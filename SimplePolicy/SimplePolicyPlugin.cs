@@ -1,15 +1,18 @@
-﻿using Neo.Network.P2P.Payloads;
+﻿using Neo.Consensus;
+using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Neo.Plugins
 {
-    public class SimplePolicyPlugin : PolicyPlugin
+    public class SimplePolicyPlugin : Plugin, ILogPlugin, IPolicyPlugin
     {
-        public override string Name => nameof(SimplePolicyPlugin);
+        private static string log_dictionary = Path.Combine(AppContext.BaseDirectory, "Logs");
 
-        protected override bool CheckPolicy(Transaction tx)
+        public bool CheckPolicy(Transaction tx)
         {
             switch (Settings.Default.BlockedAccounts.Type)
             {
@@ -24,7 +27,7 @@ namespace Neo.Plugins
             }
         }
 
-        protected override IEnumerable<Transaction> Filter(IEnumerable<Transaction> transactions)
+        public IEnumerable<Transaction> Filter(IEnumerable<Transaction> transactions)
         {
             Transaction[] array = transactions.ToArray();
             if (array.Length + 1 <= Settings.Default.MaxTransactionsPerBlock)
@@ -43,6 +46,21 @@ namespace Neo.Plugins
                     yield return tx;
                 else
                     yield break;
+        }
+
+        void ILogPlugin.Log(string source, LogLevel level, string message)
+        {
+            if (source != nameof(ConsensusService)) return;
+            DateTime now = DateTime.Now;
+            string line = $"[{now.TimeOfDay:hh\\:mm\\:ss}] {message}";
+            Console.WriteLine(line);
+            if (string.IsNullOrEmpty(log_dictionary)) return;
+            lock (log_dictionary)
+            {
+                Directory.CreateDirectory(log_dictionary);
+                string path = Path.Combine(log_dictionary, $"{now:yyyy-MM-dd}.log");
+                File.AppendAllLines(path, new[] { line });
+            }
         }
     }
 }

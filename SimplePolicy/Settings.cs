@@ -2,7 +2,6 @@
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -18,9 +17,7 @@ namespace Neo.Plugins
 
         static Settings()
         {
-            string path = Path.Combine(Assembly.GetExecutingAssembly().GetName().Name, "config.json");
-            IConfigurationSection section = new ConfigurationBuilder().AddJsonFile(path).Build().GetSection("PluginConfiguration");
-            Default = new Settings(section);
+            Default = new Settings(Assembly.GetExecutingAssembly().GetConfiguration());
         }
 
         public Settings(IConfigurationSection section)
