@@ -1,16 +1,20 @@
 ﻿using Akka.Actor;
+using Neo.IO;
+using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.VM;
-using System.IO;
 using System.Linq;
 
 namespace Neo.Plugins
 {
     internal class Logger : UntypedActor
     {
-        public Logger(IActorRef blockchain)
+        private readonly DB db;
+
+        public Logger(IActorRef blockchain, DB db)
         {
+            this.db = db;
             blockchain.Tell(new Blockchain.Register());
         }
 
@@ -37,15 +41,13 @@ namespace Neo.Plugins
                     }).ToArray();
                     return execution;
                 }).ToArray();
-                Directory.CreateDirectory(Settings.Default.Path);
-                string path = Path.Combine(Settings.Default.Path, $"{e.Transaction.Hash}.json");
-                File.WriteAllText(path, json.ToString());
+                db.Put(WriteOptions.Default, e.Transaction.Hash.ToArray(), json.ToString());
             }
         }
 
-        public static Props Props(IActorRef blockchain)
+        public static Props Props(IActorRef blockchain, DB db)
         {
-            return Akka.Actor.Props.Create(() => new Logger(blockchain));
+            return Akka.Actor.Props.Create(() => new Logger(blockchain, db));
         }
     }
 }
