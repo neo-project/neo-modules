@@ -18,7 +18,7 @@ namespace Neo.Plugins
 
         static Settings()
         {
-            string path = Path.Combine(Assembly.GetExecutingAssembly().GetName().Name, "config.json");
+            string path = Path.Combine("Plugins", Assembly.GetExecutingAssembly().GetName().Name, "config.json");
             IConfigurationSection section = new ConfigurationBuilder().AddJsonFile(path).Build().GetSection("PluginConfiguration");
             Default = new Settings(section);
         }
