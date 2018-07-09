@@ -50,7 +50,7 @@ namespace Neo.Plugins
         public BlockedAccounts(IConfigurationSection section)
         {
             this.Type = (PolicyType)Enum.Parse(typeof(PolicyType), section.GetSection("Type").Value, true);
-            this.List = new HashSet<UInt160>(section.GetSection("List").GetChildren().Select(p => Wallet.ToScriptHash(p.Value)));
+            this.List = new HashSet<UInt160>(section.GetSection("List").GetChildren().Select(p => p.Value.ToScriptHash()));
         }
     }
 }
