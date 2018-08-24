@@ -32,7 +32,7 @@ namespace Neo.Plugins
             Transaction[] array = transactions.ToArray();
             if (array.Length + 1 <= Settings.Default.MaxTransactionsPerBlock)
                 return array;
-            transactions = array.OrderByDescending(p => p.NetworkFee).Take(Settings.Default.MaxTransactionsPerBlock - 1);
+            transactions = array.OrderByDescending(p => p.NetworkFee / p.Size).ThenByDescending(p => p.NetworkFee).Take(Settings.Default.MaxTransactionsPerBlock - 1);
             return FilterFree(transactions);
         }
 
