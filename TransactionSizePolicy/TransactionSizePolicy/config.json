@@ -1,0 +1,9 @@
+﻿{
+  "PluginConfiguration": {
+    "MaxTransactionSize": 100000,
+    "MaxFreeTransactionSize": 1000,
+    "TransactionExtraSize": 2500,
+    "ExtraSizeChunk": 700,
+    "ExtraChunkFee": 1
+  }
+}
