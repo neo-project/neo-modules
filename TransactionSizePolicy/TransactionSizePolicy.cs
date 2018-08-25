@@ -26,7 +26,7 @@ namespace Neo.Plugins
             // For TX bigger than TransactionExtraSize require proportional fee
             if (tx.Size > Settings.Default.TransactionExtraSize)
             {
-                decimal chunks = (tx.Size - Settings.Default.TransactionExtraSize) / Settings.Default.ExtraSizeChunk;
+                decimal chunks = (decimal)(tx.Size - Settings.Default.TransactionExtraSize) / Settings.Default.ExtraSizeChunk;
                 decimal fee = chunks * Settings.Default.ExtraChunkFee;
 
                 if (tx.NetworkFee < Fixed8.FromDecimal(fee)) return false;
