@@ -3,7 +3,6 @@
     "MaxTransactionSize": 100000,
     "MaxFreeTransactionSize": 300,
     "TransactionExtraSize": 2000,
-    "ExtraSizeChunk": 100,
-    "ExtraChunkFee": 0.001
+    "FeePerExtraByte": 0.00001
   }
 }

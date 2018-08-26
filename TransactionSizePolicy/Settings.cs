@@ -12,8 +12,7 @@ namespace Neo.Plugins
         public int MaxTransactionSize { get; }
         public int MaxFreeTransactionSize { get; }
         public int TransactionExtraSize { get; }
-        public int ExtraSizeChunk { get; }
-        public decimal ExtraChunkFee { get; }
+        public decimal FeePerExtraByte { get; }
 
         public static Settings Default { get; }
 
@@ -28,8 +27,7 @@ namespace Neo.Plugins
             MaxFreeTransactionSize = GetValueOrDefault(section.GetSection("MaxFreeTransactionSize"), 300, p => int.Parse(p));
 
             TransactionExtraSize = GetValueOrDefault(section.GetSection("TransactionExtraSize"), 2000, p => int.Parse(p));
-            ExtraSizeChunk = GetValueOrDefault(section.GetSection("ExtraSizeChunk"), 100, p => int.Parse(p));
-            ExtraChunkFee = GetValueOrDefault(section.GetSection("ExtraChunkFee"), 0.001M, p => decimal.Parse(p));
+            FeePerExtraByte = GetValueOrDefault(section.GetSection("FeePerExtraByte"), 0.00001M, p => decimal.Parse(p));
         }
 
         public T GetValueOrDefault<T>(IConfigurationSection section, T defaultValue, Func<string, T> selector)
