@@ -5,7 +5,9 @@ VisualStudioVersion = 15.0.27428.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimplePolicy", "SimplePolicy\SimplePolicy.csproj", "{322C366E-F891-47FD-A039-0FEF79BCB6D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationLogs", "ApplicationLogs\ApplicationLogs.csproj", "{84DA8EA6-EF60-4FCD-B1C6-65C1A8323B3F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationLogs", "ApplicationLogs\ApplicationLogs.csproj", "{84DA8EA6-EF60-4FCD-B1C6-65C1A8323B3F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcDisabled", "RpcDisabled\RpcDisabled.csproj", "{6800D782-8EC0-49E9-98C4-195C8F781A1F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{84DA8EA6-EF60-4FCD-B1C6-65C1A8323B3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{84DA8EA6-EF60-4FCD-B1C6-65C1A8323B3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{84DA8EA6-EF60-4FCD-B1C6-65C1A8323B3F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6800D782-8EC0-49E9-98C4-195C8F781A1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6800D782-8EC0-49E9-98C4-195C8F781A1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6800D782-8EC0-49E9-98C4-195C8F781A1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6800D782-8EC0-49E9-98C4-195C8F781A1F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
