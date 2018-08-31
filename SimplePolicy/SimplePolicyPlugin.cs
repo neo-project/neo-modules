@@ -46,6 +46,13 @@ namespace Neo.Plugins
                     yield return tx;
         }
 
+        public bool CheckMaxOnImportHeight(uint currentImportBlockIndex)
+        {
+	    if(Settings.Default.MaxOnImportHeight != 0 && Settings.Default.MaxOnImportHeight == currentImportBlockIndex)
+		return true;
+	    return false;
+        }
+
         void ILogPlugin.Log(string source, LogLevel level, string message)
         {
             if (source != nameof(ConsensusService)) return;
