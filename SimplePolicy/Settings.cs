@@ -11,6 +11,7 @@ namespace Neo.Plugins
     {
         public int MaxTransactionsPerBlock { get; }
         public int MaxFreeTransactionsPerBlock { get; }
+	public uint MaxOnImportHeight { get; }
         public BlockedAccounts BlockedAccounts { get; }
 
         public static Settings Default { get; }
@@ -24,6 +25,7 @@ namespace Neo.Plugins
         {
             this.MaxTransactionsPerBlock = GetValueOrDefault(section.GetSection("MaxTransactionsPerBlock"), 500, p => int.Parse(p));
             this.MaxFreeTransactionsPerBlock = GetValueOrDefault(section.GetSection("MaxFreeTransactionsPerBlock"), 20, p => int.Parse(p));
+ 	    this.MaxOnImportHeight = (uint)GetValueOrDefault(section.GetSection("MaxOnImportHeight"), 0, p => int.Parse(p));
             this.BlockedAccounts = new BlockedAccounts(section.GetSection("BlockedAccounts"));
         }
 
