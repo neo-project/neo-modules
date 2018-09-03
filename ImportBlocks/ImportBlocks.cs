@@ -72,10 +72,10 @@ namespace Neo.Plugins
                 {
                     byte[] array = r.ReadBytes(r.ReadInt32());
 
-                    if (height > Blockchain.Singleton.Height || CheckMaxOnImportHeight(height))
+                    if (height > Blockchain.Singleton.Height && CheckMaxOnImportHeight(height))
                     {
                         Block block = array.AsSerializable<Block>();
-			yield return block;
+                        yield return block;
                     }
                 }
             }
@@ -83,9 +83,9 @@ namespace Neo.Plugins
 
         private static bool CheckMaxOnImportHeight(uint currentImportBlockHeight)
         {
-	    if(Settings.Default.MaxOnImportHeight != 0 && Settings.Default.MaxOnImportHeight == currentImportBlockHeight)
-		return true;
-	    return false;
+            if (Settings.Default.MaxOnImportHeight == 0 || Settings.Default.MaxOnImportHeight >= currentImportBlockHeight)
+                return true;
+            return false;
         }
     }
 }

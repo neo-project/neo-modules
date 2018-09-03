@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Neo.Wallets;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
 namespace Neo.Plugins
@@ -20,7 +17,7 @@ namespace Neo.Plugins
 
         public Settings(IConfigurationSection section)
         {
-            this.MaxOnImportHeight = (uint)GetValueOrDefault(section.GetSection("MaxOnImportHeight"), 0, p => int.Parse(p));
+            this.MaxOnImportHeight = GetValueOrDefault(section.GetSection("MaxOnImportHeight"), 0u, p => uint.Parse(p));
         }
 
         public T GetValueOrDefault<T>(IConfigurationSection section, T defaultValue, Func<string, T> selector)
