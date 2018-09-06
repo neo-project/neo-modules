@@ -71,8 +71,8 @@ namespace Neo.Plugins
                 for (uint height = start; height <= end; height++)
                 {
                     byte[] array = r.ReadBytes(r.ReadInt32());
-
-                    if (height > Blockchain.Singleton.Height && CheckMaxOnImportHeight(height))
+                    if (!CheckMaxOnImportHeight(height)) yield break;
+                    if (height > Blockchain.Singleton.Height)
                     {
                         Block block = array.AsSerializable<Block>();
                         yield return block;
