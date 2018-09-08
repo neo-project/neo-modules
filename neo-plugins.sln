@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationLogs", "Applicat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcDisabled", "RpcDisabled\RpcDisabled.csproj", "{6800D782-8EC0-49E9-98C4-195C8F781A1F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatesDumper", "StatesDumper\StatesDumper.csproj", "{86531DB1-A231-46C4-823F-BE60972F7523}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StatesDumper", "StatesDumper\StatesDumper.csproj", "{86531DB1-A231-46C4-823F-BE60972F7523}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImportBlocks", "ImportBlocks\ImportBlocks.csproj", "{B7A42984-57BB-4F8D-967B-23B0E841B726}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{86531DB1-A231-46C4-823F-BE60972F7523}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{86531DB1-A231-46C4-823F-BE60972F7523}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{86531DB1-A231-46C4-823F-BE60972F7523}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7A42984-57BB-4F8D-967B-23B0E841B726}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7A42984-57BB-4F8D-967B-23B0E841B726}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7A42984-57BB-4F8D-967B-23B0E841B726}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7A42984-57BB-4F8D-967B-23B0E841B726}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
