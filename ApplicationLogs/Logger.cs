@@ -4,6 +4,7 @@ using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.VM;
+using System;
 using System.Linq;
 
 namespace Neo.Plugins
@@ -31,12 +32,26 @@ namespace Neo.Plugins
                     execution["contract"] = p.ScriptHash.ToString();
                     execution["vmstate"] = p.VMState;
                     execution["gas_consumed"] = p.GasConsumed.ToString();
-                    execution["stack"] = p.Stack.Select(q => q.ToParameter().ToJson()).ToArray();
+                    try
+                    {
+                        execution["stack"] = p.Stack.Select(q => q.ToParameter().ToJson()).ToArray();
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        execution["stack"] = "error: recursive reference";
+                    }
                     execution["notifications"] = p.Notifications.Select(q =>
                     {
                         JObject notification = new JObject();
                         notification["contract"] = q.ScriptHash.ToString();
-                        notification["state"] = q.State.ToParameter().ToJson();
+                        try
+                        {
+                            notification["state"] = q.State.ToParameter().ToJson();
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            notification["state"] = "error: recursive reference";
+                        }
                         return notification;
                     }).ToArray();
                     return execution;
