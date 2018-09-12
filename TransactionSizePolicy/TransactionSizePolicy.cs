@@ -10,11 +10,8 @@ namespace Neo.Plugins
             return VerifySizeLimits(tx);
         }
 
-        public IEnumerable<Transaction> Filter(IEnumerable<Transaction> transactions)
-        {
-            return transactions;
-        }
-
+        public IEnumerable<Transaction> Filter(IEnumerable<Transaction> transactions) => transactions;
+        
         private bool VerifySizeLimits(Transaction tx)
         {
             // Not Allow free TX bigger than MaxFreeTransactionSize
