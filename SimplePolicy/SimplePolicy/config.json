@@ -5,6 +5,10 @@
     "BlockedAccounts": {
       "Type": "AllowAll",
       "List": []
-    }
+    },
+    "MaxTransactionSize": 100000,
+    "MaxFreeTransactionSize": 300,
+    "TransactionExtraSize": 2000,
+    "FeePerExtraByte": 0.00001
   }
 }

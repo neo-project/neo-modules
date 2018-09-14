@@ -14,6 +14,8 @@ namespace Neo.Plugins
 
         public bool CheckPolicy(Transaction tx)
         {
+            if (!VerifySizeLimits(tx)) return false;
+
             switch (Settings.Default.BlockedAccounts.Type)
             {
                 case PolicyType.AllowAll:
@@ -59,6 +61,24 @@ namespace Neo.Plugins
                 string path = Path.Combine(log_dictionary, $"{now:yyyy-MM-dd}.log");
                 File.AppendAllLines(path, new[] { line });
             }
+        }
+
+        private bool VerifySizeLimits(Transaction tx)
+        {
+            // Not Allow free TX bigger than MaxFreeTransactionSize
+            if (tx.NetworkFee.Equals(0) && tx.Size > Settings.Default.MaxFreeTransactionSize) return false;
+
+            // Not Allow TX bigger than MaxTransactionSize
+            if (tx.Size > Settings.Default.MaxTransactionSize) return false;
+
+            // For TX bigger than TransactionExtraSize require proportional fee
+            if (tx.Size > Settings.Default.TransactionExtraSize)
+            {
+                decimal fee = (tx.Size - Settings.Default.TransactionExtraSize) * Settings.Default.FeePerExtraByte;
+
+                if (tx.NetworkFee < Fixed8.FromDecimal(fee)) return false;
+            }
+            return true;
         }
     }
 }
