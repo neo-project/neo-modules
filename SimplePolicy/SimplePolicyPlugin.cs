@@ -12,7 +12,7 @@ namespace Neo.Plugins
     {
         private static string log_dictionary = Path.Combine(AppContext.BaseDirectory, "Logs");
 
-        public bool CheckPolicy(Transaction tx)
+        public bool FilterForMemoryPool(Transaction tx)
         {
             if (!VerifySizeLimits(tx)) return false;
 
@@ -29,7 +29,7 @@ namespace Neo.Plugins
             }
         }
 
-        public IEnumerable<Transaction> Filter(IEnumerable<Transaction> transactions)
+        public IEnumerable<Transaction> FilterForBlock(IEnumerable<Transaction> transactions)
         {
             Transaction[] array = transactions.ToArray();
             if (array.Length + 1 <= Settings.Default.MaxTransactionsPerBlock)
