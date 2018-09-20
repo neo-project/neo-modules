@@ -21,9 +21,11 @@ namespace Neo.Plugins
                 case PolicyType.AllowAll:
                     return true;
                 case PolicyType.AllowList:
-                    return tx.Witnesses.All(p => Settings.Default.BlockedAccounts.List.Contains(p.VerificationScript.ToScriptHash())) || tx.Outputs.All(p => Settings.Default.BlockedAccounts.List.Contains(p.ScriptHash));
+                    return tx.Witnesses.All(p => Settings.Default.BlockedAccounts.List.Contains(p.VerificationScript.ToScriptHash())) ||
+                            tx.Outputs.All(p => Settings.Default.BlockedAccounts.List.Contains(p.ScriptHash));
                 case PolicyType.DenyList:
-                    return tx.Witnesses.All(p => !Settings.Default.BlockedAccounts.List.Contains(p.VerificationScript.ToScriptHash())) && tx.Outputs.All(p => !Settings.Default.BlockedAccounts.List.Contains(p.ScriptHash));
+                    return tx.Witnesses.All(p => !Settings.Default.BlockedAccounts.List.Contains(p.VerificationScript.ToScriptHash())) &&
+                            tx.Outputs.All(p => !Settings.Default.BlockedAccounts.List.Contains(p.ScriptHash));
                 default:
                     return false;
             }
@@ -34,7 +36,10 @@ namespace Neo.Plugins
             Transaction[] array = transactions.ToArray();
             if (array.Length + 1 <= Settings.Default.MaxTransactionsPerBlock)
                 return array;
-            transactions = array.OrderByDescending(p => p.NetworkFee / p.Size).ThenByDescending(p => p.NetworkFee).Take(Settings.Default.MaxTransactionsPerBlock - 1);
+            transactions = array.OrderByDescending(p => p.NetworkFee / p.Size)
+                                .ThenByDescending(p => p.NetworkFee)
+                                .Take(Settings.Default.MaxTransactionsPerBlock - 1);
+
             return FilterFree(transactions);
         }
 
@@ -71,10 +76,10 @@ namespace Neo.Plugins
             // Not Allow TX bigger than MaxTransactionSize
             if (tx.Size > Settings.Default.MaxTransactionSize) return false;
 
-            // For TX bigger than TransactionExtraSize require proportional fee
-            if (tx.Size > Settings.Default.TransactionExtraSize)
+            // Require proportional fee for TX bigger than MaxFreeTransactionSize 
+            if (tx.Size > Settings.Default.MaxFreeTransactionSize)
             {
-                decimal fee = (tx.Size - Settings.Default.TransactionExtraSize) * Settings.Default.FeePerExtraByte;
+                decimal fee = (tx.Size - Settings.Default.MaxFreeTransactionSize) * Settings.Default.FeePerExtraByte;
 
                 if (tx.NetworkFee < Fixed8.FromDecimal(fee)) return false;
             }
