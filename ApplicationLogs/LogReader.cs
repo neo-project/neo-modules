@@ -2,12 +2,13 @@
 using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Network.RPC;
+using System.IO;
 
 namespace Neo.Plugins
 {
     public class LogReader : Plugin, IRpcPlugin
     {
-        private readonly DB db = DB.Open(Settings.Default.Path, new Options { CreateIfMissing = true });
+        private readonly DB db = DB.Open(Path.GetFullPath(Settings.Default.Path), new Options { CreateIfMissing = true });
 
         public override string Name => "ApplicationLogs";
 
