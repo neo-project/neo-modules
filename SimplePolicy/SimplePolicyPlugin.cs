@@ -10,7 +10,7 @@ namespace Neo.Plugins
 {
     public class SimplePolicyPlugin : Plugin, ILogPlugin, IPolicyPlugin
     {
-        private static string log_dictionary = Path.Combine(AppContext.BaseDirectory, "Logs");
+        private static readonly string log_dictionary = Path.Combine(AppContext.BaseDirectory, "Logs");
 
         public bool FilterForMemoryPool(Transaction tx)
         {
