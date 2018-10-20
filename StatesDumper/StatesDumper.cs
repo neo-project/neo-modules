@@ -49,6 +49,7 @@ namespace Neo.Plugins
             Console.WriteLine($"States have been dumped into file {path}");
         }
 
+        /*
         private static StorageItem toStorageItem<TKey, TValue>(KeyValuePair<TKey, TValue> crazy) {
            StorageItem si = new StorageItem();
            byte[] b = crazy.Value.ToArray();
@@ -56,6 +57,7 @@ namespace Neo.Plugins
            si.Deserialize(bi);
            return si;
         }
+        */
 
         private static void DumpInBlock<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> states)
             where TKey : ISerializable
