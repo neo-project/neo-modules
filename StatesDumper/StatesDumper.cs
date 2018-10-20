@@ -69,10 +69,13 @@ namespace Neo.Plugins
             {
                 JObject state = new JObject();
                 state["key"] = p.Key.ToArray().ToHexString();
-                byte[] b = p.Value.ToArray();
+                byte[] src = p.Value.ToArray();
                 StorageItem si = new StorageItem();
-                BinaryReader bi = new BinaryReader(b);
-                si.Deserialize(bi);
+                using (MemoryStream stream = new MemoryStream(src)) {
+                  using (BinaryReader reader = new BinaryReader(stream)) {
+                    si.Deserialize(bi);
+                  }
+                }
                 uint h = si.Height;
                 state["value"] = p.Value.ToArray().ToHexString();
                 return state;
