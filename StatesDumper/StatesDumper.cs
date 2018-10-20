@@ -73,7 +73,7 @@ namespace Neo.Plugins
                 StorageItem si = new StorageItem();
                 using (MemoryStream stream = new MemoryStream(src)) {
                   using (BinaryReader reader = new BinaryReader(stream)) {
-                    si.Deserialize(bi);
+                    si.Deserialize(reader);
                   }
                 }
                 uint h = si.Height;
