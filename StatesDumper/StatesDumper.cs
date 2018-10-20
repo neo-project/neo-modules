@@ -24,8 +24,9 @@ namespace Neo.Plugins
                     return true;
                 case "blockstorage":
                     Dump(args.Length >= 3
-                        ? Blockchain.Singleton.Store.GetStorages().Find(UInt160.Parse(args[2]).ToArray()).Find((key, item) => item.Height == Blockchain.Singleton.Height)
-                        : Blockchain.Singleton.Store.GetStorages().Find((key, item) => item.Height == Blockchain.Singleton.Height));
+                        ? Blockchain.Singleton.Store.GetStorages().FindInBlock(UInt160.Parse(Blockchain.Singleton.Height, args[2]).ToArray())
+                        : Blockchain.Singleton.Store.GetStorages().FindInBlock(Blockchain.Singleton.Height));
+                        FindLatest
                     return true;
                 default:
                     return false;
@@ -48,6 +49,7 @@ namespace Neo.Plugins
             Console.WriteLine($"States have been dumped into file {path}");
         }
 
+/*
         private static void DumpBlockStorage<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> states)
             where TKey : ISerializable
             where TValue : ISerializable
@@ -63,5 +65,7 @@ namespace Neo.Plugins
             File.WriteAllText(path, array.ToString());
             Console.WriteLine($"States have been dumped into file {path}");
         }
+*/
     }
+
 }
