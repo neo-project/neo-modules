@@ -48,12 +48,19 @@ namespace Neo.Plugins
             Console.WriteLine($"States have been dumped into file {path}");
         }
 
+        private static StorageItem toStorageItem(TValue crazy) {
+           StorageItem si = new StorageItem();
+           BinaryReader bi = crazy.ToArray();
+           si.Deserialize(bi);
+           return si;
+        }
+
         private static void DumpInBlock<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> states)
             where TKey : ISerializable
             where TValue : ISerializable
         {
-            const string path = $"dump-block-{Blockchain.Singleton.Height.ToString()}.json";
-            JArray array = new JArray(states.Where(p => ((StorageItem)p.Value).Height == Blockchain.Singleton.Height).Select(p =>
+            string path = $"dump-block-{Blockchain.Singleton.Height.ToString()}.json";
+            JArray array = new JArray(states.Where(p => toStorageItem(p.Value).Height == Blockchain.Singleton.Height).Select(p =>
             {
                 JObject state = new JObject();
                 state["key"] = p.Key.ToArray().ToHexString();
