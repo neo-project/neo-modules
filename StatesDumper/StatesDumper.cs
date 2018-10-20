@@ -71,7 +71,7 @@ namespace Neo.Plugins
                 state["key"] = p.Key.ToArray().ToHexString();
                 byte[] b = p.Value.ToArray();
                 StorageItem si = new StorageItem();
-                BinaryReader bi = b;
+                BinaryReader bi = new BinaryReader(b);
                 si.Deserialize(bi);
                 uint h = si.Height;
                 state["value"] = p.Value.ToArray().ToHexString();
