@@ -70,7 +70,10 @@ namespace Neo.Plugins
                 JObject state = new JObject();
                 state["key"] = p.Key.ToArray().ToHexString();
                 byte[] b = p.Value.ToArray();
-                uint h = p.Value.Height;
+                StorageItem si = new StorageItem();
+                BinaryReader bi = b;
+                si.Deserialize(bi);
+                uint h = si.Height;
                 state["value"] = p.Value.ToArray().ToHexString();
                 return state;
             }));
