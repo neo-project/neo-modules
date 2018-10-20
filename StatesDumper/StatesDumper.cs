@@ -22,12 +22,33 @@ namespace Neo.Plugins
                         ? Blockchain.Singleton.Store.GetStorages().Find(UInt160.Parse(args[2]).ToArray())
                         : Blockchain.Singleton.Store.GetStorages().Find());
                     return true;
+                case "blockstorage":
+                    Dump(args.Length >= 3
+                        ? Blockchain.Singleton.Store.GetStorages().Find(UInt160.Parse(args[2]).Find((key, item) => item.Height == Blockchain.Singleton.Height).ToArray())
+                        : Blockchain.Singleton.Store.GetStorages().Find((key, item) => item.Height == Blockchain.Singleton.Height));
+                    return true;
                 default:
                     return false;
             }
         }
 
         private static void Dump<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> states)
+            where TKey : ISerializable
+            where TValue : ISerializable
+        {
+            const string path = "dump.json";
+            JArray array = new JArray(states.Select(p =>
+            {
+                JObject state = new JObject();
+                state["key"] = p.Key.ToArray().ToHexString();
+                state["value"] = p.Value.ToArray().ToHexString();
+                return state;
+            }));
+            File.WriteAllText(path, array.ToString());
+            Console.WriteLine($"States have been dumped into file {path}");
+        }
+
+        private static void DumpBlockStorage<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> states)
             where TKey : ISerializable
             where TValue : ISerializable
         {
