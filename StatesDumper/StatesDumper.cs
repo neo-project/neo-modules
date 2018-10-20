@@ -24,9 +24,8 @@ namespace Neo.Plugins
                     return true;
                 case "blockstorage":
                     Dump(args.Length >= 3
-                        ? Blockchain.Singleton.Store.GetStorages().FindInBlock(UInt160.Parse(Blockchain.Singleton.Height, args[2]).ToArray())
-                        : Blockchain.Singleton.Store.GetStorages().FindInBlock(Blockchain.Singleton.Height));
-                        FindLatest
+                        ? Blockchain.Singleton.Store.GetStorages().Find(UInt160.Parse(args[2])).ToDictionary(i => i.Key, i => i.Value).Where((key,value) => value.Height == height).ToArray())
+                        : Blockchain.Singleton.Store.GetStorages().Find().ToDictionary(i => i.Key, i => i.Value).Where((key,value) => value.Height == height));
                     return true;
                 default:
                     return false;
