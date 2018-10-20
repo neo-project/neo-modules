@@ -51,7 +51,8 @@ namespace Neo.Plugins
 
         private static StorageItem toStorageItem<TKey, TValue>(KeyValuePair<TKey, TValue> crazy) {
            StorageItem si = new StorageItem();
-           BinaryReader bi = crazy.Value.ToArray();
+           byte[] b = crazy.Value.ToArray();
+           BinaryReader bi = b;
            si.Deserialize(bi);
            return si;
         }
