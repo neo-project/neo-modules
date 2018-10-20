@@ -52,7 +52,7 @@ namespace Neo.Plugins
             where TKey : ISerializable
             where TValue : ISerializable
         {
-            const string path = "dump.json";
+            const string path = $"dump-block-{Blockchain.Singleton.Height.ToString()}.json";
             JArray array = new JArray(states.Where(p => p.Value.Height == Blockchain.Singleton.Height).Select(p =>
             {
                 JObject state = new JObject();
