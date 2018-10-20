@@ -1,4 +1,5 @@
 ﻿using Neo.IO;
+using Neo.IO.Caching;
 using Neo.IO.Json;
 using Neo.Ledger;
 using System;
@@ -48,9 +49,9 @@ namespace Neo.Plugins
             Console.WriteLine($"States have been dumped into file {path}");
         }
 
-        private static StorageItem toStorageItem(TValue crazy) {
+        private static StorageItem toStorageItem(KeyValuePair<TKey, TValue> crazy) {
            StorageItem si = new StorageItem();
-           BinaryReader bi = crazy.ToArray();
+           BinaryReader bi = crazy.Value.ToArray();
            si.Deserialize(bi);
            return si;
         }
@@ -60,7 +61,7 @@ namespace Neo.Plugins
             where TValue : ISerializable
         {
             string path = $"dump-block-{Blockchain.Singleton.Height.ToString()}.json";
-            JArray array = new JArray(states.Where(p => toStorageItem(p.Value).Height == Blockchain.Singleton.Height).Select(p =>
+            JArray array = new JArray(states.Where(p => toStorageItem(p).Height == Blockchain.Singleton.Height).Select(p =>
             {
                 JObject state = new JObject();
                 state["key"] = p.Key.ToArray().ToHexString();
