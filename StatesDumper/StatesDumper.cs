@@ -77,6 +77,8 @@ namespace Neo.Plugins
                   }
                 }
                 uint h = si.Height;
+                if(h != Blockchain.Singleton.Height)
+                  return null;
                 state["value"] = p.Value.ToArray().ToHexString();
                 return state;
             }));
