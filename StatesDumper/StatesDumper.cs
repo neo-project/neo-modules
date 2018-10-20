@@ -49,7 +49,7 @@ namespace Neo.Plugins
             Console.WriteLine($"States have been dumped into file {path}");
         }
 
-        private static StorageItem toStorageItem(KeyValuePair<TKey, TValue> crazy) {
+        private static StorageItem toStorageItem<TKey, TValue>(KeyValuePair<TKey, TValue> crazy) {
            StorageItem si = new StorageItem();
            BinaryReader bi = crazy.Value.ToArray();
            si.Deserialize(bi);
