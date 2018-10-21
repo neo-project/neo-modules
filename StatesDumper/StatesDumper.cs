@@ -73,7 +73,7 @@ namespace Neo.Plugins
                 state["value"] = p.Value.ToArray().ToHexString();
                 return state;
             });
-            IEnumerable<JObject> itemsFilter = states.Where(p => p != null);
+            IEnumerable<JObject> itemsFilter = items.Where(p => p != null);
             JArray array = new JArray(itemsFilter);
             File.WriteAllText(path, array.ToString());
             Console.WriteLine($"DumpInBlock States have been dumped into file {path}");
