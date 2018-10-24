@@ -54,12 +54,8 @@ namespace Neo.Plugins
             where TValue : ISerializable
         {
             string path = $"dump-block-{Blockchain.Singleton.Height.ToString()}.json";
-            //JArray array = new JArray(states.Where(p => toStorageItem(p).Height == Blockchain.Singleton.Height).Select(p =>
-
-            IEnumerable<JObject> items = states.Select(p =>
+            JArray array = new JArray(states.Where(p => 
             {
-                JObject state = new JObject();
-                state["key"] = p.Key.ToArray().ToHexString();
                 byte[] src = p.Value.ToArray();
                 StorageItem si = new StorageItem();
                 using (MemoryStream stream = new MemoryStream(src)) {
@@ -68,13 +64,14 @@ namespace Neo.Plugins
                   }
                 }
                 uint h = si.Height;
-                if(h != Blockchain.Singleton.Height)
-                  return null;
+                return h == blockIndex;
+            }).Select(p =>
+            {
+                JObject state = new JObject();
+                state["key"] = p.Key.ToArray().ToHexString();
                 state["value"] = p.Value.ToArray().ToHexString();
                 return state;
-            });
-            IEnumerable<JObject> itemsFilter = items.Where(p => p != null);
-            JArray array = new JArray(itemsFilter);
+            }));
             File.WriteAllText(path, array.ToString());
             Console.WriteLine($"DumpInBlock States have been dumped into file {path}");
         }
