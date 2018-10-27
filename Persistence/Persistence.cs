@@ -1,10 +1,14 @@
 ﻿using Neo.Consensus;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
+using Neo.Persistence;
+using Neo.IO.Caching;
+using Neo.IO.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Neo.Plugins
 {
@@ -12,6 +16,7 @@ namespace Neo.Plugins
     {
         public void OnPersist(Snapshot snapshot)
         {
+            uint blockIndex = snapshot.Height;
             string dirPath = "./Storage";
             Directory.CreateDirectory(dirPath);
             string path = $"{HandlePaths(dirPath, blockIndex)}/dump-block-{blockIndex.ToString()}.json";
@@ -41,14 +46,14 @@ namespace Neo.Plugins
                 array.Add(state);
             }
 
-            BlockStorageCache = BlockStorageCache + "{\"block\":" + blockIndex.ToString() + ",\"size\":" + array.Count.ToString() + ",\"storage\":\n";
-            BlockStorageCache = BlockStorageCache + array.ToString() + "},\n";
+            Settings.Default.BlockStorageCache = Settings.Default.BlockStorageCache + "{\"block\":" + blockIndex.ToString() + ",\"size\":" + array.Count.ToString() + ",\"storage\":\n";
+            Settings.Default.BlockStorageCache = Settings.Default.BlockStorageCache + array.ToString() + "},\n";
 
-            if ((blockIndex % BlockCacheSize == 0) || (blockIndex > HeightToRealTimeSyncing))
+            if ((blockIndex % Settings.Default.BlockCacheSize == 0) || (blockIndex > Settings.Default.HeightToRealTimeSyncing))
             {
-                BlockStorageCache += "]";
-                File.WriteAllText(path, BlockStorageCache);
-                BlockStorageCache = "[";
+                Settings.Default.BlockStorageCache += "]";
+                File.WriteAllText(path, Settings.Default.BlockStorageCache);
+                Settings.Default.BlockStorageCache = "[";
 	    }
 
         }
