@@ -1,5 +1,5 @@
 ## What is it
-A set of plugins that can be used inside the Neo core library.
+A set of plugins that can be used inside the Neo core library. Check [here](http://docs.neo.org/en-us/node/plugin.html) for the official documentation.
 
 ## Using plugins
 Plugins can be used to increase functionality in neo. One common example is to add the ApplicationLogs plugin in order to enable your node to create log files.
