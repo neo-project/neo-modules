@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StatesDumper", "StatesDumpe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImportBlocks", "ImportBlocks\ImportBlocks.csproj", "{B7A42984-57BB-4F8D-967B-23B0E841B726}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimplePolicy.UnitTests", "SimplePolicy.UnitTests\SimplePolicy.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{B7A42984-57BB-4F8D-967B-23B0E841B726}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B7A42984-57BB-4F8D-967B-23B0E841B726}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B7A42984-57BB-4F8D-967B-23B0E841B726}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0DA81327-DC81-4960-91C8-4C5F8B9B804C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0DA81327-DC81-4960-91C8-4C5F8B9B804C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0DA81327-DC81-4960-91C8-4C5F8B9B804C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0DA81327-DC81-4960-91C8-4C5F8B9B804C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
