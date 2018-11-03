@@ -11,7 +11,6 @@ namespace Neo.Plugins
     {
         public int MaxTransactionsPerBlock { get; }
         public int MaxFreeTransactionsPerBlock { get; }
-        public int MaxTransactionSize { get; }
         public int MaxFreeTransactionSize { get; }
         public decimal FeePerExtraByte { get; }
         public BlockedAccounts BlockedAccounts { get; }
@@ -27,7 +26,6 @@ namespace Neo.Plugins
         {
             this.MaxTransactionsPerBlock = GetValueOrDefault(section.GetSection("MaxTransactionsPerBlock"), 500, p => int.Parse(p));
             this.MaxFreeTransactionsPerBlock = GetValueOrDefault(section.GetSection("MaxFreeTransactionsPerBlock"), 20, p => int.Parse(p));
-            this.MaxTransactionSize = GetValueOrDefault(section.GetSection("MaxTransactionSize"), 100000, p => int.Parse(p));
             this.MaxFreeTransactionSize = GetValueOrDefault(section.GetSection("MaxFreeTransactionSize"), 400, p => int.Parse(p));
             this.FeePerExtraByte = GetValueOrDefault(section.GetSection("FeePerExtraByte"), 0.00001M, p => decimal.Parse(p));
             this.BlockedAccounts = new BlockedAccounts(section.GetSection("BlockedAccounts"));

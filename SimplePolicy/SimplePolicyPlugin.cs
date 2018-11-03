@@ -73,9 +73,6 @@ namespace Neo.Plugins
             // Not Allow free TX bigger than MaxFreeTransactionSize
             if (tx.NetworkFee.Equals(0) && tx.Size > Settings.Default.MaxFreeTransactionSize) return false;
 
-            // Not Allow TX bigger than MaxTransactionSize
-            if (tx.Size > Settings.Default.MaxTransactionSize) return false;
-
             // Require proportional fee for TX bigger than MaxFreeTransactionSize 
             if (tx.Size > Settings.Default.MaxFreeTransactionSize)
             {
