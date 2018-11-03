@@ -22,15 +22,9 @@ namespace Neo.Plugins
 
         public Settings(IConfigurationSection section)
         {
-            this.MaxTransactionsPerBlock = GetValueOrDefault(section.GetSection("MaxTransactionsPerBlock"), 500, p => int.Parse(p));
-            this.MaxFreeTransactionsPerBlock = GetValueOrDefault(section.GetSection("MaxFreeTransactionsPerBlock"), 20, p => int.Parse(p));
+            this.MaxTransactionsPerBlock = section.GetSection("MaxTransactionsPerBlock").GetValueOrDefault(500, p => int.Parse(p));
+            this.MaxFreeTransactionsPerBlock = section.GetSection("MaxFreeTransactionsPerBlock").GetValueOrDefault(20, p => int.Parse(p));
             this.BlockedAccounts = new BlockedAccounts(section.GetSection("BlockedAccounts"));
-        }
-
-        public T GetValueOrDefault<T>(IConfigurationSection section, T defaultValue, Func<string, T> selector)
-        {
-            if (section.Value == null) return defaultValue;
-            return selector(section.Value);
         }
     }
 
@@ -49,7 +43,7 @@ namespace Neo.Plugins
 
         public BlockedAccounts(IConfigurationSection section)
         {
-            this.Type = (PolicyType)Enum.Parse(typeof(PolicyType), section.GetSection("Type").Value, true);
+            this.Type = section.GetSection("Type").GetValueOrDefault(PolicyType.AllowAll, p => (PolicyType)Enum.Parse(typeof(PolicyType), p, true));
             this.List = new HashSet<UInt160>(section.GetSection("List").GetChildren().Select(p => p.Value.ToScriptHash()));
         }
     }

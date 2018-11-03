@@ -23,8 +23,8 @@ namespace SimplePolicy.UnitTests
         [TestMethod]
         public void TestMaxTransactionsPerBlock()
         {
-            SimplePolicyPlugin.GetMaxTransactionsPerBlock().Should().Be(10);
-            SimplePolicyPlugin.GetMaxFreeTransactionsPerBlock().Should().Be(3);
+            SimplePolicyPlugin.GetMaxTransactionsPerBlock().Should().Be(500);
+            SimplePolicyPlugin.GetMaxFreeTransactionsPerBlock().Should().Be(20);
         }
     }
 }
