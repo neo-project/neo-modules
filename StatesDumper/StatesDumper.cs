@@ -40,7 +40,7 @@ namespace Neo.Plugins
                 return state;
             }));
             File.WriteAllText(path, array.ToString());
-            Console.WriteLine($"States have been dumped into file {path}");
+            Console.WriteLine($"States ({array.Count}) have been dumped into file {path}");
         }
     }
 }
