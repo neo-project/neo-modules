@@ -47,7 +47,7 @@ namespace Neo.Plugins
         {
             int count = 0;
             foreach (Transaction tx in transactions)
-                if (tx.NetworkFee > Fixed8.Zero || tx.SystemFee > Fixed8.Zero)
+                if (!tx.IsLowPriority)
                     yield return tx;
                 else if (count++ < Settings.Default.MaxFreeTransactionsPerBlock)
                     yield return tx;
@@ -71,7 +71,7 @@ namespace Neo.Plugins
         private bool VerifySizeLimits(Transaction tx)
         {
             // Not Allow free TX bigger than MaxFreeTransactionSize
-            if (tx.NetworkFee.Equals(0) && tx.Size > Settings.Default.MaxFreeTransactionSize) return false;
+            if (tx.IsLowPriority && tx.Size > Settings.Default.MaxFreeTransactionSize) return false;
 
             // Require proportional fee for TX bigger than MaxFreeTransactionSize 
             if (tx.Size > Settings.Default.MaxFreeTransactionSize)
