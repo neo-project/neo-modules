@@ -33,24 +33,13 @@ namespace Neo.Plugins
 
         public IEnumerable<Transaction> FilterForBlock(IEnumerable<Transaction> transactions)
         {
-            Transaction[] array = transactions.ToArray();
-            if (array.Length + 1 <= Settings.Default.MaxTransactionsPerBlock)
-                return array;
-            transactions = array.OrderByDescending(p => p.NetworkFee / p.Size)
-                                .ThenByDescending(p => p.NetworkFee)
-                                .Take(Settings.Default.MaxTransactionsPerBlock - 1);
-
-            return FilterFree(transactions);
-        }
-
-        private IEnumerable<Transaction> FilterFree(IEnumerable<Transaction> transactions)
-        {
-            int count = 0;
-            foreach (Transaction tx in transactions)
-                if (!tx.IsLowPriority)
+            int count = 0, count_free = 0;
+            foreach (Transaction tx in transactions.OrderByDescending(p => p.NetworkFee / p.Size).ThenByDescending(p => p.NetworkFee))
+            {
+                if (count++ >= Settings.Default.MaxTransactionsPerBlock - 1) break;
+                if (!tx.IsLowPriority || count_free++ < Settings.Default.MaxFreeTransactionsPerBlock)
                     yield return tx;
-                else if (count++ < Settings.Default.MaxFreeTransactionsPerBlock)
-                    yield return tx;
+            }
         }
 
         void ILogPlugin.Log(string source, LogLevel level, string message)
