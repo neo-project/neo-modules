@@ -12,6 +12,16 @@ namespace Neo.Plugins
     {
         private static string log_dictionary = Path.Combine(AppContext.BaseDirectory, "Logs");
 
+        public static int GetMaxTransactionsPerBlock()
+        {
+            return Settings.Default.MaxTransactionsPerBlock;
+        }
+
+        public static int GetMaxFreeTransactionsPerBlock()
+        {
+            return Settings.Default.MaxFreeTransactionsPerBlock;
+        }
+
         public bool FilterForMemoryPool(Transaction tx)
         {
             switch (Settings.Default.BlockedAccounts.Type)
