@@ -33,6 +33,11 @@ namespace Neo.Plugins
 
         public IEnumerable<Transaction> FilterForBlock(IEnumerable<Transaction> transactions)
         {
+            return FilterForBlock_Policy2(transactions);
+        }
+
+        private static IEnumerable<Transaction> FilterForBlock_Policy1(IEnumerable<Transaction> transactions)
+        {
             int count = 0, count_free = 0;
             foreach (Transaction tx in transactions.OrderByDescending(p => p.NetworkFee / p.Size).ThenByDescending(p => p.NetworkFee))
             {
@@ -40,6 +45,26 @@ namespace Neo.Plugins
                 if (!tx.IsLowPriority || count_free++ < Settings.Default.MaxFreeTransactionsPerBlock)
                     yield return tx;
             }
+        }
+
+        private static IEnumerable<Transaction> FilterForBlock_Policy2(IEnumerable<Transaction> transactions)
+        {
+            if (!(transactions is IReadOnlyList<Transaction> tx_list))
+                tx_list = transactions.ToArray();
+
+            Transaction[] free = tx_list.Where(p => p.IsLowPriority)
+                .OrderByDescending(p => p.NetworkFee / p.Size)
+                .ThenByDescending(p => p.NetworkFee)
+                .Take(Settings.Default.MaxFreeTransactionsPerBlock)
+                .ToArray();
+
+            Transaction[] non_free = transactions.Where(p => !p.IsLowPriority)
+                .OrderByDescending(p => p.NetworkFee / p.Size)
+                .ThenByDescending(p => p.NetworkFee)
+                .Take(Settings.Default.MaxTransactionsPerBlock - free.Length - 1)
+                .ToArray();
+
+            return non_free.Concat(free);
         }
 
         void ILogPlugin.Log(string source, LogLevel level, string message)
