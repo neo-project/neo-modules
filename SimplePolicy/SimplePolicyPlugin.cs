@@ -33,6 +33,22 @@ namespace Neo.Plugins
 
         public IEnumerable<Transaction> FilterForBlock(IEnumerable<Transaction> transactions)
         {
+            return FilterForBlock_Policy2(transactions);
+        }
+
+        private static IEnumerable<Transaction> FilterForBlock_Policy1(IEnumerable<Transaction> transactions)
+        {
+            int count = 0, count_free = 0;
+            foreach (Transaction tx in transactions.OrderByDescending(p => p.NetworkFee / p.Size).ThenByDescending(p => p.NetworkFee))
+            {
+                if (count++ >= Settings.Default.MaxTransactionsPerBlock - 1) break;
+                if (!tx.IsLowPriority || count_free++ < Settings.Default.MaxFreeTransactionsPerBlock)
+                    yield return tx;
+            }
+        }
+
+        private static IEnumerable<Transaction> FilterForBlock_Policy2(IEnumerable<Transaction> transactions)
+        {
             if (!(transactions is IReadOnlyList<Transaction> tx_list))
                 tx_list = transactions.ToArray();
 
