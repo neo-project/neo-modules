@@ -90,9 +90,9 @@ namespace Neo.Plugins
             // Require proportional fee for TX bigger than MaxFreeTransactionSize 
             if (tx.Size > Settings.Default.MaxFreeTransactionSize)
             {
-                decimal fee = (tx.Size - Settings.Default.MaxFreeTransactionSize) * Settings.Default.FeePerExtraByte;
+                Fixed8 fee = Settings.Default.FeePerExtraByte * (tx.Size - Settings.Default.MaxFreeTransactionSize);
 
-                if (tx.NetworkFee < Fixed8.FromDecimal(fee)) return false;
+                if (tx.NetworkFee < fee) return false;
             }
             return true;
         }
