@@ -26,7 +26,7 @@ namespace Neo.Plugins
             string path = $"{HandlePaths(dirPath, blockIndex)}/dump-block-{blockIndex.ToString()}.json";
 
             JArray array = new JArray();
- 
+
             foreach (DataCache<StorageKey, StorageItem>.Trackable trackable in snapshot.Storages.GetChangeSet())
             {
                 JObject state = new JObject();
@@ -35,18 +35,18 @@ namespace Neo.Plugins
                 {
                     case TrackState.Added:
                         state["state"] = "Added";
-                        state["key"] = trackable.Key.ToString();
-                        state["value"] = trackable.Item.ToJson();
+                        state["key"] = trackable.Key.Key.ToString();
+                        state["value"] = trackable.Item.Value.ToString();
                         // Here we have a new trackable.Key and trackable.Item
                         break;
                     case TrackState.Changed:
                         state["state"] = "Changed";
-                        state["key"] = trackable.Key.ToString();
-                        state["value"] = trackable.Item.ToJson();
+                        state["key"] = trackable.Key.Key.ToString();
+                        state["value"] = trackable.Item.Value.ToString();
                         break;
                     case TrackState.Deleted:
                         state["state"] = "Deleted";
-                        state["key"] = trackable.Key.ToString();
+                        state["key"] = trackable.Key.Key.ToString();
                         break;
                 }
                 array.Add(state);
