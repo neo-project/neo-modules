@@ -3,16 +3,21 @@ using Neo.SmartContract;
 using Neo.Persistence;
 using Neo.IO.Caching;
 using Neo.IO.Json;
+using Neo.Ledger;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 
+
+
 namespace Neo.Plugins
 {
+    
     public class PersistencePlugin : Plugin, IPersistencePlugin
     {
+        
         public void OnPersist(Snapshot snapshot)
         {
             uint blockIndex = snapshot.Height;
@@ -21,25 +26,27 @@ namespace Neo.Plugins
             string path = $"{HandlePaths(dirPath, blockIndex)}/dump-block-{blockIndex.ToString()}.json";
 
             JArray array = new JArray();
-            foreach (Trackable trackable in snapshot.Storages.GetChangeSet())
+ 
+            foreach (DataCache<StorageKey, StorageItem>.Trackable trackable in snapshot.Storages.GetChangeSet())
             {
                 JObject state = new JObject();
+
                 switch (trackable.State)
                 {
                     case TrackState.Added:
                         state["state"] = "Added";
-                        state["key"] = trackable.Key;
-                        state["value"] = trackable.Item;
+                        state["key"] = trackable.Key.ToString();
+                        state["value"] = trackable.Item.ToJson();
                         // Here we have a new trackable.Key and trackable.Item
                         break;
                     case TrackState.Changed:
                         state["state"] = "Changed";
-                        state["key"] = trackable.Key;
-                        state["value"] = trackable.Item;
+                        state["key"] = trackable.Key.ToString();
+                        state["value"] = trackable.Item.ToJson();
                         break;
                     case TrackState.Deleted:
                         state["state"] = "Deleted";
-                        state["key"] = trackable.Key;
+                        state["key"] = trackable.Key.ToString();
                         break;
                 }
                 array.Add(state);
