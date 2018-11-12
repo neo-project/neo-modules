@@ -1,5 +1,4 @@
-﻿using Neo.Consensus;
-using Neo.Network.P2P.Payloads;
+﻿using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.Persistence;
 using Neo.IO.Caching;
@@ -49,12 +48,12 @@ namespace Neo.Plugins
             Settings.Default.BlockStorageCache = Settings.Default.BlockStorageCache + "{\"block\":" + blockIndex.ToString() + ",\"size\":" + array.Count.ToString() + ",\"storage\":\n";
             Settings.Default.BlockStorageCache = Settings.Default.BlockStorageCache + array.ToString() + "},\n";
 
-            if ((blockIndex % Settings.Default.BlockCacheSize == 0) || (blockIndex > Settings.Default.HeightToRealTimeSyncing))
+            if ((blockIndex % Settings.Default.BlockCacheSize == 0) || (blockIndex > Settings.Default.HeightToStartRealTimeSyncing))
             {
                 Settings.Default.BlockStorageCache += "]";
                 File.WriteAllText(path, Settings.Default.BlockStorageCache);
                 Settings.Default.BlockStorageCache = "[";
-	    }
+	        }
 
         }
 
