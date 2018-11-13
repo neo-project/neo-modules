@@ -1,16 +1,15 @@
-﻿using Neo.Network.P2P.Payloads;
-using Neo.SmartContract;
+﻿using System.IO;
+using System.Linq;
 using Neo.Persistence;
+using Neo.IO;
 using Neo.IO.Caching;
 using Neo.IO.Json;
 using Neo.Ledger;
+using System.Text;
+using Neo.Network.P2P.Payloads;
+using Neo.SmartContract;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-
-
 
 namespace Neo.Plugins
 {
@@ -19,6 +18,17 @@ namespace Neo.Plugins
     {
         
         public void OnPersist(Snapshot snapshot)
+        {
+            switch (Settings.Default.PersistAction)
+            {
+                // Action == 0 calls OnPersistStorage
+                case 0:
+                    OnPersistStorage(snapshot);
+                    break;
+            }
+        }
+
+        private static void OnPersistStorage(Snapshot snapshot)
         {
             uint blockIndex = snapshot.Height;
             string dirPath = "./Storage";
@@ -33,20 +43,21 @@ namespace Neo.Plugins
 
                 switch (trackable.State)
                 {
+
                     case TrackState.Added:
                         state["state"] = "Added";
-                        state["key"] = trackable.Key.Key.ToString();
-                        state["value"] = trackable.Item.Value.ToString();
+                        state["key"] = trackable.Key.ToArray().ToHexString();
+                        state["value"] = trackable.Item.ToArray().ToHexString();
                         // Here we have a new trackable.Key and trackable.Item
                         break;
                     case TrackState.Changed:
                         state["state"] = "Changed";
-                        state["key"] = trackable.Key.Key.ToString();
-                        state["value"] = trackable.Item.Value.ToString();
+                        state["key"] = trackable.Key.ToArray().ToHexString();
+                        state["value"] = trackable.Item.ToArray().ToHexString();
                         break;
                     case TrackState.Deleted:
                         state["state"] = "Deleted";
-                        state["key"] = trackable.Key.Key.ToString();
+                        state["key"] = trackable.Key.ToArray().ToHexString();
                         break;
                 }
                 array.Add(state);
@@ -60,8 +71,7 @@ namespace Neo.Plugins
                 Settings.Default.BlockStorageCache += "]";
                 File.WriteAllText(path, Settings.Default.BlockStorageCache);
                 Settings.Default.BlockStorageCache = "[";
-	        }
-
+            }   
         }
 
         private static string HandlePaths(string dirPath, uint blockIndex)
@@ -75,6 +85,5 @@ namespace Neo.Plugins
             Directory.CreateDirectory(dirPathWithBlock);
             return dirPathWithBlock;
         }
-
     }
 }

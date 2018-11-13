@@ -16,6 +16,7 @@ namespace Neo.Plugins
 	    //Height to begin real-time syncing and dumping on single files
         public uint HeightToStartRealTimeSyncing { get; }
         public string BlockStorageCache;
+        public uint PersistAction { get; }
 
         public static Settings Default { get; }
 
@@ -30,6 +31,7 @@ namespace Neo.Plugins
             this.BlockCacheSize = GetValueOrDefault(section.GetSection("BlockCacheSize"), 1000u, p => uint.Parse(p));
             this.HeightToBegin = GetValueOrDefault(section.GetSection("HeightToBegin"), 0u, p => uint.Parse(p));
             this.HeightToStartRealTimeSyncing = GetValueOrDefault(section.GetSection("HeightToStartRealTimeSyncing"), 2883000u, p => uint.Parse(p));
+            this.PersistAction = GetValueOrDefault(section.GetSection("PersistAction"), 0u, p => uint.Parse(p));
             this.BlockStorageCache = "[";
         }
 
