@@ -15,8 +15,9 @@ namespace Neo.Plugins
         public uint HeightToBegin { get; }
 	    //Height to begin real-time syncing and dumping on single files
         public uint HeightToStartRealTimeSyncing { get; }
-        public string BlockStorageCache;
         public uint PersistAction { get; }
+        public string BlockStorageCache;
+
 
         public static Settings Default { get; }
 

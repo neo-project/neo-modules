@@ -31,47 +31,50 @@ namespace Neo.Plugins
         private static void OnPersistStorage(Snapshot snapshot)
         {
             uint blockIndex = snapshot.Height;
-            string dirPath = "./Storage";
-            Directory.CreateDirectory(dirPath);
-            string path = $"{HandlePaths(dirPath, blockIndex)}/dump-block-{blockIndex.ToString()}.json";
-
-            JArray array = new JArray();
-
-            foreach (DataCache<StorageKey, StorageItem>.Trackable trackable in snapshot.Storages.GetChangeSet())
+            if (blockIndex >= Settings.Default.HeightToBegin)
             {
-                JObject state = new JObject();
+                string dirPath = "./Storage";
+                Directory.CreateDirectory(dirPath);
+                string path = $"{HandlePaths(dirPath, blockIndex)}/dump-block-{blockIndex.ToString()}.json";
 
-                switch (trackable.State)
+                JArray array = new JArray();
+
+                foreach (DataCache<StorageKey, StorageItem>.Trackable trackable in snapshot.Storages.GetChangeSet())
                 {
+                    JObject state = new JObject();
 
-                    case TrackState.Added:
-                        state["state"] = "Added";
-                        state["key"] = trackable.Key.ToArray().ToHexString();
-                        state["value"] = trackable.Item.ToArray().ToHexString();
-                        // Here we have a new trackable.Key and trackable.Item
-                        break;
-                    case TrackState.Changed:
-                        state["state"] = "Changed";
-                        state["key"] = trackable.Key.ToArray().ToHexString();
-                        state["value"] = trackable.Item.ToArray().ToHexString();
-                        break;
-                    case TrackState.Deleted:
-                        state["state"] = "Deleted";
-                        state["key"] = trackable.Key.ToArray().ToHexString();
-                        break;
+                    switch (trackable.State)
+                    {
+
+                        case TrackState.Added:
+                            state["state"] = "Added";
+                            state["key"] = trackable.Key.ToArray().ToHexString();
+                            state["value"] = trackable.Item.ToArray().ToHexString();
+                            // Here we have a new trackable.Key and trackable.Item
+                            break;
+                        case TrackState.Changed:
+                            state["state"] = "Changed";
+                            state["key"] = trackable.Key.ToArray().ToHexString();
+                            state["value"] = trackable.Item.ToArray().ToHexString();
+                            break;
+                        case TrackState.Deleted:
+                            state["state"] = "Deleted";
+                            state["key"] = trackable.Key.ToArray().ToHexString();
+                            break;
+                    }
+                    array.Add(state);
                 }
-                array.Add(state);
+
+                Settings.Default.BlockStorageCache = Settings.Default.BlockStorageCache + "{\"block\":" + blockIndex.ToString() + ",\"size\":" + array.Count.ToString() + ",\"storage\":\n";
+                Settings.Default.BlockStorageCache = Settings.Default.BlockStorageCache + array.ToString() + "},\n";
+
+                if ((blockIndex % Settings.Default.BlockCacheSize == 0) || (blockIndex > Settings.Default.HeightToStartRealTimeSyncing))
+                {
+                    Settings.Default.BlockStorageCache += "]";
+                    File.WriteAllText(path, Settings.Default.BlockStorageCache);
+                    Settings.Default.BlockStorageCache = "[";
+                }
             }
-
-            Settings.Default.BlockStorageCache = Settings.Default.BlockStorageCache + "{\"block\":" + blockIndex.ToString() + ",\"size\":" + array.Count.ToString() + ",\"storage\":\n";
-            Settings.Default.BlockStorageCache = Settings.Default.BlockStorageCache + array.ToString() + "},\n";
-
-            if ((blockIndex % Settings.Default.BlockCacheSize == 0) || (blockIndex > Settings.Default.HeightToStartRealTimeSyncing))
-            {
-                Settings.Default.BlockStorageCache += "]";
-                File.WriteAllText(path, Settings.Default.BlockStorageCache);
-                Settings.Default.BlockStorageCache = "[";
-            }   
         }
 
         private static string HandlePaths(string dirPath, uint blockIndex)
