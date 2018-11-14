@@ -93,6 +93,8 @@ namespace Neo.Plugins
         protected override bool OnMessage(object message)
         {
             if (!(message is string[] args)) return false;
+            if (args[0] == "plugin-help")
+                Console.Write("Import Blocks Commands:\n" + "\texport block[s] <block>\n");
             if (args.Length < 2) return false;
             if (args[0] != "export") return false;
             if (args[1] != "block" && args[1] != "blocks") return false;
