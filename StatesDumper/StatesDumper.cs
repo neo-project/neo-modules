@@ -13,9 +13,12 @@ namespace Neo.Plugins
         protected override bool OnMessage(object message)
         {
             if (!(message is string[] args)) return false;
-            if (args[0] == "plugin-help")
-                Console.Write("States Dumper Commands:\n" + "\tdump storage <key>\n");
             if (args.Length < 2) return false;
+            if (args[0] == "help" && args[1] == GetType().Name)
+            {
+                Console.Write("States Dumper Commands:\n" + "\tdump storage <key>\n");
+                return true;
+            }
             if (args[0] != "dump") return false;
             switch (args[1])
             {
