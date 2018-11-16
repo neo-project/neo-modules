@@ -11,6 +11,8 @@ namespace Neo.Plugins
     {
         public int MaxTransactionsPerBlock { get; }
         public int MaxFreeTransactionsPerBlock { get; }
+        public int MaxFreeTransactionSize { get; }
+        public Fixed8 FeePerExtraByte { get; }
         public BlockedAccounts BlockedAccounts { get; }
 
         public static Settings Default { get; }
@@ -22,9 +24,17 @@ namespace Neo.Plugins
 
         public Settings(IConfigurationSection section)
         {
-            this.MaxTransactionsPerBlock = section.GetSection("MaxTransactionsPerBlock").GetValueOrDefault(500, p => int.Parse(p));
-            this.MaxFreeTransactionsPerBlock = section.GetSection("MaxFreeTransactionsPerBlock").GetValueOrDefault(20, p => int.Parse(p));
+            this.MaxTransactionsPerBlock = GetValueOrDefault(section.GetSection("MaxTransactionsPerBlock"), 500, p => int.Parse(p));
+            this.MaxFreeTransactionsPerBlock = GetValueOrDefault(section.GetSection("MaxFreeTransactionsPerBlock"), 20, p => int.Parse(p));
+            this.MaxFreeTransactionSize = GetValueOrDefault(section.GetSection("MaxFreeTransactionSize"), 1024, p => int.Parse(p));
+            this.FeePerExtraByte = GetValueOrDefault(section.GetSection("FeePerExtraByte"), Fixed8.FromDecimal(0.00001M), p => Fixed8.Parse(p));
             this.BlockedAccounts = new BlockedAccounts(section.GetSection("BlockedAccounts"));
+        }
+
+        public T GetValueOrDefault<T>(IConfigurationSection section, T defaultValue, Func<string, T> selector)
+        {
+            if (section.Value == null) return defaultValue;
+            return selector(section.Value);
         }
     }
 

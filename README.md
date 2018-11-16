@@ -32,7 +32,7 @@ Synchronizes the client using offline packages. Follow the instructions [here](h
 ### RPC Security
 Improves security in RPC nodes.
 
-### Simpli Policy
+### Simple Policy
 Enables policies for consensus.
 
 ### StatesDumper
