@@ -62,6 +62,13 @@ namespace Neo.Plugins
             });
         }
 
+        private static bool CheckMaxOnImportHeight(uint currentImportBlockHeight)
+        {
+            if (Settings.Default.MaxOnImportHeight == 0 || Settings.Default.MaxOnImportHeight >= currentImportBlockHeight)
+                return true;
+            return false;
+        }
+
         private static IEnumerable<Block> GetBlocks(Stream stream, bool read_start = false)
         {
             using (BinaryReader r = new BinaryReader(stream))
@@ -83,24 +90,12 @@ namespace Neo.Plugins
             }
         }
 
-        private static bool CheckMaxOnImportHeight(uint currentImportBlockHeight)
+        private bool OnExport(string[] args)
         {
-            if (Settings.Default.MaxOnImportHeight == 0 || Settings.Default.MaxOnImportHeight >= currentImportBlockHeight)
-                return true;
-            return false;
-        }
-
-        protected override bool OnMessage(object message)
-        {
-            if (!(message is string[] args)) return false;
             if (args.Length < 2) return false;
-            if (args[0] == "help" && args[1] == GetType().Name)
-            {
-                Console.Write("Import Blocks Commands:\n" + "\texport block[s] <block>\n");
-                return true;
-            }
-            if (args[0] != "export") return false;
-            if (args[1] != "block" && args[1] != "blocks") return false;
+            if (!string.Equals(args[1], "block", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(args[1], "blocks", StringComparison.OrdinalIgnoreCase))
+                return false;
             if (args.Length >= 3 && uint.TryParse(args[2], out uint start))
             {
                 if (start > Blockchain.Singleton.Height)
@@ -170,6 +165,29 @@ namespace Neo.Plugins
             }
             Console.WriteLine();
             return true;
+        }
+
+        private bool OnHelp(string[] args)
+        {
+            if (args.Length < 2) return false;
+            if (!string.Equals(args[1], Name, StringComparison.OrdinalIgnoreCase))
+                return false;
+            Console.Write($"{Name} Commands:\n" + "\texport block[s] <index>\n");
+            return true;
+        }
+
+        protected override bool OnMessage(object message)
+        {
+            if (!(message is string[] args)) return false;
+            if (args.Length == 0) return false;
+            switch (args[0].ToLower())
+            {
+                case "help":
+                    return OnHelp(args);
+                case "export":
+                    return OnExport(args);
+            }
+            return false;
         }
     }
 }
