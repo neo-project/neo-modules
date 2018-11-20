@@ -1,7 +1,3 @@
-using Microsoft.Extensions.Configuration;
-using System.IO;
-using System.Reflection;
-using System;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Plugins;
@@ -23,8 +19,8 @@ namespace SimplePolicy.UnitTests
         [TestMethod]
         public void TestMaxTransactionsPerBlock()
         {
-            SimplePolicyPlugin.GetMaxTransactionsPerBlock().Should().Be(500);
-            SimplePolicyPlugin.GetMaxFreeTransactionsPerBlock().Should().Be(20);
+            Settings.Default.MaxTransactionsPerBlock.Should().Be(500);
+            Settings.Default.MaxFreeTransactionsPerBlock.Should().Be(20);
         }
     }
 }

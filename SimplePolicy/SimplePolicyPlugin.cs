@@ -5,22 +5,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("SimplePolicy.UnitTests")]
 
 namespace Neo.Plugins
 {
     public class SimplePolicyPlugin : Plugin, ILogPlugin, IPolicyPlugin
     {
         private static readonly string log_dictionary = Path.Combine(AppContext.BaseDirectory, "Logs");
-
-        public static int GetMaxTransactionsPerBlock()
-        {
-            return Settings.Default.MaxTransactionsPerBlock;
-        }
-
-        public static int GetMaxFreeTransactionsPerBlock()
-        {
-            return Settings.Default.MaxFreeTransactionsPerBlock;
-        }
 
         public bool FilterForMemoryPool(Transaction tx)
         {
