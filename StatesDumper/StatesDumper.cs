@@ -1,6 +1,8 @@
 ﻿using Neo.IO;
 using Neo.IO.Json;
 using Neo.Ledger;
+using Neo.Persistence;
+using Neo.IO.Caching;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,7 +10,7 @@ using System.Linq;
 
 namespace Neo.Plugins
 {
-    public class StatesDumper : Plugin
+    public class StatesDumper : Plugin, IPersistencePlugin
     {
         protected override bool OnMessage(object message)
         {
@@ -42,5 +44,78 @@ namespace Neo.Plugins
             File.WriteAllText(path, array.ToString());
             Console.WriteLine($"States ({array.Count}) have been dumped into file {path}");
         }
+
+        public void OnPersist(Snapshot snapshot)
+        {
+            switch (Settings.Default.PersistAction)
+            {
+                // Action == 0 calls OnPersistStorage
+                case 0:
+                    OnPersistStorage(snapshot);
+                    break;
+            }
+        }
+
+        private static void OnPersistStorage(Snapshot snapshot)
+        {
+            uint blockIndex = snapshot.Height;
+            if (blockIndex >= Settings.Default.HeightToBegin)
+            {
+                string dirPath = "./Storage";
+                Directory.CreateDirectory(dirPath);
+                string path = $"{HandlePaths(dirPath, blockIndex)}/dump-block-{blockIndex.ToString()}.json";
+
+                JArray array = new JArray();
+
+                foreach (DataCache<StorageKey, StorageItem>.Trackable trackable in snapshot.Storages.GetChangeSet())
+                {
+                    JObject state = new JObject();
+
+                    switch (trackable.State)
+                    {
+
+                        case TrackState.Added:
+                            state["state"] = "Added";
+                            state["key"] = trackable.Key.ToArray().ToHexString();
+                            state["value"] = trackable.Item.ToArray().ToHexString();
+                            // Here we have a new trackable.Key and trackable.Item
+                            break;
+                        case TrackState.Changed:
+                            state["state"] = "Changed";
+                            state["key"] = trackable.Key.ToArray().ToHexString();
+                            state["value"] = trackable.Item.ToArray().ToHexString();
+                            break;
+                        case TrackState.Deleted:
+                            state["state"] = "Deleted";
+                            state["key"] = trackable.Key.ToArray().ToHexString();
+                            break;
+                    }
+                    array.Add(state);
+                }
+
+                Settings.Default.BlockStorageCache = Settings.Default.BlockStorageCache + "{\"block\":" + blockIndex.ToString() + ",\"size\":" + array.Count.ToString() + ",\"storage\":\n";
+                Settings.Default.BlockStorageCache = Settings.Default.BlockStorageCache + array.ToString() + "},\n";
+
+                if ((blockIndex % Settings.Default.BlockCacheSize == 0) || (blockIndex > Settings.Default.HeightToStartRealTimeSyncing))
+                {
+                    Settings.Default.BlockStorageCache += "]";
+                    File.WriteAllText(path, Settings.Default.BlockStorageCache);
+                    Settings.Default.BlockStorageCache = "[";
+                }
+            }
+        }
+
+        private static string HandlePaths(string dirPath, uint blockIndex)
+        {
+            //Default Parameter
+            uint storagePerFolder = 100000;
+            uint folder = (((blockIndex - 1) / storagePerFolder) + 1) * storagePerFolder;
+            if (blockIndex == 0)
+                folder = 0;
+            string dirPathWithBlock = $"{dirPath}/BlockStorage_{folder}";
+            Directory.CreateDirectory(dirPathWithBlock);
+            return dirPathWithBlock;
+        }
+
     }
 }
