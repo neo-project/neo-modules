@@ -12,23 +12,6 @@ namespace Neo.Plugins
 {
     public class StatesDumper : Plugin, IPersistencePlugin
     {
-        protected override bool OnMessage(object message)
-        {
-            if (!(message is string[] args)) return false;
-            if (args.Length < 2) return false;
-            if (args[0] != "dump") return false;
-            switch (args[1])
-            {
-                case "storage":
-                    Dump(args.Length >= 3
-                        ? Blockchain.Singleton.Store.GetStorages().Find(UInt160.Parse(args[2]).ToArray())
-                        : Blockchain.Singleton.Store.GetStorages().Find());
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
         private static void Dump<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> states)
             where TKey : ISerializable
             where TValue : ISerializable
@@ -43,6 +26,44 @@ namespace Neo.Plugins
             }));
             File.WriteAllText(path, array.ToString());
             Console.WriteLine($"States ({array.Count}) have been dumped into file {path}");
+        }
+
+        protected override bool OnMessage(object message)
+        {
+            if (!(message is string[] args)) return false;
+            if (args.Length == 0) return false;
+            switch (args[0].ToLower())
+            {
+                case "help":
+                    return OnHelp(args);
+                case "dump":
+                    return OnDump(args);
+            }
+            return false;
+        }
+
+        private bool OnDump(string[] args)
+        {
+            if (args.Length < 2) return false;
+            switch (args[1].ToLower())
+            {
+                case "storage":
+                    Dump(args.Length >= 3
+                        ? Blockchain.Singleton.Store.GetStorages().Find(UInt160.Parse(args[2]).ToArray())
+                        : Blockchain.Singleton.Store.GetStorages().Find());
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private bool OnHelp(string[] args)
+        {
+            if (args.Length < 2) return false;
+            if (!string.Equals(args[1], Name, StringComparison.OrdinalIgnoreCase))
+                return false;
+            Console.Write($"{Name} Commands:\n" + "\tdump storage <key>\n");
+            return true;
         }
 
         public void OnPersist(Snapshot snapshot)
