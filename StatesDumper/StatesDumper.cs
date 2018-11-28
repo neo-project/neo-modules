@@ -1,8 +1,8 @@
 ﻿using Neo.IO;
+using Neo.IO.Caching;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Persistence;
-using Neo.IO.Caching;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -137,6 +137,5 @@ namespace Neo.Plugins
             Directory.CreateDirectory(dirPathWithBlock);
             return dirPathWithBlock;
         }
-
     }
 }

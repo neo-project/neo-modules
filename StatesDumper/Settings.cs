@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Neo.Wallets;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
 namespace Neo.Plugins
@@ -32,9 +29,7 @@ namespace Neo.Plugins
         /// </summary>
         public uint PersistAction { get; }
 
-
         public static Settings Default { get; }
-
 
         static Settings()
         {
@@ -43,7 +38,7 @@ namespace Neo.Plugins
 
         public Settings(IConfigurationSection section)
         {
-	        /// Geting settings for storage changes state dumper
+            /// Geting settings for storage changes state dumper
             this.BlockCacheSize = GetValueOrDefault(section.GetSection("BlockCacheSize"), 1000u, p => uint.Parse(p));
             this.HeightToBegin = GetValueOrDefault(section.GetSection("HeightToBegin"), 0u, p => uint.Parse(p));
             this.HeightToStartRealTimeSyncing = GetValueOrDefault(section.GetSection("HeightToStartRealTimeSyncing"), 2883000u, p => uint.Parse(p));
@@ -57,5 +52,4 @@ namespace Neo.Plugins
             return selector(section.Value);
         }
     }
-
 }
