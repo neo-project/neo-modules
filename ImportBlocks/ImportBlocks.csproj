@@ -5,16 +5,16 @@
     <TargetFrameworks>netstandard2.0;net47</TargetFrameworks>
     <RootNamespace>Neo.Plugins</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\neo\neo\neo.csproj" />
+  </ItemGroup>
   
   <ItemGroup>
     <None Update="ImportBlocks\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Neo" Version="2.9.2" />
   </ItemGroup>
 
 </Project>
