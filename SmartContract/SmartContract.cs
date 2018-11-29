@@ -1,6 +1,4 @@
-﻿using Neo;
-using Neo.Plugins;
-using Neo.Wallets;
+﻿using Neo.Wallets;
 using System;
 using Neo.Ledger;
 using Neo.VM;
@@ -9,10 +7,11 @@ using Neo.SmartContract;
 using Neo.Network.P2P.Payloads;
 using Neo.IO.Json;
 using Neo.Network.P2P;
+using Neo.Compiler;
 using Akka.Actor;
 using System.IO;
 
-namespace SmartContract
+namespace Neo.Plugins
 {
     public class SmartContract : Plugin, ISmartContractPlugin
     {
@@ -25,18 +24,25 @@ namespace SmartContract
         {
             if (!(message is string[] args)) return false;
             if (args.Length == 0) return false;
-            switch (args[0].ToLower())
+            try
             {
-                case "help":
-                    return OnHelp(args);
-                case "compile":
-                    return OnCompile(args);
-                case "deploy":
-                    return OnDeploy(args);
-                case "invoke":
-                    return OnInvoke(args);
-                case "test":
-                    return OnTest(args);
+                switch (args[0].ToLower())
+                {
+                    case "help":
+                        return OnHelp(args);
+                    case "compile":
+                        return OnCompile(args);
+                    case "deploy":
+                        return OnDeploy(args);
+                    case "invoke":
+                        return OnInvoke(args);
+                    case "test":
+                        return OnTest(args);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"{e.Message}\n{e.StackTrace}");
             }
             return false;
         }
@@ -62,13 +68,15 @@ namespace SmartContract
 
         private bool OnCompile(string[] parameters)
         {
-            string[] args = parameters[2] == "true" ? new string[2] : new string[1];
-            args[1] = parameters[1];
+            string[] args = new string[1];
+            if (parameters.Length > 2 && parameters[2] == "false")
+            {
+                args = new string[2];
+                args[1] = "--compatible";
+            }
+            args[0] = parameters[1];
 
-            if (args.Length > 1)
-                args[2] = parameters[2] == "true" ? "--compatiable" : ""; 
-
-            Neo.Compiler.Program.Main(args);
+            Program.Main(args);
 
             return true;
         }
