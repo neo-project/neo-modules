@@ -135,24 +135,23 @@ namespace Neo.Plugins
             if (tx.Outputs == null) tx.Outputs = new TransactionOutput[0];
             if (tx.Witnesses == null) tx.Witnesses = new Witness[0];
 
-            ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx);
+            ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
 
             Console.WriteLine($"VM State: {engine.State}");
             Console.WriteLine($"Gas Consumed: {engine.GasConsumed}");
             Console.WriteLine($"Evaluation Stack: {new JArray(engine.ResultStack.Select(p => p.ToParameter().ToJson()))}");
 
-            if (!engine.State.HasFlag(VMState.FAULT))
-            {
-                tx.Gas = engine.GasConsumed - Fixed8.FromDecimal(10);
-                if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
-                tx.Gas = tx.Gas.Ceiling();
-                Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : tx.Gas;
-            }
-            else
+            if (engine.State.HasFlag(VMState.FAULT))
             {
                 Console.WriteLine("Execution Failed");
             }
 
+            tx.Gas = engine.GasConsumed - Fixed8.FromDecimal(10);
+            if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
+            tx.Gas = tx.Gas.Ceiling();
+            Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : tx.Gas;
+
+            tx = wallet.MakeTransaction(tx, fee: fee);
             ContractParametersContext context = new ContractParametersContext(tx);
             wallet.Sign(context);
             wallet.ApplyTransaction(tx);
@@ -162,7 +161,7 @@ namespace Neo.Plugins
                 tx.Witnesses = context.GetWitnesses();
                 wallet.ApplyTransaction(tx);
                 system.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
-                Console.WriteLine(tx.ToJson());
+                Console.WriteLine($"Transaction Success: {tx.ToJson()}");
             }
             else
             {
@@ -246,24 +245,24 @@ namespace Neo.Plugins
             if (tx.Outputs == null) tx.Outputs = new TransactionOutput[0];
             if (tx.Witnesses == null) tx.Witnesses = new Witness[0];
 
-            ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx);
+            ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
 
             Console.WriteLine($"VM State: {engine.State}");
             Console.WriteLine($"Gas Consumed: {engine.GasConsumed}");
             Console.WriteLine($"Evaluation Stack: {new JArray(engine.ResultStack.Select(p => p.ToParameter().ToJson()))}");
 
-            if (!engine.State.HasFlag(VMState.FAULT))
-            {
-                tx.Gas = engine.GasConsumed - Fixed8.FromDecimal(10);
-                if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
-                tx.Gas = tx.Gas.Ceiling();
-                Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : tx.Gas;
-            }
-            else
+            if (engine.State.HasFlag(VMState.FAULT))
             {
                 Console.WriteLine("Execution Failed");
+                return true;
             }
 
+            tx.Gas = engine.GasConsumed - Fixed8.FromDecimal(10);
+            if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
+            tx.Gas = tx.Gas.Ceiling();
+            Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : tx.Gas;
+
+            tx = wallet.MakeTransaction(tx, fee: fee);
             ContractParametersContext context = new ContractParametersContext(tx);
             wallet.Sign(context);
             wallet.ApplyTransaction(tx);
@@ -273,7 +272,7 @@ namespace Neo.Plugins
                 tx.Witnesses = context.GetWitnesses();
                 wallet.ApplyTransaction(tx);
                 system.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
-                Console.WriteLine(tx.ToJson());
+                Console.WriteLine($"Transaction Success: {tx.ToJson()}");
             }
             else
             {
