@@ -324,9 +324,9 @@ namespace Neo.Plugins
             if (args.Length < 2) return false;
             if (!string.Equals(args[1], Name, StringComparison.OrdinalIgnoreCase))
                 return false;
-            Console.Write($"{Name} Commands:\n" + "\tcompile <path> <whether NEP8>\n" 
-                + "\tdeploy <path> [arguments]\n" + "\ttest deploy <path> [arguments]\n"
-                + "\tinvoke <hash> [arguments]\n" + "\ttest invoke <hash> [arguments]\n");
+            Console.Write($"{Name} Commands:\n" + "\tcompile <path>\n"
+                + "\tdeploy <path>\n" + "\ttest deploy <path>\n"
+                + "\tinvoke <hash>\n" + "\ttest invoke <hash>\n");
             return true;
         }
 
