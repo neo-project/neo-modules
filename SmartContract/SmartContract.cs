@@ -10,6 +10,7 @@ using Neo.Network.P2P;
 using Neo.Compiler;
 using Akka.Actor;
 using System.IO;
+using System.Collections.Generic;
 
 namespace Neo.Plugins
 {
@@ -68,53 +69,72 @@ namespace Neo.Plugins
 
         private bool OnCompile(string[] parameters)
         {
+            if (parameters.Length < 2)
+            {
+                Console.WriteLine("error");
+                return true;
+            }
+
             string[] args = new string[1];
-            if (parameters.Length > 2 && parameters[2] == "false")
+            Console.Write("[Whether NEP-8(y/N)]> ");
+            bool isNep8 = Console.ReadLine() == "y" ? true : false;
+
+            if (!isNep8)
             {
                 args = new string[2];
                 args[1] = "--compatible";
             }
             args[0] = parameters[1];
-
             Program.Main(args);
 
             return true;
         }
         private bool OnDeploy(string[] args)
         {
-            string path = args[1];
-            byte[] script = File.ReadAllBytes(path);
+            if (args.Length < 2)
+            {
+                Console.WriteLine("error");
+                return true;
+            }
+            if (wallet == null)
+            {
+                Console.WriteLine("No Wallet Open");
+                return true;
+            }
+
+            byte[] script;
+            try
+            {
+                string path = args[1];
+                script = File.ReadAllBytes(path);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("File Error");
+                return true;
+            }
 
             byte[] parameter_list = new byte[0];
             ContractParameterType return_type = new ContractParameterType();
             ContractPropertyState properties = ContractPropertyState.NoProperty;
-            string name = "", version = "", author = "", email = "", propertie = "", description = "";
+
+            string[] keys = { "Parameter List", "Return Type", "Name", "Version", "Author", "Email", "Properties(Storage, Dyncall, Payable)", "Description" };
+            Dictionary<string, string> values = new Dictionary<string, string>();
+
+            foreach (string key in keys)
+            {
+                Console.Write($"[{key}]> ");
+                values.Add(key, Console.ReadLine());
+            }
 
             try
             {
-                parameter_list = args[2].HexToBytes();
-                return_type = args[3].HexToBytes().Select(p => (ContractParameterType?)p).FirstOrDefault() ?? ContractParameterType.Void;
+                parameter_list = values["Parameter List"].HexToBytes();
+                return_type = values["Return Type"].HexToBytes().Select(p => (ContractParameterType?)p).FirstOrDefault() ?? ContractParameterType.Void;
 
-                args = args.Skip(3).ToArray();
-                for (int i = 0; i < args.Length; i++)
-                {
-                    if (args[i].StartsWith("-n"))
-                        name = args[i + 1];
-                    if (args[i].StartsWith("-v"))
-                        version = args[i + 1];
-                    if (args[i].StartsWith("-a"))
-                        author = args[i + 1];
-                    if (args[i].StartsWith("-e"))
-                        email = args[i + 1];
-                    if (args[i].StartsWith("-p"))
-                        propertie = args[i + 1];
-                    if (args[i].StartsWith("-d"))
-                        description = args[i + 1];
-                }
-
-                if (propertie[0] == 'T') properties |= ContractPropertyState.HasStorage;
-                if (propertie[1] == 'T') properties |= ContractPropertyState.HasDynamicInvoke;
-                if (propertie[2] == 'T') properties |= ContractPropertyState.Payable;
+                if (values["Properties(Storage, Dyncall, Payable)"][0] == 'T') properties |= ContractPropertyState.HasStorage;
+                if (values["Properties(Storage, Dyncall, Payable)"][1] == 'T') properties |= ContractPropertyState.HasDynamicInvoke;
+                if (values["Properties(Storage, Dyncall, Payable)"][2] == 'T') properties |= ContractPropertyState.Payable;
             }
             catch (Exception)
             {
@@ -124,7 +144,7 @@ namespace Neo.Plugins
 
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitSysCall("Neo.Contract.Create", script, parameter_list, return_type, properties, name, version, author, email, description);
+                sb.EmitSysCall("Neo.Contract.Create", script, parameter_list, return_type, properties, values["Name"], values["Version"], values["Author"], values["Email"], values["Description"]);
                 script = sb.ToArray();
             }
             InvocationTransaction tx = new InvocationTransaction();
@@ -137,13 +157,12 @@ namespace Neo.Plugins
 
             ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
 
-            Console.WriteLine($"VM State: {engine.State}");
-            Console.WriteLine($"Gas Consumed: {engine.GasConsumed}");
-            Console.WriteLine($"Evaluation Stack: {new JArray(engine.ResultStack.Select(p => p.ToParameter().ToJson()))}");
+            LogEngine(engine);
 
             if (engine.State.HasFlag(VMState.FAULT))
             {
                 Console.WriteLine("Execution Failed");
+                return true;
             }
 
             tx.Gas = engine.GasConsumed - Fixed8.FromDecimal(10);
@@ -161,7 +180,7 @@ namespace Neo.Plugins
                 tx.Witnesses = context.GetWitnesses();
                 wallet.ApplyTransaction(tx);
                 system.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
-                Console.WriteLine($"Transaction Success: {tx.ToJson()}");
+                Console.WriteLine($"Relayed Transaction: {tx.ToJson()}");
             }
             else
             {
@@ -171,39 +190,45 @@ namespace Neo.Plugins
         }
         private bool OnTestDeploy(string[] args)
         {
-            string path = args[2];
-            byte[] script = File.ReadAllBytes(path);
+            if (args.Length < 3)
+            {
+                Console.WriteLine("error");
+                return true;
+            }
+
+            byte[] script;
+            try
+            {
+                string path = args[2];
+                script = File.ReadAllBytes(path);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("File Error");
+                return true;
+            }
 
             byte[] parameter_list = new byte[0];
             ContractParameterType return_type = new ContractParameterType();
             ContractPropertyState properties = ContractPropertyState.NoProperty;
-            string name = "", version = "", author = "", email = "", propertie = "", description = "";
+
+            string[] keys = { "Parameter List", "Return Type", "Name", "Version", "Author", "Email", "Properties(Storage, Dyncall, Payable)", "Description" };
+            Dictionary<string, string> values = new Dictionary<string, string>();
+
+            foreach (string key in keys)
+            {
+                Console.Write($"[{key}]> ");
+                values.Add(key, Console.ReadLine());
+            }
 
             try
             {
-                parameter_list = args[3].HexToBytes();
-                return_type = args[4].HexToBytes().Select(p => (ContractParameterType?)p).FirstOrDefault() ?? ContractParameterType.Void;
+                parameter_list = values["Parameter List"].HexToBytes();
+                return_type = values["Return Type"].HexToBytes().Select(p => (ContractParameterType?)p).FirstOrDefault() ?? ContractParameterType.Void;
 
-                args = args.Skip(4).ToArray();
-                for (int i = 0; i < args.Length; i++)
-                {
-                    if (args[i].StartsWith("-n"))
-                        name = args[i + 1];
-                    if (args[i].StartsWith("-v"))
-                        version = args[i + 1];
-                    if (args[i].StartsWith("-a"))
-                        author = args[i + 1];
-                    if (args[i].StartsWith("-e"))
-                        email = args[i + 1];
-                    if (args[i].StartsWith("-p"))
-                        propertie = args[i + 1];
-                    if (args[i].StartsWith("-d"))
-                        description = args[i + 1];
-                }
-
-                if (propertie[0] == 'T') properties |= ContractPropertyState.HasStorage;
-                if (propertie[1] == 'T') properties |= ContractPropertyState.HasDynamicInvoke;
-                if (propertie[2] == 'T') properties |= ContractPropertyState.Payable;
+                if (values["Properties(Storage, Dyncall, Payable)"][0] == 'T') properties |= ContractPropertyState.HasStorage;
+                if (values["Properties(Storage, Dyncall, Payable)"][1] == 'T') properties |= ContractPropertyState.HasDynamicInvoke;
+                if (values["Properties(Storage, Dyncall, Payable)"][2] == 'T') properties |= ContractPropertyState.Payable;
             }
             catch (Exception)
             {
@@ -213,15 +238,12 @@ namespace Neo.Plugins
 
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitSysCall("Neo.Contract.Create", script, parameter_list, return_type, properties, name, version, author, email, description);
+                sb.EmitSysCall("Neo.Contract.Create", script, parameter_list, return_type, properties, values["Name"], values["Version"], values["Author"], values["Email"], values["Description"]);
                 script = sb.ToArray();
             }
             ApplicationEngine engine = ApplicationEngine.Run(script, testMode: true);
 
-            Console.WriteLine($"VM State: {engine.State}");
-            Console.WriteLine($"Gas Consumed: {engine.GasConsumed}");
-            Console.WriteLine($"Evaluation Stack: {new JArray(engine.ResultStack.Select(p => p.ToParameter().ToJson()))}");
-
+            LogEngine(engine);
             return true;
         }
         private bool OnInvoke(string[] parameters)
@@ -247,9 +269,7 @@ namespace Neo.Plugins
 
             ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
 
-            Console.WriteLine($"VM State: {engine.State}");
-            Console.WriteLine($"Gas Consumed: {engine.GasConsumed}");
-            Console.WriteLine($"Evaluation Stack: {new JArray(engine.ResultStack.Select(p => p.ToParameter().ToJson()))}");
+            LogEngine(engine);
 
             if (engine.State.HasFlag(VMState.FAULT))
             {
@@ -272,7 +292,7 @@ namespace Neo.Plugins
                 tx.Witnesses = context.GetWitnesses();
                 wallet.ApplyTransaction(tx);
                 system.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
-                Console.WriteLine($"Transaction Success: {tx.ToJson()}");
+                Console.WriteLine($"Relayed Transaction: {tx.ToJson()}");
             }
             else
             {
@@ -295,10 +315,7 @@ namespace Neo.Plugins
             }
             ApplicationEngine engine = ApplicationEngine.Run(script, testMode: true);
 
-            Console.WriteLine($"VM State: {engine.State}");
-            Console.WriteLine($"Gas Consumed: {engine.GasConsumed}");
-            Console.WriteLine($"Evaluation Stack: {new JArray(engine.ResultStack.Select(p => p.ToParameter().ToJson()))}");
-
+            LogEngine(engine);
             return true;
         }
 
@@ -311,6 +328,13 @@ namespace Neo.Plugins
                 + "\tdeploy <path> [arguments]\n" + "\ttest deploy <path> [arguments]\n"
                 + "\tinvoke <hash> [arguments]\n" + "\ttest invoke <hash> [arguments]\n");
             return true;
+        }
+
+        private void LogEngine(ApplicationEngine engine)
+        {
+            Console.WriteLine($"VM State: {engine.State}");
+            Console.WriteLine($"Gas Consumed: {engine.GasConsumed}");
+            Console.WriteLine($"Evaluation Stack: {new JArray(engine.ResultStack.Select(p => p.ToParameter().ToJson()))}");
         }
     }
 }
