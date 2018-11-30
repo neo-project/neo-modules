@@ -85,14 +85,42 @@ namespace Neo.Plugins
             string path = args[1];
             byte[] script = File.ReadAllBytes(path);
 
-            string name = args[4], version = args[5], author = args[6], email = args[7], propertie = args[8], description = args[9];
-
-            byte[] parameter_list = args[2].HexToBytes();
-            ContractParameterType return_type = args[3].HexToBytes().Select(p => (ContractParameterType?)p).FirstOrDefault() ?? ContractParameterType.Void;
+            byte[] parameter_list = new byte[0];
+            ContractParameterType return_type = new ContractParameterType();
             ContractPropertyState properties = ContractPropertyState.NoProperty;
-            if (propertie[0] == 'T') properties |= ContractPropertyState.HasStorage;
-            if (propertie[1] == 'T') properties |= ContractPropertyState.HasDynamicInvoke;
-            if (propertie[2] == 'T') properties |= ContractPropertyState.Payable;
+            string name = "", version = "", author = "", email = "", propertie = "", description = "";
+
+            try
+            {
+                parameter_list = args[2].HexToBytes();
+                return_type = args[3].HexToBytes().Select(p => (ContractParameterType?)p).FirstOrDefault() ?? ContractParameterType.Void;
+
+                args = args.Skip(3).ToArray();
+                for (int i = 0; i < args.Length; i++)
+                {
+                    if (args[i].StartsWith("-n"))
+                        name = args[i + 1];
+                    if (args[i].StartsWith("-v"))
+                        version = args[i + 1];
+                    if (args[i].StartsWith("-a"))
+                        author = args[i + 1];
+                    if (args[i].StartsWith("-e"))
+                        email = args[i + 1];
+                    if (args[i].StartsWith("-p"))
+                        propertie = args[i + 1];
+                    if (args[i].StartsWith("-d"))
+                        description = args[i + 1];
+                }
+
+                if (propertie[0] == 'T') properties |= ContractPropertyState.HasStorage;
+                if (propertie[1] == 'T') properties |= ContractPropertyState.HasDynamicInvoke;
+                if (propertie[2] == 'T') properties |= ContractPropertyState.Payable;
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Parameters Error");
+                return true;
+            }
 
             using (ScriptBuilder sb = new ScriptBuilder())
             {
@@ -147,14 +175,42 @@ namespace Neo.Plugins
             string path = args[2];
             byte[] script = File.ReadAllBytes(path);
 
-            string name = args[5], version = args[6], author = args[7], email = args[8], propertie = args[9], description = args[10];
-
-            byte[] parameter_list = args[3].HexToBytes();
-            ContractParameterType return_type = args[4].HexToBytes().Select(p => (ContractParameterType?)p).FirstOrDefault() ?? ContractParameterType.Void;
+            byte[] parameter_list = new byte[0];
+            ContractParameterType return_type = new ContractParameterType();
             ContractPropertyState properties = ContractPropertyState.NoProperty;
-            if (propertie[0] == 'T') properties |= ContractPropertyState.HasStorage;
-            if (propertie[1] == 'T') properties |= ContractPropertyState.HasDynamicInvoke;
-            if (propertie[2] == 'T') properties |= ContractPropertyState.Payable;
+            string name = "", version = "", author = "", email = "", propertie = "", description = "";
+
+            try
+            {
+                parameter_list = args[3].HexToBytes();
+                return_type = args[4].HexToBytes().Select(p => (ContractParameterType?)p).FirstOrDefault() ?? ContractParameterType.Void;
+
+                args = args.Skip(4).ToArray();
+                for (int i = 0; i < args.Length; i++)
+                {
+                    if (args[i].StartsWith("-n"))
+                        name = args[i + 1];
+                    if (args[i].StartsWith("-v"))
+                        version = args[i + 1];
+                    if (args[i].StartsWith("-a"))
+                        author = args[i + 1];
+                    if (args[i].StartsWith("-e"))
+                        email = args[i + 1];
+                    if (args[i].StartsWith("-p"))
+                        propertie = args[i + 1];
+                    if (args[i].StartsWith("-d"))
+                        description = args[i + 1];
+                }
+
+                if (propertie[0] == 'T') properties |= ContractPropertyState.HasStorage;
+                if (propertie[1] == 'T') properties |= ContractPropertyState.HasDynamicInvoke;
+                if (propertie[2] == 'T') properties |= ContractPropertyState.Payable;
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Parameters Error");
+                return true;
+            }
 
             using (ScriptBuilder sb = new ScriptBuilder())
             {
