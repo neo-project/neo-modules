@@ -352,7 +352,7 @@ namespace Neo.Plugins
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                if (method == "\n")
+                if (method == "")
                     sb.EmitAppCall(hash, parameters: cparams);
                 else
                     sb.EmitAppCall(hash, method, args: cparams);
@@ -406,7 +406,6 @@ namespace Neo.Plugins
                         parameters[i] = new ContractParameter { Type = ContractParameterType.String, Value = values[i] };
                         break;
                     case (byte)ContractParameterType.Void:
-                        break;
                     case (byte)ContractParameterType.InteropInterface:
                     case (byte)ContractParameterType.Map:
                     case (byte)ContractParameterType.Signature:
