@@ -1,16 +1,20 @@
-﻿using Neo.Wallets;
-using System;
-using Neo.Ledger;
-using Neo.VM;
-using System.Linq;
-using Neo.SmartContract;
-using Neo.Network.P2P.Payloads;
-using Neo.IO.Json;
-using Neo.Network.P2P;
+﻿using Akka.Actor;
 using Neo.Compiler;
-using Akka.Actor;
-using System.IO;
+using Neo.Cryptography.ECC;
+using Neo.IO.Json;
+using Neo.Ledger;
+using Neo.Network.P2P;
+using Neo.Network.P2P.Payloads;
+using Neo.SmartContract;
+using Neo.VM;
+using Neo.Wallets;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Numerics;
+
 
 namespace Neo.Plugins
 {
@@ -218,7 +222,8 @@ namespace Neo.Plugins
             foreach (string key in keys)
             {
                 Console.Write($"[{key}]> ");
-                values.Add(key, Console.ReadLine());
+                string value = Console.ReadLine();
+                values.Add(key, value == null ? "" : value);
             }
 
             try
@@ -248,15 +253,40 @@ namespace Neo.Plugins
         }
         private bool OnInvoke(string[] parameters)
         {
-            if (parameters.Length < 3) return false;
+            if (parameters.Length < 3)
+            {
+                Console.WriteLine("error");
+                return true;
+            }
+            if (wallet == null)
+            {
+                Console.WriteLine("No Wallet Open");
+                return true;
+            }
+
             UInt160 hash = UInt160.Parse(parameters[1]);
-            string method = parameters[2];
-            object[] args = parameters.Length > 2 ? parameters.Skip(3).ToArray() : new object[0];
+
+            Console.Write("[Method]> ");
+            string method = Console.ReadLine();
+
+            ContractParameter[] cparams = null;
+            try
+            {
+                cparams = GetParameters(0);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Parameters Error");
+                return true;
+            }
 
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitAppCall(hash, method, args);
+                if (method == "\n")
+                    sb.EmitAppCall(hash, parameters: cparams);
+                else
+                    sb.EmitAppCall(hash, method, args: cparams);
                 script = sb.ToArray();
             }
             InvocationTransaction tx = new InvocationTransaction();
@@ -302,21 +332,89 @@ namespace Neo.Plugins
         }
         private bool OnTestInvoke(string[] parameters)
         {
-            if (parameters.Length < 4) return false;
+            if (parameters.Length < 3) return false;
             UInt160 hash = UInt160.Parse(parameters[2]);
-            string method = parameters[3];
-            object[] args = parameters.Length > 3 ? parameters.Skip(4).ToArray() : new object[0];
+
+            Console.Write("[Method]> ");
+            string method = Console.ReadLine();
+
+            ContractParameter[] cparams = null;
+            try
+            {
+                cparams = GetParameters(0);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Parameters Error");
+                return true;
+            }
 
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitAppCall(hash, method, args);
+                if (method == "\n")
+                    sb.EmitAppCall(hash, parameters: cparams);
+                else
+                    sb.EmitAppCall(hash, method, args: cparams);
                 script = sb.ToArray();
             }
             ApplicationEngine engine = ApplicationEngine.Run(script, testMode: true);
 
             LogEngine(engine);
             return true;
+        }
+
+        private ContractParameter[] GetParameters(int depth)
+        {
+            Console.Write(new String(' ', depth) + "[Parameter Types]> ");
+            string[] types = Console.ReadLine().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            Console.Write(new String(' ', depth) + "[Parameters]> ");
+            string[] values = Console.ReadLine().Split(' ');
+
+            ContractParameter[] parameters = new ContractParameter[types.Length];
+
+            for (int i = 0; i < types.Length; i++)
+            {
+                switch (Convert.ToByte(types[i], 16))
+                {
+                    case (byte)ContractParameterType.Array:
+                        parameters[i] = new ContractParameter { Type = ContractParameterType.Array, Value = GetParameters(depth + 1) };
+                        break;
+                    case (byte)ContractParameterType.Boolean:
+                        parameters[i] = new ContractParameter { Type = ContractParameterType.Boolean, Value = Boolean.Parse(values[i]) };
+                        break;
+                    case (byte)ContractParameterType.ByteArray:
+                        parameters[i] = new ContractParameter { Type = ContractParameterType.ByteArray, Value = values[i].HexToBytes() };
+                        break;
+                    case (byte)ContractParameterType.PublicKey:
+                        parameters[i] = new ContractParameter { Type = ContractParameterType.PublicKey, Value = ECPoint.Parse(values[i], ECCurve.Secp256r1) };
+                        break;
+                    case (byte)ContractParameterType.Hash160:
+                        parameters[i] = new ContractParameter { Type = ContractParameterType.Hash160, Value = UInt160.Parse(values[i]) };
+                        break;
+                    case (byte)ContractParameterType.Hash256:
+                        parameters[i] = new ContractParameter { Type = ContractParameterType.Hash256, Value = UInt256.Parse(values[i]) };
+                        break;
+                    case (byte)ContractParameterType.Integer:
+                        if (long.TryParse(values[i], out long num))
+                            parameters[i] = new ContractParameter { Type = ContractParameterType.Integer, Value = num };
+                        else if (BigInteger.TryParse(values[i].Substring(2), NumberStyles.AllowHexSpecifier, null, out BigInteger bi))
+                            parameters[i] = new ContractParameter { Type = ContractParameterType.Integer, Value = bi };
+                        break;
+                    case (byte)ContractParameterType.String:
+                        parameters[i] = new ContractParameter { Type = ContractParameterType.String, Value = values[i] };
+                        break;
+                    case (byte)ContractParameterType.Void:
+                        break;
+                    case (byte)ContractParameterType.InteropInterface:
+                    case (byte)ContractParameterType.Map:
+                    case (byte)ContractParameterType.Signature:
+                    default:
+                        throw new FormatException();
+                }
+            }
+            return parameters;
         }
 
         private bool OnHelp(string[] args)
