@@ -19,11 +19,9 @@ namespace Neo.Plugins
         /// </summary>
         public uint HeightToStartRealTimeSyncing { get; }
         /// <summary>
-        /// Possible Persisting actions:
-        /// 0: Calls Storage Changes Dumping
-        /// 1: Other persisting actions
+        /// Persisting actions
         /// </summary>
-        public uint PersistAction { get; }
+        public PersistActions PersistAction { get; }
 
         public static Settings Default { get; }
 
@@ -38,7 +36,7 @@ namespace Neo.Plugins
             this.BlockCacheSize = GetValueOrDefault(section.GetSection("BlockCacheSize"), 1000u, p => uint.Parse(p));
             this.HeightToBegin = GetValueOrDefault(section.GetSection("HeightToBegin"), 0u, p => uint.Parse(p));
             this.HeightToStartRealTimeSyncing = GetValueOrDefault(section.GetSection("HeightToStartRealTimeSyncing"), 2883000u, p => uint.Parse(p));
-            this.PersistAction = GetValueOrDefault(section.GetSection("PersistAction"), 0u, p => uint.Parse(p));
+            this.PersistAction = GetValueOrDefault(section.GetSection("PersistAction"), PersistActions.StorageChanges, p => (PersistActions)Enum.Parse(typeof(PersistActions), p));
         }
 
         public T GetValueOrDefault<T>(IConfigurationSection section, T defaultValue, Func<string, T> selector)

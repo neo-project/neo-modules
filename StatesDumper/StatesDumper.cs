@@ -70,13 +70,8 @@ namespace Neo.Plugins
 
         public void OnPersist(Snapshot snapshot)
         {
-            switch (Settings.Default.PersistAction)
-            {
-                // Action == 0 calls OnPersistStorage
-                case 0:
-                    OnPersistStorage(snapshot);
-                    break;
-            }
+            if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
+                OnPersistStorage(snapshot);
         }
 
         private void OnPersistStorage(Snapshot snapshot)
