@@ -169,7 +169,9 @@ namespace Neo.Plugins
             tx.Gas = tx.Gas.Ceiling();
             Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : Fixed8.Zero;
 
-            SendTransaction(tx, fee);
+            Console.WriteLine("[Confirmation(y/N)]> ");
+            if (Console.ReadLine() == "y")
+                SendTransaction(tx, fee);
             return true;
         }
         private bool OnTestDeploy(string[] args)
@@ -288,7 +290,9 @@ namespace Neo.Plugins
             tx.Gas = tx.Gas.Ceiling();
             Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : Fixed8.Zero;
 
-            SendTransaction(tx, fee);
+            Console.WriteLine("[Confirmation(y/N)]> ");
+            if (Console.ReadLine() == "y")
+                SendTransaction(tx, fee);
             return true;
         }
         private bool OnTestInvoke(string[] parameters)
