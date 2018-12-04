@@ -172,7 +172,7 @@ namespace Neo.Plugins
             tx.Gas = engine.GasConsumed - Fixed8.FromDecimal(10);
             if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
             tx.Gas = tx.Gas.Ceiling();
-            Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : tx.Gas;
+            Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : Fixed8.Zero;
 
             SendTransaction(tx, fee);
             return true;
@@ -295,7 +295,7 @@ namespace Neo.Plugins
             tx.Gas = engine.GasConsumed - Fixed8.FromDecimal(10);
             if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
             tx.Gas = tx.Gas.Ceiling();
-            Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : tx.Gas;
+            Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : Fixed8.Zero;
 
             SendTransaction(tx, fee);
             return true;
@@ -412,12 +412,12 @@ namespace Neo.Plugins
                 Console.WriteLine("Unsynchronized Block");
                 return;
             }
+
             wallet.Sign(context);
-            wallet.ApplyTransaction(tx);
 
             if (context.Completed)
             {
-                tx.Witnesses = context.GetWitnesses();
+                context.Verifiable.Witnesses = context.GetWitnesses();
                 wallet.ApplyTransaction(tx);
                 system.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
                 Console.WriteLine($"Relayed Transaction: {tx.ToJson()}");
