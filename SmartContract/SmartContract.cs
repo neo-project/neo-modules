@@ -253,7 +253,7 @@ namespace Neo.Plugins
         }
         private bool OnInvoke(string[] parameters)
         {
-            if (parameters.Length < 3)
+            if (parameters.Length < 2)
             {
                 Console.WriteLine("error");
                 return true;
@@ -283,7 +283,7 @@ namespace Neo.Plugins
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                if (method == "\n")
+                if (method == "")
                     sb.EmitAppCall(hash, parameters: cparams);
                 else
                     sb.EmitAppCall(hash, method, args: cparams);
