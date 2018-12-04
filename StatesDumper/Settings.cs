@@ -19,10 +19,6 @@ namespace Neo.Plugins
         /// </summary>
         public uint HeightToStartRealTimeSyncing { get; }
         /// <summary>
-        /// Auxiliar variable that caches all block storage changes for every BlockCacheSize cached blocks
-        /// </summary>
-        public string BlockStorageCache;
-        /// <summary>
         /// Possible Persisting actions:
         /// 0: Calls Storage Changes Dumping
         /// 1: Other persisting actions
@@ -43,7 +39,6 @@ namespace Neo.Plugins
             this.HeightToBegin = GetValueOrDefault(section.GetSection("HeightToBegin"), 0u, p => uint.Parse(p));
             this.HeightToStartRealTimeSyncing = GetValueOrDefault(section.GetSection("HeightToStartRealTimeSyncing"), 2883000u, p => uint.Parse(p));
             this.PersistAction = GetValueOrDefault(section.GetSection("PersistAction"), 0u, p => uint.Parse(p));
-            this.BlockStorageCache = "[";
         }
 
         public T GetValueOrDefault<T>(IConfigurationSection section, T defaultValue, Func<string, T> selector)

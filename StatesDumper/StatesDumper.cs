@@ -12,6 +12,8 @@ namespace Neo.Plugins
 {
     public class StatesDumper : Plugin, IPersistencePlugin
     {
+        private readonly JArray bs_cache = new JArray();
+
         private static void Dump<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> states)
             where TKey : ISerializable
             where TValue : ISerializable
@@ -77,7 +79,7 @@ namespace Neo.Plugins
             }
         }
 
-        private static void OnPersistStorage(Snapshot snapshot)
+        private void OnPersistStorage(Snapshot snapshot)
         {
             uint blockIndex = snapshot.Height;
             if (blockIndex >= Settings.Default.HeightToBegin)
@@ -114,14 +116,16 @@ namespace Neo.Plugins
                     array.Add(state);
                 }
 
-                Settings.Default.BlockStorageCache = Settings.Default.BlockStorageCache + "{\"block\":" + blockIndex.ToString() + ",\"size\":" + array.Count.ToString() + ",\"storage\":\n";
-                Settings.Default.BlockStorageCache = Settings.Default.BlockStorageCache + array.ToString() + "},\n";
+                JObject bs_item = new JObject();
+                bs_item["block"] = blockIndex;
+                bs_item["size"] = array.Count;
+                bs_item["storage"] = array;
+                bs_cache.Add(bs_item);
 
                 if ((blockIndex % Settings.Default.BlockCacheSize == 0) || (blockIndex > Settings.Default.HeightToStartRealTimeSyncing))
                 {
-                    Settings.Default.BlockStorageCache += "]";
-                    File.WriteAllText(path, Settings.Default.BlockStorageCache);
-                    Settings.Default.BlockStorageCache = "[";
+                    File.WriteAllText(path, bs_cache.ToString());
+                    bs_cache.Clear();
                 }
             }
         }
