@@ -174,22 +174,7 @@ namespace Neo.Plugins
             tx.Gas = tx.Gas.Ceiling();
             Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : tx.Gas;
 
-            tx = wallet.MakeTransaction(tx, fee: fee);
-            ContractParametersContext context = new ContractParametersContext(tx);
-            wallet.Sign(context);
-            wallet.ApplyTransaction(tx);
-
-            if (context.Completed)
-            {
-                tx.Witnesses = context.GetWitnesses();
-                wallet.ApplyTransaction(tx);
-                system.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
-                Console.WriteLine($"Relayed Transaction: {tx.ToJson()}");
-            }
-            else
-            {
-                Console.WriteLine(context.ToJson());
-            }
+            SendTransaction(tx, fee);
             return true;
         }
         private bool OnTestDeploy(string[] args)
@@ -312,22 +297,7 @@ namespace Neo.Plugins
             tx.Gas = tx.Gas.Ceiling();
             Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : tx.Gas;
 
-            tx = wallet.MakeTransaction(tx, fee: fee);
-            ContractParametersContext context = new ContractParametersContext(tx);
-            wallet.Sign(context);
-            wallet.ApplyTransaction(tx);
-
-            if (context.Completed)
-            {
-                tx.Witnesses = context.GetWitnesses();
-                wallet.ApplyTransaction(tx);
-                system.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
-                Console.WriteLine($"Relayed Transaction: {tx.ToJson()}");
-            }
-            else
-            {
-                Console.WriteLine(context.ToJson());
-            }
+            SendTransaction(tx, fee);
             return true;
         }
         private bool OnTestInvoke(string[] parameters)
@@ -414,6 +384,48 @@ namespace Neo.Plugins
                 }
             }
             return parameters;
+        }
+
+        private void SendTransaction(InvocationTransaction tx, Fixed8 fee)
+        {
+            tx = wallet.MakeTransaction(new InvocationTransaction
+            {
+                Version = tx.Version,
+                Script = tx.Script,
+                Gas = tx.Gas,
+                Attributes = tx.Attributes,
+                Inputs = tx.Inputs,
+                Outputs = tx.Outputs
+            }, fee: fee);
+            if (tx == null)
+            {
+                Console.WriteLine("Insufficient Funds");
+                return;
+            }
+            ContractParametersContext context;
+            try
+            {
+                context = new ContractParametersContext(tx);
+            }
+            catch (InvalidOperationException)
+            {
+                Console.WriteLine("Unsynchronized Block");
+                return;
+            }
+            wallet.Sign(context);
+            wallet.ApplyTransaction(tx);
+
+            if (context.Completed)
+            {
+                tx.Witnesses = context.GetWitnesses();
+                wallet.ApplyTransaction(tx);
+                system.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
+                Console.WriteLine($"Relayed Transaction: {tx.ToJson()}");
+            }
+            else
+            {
+                Console.WriteLine(context.ToJson());
+            }
         }
 
         private bool OnHelp(string[] args)
