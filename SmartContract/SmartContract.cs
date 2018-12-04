@@ -48,6 +48,7 @@ namespace Neo.Plugins
             catch (Exception e)
             {
                 Console.WriteLine($"{e.Message}\n{e.StackTrace}");
+                return true;
             }
             return false;
         }
@@ -151,13 +152,7 @@ namespace Neo.Plugins
                 sb.EmitSysCall("Neo.Contract.Create", script, parameter_list, return_type, properties, values["Name"], values["Version"], values["Author"], values["Email"], values["Description"]);
                 script = sb.ToArray();
             }
-            InvocationTransaction tx = new InvocationTransaction();
-            tx.Version = 1;
-            tx.Script = script;
-            if (tx.Attributes == null) tx.Attributes = new TransactionAttribute[0];
-            if (tx.Inputs == null) tx.Inputs = new CoinReference[0];
-            if (tx.Outputs == null) tx.Outputs = new TransactionOutput[0];
-            if (tx.Witnesses == null) tx.Witnesses = new Witness[0];
+            InvocationTransaction tx = GetTransaction(script);
 
             ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
 
@@ -231,7 +226,9 @@ namespace Neo.Plugins
                 sb.EmitSysCall("Neo.Contract.Create", script, parameter_list, return_type, properties, values["Name"], values["Version"], values["Author"], values["Email"], values["Description"]);
                 script = sb.ToArray();
             }
-            ApplicationEngine engine = ApplicationEngine.Run(script, testMode: true);
+            InvocationTransaction tx = GetTransaction(script);
+
+            ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
 
             LogEngine(engine);
             return true;
@@ -274,13 +271,7 @@ namespace Neo.Plugins
                     sb.EmitAppCall(hash, method, args: cparams);
                 script = sb.ToArray();
             }
-            InvocationTransaction tx = new InvocationTransaction();
-            tx.Version = 1;
-            tx.Script = script;
-            if (tx.Attributes == null) tx.Attributes = new TransactionAttribute[0];
-            if (tx.Inputs == null) tx.Inputs = new CoinReference[0];
-            if (tx.Outputs == null) tx.Outputs = new TransactionOutput[0];
-            if (tx.Witnesses == null) tx.Witnesses = new Witness[0];
+            InvocationTransaction tx = GetTransaction(script);
 
             ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
 
@@ -328,7 +319,9 @@ namespace Neo.Plugins
                     sb.EmitAppCall(hash, method, args: cparams);
                 script = sb.ToArray();
             }
-            ApplicationEngine engine = ApplicationEngine.Run(script, testMode: true);
+            InvocationTransaction tx = GetTransaction(script);
+
+            ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
 
             LogEngine(engine);
             return true;
@@ -384,6 +377,19 @@ namespace Neo.Plugins
                 }
             }
             return parameters;
+        }
+
+        private InvocationTransaction GetTransaction(byte[] script)
+        {
+            InvocationTransaction tx = new InvocationTransaction();
+            tx.Version = 1;
+            tx.Script = script;
+            if (tx.Attributes == null) tx.Attributes = new TransactionAttribute[0];
+            if (tx.Inputs == null) tx.Inputs = new CoinReference[0];
+            if (tx.Outputs == null) tx.Outputs = new TransactionOutput[0];
+            if (tx.Witnesses == null) tx.Witnesses = new Witness[0];
+
+            return tx;
         }
 
         private void SendTransaction(InvocationTransaction tx, Fixed8 fee)
