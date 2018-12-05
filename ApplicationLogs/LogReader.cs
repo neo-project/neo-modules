@@ -25,5 +25,10 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "Unknown transaction");
             return JObject.Parse(value.ToString());
         }
+        
+        public override void Configure()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }
