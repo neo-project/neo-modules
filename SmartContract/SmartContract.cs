@@ -169,7 +169,7 @@ namespace Neo.Plugins
             tx.Gas = tx.Gas.Ceiling();
             Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : Fixed8.Zero;
 
-            Console.WriteLine("[Confirmation(y/N)]> ");
+            Console.Write("[Confirmation(y/N)]> ");
             if (Console.ReadLine() == "y")
                 SendTransaction(tx, fee);
             return true;
@@ -290,7 +290,7 @@ namespace Neo.Plugins
             tx.Gas = tx.Gas.Ceiling();
             Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : Fixed8.Zero;
 
-            Console.WriteLine("[Confirmation(y/N)]> ");
+            Console.Write("[Confirmation(y/N)]> ");
             if (Console.ReadLine() == "y")
                 SendTransaction(tx, fee);
             return true;
