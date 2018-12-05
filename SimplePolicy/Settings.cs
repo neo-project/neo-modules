@@ -3,7 +3,6 @@ using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace Neo.Plugins
 {
@@ -15,14 +14,9 @@ namespace Neo.Plugins
         public Fixed8 FeePerExtraByte { get; }
         public BlockedAccounts BlockedAccounts { get; }
 
-        public static Settings Default { get; }
+        public static Settings Default { get; private set; }
 
-        static Settings()
-        {
-            Default = new Settings(Assembly.GetExecutingAssembly().GetConfiguration());
-        }
-
-        public Settings(IConfigurationSection section)
+        private Settings(IConfigurationSection section)
         {
             this.MaxTransactionsPerBlock = GetValueOrDefault(section.GetSection("MaxTransactionsPerBlock"), 500, p => int.Parse(p));
             this.MaxFreeTransactionsPerBlock = GetValueOrDefault(section.GetSection("MaxFreeTransactionsPerBlock"), 20, p => int.Parse(p));
@@ -35,6 +29,11 @@ namespace Neo.Plugins
         {
             if (section.Value == null) return defaultValue;
             return selector(section.Value);
+        }
+
+        public static void Load(IConfigurationSection section)
+        {
+            Default = new Settings(section);
         }
     }
 

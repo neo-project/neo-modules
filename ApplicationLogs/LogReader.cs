@@ -8,13 +8,19 @@ namespace Neo.Plugins
 {
     public class LogReader : Plugin, IRpcPlugin
     {
-        private readonly DB db = DB.Open(Path.GetFullPath(Settings.Default.Path), new Options { CreateIfMissing = true });
+        private readonly DB db;
 
         public override string Name => "ApplicationLogs";
 
         public LogReader()
         {
+            this.db = DB.Open(Path.GetFullPath(Settings.Default.Path), new Options { CreateIfMissing = true });
             System.ActorSystem.ActorOf(Logger.Props(System.Blockchain, db));
+        }
+
+        public override void Configure()
+        {
+            Settings.Load(GetConfiguration());
         }
 
         public JObject OnProcess(HttpContext context, string method, JArray _params)

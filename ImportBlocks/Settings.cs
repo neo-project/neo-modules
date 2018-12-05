@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System;
-using System.Reflection;
 
 namespace Neo.Plugins
 {
@@ -8,14 +7,9 @@ namespace Neo.Plugins
     {
         public uint MaxOnImportHeight { get; }
 
-        public static Settings Default { get; }
+        public static Settings Default { get; private set; }
 
-        static Settings()
-        {
-            Default = new Settings(Assembly.GetExecutingAssembly().GetConfiguration());
-        }
-
-        public Settings(IConfigurationSection section)
+        private Settings(IConfigurationSection section)
         {
             this.MaxOnImportHeight = GetValueOrDefault(section.GetSection("MaxOnImportHeight"), 0u, p => uint.Parse(p));
         }
@@ -24,6 +18,11 @@ namespace Neo.Plugins
         {
             if (section.Value == null) return defaultValue;
             return selector(section.Value);
+        }
+
+        public static void Load(IConfigurationSection section)
+        {
+            Default = new Settings(section);
         }
     }
 }

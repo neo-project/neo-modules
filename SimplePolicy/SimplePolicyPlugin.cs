@@ -15,6 +15,11 @@ namespace Neo.Plugins
     {
         private static readonly string log_dictionary = Path.Combine(AppContext.BaseDirectory, "Logs");
 
+        public override void Configure()
+        {
+            Settings.Load(GetConfiguration());
+        }
+
         public bool FilterForMemoryPool(Transaction tx)
         {
             if (!VerifySizeLimits(tx)) return false;
