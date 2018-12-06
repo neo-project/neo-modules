@@ -231,7 +231,7 @@ namespace Neo.Plugins
                 sb.EmitSysCall("Neo.Contract.Create", script, parameter_list, return_type, properties, values["Name"], values["Version"], values["Author"], values["Email"], values["Description"]);
                 new_script = sb.ToArray();
             }
-            InvocationTransaction tx = GetTransaction(script);
+            InvocationTransaction tx = GetTransaction(new_script);
 
             ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
 
