@@ -147,16 +147,18 @@ namespace Neo.Plugins
                 return true;
             }
 
+            byte[] new_script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
                 sb.EmitSysCall("Neo.Contract.Create", script, parameter_list, return_type, properties, values["Name"], values["Version"], values["Author"], values["Email"], values["Description"]);
-                script = sb.ToArray();
+                new_script = sb.ToArray();
             }
-            InvocationTransaction tx = GetTransaction(script);
+            InvocationTransaction tx = GetTransaction(new_script);
 
             ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
 
             LogEngine(engine);
+            Console.WriteLine($"Contract Hash: {script.ToScriptHash().ToString()}");
 
             if (engine.State.HasFlag(VMState.FAULT))
             {
@@ -223,16 +225,18 @@ namespace Neo.Plugins
                 return true;
             }
 
+            byte[] new_script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
                 sb.EmitSysCall("Neo.Contract.Create", script, parameter_list, return_type, properties, values["Name"], values["Version"], values["Author"], values["Email"], values["Description"]);
-                script = sb.ToArray();
+                new_script = sb.ToArray();
             }
             InvocationTransaction tx = GetTransaction(script);
 
             ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
 
             LogEngine(engine);
+            Console.WriteLine($"Contract Hash: {script.ToScriptHash().ToString()}");
             return true;
         }
         private bool OnInvoke(string[] parameters)
