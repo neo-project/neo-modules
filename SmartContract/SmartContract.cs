@@ -18,7 +18,7 @@ using System.Numerics;
 
 namespace Neo.Plugins
 {
-    public class SmartContract : Plugin, ISmartContractPlugin
+    public class SmartContract : Plugin
     {
         private Wallet wallet = null;
         private NeoSystem system = null;
