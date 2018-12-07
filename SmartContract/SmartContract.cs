@@ -21,19 +21,14 @@ namespace Neo.Plugins
     public class SmartContract : Plugin
     {
         private Wallet wallet = null;
-        private NeoSystem system = null;
 
         private static readonly Fixed8 net_fee = Fixed8.FromDecimal(0.001m);
 
         protected override bool OnMessage(object message)
         {
-            if (message is object[] objs)
+            if (message is Wallet wallet)
             {
-                if (objs.Length == 0) return false;
-                if (objs[0] is Wallet wallet && objs[1] is NeoSystem system)
-                {
-                    return OnInit(wallet, system);
-                }
+                return OnInit(wallet);
             }
             if (message is string[] args)
             {
@@ -76,10 +71,9 @@ namespace Neo.Plugins
             return false;
         }
 
-        private bool OnInit(Wallet wallet, NeoSystem system)
+        private bool OnInit(Wallet wallet)
         {
             this.wallet = wallet;
-            this.system = system;
             return true;
         }
 
@@ -444,7 +438,7 @@ namespace Neo.Plugins
             {
                 context.Verifiable.Witnesses = context.GetWitnesses();
                 wallet.ApplyTransaction(tx);
-                system.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
+                System.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
                 Console.WriteLine($"Relayed Transaction: {tx.ToJson()}");
             }
             else
