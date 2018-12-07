@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImportBlocks", "ImportBlock
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimplePolicy.UnitTests", "SimplePolicy.UnitTests\SimplePolicy.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartContract", "SmartContract\SmartContract.csproj", "{F8A461A5-F889-4048-8157-04C295B0EB2E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{0DA81327-DC81-4960-91C8-4C5F8B9B804C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0DA81327-DC81-4960-91C8-4C5F8B9B804C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0DA81327-DC81-4960-91C8-4C5F8B9B804C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8A461A5-F889-4048-8157-04C295B0EB2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8A461A5-F889-4048-8157-04C295B0EB2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8A461A5-F889-4048-8157-04C295B0EB2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8A461A5-F889-4048-8157-04C295B0EB2E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -9,7 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="neo-compiler\**" />
+    <EmbeddedResource Remove="neo-compiler\**" />
+    <None Remove="neo-compiler\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="0.10.0" />
+    <PackageReference Include="Neo.Compiler.MSIL" Version="2.3.0.9" />
     <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
   </ItemGroup>
 
