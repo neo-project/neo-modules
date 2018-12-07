@@ -50,7 +50,7 @@ namespace Neo.Plugins
             foreach (Transaction tx in transactions.OrderByDescending(p => p.NetworkFee / p.Size).ThenByDescending(p => p.NetworkFee))
             {
                 if (count++ >= Settings.Default.MaxTransactionsPerBlock - 1) break;
-                if (!tx.IsLowPriority || count_free++ < Settings.Default.MaxFreeTransactionsPerBlock)
+                if (!IsLowPriority(tx) || count_free++ < Settings.Default.MaxFreeTransactionsPerBlock)
                     yield return tx;
             }
         }
@@ -60,13 +60,13 @@ namespace Neo.Plugins
             if (!(transactions is IReadOnlyList<Transaction> tx_list))
                 tx_list = transactions.ToArray();
 
-            Transaction[] free = tx_list.Where(p => p.IsLowPriority)
+            Transaction[] free = tx_list.Where(p => IsLowPriority(tx))
                 .OrderByDescending(p => p.NetworkFee / p.Size)
                 .ThenByDescending(p => p.NetworkFee)
                 .Take(Settings.Default.MaxFreeTransactionsPerBlock)
                 .ToArray();
 
-            Transaction[] non_free = tx_list.Where(p => !p.IsLowPriority)
+            Transaction[] non_free = tx_list.Where(p => !IsLowPriority(tx))
                 .OrderByDescending(p => p.NetworkFee / p.Size)
                 .ThenByDescending(p => p.NetworkFee)
                 .Take(Settings.Default.MaxTransactionsPerBlock - free.Length - 1)
@@ -93,7 +93,7 @@ namespace Neo.Plugins
         private bool VerifySizeLimits(Transaction tx)
         {
             // Not Allow free TX bigger than MaxFreeTransactionSize
-            if (tx.IsLowPriority && tx.Size > Settings.Default.MaxFreeTransactionSize) return false;
+            if (IsLowPriority(tx) && tx.Size > Settings.Default.MaxFreeTransactionSize) return false;
 
             // Require proportional fee for TX bigger than MaxFreeTransactionSize 
             if (tx.Size > Settings.Default.MaxFreeTransactionSize)
@@ -103,6 +103,13 @@ namespace Neo.Plugins
                 if (tx.NetworkFee < fee) return false;
             }
             return true;
+        }
+
+        private static bool IsLowPriority(Transaction tx)
+        {
+            if (Settings.Default.HighPriorityTx.Contains(tx.Type)) return false;
+
+            return tx.IsLowPriority;
         }
     }
 }
