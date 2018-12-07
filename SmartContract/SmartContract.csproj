@@ -16,12 +16,9 @@
 
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="0.10.0" />
+    <PackageReference Include="Neo" Version="2.9.2" />
     <PackageReference Include="Neo.Compiler.MSIL" Version="2.3.0.9" />
     <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\neo\neo\neo.csproj" />
   </ItemGroup>
 
 </Project>
