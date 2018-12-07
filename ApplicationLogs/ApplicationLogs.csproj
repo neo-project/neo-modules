@@ -7,14 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neo" Version="2.9.2" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="ApplicationLogs\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Neo" Version="2.9.2" />
   </ItemGroup>
 
 </Project>
