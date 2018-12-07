@@ -18,7 +18,7 @@ using System.Numerics;
 
 namespace Neo.Plugins
 {
-    public class SmartContract : Plugin, ISmartContractPlugin
+    public class SmartContract : Plugin
     {
         private Wallet wallet = null;
         private NeoSystem system = null;
@@ -27,28 +27,38 @@ namespace Neo.Plugins
 
         protected override bool OnMessage(object message)
         {
-            if (!(message is string[] args)) return false;
-            if (args.Length == 0) return false;
-            try
+            if (message is object[] objs)
             {
-                switch (args[0].ToLower())
+                if (objs.Length == 0) return false;
+                if (objs[0] is Wallet wallet && objs[1] is NeoSystem system)
                 {
-                    case "help":
-                        return OnHelp(args);
-                    case "compile":
-                        return OnCompile(args);
-                    case "deploy":
-                        return OnDeploy(args);
-                    case "invoke":
-                        return OnInvoke(args);
-                    case "test":
-                        return OnTest(args);
+                    return OnInit(wallet, system);
                 }
             }
-            catch (Exception e)
+            if (message is string[] args)
             {
-                Console.WriteLine($"{e.Message}\n{e.StackTrace}");
-                return true;
+                if (args.Length == 0) return false;
+                try
+                {
+                    switch (args[0].ToLower())
+                    {
+                        case "help":
+                            return OnHelp(args);
+                        case "compile":
+                            return OnCompile(args);
+                        case "deploy":
+                            return OnDeploy(args);
+                        case "invoke":
+                            return OnInvoke(args);
+                        case "test":
+                            return OnTest(args);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"{e.Message}\n{e.StackTrace}");
+                    return true;
+                }
             }
             return false;
         }
@@ -66,10 +76,11 @@ namespace Neo.Plugins
             return false;
         }
 
-        public void Init(Wallet wallet, NeoSystem system)
+        private bool OnInit(Wallet wallet, NeoSystem system)
         {
             this.wallet = wallet;
             this.system = system;
+            return true;
         }
 
         private bool OnCompile(string[] parameters)
