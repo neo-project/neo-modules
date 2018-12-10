@@ -16,7 +16,7 @@ namespace Neo.Plugins
         public BlockedAccounts BlockedAccounts { get; }
         public HashSet<TransactionType> HighPriorityTx { get; set; }
 
-        public static Settings Default { get; }
+        public static Settings Default { get; private set; }
 
         static Settings()
         {
