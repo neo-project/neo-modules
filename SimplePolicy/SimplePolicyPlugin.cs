@@ -107,7 +107,7 @@ namespace Neo.Plugins
 
         private static bool IsLowPriority(Transaction tx)
         {
-            if (Settings.Default.HighPriorityTx.Contains(tx.Type)) return false;
+            if (Settings.Default.HighPriorityTxType.Contains(tx.Type)) return false;
 
             return tx.IsLowPriority;
         }
