@@ -1,9 +1,9 @@
-using Microsoft.Extensions.Configuration;
-using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using Microsoft.Extensions.Configuration;
+using Neo.Network.P2P.Payloads;
+using Neo.Wallets;
 
 namespace Neo.Plugins
 {
@@ -14,7 +14,7 @@ namespace Neo.Plugins
         public int MaxFreeTransactionSize { get; }
         public Fixed8 FeePerExtraByte { get; }
         public BlockedAccounts BlockedAccounts { get; }
-        public HashSet<TransactionType> HighPriorityTx { get; set; }
+        public HashSet<TransactionType> HighPriorityTxType { get; set; }
 
         public static Settings Default { get; private set; }
 
@@ -25,7 +25,7 @@ namespace Neo.Plugins
             this.MaxFreeTransactionSize = GetValueOrDefault(section.GetSection("MaxFreeTransactionSize"), 1024, p => int.Parse(p));
             this.FeePerExtraByte = GetValueOrDefault(section.GetSection("FeePerExtraByte"), Fixed8.FromDecimal(0.00001M), p => Fixed8.Parse(p));
             this.BlockedAccounts = new BlockedAccounts(section.GetSection("BlockedAccounts"));
-            this.HighPriorityTx = new HashSet<TransactionType>(section.GetSection("HighPriorityTx").GetChildren()
+            this.HighPriorityTxType = new HashSet<TransactionType>(section.GetSection("HighPriorityTxType").GetChildren()
                 .Select(p => (TransactionType)Enum.Parse(typeof(TransactionType), p.Value)));
         }
 
