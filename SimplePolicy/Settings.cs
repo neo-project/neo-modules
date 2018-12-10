@@ -18,7 +18,7 @@ namespace Neo.Plugins
 
         public static Settings Default { get; private set; }
 
-        static Settings()
+        private Settings(IConfigurationSection section)
         {
             Default = new Settings(Assembly.GetExecutingAssembly().GetConfiguration());
         }
