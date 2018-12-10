@@ -64,9 +64,9 @@ namespace Neo.Plugins
             switch (args[1].ToLower())
             {
                 case "deploy":
-                    return OnTestDeploy(args);
+                    return OnDeploy(args.Skip(1).ToArray(), testMode: true);
                 case "invoke":
-                    return OnTestInvoke(args);
+                    return OnInvoke(args.Skip(1).ToArray(), testMode: true);
             }
             return false;
         }
@@ -99,14 +99,14 @@ namespace Neo.Plugins
 
             return true;
         }
-        private bool OnDeploy(string[] args)
+        private bool OnDeploy(string[] args, bool testMode = false)
         {
             if (args.Length < 2)
             {
                 Console.WriteLine("error");
                 return true;
             }
-            if (wallet == null)
+            if (wallet == null && !testMode)
             {
                 Console.WriteLine("No Wallet Open");
                 return true;
@@ -171,87 +171,27 @@ namespace Neo.Plugins
                 return true;
             }
 
-            tx.Gas = engine.GasConsumed - Fixed8.FromDecimal(10);
-            if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
-            tx.Gas = tx.Gas.Ceiling();
-            Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : Fixed8.Zero;
+            if (!testMode)
+            {
+                tx.Gas = engine.GasConsumed - Fixed8.FromDecimal(10);
+                if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
+                tx.Gas = tx.Gas.Ceiling();
+                Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : Fixed8.Zero;
 
-            Console.Write("[Confirmation(y/N)]> ");
-            if (Console.ReadLine() == "y")
-                SendTransaction(tx, fee);
+                Console.Write("[Confirmation(y/N)]> ");
+                if (Console.ReadLine() == "y")
+                    SendTransaction(tx, fee);
+            }
             return true;
         }
-        private bool OnTestDeploy(string[] args)
-        {
-            if (args.Length < 3)
-            {
-                Console.WriteLine("error");
-                return true;
-            }
-
-            byte[] script;
-            try
-            {
-                string path = args[2];
-                script = File.ReadAllBytes(path);
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("File Error");
-                return true;
-            }
-
-            byte[] parameter_list = new byte[0];
-            ContractParameterType return_type = new ContractParameterType();
-            ContractPropertyState properties = ContractPropertyState.NoProperty;
-
-            string[] keys = { "Parameter List", "Return Type", "Name", "Version", "Author", "Email", "Properties(Storage, Dyncall, Payable)", "Description" };
-            Dictionary<string, string> values = new Dictionary<string, string>();
-
-            foreach (string key in keys)
-            {
-                Console.Write($"[{key}]> ");
-                string value = Console.ReadLine();
-                values.Add(key, value == null ? "" : value);
-            }
-
-            try
-            {
-                parameter_list = values["Parameter List"].HexToBytes();
-                return_type = values["Return Type"].HexToBytes().Select(p => (ContractParameterType?)p).FirstOrDefault() ?? ContractParameterType.Void;
-
-                if (values["Properties(Storage, Dyncall, Payable)"][0] == 'T') properties |= ContractPropertyState.HasStorage;
-                if (values["Properties(Storage, Dyncall, Payable)"][1] == 'T') properties |= ContractPropertyState.HasDynamicInvoke;
-                if (values["Properties(Storage, Dyncall, Payable)"][2] == 'T') properties |= ContractPropertyState.Payable;
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Parameters Error");
-                return true;
-            }
-
-            byte[] new_script;
-            using (ScriptBuilder sb = new ScriptBuilder())
-            {
-                sb.EmitSysCall("Neo.Contract.Create", script, parameter_list, return_type, properties, values["Name"], values["Version"], values["Author"], values["Email"], values["Description"]);
-                new_script = sb.ToArray();
-            }
-            InvocationTransaction tx = GetTransaction(new_script);
-
-            ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
-
-            LogEngine(engine);
-            Console.WriteLine($"Contract Hash: {script.ToScriptHash().ToString()}");
-            return true;
-        }
-        private bool OnInvoke(string[] parameters)
+        private bool OnInvoke(string[] parameters, bool testMode = false)
         {
             if (parameters.Length < 2)
             {
                 Console.WriteLine("error");
                 return true;
             }
-            if (wallet == null)
+            if (wallet == null && !testMode)
             {
                 Console.WriteLine("No Wallet Open");
                 return true;
@@ -294,49 +234,17 @@ namespace Neo.Plugins
                 return true;
             }
 
-            tx.Gas = engine.GasConsumed - Fixed8.FromDecimal(10);
-            if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
-            tx.Gas = tx.Gas.Ceiling();
-            Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : Fixed8.Zero;
-
-            Console.Write("[Confirmation(y/N)]> ");
-            if (Console.ReadLine() == "y")
-                SendTransaction(tx, fee);
-            return true;
-        }
-        private bool OnTestInvoke(string[] parameters)
-        {
-            if (parameters.Length < 3) return false;
-            UInt160 hash = UInt160.Parse(parameters[2]);
-
-            Console.Write("[Method]> ");
-            string method = Console.ReadLine();
-
-            ContractParameter[] cparams = null;
-            try
+            if (!testMode)
             {
-                cparams = GetParameters(0);
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Parameters Error");
-                return true;
-            }
+                tx.Gas = engine.GasConsumed - Fixed8.FromDecimal(10);
+                if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
+                tx.Gas = tx.Gas.Ceiling();
+                Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : Fixed8.Zero;
 
-            byte[] script;
-            using (ScriptBuilder sb = new ScriptBuilder())
-            {
-                if (method == "")
-                    sb.EmitAppCall(hash, parameters: cparams);
-                else
-                    sb.EmitAppCall(hash, method, args: cparams);
-                script = sb.ToArray();
+                Console.Write("[Confirmation(y/N)]> ");
+                if (Console.ReadLine() == "y")
+                    SendTransaction(tx, fee);
             }
-            InvocationTransaction tx = GetTransaction(script);
-
-            ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
-
-            LogEngine(engine);
             return true;
         }
 
