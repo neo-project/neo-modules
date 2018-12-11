@@ -60,13 +60,13 @@ namespace Neo.Plugins
             if (!(transactions is IReadOnlyList<Transaction> tx_list))
                 tx_list = transactions.ToArray();
 
-            Transaction[] free = tx_list.Where(p => IsLowPriority(p))
-                .OrderByDescending(p => p.NetworkFee / p.Size)
+            Transaction[] free = tx_list.Where(p => IsLowPriority(p) || (InHighPriorityList(p) && (p.NetworkFee == Fixed8.Zero)))
+                .OrderByDescending(p => (InHighPriorityList(p) ? Fixed8.One : p.NetworkFee) / p.Size)
                 .ThenByDescending(p => p.NetworkFee)
                 .Take(Settings.Default.MaxFreeTransactionsPerBlock)
                 .ToArray();
 
-            Transaction[] non_free = tx_list.Where(p => !IsLowPriority(p))
+            Transaction[] non_free = tx_list.Where(p => !IsLowPriority(p) && (p.NetworkFee > Fixed8.Zero))
                 .OrderByDescending(p => p.NetworkFee / p.Size)
                 .ThenByDescending(p => p.NetworkFee)
                 .Take(Settings.Default.MaxTransactionsPerBlock - free.Length - 1)
@@ -95,7 +95,7 @@ namespace Neo.Plugins
             // Not Allow free TX bigger than MaxFreeTransactionSize
             if (IsLowPriority(tx) && tx.Size > Settings.Default.MaxFreeTransactionSize) return false;
 
-            // Require proportional fee for TX bigger than MaxFreeTransactionSize 
+            // Require proportional fee for TX bigger than MaxFreeTransactionSize
             if (tx.Size > Settings.Default.MaxFreeTransactionSize)
             {
                 Fixed8 fee = Settings.Default.FeePerExtraByte * (tx.Size - Settings.Default.MaxFreeTransactionSize);
@@ -105,11 +105,8 @@ namespace Neo.Plugins
             return true;
         }
 
-        private static bool IsLowPriority(Transaction tx)
-        {
-            if (Settings.Default.HighPriorityTxType.Contains(tx.Type)) return false;
+        private static bool IsLowPriority(Transaction tx) => InHighPriorityList(tx) ? false : tx.IsLowPriority;
 
-            return tx.IsLowPriority;
-        }
+        private static bool InHighPriorityList(Transaction tx) => Settings.Default.HighPriorityTxType.Contains(tx.Type);
     }
 }
