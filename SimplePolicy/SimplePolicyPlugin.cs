@@ -105,8 +105,10 @@ namespace Neo.Plugins
             return true;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsLowPriority(Transaction tx) => InHighPriorityList(tx) ? false : tx.IsLowPriority;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool InHighPriorityList(Transaction tx) => Settings.Default.HighPriorityTxType.Contains(tx.Type);
     }
 }

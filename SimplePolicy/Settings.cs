@@ -25,8 +25,15 @@ namespace Neo.Plugins
             this.MaxFreeTransactionSize = GetValueOrDefault(section.GetSection("MaxFreeTransactionSize"), 1024, p => int.Parse(p));
             this.FeePerExtraByte = GetValueOrDefault(section.GetSection("FeePerExtraByte"), Fixed8.FromDecimal(0.00001M), p => Fixed8.Parse(p));
             this.BlockedAccounts = new BlockedAccounts(section.GetSection("BlockedAccounts"));
-            this.HighPriorityTxType = (section.GetSection("HighPriorityTxType").Value == null) ? new HashSet<TransactionType>{ TransactionType.ClaimTransaction } :
-                                              new HashSet<TransactionType>(section.GetSection("HighPriorityTxType").GetChildren().Select(p => (TransactionType)Enum.Parse(typeof(TransactionType), p.Value)));
+            this.HighPriorityTxType = GetValueOrDefault(section.GetSection("HighPriorityTxType"),
+                    new HashSet<TransactionType> { TransactionType.ClaimTransaction },
+                    p => (TransactionType)Enum.Parse(typeof(TransactionType), p));
+        }
+
+        public HashSet<T> GetValueOrDefault<T>(IConfigurationSection section, HashSet<T> defaultValue, Func<string, T> selector)
+        {
+            if (section.Value == null) return defaultValue;
+            return new HashSet<T>(section.GetChildren().Select(p => selector(p.Value)));
         }
 
         public T GetValueOrDefault<T>(IConfigurationSection section, T defaultValue, Func<string, T> selector)
