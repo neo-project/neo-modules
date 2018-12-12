@@ -1,9 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Neo.Network.P2P.Payloads;
 using Neo.Wallets;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Neo.Plugins
 {
@@ -13,8 +13,8 @@ namespace Neo.Plugins
         public int MaxFreeTransactionsPerBlock { get; }
         public int MaxFreeTransactionSize { get; }
         public Fixed8 FeePerExtraByte { get; }
+        public EnumSet<TransactionType> HighPriorityTxType { get; }
         public BlockedAccounts BlockedAccounts { get; }
-        public HashSet<TransactionType> HighPriorityTxType { get; set; }
 
         public static Settings Default { get; private set; }
 
@@ -25,15 +25,7 @@ namespace Neo.Plugins
             this.MaxFreeTransactionSize = GetValueOrDefault(section.GetSection("MaxFreeTransactionSize"), 1024, p => int.Parse(p));
             this.FeePerExtraByte = GetValueOrDefault(section.GetSection("FeePerExtraByte"), Fixed8.FromDecimal(0.00001M), p => Fixed8.Parse(p));
             this.BlockedAccounts = new BlockedAccounts(section.GetSection("BlockedAccounts"));
-            this.HighPriorityTxType = GetValueOrDefault(section.GetSection("HighPriorityTxType"),
-                    new HashSet<TransactionType> { TransactionType.ClaimTransaction },
-                    p => (TransactionType)Enum.Parse(typeof(TransactionType), p));
-        }
-
-        public HashSet<T> GetValueOrDefault<T>(IConfigurationSection section, HashSet<T> defaultValue, Func<string, T> selector)
-        {
-            if (section.Value == null) return defaultValue;
-            return new HashSet<T>(section.GetChildren().Select(p => selector(p.Value)));
+            this.HighPriorityTxType = new EnumSet<TransactionType>(section.GetSection("HighPriorityTxType"), TransactionType.ClaimTransaction);
         }
 
         public T GetValueOrDefault<T>(IConfigurationSection section, T defaultValue, Func<string, T> selector)
@@ -45,6 +37,19 @@ namespace Neo.Plugins
         public static void Load(IConfigurationSection section)
         {
             Default = new Settings(section);
+        }
+    }
+
+    internal class EnumSet<T> : HashSet<T>
+        where T : Enum
+    {
+        public EnumSet(IConfigurationSection section, params T[] defaultValues)
+        {
+            if (section.Exists())
+                foreach (IConfigurationSection child in section.GetChildren())
+                    Add((T)Enum.Parse(typeof(T), child.Value));
+            else
+                UnionWith(defaultValues);
         }
     }
 
