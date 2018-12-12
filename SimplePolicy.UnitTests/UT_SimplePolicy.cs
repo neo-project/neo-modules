@@ -59,10 +59,10 @@ namespace SimplePolicy.UnitTests
             // ======================== BEGIN TESTS ============================
 
             // insert invocation transactions (100 of each)
-            for(var i=0; i<100; i++)
+            for (var i = 0; i < 100; i++)
             {
                 TxList.Insert(0, MockGenerateInvocationTransaction(Fixed8.One, 50).Object);
-                TxList.Insert(0, MockGenerateInvocationTransaction(Fixed8.One/10000, 50).Object);
+                TxList.Insert(0, MockGenerateInvocationTransaction(Fixed8.Zero, 50).Object);
             }
 
             TxList.Count().Should().Be(204); // 100 free + 100 paid + 4 claims
@@ -82,10 +82,10 @@ namespace SimplePolicy.UnitTests
             // =================================================================
 
             // insert more invocation transactions (400 of each)
-            for(var i=0; i<400; i++)
+            for (var i = 0; i < 400; i++)
             {
                 TxList.Insert(0, MockGenerateInvocationTransaction(Fixed8.One, 50).Object);
-                TxList.Insert(0, MockGenerateInvocationTransaction(Fixed8.One/10000, 50).Object);
+                TxList.Insert(0, MockGenerateInvocationTransaction(Fixed8.Zero, 50).Object);
             }
 
             TxList.Count().Should().Be(1004); // 500 free + 500 paid + 4 claims
@@ -108,9 +108,9 @@ namespace SimplePolicy.UnitTests
         {
             List<Transaction> txList = new List<Transaction>();
             // three different sizes, but it doesn't matter
-            for(var size = 10; size <= 20; size += 5)
+            for (var size = 10; size <= 20; size += 5)
             {
-                for(var netFeeSatoshi = 0; netFeeSatoshi <= 90000; netFeeSatoshi += 10000)
+                for (var netFeeSatoshi = 0; netFeeSatoshi <= 90000; netFeeSatoshi += 10000)
                 {
                     var testTx = MockGenerateInvocationTransaction(new Fixed8(netFeeSatoshi), size).Object;
                     testTx.IsLowPriority.Should().Be(true); // "LowPriorityThreshold": 0.001
@@ -188,7 +188,7 @@ namespace SimplePolicy.UnitTests
             // part A
             filteredTxList.Where(tx => (tx.NetworkFee / tx.Size) >= new Fixed8(2500)).Count().Should().Be(18); // 18 enter in part A
             txList.Where(tx => (tx.NetworkFee / tx.Size) >= new Fixed8(2500)).Count().Should().Be(18); // they also exist in main list
-            txList.Where(tx => (tx.NetworkFee / tx.Size) < new Fixed8(2500)).Count().Should().Be(30-18); // 12 not selected transactions in part A
+            txList.Where(tx => (tx.NetworkFee / tx.Size) < new Fixed8(2500)).Count().Should().Be(30 - 18); // 12 not selected transactions in part A
             // part B
             filteredTxList.Where(tx => (tx.NetworkFee / tx.Size) < new Fixed8(2500)).Count().Should().Be(2); // only two enter in part B
             filteredTxList.Where(tx => (tx.NetworkFee / tx.Size) == new Fixed8(2000)).Count().Should().Be(2); // only two enter in part B with ratio 0.00002
@@ -206,7 +206,7 @@ namespace SimplePolicy.UnitTests
             txHighPriority_ratio.Should().Be(new Fixed8(2000000)); // 0.02
             txHighPriority.Object.IsLowPriority.Should().Be(false);
 
-            var txLowPriority = MockGenerateInvocationTransaction(Fixed8.One/10000, 50); // 0.00001
+            var txLowPriority = MockGenerateInvocationTransaction(Fixed8.One / 10000, 50); // 0.00001
             // testing default values
             Fixed8 txLowPriority_ratio = txLowPriority.Object.NetworkFee / txLowPriority.Object.Size;
             txLowPriority_ratio.Should().Be(new Fixed8(200)); // 0.000002  -> 200 satoshi / Byte
@@ -226,7 +226,7 @@ namespace SimplePolicy.UnitTests
         public static ClaimTransaction GetClaimTransaction(int countRefs)
         {
             CoinReference[] refs = new CoinReference[countRefs];
-            for(var i = 0; i<countRefs; i++)
+            for (var i = 0; i < countRefs; i++)
             {
                 refs[i] = GetCoinReference(new UInt256(Crypto.Default.Hash256(new BigInteger(i).ToByteArray())));
             }
