@@ -24,8 +24,8 @@ namespace Neo.Plugins
             this.MaxFreeTransactionsPerBlock = GetValueOrDefault(section.GetSection("MaxFreeTransactionsPerBlock"), 20, p => int.Parse(p));
             this.MaxFreeTransactionSize = GetValueOrDefault(section.GetSection("MaxFreeTransactionSize"), 1024, p => int.Parse(p));
             this.FeePerExtraByte = GetValueOrDefault(section.GetSection("FeePerExtraByte"), Fixed8.FromDecimal(0.00001M), p => Fixed8.Parse(p));
-            this.BlockedAccounts = new BlockedAccounts(section.GetSection("BlockedAccounts"));
             this.HighPriorityTxType = new EnumSet<TransactionType>(section.GetSection("HighPriorityTxType"), TransactionType.ClaimTransaction);
+            this.BlockedAccounts = new BlockedAccounts(section.GetSection("BlockedAccounts"));
         }
 
         public T GetValueOrDefault<T>(IConfigurationSection section, T defaultValue, Func<string, T> selector)
