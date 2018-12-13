@@ -3,6 +3,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Plugins;
 using Neo.Network.P2P.Payloads;
 using Neo;
+using NeoSettings = Neo.Settings;
+using Settings = Neo.Plugins.Settings;
 using System.Collections.Generic;
 using Neo.Cryptography;
 using System.Numerics;
@@ -30,6 +32,7 @@ namespace SimplePolicy.UnitTests
             Settings.Default.MaxTransactionsPerBlock.Should().Be(500);
             Settings.Default.MaxFreeTransactionsPerBlock.Should().Be(20);
         }
+
 
         [TestMethod]
         public void TestFilterForBlock_ClaimHasPriority()
@@ -62,7 +65,7 @@ namespace SimplePolicy.UnitTests
             for (var i = 0; i < 100; i++)
             {
                 TxList.Insert(0, MockGenerateInvocationTransaction(Fixed8.One, 50).Object);
-                TxList.Insert(0, MockGenerateInvocationTransaction(Fixed8.Zero, 50).Object);
+                TxList.Insert(0, MockGenerateInvocationTransaction(NeoSettings.Default.LowPriorityThreshold-Fixed8.Satoshi, 50).Object);
             }
 
             TxList.Count().Should().Be(204); // 100 free + 100 paid + 4 claims
@@ -85,7 +88,7 @@ namespace SimplePolicy.UnitTests
             for (var i = 0; i < 400; i++)
             {
                 TxList.Insert(0, MockGenerateInvocationTransaction(Fixed8.One, 50).Object);
-                TxList.Insert(0, MockGenerateInvocationTransaction(Fixed8.Zero, 50).Object);
+                TxList.Insert(0, MockGenerateInvocationTransaction(NeoSettings.Default.LowPriorityThreshold-Fixed8.Satoshi, 50).Object);
             }
 
             TxList.Count().Should().Be(1004); // 500 free + 500 paid + 4 claims
@@ -104,7 +107,7 @@ namespace SimplePolicy.UnitTests
 
 
         [TestMethod]
-        public void FreeTxVerifySort()
+        public void FreeTxVerifySort_NoHighPriority()
         {
             List<Transaction> txList = new List<Transaction>();
             // three different sizes, but it doesn't matter
@@ -121,7 +124,7 @@ namespace SimplePolicy.UnitTests
             txList.Count.Should().Be(30);
             // transactions => size: [10, 15, 20] x price: [0 ... 90000, step by 10000]
             //foreach(var tx in txList)
-            //    Console.WriteLine($"TX fee: {tx.NetworkFee} size: {tx.Size} ratio: {tx.NetworkFee / tx.Size}");
+            //    Console.WriteLine($"TX fee: {tx.NetworkFee} size: {tx.Size} ratio: {tx.FeePerByte}");
             /*
              TX fee: 0.0009 size: 20 ratio: 0.000045
              TX fee: 0.0008 size: 20 ratio: 0.00004
@@ -194,6 +197,71 @@ namespace SimplePolicy.UnitTests
             filteredTxList.Where(tx => (tx.NetworkFee / tx.Size) == new Fixed8(2000)).Count().Should().Be(2); // only two enter in part B with ratio 0.00002
             txList.Where(tx => (tx.NetworkFee / tx.Size) == new Fixed8(2000)).Count().Should().Be(3); // 3 in tie (ratio 0.00002)
             txList.Where(tx => (tx.NetworkFee / tx.Size) == new Fixed8(2000) && (tx.NetworkFee > new Fixed8(20000))).Count().Should().Be(2); // only 2 survive (fee > 0.0002)
+        }
+
+
+        [TestMethod]
+        public void FreeTxVerifySortWithPriority()
+        {
+            List<Transaction> txList = new List<Transaction>();
+            // three different sizes, but it doesn't matter
+            for (var size = 10; size <= 20; size += 5)
+            {
+                for (var netFeeSatoshi = 0; netFeeSatoshi <= 90000; netFeeSatoshi += 10000)
+                {
+                    var testTx = MockGenerateInvocationTransaction(new Fixed8(netFeeSatoshi), size).Object;
+                    testTx.IsLowPriority.Should().Be(true); // "LowPriorityThreshold": 0.001
+                    txList.Insert(0, testTx);
+                }
+            }
+
+            txList.Insert(0, GetClaimTransaction(1));
+            txList.Insert(0, GetClaimTransaction(10));
+            txList.Insert(0, GetClaimTransaction(20));
+            txList.Insert(0, GetClaimTransaction(30));
+
+            txList.Count.Should().Be(34); // 30 free + 4 claims
+            /*
+             sort2 tx 0 feeperbyte: 0 netfee: 0 priority: True
+             sort2 tx 1 feeperbyte: 0 netfee: 0 priority: True
+             sort2 tx 2 feeperbyte: 0 netfee: 0 priority: True
+             sort2 tx 3 feeperbyte: 0 netfee: 0 priority: True
+             sort2 tx 4 feeperbyte: 0.00009 netfee: 0.0009 priority: False
+             sort2 tx 5 feeperbyte: 0.00008 netfee: 0.0008 priority: False
+             sort2 tx 6 feeperbyte: 0.00007 netfee: 0.0007 priority: False
+             sort2 tx 7 feeperbyte: 0.00006 netfee: 0.0009 priority: False
+             sort2 tx 8 feeperbyte: 0.00006 netfee: 0.0006 priority: False
+             sort2 tx 9 feeperbyte: 0.00005333 netfee: 0.0008 priority: False
+             sort2 tx 10 feeperbyte: 0.00005 netfee: 0.0005 priority: False
+             sort2 tx 11 feeperbyte: 0.00004666 netfee: 0.0007 priority: False
+             sort2 tx 12 feeperbyte: 0.000045 netfee: 0.0009 priority: False
+             sort2 tx 13 feeperbyte: 0.00004 netfee: 0.0008 priority: False
+             sort2 tx 14 feeperbyte: 0.00004 netfee: 0.0006 priority: False
+             sort2 tx 15 feeperbyte: 0.00004 netfee: 0.0004 priority: False
+             sort2 tx 16 feeperbyte: 0.000035 netfee: 0.0007 priority: False
+             sort2 tx 17 feeperbyte: 0.00003333 netfee: 0.0005 priority: False
+             sort2 tx 18 feeperbyte: 0.00003 netfee: 0.0006 priority: False
+             sort2 tx 19 feeperbyte: 0.00003 netfee: 0.0003 priority: False
+             sort2 tx 20 feeperbyte: 0.00002666 netfee: 0.0004 priority: False
+             sort2 tx 21 feeperbyte: 0.000025 netfee: 0.0005 priority: False
+             sort2 tx 22 feeperbyte: 0.00002 netfee: 0.0004 priority: False
+             sort2 tx 23 feeperbyte: 0.00002 netfee: 0.0003 priority: False
+             sort2 tx 24 feeperbyte: 0.00002 netfee: 0.0002 priority: False
+             sort2 tx 25 feeperbyte: 0.000015 netfee: 0.0003 priority: False
+             sort2 tx 26 feeperbyte: 0.00001333 netfee: 0.0002 priority: False
+             sort2 tx 27 feeperbyte: 0.00001 netfee: 0.0002 priority: False
+             sort2 tx 28 feeperbyte: 0.00001 netfee: 0.0001 priority: False
+             sort2 tx 29 feeperbyte: 0.00000666 netfee: 0.0001 priority: False
+             sort2 tx 30 feeperbyte: 0.000005 netfee: 0.0001 priority: False
+             sort2 tx 31 feeperbyte: 0 netfee: 0 priority: False
+             sort2 tx 32 feeperbyte: 0 netfee: 0 priority: False
+             sort2 tx 33 feeperbyte: 0 netfee: 0 priority: False
+            */
+
+            IEnumerable<Transaction> filteredTxList = uut.FilterForBlock(txList);
+            filteredTxList.Count().Should().Be(20);
+
+            filteredTxList.Where(tx => tx.Type == TransactionType.ClaimTransaction).Count().Should().Be(4); // 4 claims will be selected
         }
 
 
