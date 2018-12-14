@@ -47,7 +47,7 @@ namespace Neo.Plugins
         private static IEnumerable<Transaction> FilterForBlock_Policy1(IEnumerable<Transaction> transactions)
         {
             int count = 0, count_free = 0;
-            foreach (Transaction tx in transactions.OrderByDescending(p => p.NetworkFee / p.Size).ThenByDescending(p => p.NetworkFee))
+            foreach (Transaction tx in transactions.OrderByDescending(p => p.NetworkFee / p.Size).ThenByDescending(p => p.NetworkFee).ThenByDescending(p => InHighPriorityList(p)))
             {
                 if (count++ >= Settings.Default.MaxTransactionsPerBlock - 1) break;
                 if (!tx.IsLowPriority || count_free++ < Settings.Default.MaxFreeTransactionsPerBlock)
@@ -63,6 +63,7 @@ namespace Neo.Plugins
             Transaction[] free = tx_list.Where(p => p.IsLowPriority)
                 .OrderByDescending(p => p.NetworkFee / p.Size)
                 .ThenByDescending(p => p.NetworkFee)
+                .ThenByDescending(p => InHighPriorityList(p))
                 .Take(Settings.Default.MaxFreeTransactionsPerBlock)
                 .ToArray();
 
@@ -92,10 +93,12 @@ namespace Neo.Plugins
 
         private bool VerifySizeLimits(Transaction tx)
         {
+            if (InHighPriorityList(tx)) return true;
+
             // Not Allow free TX bigger than MaxFreeTransactionSize
             if (tx.IsLowPriority && tx.Size > Settings.Default.MaxFreeTransactionSize) return false;
 
-            // Require proportional fee for TX bigger than MaxFreeTransactionSize 
+            // Require proportional fee for TX bigger than MaxFreeTransactionSize
             if (tx.Size > Settings.Default.MaxFreeTransactionSize)
             {
                 Fixed8 fee = Settings.Default.FeePerExtraByte * (tx.Size - Settings.Default.MaxFreeTransactionSize);
@@ -104,5 +107,8 @@ namespace Neo.Plugins
             }
             return true;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool InHighPriorityList(Transaction tx) => Settings.Default.HighPriorityTxType.Contains(tx.Type);
     }
 }
