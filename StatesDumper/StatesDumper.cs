@@ -14,6 +14,11 @@ namespace Neo.Plugins
     {
         private readonly JArray bs_cache = new JArray();
 
+        public override void Configure()
+        {
+            Settings.Load(GetConfiguration());
+        }
+
         private static void Dump<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> states)
             where TKey : ISerializable
             where TValue : ISerializable
