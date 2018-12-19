@@ -84,6 +84,11 @@ namespace Neo.Plugins
                 Console.WriteLine("error");
                 return true;
             }
+            if (parameters.Length > 2 && parameters[2].Contains("--"))
+            {
+                Program.Main(parameters);
+                return true;
+            }
 
             string[] args = new string[1];
             Console.Write("[Whether NEP-8(y/N)]> ");
@@ -99,6 +104,7 @@ namespace Neo.Plugins
 
             return true;
         }
+
         private bool OnDeploy(string[] args, bool testMode = false)
         {
             if (args.Length < 2)
