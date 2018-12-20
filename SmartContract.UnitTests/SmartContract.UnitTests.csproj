@@ -1,0 +1,79 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="resource\AgencyTransaction.dll" />
+    <None Remove="resource\Domain.dll" />
+    <None Remove="resource\EventExample.dll" />
+    <None Remove="resource\HelloWorld.dll" />
+    <None Remove="resource\ICO_Template.dll" />
+    <None Remove="resource\Lock.dll" />
+    <None Remove="resource\MapExample.dll" />
+    <None Remove="resource\NEP5.dll" />
+    <None Remove="resource\StructExample.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="resource\AgencyTransaction.dll" />
+    <EmbeddedResource Include="resource\Domain.dll" />
+    <EmbeddedResource Include="resource\EventExample.dll" />
+    <EmbeddedResource Include="resource\HelloWorld.dll" />
+    <EmbeddedResource Include="resource\ICO_Template.dll" />
+    <EmbeddedResource Include="resource\Lock.dll" />
+    <EmbeddedResource Include="resource\MapExample.dll" />
+    <EmbeddedResource Include="resource\NEP5.dll" />
+    <EmbeddedResource Include="resource\StructExample.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="4.19.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="1.2.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="1.2.0" />
+    <PackageReference Include="Neo.SmartContract.Framework" Version="2.9.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SmartContract\SmartContract.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="AgencyTransaction">
+      <HintPath>resource\AgencyTransaction.dll</HintPath>
+    </Reference>
+    <Reference Include="Domain">
+      <HintPath>resource\Domain.dll</HintPath>
+    </Reference>
+    <Reference Include="EventExample">
+      <HintPath>resource\EventExample.dll</HintPath>
+    </Reference>
+    <Reference Include="HelloWorld">
+      <HintPath>resource\HelloWorld.dll</HintPath>
+    </Reference>
+    <Reference Include="ICO_Template">
+      <HintPath>resource\ICO_Template.dll</HintPath>
+    </Reference>
+    <Reference Include="Lock">
+      <HintPath>resource\Lock.dll</HintPath>
+    </Reference>
+    <Reference Include="MapExample">
+      <HintPath>resource\MapExample.dll</HintPath>
+    </Reference>
+    <Reference Include="NEP5">
+      <HintPath>resource\NEP5.dll</HintPath>
+    </Reference>
+    <Reference Include="StructExample">
+      <HintPath>resource\StructExample.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

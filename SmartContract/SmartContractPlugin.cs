@@ -18,7 +18,7 @@ using System.Numerics;
 
 namespace Neo.Plugins
 {
-    public class SmartContract : Plugin
+    public class SmartContractPlugin : Plugin
     {
         private Wallet wallet = null;
 
@@ -84,21 +84,24 @@ namespace Neo.Plugins
                 Console.WriteLine("error");
                 return true;
             }
+            if (parameters.Length > 2 && parameters[2].Contains("--"))
+            {
+                Program.Main(parameters);
+                return true;
+            }
 
-            string[] args = new string[1];
             Console.Write("[Whether NEP-8(y/N)]> ");
             bool isNep8 = Console.ReadLine() == "y" ? true : false;
 
             if (!isNep8)
             {
-                args = new string[2];
-                args[1] = "--compatible";
+                parameters = parameters.Append("--compatible").ToArray();
             }
-            args[0] = parameters[1];
-            Program.Main(args);
+            Program.Main(parameters);
 
             return true;
         }
+
         private bool OnDeploy(string[] args, bool testMode = false)
         {
             if (args.Length < 2)
@@ -152,35 +155,10 @@ namespace Neo.Plugins
                 return true;
             }
 
-            byte[] new_script;
-            using (ScriptBuilder sb = new ScriptBuilder())
+            UInt256 txid = Deploy(script, parameter_list, return_type, properties, values, testMode);
+            if (txid != null)
             {
-                sb.EmitSysCall("Neo.Contract.Create", script, parameter_list, return_type, properties, values["Name"], values["Version"], values["Author"], values["Email"], values["Description"]);
-                new_script = sb.ToArray();
-            }
-            InvocationTransaction tx = GetTransaction(new_script);
-
-            ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
-
-            LogEngine(engine);
-            Console.WriteLine($"Contract Hash: {script.ToScriptHash().ToString()}");
-
-            if (engine.State.HasFlag(VMState.FAULT))
-            {
-                Console.WriteLine("Execution Failed");
-                return true;
-            }
-
-            if (!testMode)
-            {
-                tx.Gas = engine.GasConsumed - Fixed8.FromDecimal(10);
-                if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
-                tx.Gas = tx.Gas.Ceiling();
-                Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : Fixed8.Zero;
-
-                Console.Write("[Confirmation(y/N)]> ");
-                if (Console.ReadLine() == "y")
-                    SendTransaction(tx, fee);
+                Console.WriteLine($"Success! \nTXID: {txid.ToString()}");
             }
             return true;
         }
@@ -213,37 +191,10 @@ namespace Neo.Plugins
                 return true;
             }
 
-            byte[] script;
-            using (ScriptBuilder sb = new ScriptBuilder())
+            UInt256 txid = Invoke(hash, method, cparams, testMode);
+            if (txid != null)
             {
-                if (method == "")
-                    sb.EmitAppCall(hash, parameters: cparams);
-                else
-                    sb.EmitAppCall(hash, method, args: cparams);
-                script = sb.ToArray();
-            }
-            InvocationTransaction tx = GetTransaction(script);
-
-            ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
-
-            LogEngine(engine);
-
-            if (engine.State.HasFlag(VMState.FAULT))
-            {
-                Console.WriteLine("Execution Failed");
-                return true;
-            }
-
-            if (!testMode)
-            {
-                tx.Gas = engine.GasConsumed - Fixed8.FromDecimal(10);
-                if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
-                tx.Gas = tx.Gas.Ceiling();
-                Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : Fixed8.Zero;
-
-                Console.Write("[Confirmation(y/N)]> ");
-                if (Console.ReadLine() == "y")
-                    SendTransaction(tx, fee);
+                Console.WriteLine($"Success! \nTXID: {txid.ToString()}");
             }
             return true;
         }
@@ -313,7 +264,76 @@ namespace Neo.Plugins
             return tx;
         }
 
-        private void SendTransaction(InvocationTransaction tx, Fixed8 fee)
+        private UInt256 Deploy(byte[] script, byte[] parameter_list, ContractParameterType return_type, ContractPropertyState properties, Dictionary<string, string> values, bool testMode)
+        {
+
+            byte[] new_script;
+            using (ScriptBuilder sb = new ScriptBuilder())
+            {
+                sb.EmitSysCall("Neo.Contract.Create", script, parameter_list, return_type, properties, values["Name"], values["Version"], values["Author"], values["Email"], values["Description"]);
+                new_script = sb.ToArray();
+            }
+            InvocationTransaction tx = GetTransaction(new_script);
+            ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
+            LogEngine(engine);
+            Console.WriteLine($"Contract Hash: {script.ToScriptHash().ToString()}");
+
+            if (engine.State.HasFlag(VMState.FAULT))
+            {
+                Console.WriteLine("Execution Failed");
+                return null;
+            }
+
+            if (!testMode)
+            {
+                tx.Gas = engine.GasConsumed - Fixed8.FromDecimal(10);
+                if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
+                tx.Gas = tx.Gas.Ceiling();
+                Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : Fixed8.Zero;
+
+                Console.Write("[Confirmation(y/N)]> ");
+                if (Console.ReadLine() == "y")
+                    return SendTransaction(tx, fee);
+            }
+            return null;
+        }
+
+        private UInt256 Invoke(UInt160 hash, string method, ContractParameter[] cparams, bool testMode)
+        {
+            byte[] script;
+            using (ScriptBuilder sb = new ScriptBuilder())
+            {
+                if (method == "")
+                    sb.EmitAppCall(hash, parameters: cparams);
+                else
+                    sb.EmitAppCall(hash, method, args: cparams);
+                script = sb.ToArray();
+            }
+            InvocationTransaction tx = GetTransaction(script);
+            ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx, testMode: true);
+            LogEngine(engine);
+
+            if (engine.State.HasFlag(VMState.FAULT))
+            {
+                Console.WriteLine("Execution Failed");
+                return null;
+            }
+
+            if (!testMode)
+            {
+                tx.Gas = engine.GasConsumed - Fixed8.FromDecimal(10);
+                if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
+                tx.Gas = tx.Gas.Ceiling();
+                Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : Fixed8.Zero;
+
+                Console.Write("[Confirmation(y/N)]> ");
+                if (Console.ReadLine() == "y")
+                    return SendTransaction(tx, fee);
+            }
+            return null;
+        }
+
+        private UInt256 SendTransaction(InvocationTransaction tx, Fixed8 fee)
         {
             tx = wallet.MakeTransaction(new InvocationTransaction
             {
@@ -327,7 +347,7 @@ namespace Neo.Plugins
             if (tx == null)
             {
                 Console.WriteLine("Insufficient Funds");
-                return;
+                return null;
             }
             ContractParametersContext context;
             try
@@ -337,7 +357,7 @@ namespace Neo.Plugins
             catch (InvalidOperationException)
             {
                 Console.WriteLine("Unsynchronized Block");
-                return;
+                return null;
             }
 
             wallet.Sign(context);
@@ -348,10 +368,12 @@ namespace Neo.Plugins
                 wallet.ApplyTransaction(tx);
                 System.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
                 Console.WriteLine($"Relayed Transaction: {tx.ToJson()}");
+                return tx.Hash;
             }
             else
             {
                 Console.WriteLine(context.ToJson());
+                return null;
             }
         }
 

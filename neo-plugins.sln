@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimplePolicy.UnitTests", "S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartContract", "SmartContract\SmartContract.csproj", "{F8A461A5-F889-4048-8157-04C295B0EB2E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartContract.UnitTests", "SmartContract.UnitTests\SmartContract.UnitTests.csproj", "{50E2FE99-A485-43DC-AD3E-AE41AD5EB997}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{F8A461A5-F889-4048-8157-04C295B0EB2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F8A461A5-F889-4048-8157-04C295B0EB2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F8A461A5-F889-4048-8157-04C295B0EB2E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50E2FE99-A485-43DC-AD3E-AE41AD5EB997}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50E2FE99-A485-43DC-AD3E-AE41AD5EB997}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50E2FE99-A485-43DC-AD3E-AE41AD5EB997}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50E2FE99-A485-43DC-AD3E-AE41AD5EB997}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
