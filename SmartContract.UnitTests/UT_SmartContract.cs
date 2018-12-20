@@ -71,14 +71,14 @@ namespace SmartContract.UnitTests
         public void TestMapExample()
         {
             uut.Do(new string[] { "compile", "MapExample.dll", "--compatible" }).Should().BeTrue();
-            File.ReadAllBytes("MapExample.avm").ToScriptHash().ToString().Should().Be("0x4707bc0b203db300ff9694875c539e8b3cb2b313");
+            File.ReadAllBytes("MapExample.avm").ToScriptHash().ToString().Should().Be("0x368a5bde8e2fdafb32323d3428a4c9492e783d21");
         }
 
         [TestMethod]
         public void TestNEP5()
         {
             uut.Do(new string[] { "compile", "NEP5.dll", "--compatible" }).Should().BeTrue();
-            File.ReadAllBytes("NEP5.avm").ToScriptHash().ToString().Should().Be("0x65ca53abaaa7518d041b0f3b92eaa5dda63c9ee2");
+            File.ReadAllBytes("NEP5.avm").ToScriptHash().ToString().Should().Be("0xf13b2d59398f9da56693c6b2e543846b0ad279c8");
         }
 
         [TestMethod]
