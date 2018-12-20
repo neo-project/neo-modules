@@ -57,7 +57,7 @@ namespace SmartContract.UnitTests
         public void TestICOTemplate()
         {
             uut.Do(new string[] { "compile", "ICO_Template.dll", "--compatible" }).Should().BeTrue();
-            File.ReadAllBytes("ICO_Template.avm").ToScriptHash().ToString().Should().Be("0x3b1c0718473a48cc1d4e1046ffb62c03192dd2b8");
+            File.ReadAllBytes("ICO_Template.avm").ToScriptHash().ToString().Should().Be("0x7d00e9f3903f23d4ed2f27db9074bc91e5a2b891");
         }
 
         [TestMethod]
@@ -71,7 +71,7 @@ namespace SmartContract.UnitTests
         public void TestMapExample()
         {
             uut.Do(new string[] { "compile", "MapExample.dll", "--compatible" }).Should().BeTrue();
-            File.ReadAllBytes("MapExample.avm").ToScriptHash().ToString().Should().Be("0x368a5bde8e2fdafb32323d3428a4c9492e783d21");
+            File.ReadAllBytes("MapExample.avm").ToScriptHash().ToString().Should().Be("0x35ca61925da081fc93921fe71ed36e30f5d9b0a4");
         }
 
         [TestMethod]

@@ -90,17 +90,14 @@ namespace Neo.Plugins
                 return true;
             }
 
-            string[] args = new string[1];
             Console.Write("[Whether NEP-8(y/N)]> ");
             bool isNep8 = Console.ReadLine() == "y" ? true : false;
 
             if (!isNep8)
             {
-                args = new string[2];
-                args[1] = "--compatible";
+                parameters = parameters.Append("--compatible").ToArray();
             }
-            args[0] = parameters[1];
-            Program.Main(args);
+            Program.Main(parameters);
 
             return true;
         }
