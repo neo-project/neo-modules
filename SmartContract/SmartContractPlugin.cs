@@ -5,6 +5,7 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
+using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.VM;
 using Neo.Wallets;
@@ -47,6 +48,8 @@ namespace Neo.Plugins
                             return OnInvoke(args);
                         case "test":
                             return OnTest(args);
+                        case "debug":
+                            return OnDebug(args);
                     }
                 }
                 catch (Exception e)
@@ -97,6 +100,7 @@ namespace Neo.Plugins
             {
                 parameters = parameters.Append("--compatible").ToArray();
             }
+            Console.WriteLine("----------");
             Program.Main(parameters);
 
             return true;
@@ -154,11 +158,11 @@ namespace Neo.Plugins
                 Console.WriteLine("Parameters Error");
                 return true;
             }
-
+            Console.WriteLine("----------");
             UInt256 txid = Deploy(script, parameter_list, return_type, properties, values, testMode);
             if (txid != null)
             {
-                Console.WriteLine($"Success! \nTXID: {txid.ToString()}");
+                Console.WriteLine($"----------\nSuccess! \nTXID: {txid.ToString()}");
             }
             return true;
         }
@@ -190,11 +194,11 @@ namespace Neo.Plugins
                 Console.WriteLine("Parameters Error");
                 return true;
             }
-
+            Console.WriteLine("----------");
             UInt256 txid = Invoke(hash, method, cparams, testMode);
             if (txid != null)
             {
-                Console.WriteLine($"Success! \nTXID: {txid.ToString()}");
+                Console.WriteLine($"----------\nSuccess! \nTXID: {txid.ToString()}");
             }
             return true;
         }
@@ -266,7 +270,6 @@ namespace Neo.Plugins
 
         private UInt256 Deploy(byte[] script, byte[] parameter_list, ContractParameterType return_type, ContractPropertyState properties, Dictionary<string, string> values, bool testMode)
         {
-
             byte[] new_script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
@@ -291,7 +294,7 @@ namespace Neo.Plugins
                 tx.Gas = tx.Gas.Ceiling();
                 Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : Fixed8.Zero;
 
-                Console.Write("[Confirmation(y/N)]> ");
+                Console.Write("----------\n[Confirmation(y/N)]> ");
                 if (Console.ReadLine() == "y")
                     return SendTransaction(tx, fee);
             }
@@ -326,15 +329,108 @@ namespace Neo.Plugins
                 tx.Gas = tx.Gas.Ceiling();
                 Fixed8 fee = tx.Gas.Equals(Fixed8.Zero) ? net_fee : Fixed8.Zero;
 
-                Console.Write("[Confirmation(y/N)]> ");
+                Console.Write("----------\n[Confirmation(y/N)]> ");
                 if (Console.ReadLine() == "y")
                     return SendTransaction(tx, fee);
             }
             return null;
         }
 
+        private bool OnDebug(string[] args)
+        {
+            using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                byte[] script;
+                try
+                {
+                    script = File.ReadAllBytes(args[1]);
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("File Error");
+                    return true;
+                }
+
+                byte[] parameter_list = new byte[0];
+                ContractParameterType return_type = new ContractParameterType();
+                ContractPropertyState properties = ContractPropertyState.NoProperty;
+
+                string[] keys = { "Parameter List", "Return Type", "Properties(Storage, Dyncall, Payable)" };
+                Dictionary<string, string> values = new Dictionary<string, string>();
+
+                foreach (string key in keys)
+                {
+                    Console.Write($"[{key}]> ");
+                    values.Add(key, Console.ReadLine());
+                }
+
+                try
+                {
+                    parameter_list = values["Parameter List"].HexToBytes();
+                    return_type = values["Return Type"].HexToBytes().Select(p => (ContractParameterType?)p).FirstOrDefault() ?? ContractParameterType.Void;
+
+                    if (values["Properties(Storage, Dyncall, Payable)"][0] == 'T') properties |= ContractPropertyState.HasStorage;
+                    if (values["Properties(Storage, Dyncall, Payable)"][1] == 'T') properties |= ContractPropertyState.HasDynamicInvoke;
+                    if (values["Properties(Storage, Dyncall, Payable)"][2] == 'T') properties |= ContractPropertyState.Payable;
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("Parameters Error");
+                    return true;
+                }
+
+                ContractParameterType[] contractParameters = new ContractParameterType[0];
+                foreach (byte parameter in parameter_list)
+                {
+                    contractParameters = contractParameters.Append((ContractParameterType)parameter).ToArray();
+                }
+                snapshot.Contracts.GetOrAdd(script.ToScriptHash(), () => new ContractState
+                {
+                    Script = script,
+                    ParameterList = contractParameters,
+                    ReturnType = return_type,
+                    ContractProperties = properties
+                });
+
+                Console.Write("----------\n[Method]> ");
+                string method = Console.ReadLine();
+
+                ContractParameter[] cparams = null;
+                try
+                {
+                    cparams = GetParameters(0);
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("Parameters Error");
+                    return true;
+                }
+                Console.WriteLine("----------");
+                byte[] iscript;
+                using (ScriptBuilder sb = new ScriptBuilder())
+                {
+                    if (method == "")
+                        sb.EmitAppCall(script.ToScriptHash(), parameters: cparams);
+                    else
+                        sb.EmitAppCall(script.ToScriptHash(), method, args: cparams);
+                    iscript = sb.ToArray();
+                }
+                InvocationTransaction itx = GetTransaction(iscript);
+                ApplicationEngine engine = ApplicationEngine.Run(itx.Script, snapshot, itx, testMode: true);
+                LogEngine(engine);
+
+                if (engine.State.HasFlag(VMState.FAULT))
+                {
+                    Console.WriteLine("Execution Failed");
+                    return true;
+                }
+            }
+            return true;
+        }
+
         private UInt256 SendTransaction(InvocationTransaction tx, Fixed8 fee)
         {
+            Console.WriteLine("----------");
             tx = wallet.MakeTransaction(new InvocationTransaction
             {
                 Version = tx.Version,
@@ -383,6 +479,7 @@ namespace Neo.Plugins
             if (!string.Equals(args[1], Name, StringComparison.OrdinalIgnoreCase))
                 return false;
             Console.Write($"{Name} Commands:\n" + "\tcompile <path>\n"
+                + "\tdebug <path>\n"
                 + "\tdeploy <path>\n" + "\ttest deploy <path>\n"
                 + "\tinvoke <hash>\n" + "\ttest invoke <hash>\n");
             return true;
