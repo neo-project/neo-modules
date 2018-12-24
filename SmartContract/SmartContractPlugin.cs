@@ -87,6 +87,11 @@ namespace Neo.Plugins
                 Console.WriteLine("error");
                 return true;
             }
+            if (!parameters[1].Contains(".dll"))
+            {
+                Console.WriteLine("File type error");
+                return true;
+            }
             if (parameters.Length > 2 && parameters[2].Contains("--"))
             {
                 Program.Main(parameters);
@@ -123,6 +128,11 @@ namespace Neo.Plugins
             try
             {
                 string path = args[1];
+                if (!path.Contains(".avm"))
+                {
+                    Console.WriteLine("File type error");
+                    return true;
+                }
                 script = File.ReadAllBytes(path);
             }
             catch (Exception)
@@ -203,6 +213,73 @@ namespace Neo.Plugins
             return true;
         }
 
+        private bool OnDebug(string[] args)
+        {
+
+            byte[] script;
+            try
+            {
+                if (!args[1].Contains(".avm"))
+                {
+                    Console.WriteLine("File type error");
+                    return true;
+                }
+                script = File.ReadAllBytes(args[1]);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("File Error");
+                return true;
+            }
+
+            byte[] parameter_list = new byte[0];
+            ContractParameterType return_type = new ContractParameterType();
+            ContractPropertyState properties = ContractPropertyState.NoProperty;
+
+            string[] keys = { "Parameter List", "Return Type", "Properties(Storage, Dyncall, Payable)" };
+            Dictionary<string, string> values = new Dictionary<string, string>();
+
+            foreach (string key in keys)
+            {
+                Console.Write($"[{key}]> ");
+                values.Add(key, Console.ReadLine());
+            }
+
+            try
+            {
+                parameter_list = values["Parameter List"].HexToBytes();
+                return_type = values["Return Type"].HexToBytes().Select(p => (ContractParameterType?)p).FirstOrDefault() ?? ContractParameterType.Void;
+
+                if (values["Properties(Storage, Dyncall, Payable)"][0] == 'T') properties |= ContractPropertyState.HasStorage;
+                if (values["Properties(Storage, Dyncall, Payable)"][1] == 'T') properties |= ContractPropertyState.HasDynamicInvoke;
+                if (values["Properties(Storage, Dyncall, Payable)"][2] == 'T') properties |= ContractPropertyState.Payable;
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Parameters Error");
+                return true;
+            }
+
+            Console.Write("----------\n[Method]> ");
+            string method = Console.ReadLine();
+
+            ContractParameter[] cparams = null;
+            try
+            {
+                cparams = GetParameters(0);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Parameters Error");
+                return true;
+            }
+            Console.WriteLine("----------");
+
+            Debug(script, parameter_list, return_type, properties, method, cparams);
+
+            return true;
+        }
+
         private ContractParameter[] GetParameters(int depth)
         {
             Console.Write(new String(' ', depth) + "[Parameter Types]> ");
@@ -268,12 +345,12 @@ namespace Neo.Plugins
             return tx;
         }
 
-        private UInt256 Deploy(byte[] script, byte[] parameter_list, ContractParameterType return_type, ContractPropertyState properties, Dictionary<string, string> values, bool testMode)
+        private UInt256 Deploy(byte[] script, byte[] parameterList, ContractParameterType returnType, ContractPropertyState properties, Dictionary<string, string> values, bool testMode)
         {
             byte[] new_script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitSysCall("Neo.Contract.Create", script, parameter_list, return_type, properties, values["Name"], values["Version"], values["Author"], values["Email"], values["Description"]);
+                sb.EmitSysCall("Neo.Contract.Create", script, parameterList, returnType, properties, values["Name"], values["Version"], values["Author"], values["Email"], values["Description"]);
                 new_script = sb.ToArray();
             }
             InvocationTransaction tx = GetTransaction(new_script);
@@ -336,76 +413,22 @@ namespace Neo.Plugins
             return null;
         }
 
-        private bool OnDebug(string[] args)
+        private void Debug(byte[] script, byte[] parameterList, ContractParameterType returnType, ContractPropertyState properties, string method, ContractParameter[] cparams)
         {
             using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
             {
-                byte[] script;
-                try
+                ContractParameterType[] contract_parameters = new ContractParameterType[0];
+                foreach (byte parameter in parameterList)
                 {
-                    script = File.ReadAllBytes(args[1]);
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine("File Error");
-                    return true;
-                }
-
-                byte[] parameter_list = new byte[0];
-                ContractParameterType return_type = new ContractParameterType();
-                ContractPropertyState properties = ContractPropertyState.NoProperty;
-
-                string[] keys = { "Parameter List", "Return Type", "Properties(Storage, Dyncall, Payable)" };
-                Dictionary<string, string> values = new Dictionary<string, string>();
-
-                foreach (string key in keys)
-                {
-                    Console.Write($"[{key}]> ");
-                    values.Add(key, Console.ReadLine());
-                }
-
-                try
-                {
-                    parameter_list = values["Parameter List"].HexToBytes();
-                    return_type = values["Return Type"].HexToBytes().Select(p => (ContractParameterType?)p).FirstOrDefault() ?? ContractParameterType.Void;
-
-                    if (values["Properties(Storage, Dyncall, Payable)"][0] == 'T') properties |= ContractPropertyState.HasStorage;
-                    if (values["Properties(Storage, Dyncall, Payable)"][1] == 'T') properties |= ContractPropertyState.HasDynamicInvoke;
-                    if (values["Properties(Storage, Dyncall, Payable)"][2] == 'T') properties |= ContractPropertyState.Payable;
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine("Parameters Error");
-                    return true;
-                }
-
-                ContractParameterType[] contractParameters = new ContractParameterType[0];
-                foreach (byte parameter in parameter_list)
-                {
-                    contractParameters = contractParameters.Append((ContractParameterType)parameter).ToArray();
+                    contract_parameters = contract_parameters.Append((ContractParameterType)parameter).ToArray();
                 }
                 snapshot.Contracts.GetOrAdd(script.ToScriptHash(), () => new ContractState
                 {
                     Script = script,
-                    ParameterList = contractParameters,
-                    ReturnType = return_type,
+                    ParameterList = contract_parameters,
+                    ReturnType = returnType,
                     ContractProperties = properties
                 });
-
-                Console.Write("----------\n[Method]> ");
-                string method = Console.ReadLine();
-
-                ContractParameter[] cparams = null;
-                try
-                {
-                    cparams = GetParameters(0);
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine("Parameters Error");
-                    return true;
-                }
-                Console.WriteLine("----------");
                 byte[] iscript;
                 using (ScriptBuilder sb = new ScriptBuilder())
                 {
@@ -422,10 +445,8 @@ namespace Neo.Plugins
                 if (engine.State.HasFlag(VMState.FAULT))
                 {
                     Console.WriteLine("Execution Failed");
-                    return true;
                 }
             }
-            return true;
         }
 
         private UInt256 SendTransaction(InvocationTransaction tx, Fixed8 fee)
