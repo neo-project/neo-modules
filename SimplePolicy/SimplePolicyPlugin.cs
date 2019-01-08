@@ -44,6 +44,9 @@ namespace Neo.Plugins
             return FilterForBlock_Policy2(transactions);
         }
 
+        public int MaxTxPerBlock { get; } = Settings.Default.MaxTransactionsPerBlock;
+        public int MaxLowPriorityTxPerBlock { get; } = Settings.Default.MaxFreeTransactionsPerBlock;
+
         private static IEnumerable<Transaction> FilterForBlock_Policy1(IEnumerable<Transaction> transactions)
         {
             int count = 0, count_free = 0;
@@ -63,7 +66,7 @@ namespace Neo.Plugins
             Transaction[] free = tx_list.Where(p => p.IsLowPriority)
                 .OrderByDescending(p => p.NetworkFee / p.Size)
                 .ThenByDescending(p => p.NetworkFee)
-                .ThenByDescending(p => InHighPriorityList(p))
+                .ThenByDescending(InHighPriorityList)
                 .Take(Settings.Default.MaxFreeTransactionsPerBlock)
                 .ToArray();
 
