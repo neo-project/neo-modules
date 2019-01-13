@@ -44,6 +44,9 @@ namespace Neo.Plugins
             return FilterForBlock_Policy2(transactions);
         }
 
+        public int MaxTxPerBlock => Settings.Default.MaxTransactionsPerBlock;
+        public int MaxLowPriorityTxPerBlock => Settings.Default.MaxFreeTransactionsPerBlock;
+
         private static IEnumerable<Transaction> FilterForBlock_Policy1(IEnumerable<Transaction> transactions)
         {
             int count = 0, count_free = 0;
