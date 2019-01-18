@@ -46,6 +46,7 @@ namespace Neo.Plugins
 
         public int MaxTxPerBlock => Settings.Default.MaxTransactionsPerBlock;
         public int MaxLowPriorityTxPerBlock => Settings.Default.MaxFreeTransactionsPerBlock;
+        public EnumSet<TransactionType> HighPriorityTxType => Settings.Default.HighPriorityTxType;
 
         private static IEnumerable<Transaction> FilterForBlock_Policy1(IEnumerable<Transaction> transactions)
         {
