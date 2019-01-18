@@ -97,7 +97,7 @@ namespace Neo.Plugins
 
         private bool VerifySizeLimits(Transaction tx)
         {
-            if (InHighPriorityList(tx)) return true;
+            if (InHigherLowPriorityList(tx)) return true;
 
             // Not Allow free TX bigger than MaxFreeTransactionSize
             if (tx.IsLowPriority && tx.Size > Settings.Default.MaxFreeTransactionSize) return false;
