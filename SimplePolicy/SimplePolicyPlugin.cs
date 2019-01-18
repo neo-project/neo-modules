@@ -51,7 +51,7 @@ namespace Neo.Plugins
         private static IEnumerable<Transaction> FilterForBlock_Policy1(IEnumerable<Transaction> transactions)
         {
             int count = 0, count_free = 0;
-            foreach (Transaction tx in transactions.OrderByDescending(p => p.NetworkFee / p.Size).ThenByDescending(p => p.NetworkFee).ThenByDescending(p => InHighPriorityList(p)))
+            foreach (Transaction tx in transactions.OrderByDescending(p => p.NetworkFee / p.Size).ThenByDescending(p => p.NetworkFee).ThenByDescending(p => InHigherLowPriorityList(p)))
             {
                 if (count++ >= Settings.Default.MaxTransactionsPerBlock - 1) break;
                 if (!tx.IsLowPriority || count_free++ < Settings.Default.MaxFreeTransactionsPerBlock)
