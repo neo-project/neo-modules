@@ -67,7 +67,7 @@ namespace Neo.Plugins
             Transaction[] free = tx_list.Where(p => p.IsLowPriority)
                 .OrderByDescending(p => p.NetworkFee / p.Size)
                 .ThenByDescending(p => p.NetworkFee)
-                .ThenByDescending(p => InHighPriorityList(p))
+                .ThenByDescending(p => InHigherLowPriorityList(p))
                 .Take(Settings.Default.MaxFreeTransactionsPerBlock)
                 .ToArray();
 
@@ -113,6 +113,6 @@ namespace Neo.Plugins
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool InHighPriorityList(Transaction tx) => Settings.Default.HighPriorityTxType.Contains(tx.Type);
+        private static bool InHigherLowPriorityList(Transaction tx) => Settings.Default.HighPriorityTxType.Contains(tx.Type);
     }
 }
