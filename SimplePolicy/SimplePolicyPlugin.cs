@@ -67,14 +67,14 @@ namespace Neo.Plugins
                 .OrderByDescending(p => p.NetworkFee / p.Size)
                 .ThenByDescending(p => p.NetworkFee)
                 .ThenByDescending(p => InHighPriorityList(p))
-                .ThenByDescending(p => p.Transaction.Hash)
+                .ThenByAscending(p => p.Transaction.Hash)
                 .Take(Settings.Default.MaxFreeTransactionsPerBlock)
                 .ToArray();
 
             Transaction[] non_free = tx_list.Where(p => !p.IsLowPriority)
                 .OrderByDescending(p => p.NetworkFee / p.Size)
                 .ThenByDescending(p => p.NetworkFee)
-                .ThenByDescending(p => p.Transaction.Hash)
+                .ThenByAscending(p => p.Transaction.Hash)
                 .Take(Settings.Default.MaxTransactionsPerBlock - free.Length - 1)
                 .ToArray();
 
