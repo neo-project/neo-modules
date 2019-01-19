@@ -45,8 +45,7 @@ namespace Neo.Plugins
         }
 
         public int MaxTxPerBlock => Settings.Default.MaxTransactionsPerBlock;
-        public int MaxLowPriorityTxPerBlock => Settings.Default.MaxFreeTransactionsPerBlock;
-        public EnumSet<TransactionType> HigherLowPriorityTxTypes => Settings.Default.HighPriorityTxType;
+        public int MaxLowPriorityTxPerBlock => Settings.Default.MaxFreeTransactionsPerBlock;        
 
         private static IEnumerable<Transaction> FilterForBlock_Policy1(IEnumerable<Transaction> transactions)
         {
@@ -113,6 +112,6 @@ namespace Neo.Plugins
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool InHigherLowPriorityList(Transaction tx) => Settings.Default.HighPriorityTxType.Contains(tx.Type);
+        public static bool InHigherLowPriorityList(Transaction tx) => Settings.Default.HighPriorityTxType.Contains(tx.Type);
     }
 }
