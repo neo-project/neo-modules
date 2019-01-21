@@ -84,10 +84,6 @@ namespace Neo.Plugins
             uint blockIndex = snapshot.Height;
             if (blockIndex >= Settings.Default.HeightToBegin)
             {
-                string dirPath = "./Storage";
-                Directory.CreateDirectory(dirPath);
-                string path = $"{HandlePaths(dirPath, blockIndex)}/dump-block-{blockIndex.ToString()}.json";
-
                 JArray array = new JArray();
 
                 foreach (DataCache<StorageKey, StorageItem>.Trackable trackable in snapshot.Storages.GetChangeSet())
@@ -121,9 +117,20 @@ namespace Neo.Plugins
                 bs_item["size"] = array.Count;
                 bs_item["storage"] = array;
                 bs_cache.Add(bs_item);
+            }
+        }
 
+        public void OnCommit(Snapshot snapshot)
+        {
+            uint blockIndex = snapshot.Height;
+            if (bs_cache.Count > 0)
+            {
                 if ((blockIndex % Settings.Default.BlockCacheSize == 0) || (blockIndex > Settings.Default.HeightToStartRealTimeSyncing))
                 {
+                    string dirPath = "./Storage";
+                    Directory.CreateDirectory(dirPath);
+                    string path = $"{HandlePaths(dirPath, blockIndex)}/dump-block-{blockIndex.ToString()}.json";
+
                     File.WriteAllText(path, bs_cache.ToString());
                     bs_cache.Clear();
                 }
