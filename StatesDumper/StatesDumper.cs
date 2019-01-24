@@ -137,6 +137,12 @@ namespace Neo.Plugins
             }
         }
 
+        public bool ShouldThrowExceptionFromCommit(Exception ex)
+        {
+            Console.WriteLine($"Error writing States with StatesDumper.{Environment.NewLine}{ex}");
+            return true;
+        }
+
         private static string HandlePaths(string dirPath, uint blockIndex)
         {
             //Default Parameter
