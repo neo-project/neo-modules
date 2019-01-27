@@ -122,6 +122,12 @@ namespace Neo.Plugins
 
         public void OnCommit(Snapshot snapshot)
         {
+            if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
+                OnCommitStorage(snapshot);
+        }
+
+        public void OnCommitStorage(Snapshot snapshot)
+        {
             uint blockIndex = snapshot.Height;
             if (bs_cache.Count > 0)
             {
@@ -136,7 +142,7 @@ namespace Neo.Plugins
                 }
             }
         }
-
+        
         public bool ShouldThrowExceptionFromCommit(Exception ex)
         {
             Console.WriteLine($"Error writing States with StatesDumper.{Environment.NewLine}{ex}");
