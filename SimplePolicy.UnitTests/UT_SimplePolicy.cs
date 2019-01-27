@@ -43,14 +43,14 @@ namespace SimplePolicy.UnitTests
             Settings.Default.HighPriorityTxType.Contains(TransactionType.ClaimTransaction).Should().Be(true);
 
             ClaimTransaction claimTxZero = GetClaimTransaction(0);
-            claimTxZero.Size.Should().Be(7); // 7
+            claimTxZero.Size.Should().Be(7 + 21); // 7 + 21
             ClaimTransaction claimTxOne = GetClaimTransaction(1);
-            claimTxOne.Size.Should().Be(41); // 34 + 7
+            claimTxOne.Size.Should().Be(41 + 21); // 34 + 7 + 21
             ClaimTransaction claimTxTwo = GetClaimTransaction(2);
-            claimTxTwo.Size.Should().Be(75); // 2*34 + 7
+            claimTxTwo.Size.Should().Be(75 + 21); // 2*34 + 7 + 21
 
             ClaimTransaction claimTx30 = GetClaimTransaction(30);
-            claimTx30.Size.Should().Be(1027); // 30*34 + 7
+            claimTx30.Size.Should().Be(1027 + 21); // 30*34 + 7 + 21
             claimTx30.NetworkFee.Should().Be(Fixed8.Zero);
             claimTx30.IsLowPriority.Should().Be(true); // by default is Low Priority, but plugin makes it High Priority
             //uut.IsLowPriority -> cannot inspect because it's private... no problem!
@@ -297,10 +297,15 @@ namespace SimplePolicy.UnitTests
                 refs[i] = GetCoinReference(new UInt256(Crypto.Default.Hash256(new BigInteger(i).ToByteArray())));
             }
 
+            //==============================
+            //=== Generating random Hash ===
+            var randomBytes = new byte[20];
+            _random.NextBytes(randomBytes);
+            //==============================
             return new ClaimTransaction
             {
                 Claims = refs,
-                Attributes = new TransactionAttribute[0],
+                Attributes = new TransactionAttribute[]{new TransactionAttribute{Usage = TransactionAttributeUsage.Script, Data = randomBytes} },
                 Inputs = new CoinReference[0],
                 Outputs = new TransactionOutput[0],
                 Witnesses = new Witness[0]
