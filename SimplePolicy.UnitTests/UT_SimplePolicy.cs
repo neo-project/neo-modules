@@ -42,12 +42,18 @@ namespace SimplePolicy.UnitTests
             // Should contain "ClaimTransaction" in "HighPriorityTxType"
             Settings.Default.HighPriorityTxType.Contains(TransactionType.ClaimTransaction).Should().Be(true);
 
-            ClaimTransaction claimTxZero = GetClaimTransaction(0);
-            claimTxZero.Size.Should().Be(7 + 21); // 7 + 21
-            ClaimTransaction claimTxOne = GetClaimTransaction(1);
-            claimTxOne.Size.Should().Be(41 + 21); // 34 + 7 + 21
-            ClaimTransaction claimTxTwo = GetClaimTransaction(2);
-            claimTxTwo.Size.Should().Be(75 + 21); // 2*34 + 7 + 21
+            ClaimTransaction claimTxZero1 = GetClaimTransaction(0);
+            claimTxZero1.Size.Should().Be(7 + 21); // 7 + 21 (random script)
+            claimTxZero1.Hash.ToString().Should().Be("0x60037520be0fd903703c2b67973296f22cac8932db07a2723addf79478aea75f");
+            ClaimTransaction claimTxZero2 = GetClaimTransaction(0);
+            claimTxZero2.Size.Should().Be(7 + 21); // 7 + 21 (random script)
+            claimTxZero2.Hash.ToString().Should().Be("0xb29426673b3ef5c226bd35d53c2cb2242e09c06f0efe9c0d5be2034f41cb85ba");
+            ClaimTransaction claimTxZero3 = GetClaimTransaction(0);
+            claimTxZero3.Size.Should().Be(7 + 21); // 7 + 21 (random script)
+            claimTxZero3.Hash.ToString().Should().Be("0x01027faead9a0538048db7ac5657172f6e2240bff3f7d902e490bb1bd75c2df7");
+
+            //ClaimTransaction claimTxTwo = GetClaimTransaction(2);
+            //claimTxTwo.Size.Should().Be(75 + 21); // 2*34 + 7 + 21
 
             ClaimTransaction claimTx30 = GetClaimTransaction(30);
             claimTx30.Size.Should().Be(1027 + 21); // 30*34 + 7 + 21
@@ -56,10 +62,15 @@ namespace SimplePolicy.UnitTests
             //uut.IsLowPriority -> cannot inspect because it's private... no problem!
 
             List<Transaction> TxList = new List<Transaction>();
-            TxList.Insert(0, claimTxZero);
-            TxList.Insert(0, claimTxOne);
-            TxList.Insert(0, claimTxTwo);
+            TxList.Insert(0, claimTxZero1);
+            TxList.Insert(0, claimTxZero2);
+            TxList.Insert(0, claimTxZero3);
             TxList.Insert(0, claimTx30);
+
+            //Console.WriteLine("Tx List Claim");
+            //foreach(var tx in TxList)
+            //    Console.WriteLine($"Claim TX fee: {tx.NetworkFee} size: {tx.Size} ratio: {tx.FeePerByte} hash: {tx.Hash}" );
+
 
             // ======================== BEGIN TESTS ============================
 
@@ -121,6 +132,22 @@ namespace SimplePolicy.UnitTests
             // will still select Claim Transactions
             vx = filteredTxList.Where(tx => tx.Type == TransactionType.ClaimTransaction);
             vx.Count().Should().Be(2);
+
+            // there are 3 tied Claim tx, will solve it based on smaller hash (0x01, 0x60) => 0xb2 is excluded
+            // 0x01027faead9a0538048db7ac5657172f6e2240bff3f7d902e490bb1bd75c2df7
+            // 0x60037520be0fd903703c2b67973296f22cac8932db07a2723addf79478aea75f
+            // 0xb29426673b3ef5c226bd35d53c2cb2242e09c06f0efe9c0d5be2034f41cb85ba
+            vx = filteredTxList.Where(tx => tx.Hash.ToString() == "0x01027faead9a0538048db7ac5657172f6e2240bff3f7d902e490bb1bd75c2df7");
+            vx.Count().Should().Be(1);
+            vx = filteredTxList.Where(tx => tx.Hash.ToString() == "0x60037520be0fd903703c2b67973296f22cac8932db07a2723addf79478aea75f");
+            vx.Count().Should().Be(1);
+            vx = filteredTxList.Where(tx => tx.Hash.ToString() == "0xb29426673b3ef5c226bd35d53c2cb2242e09c06f0efe9c0d5be2034f41cb85ba");
+            vx.Count().Should().Be(0);
+
+            //Console.WriteLine("filtered");
+            //foreach(var tx in filteredTxList)
+            //    Console.WriteLine($"TX fee: {tx.NetworkFee} size: {tx.Size} ratio: {tx.FeePerByte} hash: {tx.Hash}" );
+
         }
 
 
