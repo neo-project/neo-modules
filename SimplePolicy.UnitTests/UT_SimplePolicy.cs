@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Plugins;
 using Neo.Network.P2P.Payloads;
 using Neo;
+using Neo.Persistence;
 using Settings = Neo.Plugins.Settings;
 using System.Collections.Generic;
 using Neo.Cryptography;
@@ -17,6 +18,8 @@ namespace SimplePolicy.UnitTests
     [TestClass]
     public class UT_SimplePolicy
     {
+        private static Random _random = new Random(11121990);
+
         SimplePolicyPlugin uut;
 
         [TestInitialize]
@@ -261,13 +264,29 @@ namespace SimplePolicy.UnitTests
         }
 
         // Generate Mock InvocationTransaction with different sizes and prices
-        public static Mock<Transaction> MockGenerateInvocationTransaction(Fixed8 networkFee, int size)
+        public static Mock<InvocationTransaction> MockGenerateInvocationTransaction(Fixed8 networkFee, int size)
         {
-            var mockTx = new Mock<Transaction>(TransactionType.InvocationTransaction);
+            var mockTx = new Mock<InvocationTransaction>();
             mockTx.SetupGet(mr => mr.NetworkFee).Returns(networkFee);
             mockTx.SetupGet(mr => mr.Size).Returns(size);
+
+            //==============================
+            //=== Generating random Hash ===
+            mockTx.CallBase = true;
+            mockTx.Setup(p => p.Verify(It.IsAny<Snapshot>(), It.IsAny<IEnumerable<Transaction>>())).Returns(true);
+            var tx = mockTx.Object;
+            var randomBytes = new byte[16];
+            _random.NextBytes(randomBytes);
+            tx.Script = randomBytes;
+            tx.Attributes = new TransactionAttribute[0];
+            tx.Inputs = new CoinReference[0];
+            tx.Outputs = new TransactionOutput[0];
+            tx.Witnesses = new Witness[0];
+            //==============================
+
             return mockTx;
         }
+
 
         // Create ClaimTransaction with 'countRefs' CoinReferences
         public static ClaimTransaction GetClaimTransaction(int countRefs)
