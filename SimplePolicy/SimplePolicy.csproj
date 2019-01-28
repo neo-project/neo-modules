@@ -4,7 +4,7 @@
     <Version>2.9.4</Version>
     <TargetFrameworks>netstandard2.0;net47</TargetFrameworks>
     <RootNamespace>Neo.Plugins</RootNamespace>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,5 +17,5 @@
   <ItemGroup>
     <PackageReference Include="Neo" Version="2.9.4" />
   </ItemGroup>
-
+   
 </Project>
