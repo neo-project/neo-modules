@@ -9,6 +9,11 @@ namespace Neo.Plugins
 {
     public class RpcSecurity : Plugin, IRpcPlugin
     {
+        public override void Configure()
+        {
+            Settings.Load(GetConfiguration());
+        }
+
         public JObject OnProcess(HttpContext context, string method, JArray _params)
         {
             if (!CheckAuth(context) || Settings.Default.DisabledMethods.Contains(method))

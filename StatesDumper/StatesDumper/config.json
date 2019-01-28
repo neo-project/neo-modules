@@ -1,0 +1,8 @@
+﻿{
+  "PluginConfiguration": {
+    "PersistAction": "StorageChanges",
+    "BlockCacheSize": 1000,
+    "HeightToBegin": 0,
+    "HeightToRealTimeSyncing": 2883000
+  }
+}
