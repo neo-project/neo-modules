@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Neo.IO;
 using Neo.IO.Data.LevelDB;
-using Neo.Persistence.LevelDB;
 
 namespace Neo.Plugins
 {
