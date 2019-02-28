@@ -1,0 +1,236 @@
+using Neo.IO.Caching;
+using Neo.IO.Json;
+using Neo.Ledger;
+using Encoding = System.Text.Encoding;
+using System;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
+using Neo.IO.Data.LevelDB;
+using Neo.Persistence.LevelDB;
+using Neo.SmartContract;
+using System.Linq;
+using System.Numerics;
+using Neo.Network.RPC;
+using Neo.Persistence;
+using Neo.VM;
+using Neo.Wallets;
+using Snapshot = Neo.Persistence.Snapshot;
+
+namespace Neo.Plugins
+{
+    public class RpcNep5Balances : Plugin, IPersistencePlugin, IRpcPlugin
+    {
+        private const byte Nep5BalancePrefix = 0xf8;
+        private const byte Nep5TransferSentPrefix = 0xf9;
+        private const byte Nep5TransferReceivedPrefix = 0xfa;
+        private DB _db;
+        private DataCache<Nep5BalanceKey, Nep5Balance> _balances;
+        private DataCache<Nep5TransferKey, Nep5Transfer> _transfersSent;
+        private DataCache<Nep5TransferKey, Nep5Transfer> _transfersReceived;
+        private WriteBatch _writeBatch;
+        private bool _shouldTrackHistory;
+
+        public override void Configure()
+        {
+            if (_db == null)
+            {
+                var dbPath = GetConfiguration().GetSection("DBPath").Value ?? "Nep5BalanceData";
+                _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
+                _db = DB.Open(dbPath, new Options { CreateIfMissing = true });
+            }
+        }
+
+        private void ResetBatch()
+        {
+            _writeBatch = new WriteBatch();
+            var balancesSnapshot = _db.GetSnapshot();
+            ReadOptions dbOptions = new ReadOptions { FillCache = false, Snapshot = balancesSnapshot };
+            _balances = new DbCache<Nep5BalanceKey, Nep5Balance>(_db, dbOptions, _writeBatch, Nep5BalancePrefix);
+            if (_shouldTrackHistory)
+            {
+                _transfersSent =
+                    new DbCache<Nep5TransferKey, Nep5Transfer>(_db, dbOptions, _writeBatch, Nep5TransferSentPrefix);
+                _transfersReceived =
+                    new DbCache<Nep5TransferKey, Nep5Transfer>(_db, dbOptions, _writeBatch, Nep5TransferReceivedPrefix);
+            }
+        }
+
+        private void HandleNotification(Snapshot snapshot, UInt160 scriptHash, VM.Types.Array stateItems,
+            Dictionary<Nep5BalanceKey, Nep5Balance> nep5BalancesChanged, ref ushort transferIndex)
+        {
+            // Event name should be encoded as a byte array.
+            if (!(stateItems[0] is VM.Types.ByteArray)) return;
+            var eventName = Encoding.UTF8.GetString(stateItems[0].GetByteArray());
+
+            // Only care about transfers
+            if (eventName != "transfer") return;
+
+            if (!(stateItems[1] is VM.Types.ByteArray))
+                return;
+            if (!(stateItems[2] is VM.Types.ByteArray))
+                return;
+            var amountItem = stateItems[3];
+            if (!(amountItem is VM.Types.ByteArray || amountItem is VM.Types.Integer))
+                return;
+            byte[] fromBytes = stateItems[1].GetByteArray();
+            if (fromBytes.Length != 20) fromBytes = null;
+            byte[] toBytes = stateItems[2].GetByteArray();
+            if (toBytes.Length != 20) toBytes = null;
+            if (fromBytes == null && toBytes == null) return;
+            var from = new UInt160(fromBytes);
+            var to = new UInt160(toBytes);
+
+            var fromKey = new Nep5BalanceKey(@from, scriptHash);
+            if (!nep5BalancesChanged.ContainsKey(fromKey)) nep5BalancesChanged.Add(fromKey, new Nep5Balance());
+            var toKey = new Nep5BalanceKey(to, scriptHash);
+            if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
+
+            if (!_shouldTrackHistory) return;
+            BigInteger amount = amountItem.GetBigInteger();
+            _transfersSent.Add(new Nep5TransferKey(@from,
+                    snapshot.GetHeader(snapshot.Height).Timestamp, @from, transferIndex),
+                new Nep5Transfer
+                {
+                    Amount = amount,
+                    UserScriptHash = to
+                });
+            _transfersReceived.Add(new Nep5TransferKey(@from,
+                    snapshot.GetHeader(snapshot.Height).Timestamp, to, transferIndex),
+                new Nep5Transfer
+                {
+                    Amount = amount,
+                    UserScriptHash = @from
+                });
+            transferIndex++;
+        }
+
+        public void OnPersist(Snapshot snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        {
+            // Start freshly with a new DBCache for each block.
+            ResetBatch();
+            Dictionary<Nep5BalanceKey, Nep5Balance> nep5BalancesChanged = new Dictionary<Nep5BalanceKey, Nep5Balance>();
+
+            ushort transferIndex = 0;
+            foreach (Blockchain.ApplicationExecuted appExecuted in applicationExecutedList)
+            {
+                foreach (var executionResults in appExecuted.ExecutionResults)
+                {
+                    // Executions that fault won't modify storage, so we can skip them.
+                    if (executionResults.VMState.HasFlag(VMState.FAULT)) continue;
+                    foreach (var notifyEventArgs in executionResults.Notifications)
+                    {
+                        if (!(notifyEventArgs?.State is VM.Types.Array stateItems) || stateItems.Count == 0)
+                            continue;
+                        HandleNotification(snapshot, notifyEventArgs.ScriptHash, stateItems, nep5BalancesChanged, ref transferIndex);
+                    }
+                }
+            }
+
+            foreach (var nep5BalancePair in nep5BalancesChanged)
+            {
+                // get guarantee accurate balances by calling balanceOf for keys that changed.
+                byte[] script;
+                using (ScriptBuilder sb = new ScriptBuilder())
+                {
+                    sb.EmitAppCall(nep5BalancePair.Key.AssetScriptHash, "balanceOf",
+                        nep5BalancePair.Key.UserScriptHash.ToArray());
+                    script = sb.ToArray();
+                }
+
+                ApplicationEngine engine = ApplicationEngine.Run(script, snapshot);
+                if (engine.State.HasFlag(VMState.FAULT)) continue;
+                if (engine.ResultStack.Count <= 0) continue;
+                nep5BalancePair.Value.Balance = engine.ResultStack.Pop().GetBigInteger();
+                nep5BalancePair.Value.LastUpdatedBlock = snapshot.Height;
+                var itemToChange = _balances.GetAndChange(nep5BalancePair.Key, () => nep5BalancePair.Value);
+                if (itemToChange != nep5BalancePair.Value)
+                    itemToChange.FromReplica(nep5BalancePair.Value);
+            }
+        }
+
+        public void OnCommit(Snapshot snapshot)
+        {
+            _balances.Commit();
+            if (_shouldTrackHistory)
+            {
+                _transfersSent.Commit();
+                _transfersReceived.Commit();
+            }
+
+            _db.Write(WriteOptions.Default, _writeBatch);
+        }
+
+        public bool ShouldThrowExceptionFromCommit(Exception ex)
+        {
+            return true;
+        }
+
+        private void AddTransfers(byte dbPrefix, UInt160 userScriptHash, uint startTime, uint endTime,
+            JArray parentJArray)
+        {
+            var prefix = new [] { dbPrefix }.Concat(userScriptHash.ToArray());
+            var transferPairs = _db.FindRange<Nep5TransferKey, Nep5Transfer>(
+                prefix.Concat(BitConverter.GetBytes(startTime)).ToArray(),
+                prefix.Concat(BitConverter.GetBytes(endTime)).ToArray());
+
+            foreach (var transferPair in transferPairs)
+            {
+                JObject transfer = new JObject();
+                transfer["timestamp"] = transferPair.Key.Timestamp;
+                transfer["asset_hash"] = transferPair.Key.AssetScriptHash.ToArray().Reverse().ToHexString();
+                transfer["transfer_notify_index"] = transferPair.Key.BlockXferNotificationIndex;
+                transfer["amount"] = transferPair.Value.Amount.ToString();
+                transfer["transfer_address"] = transferPair.Value.UserScriptHash.ToAddress();
+                parentJArray.Add(transfer);
+            }
+        }
+
+        private JObject GetNep5Transfers(JArray _params)
+        {
+            var userScriptHash = UInt160.Parse(_params[0].AsString());
+            // If start time not present, default to 1 week of history.
+            uint startTime = _params.Count > 1 ? (uint) _params[1].AsNumber() :
+                (DateTime.UtcNow - TimeSpan.FromDays(7)).ToTimestamp();
+            uint endTime = _params.Count > 2 ? (uint) _params[2].AsNumber() : DateTime.UtcNow.ToTimestamp();
+
+            if (endTime < startTime) throw new RpcException(-32602, "Invalid params");
+
+            JObject json = new JObject();
+            JArray transfersSent = new JArray();
+            json["sent"] = transfersSent;
+            JArray transfersReceived = new JArray();
+            json["received"] = transfersReceived;
+            json["address"] = userScriptHash.ToAddress();
+            AddTransfers(Nep5TransferSentPrefix, userScriptHash, startTime, endTime, transfersSent);
+            AddTransfers(Nep5TransferReceivedPrefix, userScriptHash, startTime, endTime, transfersReceived);
+            return json;
+        }
+
+        private JObject GetNep5Balances(JArray _params)
+        {
+            var userAddressScriptHash = UInt160.Parse(_params[0].AsString());
+            byte[] prefix = userAddressScriptHash.ToArray();
+
+            JObject json = new JObject();
+            JArray balances = new JArray();
+            json["balance"] = balances;
+            json["address"] = userAddressScriptHash.ToAddress();
+            var dbCache = new DbCache<Nep5BalanceKey, Nep5Balance>(_db, null, null, Nep5BalancePrefix);
+            foreach (var storageKeyValuePair in dbCache.Find(prefix))
+            {
+                JObject balance = new JObject();
+                balance["asset_hash"] = storageKeyValuePair.Key.AssetScriptHash.ToArray().Reverse().ToHexString();
+                balance["amount"] = storageKeyValuePair.Value.Balance.ToString();
+                balance["last_updated_block"] = storageKeyValuePair.Value.LastUpdatedBlock;
+                balances.Add(balance);
+            }
+            return json;
+        }
+
+        public JObject OnProcess(HttpContext context, string method, JArray _params)
+        {
+            if (_shouldTrackHistory && method == "getnep5transfers") return GetNep5Transfers(_params);
+            return method == "getnep5balances" ? GetNep5Balances(_params) : null;
+        }
+    }
+}
