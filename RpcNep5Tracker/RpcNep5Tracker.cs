@@ -19,7 +19,7 @@ using Neo.Wallets;
 
 namespace Neo.Plugins
 {
-    public class RpcNep5Balances : Plugin, IPersistencePlugin, IRpcPlugin
+    public class RpcNep5Tracker : Plugin, IPersistencePlugin, IRpcPlugin
     {
         private const byte Nep5BalancePrefix = 0xf8;
         private const byte Nep5TransferSentPrefix = 0xf9;
