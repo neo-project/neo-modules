@@ -150,6 +150,11 @@ namespace Neo.Plugins
                 if (engine.ResultStack.Count <= 0) continue;
                 nep5BalancePair.Value.Balance = engine.ResultStack.Pop().GetBigInteger();
                 nep5BalancePair.Value.LastUpdatedBlock = snapshot.Height;
+                if (nep5BalancePair.Value.Balance == 0)
+                {
+                    _balances.Delete(nep5BalancePair.Key);
+                    continue;
+                }
                 var itemToChange = _balances.GetAndChange(nep5BalancePair.Key, () => nep5BalancePair.Value);
                 if (itemToChange != nep5BalancePair.Value)
                     itemToChange.FromReplica(nep5BalancePair.Value);
