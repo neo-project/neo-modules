@@ -182,9 +182,17 @@ namespace Neo.Plugins
             JArray parentJArray)
         {
             var prefix = new [] { dbPrefix }.Concat(userScriptHash.ToArray()).ToArray();
+            var startTimeBytes = BitConverter.GetBytes(startTime);
+            var endTimeBytes = BitConverter.GetBytes(endTime);
+            if (BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(startTimeBytes);
+                Array.Reverse(endTimeBytes);
+            }
+
             var transferPairs = _db.FindRange<Nep5TransferKey, Nep5Transfer>(
-                prefix.Concat(BitConverter.GetBytes(startTime)).ToArray(),
-                prefix.Concat(BitConverter.GetBytes(endTime)).ToArray());
+                prefix.Concat(startTimeBytes).ToArray(),
+                prefix.Concat(endTimeBytes).ToArray());
 
             foreach (var transferPair in transferPairs)
             {

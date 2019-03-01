@@ -67,7 +67,9 @@ namespace Neo.Plugins
         public void Serialize(BinaryWriter writer)
         {
             writer.Write(UserScriptHash);
-            writer.Write(Timestamp);
+            var timestampBytes = BitConverter.GetBytes(Timestamp);
+            if (BitConverter.IsLittleEndian) Array.Reverse(timestampBytes);
+            writer.Write(timestampBytes);
             writer.Write(AssetScriptHash);
             writer.Write(BlockXferNotificationIndex);
         }
@@ -75,7 +77,10 @@ namespace Neo.Plugins
         public void Deserialize(BinaryReader reader)
         {
             ((ISerializable) UserScriptHash).Deserialize(reader);
-            Timestamp = reader.ReadUInt32();
+            byte[] timestampBytes = new byte[sizeof(uint)];
+            reader.Read(timestampBytes, 0, sizeof(uint));
+            if (BitConverter.IsLittleEndian) Array.Reverse(timestampBytes);
+            Timestamp = BitConverter.ToUInt32(timestampBytes, 0);
             ((ISerializable) AssetScriptHash).Deserialize(reader);
             BlockXferNotificationIndex = reader.ReadUInt16();
         }
