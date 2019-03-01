@@ -8,6 +8,7 @@ using Neo.IO.Caching;
 using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Ledger;
+using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.Persistence.LevelDB;
 using Snapshot = Neo.Persistence.Snapshot;
@@ -55,7 +56,8 @@ namespace Neo.Plugins
             }
         }
 
-        private void HandleNotification(Snapshot snapshot, UInt160 scriptHash, VM.Types.Array stateItems,
+        private void HandleNotification(Snapshot snapshot, Transaction transaction, UInt160 scriptHash,
+            VM.Types.Array stateItems,
             Dictionary<Nep5BalanceKey, Nep5Balance> nep5BalancesChanged, ref ushort transferIndex)
         {
             // Event name should be encoded as a byte array.
@@ -80,26 +82,30 @@ namespace Neo.Plugins
             var from = new UInt160(fromBytes);
             var to = new UInt160(toBytes);
 
-            var fromKey = new Nep5BalanceKey(@from, scriptHash);
+            var fromKey = new Nep5BalanceKey(from, scriptHash);
             if (!nep5BalancesChanged.ContainsKey(fromKey)) nep5BalancesChanged.Add(fromKey, new Nep5Balance());
             var toKey = new Nep5BalanceKey(to, scriptHash);
             if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
 
             if (!_shouldTrackHistory) return;
             BigInteger amount = amountItem.GetBigInteger();
-            _transfersSent.Add(new Nep5TransferKey(@from,
-                    snapshot.GetHeader(snapshot.Height).Timestamp, @from, transferIndex),
+            _transfersSent.Add(new Nep5TransferKey(from,
+                    snapshot.GetHeader(snapshot.Height).Timestamp, from, transferIndex),
                 new Nep5Transfer
                 {
                     Amount = amount,
-                    UserScriptHash = to
+                    UserScriptHash = to,
+                    BlockIndex = snapshot.Height,
+                    TxHash = transaction.Hash
                 });
-            _transfersReceived.Add(new Nep5TransferKey(@from,
+            _transfersReceived.Add(new Nep5TransferKey(from,
                     snapshot.GetHeader(snapshot.Height).Timestamp, to, transferIndex),
                 new Nep5Transfer
                 {
                     Amount = amount,
-                    UserScriptHash = @from
+                    UserScriptHash = from,
+                    BlockIndex = snapshot.Height,
+                    TxHash = transaction.Hash
                 });
             transferIndex++;
         }
@@ -119,9 +125,11 @@ namespace Neo.Plugins
                     if (executionResults.VMState.HasFlag(VMState.FAULT)) continue;
                     foreach (var notifyEventArgs in executionResults.Notifications)
                     {
-                        if (!(notifyEventArgs?.State is VM.Types.Array stateItems) || stateItems.Count == 0)
+                        if (!(notifyEventArgs?.State is VM.Types.Array stateItems) || stateItems.Count == 0
+                            || !(notifyEventArgs.ScriptContainer is Transaction transaction))
                             continue;
-                        HandleNotification(snapshot, notifyEventArgs.ScriptHash, stateItems, nep5BalancesChanged, ref transferIndex);
+                        HandleNotification(snapshot, transaction, notifyEventArgs.ScriptHash, stateItems,
+                            nep5BalancesChanged, ref transferIndex);
                     }
                 }
             }
@@ -178,9 +186,11 @@ namespace Neo.Plugins
                 JObject transfer = new JObject();
                 transfer["timestamp"] = transferPair.Key.Timestamp;
                 transfer["asset_hash"] = transferPair.Key.AssetScriptHash.ToArray().Reverse().ToHexString();
-                transfer["transfer_notify_index"] = transferPair.Key.BlockXferNotificationIndex;
-                transfer["amount"] = transferPair.Value.Amount.ToString();
                 transfer["transfer_address"] = transferPair.Value.UserScriptHash.ToAddress();
+                transfer["amount"] = transferPair.Value.Amount.ToString();
+                transfer["block_index"] = transferPair.Value.BlockIndex;
+                transfer["transfer_notify_index"] = transferPair.Key.BlockXferNotificationIndex;
+                transfer["tx_hash"] = transferPair.Value.TxHash.ToArray().Reverse().ToHexString();
                 parentJArray.Add(transfer);
             }
         }

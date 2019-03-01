@@ -8,6 +8,8 @@ namespace Neo.Plugins
     public class Nep5Transfer : StateBase, ICloneable<Nep5Transfer>
     {
         public UInt160 UserScriptHash;
+        public uint BlockIndex;
+        public UInt256 TxHash;
         public BigInteger Amount;
 
         public override int Size => base.Size + 20 + Amount.ToByteArray().GetVarSize();
@@ -16,6 +18,8 @@ namespace Neo.Plugins
         {
             base.Serialize(writer);
             writer.Write(UserScriptHash);
+            writer.Write(BlockIndex);
+            writer.Write(TxHash);
             writer.WriteVarBytes(Amount.ToByteArray());
         }
 
@@ -23,6 +27,8 @@ namespace Neo.Plugins
         {
             base.Deserialize(reader);
             UserScriptHash = reader.ReadSerializable<UInt160>();
+            BlockIndex = reader.ReadUInt32();
+            TxHash = reader.ReadSerializable<UInt256>();
             Amount = new BigInteger(reader.ReadVarBytes(512));
         }
 
