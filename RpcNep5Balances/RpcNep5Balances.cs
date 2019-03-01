@@ -90,7 +90,7 @@ namespace Neo.Plugins
             if (!_shouldTrackHistory) return;
             BigInteger amount = amountItem.GetBigInteger();
             _transfersSent.Add(new Nep5TransferKey(from,
-                    snapshot.GetHeader(snapshot.Height).Timestamp, from, transferIndex),
+                    snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
                 new Nep5Transfer
                 {
                     Amount = amount,
@@ -98,8 +98,8 @@ namespace Neo.Plugins
                     BlockIndex = snapshot.Height,
                     TxHash = transaction.Hash
                 });
-            _transfersReceived.Add(new Nep5TransferKey(from,
-                    snapshot.GetHeader(snapshot.Height).Timestamp, to, transferIndex),
+            _transfersReceived.Add(new Nep5TransferKey(to,
+                    snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
                 new Nep5Transfer
                 {
                     Amount = amount,
