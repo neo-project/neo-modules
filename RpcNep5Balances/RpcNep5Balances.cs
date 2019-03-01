@@ -181,7 +181,7 @@ namespace Neo.Plugins
         private void AddTransfers(byte dbPrefix, UInt160 userScriptHash, uint startTime, uint endTime,
             JArray parentJArray)
         {
-            var prefix = new [] { dbPrefix }.Concat(userScriptHash.ToArray());
+            var prefix = new [] { dbPrefix }.Concat(userScriptHash.ToArray()).ToArray();
             var transferPairs = _db.FindRange<Nep5TransferKey, Nep5Transfer>(
                 prefix.Concat(BitConverter.GetBytes(startTime)).ToArray(),
                 prefix.Concat(BitConverter.GetBytes(endTime)).ToArray());
