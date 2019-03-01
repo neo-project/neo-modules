@@ -2,6 +2,7 @@ using System.IO;
 using System.Numerics;
 using Neo.IO;
 using Neo.Ledger;
+using Neo.Network.P2P.Payloads;
 
 namespace Neo.Plugins
 {
@@ -37,13 +38,17 @@ namespace Neo.Plugins
             return new Nep5Transfer
             {
                 UserScriptHash = UserScriptHash,
-                Amount = Amount,
+                BlockIndex = BlockIndex,
+                TxHash = TxHash,
+                Amount = Amount
             };
         }
 
         public void FromReplica(Nep5Transfer replica)
         {
             UserScriptHash = replica.UserScriptHash;
+            BlockIndex = replica.BlockIndex;
+            TxHash = replica.TxHash;
             Amount = replica.Amount;
         }
     }
