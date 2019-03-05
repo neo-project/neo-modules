@@ -69,10 +69,17 @@ namespace Neo.Plugins
                     }
                 case "sendmany":
                     {
-                        JArray to = (JArray)_params[0];
-                        Fixed8 fee = _params.Count >= 2 ? Fixed8.Parse(_params[1].AsString()) : Fixed8.Zero;
-                        UInt160 change_address = _params.Count >= 3 ? _params[2].AsString().ToScriptHash() : null;
-                        return SendMany(to, fee, change_address);
+                        int to_start = 0;
+                        UInt160 from = null;
+                        if (_params[0] is JString)
+                        {
+                            from = _params[0].AsString().ToScriptHash();
+                            to_start = 1;
+                        }
+                        JArray to = (JArray)_params[to_start + 0];
+                        Fixed8 fee = _params.Count >= to_start + 2 ? Fixed8.Parse(_params[to_start + 1].AsString()) : Fixed8.Zero;
+                        UInt160 change_address = _params.Count >= to_start + 3 ? _params[to_start + 2].AsString().ToScriptHash() : null;
+                        return SendMany(from, to, fee, change_address);
                     }
                 case "sendtoaddress":
                     {
@@ -235,7 +242,7 @@ namespace Neo.Plugins
             }
         }
 
-        private JObject SendMany(JArray to, Fixed8 fee, UInt160 change_address)
+        private JObject SendMany(UInt160 from, JArray to, Fixed8 fee, UInt160 change_address)
         {
             CheckWallet();
             if (to.Count == 0)
@@ -256,7 +263,7 @@ namespace Neo.Plugins
             }
             if (fee < Fixed8.Zero)
                 throw new RpcException(-32602, "Invalid params");
-            Transaction tx = Wallet.MakeTransaction(null, outputs, change_address: change_address, fee: fee);
+            Transaction tx = Wallet.MakeTransaction(null, outputs, from: from, change_address: change_address, fee: fee);
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
             ContractParametersContext context = new ContractParametersContext(tx);
