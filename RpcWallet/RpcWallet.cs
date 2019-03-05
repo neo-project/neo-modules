@@ -6,6 +6,7 @@ using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC;
+using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
@@ -43,6 +44,10 @@ namespace Neo.Plugins
                 case "getnewaddress":
                     {
                         return GetNewAddress();
+                    }
+                case "getunclaimedgas":
+                    {
+                        return GetUnclaimedGas();
                     }
                 case "getwalletheight":
                     {
@@ -172,6 +177,29 @@ namespace Neo.Plugins
             if (Wallet is NEP6Wallet nep6)
                 nep6.Save();
             return account.Address;
+        }
+
+        private JObject GetUnclaimedGas()
+        {
+            CheckWallet();
+            using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                uint height = snapshot.Height + 1;
+                Fixed8 unavailable;
+                try
+                {
+                    unavailable = snapshot.CalculateBonus(Wallet.FindUnspentCoins().Where(p => p.Output.AssetId.Equals(Blockchain.GoverningToken.Hash)).Select(p => p.Reference), height);
+                }
+                catch
+                {
+                    unavailable = Fixed8.Zero;
+                }
+                return new JObject
+                {
+                    ["available"] = snapshot.CalculateBonus(Wallet.GetUnclaimedCoins().Select(p => p.Reference)).ToString(),
+                    ["unavailable"] = unavailable.ToString()
+                };
+            }
         }
 
         private JObject GetWalletHeight()
