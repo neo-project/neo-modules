@@ -48,6 +48,11 @@ namespace Neo.Plugins
                     {
                         return GetWalletHeight();
                     }
+                case "importprivkey":
+                    {
+                        string privkey = _params[0].AsString();
+                        return ImportPrivKey(privkey);
+                    }
                 case "listaddress":
                     {
                         return ListAddress();
@@ -166,6 +171,19 @@ namespace Neo.Plugins
         {
             CheckWallet();
             return (Wallet.WalletHeight > 0) ? Wallet.WalletHeight - 1 : 0;
+        }
+
+        private JObject ImportPrivKey(string privkey)
+        {
+            CheckWallet();
+            WalletAccount account = Wallet.Import(privkey);
+            return new JObject
+            {
+                ["address"] = account.Address,
+                ["haskey"] = account.HasKey,
+                ["label"] = account.Label,
+                ["watchonly"] = account.WatchOnly
+            };
         }
 
         private JObject ListAddress()
