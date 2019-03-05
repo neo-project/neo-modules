@@ -31,6 +31,11 @@ namespace Neo.Plugins
         {
             switch (method)
             {
+                case "claimgas":
+                    {
+                        UInt160 to = _params.Count >= 1 ? _params[0].AsString().ToScriptHash() : null;
+                        return ClaimGas(to);
+                    }
                 case "dumpprivkey":
                     {
                         UInt160 scriptHash = _params[0].AsString().ToScriptHash();
@@ -145,6 +150,53 @@ namespace Neo.Plugins
                 throw new RpcException(-400, "Access denied");
         }
 
+        private JObject SignAndRelay(Transaction tx)
+        {
+            ContractParametersContext context = new ContractParametersContext(tx);
+            Wallet.Sign(context);
+            if (context.Completed)
+            {
+                tx.Witnesses = context.GetWitnesses();
+                Wallet.ApplyTransaction(tx);
+                System.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
+                return tx.ToJson();
+            }
+            else
+            {
+                return context.ToJson();
+            }
+        }
+
+        private JObject ClaimGas(UInt160 to)
+        {
+            CheckWallet();
+            const int MAX_CLAIMS_AMOUNT = 50;
+            CoinReference[] claims = Wallet.GetUnclaimedCoins().Select(p => p.Reference).ToArray();
+            if (claims.Length == 0)
+                throw new RpcException(-300, "No gas to claim");
+            ClaimTransaction tx;
+            using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                tx = new ClaimTransaction
+                {
+                    Claims = claims.Take(MAX_CLAIMS_AMOUNT).ToArray(),
+                    Attributes = new TransactionAttribute[0],
+                    Inputs = new CoinReference[0],
+                    Outputs = new[]
+                    {
+                        new TransactionOutput
+                        {
+                            AssetId = Blockchain.UtilityToken.Hash,
+                            Value = snapshot.CalculateBonus(claims.Take(MAX_CLAIMS_AMOUNT)),
+                            ScriptHash = to ?? Wallet.GetChangeAddress()
+                        }
+                    }
+
+                };
+            }
+            return SignAndRelay(tx);
+        }
+
         private JObject DumpPrivKey(UInt160 scriptHash)
         {
             CheckWallet();
@@ -255,19 +307,7 @@ namespace Neo.Plugins
             }, from: from, change_address: change_address, fee: fee);
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
-            ContractParametersContext context = new ContractParametersContext(tx);
-            Wallet.Sign(context);
-            if (context.Completed)
-            {
-                tx.Witnesses = context.GetWitnesses();
-                Wallet.ApplyTransaction(tx);
-                System.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
-                return tx.ToJson();
-            }
-            else
-            {
-                return context.ToJson();
-            }
+            return SignAndRelay(tx);
         }
 
         private JObject SendMany(UInt160 from, JArray to, Fixed8 fee, UInt160 change_address)
@@ -294,19 +334,7 @@ namespace Neo.Plugins
             Transaction tx = Wallet.MakeTransaction(null, outputs, from: from, change_address: change_address, fee: fee);
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
-            ContractParametersContext context = new ContractParametersContext(tx);
-            Wallet.Sign(context);
-            if (context.Completed)
-            {
-                tx.Witnesses = context.GetWitnesses();
-                Wallet.ApplyTransaction(tx);
-                System.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
-                return tx.ToJson();
-            }
-            else
-            {
-                return context.ToJson();
-            }
+            return SignAndRelay(tx);
         }
 
         private JObject SendToAddress(UIntBase assetId, UInt160 scriptHash, string value, Fixed8 fee, UInt160 change_address)
@@ -329,19 +357,7 @@ namespace Neo.Plugins
             }, change_address: change_address, fee: fee);
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
-            ContractParametersContext context = new ContractParametersContext(tx);
-            Wallet.Sign(context);
-            if (context.Completed)
-            {
-                tx.Witnesses = context.GetWitnesses();
-                Wallet.ApplyTransaction(tx);
-                System.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
-                return tx.ToJson();
-            }
-            else
-            {
-                return context.ToJson();
-            }
+            return SignAndRelay(tx);
         }
     }
 }
