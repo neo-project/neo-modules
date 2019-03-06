@@ -1,21 +1,21 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using Encoding = System.Text.Encoding;
 using Microsoft.AspNetCore.Http;
 using Neo.IO.Caching;
 using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
+using Neo.Network.RPC;
 using Neo.Persistence;
 using Neo.Persistence.LevelDB;
-using Snapshot = Neo.Persistence.Snapshot;
 using Neo.SmartContract;
-using Neo.Network.RPC;
 using Neo.VM;
 using Neo.Wallets;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using System.Text;
+using Snapshot = Neo.Persistence.Snapshot;
 
 namespace Neo.Plugins
 {
@@ -181,7 +181,7 @@ namespace Neo.Plugins
         private void AddTransfers(byte dbPrefix, UInt160 userScriptHash, uint startTime, uint endTime,
             JArray parentJArray)
         {
-            var prefix = new [] { dbPrefix }.Concat(userScriptHash.ToArray()).ToArray();
+            var prefix = new[] { dbPrefix }.Concat(userScriptHash.ToArray()).ToArray();
             var startTimeBytes = BitConverter.GetBytes(startTime);
             var endTimeBytes = BitConverter.GetBytes(endTime);
             if (BitConverter.IsLittleEndian)
@@ -212,9 +212,9 @@ namespace Neo.Plugins
         {
             var userScriptHash = UInt160.Parse(_params[0].AsString());
             // If start time not present, default to 1 week of history.
-            uint startTime = _params.Count > 1 ? (uint) _params[1].AsNumber() :
+            uint startTime = _params.Count > 1 ? (uint)_params[1].AsNumber() :
                 (DateTime.UtcNow - TimeSpan.FromDays(7)).ToTimestamp();
-            uint endTime = _params.Count > 2 ? (uint) _params[2].AsNumber() : DateTime.UtcNow.ToTimestamp();
+            uint endTime = _params.Count > 2 ? (uint)_params[2].AsNumber() : DateTime.UtcNow.ToTimestamp();
 
             if (endTime < startTime) throw new RpcException(-32602, "Invalid params");
 
@@ -250,10 +250,18 @@ namespace Neo.Plugins
             return json;
         }
 
+        public void PreProcess(HttpContext context, string method, JArray _params)
+        {
+        }
+
         public JObject OnProcess(HttpContext context, string method, JArray _params)
         {
             if (_shouldTrackHistory && method == "getnep5transfers") return GetNep5Transfers(_params);
             return method == "getnep5balances" ? GetNep5Balances(_params) : null;
+        }
+
+        public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
+        {
         }
     }
 }
