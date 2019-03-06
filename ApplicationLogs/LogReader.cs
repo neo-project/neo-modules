@@ -23,7 +23,7 @@ namespace Neo.Plugins
             Settings.Load(GetConfiguration());
         }
 
-        void PreProcess(HttpContext context, string method, JArray _params)
+        public void PreProcess(HttpContext context, string method, JArray _params)
         {
         }
         
@@ -36,7 +36,7 @@ namespace Neo.Plugins
             return JObject.Parse(value.ToString());
         }
         
-        void PostProcess(HttpContext context, string method, JArray _params, JObject result)
+        public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
         {
         }
     }
