@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SimplePolicy\SimplePolicy.csproj" />
+    <ProjectReference Include="..\..\SimplePolicy\SimplePolicy.csproj" />
   </ItemGroup>
 
 </Project>

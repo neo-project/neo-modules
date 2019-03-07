@@ -13,9 +13,21 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StatesDumper", "StatesDumpe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImportBlocks", "ImportBlocks\ImportBlocks.csproj", "{B7A42984-57BB-4F8D-967B-23B0E841B726}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimplePolicy.UnitTests", "SimplePolicy.UnitTests\SimplePolicy.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcWallet", "RpcWallet\RpcWallet.csproj", "{EF32A7E5-EDF9-438C-8041-8DA6E675A7FD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimplePolicy.UnitTests", "plugins.UnitTests\SimplePolicy.UnitTests\SimplePolicy.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationLogs.UnitTests", "plugins.UnitTests\ApplicationLogs.UnitTests\ApplicationLogs.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcSecurity.UnitTests", "plugins.UnitTests\RpcSecurity.UnitTests\RpcSecurity.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StatesDumper.UnitTests", "plugins.UnitTests\StatesDumper.UnitTests\StatesDumper.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImportBlocks.UnitTests", "plugins.UnitTests\ImportBlocks.UnitTests\ImportBlocks.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcWallet.UnitTests", "plugins.UnitTests\RpcWallet.UnitTests\RpcWallet.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
+EndProject
+
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

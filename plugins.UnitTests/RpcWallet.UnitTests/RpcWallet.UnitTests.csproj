@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <AssemblyName>RpcWallet.UnitTests</AssemblyName>
+    <RootNamespace>RpcWallet.UnitTests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="5.5.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.9.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="1.4.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
+    <PackageReference Include="Moq" Version="4.7.63" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\RpcWallet\RpcWallet.csproj" />
+  </ItemGroup>
+
+</Project>
