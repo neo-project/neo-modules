@@ -13,10 +13,10 @@ using System.Linq;
 using System;
 using Moq;
 
-namespace ImportBlocks.UnitTests
+namespace ImportBlocksPlugin.UnitTests
 {
     [TestClass]
-    public class UT_ImportBlocks
+    public class UT_ImportBlocksPlugin
     {
         ImportBlocks uut;
 
@@ -29,7 +29,7 @@ namespace ImportBlocks.UnitTests
         [TestMethod]
         public void TestDefaultConfiguration()
         {
-            Settings.Default.MaxOnImportHeight.Should().Be(0);
+            Settings.Default.MaxOnImportHeight.Should().Be(0u);
         }
    }
 }

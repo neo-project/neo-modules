@@ -4,7 +4,6 @@ using Neo.Plugins;
 using Neo.Network.P2P.Payloads;
 using Neo;
 using Neo.Persistence;
-using Settings = Neo.Plugins.Settings;
 using System.Collections.Generic;
 using Neo.Cryptography;
 using System.Numerics;
@@ -13,10 +12,10 @@ using System.Linq;
 using System;
 using Moq;
 
-namespace RpcWallet.UnitTests
+namespace RpcWalletPlugin.UnitTests
 {
     [TestClass]
-    public class UT_RpcWallet
+    public class UT_RpcWalletPlugin
     {
         RpcWallet uut;
 

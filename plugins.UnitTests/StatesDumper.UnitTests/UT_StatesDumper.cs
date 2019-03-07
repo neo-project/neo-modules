@@ -13,10 +13,10 @@ using System.Linq;
 using System;
 using Moq;
 
-namespace StatesDumper.UnitTests
+namespace StatesDumperPlugin.UnitTests
 {
     [TestClass]
-    public class UT_StatesDumper
+    public class UT_StatesDumperPlugin
     {
         StatesDumper uut;
 
