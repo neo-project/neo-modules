@@ -208,9 +208,14 @@ namespace Neo.Plugins
             }
         }
 
+        private UInt160 GetScriptHashFromParam(string addressOrScriptHash)
+        {
+            return addressOrScriptHash.Length < 40 ?
+                addressOrScriptHash.ToScriptHash() : UInt160.Parse(addressOrScriptHash);
+        }
         private JObject GetNep5Transfers(JArray _params)
         {
-            var userScriptHash = UInt160.Parse(_params[0].AsString());
+            UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
             // If start time not present, default to 1 week of history.
             uint startTime = _params.Count > 1 ? (uint)_params[1].AsNumber() :
                 (DateTime.UtcNow - TimeSpan.FromDays(7)).ToTimestamp();
@@ -231,14 +236,14 @@ namespace Neo.Plugins
 
         private JObject GetNep5Balances(JArray _params)
         {
-            var userAddressScriptHash = UInt160.Parse(_params[0].AsString());
-            byte[] prefix = userAddressScriptHash.ToArray();
+            UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
 
             JObject json = new JObject();
             JArray balances = new JArray();
             json["balance"] = balances;
-            json["address"] = userAddressScriptHash.ToAddress();
+            json["address"] = userScriptHash.ToAddress();
             var dbCache = new DbCache<Nep5BalanceKey, Nep5Balance>(_db, null, null, Nep5BalancePrefix);
+            byte[] prefix = userScriptHash.ToArray();
             foreach (var storageKeyValuePair in dbCache.Find(prefix))
             {
                 JObject balance = new JObject();
