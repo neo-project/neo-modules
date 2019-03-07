@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimplePolicy.UnitTests", "p
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationLogs.UnitTests", "plugins.UnitTests\ApplicationLogs.UnitTests\ApplicationLogs.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcSecurity.UnitTests", "plugins.UnitTests\RpcSecurity.UnitTests\RpcSecurity.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcSecurity.UnitTests", "plugins.UnitTests\RpcSecurity.UnitTests\RpcSecurity.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StatesDumper.UnitTests", "plugins.UnitTests\StatesDumper.UnitTests\StatesDumper.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
 EndProject
