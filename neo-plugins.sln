@@ -3,31 +3,29 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.2027
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimplePolicy", "SimplePolicy\SimplePolicy.csproj", "{322C366E-F891-47FD-A039-0FEF79BCB6D5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimplePolicy", "SimplePolicy\SimplePolicy.csproj", "{322C366E-F891-47FD-A039-0FEF79BCB6D5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationLogs", "ApplicationLogs\ApplicationLogs.csproj", "{84DA8EA6-EF60-4FCD-B1C6-65C1A8323B3F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationLogs", "ApplicationLogs\ApplicationLogs.csproj", "{84DA8EA6-EF60-4FCD-B1C6-65C1A8323B3F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcSecurity", "RpcSecurity\RpcSecurity.csproj", "{6800D782-8EC0-49E9-98C4-195C8F781A1F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcSecurity", "RpcSecurity\RpcSecurity.csproj", "{6800D782-8EC0-49E9-98C4-195C8F781A1F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StatesDumper", "StatesDumper\StatesDumper.csproj", "{86531DB1-A231-46C4-823F-BE60972F7523}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatesDumper", "StatesDumper\StatesDumper.csproj", "{86531DB1-A231-46C4-823F-BE60972F7523}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImportBlocks", "ImportBlocks\ImportBlocks.csproj", "{B7A42984-57BB-4F8D-967B-23B0E841B726}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImportBlocks", "ImportBlocks\ImportBlocks.csproj", "{B7A42984-57BB-4F8D-967B-23B0E841B726}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcWallet", "RpcWallet\RpcWallet.csproj", "{EF32A7E5-EDF9-438C-8041-8DA6E675A7FD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimplePolicy.UnitTests", "plugins.UnitTests\SimplePolicy.UnitTests\SimplePolicy.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimplePolicy.UnitTests", "plugins.UnitTests\SimplePolicy.UnitTests\SimplePolicy.UnitTests.csproj", "{613EBBDA-3F43-4DAF-A35E-68B75627B127}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationLogs.UnitTests", "plugins.UnitTests\ApplicationLogs.UnitTests\ApplicationLogs.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationLogs.UnitTests", "plugins.UnitTests\ApplicationLogs.UnitTests\ApplicationLogs.UnitTests.csproj", "{E0F6527A-0F52-4CD3-9CCB-6EB4FA1AE14D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcSecurity.UnitTests", "plugins.UnitTests\RpcSecurity.UnitTests\RpcSecurity.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImportBlocks.UnitTests", "plugins.UnitTests\ImportBlocks.UnitTests\ImportBlocks.UnitTests.csproj", "{59B0EF62-3FE9-4D36-9ABB-37C07B4428E2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StatesDumper.UnitTests", "plugins.UnitTests\StatesDumper.UnitTests\StatesDumper.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcSecurity.UnitTests", "plugins.UnitTests\RpcSecurity.UnitTests\RpcSecurity.UnitTests.csproj", "{40C6DE49-EE11-4287-8631-E414C3DF91F7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImportBlocks.UnitTests", "plugins.UnitTests\ImportBlocks.UnitTests\ImportBlocks.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RpcWallet.UnitTests", "plugins.UnitTests\RpcWallet.UnitTests\RpcWallet.UnitTests.csproj", "{7470292A-ACF0-43C9-95F4-562CD26DD4E8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcWallet.UnitTests", "plugins.UnitTests\RpcWallet.UnitTests\RpcWallet.UnitTests.csproj", "{0DA81327-DC81-4960-91C8-4C5F8B9B804C}"
-EndProject
-
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatesDumper.UnitTests", "plugins.UnitTests\StatesDumper.UnitTests\StatesDumper.UnitTests.csproj", "{C8F9BFAE-6E76-4443-805E-C7B582F27004}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +61,34 @@ Global
 		{EF32A7E5-EDF9-438C-8041-8DA6E675A7FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF32A7E5-EDF9-438C-8041-8DA6E675A7FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF32A7E5-EDF9-438C-8041-8DA6E675A7FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{522CF910-A140-48AB-B8C7-6029BD92C674}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{522CF910-A140-48AB-B8C7-6029BD92C674}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{522CF910-A140-48AB-B8C7-6029BD92C674}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{522CF910-A140-48AB-B8C7-6029BD92C674}.Release|Any CPU.Build.0 = Release|Any CPU
+		{613EBBDA-3F43-4DAF-A35E-68B75627B127}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{613EBBDA-3F43-4DAF-A35E-68B75627B127}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{613EBBDA-3F43-4DAF-A35E-68B75627B127}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{613EBBDA-3F43-4DAF-A35E-68B75627B127}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0F6527A-0F52-4CD3-9CCB-6EB4FA1AE14D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0F6527A-0F52-4CD3-9CCB-6EB4FA1AE14D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0F6527A-0F52-4CD3-9CCB-6EB4FA1AE14D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0F6527A-0F52-4CD3-9CCB-6EB4FA1AE14D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59B0EF62-3FE9-4D36-9ABB-37C07B4428E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59B0EF62-3FE9-4D36-9ABB-37C07B4428E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59B0EF62-3FE9-4D36-9ABB-37C07B4428E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59B0EF62-3FE9-4D36-9ABB-37C07B4428E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40C6DE49-EE11-4287-8631-E414C3DF91F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40C6DE49-EE11-4287-8631-E414C3DF91F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40C6DE49-EE11-4287-8631-E414C3DF91F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40C6DE49-EE11-4287-8631-E414C3DF91F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7470292A-ACF0-43C9-95F4-562CD26DD4E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7470292A-ACF0-43C9-95F4-562CD26DD4E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7470292A-ACF0-43C9-95F4-562CD26DD4E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7470292A-ACF0-43C9-95F4-562CD26DD4E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8F9BFAE-6E76-4443-805E-C7B582F27004}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8F9BFAE-6E76-4443-805E-C7B582F27004}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8F9BFAE-6E76-4443-805E-C7B582F27004}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8F9BFAE-6E76-4443-805E-C7B582F27004}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

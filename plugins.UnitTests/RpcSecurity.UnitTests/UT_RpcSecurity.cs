@@ -31,7 +31,7 @@ namespace RpcSecurity.UnitTests
         {
             Settings.Default.RpcUser.Should().Be("");
             Settings.Default.RpcPass.Should().Be("");
-	    string[] DisabledMethodsEmpty = [];
+	    string[] DisabledMethodsEmpty = new string[0];
             Settings.Default.DisabledMethods.Should().Be(DisabledMethodsEmpty);
         }
    }
