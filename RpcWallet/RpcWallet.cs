@@ -264,6 +264,8 @@ namespace Neo.Plugins
         {
             CheckWallet();
             WalletAccount account = Wallet.Import(privkey);
+            if (Wallet is NEP6Wallet nep6wallet)
+                nep6wallet.Save();
             return new JObject
             {
                 ["address"] = account.Address,
