@@ -27,7 +27,7 @@ namespace RpcSecurity.UnitTests
         }
 
         [TestMethod]
-        public void TestMaxTransactionsPerBlock()
+        public void TestDefaultConfiguration()
         {
             Settings.Default.RpcUser.Should().Be("");
             Settings.Default.RpcPass.Should().Be("");
