@@ -5,6 +5,10 @@ using System;
 using System.Linq;
 using System.Text;
 
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("RpcSecurity.UnitTests")]
+
 namespace Neo.Plugins
 {
     public class RpcSecurity : Plugin, IRpcPlugin

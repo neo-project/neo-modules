@@ -8,7 +8,6 @@ using Settings = Neo.Plugins.Settings;
 using System.Collections.Generic;
 using Neo.Cryptography;
 using System.Numerics;
-using System.Collections;
 using System.Linq;
 using System;
 using Moq;

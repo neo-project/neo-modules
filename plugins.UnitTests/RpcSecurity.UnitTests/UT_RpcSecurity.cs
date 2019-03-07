@@ -1,22 +1,12 @@
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Plugins;
-using Neo.Network.P2P.Payloads;
-using Neo;
-using Neo.Persistence;
 using Settings = Neo.Plugins.Settings;
-using System.Collections.Generic;
-using Neo.Cryptography;
-using System.Numerics;
-using System.Collections;
-using System.Linq;
-using System;
-using Moq;
+using Neo.Plugins;
 
-namespace RpcSecurity.UnitTests
+namespace RpcSecurityPlugin.UnitTests
 {
     [TestClass]
-    public class UT_RpcSecurity
+    public class UT_RpcSecurityPlugin
     {
         RpcSecurity uut;
 
@@ -29,10 +19,8 @@ namespace RpcSecurity.UnitTests
         [TestMethod]
         public void TestDefaultConfiguration()
         {
-            Settings.Default.RpcUser.Should().Be("");
-            Settings.Default.RpcPass.Should().Be("");
-	    string[] DisabledMethodsEmpty = new string[0];
-            Settings.Default.DisabledMethods.Should().Be(DisabledMethodsEmpty);
+            Settings.Default.RpcUser.Should().Be(null);
+            Settings.Default.RpcPass.Should().Be(null);
         }
    }
 }

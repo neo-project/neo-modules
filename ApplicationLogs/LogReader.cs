@@ -3,6 +3,9 @@ using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Network.RPC;
 using System.IO;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("ApplicationLogs.UnitTests")]
 
 namespace Neo.Plugins
 {

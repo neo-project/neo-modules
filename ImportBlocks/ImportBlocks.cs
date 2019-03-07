@@ -9,6 +9,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("ImportBlocks.UnitTests")]
 
 namespace Neo.Plugins
 {
