@@ -106,11 +106,17 @@ namespace Neo.Plugins
         {
         }
 
+        private UInt160 GetScriptHashFromParam(string addressOrScriptHash)
+        {
+            return addressOrScriptHash.Length < 40 ?
+                addressOrScriptHash.ToScriptHash() : UInt160.Parse(addressOrScriptHash);
+        }
+
         public JObject OnProcess(HttpContext context, string method, JArray _params)
         {
             if (method != "getunspents") return null;
 
-            UInt160 scriptHash = UInt160.Parse(_params[0].AsString());
+            UInt160 scriptHash = GetScriptHashFromParam(_params[0].AsString());
 
             string[] nativeAssetNames = {"GAS", "NEO"};
             UInt256[] nativeAssetIds = {Blockchain.UtilityToken.Hash, Blockchain.GoverningToken.Hash};
