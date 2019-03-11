@@ -41,7 +41,6 @@ namespace Neo.Plugins
                 _writeBatch, SystemAssetUnspentCoinsPrefix);
         }
 
-
         public void OnPersist(Snapshot snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             // Start freshly with a new DBCache for each block.

@@ -10,7 +10,6 @@ namespace Neo.Plugins
             public Fixed8 TotalAmount;
             public Dictionary<ushort, Fixed8> AmountByTxIndex;
 
-
             public UserUnspentCoinOutputs()
             {
                 TotalAmount = new Fixed8(0);
