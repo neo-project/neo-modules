@@ -11,9 +11,12 @@ mono: none
 dotnet: 2.1.300
 
 before_install:
-  - cd SimplePolicy.UnitTests
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ulimit -n 2048; fi
 
 script:
+ - cd /plugins.UnitTests/SimplePolicy.UnitTests
+ - dotnet restore
+ - dotnet test
+ - cd /plugins.UnitTests/ApplicationLogs.UnitTests
  - dotnet restore
  - dotnet test
