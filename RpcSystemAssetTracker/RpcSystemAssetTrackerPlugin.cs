@@ -13,7 +13,7 @@ using Snapshot = Neo.Persistence.Snapshot;
 
 namespace Neo.Plugins
 {
-    public class RpcSystemAssetPlugin : Plugin, IPersistencePlugin, IRpcPlugin
+    public class RpcSystemAssetTrackerPlugin : Plugin, IPersistencePlugin, IRpcPlugin
     {
         private const byte SystemAssetUnspentCoinsPrefix = 0xfb;
         private DB _db;
