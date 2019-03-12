@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Neo.Ledger;
+using Neo.Persistence;
 using Snapshot = Neo.Persistence.Snapshot;
 
 namespace Neo.Plugins
@@ -20,6 +21,7 @@ namespace Neo.Plugins
         private DataCache<UserUnspentCoinOutputsKey, UserUnspentCoinOutputs> _userUnspentCoins;
         private WriteBatch _writeBatch;
         private int _rpcMaxUnspents;
+        private uint _lastPersistedBlock;
 
         public override void Configure()
         {
@@ -28,7 +30,16 @@ namespace Neo.Plugins
                 var dbPath = GetConfiguration().GetSection("DBPath").Value ?? "SystemAssetBalanceData";
                 _db = DB.Open(dbPath, new Options { CreateIfMissing = true });
                 _rpcMaxUnspents = int.Parse(GetConfiguration().GetSection("MaxReturnedUnspents").Value ?? "0");
-
+                try
+                {
+                    _lastPersistedBlock = _db.Get(ReadOptions.Default, SystemAssetUnspentCoinsPrefix).ToUInt32();
+                }
+                catch (LevelDBException ex)
+                {
+                    if (!ex.Message.Contains("not found"))
+                        throw;
+                    _lastPersistedBlock = 0;
+                }
             }
         }
 
@@ -41,12 +52,9 @@ namespace Neo.Plugins
                 _writeBatch, SystemAssetUnspentCoinsPrefix);
         }
 
-        public void OnPersist(Snapshot snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        private void ProcessBlock(Snapshot snapshot, Block block)
         {
-            // Start freshly with a new DBCache for each block.
-            ResetBatch();
-
-            foreach (Transaction tx in snapshot.PersistingBlock.Transactions)
+            foreach (Transaction tx in block.Transactions)
             {
                 ushort outputIndex = 0;
                 foreach (TransactionOutput output in tx.Outputs)
@@ -88,6 +96,31 @@ namespace Neo.Plugins
                     }
                 }
             }
+
+            // Write the current height into the key of the prefix itself
+            _writeBatch.Put(SystemAssetUnspentCoinsPrefix, block.Index);
+        }
+
+        private void ProcessSkippedBlocks(Snapshot snapshot)
+        {
+            // Process an
+            for (uint blockIndex = _lastPersistedBlock + 1; blockIndex < snapshot.PersistingBlock.Index; blockIndex++)
+            {
+                var skippedBlock = Blockchain.Singleton.Store.GetBlock(blockIndex);
+                ResetBatch();
+                ProcessBlock(snapshot, skippedBlock);
+                _userUnspentCoins.Commit();
+                _db.Write(WriteOptions.Default, _writeBatch);
+            }
+        }
+
+        public void OnPersist(Snapshot snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        {
+            if (snapshot.PersistingBlock.Index > _lastPersistedBlock + 1)
+                ProcessSkippedBlocks(snapshot);
+
+            ResetBatch();
+            ProcessBlock(snapshot, snapshot.PersistingBlock);
         }
 
         public void OnCommit(Snapshot snapshot)
