@@ -99,11 +99,11 @@ namespace Neo.Plugins
 
             // Write the current height into the key of the prefix itself
             _writeBatch.Put(SystemAssetUnspentCoinsPrefix, block.Index);
+            _lastPersistedBlock = block.Index;
         }
 
         private void ProcessSkippedBlocks(Snapshot snapshot)
         {
-            // Process an
             for (uint blockIndex = _lastPersistedBlock + 1; blockIndex < snapshot.PersistingBlock.Index; blockIndex++)
             {
                 var skippedBlock = Blockchain.Singleton.Store.GetBlock(blockIndex);
