@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>2.10.0</Version>
+    <Version>2.10.1</Version>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <RootNamespace>Neo.Plugins</RootNamespace>
   </PropertyGroup>
@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neo" Version="2.10.0" />
+    <PackageReference Include="Neo" Version="2.10.1-CI00001" />
   </ItemGroup>
 
 </Project>
