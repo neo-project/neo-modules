@@ -57,6 +57,11 @@ namespace Neo.Plugins
             db.Put(WriteOptions.Default, appExec.Transaction.Hash.ToArray(), json.ToString());
         }
 
+        protected override void PostStop()
+        {
+            Context.System.EventStream.Unsubscribe(Self);
+        }
+
         public static Props Props(DB db)
         {
             return Akka.Actor.Props.Create(() => new Logger(db));
