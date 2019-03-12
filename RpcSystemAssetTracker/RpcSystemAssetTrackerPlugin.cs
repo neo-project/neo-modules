@@ -22,6 +22,7 @@ namespace Neo.Plugins
         private WriteBatch _writeBatch;
         private int _rpcMaxUnspents;
         private uint _lastPersistedBlock;
+        private bool _shouldPersistBlock;
 
         public override void Configure()
         {
@@ -52,8 +53,11 @@ namespace Neo.Plugins
                 _writeBatch, SystemAssetUnspentCoinsPrefix);
         }
 
-        private void ProcessBlock(Snapshot snapshot, Block block)
+        private bool ProcessBlock(Snapshot snapshot, Block block)
         {
+            if (block.Transactions.Length <= 1) return false;
+            ResetBatch();
+
             foreach (Transaction tx in block.Transactions)
             {
                 ushort outputIndex = 0;
@@ -100,6 +104,7 @@ namespace Neo.Plugins
             // Write the current height into the key of the prefix itself
             _writeBatch.Put(SystemAssetUnspentCoinsPrefix, block.Index);
             _lastPersistedBlock = block.Index;
+            return true;
         }
 
         private void ProcessSkippedBlocks(Snapshot snapshot)
@@ -107,10 +112,17 @@ namespace Neo.Plugins
             for (uint blockIndex = _lastPersistedBlock + 1; blockIndex < snapshot.PersistingBlock.Index; blockIndex++)
             {
                 var skippedBlock = Blockchain.Singleton.Store.GetBlock(blockIndex);
-                ResetBatch();
-                ProcessBlock(snapshot, skippedBlock);
-                _userUnspentCoins.Commit();
-                _db.Write(WriteOptions.Default, _writeBatch);
+                if (skippedBlock.Transactions.Length <= 1)
+                {
+                    _lastPersistedBlock = skippedBlock.Index;
+                    continue;
+                }
+
+                if (ProcessBlock(snapshot, skippedBlock))
+                {
+                    _userUnspentCoins.Commit();
+                    _db.Write(WriteOptions.Default, _writeBatch);
+                }
             }
         }
 
@@ -119,12 +131,12 @@ namespace Neo.Plugins
             if (snapshot.PersistingBlock.Index > _lastPersistedBlock + 1)
                 ProcessSkippedBlocks(snapshot);
 
-            ResetBatch();
-            ProcessBlock(snapshot, snapshot.PersistingBlock);
+            _shouldPersistBlock = ProcessBlock(snapshot, snapshot.PersistingBlock);
         }
 
         public void OnCommit(Snapshot snapshot)
         {
+            if (!_shouldPersistBlock) return;
             _userUnspentCoins.Commit();
             _db.Write(WriteOptions.Default, _writeBatch);
         }
