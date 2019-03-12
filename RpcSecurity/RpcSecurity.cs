@@ -16,12 +16,12 @@ namespace Neo.Plugins
 
         public void PreProcess(HttpContext context, string method, JArray _params)
         {
-        }
-        
-        public JObject OnProcess(HttpContext context, string method, JArray _params)
-        {
             if (!CheckAuth(context) || Settings.Default.DisabledMethods.Contains(method))
                 throw new RpcException(-400, "Access denied");
+        }
+
+        public JObject OnProcess(HttpContext context, string method, JArray _params)
+        {
             return null;
         }
 
