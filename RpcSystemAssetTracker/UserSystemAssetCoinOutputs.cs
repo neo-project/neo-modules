@@ -5,12 +5,12 @@ using Neo.Ledger;
 
 namespace Neo.Plugins
 {
-        public class UserUnspentCoinOutputs : StateBase, ICloneable<UserUnspentCoinOutputs>
+        public class UserSystemAssetCoinOutputs : StateBase, ICloneable<UserSystemAssetCoinOutputs>
         {
             public Fixed8 TotalAmount;
             public Dictionary<ushort, Fixed8> AmountByTxIndex;
 
-            public UserUnspentCoinOutputs()
+            public UserSystemAssetCoinOutputs()
             {
                 TotalAmount = new Fixed8(0);
                 AmountByTxIndex = new Dictionary<ushort, Fixed8>();
@@ -33,16 +33,16 @@ namespace Neo.Plugins
 
                 return false;
             }
-            public UserUnspentCoinOutputs Clone()
+            public UserSystemAssetCoinOutputs Clone()
             {
-                return new UserUnspentCoinOutputs()
+                return new UserSystemAssetCoinOutputs()
                 {
                     TotalAmount = TotalAmount,
                     AmountByTxIndex = new Dictionary<ushort, Fixed8>(AmountByTxIndex)
                 };
             }
 
-            public void FromReplica(UserUnspentCoinOutputs replica)
+            public void FromReplica(UserSystemAssetCoinOutputs replica)
             {
                 TotalAmount = replica.TotalAmount;
                 AmountByTxIndex = replica.AmountByTxIndex;

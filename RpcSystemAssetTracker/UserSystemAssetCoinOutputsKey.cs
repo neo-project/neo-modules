@@ -5,7 +5,7 @@ using Neo.IO;
 
 namespace Neo.Plugins
 {
-    public class UserUnspentCoinOutputsKey : IComparable<UserUnspentCoinOutputsKey>, IEquatable<UserUnspentCoinOutputsKey>,
+    public class UserSystemAssetCoinOutputsKey : IComparable<UserSystemAssetCoinOutputsKey>, IEquatable<UserSystemAssetCoinOutputsKey>,
         ISerializable
     {
         public bool IsGoverningToken; // It's either the governing token or the utility token
@@ -14,7 +14,7 @@ namespace Neo.Plugins
 
         public int Size => 1 + UserAddress.Size + TxHash.Size;
 
-        public bool Equals(UserUnspentCoinOutputsKey other)
+        public bool Equals(UserSystemAssetCoinOutputsKey other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -26,10 +26,10 @@ namespace Neo.Plugins
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((UserUnspentCoinOutputsKey) obj);
+            return Equals((UserSystemAssetCoinOutputsKey) obj);
         }
 
-        public int CompareTo(UserUnspentCoinOutputsKey other)
+        public int CompareTo(UserSystemAssetCoinOutputsKey other)
         {
             if (ReferenceEquals(this, other)) return 0;
             if (ReferenceEquals(null, other)) return 1;
@@ -51,13 +51,13 @@ namespace Neo.Plugins
             }
         }
 
-        public UserUnspentCoinOutputsKey()
+        public UserSystemAssetCoinOutputsKey()
         {
             UserAddress = new UInt160();
             TxHash = new UInt256();
         }
 
-        public UserUnspentCoinOutputsKey(bool isGoverningToken, UInt160 userAddress, UInt256 txHash)
+        public UserSystemAssetCoinOutputsKey(bool isGoverningToken, UInt160 userAddress, UInt256 txHash)
         {
             IsGoverningToken = isGoverningToken;
             UserAddress = userAddress;
