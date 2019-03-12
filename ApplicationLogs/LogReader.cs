@@ -23,6 +23,10 @@ namespace Neo.Plugins
             Settings.Load(GetConfiguration());
         }
 
+        public void PreProcess(HttpContext context, string method, JArray _params)
+        {
+        }
+        
         public JObject OnProcess(HttpContext context, string method, JArray _params)
         {
             if (method != "getapplicationlog") return null;
@@ -30,6 +34,10 @@ namespace Neo.Plugins
             if (!db.TryGet(ReadOptions.Default, hash.ToArray(), out Slice value))
                 throw new RpcException(-100, "Unknown transaction");
             return JObject.Parse(value.ToString());
+        }
+        
+        public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
+        {
         }
     }
 }
