@@ -17,7 +17,7 @@ namespace Neo.Plugins
             db = DB.Open(Path.GetFullPath(Settings.Default.Path), new Options { CreateIfMissing = true });
         }
 
-        public override void OnPluginsLoaded()
+        public override void OnNeoSystemInitialized()
         {
             System.ActorSystem.ActorOf(Logger.Props(System.Blockchain, db));
         }
