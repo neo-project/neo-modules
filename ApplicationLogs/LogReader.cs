@@ -15,11 +15,7 @@ namespace Neo.Plugins
         public LogReader()
         {
             db = DB.Open(Path.GetFullPath(Settings.Default.Path), new Options { CreateIfMissing = true });
-        }
-
-        public override void OnNeoSystemInitialized()
-        {
-            System.ActorSystem.ActorOf(Logger.Props(System.Blockchain, db));
+            System.ActorSystem.ActorOf(Logger.Props(db));
         }
 
         public override void Configure()

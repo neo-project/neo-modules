@@ -12,7 +12,7 @@ namespace Neo.Plugins
     {
         private readonly DB db;
 
-        public Logger(IActorRef blockchain, DB db)
+        public Logger(DB db)
         {
             this.db = db;
             Context.System.EventStream.Subscribe(Self, typeof(Blockchain.ApplicationExecuted));
@@ -57,9 +57,9 @@ namespace Neo.Plugins
             db.Put(WriteOptions.Default, appExec.Transaction.Hash.ToArray(), json.ToString());
         }
 
-        public static Props Props(IActorRef blockchain, DB db)
+        public static Props Props(DB db)
         {
-            return Akka.Actor.Props.Create(() => new Logger(blockchain, db));
+            return Akka.Actor.Props.Create(() => new Logger(db));
         }
     }
 }
