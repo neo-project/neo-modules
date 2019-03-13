@@ -196,9 +196,116 @@ namespace Neo.Plugins
                 addressOrScriptHash.ToScriptHash() : UInt160.Parse(addressOrScriptHash);
         }
 
-       private JObject GenerateUtxoResponse(UInt160 scriptHash, byte startingToken, int maxIterations,
-            DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs> dbCache)
+
+        private long GetSysFeeAmountForHeight(DataCache<UInt256, BlockState> blocks, uint height)
         {
+            return blocks.TryGet(Blockchain.Singleton.GetBlockHash(height)).SystemFeeAmount;
+        }
+
+        private void CalculateClaimable(Snapshot snapshot, Fixed8 value, uint startHeight, uint endHeight, out Fixed8 generated, out Fixed8 sysFee)
+        {
+            uint amount = 0;
+            uint ustart = startHeight / Blockchain.DecrementInterval;
+            if (ustart < Blockchain.GenerationAmount.Length)
+            {
+                uint istart = startHeight % Blockchain.DecrementInterval;
+                uint uend = endHeight / Blockchain.DecrementInterval;
+                uint iend = endHeight % Blockchain.DecrementInterval;
+                if (uend >= Blockchain.GenerationAmount.Length)
+                {
+                    uend = (uint)Blockchain.GenerationAmount.Length;
+                    iend = 0;
+                }
+                if (iend == 0)
+                {
+                    uend--;
+                    iend = Blockchain.DecrementInterval;
+                }
+                while (ustart < uend)
+                {
+                    amount += (Blockchain.DecrementInterval - istart) * Blockchain.GenerationAmount[ustart];
+                    ustart++;
+                    istart = 0;
+                }
+                amount += (iend - istart) * Blockchain.GenerationAmount[ustart];
+            }
+
+            Fixed8 fractionalShare = value / 100000000;
+            generated = fractionalShare * amount;
+            sysFee = fractionalShare * (GetSysFeeAmountForHeight(snapshot.Blocks, endHeight - 1) -
+                     (startHeight == 0 ? 0 : GetSysFeeAmountForHeight(snapshot.Blocks, startHeight - 1)));
+        }
+
+        private bool AddClaims(JArray claimableOutput, ref Fixed8 runningTotal, int maxClaims,
+            Snapshot snapshot, DataCache<UInt256, SpentCoinState> storeSpentCoins,
+            KeyValuePair<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs> claimableInTx)
+        {
+            foreach (var claimTransaction in claimableInTx.Value.AmountByTxIndex)
+            {
+                var utxo = new JObject();
+                var txId = claimableInTx.Key.TxHash.ToString().Substring(2);
+                utxo["txid"] = txId;
+                utxo["n"] = claimTransaction.Key;
+                var spentCoinState = storeSpentCoins.TryGet(claimableInTx.Key.TxHash);
+                var startHeight = spentCoinState.TransactionHeight;
+                var endHeight = spentCoinState.Items[claimTransaction.Key];
+                CalculateClaimable(snapshot, claimTransaction.Value, startHeight, endHeight, out var generated,
+                    out var sysFee);
+                var unclaimed = generated + sysFee;
+                utxo["value"] = (double) (decimal) claimTransaction.Value;
+                utxo["start_height"] = startHeight;
+                utxo["end_height"] = endHeight;
+                utxo["generated"] = (double) (decimal) generated;
+                utxo["sys_fee"] = (double) (decimal) sysFee;
+                utxo["unclaimed"] = (double) (decimal) unclaimed;
+                runningTotal += unclaimed;
+                claimableOutput.Add(utxo);
+                if (claimableOutput.Count > maxClaims)
+                    return false;
+            }
+
+            return true;
+        }
+
+        private JObject ProcessGetClaimableSpents(JArray parameters)
+        {
+            UInt160 scriptHash = GetScriptHashFromParam(parameters[0].AsString());
+            var dbCache = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(
+                _db, null, null, SystemAssetSpentUnclaimedCoinsPrefix);
+
+            JObject json = new JObject();
+            JArray claimable = new JArray();
+            json["claimable"] = claimable;
+            json["address"] = scriptHash.ToAddress();
+            byte[] prefix = new [] { (byte) 1 }.Concat(scriptHash.ToArray()).ToArray();
+
+            var snapshot = Blockchain.Singleton.GetSnapshot();
+            var storeSpentCoins = snapshot.SpentCoins;
+
+            Fixed8 totalUnclaimed = Fixed8.Zero;
+            foreach (var claimableInTx in dbCache.Find(prefix))
+                if (!AddClaims(claimable, ref totalUnclaimed, _rpcMaxUnspents, snapshot, storeSpentCoins, claimableInTx)) break;
+
+            json["unclaimed"] = (double) (decimal) totalUnclaimed;
+            return json;
+        }
+
+        private JObject ProcessGetUnspents(JArray _params)
+        {
+            UInt160 scriptHash = GetScriptHashFromParam(_params[0].AsString());
+            byte startingToken = 0; // 0 = Utility Token (GAS), 1 = Governing Token (NEO)
+            int maxIterations = 2;
+
+            if (_params.Count > 1)
+            {
+                maxIterations = 1;
+                bool isGoverningToken = _params[1].AsBoolean();
+                if (isGoverningToken) startingToken = 1;
+            }
+
+            var unspentsCache = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(
+                _db, null, null, SystemAssetUnspentCoinsPrefix);
+
             string[] nativeAssetNames = {"GAS", "NEO"};
             UInt256[] nativeAssetIds = {Blockchain.UtilityToken.Hash, Blockchain.GoverningToken.Hash};
 
@@ -207,7 +314,7 @@ namespace Neo.Plugins
                 var unspents = new JArray();
                 Fixed8 total = new Fixed8(0);
 
-                foreach (var unspentInTx in dbCache.Find(prefix))
+                foreach (var unspentInTx in unspentsCache.Find(prefix))
                 {
                     var txId = unspentInTx.Key.TxHash.ToString().Substring(2);
                     foreach (var unspent in unspentInTx.Value.AmountByTxIndex)
@@ -249,37 +356,11 @@ namespace Neo.Plugins
             return json;
         }
 
-        private JObject ProcessGetUnclaimedSpents(UInt160 scriptHash)
+        public JObject OnProcess(HttpContext context, string method, JArray parameters)
         {
-            var dbCache = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(
-                _db, null, null, SystemAssetSpentUnclaimedCoinsPrefix);
-            return GenerateUtxoResponse(scriptHash, 1, 1, dbCache);
-        }
-
-        private JObject ProcessGetUnspents(JArray _params)
-        {
-            UInt160 scriptHash = GetScriptHashFromParam(_params[0].AsString());
-            byte startingToken = 0; // 0 = Utility Token (GAS), 1 = Governing Token (NEO)
-            int maxIterations = 2;
-
-            if (_params.Count > 1)
-            {
-                maxIterations = 1;
-                bool isGoverningToken = _params[1].AsBoolean();
-                if (isGoverningToken) startingToken = 1;
-            }
-
-            var unspentsCache = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(
-                _db, null, null, SystemAssetUnspentCoinsPrefix);
-
-            return GenerateUtxoResponse(scriptHash, startingToken, maxIterations, unspentsCache);
-        }
-
-        public JObject OnProcess(HttpContext context, string method, JArray _params)
-        {
-            if (_shouldTrackUnclaimed && method == "getunclaimedspents")
-                return ProcessGetUnclaimedSpents(GetScriptHashFromParam(_params[0].AsString()));
-            return method != "getunspents" ? null : ProcessGetUnspents(_params);
+            if (_shouldTrackUnclaimed && method == "getclaimable")
+                return ProcessGetClaimableSpents(parameters);
+            return method != "getunspents" ? null : ProcessGetUnspents(parameters);
         }
 
         public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
