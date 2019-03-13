@@ -27,6 +27,7 @@ namespace Neo.Plugins
         private int _rpcMaxUnspents;
         private uint _lastPersistedBlock;
         private bool _shouldPersistBlock;
+        private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
 
         public override void Configure()
         {
@@ -52,8 +53,9 @@ namespace Neo.Plugins
         private void ResetBatch()
         {
             _writeBatch = new WriteBatch();
-            var balancesSnapshot = _db.GetSnapshot();
-            ReadOptions dbOptions = new ReadOptions { FillCache = false, Snapshot = balancesSnapshot };
+            _levelDbSnapshot?.Dispose();
+            _levelDbSnapshot = _db.GetSnapshot();
+            var dbOptions = new ReadOptions { FillCache = false, Snapshot = _levelDbSnapshot };
             _userUnspentCoins = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(_db, dbOptions,
                 _writeBatch, SystemAssetUnspentCoinsPrefix);
             if (!_shouldTrackUnclaimed) return;
@@ -279,16 +281,19 @@ namespace Neo.Plugins
             json["address"] = scriptHash.ToAddress();
             byte[] prefix = new [] { (byte) 1 }.Concat(scriptHash.ToArray()).ToArray();
 
-            var snapshot = Blockchain.Singleton.GetSnapshot();
-            var storeSpentCoins = snapshot.SpentCoins;
-
             Fixed8 totalUnclaimed = Fixed8.Zero;
-            foreach (var claimableInTx in dbCache.Find(prefix))
-                if (!AddClaims(claimable, ref totalUnclaimed, _rpcMaxUnspents, snapshot, storeSpentCoins, claimableInTx)) break;
-
+            using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                var storeSpentCoins = snapshot.SpentCoins;
+                foreach (var claimableInTx in dbCache.Find(prefix))
+                    if (!AddClaims(claimable, ref totalUnclaimed, _rpcMaxUnspents, snapshot, storeSpentCoins,
+                        claimableInTx))
+                        break;
+            }
             json["unclaimed"] = (double) (decimal) totalUnclaimed;
             return json;
         }
+
 
         private bool AddUnspents(JArray unspents, ref Fixed8 runningTotal,
             KeyValuePair<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs> unspentInTx)
@@ -357,8 +362,7 @@ namespace Neo.Plugins
 
         public JObject OnProcess(HttpContext context, string method, JArray parameters)
         {
-            if (_shouldTrackUnclaimed && method == "getclaimable")
-                return ProcessGetClaimableSpents(parameters);
+            if (method == "getclaimable") return ProcessGetClaimableSpents(parameters);
             return method != "getunspents" ? null : ProcessGetUnspents(parameters);
         }
 
