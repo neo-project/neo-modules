@@ -279,12 +279,12 @@ namespace Neo.Plugins
             JArray claimable = new JArray();
             json["claimable"] = claimable;
             json["address"] = scriptHash.ToAddress();
-            byte[] prefix = new [] { (byte) 1 }.Concat(scriptHash.ToArray()).ToArray();
 
             Fixed8 totalUnclaimed = Fixed8.Zero;
             using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
             {
                 var storeSpentCoins = snapshot.SpentCoins;
+                byte[] prefix = new [] { (byte) 1 }.Concat(scriptHash.ToArray()).ToArray();
                 foreach (var claimableInTx in dbCache.Find(prefix))
                     if (!AddClaims(claimable, ref totalUnclaimed, _rpcMaxUnspents, snapshot, storeSpentCoins,
                         claimableInTx))
@@ -294,6 +294,56 @@ namespace Neo.Plugins
             return json;
         }
 
+        private JObject ProcessGetUnclaimed(JArray parameters)
+        {
+            UInt160 scriptHash = GetScriptHashFromParam(parameters[0].AsString());
+            JObject json = new JObject();
+
+            Fixed8 available = Fixed8.Zero;
+            Fixed8 unavailable = Fixed8.Zero;
+            var spentsCache = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(
+                _db, null, null, SystemAssetSpentUnclaimedCoinsPrefix);
+            var unspentsCache = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(
+                _db, null, null, SystemAssetUnspentCoinsPrefix);
+            using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                var storeSpentCoins = snapshot.SpentCoins;
+                byte[] prefix = new [] { (byte) 1 }.Concat(scriptHash.ToArray()).ToArray();
+                foreach (var claimableInTx in spentsCache.Find(prefix))
+                {
+                    var spentCoinState = storeSpentCoins.TryGet(claimableInTx.Key.TxHash);
+                    foreach (var claimTxIndex in claimableInTx.Value.AmountByTxIndex)
+                    {
+                        var startHeight = spentCoinState.TransactionHeight;
+                        var endHeight = spentCoinState.Items[claimTxIndex.Key];
+                        CalculateClaimable(snapshot, claimTxIndex.Value, startHeight, endHeight, out var generated,
+                            out var sysFee);
+                        available += generated + sysFee;
+                    }
+                }
+
+                var transactionsCache = snapshot.Transactions;
+                foreach (var claimableInTx in unspentsCache.Find(prefix))
+                {
+                    var transaction = transactionsCache.TryGet(claimableInTx.Key.TxHash); // Blockchain.Singleton.GetTransaction(claimableInTx.Key.TxHash);
+
+                    foreach (var claimTxIndex in claimableInTx.Value.AmountByTxIndex)
+                    {
+                        var startHeight = transaction.BlockIndex;
+                        var endHeight = Blockchain.Singleton.Height;
+                        CalculateClaimable(snapshot, claimTxIndex.Value, startHeight, endHeight,
+                            out var generated,
+                            out var sysFee);
+                        unavailable += generated + sysFee;
+                    }
+                }
+            }
+
+            json["available"] = (double) (decimal) available;
+            json["unavailable"] = (double) (decimal) unavailable;
+            json["unclaimed"] = (double) (decimal) (available + unavailable);
+            return json;
+        }
 
         private bool AddUnspents(JArray unspents, ref Fixed8 runningTotal,
             KeyValuePair<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs> unspentInTx)
@@ -362,7 +412,11 @@ namespace Neo.Plugins
 
         public JObject OnProcess(HttpContext context, string method, JArray parameters)
         {
-            if (method == "getclaimable") return ProcessGetClaimableSpents(parameters);
+            if (_shouldTrackUnclaimed)
+            {
+                if (method == "getclaimable") return ProcessGetClaimableSpents(parameters);
+                if (method == "getunclaimed") return ProcessGetUnclaimed(parameters);
+            }
             return method != "getunspents" ? null : ProcessGetUnspents(parameters);
         }
 
