@@ -30,6 +30,7 @@ namespace Neo.Plugins
         private DataCache<Nep5TransferKey, Nep5Transfer> _transfersReceived;
         private WriteBatch _writeBatch;
         private bool _shouldTrackHistory;
+        private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
 
         public override void Configure()
         {
@@ -44,8 +45,9 @@ namespace Neo.Plugins
         private void ResetBatch()
         {
             _writeBatch = new WriteBatch();
-            var balancesSnapshot = _db.GetSnapshot();
-            ReadOptions dbOptions = new ReadOptions { FillCache = false, Snapshot = balancesSnapshot };
+            _levelDbSnapshot?.Dispose();
+            _levelDbSnapshot = _db.GetSnapshot();
+            ReadOptions dbOptions = new ReadOptions { FillCache = false, Snapshot = _levelDbSnapshot };
             _balances = new DbCache<Nep5BalanceKey, Nep5Balance>(_db, dbOptions, _writeBatch, Nep5BalancePrefix);
             if (_shouldTrackHistory)
             {
