@@ -290,6 +290,25 @@ namespace Neo.Plugins
             return json;
         }
 
+        private bool AddUnspents(JArray unspents, ref Fixed8 runningTotal,
+            KeyValuePair<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs> unspentInTx)
+        {
+            var txId = unspentInTx.Key.TxHash.ToString().Substring(2);
+            foreach (var unspent in unspentInTx.Value.AmountByTxIndex)
+            {
+                var utxo = new JObject();
+                utxo["txid"] = txId;
+                utxo["n"] = unspent.Key;
+                utxo["value"] = (double) (decimal) unspent.Value;
+                runningTotal += unspent.Value;
+
+                unspents.Add(utxo);
+                if (unspents.Count > _rpcMaxUnspents)
+                    return false;
+            }
+            return true;
+        }
+
         private JObject ProcessGetUnspents(JArray _params)
         {
             UInt160 scriptHash = GetScriptHashFromParam(_params[0].AsString());
@@ -309,30 +328,6 @@ namespace Neo.Plugins
             string[] nativeAssetNames = {"GAS", "NEO"};
             UInt256[] nativeAssetIds = {Blockchain.UtilityToken.Hash, Blockchain.GoverningToken.Hash};
 
-            (JArray, Fixed8) RetreiveUnspentsForPrefix(byte[] prefix)
-            {
-                var unspents = new JArray();
-                Fixed8 total = new Fixed8(0);
-
-                foreach (var unspentInTx in unspentsCache.Find(prefix))
-                {
-                    var txId = unspentInTx.Key.TxHash.ToString().Substring(2);
-                    foreach (var unspent in unspentInTx.Value.AmountByTxIndex)
-                    {
-                        var utxo = new JObject();
-                        utxo["txid"] = txId;
-                        utxo["n"] = unspent.Key;
-                        utxo["value"] = (double) (decimal) unspent.Value;
-                        total += unspent.Value;
-
-                        unspents.Add(utxo);
-                        if (unspents.Count > _rpcMaxUnspents)
-                            return (unspents, total);
-                    }
-                }
-                return (unspents, total);
-            }
-
             JObject json = new JObject();
             JArray balances = new JArray();
             json["balance"] = balances;
@@ -341,7 +336,11 @@ namespace Neo.Plugins
             {
                 byte[] prefix = new [] { tokenIndex }.Concat(scriptHash.ToArray()).ToArray();
 
-                var (unspents, total) = RetreiveUnspentsForPrefix(prefix);
+                var unspents = new JArray();
+                Fixed8 total = new Fixed8(0);
+
+                foreach (var unspentInTx in unspentsCache.Find(prefix))
+                    if (!AddUnspents(unspents, ref total, unspentInTx)) break;
 
                 if (unspents.Count <= 0) continue;
 
