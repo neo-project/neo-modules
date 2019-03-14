@@ -21,6 +21,7 @@ namespace Neo.Plugins
 
         public override void Configure()
         {
+            Settings.Load(GetConfiguration());
         }
 
         public void PreProcess(HttpContext context, string method, JArray _params)
@@ -127,7 +128,7 @@ namespace Neo.Plugins
                     Script = result["script"].AsString().HexToBytes(),
                     Gas = Fixed8.Parse(result["gas_consumed"].AsString())
                 };
-                tx.Gas -= Fixed8.FromDecimal(10);
+                tx.Gas -= Settings.Default.MaxGasInvoke;
                 if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
                 tx.Gas = tx.Gas.Ceiling();
                 tx = Wallet.MakeTransaction(tx);
