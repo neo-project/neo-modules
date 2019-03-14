@@ -325,7 +325,7 @@ namespace Neo.Plugins
                 var transactionsCache = snapshot.Transactions;
                 foreach (var claimableInTx in unspentsCache.Find(prefix))
                 {
-                    var transaction = transactionsCache.TryGet(claimableInTx.Key.TxHash); // Blockchain.Singleton.GetTransaction(claimableInTx.Key.TxHash);
+                    var transaction = transactionsCache.TryGet(claimableInTx.Key.TxHash);
 
                     foreach (var claimTxIndex in claimableInTx.Value.AmountByTxIndex)
                     {
