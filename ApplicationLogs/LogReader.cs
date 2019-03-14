@@ -14,8 +14,8 @@ namespace Neo.Plugins
 
         public LogReader()
         {
-            this.db = DB.Open(Path.GetFullPath(Settings.Default.Path), new Options { CreateIfMissing = true });
-            System.ActorSystem.ActorOf(Logger.Props(System.Blockchain, db));
+            db = DB.Open(Path.GetFullPath(Settings.Default.Path), new Options { CreateIfMissing = true });
+            System.ActorSystem.ActorOf(Logger.Props(db));
         }
 
         public override void Configure()
@@ -26,7 +26,7 @@ namespace Neo.Plugins
         public void PreProcess(HttpContext context, string method, JArray _params)
         {
         }
-        
+
         public JObject OnProcess(HttpContext context, string method, JArray _params)
         {
             if (method != "getapplicationlog") return null;
@@ -35,7 +35,7 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "Unknown transaction");
             return JObject.Parse(value.ToString());
         }
-        
+
         public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
         {
         }
