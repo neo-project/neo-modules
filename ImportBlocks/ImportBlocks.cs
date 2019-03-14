@@ -14,7 +14,7 @@ namespace Neo.Plugins
 {
     public class ImportBlocks : Plugin
     {
-        public override void OnPluginsLoaded()
+        protected override void OnPluginsLoaded()
         {
             OnImport();
         }
