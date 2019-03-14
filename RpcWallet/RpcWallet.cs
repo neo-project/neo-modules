@@ -128,7 +128,7 @@ namespace Neo.Plugins
                     Script = result["script"].AsString().HexToBytes(),
                     Gas = Fixed8.Parse(result["gas_consumed"].AsString())
                 };
-                tx.Gas -= Settings.Default.MaxGasInvoke;
+                tx.Gas -= Fixed8.FromDecimal(10);
                 if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
                 tx.Gas = tx.Gas.Ceiling();
                 tx = Wallet.MakeTransaction(tx);
