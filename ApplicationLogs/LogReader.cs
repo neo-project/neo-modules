@@ -32,7 +32,7 @@ namespace Neo.Plugins
         public void PreProcess(HttpContext context, string method, JArray _params)
         {
         }
-        
+
         public JObject OnProcess(HttpContext context, string method, JArray _params)
         {
             if (method != "getapplicationlog") return null;
@@ -41,7 +41,7 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "Unknown transaction");
             return JObject.Parse(value.ToString());
         }
-        
+
         public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
         {
         }
@@ -85,19 +85,18 @@ namespace Neo.Plugins
                     }).ToArray();
                     return execution;
                 }).ToArray();
-                db.Put(WriteOptions.Default, appExec.Transaction.Hash.ToArray(), json.ToString());
                 writeBatch.Put(appExec.Transaction.Hash.ToArray(), json.ToString());
             }
+            db.Write(WriteOptions.Default, writeBatch);
         }
 
         public void OnCommit(Snapshot snapshot)
         {
-            db.Write(WriteOptions.Default, writeBatch);
         }
 
         public bool ShouldThrowExceptionFromCommit(Exception ex)
         {
-            return true;
+            return false;
         }
     }
 }
