@@ -20,19 +20,20 @@ namespace Neo.Plugins
             _blockImporter = System.ActorSystem.ActorOf(BlockImporter.Props());
         }
 
-        private void OnImportComplete()
+        public override void Configure()
         {
-            ResumeNodeStartup();
+            Settings.Load(GetConfiguration());
         }
+
         protected override void OnPluginsLoaded()
         {
             SuspendNodeStartup();
             _blockImporter.Tell(new BlockImporter.StartImport { BlockchainActorRef = System.Blockchain, OnComplete = OnImportComplete});
         }
 
-        public override void Configure()
+        private void OnImportComplete()
         {
-            Settings.Load(GetConfiguration());
+            ResumeNodeStartup();
         }
 
         private bool OnExport(string[] args)
