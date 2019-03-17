@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
+using Neo.Ledger;
 using Neo.Network.RPC;
+using Neo.VM;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Neo.Ledger;
-using Neo.VM;
 using Snapshot = Neo.Persistence.Snapshot;
 
 namespace Neo.Plugins
@@ -15,7 +15,6 @@ namespace Neo.Plugins
     public class LogReader : Plugin, IRpcPlugin, IPersistencePlugin
     {
         private readonly DB db;
-        private WriteBatch writeBatch;
 
         public override string Name => "ApplicationLogs";
 
@@ -48,7 +47,7 @@ namespace Neo.Plugins
 
         public void OnPersist(Snapshot snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
-            writeBatch = new WriteBatch();
+            WriteBatch writeBatch = new WriteBatch();
 
             foreach (var appExec in applicationExecutedList)
             {
