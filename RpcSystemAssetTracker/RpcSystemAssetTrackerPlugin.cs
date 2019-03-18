@@ -7,7 +7,6 @@ using Neo.Persistence.LevelDB;
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Neo.Ledger;
 using Neo.Persistence;

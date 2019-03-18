@@ -10,6 +10,9 @@ namespace Neo.Plugins
             public Fixed8 TotalAmount;
             public Dictionary<ushort, Fixed8> AmountByTxIndex;
 
+            public override int Size => base.Size + TotalAmount.Size + sizeof(ushort) +
+                                        (AmountByTxIndex.Count * (sizeof(ushort) + sizeof(ulong)));
+
             public UserSystemAssetCoinOutputs()
             {
                 TotalAmount = new Fixed8(0);
