@@ -11,6 +11,8 @@ namespace Neo.Plugins
         public readonly UInt160 AssetScriptHash;
         public ushort BlockXferNotificationIndex { get; private set; }
 
+        public int Size => 20 + sizeof(uint) + 20 + sizeof(ushort);
+
         public Nep5TransferKey() : this(new UInt160(), 0, new UInt160(), 0)
         {
         }
@@ -76,15 +78,13 @@ namespace Neo.Plugins
 
         public void Deserialize(BinaryReader reader)
         {
-            ((ISerializable) UserScriptHash).Deserialize(reader);
+            ((ISerializable)UserScriptHash).Deserialize(reader);
             byte[] timestampBytes = new byte[sizeof(uint)];
             reader.Read(timestampBytes, 0, sizeof(uint));
             if (BitConverter.IsLittleEndian) Array.Reverse(timestampBytes);
             Timestamp = BitConverter.ToUInt32(timestampBytes, 0);
-            ((ISerializable) AssetScriptHash).Deserialize(reader);
+            ((ISerializable)AssetScriptHash).Deserialize(reader);
             BlockXferNotificationIndex = reader.ReadUInt16();
         }
-
-        public int Size { get; } = 20 + sizeof(byte) + sizeof(uint) + 20 + sizeof(ushort);
     }
 }

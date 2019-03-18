@@ -10,18 +10,20 @@ namespace Neo.Plugins
         public BigInteger Balance;
         public uint LastUpdatedBlock;
 
-        public override int Size => base.Size + Balance.ToByteArray().GetVarSize();
+        public override int Size => base.Size + Balance.ToByteArray().GetVarSize() + sizeof(uint);
 
         public override void Serialize(BinaryWriter writer)
         {
             base.Serialize(writer);
             writer.WriteVarBytes(Balance.ToByteArray());
+            writer.Write(LastUpdatedBlock);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);
             Balance = new BigInteger(reader.ReadVarBytes(512));
+            LastUpdatedBlock = reader.ReadUInt32();
         }
 
         public Nep5Balance Clone()

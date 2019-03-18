@@ -2,7 +2,6 @@ using System.IO;
 using System.Numerics;
 using Neo.IO;
 using Neo.Ledger;
-using Neo.Network.P2P.Payloads;
 
 namespace Neo.Plugins
 {
@@ -13,7 +12,7 @@ namespace Neo.Plugins
         public UInt256 TxHash;
         public BigInteger Amount;
 
-        public override int Size => base.Size + 20 + Amount.ToByteArray().GetVarSize();
+        public override int Size => base.Size + 20 + sizeof(uint) + 32 + Amount.ToByteArray().GetVarSize();
 
         public override void Serialize(BinaryWriter writer)
         {
