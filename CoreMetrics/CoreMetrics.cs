@@ -20,7 +20,7 @@ namespace Neo.Plugins
         {
             switch (method)
             {
-                case "getblockstimestamps":
+                case "getmetricblocktimestamp":
                     {
 
                         uint nBlocks = (uint)_params[0].AsNumber();
