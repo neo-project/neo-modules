@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Neo.IO.Json;
 using Neo.Ledger;
-using System.Collections.Generic;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 
@@ -9,7 +8,6 @@ namespace Neo.Plugins
 {
     public class CoreMetrics : Plugin, IRpcPlugin
     {
-
         public override void Configure()
         {
         }
@@ -24,10 +22,10 @@ namespace Neo.Plugins
             {
                 case "getblockstimestamps":
                     {
-                        
+
                         uint nBlocks = (uint)_params[0].AsNumber();
                         uint lastHeight = _params.Count >= 2 ? lastHeight = (uint)_params[1].AsNumber() : 0;
-                        return GetBlocksTime(nBlocks,lastHeight);
+                        return GetBlocksTime(nBlocks, lastHeight);
                     }
                 default:
                     return null;
@@ -36,7 +34,6 @@ namespace Neo.Plugins
 
         public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
         {
-
         }
 
         private JObject GetBlocksTime(uint nBlocks, uint lastHeight)
@@ -89,6 +86,5 @@ namespace Neo.Plugins
 
             return array;
         }
-      
     }
 }

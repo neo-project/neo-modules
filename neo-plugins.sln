@@ -19,6 +19,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcWallet", "RpcWallet\RpcW
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcNep5Tracker", "RpcNep5Tracker\RpcNep5Tracker.csproj", "{BBE8AC15-12DF-4AF0-ABC1-F1557EB5DC8E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreMetrics", "CoreMetrics\CoreMetrics.csproj", "{AEFFF003-3500-416B-AD9B-8C838C33C1F4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +58,10 @@ Global
 		{BBE8AC15-12DF-4AF0-ABC1-F1557EB5DC8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BBE8AC15-12DF-4AF0-ABC1-F1557EB5DC8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BBE8AC15-12DF-4AF0-ABC1-F1557EB5DC8E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AEFFF003-3500-416B-AD9B-8C838C33C1F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AEFFF003-3500-416B-AD9B-8C838C33C1F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AEFFF003-3500-416B-AD9B-8C838C33C1F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AEFFF003-3500-416B-AD9B-8C838C33C1F4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
