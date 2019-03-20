@@ -34,7 +34,6 @@ namespace Neo.Plugins
             {
                 var dbPath = GetConfiguration().GetSection("DBPath").Value ?? "SystemAssetBalanceData";
                 _db = DB.Open(dbPath, new Options { CreateIfMissing = true });
-                _rpcMaxUnspents = int.Parse(GetConfiguration().GetSection("MaxReturnedUnspents").Value ?? "0");
                 _shouldTrackUnclaimed = (GetConfiguration().GetSection("TrackUnclaimed").Value ?? true.ToString()) != false.ToString();
                 try
                 {
@@ -47,6 +46,7 @@ namespace Neo.Plugins
                     _lastPersistedBlock = 0;
                 }
             }
+            _rpcMaxUnspents = int.Parse(GetConfiguration().GetSection("MaxReturnedUnspents").Value ?? "0");
         }
 
         private void ResetBatch()
