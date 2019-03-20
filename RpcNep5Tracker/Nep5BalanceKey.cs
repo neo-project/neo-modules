@@ -9,6 +9,8 @@ namespace Neo.Plugins
         public readonly UInt160 UserScriptHash;
         public readonly UInt160 AssetScriptHash;
 
+        public int Size => 20 + 20;
+
         public Nep5BalanceKey() : this(new UInt160(), new UInt160())
         {
         }
@@ -63,7 +65,5 @@ namespace Neo.Plugins
             ((ISerializable) UserScriptHash).Deserialize(reader);
             ((ISerializable) AssetScriptHash).Deserialize(reader);
         }
-
-        public int Size { get; } = 20 + 20;
     }
 }
