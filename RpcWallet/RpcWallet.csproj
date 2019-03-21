@@ -5,9 +5,20 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neo.Plugins</RootNamespace>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <None Update="RpcWallet\config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Neo" Version="2.10.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\neo\neo\neo.csproj" />
   </ItemGroup>
 
 </Project>

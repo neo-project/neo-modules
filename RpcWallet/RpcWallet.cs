@@ -1,4 +1,4 @@
-﻿using Akka.Actor;
+using Akka.Actor;
 using Microsoft.AspNetCore.Http;
 using Neo.IO;
 using Neo.IO.Json;
@@ -21,6 +21,7 @@ namespace Neo.Plugins
 
         public override void Configure()
         {
+            Settings.Load(GetConfiguration());
         }
 
         public void PreProcess(HttpContext context, string method, JArray _params)
@@ -307,8 +308,25 @@ namespace Neo.Plugins
                     ScriptHash = to
                 }
             }, from: from, change_address: change_address, fee: fee);
+            if (tx.Size > 1024)
+            {
+                fee += Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
+                tx = Wallet.MakeTransaction(null, new[]
+                {
+                    new TransferOutput
+                        {
+                            AssetId = assetId,
+                            Value = amount,
+                            ScriptHash = to
+                        }
+                }, from: from, change_address: change_address, fee: fee);
+            }
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
+            if (fee > Settings.Default.MaxFee)
+            {
+                throw new RpcException(-100, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
+            }
             return SignAndRelay(tx);
         }
 
@@ -334,8 +352,17 @@ namespace Neo.Plugins
             if (fee < Fixed8.Zero)
                 throw new RpcException(-32602, "Invalid params");
             Transaction tx = Wallet.MakeTransaction(null, outputs, from: from, change_address: change_address, fee: fee);
+            if (tx.Size > 1024)
+            {
+                fee += Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
+                tx = Wallet.MakeTransaction(null, outputs, from: from, change_address: change_address, fee: fee);
+            }
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
+            if (fee > Settings.Default.MaxFee)
+            {
+                throw new RpcException(-100, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
+            }
             return SignAndRelay(tx);
         }
 
@@ -357,8 +384,25 @@ namespace Neo.Plugins
                     ScriptHash = scriptHash
                 }
             }, change_address: change_address, fee: fee);
+            if (tx.Size > 1024)
+            {
+                fee += Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
+                tx = Wallet.MakeTransaction(null, new[]
+                {
+                    new TransferOutput
+                    {
+                        AssetId = assetId,
+                        Value = amount,
+                        ScriptHash = scriptHash
+                    }
+                }, change_address: change_address, fee: fee);
+            }
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
+            if (fee > Settings.Default.MaxFee)
+            {
+                throw new RpcException(-100, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
+            }
             return SignAndRelay(tx);
         }
     }
