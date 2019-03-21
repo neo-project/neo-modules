@@ -309,7 +309,7 @@ namespace Neo.Plugins
             }, from: from, change_address: change_address, fee: fee);
             if (tx.Size > 1024)
             {
-                fee += Fixed8.FromDecimal(tx.Size * 0.00001m);
+                fee += Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
                 tx = Wallet.MakeTransaction(null, new[]
                 {
                     new TransferOutput
@@ -349,7 +349,7 @@ namespace Neo.Plugins
             Transaction tx = Wallet.MakeTransaction(null, outputs, from: from, change_address: change_address, fee: fee);
             if (tx.Size > 1024)
             {
-                fee += Fixed8.FromDecimal(tx.Size * 0.00001m);
+                fee += Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
                 tx = Wallet.MakeTransaction(null, outputs, from: from, change_address: change_address, fee: fee);
             }
             if (tx == null)
@@ -377,7 +377,7 @@ namespace Neo.Plugins
             }, change_address: change_address, fee: fee);
             if (tx.Size > 1024)
             {
-                fee += Fixed8.FromDecimal(tx.Size * 0.00001m);
+                fee += Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
                 tx = Wallet.MakeTransaction(null, new[]
                 {
                     new TransferOutput
