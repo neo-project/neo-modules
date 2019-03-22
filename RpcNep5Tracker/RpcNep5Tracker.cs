@@ -60,7 +60,7 @@ namespace Neo.Plugins
 
         private void RecordTransferHistory(Snapshot snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
         {
-
+            if (!_shouldTrackHistory) return;
             _transfersSent.Add(new Nep5TransferKey(from,
                     snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
                 new Nep5Transfer
@@ -137,8 +137,6 @@ namespace Neo.Plugins
                 var toKey = new Nep5BalanceKey(to, scriptHash);
                 if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
             }
-
-            if (!_shouldTrackHistory) return;
             RecordTransferHistory(snapshot, scriptHash, from, to, amountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
         }
 
