@@ -58,6 +58,30 @@ namespace Neo.Plugins
             }
         }
 
+        private void RecordTransferHistory(Snapshot snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
+        {
+
+            _transfersSent.Add(new Nep5TransferKey(from,
+                    snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
+                new Nep5Transfer
+                {
+                    Amount = amount,
+                    UserScriptHash = to,
+                    BlockIndex = snapshot.Height,
+                    TxHash = txHash
+                });
+            _transfersReceived.Add(new Nep5TransferKey(to,
+                    snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
+                new Nep5Transfer
+                {
+                    Amount = amount,
+                    UserScriptHash = from,
+                    BlockIndex = snapshot.Height,
+                    TxHash = txHash
+                });
+            transferIndex++;
+        }
+
         private void HandleNotification(Snapshot snapshot, Transaction transaction, UInt160 scriptHash,
             VM.Types.Array stateItems,
             Dictionary<Nep5BalanceKey, Nep5Balance> nep5BalancesChanged, ref ushort transferIndex)
@@ -66,7 +90,25 @@ namespace Neo.Plugins
             if (!(stateItems[0] is VM.Types.ByteArray)) return;
             var eventName = Encoding.UTF8.GetString(stateItems[0].GetByteArray());
 
-            // Only care about transfers
+            if (eventName == "mintTokens")
+            {
+                // This is not an official standard but at least one token uses it, and so it is needed for proper
+                // balance tracking to support all tokens in use.
+                if (!(stateItems[2] is VM.Types.ByteArray))
+                    return;
+                byte[] mintToBytes = stateItems[2].GetByteArray();
+                if (mintToBytes.Length != 20) return;
+                var mintTo = new UInt160(mintToBytes);
+
+                var mintAmountItem = stateItems[3];
+                if (!(mintAmountItem is VM.Types.ByteArray || mintAmountItem is VM.Types.Integer))
+                    return;
+
+                var toKey = new Nep5BalanceKey(mintTo, scriptHash);
+                if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
+                RecordTransferHistory(snapshot, scriptHash, new UInt160(null), mintTo, mintAmountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
+                return;
+            }
             if (eventName != "transfer") return;
 
             if (!(stateItems[1] is null) && !(stateItems[1] is VM.Types.ByteArray))
@@ -97,26 +139,7 @@ namespace Neo.Plugins
             }
 
             if (!_shouldTrackHistory) return;
-            BigInteger amount = amountItem.GetBigInteger();
-            _transfersSent.Add(new Nep5TransferKey(from,
-                    snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
-                new Nep5Transfer
-                {
-                    Amount = amount,
-                    UserScriptHash = to,
-                    BlockIndex = snapshot.Height,
-                    TxHash = transaction.Hash
-                });
-            _transfersReceived.Add(new Nep5TransferKey(to,
-                    snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
-                new Nep5Transfer
-                {
-                    Amount = amount,
-                    UserScriptHash = from,
-                    BlockIndex = snapshot.Height,
-                    TxHash = transaction.Hash
-                });
-            transferIndex++;
+            RecordTransferHistory(snapshot, scriptHash, from, to, amountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
         }
 
         public void OnPersist(Snapshot snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
