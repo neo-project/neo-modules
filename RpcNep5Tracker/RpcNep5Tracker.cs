@@ -69,25 +69,32 @@ namespace Neo.Plugins
             // Only care about transfers
             if (eventName != "transfer") return;
 
-            if (!(stateItems[1] is VM.Types.ByteArray))
+            if (!(stateItems[1] is null) && !(stateItems[1] is VM.Types.ByteArray))
                 return;
-            if (!(stateItems[2] is VM.Types.ByteArray))
+            if (!(stateItems[2] is null) && !(stateItems[2] is VM.Types.ByteArray))
                 return;
             var amountItem = stateItems[3];
             if (!(amountItem is VM.Types.ByteArray || amountItem is VM.Types.Integer))
                 return;
-            byte[] fromBytes = stateItems[1].GetByteArray();
-            if (fromBytes.Length != 20) fromBytes = null;
-            byte[] toBytes = stateItems[2].GetByteArray();
-            if (toBytes.Length != 20) toBytes = null;
+            byte[] fromBytes = stateItems[1]?.GetByteArray();
+            if (fromBytes?.Length != 20) fromBytes = null;
+            byte[] toBytes = stateItems[2]?.GetByteArray();
+            if (toBytes?.Length != 20) toBytes = null;
             if (fromBytes == null && toBytes == null) return;
             var from = new UInt160(fromBytes);
             var to = new UInt160(toBytes);
 
-            var fromKey = new Nep5BalanceKey(from, scriptHash);
-            if (!nep5BalancesChanged.ContainsKey(fromKey)) nep5BalancesChanged.Add(fromKey, new Nep5Balance());
-            var toKey = new Nep5BalanceKey(to, scriptHash);
-            if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
+            if (fromBytes != null)
+            {
+                var fromKey = new Nep5BalanceKey(from, scriptHash);
+                if (!nep5BalancesChanged.ContainsKey(fromKey)) nep5BalancesChanged.Add(fromKey, new Nep5Balance());
+            }
+
+            if (toBytes != null)
+            {
+                var toKey = new Nep5BalanceKey(to, scriptHash);
+                if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
+            }
 
             if (!_shouldTrackHistory) return;
             BigInteger amount = amountItem.GetBigInteger();
