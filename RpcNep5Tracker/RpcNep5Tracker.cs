@@ -30,6 +30,7 @@ namespace Neo.Plugins
         private DataCache<Nep5TransferKey, Nep5Transfer> _transfersReceived;
         private WriteBatch _writeBatch;
         private bool _shouldTrackHistory;
+        private bool _recordNullAddressHistory;
         private uint _maxResults;
         private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
 
@@ -41,6 +42,7 @@ namespace Neo.Plugins
                 _db = DB.Open(dbPath, new Options { CreateIfMissing = true });
             }
             _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
+            _recordNullAddressHistory = (GetConfiguration().GetSection("RecordNullAddressHistory").Value ?? false.ToString()) != false.ToString();
             _maxResults = uint.Parse(GetConfiguration().GetSection("MaxResults").Value ?? "1000");
         }
 
@@ -63,7 +65,7 @@ namespace Neo.Plugins
         private void RecordTransferHistory(Snapshot snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
         {
             if (!_shouldTrackHistory) return;
-            if (from != UInt160.Zero)
+            if (_recordNullAddressHistory || from != UInt160.Zero)
             {
                 _transfersSent.Add(new Nep5TransferKey(from,
                         snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
@@ -76,7 +78,7 @@ namespace Neo.Plugins
                     });
             }
 
-            if (to != UInt160.Zero)
+            if (_recordNullAddressHistory || to != UInt160.Zero)
             {
                 _transfersReceived.Add(new Nep5TransferKey(to,
                         snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
