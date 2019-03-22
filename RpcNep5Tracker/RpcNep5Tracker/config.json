@@ -1,6 +1,7 @@
 ﻿{
   "PluginConfiguration": {
     "DBPath": "Nep5BalanceData",
-    "TrackHistory" : true
+    "TrackHistory" : true,
+    "MaxResults" : 1000
   }
 }

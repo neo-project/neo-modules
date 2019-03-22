@@ -30,6 +30,7 @@ namespace Neo.Plugins
         private DataCache<Nep5TransferKey, Nep5Transfer> _transfersReceived;
         private WriteBatch _writeBatch;
         private bool _shouldTrackHistory;
+        private uint _maxResults;
         private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
 
         public override void Configure()
@@ -40,6 +41,7 @@ namespace Neo.Plugins
                 _db = DB.Open(dbPath, new Options { CreateIfMissing = true });
             }
             _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
+            _maxResults = uint.Parse(GetConfiguration().GetSection("MaxResults").Value ?? "1000");
         }
 
         private void ResetBatch()
@@ -231,8 +233,10 @@ namespace Neo.Plugins
                 prefix.Concat(startTimeBytes).ToArray(),
                 prefix.Concat(endTimeBytes).ToArray());
 
+            int resultCount = 0;
             foreach (var transferPair in transferPairs)
             {
+                if (++resultCount > _maxResults) break;
                 JObject transfer = new JObject();
                 transfer["timestamp"] = transferPair.Key.Timestamp;
                 transfer["asset_hash"] = transferPair.Key.AssetScriptHash.ToArray().Reverse().ToHexString();
