@@ -97,12 +97,14 @@ namespace Neo.Plugins
             VM.Types.Array stateItems,
             Dictionary<Nep5BalanceKey, Nep5Balance> nep5BalancesChanged, ref ushort transferIndex)
         {
+            if (stateItems.Count == 0) return;
             // Event name should be encoded as a byte array.
             if (!(stateItems[0] is VM.Types.ByteArray)) return;
             var eventName = Encoding.UTF8.GetString(stateItems[0].GetByteArray());
 
             if (eventName == "mintTokens")
             {
+                if (stateItems.Count < 4) return;
                 // This is not an official standard but at least one token uses it, and so it is needed for proper
                 // balance tracking to support all tokens in use.
                 if (!(stateItems[2] is VM.Types.ByteArray))
@@ -121,6 +123,7 @@ namespace Neo.Plugins
                 return;
             }
             if (eventName != "transfer") return;
+            if (stateItems.Count < 4) return;
 
             if (!(stateItems[1] is null) && !(stateItems[1] is VM.Types.ByteArray))
                 return;
