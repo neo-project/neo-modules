@@ -37,9 +37,9 @@ namespace Neo.Plugins
             if (_db == null)
             {
                 var dbPath = GetConfiguration().GetSection("DBPath").Value ?? "Nep5BalanceData";
-                _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
                 _db = DB.Open(dbPath, new Options { CreateIfMissing = true });
             }
+            _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
         }
 
         private void ResetBatch()
@@ -61,24 +61,31 @@ namespace Neo.Plugins
         private void RecordTransferHistory(Snapshot snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
         {
             if (!_shouldTrackHistory) return;
-            _transfersSent.Add(new Nep5TransferKey(from,
-                    snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
-                new Nep5Transfer
-                {
-                    Amount = amount,
-                    UserScriptHash = to,
-                    BlockIndex = snapshot.Height,
-                    TxHash = txHash
-                });
-            _transfersReceived.Add(new Nep5TransferKey(to,
-                    snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
-                new Nep5Transfer
-                {
-                    Amount = amount,
-                    UserScriptHash = from,
-                    BlockIndex = snapshot.Height,
-                    TxHash = txHash
-                });
+            if (from != UInt160.Zero)
+            {
+                _transfersSent.Add(new Nep5TransferKey(from,
+                        snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
+                    new Nep5Transfer
+                    {
+                        Amount = amount,
+                        UserScriptHash = to,
+                        BlockIndex = snapshot.Height,
+                        TxHash = txHash
+                    });
+            }
+
+            if (to != UInt160.Zero)
+            {
+                _transfersReceived.Add(new Nep5TransferKey(to,
+                        snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
+                    new Nep5Transfer
+                    {
+                        Amount = amount,
+                        UserScriptHash = from,
+                        BlockIndex = snapshot.Height,
+                        TxHash = txHash
+                    });
+            }
             transferIndex++;
         }
 
@@ -106,7 +113,7 @@ namespace Neo.Plugins
 
                 var toKey = new Nep5BalanceKey(mintTo, scriptHash);
                 if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
-                RecordTransferHistory(snapshot, scriptHash, new UInt160(null), mintTo, mintAmountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
+                RecordTransferHistory(snapshot, scriptHash, UInt160.Zero, mintTo, mintAmountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
                 return;
             }
             if (eventName != "transfer") return;
