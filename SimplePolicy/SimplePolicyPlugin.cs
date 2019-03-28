@@ -103,10 +103,16 @@ namespace Neo.Plugins
             // Not Allow free TX bigger than MaxFreeTransactionSize
             if (tx.IsLowPriority && tx.Size > Settings.Default.MaxFreeTransactionSize) return false;
 
-            // Require proportional fee for TX bigger than MaxFreeTransactionSize
-            if (tx.Size > Settings.Default.MaxFreeTransactionSize)
+            var paysize = tx.Size;
+            foreach(var input in tx.Inputs)
             {
-                Fixed8 fee = Settings.Default.FeePerExtraByte * (tx.Size - Settings.Default.MaxFreeTransactionSize);
+                paysize -= input.Size;
+            }
+
+            // Require proportional fee for TX bigger than MaxFreeTransactionSize
+            if (paysize > Settings.Default.MaxFreeTransactionSize)
+            {
+                Fixed8 fee = Settings.Default.FeePerExtraByte * (paysize - Settings.Default.MaxFreeTransactionSize);
 
                 if (tx.NetworkFee < fee) return false;
             }
