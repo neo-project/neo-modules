@@ -324,9 +324,7 @@ namespace Neo.Plugins
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
             if (fee > Settings.Default.MaxFee)
-            {
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
-            }
             return SignAndRelay(tx);
         }
 
@@ -360,9 +358,7 @@ namespace Neo.Plugins
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
             if (fee > Settings.Default.MaxFee)
-            {
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
-            }
             return SignAndRelay(tx);
         }
 
@@ -400,9 +396,7 @@ namespace Neo.Plugins
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
             if (fee > Settings.Default.MaxFee)
-            {
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
-            }
             return SignAndRelay(tx);
         }
     }
