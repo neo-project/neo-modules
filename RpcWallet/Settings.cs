@@ -1,6 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using System;
-using System.Linq;
 
 namespace Neo.Plugins
 {
@@ -12,13 +10,7 @@ namespace Neo.Plugins
 
         private Settings(IConfigurationSection section)
         {
-            this.MaxFee = GetValueOrDefault(section.GetSection("MaxFee"), Fixed8.FromDecimal(0.1M), p => Fixed8.Parse(p));
-        }
-
-        public T GetValueOrDefault<T>(IConfigurationSection section, T defaultValue, Func<string, T> selector)
-        {
-            if (section.Value == null) return defaultValue;
-            return selector(section.Value);
+            this.MaxFee = Fixed8.Parse(section.GetValue("MaxFee", "0.1"));
         }
 
         public static void Load(IConfigurationSection section)
