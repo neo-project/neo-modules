@@ -21,6 +21,7 @@ namespace Neo.Plugins
 
         public override void Configure()
         {
+            Settings.Load(GetConfiguration());
         }
 
         public void PreProcess(HttpContext context, string method, JArray _params)
@@ -309,7 +310,7 @@ namespace Neo.Plugins
             }, from: from, change_address: change_address, fee: fee);
             if (tx.Size > 1024)
             {
-                fee += Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
+                fee = Fixed8.Max(Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m), fee);
                 tx = Wallet.MakeTransaction(null, new[]
                 {
                     new TransferOutput
@@ -322,6 +323,8 @@ namespace Neo.Plugins
             }
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
+            if (fee > Settings.Default.MaxFee)
+                throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
         }
 
@@ -349,11 +352,13 @@ namespace Neo.Plugins
             Transaction tx = Wallet.MakeTransaction(null, outputs, from: from, change_address: change_address, fee: fee);
             if (tx.Size > 1024)
             {
-                fee += Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
+                fee = Fixed8.Max(Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m), fee);
                 tx = Wallet.MakeTransaction(null, outputs, from: from, change_address: change_address, fee: fee);
             }
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
+            if (fee > Settings.Default.MaxFee)
+                throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
         }
 
@@ -377,7 +382,7 @@ namespace Neo.Plugins
             }, change_address: change_address, fee: fee);
             if (tx.Size > 1024)
             {
-                fee += Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
+                fee = Fixed8.Max(Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m), fee);
                 tx = Wallet.MakeTransaction(null, new[]
                 {
                     new TransferOutput
@@ -390,6 +395,8 @@ namespace Neo.Plugins
             }
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
+            if (fee > Settings.Default.MaxFee)
+                throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
         }
     }
