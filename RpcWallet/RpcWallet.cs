@@ -308,6 +308,11 @@ namespace Neo.Plugins
                     ScriptHash = to
                 }
             }, from: from, change_address: change_address, fee: fee);
+            
+            ContractParametersContext transContext = new ContractParametersContext(tx);
+            Wallet.Sign(transContext);
+            tx.Witnesses = transContext.GetWitnesses();
+            
             if (tx.Size > 1024)
             {
                 fee = Fixed8.Max(Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m), fee);
@@ -350,6 +355,11 @@ namespace Neo.Plugins
             if (fee < Fixed8.Zero)
                 throw new RpcException(-32602, "Invalid params");
             Transaction tx = Wallet.MakeTransaction(null, outputs, from: from, change_address: change_address, fee: fee);
+            
+            ContractParametersContext transContext = new ContractParametersContext(tx);
+            Wallet.Sign(transContext);
+            tx.Witnesses = transContext.GetWitnesses();
+            
             if (tx.Size > 1024)
             {
                 fee = Fixed8.Max(Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m), fee);
@@ -380,6 +390,11 @@ namespace Neo.Plugins
                     ScriptHash = scriptHash
                 }
             }, change_address: change_address, fee: fee);
+            
+            ContractParametersContext transContext = new ContractParametersContext(tx);
+            Wallet.Sign(transContext);
+            tx.Witnesses = transContext.GetWitnesses();
+            
             if (tx.Size > 1024)
             {
                 fee = Fixed8.Max(Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m), fee);
