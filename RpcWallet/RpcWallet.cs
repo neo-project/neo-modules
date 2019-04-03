@@ -329,10 +329,10 @@ namespace Neo.Plugins
                                 ScriptHash = to
                             }
                     }, from: from, change_address: change_address, fee: fee);
+                    if (tx == null)
+                        throw new RpcException(-300, "Insufficient funds");
                 }
             }
-            if (tx == null)
-                throw new RpcException(-300, "Insufficient funds");
             if (fee > Settings.Default.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
@@ -373,10 +373,10 @@ namespace Neo.Plugins
                 {
                     fee = calFee;
                     tx = Wallet.MakeTransaction(null, outputs, from: from, change_address: change_address, fee: fee);
+                    if (tx == null)
+                        throw new RpcException(-300, "Insufficient funds");
                 }   
             }
-            if (tx == null)
-                throw new RpcException(-300, "Insufficient funds");
             if (fee > Settings.Default.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
@@ -421,10 +421,10 @@ namespace Neo.Plugins
                             ScriptHash = scriptHash
                         }
                     }, change_address: change_address, fee: fee);
+                    if (tx == null)
+                        throw new RpcException(-300, "Insufficient funds");
                 }  
-            }
-            if (tx == null)
-                throw new RpcException(-300, "Insufficient funds");
+            } 
             if (fee > Settings.Default.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
