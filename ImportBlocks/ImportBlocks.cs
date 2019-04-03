@@ -11,11 +11,6 @@ namespace Neo.Plugins
     public class ImportBlocks : Plugin
     {
         private IActorRef _blockImporter;
-        public ImportBlocks()
-        {
-            _blockImporter = System.ActorSystem.ActorOf(BlockImporter.Props());
-        }
-
         public override void Configure()
         {
             Settings.Load(GetConfiguration());
@@ -23,6 +18,7 @@ namespace Neo.Plugins
 
         protected override void OnPluginsLoaded()
         {
+            _blockImporter = System.ActorSystem.ActorOf(BlockImporter.Props());
             SuspendNodeStartup();
             _blockImporter.Tell(new BlockImporter.StartImport { BlockchainActorRef = System.Blockchain, OnComplete = OnImportComplete});
         }
