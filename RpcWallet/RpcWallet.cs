@@ -319,7 +319,7 @@ namespace Neo.Plugins
                 Fixed8 calFee = Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
                 if (fee < calFee)
                 {
-                    fee = Fixed8.Max(Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m), fee);
+                    fee = calFee;
                     tx = Wallet.MakeTransaction(null, new[]
                     {
                         new TransferOutput
