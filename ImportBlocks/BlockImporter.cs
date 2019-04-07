@@ -1,57 +1,25 @@
+using Akka.Actor;
+using Neo.IO;
+using Neo.Ledger;
+using Neo.Network.P2P.Payloads;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Akka.Actor;
-using Neo.IO;
-using Neo.Ledger;
-using Neo.Network.P2P.Payloads;
 
 namespace Neo.Plugins
 {
     public class BlockImporter : UntypedActor
     {
         public class StartImport { public IActorRef BlockchainActorRef; public Action OnComplete; }
-        private IActorRef _blockchainActorRef;
+
         private const int BlocksPerBatch = 10;
+        private IActorRef _blockchainActorRef;
         private bool isImporting;
         private IEnumerator<Block> blocksBeingImported;
         private Action _doneAction;
-
-        protected override void OnReceive(object message)
-        {
-            switch (message)
-            {
-                case StartImport startImport:
-                    if (isImporting) return;
-                    isImporting = true;
-                    _blockchainActorRef = startImport.BlockchainActorRef;
-                    _doneAction = startImport.OnComplete;
-                    blocksBeingImported = GetBlocksFromFile().GetEnumerator();
-                    // Start the first import
-                    Self.Tell(new Blockchain.ImportCompleted());
-                    break;
-                case Blockchain.ImportCompleted _:
-                    // Import the next batch
-                    List<Block> blocksToImport = new List<Block>();
-                    for (int i = 0; i < BlocksPerBatch; i++)
-                    {
-                        if (!blocksBeingImported.MoveNext())
-                            break;
-                        blocksToImport.Add(blocksBeingImported.Current);
-                    }
-                    if (blocksToImport.Count > 0)
-                        _blockchainActorRef.Tell(new Blockchain.Import { Blocks = blocksToImport });
-                    else
-                    {
-                        blocksBeingImported.Dispose();
-                        _doneAction();
-                    }
-                    break;
-            }
-        }
 
         private static bool CheckMaxOnImportHeight(uint currentImportBlockHeight)
         {
@@ -117,6 +85,39 @@ namespace Neo.Plugins
                     using (FileStream fs = new FileStream(path.FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                         foreach (var block in GetBlocks(fs, true))
                             yield return block;
+            }
+        }
+
+        protected override void OnReceive(object message)
+        {
+            switch (message)
+            {
+                case StartImport startImport:
+                    if (isImporting) return;
+                    isImporting = true;
+                    _blockchainActorRef = startImport.BlockchainActorRef;
+                    _doneAction = startImport.OnComplete;
+                    blocksBeingImported = GetBlocksFromFile().GetEnumerator();
+                    // Start the first import
+                    Self.Tell(new Blockchain.ImportCompleted());
+                    break;
+                case Blockchain.ImportCompleted _:
+                    // Import the next batch
+                    List<Block> blocksToImport = new List<Block>();
+                    for (int i = 0; i < BlocksPerBatch; i++)
+                    {
+                        if (!blocksBeingImported.MoveNext())
+                            break;
+                        blocksToImport.Add(blocksBeingImported.Current);
+                    }
+                    if (blocksToImport.Count > 0)
+                        _blockchainActorRef.Tell(new Blockchain.Import { Blocks = blocksToImport });
+                    else
+                    {
+                        blocksBeingImported.Dispose();
+                        _doneAction();
+                    }
+                    break;
             }
         }
 

@@ -11,21 +11,10 @@ namespace Neo.Plugins
     public class ImportBlocks : Plugin
     {
         private IActorRef _blockImporter;
+
         public override void Configure()
         {
             Settings.Load(GetConfiguration());
-        }
-
-        protected override void OnPluginsLoaded()
-        {
-            _blockImporter = System.ActorSystem.ActorOf(BlockImporter.Props());
-            SuspendNodeStartup();
-            _blockImporter.Tell(new BlockImporter.StartImport { BlockchainActorRef = System.Blockchain, OnComplete = OnImportComplete});
-        }
-
-        private void OnImportComplete()
-        {
-            ResumeNodeStartup();
         }
 
         private bool OnExport(string[] args)
@@ -112,6 +101,18 @@ namespace Neo.Plugins
                 return false;
             Console.Write($"{Name} Commands:\n" + "\texport block[s] <index>\n");
             return true;
+        }
+
+        private void OnImportComplete()
+        {
+            ResumeNodeStartup();
+        }
+
+        protected override void OnPluginsLoaded()
+        {
+            SuspendNodeStartup();
+            _blockImporter = System.ActorSystem.ActorOf(BlockImporter.Props());
+            _blockImporter.Tell(new BlockImporter.StartImport { BlockchainActorRef = System.Blockchain, OnComplete = OnImportComplete });
         }
 
         protected override bool OnMessage(object message)
