@@ -14,11 +14,6 @@ namespace Neo.Plugins
 {
     public class ImportBlocks : Plugin
     {
-        public ImportBlocks()
-        {
-            OnImport();
-        }
-
         private static bool CheckMaxOnImportHeight(uint currentImportBlockHeight)
         {
             if (Settings.Default.MaxOnImportHeight == 0 || Settings.Default.MaxOnImportHeight >= currentImportBlockHeight)
@@ -138,7 +133,7 @@ namespace Neo.Plugins
             return true;
         }
 
-        private async void OnImport()
+        protected override async void OnPluginsLoaded()
         {
             SuspendNodeStartup();
             const string path_acc = "chain.acc";
