@@ -45,7 +45,10 @@ namespace Neo.Plugins
                     if (blocksToImport.Count > 0)
                         _blockchainActorRef.Tell(new Blockchain.Import { Blocks = blocksToImport });
                     else
+                    {
+                        blocksBeingImported.Dispose();
                         _doneAction();
+                    }
                     break;
             }
         }
