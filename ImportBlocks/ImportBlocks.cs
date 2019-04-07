@@ -106,6 +106,7 @@ namespace Neo.Plugins
         private void OnImportComplete()
         {
             ResumeNodeStartup();
+            System.ActorSystem.Stop(_blockImporter);
         }
 
         protected override void OnPluginsLoaded()
