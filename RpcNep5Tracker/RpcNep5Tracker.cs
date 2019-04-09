@@ -30,6 +30,9 @@ namespace Neo.Plugins
         private DataCache<Nep5TransferKey, Nep5Transfer> _transfersReceived;
         private WriteBatch _writeBatch;
         private bool _shouldTrackHistory;
+        private bool _recordNullAddressHistory;
+        private uint _maxResults;
+        private bool _shouldTrackNonStandardMintTokensEvent;
         private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
 
         public override void Configure()
@@ -37,9 +40,12 @@ namespace Neo.Plugins
             if (_db == null)
             {
                 var dbPath = GetConfiguration().GetSection("DBPath").Value ?? "Nep5BalanceData";
-                _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
                 _db = DB.Open(dbPath, new Options { CreateIfMissing = true });
             }
+            _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
+            _recordNullAddressHistory = (GetConfiguration().GetSection("RecordNullAddressHistory").Value ?? false.ToString()) != false.ToString();
+            _maxResults = uint.Parse(GetConfiguration().GetSection("MaxResults").Value ?? "1000");
+            _shouldTrackNonStandardMintTokensEvent = (GetConfiguration().GetSection("TrackNonStandardMintTokens").Value ?? false.ToString()) != false.ToString();
         }
 
         private void ResetBatch()
@@ -58,58 +64,96 @@ namespace Neo.Plugins
             }
         }
 
+        private void RecordTransferHistory(Snapshot snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
+        {
+            if (!_shouldTrackHistory) return;
+            if (_recordNullAddressHistory || from != UInt160.Zero)
+            {
+                _transfersSent.Add(new Nep5TransferKey(from,
+                        snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
+                    new Nep5Transfer
+                    {
+                        Amount = amount,
+                        UserScriptHash = to,
+                        BlockIndex = snapshot.Height,
+                        TxHash = txHash
+                    });
+            }
+
+            if (_recordNullAddressHistory || to != UInt160.Zero)
+            {
+                _transfersReceived.Add(new Nep5TransferKey(to,
+                        snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
+                    new Nep5Transfer
+                    {
+                        Amount = amount,
+                        UserScriptHash = from,
+                        BlockIndex = snapshot.Height,
+                        TxHash = txHash
+                    });
+            }
+            transferIndex++;
+        }
+
         private void HandleNotification(Snapshot snapshot, Transaction transaction, UInt160 scriptHash,
             VM.Types.Array stateItems,
             Dictionary<Nep5BalanceKey, Nep5Balance> nep5BalancesChanged, ref ushort transferIndex)
         {
+            if (stateItems.Count == 0) return;
             // Event name should be encoded as a byte array.
             if (!(stateItems[0] is VM.Types.ByteArray)) return;
             var eventName = Encoding.UTF8.GetString(stateItems[0].GetByteArray());
 
-            // Only care about transfers
-            if (eventName != "transfer") return;
+            if (_shouldTrackNonStandardMintTokensEvent && eventName == "mintTokens")
+            {
+                if (stateItems.Count < 4) return;
+                // This is not an official standard but at least one token uses it, and so it is needed for proper
+                // balance tracking to support all tokens in use.
+                if (!(stateItems[2] is VM.Types.ByteArray))
+                    return;
+                byte[] mintToBytes = stateItems[2].GetByteArray();
+                if (mintToBytes.Length != 20) return;
+                var mintTo = new UInt160(mintToBytes);
 
-            if (!(stateItems[1] is VM.Types.ByteArray))
+                var mintAmountItem = stateItems[3];
+                if (!(mintAmountItem is VM.Types.ByteArray || mintAmountItem is VM.Types.Integer))
+                    return;
+
+                var toKey = new Nep5BalanceKey(mintTo, scriptHash);
+                if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
+                RecordTransferHistory(snapshot, scriptHash, UInt160.Zero, mintTo, mintAmountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
                 return;
-            if (!(stateItems[2] is VM.Types.ByteArray))
+            }
+            if (eventName != "transfer") return;
+            if (stateItems.Count < 4) return;
+
+            if (!(stateItems[1] is null) && !(stateItems[1] is VM.Types.ByteArray))
+                return;
+            if (!(stateItems[2] is null) && !(stateItems[2] is VM.Types.ByteArray))
                 return;
             var amountItem = stateItems[3];
             if (!(amountItem is VM.Types.ByteArray || amountItem is VM.Types.Integer))
                 return;
-            byte[] fromBytes = stateItems[1].GetByteArray();
-            if (fromBytes.Length != 20) fromBytes = null;
-            byte[] toBytes = stateItems[2].GetByteArray();
-            if (toBytes.Length != 20) toBytes = null;
+            byte[] fromBytes = stateItems[1]?.GetByteArray();
+            if (fromBytes?.Length != 20) fromBytes = null;
+            byte[] toBytes = stateItems[2]?.GetByteArray();
+            if (toBytes?.Length != 20) toBytes = null;
             if (fromBytes == null && toBytes == null) return;
             var from = new UInt160(fromBytes);
             var to = new UInt160(toBytes);
 
-            var fromKey = new Nep5BalanceKey(from, scriptHash);
-            if (!nep5BalancesChanged.ContainsKey(fromKey)) nep5BalancesChanged.Add(fromKey, new Nep5Balance());
-            var toKey = new Nep5BalanceKey(to, scriptHash);
-            if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
+            if (fromBytes != null)
+            {
+                var fromKey = new Nep5BalanceKey(from, scriptHash);
+                if (!nep5BalancesChanged.ContainsKey(fromKey)) nep5BalancesChanged.Add(fromKey, new Nep5Balance());
+            }
 
-            if (!_shouldTrackHistory) return;
-            BigInteger amount = amountItem.GetBigInteger();
-            _transfersSent.Add(new Nep5TransferKey(from,
-                    snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
-                new Nep5Transfer
-                {
-                    Amount = amount,
-                    UserScriptHash = to,
-                    BlockIndex = snapshot.Height,
-                    TxHash = transaction.Hash
-                });
-            _transfersReceived.Add(new Nep5TransferKey(to,
-                    snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
-                new Nep5Transfer
-                {
-                    Amount = amount,
-                    UserScriptHash = from,
-                    BlockIndex = snapshot.Height,
-                    TxHash = transaction.Hash
-                });
-            transferIndex++;
+            if (toBytes != null)
+            {
+                var toKey = new Nep5BalanceKey(to, scriptHash);
+                if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
+            }
+            RecordTransferHistory(snapshot, scriptHash, from, to, amountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
         }
 
         public void OnPersist(Snapshot snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
@@ -196,8 +240,10 @@ namespace Neo.Plugins
                 prefix.Concat(startTimeBytes).ToArray(),
                 prefix.Concat(endTimeBytes).ToArray());
 
+            int resultCount = 0;
             foreach (var transferPair in transferPairs)
             {
+                if (++resultCount > _maxResults) break;
                 JObject transfer = new JObject();
                 transfer["timestamp"] = transferPair.Key.Timestamp;
                 transfer["asset_hash"] = transferPair.Key.AssetScriptHash.ToArray().Reverse().ToHexString();
