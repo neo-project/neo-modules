@@ -3,7 +3,7 @@
     "ProbRejectPrepRequest": 0.25,
     "ProbRejectPrepResponse": 0.5,
     "ProbRejectCommit": 0.5,
-    "ProbRejectChangeView": 0
+    "ProbRejectChangeView": 0,
     "ProbRejectRecover": 0
   }
 }
