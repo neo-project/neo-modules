@@ -1,6 +1,7 @@
 using Akka.Actor;
 using Neo.IO;
 using Neo.Ledger;
+using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using System;
 using System.Collections.Generic;
@@ -39,7 +40,7 @@ namespace Neo.Plugins
                 for (uint height = start; height <= end; height++)
                 {
                     var size = r.ReadInt32();
-                    if (size > 0x02000000) yield break;
+                    if (size > Message.PayloadMaxSize) yield break;
 
                     byte[] array = r.ReadBytes(size);
                     if (!CheckMaxOnImportHeight(height)) yield break;
