@@ -38,7 +38,10 @@ namespace Neo.Plugins
                 if (end <= Blockchain.Singleton.Height) yield break;
                 for (uint height = start; height <= end; height++)
                 {
-                    byte[] array = r.ReadBytes(r.ReadInt32());
+                    var size = r.ReadInt32();
+                    if (size > 0x02000000) yield break;
+
+                    byte[] array = r.ReadBytes(size);
                     if (!CheckMaxOnImportHeight(height)) yield break;
                     if (height > Blockchain.Singleton.Height)
                     {
