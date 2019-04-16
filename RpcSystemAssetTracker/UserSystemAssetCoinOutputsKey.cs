@@ -25,8 +25,8 @@ namespace Neo.Plugins
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((UserSystemAssetCoinOutputsKey) obj);
+            if (!(obj is UserSystemAssetCoinOutputsKey b)) return false;
+            return Equals(b);
         }
 
         public int CompareTo(UserSystemAssetCoinOutputsKey other)
