@@ -313,17 +313,17 @@ namespace Neo.Plugins
 
             ContractParametersContext transContext = new ContractParametersContext(tx);
             Wallet.Sign(transContext);
-            if (transContext.Completed)
+            if (!transContext.Completed)
+                return transContext.ToJson();
+            tx.Witnesses = transContext.GetWitnesses();
+            if (tx.Size > 1024)
             {
-                tx.Witnesses = transContext.GetWitnesses();
-                if (tx.Size > 1024)
+                Fixed8 calFee = Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
+                if (fee < calFee)
                 {
-                    Fixed8 calFee = Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
-                    if (fee < calFee)
+                    fee = calFee;
+                    tx = Wallet.MakeTransaction(null, new[]
                     {
-                        fee = calFee;
-                        tx = Wallet.MakeTransaction(null, new[]
-                        {
                             new TransferOutput
                             {
                                 AssetId = assetId,
@@ -331,18 +331,13 @@ namespace Neo.Plugins
                                 ScriptHash = to
                             }
                         }, from: from, change_address: change_address, fee: fee);
-                        if (tx == null)
-                            throw new RpcException(-300, "Insufficient funds");
-                    }
+                    if (tx == null)
+                        throw new RpcException(-300, "Insufficient funds");
                 }
-                if (fee > Settings.Default.MaxFee)
-                    throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
-                return SignAndRelay(tx);
             }
-            else
-            {
-                return transContext.ToJson();
-            }
+            if (fee > Settings.Default.MaxFee)
+                throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
+            return SignAndRelay(tx);
         }
 
         private JObject SendMany(UInt160 from, JArray to, Fixed8 fee, UInt160 change_address)
@@ -372,28 +367,23 @@ namespace Neo.Plugins
 
             ContractParametersContext transContext = new ContractParametersContext(tx);
             Wallet.Sign(transContext);
-            if (transContext.Completed)
-            {
-                tx.Witnesses = transContext.GetWitnesses();
-                if (tx.Size > 1024)
-                {
-                    Fixed8 calFee = Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
-                    if (fee < calFee)
-                    {
-                        fee = calFee;
-                        tx = Wallet.MakeTransaction(null, outputs, from: from, change_address: change_address, fee: fee);
-                        if (tx == null)
-                            throw new RpcException(-300, "Insufficient funds");
-                    }
-                }
-                if (fee > Settings.Default.MaxFee)
-                    throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
-                return SignAndRelay(tx);
-            }
-            else
-            {
+            if (!transContext.Completed)
                 return transContext.ToJson();
+            tx.Witnesses = transContext.GetWitnesses();
+            if (tx.Size > 1024)
+            {
+                Fixed8 calFee = Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
+                if (fee < calFee)
+                {
+                    fee = calFee;
+                    tx = Wallet.MakeTransaction(null, outputs, from: from, change_address: change_address, fee: fee);
+                    if (tx == null)
+                        throw new RpcException(-300, "Insufficient funds");
+                }
             }
+            if (fee > Settings.Default.MaxFee)
+                throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
+            return SignAndRelay(tx);
         }
 
         private JObject SendToAddress(UIntBase assetId, UInt160 scriptHash, string value, Fixed8 fee, UInt160 change_address)
@@ -419,17 +409,17 @@ namespace Neo.Plugins
 
             ContractParametersContext transContext = new ContractParametersContext(tx);
             Wallet.Sign(transContext);
-            if(transContext.Completed)
+            if (!transContext.Completed)
+                return transContext.ToJson();
+            tx.Witnesses = transContext.GetWitnesses();
+            if (tx.Size > 1024)
             {
-                tx.Witnesses = transContext.GetWitnesses();
-                if (tx.Size > 1024)
+                Fixed8 calFee = Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
+                if (fee < calFee)
                 {
-                    Fixed8 calFee = Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
-                    if (fee < calFee)
+                    fee = calFee;
+                    tx = Wallet.MakeTransaction(null, new[]
                     {
-                        fee = calFee;
-                        tx = Wallet.MakeTransaction(null, new[]
-                        {
                             new TransferOutput
                             {
                                 AssetId = assetId,
@@ -437,18 +427,13 @@ namespace Neo.Plugins
                                 ScriptHash = scriptHash
                             }
                         }, change_address: change_address, fee: fee);
-                        if (tx == null)
-                            throw new RpcException(-300, "Insufficient funds");
-                    }
+                    if (tx == null)
+                        throw new RpcException(-300, "Insufficient funds");
                 }
-                if (fee > Settings.Default.MaxFee)
-                    throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
-                return SignAndRelay(tx);
             }
-            else
-            {
-                return transContext.ToJson();
-            }
+            if (fee > Settings.Default.MaxFee)
+                throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
+            return SignAndRelay(tx);
         }
     }
 }
