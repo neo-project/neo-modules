@@ -324,13 +324,13 @@ namespace Neo.Plugins
                     fee = calFee;
                     tx = Wallet.MakeTransaction(null, new[]
                     {
-                            new TransferOutput
-                            {
-                                AssetId = assetId,
-                                Value = amount,
-                                ScriptHash = to
-                            }
-                        }, from: from, change_address: change_address, fee: fee);
+                        new TransferOutput
+                        {
+                            AssetId = assetId,
+                            Value = amount,
+                            ScriptHash = to
+                        }
+                    }, from: from, change_address: change_address, fee: fee);
                     if (tx == null)
                         throw new RpcException(-300, "Insufficient funds");
                 }
@@ -420,13 +420,13 @@ namespace Neo.Plugins
                     fee = calFee;
                     tx = Wallet.MakeTransaction(null, new[]
                     {
-                            new TransferOutput
-                            {
-                                AssetId = assetId,
-                                Value = amount,
-                                ScriptHash = scriptHash
-                            }
-                        }, change_address: change_address, fee: fee);
+                        new TransferOutput
+                        {
+                            AssetId = assetId,
+                            Value = amount,
+                            ScriptHash = scriptHash
+                        }
+                    }, change_address: change_address, fee: fee);
                     if (tx == null)
                         throw new RpcException(-300, "Insufficient funds");
                 }
