@@ -75,7 +75,7 @@ namespace Neo.Plugins
 
             JArray array = new JArray();
             uint heightToBegin = lastHeight > 0 ? lastHeight - nBlocks : Blockchain.Singleton.Height - nBlocks;
-            for (uint i = heightToBegin; i <= Blockchain.Singleton.HeaderHeight; i++)
+            for (uint i = heightToBegin; i <= heightToBegin + nBlocks; i++)
             {
                 JObject json = new JObject();
                 Header header = Blockchain.Singleton.Store.GetHeader(i);
