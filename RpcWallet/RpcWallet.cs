@@ -313,6 +313,8 @@ namespace Neo.Plugins
 
             ContractParametersContext transContext = new ContractParametersContext(tx);
             Wallet.Sign(transContext);
+            if (!transContext.Completed)
+                return transContext.ToJson();
             tx.Witnesses = transContext.GetWitnesses();
             if (tx.Size > 1024)
             {
@@ -323,11 +325,11 @@ namespace Neo.Plugins
                     tx = Wallet.MakeTransaction(null, new[]
                     {
                         new TransferOutput
-                            {
-                                AssetId = assetId,
-                                Value = amount,
-                                ScriptHash = to
-                            }
+                        {
+                            AssetId = assetId,
+                            Value = amount,
+                            ScriptHash = to
+                        }
                     }, from: from, change_address: change_address, fee: fee);
                     if (tx == null)
                         throw new RpcException(-300, "Insufficient funds");
@@ -365,6 +367,8 @@ namespace Neo.Plugins
 
             ContractParametersContext transContext = new ContractParametersContext(tx);
             Wallet.Sign(transContext);
+            if (!transContext.Completed)
+                return transContext.ToJson();
             tx.Witnesses = transContext.GetWitnesses();
             if (tx.Size > 1024)
             {
@@ -375,7 +379,7 @@ namespace Neo.Plugins
                     tx = Wallet.MakeTransaction(null, outputs, from: from, change_address: change_address, fee: fee);
                     if (tx == null)
                         throw new RpcException(-300, "Insufficient funds");
-                }   
+                }
             }
             if (fee > Settings.Default.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
@@ -405,6 +409,8 @@ namespace Neo.Plugins
 
             ContractParametersContext transContext = new ContractParametersContext(tx);
             Wallet.Sign(transContext);
+            if (!transContext.Completed)
+                return transContext.ToJson();
             tx.Witnesses = transContext.GetWitnesses();
             if (tx.Size > 1024)
             {
@@ -423,8 +429,8 @@ namespace Neo.Plugins
                     }, change_address: change_address, fee: fee);
                     if (tx == null)
                         throw new RpcException(-300, "Insufficient funds");
-                }  
-            } 
+                }
+            }
             if (fee > Settings.Default.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
