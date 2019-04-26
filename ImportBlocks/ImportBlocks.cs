@@ -3,6 +3,7 @@ using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.IO.Json;
 using System;
 using System.IO;
 
@@ -31,6 +32,10 @@ namespace Neo.Plugins
                 count = Math.Min(count, Blockchain.Singleton.Height - start + 1);
                 uint end = start + count - 1;
                 string path = $"chain.{start}.acc";
+
+                if (Settings.Default.PersistTXState)
+                    path = $"chain.{start}.acc.v2";
+                        
                 using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
                 {
                     if (fs.Length > 0)
@@ -55,6 +60,39 @@ namespace Neo.Plugins
                             byte[] array = block.ToArray();
                             fs.Write(BitConverter.GetBytes(array.Length), 0, sizeof(int));
                             fs.Write(array, 0, array.Length);
+
+                            if (Settings.Default.PersistTXState)
+                            {
+                                bool appLogExported = false;
+                                foreach (IRpcPlugin plugin in Plugin.RpcPlugins)
+                                    if (plugin.Name == "ApplicationLogs")
+                                    {
+                                        appLogExported = true;
+                                        foreach (Transaction tx in block.Transactions)
+                                        {
+                                            JArray _params = new JArray;
+                                            JString txHash = new JString(tx.Hash.ToString());
+                                            _params.Add(txHash);
+                                            JObject txState = plugin.OnProcess(null, "getapplicationlog", _params);
+                                            JArray appExecuted = JObject.Parse(txState["result"]["executions"]);
+                                            uint nExec = (uint)appExecuted.Count;
+                                            fs.Write(BitConverter.GetBytes(nExec), 0, sizeof(uint));
+                                            for (int k = 0; k < nExec; k++)
+                                            {
+                                                VM.VMState vmState = appExecuted[k]["vmstate"].ToString().Contains("FAULT") ? VM.VMState.FAULT : VM.VMState.HALT;
+                                                fs.Write(BitConverter.GetBytes(vmState), 0, sizeof(VM.VMState));
+                                            }
+                                        }
+                                        // exit if there is more than one active AppLog Plugin
+                                        break;
+                                    }
+                                if (!appLogExported)
+                                {
+                                    Console.Write("Error while exporting files with AppLog.");
+                                    return false;
+                                }
+                            }
+                        
                             Console.SetCursorPosition(0, Console.CursorTop);
                             Console.Write($"[{i}/{end}]");
                         }

@@ -7,11 +7,18 @@ namespace Neo.Plugins
     {
         public uint MaxOnImportHeight { get; }
 
+        /// <summary>
+        /// Flag for persisting (exporting and importing) transaction state:
+        /// fault or halt; number of notifications and stack type.
+        /// </summary>
+        public bool PersistTXState { get; }
+
         public static Settings Default { get; private set; }
 
         private Settings(IConfigurationSection section)
         {
             this.MaxOnImportHeight = GetValueOrDefault(section.GetSection("MaxOnImportHeight"), 0u, p => uint.Parse(p));
+            this.PersistTXState = GetValueOrDefault(section.GetSection("PersistTXState"), false, p => bool.Parse(p));
         }
 
         public T GetValueOrDefault<T>(IConfigurationSection section, T defaultValue, Func<string, T> selector)
