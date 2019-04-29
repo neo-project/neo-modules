@@ -18,7 +18,8 @@ namespace Neo.Plugins
         private Settings(IConfigurationSection section)
         {
             this.MaxOnImportHeight = GetValueOrDefault(section.GetSection("MaxOnImportHeight"), 0u, p => uint.Parse(p));
-            this.PersistTXState = GetValueOrDefault(section.GetSection("PersistTXState"), false, p => bool.Parse(p));
+            // TODO - set to false after finishing
+            this.PersistTXState = GetValueOrDefault(section.GetSection("PersistTXState"), true, p => bool.Parse(p));
         }
 
         public T GetValueOrDefault<T>(IConfigurationSection section, T defaultValue, Func<string, T> selector)
