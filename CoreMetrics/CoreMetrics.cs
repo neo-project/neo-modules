@@ -61,7 +61,9 @@ namespace Neo.Plugins
                 return json["error"] = "Requested number of blocks timestamps exceeds " + maxNBlocksPerDay;
             }
 
-            if (nBlocks >= Blockchain.Singleton.Height)
+            uint heightToBegin = lastHeight > 0 ? lastHeight - nBlocks : (Blockchain.Singleton.Height - 1) - nBlocks;
+            
+            if (heightToBegin + nBlocks >= Blockchain.Singleton.Height)
             {
                 JObject json = new JObject();
                 return json["error"] = "Requested number of blocks timestamps " + nBlocks + " exceeds quantity of known blocks " + Blockchain.Singleton.Height;
@@ -74,7 +76,6 @@ namespace Neo.Plugins
             }
 
             JArray array = new JArray();
-            uint heightToBegin = lastHeight > 0 ? lastHeight - nBlocks : (Blockchain.Singleton.Height - 1) - nBlocks;
             for (uint i = heightToBegin; i <= heightToBegin + nBlocks; i++)
             {
                 JObject json = new JObject();
