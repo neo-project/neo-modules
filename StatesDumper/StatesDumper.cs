@@ -131,7 +131,7 @@ namespace Neo.Plugins
             uint blockIndex = snapshot.Height;
             if (bs_cache.Count > 0)
             {
-                if ((blockIndex % Settings.Default.BlockCacheSize == 0) || (blockIndex > Settings.Default.HeightToStartRealTimeSyncing))
+                if ((blockIndex % Settings.Default.BlockCacheSize == 0) || (Settings.Default.HeightToStartRealTimeSyncing != -1 && blockIndex >= Settings.Default.HeightToStartRealTimeSyncing))
                 {
                     string dirPath = "./Storage";
                     Directory.CreateDirectory(dirPath);
