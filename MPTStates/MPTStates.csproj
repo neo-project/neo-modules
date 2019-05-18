@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Version>2.10.2</Version>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Neo.Plugins</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Update="MPTStates\config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Remove="StatesDumper\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Neo" Version="2.10.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="StatesDumper\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="StatesDumper\**" />
+  </ItemGroup>
+</Project>
