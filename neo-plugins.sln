@@ -23,6 +23,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreMetrics", "CoreMetrics\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcSystemAssetTracker", "RpcSystemAssetTracker\RpcSystemAssetTracker.csproj", "{D3C183C1-8C23-4566-8909-EBF468DAD67A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MPTStates", "MPTStates\MPTStates.csproj", "{4704220C-75F4-4A8C-B55C-7E809D6AAAA6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MPTStates.UnitTests", "MPTStates.UnitTests\MPTStates.UnitTests.csproj", "{A4517E03-B2E8-47EF-92C9-987C7E6508E7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -68,6 +72,14 @@ Global
 		{D3C183C1-8C23-4566-8909-EBF468DAD67A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3C183C1-8C23-4566-8909-EBF468DAD67A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3C183C1-8C23-4566-8909-EBF468DAD67A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4704220C-75F4-4A8C-B55C-7E809D6AAAA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4704220C-75F4-4A8C-B55C-7E809D6AAAA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4704220C-75F4-4A8C-B55C-7E809D6AAAA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4704220C-75F4-4A8C-B55C-7E809D6AAAA6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4517E03-B2E8-47EF-92C9-987C7E6508E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4517E03-B2E8-47EF-92C9-987C7E6508E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4517E03-B2E8-47EF-92C9-987C7E6508E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4517E03-B2E8-47EF-92C9-987C7E6508E7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
