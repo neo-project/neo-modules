@@ -47,3 +47,8 @@ Enables policies for Consensus or Seed Nodes. In particular, policies for accept
 
 ### StatesDumper
 Exports NEO-CLI status data \(useful for debugging\).
+
+### MPTStates
+An experimental plugin for persisting neo blockchain states into Merkle Patricia Tries.
+It is related to the implementation on the [PR-528](https://github.com/neo-project/neo/pull/528) of the main project.
+
