@@ -71,10 +71,10 @@ namespace Neo.Plugins
             uint heightToBegin = lastHeight > 0 ? lastHeight - nBlocks : (Blockchain.Singleton.Height - 1) - nBlocks;
             for (uint i = heightToBegin; i <= heightToBegin + nBlocks; i++)
             {
-                JObject json = new JObject();
                 Header header = Blockchain.Singleton.Store.GetHeader(i);
                 if (header == null) break;
 
+                JObject json = new JObject();
                 json["timestamp"] = header.Timestamp;
                 json["height"] = i;
                 array.Add(json);
