@@ -8,10 +8,11 @@ using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC;
 using Neo.Persistence;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
-using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 namespace Neo.Plugins
 {
@@ -32,11 +33,6 @@ namespace Neo.Plugins
         {
             switch (method)
             {
-                case "claimgas":
-                    {
-                        UInt160 to = _params.Count >= 1 ? _params[0].AsString().ToScriptHash() : null;
-                        return ClaimGas(to);
-                    }
                 case "dumpprivkey":
                     {
                         UInt160 scriptHash = _params[0].AsString().ToScriptHash();
@@ -44,7 +40,7 @@ namespace Neo.Plugins
                     }
                 case "getbalance":
                     {
-                        UIntBase asset_id = UIntBase.Parse(_params[0].AsString());
+                        UInt160 asset_id = UInt160.Parse(_params[0].AsString());
                         return GetBalance(asset_id);
                     }
                 case "getnewaddress":
@@ -70,13 +66,12 @@ namespace Neo.Plugins
                     }
                 case "sendfrom":
                     {
-                        UIntBase assetId = UIntBase.Parse(_params[0].AsString());
+                        UInt160 assetId = UInt160.Parse(_params[0].AsString());
                         UInt160 from = _params[1].AsString().ToScriptHash();
                         UInt160 to = _params[2].AsString().ToScriptHash();
                         string value = _params[3].AsString();
-                        Fixed8 fee = _params.Count >= 5 ? Fixed8.Parse(_params[4].AsString()) : Fixed8.Zero;
-                        UInt160 change_address = _params.Count >= 6 ? _params[5].AsString().ToScriptHash() : null;
-                        return SendFrom(assetId, from, to, value, fee, change_address);
+                        long fee = _params.Count >= 5 ? long.Parse(_params[4].AsString()) : 0;
+                        return SendFrom(assetId, from, to, value, fee);
                     }
                 case "sendmany":
                     {
@@ -88,18 +83,16 @@ namespace Neo.Plugins
                             to_start = 1;
                         }
                         JArray to = (JArray)_params[to_start + 0];
-                        Fixed8 fee = _params.Count >= to_start + 2 ? Fixed8.Parse(_params[to_start + 1].AsString()) : Fixed8.Zero;
-                        UInt160 change_address = _params.Count >= to_start + 3 ? _params[to_start + 2].AsString().ToScriptHash() : null;
-                        return SendMany(from, to, fee, change_address);
+                        long fee = _params.Count >= to_start + 2 ? long.Parse(_params[to_start + 1].AsString()) : 0;
+                        return SendMany(from, to, fee);
                     }
                 case "sendtoaddress":
                     {
-                        UIntBase assetId = UIntBase.Parse(_params[0].AsString());
+                        UInt160 assetId = UInt160.Parse(_params[0].AsString());
                         UInt160 scriptHash = _params[1].AsString().ToScriptHash();
                         string value = _params[2].AsString();
-                        Fixed8 fee = _params.Count >= 4 ? Fixed8.Parse(_params[3].AsString()) : Fixed8.Zero;
-                        UInt160 change_address = _params.Count >= 5 ? _params[4].AsString().ToScriptHash() : null;
-                        return SendToAddress(assetId, scriptHash, value, fee, change_address);
+                        long fee = _params.Count >= 4 ? long.Parse(_params[3].AsString()) : 0;
+                        return SendToAddress(assetId, scriptHash, value, fee);
                     }
                 default:
                     return null;
@@ -122,25 +115,17 @@ namespace Neo.Plugins
         {
             if (Wallet != null)
             {
-                InvocationTransaction tx = new InvocationTransaction
+                Transaction tx = new Transaction
                 {
-                    Version = 1,
-                    Script = result["script"].AsString().HexToBytes(),
-                    Gas = Fixed8.Parse(result["gas_consumed"].AsString())
+                    Script = result["script"].AsString().HexToBytes()
                 };
-                tx.Gas -= Fixed8.FromDecimal(10);
-                if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
-                tx.Gas = tx.Gas.Ceiling();
-                tx = Wallet.MakeTransaction(tx);
-                if (tx != null)
-                {
-                    ContractParametersContext context = new ContractParametersContext(tx);
-                    Wallet.Sign(context);
-                    if (context.Completed)
-                        tx.Witnesses = context.GetWitnesses();
-                    else
-                        tx = null;
-                }
+                Wallet.FillTransaction(tx);
+                ContractParametersContext context = new ContractParametersContext(tx);
+                Wallet.Sign(context);
+                if (context.Completed)
+                    tx.Witnesses = context.GetWitnesses();
+                else
+                    tx = null;
                 result["tx"] = tx?.ToArray().ToHexString();
             }
         }
@@ -168,36 +153,6 @@ namespace Neo.Plugins
             }
         }
 
-        private JObject ClaimGas(UInt160 to)
-        {
-            CheckWallet();
-            const int MAX_CLAIMS_AMOUNT = 50;
-            CoinReference[] claims = Wallet.GetUnclaimedCoins().Select(p => p.Reference).ToArray();
-            if (claims.Length == 0)
-                throw new RpcException(-300, "No gas to claim");
-            ClaimTransaction tx;
-            using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
-            {
-                tx = new ClaimTransaction
-                {
-                    Claims = claims.Take(MAX_CLAIMS_AMOUNT).ToArray(),
-                    Attributes = new TransactionAttribute[0],
-                    Inputs = new CoinReference[0],
-                    Outputs = new[]
-                    {
-                        new TransactionOutput
-                        {
-                            AssetId = Blockchain.UtilityToken.Hash,
-                            Value = snapshot.CalculateBonus(claims.Take(MAX_CLAIMS_AMOUNT)),
-                            ScriptHash = to ?? Wallet.GetChangeAddress()
-                        }
-                    }
-
-                };
-            }
-            return SignAndRelay(tx);
-        }
-
         private JObject DumpPrivKey(UInt160 scriptHash)
         {
             CheckWallet();
@@ -205,21 +160,11 @@ namespace Neo.Plugins
             return account.GetKey().Export();
         }
 
-        private JObject GetBalance(UIntBase asset_id)
+        private JObject GetBalance(UInt160 asset_id)
         {
             CheckWallet();
             JObject json = new JObject();
-            switch (asset_id)
-            {
-                case UInt160 asset_id_160: //NEP-5 balance
-                    json["balance"] = Wallet.GetAvailable(asset_id_160).ToString();
-                    break;
-                case UInt256 asset_id_256: //Global Assets balance
-                    IEnumerable<Coin> coins = Wallet.GetCoins().Where(p => !p.State.HasFlag(CoinState.Spent) && p.Output.AssetId.Equals(asset_id_256));
-                    json["balance"] = coins.Sum(p => p.Output.Value).ToString();
-                    json["confirmed"] = coins.Where(p => p.State.HasFlag(CoinState.Confirmed)).Sum(p => p.Output.Value).ToString();
-                    break;
-            }
+            json["balance"] = Wallet.GetAvailable(asset_id).ToString();
             return json;
         }
 
@@ -235,24 +180,13 @@ namespace Neo.Plugins
         private JObject GetUnclaimedGas()
         {
             CheckWallet();
+            BigInteger gas = BigInteger.Zero;
             using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
-            {
-                uint height = snapshot.Height + 1;
-                Fixed8 unavailable;
-                try
+                foreach (UInt160 account in Wallet.GetAccounts().Select(p => p.ScriptHash))
                 {
-                    unavailable = snapshot.CalculateBonus(Wallet.FindUnspentCoins().Where(p => p.Output.AssetId.Equals(Blockchain.GoverningToken.Hash)).Select(p => p.Reference), height);
+                    gas += NativeContract.NEO.UnclaimedGas(snapshot, account, snapshot.Height + 1);
                 }
-                catch
-                {
-                    unavailable = Fixed8.Zero;
-                }
-                return new JObject
-                {
-                    ["available"] = snapshot.CalculateBonus(Wallet.GetUnclaimedCoins().Select(p => p.Reference)).ToString(),
-                    ["unavailable"] = unavailable.ToString()
-                };
-            }
+            return gas.ToString();
         }
 
         private JObject GetWalletHeight()
@@ -290,14 +224,14 @@ namespace Neo.Plugins
             }).ToArray();
         }
 
-        private JObject SendFrom(UIntBase assetId, UInt160 from, UInt160 to, string value, Fixed8 fee, UInt160 change_address)
+        private JObject SendFrom(UInt160 assetId, UInt160 from, UInt160 to, string value, long fee)
         {
             CheckWallet();
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
             BigDecimal amount = BigDecimal.Parse(value, descriptor.Decimals);
             if (amount.Sign <= 0)
                 throw new RpcException(-32602, "Invalid params");
-            if (fee < Fixed8.Zero)
+            if (fee < 0)
                 throw new RpcException(-32602, "Invalid params");
             Transaction tx = Wallet.MakeTransaction(null, new[]
             {
@@ -307,7 +241,7 @@ namespace Neo.Plugins
                     Value = amount,
                     ScriptHash = to
                 }
-            }, from: from, change_address: change_address, fee: fee);
+            }, from: from, net_fee: fee);
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
@@ -318,29 +252,16 @@ namespace Neo.Plugins
             tx.Witnesses = transContext.GetWitnesses();
             if (tx.Size > 1024)
             {
-                Fixed8 calFee = Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
-                if (fee < calFee)
-                {
-                    fee = calFee;
-                    tx = Wallet.MakeTransaction(null, new[]
-                    {
-                        new TransferOutput
-                        {
-                            AssetId = assetId,
-                            Value = amount,
-                            ScriptHash = to
-                        }
-                    }, from: from, change_address: change_address, fee: fee);
-                    if (tx == null)
-                        throw new RpcException(-300, "Insufficient funds");
-                }
+                long calFee = tx.Size * 1000 + 100000;
+                if (tx.NetworkFee < calFee)
+                    tx.NetworkFee = calFee;
             }
-            if (fee > Settings.Default.MaxFee)
+            if (tx.NetworkFee > Settings.Default.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
         }
 
-        private JObject SendMany(UInt160 from, JArray to, Fixed8 fee, UInt160 change_address)
+        private JObject SendMany(UInt160 from, JArray to, long fee)
         {
             CheckWallet();
             if (to.Count == 0)
@@ -348,7 +269,7 @@ namespace Neo.Plugins
             TransferOutput[] outputs = new TransferOutput[to.Count];
             for (int i = 0; i < to.Count; i++)
             {
-                UIntBase asset_id = UIntBase.Parse(to[i]["asset"].AsString());
+                UInt160 asset_id = UInt160.Parse(to[i]["asset"].AsString());
                 AssetDescriptor descriptor = new AssetDescriptor(asset_id);
                 outputs[i] = new TransferOutput
                 {
@@ -359,9 +280,9 @@ namespace Neo.Plugins
                 if (outputs[i].Value.Sign <= 0)
                     throw new RpcException(-32602, "Invalid params");
             }
-            if (fee < Fixed8.Zero)
+            if (fee < 0)
                 throw new RpcException(-32602, "Invalid params");
-            Transaction tx = Wallet.MakeTransaction(null, outputs, from: from, change_address: change_address, fee: fee);
+            Transaction tx = Wallet.MakeTransaction(null, outputs, from: from, net_fee: fee);
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
@@ -372,28 +293,23 @@ namespace Neo.Plugins
             tx.Witnesses = transContext.GetWitnesses();
             if (tx.Size > 1024)
             {
-                Fixed8 calFee = Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
-                if (fee < calFee)
-                {
-                    fee = calFee;
-                    tx = Wallet.MakeTransaction(null, outputs, from: from, change_address: change_address, fee: fee);
-                    if (tx == null)
-                        throw new RpcException(-300, "Insufficient funds");
-                }
+                long calFee = tx.Size * 1000 + 100000;
+                if (tx.NetworkFee < calFee)
+                    tx.NetworkFee = calFee;
             }
-            if (fee > Settings.Default.MaxFee)
+            if (tx.NetworkFee > Settings.Default.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
         }
 
-        private JObject SendToAddress(UIntBase assetId, UInt160 scriptHash, string value, Fixed8 fee, UInt160 change_address)
+        private JObject SendToAddress(UInt160 assetId, UInt160 scriptHash, string value, long fee)
         {
             CheckWallet();
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
             BigDecimal amount = BigDecimal.Parse(value, descriptor.Decimals);
             if (amount.Sign <= 0)
                 throw new RpcException(-32602, "Invalid params");
-            if (fee < Fixed8.Zero)
+            if (fee < 0)
                 throw new RpcException(-32602, "Invalid params");
             Transaction tx = Wallet.MakeTransaction(null, new[]
             {
@@ -403,7 +319,7 @@ namespace Neo.Plugins
                     Value = amount,
                     ScriptHash = scriptHash
                 }
-            }, change_address: change_address, fee: fee);
+            }, net_fee: fee);
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
@@ -414,24 +330,11 @@ namespace Neo.Plugins
             tx.Witnesses = transContext.GetWitnesses();
             if (tx.Size > 1024)
             {
-                Fixed8 calFee = Fixed8.FromDecimal(tx.Size * 0.00001m + 0.001m);
-                if (fee < calFee)
-                {
-                    fee = calFee;
-                    tx = Wallet.MakeTransaction(null, new[]
-                    {
-                        new TransferOutput
-                        {
-                            AssetId = assetId,
-                            Value = amount,
-                            ScriptHash = scriptHash
-                        }
-                    }, change_address: change_address, fee: fee);
-                    if (tx == null)
-                        throw new RpcException(-300, "Insufficient funds");
-                }
+                long calFee = tx.Size * 1000 + 100000;
+                if (tx.NetworkFee < calFee)
+                    tx.NetworkFee = calFee;
             }
-            if (fee > Settings.Default.MaxFee)
+            if (tx.NetworkFee > Settings.Default.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
         }

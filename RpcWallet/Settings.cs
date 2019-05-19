@@ -1,16 +1,17 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Neo.SmartContract.Native;
 
 namespace Neo.Plugins
 {
     internal class Settings
     {
-        public Fixed8 MaxFee { get; }
+        public long MaxFee { get; }
 
         public static Settings Default { get; private set; }
 
         private Settings(IConfigurationSection section)
         {
-            this.MaxFee = Fixed8.Parse(section.GetValue("MaxFee", "0.1"));
+            this.MaxFee = (long)BigDecimal.Parse(section.GetValue("MaxFee", "0.1"), NativeContract.GAS.Decimals).Value;
         }
 
         public static void Load(IConfigurationSection section)

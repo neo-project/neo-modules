@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Neo.Network.P2P;
 
 namespace Neo.Plugins
 {
@@ -11,7 +10,7 @@ namespace Neo.Plugins
 
         private Settings(IConfigurationSection section)
         {
-            this.Path = string.Format(section.GetSection("Path").Value, Message.Magic.ToString("X8"));
+            this.Path = string.Format(section.GetSection("Path").Value, ProtocolSettings.Default.Magic.ToString("X8"));
         }
 
         public static void Load(IConfigurationSection section)
