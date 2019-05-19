@@ -8,13 +8,9 @@ namespace Neo.Plugins
 {
     public class CoreMetrics : Plugin, IRpcPlugin
     {
-        public override void Configure()
-        {
-        }
+        public override void Configure() { }
 
-        public void PreProcess(HttpContext context, string method, JArray _params)
-        {
-        }
+        public void PreProcess(HttpContext context, string method, JArray _params) { }
 
         public JObject OnProcess(HttpContext context, string method, JArray _params)
         {
@@ -32,9 +28,7 @@ namespace Neo.Plugins
             }
         }
 
-        public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
-        {
-        }
+        public void PostProcess(HttpContext context, string method, JArray _params, JObject result) { }
 
         private JObject GetBlocksTime(uint nBlocks, uint lastHeight)
         {
@@ -79,6 +73,8 @@ namespace Neo.Plugins
             {
                 JObject json = new JObject();
                 Header header = Blockchain.Singleton.Store.GetHeader(i);
+                if (header == null) break;
+
                 json["timestamp"] = header.Timestamp;
                 json["height"] = i;
                 array.Add(json);

@@ -16,7 +16,7 @@ namespace Neo.Plugins
         /// <summary>
         /// Height to begin real-time syncing and dumping on, consequently, dumping every block into a single files
         /// </summary>
-        public uint HeightToStartRealTimeSyncing { get; }
+        public int HeightToStartRealTimeSyncing { get; }
         /// <summary>
         /// Persisting actions
         /// </summary>
@@ -29,7 +29,7 @@ namespace Neo.Plugins
             /// Geting settings for storage changes state dumper
             this.BlockCacheSize = GetValueOrDefault(section.GetSection("BlockCacheSize"), 1000u, p => uint.Parse(p));
             this.HeightToBegin = GetValueOrDefault(section.GetSection("HeightToBegin"), 0u, p => uint.Parse(p));
-            this.HeightToStartRealTimeSyncing = GetValueOrDefault(section.GetSection("HeightToStartRealTimeSyncing"), 2883000u, p => uint.Parse(p));
+            this.HeightToStartRealTimeSyncing = GetValueOrDefault(section.GetSection("HeightToStartRealTimeSyncing"), -1, p => int.Parse(p));
             this.PersistAction = GetValueOrDefault(section.GetSection("PersistAction"), PersistActions.StorageChanges, p => (PersistActions)Enum.Parse(typeof(PersistActions), p));
         }
 
