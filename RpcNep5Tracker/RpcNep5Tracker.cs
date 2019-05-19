@@ -165,18 +165,15 @@ namespace Neo.Plugins
             ushort transferIndex = 0;
             foreach (Blockchain.ApplicationExecuted appExecuted in applicationExecutedList)
             {
-                foreach (var executionResults in appExecuted.ExecutionResults)
+                // Executions that fault won't modify storage, so we can skip them.
+                if (appExecuted.VMState.HasFlag(VMState.FAULT)) continue;
+                foreach (var notifyEventArgs in appExecuted.Notifications)
                 {
-                    // Executions that fault won't modify storage, so we can skip them.
-                    if (executionResults.VMState.HasFlag(VMState.FAULT)) continue;
-                    foreach (var notifyEventArgs in executionResults.Notifications)
-                    {
-                        if (!(notifyEventArgs?.State is VM.Types.Array stateItems) || stateItems.Count == 0
-                            || !(notifyEventArgs.ScriptContainer is Transaction transaction))
-                            continue;
-                        HandleNotification(snapshot, transaction, notifyEventArgs.ScriptHash, stateItems,
-                            nep5BalancesChanged, ref transferIndex);
-                    }
+                    if (!(notifyEventArgs?.State is VM.Types.Array stateItems) || stateItems.Count == 0
+                        || !(notifyEventArgs.ScriptContainer is Transaction transaction))
+                        continue;
+                    HandleNotification(snapshot, transaction, notifyEventArgs.ScriptHash, stateItems,
+                        nep5BalancesChanged, ref transferIndex);
                 }
             }
 
