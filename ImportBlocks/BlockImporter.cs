@@ -41,9 +41,7 @@ namespace Neo.Plugins
                 {
                     var size = r.ReadInt32();
                     if (size > Message.PayloadMaxSize)
-                    {
                         throw new ArgumentException($"Block {height} exceeds the maximum allowed size");
-                    }
 
                     byte[] array = r.ReadBytes(size);
                     if (!CheckMaxOnImportHeight(height)) yield break;
