@@ -53,36 +53,30 @@ namespace Neo.Plugins
             {
                 JObject json = new JObject();
                 json["txid"] = appExec.Transaction.Hash.ToString();
-                json["executions"] = appExec.ExecutionResults.Select(p =>
+                json["trigger"] = appExec.Trigger;
+                json["vmstate"] = appExec.VMState;
+                json["gas_consumed"] = appExec.GasConsumed.ToString();
+                try
                 {
-                    JObject execution = new JObject();
-                    execution["trigger"] = p.Trigger;
-                    execution["contract"] = p.ScriptHash.ToString();
-                    execution["vmstate"] = p.VMState;
-                    execution["gas_consumed"] = p.GasConsumed.ToString();
+                    json["stack"] = appExec.Stack.Select(q => q.ToParameter().ToJson()).ToArray();
+                }
+                catch (InvalidOperationException)
+                {
+                    json["stack"] = "error: recursive reference";
+                }
+                json["notifications"] = appExec.Notifications.Select(q =>
+                {
+                    JObject notification = new JObject();
+                    notification["contract"] = q.ScriptHash.ToString();
                     try
                     {
-                        execution["stack"] = p.Stack.Select(q => q.ToParameter().ToJson()).ToArray();
+                        notification["state"] = q.State.ToParameter().ToJson();
                     }
                     catch (InvalidOperationException)
                     {
-                        execution["stack"] = "error: recursive reference";
+                        notification["state"] = "error: recursive reference";
                     }
-                    execution["notifications"] = p.Notifications.Select(q =>
-                    {
-                        JObject notification = new JObject();
-                        notification["contract"] = q.ScriptHash.ToString();
-                        try
-                        {
-                            notification["state"] = q.State.ToParameter().ToJson();
-                        }
-                        catch (InvalidOperationException)
-                        {
-                            notification["state"] = "error: recursive reference";
-                        }
-                        return notification;
-                    }).ToArray();
-                    return execution;
+                    return notification;
                 }).ToArray();
                 writeBatch.Put(appExec.Transaction.Hash.ToArray(), json.ToString());
             }

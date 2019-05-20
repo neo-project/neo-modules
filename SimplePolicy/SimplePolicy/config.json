@@ -4,10 +4,6 @@
     "MaxFreeTransactionsPerBlock": 20,
     "MaxFreeTransactionSize": 1024,
     "FeePerExtraByte": 0.00001,
-    "HighPriorityTxType":
-    [
-        "ClaimTransaction"
-    ],
     "BlockedAccounts": {
       "Type": "AllowAll",
       "List": []
