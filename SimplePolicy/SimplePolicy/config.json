@@ -3,7 +3,8 @@
     "MaxTransactionsPerBlock": 500,
     "MaxFreeTransactionsPerBlock": 20,
     "MaxFreeTransactionSize": 1024,
-    "FeePerExtraByte": 0.00001,
+    "FeePerExtraBlock": 0.01024,
+    "ExtraBlockSize": 1024,
     "HighPriorityTxType":
     [
         "ClaimTransaction"

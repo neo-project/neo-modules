@@ -106,7 +106,12 @@ namespace Neo.Plugins
             // Require proportional fee for TX bigger than MaxFreeTransactionSize
             if (tx.Size > Settings.Default.MaxFreeTransactionSize)
             {
-                Fixed8 fee = Settings.Default.FeePerExtraByte * (tx.Size - Settings.Default.MaxFreeTransactionSize);
+                decimal payBytes = (tx.Size - Settings.Default.MaxFreeTransactionSize);
+                //when extrablocksize==1 ，pay per bytes
+                //when extrablocksize==1024 ，pay per 1k bytes
+                long payBlockCount =(long) Math.Ceiling(payBytes / Settings.Default.ExtraBlockSize);
+
+                Fixed8 fee = Settings.Default.FeePerExtraBlock * payBlockCount;
 
                 if (tx.NetworkFee < fee) return false;
             }
