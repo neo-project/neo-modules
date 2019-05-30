@@ -96,7 +96,7 @@ namespace Neo.Plugins
             }
         }
 
-        private bool VerifySizeLimits(Transaction tx)
+        internal protected bool VerifySizeLimits(Transaction tx)
         {
             if (InHigherLowPriorityList(tx)) return true;
 
