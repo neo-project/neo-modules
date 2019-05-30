@@ -98,6 +98,30 @@ namespace Neo.Plugins
 
         internal protected bool VerifySizeLimits(Transaction tx)
         {
+            return VerifySizeLimits2(tx); // fee per block
+        }
+
+        // fee per byte
+        internal protected bool VerifySizeLimits1(Transaction tx)
+        {
+            if (InHigherLowPriorityList(tx)) return true;
+
+            // Not Allow free TX bigger than MaxFreeTransactionSize
+            if (tx.IsLowPriority && tx.Size > Settings.Default.MaxFreeTransactionSize) return false;
+
+            // Require proportional fee for TX bigger than MaxFreeTransactionSize
+            if (tx.Size > Settings.Default.MaxFreeTransactionSize)
+            {
+                Fixed8 fee = Settings.Default.FeePerExtraByte * (tx.Size - Settings.Default.MaxFreeTransactionSize);
+
+                if (tx.NetworkFee < fee) return false;
+            }
+            return true;
+        }
+
+        // fee per block
+        internal protected bool VerifySizeLimits2(Transaction tx)
+        {
             if (InHigherLowPriorityList(tx)) return true;
 
             // Not Allow free TX bigger than MaxFreeTransactionSize
