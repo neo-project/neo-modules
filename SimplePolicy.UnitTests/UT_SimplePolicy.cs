@@ -291,9 +291,9 @@ namespace SimplePolicy.UnitTests
         }
 
          [TestMethod]
-        public void TestVerifySizeLimits_FreeLessEq1024()
+        public void TestVerifySizeLimits_Free1024_Pass()
         {
-            var txLowPriority = MockGenerateInvocationTransaction(new Fixed8(100000000 / 10000), 1024).Object; // 0.00001
+            var txLowPriority = MockGenerateInvocationTransaction(new Fixed8(100000000 / 10000), 1024).Object; // 0.0001
             txLowPriority.IsLowPriority.Should().Be(true);
             txLowPriority.Size.Should().Be(1024); 
             Settings.Default.MaxFreeTransactionSize.Should().Be(1024);
@@ -303,9 +303,9 @@ namespace SimplePolicy.UnitTests
 
 
         [TestMethod]
-        public void TestVerifySizeLimits_FreeGreater1024()
+        public void TestVerifySizeLimits_Free1025_Fail()
         {
-            var txLowPriority = MockGenerateInvocationTransaction(new Fixed8(100000000 / 10000), 1025).Object; // 0.00001
+            var txLowPriority = MockGenerateInvocationTransaction(new Fixed8(100000000 / 10000), 1025).Object; // 0.0001
             txLowPriority.IsLowPriority.Should().Be(true);
             txLowPriority.Size.Should().Be(1025); 
             Settings.Default.MaxFreeTransactionSize.Should().Be(1024);
@@ -315,9 +315,9 @@ namespace SimplePolicy.UnitTests
 
 
         [TestMethod]
-        public void TestVerifySizeLimits_HighPriorityLessEq1024()
+        public void TestVerifySizeLimits_HighPriority_1024_Pass()
         {
-            var txHighPriority = MockGenerateInvocationTransaction(new Fixed8(100000000 / 1000), 1024).Object; // 0.0001
+            var txHighPriority = MockGenerateInvocationTransaction(new Fixed8(100000000 / 1000), 1024).Object; // 0.001
             txHighPriority.IsLowPriority.Should().Be(false);
             txHighPriority.Size.Should().Be(1024); 
             Settings.Default.MaxFreeTransactionSize.Should().Be(1024);
@@ -327,51 +327,34 @@ namespace SimplePolicy.UnitTests
 
 
         [TestMethod]
-        public void TestVerifySizeLimits_HighPriorityGreater1024_1025()
+        public void TestVerifySizeLimits_HighPriority_NoExtraFee_4000_Fail()
         {
-            var txHighPriority = MockGenerateInvocationTransaction(new Fixed8(100000000 / 1000), 1025).Object; // 0.0001
+            var txHighPriority = MockGenerateInvocationTransaction(new Fixed8(100000000 / 1000), 4000).Object; // 0.001
             txHighPriority.IsLowPriority.Should().Be(false);
-            txHighPriority.Size.Should().Be(1025); 
+            txHighPriority.Size.Should().Be(4000); 
             Settings.Default.MaxFreeTransactionSize.Should().Be(1024);
             Settings.Default.FeePerExtraByte.Should().Be(new Fixed8(100000000 / 100000)); // 0.000001 (1000 satoshi)
             
-            uut.VerifySizeLimits(txHighPriority).Should().Be(true); // 1025 > 1024 (extra fee was 1 byte * 1000 satoshi = 0.000001)
+            uut.VerifySizeLimits(txHighPriority).Should().Be(false); // 4000 > 1024 (required fee was (4000-1024=2976) 2976 byte * 1000 satoshi + 0.001 = 0.02976+0.001 = 0.03076)
         }
 
         [TestMethod]
-        public void TestVerifySizeLimits_HighPriorityGreater1024_1124()
+        public void TestVerifySizeLimits_HighPriority_ExtraFee_4000_Pass()
         {
-            var txHighPriority = MockGenerateInvocationTransaction(new Fixed8(100000000 / 1000), 1124).Object; // 0.0001
+            var txSize = 4000;
+            var txHighPriorityExtraFee = ((txSize-1024) * 0.00001 + 0.001); // 0.03076
+            txHighPriorityExtraFee.Should().BeApproximately(0.03076, 0.00000001);
+            var txHighPriority = MockGenerateInvocationTransaction(new Fixed8((long)(100000000 * txHighPriorityExtraFee)), txSize).Object; // 0.03076
             txHighPriority.IsLowPriority.Should().Be(false);
-            txHighPriority.Size.Should().Be(1124); 
+            txHighPriority.Size.Should().Be(4000); 
             Settings.Default.MaxFreeTransactionSize.Should().Be(1024);
-            Settings.Default.FeePerExtraByte.Should().Be(new Fixed8(100000000 / 100000)); // 0.000001 (1000 satoshi)
+            Settings.Default.FeePerExtraByte.Should().Be(new Fixed8(100000000 / 100000)); // 0.00001 (1000 satoshi)
             
-            uut.VerifySizeLimits(txHighPriority).Should().Be(true); // 1124 > 1024 (extra fee was 100 byte * 1000 satoshi = 0.0001)
-        }
-
-         [TestMethod]
-        public void TestVerifySizeLimits_HighPriorityGreater1024_1125_unpaid_fails()
-        {
-            var txHighPriority = MockGenerateInvocationTransaction(new Fixed8(100000000 / 1000), 1125).Object; // 0.0001
-            txHighPriority.IsLowPriority.Should().Be(false);
-            txHighPriority.Size.Should().Be(1125); 
-            Settings.Default.MaxFreeTransactionSize.Should().Be(1024);
-            Settings.Default.FeePerExtraByte.Should().Be(new Fixed8(100000000 / 100000)); // 0.000001 (1000 satoshi)
-            // should fail because of 1000 unpaid satoshi... (1 byte over)
-            uut.VerifySizeLimits(txHighPriority).Should().Be(false); // 1125 > 1024 (extra fee was 101 byte * 1000 satoshi = 0.0001001)
-        }
-
-                 [TestMethod]
-        public void TestVerifySizeLimits_HighPriorityGreater1024_1125_paid_NotFail()
-        {
-            var txHighPriority = MockGenerateInvocationTransaction(new Fixed8(100000000 / 1000 + 1000), 1125).Object; // 0.000101
-            txHighPriority.IsLowPriority.Should().Be(false);
-            txHighPriority.Size.Should().Be(1125); 
-            Settings.Default.MaxFreeTransactionSize.Should().Be(1024);
-            Settings.Default.FeePerExtraByte.Should().Be(new Fixed8(100000000 / 100000)); // 0.000001 (1000 satoshi)
-            // should pass (total charged is 0.000101)
-            uut.VerifySizeLimits(txHighPriority).Should().Be(true); // 1125 > 1024 (extra fee was 101 byte * 1000 satoshi = 0.000101)
+            uut.VerifySizeLimits(txHighPriority).Should().Be(true); // 4000 > 1024 (required fee is (4000-1024=2976) 2976 byte * 1000 satoshi + 0.001 = 0.02976+0.001 = 0.03076)
+            
+            var txHighPriorityExtraFee2 = txHighPriorityExtraFee - 0.02; // cut a few hundreds satoshi
+            var txHighPriority2 = MockGenerateInvocationTransaction(new Fixed8((long)(100000000 * txHighPriorityExtraFee2)), txSize).Object;
+            uut.VerifySizeLimits(txHighPriority2).Should().Be(false); // should fail
         }
 
         // Generate Mock InvocationTransaction with different sizes and prices
