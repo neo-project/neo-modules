@@ -18,7 +18,7 @@ namespace SimplePolicy.UnitTests
     [TestClass]
     public class UT_SimplePolicy
     {
-        private static Random _random = new Random(11121990);
+        private static readonly Random _random = new Random(11121990);
 
         SimplePolicyPlugin uut;
 
@@ -34,7 +34,6 @@ namespace SimplePolicy.UnitTests
             Settings.Default.MaxTransactionsPerBlock.Should().Be(500);
             Settings.Default.MaxFreeTransactionsPerBlock.Should().Be(20);
         }
-
 
         [TestMethod]
         public void TestFilterForBlock_ClaimHasPriority()
@@ -90,7 +89,7 @@ namespace SimplePolicy.UnitTests
             }
 
             TxList.Count().Should().Be(204); // 100 free + 100 paid + 4 claims
-            TxList.Where(tx => tx.NetworkFee == Fixed8.Zero).Count().Should().Be(100-18+4); // 82 fully free + 4 claims
+            TxList.Where(tx => tx.NetworkFee == Fixed8.Zero).Count().Should().Be(100 - 18 + 4); // 82 fully free + 4 claims
 
             IEnumerable<Transaction> filteredTxList = uut.FilterForBlock(TxList);
             //filteredTxList.Count().Should().Be(124); // 20 free + 100 paid + 4 claims
@@ -120,7 +119,7 @@ namespace SimplePolicy.UnitTests
             }
 
             TxList.Count().Should().Be(1004); // 500 free + 500 paid + 4 claims
-            TxList.Where(tx => tx.NetworkFee == Fixed8.Zero).Count().Should().Be(400+100-18+4); // 500-18 fully free + 4 claims
+            TxList.Where(tx => tx.NetworkFee == Fixed8.Zero).Count().Should().Be(400 + 100 - 18 + 4); // 500-18 fully free + 4 claims
 
             filteredTxList = uut.FilterForBlock(TxList);
             filteredTxList.Count().Should().Be(499); // full block
@@ -147,9 +146,7 @@ namespace SimplePolicy.UnitTests
             //Console.WriteLine("filtered");
             //foreach(var tx in filteredTxList)
             //    Console.WriteLine($"TX fee: {tx.NetworkFee} size: {tx.Size} ratio: {tx.FeePerByte} hash: {tx.Hash}" );
-
         }
-
 
         [TestMethod]
         public void FreeTxVerifySort_NoHighPriority()
@@ -244,7 +241,6 @@ namespace SimplePolicy.UnitTests
             txList.Where(tx => (tx.NetworkFee / tx.Size) == new Fixed8(2000) && (tx.NetworkFee > new Fixed8(20000))).Count().Should().Be(2); // only 2 survive (fee > 0.0002)
         }
 
-
         [TestMethod]
         public void FreeTxVerifySortWithPriority()
         {
@@ -273,7 +269,6 @@ namespace SimplePolicy.UnitTests
             filteredTxList.Where(tx => tx.Type == TransactionType.ClaimTransaction).Count().Should().Be(2); // 2 claims will be selected
         }
 
-
         [TestMethod]
         public void TestMock_GenerateInvocationTransaction()
         {
@@ -290,41 +285,38 @@ namespace SimplePolicy.UnitTests
             txLowPriority.Object.IsLowPriority.Should().Be(true);
         }
 
-         [TestMethod]
+        [TestMethod]
         public void TestVerifySizeLimits_Free1024_Pass()
         {
             var txLowPriority = MockGenerateInvocationTransaction(new Fixed8(100000000 / 10000), 1024).Object; // 0.0001
             txLowPriority.IsLowPriority.Should().Be(true);
-            txLowPriority.Size.Should().Be(1024); 
+            txLowPriority.Size.Should().Be(1024);
             Settings.Default.MaxFreeTransactionSize.Should().Be(1024);
-            
+
             uut.VerifySizeLimits(txLowPriority).Should().Be(true); // 1024 <= 1024
         }
-
 
         [TestMethod]
         public void TestVerifySizeLimits_Free1025_Fail()
         {
             var txLowPriority = MockGenerateInvocationTransaction(new Fixed8(100000000 / 10000), 1025).Object; // 0.0001
             txLowPriority.IsLowPriority.Should().Be(true);
-            txLowPriority.Size.Should().Be(1025); 
+            txLowPriority.Size.Should().Be(1025);
             Settings.Default.MaxFreeTransactionSize.Should().Be(1024);
-            
+
             uut.VerifySizeLimits(txLowPriority).Should().Be(false); // 1025 > 1024
         }
-
 
         [TestMethod]
         public void TestVerifySizeLimits_HighPriority_1024_Pass()
         {
             var txHighPriority = MockGenerateInvocationTransaction(new Fixed8(100000000 / 1000), 1024).Object; // 0.001
             txHighPriority.IsLowPriority.Should().Be(false);
-            txHighPriority.Size.Should().Be(1024); 
+            txHighPriority.Size.Should().Be(1024);
             Settings.Default.MaxFreeTransactionSize.Should().Be(1024);
-            
+
             uut.VerifySizeLimits(txHighPriority).Should().Be(true); // 1024 <= 1024
         }
-
 
         [TestMethod]
         public void TestVerifySizeLimits_HighPriority_NoExtraFee_4000_Fail()
@@ -381,7 +373,6 @@ namespace SimplePolicy.UnitTests
             return mockTx;
         }
 
-
         // Create ClaimTransaction with 'countRefs' CoinReferences
         public static ClaimTransaction GetClaimTransaction(int countRefs)
         {
@@ -399,7 +390,7 @@ namespace SimplePolicy.UnitTests
             return new ClaimTransaction
             {
                 Claims = refs,
-                Attributes = new TransactionAttribute[]{new TransactionAttribute{Usage = TransactionAttributeUsage.Script, Data = randomBytes} },
+                Attributes = new TransactionAttribute[] { new TransactionAttribute { Usage = TransactionAttributeUsage.Script, Data = randomBytes } },
                 Inputs = new CoinReference[0],
                 Outputs = new TransactionOutput[0],
                 Witnesses = new Witness[0]
