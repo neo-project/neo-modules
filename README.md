@@ -39,9 +39,6 @@ Plugin that enables NEP5 tracking using LevelDB.
 ### RPC Security
 Improves security in RPC nodes.
 
-### RPC System Asset Tracker
-Plugin that enables Assets tracker. In particular, it enables RPC calls for `getunpents` and `claimables`.
-
 ### Simple Policy
 Enables policies for Consensus or Seed Nodes. In particular, policies for accepting transactions in the mempool and managing them.
 
