@@ -1,6 +1,7 @@
 using Akka.Actor;
 using Neo.IO;
 using Neo.Ledger;
+using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using System;
 using System.Collections.Generic;
@@ -38,7 +39,11 @@ namespace Neo.Plugins
                 if (end <= Blockchain.Singleton.Height) yield break;
                 for (uint height = start; height <= end; height++)
                 {
-                    byte[] array = r.ReadBytes(r.ReadInt32());
+                    var size = r.ReadInt32();
+                    if (size > Message.PayloadMaxSize)
+                        throw new ArgumentException($"Block {height} exceeds the maximum allowed size");
+
+                    byte[] array = r.ReadBytes(size);
                     if (!CheckMaxOnImportHeight(height)) yield break;
                     if (height > Blockchain.Singleton.Height)
                     {
