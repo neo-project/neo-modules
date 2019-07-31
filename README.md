@@ -2,7 +2,7 @@
 A set of plugins that can be used inside the NEO core library. Check [here](http://docs.neo.org/en-us/node/plugin.html) for the official documentation.
 
 ## Using plugins
-Plugins can be used to increase functionality, as well as providing policies definitions of the network. 
+Plugins can be used to increase functionality, as well as providing policies definitions of the network.
 One common example is to add the ApplicationLogs plugin in order to enable your node to create log files.
 
 To configure a plugin, do the following:
@@ -38,9 +38,6 @@ Plugin that enables NEP5 tracking using LevelDB.
 
 ### RPC Security
 Improves security in RPC nodes.
-
-### Simple Policy
-Enables policies for Consensus or Seed Nodes. In particular, policies for accepting transactions in the mempool and managing them.
 
 ### StatesDumper
 Exports NEO-CLI status data \(useful for debugging\).
