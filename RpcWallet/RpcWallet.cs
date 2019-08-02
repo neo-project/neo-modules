@@ -51,10 +51,6 @@ namespace Neo.Plugins
                     {
                         return GetUnclaimedGas();
                     }
-                case "getwalletheight":
-                    {
-                        return GetWalletHeight();
-                    }
                 case "importprivkey":
                     {
                         string privkey = _params[0].AsString();
@@ -70,8 +66,7 @@ namespace Neo.Plugins
                         UInt160 from = _params[1].AsString().ToScriptHash();
                         UInt160 to = _params[2].AsString().ToScriptHash();
                         string value = _params[3].AsString();
-                        long fee = _params.Count >= 5 ? long.Parse(_params[4].AsString()) : 0;
-                        return SendFrom(assetId, from, to, value, fee);
+                        return SendFrom(assetId, from, to, value);
                     }
                 case "sendmany":
                     {
@@ -82,17 +77,15 @@ namespace Neo.Plugins
                             from = _params[0].AsString().ToScriptHash();
                             to_start = 1;
                         }
-                        JArray to = (JArray)_params[to_start + 0];
-                        long fee = _params.Count >= to_start + 2 ? long.Parse(_params[to_start + 1].AsString()) : 0;
-                        return SendMany(from, to, fee);
+                        JArray to = (JArray)_params[to_start];
+                        return SendMany(from, to);
                     }
                 case "sendtoaddress":
                     {
                         UInt160 assetId = UInt160.Parse(_params[0].AsString());
                         UInt160 scriptHash = _params[1].AsString().ToScriptHash();
                         string value = _params[2].AsString();
-                        long fee = _params.Count >= 4 ? long.Parse(_params[3].AsString()) : 0;
-                        return SendToAddress(assetId, scriptHash, value, fee);
+                        return SendToAddress(assetId, scriptHash, value);
                     }
                 default:
                     return null;
@@ -115,11 +108,7 @@ namespace Neo.Plugins
         {
             if (Wallet != null)
             {
-                Transaction tx = new Transaction
-                {
-                    Script = result["script"].AsString().HexToBytes()
-                };
-                Wallet.FillTransaction(tx);
+                Transaction tx = Wallet.MakeTransaction(null, result["script"].AsString().HexToBytes());
                 ContractParametersContext context = new ContractParametersContext(tx);
                 Wallet.Sign(context);
                 if (context.Completed)
@@ -143,7 +132,6 @@ namespace Neo.Plugins
             if (context.Completed)
             {
                 tx.Witnesses = context.GetWitnesses();
-                Wallet.ApplyTransaction(tx);
                 System.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
                 return tx.ToJson();
             }
@@ -189,12 +177,6 @@ namespace Neo.Plugins
             return gas.ToString();
         }
 
-        private JObject GetWalletHeight()
-        {
-            CheckWallet();
-            return (Wallet.WalletHeight > 0) ? Wallet.WalletHeight - 1 : 0;
-        }
-
         private JObject ImportPrivKey(string privkey)
         {
             CheckWallet();
@@ -224,16 +206,14 @@ namespace Neo.Plugins
             }).ToArray();
         }
 
-        private JObject SendFrom(UInt160 assetId, UInt160 from, UInt160 to, string value, long fee)
+        private JObject SendFrom(UInt160 assetId, UInt160 from, UInt160 to, string value)
         {
             CheckWallet();
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
             BigDecimal amount = BigDecimal.Parse(value, descriptor.Decimals);
             if (amount.Sign <= 0)
                 throw new RpcException(-32602, "Invalid params");
-            if (fee < 0)
-                throw new RpcException(-32602, "Invalid params");
-            Transaction tx = Wallet.MakeTransaction(null, new[]
+            Transaction tx = Wallet.MakeTransaction(new[]
             {
                 new TransferOutput
                 {
@@ -241,7 +221,7 @@ namespace Neo.Plugins
                     Value = amount,
                     ScriptHash = to
                 }
-            }, from: from, net_fee: fee);
+            }, from);
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
@@ -261,7 +241,7 @@ namespace Neo.Plugins
             return SignAndRelay(tx);
         }
 
-        private JObject SendMany(UInt160 from, JArray to, long fee)
+        private JObject SendMany(UInt160 from, JArray to)
         {
             CheckWallet();
             if (to.Count == 0)
@@ -280,9 +260,7 @@ namespace Neo.Plugins
                 if (outputs[i].Value.Sign <= 0)
                     throw new RpcException(-32602, "Invalid params");
             }
-            if (fee < 0)
-                throw new RpcException(-32602, "Invalid params");
-            Transaction tx = Wallet.MakeTransaction(null, outputs, from: from, net_fee: fee);
+            Transaction tx = Wallet.MakeTransaction(outputs, from);
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
@@ -302,16 +280,14 @@ namespace Neo.Plugins
             return SignAndRelay(tx);
         }
 
-        private JObject SendToAddress(UInt160 assetId, UInt160 scriptHash, string value, long fee)
+        private JObject SendToAddress(UInt160 assetId, UInt160 scriptHash, string value)
         {
             CheckWallet();
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
             BigDecimal amount = BigDecimal.Parse(value, descriptor.Decimals);
             if (amount.Sign <= 0)
                 throw new RpcException(-32602, "Invalid params");
-            if (fee < 0)
-                throw new RpcException(-32602, "Invalid params");
-            Transaction tx = Wallet.MakeTransaction(null, new[]
+            Transaction tx = Wallet.MakeTransaction(new[]
             {
                 new TransferOutput
                 {
@@ -319,7 +295,7 @@ namespace Neo.Plugins
                     Value = amount,
                     ScriptHash = scriptHash
                 }
-            }, net_fee: fee);
+            });
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
