@@ -12,7 +12,7 @@ using Snapshot = Neo.Persistence.Snapshot;
 
 namespace Neo.Plugins
 {
-    public class LogReader : Plugin, IRpcPlugin, IPersistencePlugin
+    public class LogReader : Plugin, IRpcPlugin, IPersistencePlugin, ILogPlugin
     {
         private readonly DB db;
 
@@ -26,6 +26,26 @@ namespace Neo.Plugins
         public override void Configure()
         {
             Settings.Load(GetConfiguration());
+        }
+        
+        public void Log(string source, LogLevel level, string message)
+        {
+            if (!Settings.Default.ConsoleOutput) return;
+
+            var currentColor = new ConsoleColorSet();
+
+            switch (level)
+            {
+                case LogLevel.Debug: ConsoleColorSet.Debug.Apply(); break;
+                case LogLevel.Error: ConsoleColorSet.Error.Apply(); break;
+                case LogLevel.Fatal: ConsoleColorSet.Fatal.Apply(); break;
+                case LogLevel.Info: ConsoleColorSet.Info.Apply(); break;
+                case LogLevel.Warning: ConsoleColorSet.Warning.Apply(); break;
+            }
+
+            Console.WriteLine($"[{DateTime.Now.TimeOfDay:hh\\:mm\\:ss\\.fff}] {message}");
+
+            currentColor.Apply();
         }
 
         public void PreProcess(HttpContext context, string method, JArray _params)

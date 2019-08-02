@@ -1,5 +1,7 @@
 ﻿{
-  "PluginConfiguration": {
-    "Path": "ApplicationLogs_{0}"
-  }
+    "PluginConfiguration":
+    {
+        "Path": "ApplicationLogs_{0}",
+        "ConsoleOutput": true
+    }
 }
