@@ -78,7 +78,7 @@ namespace Neo.Plugins
                     }
                     return notification;
                 }).ToArray();
-                writeBatch.Put((appExec.Transaction.Hash ?? snapshot.PersistingBlock.Hash).ToArray(), json.ToString());
+                writeBatch.Put((appExec.Transaction?.Hash ?? snapshot.PersistingBlock.Hash).ToArray(), json.ToString());
             }
             db.Write(WriteOptions.Default, writeBatch);
         }
