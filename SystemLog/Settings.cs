@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace SystemLog
+namespace Neo.Plugins
 {
     internal class Settings
     {

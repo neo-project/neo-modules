@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SystemLog
+namespace Neo.Plugins
 {
     internal class ConsoleColorSet
     {

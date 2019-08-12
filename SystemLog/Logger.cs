@@ -1,7 +1,7 @@
 ﻿using Neo.Plugins;
 using System;
 
-namespace SystemLog
+namespace Neo.Plugins
 {
     public class Logger : Plugin, ILogPlugin
     {
