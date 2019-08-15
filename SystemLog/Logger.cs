@@ -14,30 +14,33 @@ namespace Neo.Plugins
 
         public new void Log(string source, LogLevel level, string message)
         {
-            DateTime now = DateTime.Now;
-            var log = $"[{now.TimeOfDay:hh\\:mm\\:ss\\.fff}] {message}";
-
-            if (Settings.Default.ConsoleOutput)
+            lock (typeof(Logger))
             {
-                var currentColor = new ConsoleColorSet();
+                DateTime now = DateTime.Now;
+                var log = $"[{now.TimeOfDay:hh\\:mm\\:ss\\.fff}] {message}";
 
-                switch (level)
+                if (Settings.Default.ConsoleOutput)
                 {
-                    case LogLevel.Debug: ConsoleColorSet.Debug.Apply(); break;
-                    case LogLevel.Error: ConsoleColorSet.Error.Apply(); break;
-                    case LogLevel.Fatal: ConsoleColorSet.Fatal.Apply(); break;
-                    case LogLevel.Info: ConsoleColorSet.Info.Apply(); break;
-                    case LogLevel.Warning: ConsoleColorSet.Warning.Apply(); break;
+                    var currentColor = new ConsoleColorSet();
+
+                    switch (level)
+                    {
+                        case LogLevel.Debug: ConsoleColorSet.Debug.Apply(); break;
+                        case LogLevel.Error: ConsoleColorSet.Error.Apply(); break;
+                        case LogLevel.Fatal: ConsoleColorSet.Fatal.Apply(); break;
+                        case LogLevel.Info: ConsoleColorSet.Info.Apply(); break;
+                        case LogLevel.Warning: ConsoleColorSet.Warning.Apply(); break;
+                    }
+
+                    Console.WriteLine(log);
+                    currentColor.Apply();
                 }
 
-                Console.WriteLine(log);
-                currentColor.Apply();
-            }
-
-            if (!string.IsNullOrEmpty(Settings.Default.Path))
-            {
-                var path = Path.Combine(Settings.Default.Path, $"{now:yyyy-MM-dd}.log");
-                File.AppendAllText(path, log + Environment.NewLine);
+                if (!string.IsNullOrEmpty(Settings.Default.Path))
+                {
+                    var path = Path.Combine(Settings.Default.Path, $"{now:yyyy-MM-dd}.log");
+                    File.AppendAllText(path, log + Environment.NewLine);
+                }
             }
         }
     }
