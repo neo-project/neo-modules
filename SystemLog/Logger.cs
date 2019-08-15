@@ -38,7 +38,9 @@ namespace Neo.Plugins
 
                 if (!string.IsNullOrEmpty(Settings.Default.Path))
                 {
-                    var path = Path.Combine(Settings.Default.Path, $"{now:yyyy-MM-dd}.log");
+                    var path = Path.Combine(Settings.Default.Path, source);
+                    Directory.CreateDirectory(path);
+                    path = Path.Combine(path, $"{now:yyyy-MM-dd}.log");
                     File.AppendAllLines(path, new[] { $"[{level}]{log}" });
                 }
             }
