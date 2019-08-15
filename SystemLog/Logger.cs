@@ -39,7 +39,7 @@ namespace Neo.Plugins
                 if (!string.IsNullOrEmpty(Settings.Default.Path))
                 {
                     var path = Path.Combine(Settings.Default.Path, $"{now:yyyy-MM-dd}.log");
-                    File.AppendAllLines(path, new[] { log });
+                    File.AppendAllLines(path, new[] { $"[{level}]{log}" });
                 }
             }
         }
