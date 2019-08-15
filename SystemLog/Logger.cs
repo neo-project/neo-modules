@@ -12,7 +12,7 @@ namespace Neo.Plugins
             Settings.Load(GetConfiguration());
         }
 
-        public void Log(string source, LogLevel level, string message)
+        public new void Log(string source, LogLevel level, string message)
         {
             var log = $"[{DateTime.Now.TimeOfDay:hh\\:mm\\:ss\\.fff}] {message}";
 
