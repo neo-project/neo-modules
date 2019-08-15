@@ -14,7 +14,8 @@ namespace Neo.Plugins
 
         public new void Log(string source, LogLevel level, string message)
         {
-            var log = $"[{DateTime.Now.TimeOfDay:hh\\:mm\\:ss\\.fff}] {message}";
+            DateTime now = DateTime.Now;
+            var log = $"[{now.TimeOfDay:hh\\:mm\\:ss\\.fff}] {message}";
 
             if (Settings.Default.ConsoleOutput)
             {
@@ -35,7 +36,7 @@ namespace Neo.Plugins
 
             if (!string.IsNullOrEmpty(Settings.Default.Path))
             {
-                var path = Path.Combine(Settings.Default.Path, $"{DateTime.Now:yyyy-MM-dd}.log");
+                var path = Path.Combine(Settings.Default.Path, $"{now:yyyy-MM-dd}.log");
                 File.AppendAllText(path, log + Environment.NewLine);
             }
         }
