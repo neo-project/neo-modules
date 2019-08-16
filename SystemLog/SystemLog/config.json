@@ -1,0 +1,7 @@
+{
+  "PluginConfiguration":
+  {
+    "Path": "SystemLogs_{0}",
+    "ConsoleOutput": true
+  }
+}
