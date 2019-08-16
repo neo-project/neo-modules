@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcNep5Tracker", "RpcNep5Tr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreMetrics", "CoreMetrics\CoreMetrics.csproj", "{AEFFF003-3500-416B-AD9B-8C838C33C1F4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SystemLog", "SystemLog\SystemLog.csproj", "{14DB62D5-0EA1-4A98-8656-1AA2D0345206}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{AEFFF003-3500-416B-AD9B-8C838C33C1F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AEFFF003-3500-416B-AD9B-8C838C33C1F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AEFFF003-3500-416B-AD9B-8C838C33C1F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14DB62D5-0EA1-4A98-8656-1AA2D0345206}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14DB62D5-0EA1-4A98-8656-1AA2D0345206}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14DB62D5-0EA1-4A98-8656-1AA2D0345206}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14DB62D5-0EA1-4A98-8656-1AA2D0345206}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
