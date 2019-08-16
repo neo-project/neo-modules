@@ -108,7 +108,7 @@ namespace Neo.Plugins
         {
             if (Wallet != null)
             {
-                Transaction tx = Wallet.MakeTransaction(null, result["script"].AsString().HexToBytes());
+                Transaction tx = Wallet.MakeTransaction(result["script"].AsString().HexToBytes());
                 ContractParametersContext context = new ContractParametersContext(tx);
                 Wallet.Sign(context);
                 if (context.Completed)
