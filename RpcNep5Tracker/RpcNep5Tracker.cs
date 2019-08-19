@@ -124,7 +124,7 @@ namespace Neo.Plugins
                 RecordTransferHistory(snapshot, scriptHash, UInt160.Zero, mintTo, mintAmountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
                 return;
             }
-            if (eventName != "transfer") return;
+            if (eventName != "Transfer") return;
             if (stateItems.Count < 4) return;
 
             if (!(stateItems[1] is null) && !(stateItems[1] is VM.Types.ByteArray))
