@@ -68,9 +68,7 @@ namespace Neo.Plugins
         {
             if (!_shouldTrackHistory) return;
 
-            Header header = snapshot.Height == 0
-                ? Blockchain.GenesisBlock.Header
-                : snapshot.GetHeader(snapshot.Height);
+            Header header = snapshot.GetHeader(snapshot.Height);
 
             if (_recordNullAddressHistory || from != UInt160.Zero)
             {
