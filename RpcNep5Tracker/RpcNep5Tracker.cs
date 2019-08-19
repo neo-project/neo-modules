@@ -67,10 +67,14 @@ namespace Neo.Plugins
         private void RecordTransferHistory(Snapshot snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
         {
             if (!_shouldTrackHistory) return;
+
+            Header header = snapshot.Height == 0
+                ? Blockchain.GenesisBlock.Header
+                : snapshot.GetHeader(snapshot.Height);
+
             if (_recordNullAddressHistory || from != UInt160.Zero)
             {
-                _transfersSent.Add(new Nep5TransferKey(from,
-                        snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
+                _transfersSent.Add(new Nep5TransferKey(from, header.Timestamp, scriptHash, transferIndex),
                     new Nep5Transfer
                     {
                         Amount = amount,
@@ -82,8 +86,7 @@ namespace Neo.Plugins
 
             if (_recordNullAddressHistory || to != UInt160.Zero)
             {
-                _transfersReceived.Add(new Nep5TransferKey(to,
-                        snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
+                _transfersReceived.Add(new Nep5TransferKey(to, header.Timestamp, scriptHash, transferIndex),
                     new Nep5Transfer
                     {
                         Amount = amount,
