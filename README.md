@@ -39,5 +39,11 @@ Plugin that enables NEP5 tracking using LevelDB.
 ### RPC Security
 Improves security in RPC nodes.
 
+### RPC Wallet
+Client commands for wallet management functionalities, such as signing and invoking.
+
 ### StatesDumper
 Exports NEO-CLI status data \(useful for debugging\).
+
+### SystemLog
+Enables neo-cli Logging, with timestamps, by showing messages with different levels (differentiated by colors) \(useful for debugging\).
