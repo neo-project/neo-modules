@@ -12,6 +12,7 @@ using Neo.VM;
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -32,7 +33,6 @@ namespace Neo.Plugins
         private bool _shouldTrackHistory;
         private bool _recordNullAddressHistory;
         private uint _maxResults;
-        private bool _shouldTrackNonStandardMintTokensEvent;
         private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
 
         public override void Configure()
@@ -40,12 +40,11 @@ namespace Neo.Plugins
             if (_db == null)
             {
                 var dbPath = GetConfiguration().GetSection("DBPath").Value ?? "Nep5BalanceData";
-                _db = DB.Open(dbPath, new Options { CreateIfMissing = true });
+                _db = DB.Open(Path.GetFullPath(dbPath), new Options { CreateIfMissing = true });
             }
             _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
             _recordNullAddressHistory = (GetConfiguration().GetSection("RecordNullAddressHistory").Value ?? false.ToString()) != false.ToString();
             _maxResults = uint.Parse(GetConfiguration().GetSection("MaxResults").Value ?? "1000");
-            _shouldTrackNonStandardMintTokensEvent = (GetConfiguration().GetSection("TrackNonStandardMintTokens").Value ?? false.ToString()) != false.ToString();
         }
 
         private void ResetBatch()
@@ -103,27 +102,6 @@ namespace Neo.Plugins
             // Event name should be encoded as a byte array.
             if (!(stateItems[0] is VM.Types.ByteArray)) return;
             var eventName = Encoding.UTF8.GetString(stateItems[0].GetByteArray());
-
-            if (_shouldTrackNonStandardMintTokensEvent && eventName == "mintTokens")
-            {
-                if (stateItems.Count < 4) return;
-                // This is not an official standard but at least one token uses it, and so it is needed for proper
-                // balance tracking to support all tokens in use.
-                if (!(stateItems[2] is VM.Types.ByteArray))
-                    return;
-                byte[] mintToBytes = stateItems[2].GetByteArray();
-                if (mintToBytes.Length != 20) return;
-                var mintTo = new UInt160(mintToBytes);
-
-                var mintAmountItem = stateItems[3];
-                if (!(mintAmountItem is VM.Types.ByteArray || mintAmountItem is VM.Types.Integer))
-                    return;
-
-                var toKey = new Nep5BalanceKey(mintTo, scriptHash);
-                if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
-                RecordTransferHistory(snapshot, scriptHash, UInt160.Zero, mintTo, mintAmountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
-                return;
-            }
             if (eventName != "transfer") return;
             if (stateItems.Count < 4) return;
 
