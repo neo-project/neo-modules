@@ -200,7 +200,7 @@ namespace Neo.Plugins
             return true;
         }
 
-        private void AddTransfers(byte dbPrefix, UInt160 userScriptHash, uint startTime, uint endTime,
+        private void AddTransfers(byte dbPrefix, UInt160 userScriptHash, ulong startTime, ulong endTime,
             JArray parentJArray)
         {
             var prefix = new[] { dbPrefix }.Concat(userScriptHash.ToArray()).ToArray();
@@ -221,7 +221,7 @@ namespace Neo.Plugins
             {
                 if (++resultCount > _maxResults) break;
                 JObject transfer = new JObject();
-                transfer["timestamp"] = transferPair.Key.Timestamp;
+                transfer["timestamp"] = transferPair.Key.TimestampMS;
                 transfer["asset_hash"] = transferPair.Key.AssetScriptHash.ToArray().Reverse().ToHexString();
                 transfer["transfer_address"] = transferPair.Value.UserScriptHash.ToAddress();
                 transfer["amount"] = transferPair.Value.Amount.ToString();
@@ -241,9 +241,9 @@ namespace Neo.Plugins
         {
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
             // If start time not present, default to 1 week of history.
-            uint startTime = _params.Count > 1 ? (uint)_params[1].AsNumber() :
-                (DateTime.UtcNow - TimeSpan.FromDays(7)).ToTimestamp();
-            uint endTime = _params.Count > 2 ? (uint)_params[2].AsNumber() : DateTime.UtcNow.ToTimestamp();
+            ulong startTime = _params.Count > 1 ? (ulong)_params[1].AsNumber() :
+                (DateTime.UtcNow - TimeSpan.FromDays(7)).ToTimestampMS();
+            ulong endTime = _params.Count > 2 ? (ulong)_params[2].AsNumber() : DateTime.UtcNow.ToTimestampMS();
 
             if (endTime < startTime) throw new RpcException(-32602, "Invalid params");
 
