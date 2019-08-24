@@ -66,10 +66,12 @@ namespace Neo.Plugins
         private void RecordTransferHistory(Snapshot snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
         {
             if (!_shouldTrackHistory) return;
+
+            Header header = snapshot.GetHeader(snapshot.Height);
+
             if (_recordNullAddressHistory || from != UInt160.Zero)
             {
-                _transfersSent.Add(new Nep5TransferKey(from,
-                        snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
+                _transfersSent.Add(new Nep5TransferKey(from, header.Timestamp, scriptHash, transferIndex),
                     new Nep5Transfer
                     {
                         Amount = amount,
@@ -81,8 +83,7 @@ namespace Neo.Plugins
 
             if (_recordNullAddressHistory || to != UInt160.Zero)
             {
-                _transfersReceived.Add(new Nep5TransferKey(to,
-                        snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
+                _transfersReceived.Add(new Nep5TransferKey(to, header.Timestamp, scriptHash, transferIndex),
                     new Nep5Transfer
                     {
                         Amount = amount,
@@ -102,7 +103,7 @@ namespace Neo.Plugins
             // Event name should be encoded as a byte array.
             if (!(stateItems[0] is VM.Types.ByteArray)) return;
             var eventName = Encoding.UTF8.GetString(stateItems[0].GetByteArray());
-            if (eventName != "transfer") return;
+            if (eventName != "Transfer") return;
             if (stateItems.Count < 4) return;
 
             if (!(stateItems[1] is null) && !(stateItems[1] is VM.Types.ByteArray))
@@ -166,7 +167,7 @@ namespace Neo.Plugins
                     script = sb.ToArray();
                 }
 
-                ApplicationEngine engine = ApplicationEngine.Run(script, snapshot);
+                ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, extraGAS: 100000000);
                 if (engine.State.HasFlag(VMState.FAULT)) continue;
                 if (engine.ResultStack.Count <= 0) continue;
                 nep5BalancePair.Value.Balance = engine.ResultStack.Pop().GetBigInteger();
@@ -199,7 +200,7 @@ namespace Neo.Plugins
             return true;
         }
 
-        private void AddTransfers(byte dbPrefix, UInt160 userScriptHash, uint startTime, uint endTime,
+        private void AddTransfers(byte dbPrefix, UInt160 userScriptHash, ulong startTime, ulong endTime,
             JArray parentJArray)
         {
             var prefix = new[] { dbPrefix }.Concat(userScriptHash.ToArray()).ToArray();
@@ -220,7 +221,7 @@ namespace Neo.Plugins
             {
                 if (++resultCount > _maxResults) break;
                 JObject transfer = new JObject();
-                transfer["timestamp"] = transferPair.Key.Timestamp;
+                transfer["timestamp"] = transferPair.Key.TimestampMS;
                 transfer["asset_hash"] = transferPair.Key.AssetScriptHash.ToArray().Reverse().ToHexString();
                 transfer["transfer_address"] = transferPair.Value.UserScriptHash.ToAddress();
                 transfer["amount"] = transferPair.Value.Amount.ToString();
@@ -240,9 +241,9 @@ namespace Neo.Plugins
         {
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
             // If start time not present, default to 1 week of history.
-            uint startTime = _params.Count > 1 ? (uint)_params[1].AsNumber() :
-                (DateTime.UtcNow - TimeSpan.FromDays(7)).ToTimestamp();
-            uint endTime = _params.Count > 2 ? (uint)_params[2].AsNumber() : DateTime.UtcNow.ToTimestamp();
+            ulong startTime = _params.Count > 1 ? (ulong)_params[1].AsNumber() :
+                (DateTime.UtcNow - TimeSpan.FromDays(7)).ToTimestampMS();
+            ulong endTime = _params.Count > 2 ? (ulong)_params[2].AsNumber() : DateTime.UtcNow.ToTimestampMS();
 
             if (endTime < startTime) throw new RpcException(-32602, "Invalid params");
 
