@@ -19,6 +19,7 @@
     <PackageReference Include="MSTest.TestAdapter" Version="1.4.0" />
     <PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
     <PackageReference Include="Moq" Version="4.7.63" />
+    <PackageReference Include="Neo" Version="2.10.3" />
   </ItemGroup>
 
   <ItemGroup>
