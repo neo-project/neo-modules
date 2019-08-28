@@ -7,7 +7,7 @@ namespace Neo.Plugins
     public class Nep5TransferKey : IComparable<Nep5TransferKey>, IEquatable<Nep5TransferKey>, ISerializable
     {
         public readonly UInt160 UserScriptHash;
-        public uint Timestamp { get; private set; }
+        public ulong Timestamp { get; private set; }
         public readonly UInt160 AssetScriptHash;
         public ushort BlockXferNotificationIndex { get; private set; }
 
@@ -17,7 +17,7 @@ namespace Neo.Plugins
         {
         }
 
-        public Nep5TransferKey(UInt160 userScriptHash, uint timestamp, UInt160 assetScriptHash, ushort xferIndex)
+        public Nep5TransferKey(UInt160 userScriptHash, ulong timestamp, UInt160 assetScriptHash, ushort xferIndex)
         {
             if (userScriptHash is null || assetScriptHash is null)
                 throw new ArgumentNullException();
@@ -79,8 +79,8 @@ namespace Neo.Plugins
         public void Deserialize(BinaryReader reader)
         {
             ((ISerializable)UserScriptHash).Deserialize(reader);
-            byte[] timestampBytes = new byte[sizeof(uint)];
-            reader.Read(timestampBytes, 0, sizeof(uint));
+            byte[] timestampBytes = new byte[sizeof(ulong)];
+            reader.Read(timestampBytes, 0, sizeof(ulong));
             if (BitConverter.IsLittleEndian) Array.Reverse(timestampBytes);
             Timestamp = BitConverter.ToUInt32(timestampBytes, 0);
             ((ISerializable)AssetScriptHash).Deserialize(reader);
