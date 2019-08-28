@@ -152,7 +152,7 @@ namespace Neo.Plugins
         {
             CheckWallet();
             JObject json = new JObject();
-            json["balance"] = Wallet.GetAvailable(asset_id).ToString();
+            json["balance"] = Wallet.GetAvailable(asset_id).Value.ToString();
             return json;
         }
 
