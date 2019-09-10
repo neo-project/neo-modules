@@ -12,6 +12,7 @@ using Neo.VM;
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -32,7 +33,6 @@ namespace Neo.Plugins
         private bool _shouldTrackHistory;
         private bool _recordNullAddressHistory;
         private uint _maxResults;
-        private bool _shouldTrackNonStandardMintTokensEvent;
         private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
 
         public override void Configure()
@@ -40,12 +40,11 @@ namespace Neo.Plugins
             if (_db == null)
             {
                 var dbPath = GetConfiguration().GetSection("DBPath").Value ?? "Nep5BalanceData";
-                _db = DB.Open(dbPath, new Options { CreateIfMissing = true });
+                _db = DB.Open(Path.GetFullPath(dbPath), new Options { CreateIfMissing = true });
             }
             _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
             _recordNullAddressHistory = (GetConfiguration().GetSection("RecordNullAddressHistory").Value ?? false.ToString()) != false.ToString();
             _maxResults = uint.Parse(GetConfiguration().GetSection("MaxResults").Value ?? "1000");
-            _shouldTrackNonStandardMintTokensEvent = (GetConfiguration().GetSection("TrackNonStandardMintTokens").Value ?? false.ToString()) != false.ToString();
         }
 
         private void ResetBatch()
@@ -67,10 +66,12 @@ namespace Neo.Plugins
         private void RecordTransferHistory(Snapshot snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
         {
             if (!_shouldTrackHistory) return;
+
+            Header header = snapshot.GetHeader(snapshot.Height);
+
             if (_recordNullAddressHistory || from != UInt160.Zero)
             {
-                _transfersSent.Add(new Nep5TransferKey(from,
-                        snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
+                _transfersSent.Add(new Nep5TransferKey(from, header.Timestamp, scriptHash, transferIndex),
                     new Nep5Transfer
                     {
                         Amount = amount,
@@ -82,8 +83,7 @@ namespace Neo.Plugins
 
             if (_recordNullAddressHistory || to != UInt160.Zero)
             {
-                _transfersReceived.Add(new Nep5TransferKey(to,
-                        snapshot.GetHeader(snapshot.Height).Timestamp, scriptHash, transferIndex),
+                _transfersReceived.Add(new Nep5TransferKey(to, header.Timestamp, scriptHash, transferIndex),
                     new Nep5Transfer
                     {
                         Amount = amount,
@@ -103,28 +103,7 @@ namespace Neo.Plugins
             // Event name should be encoded as a byte array.
             if (!(stateItems[0] is VM.Types.ByteArray)) return;
             var eventName = Encoding.UTF8.GetString(stateItems[0].GetByteArray());
-
-            if (_shouldTrackNonStandardMintTokensEvent && eventName == "mintTokens")
-            {
-                if (stateItems.Count < 4) return;
-                // This is not an official standard but at least one token uses it, and so it is needed for proper
-                // balance tracking to support all tokens in use.
-                if (!(stateItems[2] is VM.Types.ByteArray))
-                    return;
-                byte[] mintToBytes = stateItems[2].GetByteArray();
-                if (mintToBytes.Length != 20) return;
-                var mintTo = new UInt160(mintToBytes);
-
-                var mintAmountItem = stateItems[3];
-                if (!(mintAmountItem is VM.Types.ByteArray || mintAmountItem is VM.Types.Integer))
-                    return;
-
-                var toKey = new Nep5BalanceKey(mintTo, scriptHash);
-                if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
-                RecordTransferHistory(snapshot, scriptHash, UInt160.Zero, mintTo, mintAmountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
-                return;
-            }
-            if (eventName != "transfer") return;
+            if (eventName != "Transfer") return;
             if (stateItems.Count < 4) return;
 
             if (!(stateItems[1] is null) && !(stateItems[1] is VM.Types.ByteArray))
@@ -188,7 +167,7 @@ namespace Neo.Plugins
                     script = sb.ToArray();
                 }
 
-                ApplicationEngine engine = ApplicationEngine.Run(script, snapshot);
+                ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, extraGAS: 100000000);
                 if (engine.State.HasFlag(VMState.FAULT)) continue;
                 if (engine.ResultStack.Count <= 0) continue;
                 nep5BalancePair.Value.Balance = engine.ResultStack.Pop().GetBigInteger();
@@ -221,7 +200,7 @@ namespace Neo.Plugins
             return true;
         }
 
-        private void AddTransfers(byte dbPrefix, UInt160 userScriptHash, uint startTime, uint endTime,
+        private void AddTransfers(byte dbPrefix, UInt160 userScriptHash, ulong startTime, ulong endTime,
             JArray parentJArray)
         {
             var prefix = new[] { dbPrefix }.Concat(userScriptHash.ToArray()).ToArray();
@@ -242,7 +221,7 @@ namespace Neo.Plugins
             {
                 if (++resultCount > _maxResults) break;
                 JObject transfer = new JObject();
-                transfer["timestamp"] = transferPair.Key.Timestamp;
+                transfer["timestamp"] = transferPair.Key.TimestampMS;
                 transfer["asset_hash"] = transferPair.Key.AssetScriptHash.ToArray().Reverse().ToHexString();
                 transfer["transfer_address"] = transferPair.Value.UserScriptHash.ToAddress();
                 transfer["amount"] = transferPair.Value.Amount.ToString();
@@ -262,9 +241,9 @@ namespace Neo.Plugins
         {
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
             // If start time not present, default to 1 week of history.
-            uint startTime = _params.Count > 1 ? (uint)_params[1].AsNumber() :
-                (DateTime.UtcNow - TimeSpan.FromDays(7)).ToTimestamp();
-            uint endTime = _params.Count > 2 ? (uint)_params[2].AsNumber() : DateTime.UtcNow.ToTimestamp();
+            ulong startTime = _params.Count > 1 ? (ulong)_params[1].AsNumber() :
+                (DateTime.UtcNow - TimeSpan.FromDays(7)).ToTimestampMS();
+            ulong endTime = _params.Count > 2 ? (ulong)_params[2].AsNumber() : DateTime.UtcNow.ToTimestampMS();
 
             if (endTime < startTime) throw new RpcException(-32602, "Invalid params");
 

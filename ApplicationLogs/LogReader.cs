@@ -52,7 +52,7 @@ namespace Neo.Plugins
             foreach (var appExec in applicationExecutedList)
             {
                 JObject json = new JObject();
-                json["txid"] = appExec.Transaction.Hash.ToString();
+                json["txid"] = appExec.Transaction?.Hash.ToString();
                 json["trigger"] = appExec.Trigger;
                 json["vmstate"] = appExec.VMState;
                 json["gas_consumed"] = appExec.GasConsumed.ToString();
@@ -78,7 +78,7 @@ namespace Neo.Plugins
                     }
                     return notification;
                 }).ToArray();
-                writeBatch.Put(appExec.Transaction.Hash.ToArray(), json.ToString());
+                writeBatch.Put((appExec.Transaction?.Hash ?? snapshot.PersistingBlock.Hash).ToArray(), json.ToString());
             }
             db.Write(WriteOptions.Default, writeBatch);
         }
