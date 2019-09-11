@@ -17,23 +17,14 @@ namespace Neo.Plugins
             Settings.Load(GetConfiguration());
         }
 
-        private bool OnExport(string[] args)
+        private void WriteBlocks(uint start, uint count, string path, bool writeStart)
         {
-            if (args.Length < 2) return false;
-            if (!string.Equals(args[1], "block", StringComparison.OrdinalIgnoreCase)
-                && !string.Equals(args[1], "blocks", StringComparison.OrdinalIgnoreCase))
-                return false;
-            if (args.Length >= 3 && uint.TryParse(args[2], out uint start))
+            uint end = start + count - 1;
+            using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.WriteThrough))
             {
-                if (start > Blockchain.Singleton.Height)
-                    return true;
-                uint count = args.Length >= 4 ? uint.Parse(args[3]) : uint.MaxValue;
-                count = Math.Min(count, Blockchain.Singleton.Height - start + 1);
-                uint end = start + count - 1;
-                string path = $"chain.{start}.acc";
-                using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.WriteThrough))
+                if (fs.Length > 0)
                 {
-                    if (fs.Length > 0)
+                    if (writeStart)
                     {
                         fs.Seek(sizeof(uint), SeekOrigin.Begin);
                         byte[] buffer = new byte[sizeof(uint)];
@@ -43,56 +34,64 @@ namespace Neo.Plugins
                     }
                     else
                     {
-                        fs.Write(BitConverter.GetBytes(start), 0, sizeof(uint));
-                    }
-                    if (start <= end)
-                        fs.Write(BitConverter.GetBytes(count), 0, sizeof(uint));
-                    fs.Seek(0, SeekOrigin.End);
-                    for (uint i = start; i <= end; i++)
-                    {
-                        using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
-                        {
-                            Block block = snapshot.GetBlock(i);
-                            byte[] array = block.ToArray();
-                            fs.Write(BitConverter.GetBytes(array.Length), 0, sizeof(int));
-                            fs.Write(array, 0, array.Length);
-                            Console.SetCursorPosition(0, Console.CursorTop);
-                            Console.Write($"[{i}/{end}]");
-                        }
-                    }
-                }
-            }
-            else
-            {
-                start = 0;
-                uint end = Blockchain.Singleton.Height;
-                uint count = end - start + 1;
-                string path = args.Length >= 3 ? args[2] : "chain.acc";
-                using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.WriteThrough))
-                {
-                    if (fs.Length > 0)
-                    {
                         byte[] buffer = new byte[sizeof(uint)];
                         fs.Read(buffer, 0, buffer.Length);
                         start = BitConverter.ToUInt32(buffer, 0);
                         fs.Seek(0, SeekOrigin.Begin);
                     }
-                    if (start <= end)
-                        fs.Write(BitConverter.GetBytes(count), 0, sizeof(uint));
-                    fs.Seek(0, SeekOrigin.End);
-                    for (uint i = start; i <= end; i++)
+                }
+                else
+                {
+                    if (writeStart)
                     {
-                        using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot()) {
-                            Block block = snapshot.GetBlock(i);
-                            byte[] array = block.ToArray();
-                            fs.Write(BitConverter.GetBytes(array.Length), 0, sizeof(int));
-                            fs.Write(array, 0, array.Length);
-                            Console.SetCursorPosition(0, Console.CursorTop);
-                            Console.Write($"[{i}/{end}]");
-                        }
+                        fs.Write(BitConverter.GetBytes(start), 0, sizeof(uint));
+                    }
+                }
+                if (start <= end)
+                    fs.Write(BitConverter.GetBytes(count), 0, sizeof(uint));
+                fs.Seek(0, SeekOrigin.End);
+                for (uint i = start; i <= end; i++)
+                {
+                    using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
+                    {
+                        Block block = snapshot.GetBlock(i);
+                        byte[] array = block.ToArray();
+                        fs.Write(BitConverter.GetBytes(array.Length), 0, sizeof(int));
+                        fs.Write(array, 0, array.Length);
+                        Console.SetCursorPosition(0, Console.CursorTop);
+                        Console.Write($"[{i}/{end}]");
                     }
                 }
             }
+        }
+
+        private bool OnExport(string[] args)
+        {
+            bool writeStart;
+            uint start, count;
+            string path;
+            if (args.Length < 2) return false;
+            if (!string.Equals(args[1], "block", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(args[1], "blocks", StringComparison.OrdinalIgnoreCase))
+                return false;
+            if (args.Length >= 3 && uint.TryParse(args[2], out start))
+            {
+                if (Blockchain.Singleton.Height < start) return true;
+                count = args.Length >= 4 ? uint.Parse(args[3]) : uint.MaxValue;
+                count = Math.Min(count, Blockchain.Singleton.Height - start + 1);
+                path = $"chain.{start}.acc";
+                writeStart = true;
+            }
+            else
+            {
+                start = 0;
+                count = Blockchain.Singleton.Height - start + 1;
+                path = args.Length >= 3 ? args[2] : "chain.acc";
+                writeStart = false;
+            }
+
+            WriteBlocks(start, count, path, writeStart);
+
             Console.WriteLine();
             return true;
         }
