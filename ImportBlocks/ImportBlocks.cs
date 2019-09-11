@@ -31,7 +31,7 @@ namespace Neo.Plugins
                 count = Math.Min(count, Blockchain.Singleton.Height - start + 1);
                 uint end = start + count - 1;
                 string path = $"chain.{start}.acc";
-                using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+                using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.WriteThrough))
                 {
                     if (fs.Length > 0)
                     {
@@ -48,8 +48,9 @@ namespace Neo.Plugins
                     if (start <= end)
                         fs.Write(BitConverter.GetBytes(count), 0, sizeof(uint));
                     fs.Seek(0, SeekOrigin.End);
-                    using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
-                        for (uint i = start; i <= end; i++)
+                    for (uint i = start; i <= end; i++)
+                    {
+                        using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
                         {
                             Block block = snapshot.GetBlock(i);
                             byte[] array = block.ToArray();
@@ -58,6 +59,7 @@ namespace Neo.Plugins
                             Console.SetCursorPosition(0, Console.CursorTop);
                             Console.Write($"[{i}/{end}]");
                         }
+                    }
                 }
             }
             else
@@ -66,7 +68,7 @@ namespace Neo.Plugins
                 uint end = Blockchain.Singleton.Height;
                 uint count = end - start + 1;
                 string path = args.Length >= 3 ? args[2] : "chain.acc";
-                using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+                using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.WriteThrough))
                 {
                     if (fs.Length > 0)
                     {
@@ -78,9 +80,9 @@ namespace Neo.Plugins
                     if (start <= end)
                         fs.Write(BitConverter.GetBytes(count), 0, sizeof(uint));
                     fs.Seek(0, SeekOrigin.End);
-                    using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
-                        for (uint i = start; i <= end; i++)
-                        {
+                    for (uint i = start; i <= end; i++)
+                    {
+                        using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot()) {
                             Block block = snapshot.GetBlock(i);
                             byte[] array = block.ToArray();
                             fs.Write(BitConverter.GetBytes(array.Length), 0, sizeof(int));
@@ -88,6 +90,7 @@ namespace Neo.Plugins
                             Console.SetCursorPosition(0, Console.CursorTop);
                             Console.Write($"[{i}/{end}]");
                         }
+                    }
                 }
             }
             Console.WriteLine();
