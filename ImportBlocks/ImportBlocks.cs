@@ -83,18 +83,15 @@ namespace Neo.Plugins
                 fs.Seek(0, SeekOrigin.End);
                 for (uint i = start; i <= end; i++)
                 {
-                    using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
-                    {
-                        DataCache<UInt256, BlockState> blocks = Blockchain.Singleton.Store.GetBlocks();
-                        DataCache<UInt256, TransactionState> transactions = Blockchain.Singleton.Store.GetTransactions();
-                        UInt256 hash = Blockchain.Singleton.GetBlockHash(i);
-                        Block block = blocks.TryGet(hash).TrimmedBlock.GetBlock(transactions);
-                        byte[] array = block.ToArray();
-                        fs.Write(BitConverter.GetBytes(array.Length), 0, sizeof(int));
-                        fs.Write(array, 0, array.Length);
-                        Console.SetCursorPosition(0, Console.CursorTop);
-                        Console.Write($"[{i}/{end}]");
-                    }
+                    var blocks = Blockchain.Singleton.Store.GetBlocks();
+                    var transactions = Blockchain.Singleton.Store.GetTransactions();
+                    UInt256 hash = Blockchain.Singleton.GetBlockHash(i);
+                    Block block = blocks.TryGet(hash).GetBlock(transactions);
+                    byte[] array = block.ToArray();
+                    fs.Write(BitConverter.GetBytes(array.Length), 0, sizeof(int));
+                    fs.Write(array, 0, array.Length);
+                    Console.SetCursorPosition(0, Console.CursorTop);
+                    Console.Write($"[{i}/{end}]");
                 }
             }
         }
