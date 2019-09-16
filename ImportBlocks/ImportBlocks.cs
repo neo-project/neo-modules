@@ -3,7 +3,6 @@ using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
-using Neo.IO.Caching;
 using System;
 using System.IO;
 
