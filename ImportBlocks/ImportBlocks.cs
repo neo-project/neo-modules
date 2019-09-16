@@ -3,6 +3,7 @@ using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.IO.Caching;
 using System;
 using System.IO;
 
@@ -84,7 +85,10 @@ namespace Neo.Plugins
                 {
                     using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
                     {
-                        Block block = snapshot.GetBlock(i);
+                        DataCache<UInt256, BlockState> blocks = Blockchain.Singleton.Store.GetBlocks();
+                        DataCache<UInt256, TransactionState> transactions = Blockchain.Singleton.Store.GetTransactions();
+                        UInt256 hash = Blockchain.Singleton.GetBlockHash(i);
+                        Block block = blocks.TryGet(hash).TrimmedBlock.GetBlock(transactions);
                         byte[] array = block.ToArray();
                         fs.Write(BitConverter.GetBytes(array.Length), 0, sizeof(int));
                         fs.Write(array, 0, array.Length);
