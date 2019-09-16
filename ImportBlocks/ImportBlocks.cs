@@ -17,54 +17,6 @@ namespace Neo.Plugins
             Settings.Load(GetConfiguration());
         }
 
-        private void WriteBlocks(uint start, uint count, string path, bool writeStart)
-        {
-            uint end = start + count - 1;
-            using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.WriteThrough))
-            {
-                if (fs.Length > 0)
-                {
-                    if (writeStart)
-                    {
-                        fs.Seek(sizeof(uint), SeekOrigin.Begin);
-                        byte[] buffer = new byte[sizeof(uint)];
-                        fs.Read(buffer, 0, buffer.Length);
-                        start += BitConverter.ToUInt32(buffer, 0);
-                        fs.Seek(sizeof(uint), SeekOrigin.Begin);
-                    }
-                    else
-                    {
-                        byte[] buffer = new byte[sizeof(uint)];
-                        fs.Read(buffer, 0, buffer.Length);
-                        start = BitConverter.ToUInt32(buffer, 0);
-                        fs.Seek(0, SeekOrigin.Begin);
-                    }
-                }
-                else
-                {
-                    if (writeStart)
-                    {
-                        fs.Write(BitConverter.GetBytes(start), 0, sizeof(uint));
-                    }
-                }
-                if (start <= end)
-                    fs.Write(BitConverter.GetBytes(count), 0, sizeof(uint));
-                fs.Seek(0, SeekOrigin.End);
-                for (uint i = start; i <= end; i++)
-                {
-                    using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
-                    {
-                        Block block = snapshot.GetBlock(i);
-                        byte[] array = block.ToArray();
-                        fs.Write(BitConverter.GetBytes(array.Length), 0, sizeof(int));
-                        fs.Write(array, 0, array.Length);
-                        Console.SetCursorPosition(0, Console.CursorTop);
-                        Console.Write($"[{i}/{end}]");
-                    }
-                }
-            }
-        }
-
         private bool OnExport(string[] args)
         {
             bool writeStart;
@@ -94,6 +46,53 @@ namespace Neo.Plugins
 
             Console.WriteLine();
             return true;
+        }
+
+        private void WriteBlocks(uint start, uint count, string path, bool writeStart)
+        {
+            uint end = start + count - 1;
+            using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.WriteThrough))
+            {
+                if (fs.Length > 0)
+                {
+                    byte[] buffer = new byte[sizeof(uint)];
+                    if (writeStart)
+                    {
+                        fs.Seek(sizeof(uint), SeekOrigin.Begin);
+                        fs.Read(buffer, 0, buffer.Length);
+                        start += BitConverter.ToUInt32(buffer, 0);
+                        fs.Seek(sizeof(uint), SeekOrigin.Begin);
+                    }
+                    else
+                    {
+                        fs.Read(buffer, 0, buffer.Length);
+                        start = BitConverter.ToUInt32(buffer, 0);
+                        fs.Seek(0, SeekOrigin.Begin);
+                    }
+                }
+                else
+                {
+                    if (writeStart)
+                    {
+                        fs.Write(BitConverter.GetBytes(start), 0, sizeof(uint));
+                    }
+                }
+                if (start <= end)
+                    fs.Write(BitConverter.GetBytes(count), 0, sizeof(uint));
+                fs.Seek(0, SeekOrigin.End);
+                for (uint i = start; i <= end; i++)
+                {
+                    using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
+                    {
+                        Block block = snapshot.GetBlock(i);
+                        byte[] array = block.ToArray();
+                        fs.Write(BitConverter.GetBytes(array.Length), 0, sizeof(int));
+                        fs.Write(array, 0, array.Length);
+                        Console.SetCursorPosition(0, Console.CursorTop);
+                        Console.Write($"[{i}/{end}]");
+                    }
+                }
+            }
         }
 
         private bool OnHelp(string[] args)
