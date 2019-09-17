@@ -82,10 +82,7 @@ namespace Neo.Plugins
                 fs.Seek(0, SeekOrigin.End);
                 for (uint i = start; i <= end; i++)
                 {
-                    var blocks = Blockchain.Singleton.Store.GetBlocks();
-                    var transactions = Blockchain.Singleton.Store.GetTransactions();
-                    UInt256 hash = Blockchain.Singleton.GetBlockHash(i);
-                    Block block = blocks.TryGet(hash).GetBlock(transactions);
+                    Block block = Blockchain.Singleton.Store.GetBlock(i);
                     byte[] array = block.ToArray();
                     fs.Write(BitConverter.GetBytes(array.Length), 0, sizeof(int));
                     fs.Write(array, 0, array.Length);
