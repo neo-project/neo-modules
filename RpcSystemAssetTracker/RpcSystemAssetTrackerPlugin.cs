@@ -11,6 +11,7 @@ using System.Linq;
 using Neo.Ledger;
 using Neo.Persistence;
 using Snapshot = Neo.Persistence.Snapshot;
+using System.IO;
 
 namespace Neo.Plugins
 {
@@ -33,7 +34,7 @@ namespace Neo.Plugins
             if (_db == null)
             {
                 var dbPath = GetConfiguration().GetSection("DBPath").Value ?? "SystemAssetBalanceData";
-                _db = DB.Open(dbPath, new Options { CreateIfMissing = true });
+                _db = DB.Open(Path.GetFullPath(dbPath), new Options { CreateIfMissing = true });
                 _shouldTrackUnclaimed = (GetConfiguration().GetSection("TrackUnclaimed").Value ?? true.ToString()) != false.ToString();
                 try
                 {
