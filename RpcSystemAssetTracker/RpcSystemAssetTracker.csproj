@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Version>2.10.2</Version>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <RootNamespace>Neo.Plugins</RootNamespace>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CRONIUM" Version="2.9.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="RpcSystemAssetTracker\config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+</Project>
