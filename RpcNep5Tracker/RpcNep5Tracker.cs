@@ -35,6 +35,7 @@ namespace Neo.Plugins
         private uint _maxResults;
         private bool _shouldTrackNonStandardMintTokensEvent;
         private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
+        private Fixed8 maxGas = Fixed8.FromDecimal(1000000000m);
 
         public override void Configure()
         {
@@ -191,7 +192,7 @@ namespace Neo.Plugins
                     script = sb.ToArray();
                 }
 
-                ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, extraGAS: new Fixed8(100000000));
+                ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, extraGAS: maxGas);
                 if (engine.State.HasFlag(VMState.FAULT)) continue;
                 if (engine.ResultStack.Count <= 0) continue;
                 nep5BalancePair.Value.Balance = engine.ResultStack.Pop().GetBigInteger();
