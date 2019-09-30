@@ -35,7 +35,7 @@ namespace Neo.Plugins
         private uint _maxResults;
         private bool _shouldTrackNonStandardMintTokensEvent;
         private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
-        private Fixed8 maxGas = Fixed8.FromDecimal(1000000000m);
+        private Fixed8 maxGas = Fixed8.FromDecimal(100000000m);
 
         public override void Configure()
         {
