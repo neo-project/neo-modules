@@ -49,15 +49,15 @@ namespace Neo.Plugins
             var privateKey = jArray[0].AsString().HexToBytes();
             var addressTo = jArray[1].AsString();
 
-            var amount = (decimal) double.Parse(jArray[2].ToString(), NumberStyles.Any, CultureInfo.InvariantCulture);
+            var amount = (decimal) jArray[2].AsNumber();
 
             UInt256 th = (jArray.Count > 3) ? ParseTokenHash(jArray[3].AsString()) : Blockchain.UtilityToken.Hash;
 
             obj["txn_hash"] = SendWithKey(privateKey, amount, addressTo, th);
        
             return obj;
-        }
-        
+        }                
+
         private UInt256 ParseTokenHash(string v)
         {
             v = v.Trim();
