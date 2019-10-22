@@ -22,7 +22,8 @@ namespace Neo.Plugins
         public const string ASSET_CRONIUM = "c56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b";
         public const string ASSET_CRON = "602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7";
         private static Dictionary<string, string> _systemAssets;
-        
+                 
+
         private string SendWithKey(byte[] privateKeyFrom, decimal amount, string addressTo, UInt256 th)
         {
             KeyPair fromKey = new KeyPair(privateKeyFrom);
@@ -436,6 +437,19 @@ namespace Neo.Plugins
         {
             var bytes = kp.PublicKey.EncodePoint(true);
             return ("21" + bytes.ToHexString() + "ac");
+        }
+
+
+        public static byte[] ToBytePrivateKey(this string k1)
+        {
+            try
+            {
+                return Wallet.GetPrivateKeyFromWIF(k1);
+            }
+            catch
+            {
+                return k1.HexToBytes();
+            }
         }
     }
 }

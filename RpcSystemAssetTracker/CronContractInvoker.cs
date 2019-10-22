@@ -18,17 +18,18 @@ namespace Neo.Plugins
       /// <summary>
       /// Derives an address and keys from given private key 
       /// </summary>
-      /// <param name="hexPrivKey">Private key to derive address from</param>
+      /// <param name="privKey">HEX or WIF private key to derive address from</param>
       /// <returns>An object with address and its keys in different formats</returns>
-      /// 
-        private JObject GetAddress(string hexPrivKey)
+      ///  
+        private JObject GetAddress(string privKey)
         {
             JObject obj = new JObject();
-            KeyPair kp = new KeyPair(hexPrivKey.HexToBytes());
+            KeyPair kp = new KeyPair(privKey.ToBytePrivateKey());
             obj["wif"] = kp.Export();
             obj["address"] = kp.AsAddress();
             obj["privkey"] = kp.PrivateKey.ToHexString();
-            obj["pubkey"] = kp.PublicKey.ToString(); 
+            obj["pubkey"] = kp.PublicKey.ToString();
+                       
             return obj;
         }
 
@@ -36,7 +37,7 @@ namespace Neo.Plugins
         /// Allows to send system assets using a private key
         /// </summary>
         /// <param name="jArray">An array of parameters: 
-        /// [0] MANDATORY; HEX private key, string
+        /// [0] MANDATORY; HEX or WIF private key, string
         /// [1] MANDATORY; destination address, string
         /// [2] MANDATORY; amount to send, double
         /// [3] OPTIONAL;  system token hash (hex bytes string) or its name (string). Default is CRON </param>
@@ -46,7 +47,7 @@ namespace Neo.Plugins
         {
             JObject obj = new JObject();
 
-            var privateKey = jArray[0].AsString().HexToBytes();
+            var privateKey = jArray[0].AsString().ToBytePrivateKey();
             var addressTo = jArray[1].AsString();
 
             var amount = (decimal) jArray[2].AsNumber();
@@ -56,7 +57,8 @@ namespace Neo.Plugins
             obj["txn_hash"] = SendWithKey(privateKey, amount, addressTo, th);
        
             return obj;
-        }                
+        }
+       
 
         private UInt256 ParseTokenHash(string v)
         {
@@ -84,7 +86,7 @@ namespace Neo.Plugins
                 SetContractParamValue(parameters[ip],
                     ip < _params.Length ? _params[ip] : default(JObject));
 
-            bool b =  CallContract(new KeyPair(key.HexToBytes()), script,  parameters, out byte[] txhash);
+            bool b =  CallContract(new KeyPair(key.ToBytePrivateKey()), script,  parameters, out byte[] txhash);
             return b ? txhash.ToHexString() : null;
         }
 
