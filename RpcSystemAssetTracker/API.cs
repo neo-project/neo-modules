@@ -24,15 +24,16 @@ namespace Neo.Plugins
         private static Dictionary<string, string> _systemAssets;
                  
 
-        private string SendWithKey(byte[] privateKeyFrom, decimal amount, string addressTo, UInt256 th)
+        private string SendWithKey(byte[] privateKeyFrom, decimal amount, decimal systemFee, string addressTo, UInt256 th, byte [] remarksAttr)
         {
             KeyPair fromKey = new KeyPair(privateKeyFrom);
 
-            bool b = SendAsset(fromKey, addressTo, th, amount, out string tx_hash);
+            bool b = SendAsset(fromKey, addressTo, th, amount, systemFee, remarksAttr, out string tx_hash);
             return tx_hash;            
         }
 
-        public bool SendAsset(KeyPair fromKey, string toAddress, UInt256 symbol, decimal amount, out string tx_hash)
+        public bool SendAsset(KeyPair fromKey, string toAddress, UInt256 symbol, decimal amount, 
+            decimal systemFee, byte[] remarksAttr, out string tx_hash)
         {
             tx_hash = null;
             if (String.Equals(fromKey.AsAddress(), toAddress, StringComparison.OrdinalIgnoreCase))
@@ -47,18 +48,19 @@ namespace Neo.Plugins
                 AssetId = symbol
             };
             var targets = new List<TransactionOutput>() { target };
-            return SendAsset(fromKey, symbol, targets, out tx_hash);
+            return SendAsset(fromKey, symbol, targets, remarksAttr, systemFee, out tx_hash);
         }
 
-        public bool SendAsset(KeyPair fromKey, UInt256 symbol, IEnumerable<TransactionOutput> targets, out string tx_hash)
+        public bool SendAsset(KeyPair fromKey, UInt256 symbol, IEnumerable<TransactionOutput> targets,
+            byte[] remarksAttr, decimal system_fee, out string tx_hash)
         {
             List<CoinReference> inputs;
             List<TransactionOutput> outputs;
-            GenerateInputsOutputsWithSymbol(fromKey, symbol, targets, out inputs, out outputs);
+            GenerateInputsOutputsWithSymbol(fromKey, symbol, targets, out inputs, out outputs, system_fee);
             
             ContractTransaction tx = new ContractTransaction()
             {
-                Attributes = new TransactionAttribute[0],
+                Attributes = GetRemarksAttrArray(remarksAttr),
                 Version = 0,
                 Inputs = inputs.ToArray(),
                 Outputs = outputs.ToArray()
@@ -69,7 +71,13 @@ namespace Neo.Plugins
             return SignAndRelay(tx, fromKey);
         }
 
-        
+        private TransactionAttribute[] GetRemarksAttrArray(byte[] remarksAttr)
+        {
+            if (remarksAttr == null) return new TransactionAttribute[0];
+            return new TransactionAttribute[] {
+                new TransactionAttribute { Usage = TransactionAttributeUsage.Remark, Data = remarksAttr }
+            };
+        }
 
         public void GenerateInputsOutputsWithSymbol(KeyPair key, UInt256 symbol, 
             IEnumerable<TransactionOutput> targets, 

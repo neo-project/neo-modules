@@ -42,7 +42,12 @@ namespace Neo.Plugins
             {
                 return Send(parameters);
             }
-       
+
+            if (method == "cron_send_1xN")
+            {
+                return SendToMultipleSimple(parameters);
+            }             
+
             if (method == "cron_invoke_contract_as")
             {
                 return InvokeSmartContractEntryPointAs(

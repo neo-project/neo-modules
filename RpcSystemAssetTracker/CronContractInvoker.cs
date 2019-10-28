@@ -1,6 +1,7 @@
 ﻿using Neo.Cryptography.ECC;
 using Neo.IO.Json;
 using Neo.Ledger;
+using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC;
 using Neo.SmartContract;
 using Neo.Wallets;
@@ -41,6 +42,8 @@ namespace Neo.Plugins
         /// [1] MANDATORY; destination address, string
         /// [2] MANDATORY; amount to send, double
         /// [3] OPTIONAL;  system token hash (hex bytes string) or its name (string). Default is CRON </param>
+        /// [4] OPTIONAL;  remarks attribute value. Default is null 
+        /// [5] OPTIONAL;  system fee (decimal) . Default is zero 
         /// <returns>an object with txn_hash field containing transaction hash</returns>
 
         private JObject Send(JArray jArray)
@@ -53,17 +56,73 @@ namespace Neo.Plugins
             var amount = (decimal) jArray[2].AsNumber();
 
             UInt256 th = (jArray.Count > 3) ? ParseTokenHash(jArray[3].AsString()) : Blockchain.UtilityToken.Hash;
+            byte[] bRemarks = (jArray.Count > 4) ? jArray[4].AsString().HexToBytes() : null;
+            decimal systemFee = (jArray.Count > 5) ? (decimal)jArray[5].AsNumber() : 0.0m;
 
-            obj["txn_hash"] = SendWithKey(privateKey, amount, addressTo, th);
+            obj["txn_hash"] = SendWithKey(privateKey, amount, systemFee, addressTo, th, bRemarks);
        
             return obj;
         }
+
+        /// <summary>
+        /// Allows to send system assets using a private key
+        /// </summary>
+        /// <param name="jArray">An array of parameters: 
+        /// [0] MANDATORY; HEX or WIF private key, string
+        /// [1] MANDATORY; array of objects {"address": string, "amount": decimal}.
+		//      At least one item is needed to send successful txn
+        /// [2] OPTIONAL;  system token hash (hex bytes string) or its name (string). Default is CRON 
+        /// [3] OPTIONAL;  remarks attribute value. Default is null 
+        /// [4] OPTIONAL;  system fee (decimal) . Default is zero 
+        /// </param>
+        /// <returns>an object with txn_hash field containing transaction hash</returns>
+
+        private JObject SendToMultipleSimple(JArray jArray)
+        {
+            JObject obj = new JObject();
+
+            var privateKey = jArray[0].AsString().ToBytePrivateKey();
+
+            var arrayTargets = (JArray)jArray[1]; 
+
+            UInt256 th = (jArray.Count > 2) ? ParseTokenHash(jArray[2].AsString()) : Blockchain.UtilityToken.Hash;
+
+            List<TransactionOutput> targets = new List<TransactionOutput>();
+
+            for (int i = 0; i < arrayTargets.Count; i++)
+            {
+                JObject jo = arrayTargets[i];
+                var addressesTo = jo["address"].AsString();
+                var amount  = (decimal)jo["amount"].AsNumber();
+                
+                var target = new TransactionOutput()
+                {
+                    ScriptHash = addressesTo.ToScriptHash(),
+                    Value = Fixed8.FromDecimal(amount),
+                    AssetId = th
+                };
+                targets.Add(target);
+            }
+
+            byte[] bRemarks = (jArray.Count > 3) ? jArray[3].AsString().HexToBytes() : null;
+            decimal systemFee = (jArray.Count > 4) ? (decimal)jArray[4].AsNumber() : 0.0m;
+            
+            KeyPair fromKey = new KeyPair(privateKey);
+            bool b = SendAsset(fromKey, th, targets, bRemarks, systemFee, out string txn_hash );
+
+            obj["txn_hash"] = txn_hash;
+
+            return obj;
+        }
+        
        
 
         private UInt256 ParseTokenHash(string v)
         {
+            if(string.IsNullOrWhiteSpace(v))
+                return Blockchain.UtilityToken.Hash;
             v = v.Trim();
-            if (v.ToUpper() == "CRON")
+            if (v.ToUpper() == "CRON" || v.Length == 0)
                 return Blockchain.UtilityToken.Hash;
             if (v.ToUpper() == "CRONIUM")
                 return Blockchain.GoverningToken.Hash;
