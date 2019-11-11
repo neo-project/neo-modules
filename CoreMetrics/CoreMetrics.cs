@@ -60,13 +60,7 @@ namespace Neo.Plugins
                 JObject json = new JObject();
                 return json["error"] = "Requested number of blocks timestamps " + nBlocks + " exceeds quantity of known blocks " + Blockchain.Singleton.Height;
             }
-
-            if (nBlocks <= 0)
-            {
-                JObject json = new JObject();
-                return json["error"] = "Requested number of block times can not be <= 0";
-            }
-
+            
             JArray array = new JArray();
             uint heightToBegin = lastHeight > 0 ? lastHeight - nBlocks : (Blockchain.Singleton.Height - 1) - nBlocks;
             for (uint i = heightToBegin; i <= heightToBegin + nBlocks; i++)
