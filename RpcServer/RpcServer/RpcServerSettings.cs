@@ -41,37 +41,37 @@ namespace Neo.Plugins.RpcServer
 
         public IPAddress[] IpBlacklist { get; internal set; }
 
-		public long MaxGasInvoke { get; internal set; }
+        public long MaxGasInvoke { get; internal set; }
 
-		/// <summary>
-		/// Constructor
-		/// </summary>
-		/// <param name="configuration">Configuration</param>
-		public RpcServerSettings(IConfiguration config = null)
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="configuration">Configuration</param>
+        public RpcServerSettings(IConfiguration config = null)
         {
-			ListenEndPoint = new IPEndPoint(
-				IPAddress.Parse(config.GetValue("BindAddress", "127.0.0.1")),
-				ushort.Parse(config.GetValue("Port", "10332")));
+            ListenEndPoint = new IPEndPoint(
+                IPAddress.Parse(config.GetValue("BindAddress", "127.0.0.1")),
+                ushort.Parse(config.GetValue("Port", "10332")));
 
-			Ssl = new SslCert
-			{
-				Path = config.GetValue("SslCert", ""),
-				Password = config.GetValue("SslCertPassword", "")
-			};
+            Ssl = new SslCert
+            {
+                Path = config.GetValue("SslCert", ""),
+                Password = config.GetValue("SslCertPassword", "")
+            };
 
-			var trustedAuth = config.GetSection("TrustedAuthorities");
-			if (trustedAuth.Exists())
-			{
-				TrustedAuthorities = trustedAuth.Get<List<string>>().ToArray();
-			}
+            var trustedAuth = config.GetSection("TrustedAuthorities");
+            if (trustedAuth.Exists())
+            {
+                TrustedAuthorities = trustedAuth.Get<List<string>>().ToArray();
+            }
 
-			var blacklist = config.GetSection("IpBlacklist");
-			if (blacklist.Exists())
-			{
-				IpBlacklist = blacklist.Get<List<string>>().Select(x => IPAddress.Parse(x)).ToArray();
-			}
+            var blacklist = config.GetSection("IpBlacklist");
+            if (blacklist.Exists())
+            {
+                IpBlacklist = blacklist.Get<List<string>>().Select(x => IPAddress.Parse(x)).ToArray();
+            }
 
-			MaxGasInvoke = (long)BigDecimal.Parse(config.GetValue("MaxGasInvoke", "10"), NativeContract.GAS.Decimals).Value;
-		}
-	}
+            MaxGasInvoke = (long)BigDecimal.Parse(config.GetValue("MaxGasInvoke", "10"), NativeContract.GAS.Decimals).Value;
+        }
+    }
 }

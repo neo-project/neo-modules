@@ -19,19 +19,21 @@ namespace Neo.Plugins.RpcServer
 {
     [RpcController(Name = "$root")]
     public class NeoDefaultRpcController : Plugin, IRpcPlugin
-	{
-		public void BeforeStartServer(IRpcServer server)
-		{
-			server.BindController<NeoDefaultRpcController>();
-		}
+    {
+        public void BeforeStartServer(IRpcServer server)
+        {
+            server.BindController<NeoDefaultRpcController>();
+        }
 
-		[RpcMethod]
-        public string getbestblockhash() {
+        [RpcMethod]
+        public string getbestblockhash()
+        {
             return Blockchain.Singleton.CurrentBlockHash.ToString();
         }
 
         [RpcMethod]
-        public JObject getblock(string key, bool verbose = false) {
+        public JObject getblock(string key, bool verbose = false)
+        {
             Block block;
             if (int.TryParse(key, out _))
             {
@@ -332,11 +334,11 @@ namespace Neo.Plugins.RpcServer
             switch (reason)
             {
                 case RelayResultReason.Succeed:
-                {
-                    var ret = new JObject();
-                    ret["hash"] = hash.ToString();
-                    return ret;
-                }
+                    {
+                        var ret = new JObject();
+                        ret["hash"] = hash.ToString();
+                        return ret;
+                    }
                 case RelayResultReason.AlreadyExists:
                     throw new RpcException(-501, "Block or transaction already exists and cannot be sent repeatedly.");
                 case RelayResultReason.OutOfMemory:
@@ -375,7 +377,7 @@ namespace Neo.Plugins.RpcServer
             Plugin.Log(nameof(NeoDefaultRpcController), level, message);
         }
 
-		private class CheckWitnessHashes : IVerifiable
+        private class CheckWitnessHashes : IVerifiable
         {
             private readonly UInt160[] _scriptHashesForVerifying;
             public Witness[] Witnesses { get; set; }

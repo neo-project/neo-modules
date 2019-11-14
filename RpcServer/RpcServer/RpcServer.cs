@@ -22,36 +22,36 @@ namespace Neo.Plugins.RpcServer
 {
     public class RpcServer : Plugin, IRpcServer
     {
-		#region Variables
+        #region Variables
 
-		private const int MaxPostValue = 1024 * 1024 * 2;
+        private const int MaxPostValue = 1024 * 1024 * 2;
 
         private IWebHost _host;
         private RpcServerSettings _settings;
         private IDictionary<string, IDictionary<string, RcpTargetAndMethod>> _operations = new Dictionary<string, IDictionary<string, RcpTargetAndMethod>>();
         private IDictionary<Type, Func<HttpContext, object>> _specialParameterInjectors = new Dictionary<Type, Func<HttpContext, object>>();
-		private List<Func<IRpcOperationPayload, IRpcOperationPayload>> _requestInterceptors = new List<Func<IRpcOperationPayload, IRpcOperationPayload>>();
-		private List<Func<JObject, JObject>> _responseInterceptors = new List<Func<JObject, JObject>>();
+        private List<Func<IRpcOperationPayload, IRpcOperationPayload>> _requestInterceptors = new List<Func<IRpcOperationPayload, IRpcOperationPayload>>();
+        private List<Func<JObject, JObject>> _responseInterceptors = new List<Func<JObject, JObject>>();
 
-		#endregion
+        #endregion
 
-		public override string Name => "RpcServer";
+        public override string Name => "RpcServer";
 
-		public override void Configure()
-		{
-			_settings = new RpcServerSettings(GetConfiguration());
-			InjectSpecialParameter(ctx => ctx);
-			InjectSpecialParameter(ctx => _settings);
-			
-			foreach (IRpcPlugin plugin in Plugin.RpcPlugins.ToList())
-			{
-				plugin.BeforeStartServer(this);
-			}
+        public override void Configure()
+        {
+            _settings = new RpcServerSettings(GetConfiguration());
+            InjectSpecialParameter(ctx => ctx);
+            InjectSpecialParameter(ctx => _settings);
 
-			Start();
-		}
+            foreach (IRpcPlugin plugin in Plugin.RpcPlugins.ToList())
+            {
+                plugin.BeforeStartServer(this);
+            }
 
-		private JObject CreateErrorResponse(bool isNewVersion, string id, int code, string message, string stacktrace = null)
+            Start();
+        }
+
+        private JObject CreateErrorResponse(bool isNewVersion, string id, int code, string message, string stacktrace = null)
         {
             var response = CreateResponse(isNewVersion, id);
             response["error"] = new JObject
@@ -72,16 +72,16 @@ namespace Neo.Plugins.RpcServer
 
         private JObject CreateResponse(bool isNewVersion, string id)
         {
-			var response = new JObject();
+            var response = new JObject();
 
-			if (isNewVersion)
-			{
-				response["restResponse"] = "1.0";
-			}
-			else
-			{
-				response["jsonrpc"] = "2.0";
-			}
+            if (isNewVersion)
+            {
+                response["restResponse"] = "1.0";
+            }
+            else
+            {
+                response["jsonrpc"] = "2.0";
+            }
 
             if (!string.IsNullOrEmpty(id))
             {
@@ -113,50 +113,51 @@ namespace Neo.Plugins.RpcServer
                 postBody = new StreamReader(context.Request.Body).ReadToEnd();
             }
 
-			var backupId = extractId(context, postBody);
-			IRpcOperationPayload payload = new RpcOperationPayload
-			{
-				Context = context,
-				ControllerName = extractController(context),
-				OperationName = extractMethod(context, postBody),
-				Id = backupId
-			};
+            var backupId = extractId(context, postBody);
+            IRpcOperationPayload payload = new RpcOperationPayload
+            {
+                Context = context,
+                ControllerName = extractController(context),
+                OperationName = extractMethod(context, postBody),
+                Id = backupId
+            };
 
             if (string.IsNullOrEmpty(payload.OperationName))
             {
                 return CreateErrorResponse(pNamed, payload.Id, -32700, "Method not informed");
             }
 
-            try {
-				if (pNamed)
-				{
-					payload.ParametersDictionary = extractParamsAsDictionary(payload.Context, postBody);
-				}
-				else
-				{
-					payload.ParametersArray = extractParamsAsArray(payload.Context, postBody);
-				}
+            try
+            {
+                if (pNamed)
+                {
+                    payload.ParametersDictionary = extractParamsAsDictionary(payload.Context, postBody);
+                }
+                else
+                {
+                    payload.ParametersArray = extractParamsAsArray(payload.Context, postBody);
+                }
 
-				payload = CallRequestInterceptors(payload);
+                payload = CallRequestInterceptors(payload);
 
-				if (payload == null)
-				{
-					return CreateErrorResponse(pNamed, backupId, -500, "A RpcServer plugin aborted the execution returning null on the interceptor");
-				}
+                if (payload == null)
+                {
+                    return CreateErrorResponse(pNamed, backupId, -500, "A RpcServer plugin aborted the execution returning null on the interceptor");
+                }
 
-				object result = null;
+                object result = null;
 
-				if (payload.ParametersDictionary.Count > 0)
-				{
-					result = CallOperation(payload.Context, payload.ControllerName, payload.OperationName, payload.ParametersDictionary);
-				}
-				else
-				{
-					result = CallOperation(payload.Context, payload.ControllerName, payload.OperationName, payload.ParametersArray);
-				}
+                if (payload.ParametersDictionary.Count > 0)
+                {
+                    result = CallOperation(payload.Context, payload.ControllerName, payload.OperationName, payload.ParametersDictionary);
+                }
+                else
+                {
+                    result = CallOperation(payload.Context, payload.ControllerName, payload.OperationName, payload.ParametersArray);
+                }
 
-				return CallResponseInterceptors(
-					CreateResponse(pNamed, payload.Id, result));
+                return CallResponseInterceptors(
+                    CreateResponse(pNamed, payload.Id, result));
             }
             catch (Exception ex)
             {
@@ -165,33 +166,34 @@ namespace Neo.Plugins.RpcServer
             }
         }
 
-		private IRpcOperationPayload CallRequestInterceptors(IRpcOperationPayload payload)
-		{
-			foreach (var interc in _requestInterceptors) {
-				payload = interc.Invoke(payload);
-
-				if (payload == null)
-				{
-					break;
-				}
-			}
-
-			return payload;
-		}
-
-		private JObject CallResponseInterceptors(JObject response)
-		{
-			_responseInterceptors.ForEach((interc) =>
-			{
-				response = interc.Invoke(response);
-			});
-
-			return response;
-		}
-
-		private async Task ProcessAsync(HttpContext context)
+        private IRpcOperationPayload CallRequestInterceptors(IRpcOperationPayload payload)
         {
-			if (IsIpAddressAllowed(context.Connection.RemoteIpAddress) == false)
+            foreach (var interc in _requestInterceptors)
+            {
+                payload = interc.Invoke(payload);
+
+                if (payload == null)
+                {
+                    break;
+                }
+            }
+
+            return payload;
+        }
+
+        private JObject CallResponseInterceptors(JObject response)
+        {
+            _responseInterceptors.ForEach((interc) =>
+            {
+                response = interc.Invoke(response);
+            });
+
+            return response;
+        }
+
+        private async Task ProcessAsync(HttpContext context)
+        {
+            if (IsIpAddressAllowed(context.Connection.RemoteIpAddress) == false)
             {
                 var pNamed = areParametersNamed(context);
 
@@ -236,13 +238,13 @@ namespace Neo.Plugins.RpcServer
                 return;
             }
 
-			if (_settings.ListenEndPoint == null)
-			{
-				Log("ListenEndPoint not present on config file! Aborting RPC Server Startup.");
-				return;
-			}
+            if (_settings.ListenEndPoint == null)
+            {
+                Log("ListenEndPoint not present on config file! Aborting RPC Server Startup.");
+                return;
+            }
 
-			_host = new WebHostBuilder().UseKestrel(options => options.Listen(_settings.ListenEndPoint, listenOptions =>
+            _host = new WebHostBuilder().UseKestrel(options => options.Listen(_settings.ListenEndPoint, listenOptions =>
             {
                 // Config SSL
 
@@ -295,7 +297,7 @@ namespace Neo.Plugins.RpcServer
         /// <summary>
         /// Stops the server
         /// </summary>
-        public  void Stop()
+        public void Stop()
         {
             if (_host == null)
             {
@@ -399,8 +401,8 @@ namespace Neo.Plugins.RpcServer
         /// <param name="controller">the controller class</param>
         private void BindController(Type controller, object controllerInstance)
         {
-			Console.WriteLine("controllerInstance:");
-			Console.WriteLine(controllerInstance);
+            Console.WriteLine("controllerInstance:");
+            Console.WriteLine(controllerInstance);
             var controllerName = controller.Name;
             var controllerAttr = controller.GetCustomAttributes<RpcControllerAttribute>(false).FirstOrDefault();
 
@@ -493,13 +495,15 @@ namespace Neo.Plugins.RpcServer
                 var paramNames = methodParameters.Select(p => p.Name).ToArray();
                 var reorderedParams = new List<object>();
 
-                foreach (var mParam in methodParameters) {
+                foreach (var mParam in methodParameters)
+                {
                     var paramIndex = Array.IndexOf(paramNames, mParam.Name);
 
                     if (_specialParameterInjectors.ContainsKey(mParam.ParameterType))
                     {
                         reorderedParams.Insert(paramIndex, _specialParameterInjectors[mParam.ParameterType](context));
-                    } else if (parameters.ContainsKey(mParam.Name))
+                    }
+                    else if (parameters.ContainsKey(mParam.Name))
                     {
                         reorderedParams.Insert(paramIndex, ConvertParameter(parameters[mParam.Name], mParam));
                     }
@@ -532,7 +536,9 @@ namespace Neo.Plugins.RpcServer
             try
             {
                 return Convert.ChangeType(p, paramInfo.ParameterType);
-            } catch {
+            }
+            catch
+            {
                 throw new ArgumentException("Wrong parameter type, expected "
                                             + paramInfo.Name
                                             + " to be "
@@ -584,27 +590,27 @@ namespace Neo.Plugins.RpcServer
             _specialParameterInjectors.Add(typeof(T), ctx => parameterConstructor(ctx));
         }
 
-		public void AddRequestInterceptor(Func<IRpcOperationPayload, IRpcOperationPayload> interc)
-		{
-			_requestInterceptors.Add(interc);
-		}
+        public void AddRequestInterceptor(Func<IRpcOperationPayload, IRpcOperationPayload> interc)
+        {
+            _requestInterceptors.Add(interc);
+        }
 
-		public void RemoveRequestInterceptor(Func<IRpcOperationPayload, IRpcOperationPayload> interc)
-		{
-			_requestInterceptors.Remove(interc);
-		}
+        public void RemoveRequestInterceptor(Func<IRpcOperationPayload, IRpcOperationPayload> interc)
+        {
+            _requestInterceptors.Remove(interc);
+        }
 
-		public void AddResponseInterceptor(Func<JObject, JObject> interc)
-		{
-			_responseInterceptors.Add(interc);
-		}
+        public void AddResponseInterceptor(Func<JObject, JObject> interc)
+        {
+            _responseInterceptors.Add(interc);
+        }
 
-		public void RemoveResponseInterceptor(Func<JObject, JObject> interc)
-		{
-			_responseInterceptors.Remove(interc);
-		}
+        public void RemoveResponseInterceptor(Func<JObject, JObject> interc)
+        {
+            _responseInterceptors.Remove(interc);
+        }
 
-		private string extractController(HttpContext context)
+        private string extractController(HttpContext context)
         {
             // skip 1 because we dont need the things before the first bar
             var pathParts = context.Request.Path.Value.Split('/').Skip(1).ToArray();
@@ -683,8 +689,9 @@ namespace Neo.Plugins.RpcServer
             if (HttpMethods.Get.Equals(context.Request.Method, StringComparison.OrdinalIgnoreCase))
             {
                 // GET localhost:10332/controllername/methodname?first=1&second=a
-                return context.Request.Query.ToDictionary(p => p.Key, p => {
-                    var pArray = (object[]) p.Value;
+                return context.Request.Query.ToDictionary(p => p.Key, p =>
+                {
+                    var pArray = (object[])p.Value;
 
                     if (pArray.Length == 1)
                     {
@@ -692,7 +699,7 @@ namespace Neo.Plugins.RpcServer
                     }
                     else
                     {
-                        return (object) pArray;
+                        return (object)pArray;
                     }
                 });
             }
@@ -703,7 +710,7 @@ namespace Neo.Plugins.RpcServer
             }
 
             // POST localhost:10332 BODY{ "first": 1, "second": "a" }
-            return (IDictionary<string, object>) JObject.Parse(body).ToPrimitive();
+            return (IDictionary<string, object>)JObject.Parse(body).ToPrimitive();
         }
 
         private object[] extractParamsAsArray(HttpContext context, string body)
@@ -711,20 +718,20 @@ namespace Neo.Plugins.RpcServer
             if (HttpMethods.Post.Equals(context.Request.Method, StringComparison.OrdinalIgnoreCase))
             {
                 // POST localhost:10332 BODY{ "params": [1, "a"] }
-                return (object[]) JObject.Parse(body)["params"].ToPrimitive();
+                return (object[])JObject.Parse(body)["params"].ToPrimitive();
             }
 
             // GET localhost:10332?params=[1, "a"]
             string par = context.Request.Query["params"];
             try
             {
-                return (object[]) JObject.Parse(par).ToPrimitive();
+                return (object[])JObject.Parse(par).ToPrimitive();
             }
             catch
             {
                 // Try in base64
                 par = Encoding.UTF8.GetString(Convert.FromBase64String(par));
-                return (object[]) JObject.Parse(par).ToPrimitive();
+                return (object[])JObject.Parse(par).ToPrimitive();
             }
         }
 
@@ -733,5 +740,5 @@ namespace Neo.Plugins.RpcServer
             var pathParts = context.Request.Path.Value.Split('/').Skip(1).ToArray();
             return pathParts.Length > 0 && !string.IsNullOrEmpty(pathParts[0]);
         }
-	}
+    }
 }

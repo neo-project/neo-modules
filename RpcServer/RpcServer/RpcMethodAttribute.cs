@@ -6,5 +6,5 @@ namespace Neo.Plugins.RpcServer
     public class RpcMethodAttribute : Attribute
     {
         public string Name { get; set; }
-	}
+    }
 }
