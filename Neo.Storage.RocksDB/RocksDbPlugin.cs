@@ -7,7 +7,7 @@ namespace Neo.Storage.RocksDB
     {
         public readonly RocksDBStore _store;
 
-        public override string Name => "RocksDbPlugin";
+        public override string Name => nameof(RocksDbPlugin);
 
         /// <summary>
         /// Constructor
