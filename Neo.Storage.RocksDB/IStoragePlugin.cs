@@ -2,7 +2,7 @@
 
 namespace Neo.Storage.RocksDB
 {
-    // TODO: Delete me on https://github.com/neo-project/neo/pull/1087
+    // TODO: Delete this file when https://github.com/neo-project/neo/pull/1087 was merged
 
     public interface IStoragePlugin
     {
