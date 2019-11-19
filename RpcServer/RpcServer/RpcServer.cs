@@ -28,7 +28,7 @@ namespace Neo.Plugins.RpcServer
 
         private IWebHost _host;
         private RpcServerSettings _settings;
-        private IDictionary<string, IDictionary<string, RcpTargetAndMethod>> _operations = new Dictionary<string, IDictionary<string, RcpTargetAndMethod>>();
+        private IDictionary<string, IDictionary<string, RpcTargetAndMethod>> _operations = new Dictionary<string, IDictionary<string, RpcTargetAndMethod>>();
         private IDictionary<Type, Func<HttpContext, object>> _specialParameterInjectors = new Dictionary<Type, Func<HttpContext, object>>();
         private List<Func<IRpcOperationPayload, IRpcOperationPayload>> _requestInterceptors = new List<Func<IRpcOperationPayload, IRpcOperationPayload>>();
         private List<Func<JObject, JObject>> _responseInterceptors = new List<Func<JObject, JObject>>();
@@ -350,12 +350,12 @@ namespace Neo.Plugins.RpcServer
 
             if (!_operations.ContainsKey(controllerName))
             {
-                _operations.Add(controllerName, new Dictionary<string, RcpTargetAndMethod>());
+                _operations.Add(controllerName, new Dictionary<string, RpcTargetAndMethod>());
             }
 
             var controller = _operations[controllerName];
 
-            var callerAndMethod = new RcpTargetAndMethod()
+            var callerAndMethod = new RpcTargetAndMethod()
             {
                 Target = target,
                 Method = anyMethod

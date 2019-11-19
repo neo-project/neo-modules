@@ -2,7 +2,7 @@
 
 namespace Neo.Plugins.RpcServer
 {
-    internal class RcpTargetAndMethod
+    internal class RpcTargetAndMethod
     {
         public object Target { get; set; }
 
