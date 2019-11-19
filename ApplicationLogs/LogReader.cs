@@ -53,6 +53,16 @@ namespace Neo.Plugins
             {
                 JObject json = new JObject();
                 json["txid"] = appExec.Transaction.Hash.ToString();
+                if (appExec.Transaction != null)
+                {
+                    var jSystemFee = new JObject();
+                    jSystemFee["systemFee"] = appExec.Transaction.SystemFee.ToString();
+
+                    var jNetworkFee = new JObject();
+                    jNetworkFee["networkFee"] = appExec.Transaction.NetworkFee.ToString();
+
+                    json["fee"] = new JArray(jSystemFee, jNetworkFee);
+                }
                 json["executions"] = appExec.ExecutionResults.Select(p =>
                 {
                     JObject execution = new JObject();
