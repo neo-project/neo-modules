@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreMetrics", "CoreMetrics\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SystemLog", "SystemLog\SystemLog.csproj", "{14DB62D5-0EA1-4A98-8656-1AA2D0345206}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcServer", "RpcServer\RpcServer.csproj", "{E8005F4F-3220-4637-9F04-5FB712BFD0E9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpServer", "RpcServer\HttpServer.csproj", "{E8005F4F-3220-4637-9F04-5FB712BFD0E9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neo", "..\neo\neo\neo.csproj", "{5B84E884-689D-4D4D-918F-9B392C3BA7DD}"
 EndProject

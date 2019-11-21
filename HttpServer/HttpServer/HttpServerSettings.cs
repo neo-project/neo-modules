@@ -6,9 +6,9 @@ using System.Net;
 using Microsoft.Extensions.Configuration;
 using Neo.SmartContract.Native;
 
-namespace Neo.Plugins.RpcServer
+namespace Neo.Plugins.HttpServer
 {
-    public class RpcServerSettings
+    public class HttpServerSettings
     {
         public class SslCert
         {
@@ -47,7 +47,7 @@ namespace Neo.Plugins.RpcServer
         /// Constructor
         /// </summary>
         /// <param name="configuration">Configuration</param>
-        public RpcServerSettings(IConfiguration config = null)
+        public HttpServerSettings(IConfiguration config = null)
         {
             ListenEndPoint = new IPEndPoint(
                 IPAddress.Parse(config.GetValue("BindAddress", "127.0.0.1")),

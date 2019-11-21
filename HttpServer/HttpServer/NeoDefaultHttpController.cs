@@ -6,32 +6,32 @@ using Akka.Actor;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Ledger;
+using Neo.Network;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
-using Neo.Network.RPC;
 using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
 
-namespace Neo.Plugins.RpcServer
+namespace Neo.Plugins.HttpServer
 {
-    [RpcController(Name = "$root")]
-    public class NeoDefaultRpcController : Plugin, IRpcPlugin
+    [HttpController(Path = "$root")]
+    public class NeoDefaultHttpController : Plugin, IHttpPlugin
     {
-        public void BeforeStartServer(IRpcServer server)
+        public void ConfigureHttp(IHttpServer server)
         {
-            server.BindController<NeoDefaultRpcController>();
+            server.BindController<NeoDefaultHttpController>();
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public string getbestblockhash()
         {
             return Blockchain.Singleton.CurrentBlockHash.ToString();
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public JObject getblock(string key, bool verbose = false)
         {
             Block block;
@@ -46,7 +46,7 @@ namespace Neo.Plugins.RpcServer
                 block = Blockchain.Singleton.Store.GetBlock(hash);
             }
 
-            if (block == null) throw new RpcException(-100, "Unknown block");
+            if (block == null) throw new HttpException(-100, "Unknown block");
 
             if (verbose)
             {
@@ -60,23 +60,23 @@ namespace Neo.Plugins.RpcServer
             return block.ToArray().ToHexString();
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public uint getblockcount()
         {
             return Blockchain.Singleton.Height + 1;
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public string getblockhash(uint height)
         {
             if (height <= Blockchain.Singleton.Height)
             {
                 return Blockchain.Singleton.GetBlockHash(height).ToString();
             }
-            throw new RpcException(-100, "Invalid Height");
+            throw new HttpException(-100, "Invalid Height");
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public JObject getblockheader(string key, bool verbose = false)
         {
             Header header;
@@ -93,7 +93,7 @@ namespace Neo.Plugins.RpcServer
 
             if (header == null)
             {
-                throw new RpcException(-100, "Unknown block");
+                throw new HttpException(-100, "Unknown block");
             }
 
             if (verbose)
@@ -109,7 +109,7 @@ namespace Neo.Plugins.RpcServer
             return header.ToArray().ToHexString();
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public string getblocksysfee(uint height)
         {
             if (height <= Blockchain.Singleton.Height)
@@ -117,23 +117,23 @@ namespace Neo.Plugins.RpcServer
                 {
                     return engine.ResultStack.Peek().GetBigInteger().ToString();
                 }
-            throw new RpcException(-100, "Invalid Height");
+            throw new HttpException(-100, "Invalid Height");
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public int getconnectioncount()
         {
             return LocalNode.Singleton.ConnectedCount;
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public JObject getcontractstate(string script_hash)
         {
             ContractState contract = Blockchain.Singleton.Store.GetContracts().TryGet(UInt160.Parse(script_hash));
-            return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
+            return contract?.ToJson() ?? throw new HttpException(-100, "Unknown contract");
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public JObject getpeers()
         {
             JObject json = new JObject();
@@ -155,7 +155,7 @@ namespace Neo.Plugins.RpcServer
             return json;
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public JObject getrawmempool(bool shouldGetUnverified)
         {
             if (!shouldGetUnverified)
@@ -171,13 +171,13 @@ namespace Neo.Plugins.RpcServer
             return json;
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public JObject getrawtransaction(string hash, bool verbose = false)
         {
             UInt256 hash256 = UInt256.Parse(hash);
             Transaction tx = Blockchain.Singleton.GetTransaction(hash256);
             if (tx == null)
-                throw new RpcException(-100, "Unknown transaction");
+                throw new HttpException(-100, "Unknown transaction");
             if (verbose)
             {
                 JObject json = tx.ToJson();
@@ -195,7 +195,7 @@ namespace Neo.Plugins.RpcServer
             return tx.ToArray().ToHexString();
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public string getstorage(string script_hash, string key)
         {
             StorageItem item = Blockchain.Singleton.Store.GetStorages().TryGet(new StorageKey
@@ -206,15 +206,15 @@ namespace Neo.Plugins.RpcServer
             return item.Value?.ToHexString();
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public uint gettransactionheight(string hash)
         {
             uint? height = Blockchain.Singleton.Store.GetTransactions().TryGet(UInt256.Parse(hash))?.BlockIndex;
             if (height.HasValue) return height.Value;
-            throw new RpcException(-100, "Unknown transaction");
+            throw new HttpException(-100, "Unknown transaction");
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public JObject getvalidators()
         {
             using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
@@ -231,7 +231,7 @@ namespace Neo.Plugins.RpcServer
             }
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public JObject getversion()
         {
             JObject json = new JObject();
@@ -242,8 +242,8 @@ namespace Neo.Plugins.RpcServer
             return json;
         }
 
-        [RpcMethod]
-        public JObject invokefunction(RpcServerSettings config, string script_hash, string operation, object[] args)
+        [HttpMethod]
+        public JObject invokefunction(HttpServerSettings config, string script_hash, string operation, object[] args)
         {
             ContractParameter[] cParams = args
                 .Select(a => ContractParameter
@@ -260,8 +260,8 @@ namespace Neo.Plugins.RpcServer
             return GetInvokeResult(config, script);
         }
 
-        [RpcMethod]
-        public JObject invokescript(RpcServerSettings config, string scriptHex, string[] hashesToVerify = null)
+        [HttpMethod]
+        public JObject invokescript(HttpServerSettings config, string scriptHex, string[] hashesToVerify = null)
         {
             byte[] script = scriptHex.HexToBytes();
 
@@ -275,7 +275,7 @@ namespace Neo.Plugins.RpcServer
             return GetInvokeResult(config, script, checkWitnessHashes);
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public JObject listplugins()
         {
             return new JArray(Plugin.Plugins
@@ -291,7 +291,7 @@ namespace Neo.Plugins.RpcServer
                 }));
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public JObject sendrawtransaction(string txHash, NeoSystem system)
         {
             Transaction tx = txHash.HexToBytes().AsSerializable<Transaction>();
@@ -299,7 +299,7 @@ namespace Neo.Plugins.RpcServer
             return GetRelayResult(reason, tx.Hash);
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public JObject submitblock(string blockHash, NeoSystem system)
         {
             Block block = blockHash.HexToBytes().AsSerializable<Block>();
@@ -307,7 +307,7 @@ namespace Neo.Plugins.RpcServer
             return GetRelayResult(reason, block.Hash);
         }
 
-        [RpcMethod]
+        [HttpMethod]
         public JObject validateaddress(string address)
         {
             JObject json = new JObject();
@@ -340,21 +340,21 @@ namespace Neo.Plugins.RpcServer
                         return ret;
                     }
                 case RelayResultReason.AlreadyExists:
-                    throw new RpcException(-501, "Block or transaction already exists and cannot be sent repeatedly.");
+                    throw new HttpException(-501, "Block or transaction already exists and cannot be sent repeatedly.");
                 case RelayResultReason.OutOfMemory:
-                    throw new RpcException(-502, "The memory pool is full and no more transactions can be sent.");
+                    throw new HttpException(-502, "The memory pool is full and no more transactions can be sent.");
                 case RelayResultReason.UnableToVerify:
-                    throw new RpcException(-503, "The block cannot be validated.");
+                    throw new HttpException(-503, "The block cannot be validated.");
                 case RelayResultReason.Invalid:
-                    throw new RpcException(-504, "Block or transaction validation failed.");
+                    throw new HttpException(-504, "Block or transaction validation failed.");
                 case RelayResultReason.PolicyFail:
-                    throw new RpcException(-505, "One of the Policy filters failed.");
+                    throw new HttpException(-505, "One of the Policy filters failed.");
                 default:
-                    throw new RpcException(-500, "Unknown error.");
+                    throw new HttpException(-500, "Unknown error.");
             }
         }
 
-        private static JObject GetInvokeResult(RpcServerSettings config, byte[] script, IVerifiable checkWitnessHashes = null)
+        private static JObject GetInvokeResult(HttpServerSettings config, byte[] script, IVerifiable checkWitnessHashes = null)
         {
             ApplicationEngine engine = ApplicationEngine.Run(script, checkWitnessHashes, extraGAS: config.MaxGasInvoke);
             JObject json = new JObject();
@@ -374,7 +374,7 @@ namespace Neo.Plugins.RpcServer
 
         private void Log(string message, LogLevel level = LogLevel.Info)
         {
-            Plugin.Log(nameof(NeoDefaultRpcController), level, message);
+            Plugin.Log(nameof(NeoDefaultHttpController), level, message);
         }
 
         private class CheckWitnessHashes : IVerifiable
