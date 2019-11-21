@@ -20,29 +20,29 @@ using Neo.IO.Json;
 
 namespace Neo.Plugins.HttpServer
 {
-	using Interceptor = Action<IHttpOperationPayload>;
+    using Interceptor = Action<IHttpOperationPayload>;
 
-	public class HttpServer : Plugin, IHttpServer
+    public class HttpServer : Plugin, IHttpServer
     {
         private const int MaxPostValue = 1024 * 1024 * 2;
 
-		// WEB HOST HANDLING THE SERVER
+        // WEB HOST HANDLING THE SERVER
         private IWebHost _host;
 
-		// SETTINGS PROVIDED BY JSON FILE
+        // SETTINGS PROVIDED BY JSON FILE
         private HttpServerSettings _settings;
 
-		// BINDED OPERATIONS TO BE CALLED WHEN REQUESTS MATCH IT'S SIGNATURE
+        // BINDED OPERATIONS TO BE CALLED WHEN REQUESTS MATCH IT'S SIGNATURE
         private IDictionary<string, IDictionary<string, OperationTargetAndMethod>> _operations = new Dictionary<string, IDictionary<string, OperationTargetAndMethod>>();
 
-		// INJECTED PARAMETERS FOR OPERATIONS: When a controller needs a parameter of a specific TYPE that was injected it will get it automatically
+        // INJECTED PARAMETERS FOR OPERATIONS: When a controller needs a parameter of a specific TYPE that was injected it will get it automatically
         private IDictionary<Type, Func<HttpContext, object>> _specialParameterInjectors = new Dictionary<Type, Func<HttpContext, object>>();
 
-		// REQUEST INTERCEPTORS: Actions that will be called to handle the request, can read, modify and abort the request and response. Can be used to call the operation aswell
-		private List<Interceptor> _requestInterceptors = new List<Interceptor>();
+        // REQUEST INTERCEPTORS: Actions that will be called to handle the request, can read, modify and abort the request and response. Can be used to call the operation aswell
+        private List<Interceptor> _requestInterceptors = new List<Interceptor>();
 
-		// RESPONSE INTERCEPTORS: Actions that will be called to handle the response, can read and modify request and response
-		private List<Interceptor> _responseInterceptors = new List<Interceptor>();
+        // RESPONSE INTERCEPTORS: Actions that will be called to handle the response, can read and modify request and response
+        private List<Interceptor> _responseInterceptors = new List<Interceptor>();
 
         public override string Name => "HttpServer";
 
@@ -52,10 +52,10 @@ namespace Neo.Plugins.HttpServer
             InjectSpecialParameter(ctx => ctx);
             InjectSpecialParameter(ctx => _settings);
 
-			RegisterDefaultInterceptors();
+            RegisterDefaultInterceptors();
 
             Start();
-		}
+        }
 
         public override void OnPluginsLoaded()
         {
@@ -76,176 +76,176 @@ namespace Neo.Plugins.HttpServer
         /// Starts the server
         /// </summary>
         public void Start()
-		{
-			// Check started
+        {
+            // Check started
 
-			if (_host != null)
-			{
-				Log("Http server already started");
-				return;
-			}
+            if (_host != null)
+            {
+                Log("Http server already started");
+                return;
+            }
 
-			if (_settings.ListenEndPoint == null)
-			{
-				Log("ListenEndPoint not present on config file! Aborting Http Server Startup.");
-				return;
-			}
+            if (_settings.ListenEndPoint == null)
+            {
+                Log("ListenEndPoint not present on config file! Aborting Http Server Startup.");
+                return;
+            }
 
-			_host = new WebHostBuilder().UseKestrel(options => options.Listen(_settings.ListenEndPoint, listenOptions =>
-			{
-				// Config SSL
+            _host = new WebHostBuilder().UseKestrel(options => options.Listen(_settings.ListenEndPoint, listenOptions =>
+            {
+                // Config SSL
 
-				if (_settings.Ssl != null && _settings.Ssl.IsValid)
-					listenOptions.UseHttps(_settings.Ssl.Path, _settings.Ssl.Password, httpsConnectionAdapterOptions =>
-					{
-						if (_settings.TrustedAuthorities is null || _settings.TrustedAuthorities.Length == 0)
-						{
-							return;
-						}
+                if (_settings.Ssl != null && _settings.Ssl.IsValid)
+                    listenOptions.UseHttps(_settings.Ssl.Path, _settings.Ssl.Password, httpsConnectionAdapterOptions =>
+                    {
+                        if (_settings.TrustedAuthorities is null || _settings.TrustedAuthorities.Length == 0)
+                        {
+                            return;
+                        }
 
-						httpsConnectionAdapterOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
-						httpsConnectionAdapterOptions.ClientCertificateValidation = (cert, chain, err) =>
-						{
-							if (err != SslPolicyErrors.None)
-							{
-								return false;
-							}
+                        httpsConnectionAdapterOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
+                        httpsConnectionAdapterOptions.ClientCertificateValidation = (cert, chain, err) =>
+                        {
+                            if (err != SslPolicyErrors.None)
+                            {
+                                return false;
+                            }
 
-							X509Certificate2 authority = chain.ChainElements[chain.ChainElements.Count - 1].Certificate;
-							return _settings.TrustedAuthorities.Contains(authority.Thumbprint);
-						};
-					});
-			}))
-			.Configure(app =>
-			{
-				app.UseResponseCompression();
-				app.Run(ProcessRequest);
-			})
-			.ConfigureServices(services =>
-			{
-				services.AddResponseCompression(options =>
-				{
-					options.Providers.Add<GzipCompressionProvider>();
-					options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/json" });
-				});
+                            X509Certificate2 authority = chain.ChainElements[chain.ChainElements.Count - 1].Certificate;
+                            return _settings.TrustedAuthorities.Contains(authority.Thumbprint);
+                        };
+                    });
+            }))
+            .Configure(app =>
+            {
+                app.UseResponseCompression();
+                app.Run(ProcessRequest);
+            })
+            .ConfigureServices(services =>
+            {
+                services.AddResponseCompression(options =>
+                {
+                    options.Providers.Add<GzipCompressionProvider>();
+                    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/json" });
+                });
 
-				services.Configure<GzipCompressionProviderOptions>(options =>
-				{
-					options.Level = CompressionLevel.Fastest;
-				});
-			})
-			.Build();
+                services.Configure<GzipCompressionProviderOptions>(options =>
+                {
+                    options.Level = CompressionLevel.Fastest;
+                });
+            })
+            .Build();
 
-			_host.Start();
-			Log($"Http server started on {_settings.ListenEndPoint.Address}:{_settings.ListenEndPoint.Port}");
-		}
+            _host.Start();
+            Log($"Http server started on {_settings.ListenEndPoint.Address}:{_settings.ListenEndPoint.Port}");
+        }
 
-		private async Task ProcessRequest(HttpContext context)
-		{
-			var payload = new HttpOperationPayload
-			{
-				Context = context
-			};
+        private async Task ProcessRequest(HttpContext context)
+        {
+            var payload = new HttpOperationPayload
+            {
+                Context = context
+            };
 
-			try
-			{
-				CallRequestInterceptors(payload);
-				CallResponseInterceptors(payload);
-			}
-			catch (Exception ex)
-			{
-				Log(ex.ToString());
-				HandleException(payload, ex.HResult, ex.Message, ex.StackTrace);
-			}
+            try
+            {
+                CallRequestInterceptors(payload);
+                CallResponseInterceptors(payload);
+            }
+            catch (Exception ex)
+            {
+                Log(ex.ToString());
+                HandleException(payload, ex.HResult, ex.Message, ex.StackTrace);
+            }
 
-			if (payload.Response != null)
-			{
-				await payload.Context.Response.WriteAsync(payload.Response.ToString(), Encoding.UTF8);
-			}
-		}
+            if (payload.Response != null)
+            {
+                await payload.Context.Response.WriteAsync(payload.Response.ToString(), Encoding.UTF8);
+            }
+        }
 
-		private void HandleException(HttpOperationPayload payload, int code, string message, string stacktrace = null)
-		{
-			var errorResp = new JObject
-			{
-				["error"] = new JObject
-				{
-					["code"] = code,
-					["message"] = message
-				}
-			};
+        private void HandleException(HttpOperationPayload payload, int code, string message, string stacktrace = null)
+        {
+            var errorResp = new JObject
+            {
+                ["error"] = new JObject
+                {
+                    ["code"] = code,
+                    ["message"] = message
+                }
+            };
 
-				if (stacktrace != null)
-				{
-					errorResp["error"]["data"] = stacktrace;
-				}
+            if (stacktrace != null)
+            {
+                errorResp["error"]["data"] = stacktrace;
+            }
 
-			payload.Response = errorResp;
-		}
+            payload.Response = errorResp;
+        }
 
-		private void RegisterDefaultInterceptors()
-		{
-			// abort requests with unallowed IPs
-			AddRequestInterceptor((payload) =>
-			{
-				if (_settings.IpBlacklist != null && _settings.IpBlacklist.Contains(payload.Context.Connection.RemoteIpAddress))
-				{
-					Log("Unauthorized request " + payload.Context.Connection.RemoteIpAddress, LogLevel.Warning);
+        private void RegisterDefaultInterceptors()
+        {
+            // abort requests with unallowed IPs
+            AddRequestInterceptor((payload) =>
+            {
+                if (_settings.IpBlacklist != null && _settings.IpBlacklist.Contains(payload.Context.Connection.RemoteIpAddress))
+                {
+                    Log("Unauthorized request " + payload.Context.Connection.RemoteIpAddress, LogLevel.Warning);
 
-					payload.AbortRequest = true;
-					payload.Data["IP_NOT_ALLOWED"] = true;
+                    payload.AbortRequest = true;
+                    payload.Data["IP_NOT_ALLOWED"] = true;
 
-					payload.Context.Response.StatusCode = 401;
+                    payload.Context.Response.StatusCode = 401;
 
-					var response = (payload.Response as JObject) ?? new JObject();
-					response["error"] = new JObject
-					{
-						["code"] = 401,
-						["message"] = "Forbidden"
-					};
+                    var response = (payload.Response as JObject) ?? new JObject();
+                    response["error"] = new JObject
+                    {
+                        ["code"] = 401,
+                        ["message"] = "Forbidden"
+                    };
 
-					payload.Response = response;
-				}
-			});
+                    payload.Response = response;
+                }
+            });
 
-			// read POST body or abort the request if the body is too long
-			AddRequestInterceptor((payload) =>
-			{
-				if (HttpMethods.Post.Equals(payload.Context.Request.Method, StringComparison.OrdinalIgnoreCase))
-				{
-					if (!payload.Context.Request.ContentLength.HasValue || payload.Context.Request.ContentLength > MaxPostValue)
-					{
-						Log("Unauthorized request " + payload.Context.Connection.RemoteIpAddress, LogLevel.Warning);
+            // read POST body or abort the request if the body is too long
+            AddRequestInterceptor((payload) =>
+            {
+                if (HttpMethods.Post.Equals(payload.Context.Request.Method, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!payload.Context.Request.ContentLength.HasValue || payload.Context.Request.ContentLength > MaxPostValue)
+                    {
+                        Log("Unauthorized request " + payload.Context.Connection.RemoteIpAddress, LogLevel.Warning);
 
-						payload.AbortRequest = true;
-						payload.Data["BODY_SIZE_TOO_BIG"] = true;
+                        payload.AbortRequest = true;
+                        payload.Data["BODY_SIZE_TOO_BIG"] = true;
 
-						var response = (payload.Response as JObject) ?? new JObject();
-						response["error"] = new JObject
-						{
-							["code"] = -32700,
-							["message"] = "The post body is too long, max size is " + MaxPostValue
-						};
+                        var response = (payload.Response as JObject) ?? new JObject();
+                        response["error"] = new JObject
+                        {
+                            ["code"] = -32700,
+                            ["message"] = "The post body is too long, max size is " + MaxPostValue
+                        };
 
-						payload.Response = response;
-					}
-					else
-					{
-						payload.Body = new StreamReader(payload.Context.Request.Body).ReadToEnd();
-					}
-				}
-			});
+                        payload.Response = response;
+                    }
+                    else
+                    {
+                        payload.Body = new StreamReader(payload.Context.Request.Body).ReadToEnd();
+                    }
+                }
+            });
 
-			// add default headers
-			AddResponseInterceptor((payload) =>
-			{
-				payload.Context.Response.Headers["Access-Control-Allow-Origin"] = "*";
-				payload.Context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST";
-				payload.Context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type";
-				payload.Context.Response.Headers["Access-Control-Max-Age"] = "31536000";
-				payload.Context.Response.ContentType = "application/json";
-			});
-		}
+            // add default headers
+            AddResponseInterceptor((payload) =>
+            {
+                payload.Context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+                payload.Context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST";
+                payload.Context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type";
+                payload.Context.Response.Headers["Access-Control-Max-Age"] = "31536000";
+                payload.Context.Response.ContentType = "application/json";
+            });
+        }
 
         private IHttpOperationPayload CallRequestInterceptors(IHttpOperationPayload payload)
         {
@@ -260,17 +260,17 @@ namespace Neo.Plugins.HttpServer
             }
 
             return payload;
-		}
+        }
 
-		private IHttpOperationPayload CallResponseInterceptors(IHttpOperationPayload payload)
-		{
-			foreach (var interc in _responseInterceptors)
-			{
-				interc.Invoke(payload);
-			}
+        private IHttpOperationPayload CallResponseInterceptors(IHttpOperationPayload payload)
+        {
+            foreach (var interc in _responseInterceptors)
+            {
+                interc.Invoke(payload);
+            }
 
-			return payload;
-		}
+            return payload;
+        }
 
         /// <summary>
         /// Stops the server
@@ -298,17 +298,17 @@ namespace Neo.Plugins.HttpServer
         public void Dispose()
         {
             Stop();
-		}
+        }
 
-		/// <summary>
-		/// Register an operation that can be called by the server.
-		/// Usage:
-		/// server.BindOperation("controllerName", "operationName", new Func<int, bool>(MyMethod));
-		/// </summary>
-		/// <param name="controllerName">controller name is used to organize many operations in a group</param>
-		/// <param name="operationName">operation name</param>
-		/// <param name="anyMethod">the method to be called when the operation is called</param>
-		public void BindOperation(string controllerName, string operationName, Delegate anyMethod)
+        /// <summary>
+        /// Register an operation that can be called by the server.
+        /// Usage:
+        /// server.BindOperation("controllerName", "operationName", new Func<int, bool>(MyMethod));
+        /// </summary>
+        /// <param name="controllerName">controller name is used to organize many operations in a group</param>
+        /// <param name="operationName">operation name</param>
+        /// <param name="anyMethod">the method to be called when the operation is called</param>
+        public void BindOperation(string controllerName, string operationName, Delegate anyMethod)
         {
             BindOperation(controllerName, operationName, anyMethod.Target, anyMethod.Method);
         }
@@ -361,23 +361,23 @@ namespace Neo.Plugins.HttpServer
             BindController(controller, controllerInstance);
         }
 
-		/// <summary>
-		/// Register many operations organized in a controller class,
-		/// The operations should be methods annotated with [HttpMethod] or [HttpMethod("methodName")]
-		/// </summary>
-		/// <param name="controller">the controller class</param>
-		public void BindController(Type controller)
+        /// <summary>
+        /// Register many operations organized in a controller class,
+        /// The operations should be methods annotated with [HttpMethod] or [HttpMethod("methodName")]
+        /// </summary>
+        /// <param name="controller">the controller class</param>
+        public void BindController(Type controller)
         {
             var controllerInstance = Activator.CreateInstance(controller);
             BindController(controller, controllerInstance);
         }
 
-		/// <summary>
-		/// Register many operations organized in a controller class,
-		/// The operations should be methods annotated with [HttpMethod] or [HttpMethod("methodName")]
-		/// </summary>
-		/// <param name="controller">the controller class</param>
-		private void BindController(Type controller, object controllerInstance)
+        /// <summary>
+        /// Register many operations organized in a controller class,
+        /// The operations should be methods annotated with [HttpMethod] or [HttpMethod("methodName")]
+        /// </summary>
+        /// <param name="controller">the controller class</param>
+        private void BindController(Type controller, object controllerInstance)
         {
             var controllerName = controller.Name;
             var controllerAttr = controller.GetCustomAttributes<HttpControllerAttribute>(false).FirstOrDefault();
@@ -587,10 +587,10 @@ namespace Neo.Plugins.HttpServer
         }
     }
 
-	internal class OperationTargetAndMethod
-	{
-		public object Target { get; set; }
+    internal class OperationTargetAndMethod
+    {
+        public object Target { get; set; }
 
-		public MethodInfo Method { get; set; }
-	}
+        public MethodInfo Method { get; set; }
+    }
 }
