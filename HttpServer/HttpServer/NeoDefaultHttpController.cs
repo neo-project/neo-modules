@@ -18,9 +18,9 @@ using Neo.Wallets;
 namespace Neo.Plugins.HttpServer
 {
     [HttpController(Path = "$root")]
-    public class NeoDefaultHttpController : Plugin, IHttpPlugin
+    public class NeoDefaultHttpController : HttpPlugin
     {
-        public void ConfigureHttp(IHttpServer server)
+        public override void ConfigureHttp(HttpServer server)
         {
             server.BindController<NeoDefaultHttpController>();
         }

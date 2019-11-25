@@ -7,9 +7,9 @@ using System.Text;
 
 namespace Neo.Plugins.HttpServer
 {
-    public class RestInterceptor : Plugin, IHttpPlugin
+    public class RestInterceptor : HttpPlugin
     {
-        public void ConfigureHttp(IHttpServer server)
+        public override void ConfigureHttp(HttpServer server)
         {
             server.AddRequestInterceptor((payload) =>
             {

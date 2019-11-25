@@ -6,9 +6,9 @@ using System.Text;
 
 namespace Neo.Plugins.HttpServer
 {
-    public class RpcInterceptor : Plugin, IHttpPlugin
+    public class RpcInterceptor : HttpPlugin
     {
-        public void ConfigureHttp(IHttpServer server)
+        public override void ConfigureHttp(HttpServer server)
         {
             server.AddRequestInterceptor((payload) =>
             {
@@ -105,11 +105,24 @@ namespace Neo.Plugins.HttpServer
             if (HttpMethods.Post.Equals(context.Request.Method, StringComparison.OrdinalIgnoreCase))
             {
                 // POST localhost:10332 BODY{ "params": [1, "a"] }
-                return (object[])JObject.Parse(body)["params"].ToPrimitive();
+                var bodyPar = JObject.Parse(body)["params"];
+
+                if (bodyPar == null)
+                {
+                    return new object[0];
+                }
+
+                return (object[])bodyPar.ToPrimitive();
             }
 
             // GET localhost:10332?params=[1, "a"]
             string par = context.Request.Query["params"];
+
+            if (par == null)
+            {
+                return new object[0];
+            }
+
             try
             {
                 return (object[])JObject.Parse(par).ToPrimitive();

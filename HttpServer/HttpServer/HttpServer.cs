@@ -20,9 +20,9 @@ using Neo.IO.Json;
 
 namespace Neo.Plugins.HttpServer
 {
-    using Interceptor = Action<IHttpOperationPayload>;
+    using Interceptor = Action<HttpOperationPayload>;
 
-    public class HttpServer : Plugin, IHttpServer
+    public class HttpServer : Plugin
     {
         private const int MaxPostValue = 1024 * 1024 * 2;
 
@@ -51,22 +51,25 @@ namespace Neo.Plugins.HttpServer
             _settings = new HttpServerSettings(GetConfiguration());
             InjectSpecialParameter(ctx => ctx);
             InjectSpecialParameter(ctx => _settings);
-
             RegisterDefaultInterceptors();
-
-            Start();
         }
-
-        public override void OnPluginsLoaded()
+        protected override bool OnMessage(object message)
         {
+            if (!(message is string[] args) || args.Length == 0 || !args[0].ToLower().Equals("start-http"))
+            {
+                return false;
+            }
+
             ConfigurePlugins();
+            Start();
+
+            return true;
         }
 
         public async void ConfigurePlugins()
         {
-            await Task.Delay(500);
             // calls the plugins to configure itself
-            foreach (IHttpPlugin plugin in Plugin.HttpPlugins.ToList())
+            foreach (HttpPlugin plugin in HttpPlugin.HttpPlugins.ToList())
             {
                 plugin.ConfigureHttp(this);
             }
@@ -247,7 +250,7 @@ namespace Neo.Plugins.HttpServer
             });
         }
 
-        private IHttpOperationPayload CallRequestInterceptors(IHttpOperationPayload payload)
+        private HttpOperationPayload CallRequestInterceptors(HttpOperationPayload payload)
         {
             foreach (var interc in _requestInterceptors)
             {
@@ -262,7 +265,7 @@ namespace Neo.Plugins.HttpServer
             return payload;
         }
 
-        private IHttpOperationPayload CallResponseInterceptors(IHttpOperationPayload payload)
+        private HttpOperationPayload CallResponseInterceptors(HttpOperationPayload payload)
         {
             foreach (var interc in _responseInterceptors)
             {

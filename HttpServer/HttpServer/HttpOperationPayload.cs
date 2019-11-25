@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Neo.Plugins.HttpServer
 {
-    public class HttpOperationPayload : IHttpOperationPayload
+    public class HttpOperationPayload
     {
         public HttpContext Context { get; set; }
         public string Body { get; set; } = "";
