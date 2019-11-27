@@ -7,30 +7,7 @@ namespace Neo.Storage.RocksDB
     {
         #region Families
 
-        private const string DATA_Block_Name = "Block";
-        private const string DATA_Transaction_Name = "Transaction";
-
-        private const string ST_Contract_Name = "Contract";
-        private const string ST_Storage_Name = "Storage";
-
-        private const string IX_HeaderHashList_Name = "HeaderHashList";
-        private const string IX_CurrentBlock_Name = "CurrentBlock";
-        private const string IX_CurrentHeader_Name = "CurrentHeader";
-
-        private const string SYS_Version_Name = "Version";
-
-        internal readonly ColumnFamily DATA_Block;
-        internal readonly ColumnFamily DATA_Transaction;
-
-        internal readonly ColumnFamily ST_Contract;
-        internal readonly ColumnFamily ST_Storage;
-
-        internal readonly ColumnFamily IX_HeaderHashList;
-        internal readonly ColumnFamily IX_CurrentBlock;
-        internal readonly ColumnFamily IX_CurrentHeader;
-
-        internal readonly ColumnFamily SYS_Version;
-
+        internal readonly ColumnFamily[] Families = new ColumnFamily[byte.MaxValue + 1];
         internal readonly ColumnFamily DefaultFamily;
 
         #endregion
@@ -52,16 +29,10 @@ namespace Neo.Storage.RocksDB
 
             // Get column families
 
-            DATA_Block = new ColumnFamily(db, DATA_Block_Name);
-            DATA_Transaction = new ColumnFamily(db, DATA_Transaction_Name);
-
-            IX_CurrentBlock = new ColumnFamily(db, IX_CurrentBlock_Name);
-            IX_CurrentHeader = new ColumnFamily(db, IX_CurrentHeader_Name);
-            IX_HeaderHashList = new ColumnFamily(db, IX_HeaderHashList_Name);
-
-            ST_Contract = new ColumnFamily(db, ST_Contract_Name);
-            ST_Storage = new ColumnFamily(db, ST_Storage_Name);
-            SYS_Version = new ColumnFamily(db, SYS_Version_Name);
+            for (int x = 0; x <= byte.MaxValue; x++)
+            {
+                Families[x] = new ColumnFamily(db, x.ToString());
+            }
 
             DefaultFamily = new ColumnFamily("", _rocksDb.GetDefaultColumnFamily());
         }
@@ -82,20 +53,12 @@ namespace Neo.Storage.RocksDB
         /// <returns>DB</returns>
         public static RocksDBCore Open(Options config)
         {
-            var families = new ColumnFamilies
+            var families = new ColumnFamilies();
+
+            for (int x = 0; x <= byte.MaxValue; x++)
             {
-                { DATA_Block_Name, new ColumnFamilyOptions() },
-                { DATA_Transaction_Name, new ColumnFamilyOptions() },
-
-                { IX_CurrentBlock_Name, new ColumnFamilyOptions() },
-                { IX_CurrentHeader_Name, new ColumnFamilyOptions() },
-                { IX_HeaderHashList_Name, new ColumnFamilyOptions() },
-
-                { ST_Contract_Name, new ColumnFamilyOptions() },
-                { ST_Storage_Name, new ColumnFamilyOptions() },
-
-                { SYS_Version_Name, new ColumnFamilyOptions() }
-            };
+                families.Add(new ColumnFamilies.Descriptor(x.ToString(), new ColumnFamilyOptions()));
+            }
 
             return new RocksDBCore(RocksDb.Open(config.Build(), config.FilePath, families));
         }
@@ -153,6 +116,7 @@ namespace Neo.Storage.RocksDB
         {
             // Drop the column family
             _rocksDb.DropColumnFamily(familiy.Name);
+
             // The handle is invalid now, require to obtains a new column family
             familiy.Handle = new ColumnFamily(_rocksDb, familiy.Name).Handle;
         }

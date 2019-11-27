@@ -33,6 +33,6 @@ namespace Neo.Storage.RocksDB
         /// Get store
         /// </summary>
         /// <returns>RocksDbStore</returns>
-        public Store GetStore() => _store;
+        public IStore GetStore() => _store;
     }
 }

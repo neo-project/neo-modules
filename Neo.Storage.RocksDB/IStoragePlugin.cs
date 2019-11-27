@@ -6,6 +6,6 @@ namespace Neo.Storage.RocksDB
 
     public interface IStoragePlugin
     {
-        Store GetStore();
+        IStore GetStore();
     }
 }
