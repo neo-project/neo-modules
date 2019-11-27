@@ -32,10 +32,9 @@ namespace Neo.Storage.RocksDB
             batch.Delete(key, db.Families[table].Handle);
         }
 
-        public void Dispose()
+        public void Put(byte table, byte[] key, byte[] value)
         {
-            snapshot.Dispose();
-            batch.Dispose();
+            batch.Put(key, value, db.Families[table].Handle);
         }
 
         public IEnumerable<(byte[] Key, byte[] Value)> Find(byte table, byte[] prefix)
@@ -43,16 +42,17 @@ namespace Neo.Storage.RocksDB
             return db.Find(db.Families[table], options, prefix, (k, v) => (k, v));
         }
 
-        public void Put(byte table, byte[] key, byte[] value)
-        {
-            batch.Put(key, value, db.Families[table].Handle);
-        }
-
         public byte[] TryGet(byte table, byte[] key)
         {
             if (!db.TryGet(db.Families[table], options, key, out var value))
                 return null;
             return value;
+        }
+
+        public void Dispose()
+        {
+            snapshot.Dispose();
+            batch.Dispose();
         }
     }
 }
