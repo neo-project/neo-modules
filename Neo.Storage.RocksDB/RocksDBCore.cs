@@ -1,5 +1,7 @@
 ﻿using RocksDbSharp;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Neo.Storage.RocksDB
 {
@@ -69,6 +71,21 @@ namespace Neo.Storage.RocksDB
         public void Dispose()
         {
             _rocksDb.Dispose();
+        }
+
+        internal IEnumerable<T> Find<T>(ColumnFamily family, ReadOptions options, byte[] prefix, Func<byte[], byte[], T> resultSelector)
+        {
+            using (var it = _rocksDb.NewIterator(family.Handle, options))
+            {
+                for (it.Seek(prefix); it.Valid(); it.Next())
+                {
+                    var key = it.Key();
+                    byte[] y = prefix;
+                    if (key.Length < y.Length) break;
+                    if (!key.Take(y.Length).SequenceEqual(y)) break;
+                    yield return resultSelector(key, it.Value());
+                }
+            }
         }
 
         public void Delete(ColumnFamily family, WriteOptions options, byte[] key)
