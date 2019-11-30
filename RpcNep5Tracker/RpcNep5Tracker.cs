@@ -219,7 +219,7 @@ namespace Neo.Plugins
                 if (++resultCount > _maxResults) break;
                 JObject transfer = new JObject();
                 transfer["timestamp"] = transferPair.Key.TimestampMS;
-                transfer["asset_hash"] = transferPair.Key.AssetScriptHash.ToArray().Reverse().ToArray().ToHexString();
+                transfer["asset_hash"] = transferPair.Key.AssetScriptHash.ToString();
                 transfer["transfer_address"] = transferPair.Value.UserScriptHash.ToAddress();
                 transfer["amount"] = transferPair.Value.Amount.ToString();
                 transfer["block_index"] = transferPair.Value.BlockIndex;
