@@ -219,12 +219,12 @@ namespace Neo.Plugins
                 if (++resultCount > _maxResults) break;
                 JObject transfer = new JObject();
                 transfer["timestamp"] = transferPair.Key.TimestampMS;
-                transfer["asset_hash"] = transferPair.Key.AssetScriptHash.ToArray().Reverse().ToHexString();
+                transfer["asset_hash"] = transferPair.Key.AssetScriptHash.ToArray().Reverse().ToArray().ToHexString();
                 transfer["transfer_address"] = transferPair.Value.UserScriptHash.ToAddress();
                 transfer["amount"] = transferPair.Value.Amount.ToString();
                 transfer["block_index"] = transferPair.Value.BlockIndex;
                 transfer["transfer_notify_index"] = transferPair.Key.BlockXferNotificationIndex;
-                transfer["tx_hash"] = transferPair.Value.TxHash.ToArray().Reverse().ToHexString();
+                transfer["tx_hash"] = transferPair.Value.TxHash.ToArray().Reverse().ToArray().ToHexString();
                 parentJArray.Add(transfer);
             }
         }
@@ -268,7 +268,7 @@ namespace Neo.Plugins
             foreach (var (key, value) in dbCache.Find(prefix))
             {
                 JObject balance = new JObject();
-                balance["asset_hash"] = key.AssetScriptHash.ToArray().Reverse().ToHexString();
+                balance["asset_hash"] = key.AssetScriptHash.ToArray().Reverse().ToArray().ToHexString();
                 balance["amount"] = value.Balance.ToString();
                 balance["last_updated_block"] = value.LastUpdatedBlock;
                 balances.Add(balance);
