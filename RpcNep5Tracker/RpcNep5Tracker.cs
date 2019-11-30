@@ -224,7 +224,7 @@ namespace Neo.Plugins
                 transfer["amount"] = transferPair.Value.Amount.ToString();
                 transfer["block_index"] = transferPair.Value.BlockIndex;
                 transfer["transfer_notify_index"] = transferPair.Key.BlockXferNotificationIndex;
-                transfer["tx_hash"] = transferPair.Value.TxHash.ToArray().Reverse().ToArray().ToHexString();
+                transfer["tx_hash"] = transferPair.Value.TxHash.ToString();
                 parentJArray.Add(transfer);
             }
         }
