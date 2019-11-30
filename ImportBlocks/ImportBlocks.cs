@@ -2,7 +2,6 @@
 using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
-using Neo.Persistence;
 using System;
 using System.IO;
 
@@ -82,7 +81,7 @@ namespace Neo.Plugins
                 fs.Seek(0, SeekOrigin.End);
                 for (uint i = start; i <= end; i++)
                 {
-                    Block block = Blockchain.Singleton.Store.GetBlock(i);
+                    Block block = Blockchain.Singleton.GetBlock(i);
                     byte[] array = block.ToArray();
                     fs.Write(BitConverter.GetBytes(array.Length), 0, sizeof(int));
                     fs.Write(array, 0, array.Length);
