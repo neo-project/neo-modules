@@ -1,7 +1,6 @@
 ﻿using RocksDbSharp;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Neo.Storage.RocksDB
 {
@@ -82,7 +81,7 @@ namespace Neo.Storage.RocksDB
                     var key = it.Key();
                     byte[] y = prefix;
                     if (key.Length < y.Length) break;
-                    if (!key.Take(y.Length).SequenceEqual(y)) break;
+                    if (!key.AsSpan().StartsWith(y)) break;
                     yield return resultSelector(key, it.Value());
                 }
             }

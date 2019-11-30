@@ -15,7 +15,6 @@ namespace Neo.Storage.RocksDB
         public RocksDbPlugin()
         {
             Settings.Load(GetConfiguration());
-
             _store = new RocksDBStore(Settings.Default.Path);
         }
 
