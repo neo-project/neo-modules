@@ -3,12 +3,12 @@ using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.RPC;
+using Neo.Persistence;
 using Neo.VM;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Snapshot = Neo.Persistence.Snapshot;
 
 namespace Neo.Plugins
 {
@@ -45,7 +45,7 @@ namespace Neo.Plugins
         {
         }
 
-        public void OnPersist(Snapshot snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             WriteBatch writeBatch = new WriteBatch();
 
@@ -83,7 +83,7 @@ namespace Neo.Plugins
             db.Write(WriteOptions.Default, writeBatch);
         }
 
-        public void OnCommit(Snapshot snapshot)
+        public void OnCommit(StoreView snapshot)
         {
         }
 

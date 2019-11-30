@@ -2,7 +2,6 @@
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
-using Neo.Persistence;
 
 namespace Neo.Plugins
 {
@@ -18,9 +17,8 @@ namespace Neo.Plugins
             {
                 case "getmetricblocktimestamp":
                     {
-
                         uint nBlocks = (uint)_params[0].AsNumber();
-                        uint lastHeight = _params.Count >= 2 ? lastHeight = (uint)_params[1].AsNumber() : 0;
+                        uint lastHeight = _params.Count >= 2 ? (uint)_params[1].AsNumber() : 0;
                         return GetBlocksTime(nBlocks, lastHeight);
                     }
                 default:
@@ -60,18 +58,18 @@ namespace Neo.Plugins
                 JObject json = new JObject();
                 return json["error"] = "Requested number of blocks timestamps " + nBlocks + " exceeds quantity of known blocks " + Blockchain.Singleton.Height;
             }
-            
+
             if (nBlocks == 0)
             {
                 JObject json = new JObject();
                 return json["error"] = "Requested number of block times can not be = 0";
             }
-            
+
             JArray array = new JArray();
             uint heightToBegin = lastHeight > 0 ? lastHeight - nBlocks : (Blockchain.Singleton.Height - 1) - nBlocks;
             for (uint i = heightToBegin; i <= heightToBegin + nBlocks; i++)
             {
-                Header header = Blockchain.Singleton.Store.GetHeader(i);
+                Header header = Blockchain.Singleton.GetHeader(i);
                 if (header == null) break;
 
                 JObject json = new JObject();
