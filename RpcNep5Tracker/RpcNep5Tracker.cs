@@ -268,7 +268,7 @@ namespace Neo.Plugins
             foreach (var (key, value) in dbCache.Find(prefix))
             {
                 JObject balance = new JObject();
-                balance["asset_hash"] = key.AssetScriptHash.ToArray().Reverse().ToArray().ToHexString();
+                balance["asset_hash"] = key.AssetScriptHash.ToString();
                 balance["amount"] = value.Balance.ToString();
                 balance["last_updated_block"] = value.LastUpdatedBlock;
                 balances.Add(balance);
