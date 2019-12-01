@@ -25,32 +25,46 @@ namespace Neo.Plugins
 
         protected override void AddInternal(TKey key, TValue value)
         {
-            batch?.Put(prefix, key, value);
+            batch?.Put(CreateKey(prefix, key), value.ToArray());
+        }
+
+        private static byte[] CreateKey(byte prefix, byte[] key = null)
+        {
+            if (key is null) return new[] { prefix };
+            byte[] buffer = new byte[1 + key.Length];
+            buffer[0] = prefix;
+            Buffer.BlockCopy(key, 0, buffer, 1, key.Length);
+            return buffer;
+        }
+
+        private static byte[] CreateKey(byte prefix, ISerializable key)
+        {
+            return CreateKey(prefix, key.ToArray());
         }
 
         protected override void DeleteInternal(TKey key)
         {
-            batch?.Delete(prefix, key);
+            batch?.Delete(CreateKey(prefix, key));
         }
 
         protected override IEnumerable<(TKey, TValue)> FindInternal(byte[] key_prefix)
         {
-            return db.Find(options, SliceBuilder.Begin(prefix).Add(key_prefix), (k, v) => (k.ToArray().AsSerializable<TKey>(1), v.ToArray().AsSerializable<TValue>()));
+            return db.Find(options, CreateKey(prefix, key_prefix), (k, v) => (k.AsSerializable<TKey>(1), v.AsSerializable<TValue>()));
         }
 
         protected override TValue GetInternal(TKey key)
         {
-            return db.Get<TValue>(options, prefix, key);
+            return TryGetInternal(key) ?? throw new InvalidOperationException();
         }
 
         protected override TValue TryGetInternal(TKey key)
         {
-            return db.TryGet<TValue>(options, prefix, key);
+            return db.Get(options, CreateKey(prefix, key))?.AsSerializable<TValue>();
         }
 
         protected override void UpdateInternal(TKey key, TValue value)
         {
-            batch?.Put(prefix, key, value);
+            batch?.Put(CreateKey(prefix, key), value.ToArray());
         }
     }
 }

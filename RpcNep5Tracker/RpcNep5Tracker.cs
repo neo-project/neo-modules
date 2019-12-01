@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Neo.IO;
 using Neo.IO.Caching;
 using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
@@ -214,17 +215,17 @@ namespace Neo.Plugins
                 prefix.Concat(endTimeBytes).ToArray());
 
             int resultCount = 0;
-            foreach (var transferPair in transferPairs)
+            foreach (var (key, value) in transferPairs)
             {
                 if (++resultCount > _maxResults) break;
                 JObject transfer = new JObject();
-                transfer["timestamp"] = transferPair.Key.TimestampMS;
-                transfer["asset_hash"] = transferPair.Key.AssetScriptHash.ToString();
-                transfer["transfer_address"] = transferPair.Value.UserScriptHash.ToAddress();
-                transfer["amount"] = transferPair.Value.Amount.ToString();
-                transfer["block_index"] = transferPair.Value.BlockIndex;
-                transfer["transfer_notify_index"] = transferPair.Key.BlockXferNotificationIndex;
-                transfer["tx_hash"] = transferPair.Value.TxHash.ToString();
+                transfer["timestamp"] = key.TimestampMS;
+                transfer["asset_hash"] = key.AssetScriptHash.ToString();
+                transfer["transfer_address"] = value.UserScriptHash.ToAddress();
+                transfer["amount"] = value.Amount.ToString();
+                transfer["block_index"] = value.BlockIndex;
+                transfer["transfer_notify_index"] = key.BlockXferNotificationIndex;
+                transfer["tx_hash"] = value.TxHash.ToString();
                 parentJArray.Add(transfer);
             }
         }
