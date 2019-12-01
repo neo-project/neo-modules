@@ -1,6 +1,8 @@
 ﻿using RocksDbSharp;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Neo.Storage.RocksDB
 {
@@ -8,8 +10,8 @@ namespace Neo.Storage.RocksDB
     {
         #region Families
 
-        internal readonly ColumnFamily[] Families = new ColumnFamily[byte.MaxValue + 1];
-        internal readonly ColumnFamily DefaultFamily;
+        private readonly Dictionary<byte, ColumnFamily> _families = new Dictionary<byte, ColumnFamily>();
+        public readonly ColumnFamily DefaultFamily;
 
         #endregion
 
@@ -28,12 +30,7 @@ namespace Neo.Storage.RocksDB
         {
             _rocksDb = db ?? throw new NullReferenceException(nameof(db));
 
-            // Get column families
-
-            for (int x = 0; x <= byte.MaxValue; x++)
-            {
-                Families[x] = new ColumnFamily(db, x.ToString());
-            }
+            // Get default column families
 
             DefaultFamily = new ColumnFamily("", _rocksDb.GetDefaultColumnFamily());
         }
@@ -128,13 +125,40 @@ namespace Neo.Storage.RocksDB
             _rocksDb.Write(batch, options);
         }
 
-        public void Clear(ColumnFamily familiy)
+        #region Families
+
+        /// <summary>
+        /// Get family
+        /// </summary>
+        /// <param name="table">Table</param>
+        /// <returns>Return column family</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ColumnFamily GetFamily(byte table)
+        {
+            if (!_families.TryGetValue(table, out var family))
+            {
+                family = new ColumnFamily(_rocksDb, table.ToString());
+                _families.Add(table, family);
+            }
+
+            return family;
+        }
+
+        /// <summary>
+        /// Drop column family
+        /// </summary>
+        /// <param name="family">Family</param>
+        public void DropFamily(ColumnFamily family)
         {
             // Drop the column family
-            _rocksDb.DropColumnFamily(familiy.Name);
+
+            _rocksDb.DropColumnFamily(family.Name);
 
             // The handle is invalid now, require to obtains a new column family
-            familiy.Handle = new ColumnFamily(_rocksDb, familiy.Name).Handle;
+
+            _families.Where(u => u.Value.Name == family.Name).All(u => _families.Remove(u.Key));
         }
+
+        #endregion
     }
 }

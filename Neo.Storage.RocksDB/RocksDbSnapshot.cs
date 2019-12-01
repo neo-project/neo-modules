@@ -29,22 +29,22 @@ namespace Neo.Storage.RocksDB
 
         public void Delete(byte table, byte[] key)
         {
-            batch.Delete(key, db.Families[table].Handle);
+            batch.Delete(key, db.GetFamily(table).Handle);
         }
 
         public void Put(byte table, byte[] key, byte[] value)
         {
-            batch.Put(key, value, db.Families[table].Handle);
+            batch.Put(key, value, db.GetFamily(table).Handle);
         }
 
         public IEnumerable<(byte[] Key, byte[] Value)> Find(byte table, byte[] prefix)
         {
-            return db.Find(db.Families[table], options, prefix, (k, v) => (k, v));
+            return db.Find(db.GetFamily(table), options, prefix, (k, v) => (k, v));
         }
 
         public byte[] TryGet(byte table, byte[] key)
         {
-            if (!db.TryGet(db.Families[table], options, key, out var value))
+            if (!db.TryGet(db.GetFamily(table), options, key, out var value))
                 return null;
             return value;
         }

@@ -26,11 +26,11 @@ namespace Neo.Storage.RocksDB
                 var options = new ReadOptions();
                 options.SetFillCache(false);
 
-                // Clean entries
+                // Clean all families
 
-                foreach (var family in db.Families)
+                for (int x = 0; x <= byte.MaxValue; x++)
                 {
-                    db.Clear(family);
+                    db.DropFamily(db.GetFamily((byte)x));
                 }
 
                 // Update version
@@ -52,29 +52,29 @@ namespace Neo.Storage.RocksDB
 
         public IEnumerable<(byte[] Key, byte[] Value)> Find(byte table, byte[] prefix)
         {
-            return db.Find(db.Families[table], Options.ReadDefault, prefix, (k, v) => (k, v));
+            return db.Find(db.GetFamily(table), Options.ReadDefault, prefix, (k, v) => (k, v));
         }
 
         public byte[] TryGet(byte table, byte[] key)
         {
-            if (!db.TryGet(db.Families[table], Options.ReadDefault, key, out var value))
+            if (!db.TryGet(db.GetFamily(table), Options.ReadDefault, key, out var value))
                 return null;
             return value;
         }
 
         public void Delete(byte table, byte[] key)
         {
-            db.Delete(db.Families[table], Options.WriteDefault, key);
+            db.Delete(db.GetFamily(table), Options.WriteDefault, key);
         }
 
         public void Put(byte table, byte[] key, byte[] value)
         {
-            db.Put(db.Families[table], Options.WriteDefault, key, value);
+            db.Put(db.GetFamily(table), Options.WriteDefault, key, value);
         }
 
         public void PutSync(byte table, byte[] key, byte[] value)
         {
-            db.Put(db.Families[table], Options.WriteDefaultSync, key, value);
+            db.Put(db.GetFamily(table), Options.WriteDefaultSync, key, value);
         }
     }
 }
