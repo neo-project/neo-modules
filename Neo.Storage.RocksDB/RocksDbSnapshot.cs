@@ -2,7 +2,7 @@
 using RocksDbSharp;
 using System.Collections.Generic;
 
-namespace Neo.Storage.RocksDB
+namespace Neo.Plugins.Storage
 {
     internal class RocksDbSnapshot : ISnapshot
     {

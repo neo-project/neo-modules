@@ -1,6 +1,6 @@
 ﻿using RocksDbSharp;
 
-namespace Neo.Storage.RocksDB
+namespace Neo.Plugins.Storage
 {
     public class Options
     {

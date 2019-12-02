@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Neo.Storage.RocksDB
+namespace Neo.Plugins.Storage
 {
     [DebuggerDisplay("Name={Name}, Handle={Handle.Handle}")]
     public class ColumnFamily

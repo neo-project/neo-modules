@@ -1,7 +1,6 @@
 ﻿using Neo.Persistence;
-using Neo.Plugins;
 
-namespace Neo.Storage.RocksDB
+namespace Neo.Plugins.Storage
 {
     public class RocksDbPlugin : Plugin, IStoragePlugin
     {

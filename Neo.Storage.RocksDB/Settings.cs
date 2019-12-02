@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace Neo.Storage.RocksDB
+namespace Neo.Plugins.Storage
 {
     internal class Settings
     {

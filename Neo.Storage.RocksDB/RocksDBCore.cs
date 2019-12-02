@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace Neo.Storage.RocksDB
+namespace Neo.Plugins.Storage
 {
     public class RocksDBCore : IDisposable
     {
