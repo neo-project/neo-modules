@@ -1,80 +1,34 @@
 ﻿using Neo.Persistence;
-using RocksDbSharp;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
 
 namespace Neo.Plugins.Storage
 {
-    public class RocksDBStore : IStore
+    public class RocksDBStore : Plugin, IStoragePlugin
     {
-        private const byte SYS_Version = 0xf0;
-        private readonly RocksDBCore db;
+        private readonly Store _store;
 
-        public RocksDBStore(string path)
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public RocksDBStore()
         {
-            db = RocksDBCore.Open(new Options { CreateIfMissing = true, FilePath = path });
-
-            if (db.TryGet(db.DefaultFamily, Options.ReadDefault, new byte[] { SYS_Version }, out var value) &&
-                Version.TryParse(value.ToString(), out Version version) &&
-                version >= Version.Parse("2.9.1"))
-                return;
-
-            using (var batch = new WriteBatch())
-            {
-                var options = new ReadOptions();
-                options.SetFillCache(false);
-
-                // Clean all families
-
-                for (int x = 0; x <= byte.MaxValue; x++)
-                {
-                    db.DropFamily(db.GetFamily((byte)x));
-                }
-
-                // Update version
-
-                db.Put(db.DefaultFamily, Options.WriteDefault, new byte[0], Encoding.UTF8.GetBytes(Assembly.GetExecutingAssembly().GetName().Version.ToString()));
-                db.Write(Options.WriteDefault, batch);
-            }
+            Settings.Load(GetConfiguration());
+            _store = new Store(Settings.Default.Path);
         }
 
-        public void Dispose()
+        /// <summary>
+        /// Configure
+        /// </summary>
+        public override void Configure()
         {
-            db.Dispose();
+            // Can't configure the path because NeoSystem store in cache some values
+
+            Settings.Load(GetConfiguration());
         }
 
-        public ISnapshot GetSnapshot()
-        {
-            return new RocksDbSnapshot(db);
-        }
-
-        public IEnumerable<(byte[] Key, byte[] Value)> Find(byte table, byte[] prefix)
-        {
-            return db.Find(db.GetFamily(table), Options.ReadDefault, prefix, (k, v) => (k, v));
-        }
-
-        public byte[] TryGet(byte table, byte[] key)
-        {
-            if (!db.TryGet(db.GetFamily(table), Options.ReadDefault, key, out var value))
-                return null;
-            return value;
-        }
-
-        public void Delete(byte table, byte[] key)
-        {
-            db.Delete(db.GetFamily(table), Options.WriteDefault, key);
-        }
-
-        public void Put(byte table, byte[] key, byte[] value)
-        {
-            db.Put(db.GetFamily(table), Options.WriteDefault, key, value);
-        }
-
-        public void PutSync(byte table, byte[] key, byte[] value)
-        {
-            db.Put(db.GetFamily(table), Options.WriteDefaultSync, key, value);
-        }
+        /// <summary>
+        /// Get store
+        /// </summary>
+        /// <returns>RocksDbStore</returns>
+        public IStore GetStore() => _store;
     }
 }
