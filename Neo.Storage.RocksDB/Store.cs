@@ -18,7 +18,7 @@ namespace Neo.Plugins.Storage
 
             if (db.TryGet(db.DefaultFamily, Options.ReadDefault, new byte[] { SYS_Version }, out var value) &&
                 Version.TryParse(value.ToString(), out Version version) &&
-                version >= Version.Parse("2.9.1"))
+                version >= Version.Parse("3.0.0"))
                 return;
 
             using (var batch = new WriteBatch())
