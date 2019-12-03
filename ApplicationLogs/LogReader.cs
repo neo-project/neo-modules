@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Neo.IO;
 using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Ledger;
@@ -9,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Neo.Plugins
 {
@@ -36,7 +38,8 @@ namespace Neo.Plugins
         {
             if (method != "getapplicationlog") return null;
             UInt256 hash = UInt256.Parse(_params[0].AsString());
-            if (!db.TryGet(ReadOptions.Default, hash.ToArray(), out Slice value))
+            byte[] value = db.Get(ReadOptions.Default, hash.ToArray());
+            if (value is null)
                 throw new RpcException(-100, "Unknown transaction");
             return JObject.Parse(value.ToString());
         }
@@ -78,7 +81,7 @@ namespace Neo.Plugins
                     }
                     return notification;
                 }).ToArray();
-                writeBatch.Put((appExec.Transaction?.Hash ?? snapshot.PersistingBlock.Hash).ToArray(), json.ToString());
+                writeBatch.Put((appExec.Transaction?.Hash ?? snapshot.PersistingBlock.Hash).ToArray(), Encoding.UTF8.GetBytes(json.ToString()));
             }
             db.Write(WriteOptions.Default, writeBatch);
         }
