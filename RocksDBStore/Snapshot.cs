@@ -5,15 +5,15 @@ using System.Collections.Generic;
 
 namespace Neo.Plugins.Storage
 {
-    internal class RocksDbSnapshot : ISnapshot
+    internal class Snapshot : ISnapshot
     {
         private readonly Store store;
         private readonly RocksDb db;
-        private readonly Snapshot snapshot;
+        private readonly RocksDbSharp.Snapshot snapshot;
         private readonly WriteBatch batch;
         private readonly ReadOptions options;
 
-        public RocksDbSnapshot(Store store, RocksDb db)
+        public Snapshot(Store store, RocksDb db)
         {
             this.store = store;
             this.db = db;

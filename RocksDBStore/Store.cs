@@ -63,7 +63,7 @@ namespace Neo.Plugins.Storage
 
         public ISnapshot GetSnapshot()
         {
-            return new RocksDbSnapshot(this, db);
+            return new Snapshot(this, db);
         }
 
         public IEnumerable<(byte[] Key, byte[] Value)> Find(byte table, byte[] prefix)
