@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 
 namespace Neo.Plugins.Storage
 {
@@ -10,7 +10,7 @@ namespace Neo.Plugins.Storage
 
         private Settings(IConfigurationSection section)
         {
-            this.Path = string.Format(section.GetSection("Path").Value, ProtocolSettings.Default.Magic.ToString("X8"));
+            this.Path = string.Format(section.GetSection("Path").Value ?? "Data_RocksDB_{0}", ProtocolSettings.Default.Magic.ToString("X8"));
         }
 
         public static void Load(IConfigurationSection section)

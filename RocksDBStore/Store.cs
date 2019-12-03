@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Neo.Plugins.Storage
 {
@@ -28,10 +29,7 @@ namespace Neo.Plugins.Storage
 
             // Clean all families
 
-            for (int x = 0; x <= byte.MaxValue; x++)
-            {
-                db.DropColumnFamily(x.ToString());
-            }
+            Parallel.For(0, byte.MaxValue + 1, (x) => db.DropColumnFamily(x.ToString()));
             _families.Clear();
 
             // Update version
