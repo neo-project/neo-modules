@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace Neo.Plugins
 {
     public class Logger : Plugin, ILogPlugin
     {
-        public override string Name => "SystemLogs";
+        public override string Name => "SystemLog";
 
         public override void Configure()
         {
