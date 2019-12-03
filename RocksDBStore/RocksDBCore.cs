@@ -1,4 +1,4 @@
-﻿using RocksDbSharp;
+using RocksDbSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,11 +14,6 @@ namespace Neo.Plugins.Storage
         public readonly ColumnFamily DefaultFamily;
 
         #endregion
-
-        static RocksDBCore()
-        {
-            Options.WriteDefaultSync.SetSync(true);
-        }
 
         private readonly RocksDb _rocksDb;
 

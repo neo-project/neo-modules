@@ -1,4 +1,4 @@
-﻿using RocksDbSharp;
+using RocksDbSharp;
 
 namespace Neo.Plugins.Storage
 {
@@ -9,7 +9,7 @@ namespace Neo.Plugins.Storage
         public static readonly Options Default = new Options();
         public static readonly ReadOptions ReadDefault = new ReadOptions();
         public static readonly WriteOptions WriteDefault = new WriteOptions();
-        public static readonly WriteOptions WriteDefaultSync = new WriteOptions();
+        public static readonly WriteOptions WriteDefaultSync = new WriteOptions().SetSync(true);
 
         #endregion
 
