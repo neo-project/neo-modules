@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreMetrics", "CoreMetrics\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SystemLog", "SystemLog\SystemLog.csproj", "{14DB62D5-0EA1-4A98-8656-1AA2D0345206}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neo.Storage.RocksDB", "Neo.Storage.RocksDB\Neo.Storage.RocksDB.csproj", "{0E2AAF05-C55A-4B36-8750-F55743FBE4B3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocksDBStore", "RocksDBStore\RocksDBStore.csproj", "{0E2AAF05-C55A-4B36-8750-F55743FBE4B3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
