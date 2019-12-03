@@ -18,6 +18,10 @@ namespace neo_plugins.Tests
             TestStorage(new Neo.Plugins.Storage.RocksDBStore());
         }
 
+        /// <summary>
+        /// Test Put/Delete/TryGet
+        /// </summary>
+        /// <param name="plugin">Plugin</param>
         private void TestStorage(IStoragePlugin plugin)
         {
             using (var store = plugin.GetStore())
