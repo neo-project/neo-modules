@@ -3,39 +3,40 @@ using RocksDbSharp;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Neo.Plugins.Storage
 {
     internal class Store : IStore
     {
-        private const byte SYS_Version = 0xf0;
-        private readonly RocksDBCore db;
+        private static readonly byte[] SYS_Version = { 0xf0 };
+        private readonly RocksDb db;
+        private readonly Dictionary<byte, ColumnFamilyHandle> _families = new Dictionary<byte, ColumnFamilyHandle>();
 
         public Store(string path)
         {
-            db = RocksDBCore.Open(path);
+            var families = new ColumnFamilies();
+            for (int x = 0; x <= byte.MaxValue; x++)
+                families.Add(new ColumnFamilies.Descriptor(x.ToString(), new ColumnFamilyOptions()));
+            db = RocksDb.Open(Options.Default, path, families);
 
-            if (db.TryGet(db.DefaultFamily, Options.ReadDefault, new byte[] { SYS_Version }, out var value) &&
-                Version.TryParse(value.ToString(), out Version version) &&
-                version >= Version.Parse("3.0.0"))
+            ColumnFamilyHandle defaultFamily = db.GetDefaultColumnFamily();
+            byte[] value = db.Get(SYS_Version, defaultFamily, Options.ReadDefault);
+            if (value != null && Version.TryParse(Encoding.ASCII.GetString(value), out Version version) && version >= Version.Parse("3.0.0"))
                 return;
-
-            using var batch = new WriteBatch();
-            var options = new ReadOptions();
-            options.SetFillCache(false);
 
             // Clean all families
 
             for (int x = 0; x <= byte.MaxValue; x++)
             {
-                db.DropFamily(db.GetFamily((byte)x));
+                db.DropColumnFamily(x.ToString());
             }
+            _families.Clear();
 
             // Update version
 
-            db.Put(db.DefaultFamily, Options.WriteDefault, new byte[0], Encoding.UTF8.GetBytes(Assembly.GetExecutingAssembly().GetName().Version.ToString()));
-            db.Write(Options.WriteDefault, batch);
+            db.Put(SYS_Version, Encoding.ASCII.GetBytes(Assembly.GetExecutingAssembly().GetName().Version.ToString()), defaultFamily, Options.WriteDefault);
         }
 
         public void Dispose()
@@ -43,36 +44,59 @@ namespace Neo.Plugins.Storage
             db.Dispose();
         }
 
+        /// <summary>
+        /// Get family
+        /// </summary>
+        /// <param name="table">Table</param>
+        /// <returns>Return column family</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ColumnFamilyHandle GetFamily(byte table)
+        {
+            if (!_families.TryGetValue(table, out var family))
+            {
+                family = db.GetColumnFamily(table.ToString());
+                _families.Add(table, family);
+            }
+
+            return family;
+        }
+
         public ISnapshot GetSnapshot()
         {
-            return new RocksDbSnapshot(db);
+            return new RocksDbSnapshot(this, db);
         }
 
         public IEnumerable<(byte[] Key, byte[] Value)> Find(byte table, byte[] prefix)
         {
-            return db.Find(db.GetFamily(table), Options.ReadDefault, prefix, (k, v) => (k, v));
+            using var it = db.NewIterator(GetFamily(table), Options.ReadDefault);
+            for (it.Seek(prefix); it.Valid(); it.Next())
+            {
+                var key = it.Key();
+                byte[] y = prefix;
+                if (key.Length < y.Length) break;
+                if (!key.AsSpan().StartsWith(y)) break;
+                yield return (key, it.Value());
+            }
         }
 
         public byte[] TryGet(byte table, byte[] key)
         {
-            if (!db.TryGet(db.GetFamily(table), Options.ReadDefault, key, out var value))
-                return null;
-            return value;
+            return db.Get(key, GetFamily(table), Options.ReadDefault);
         }
 
         public void Delete(byte table, byte[] key)
         {
-            db.Delete(db.GetFamily(table), Options.WriteDefault, key);
+            db.Remove(key, GetFamily(table), Options.WriteDefault);
         }
 
         public void Put(byte table, byte[] key, byte[] value)
         {
-            db.Put(db.GetFamily(table), Options.WriteDefault, key, value);
+            db.Put(key, value, GetFamily(table), Options.WriteDefault);
         }
 
         public void PutSync(byte table, byte[] key, byte[] value)
         {
-            db.Put(db.GetFamily(table), Options.WriteDefaultSync, key, value);
+            db.Put(key, value, GetFamily(table), Options.WriteDefaultSync);
         }
     }
 }
