@@ -1,4 +1,4 @@
-﻿using Neo.Persistence;
+using Neo.Persistence;
 using RocksDbSharp;
 using System;
 using System.Collections.Generic;
@@ -14,30 +14,28 @@ namespace Neo.Plugins.Storage
 
         public Store(string path)
         {
-            db = RocksDBCore.Open(new Options { CreateIfMissing = true, FilePath = path });
+            db = RocksDBCore.Open(path);
 
             if (db.TryGet(db.DefaultFamily, Options.ReadDefault, new byte[] { SYS_Version }, out var value) &&
                 Version.TryParse(value.ToString(), out Version version) &&
                 version >= Version.Parse("3.0.0"))
                 return;
 
-            using (var batch = new WriteBatch())
+            using var batch = new WriteBatch();
+            var options = new ReadOptions();
+            options.SetFillCache(false);
+
+            // Clean all families
+
+            for (int x = 0; x <= byte.MaxValue; x++)
             {
-                var options = new ReadOptions();
-                options.SetFillCache(false);
-
-                // Clean all families
-
-                for (int x = 0; x <= byte.MaxValue; x++)
-                {
-                    db.DropFamily(db.GetFamily((byte)x));
-                }
-
-                // Update version
-
-                db.Put(db.DefaultFamily, Options.WriteDefault, new byte[0], Encoding.UTF8.GetBytes(Assembly.GetExecutingAssembly().GetName().Version.ToString()));
-                db.Write(Options.WriteDefault, batch);
+                db.DropFamily(db.GetFamily((byte)x));
             }
+
+            // Update version
+
+            db.Put(db.DefaultFamily, Options.WriteDefault, new byte[0], Encoding.UTF8.GetBytes(Assembly.GetExecutingAssembly().GetName().Version.ToString()));
+            db.Write(Options.WriteDefault, batch);
         }
 
         public void Dispose()

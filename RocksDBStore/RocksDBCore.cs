@@ -33,18 +33,9 @@ namespace Neo.Plugins.Storage
         /// <summary>
         /// Open database
         /// </summary>
-        /// <returns>DB</returns>
-        public static RocksDBCore Open()
-        {
-            return Open(Options.Default);
-        }
-
-        /// <summary>
-        /// Open database
-        /// </summary>
         /// <param name="config">Configuration</param>
         /// <returns>DB</returns>
-        public static RocksDBCore Open(Options config)
+        public static RocksDBCore Open(string path, DbOptions options = null)
         {
             var families = new ColumnFamilies();
 
@@ -53,7 +44,7 @@ namespace Neo.Plugins.Storage
                 families.Add(new ColumnFamilies.Descriptor(x.ToString(), new ColumnFamilyOptions()));
             }
 
-            return new RocksDBCore(RocksDb.Open(config.Build(), config.FilePath, families));
+            return new RocksDBCore(RocksDb.Open(options ?? Options.Default, path, families));
         }
 
         /// <summary>
@@ -66,16 +57,14 @@ namespace Neo.Plugins.Storage
 
         internal IEnumerable<T> Find<T>(ColumnFamily family, ReadOptions options, byte[] prefix, Func<byte[], byte[], T> resultSelector)
         {
-            using (var it = _rocksDb.NewIterator(family.Handle, options))
+            using var it = _rocksDb.NewIterator(family.Handle, options);
+            for (it.Seek(prefix); it.Valid(); it.Next())
             {
-                for (it.Seek(prefix); it.Valid(); it.Next())
-                {
-                    var key = it.Key();
-                    byte[] y = prefix;
-                    if (key.Length < y.Length) break;
-                    if (!key.AsSpan().StartsWith(y)) break;
-                    yield return resultSelector(key, it.Value());
-                }
+                var key = it.Key();
+                byte[] y = prefix;
+                if (key.Length < y.Length) break;
+                if (!key.AsSpan().StartsWith(y)) break;
+                yield return resultSelector(key, it.Value());
             }
         }
 
