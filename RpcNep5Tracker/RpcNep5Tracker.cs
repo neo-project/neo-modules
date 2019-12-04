@@ -12,9 +12,9 @@ using Neo.VM;
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Numerics;
+using static System.IO.Path;
 
 namespace Neo.Plugins
 {
@@ -33,12 +33,12 @@ namespace Neo.Plugins
         private uint _maxResults;
         private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
 
-        public override void Configure()
+        protected override void Configure()
         {
             if (_db == null)
             {
                 var dbPath = GetConfiguration().GetSection("DBPath").Value ?? "Nep5BalanceData";
-                _db = DB.Open(Path.GetFullPath(dbPath), new Options { CreateIfMissing = true });
+                _db = DB.Open(GetFullPath(dbPath), new Options { CreateIfMissing = true });
             }
             _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
             _recordNullAddressHistory = (GetConfiguration().GetSection("RecordNullAddressHistory").Value ?? false.ToString()) != false.ToString();

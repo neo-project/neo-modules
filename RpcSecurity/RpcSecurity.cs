@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Neo.IO.Json;
 using Neo.Network.RPC;
 using System;
@@ -9,7 +9,7 @@ namespace Neo.Plugins
 {
     public class RpcSecurity : Plugin, IRpcPlugin
     {
-        public override void Configure()
+        protected override void Configure()
         {
             Settings.Load(GetConfiguration());
         }

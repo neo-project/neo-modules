@@ -1,4 +1,4 @@
-﻿using Neo.Persistence;
+using Neo.Persistence;
 
 namespace Neo.Plugins.Storage
 {
@@ -6,7 +6,7 @@ namespace Neo.Plugins.Storage
     {
         private string path;
 
-        public override void Configure()
+        protected override void Configure()
         {
             path = string.Format(GetConfiguration().GetSection("Path").Value, ProtocolSettings.Default.Magic.ToString("X8"));
         }

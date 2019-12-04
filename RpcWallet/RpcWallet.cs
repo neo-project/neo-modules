@@ -20,7 +20,7 @@ namespace Neo.Plugins
     {
         private Wallet Wallet => System.RpcServer.Wallet;
 
-        public override void Configure()
+        protected override void Configure()
         {
             Settings.Load(GetConfiguration());
         }

@@ -1,4 +1,4 @@
-﻿using Akka.Actor;
+using Akka.Actor;
 using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
@@ -11,7 +11,7 @@ namespace Neo.Plugins
     {
         private IActorRef _blockImporter;
 
-        public override void Configure()
+        protected override void Configure()
         {
             Settings.Load(GetConfiguration());
         }
