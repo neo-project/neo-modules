@@ -20,6 +20,9 @@ jobs:
       run: |
         dotnet tool install --tool-path ./ dotnet-format
         ./dotnet-format --check --dry-run -v diagnostic
+    - name: Install dependencies
+      run: |
+        apt-get --assume-yes install libsnappy-dev libc6-dev
     - name: Test
       run: |
         find tests -name *.csproj | xargs -I % dotnet add % package coverlet.msbuild
