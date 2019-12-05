@@ -4,17 +4,6 @@ namespace Neo.Plugins.Storage
 {
     public class RocksDBStore : Plugin, IStoragePlugin
     {
-        private readonly Store _store;
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        public RocksDBStore()
-        {
-            Settings.Load(GetConfiguration());
-            _store = new Store(Settings.Default.Path);
-        }
-
         /// <summary>
         /// Configure
         /// </summary>
@@ -27,6 +16,6 @@ namespace Neo.Plugins.Storage
         /// Get store
         /// </summary>
         /// <returns>RocksDbStore</returns>
-        public IStore GetStore() => _store;
+        public IStore GetStore() => new Store(Settings.Default.Path);
     }
 }
