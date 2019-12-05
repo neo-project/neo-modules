@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 namespace Neo.IO.Data.LevelDB
 {
@@ -66,7 +67,7 @@ namespace Neo.IO.Data.LevelDB
 
         public static DB Open(string name, Options options)
         {
-            IntPtr handle = Native.leveldb_open(options.handle, name, out IntPtr error);
+            IntPtr handle = Native.leveldb_open(options.handle, Path.GetFullPath(name), out IntPtr error);
             NativeHelper.CheckError(error);
             return new DB(handle);
         }
