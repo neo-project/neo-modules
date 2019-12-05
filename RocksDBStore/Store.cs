@@ -32,11 +32,7 @@ namespace Neo.Plugins.Storage
 
             if (value != null)
             {
-                Parallel.For(0, byte.MaxValue + 1, (x) =>
-                {
-                    db.DropColumnFamily(x.ToString());
-                    db.CreateColumnFamily(new ColumnFamilyOptions(), x.ToString());
-                });
+                Parallel.For(0, byte.MaxValue + 1, (x) => db.DropColumnFamily(x.ToString()));
                 _families.Clear();
             }
 
@@ -60,8 +56,20 @@ namespace Neo.Plugins.Storage
         {
             if (!_families.TryGetValue(table, out var family))
             {
-                family = db.GetColumnFamily(table.ToString());
-                _families.Add(table, family);
+                try
+                {
+                    // Try to find the family
+
+                    family = db.GetColumnFamily(table.ToString());
+                    _families.Add(table, family);
+                }
+                catch (KeyNotFoundException)
+                {
+                    // Try to create the family
+
+                    family = db.CreateColumnFamily(new ColumnFamilyOptions(), table.ToString());
+                    _families.Add(table, family);
+                }
             }
 
             return family;
