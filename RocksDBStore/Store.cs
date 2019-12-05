@@ -20,7 +20,7 @@ namespace Neo.Plugins.Storage
             var families = new ColumnFamilies();
             for (int x = 0; x <= byte.MaxValue; x++)
                 families.Add(new ColumnFamilies.Descriptor(x.ToString(), new ColumnFamilyOptions()));
-            db = RocksDb.Open(Options.Default, path, families);
+            db = RocksDb.Open(Options.Default, Path.GetFullPath(path), families);
 
             ColumnFamilyHandle defaultFamily = db.GetDefaultColumnFamily();
             byte[] value = db.Get(SYS_Version, defaultFamily, Options.ReadDefault);
