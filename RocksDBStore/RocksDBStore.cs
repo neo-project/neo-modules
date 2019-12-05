@@ -1,4 +1,4 @@
-﻿using Neo.Persistence;
+using Neo.Persistence;
 
 namespace Neo.Plugins.Storage
 {
@@ -20,8 +20,6 @@ namespace Neo.Plugins.Storage
         /// </summary>
         public override void Configure()
         {
-            // Can't configure the path because NeoSystem store in cache some values
-
             Settings.Load(GetConfiguration());
         }
 
