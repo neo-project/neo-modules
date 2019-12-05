@@ -1,4 +1,4 @@
-﻿using Neo.IO;
+using Neo.IO;
 using Neo.IO.Caching;
 using Neo.IO.Json;
 using Neo.Ledger;
@@ -14,7 +14,7 @@ namespace Neo.Plugins
     {
         private readonly JArray bs_cache = new JArray();
 
-        public override void Configure()
+        protected override void Configure()
         {
             Settings.Load(GetConfiguration());
         }

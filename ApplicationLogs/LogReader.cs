@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Neo.IO;
 using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
@@ -8,9 +8,9 @@ using Neo.Persistence;
 using Neo.VM;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
+using static System.IO.Path;
 
 namespace Neo.Plugins
 {
@@ -22,10 +22,10 @@ namespace Neo.Plugins
 
         public LogReader()
         {
-            db = DB.Open(Path.GetFullPath(Settings.Default.Path), new Options { CreateIfMissing = true });
+            db = DB.Open(GetFullPath(Settings.Default.Path), new Options { CreateIfMissing = true });
         }
 
-        public override void Configure()
+        protected override void Configure()
         {
             Settings.Load(GetConfiguration());
         }

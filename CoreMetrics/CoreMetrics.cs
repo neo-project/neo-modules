@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
@@ -7,7 +7,7 @@ namespace Neo.Plugins
 {
     public class CoreMetrics : Plugin, IRpcPlugin
     {
-        public override void Configure() { }
+        protected override void Configure() { }
 
         public void PreProcess(HttpContext context, string method, JArray _params) { }
 
