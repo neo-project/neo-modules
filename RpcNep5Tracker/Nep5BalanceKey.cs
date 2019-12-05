@@ -62,8 +62,8 @@ namespace Neo.Plugins
 
         public void Deserialize(BinaryReader reader)
         {
-            ((ISerializable) UserScriptHash).Deserialize(reader);
-            ((ISerializable) AssetScriptHash).Deserialize(reader);
+            ((ISerializable)UserScriptHash).Deserialize(reader);
+            ((ISerializable)AssetScriptHash).Deserialize(reader);
         }
     }
 }

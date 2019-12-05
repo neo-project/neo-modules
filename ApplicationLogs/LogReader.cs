@@ -1,14 +1,16 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
+using Neo.IO;
 using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.RPC;
+using Neo.Persistence;
 using Neo.VM;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using Snapshot = Neo.Persistence.Snapshot;
+using System.Text;
+using static System.IO.Path;
 
 namespace Neo.Plugins
 {
@@ -20,10 +22,10 @@ namespace Neo.Plugins
 
         public LogReader()
         {
-            db = DB.Open(Path.GetFullPath(Settings.Default.Path), new Options { CreateIfMissing = true });
+            db = DB.Open(GetFullPath(Settings.Default.Path), new Options { CreateIfMissing = true });
         }
 
-        public override void Configure()
+        protected override void Configure()
         {
             Settings.Load(GetConfiguration());
         }
@@ -36,16 +38,17 @@ namespace Neo.Plugins
         {
             if (method != "getapplicationlog") return null;
             UInt256 hash = UInt256.Parse(_params[0].AsString());
-            if (!db.TryGet(ReadOptions.Default, hash.ToArray(), out Slice value))
+            byte[] value = db.Get(ReadOptions.Default, hash.ToArray());
+            if (value is null)
                 throw new RpcException(-100, "Unknown transaction");
-            return JObject.Parse(value.ToString());
+            return JObject.Parse(Encoding.UTF8.GetString(value));
         }
 
         public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
         {
         }
 
-        public void OnPersist(Snapshot snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             WriteBatch writeBatch = new WriteBatch();
 
@@ -78,12 +81,12 @@ namespace Neo.Plugins
                     }
                     return notification;
                 }).ToArray();
-                writeBatch.Put((appExec.Transaction?.Hash ?? snapshot.PersistingBlock.Hash).ToArray(), json.ToString());
+                writeBatch.Put((appExec.Transaction?.Hash ?? snapshot.PersistingBlock.Hash).ToArray(), Encoding.UTF8.GetBytes(json.ToString()));
             }
             db.Write(WriteOptions.Default, writeBatch);
         }
 
-        public void OnCommit(Snapshot snapshot)
+        public void OnCommit(StoreView snapshot)
         {
         }
 

@@ -1,18 +1,19 @@
-﻿using System;
+using System;
 using System.IO;
+using static System.IO.Path;
 
 namespace Neo.Plugins
 {
     public class Logger : Plugin, ILogPlugin
     {
-        public override string Name => "SystemLogs";
+        public override string Name => "SystemLog";
 
-        public override void Configure()
+        protected override void Configure()
         {
             Settings.Load(GetConfiguration());
         }
 
-        public new void Log(string source, LogLevel level, string message)
+        void ILogPlugin.Log(string source, LogLevel level, string message)
         {
             lock (typeof(Logger))
             {
@@ -38,9 +39,9 @@ namespace Neo.Plugins
 
                 if (!string.IsNullOrEmpty(Settings.Default.Path))
                 {
-                    var path = Path.Combine(Settings.Default.Path, source);
+                    var path = Combine(Settings.Default.Path, source);
                     Directory.CreateDirectory(path);
-                    path = Path.Combine(path, $"{now:yyyy-MM-dd}.log");
+                    path = Combine(path, $"{now:yyyy-MM-dd}.log");
                     File.AppendAllLines(path, new[] { $"[{level}]{log}" });
                 }
             }

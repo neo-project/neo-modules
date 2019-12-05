@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Neo.IO;
 using Neo.IO.Caching;
 using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
@@ -6,17 +7,14 @@ using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC;
 using Neo.Persistence;
-using Neo.Persistence.LevelDB;
 using Neo.SmartContract;
 using Neo.VM;
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Text;
-using Snapshot = Neo.Persistence.Snapshot;
+using static System.IO.Path;
 
 namespace Neo.Plugins
 {
@@ -35,12 +33,12 @@ namespace Neo.Plugins
         private uint _maxResults;
         private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
 
-        public override void Configure()
+        protected override void Configure()
         {
             if (_db == null)
             {
                 var dbPath = GetConfiguration().GetSection("DBPath").Value ?? "Nep5BalanceData";
-                _db = DB.Open(Path.GetFullPath(dbPath), new Options { CreateIfMissing = true });
+                _db = DB.Open(GetFullPath(dbPath), new Options { CreateIfMissing = true });
             }
             _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
             _recordNullAddressHistory = (GetConfiguration().GetSection("RecordNullAddressHistory").Value ?? false.ToString()) != false.ToString();
@@ -63,11 +61,11 @@ namespace Neo.Plugins
             }
         }
 
-        private void RecordTransferHistory(Snapshot snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
+        private void RecordTransferHistory(StoreView snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
         {
             if (!_shouldTrackHistory) return;
 
-            Header header = snapshot.GetHeader(snapshot.Height);
+            Header header = snapshot.GetHeader(snapshot.CurrentBlockHash);
 
             if (_recordNullAddressHistory || from != UInt160.Zero)
             {
@@ -95,14 +93,14 @@ namespace Neo.Plugins
             transferIndex++;
         }
 
-        private void HandleNotification(Snapshot snapshot, Transaction transaction, UInt160 scriptHash,
+        private void HandleNotification(StoreView snapshot, Transaction transaction, UInt160 scriptHash,
             VM.Types.Array stateItems,
             Dictionary<Nep5BalanceKey, Nep5Balance> nep5BalancesChanged, ref ushort transferIndex)
         {
             if (stateItems.Count == 0) return;
             // Event name should be encoded as a byte array.
             if (!(stateItems[0] is VM.Types.ByteArray)) return;
-            var eventName = Encoding.UTF8.GetString(stateItems[0].GetByteArray());
+            var eventName = stateItems[0].GetString();
             if (eventName != "Transfer") return;
             if (stateItems.Count < 4) return;
 
@@ -113,9 +111,9 @@ namespace Neo.Plugins
             var amountItem = stateItems[3];
             if (!(amountItem is VM.Types.ByteArray || amountItem is VM.Types.Integer))
                 return;
-            byte[] fromBytes = stateItems[1]?.GetByteArray();
+            byte[] fromBytes = stateItems[1]?.GetSpan().ToArray();
             if (fromBytes?.Length != 20) fromBytes = null;
-            byte[] toBytes = stateItems[2]?.GetByteArray();
+            byte[] toBytes = stateItems[2]?.GetSpan().ToArray();
             if (toBytes?.Length != 20) toBytes = null;
             if (fromBytes == null && toBytes == null) return;
             var from = new UInt160(fromBytes);
@@ -135,7 +133,7 @@ namespace Neo.Plugins
             RecordTransferHistory(snapshot, scriptHash, from, to, amountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
         }
 
-        public void OnPersist(Snapshot snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             // Start freshly with a new DBCache for each block.
             ResetBatch();
@@ -183,7 +181,7 @@ namespace Neo.Plugins
             }
         }
 
-        public void OnCommit(Snapshot snapshot)
+        public void OnCommit(StoreView snapshot)
         {
             _balances.Commit();
             if (_shouldTrackHistory)
@@ -217,17 +215,17 @@ namespace Neo.Plugins
                 prefix.Concat(endTimeBytes).ToArray());
 
             int resultCount = 0;
-            foreach (var transferPair in transferPairs)
+            foreach (var (key, value) in transferPairs)
             {
                 if (++resultCount > _maxResults) break;
                 JObject transfer = new JObject();
-                transfer["timestamp"] = transferPair.Key.TimestampMS;
-                transfer["asset_hash"] = transferPair.Key.AssetScriptHash.ToArray().Reverse().ToHexString();
-                transfer["transfer_address"] = transferPair.Value.UserScriptHash.ToAddress();
-                transfer["amount"] = transferPair.Value.Amount.ToString();
-                transfer["block_index"] = transferPair.Value.BlockIndex;
-                transfer["transfer_notify_index"] = transferPair.Key.BlockXferNotificationIndex;
-                transfer["tx_hash"] = transferPair.Value.TxHash.ToArray().Reverse().ToHexString();
+                transfer["timestamp"] = key.TimestampMS;
+                transfer["asset_hash"] = key.AssetScriptHash.ToString();
+                transfer["transfer_address"] = value.UserScriptHash.ToAddress();
+                transfer["amount"] = value.Amount.ToString();
+                transfer["block_index"] = value.BlockIndex;
+                transfer["transfer_notify_index"] = key.BlockXferNotificationIndex;
+                transfer["tx_hash"] = value.TxHash.ToString();
                 parentJArray.Add(transfer);
             }
         }
@@ -268,12 +266,12 @@ namespace Neo.Plugins
             json["address"] = userScriptHash.ToAddress();
             var dbCache = new DbCache<Nep5BalanceKey, Nep5Balance>(_db, null, null, Nep5BalancePrefix);
             byte[] prefix = userScriptHash.ToArray();
-            foreach (var storageKeyValuePair in dbCache.Find(prefix))
+            foreach (var (key, value) in dbCache.Find(prefix))
             {
                 JObject balance = new JObject();
-                balance["asset_hash"] = storageKeyValuePair.Key.AssetScriptHash.ToArray().Reverse().ToHexString();
-                balance["amount"] = storageKeyValuePair.Value.Balance.ToString();
-                balance["last_updated_block"] = storageKeyValuePair.Value.LastUpdatedBlock;
+                balance["asset_hash"] = key.AssetScriptHash.ToString();
+                balance["amount"] = value.Balance.ToString();
+                balance["last_updated_block"] = value.LastUpdatedBlock;
                 balances.Add(balance);
             }
             return json;

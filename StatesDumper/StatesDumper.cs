@@ -1,4 +1,4 @@
-﻿using Neo.IO;
+using Neo.IO;
 using Neo.IO.Caching;
 using Neo.IO.Json;
 using Neo.Ledger;
@@ -14,12 +14,12 @@ namespace Neo.Plugins
     {
         private readonly JArray bs_cache = new JArray();
 
-        public override void Configure()
+        protected override void Configure()
         {
             Settings.Load(GetConfiguration());
         }
 
-        private static void Dump<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> states)
+        private static void Dump<TKey, TValue>(IEnumerable<(TKey Key, TValue Value)> states)
             where TKey : ISerializable
             where TValue : ISerializable
         {
@@ -39,14 +39,12 @@ namespace Neo.Plugins
         {
             if (!(message is string[] args)) return false;
             if (args.Length == 0) return false;
-            switch (args[0].ToLower())
+            return (args[0].ToLower()) switch
             {
-                case "help":
-                    return OnHelp(args);
-                case "dump":
-                    return OnDump(args);
-            }
-            return false;
+                "help" => OnHelp(args),
+                "dump" => OnDump(args),
+                _ => false,
+            };
         }
 
         private bool OnDump(string[] args)
@@ -56,8 +54,8 @@ namespace Neo.Plugins
             {
                 case "storage":
                     Dump(args.Length >= 3
-                        ? Blockchain.Singleton.Store.GetStorages().Find(UInt160.Parse(args[2]).ToArray())
-                        : Blockchain.Singleton.Store.GetStorages().Find());
+                        ? Blockchain.Singleton.View.Storages.Find(UInt160.Parse(args[2]).ToArray())
+                        : Blockchain.Singleton.View.Storages.Find());
                     return true;
                 default:
                     return false;
@@ -73,13 +71,13 @@ namespace Neo.Plugins
             return true;
         }
 
-        public void OnPersist(Snapshot snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
                 OnPersistStorage(snapshot);
         }
 
-        private void OnPersistStorage(Snapshot snapshot)
+        private void OnPersistStorage(StoreView snapshot)
         {
             uint blockIndex = snapshot.Height;
             if (blockIndex >= Settings.Default.HeightToBegin)
@@ -120,13 +118,13 @@ namespace Neo.Plugins
             }
         }
 
-        public void OnCommit(Snapshot snapshot)
+        public void OnCommit(StoreView snapshot)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
                 OnCommitStorage(snapshot);
         }
 
-        public void OnCommitStorage(Snapshot snapshot)
+        public void OnCommitStorage(StoreView snapshot)
         {
             uint blockIndex = snapshot.Height;
             if (bs_cache.Count > 0)
@@ -142,7 +140,7 @@ namespace Neo.Plugins
                 }
             }
         }
-        
+
         public bool ShouldThrowExceptionFromCommit(Exception ex)
         {
             Console.WriteLine($"Error writing States with StatesDumper.{Environment.NewLine}{ex}");
