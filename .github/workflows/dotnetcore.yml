@@ -20,10 +20,8 @@ jobs:
       run: |
         dotnet tool install --tool-path ./ dotnet-format
         ./dotnet-format --check --dry-run -v diagnostic
-    - name: Install dependencies
-      run: |
-        sudo apt-get --assume-yes install libleveldb-dev libsnappy-dev libc6-dev
     - name: Test
       run: |
+        sudo apt-get --assume-yes install libleveldb-dev libsnappy-dev libc6-dev
         find tests -name *.csproj | xargs -I % dotnet add % package coverlet.msbuild
         dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov
