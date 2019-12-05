@@ -41,7 +41,7 @@ namespace Neo.Plugins
             byte[] value = db.Get(ReadOptions.Default, hash.ToArray());
             if (value is null)
                 throw new RpcException(-100, "Unknown transaction");
-            return JObject.Parse(value.ToString());
+            return JObject.Parse(Encoding.UTF8.GetString(value));
         }
 
         public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
