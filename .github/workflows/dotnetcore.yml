@@ -22,7 +22,7 @@ jobs:
         ./dotnet-format --check --dry-run -v diagnostic
     - name: Install dependencies
       run: |
-        sudo apt-get --assume-yes install libsnappy-dev libc6-dev
+        sudo apt-get --assume-yes install libleveldb-dev libsnappy-dev libc6-dev
     - name: Test
       run: |
         find tests -name *.csproj | xargs -I % dotnet add % package coverlet.msbuild
