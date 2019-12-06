@@ -1,4 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neo.Persistence;
 using Neo.Plugins;
 
 namespace neo_plugins.Tests
@@ -9,22 +10,46 @@ namespace neo_plugins.Tests
         [TestMethod]
         public void TestLevelDb()
         {
-            TestStorage(new Neo.Plugins.Storage.LevelDBStore());
+            using (var plugin = new Neo.Plugins.Storage.LevelDBStore())
+            {
+                // Test all with the same store
+
+                TestStorage(plugin.GetStore());
+
+                // Test with different storages
+
+                TestPersistenceWrite(plugin.GetStore());
+                TestPersistenceRead(plugin.GetStore(), true);
+                TestPersistenceDelete(plugin.GetStore());
+                TestPersistenceRead(plugin.GetStore(), false);
+            }
         }
 
         [TestMethod]
         public void TestRocksDb()
         {
-            TestStorage(new Neo.Plugins.Storage.RocksDBStore());
+            using (var plugin = new Neo.Plugins.Storage.RocksDBStore())
+            {
+                // Test all with the same store
+
+                TestStorage(plugin.GetStore());
+
+                // Test with different storages
+
+                TestPersistenceWrite(plugin.GetStore());
+                TestPersistenceRead(plugin.GetStore(), true);
+                TestPersistenceDelete(plugin.GetStore());
+                TestPersistenceRead(plugin.GetStore(), false);
+            }
         }
 
         /// <summary>
         /// Test Put/Delete/TryGet
         /// </summary>
-        /// <param name="plugin">Plugin</param>
-        private void TestStorage(IStoragePlugin plugin)
+        /// <param name="store">Store</param>
+        private void TestStorage(IStore store)
         {
-            using (var store = plugin.GetStore())
+            using (store)
             {
                 var ret = store.TryGet(0, new byte[] { 0x01, 0x02 });
                 Assert.IsNull(ret);
@@ -40,6 +65,46 @@ namespace neo_plugins.Tests
 
                 ret = store.TryGet(0, new byte[] { 0x01, 0x02 });
                 Assert.IsNull(ret);
+            }
+        }
+
+        /// <summary>
+        /// Test Put
+        /// </summary>
+        /// <param name="store">Store</param>
+        private void TestPersistenceWrite(IStore store)
+        {
+            using (store)
+            {
+                store.Put(byte.MaxValue, new byte[] { 0x01, 0x02, 0x03 }, new byte[] { 0x04, 0x05, 0x06 });
+            }
+        }
+
+        /// <summary>
+        /// Test Put
+        /// </summary>
+        /// <param name="store">Store</param>
+        private void TestPersistenceDelete(IStore store)
+        {
+            using (store)
+            {
+                store.Delete(byte.MaxValue, new byte[] { 0x01, 0x02, 0x03 });
+            }
+        }
+
+        /// <summary>
+        /// Test Read
+        /// </summary>
+        /// <param name="store">Store</param>
+        /// <param name="shouldExist">Should exist</param>
+        private void TestPersistenceRead(IStore store, bool shouldExist)
+        {
+            using (store)
+            {
+                var ret = store.TryGet(byte.MaxValue, new byte[] { 0x01, 0x02, 0x03 });
+
+                if (shouldExist) CollectionAssert.AreEqual(new byte[] { 0x04, 0x05, 0x06 }, ret);
+                else Assert.IsNull(ret);
             }
         }
     }

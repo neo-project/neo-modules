@@ -44,6 +44,7 @@ namespace Neo.Plugins.Storage
         public void Dispose()
         {
             db.Dispose();
+            _families.Clear();
         }
 
         /// <summary>
