@@ -1,6 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Persistence;
-using Neo.Plugins;
 
 namespace neo_plugins.Tests
 {
