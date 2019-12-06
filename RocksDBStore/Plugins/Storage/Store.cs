@@ -28,10 +28,10 @@ namespace Neo.Plugins.Storage
             if (value != null && Version.TryParse(Encoding.ASCII.GetString(value), out Version version) && version >= Version.Parse("3.0.0"))
                 return;
 
-            // Clean all families only if the version are different
-
             if (value != null)
             {
+                // Clean all families only if the version are different
+
                 Parallel.For(0, byte.MaxValue + 1, (x) => db.DropColumnFamily(x.ToString()));
                 _families.Clear();
             }

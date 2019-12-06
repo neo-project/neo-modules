@@ -1,4 +1,4 @@
-﻿using Neo.IO.Data.LevelDB;
+using Neo.IO.Data.LevelDB;
 using Neo.Persistence;
 using System;
 using System.Collections.Generic;
@@ -18,15 +18,23 @@ namespace Neo.Plugins.Storage
             byte[] value = db.Get(ReadOptions.Default, Helper.CreateKey(SYS_Version));
             if (value != null && Version.TryParse(Encoding.ASCII.GetString(value), out Version version) && version >= Version.Parse("3.0.0"))
                 return;
+
             WriteBatch batch = new WriteBatch();
-            ReadOptions options = new ReadOptions { FillCache = false };
-            using (Iterator it = db.NewIterator(options))
+
+            if (value != null)
             {
-                for (it.SeekToFirst(); it.Valid(); it.Next())
+                // Clean all entries only if the version are different
+
+                ReadOptions options = new ReadOptions { FillCache = false };
+                using (Iterator it = db.NewIterator(options))
                 {
-                    batch.Delete(it.Key());
+                    for (it.SeekToFirst(); it.Valid(); it.Next())
+                    {
+                        batch.Delete(it.Key());
+                    }
                 }
             }
+
             db.Put(WriteOptions.Default, Helper.CreateKey(SYS_Version), Encoding.ASCII.GetBytes(Assembly.GetExecutingAssembly().GetName().Version.ToString()));
             db.Write(WriteOptions.Default, batch);
         }
