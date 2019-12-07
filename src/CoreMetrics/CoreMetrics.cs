@@ -1,35 +1,21 @@
-using Microsoft.AspNetCore.Http;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 
 namespace Neo.Plugins
 {
-    public class CoreMetrics : Plugin, IRpcPlugin
+    public class CoreMetrics : Plugin
     {
-        protected override void Configure() { }
-
-        public void PreProcess(HttpContext context, string method, JArray _params) { }
-
-        public JObject OnProcess(HttpContext context, string method, JArray _params)
+        public CoreMetrics()
         {
-            switch (method)
-            {
-                case "getmetricblocktimestamp":
-                    {
-                        uint nBlocks = (uint)_params[0].AsNumber();
-                        uint lastHeight = _params.Count >= 2 ? (uint)_params[1].AsNumber() : 0;
-                        return GetBlocksTime(nBlocks, lastHeight);
-                    }
-                default:
-                    return null;
-            }
+            RpcServer.RegisterMethods(this);
         }
 
-        public void PostProcess(HttpContext context, string method, JArray _params, JObject result) { }
-
-        private JObject GetBlocksTime(uint nBlocks, uint lastHeight)
+        [RpcMethod]
+        public JObject GetMetricBlockTimestamp(JArray _params)
         {
+            uint nBlocks = (uint)_params[0].AsNumber();
+            uint lastHeight = _params.Count >= 2 ? (uint)_params[1].AsNumber() : 0;
             // It is currently limited to query blocks generated in the last 24hours (86400 seconds)
             uint maxNBlocksPerDay = 86400 / (Blockchain.MillisecondsPerBlock / 1000);
             if (lastHeight != 0)
