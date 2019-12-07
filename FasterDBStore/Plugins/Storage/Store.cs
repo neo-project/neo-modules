@@ -85,11 +85,9 @@ namespace Neo.Plugins.Storage.Plugins.Storage
                 while (iterator.GetNext(out var info))
                 {
                     var key = iterator.GetKey().Key;
+                    if (!key.AsSpan().StartsWith(prefix)) break;
 
-                    if (!Unsafe.StartWith(key, prefix)) continue;
-
-                    var value = iterator.GetValue().Value;
-                    yield return (key, value);
+                    yield return (key, iterator.GetValue().Value);
                 }
             }
         }

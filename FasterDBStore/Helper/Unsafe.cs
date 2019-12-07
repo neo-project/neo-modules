@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 
 namespace Neo.Plugins.Storage.Helper
@@ -59,18 +58,6 @@ namespace Neo.Plugins.Storage.Helper
             }
 
             return ret;
-        }
-
-        internal static bool StartWith(byte[] key, byte[] prefix)
-        {
-            if (key.Length < prefix.Length) return false;
-
-            for (int x = prefix.Length - 1; x >= 0; x--)
-            {
-                if (key[x] != prefix[x]) return false;
-            }
-
-            return true;
         }
     }
 }
