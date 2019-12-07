@@ -8,7 +8,7 @@ namespace Neo.Plugins.Storage
 
         protected override void Configure()
         {
-            path = string.Format(GetConfiguration().GetSection("Path").Value, ProtocolSettings.Default.Magic.ToString("X8"));
+            path = string.Format(GetConfiguration().GetSection("Path").Value ?? "Data_LevelDB_{0}", ProtocolSettings.Default.Magic.ToString("X8"));
         }
 
         public IStore GetStore()
