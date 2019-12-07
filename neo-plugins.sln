@@ -3,31 +3,31 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28729.10
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationLogs", "ApplicationLogs\ApplicationLogs.csproj", "{84DA8EA6-EF60-4FCD-B1C6-65C1A8323B3F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationLogs", "src\ApplicationLogs\ApplicationLogs.csproj", "{84DA8EA6-EF60-4FCD-B1C6-65C1A8323B3F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcSecurity", "RpcSecurity\RpcSecurity.csproj", "{6800D782-8EC0-49E9-98C4-195C8F781A1F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcSecurity", "src\RpcSecurity\RpcSecurity.csproj", "{6800D782-8EC0-49E9-98C4-195C8F781A1F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StatesDumper", "StatesDumper\StatesDumper.csproj", "{86531DB1-A231-46C4-823F-BE60972F7523}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StatesDumper", "src\StatesDumper\StatesDumper.csproj", "{86531DB1-A231-46C4-823F-BE60972F7523}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImportBlocks", "ImportBlocks\ImportBlocks.csproj", "{B7A42984-57BB-4F8D-967B-23B0E841B726}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImportBlocks", "src\ImportBlocks\ImportBlocks.csproj", "{B7A42984-57BB-4F8D-967B-23B0E841B726}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcWallet", "RpcWallet\RpcWallet.csproj", "{EF32A7E5-EDF9-438C-8041-8DA6E675A7FD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcWallet", "src\RpcWallet\RpcWallet.csproj", "{EF32A7E5-EDF9-438C-8041-8DA6E675A7FD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcNep5Tracker", "RpcNep5Tracker\RpcNep5Tracker.csproj", "{BBE8AC15-12DF-4AF0-ABC1-F1557EB5DC8E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcNep5Tracker", "src\RpcNep5Tracker\RpcNep5Tracker.csproj", "{BBE8AC15-12DF-4AF0-ABC1-F1557EB5DC8E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreMetrics", "CoreMetrics\CoreMetrics.csproj", "{AEFFF003-3500-416B-AD9B-8C838C33C1F4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CoreMetrics", "src\CoreMetrics\CoreMetrics.csproj", "{AEFFF003-3500-416B-AD9B-8C838C33C1F4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SystemLog", "SystemLog\SystemLog.csproj", "{14DB62D5-0EA1-4A98-8656-1AA2D0345206}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SystemLog", "src\SystemLog\SystemLog.csproj", "{14DB62D5-0EA1-4A98-8656-1AA2D0345206}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LevelDBStore", "LevelDBStore\LevelDBStore.csproj", "{C66214CD-0B97-4EA5-B7A2-164F54346F19}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LevelDBStore", "src\LevelDBStore\LevelDBStore.csproj", "{C66214CD-0B97-4EA5-B7A2-164F54346F19}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocksDBStore", "RocksDBStore\RocksDBStore.csproj", "{0E2AAF05-C55A-4B36-8750-F55743FBE4B3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocksDBStore", "src\RocksDBStore\RocksDBStore.csproj", "{0E2AAF05-C55A-4B36-8750-F55743FBE4B3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{59D802AB-C552-422A-B9C3-64D329FBCDCC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neo-plugins.Tests", "tests\neo-plugins.Tests\neo-plugins.Tests.csproj", "{9E7EA895-302A-4C0C-BA9B-54F9A67AD75C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FasterDBStore", "FasterDBStore\FasterDBStore.csproj", "{852B2114-DB62-4814-BA47-2A5776BC8441}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FasterDBStore", "src\FasterDBStore\FasterDBStore.csproj", "{852B2114-DB62-4814-BA47-2A5776BC8441}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
