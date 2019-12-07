@@ -1,6 +1,5 @@
 using FASTER.core;
 using Neo.Persistence;
-using Neo.Plugins.Storage.Helper;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -43,18 +42,19 @@ namespace Neo.Plugins.Storage
             public void CheckpointCompletionCallback(Guid sessionId, long serialNum) { }
         }
 
+        internal readonly IDevice log, objlog;
         internal readonly FasterKV<BufferKey, BufferValue, Input, Output, Empty, FasterFunctions> db;
 
         public Store(string path)
         {
             path = Path.GetFullPath(path);
 
-            var log = Devices.CreateLogDevice(Path.Combine(path, "hlog.log"));
-            var objlog = Devices.CreateLogDevice(Path.Combine(path, "hlog.obj.log"));
+            log = Devices.CreateLogDevice(Path.Combine(path, "hlog.log"), deleteOnClose: false, recoverDevice: true);
+            objlog = Devices.CreateLogDevice(Path.Combine(path, "hlog.obj.log"), deleteOnClose: false, recoverDevice: true);
 
             db = new FasterKV<BufferKey, BufferValue, Input, Output, Empty, FasterFunctions>
                 (1L << 20, new FasterFunctions(),
-                new LogSettings { LogDevice = log, ObjectLogDevice = objlog, MemorySizeBits = 29 },
+                new LogSettings { LogDevice = log, ObjectLogDevice = objlog },
                 new CheckpointSettings { CheckpointDir = Path.Combine(path, "Snapshot"), CheckPointType = CheckpointType.Snapshot },
                 new SerializerSettings<BufferKey, BufferValue>
                 {
@@ -74,8 +74,12 @@ namespace Neo.Plugins.Storage
 
         public void Dispose()
         {
+            db.CompletePending(true);
             db.StopSession();
             db.Dispose();
+
+            log.Close();
+            objlog.Close();
         }
 
         public IEnumerable<(byte[] Key, byte[] Value)> Find(byte table, byte[] prefix)
