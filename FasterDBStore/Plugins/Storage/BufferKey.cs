@@ -26,7 +26,7 @@ namespace Neo.Plugins.Storage
 
         public long GetHashCode64(ref BufferKey key)
         {
-            return Table * Unsafe.GetHashCode(key.Key);
+            return Table + Unsafe.GetHashCode(key.Key);
         }
 
         public bool Equals(ref BufferKey key1, ref BufferKey key2)

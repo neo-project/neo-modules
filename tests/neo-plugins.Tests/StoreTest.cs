@@ -49,7 +49,7 @@ namespace neo_plugins.Tests
             {
                 // Test all with the same store
 
-                TestStorage(plugin.GetStore());
+                //TestStorage(plugin.GetStore());
 
                 // Test with different storages
 

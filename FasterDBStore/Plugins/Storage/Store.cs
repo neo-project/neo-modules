@@ -45,17 +45,19 @@ namespace Neo.Plugins.Storage
         internal readonly IDevice log, objlog;
         internal readonly FasterKV<BufferKey, BufferValue, Input, Output, Empty, FasterFunctions> db;
 
+        private readonly string StorePath;
+
         public Store(string path)
         {
-            path = Path.GetFullPath(path);
+            StorePath = path = Path.GetFullPath(path);
 
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
             }
 
-            log = Devices.CreateLogDevice(Path.Combine(path, "hlog.log"), preallocateFile: true, deleteOnClose: false, recoverDevice: true);
-            objlog = Devices.CreateLogDevice(Path.Combine(path, "hlog.obj.log"), preallocateFile: true, deleteOnClose: false, recoverDevice: true);
+            log = Devices.CreateLogDevice(Path.Combine(path, "hlog.log"), preallocateFile: false, deleteOnClose: false, recoverDevice: true);
+            objlog = Devices.CreateLogDevice(Path.Combine(path, "hlog.obj.log"), preallocateFile: false, deleteOnClose: false, recoverDevice: true);
 
             db = new FasterKV<BufferKey, BufferValue, Input, Output, Empty, FasterFunctions>
                 (1L << 20, new FasterFunctions(),
@@ -70,7 +72,19 @@ namespace Neo.Plugins.Storage
 
             // Each thread calls StartSession to register itself with FASTER
 
-            db.StartSession();
+            var uid = db.StartSession();
+
+            if (File.Exists(Path.Combine(path, "session.id")))
+            {
+                var data = new byte[16];
+                using (var file = File.OpenRead(Path.Combine(path, "session.id")))
+                {
+                    if (file.Read(data, 0, 16) == 16)
+                    {
+                        db.Recover(new Guid(data));
+                    }
+                }
+            }
         }
 
         public ISnapshot GetSnapshot()
@@ -83,13 +97,17 @@ namespace Neo.Plugins.Storage
             // Make sure operations are completed
             db.CompletePending(true);
 
+            db.TakeFullCheckpoint(out var uid);
+            db.CompleteCheckpoint(true);
+            File.WriteAllBytes(Path.Combine(StorePath, "session.id"), uid.ToByteArray());
+
             // Copy entire log to disk, but retain tail of log in memory
-            db.Log.Flush(true);
+            //db.Log.Flush(true);
 
             // Move entire log to disk and eliminate data from memory as 
             // well. This will serve workload entirely from disk using read cache if enabled.
             // This will *allow* future updates to the store.
-            db.Log.FlushAndEvict(true);
+            //db.Log.FlushAndEvict(true);
 
             // Move entire log to disk and eliminate data from memory as 
             // well. This will serve workload entirely from disk using read cache if enabled.
@@ -121,7 +139,10 @@ namespace Neo.Plugins.Storage
         {
             var k = new BufferKey(table, key);
 
-            db.Delete(ref k, Empty.Default, 0);
+            if (db.Delete(ref k, Empty.Default, 0) == Status.PENDING)
+            {
+                db.CompletePending(true);
+            }
         }
 
         public void Put(byte table, byte[] key, byte[] value)
@@ -129,7 +150,10 @@ namespace Neo.Plugins.Storage
             var k = new BufferKey(table, key);
             var v = new BufferValue(value);
 
-            db.Upsert(ref k, ref v, Empty.Default, 0);
+            if (db.Upsert(ref k, ref v, Empty.Default, 0) == Status.PENDING)
+            {
+                db.CompletePending(true);
+            }
         }
 
         public byte[] TryGet(byte table, byte[] key)
@@ -138,8 +162,16 @@ namespace Neo.Plugins.Storage
             var input = default(Input);
             var g1 = new Output();
 
-            if (db.Read(ref k, ref input, ref g1, Empty.Default, 0) == Status.OK)
+            var status = db.Read(ref k, ref input, ref g1, Empty.Default, 0);
+
+            if (status == Status.OK)
+            {
                 return g1.Value.Value;
+            }
+            else if (status == Status.PENDING)
+            {
+                db.CompletePending(true);
+            }
 
             return null;
         }
