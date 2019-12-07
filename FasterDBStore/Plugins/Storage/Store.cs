@@ -116,7 +116,7 @@ namespace Neo.Plugins.Storage
             if (db.Read(ref k, ref input, ref g1, Empty.Default, 0) == Status.OK)
                 return g1.Value.Value;
 
-            return new byte[0];
+            return null;
         }
     }
 }
