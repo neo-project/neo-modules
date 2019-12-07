@@ -27,13 +27,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LevelDBStore", "src\LevelDB
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocksDBStore", "src\RocksDBStore\RocksDBStore.csproj", "{0E2AAF05-C55A-4B36-8750-F55743FBE4B3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LevelDBStore", "src\LevelDBStore\LevelDBStore.csproj", "{C66214CD-0B97-4EA5-B7A2-164F54346F19}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocksDBStore", "src\RocksDBStore\RocksDBStore.csproj", "{0E2AAF05-C55A-4B36-8750-F55743FBE4B3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FasterDBStore", "src\FasterDBStore\FasterDBStore.csproj", "{852B2114-DB62-4814-BA47-2A5776BC8441}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neo-plugins.Tests", "tests\neo-plugins.Tests\neo-plugins.Tests.csproj", "{9E7EA895-302A-4C0C-BA9B-54F9A67AD75C}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FasterDBStore", "src\FasterDBStore\FasterDBStore.csproj", "{852B2114-DB62-4814-BA47-2A5776BC8441}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
