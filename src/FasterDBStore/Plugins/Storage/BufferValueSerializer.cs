@@ -7,14 +7,12 @@ namespace Neo.Plugins.Storage
     {
         public override void Serialize(ref BufferValue value)
         {
-            writer.WriteVarInt(value.Value.Length);
-            writer.Write(value.Value);
+            writer.WriteVarBytes(value.Value);
         }
 
         public override void Deserialize(ref BufferValue value)
         {
-            var length = (int)reader.ReadVarInt(BufferKeySerializer.MaxLength);
-            value.Value = reader.ReadBytes(length);
+            value.Value = reader.ReadVarBytes(BufferKeySerializer.MaxLength);
         }
     }
 }
