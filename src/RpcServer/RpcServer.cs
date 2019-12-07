@@ -21,18 +21,12 @@ namespace Neo.Plugins
 {
     public sealed partial class RpcServer : Plugin
     {
-        private readonly Dictionary<string, Func<JArray, JObject>> methods = new Dictionary<string, Func<JArray, JObject>>();
+        private static readonly Dictionary<string, Func<JArray, JObject>> methods = new Dictionary<string, Func<JArray, JObject>>();
         private IWebHost host;
 
         public RpcServer()
         {
-            foreach (MethodInfo method in typeof(RpcServer).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
-            {
-                RpcMethodAttribute attribute = method.GetCustomAttribute<RpcMethodAttribute>();
-                if (attribute is null) continue;
-                string name = string.IsNullOrEmpty(attribute.Name) ? method.Name.ToLowerInvariant() : attribute.Name;
-                methods[name] = (Func<JArray, JObject>)method.CreateDelegate(typeof(Func<JArray, JObject>), this);
-            }
+            RegisterMethods(this);
         }
 
         private bool CheckAuth(HttpContext context)
@@ -232,6 +226,17 @@ namespace Neo.Plugins
 #else
                 return CreateErrorResponse(request["id"], ex.HResult, ex.Message);
 #endif
+            }
+        }
+
+        public static void RegisterMethods(object handler)
+        {
+            foreach (MethodInfo method in handler.GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            {
+                RpcMethodAttribute attribute = method.GetCustomAttribute<RpcMethodAttribute>();
+                if (attribute is null) continue;
+                string name = string.IsNullOrEmpty(attribute.Name) ? method.Name.ToLowerInvariant() : attribute.Name;
+                methods[name] = (Func<JArray, JObject>)method.CreateDelegate(typeof(Func<JArray, JObject>), handler);
             }
         }
     }
