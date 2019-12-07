@@ -172,7 +172,7 @@ namespace neo_plugins.Tests
                 }
             }
 
-            // Try write during a snapshot
+            // Try to write during a snapshot
 
             using (var store = plugin.GetStore())
             {
