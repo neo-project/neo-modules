@@ -12,8 +12,12 @@ using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
+using Neo.Wallets.SQLite;
+using System;
+using System.IO;
 using System.Linq;
 using System.Numerics;
+using static System.IO.Path;
 
 namespace Neo.Plugins
 {
@@ -25,6 +29,13 @@ namespace Neo.Plugins
         {
             if (wallet is null)
                 throw new RpcException(-400, "Access denied");
+        }
+
+        [RpcMethod]
+        private JObject CloseWallet(JArray _params)
+        {
+            wallet = null;
+            return true;
         }
 
         [RpcMethod]
@@ -99,6 +110,32 @@ namespace Neo.Plugins
                 account["watchonly"] = p.WatchOnly;
                 return account;
             }).ToArray();
+        }
+
+        [RpcMethod]
+        private JObject OpenWallet(JArray _params)
+        {
+            string path = _params[0].AsString();
+            string password = _params[1].AsString();
+            if (!File.Exists(path)) throw new FileNotFoundException();
+            switch (GetExtension(path))
+            {
+                case ".db3":
+                    {
+                        wallet = UserWallet.Open(path, password);
+                        break;
+                    }
+                case ".json":
+                    {
+                        NEP6Wallet nep6wallet = new NEP6Wallet(path);
+                        nep6wallet.Unlock(password);
+                        wallet = nep6wallet;
+                        break;
+                    }
+                default:
+                    throw new NotSupportedException();
+            }
+            return true;
         }
 
         private void ProcessInvokeWithWallet(JObject result)

@@ -9,6 +9,6 @@
     "RpcPass": "",
     "MaxGasInvoke": 10,
     "MaxFee": 0.1,
-    "DisabledMethods": []
+    "DisabledMethods": [ "openwallet" ]
   }
 }
