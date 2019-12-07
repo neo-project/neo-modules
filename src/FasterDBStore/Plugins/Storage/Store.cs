@@ -3,32 +3,31 @@ using Neo.Persistence;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace Neo.Plugins.Storage
 {
     internal class Store : IStore
     {
-        public class Input
+        internal class Input
         {
             public byte[] Value;
         }
 
-        public class Output
+        internal class Output
         {
             public BufferValue Value;
         }
 
-        public class FasterFunctions : IFunctions<BufferKey, BufferValue, Input, Output, Empty>
+        internal class FasterFunctions : IFunctions<BufferKey, BufferValue, Input, Output, Empty>
         {
             public void InitialUpdater(ref BufferKey key, ref Input input, ref BufferValue value) => value.Value = input.Value;
             public void CopyUpdater(ref BufferKey key, ref Input input, ref BufferValue oldValue, ref BufferValue newValue) => newValue = oldValue;
             public bool InPlaceUpdater(ref BufferKey key, ref Input input, ref BufferValue value)
             {
-                // TODO: What is this
                 value.Value = input.Value;
                 return true;
             }
-
 
             public void SingleReader(ref BufferKey key, ref Input input, ref BufferValue value, ref Output dst) => dst.Value = value;
             public void SingleWriter(ref BufferKey key, ref BufferValue src, ref BufferValue dst) => dst = src;
@@ -42,10 +41,9 @@ namespace Neo.Plugins.Storage
             public void CheckpointCompletionCallback(Guid sessionId, long serialNum) { }
         }
 
-        internal readonly IDevice log, objlog;
-        internal readonly FasterKV<BufferKey, BufferValue, Input, Output, Empty, FasterFunctions> db;
-
         private readonly string StorePath;
+        private readonly IDevice log, objlog;
+        internal readonly FasterKV<BufferKey, BufferValue, Input, Output, Empty, FasterFunctions> db;
 
         public Store(string path)
         {
@@ -60,7 +58,7 @@ namespace Neo.Plugins.Storage
             objlog = Devices.CreateLogDevice(Path.Combine(path, "hlog.obj.log"), preallocateFile: false, deleteOnClose: false, recoverDevice: true);
 
             db = new FasterKV<BufferKey, BufferValue, Input, Output, Empty, FasterFunctions>
-                (1L << 20, new FasterFunctions(),
+                (1L << 20 /* TODO: I don't know a good value for this */, new FasterFunctions(),
                 new LogSettings { LogDevice = log, ObjectLogDevice = objlog },
                 new CheckpointSettings
                 {
@@ -85,12 +83,15 @@ namespace Neo.Plugins.Storage
                 {
                     if (file.Read(data, 0, 16) == 16)
                     {
+                        // Recover the last storage state
+
                         db.Recover(new Guid(data));
                     }
                 }
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ISnapshot GetSnapshot()
         {
             return new Snapshot(this);
@@ -175,6 +176,8 @@ namespace Neo.Plugins.Storage
             else if (status == Status.PENDING)
             {
                 db.CompletePending(true);
+
+                // TODO: shall we read it again?
             }
 
             return null;

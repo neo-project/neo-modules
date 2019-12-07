@@ -1,6 +1,7 @@
 using Neo.Persistence;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace Neo.Plugins.Storage
 {
@@ -17,6 +18,7 @@ namespace Neo.Plugins.Storage
             store.db.CompleteCheckpoint(true);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Commit()
         {
             checkpoint = Guid.Empty;
@@ -32,6 +34,7 @@ namespace Neo.Plugins.Storage
             checkpoint = Guid.Empty;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Delete(byte table, byte[] key)
         {
             store.Delete(table, key);
@@ -42,11 +45,13 @@ namespace Neo.Plugins.Storage
             return store.Find(table, prefix);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Put(byte table, byte[] key, byte[] value)
         {
             store.Put(table, key, value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte[] TryGet(byte table, byte[] key)
         {
             return store.TryGet(table, key);
