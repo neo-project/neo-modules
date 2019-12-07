@@ -42,6 +42,24 @@ namespace neo_plugins.Tests
             }
         }
 
+        [TestMethod]
+        public void TestFasterDb()
+        {
+            using (var plugin = new Neo.Plugins.Storage.FasterDBStore())
+            {
+                // Test all with the same store
+
+                TestStorage(plugin.GetStore());
+
+                // Test with different storages
+
+                TestPersistenceWrite(plugin.GetStore());
+                TestPersistenceRead(plugin.GetStore(), true);
+                TestPersistenceDelete(plugin.GetStore());
+                TestPersistenceRead(plugin.GetStore(), false);
+            }
+        }
+
         /// <summary>
         /// Test Put/Delete/TryGet
         /// </summary>
