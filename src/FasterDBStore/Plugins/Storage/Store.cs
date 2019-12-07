@@ -62,7 +62,11 @@ namespace Neo.Plugins.Storage
             db = new FasterKV<BufferKey, BufferValue, Input, Output, Empty, FasterFunctions>
                 (1L << 20, new FasterFunctions(),
                 new LogSettings { LogDevice = log, ObjectLogDevice = objlog },
-                new CheckpointSettings { CheckpointDir = Path.Combine(path, "Snapshot"), CheckPointType = CheckpointType.Snapshot },
+                new CheckpointSettings
+                {
+                    CheckpointDir = Path.Combine(path, "Snapshot"),
+                    CheckPointType = CheckpointType.Snapshot
+                },
                 new SerializerSettings<BufferKey, BufferValue>
                 {
                     keySerializer = () => new BufferKeySerializer(),

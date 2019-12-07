@@ -1,5 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Persistence;
+using Neo.Plugins;
 
 namespace neo_plugins.Tests
 {
@@ -13,14 +13,16 @@ namespace neo_plugins.Tests
             {
                 // Test all with the same store
 
-                TestStorage(plugin.GetStore());
+                TestStorage(plugin);
 
                 // Test with different storages
 
-                TestPersistenceWrite(plugin.GetStore());
-                TestPersistenceRead(plugin.GetStore(), true);
-                TestPersistenceDelete(plugin.GetStore());
-                TestPersistenceRead(plugin.GetStore(), false);
+                TestPersistenceWriteReadDelete(plugin);
+
+                // Test snapshot
+
+                TestPersistenceSnapshot(plugin, true);
+                TestPersistenceSnapshot(plugin, false);
             }
         }
 
@@ -31,14 +33,16 @@ namespace neo_plugins.Tests
             {
                 // Test all with the same store
 
-                TestStorage(plugin.GetStore());
+                TestStorage(plugin);
 
                 // Test with different storages
 
-                TestPersistenceWrite(plugin.GetStore());
-                TestPersistenceRead(plugin.GetStore(), true);
-                TestPersistenceDelete(plugin.GetStore());
-                TestPersistenceRead(plugin.GetStore(), false);
+                TestPersistenceWriteReadDelete(plugin);
+
+                // Test snapshot
+
+                TestPersistenceSnapshot(plugin, true);
+                TestPersistenceSnapshot(plugin, false);
             }
         }
 
@@ -49,24 +53,26 @@ namespace neo_plugins.Tests
             {
                 // Test all with the same store
 
-                //TestStorage(plugin.GetStore());
+                TestStorage(plugin);
 
                 // Test with different storages
 
-                TestPersistenceWrite(plugin.GetStore());
-                TestPersistenceRead(plugin.GetStore(), true);
-                TestPersistenceDelete(plugin.GetStore());
-                TestPersistenceRead(plugin.GetStore(), false);
+                TestPersistenceWriteReadDelete(plugin);
+
+                // Test snapshot
+
+                TestPersistenceSnapshot(plugin, true);
+                TestPersistenceSnapshot(plugin, false);
             }
         }
 
         /// <summary>
         /// Test Put/Delete/TryGet
         /// </summary>
-        /// <param name="store">Store</param>
-        private void TestStorage(IStore store)
+        /// <param name="plugin">Plugin</param>
+        private void TestStorage(IStoragePlugin plugin)
         {
-            using (store)
+            using (var store = plugin.GetStore())
             {
                 var ret = store.TryGet(0, new byte[] { 0x01, 0x02 });
                 Assert.IsNull(ret);
@@ -88,40 +94,82 @@ namespace neo_plugins.Tests
         /// <summary>
         /// Test Put
         /// </summary>
-        /// <param name="store">Store</param>
-        private void TestPersistenceWrite(IStore store)
+        /// <param name="plugin">Plugin</param>
+        private void TestPersistenceWriteReadDelete(IStoragePlugin plugin)
         {
-            using (store)
+            // Put
+
+            using (var store = plugin.GetStore())
             {
                 store.Put(byte.MaxValue, new byte[] { 0x01, 0x02, 0x03 }, new byte[] { 0x04, 0x05, 0x06 });
             }
-        }
 
-        /// <summary>
-        /// Test Put
-        /// </summary>
-        /// <param name="store">Store</param>
-        private void TestPersistenceDelete(IStore store)
-        {
-            using (store)
+            // Read
+
+            using (var store = plugin.GetStore())
+            {
+                var ret = store.TryGet(byte.MaxValue, new byte[] { 0x01, 0x02, 0x03 });
+                CollectionAssert.AreEqual(new byte[] { 0x04, 0x05, 0x06 }, ret);
+            }
+
+            // Delete
+
+            using (var store = plugin.GetStore())
             {
                 store.Delete(byte.MaxValue, new byte[] { 0x01, 0x02, 0x03 });
+            }
+
+            // Read
+
+            using (var store = plugin.GetStore())
+            {
+                var ret = store.TryGet(byte.MaxValue, new byte[] { 0x01, 0x02, 0x03 });
+                Assert.IsNull(ret);
             }
         }
 
         /// <summary>
-        /// Test Read
+        /// Test snapshot
         /// </summary>
-        /// <param name="store">Store</param>
-        /// <param name="shouldExist">Should exist</param>
-        private void TestPersistenceRead(IStore store, bool shouldExist)
+        /// <param name="plugin">Plugin</param>
+        /// <param name="commit">Commit</param>
+        private void TestPersistenceSnapshot(IStoragePlugin plugin, bool commit)
         {
-            using (store)
-            {
-                var ret = store.TryGet(byte.MaxValue, new byte[] { 0x01, 0x02, 0x03 });
+            var key = new byte[] { 0x01, 0x02, 0x03 };
+            var value = new byte[] { 0x04, 0x05, 0x06 };
 
-                if (shouldExist) CollectionAssert.AreEqual(new byte[] { 0x04, 0x05, 0x06 }, ret);
-                else Assert.IsNull(ret);
+            using (var store = plugin.GetStore())
+            {
+                store.Put(0x10, key, value);
+
+                using (var snapshot = store.GetSnapshot())
+                {
+                    store.Delete(0x10, key);
+                    if (commit) snapshot.Commit();
+                }
+
+                if (commit)
+                {
+                    Assert.IsNull(store.TryGet(0x10, key));
+                }
+                else
+                {
+                    CollectionAssert.AreEqual(value, store.TryGet(0x10, key));
+                }
+            }
+
+            // Repeat with other store
+
+            using (var store = plugin.GetStore())
+            {
+                if (commit)
+                {
+                    Assert.IsNull(store.TryGet(0x10, key));
+                }
+                else
+                {
+                    CollectionAssert.AreEqual(value, store.TryGet(0x10, key));
+                }
             }
         }
     }

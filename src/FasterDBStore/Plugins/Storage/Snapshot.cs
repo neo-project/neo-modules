@@ -12,18 +12,21 @@ namespace Neo.Plugins.Storage
         public Snapshot(Store store)
         {
             this.store = store;
-            store.db.TakeFullCheckpoint(out this.checkpoint);
+
+            store.db.TakeFullCheckpoint(out checkpoint);
+            store.db.CompleteCheckpoint(true);
         }
 
         public void Commit()
         {
-            store.db.CompleteCheckpoint(true);
             checkpoint = Guid.Empty;
         }
 
         public void Dispose()
         {
             if (checkpoint == Guid.Empty) return;
+
+            // Recover the checkpoint
 
             store.db.Recover(checkpoint);
             checkpoint = Guid.Empty;
