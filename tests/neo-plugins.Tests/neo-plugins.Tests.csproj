@@ -13,9 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\FasterDBStore\FasterDBStore.csproj" />
-    <ProjectReference Include="..\..\LevelDBStore\LevelDBStore.csproj" />
-    <ProjectReference Include="..\..\RocksDBStore\RocksDBStore.csproj" />
+    <ProjectReference Include="..\..\src\FasterDBStore\FasterDBStore.csproj" />
+    <ProjectReference Include="..\..\src\LevelDBStore\LevelDBStore.csproj" />
+    <ProjectReference Include="..\..\src\RocksDBStore\RocksDBStore.csproj" />
   </ItemGroup>
 
 </Project>
