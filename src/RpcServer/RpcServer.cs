@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
 using Neo.IO;
 using Neo.IO.Json;
-using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,7 +23,6 @@ namespace Neo.Plugins
     {
         private readonly Dictionary<string, Func<JArray, JObject>> methods = new Dictionary<string, Func<JArray, JObject>>();
         private IWebHost host;
-        private Wallet wallet;
 
         public RpcServer()
         {

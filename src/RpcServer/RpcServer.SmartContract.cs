@@ -66,6 +66,7 @@ namespace Neo.Plugins
             {
                 json["stack"] = "error: recursive reference";
             }
+            ProcessInvokeWithWallet(json);
             return json;
         }
 

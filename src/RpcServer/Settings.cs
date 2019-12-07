@@ -13,6 +13,7 @@ namespace Neo.Plugins
         public string SslCertPassword { get; }
         public string[] TrustedAuthorities { get; }
         public long MaxGasInvoke { get; }
+        public long MaxFee { get; }
 
         public static Settings Default { get; private set; }
 
@@ -24,6 +25,7 @@ namespace Neo.Plugins
             this.SslCertPassword = section.GetSection("SslCertPassword").Value;
             this.TrustedAuthorities = section.GetSection("TrustedAuthorities").GetChildren().Select(p => p.Get<string>()).ToArray();
             this.MaxGasInvoke = (long)BigDecimal.Parse(section.GetValue("MaxGasInvoke", "10"), NativeContract.GAS.Decimals).Value;
+            this.MaxFee = (long)BigDecimal.Parse(section.GetValue("MaxFee", "0.1"), NativeContract.GAS.Decimals).Value;
         }
 
         public static void Load(IConfigurationSection section)

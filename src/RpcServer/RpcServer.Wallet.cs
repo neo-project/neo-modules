@@ -1,11 +1,12 @@
+#pragma warning disable IDE0051
+#pragma warning disable IDE0060
+
 using Akka.Actor;
-using Microsoft.AspNetCore.Http;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
-using Neo.Network.RPC;
 using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
@@ -16,172 +17,65 @@ using System.Numerics;
 
 namespace Neo.Plugins
 {
-    public class RpcWallet : Plugin, IRpcPlugin
+    partial class RpcServer
     {
-        private Wallet Wallet => System.RpcServer.Wallet;
-
-        protected override void Configure()
-        {
-            Settings.Load(GetConfiguration());
-        }
-
-        public void PreProcess(HttpContext context, string method, JArray _params)
-        {
-        }
-
-        public JObject OnProcess(HttpContext context, string method, JArray _params)
-        {
-            switch (method)
-            {
-                case "dumpprivkey":
-                    {
-                        UInt160 scriptHash = _params[0].AsString().ToScriptHash();
-                        return DumpPrivKey(scriptHash);
-                    }
-                case "getbalance":
-                    {
-                        UInt160 asset_id = UInt160.Parse(_params[0].AsString());
-                        return GetBalance(asset_id);
-                    }
-                case "getnewaddress":
-                    {
-                        return GetNewAddress();
-                    }
-                case "getunclaimedgas":
-                    {
-                        return GetUnclaimedGas();
-                    }
-                case "importprivkey":
-                    {
-                        string privkey = _params[0].AsString();
-                        return ImportPrivKey(privkey);
-                    }
-                case "listaddress":
-                    {
-                        return ListAddress();
-                    }
-                case "sendfrom":
-                    {
-                        UInt160 assetId = UInt160.Parse(_params[0].AsString());
-                        UInt160 from = _params[1].AsString().ToScriptHash();
-                        UInt160 to = _params[2].AsString().ToScriptHash();
-                        string value = _params[3].AsString();
-                        return SendFrom(assetId, from, to, value);
-                    }
-                case "sendmany":
-                    {
-                        int to_start = 0;
-                        UInt160 from = null;
-                        if (_params[0] is JString)
-                        {
-                            from = _params[0].AsString().ToScriptHash();
-                            to_start = 1;
-                        }
-                        JArray to = (JArray)_params[to_start];
-                        return SendMany(from, to);
-                    }
-                case "sendtoaddress":
-                    {
-                        UInt160 assetId = UInt160.Parse(_params[0].AsString());
-                        UInt160 scriptHash = _params[1].AsString().ToScriptHash();
-                        string value = _params[2].AsString();
-                        return SendToAddress(assetId, scriptHash, value);
-                    }
-                default:
-                    return null;
-            }
-        }
-
-        public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
-        {
-            switch (method)
-            {
-                case "invoke":
-                case "invokefunction":
-                case "invokescript":
-                    ProcessInvoke(result);
-                    break;
-            }
-        }
-
-        private void ProcessInvoke(JObject result)
-        {
-            if (Wallet != null)
-            {
-                Transaction tx = Wallet.MakeTransaction(result["script"].AsString().HexToBytes());
-                ContractParametersContext context = new ContractParametersContext(tx);
-                Wallet.Sign(context);
-                if (context.Completed)
-                    tx.Witnesses = context.GetWitnesses();
-                else
-                    tx = null;
-                result["tx"] = tx?.ToArray().ToHexString();
-            }
-        }
+        private Wallet wallet;
 
         private void CheckWallet()
         {
-            if (Wallet is null)
+            if (wallet is null)
                 throw new RpcException(-400, "Access denied");
         }
 
-        private JObject SignAndRelay(Transaction tx)
-        {
-            ContractParametersContext context = new ContractParametersContext(tx);
-            Wallet.Sign(context);
-            if (context.Completed)
-            {
-                tx.Witnesses = context.GetWitnesses();
-                System.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
-                return tx.ToJson();
-            }
-            else
-            {
-                return context.ToJson();
-            }
-        }
-
-        private JObject DumpPrivKey(UInt160 scriptHash)
+        [RpcMethod]
+        private JObject DumpPrivKey(JArray _params)
         {
             CheckWallet();
-            WalletAccount account = Wallet.GetAccount(scriptHash);
+            UInt160 scriptHash = _params[0].AsString().ToScriptHash();
+            WalletAccount account = wallet.GetAccount(scriptHash);
             return account.GetKey().Export();
         }
 
-        private JObject GetBalance(UInt160 asset_id)
+        [RpcMethod]
+        private JObject GetBalance(JArray _params)
         {
             CheckWallet();
+            UInt160 asset_id = UInt160.Parse(_params[0].AsString());
             JObject json = new JObject();
-            json["balance"] = Wallet.GetAvailable(asset_id).Value.ToString();
+            json["balance"] = wallet.GetAvailable(asset_id).Value.ToString();
             return json;
         }
 
-        private JObject GetNewAddress()
+        [RpcMethod]
+        private JObject GetNewAddress(JArray _params)
         {
             CheckWallet();
-            WalletAccount account = Wallet.CreateAccount();
-            if (Wallet is NEP6Wallet nep6)
+            WalletAccount account = wallet.CreateAccount();
+            if (wallet is NEP6Wallet nep6)
                 nep6.Save();
             return account.Address;
         }
 
-        private JObject GetUnclaimedGas()
+        [RpcMethod]
+        private JObject GetUnclaimedGas(JArray _params)
         {
             CheckWallet();
             BigInteger gas = BigInteger.Zero;
             using (SnapshotView snapshot = Blockchain.Singleton.GetSnapshot())
-                foreach (UInt160 account in Wallet.GetAccounts().Select(p => p.ScriptHash))
+                foreach (UInt160 account in wallet.GetAccounts().Select(p => p.ScriptHash))
                 {
                     gas += NativeContract.NEO.UnclaimedGas(snapshot, account, snapshot.Height + 1);
                 }
             return gas.ToString();
         }
 
-        private JObject ImportPrivKey(string privkey)
+        [RpcMethod]
+        private JObject ImportPrivKey(JArray _params)
         {
             CheckWallet();
-            WalletAccount account = Wallet.Import(privkey);
-            if (Wallet is NEP6Wallet nep6wallet)
+            string privkey = _params[0].AsString();
+            WalletAccount account = wallet.Import(privkey);
+            if (wallet is NEP6Wallet nep6wallet)
                 nep6wallet.Save();
             return new JObject
             {
@@ -192,10 +86,11 @@ namespace Neo.Plugins
             };
         }
 
-        private JObject ListAddress()
+        [RpcMethod]
+        private JObject ListAddress(JArray _params)
         {
             CheckWallet();
-            return Wallet.GetAccounts().Select(p =>
+            return wallet.GetAccounts().Select(p =>
             {
                 JObject account = new JObject();
                 account["address"] = p.Address;
@@ -206,14 +101,33 @@ namespace Neo.Plugins
             }).ToArray();
         }
 
-        private JObject SendFrom(UInt160 assetId, UInt160 from, UInt160 to, string value)
+        private void ProcessInvokeWithWallet(JObject result)
+        {
+            if (wallet != null)
+            {
+                Transaction tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes());
+                ContractParametersContext context = new ContractParametersContext(tx);
+                wallet.Sign(context);
+                if (context.Completed)
+                    tx.Witnesses = context.GetWitnesses();
+                else
+                    tx = null;
+                result["tx"] = tx?.ToArray().ToHexString();
+            }
+        }
+
+        [RpcMethod]
+        private JObject SendFrom(JArray _params)
         {
             CheckWallet();
+            UInt160 assetId = UInt160.Parse(_params[0].AsString());
+            UInt160 from = _params[1].AsString().ToScriptHash();
+            UInt160 to = _params[2].AsString().ToScriptHash();
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
-            BigDecimal amount = BigDecimal.Parse(value, descriptor.Decimals);
+            BigDecimal amount = BigDecimal.Parse(_params[3].AsString(), descriptor.Decimals);
             if (amount.Sign <= 0)
                 throw new RpcException(-32602, "Invalid params");
-            Transaction tx = Wallet.MakeTransaction(new[]
+            Transaction tx = wallet.MakeTransaction(new[]
             {
                 new TransferOutput
                 {
@@ -226,7 +140,7 @@ namespace Neo.Plugins
                 throw new RpcException(-300, "Insufficient funds");
 
             ContractParametersContext transContext = new ContractParametersContext(tx);
-            Wallet.Sign(transContext);
+            wallet.Sign(transContext);
             if (!transContext.Completed)
                 return transContext.ToJson();
             tx.Witnesses = transContext.GetWitnesses();
@@ -241,9 +155,18 @@ namespace Neo.Plugins
             return SignAndRelay(tx);
         }
 
-        private JObject SendMany(UInt160 from, JArray to)
+        [RpcMethod]
+        private JObject SendMany(JArray _params)
         {
             CheckWallet();
+            int to_start = 0;
+            UInt160 from = null;
+            if (_params[0] is JString)
+            {
+                from = _params[0].AsString().ToScriptHash();
+                to_start = 1;
+            }
+            JArray to = (JArray)_params[to_start];
             if (to.Count == 0)
                 throw new RpcException(-32602, "Invalid params");
             TransferOutput[] outputs = new TransferOutput[to.Count];
@@ -260,12 +183,12 @@ namespace Neo.Plugins
                 if (outputs[i].Value.Sign <= 0)
                     throw new RpcException(-32602, "Invalid params");
             }
-            Transaction tx = Wallet.MakeTransaction(outputs, from);
+            Transaction tx = wallet.MakeTransaction(outputs, from);
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
             ContractParametersContext transContext = new ContractParametersContext(tx);
-            Wallet.Sign(transContext);
+            wallet.Sign(transContext);
             if (!transContext.Completed)
                 return transContext.ToJson();
             tx.Witnesses = transContext.GetWitnesses();
@@ -280,14 +203,17 @@ namespace Neo.Plugins
             return SignAndRelay(tx);
         }
 
-        private JObject SendToAddress(UInt160 assetId, UInt160 scriptHash, string value)
+        [RpcMethod]
+        private JObject SendToAddress(JArray _params)
         {
             CheckWallet();
+            UInt160 assetId = UInt160.Parse(_params[0].AsString());
+            UInt160 scriptHash = _params[1].AsString().ToScriptHash();
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
-            BigDecimal amount = BigDecimal.Parse(value, descriptor.Decimals);
+            BigDecimal amount = BigDecimal.Parse(_params[2].AsString(), descriptor.Decimals);
             if (amount.Sign <= 0)
                 throw new RpcException(-32602, "Invalid params");
-            Transaction tx = Wallet.MakeTransaction(new[]
+            Transaction tx = wallet.MakeTransaction(new[]
             {
                 new TransferOutput
                 {
@@ -300,7 +226,7 @@ namespace Neo.Plugins
                 throw new RpcException(-300, "Insufficient funds");
 
             ContractParametersContext transContext = new ContractParametersContext(tx);
-            Wallet.Sign(transContext);
+            wallet.Sign(transContext);
             if (!transContext.Completed)
                 return transContext.ToJson();
             tx.Witnesses = transContext.GetWitnesses();
@@ -313,6 +239,22 @@ namespace Neo.Plugins
             if (tx.NetworkFee > Settings.Default.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
+        }
+
+        private JObject SignAndRelay(Transaction tx)
+        {
+            ContractParametersContext context = new ContractParametersContext(tx);
+            wallet.Sign(context);
+            if (context.Completed)
+            {
+                tx.Witnesses = context.GetWitnesses();
+                System.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
+                return tx.ToJson();
+            }
+            else
+            {
+                return context.ToJson();
+            }
         }
     }
 }

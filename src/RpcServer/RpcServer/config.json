@@ -5,6 +5,7 @@
     "SslCert": "",
     "SslCertPassword": "",
     "TrustedAuthorities": [],
-    "MaxGasInvoke": 10
+    "MaxGasInvoke": 10,
+    "MaxFee": 0.1
   }
 }
