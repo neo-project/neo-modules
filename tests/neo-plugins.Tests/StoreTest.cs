@@ -171,6 +171,22 @@ namespace neo_plugins.Tests
                     CollectionAssert.AreEqual(value, store.TryGet(0x10, key));
                 }
             }
+
+            // Try write during a snapshot
+
+            using (var store = plugin.GetStore())
+            {
+                store.Put(0x10, key, value);
+
+                using (var snapshot = store.GetSnapshot())
+                {
+                    // Create a dummy snapshot and remove from the storage
+
+                    store.Delete(0x10, key);
+                }
+
+                Assert.IsNull(store.TryGet(0x10, key));
+            }
         }
     }
 }
