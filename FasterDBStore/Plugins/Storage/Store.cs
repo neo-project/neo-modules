@@ -49,8 +49,13 @@ namespace Neo.Plugins.Storage
         {
             path = Path.GetFullPath(path);
 
-            log = Devices.CreateLogDevice(Path.Combine(path, "hlog.log"), deleteOnClose: false, recoverDevice: true);
-            objlog = Devices.CreateLogDevice(Path.Combine(path, "hlog.obj.log"), deleteOnClose: false, recoverDevice: true);
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+
+            log = Devices.CreateLogDevice(Path.Combine(path, "hlog.log"), preallocateFile: true, deleteOnClose: false, recoverDevice: true);
+            objlog = Devices.CreateLogDevice(Path.Combine(path, "hlog.obj.log"), preallocateFile: true, deleteOnClose: false, recoverDevice: true);
 
             db = new FasterKV<BufferKey, BufferValue, Input, Output, Empty, FasterFunctions>
                 (1L << 20, new FasterFunctions(),
@@ -64,6 +69,7 @@ namespace Neo.Plugins.Storage
                 );
 
             // Each thread calls StartSession to register itself with FASTER
+
             db.StartSession();
         }
 
@@ -74,7 +80,22 @@ namespace Neo.Plugins.Storage
 
         public void Dispose()
         {
+            // Make sure operations are completed
             db.CompletePending(true);
+
+            // Copy entire log to disk, but retain tail of log in memory
+            db.Log.Flush(true);
+
+            // Move entire log to disk and eliminate data from memory as 
+            // well. This will serve workload entirely from disk using read cache if enabled.
+            // This will *allow* future updates to the store.
+            db.Log.FlushAndEvict(true);
+
+            // Move entire log to disk and eliminate data from memory as 
+            // well. This will serve workload entirely from disk using read cache if enabled.
+            // This will *prevent* future updates to the store.
+            db.Log.DisposeFromMemory();
+
             db.StopSession();
             db.Dispose();
 
