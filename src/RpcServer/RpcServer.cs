@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -28,7 +27,7 @@ using System.Threading.Tasks;
 
 namespace Neo.Plugins
 {
-    public sealed class RpcServer : IDisposable
+    public sealed class RpcServer : Plugin
     {
         private class CheckWitnessHashes : IVerifiable
         {
@@ -67,17 +66,12 @@ namespace Neo.Plugins
             }
         }
 
-        public Wallet Wallet { get; set; }
-        public long MaxGasInvoke { get; }
-
         private IWebHost host;
-        private readonly NeoSystem system;
+        private Wallet wallet;
 
-        public RpcServer(NeoSystem system, Wallet wallet = null, long maxGasInvoke = default)
+        protected override void Configure()
         {
-            this.system = system;
-            this.Wallet = wallet;
-            this.MaxGasInvoke = maxGasInvoke;
+            Settings.Load(GetConfiguration());
         }
 
         private static JObject CreateErrorResponse(JObject id, int code, string message, JObject data = null)
@@ -99,8 +93,9 @@ namespace Neo.Plugins
             return response;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
+            base.Dispose();
             if (host != null)
             {
                 host.Dispose();
@@ -110,7 +105,7 @@ namespace Neo.Plugins
 
         private JObject GetInvokeResult(byte[] script, IVerifiable checkWitnessHashes = null)
         {
-            using ApplicationEngine engine = ApplicationEngine.Run(script, checkWitnessHashes, extraGAS: MaxGasInvoke);
+            using ApplicationEngine engine = ApplicationEngine.Run(script, checkWitnessHashes, extraGAS: Settings.Default.MaxGasInvoke);
             JObject json = new JObject();
             json["script"] = script.ToHexString();
             json["state"] = engine.State;
@@ -138,6 +133,49 @@ namespace Neo.Plugins
             {
                 throw new RpcException(-500, reason.ToString());
             }
+        }
+
+        protected override void OnPluginsLoaded()
+        {
+            host = new WebHostBuilder().UseKestrel(options => options.Listen(Settings.Default.BindAddress, Settings.Default.Port, listenOptions =>
+            {
+                if (string.IsNullOrEmpty(Settings.Default.SslCert)) return;
+                listenOptions.UseHttps(Settings.Default.SslCert, Settings.Default.SslCertPassword, httpsConnectionAdapterOptions =>
+                {
+                    if (Settings.Default.TrustedAuthorities is null || Settings.Default.TrustedAuthorities.Length == 0)
+                        return;
+                    httpsConnectionAdapterOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
+                    httpsConnectionAdapterOptions.ClientCertificateValidation = (cert, chain, err) =>
+                    {
+                        if (err != SslPolicyErrors.None)
+                            return false;
+                        X509Certificate2 authority = chain.ChainElements[chain.ChainElements.Count - 1].Certificate;
+                        return Settings.Default.TrustedAuthorities.Contains(authority.Thumbprint);
+                    };
+                });
+            }))
+            .Configure(app =>
+            {
+                app.UseResponseCompression();
+                app.Run(ProcessAsync);
+            })
+            .ConfigureServices(services =>
+            {
+                services.AddResponseCompression(options =>
+                {
+                    // options.EnableForHttps = false;
+                    options.Providers.Add<GzipCompressionProvider>();
+                    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Append("application/json-rpc");
+                });
+
+                services.Configure<GzipCompressionProviderOptions>(options =>
+                {
+                    options.Level = CompressionLevel.Fastest;
+                });
+            })
+            .Build();
+
+            host.Start();
         }
 
         private JObject Process(string method, JArray _params)
@@ -355,48 +393,7 @@ namespace Neo.Plugins
             }
         }
 
-        public void Start(IPAddress bindAddress, int port, string sslCert = null, string password = null, string[] trustedAuthorities = null)
-        {
-            host = new WebHostBuilder().UseKestrel(options => options.Listen(bindAddress, port, listenOptions =>
-            {
-                if (string.IsNullOrEmpty(sslCert)) return;
-                listenOptions.UseHttps(sslCert, password, httpsConnectionAdapterOptions =>
-                {
-                    if (trustedAuthorities is null || trustedAuthorities.Length == 0)
-                        return;
-                    httpsConnectionAdapterOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
-                    httpsConnectionAdapterOptions.ClientCertificateValidation = (cert, chain, err) =>
-                    {
-                        if (err != SslPolicyErrors.None)
-                            return false;
-                        X509Certificate2 authority = chain.ChainElements[chain.ChainElements.Count - 1].Certificate;
-                        return trustedAuthorities.Contains(authority.Thumbprint);
-                    };
-                });
-            }))
-            .Configure(app =>
-            {
-                app.UseResponseCompression();
-                app.Run(ProcessAsync);
-            })
-            .ConfigureServices(services =>
-            {
-                services.AddResponseCompression(options =>
-                {
-                    // options.EnableForHttps = false;
-                    options.Providers.Add<GzipCompressionProvider>();
-                    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Append("application/json-rpc");
-                });
-
-                services.Configure<GzipCompressionProviderOptions>(options =>
-                {
-                    options.Level = CompressionLevel.Fastest;
-                });
-            })
-            .Build();
-
-            host.Start();
-        }
+        #region RPC methods
 
         private JObject GetBestBlockHash()
         {
@@ -620,13 +617,13 @@ namespace Neo.Plugins
 
         private JObject SendRawTransaction(Transaction tx)
         {
-            RelayResultReason reason = system.Blockchain.Ask<RelayResultReason>(tx).Result;
+            RelayResultReason reason = System.Blockchain.Ask<RelayResultReason>(tx).Result;
             return GetRelayResult(reason, tx.Hash);
         }
 
         private JObject SubmitBlock(Block block)
         {
-            RelayResultReason reason = system.Blockchain.Ask<RelayResultReason>(block).Result;
+            RelayResultReason reason = System.Blockchain.Ask<RelayResultReason>(block).Result;
             return GetRelayResult(reason, block.Hash);
         }
 
@@ -646,5 +643,7 @@ namespace Neo.Plugins
             json["isvalid"] = scriptHash != null;
             return json;
         }
+
+        #endregion
     }
 }

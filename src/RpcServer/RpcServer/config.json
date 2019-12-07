@@ -1,0 +1,10 @@
+{
+  "PluginConfiguration": {
+    "BindAddress": "127.0.0.1",
+    "Port": 10332,
+    "SslCert": "",
+    "SslCertPassword": "",
+    "TrustedAuthorities": [],
+    "MaxGasInvoke": 10
+  }
+}
