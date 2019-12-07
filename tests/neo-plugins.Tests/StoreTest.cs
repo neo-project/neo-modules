@@ -144,7 +144,7 @@ namespace neo_plugins.Tests
 
                 using (var snapshot = store.GetSnapshot())
                 {
-                    store.Delete(0x10, key);
+                    snapshot.Delete(0x10, key);
                     if (commit) snapshot.Commit();
                 }
 
