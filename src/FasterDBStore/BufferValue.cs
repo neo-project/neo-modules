@@ -1,5 +1,4 @@
 using FASTER.core;
-using Neo.Plugins.Storage.Helper;
 
 namespace Neo.Plugins.Storage
 {

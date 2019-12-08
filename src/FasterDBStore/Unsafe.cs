@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Neo.Plugins.Storage.Helper
+namespace Neo.Plugins.Storage
 {
     internal unsafe class Unsafe
     {
