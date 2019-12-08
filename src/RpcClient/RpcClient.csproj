@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Version>3.0.0-CI00825</Version>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>Neo.Network.RPC</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Neo" Version="3.0.0-CI00825" />
+  </ItemGroup>
+
+</Project>
