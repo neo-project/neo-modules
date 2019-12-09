@@ -117,7 +117,7 @@ namespace Neo.Plugins
                 {
                     // options.EnableForHttps = false;
                     options.Providers.Add<GzipCompressionProvider>();
-                    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Append("application/json-rpc");
+                    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Append("application/json");
                 });
 
                 services.Configure<GzipCompressionProviderOptions>(options =>
@@ -189,7 +189,7 @@ namespace Neo.Plugins
                 response = ProcessRequest(context, request);
             }
             if (response == null || (response as JArray)?.Count == 0) return;
-            context.Response.ContentType = "application/json-rpc";
+            context.Response.ContentType = "application/json";
             await context.Response.WriteAsync(response.ToString(), Encoding.UTF8);
         }
 
