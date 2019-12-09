@@ -26,7 +26,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RocksDBStore", "src\RocksDB
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RpcClient", "src\RpcClient\RpcClient.csproj", "{8DC57A45-A192-4953-81B1-6907FB7C28D2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neo-plugins.Tests", "tests\neo-plugins.Tests\neo-plugins.Tests.csproj", "{9E7EA895-302A-4C0C-BA9B-54F9A67AD75C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Plugins.Storage.Tests", "tests\Neo.Plugins.Storage.Tests\Neo.Plugins.Storage.Tests.csproj", "{9E7EA895-302A-4C0C-BA9B-54F9A67AD75C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
