@@ -1,0 +1,5 @@
+{
+  "PluginConfiguration": {
+    "Path": "Data_RocksDB_{0}"
+  }
+}

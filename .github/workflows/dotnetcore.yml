@@ -3,7 +3,7 @@ name: .NET Core Test and Publish
 on: pull_request
 
 env:
-  DOTNET_VERSION: 3.0.100
+  DOTNET_VERSION: 3.1.100
 
 jobs:
 
@@ -20,5 +20,8 @@ jobs:
       run: |
         dotnet tool install --tool-path ./ dotnet-format
         ./dotnet-format --check --dry-run -v diagnostic
-    - name: Build
-      run: dotnet build
+    - name: Test
+      run: |
+        sudo apt-get --assume-yes install libleveldb-dev libsnappy-dev libc6-dev
+        find tests -name *.csproj | xargs -I % dotnet add % package coverlet.msbuild
+        dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov
