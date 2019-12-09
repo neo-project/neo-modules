@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Persistence;
 
-namespace neo_plugins.Tests
+namespace Neo.Plugins.Storage.Tests
 {
     [TestClass]
     public class StoreTest
