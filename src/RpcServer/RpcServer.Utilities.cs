@@ -9,7 +9,6 @@ namespace Neo.Plugins
 {
     partial class RpcServer
     {
-
         [RpcMethod]
         private JObject ListPlugins(JArray _params)
         {
