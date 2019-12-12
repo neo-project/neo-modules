@@ -12,6 +12,7 @@ using Neo.Ledger;
 using Akka.Actor;
 using Neo.Network.RPC;
 using Neo.IO;
+using Newtonsoft.Json;
 
 namespace Neo.Plugins
 {
@@ -263,55 +264,59 @@ namespace Neo.Plugins
 
         public bool CallContract(KeyPair key, string scriptHash, byte[] bytes, out byte[] txhash)
         {
-            var unspent = GetUnspent(key.AsAddress());
-
-            if (!unspent.ContainsKey("CRON"))
-            {
-                throw new RpcException(-3227, "No CRONs available");
-            }
-
-            var sources = unspent["CRON"];
             var inputs = new List<CoinReference>();
-            var outputs = new List<TransactionOutput>();         
+            var outputs = new List<TransactionOutput>();
             decimal gasCost = 0;
 
-            decimal selectedGas = 0;
-            foreach (var src in sources)
+            if (key != null)
             {
-                selectedGas += src.value;
+                var unspent = GetUnspent(key.AsAddress());
 
-                var input = new CoinReference()
+                if (!unspent.ContainsKey("CRON"))
                 {
-                    PrevHash = UInt256.Parse( src.txid ),
-                    PrevIndex = (ushort) src.index,
-                };
-
-                inputs.Add(input);
-
-                if (selectedGas >= gasCost)
-                {
-                    break;
+                    throw new RpcException(-3227, "No CRONs available");
                 }
-            }
 
-            if (selectedGas < gasCost)
-            {
-                throw new RpcException(-3228, "Not enough CRONs available");
-            }
+                var sources = unspent["CRON"];
 
-            var targetAssetID = reverseHex(ASSET_CRON).HexToBytes();
-
-            if (selectedGas > gasCost)
-            {
-                var left = selectedGas - gasCost;
-
-                var change = new  TransactionOutput()
+                decimal selectedGas = 0;
+                foreach (var src in sources)
                 {
-                    AssetId = new UInt256(targetAssetID),
-                    ScriptHash = key.AsSignatureScript().HexToBytes().ToScriptHash(),
-                    Value = Fixed8.FromDecimal(left)
-                };
-                outputs.Add(change);
+                    selectedGas += src.value;
+
+                    var input = new CoinReference()
+                    {
+                        PrevHash = UInt256.Parse(src.txid),
+                        PrevIndex = (ushort)src.index,
+                    };
+
+                    inputs.Add(input);
+
+                    if (selectedGas >= gasCost)
+                    {
+                        break;
+                    }
+                }
+
+                if (selectedGas < gasCost)
+                {
+                    throw new RpcException(-3228, "Not enough CRONs available");
+                }
+
+                var targetAssetID = reverseHex(ASSET_CRON).HexToBytes();
+
+                if (selectedGas > gasCost)
+                {
+                    var left = selectedGas - gasCost;
+
+                    var change = new TransactionOutput()
+                    {
+                        AssetId = new UInt256(targetAssetID),
+                        ScriptHash = key.AsSignatureScript().HexToBytes().ToScriptHash(),
+                        Value = Fixed8.FromDecimal(left)
+                    };
+                    outputs.Add(change);
+                }
             }
 
             InvocationTransaction tx = new InvocationTransaction()
@@ -324,9 +329,35 @@ namespace Neo.Plugins
                 Outputs = outputs.ToArray()
             };
 
+            if (key == null)
+                return CallNoInvoke(tx, out txhash);
+
+
             txhash = tx.Hash.ToArray().Reverse().ToArray();
                         
             return SignAndRelay(tx, key);            
+        }
+
+        private bool CallNoInvoke(InvocationTransaction tx, out byte[] txhash)
+        {
+            ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx);
+
+            bool fault = engine.State.HasFlag(VMState.FAULT); 
+
+            Fixed8 gas = engine.GasConsumed - Fixed8.FromDecimal(10);
+            if (gas < Fixed8.Zero) gas = Fixed8.Zero;
+           
+            var obj = new
+            {
+                VMState = engine.State.ToString(),
+                GasConsumed = (decimal)engine.GasConsumed,
+                EvaluationStack = engine.ResultStack.Select(p => p.ToParameter()).ToArray(),
+                GasToSpend = (decimal)gas.Ceiling()
+            };
+
+            string res = JsonConvert.SerializeObject(obj);
+            txhash = Encoding.UTF8.GetBytes(res);
+            return !fault;
         }
 
         private bool SignAndRelay(Transaction tx, KeyPair key)

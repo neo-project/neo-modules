@@ -53,7 +53,7 @@ namespace Neo.Plugins
             var privateKey = jArray[0].AsString().ToBytePrivateKey();
             var addressTo = jArray[1].AsString();
 
-            var amount = (decimal) jArray[2].AsNumber();
+            var amount = GetDecimal(jArray[2]); 
 
             UInt256 th = (jArray.Count > 3) ? ParseTokenHash(jArray[3].AsString()) : Blockchain.UtilityToken.Hash;
             byte[] bRemarks = (jArray.Count > 4) ? jArray[4].AsString().HexToBytes() : null;
@@ -70,7 +70,7 @@ namespace Neo.Plugins
         /// <param name="jArray">An array of parameters: 
         /// [0] MANDATORY; HEX or WIF private key, string
         /// [1] MANDATORY; array of objects {"address": string, "amount": decimal}.
-		//      At least one item is needed to send successful txn
+        //      At least one item is needed to send successful txn
         /// [2] OPTIONAL;  system token hash (hex bytes string) or its name (string). Default is CRON 
         /// [3] OPTIONAL;  remarks attribute value. Default is null 
         /// [4] OPTIONAL;  system fee (decimal) . Default is zero 
@@ -82,9 +82,7 @@ namespace Neo.Plugins
             JObject obj = new JObject();
 
             var privateKey = jArray[0].AsString().ToBytePrivateKey();
-
             var arrayTargets = (JArray)jArray[1]; 
-
             UInt256 th = (jArray.Count > 2) ? ParseTokenHash(jArray[2].AsString()) : Blockchain.UtilityToken.Hash;
 
             List<TransactionOutput> targets = new List<TransactionOutput>();
@@ -93,7 +91,7 @@ namespace Neo.Plugins
             {
                 JObject jo = arrayTargets[i];
                 var addressesTo = jo["address"].AsString();
-                var amount  = (decimal)jo["amount"].AsNumber();
+                var amount      = GetDecimal(jo["amount"]);
                 
                 var target = new TransactionOutput()
                 {
@@ -115,6 +113,14 @@ namespace Neo.Plugins
             return obj;
         }
         
+
+        private decimal GetDecimal(JObject jObject)
+        {
+            var d = 0.0m;
+            try { d = (decimal)jObject.AsNumber(); }
+            catch { d = decimal.Parse(jObject.AsString(), NumberStyles.Any, CultureInfo.InvariantCulture); }
+            return d;
+        }
        
 
         private UInt256 ParseTokenHash(string v)
@@ -131,7 +137,7 @@ namespace Neo.Plugins
 
         private JObject InvokeSmartContractEntryPointAs(string script, string key, JObject[] jObject)
         {
-            JObject[] _params =   jObject.ToArray();
+            JObject[] _params = jObject;
             UInt160 sh = UInt160.Parse(script);
             ContractState contract = Blockchain.Singleton.Store.GetContracts().TryGet(sh);
             if (contract == null)
@@ -145,10 +151,16 @@ namespace Neo.Plugins
                 SetContractParamValue(parameters[ip],
                     ip < _params.Length ? _params[ip] : default(JObject));
 
-            bool b =  CallContract(new KeyPair(key.ToBytePrivateKey()), script,  parameters, out byte[] txhash);
+
+            KeyPair keyPair = null;
+            if(!string.IsNullOrEmpty(key)) 
+             try { keyPair = new KeyPair(key.ToBytePrivateKey()); } catch { }
+
+            bool b = CallContract(keyPair, script,  parameters, out byte[] txhash);
             return b ? txhash.ToHexString() : null;
         }
 
+    
         /// <summary>
         /// SC parameter helper function.
         /// Firstly tries to get SC parameter from type/value,

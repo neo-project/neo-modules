@@ -55,12 +55,34 @@ namespace Neo.Plugins
                     parameters[1].AsString(),
                     parameters.Skip(2).ToArray());
             }
-
+ 
             if (method == "cron_get_address")
             {
                 return GetAddress(parameters[0].AsString());
-            }
+            }       
 
+            if (method == "cron_get_stat_special")
+            {             
+
+                int code = (int)parameters[0].AsNumber();
+                switch (code)
+                {
+                    case 0: return StatScenarioZero(parameters);
+                }
+
+                throw new Neo.Network.RPC.RpcException(-7171, "Wrong submethod code"); 
+            } 
+
+            if (method == "cron_search_special")
+            {
+                int code = (int) parameters[0].AsNumber();                 
+                switch (code)
+                {
+                    case 0: return SearchScenarioZero(parameters);
+                }
+
+                throw new Neo.Network.RPC.RpcException(-7171, "Wrong submethod code");
+            }                        
 
             if (method == "cron_tx_block")
             {
@@ -76,7 +98,7 @@ namespace Neo.Plugins
 
             return method != "getunspents" ? null : ProcessGetUnspents(parameters);
         }
-
+        
         public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
         {
         }
@@ -84,7 +106,12 @@ namespace Neo.Plugins
         public override void Configure()
         {
 #if DEBUG
-            Console.WriteLine($"PID: {Process.GetCurrentProcess().Id} RpcSystemAssetTrackerPlugin: Configure()");
+            string h = string.Join(Environment.NewLine, Assembly.GetCallingAssembly().CustomAttributes.Select
+                (x => x.AttributeType.Name + ": "
+                     + string.Join(", ", x.ConstructorArguments.Select(y => y.Value.ToString()))));
+
+            Console.WriteLine($"PID: {Process.GetCurrentProcess().Id} RpcSystemAssetTrackerPlugin v2.9.4.5: Configure()");
+            Console.WriteLine(h);
 #endif
 
 
