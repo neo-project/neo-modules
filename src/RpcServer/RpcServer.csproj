@@ -7,14 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="RpcSecurity\config.json">
+    <None Update="RpcServer\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neo" Version="3.0.0-CI00817" />
+    <PackageReference Include="Microsoft.AspNetCore.ResponseCompression" Version="2.2.0" />
+    <PackageReference Include="Neo" Version="3.0.0-CI00828" />
   </ItemGroup>
 
 </Project>
