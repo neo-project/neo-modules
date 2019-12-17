@@ -1,49 +1,50 @@
 ## What is it
-A set of plugins that can be used inside the NEO core library. Check [here](http://docs.neo.org/en-us/node/plugin.html) for the official documentation.
+A set of plugins that can be used inside the NEO core library are available in this repository. You can refer to [the official documentation](https://docs.neo.org/docs/en-us/node/cli/setup.html) for the more detailed usage guide. In addition, a C# SDK is included for developers to call RPC methods with ease.
 
-## Using plugins
+## Using Plugins
 Plugins can be used to increase functionality, as well as providing policies definitions of the network.
 One common example is to add the ApplicationLogs plugin in order to enable your node to create log files.
 
-To configure a plugin, do the following:
- - Download the desired plugin from the [Releases page](https://github.com/neo-project/neo-plugins/releases)
-  - Alternative: Compile from source
-    - Clone this repository;
-    - Open it in Visual Studio, select the plugin you want to enable and select `publish` \(compile it using Release configuration\)
-    - Create the Plugins folder in neo-cli / neo-gui (where the binary is run from, like `/neo-cli/bin/debug/netcoreapp2.1/Plugins`)
- - Copy the .dll and the folder with the configuration files into this Plugin folder.
- - Start neo using additional parameters, if required;
- 	- In order to start logging, start neo with the `--log` option.
+To configure a plugin, you can directly download the desired plugin from the [Releases page](https://github.com/neo-project/neo-modules/releases)。
+
+Alternatively, you can compile from source code by following the below steps:
+- Clone this repository;
+- Open it in Visual Studio, select the plugin you want to enable and select `publish` \(compile it using Release configuration\)
+- Create the Plugins folder in neo-cli / neo-gui (where the binary file is located, such as `/neo-cli/bin/Release/netcoreapp3.0/Plugins`)
+- Copy the .dll and the folder with the configuration files into the `Plugins` folder.
+- Start neo using additional parameters, if required;
+  - In order to start logging, start neo with the `--log` option.
 
 The resulting folder structure is going to be like this:
 
-```BASH
+```sh
 ./neo-cli.dll
 ./Plugins/ApplicationLogs.dll
 ./Plugins/ApplicationsLogs/config.json
 ```
 
-## Existing plugins
-### Application Logs
-Add this plugin to your application if need to access the log files. This can be useful to handle notifications, but remember that this also largely increases the space used by the application.
+## Plugins
+### LevelDB Storage Engine
+If there is no further modification of the configuration file of the neo-node, it is the default storage engine in the NEO system. In this case, you should paste the `LevelDBStore` in the Plugins before start the node.
 
-### Core Metrics
-Metrics from the Blockchain. This can involve reports through RPC calls or other form of persisting.
+### RocksDB Storage Engine
+It is the choice of users for the storage engine. You can also use `RocksDBStore` in the NEO system by modifying the default storage engine section in the configuration file.
 
-### Import Blocks
-Synchronizes the client using offline packages. Follow the instructions [here](http://docs.neo.org/en-us/network/syncblocks.html) to bootstrap your network using this plugin.
+### RPC Server
+Currently, RPC server has been decoupled with the NEO library. You can install this plugin to provide RPC service outside.
 
 ### RPC NEP5 Tracker
-Plugin that enables NEP5 tracking using LevelDB.
-
-### RPC Security
-Improves security in RPC nodes.
-
-### RPC Wallet
-Client commands for wallet management functionalities, such as signing and invoking.
+Plugin that enables NEP5 tracking.
 
 ### StatesDumper
 Exports NEO-CLI status data \(useful for debugging\).
 
 ### SystemLog
-Enables neo-cli Logging, with timestamps, by showing messages with different levels (differentiated by colors) \(useful for debugging\).
+Enable neo-cli Logging with timestamps by showing messages with different levels (shown with different colors) \(useful for debugging\).
+
+### Application Logs
+Add this plugin to your application if need to access the log files. This can be useful to handle notifications, but remember that this also largely increases the space used by the application.
+
+## C# SDK
+### RPC Client
+The RPC client to call NEO RPC methods.
