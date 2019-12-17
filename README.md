@@ -25,16 +25,16 @@ The resulting folder structure is going to be like this:
 
 ## Plugins
 ### LevelDB Storage Engine
-If there is no further modification of the configuration file of the neo-node, it is the default storage engine in the NEO system. In this case, you should paste the `LevelDBStore` in the Plugins before start the node.
+If there is no further modification of the configuration file of the neo-node, it is the default storage engine in the NEO system. In this case, you should paste the `LevelDBStore` in the Plugins before launching the node.
 
 ### RocksDB Storage Engine
 It is the choice of users for the storage engine. You can also use `RocksDBStore` in the NEO system by modifying the default storage engine section in the configuration file.
 
 ### RPC Server
-Currently, RPC server has been decoupled with the NEO library. You can install this plugin to provide RPC service outside.
+Currently, RPC server has been decoupled with the NEO library. You can install this plugin to provide RPC service outside. Specifically, it is required to open the wallet for calling some RPC methods. For more details, you can refer to [RPC APIs](https://docs.neo.org/docs/zh-cn/reference/rpc/latest-version/api.html).  
 
 ### RPC NEP5 Tracker
-Plugin that enables NEP5 tracking.
+This plugin can help you get the NEP-5 transaction information for the specified address. You should install the plugin `RpcServer` before enabling `RpcNep5Tracker`. [Here](https://docs.neo.org/docs/en-us/reference/rpc/latest-version/api/getnep5transfers.html) is the use case for this plugin.
 
 ### StatesDumper
 Exports NEO-CLI status data \(useful for debugging\).
@@ -43,7 +43,7 @@ Exports NEO-CLI status data \(useful for debugging\).
 Enable neo-cli Logging with timestamps by showing messages with different levels (shown with different colors) \(useful for debugging\).
 
 ### Application Logs
-Add this plugin to your application if need to access the log files. This can be useful to handle notifications, but remember that this also largely increases the space used by the application.
+Add this plugin to your application if need to access the log files. This can be useful to handle notifications, but remember that this also largely increases the space used by the application. `RpcServer` is also needed for this plugin. You can find more details [here](https://docs.neo.org/docs/en-us/reference/rpc/latest-version/api/getapplicationlog.html).
 
 ## C# SDK
 ### RPC Client
