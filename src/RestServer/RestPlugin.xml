@@ -1,0 +1,231 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>RestServer</name>
+    </assembly>
+    <members>
+        <member name="M:Neo.Plugins.RestController.GetBestBlockHash">
+            <summary>
+            Get the lastest block hash of the blockchain 
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetBlock(System.String,System.Int32,System.Int32)">
+            <summary>
+            Get a block with the specified hash or at a certain height, only hash taking effect if hash and index are both non-null
+            </summary>
+            <param name="hash">block hash</param>
+            <param name="index">block height</param>
+            <param name="verbose">0:get block serialized in hexstring; 1: get block in Json format</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetBlockCount">
+            <summary>
+            Get the block count of the blockchain
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetBlockHash(System.UInt32)">
+            <summary>
+            Get the block hash with the specified index
+            </summary>
+            <param name="index">block height</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetBlockHeader(System.String,System.Int32,System.Int32)">
+            <summary>
+            Get the block header with the specified hash or at a certain height, only hash taking effect if hash and index are both non-null
+            </summary>
+            <param name="hash">block hash</param>
+            <param name="index">block height</param>
+            <param name="verbose">0:get block serialized in hexstring; 1: get block in Json format</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetBlockSysFee(System.UInt32)">
+            <summary>
+            Get the system fees before the block with the specified index
+            </summary>
+            <param name="index">block height</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetContractState(System.String)">
+            <summary>
+            Get a contract with the specified script hash
+            </summary>
+            <param name="scriptHash">contract scriptHash</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetRawMemPool(System.Int32)">
+            <summary>
+            Gets unconfirmed transactions in memory
+            </summary>
+            <param name="getUnverified">0: get all transactions; 1: get verified transactions</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetRawTransaction(System.String,System.Int32)">
+            <summary>
+            Get a transaction with the specified hash value	
+            </summary>
+            <param name="txid">transaction hash</param>
+            <param name="verbose">0:get block serialized in hexstring; 1: get block in Json format</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetStorage(System.String,System.String)">
+            <summary>
+            Get the stored value with the contract script hash and the key
+            </summary>
+            <param name="scriptHash">contract scriptHash</param>
+            <param name="key">stored key</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetTransactionHeight(System.String)">
+            <summary>
+            Get the block index in which the transaction is found
+            </summary>
+            <param name="txid">transaction hash</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetValidators">
+            <summary>
+            Get latest validators
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetConnectionCount">
+            <summary>
+            Get the current number of connections for the node
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetPeers">
+            <summary>
+            Get the peers of the node
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetVersion">
+            <summary>
+            Get version of the connected node
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.SendRawTransaction(System.String)">
+            <summary>
+            Broadcast a transaction over the network
+            </summary>
+            <param name="hex">hexstring of the transaction</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.SubmitBlock(System.String)">
+            <summary>
+            Relay a new block to the network
+            </summary>
+            <param name="hex">hexstring of the block</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.InvokeFunction(Neo.Plugins.InvokeFunctionParameter)">
+            <summary>
+            Invoke a smart contract with specified script hash, passing in an operation and the corresponding params	
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.InvokeScript(Neo.Plugins.InvokeScriptParameter)">
+            <summary>
+            Run a script through the virtual machine and get the result
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.ListPlugins">
+            <summary>
+            Get plugins loaded by the node
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.ValidateAddress(System.String)">
+            <summary>
+            Verify whether the address is a correct NEO address	    
+            </summary>
+            <param name="address">address to be veirifed</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.CloseWallet">
+            <summary>
+            Close the wallet
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.DumpPrivKey(System.String)">
+            <summary>
+            Exports the private key of the specified address. 
+            </summary>
+            <param name="address"> Addresse of the private key, required to be a standard address.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetBalance(System.String)">
+            <summary>
+            Balance of the specified asset 
+            </summary>
+            <param name="assetID"> Asset id</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetNewAddress">
+            <summary>
+            Create a new address
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.GetUnclaimedGas">
+            <summary>
+            Get the amount of unclaimed GAS
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.ImportPrivKey(System.String)">
+            <summary>
+            Import the private key 
+            </summary>
+            <param name="privkey">The WIF-format private key</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.OpenWallet(System.String,System.String)">
+            <summary>
+            Open the wallet
+            </summary>
+            <param name="path"> Path of the wallet</param>
+            <param name="password">  Wallet password</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.ListAddress">
+            <summary>
+            List all the addresses
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.SendFrom(System.String,System.String,System.String,System.String)">
+            <summary>
+            Transfer from the specified address to the destination address
+            </summary>
+            <param name="assetid"> Asset Id</param>
+            <param name="from"> Source address </param>
+            <param name="to">  Destination address </param>
+            <param name="amount"> Transfer amount </param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.SendMany(Neo.Plugins.Assets)">
+            <summary>
+            Transfer assets in batch
+            </summary>
+            <param name="assets"> Array of assets to be transferred </param>
+            <returns></returns>
+        </member>
+        <member name="M:Neo.Plugins.RestController.SendToAddress(Neo.Plugins.Asset)">
+            <summary>
+            Transfer to the specified address
+            </summary>
+            <param name="asset"> Asset information to be transferred </param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
