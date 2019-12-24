@@ -1,9 +1,7 @@
-using Microsoft.AspNetCore.Http;
 using Neo.IO;
 using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Ledger;
-using Neo.Network.RPC;
 using Neo.Persistence;
 using Neo.VM;
 using System;
@@ -14,7 +12,7 @@ using static System.IO.Path;
 
 namespace Neo.Plugins
 {
-    public class LogReader : Plugin, IRpcPlugin, IPersistencePlugin
+    public class LogReader : Plugin, IPersistencePlugin
     {
         private readonly DB db;
 
@@ -23,6 +21,7 @@ namespace Neo.Plugins
         public LogReader()
         {
             db = DB.Open(GetFullPath(Settings.Default.Path), new Options { CreateIfMissing = true });
+            RpcServer.RegisterMethods(this);
         }
 
         protected override void Configure()
@@ -30,22 +29,14 @@ namespace Neo.Plugins
             Settings.Load(GetConfiguration());
         }
 
-        public void PreProcess(HttpContext context, string method, JArray _params)
+        [RpcMethod]
+        public JObject GetApplicationLog(JArray _params)
         {
-        }
-
-        public JObject OnProcess(HttpContext context, string method, JArray _params)
-        {
-            if (method != "getapplicationlog") return null;
             UInt256 hash = UInt256.Parse(_params[0].AsString());
             byte[] value = db.Get(ReadOptions.Default, hash.ToArray());
             if (value is null)
                 throw new RpcException(-100, "Unknown transaction");
             return JObject.Parse(Encoding.UTF8.GetString(value));
-        }
-
-        public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
-        {
         }
 
         public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)

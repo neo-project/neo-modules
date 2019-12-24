@@ -5,7 +5,6 @@ using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
-using Neo.Network.RPC;
 using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.VM;
@@ -18,7 +17,7 @@ using static System.IO.Path;
 
 namespace Neo.Plugins
 {
-    public class RpcNep5Tracker : Plugin, IPersistencePlugin, IRpcPlugin
+    public class RpcNep5Tracker : Plugin, IPersistencePlugin
     {
         private const byte Nep5BalancePrefix = 0xf8;
         private const byte Nep5TransferSentPrefix = 0xf9;
@@ -32,6 +31,11 @@ namespace Neo.Plugins
         private bool _recordNullAddressHistory;
         private uint _maxResults;
         private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
+
+        public RpcNep5Tracker()
+        {
+            RpcServer.RegisterMethods(this);
+        }
 
         protected override void Configure()
         {
@@ -237,8 +241,11 @@ namespace Neo.Plugins
             return addressOrScriptHash.Length < 40 ?
                 addressOrScriptHash.ToScriptHash() : UInt160.Parse(addressOrScriptHash);
         }
-        private JObject GetNep5Transfers(JArray _params)
+
+        [RpcMethod]
+        public JObject GetNep5Transfers(JArray _params)
         {
+            if (!_shouldTrackHistory) throw new RpcException(-32601, "Method not found");
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
             // If start time not present, default to 1 week of history.
             ulong startTime = _params.Count > 1 ? (ulong)_params[1].AsNumber() :
@@ -258,7 +265,8 @@ namespace Neo.Plugins
             return json;
         }
 
-        private JObject GetNep5Balances(JArray _params)
+        [RpcMethod]
+        public JObject GetNep5Balances(JArray _params)
         {
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
 
@@ -277,20 +285,6 @@ namespace Neo.Plugins
                 balances.Add(balance);
             }
             return json;
-        }
-
-        public void PreProcess(HttpContext context, string method, JArray _params)
-        {
-        }
-
-        public JObject OnProcess(HttpContext context, string method, JArray _params)
-        {
-            if (_shouldTrackHistory && method == "getnep5transfers") return GetNep5Transfers(_params);
-            return method == "getnep5balances" ? GetNep5Balances(_params) : null;
-        }
-
-        public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
-        {
         }
     }
 }
