@@ -1,3 +1,23 @@
+<p align="center">
+<a href="https://neo.org/">
+      <img
+      src="https://neo3.azureedge.net/images/logo%20files-dark.svg"
+      width="250px" alt="neo-logo">
+  </a>
+</p>
+
+<p align="center">      
+  <a href="https://travis-ci.org/neo-project/neo-modules">
+    <img src="https://travis-ci.org/neo-project/neo-modules.svg?branch=master" alt="Current TravisCI build status.">
+  </a>
+  <a href="https://github.com/neo-project/neo-modules/blob/master/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
+  </a>
+  <a href="https://github.com/neo-project/neo-modules/releases">
+    <img src="https://badge.fury.io/gh/neo-project%2Fneo-modules.svg" alt="Current neo-modules version.">
+  </a>    
+</p>
+
 ## What is it
 A set of plugins that can be used inside the NEO core library are available in this repository. You can refer to [the official documentation](https://docs.neo.org/docs/en-us/node/cli/setup.html) for the more detailed usage guide. In addition, a C# SDK is included for developers to call RPC methods with ease.
 
