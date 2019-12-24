@@ -9,12 +9,15 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Swagger;
 using SystemPath=System.IO.Path;
+using Microsoft.Extensions.Configuration;
+using System.Net;
 
 namespace Neo.Plugins
 {
     public sealed class RestServer : Plugin
     {
         private IWebHost host;
+        public IConfiguration Configuration;
 
         public override void Dispose()
         {
@@ -28,17 +31,17 @@ namespace Neo.Plugins
 
         protected override void Configure()
         {
-            Settings.Load(GetConfiguration());
+            Configuration = GetConfiguration();
         }
 
         protected override void OnPluginsLoaded()
         {
-            host = new WebHostBuilder().UseKestrel(options => options.Listen(Settings.Default.BindAddress, Settings.Default.Port, listenOptions =>
+            host = new WebHostBuilder().UseKestrel(options => options.Listen(IPAddress.Parse(Configuration.GetSection("BindAddress").Value), ushort.Parse(Configuration.GetSection("Port").Value), listenOptions =>
             {
-                if (string.IsNullOrEmpty(Settings.Default.SslCert)) return;
-                listenOptions.UseHttps(Settings.Default.SslCert, Settings.Default.SslCertPassword, httpsConnectionAdapterOptions =>
+                if (string.IsNullOrEmpty(Configuration["SslCert"])) return;
+                listenOptions.UseHttps(Configuration["SslCert"], Configuration["SslCertPassword"], httpsConnectionAdapterOptions =>
                 {
-                    if (Settings.Default.TrustedAuthorities is null || Settings.Default.TrustedAuthorities.Length == 0)
+                    if (Configuration["TrustedAuthorities"] is null || Configuration["TrustedAuthorities"].Length == 0)
                         return;
                     httpsConnectionAdapterOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
                     httpsConnectionAdapterOptions.ClientCertificateValidation = (cert, chain, err) =>
@@ -46,11 +49,11 @@ namespace Neo.Plugins
                         if (err != SslPolicyErrors.None)
                             return false;
                         X509Certificate2 authority = chain.ChainElements[chain.ChainElements.Count - 1].Certificate;
-                        return Settings.Default.TrustedAuthorities.Contains(authority.Thumbprint);
+                        return Configuration["TrustedAuthorities"].Contains(authority.Thumbprint);
                     };
                 });
             }))
-              .ConfigureServices(services =>
+            .ConfigureServices(services =>
             {
                 services.AddSwaggerGen(option =>
                 {
@@ -66,9 +69,12 @@ namespace Neo.Plugins
 
                 services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Latest);
                 services.AddSingleton(s => System);
-                RestController.settings = Settings.Default;
+
+                services.AddOptions();
+                services.Configure<Settings>(Configuration);
+                ///RestController.settings = Settings.Default;
                 //services.AddSingleton(s => new RestController(System, settings));
-            })
+                })
             .Configure(app =>
             {
                 //app.UseHttpsRedirection();

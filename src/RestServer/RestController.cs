@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Neo.Plugins
 {
@@ -8,11 +9,12 @@ namespace Neo.Plugins
     public partial class RestController : Controller
     {
         private NeoSystem system;
-        public static Settings settings;
+        private Settings settings;
 
-        public RestController(NeoSystem system)
+        public RestController(NeoSystem system, IOptions<Settings> settings)
         {
             this.system = system;
+            this.settings = settings.Value;
         }
     }
 }
