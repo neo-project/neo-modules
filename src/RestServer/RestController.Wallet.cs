@@ -40,7 +40,7 @@ namespace Neo.Plugins
         public IActionResult CloseWallet()
         {
             wallet = null;
-            return Ok("Success");
+            return FormatJson("Success");
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Neo.Plugins
             CheckWallet();
             UInt160 scriptHash = address.ToScriptHash();
             WalletAccount account = wallet.GetAccount(scriptHash);
-            return Ok(account.GetKey().Export());
+            return FormatJson(account.GetKey().Export());
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace Neo.Plugins
             WalletAccount account = wallet.CreateAccount();
             if (wallet is NEP6Wallet nep6)  
                 nep6.Save();
-            return Ok(account.Address);
+            return FormatJson(account.Address);
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace Neo.Plugins
                 {
                     gas += NativeContract.NEO.UnclaimedGas(snapshot, account, snapshot.Height + 1);
                 }
-            return Ok(gas.ToString());
+            return FormatJson(gas.ToString());
         }
 
         /// <summary>
@@ -152,7 +152,7 @@ namespace Neo.Plugins
                 default:
                     throw new NotSupportedException();
             }
-            return Ok("Success");
+            return FormatJson("Success");
         }
 
         /// <summary>
@@ -217,7 +217,7 @@ namespace Neo.Plugins
                 if (tx.NetworkFee < calFee)
                     tx.NetworkFee = calFee;
             }
-            if (tx.NetworkFee > settings.MaxFee)
+            if (tx.NetworkFee > Settings.Default.MaxFee)
                 throw new RestException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return FormatJson(SignAndRelay(tx));
         }
@@ -268,7 +268,7 @@ namespace Neo.Plugins
                 if (tx.NetworkFee < calFee)
                     tx.NetworkFee = calFee;
             }
-            if (tx.NetworkFee > settings.MaxFee)
+            if (tx.NetworkFee > Settings.Default.MaxFee)
                 throw new RestException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return FormatJson(SignAndRelay(tx));
         }
@@ -312,7 +312,7 @@ namespace Neo.Plugins
                 if (tx.NetworkFee < calFee)
                     tx.NetworkFee = calFee;
             }
-            if (tx.NetworkFee > settings.MaxFee)
+            if (tx.NetworkFee > Settings.Default.MaxFee)
                 throw new RestException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return FormatJson(SignAndRelay(tx));
         }

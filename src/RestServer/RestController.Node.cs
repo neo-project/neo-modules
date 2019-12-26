@@ -21,7 +21,7 @@ namespace Neo.Plugins
         [HttpGet("network/localnode/connections")]
         public IActionResult GetConnectionCount()
         {
-            return Ok(LocalNode.Singleton.ConnectedCount);
+            return FormatJson(LocalNode.Singleton.ConnectedCount);
         }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace Neo.Plugins
         {
             Transaction tx = hex.HexToBytes().AsSerializable<Transaction>();
             RelayResultReason reason = system.Blockchain.Ask<RelayResultReason>(tx).Result;
-            return Ok(GetRelayResult(reason, tx.Hash));
+            return FormatJson(GetRelayResult(reason, tx.Hash));
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace Neo.Plugins
         {
             Block block = hex.HexToBytes().AsSerializable<Block>();
             RelayResultReason reason = system.Blockchain.Ask<RelayResultReason>(block).Result;
-            return Ok(GetRelayResult(reason, block.Hash));
+            return FormatJson(GetRelayResult(reason, block.Hash));
         }
 
         private static JObject GetRelayResult(RelayResultReason reason, UInt256 hash)

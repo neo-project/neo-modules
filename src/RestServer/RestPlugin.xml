@@ -59,7 +59,7 @@
             <summary>
             Gets unconfirmed transactions in memory
             </summary>
-            <param name="getUnverified">0: get all transactions; 1: get verified transactions</param>
+            <param name="getUnverified">0: get verified transactions; 1: get all transactions</param>
             <returns></returns>
         </member>
         <member name="M:Neo.Plugins.RestController.GetRawTransaction(System.String,System.Int32)">

@@ -12,11 +12,8 @@
 
   <ItemGroup>
     <PackageReference Include="Neo" Version="3.0.0-CI00828" />
-
-    <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.HttpsPolicy" Version="2.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="4.0.1" />
+    
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties restserver_4config_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>

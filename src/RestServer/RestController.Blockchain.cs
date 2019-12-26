@@ -25,7 +25,7 @@ namespace Neo.Plugins
         [HttpGet("blocks/bestblockhash")]
         public IActionResult GetBestBlockHash()
         {
-            return Ok(Blockchain.Singleton.CurrentBlockHash.ToString());
+            return FormatJson(Blockchain.Singleton.CurrentBlockHash.ToString());
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace Neo.Plugins
         [HttpGet("blocks/count")]
         public IActionResult GetBlockCount()
         {
-            return Ok(Blockchain.Singleton.Height + 1);
+            return FormatJson(Blockchain.Singleton.Height + 1);
         }
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace Neo.Plugins
         {
             if (index <= Blockchain.Singleton.Height)
             {
-                return Ok(Blockchain.Singleton.GetBlockHash(index).ToString());
+                return FormatJson(Blockchain.Singleton.GetBlockHash(index).ToString());
             }
             throw new RestException(-100, "Invalid Height");
         }
@@ -157,7 +157,7 @@ namespace Neo.Plugins
             if (index <= Blockchain.Singleton.Height)
                 using (ApplicationEngine engine = NativeContract.GAS.TestCall("getSysFeeAmount", index))
                 {
-                    return Ok(engine.ResultStack.Peek().GetBigInteger().ToString());
+                    return FormatJson(engine.ResultStack.Peek().GetBigInteger().ToString());
                 }
             throw new RestException(-100, "Invalid Height");
         }
@@ -182,7 +182,7 @@ namespace Neo.Plugins
         /// <summary>
         /// Gets unconfirmed transactions in memory
         /// </summary>
-        /// <param name="getUnverified">0: get all transactions; 1: get verified transactions</param>
+        /// <param name="getUnverified">0: get verified transactions; 1: get all transactions</param>
         /// <returns></returns>
         [HttpGet("network/localnode/rawmempool")]
         public IActionResult GetRawMemPool(int getUnverified = 0)
@@ -247,7 +247,7 @@ namespace Neo.Plugins
                 ScriptHash = script_hash,
                 Key = key.HexToBytes()
             }) ?? new StorageItem();
-            if(item.Value != null) return Ok(item.Value.ToHexString());
+            if(item.Value != null) return FormatJson(item.Value.ToHexString());
             throw new RestException(-100, "Key not exist");
         }
 
@@ -262,7 +262,7 @@ namespace Neo.Plugins
             
             UInt256 hash = UInt256.Parse(txid);
             uint? height = Blockchain.Singleton.View.Transactions.TryGet(hash)?.BlockIndex;
-            if (height.HasValue) return Ok(height.Value);
+            if (height.HasValue) return FormatJson(height.Value);
             throw new RestException(-100, "Unknown transaction");
         }
 
