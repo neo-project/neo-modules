@@ -66,5 +66,5 @@ Enable neo-cli Logging with timestamps by showing messages with different levels
 Add this plugin to your application if need to access the log files. This can be useful to handle notifications, but remember that this also largely increases the space used by the application. `RpcServer` is also needed for this plugin. You can find more details [here](https://docs.neo.org/docs/en-us/reference/rpc/latest-version/api/getapplicationlog.html).
 
 ## C# SDK
-### RPC Client
-The RPC client to call NEO RPC methods.
+### RpcClient
+The RpcClient Plugin is an individual SDK which is used to call NEO RPC methods for development using.
