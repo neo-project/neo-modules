@@ -7,7 +7,7 @@ Each neo-cli can optionally install Restful plugin to enable related services. Y
 
 After installation, you need to restart the neo-cli server for the plugin to take effect.
 
-Note: You should copy the dll files in the `lib` folder to the binary directory.
+Note: You should create a file named `RestServer.xml` in RestServer folder and put the dependency files in the Plugins directory.
 
 ## Modifying configuration file
 Before installing the plugin, you can modify the BindAddress, Port and other parameters in the config.json file in the RestServer folder:
