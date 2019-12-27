@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>RestPlugin</name>
+    </assembly>
+    <members>
+        <member name="M:RestPlugin.RestController.GetBestBlockHash">
+            <summary>
+            Get the lastest block hash of the blockchain 
+            </summary>
+            <returns></returns>
+            <response code="200">block hash</response>
+        </member>
+        <member name="M:RestPlugin.RestController.GetBlock(System.String,System.Int32,System.Int32)">
+            <summary>
+            Get a block with the specified hash or at a certain height, only hash taking effect if hash and index are both non-null
+            </summary>
+            <param name="hash">block hash</param>
+            <param name="index">block height</param>
+            <param name="verbose">0:get block serialized in hexstring; 1: get block in Json format</param>
+            <returns></returns>
+            <response code="200">block information</response>
+        </member>
+        <member name="M:RestPlugin.RestController.GetBlockCount">
+            <summary>
+            Get the block count of the blockchain
+            </summary>
+            <returns></returns>
+            <response code="200">block count</response>
+        </member>
+        <member name="M:RestPlugin.RestController.GetBlockHash(System.UInt32)">
+            <summary>
+            Get the block hash with the specified index
+            </summary>
+            <param name="index">block height</param>
+            <returns></returns>
+            <response code="200">Block Hash</response>
+        </member>
+        <member name="M:RestPlugin.RestController.GetBlockHeader(System.UInt32,System.Int32)">
+            <summary>
+            Get the block header with the specified hash
+            </summary>
+            <param name="index">block height</param>
+            <param name="verbose">0:get block serialized in hexstring; 1: get block in Json format</param>
+            <returns></returns>
+            <response code="200">block header</response>
+        </member>
+        <member name="M:RestPlugin.RestController.GetBlockSysFee(System.UInt32)">
+            <summary>
+            Get the system fees before the block with the specified index
+            </summary>
+            <param name="index">block height</param>
+            <returns></returns>
+            <response code="200">Block System Fee</response>
+            <response code="400">Invalid Height</response>
+        </member>
+        <member name="M:RestPlugin.RestController.GetContractState(System.String)">
+            <summary>
+            Get a contract with the specified script hash
+            </summary>
+            <param name="scriptHash">contract scriptHash</param>
+            <returns></returns>
+            <response code="200">Contract State</response>
+            <response code="400">Unknown Contract</response>
+        </member>
+        <member name="M:RestPlugin.RestController.GetRawMemPool(System.Int32)">
+            <summary>
+            Gets unconfirmed transactions in memory
+            </summary>
+            <param name="getUnverified">0: get all transactions; 1: get verified transactions</param>
+            <returns></returns>
+            <response code="200">Transactions in Memory Pool</response>
+        </member>
+        <member name="M:RestPlugin.RestController.GetRawTransaction(System.String,System.Int32)">
+            <summary>
+            Get a transaction with the specified hash value	
+            </summary>
+            <param name="txid">transaction hash</param>
+            <param name="verbose">0:get block serialized in hexstring; 1: get block in Json format</param>
+            <returns></returns>
+            <response code="200">Transaction Information</response>
+        </member>
+        <member name="M:RestPlugin.RestController.GetStorage(System.String,System.String)">
+            <summary>
+            Get the stored value with the contract script hash and the key
+            </summary>
+            <param name="scriptHash">contract scriptHash</param>
+            <param name="key">stored key</param>
+            <returns></returns>
+            <response code="200">Stored Value</response>
+        </member>
+        <member name="M:RestPlugin.RestController.GetTransactionHeight(System.String)">
+            <summary>
+            Get the block index in which the transaction is found
+            </summary>
+            <param name="txid">transaction hash</param>
+            <returns></returns>
+            <response code="200">Transaction Height</response>
+            <response code="400">Unknown Transaction</response>
+        </member>
+        <member name="M:RestPlugin.RestController.GetValidators">
+            <summary>
+            Get latest validators
+            </summary>
+            <returns></returns>
+            <response code="200">Latest Validators</response>
+        </member>
+        <member name="M:RestPlugin.RestController.GetVersion">
+            <summary>
+            Get version of the connected node
+            </summary>
+            <returns></returns>
+            <response code="200">Node Version</response>
+        </member>
+        <member name="M:RestPlugin.RestController.GetConnectionCount">
+            <summary>
+            Get the current number of connections for the node
+            </summary>
+            <returns></returns>
+            <response code="200">Connections Count</response>
+        </member>
+        <member name="M:RestPlugin.RestController.GetPeers">
+            <summary>
+            Get the peers of the node
+            </summary>
+            <returns></returns>
+            <response code="200">Peers Information</response>
+        </member>
+        <member name="M:RestPlugin.RestController.ListPlugins">
+            <summary>
+            Get plugins loaded by the node
+            </summary>
+            <returns></returns>
+            <response code="200">Plugins Loaded</response>
+        </member>
+        <member name="M:RestPlugin.RestController.ValidateAddress(System.String)">
+            <summary>
+            Verify whether the address is a correct NEO address	    
+            </summary>
+            <param name="address">address to be veirifed</param>
+            <returns></returns>
+            <response code="200">Verification Result</response>
+        </member>
+        <member name="M:RestPlugin.RestController.InvokeFunction(RestPlugin.InvokeFunctionParameter)">
+            <summary>
+            Invoke a smart contract with specified script hash, passing in an operation and the corresponding params	
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:RestPlugin.RestController.InvokeScript(RestPlugin.InvokeScriptParameter)">
+            <summary>
+            Run a script through the virtual machine and get the result
+            </summary>
+            <param name="param"></param>
+            <returns></returns>
+        </member>
+        <member name="M:RestPlugin.RestController.SendRawTransaction(System.String)">
+            <summary>
+            Broadcast a transaction over the network
+            </summary>
+            <param name="hex">hexstring of the transaction</param>
+            <returns></returns>
+        </member>
+        <member name="M:RestPlugin.RestController.SubmitBlock(System.String)">
+            <summary>
+            Relay a new block to the network
+            </summary>
+            <param name="hex">hexstring of the block</param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

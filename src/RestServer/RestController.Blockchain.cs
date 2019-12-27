@@ -109,29 +109,22 @@ namespace Neo.Plugins
         public IActionResult GetBlockHeader(string hash, int index, int verbose = 0)
         {
             JObject key;
+            bool isVerbose = verbose == 0 ? false : true;
+            Header header;
             if (hash != null)
             {
                 key = new JString(hash);
+                UInt256 _hash = UInt256.Parse(key.AsString());
+                header = Blockchain.Singleton.View.GetHeader(_hash);
             }
             else
             {
                 key = new JNumber(index);
-            }
-            bool isVerbose = verbose == 0 ? false : true;
-            Header header;
-            if (key is JNumber)
-            {
                 uint height = uint.Parse(key.AsString());
                 header = Blockchain.Singleton.GetHeader(height);
             }
-            else
-            {
-                UInt256 _hash = UInt256.Parse(key.AsString());
-                header = Blockchain.Singleton.View.GetHeader(_hash);
-            }
             if (header == null)
                 throw new RestException(-100, "Unknown block");
-
             if (isVerbose)
             {
                 JObject json = header.ToJson();
@@ -144,7 +137,6 @@ namespace Neo.Plugins
 
             return FormatJson(header.ToArray().ToHexString());
         }
-
 
         /// <summary>
         /// Get the system fees before the block with the specified index

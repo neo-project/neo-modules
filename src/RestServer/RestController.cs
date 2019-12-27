@@ -6,7 +6,7 @@ namespace Neo.Plugins
     [Produces("application/json")]
     public partial class RestController : ControllerBase
     {
-        private NeoSystem system;
+        private readonly NeoSystem system;
 
         public RestController(NeoSystem system)
         {

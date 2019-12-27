@@ -273,7 +273,6 @@ namespace Neo.Plugins
             return FormatJson(SignAndRelay(tx));
         }
 
-
         /// <summary>
         /// Transfer to the specified address
         /// </summary>
@@ -332,6 +331,7 @@ namespace Neo.Plugins
                 return context.ToJson();
             }
         }
+
         private void ProcessInvokeWithWallet(JObject result)
         {
             if (wallet != null)

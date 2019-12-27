@@ -68,17 +68,13 @@ namespace Neo.Plugins
               })
             .Configure(app =>
             {
-                //app.UseHttpsRedirection();
                 app.UseMiddleware<ExceptionMiddleware>();
-
                 app.UseSwagger();
-
                 app.UseSwaggerUI(c =>
                 {
                     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Neo Rest API");
                     c.RoutePrefix = string.Empty;
                 });
-
                 app.UseMvc();
             })
             .Build();

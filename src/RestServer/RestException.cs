@@ -37,12 +37,10 @@ namespace Neo.Plugins
         private Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             context.Response.ContentType = "application/json";
-
             JObject response = new JObject();
             response["error"] = new JObject();
             response["error"]["code"] = exception.HResult;
             response["error"]["message"] = exception.Message;
-
             return context.Response.WriteAsync(response.ToString());
         }
     }
