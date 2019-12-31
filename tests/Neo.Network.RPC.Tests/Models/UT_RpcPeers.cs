@@ -1,9 +1,8 @@
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.IO.Json;
-using Neo.Network.RPC.Models;
 
-namespace Neo.Network.RPC.Tests.Models
+namespace Neo.Network.RPC.Models.Tests
 {
     [TestClass]
     public class UT_RpcPeers

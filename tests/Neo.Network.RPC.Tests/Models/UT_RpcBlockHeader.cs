@@ -1,8 +1,8 @@
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Network.RPC.Models;
+using Neo.Network.RPC.Tests;
 
-namespace Neo.Network.RPC.Tests.Models
+namespace Neo.Network.RPC.Models.Tests
 {
     [TestClass]
     public class UT_RpcBlockHeader

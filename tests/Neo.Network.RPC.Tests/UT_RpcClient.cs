@@ -93,6 +93,22 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
+        public void TestConstructorByUrlAndDispose()
+        {
+            //dummy url for test
+            var client = new RpcClient("http://www.xxx.yyy");
+            Action action = () => client.Dispose();
+            action.Should().NotThrow<Exception>();
+        }
+
+        [TestMethod]
+        public void TestConstructorWithBasicAuth()
+        {
+            var client = new RpcClient("http://www.xxx.yyy", "krain", "123456");
+            client.Dispose();
+        }
+
+        [TestMethod]
         public void TestGetBestBlockHash()
         {
             JObject response = CreateResponse(1);
@@ -511,25 +527,27 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public void TestSendRawTransaction()
         {
-            JObject json = true;
+            var json = new JObject();
+            json["hash"] = UInt256.Zero.ToString();
             JObject response = CreateResponse(1);
             response["result"] = json;
             MockResponse(response.ToString());
 
             var result = rpc.SendRawTransaction("80000001195876cb34364dc38b730077156c6bc3a7fc570044a66fbfeeea56f71327e8ab0000029b7cffdaa674beae0f930ebe6085af9093e5fe56b34a5c220ccdcf6efc336fc500c65eaf440000000f9a23e06f74cf86b8827a9108ec2e0f89ad956c9b7cffdaa674beae0f930ebe6085af9093e5fe56b34a5c220ccdcf6efc336fc50092e14b5e00000030aab52ad93f6ce17ca07fa88fc191828c58cb71014140915467ecd359684b2dc358024ca750609591aa731a0b309c7fb3cab5cd0836ad3992aa0a24da431f43b68883ea5651d548feb6bd3c8e16376e6e426f91f84c58232103322f35c7819267e721335948d385fae5be66e7ba8c748ac15467dcca0693692dac".HexToBytes());
-            Assert.AreEqual(json.ToString(), ((JObject)result).ToString());
+            Assert.AreEqual(UInt256.Zero.ToString(), result);
         }
 
         [TestMethod]
         public void TestSubmitBlock()
         {
-            JObject json = true;
+            var json = new JObject();
+            json["hash"] = UInt256.Zero.ToString();
             JObject response = CreateResponse(1);
             response["result"] = json;
             MockResponse(response.ToString());
 
             var result = rpc.SubmitBlock("03febccf81ac85e3d795bc5cbd4e84e907812aa3".HexToBytes());
-            Assert.AreEqual(json.ToString(), ((JObject)result).ToString());
+            Assert.AreEqual(UInt256.Zero.ToString(), result);
         }
 
         [TestMethod]
@@ -546,13 +564,128 @@ namespace Neo.Network.RPC.Tests
             Assert.AreEqual(json.ToString(), result.ToJson().ToString());
         }
 
-        [TestMethod]
-        public void TestConstructorByUrlAndDispose()
+        [TestMethod()]
+        public void GetApplicationLogTest()
         {
-            //dummy url for test
-            var client = new RpcClient("http://www.xxx.yyy");
-            Action action = () => client.Dispose();
-            action.Should().NotThrow<Exception>();
+            JObject json = JObject.Parse(@"
+            {
+                ""txid"": ""0x92b1ecc0e8ca8d6b03db7fe6297ed38aa5578b3e6316c0526b414b453c89e20d"",
+                ""trigger"": ""Application"",
+                ""vmstate"": ""HALT"",
+                ""gas_consumed"": ""291200000"",
+                ""stack"": [
+                    { 
+                        ""type"": ""Integer"",
+                        ""value"": ""1"" 
+                    } 
+                ],
+                ""notifications"": [
+                    {
+                        ""contract"": ""0x78e6d16b914fe15bc16150aeb11d0c2a8e532bdd"",
+                        ""state"": {
+                            ""type"": ""Array"",
+                            ""value"": [
+                                {
+                                    ""type"": ""ByteArray"",
+                                    ""value"": ""7472616e73666572""
+                                },
+                                {
+                                    ""type"": ""ByteArray"",
+                                    ""value"": ""d086ac0ed3e578a1afd3c0a2c0d8f0a180405be2""
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }");
+            JObject response = CreateResponse(1);
+            response["result"] = json;
+            MockResponse(response.ToString());
+
+            var result = rpc.GetApplicationLog("00046e616d656724058e5e1b6008847cd662728549088a9ee82191");
+            Assert.AreEqual(json.ToString(), result.ToJson().ToString());
+        }
+
+        [TestMethod()]
+        public void GetNep5TransfersTest()
+        {
+            JObject json = JObject.Parse(@"
+            {
+                ""sent"": [
+                    {
+                        ""timestamp"": 1554283931,
+                        ""asset_hash"": ""0x1aada0032aba1ef6d1f07bbd8bec1d85f5380fb3"",
+                        ""transfer_address"": ""NaEVDyZ5aivkKaH6PrmLe7e1xhJViQHQz5"",
+                        ""amount"": ""100000000000"",
+                        ""block_index"": 368082,
+                        ""transfer_notify_index"": 0,
+                        ""tx_hash"": ""0x240ab1369712ad2782b99a02a8f9fcaa41d1e96322017ae90d0449a3ba52a564""
+                    },
+                    {
+                        ""timestamp"": 1554880287,
+                        ""asset_hash"": ""0x1aada0032aba1ef6d1f07bbd8bec1d85f5380fb3"",
+                        ""transfer_address"": ""NaEVDyZ5aivkKaH6PrmLe7e1xhJViQHQz5"",
+                        ""amount"": ""100000000000"",
+                        ""block_index"": 397769,
+                        ""transfer_notify_index"": 0,
+                        ""tx_hash"": ""0x12fdf7ce8b2388d23ab223854cb29e5114d8288c878de23b7924880f82dfc834""
+                    }
+                ],
+                ""received"": [
+                    {
+                        ""timestamp"": 1555055087,
+                        ""asset_hash"": ""0xed5620eec5759861842e8182524fdb0321e6d831"",
+                        ""transfer_address"": ""NaEVDyZ5aivkKaH6PrmLe7e1xhJViQHQz5"",
+                        ""amount"": ""200000000000000"",
+                        ""block_index"": 406373,
+                        ""transfer_notify_index"": 0,
+                        ""tx_hash"": ""0x73e55f8048367f86d7da92b29ea38b739f984e86759bdeacd2244d491e60e9eb""
+                    },
+                    {
+                        ""timestamp"": 1555651816,
+                        ""asset_hash"": ""0x600c4f5200db36177e3e8a09e9f18e2fc7d12a0f"",
+                        ""transfer_address"": ""NaEVDyZ5aivkKaH6PrmLe7e1xhJViQHQz5"",
+                        ""amount"": ""1000000"",
+                        ""block_index"": 436036,
+                        ""transfer_notify_index"": 0,
+                        ""tx_hash"": ""0xdf7683ece554ecfb85cf41492c5f143215dd43ef9ec61181a28f922da06aba58""
+                    }
+                ],
+                ""address"": ""NaEVDyZ5aivkKaH6PrmLe7e1xhJViQHQz5""
+            }");
+            JObject response = CreateResponse(1);
+            response["result"] = json;
+            MockResponse(response.ToString());
+
+            var result = rpc.GetNep5Transfers("NaEVDyZ5aivkKaH6PrmLe7e1xhJViQHQz5");
+            Assert.AreEqual(json.ToString(), result.ToJson().ToString());
+        }
+
+        [TestMethod()]
+        public void GetNep5BalancesTest()
+        {
+            JObject json = JObject.Parse(@"
+            {
+            ""balance"": [
+                {
+                    ""asset_hash"": ""0xa48b6e1291ba24211ad11bb90ae2a10bf1fcd5a8"",
+                    ""amount"": ""50000000000"",
+                    ""last_updated_block"": 251604
+                },
+                {
+                    ""asset_hash"": ""0x1aada0032aba1ef6d1f07bbd8bec1d85f5380fb3"",
+                    ""amount"": ""50000000000"",
+                    ""last_updated_block"": 251600
+                }
+            ],
+            ""address"": ""NaEVDyZ5aivkKaH6PrmLe7e1xhJViQHQz5""
+        }");
+            JObject response = CreateResponse(1);
+            response["result"] = json;
+            MockResponse(response.ToString());
+
+            var result = rpc.GetNep5Balances("AbHgdBaWEnHkCiLtDZXjhvhaAK2cwFh5pF");
+            Assert.AreEqual(json.ToString(), result.ToJson().ToString());
         }
     }
 }

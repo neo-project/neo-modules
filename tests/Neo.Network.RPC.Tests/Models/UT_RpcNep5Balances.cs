@@ -1,10 +1,10 @@
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.IO.Json;
-using Neo.Network.RPC.Models;
+using System.Linq;
 using System.Numerics;
 
-namespace Neo.Network.RPC.Tests.Models
+namespace Neo.Network.RPC.Models.Tests
 {
     [TestClass]
     public class UT_RpcNep5Balances
@@ -16,7 +16,7 @@ namespace Neo.Network.RPC.Tests.Models
         {
             balances = new RpcNep5Balances()
             {
-                Address = "abc",
+                UserScriptHash = UInt160.Zero,
                 Balances = new RpcNep5Balance[] {
                     new RpcNep5Balance()
                     {
@@ -30,27 +30,27 @@ namespace Neo.Network.RPC.Tests.Models
                         Amount = new BigInteger(1),
                         LastUpdatedBlock = 1
                     }
-                }
+                }.ToList()
             };
         }
 
         [TestMethod]
         public void TestAddress()
         {
-            balances.Address.Should().Be("abc");
+            balances.UserScriptHash.Should().Be(UInt160.Zero);
         }
 
         [TestMethod]
         public void TestBalances()
         {
-            balances.Balances.Length.Should().Be(2);
+            balances.Balances.Count.Should().Be(2);
         }
 
         [TestMethod]
         public void TestToJson()
         {
             var json = balances.ToJson();
-            json["address"].AsString().Should().Be("abc");
+            json["address"].AsString().Should().Be("NKuyBkoGdZZSLyPbJEetheRhMjeznFZszf");
             ((JArray)json["balance"]).Count.Should().Be(2);
         }
 
@@ -59,8 +59,8 @@ namespace Neo.Network.RPC.Tests.Models
         {
             var json = balances.ToJson();
             var rpcNep5Balances = RpcNep5Balances.FromJson(json);
-            rpcNep5Balances.Address.Should().Be("abc");
-            rpcNep5Balances.Balances.Length.Should().Be(2);
+            rpcNep5Balances.UserScriptHash.Should().Be(UInt160.Zero);
+            rpcNep5Balances.Balances.Count.Should().Be(2);
         }
     }
 }

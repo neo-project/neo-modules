@@ -36,7 +36,7 @@ namespace Neo.Network.RPC.Tests
 
         public static Mock<RpcClient> MockRpcClient(UInt160 sender, byte[] script)
         {
-            var mockRpc = new Mock<RpcClient>(MockBehavior.Strict, "http://seed1.neo.org:10331");
+            var mockRpc = new Mock<RpcClient>(MockBehavior.Strict, "http://seed1.neo.org:10331", null, null);
 
             // MockHeight
             mockRpc.Setup(p => p.RpcSend("getblockcount")).Returns(100).Verifiable();
