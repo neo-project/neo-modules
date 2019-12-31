@@ -5,7 +5,7 @@ using System.Net;
 
 namespace Neo.Plugins
 {
-    internal class Settings
+    internal class RestSettings
     {
         public IPAddress BindAddress { get; }
         public ushort Port { get; }
@@ -18,9 +18,9 @@ namespace Neo.Plugins
         public long MaxFee { get; }
         public string[] DisabledMethods { get; }
 
-        public static Settings Default { get; private set; }
+        public static RestSettings Default { get; private set; }
 
-        private Settings(IConfigurationSection section)
+        private RestSettings(IConfigurationSection section)
         {
             this.BindAddress = IPAddress.Parse(section.GetSection("BindAddress").Value);
             this.Port = ushort.Parse(section.GetSection("Port").Value);
@@ -36,7 +36,7 @@ namespace Neo.Plugins
 
         public static void Load(IConfigurationSection section)
         {
-            Default = new Settings(section);
+            Default = new RestSettings(section);
         }
     }
 }

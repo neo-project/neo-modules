@@ -217,7 +217,7 @@ namespace Neo.Plugins
                 if (tx.NetworkFee < calFee)
                     tx.NetworkFee = calFee;
             }
-            if (tx.NetworkFee > Settings.Default.MaxFee)
+            if (tx.NetworkFee > RestSettings.Default.MaxFee)
                 throw new RestException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return FormatJson(SignAndRelay(tx));
         }
@@ -268,7 +268,7 @@ namespace Neo.Plugins
                 if (tx.NetworkFee < calFee)
                     tx.NetworkFee = calFee;
             }
-            if (tx.NetworkFee > Settings.Default.MaxFee)
+            if (tx.NetworkFee > RestSettings.Default.MaxFee)
                 throw new RestException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return FormatJson(SignAndRelay(tx));
         }
@@ -311,7 +311,7 @@ namespace Neo.Plugins
                 if (tx.NetworkFee < calFee)
                     tx.NetworkFee = calFee;
             }
-            if (tx.NetworkFee > Settings.Default.MaxFee)
+            if (tx.NetworkFee > RestSettings.Default.MaxFee)
                 throw new RestException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return FormatJson(SignAndRelay(tx));
         }

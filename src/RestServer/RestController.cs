@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Neo.Plugins
 {
-    [TypeFilter(typeof(RestServer.AuthorizeActionFilter))]
     [Route("api/")]
     [Produces("application/json")]
     public partial class RestController : ControllerBase

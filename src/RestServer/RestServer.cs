@@ -30,20 +30,20 @@ namespace Neo.Plugins
 
         protected override void Configure()
         {
-            Settings.Load(GetConfiguration());
+            RestSettings.Load(GetConfiguration());
         }
 
         public class AuthorizeActionFilter : IAuthorizationFilter
         {
             public void OnAuthorization(AuthorizationFilterContext context)
             {
-                if (!CheckAuth(context.HttpContext) || Settings.Default.DisabledMethods.Contains(context.HttpContext.Request.Path.ToString()))
+                if (!CheckAuth(context.HttpContext) || RestSettings.Default.DisabledMethods.Contains(context.HttpContext.Request.Path.ToString()))
                     throw new RestException(-400, "Access denied");
             }
 
             private bool CheckAuth(HttpContext context)
             {
-                if (string.IsNullOrEmpty(Settings.Default.RpcUser)) return true;
+                if (string.IsNullOrEmpty(RestSettings.Default.RpcUser)) return true;
 
                 context.Response.Headers["WWW-Authenticate"] = "Basic realm=\"Restricted\"";
 
@@ -62,18 +62,18 @@ namespace Neo.Plugins
                 if (authvalues.Length < 2)
                     return false;
 
-                return authvalues[0] == Settings.Default.RpcUser && authvalues[1] == Settings.Default.RpcPass;
+                return authvalues[0] == RestSettings.Default.RpcUser && authvalues[1] == RestSettings.Default.RpcPass;
             }
         }
 
         protected override void OnPluginsLoaded()
         {
-            host = new WebHostBuilder().UseKestrel(options => options.Listen(Settings.Default.BindAddress, Settings.Default.Port, listenOptions =>
+            host = new WebHostBuilder().UseKestrel(options => options.Listen(RestSettings.Default.BindAddress, RestSettings.Default.Port, listenOptions =>
             {
-                if (string.IsNullOrEmpty(Settings.Default.SslCert)) return;
-                listenOptions.UseHttps(Settings.Default.SslCert, Settings.Default.SslCertPassword, httpsConnectionAdapterOptions =>
+                if (string.IsNullOrEmpty(RestSettings.Default.SslCert)) return;
+                listenOptions.UseHttps(RestSettings.Default.SslCert, RestSettings.Default.SslCertPassword, httpsConnectionAdapterOptions =>
                 {
-                    if (Settings.Default.TrustedAuthorities is null || Settings.Default.TrustedAuthorities.Length == 0)
+                    if (RestSettings.Default.TrustedAuthorities is null || RestSettings.Default.TrustedAuthorities.Length == 0)
                         return;
                     httpsConnectionAdapterOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
                     httpsConnectionAdapterOptions.ClientCertificateValidation = (cert, chain, err) =>
@@ -81,7 +81,7 @@ namespace Neo.Plugins
                         if (err != SslPolicyErrors.None)
                             return false;
                         X509Certificate2 authority = chain.ChainElements[chain.ChainElements.Count - 1].Certificate;
-                        return Settings.Default.TrustedAuthorities.Contains(authority.Thumbprint);
+                        return RestSettings.Default.TrustedAuthorities.Contains(authority.Thumbprint);
                     };
                 });
             }))
