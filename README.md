@@ -1,5 +1,5 @@
 ## What is it
-A set of plugins that can be used inside the NEO core library. Check [here](http://docs.neo.org/en-us/node/plugin.html) for the official documentation.
+A set of plugins that can be used inside the NEO core library. Check [here](https://docs.neo.org/docs/en-us/node/cli/setup.html) for the official documentation.
 
 ## Using plugins
 Plugins can be used to increase functionality, as well as providing policies definitions of the network.
