@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.Swagger;
@@ -7,6 +9,7 @@ using System;
 using System.Linq;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using SystemPath = System.IO.Path;
 
 namespace Neo.Plugins
@@ -28,6 +31,39 @@ namespace Neo.Plugins
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
+        }
+
+        public class AuthorizeActionFilter : IAuthorizationFilter
+        {
+            public void OnAuthorization(AuthorizationFilterContext context)
+            {
+                if (!CheckAuth(context.HttpContext) || Settings.Default.DisabledMethods.Contains(context.HttpContext.Request.Path.ToString()))
+                    throw new RestException(-400, "Access denied");
+            }
+
+            private bool CheckAuth(HttpContext context)
+            {
+                if (string.IsNullOrEmpty(Settings.Default.RpcUser)) return true;
+
+                context.Response.Headers["WWW-Authenticate"] = "Basic realm=\"Restricted\"";
+
+                string reqauth = context.Request.Headers["Authorization"];
+                string authstring;
+                try
+                {
+                    authstring = Encoding.UTF8.GetString(Convert.FromBase64String(reqauth.Replace("Basic ", "").Trim()));
+                }
+                catch
+                {
+                    return false;
+                }
+
+                string[] authvalues = authstring.Split(new string[] { ":" }, StringSplitOptions.RemoveEmptyEntries);
+                if (authvalues.Length < 2)
+                    return false;
+
+                return authvalues[0] == Settings.Default.RpcUser && authvalues[1] == Settings.Default.RpcPass;
+            }
         }
 
         protected override void OnPluginsLoaded()
@@ -62,13 +98,15 @@ namespace Neo.Plugins
                       // Set the comments path for the Swagger JSON and UI.
                       option.IncludeXmlComments(SystemPath.Combine(AppContext.BaseDirectory, "Plugins/RestServer/RestServer.xml"), true);
                   });
-
-                  services.AddMvcCore().AddApiExplorer();
+                  services.AddMvcCore(config =>
+                  {
+                      config.Filters.Add(typeof(AuthorizeActionFilter));
+                  }).AddApiExplorer();
                   services.AddSingleton(s => System);
               })
             .Configure(app =>
             {
-                app.UseMiddleware<ExceptionMiddleware>();
+                app.UseMiddleware<ExceptionGlobalHandling>();
                 app.UseSwagger();
                 app.UseSwaggerUI(c =>
                 {

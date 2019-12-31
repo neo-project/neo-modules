@@ -18,7 +18,7 @@ namespace Neo.Plugins
         /// Get the current number of connections for the node
         /// </summary>
         /// <returns></returns>
-        [HttpGet("network/localnode/connections")]
+        [HttpGet("network/connections")]
         public IActionResult GetConnectionCount()
         {
             return FormatJson(LocalNode.Singleton.ConnectedCount);
@@ -28,7 +28,7 @@ namespace Neo.Plugins
         /// Get the peers of the node
         /// </summary>
         /// <returns></returns>
-        [HttpGet("network/localnode/peers")]
+        [HttpGet("network/peers")]
         public IActionResult GetPeers()
         {
             JObject json = new JObject();
@@ -51,10 +51,10 @@ namespace Neo.Plugins
         }
 
         /// <summary>
-        /// Get version of the connected node
+        /// Get the information about the connected node
         /// </summary>
         /// <returns></returns>
-        [HttpGet("network/localnode/version")]
+        [HttpGet("network/information")]
         public IActionResult GetVersion()
         {
             JObject json = new JObject();

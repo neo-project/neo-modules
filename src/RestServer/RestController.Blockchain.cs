@@ -22,7 +22,7 @@ namespace Neo.Plugins
         /// Get the lastest block hash of the blockchain 
         /// </summary>
         /// <returns></returns>
-        [HttpGet("blocks/bestblockhash")]
+        [HttpGet("blocks/currentblockhash")]
         public IActionResult GetBestBlockHash()
         {
             return FormatJson(Blockchain.Singleton.CurrentBlockHash.ToString());
@@ -33,10 +33,10 @@ namespace Neo.Plugins
         /// </summary>
         /// <param name="hash">block hash</param>
         /// <param name="index">block height</param>
-        /// <param name="verbose">0:get block serialized in hexstring; 1: get block in Json format</param>
+        /// <param name="verbose">false:get block serialized in hexstring; true: get block in Json format</param>
         /// <returns></returns>
         [HttpGet("blocks")]
-        public IActionResult GetBlock(string hash, int index, int verbose = 0)
+        public IActionResult GetBlock(string hash, int index, bool verbose = false)
         {
             JObject key;
             if (hash != null)
@@ -47,7 +47,6 @@ namespace Neo.Plugins
             {
                 key = new JNumber(index);
             }
-            bool isVerbose = verbose == 0 ? false : true;
             Block block;
             if (key is JNumber)
             {
@@ -61,7 +60,7 @@ namespace Neo.Plugins
             }
             if (block == null)
                 throw new RestException(-100, "Unknown block");
-            if (isVerbose)
+            if (verbose)
             {
                 JObject json = block.ToJson();
                 json["confirmations"] = Blockchain.Singleton.Height - block.Index + 1;
@@ -103,13 +102,12 @@ namespace Neo.Plugins
         /// </summary>
         /// <param name="hash">block hash</param>
         /// <param name="index">block height</param>
-        /// <param name="verbose">0:get block serialized in hexstring; 1: get block in Json format</param>
+        /// <param name="verbose">false:get block serialized in hexstring; true: get block in Json format</param>
         /// <returns></returns>
         [HttpGet("blocks/header")]
-        public IActionResult GetBlockHeader(string hash, int index, int verbose = 0)
+        public IActionResult GetBlockHeader(string hash, int index, bool verbose = false)
         {
             JObject key;
-            bool isVerbose = verbose == 0 ? false : true;
             Header header;
             if (hash != null)
             {
@@ -125,7 +123,7 @@ namespace Neo.Plugins
             }
             if (header == null)
                 throw new RestException(-100, "Unknown block");
-            if (isVerbose)
+            if (verbose)
             {
                 JObject json = header.ToJson();
                 json["confirmations"] = Blockchain.Singleton.Height - header.Index + 1;
@@ -197,17 +195,16 @@ namespace Neo.Plugins
         /// Get a transaction with the specified hash value	
         /// </summary>
         /// <param name="txid">transaction hash</param>
-        /// <param name="verbose">0:get block serialized in hexstring; 1: get block in Json format</param>
+        /// <param name="verbose">false:get block serialized in hexstring; true: get block in Json format</param>
         /// <returns></returns>
         [HttpGet("transactions/{txid}")]
-        public IActionResult GetRawTransaction(string txid, int verbose = 0)
+        public IActionResult GetRawTransaction(string txid, bool verbose = false)
         {
             UInt256 hash = UInt256.Parse(txid);
-            bool isVerbose = verbose == 0 ? false : true;
             Transaction tx = Blockchain.Singleton.GetTransaction(hash);
             if (tx == null)
                 throw new RestException(-100, "Unknown transaction");
-            if (isVerbose)
+            if (verbose)
             {
                 JObject json = tx.ToJson();
                 TransactionState txState = Blockchain.Singleton.View.Transactions.TryGet(hash);

@@ -36,7 +36,7 @@ namespace Neo.Plugins
         /// Close the wallet
         /// </summary>
         /// <returns></returns>
-        [HttpGet("wallets/closewallet")]
+        [HttpGet("wallet/closewallet")]
         public IActionResult CloseWallet()
         {
             wallet = null;
@@ -48,7 +48,7 @@ namespace Neo.Plugins
         /// </summary>
         /// <param name="address"> Addresse of the private key, required to be a standard address.</param>
         /// <returns></returns>
-        [HttpGet("wallets/dumpprivkey")]
+        [HttpGet("wallet/dumpprivkey")]
         public IActionResult DumpPrivKey(string address)
         {
             CheckWallet();
@@ -62,7 +62,7 @@ namespace Neo.Plugins
         /// </summary>
         /// <param name="assetID"> Asset id</param>
         /// <returns></returns>
-        [HttpGet("wallets/balance")]
+        [HttpGet("wallet/balance")]
         public IActionResult GetBalance(string assetID)
         {
             CheckWallet();
@@ -76,7 +76,7 @@ namespace Neo.Plugins
         /// Create a new address
         /// </summary>
         /// <returns></returns>
-        [HttpGet("wallets/newaddress")]
+        [HttpGet("wallet/newaddress")]
         public IActionResult GetNewAddress()
         {
             CheckWallet();
@@ -90,7 +90,7 @@ namespace Neo.Plugins
         /// Get the amount of unclaimed GAS
         /// </summary>
         /// <returns></returns>
-        [HttpGet("wallets/unclaimedgas")]
+        [HttpGet("wallet/unclaimedgas")]
         public IActionResult GetUnclaimedGas()
         {
             CheckWallet();
@@ -108,7 +108,7 @@ namespace Neo.Plugins
         /// </summary>
         /// <param name="privkey">The WIF-format private key</param>
         /// <returns></returns>
-        [HttpGet("wallets/importprivkey")]
+        [HttpGet("wallet/importprivkey")]
         public IActionResult ImportPrivKey(string privkey)
         {
             CheckWallet();
@@ -131,7 +131,7 @@ namespace Neo.Plugins
         /// <param name="path"> Path of the wallet</param>
         /// <param name="password">  Wallet password</param>
         /// <returns></returns>
-        [HttpPost("wallets/openwallet")]
+        [HttpPost("wallet/openwallet")]
         public IActionResult OpenWallet(string path, string password)
         {
             if (!SystemFile.Exists(path)) return NotFound();
@@ -159,7 +159,7 @@ namespace Neo.Plugins
         /// List all the addresses
         /// </summary>
         /// <returns></returns>
-        [HttpGet("wallets/listaddresses")]
+        [HttpGet("wallet/listaddresses")]
         public IActionResult ListAddress()
         {
             CheckWallet();
@@ -183,7 +183,7 @@ namespace Neo.Plugins
         /// <param name="to">  Destination address </param>
         /// <param name="amount"> Transfer amount </param>
         /// <returns></returns>
-        [HttpPost("wallets/sendasset")]
+        [HttpPost("wallet/sendasset")]
         public IActionResult SendFrom(string assetid, string from, string to, string amount)
         {
             CheckWallet();
@@ -227,7 +227,7 @@ namespace Neo.Plugins
         /// </summary>
         /// <param name="assets"> Array of assets to be transferred </param>
         /// <returns></returns>
-        [HttpPost("wallets/sendmany")]
+        [HttpPost("wallet/sendmany")]
         public IActionResult SendMany(Assets assets)
         {
             CheckWallet();
@@ -278,7 +278,7 @@ namespace Neo.Plugins
         /// </summary>
         /// <param name="asset"> Asset information to be transferred </param>
         /// <returns></returns>
-        [HttpPost("wallets/sendtoaddress")]
+        [HttpPost("wallet/sendtoaddress")]
         public IActionResult SendToAddress(Asset asset)
         {
             CheckWallet();

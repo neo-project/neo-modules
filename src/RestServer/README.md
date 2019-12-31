@@ -33,7 +33,7 @@ Before installing the plugin, you can modify the BindAddress, Port and other par
  
 | Type| URL | Param | Desc | 
 |---|-------|-----|----|
-|GET|api/blocks/bestblockhash| - | Get the lastest block hash of the blockchain|
+|GET|api/blocks/currentblockhash| - | Get the lastest block hash of the blockchain|
 |GET|api/blocks| hash \| index & [verbose=0] | Get a block with the specified hash or at a certain height, only hash taking effect if hash and index are both non-null|
 |GET|api/blocks/count|-| Get the block count of the blockchain|
 |GET|api/blocks/{index}/hash|index| Get the block hash with the specified index|

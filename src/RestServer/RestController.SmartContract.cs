@@ -57,7 +57,7 @@ namespace Neo.Plugins
         /// </summary>
         /// <param name="param"></param>
         /// <returns></returns>
-        [HttpPost("contracts/invokingfunction")]
+        [HttpPost("contracts/invokefunction")]
         public IActionResult InvokeFunction(InvokeFunctionParameter param)
         {
             UInt160 script_hash = UInt160.Parse(param.ScriptHash);
@@ -76,7 +76,7 @@ namespace Neo.Plugins
         /// </summary>
         /// <param name="param"></param>
         /// <returns></returns>
-        [HttpPost("contracts/invokingscript")]
+        [HttpPost("contracts/invokescript")]
         public IActionResult InvokeScript(InvokeScriptParameter param)
         {
                 byte[] script = param.Script.HexToBytes();

@@ -14,7 +14,7 @@ namespace Neo.Plugins
         /// Get plugins loaded by the node
         /// </summary>
         /// <returns></returns>
-        [HttpGet("network/localnode/plugins")]
+        [HttpGet("plugins/list")]
         public IActionResult ListPlugins()
         {
             JArray json = new JArray(RestServer.Plugins
@@ -36,7 +36,7 @@ namespace Neo.Plugins
         /// </summary>
         /// <param name="address">address to be veirifed</param>
         /// <returns></returns>
-        [HttpGet("wallets/verifyingaddress/{address}")]
+        [HttpGet("wallet/verifyaddress/{address}")]
         public IActionResult ValidateAddress(string address)
         {
             JObject json = new JObject();
