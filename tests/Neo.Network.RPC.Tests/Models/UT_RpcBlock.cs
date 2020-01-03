@@ -19,6 +19,9 @@ namespace Neo.Network.RPC.Models.Tests
             var json = rpcBlock.ToJson();
             json["previousblockhash"].AsString().Should().Be("0x0000000000000000000000000000000000000000000000000000000000000000");
             json["confirmations"].AsNumber().Should().Be(1);
+
+            var copy = RpcBlock.FromJson(json);
+            copy.ToJson().ToString().Should().Be(json.ToString());
         }
     }
 }

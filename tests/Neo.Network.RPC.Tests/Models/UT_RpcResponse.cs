@@ -28,6 +28,9 @@ namespace Neo.Network.RPC.Models.Tests
             json["jsonrpc"].AsString().Should().Be("rpc");
             json["error"].AsString().Should().Be(error.ToJson().AsString());
             json["result"].AsBoolean().Should().BeTrue();
+
+            var copy = RpcResponse.FromJson(json);
+            copy.ToJson().ToString().Should().Be(json.ToString());
         }
     }
 }

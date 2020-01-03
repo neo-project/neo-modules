@@ -44,6 +44,9 @@ namespace Neo.Network.RPC.Models.Tests
             json["address"].AsString().Should().Be("NKuyBkoGdZZSLyPbJEetheRhMjeznFZszf");
             ((JArray)json["sent"]).Count.Should().Be(1);
             ((JArray)json["received"]).Single()["amount"].AsString().Should().Be("1000");
+
+            var copy = RpcNep5Transfers.FromJson(json);
+            copy.ToJson().ToString().Should().Be(json.ToString());
         }
 
         [TestMethod]

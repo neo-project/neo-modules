@@ -17,10 +17,13 @@ namespace Neo.Network.RPC.Models.Tests
                 UserAgent = "agent"
             };
             var json = version.ToJson();
-            json["topPort"].AsNumber().Should().Be(800);
+            json["tcpPort"].AsNumber().Should().Be(800);
             json["wsPort"].AsNumber().Should().Be(900);
             json["nonce"].AsNumber().Should().Be(1);
             json["useragent"].AsString().Should().Be("agent");
+
+            var copy = RpcVersion.FromJson(json);
+            copy.ToJson().ToString().Should().Be(json.ToString());
         }
     }
 }

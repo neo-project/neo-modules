@@ -23,6 +23,9 @@ namespace Neo.Network.RPC.Models.Tests
             json["height"].AsNumber().Should().Be(1);
             json["verified"].AsString().Should().Be("a,b");
             json["unverified"].AsString().Should().Be("c,d");
+
+            var copy = RpcRawMemPool.FromJson(json);
+            copy.ToJson().ToString().Should().Be(json.ToString());
         }
     }
 }

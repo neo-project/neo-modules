@@ -25,6 +25,9 @@ namespace Neo.Network.RPC.Models.Tests
             rpcRequest.Method.Should().Be("get");
             rpcRequest.Id.Should().Be(1);
             rpcRequest.Params.Length.Should().Be(1);
+
+            var copy = RpcRequest.FromJson(json);
+            copy.ToJson().ToString().Should().Be(json.ToString());
         }
     }
 }
