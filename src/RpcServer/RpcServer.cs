@@ -91,6 +91,10 @@ namespace Neo.Plugins
         {
             host = new WebHostBuilder().UseKestrel(options => options.Listen(Settings.Default.BindAddress, Settings.Default.Port, listenOptions =>
             {
+                options.Limits.MaxConcurrentConnections = 40;
+                options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(1);
+                options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(15);
+
                 if (string.IsNullOrEmpty(Settings.Default.SslCert)) return;
                 listenOptions.UseHttps(Settings.Default.SslCert, Settings.Default.SslCertPassword, httpsConnectionAdapterOptions =>
                 {
