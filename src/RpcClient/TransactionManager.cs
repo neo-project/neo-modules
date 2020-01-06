@@ -104,7 +104,14 @@ namespace Neo.Network.RPC
             foreach (var hash in hashes)
             {
                 size += 166;
-                networkFee += ApplicationEngine.OpCodePrices[OpCode.PUSHBYTES64] + ApplicationEngine.OpCodePrices[OpCode.PUSHBYTES33] + InteropService.GetPrice(InteropService.Crypto.ECDsaVerify, null);
+                networkFee += ApplicationEngine.OpCodePrices[OpCode.PUSHNULL]; // message
+                using (ScriptBuilder sb = new ScriptBuilder())
+                {
+                    networkFee += ApplicationEngine.OpCodePrices[(OpCode)sb.EmitPush(64).ToArray()[0]]; // signature
+                    networkFee += ApplicationEngine.OpCodePrices[(OpCode)sb.EmitPush(33).ToArray()[0]]; // pubKey
+                    size += sb.ToArray().Length;
+                }
+                networkFee += InteropService.GetPrice(InteropService.Crypto.ECDsaVerify, null);
             }
 
             networkFee += size * policyAPI.GetFeePerByte();
