@@ -192,10 +192,13 @@ namespace Neo.Plugins
                     script = sb.ToArray();
                 }
 
-                ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, extraGAS: maxGas);
-                if (engine.State.HasFlag(VMState.FAULT)) continue;
-                if (engine.ResultStack.Count <= 0) continue;
-                nep5BalancePair.Value.Balance = engine.ResultStack.Pop().GetBigInteger();
+                using (ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, extraGAS: maxGas))
+                {
+                    if (engine.State.HasFlag(VMState.FAULT)) continue;
+                    if (engine.ResultStack.Count <= 0) continue;
+                    nep5BalancePair.Value.Balance = engine.ResultStack.Pop().GetBigInteger();
+                }
+
                 nep5BalancePair.Value.LastUpdatedBlock = snapshot.Height;
                 if (nep5BalancePair.Value.Balance == 0)
                 {
