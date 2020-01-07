@@ -289,9 +289,9 @@ namespace Neo.Network.RPC
         /// Returns the result after calling a smart contract at scripthash with the given operation and parameters.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
-        public RpcInvokeResult InvokeFunction(string address, string function, RpcStack[] stacks)
+        public RpcInvokeResult InvokeFunction(string scriptHash, string operation, RpcStack[] stacks)
         {
-            return RpcInvokeResult.FromJson(RpcSend("invokefunction", address, function, stacks.Select(p => p.ToJson()).ToArray()));
+            return RpcInvokeResult.FromJson(RpcSend("invokefunction", scriptHash, operation, stacks.Select(p => p.ToJson()).ToArray()));
         }
 
         /// <summary>

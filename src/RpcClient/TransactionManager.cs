@@ -98,7 +98,7 @@ namespace Neo.Network.RPC
         {
             long networkFee = 0;
             UInt160[] hashes = Tx.GetScriptHashesForVerifying(null);
-            int size = Transaction.HeaderSize + Tx.Attributes.GetVarSize() + Tx.Script.GetVarSize() + IO.Helper.GetVarSize(hashes.Length);
+            int size = Transaction.HeaderSize + Tx.Attributes.GetVarSize() + Tx.Cosigners.GetVarSize() + Tx.Script.GetVarSize() + IO.Helper.GetVarSize(hashes.Length);
 
             // assume the hashes are single Signature
             foreach (var hash in hashes)
@@ -118,7 +118,7 @@ namespace Neo.Network.RPC
         {
             long networkFee = 0;
             UInt160[] hashes = Tx.GetScriptHashesForVerifying(null);
-            int size = Transaction.HeaderSize + Tx.Attributes.GetVarSize() + Tx.Script.GetVarSize() + IO.Helper.GetVarSize(hashes.Length);
+            int size = Transaction.HeaderSize + Tx.Attributes.GetVarSize() + Tx.Cosigners.GetVarSize() + Tx.Script.GetVarSize() + IO.Helper.GetVarSize(hashes.Length);
             foreach (UInt160 hash in hashes)
             {
                 byte[] witness_script = context.GetScript(hash);
