@@ -119,7 +119,7 @@ namespace Neo.Network.RPC.Tests
 
             // get signature from Witnesses
             var tx = txManager.Tx;
-            byte[] signature = tx.Witnesses[0].InvocationScript.Skip(1).ToArray();
+            byte[] signature = tx.Witnesses[0].InvocationScript.Skip(2).ToArray();
 
             Assert.IsTrue(Crypto.VerifySignature(tx.GetHashData(), signature, keyPair1.PublicKey.EncodePoint(false).Skip(1).ToArray()));
 
