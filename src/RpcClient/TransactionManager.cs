@@ -62,9 +62,9 @@ namespace Neo.Network.RPC
                 Script = script,
                 Sender = sender,
                 ValidUntilBlock = height + Transaction.MaxValidUntilBlockIncrement,
-                Attributes = attributes ?? new TransactionAttribute[0],
-                Cosigners = cosigners ?? new Cosigner[0],
-                Witnesses = new Witness[0]
+                Attributes = attributes ?? Array.Empty<TransactionAttribute>(),
+                Cosigners = cosigners ?? Array.Empty<Cosigner>(),
+                Witnesses = Array.Empty<Witness>()
             };
 
             // Add witness hashes parameter to pass CheckWitness
@@ -126,7 +126,7 @@ namespace Neo.Network.RPC
                     if (witness_script is null) continue;
                 }
 
-                networkFee += Wallet.CalculateNetWorkFee(witness_script, ref size);
+                networkFee += Wallet.CalculateNetworkFee(witness_script, ref size);
             }
             networkFee += size * policyAPI.GetFeePerByte();
             return networkFee;
