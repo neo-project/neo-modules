@@ -107,7 +107,9 @@ namespace Neo.Network.RPC
                 if (isEstimate)
                 {
                     // assuming the witnesses are basic Signature Contract
-                    KeyPair one = new KeyPair(new byte[31].Concat(new byte[] { 1 }).ToArray());
+                    var dummyKey = new byte[32];
+                    dummyKey[31] = 0x01;
+                    KeyPair one = new KeyPair(dummyKey);
                     witness_script = Contract.CreateSignatureRedeemScript(one.PublicKey);
                 }
                 else
