@@ -59,6 +59,9 @@ Add this plugin to your application if need to access the log files. This can be
 ### Storage Engine
 There, currently, two option for users for the storage engine.
 
+### RPC NEP5 Tracker
+Plugin that enables NEP5 tracking using LevelDB.
+
 #### LevelDBStore
 If there is no further modification of the configuration file of the neo-node, it is the default storage engine in the NEO system. In this case, you should paste the `LevelDBStore` in the Plugins before launching the node.
 
@@ -69,3 +72,4 @@ You can also use `RocksDBStore` in the NEO system by modifying the default stora
 
 #### RpcClient
 The RpcClient Plugin is an individual SDK which is used to call NEO RPC methods for development using.
+In order to use the module for interacting with NEP5 functionalities `RPC NEP5 Tracker` Plugin will be needed.
