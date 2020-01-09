@@ -47,26 +47,31 @@ The resulting folder structure is going to be like this:
 
 ## Plugins/Modules
 
-### StatesDumper
-Exports neo-cli status data \(useful for debugging\), such as storage modifications block by block.
+### ApplicationLogs
+Add this plugin to your application if need to access the log files. This can be useful to handle notifications, but remember that this also largely increases the space used by the application. `RpcServer` is also needed for this plugin. You can find more details [here](https://docs.neo.org/docs/en-us/reference/rpc/latest-version/api/getapplicationlog.html).
 
 ### SystemLog
 Enable neo-cli Logging with timestamps by showing messages with different levels (shown with different colors) \(useful for debugging\).
 
-### ApplicationLogs
-Add this plugin to your application if need to access the log files. This can be useful to handle notifications, but remember that this also largely increases the space used by the application. `RpcServer` is also needed for this plugin. You can find more details [here](https://docs.neo.org/docs/en-us/reference/rpc/latest-version/api/getapplicationlog.html).
+### StatesDumper
+Exports neo-cli status data \(useful for debugging\), such as storage modifications block by block.
+
 
 ### Storage Engine
 There, currently, two option for users for the storage engine.
-
-### RPC NEP5 Tracker
-Plugin that enables NEP5 tracking using LevelDB.
 
 #### LevelDBStore
 If there is no further modification of the configuration file of the neo-node, it is the default storage engine in the NEO system. In this case, you should paste the `LevelDBStore` in the Plugins before launching the node.
 
 #### RocksDBStore
 You can also use `RocksDBStore` in the NEO system by modifying the default storage engine section in the configuration file.
+
+### RpcServer
+Plugin for hosting a RpcServer on the neo-node, being able to disable specific calls.
+
+### RpcNep5Tracker
+Plugin that enables NEP5 tracking using LevelDB.
+This module works in conjunction with RpcServer, otherwise, just local storage (on leveldb) would be created. 
 
 ### C# SDK
 
