@@ -246,7 +246,7 @@ namespace Neo.Network.RPC.Tests
             byte[] script;
             using (var sb = new ScriptBuilder())
             {
-                sb.EmitSysCall(InteropService.System_Runtime_GetInvocationCounter);
+                sb.EmitSysCall(InteropService.Runtime.GetInvocationCounter);
                 script = sb.ToArray();
             }
 

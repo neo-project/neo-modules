@@ -112,16 +112,26 @@ namespace Neo.Network.RPC.Tests
                 }
             };
 
+            Cosigner[] cosigners = new Cosigner[1] {
+                new Cosigner{
+                    Account  =  sender,
+                    Scopes = WitnessScope.Global
+                }
+            };
+
             byte[] script = new byte[1];
-            txManager.MakeTransaction(script, attributes)
+            txManager.MakeTransaction(script, attributes, cosigners)
                 .AddSignature(keyPair1)
                 .Sign();
 
             // get signature from Witnesses
             var tx = txManager.Tx;
-            byte[] signature = tx.Witnesses[0].InvocationScript.Skip(1).ToArray();
+            byte[] signature = tx.Witnesses[0].InvocationScript.Skip(2).ToArray();
 
             Assert.IsTrue(Crypto.VerifySignature(tx.GetHashData(), signature, keyPair1.PublicKey.EncodePoint(false).Skip(1).ToArray()));
+            // verify network fee
+            long networkFee = tx.Size * (long)1000 + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHNULL] + InteropService.GetPrice(InteropService.Crypto.ECDsaVerify, null);
+            Assert.AreEqual(networkFee, tx.NetworkFee);
 
             // duplicate sign should not add new witness
             txManager.AddSignature(keyPair1).Sign();

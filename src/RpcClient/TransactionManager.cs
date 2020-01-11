@@ -4,9 +4,9 @@ using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
-using Neo.VM;
 using Neo.Wallets;
 using System;
+using System.Linq;
 
 namespace Neo.Network.RPC
 {
@@ -62,9 +62,9 @@ namespace Neo.Network.RPC
                 Script = script,
                 Sender = sender,
                 ValidUntilBlock = height + Transaction.MaxValidUntilBlockIncrement,
-                Attributes = attributes ?? new TransactionAttribute[0],
-                Cosigners = cosigners ?? new Cosigner[0],
-                Witnesses = new Witness[0]
+                Attributes = attributes ?? Array.Empty<TransactionAttribute>(),
+                Cosigners = cosigners ?? Array.Empty<Cosigner>(),
+                Witnesses = Array.Empty<Witness>()
             };
 
             // Add witness hashes parameter to pass CheckWitness
@@ -84,56 +84,48 @@ namespace Neo.Network.RPC
             context = new ContractParametersContext(Tx);
 
             // set networkfee to estimate value when networkFee is 0
-            Tx.NetworkFee = networkFee == 0 ? EstimateNetworkFee() : networkFee;
+            Tx.NetworkFee = networkFee == 0 ? CalculateNetworkFee(true) : networkFee;
 
             var gasBalance = nep5API.BalanceOf(NativeContract.GAS.Hash, sender);
             if (gasBalance >= Tx.SystemFee + Tx.NetworkFee) return this;
             throw new InvalidOperationException($"Insufficient GAS in address: {sender.ToAddress()}");
         }
 
-        /// <summary>
-        /// Estimate NetworkFee, assuming the witnesses are basic Signature Contract
-        /// </summary>
-        private long EstimateNetworkFee()
-        {
-            long networkFee = 0;
-            UInt160[] hashes = Tx.GetScriptHashesForVerifying(null);
-            int size = Transaction.HeaderSize + Tx.Attributes.GetVarSize() + Tx.Cosigners.GetVarSize() + Tx.Script.GetVarSize() + IO.Helper.GetVarSize(hashes.Length);
-
-            // assume the hashes are single Signature
-            foreach (var hash in hashes)
-            {
-                size += 166;
-                networkFee += ApplicationEngine.OpCodePrices[OpCode.PUSHBYTES64] + ApplicationEngine.OpCodePrices[OpCode.PUSHBYTES33] + InteropService.GetPrice(InteropService.Neo_Crypto_ECDsaVerify, null);
-            }
-
-            networkFee += size * policyAPI.GetFeePerByte();
-            return networkFee;
-        }
-
-        /// <summary>
-        /// Calculate NetworkFee with context items
-        /// </summary>
-        private long CalculateNetworkFee()
+        /// <param name="isEstimate">assuming the witnesses are basic Signature Contract if set to true</param>
+        /// <returns></returns>
+        private long CalculateNetworkFee(bool isEstimate = false)
         {
             long networkFee = 0;
             UInt160[] hashes = Tx.GetScriptHashesForVerifying(null);
             int size = Transaction.HeaderSize + Tx.Attributes.GetVarSize() + Tx.Cosigners.GetVarSize() + Tx.Script.GetVarSize() + IO.Helper.GetVarSize(hashes.Length);
             foreach (UInt160 hash in hashes)
             {
-                byte[] witness_script = context.GetScript(hash);
-                if (witness_script is null || witness_script.Length == 0)
+                byte[] witness_script = null;
+                if (isEstimate)
                 {
-                    try
+                    // assuming the witnesses are basic Signature Contract
+                    var dummyKey = new byte[32];
+                    dummyKey[31] = 0x01;
+                    KeyPair one = new KeyPair(dummyKey);
+                    witness_script = Contract.CreateSignatureRedeemScript(one.PublicKey);
+                }
+                else
+                {
+                    // calculate NetworkFee with context items
+                    witness_script = context.GetScript(hash);
+                    if (witness_script is null || witness_script.Length == 0)
                     {
-                        witness_script = rpcClient.GetContractState(hash.ToString())?.Script;
+                        try
+                        {
+                            witness_script = rpcClient.GetContractState(hash.ToString())?.Script;
+                        }
+                        catch { }
                     }
-                    catch { }
+
+                    if (witness_script is null) continue;
                 }
 
-                if (witness_script is null) continue;
-
-                networkFee += Wallet.CalculateNetWorkFee(witness_script, ref size);
+                networkFee += Wallet.CalculateNetworkFee(witness_script, ref size);
             }
             networkFee += size * policyAPI.GetFeePerByte();
             return networkFee;
