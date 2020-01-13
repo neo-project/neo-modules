@@ -43,7 +43,7 @@ namespace Neo.Network.RPC.Tests
             manifest.Features = ContractFeatures.HasStorage | ContractFeatures.Payable;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitSysCall(InteropService.Neo_Contract_Create, new byte[1], manifest.ToString());
+                sb.EmitSysCall(InteropService.Contract.Create, new byte[1], manifest.ToString());
                 script = sb.ToArray();
             }
 
