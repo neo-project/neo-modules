@@ -18,6 +18,7 @@ namespace Neo.Plugins
         public long MaxFee { get; }
         public string[] DisabledMethods { get; }
         public int MaxConcurrentConnections { get; }
+
         public static Settings Default { get; private set; }
 
         private Settings(IConfigurationSection section)
