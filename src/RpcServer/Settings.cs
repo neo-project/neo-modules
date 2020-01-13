@@ -17,7 +17,7 @@ namespace Neo.Plugins
         public long MaxGasInvoke { get; }
         public long MaxFee { get; }
         public string[] DisabledMethods { get; }
-
+        public int MaxConcurrentConnections { get; }
         public static Settings Default { get; private set; }
 
         private Settings(IConfigurationSection section)
@@ -32,6 +32,7 @@ namespace Neo.Plugins
             this.MaxGasInvoke = (long)BigDecimal.Parse(section.GetValue("MaxGasInvoke", "10"), NativeContract.GAS.Decimals).Value;
             this.MaxFee = (long)BigDecimal.Parse(section.GetValue("MaxFee", "0.1"), NativeContract.GAS.Decimals).Value;
             this.DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray();
+            this.MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", 40);
         }
 
         public static void Load(IConfigurationSection section)
