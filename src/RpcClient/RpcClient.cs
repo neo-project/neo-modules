@@ -361,7 +361,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public RpcNep5Balances GetNep5Balances(string address)
         {
-            return RpcNep5Balances.FromJson(RpcSend("getnep5Bbalances", address));
+            return RpcNep5Balances.FromJson(RpcSend("getnep5balances", address));
         }
 
         #endregion Plugins
