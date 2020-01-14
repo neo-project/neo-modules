@@ -15,7 +15,7 @@ namespace Neo.Plugins.Storage
             this.store = store;
 
             store.db.TakeFullCheckpoint(out checkpoint);
-            store.db.CompleteCheckpoint(true);
+            store.db.CompleteCheckpointAsync().GetAwaiter().GetResult();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
