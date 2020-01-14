@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\FasterDBStore\FasterDBStore.csproj" />
     <ProjectReference Include="..\..\src\LevelDBStore\LevelDBStore.csproj" />
     <ProjectReference Include="..\..\src\RocksDBStore\RocksDBStore.csproj" />
   </ItemGroup>

@@ -87,9 +87,8 @@ namespace Neo.Plugins.Storage
             for (it.Seek(prefix); it.Valid(); it.Next())
             {
                 var key = it.Key();
-                byte[] y = prefix;
-                if (key.Length < y.Length) break;
-                if (!key.AsSpan().StartsWith(y)) break;
+                if (key.Length < prefix.Length) break;
+                if (!key.AsSpan().StartsWith(prefix)) break;
                 yield return (key, it.Value());
             }
         }
