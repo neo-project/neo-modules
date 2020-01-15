@@ -11,7 +11,7 @@ namespace Neo.Plugins.Storage
     {
         internal class Input
         {
-            public byte[] Value;
+            public byte[] Value = null;
         }
 
         internal class Output
