@@ -7,7 +7,7 @@ namespace Neo.Plugins.Storage
         /// <summary>
         /// Configure
         /// </summary>
-        public override void Configure()
+        protected override void Configure()
         {
             Settings.Load(GetConfiguration());
         }
