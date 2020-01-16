@@ -11,7 +11,7 @@ namespace Neo.Plugins.Storage
     {
         internal class Input
         {
-            public byte[] Value;
+            public byte[] Value = null;
         }
 
         internal class Output
@@ -38,12 +38,13 @@ namespace Neo.Plugins.Storage
             public void UpsertCompletionCallback(ref BufferKey key, ref BufferValue value, Empty ctx) { }
             public void RMWCompletionCallback(ref BufferKey key, ref Input input, Empty ctx, Status status) { }
             public void DeleteCompletionCallback(ref BufferKey key, Empty ctx) { }
-            public void CheckpointCompletionCallback(Guid sessionId, long serialNum) { }
+            public void CheckpointCompletionCallback(string sessionId, CommitPoint commitPoint) { }
         }
 
         private readonly string StorePath;
         private readonly IDevice log, objlog;
         internal readonly FasterKV<BufferKey, BufferValue, Input, Output, Empty, FasterFunctions> db;
+        internal ClientSession<BufferKey, BufferValue, Input, Output, Empty, FasterFunctions> session;
 
         public Store(string path)
         {
@@ -74,7 +75,7 @@ namespace Neo.Plugins.Storage
 
             // Each thread calls StartSession to register itself with FASTER
 
-            var uid = db.StartSession();
+            session = db.NewSession();
 
             if (File.Exists(Path.Combine(path, "session.id")))
             {
@@ -100,10 +101,10 @@ namespace Neo.Plugins.Storage
         public void Dispose()
         {
             // Make sure operations are completed
-            db.CompletePending(true);
+            session.CompletePending(true);
 
             db.TakeFullCheckpoint(out var uid);
-            db.CompleteCheckpoint(true);
+            db.CompleteCheckpointAsync();
             File.WriteAllBytes(Path.Combine(StorePath, "session.id"), uid.ToByteArray());
 
             // Copy entire log to disk, but retain tail of log in memory
@@ -119,7 +120,7 @@ namespace Neo.Plugins.Storage
             // This will *prevent* future updates to the store.
             db.Log.DisposeFromMemory();
 
-            db.StopSession();
+            session.Dispose();
             db.Dispose();
 
             log.Close();
@@ -142,22 +143,33 @@ namespace Neo.Plugins.Storage
 
         public void Delete(byte table, byte[] key)
         {
-            var k = new BufferKey(table, key);
+            var input = default(Input);
+            var output = new Output();
 
-            if (db.Delete(ref k, Empty.Default, 0) == Status.PENDING)
+            var k = new BufferKey(table, key);
+            session.Delete(ref k, Empty.Default, 0);
+            var status = session.Read(ref k, ref input, ref output, Empty.Default, 0);
+
+            if (status == Status.PENDING)
             {
-                db.CompletePending(true);
+                session.CompletePending(true);
             }
         }
 
         public void Put(byte table, byte[] key, byte[] value)
         {
+            var input = default(Input);
+            var output = new Output();
+
             var k = new BufferKey(table, key);
             var v = new BufferValue(value);
 
-            if (db.Upsert(ref k, ref v, Empty.Default, 0) == Status.PENDING)
+            session.Upsert(ref k, ref v, Empty.Default, 0);
+            var status = session.Read(ref k, ref input, ref output, Empty.Default, 0);
+
+            if (status == Status.PENDING)
             {
-                db.CompletePending(true);
+                session.CompletePending(true);
             }
         }
 
@@ -167,7 +179,7 @@ namespace Neo.Plugins.Storage
             var input = default(Input);
             var g1 = new Output();
 
-            var status = db.Read(ref k, ref input, ref g1, Empty.Default, 0);
+            var status = session.Read(ref k, ref input, ref g1, Empty.Default, 0);
 
             if (status == Status.OK)
             {
@@ -175,7 +187,7 @@ namespace Neo.Plugins.Storage
             }
             else if (status == Status.PENDING)
             {
-                db.CompletePending(true);
+                session.CompletePending(true);
 
                 // TODO: shall we read it again?
             }
