@@ -2,6 +2,7 @@
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Wallets;
+using System;
 using System.Linq;
 
 namespace Neo.Plugins
@@ -12,39 +13,47 @@ namespace Neo.Plugins
 
         public JObject SearchScenarioZero(JArray parameters)
         {
-            string address = parameters[1].AsString();
-            byte[] contains = parameters[2].AsString().HexToBytes();
-            TransactionType type = (TransactionType)(int)parameters[3].AsNumber();
-            TransactionAttributeUsage usage = (TransactionAttributeUsage)(int)parameters[4].AsNumber();
-            int lengthOutMin = (int)parameters[5].AsNumber();
-            int lengthOutMax = (int)parameters[6].AsNumber();
-            int flags = (int)parameters[7].AsNumber();
+            string address = Try(() => { return parameters[1].AsString();} );
+            byte[] contains = Try(() => { return parameters[2].AsString().HexToBytes(); });
+            TransactionType type = Try(() => { return (TransactionType)(int)parameters[3].AsNumber(); });
+            TransactionAttributeUsage? usage = Try(() => {  return (TransactionAttributeUsage?)(int)parameters[4].AsNumber(); });
+            int lengthOutMin = Try(() => { return (int)parameters[5].AsNumber(); });
+            int lengthOutMax = Try(() => { return (int)parameters[6].AsNumber(); });
+            int flags = Try(() => { return (int)parameters[7].AsNumber(); });
 
             var txns = Blockchain.Singleton.GetSnapshot()
                 .Transactions.Find()
-                .Where(x => x.Value.Transaction.Type == type
-                && x.Value.Transaction.Outputs.Length > lengthOutMin
-                && x.Value.Transaction.Outputs.Length < lengthOutMax
-                && Contains(x.Value.Transaction.Inputs, address)
-                && ContainsCR(x.Value.Transaction.Outputs, address)
-                && SearchBytes(GetAttributeByUsage(x.Value, usage), contains) != -1);
+                .Where(x => 
+                   (x.Value.Transaction.Type == type)
+                && ((0 == (flags & 1)) || x.Value.Transaction.Outputs.Length > lengthOutMin)
+                && ((0 == (flags & 2)) || x.Value.Transaction.Outputs.Length < lengthOutMax )
+                && ((0 == (flags & 4)) || ContainsInput(x.Value.Transaction.Inputs, address) )
+                && ((0 == (flags & 8)) || ContainsOutput(x.Value.Transaction.Outputs, address))
+                && ((0 == (flags & 16)) || usage == null || SearchBytes(GetAttributeByUsage(x.Value, usage.Value), contains) != -1));
 
-            txns = txns.OrderByDescending(x => x.Value.Transaction.Outputs.Length);
+            if(128 == (flags & 128))
+               txns = txns.OrderByDescending(x => x.Value.Transaction.Outputs.Length);
 
             JArray ja = new JArray();
             foreach (var tx in txns)
             {
                 JObject jo = new JObject();
                 jo["hash"] = tx.Value.Transaction.Hash.ToString();
-                jo["attribute"] = GetAttributeByUsage(tx.Value, usage).ToHexString();
+                if ((usage != null) && (16 == (flags & 16))) 
+                    jo["attribute"] = GetAttributeByUsage(tx.Value, usage.Value).ToHexString();
                 jo["fee"] = new JNumber((double)tx.Value.Transaction.NetworkFee);
                 jo["outputs"] = tx.Value.Transaction.Outputs.Length;
+                jo["inputs"] = tx.Value.Transaction.Inputs.Length;
                 ja.Add(jo);
-            }
-
+            }            
             return ja;
         }
 
+        private T Try<T>(Func<T> p)
+        {
+            try { return p(); }
+            catch { return default(T); }
+        }
 
         private JObject StatScenarioZero(JArray parameters)
         {
@@ -61,18 +70,15 @@ namespace Neo.Plugins
 
             obj["claimed"] = new JNumber((double)issued);
             return obj;
-        }
+        }               
 
-
-
-
-        private bool ContainsCR(TransactionOutput[] outputs, string address)
+        private bool ContainsOutput(TransactionOutput[] outputs, string address)
         {
             var sh = address.ToScriptHash();
             return outputs.Any(x => x.ScriptHash == sh);
         }
 
-        private bool Contains(CoinReference[] inputs, string address)
+        private bool ContainsInput(CoinReference[] inputs, string address)
         {
             var sh = address.ToScriptHash();
             return inputs.Any(x => x.PrevHash == sh);
@@ -87,6 +93,8 @@ namespace Neo.Plugins
 
         static int SearchBytes(byte[] haystack, byte[] needle)
         {
+            if (haystack == null) return -1;
+            if (needle == null) return -1;
             var len = needle.Length;
             var limit = haystack.Length - len;
             for (var i = 0; i <= limit; i++)

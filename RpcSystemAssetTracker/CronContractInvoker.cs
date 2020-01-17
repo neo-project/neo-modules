@@ -26,11 +26,12 @@ namespace Neo.Plugins
         {
             JObject obj = new JObject();
             KeyPair kp = new KeyPair(privKey.ToBytePrivateKey());
+            var address = kp.AsAddress();
             obj["wif"] = kp.Export();
-            obj["address"] = kp.AsAddress();
+            obj["address"] = address;
             obj["privkey"] = kp.PrivateKey.ToHexString();
             obj["pubkey"] = kp.PublicKey.ToString();
-                       
+            obj["scripthash"] = address.ToScriptHash().ToString();
             return obj;
         }
 
