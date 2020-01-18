@@ -107,6 +107,8 @@ namespace Neo.Plugins
             var eventName = stateItems[0].GetString();
             if (eventName != "Transfer") return;
             if (stateItems.Count < 4) return;
+            if (stateItems[1] is VM.Types.Null) stateItems[1] = null;
+            if (stateItems[2] is VM.Types.Null) stateItems[2] = null;
 
             if (!(stateItems[1] is null) && !(stateItems[1] is VM.Types.ByteArray))
                 return;
@@ -120,17 +122,19 @@ namespace Neo.Plugins
             byte[] toBytes = stateItems[2]?.GetSpan().ToArray();
             if (toBytes?.Length != 20) toBytes = null;
             if (fromBytes == null && toBytes == null) return;
-            var from = new UInt160(fromBytes);
-            var to = new UInt160(toBytes);
+            var from = UInt160.Zero;
+            var to = UInt160.Zero;
 
             if (fromBytes != null)
             {
+                from = new UInt160(fromBytes);
                 var fromKey = new Nep5BalanceKey(from, scriptHash);
                 if (!nep5BalancesChanged.ContainsKey(fromKey)) nep5BalancesChanged.Add(fromKey, new Nep5Balance());
             }
 
             if (toBytes != null)
             {
+                to = new UInt160(toBytes);
                 var toKey = new Nep5BalanceKey(to, scriptHash);
                 if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
             }
