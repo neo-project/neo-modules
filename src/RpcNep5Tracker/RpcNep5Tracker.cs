@@ -7,6 +7,7 @@ using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
 using System;
@@ -160,6 +161,12 @@ namespace Neo.Plugins
                     HandleNotification(snapshot, transaction, notifyEventArgs.ScriptHash, stateItems,
                         nep5BalancesChanged, ref transferIndex);
                 }
+
+                // Handle SystemFee and NetworkFee GAS burn for each transaction
+                if (!(appExecuted.Transaction is Transaction tx)) continue;
+                HandleNotification(snapshot, appExecuted.Transaction, NativeContract.GAS.Hash,
+                    new VM.Types.Array(new VM.Types.StackItem[] { "Transfer", appExecuted.Transaction.Sender.ToArray(), VM.Types.StackItem.Null, tx.SystemFee + tx.NetworkFee }),
+                    nep5BalancesChanged, ref transferIndex);
             }
 
             foreach (var nep5BalancePair in nep5BalancesChanged)
