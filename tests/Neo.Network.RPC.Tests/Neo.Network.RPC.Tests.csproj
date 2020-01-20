@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="RpcTestCases.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="5.9.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="2.0.0" />
@@ -17,6 +21,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\RpcClient\RpcClient.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="RpcTestCases.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

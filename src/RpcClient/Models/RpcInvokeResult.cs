@@ -14,6 +14,8 @@ namespace Neo.Network.RPC.Models
 
         public ContractParameter[] Stack { get; set; }
 
+        public string Tx { get; set; }
+
         public JObject ToJson()
         {
             JObject json = new JObject();
@@ -21,6 +23,7 @@ namespace Neo.Network.RPC.Models
             json["state"] = State;
             json["gas_consumed"] = GasConsumed;
             json["stack"] = new JArray(Stack.Select(p => p.ToJson()));
+            if (Tx != null) json["tx"] = Tx;
             return json;
         }
 
@@ -31,6 +34,7 @@ namespace Neo.Network.RPC.Models
             invokeScriptResult.State = json["state"].AsString();
             invokeScriptResult.GasConsumed = json["gas_consumed"].AsString();
             invokeScriptResult.Stack = ((JArray)json["stack"]).Select(p => ContractParameter.FromJson(p)).ToArray();
+            invokeScriptResult.Tx = json["tx"]?.AsString();
             return invokeScriptResult;
         }
     }

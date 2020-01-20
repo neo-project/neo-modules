@@ -12,7 +12,7 @@ namespace Neo.Network.RPC.Models
 
         public int? Confirmations { get; set; }
 
-        public uint? BlockTime { get; set; }
+        public long? BlockTime { get; set; }
 
         public VMState? VMState { get; set; }
 
@@ -40,7 +40,7 @@ namespace Neo.Network.RPC.Models
             {
                 transaction.BlockHash = UInt256.Parse(json["blockhash"].AsString());
                 transaction.Confirmations = (int)json["confirmations"].AsNumber();
-                transaction.BlockTime = (uint)json["blocktime"].AsNumber();
+                transaction.BlockTime = (long)json["blocktime"].AsNumber();
                 transaction.VMState = json["vmState"]?.TryGetEnum<VMState>();
             }
             return transaction;

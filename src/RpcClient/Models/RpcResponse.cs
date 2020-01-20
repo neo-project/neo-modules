@@ -36,7 +36,7 @@ namespace Neo.Network.RPC.Models
             var json = new JObject();
             json["id"] = Id;
             json["jsonrpc"] = Jsonrpc;
-            json["error"] = Error.ToJson();
+            json["error"] = Error?.ToJson();
             json["result"] = Result;
             return json;
         }

@@ -46,7 +46,7 @@ namespace Neo.Network.RPC
         /// Parse address, scripthash or public key string to UInt160
         /// </summary>
         /// <param name="account">account address, scripthash or public key string
-        /// Example: address ("AV556nYUwyJKNv8Xy7hVMLQnkmKPukw6x5"), scripthash ("0x6a38cd693b615aea24dd00de12a9f5836844da91"), public key ("02f9ec1fd0a98796cf75b586772a4ddd41a0af07a1dbdf86a7238f74fb72503575")</param>
+        /// Example: address ("Ncm9TEzrp8SSer6Wa3UCSLTRnqzwVhCfuE"), scripthash (""0xb0a31817c80ad5f87b6ed390ecb3f9d312f7ceb8""), public key ("02f9ec1fd0a98796cf75b586772a4ddd41a0af07a1dbdf86a7238f74fb72503575")</param>
         /// <returns></returns>
         public static UInt160 GetScriptHash(string account)
         {

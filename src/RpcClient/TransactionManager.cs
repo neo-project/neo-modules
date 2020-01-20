@@ -6,7 +6,6 @@ using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
 using System;
-using System.Linq;
 
 namespace Neo.Network.RPC
 {
@@ -91,6 +90,9 @@ namespace Neo.Network.RPC
             throw new InvalidOperationException($"Insufficient GAS in address: {sender.ToAddress()}");
         }
 
+        /// <summary>
+        /// Calculate NetworkFee
+        /// </summary>
         /// <param name="isEstimate">assuming the witnesses are basic Signature Contract if set to true</param>
         /// <returns></returns>
         private long CalculateNetworkFee(bool isEstimate = false)
