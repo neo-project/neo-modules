@@ -108,8 +108,6 @@ namespace Neo.Plugins
             var eventName = stateItems[0].GetString();
             if (eventName != "Transfer") return;
             if (stateItems.Count < 4) return;
-            if (stateItems[1] is VM.Types.Null) stateItems[1] = null;
-            if (stateItems[2] is VM.Types.Null) stateItems[2] = null;
 
             if (!(stateItems[1] is null) && !(stateItems[1] is VM.Types.ByteArray))
                 return;
@@ -165,7 +163,7 @@ namespace Neo.Plugins
                 // Handle SystemFee and NetworkFee GAS burn for each transaction
                 if (!(appExecuted.Transaction is Transaction tx)) continue;
                 HandleNotification(snapshot, appExecuted.Transaction, NativeContract.GAS.Hash,
-                    new VM.Types.Array(new VM.Types.StackItem[] { "Transfer", appExecuted.Transaction.Sender.ToArray(), VM.Types.StackItem.Null, tx.SystemFee + tx.NetworkFee }),
+                    new VM.Types.Array(new VM.Types.StackItem[] { "Transfer", appExecuted.Transaction.Sender.ToArray(), null, tx.SystemFee + tx.NetworkFee }),
                     nep5BalancesChanged, ref transferIndex);
             }
 
