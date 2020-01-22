@@ -31,7 +31,7 @@ namespace Neo.Plugins
         private bool _shouldTrackHistory;
         private bool _recordNullAddressHistory;
         private uint _maxResults;
-        private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
+        private Snapshot _levelDbSnapshot;
 
         public RpcNep5Tracker()
         {
@@ -98,6 +98,11 @@ namespace Neo.Plugins
             transferIndex++;
         }
 
+        private bool IsNull(VM.Types.StackItem item)
+        {
+            return item == null || item.IsNull;
+        }
+
         private void HandleNotification(StoreView snapshot, Transaction transaction, UInt160 scriptHash,
             VM.Types.Array stateItems,
             Dictionary<Nep5BalanceKey, Nep5Balance> nep5BalancesChanged, ref ushort transferIndex)
@@ -109,16 +114,16 @@ namespace Neo.Plugins
             if (eventName != "Transfer") return;
             if (stateItems.Count < 4) return;
 
-            if (!(stateItems[1].IsNull) && !(stateItems[1] is null) && !(stateItems[1] is VM.Types.ByteArray))
+            if (!IsNull(stateItems[1]) && !(stateItems[1] is VM.Types.ByteArray))
                 return;
-            if (!(stateItems[2].IsNull) && !(stateItems[2] is null) && !(stateItems[2] is VM.Types.ByteArray))
+            if (!IsNull(stateItems[2]) && !(stateItems[2] is VM.Types.ByteArray))
                 return;
             var amountItem = stateItems[3];
             if (!(amountItem is VM.Types.ByteArray || amountItem is VM.Types.Integer))
                 return;
-            byte[] fromBytes = stateItems[1].IsNull ? null : stateItems[1]?.GetSpan().ToArray();
+            byte[] fromBytes = IsNull(stateItems[1]) ? null : stateItems[1]?.GetSpan().ToArray();
             if (fromBytes?.Length != 20) fromBytes = null;
-            byte[] toBytes = stateItems[2].IsNull ? null : stateItems[2]?.GetSpan().ToArray();
+            byte[] toBytes = IsNull(stateItems[2]) ? null : stateItems[2]?.GetSpan().ToArray();
             if (toBytes?.Length != 20) toBytes = null;
             if (fromBytes == null && toBytes == null) return;
             var from = UInt160.Zero;
