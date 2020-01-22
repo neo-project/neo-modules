@@ -216,8 +216,8 @@ namespace Neo.Plugins
             {
                 var output = new TransferOutput
                 {
-                    AssetId = item.AssetId,
-                    Value = BigDecimal.Parse(item.Value, new AssetDescriptor(item.AssetId).Decimals),
+                    AssetId = item.Asset,
+                    Value = BigDecimal.Parse(item.Value, new AssetDescriptor(item.Asset).Decimals),
                     ScriptHash = item.ScriptHash
                 };
                 if (output.Value.Sign <= 0)

@@ -93,7 +93,7 @@ namespace Neo.Network.RPC
             var request = new RpcRequest
             {
                 Id = 1,
-                RpcVersion = "2.0",
+                JsonRpc = "2.0",
                 Method = method,
                 Params = paraArgs
             };

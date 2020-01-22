@@ -10,7 +10,7 @@ namespace Neo.Plugins
 {
     public class RpcApplicationLog
     {
-        public UInt256 TxHash { get; set; }
+        public UInt256 TxId { get; set; }
 
         public TriggerType Trigger { get; set; }
 
@@ -25,7 +25,7 @@ namespace Neo.Plugins
         public JObject ToJson()
         {
             JObject json = new JObject();
-            json["txid"] = TxHash?.ToString();
+            json["txid"] = TxId?.ToString();
             json["trigger"] = Trigger;
             json["vmstate"] = VMState;
             json["gas_consumed"] = GasConsumed.ToString();
@@ -57,7 +57,7 @@ namespace Neo.Plugins
         public static RpcApplicationLog FromJson(JObject json)
         {
             RpcApplicationLog log = new RpcApplicationLog();
-            log.TxHash = json["txid"] is null ? null : UInt256.Parse(json["txid"].AsString());
+            log.TxId = json["txid"] is null ? null : UInt256.Parse(json["txid"].AsString());
             log.Trigger = json["trigger"].TryGetEnum<TriggerType>();
             log.VMState = json["vmstate"].TryGetEnum<VMState>();
             log.GasConsumed = long.Parse(json["gas_consumed"].AsString());
@@ -66,7 +66,7 @@ namespace Neo.Plugins
             {
                 log.Stack = ((JArray)json["stack"]).Select(p => ContractParameter.FromJson(p).ToStackItem()).ToList();
             }
-            catch (Exception) { }
+            catch { }
 
             log.Notifications = new List<NotifyEventArgs>();
             foreach (var notifiy in (JArray)json["notifications"])
@@ -77,7 +77,7 @@ namespace Neo.Plugins
                 {
                     state = ContractParameter.FromJson(notifiy["state"]).ToStackItem();
                 }
-                catch (Exception) { }
+                catch { }
                 log.Notifications.Add(new NotifyEventArgs(null, scriptHash, state));
             }
 

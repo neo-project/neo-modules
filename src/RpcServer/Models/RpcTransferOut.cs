@@ -5,7 +5,7 @@ namespace Neo.Plugins
 {
     public class RpcTransferOut
     {
-        public UInt160 AssetId { get; set; }
+        public UInt160 Asset { get; set; }
 
         public UInt160 ScriptHash { get; set; }
 
@@ -15,7 +15,7 @@ namespace Neo.Plugins
         {
             return new JObject
             {
-                ["asset"] = AssetId.ToString(),
+                ["asset"] = Asset.ToString(),
                 ["value"] = Value,
                 ["address"] = ScriptHash.ToAddress(),
             };
@@ -25,7 +25,7 @@ namespace Neo.Plugins
         {
             return new RpcTransferOut
             {
-                AssetId = UInt160.Parse(json["asset"].AsString()),
+                Asset = UInt160.Parse(json["asset"].AsString()),
                 Value = json["value"].AsString(),
                 ScriptHash = json["address"].AsString().ToScriptHash(),
             };

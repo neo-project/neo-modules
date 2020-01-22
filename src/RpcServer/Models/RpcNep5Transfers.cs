@@ -40,7 +40,7 @@ namespace Neo.Plugins
     {
         public ulong TimestampMS { get; set; }
 
-        public UInt160 AssetScriptHash { get; set; }
+        public UInt160 AssetHash { get; set; }
 
         public UInt160 UserScriptHash { get; set; }
 
@@ -56,7 +56,7 @@ namespace Neo.Plugins
         {
             JObject json = new JObject();
             json["timestamp"] = TimestampMS;
-            json["asset_hash"] = AssetScriptHash.ToString();
+            json["asset_hash"] = AssetHash.ToString();
             json["transfer_address"] = UserScriptHash.ToAddress();
             json["amount"] = Amount.ToString();
             json["block_index"] = BlockIndex;
@@ -69,7 +69,7 @@ namespace Neo.Plugins
         {
             RpcNep5Transfer transfer = new RpcNep5Transfer();
             transfer.TimestampMS = (ulong)json["timestamp"].AsNumber();
-            transfer.AssetScriptHash = UInt160.Parse(json["asset_hash"].AsString());
+            transfer.AssetHash = UInt160.Parse(json["asset_hash"].AsString());
             transfer.UserScriptHash = json["transfer_address"].AsString().ToScriptHash();
             transfer.Amount = BigInteger.Parse(json["amount"].AsString());
             transfer.BlockIndex = (uint)json["block_index"].AsNumber();

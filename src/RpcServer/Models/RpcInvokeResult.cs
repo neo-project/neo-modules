@@ -42,7 +42,11 @@ namespace Neo.Plugins
             invokeScriptResult.Script = json["script"].AsString();
             invokeScriptResult.State = json["state"].TryGetEnum<VM.VMState>();
             invokeScriptResult.GasConsumed = json["gas_consumed"].AsString();
-            invokeScriptResult.Stack = ((JArray)json["stack"]).Select(p => ContractParameter.FromJson(p)).ToArray();
+            try
+            {
+                invokeScriptResult.Stack = ((JArray)json["stack"]).Select(p => ContractParameter.FromJson(p)).ToArray();
+            }
+            catch { }
             invokeScriptResult.Tx = json["tx"]?.AsString();
             return invokeScriptResult;
         }

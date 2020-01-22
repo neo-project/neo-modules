@@ -15,10 +15,7 @@ namespace Neo.Plugins
         {
             JObject json = Header.ToJson();
             json["confirmations"] = Confirmations;
-            if (NextBlockHash != null)
-            {
-                json["nextblockhash"] = NextBlockHash.ToString();
-            }
+            json["nextblockhash"] = NextBlockHash?.ToString();
             return json;
         }
 
@@ -27,10 +24,7 @@ namespace Neo.Plugins
             RpcBlockHeader block = new RpcBlockHeader();
             block.Header = Header.FromJson(json);
             block.Confirmations = (uint)json["confirmations"].AsNumber();
-            if (json["nextblockhash"] != null)
-            {
-                block.NextBlockHash = UInt256.Parse(json["nextblockhash"].AsString());
-            }
+            block.NextBlockHash = json["nextblockhash"] is null ? null : UInt256.Parse(json["nextblockhash"].AsString());
             return block;
         }
     }

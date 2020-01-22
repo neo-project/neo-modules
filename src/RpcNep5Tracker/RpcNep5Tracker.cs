@@ -227,7 +227,7 @@ namespace Neo.Plugins
                 parentList.Add(new RpcNep5Transfer
                 {
                     TimestampMS = key.TimestampMS,
-                    AssetScriptHash = key.AssetScriptHash,
+                    AssetHash = key.AssetScriptHash,
                     UserScriptHash = value.UserScriptHash,
                     Amount = value.Amount,
                     BlockIndex = value.BlockIndex,

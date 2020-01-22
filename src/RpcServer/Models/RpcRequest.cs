@@ -7,7 +7,7 @@ namespace Neo.Plugins
     {
         public JObject Id { get; set; }
 
-        public string RpcVersion { get; set; }
+        public string JsonRpc { get; set; }
 
         public string Method { get; set; }
 
@@ -18,7 +18,7 @@ namespace Neo.Plugins
             return new RpcRequest
             {
                 Id = json["id"],
-                RpcVersion = json["jsonrpc"].AsString(),
+                JsonRpc = json["jsonrpc"].AsString(),
                 Method = json["method"].AsString(),
                 Params = ((JArray)json["params"]).ToArray()
             };
@@ -28,7 +28,7 @@ namespace Neo.Plugins
         {
             var json = new JObject();
             json["id"] = Id;
-            json["jsonrpc"] = RpcVersion;
+            json["jsonrpc"] = JsonRpc;
             json["method"] = Method;
             json["params"] = new JArray(Params);
             return json;

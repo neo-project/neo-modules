@@ -74,7 +74,7 @@ namespace Neo.Plugins
         {
             return new RpcResponse
             {
-                RpcVersion = "2.0",
+                JsonRpc = "2.0",
                 Id = id
             };
         }

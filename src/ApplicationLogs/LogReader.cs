@@ -47,7 +47,7 @@ namespace Neo.Plugins
                 var appLog = new RpcApplicationLog
                 {
                     // how to query the logs with null Transaction?
-                    TxHash = appExec.Transaction?.Hash,
+                    TxId = appExec.Transaction?.Hash,
                     Trigger = appExec.Trigger,
                     VMState = appExec.VMState,
                     GasConsumed = appExec.GasConsumed,
