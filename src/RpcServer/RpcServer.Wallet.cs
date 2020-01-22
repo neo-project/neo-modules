@@ -138,18 +138,18 @@ namespace Neo.Plugins
             return true;
         }
 
-        private void ProcessInvokeWithWallet(JObject result)
+        private void ProcessInvokeWithWallet(RpcInvokeResult result)
         {
             if (wallet != null)
             {
-                Transaction tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes());
+                Transaction tx = wallet.MakeTransaction(result.Script.HexToBytes());
                 ContractParametersContext context = new ContractParametersContext(tx);
                 wallet.Sign(context);
                 if (context.Completed)
                     tx.Witnesses = context.GetWitnesses();
                 else
                     tx = null;
-                result["tx"] = tx?.ToArray().ToHexString();
+                result.Tx = tx?.ToArray().ToHexString();
             }
         }
 
