@@ -56,10 +56,6 @@ Enable neo-cli Logging with timestamps by showing messages with different levels
 ### StatesDumper
 Exports neo-cli status data \(useful for debugging\), such as storage modifications block by block.
 
-
-### Storage Engine
-There, currently, two option for users for the storage engine.
-
 ### LevelDBStore
 If there is no further modification of the configuration file of the neo-node, it is the default storage engine in the NEO system. In this case, you should paste the `LevelDBStore` in the Plugins before launching the node.
 
