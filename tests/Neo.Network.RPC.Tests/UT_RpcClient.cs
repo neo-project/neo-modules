@@ -5,10 +5,7 @@ using Moq.Protected;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
-using Neo.Network.RPC.Models;
-using Neo.SmartContract;
-using Neo.VM;
-using Neo.VM.Types;
+using Neo.Plugins;
 using System;
 using System.Linq;
 using System.Net;
@@ -430,29 +427,5 @@ namespace Neo.Network.RPC.Tests
         }
 
         #endregion Plugins
-
-        [TestMethod()]
-        public void TestJson()
-        {
-            JObject a = new JObject();
-            a["id"] = 1;
-            //JArray b = (JArray)a;
-            string c = "";
-            a = c;
-            Console.WriteLine(a.ToString());
-        }
-
-        [TestMethod()]
-        public void TestToParameterRes()
-        {
-            StackItem a = 1;
-            StackItem b = "test";
-            VM.Types.Array c = new VM.Types.Array(new[] { a, b });
-            c.Add(c);
-            ContractParameter parameter = c.ToParameter();
-            var json = parameter.ToJson();
-        }
-
-
     }
 }

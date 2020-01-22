@@ -2,7 +2,7 @@ using Neo.IO;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
-using Neo.Network.RPC.Models;
+using Neo.Plugins;
 using Neo.SmartContract;
 using System;
 using System.Collections.Generic;
@@ -93,7 +93,7 @@ namespace Neo.Network.RPC
             var request = new RpcRequest
             {
                 Id = 1,
-                Jsonrpc = "2.0",
+                RpcVersion = "2.0",
                 Method = method,
                 Params = paraArgs
             };

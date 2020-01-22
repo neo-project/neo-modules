@@ -14,34 +14,38 @@ namespace Neo.Plugins
         {
             return new JArray(Plugins
                 .OrderBy(u => u.Name)
-                .Select(u => new JObject
+                .Select(u => new RpcPlugin
                 {
-                    ["name"] = u.Name,
-                    ["version"] = u.Version.ToString(),
-                    ["interfaces"] = new JArray(u.GetType().GetInterfaces()
+                    Name = u.Name,
+                    Version = u.Version.ToString(),
+                    Interfaces = u.GetType()
+                        .GetInterfaces()
                         .Select(p => p.Name)
                         .Where(p => p.EndsWith("Plugin"))
-                        .Select(p => (JObject)p))
-                }));
+                        .ToArray()
+                }.ToJson()));
         }
 
         [RpcMethod]
         private JObject ValidateAddress(JArray _params)
         {
             string address = _params[0].AsString();
-            JObject json = new JObject();
-            UInt160 scriptHash;
+            bool isValid = true;
             try
             {
-                scriptHash = address.ToScriptHash();
+                address.ToScriptHash();
             }
             catch
             {
-                scriptHash = null;
+                isValid = false;
             }
-            json["address"] = address;
-            json["isvalid"] = scriptHash != null;
-            return json;
+
+            return new RpcValidateAddressResult
+            {
+                Address = address,
+                IsValid = isValid
+
+            }.ToJson();
         }
     }
 }

@@ -1,6 +1,6 @@
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
-using Neo.Network.RPC.Models;
+using Neo.Plugins;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;

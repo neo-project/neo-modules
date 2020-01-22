@@ -5,7 +5,7 @@ using Neo.IO;
 using Neo.IO.Json;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
-using Neo.Network.RPC.Models;
+using Neo.Plugins;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
@@ -67,7 +67,7 @@ namespace Neo.Network.RPC.Tests
                 Stack = parameters,
                 GasConsumed = "100",
                 Script = script.ToHexString(),
-                State = ""
+                State = VMState.HALT
             };
 
             mockClient.Setup(p => p.RpcSend("invokescript", It.Is<JObject[]>(j => j[0].AsString() == script.ToHexString())))

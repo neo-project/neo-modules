@@ -14,6 +14,7 @@ using Neo.Wallets;
 using Neo.Wallets.NEP6;
 using Neo.Wallets.SQLite;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -88,13 +89,14 @@ namespace Neo.Plugins
             WalletAccount account = wallet.Import(privkey);
             if (wallet is NEP6Wallet nep6wallet)
                 nep6wallet.Save();
-            return new JObject
+            return new RpcAccount
             {
-                ["address"] = account.Address,
-                ["haskey"] = account.HasKey,
-                ["label"] = account.Label,
-                ["watchonly"] = account.WatchOnly
-            };
+                Address = account.Address,
+                HasKey = account.HasKey,
+                Label = account.Label,
+                WatchOnly = account.WatchOnly
+
+            }.ToJson();
         }
 
         [RpcMethod]
@@ -103,12 +105,14 @@ namespace Neo.Plugins
             CheckWallet();
             return wallet.GetAccounts().Select(p =>
             {
-                JObject account = new JObject();
-                account["address"] = p.Address;
-                account["haskey"] = p.HasKey;
-                account["label"] = p.Label;
-                account["watchonly"] = p.WatchOnly;
-                return account;
+                return new RpcAccount
+                {
+                    Address = p.Address,
+                    HasKey = p.HasKey,
+                    Label = p.Label,
+                    WatchOnly = p.WatchOnly
+
+                }.ToJson();
             }).ToArray();
         }
 
@@ -203,24 +207,24 @@ namespace Neo.Plugins
                 from = _params[0].AsString().ToScriptHash();
                 to_start = 1;
             }
-            JArray to = (JArray)_params[to_start];
-            if (to.Count == 0)
+            var to = ((JArray)_params[to_start]).Select(p => RpcTransferOut.FromJson(p));
+            if (to.Count() == 0)
                 throw new RpcException(-32602, "Invalid params");
-            TransferOutput[] outputs = new TransferOutput[to.Count];
-            for (int i = 0; i < to.Count; i++)
+
+            var outputs = new List<TransferOutput>();
+            foreach (var item in to)
             {
-                UInt160 asset_id = UInt160.Parse(to[i]["asset"].AsString());
-                AssetDescriptor descriptor = new AssetDescriptor(asset_id);
-                outputs[i] = new TransferOutput
+                var output = new TransferOutput
                 {
-                    AssetId = asset_id,
-                    Value = BigDecimal.Parse(to[i]["value"].AsString(), descriptor.Decimals),
-                    ScriptHash = to[i]["address"].AsString().ToScriptHash()
+                    AssetId = item.AssetId,
+                    Value = BigDecimal.Parse(item.Value, new AssetDescriptor(item.AssetId).Decimals),
+                    ScriptHash = item.ScriptHash
                 };
-                if (outputs[i].Value.Sign <= 0)
+                if (output.Value.Sign <= 0)
                     throw new RpcException(-32602, "Invalid params");
+                outputs.Add(output);
             }
-            Transaction tx = wallet.MakeTransaction(outputs, from);
+            Transaction tx = wallet.MakeTransaction(outputs.ToArray(), from);
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 

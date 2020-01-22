@@ -1,6 +1,6 @@
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
-using Neo.Network.RPC.Models;
+using Neo.Plugins;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
