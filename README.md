@@ -60,10 +60,10 @@ Exports neo-cli status data \(useful for debugging\), such as storage modificati
 ### Storage Engine
 There, currently, two option for users for the storage engine.
 
-#### LevelDBStore
+### LevelDBStore
 If there is no further modification of the configuration file of the neo-node, it is the default storage engine in the NEO system. In this case, you should paste the `LevelDBStore` in the Plugins before launching the node.
 
-#### RocksDBStore
+### RocksDBStore
 You can also use `RocksDBStore` in the NEO system by modifying the default storage engine section in the configuration file.
 
 ### RpcServer
@@ -73,8 +73,8 @@ Plugin for hosting a RpcServer on the neo-node, being able to disable specific c
 Plugin that enables NEP5 tracking using LevelDB.
 This module works in conjunction with RpcServer, otherwise, just local storage (on leveldb) would be created. 
 
-### C# SDK
+## C# SDK
 
-#### RpcClient
+### RpcClient
 The RpcClient Plugin is an individual SDK which is used to call NEO RPC methods for development using.
 In order to use the module for interacting with NEP5 functionalities `RPC NEP5 Tracker` Plugin will be needed.
