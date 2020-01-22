@@ -1,49 +1,76 @@
-## What is it
-A set of plugins that can be used inside the NEO core library. Check [here](https://docs.neo.org/docs/en-us/node/cli/setup.html) for the official documentation.
+<p align="center">
+<a href="https://neo.org/">
+      <img
+      src="https://neo3.azureedge.net/images/logo%20files-dark.svg"
+      width="250px" alt="neo-logo">
+  </a>
+</p>
 
-## Using plugins
+<p align="center">      
+  <a href="https://travis-ci.org/neo-project/neo-modules">
+    <img src="https://travis-ci.org/neo-project/neo-modules.svg?branch=master" alt="Current TravisCI build status.">
+  </a>
+  <a href="https://github.com/neo-project/neo-modules/blob/master/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
+  </a>
+  <a href="https://github.com/neo-project/neo-modules/releases">
+    <img src="https://badge.fury.io/gh/neo-project%2Fneo-modules.svg" alt="Current neo-modules version.">
+  </a>    
+</p>
+
+## What is it
+
+A set of plugins/modules that can be used inside the NEO core library is available in this repository. You can refer to [the official documentation](https://docs.neo.org/docs/en-us/node/cli/setup.html) for the more detailed usage guide. 
+
+In addition, a C# SDK module is included for developers to call RPC methods with ease.
+
+## Using Plugins
 Plugins can be used to increase functionality, as well as providing policies definitions of the network.
 One common example is to add the ApplicationLogs plugin in order to enable your node to create log files.
 
-To configure a plugin, do the following:
- - Download the desired plugin from the [Releases page](https://github.com/neo-project/neo-plugins/releases)
-  - Alternative: Compile from source
-    - Clone this repository;
-    - Open it in Visual Studio, select the plugin you want to enable and select `publish` \(compile it using Release configuration\)
-    - Create the Plugins folder in neo-cli / neo-gui (where the binary is run from, like `/neo-cli/bin/debug/netcoreapp2.1/Plugins`)
- - Copy the .dll and the folder with the configuration files into this Plugin folder.
- - Start neo using additional parameters, if required;
- 	- In order to start logging, start neo with the `--log` option.
+To configure a plugin, you can directly download the desired plugin from the [Releases page](https://github.com/neo-project/neo-modules/releases).
+
+Alternatively, you can compile from source code by following the below steps:
+- Clone this repository;
+- Open it in Visual Studio, select the plugin you want to enable and select `publish` \(compile it using Release configuration\)
+- Create the Plugins folder in neo-cli / neo-gui (where the binary file is located, such as `/neo-cli/bin/Release/netcoreapp3.0/Plugins`)
+- Copy the .dll and the folder with the configuration files into the `Plugins` folder.
+  - Remarkably, you should put the dependency of the plugin in the `Plugins` folder as well. For example, since the `RpcServer` has the package reference on the `Microsoft.AspNetCore.ResponseCompression`, so the corresponding dll file should be put together with the plugin.
 
 The resulting folder structure is going to be like this:
 
-```BASH
+```sh
 ./neo-cli.dll
 ./Plugins/ApplicationLogs.dll
 ./Plugins/ApplicationsLogs/config.json
 ```
 
-## Existing plugins
-### Application Logs
-Add this plugin to your application if need to access the log files. This can be useful to handle notifications, but remember that this also largely increases the space used by the application.
+## Plugins/Modules
 
-### Core Metrics
-Metrics from the Blockchain. This can involve reports through RPC calls or other form of persisting.
-
-### Import Blocks
-Synchronizes the client using offline packages. Follow the instructions [here](http://docs.neo.org/en-us/network/syncblocks.html) to bootstrap your network using this plugin.
-
-### RPC NEP5 Tracker
-Plugin that enables NEP5 tracking using LevelDB.
-
-### RPC Security
-Improves security in RPC nodes.
-
-### RPC Wallet
-Client commands for wallet management functionalities, such as signing and invoking.
-
-### StatesDumper
-Exports NEO-CLI status data \(useful for debugging\).
+### ApplicationLogs
+Add this plugin to your application if need to access the log files. This can be useful to handle notifications, but remember that this also largely increases the space used by the application. `LevelDBStore` and `RpcServer` are also needed for this plugin. You can find more details [here](https://docs.neo.org/docs/en-us/reference/rpc/latest-version/api/getapplicationlog.html).
 
 ### SystemLog
-Enables neo-cli Logging, with timestamps, by showing messages with different levels (differentiated by colors) \(useful for debugging\).
+Enable neo-cli Logging with timestamps by showing messages with different levels (shown with different colors) \(useful for debugging\).
+
+### StatesDumper
+Exports neo-cli status data \(useful for debugging\), such as storage modifications block by block.
+
+### LevelDBStore
+If there is no further modification of the configuration file of the neo-node, it is the default storage engine in the NEO system. In this case, you should paste the `LevelDBStore` in the Plugins before launching the node.
+
+### RocksDBStore
+You can also use `RocksDBStore` in the NEO system by modifying the default storage engine section in the configuration file.
+
+### RpcServer
+Plugin for hosting a RpcServer on the neo-node, being able to disable specific calls.
+
+### RpcNep5Tracker
+Plugin that enables NEP5 tracking using LevelDB.
+This module works in conjunction with RpcServer, otherwise, just local storage (on leveldb) would be created. 
+
+## C# SDK
+
+### RpcClient
+The RpcClient Plugin is an individual SDK which is used to call NEO RPC methods for development using.
+In order to use the module for interacting with NEP5 functionalities `RPC NEP5 Tracker` Plugin will be needed.
