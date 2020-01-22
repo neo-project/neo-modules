@@ -122,9 +122,9 @@ namespace Neo.Plugins
             if (!(amountItem is VM.Types.ByteArray || amountItem is VM.Types.Integer))
                 return;
             byte[] fromBytes = IsNull(stateItems[1]) ? null : stateItems[1].GetSpan().ToArray();
-            if (fromBytes?.Length != 20) fromBytes = null;
+            if (fromBytes?.Length != UInt160.Length) fromBytes = null;
             byte[] toBytes = IsNull(stateItems[2]) ? null : stateItems[2].GetSpan().ToArray();
-            if (toBytes?.Length != 20) toBytes = null;
+            if (toBytes?.Length != UInt160.Length) toBytes = null;
             if (fromBytes == null && toBytes == null) return;
             var from = UInt160.Zero;
             var to = UInt160.Zero;
