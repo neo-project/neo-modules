@@ -205,7 +205,7 @@ namespace Neo.Plugins
         }
 
         private void AddTransfers(byte dbPrefix, UInt160 userScriptHash, ulong startTime, ulong endTime,
-            JArray parentJArray)
+            List<RpcNep5Transfer> parentList)
         {
             var prefix = new[] { dbPrefix }.Concat(userScriptHash.ToArray()).ToArray();
             var startTimeBytes = BitConverter.GetBytes(startTime);
@@ -224,15 +224,16 @@ namespace Neo.Plugins
             foreach (var (key, value) in transferPairs)
             {
                 if (++resultCount > _maxResults) break;
-                JObject transfer = new JObject();
-                transfer["timestamp"] = key.TimestampMS;
-                transfer["asset_hash"] = key.AssetScriptHash.ToString();
-                transfer["transfer_address"] = value.UserScriptHash.ToAddress();
-                transfer["amount"] = value.Amount.ToString();
-                transfer["block_index"] = value.BlockIndex;
-                transfer["transfer_notify_index"] = key.BlockXferNotificationIndex;
-                transfer["tx_hash"] = value.TxHash.ToString();
-                parentJArray.Add(transfer);
+                parentList.Add(new RpcNep5Transfer
+                {
+                    TimestampMS = key.TimestampMS,
+                    AssetScriptHash = key.AssetScriptHash,
+                    UserScriptHash = value.UserScriptHash,
+                    Amount = value.Amount,
+                    BlockIndex = value.BlockIndex,
+                    TransferNotifyIndex = key.BlockXferNotificationIndex,
+                    TxHash = value.TxHash
+                });
             }
         }
 
@@ -254,37 +255,40 @@ namespace Neo.Plugins
 
             if (endTime < startTime) throw new RpcException(-32602, "Invalid params");
 
-            JObject json = new JObject();
-            JArray transfersSent = new JArray();
-            json["sent"] = transfersSent;
-            JArray transfersReceived = new JArray();
-            json["received"] = transfersReceived;
-            json["address"] = userScriptHash.ToAddress();
-            AddTransfers(Nep5TransferSentPrefix, userScriptHash, startTime, endTime, transfersSent);
-            AddTransfers(Nep5TransferReceivedPrefix, userScriptHash, startTime, endTime, transfersReceived);
-            return json;
+            var result = new RpcNep5Transfers
+            {
+                UserScriptHash = userScriptHash,
+                Sent = new List<RpcNep5Transfer>(),
+                Received = new List<RpcNep5Transfer>()
+            };
+
+            AddTransfers(Nep5TransferSentPrefix, userScriptHash, startTime, endTime, result.Sent);
+            AddTransfers(Nep5TransferReceivedPrefix, userScriptHash, startTime, endTime, result.Received);
+            return result.ToJson();
         }
 
         [RpcMethod]
         public JObject GetNep5Balances(JArray _params)
         {
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
+            var result = new RpcNep5Balances
+            {
+                UserScriptHash = userScriptHash,
+                Balances = new List<RpcNep5Balance>()
+            };
 
-            JObject json = new JObject();
-            JArray balances = new JArray();
-            json["balance"] = balances;
-            json["address"] = userScriptHash.ToAddress();
             var dbCache = new DbCache<Nep5BalanceKey, Nep5Balance>(_db, null, null, Nep5BalancePrefix);
             byte[] prefix = userScriptHash.ToArray();
             foreach (var (key, value) in dbCache.Find(prefix))
             {
-                JObject balance = new JObject();
-                balance["asset_hash"] = key.AssetScriptHash.ToString();
-                balance["amount"] = value.Balance.ToString();
-                balance["last_updated_block"] = value.LastUpdatedBlock;
-                balances.Add(balance);
+                result.Balances.Add(new RpcNep5Balance
+                {
+                    AssetHash = key.AssetScriptHash,
+                    Amount = value.Balance,
+                    LastUpdatedBlock = value.LastUpdatedBlock
+                });
             }
-            return json;
+            return result.ToJson();
         }
     }
 }

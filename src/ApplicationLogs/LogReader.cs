@@ -3,7 +3,6 @@ using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Persistence;
-using Neo.VM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,34 +44,18 @@ namespace Neo.Plugins
 
             foreach (var appExec in applicationExecutedList)
             {
-                JObject json = new JObject();
-                json["txid"] = appExec.Transaction?.Hash.ToString();
-                json["trigger"] = appExec.Trigger;
-                json["vmstate"] = appExec.VMState;
-                json["gas_consumed"] = appExec.GasConsumed.ToString();
-                try
+                var appLog = new RpcApplicationLog
                 {
-                    json["stack"] = appExec.Stack.Select(q => q.ToParameter().ToJson()).ToArray();
-                }
-                catch (InvalidOperationException)
-                {
-                    json["stack"] = "error: recursive reference";
-                }
-                json["notifications"] = appExec.Notifications.Select(q =>
-                {
-                    JObject notification = new JObject();
-                    notification["contract"] = q.ScriptHash.ToString();
-                    try
-                    {
-                        notification["state"] = q.State.ToParameter().ToJson();
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        notification["state"] = "error: recursive reference";
-                    }
-                    return notification;
-                }).ToArray();
-                writeBatch.Put((appExec.Transaction?.Hash ?? snapshot.PersistingBlock.Hash).ToArray(), Encoding.UTF8.GetBytes(json.ToString()));
+                    // how to query the logs with null Transaction?
+                    TxHash = appExec.Transaction?.Hash,
+                    Trigger = appExec.Trigger,
+                    VMState = appExec.VMState,
+                    GasConsumed = appExec.GasConsumed,
+                    Stack = appExec.Stack.ToList(),
+                    Notifications = appExec.Notifications.ToList()
+                };
+
+                writeBatch.Put((appExec.Transaction?.Hash ?? snapshot.PersistingBlock.Hash).ToArray(), Encoding.UTF8.GetBytes(appLog.ToJson().ToString()));
             }
             db.Write(WriteOptions.Default, writeBatch);
         }

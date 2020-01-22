@@ -25,7 +25,7 @@ namespace Neo.Plugins
         public JObject ToJson()
         {
             JObject json = new JObject();
-            json["txid"] = TxHash.ToString();
+            json["txid"] = TxHash?.ToString();
             json["trigger"] = Trigger;
             json["vmstate"] = VMState;
             json["gas_consumed"] = GasConsumed.ToString();
@@ -57,7 +57,7 @@ namespace Neo.Plugins
         public static RpcApplicationLog FromJson(JObject json)
         {
             RpcApplicationLog log = new RpcApplicationLog();
-            log.TxHash = UInt256.Parse(json["txid"].AsString());
+            log.TxHash = json["txid"] is null ? null : UInt256.Parse(json["txid"].AsString());
             log.Trigger = json["trigger"].TryGetEnum<TriggerType>();
             log.VMState = json["vmstate"].TryGetEnum<VMState>();
             log.GasConsumed = long.Parse(json["gas_consumed"].AsString());
