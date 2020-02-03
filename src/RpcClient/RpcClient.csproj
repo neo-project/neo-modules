@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
+    <PackageReference Include="Neo" Version="3.0.0-CI00847" />
   </ItemGroup>
 
 </Project>

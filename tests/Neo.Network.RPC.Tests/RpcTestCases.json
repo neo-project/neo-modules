@@ -13,7 +13,7 @@
       "error": {
         "code": -500,
         "message": "InsufficientFunds",
-        "data": "   at Neo.Plugins.RpcServer.GetRelayResult(RelayResultReason reason, UInt256 hash)\r\n   at Neo.Plugins.RpcServer.SendRawTransaction(JArray _params)\r\n   at Neo.Plugins.RpcServer.ProcessRequest(HttpContext context, JObject request)"
+        "data": "   at Neo.Plugins.RpcServer.GetRelayResult(RelayResultReason reason, UInt256 hash)\r\n   at Neo.Network.RPC.Models.RpcServer.SendRawTransaction(JArray _params)\r\n   at Neo.Network.RPC.Models.RpcServer.ProcessRequest(HttpContext context, JObject request)"
       }
     }
   },

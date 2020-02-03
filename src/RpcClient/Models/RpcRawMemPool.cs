@@ -2,7 +2,7 @@ using Neo.IO.Json;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neo.Plugins
+namespace Neo.Network.RPC.Models
 {
     public class RpcRawMemPool
     {

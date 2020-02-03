@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neo.Plugins
+namespace Neo.Network.RPC.Models
 {
     public class RpcApplicationLog
     {

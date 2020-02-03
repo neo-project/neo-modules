@@ -60,23 +60,21 @@ namespace Neo.Plugins
 
         private static JObject CreateErrorResponse(JObject id, int code, string message, JObject data = null)
         {
-            RpcResponse response = CreateResponse(id);
-            response.Error = new RpcResponseError
-            {
-                Code = code,
-                Message = message,
-                Data = data
-            };
-            return response.ToJson();
+            JObject response = CreateResponse(id);
+            response["error"] = new JObject();
+            response["error"]["code"] = code;
+            response["error"]["message"] = message;
+            if (data != null)
+                response["error"]["data"] = data;
+            return response;
         }
 
-        private static RpcResponse CreateResponse(JObject id)
+        private static JObject CreateResponse(JObject id)
         {
-            return new RpcResponse
-            {
-                JsonRpc = "2.0",
-                Id = id
-            };
+            JObject response = new JObject();
+            response["jsonrpc"] = "2.0";
+            response["id"] = id;
+            return response;
         }
 
         public override void Dispose()
@@ -186,7 +184,7 @@ namespace Neo.Plugins
             {
                 if (array.Count == 0)
                 {
-                    response = CreateErrorResponse(null, -32600, "Invalid Request");
+                    response = CreateErrorResponse(request["id"], -32600, "Invalid Request");
                 }
                 else
                 {
@@ -209,7 +207,7 @@ namespace Neo.Plugins
             {
                 return CreateErrorResponse(request["id"], -32600, "Invalid Request");
             }
-            var response = CreateResponse(request["id"]);
+            JObject response = CreateResponse(request["id"]);
             try
             {
                 string method = request["method"].AsString();
@@ -217,8 +215,8 @@ namespace Neo.Plugins
                     throw new RpcException(-400, "Access denied");
                 if (!methods.TryGetValue(method, out var func))
                     throw new RpcException(-32601, "Method not found");
-                response.Result = func((JArray)request["params"]);
-                return response.ToJson();
+                response["result"] = func((JArray)request["params"]);
+                return response;
             }
             catch (FormatException)
             {

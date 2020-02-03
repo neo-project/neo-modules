@@ -1,6 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.IO.Json;
-using Neo.Plugins;
+using Neo.Network.RPC.Models;
 using System.Linq;
 
 namespace Neo.Network.RPC.Tests

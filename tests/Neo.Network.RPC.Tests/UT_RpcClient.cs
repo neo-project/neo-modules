@@ -5,7 +5,7 @@ using Moq.Protected;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
-using Neo.Plugins;
+using Neo.Network.RPC.Models;
 using System;
 using System.Linq;
 using System.Net;

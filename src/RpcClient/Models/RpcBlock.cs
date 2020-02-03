@@ -1,7 +1,7 @@
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 
-namespace Neo.Plugins
+namespace Neo.Network.RPC.Models
 {
     public class RpcBlock
     {

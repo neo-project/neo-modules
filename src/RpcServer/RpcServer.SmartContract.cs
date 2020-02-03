@@ -54,15 +54,20 @@ namespace Neo.Plugins
         private JObject GetInvokeResult(byte[] script, IVerifiable checkWitnessHashes = null)
         {
             using ApplicationEngine engine = ApplicationEngine.Run(script, checkWitnessHashes, extraGAS: Settings.Default.MaxGasInvoke);
-            RpcInvokeResult result = new RpcInvokeResult
+            JObject json = new JObject();
+            json["script"] = script.ToHexString();
+            json["state"] = engine.State;
+            json["gas_consumed"] = engine.GasConsumed.ToString();
+            try
             {
-                Script = script.ToHexString(),
-                State = engine.State,
-                GasConsumed = engine.GasConsumed.ToString(),
-                Stack = engine.ResultStack.Select(p => p.ToParameter()).ToArray()
-            };
-            ProcessInvokeWithWallet(result);
-            return result.ToJson();
+                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToParameter().ToJson()));
+            }
+            catch (InvalidOperationException)
+            {
+                json["stack"] = "error: recursive reference";
+            }
+            ProcessInvokeWithWallet(json);
+            return json;
         }
 
         [RpcMethod]

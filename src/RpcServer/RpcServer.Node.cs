@@ -7,7 +7,6 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
-using System;
 using System.Linq;
 
 namespace Neo.Plugins
@@ -23,20 +22,23 @@ namespace Neo.Plugins
         [RpcMethod]
         private JObject GetPeers(JArray _params)
         {
-            return new RpcPeers
+            JObject json = new JObject();
+            json["unconnected"] = new JArray(LocalNode.Singleton.GetUnconnectedPeers().Select(p =>
             {
-                Unconnected = LocalNode.Singleton.GetUnconnectedPeers().Select(p => new RpcPeer
-                {
-                    Address = p.Address.ToString(),
-                    Port = p.Port
-                }).ToArray(),
-                Bad = Array.Empty<RpcPeer>(),
-                Connected = LocalNode.Singleton.GetRemoteNodes().Select(p => new RpcPeer
-                {
-                    Address = p.Remote.Address.ToString(),
-                    Port = p.ListenerTcpPort
-                }).ToArray(),
-            }.ToJson();
+                JObject peerJson = new JObject();
+                peerJson["address"] = p.Address.ToString();
+                peerJson["port"] = p.Port;
+                return peerJson;
+            }));
+            json["bad"] = new JArray(); //badpeers has been removed
+            json["connected"] = new JArray(LocalNode.Singleton.GetRemoteNodes().Select(p =>
+            {
+                JObject peerJson = new JObject();
+                peerJson["address"] = p.Remote.Address.ToString();
+                peerJson["port"] = p.ListenerTcpPort;
+                return peerJson;
+            }));
+            return json;
         }
 
         private static JObject GetRelayResult(RelayResultReason reason, UInt256 hash)
@@ -56,13 +58,12 @@ namespace Neo.Plugins
         [RpcMethod]
         private JObject GetVersion(JArray _params)
         {
-            return new RpcVersion
-            {
-                TcpPort = LocalNode.Singleton.ListenerTcpPort,
-                WsPort = LocalNode.Singleton.ListenerWsPort,
-                Nonce = LocalNode.Nonce,
-                UserAgent = LocalNode.UserAgent
-            }.ToJson();
+            JObject json = new JObject();
+            json["tcpPort"] = LocalNode.Singleton.ListenerTcpPort;
+            json["wsPort"] = LocalNode.Singleton.ListenerWsPort;
+            json["nonce"] = LocalNode.Nonce;
+            json["useragent"] = LocalNode.UserAgent;
+            return json;
         }
 
         [RpcMethod]

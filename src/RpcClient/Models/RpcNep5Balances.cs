@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
-namespace Neo.Plugins
+namespace Neo.Network.RPC.Models
 {
     public class RpcNep5Balances
     {

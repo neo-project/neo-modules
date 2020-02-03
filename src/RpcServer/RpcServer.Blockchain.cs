@@ -43,12 +43,12 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "Unknown block");
             if (verbose)
             {
-                return new RpcBlock
-                {
-                    Block = block,
-                    Confirmations = Blockchain.Singleton.Height - block.Index + 1,
-                    NextBlockHash = Blockchain.Singleton.GetNextBlockHash(block.Hash)
-                }.ToJson();
+                JObject json = block.ToJson();
+                json["confirmations"] = Blockchain.Singleton.Height - block.Index + 1;
+                UInt256 hash = Blockchain.Singleton.GetNextBlockHash(block.Hash);
+                if (hash != null)
+                    json["nextblockhash"] = hash.ToString();
+                return json;
             }
             return block.ToArray().ToHexString();
         }
@@ -91,12 +91,12 @@ namespace Neo.Plugins
 
             if (verbose)
             {
-                return new RpcBlockHeader
-                {
-                    Header = header,
-                    Confirmations = Blockchain.Singleton.Height - header.Index + 1,
-                    NextBlockHash = Blockchain.Singleton.GetNextBlockHash(header.Hash)
-                }.ToJson();
+                JObject json = header.ToJson();
+                json["confirmations"] = Blockchain.Singleton.Height - header.Index + 1;
+                UInt256 hash = Blockchain.Singleton.GetNextBlockHash(header.Hash);
+                if (hash != null)
+                    json["nextblockhash"] = hash.ToString();
+                return json;
             }
 
             return header.ToArray().ToHexString();
@@ -128,16 +128,15 @@ namespace Neo.Plugins
             bool shouldGetUnverified = _params.Count >= 1 && _params[0].AsBoolean();
             if (!shouldGetUnverified)
                 return new JArray(Blockchain.Singleton.MemPool.GetVerifiedTransactions().Select(p => (JObject)p.Hash.ToString()));
+
+            JObject json = new JObject();
+            json["height"] = Blockchain.Singleton.Height;
             Blockchain.Singleton.MemPool.GetVerifiedAndUnverifiedTransactions(
                 out IEnumerable<Transaction> verifiedTransactions,
                 out IEnumerable<Transaction> unverifiedTransactions);
-
-            return new RpcRawMemPool
-            {
-                Height = Blockchain.Singleton.Height,
-                Verified = verifiedTransactions.Select(p => p.Hash).ToList(),
-                UnVerified = unverifiedTransactions.Select(p => p.Hash).ToList()
-            }.ToJson();
+            json["verified"] = new JArray(verifiedTransactions.Select(p => (JObject)p.Hash.ToString()));
+            json["unverified"] = new JArray(unverifiedTransactions.Select(p => (JObject)p.Hash.ToString()));
+            return json;
         }
 
         [RpcMethod]
@@ -150,18 +149,17 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "Unknown transaction");
             if (verbose)
             {
-                var result = new RpcTransaction { Transaction = tx };
-
+                JObject json = tx.ToJson();
                 TransactionState txState = Blockchain.Singleton.View.Transactions.TryGet(hash);
                 if (txState != null)
                 {
                     Header header = Blockchain.Singleton.GetHeader(txState.BlockIndex);
-                    result.BlockHash = header.Hash;
-                    result.Confirmations = Blockchain.Singleton.Height - header.Index + 1;
-                    result.BlockTime = header.Timestamp;
-                    result.BlockHash = header.Hash;
+                    json["blockhash"] = header.Hash.ToString();
+                    json["confirmations"] = Blockchain.Singleton.Height - header.Index + 1;
+                    json["blocktime"] = header.Timestamp;
+                    json["vmState"] = txState.VMState;
                 }
-                return result.ToJson();
+                return json;
             }
             return tx.ToArray().ToHexString();
         }
@@ -195,12 +193,11 @@ namespace Neo.Plugins
             var validators = NativeContract.NEO.GetValidators(snapshot);
             return NativeContract.NEO.GetRegisteredValidators(snapshot).Select(p =>
             {
-                return new RpcValidator
-                {
-                    PublicKey = p.PublicKey.ToString(),
-                    Votes = p.Votes,
-                    Active = validators.Contains(p.PublicKey)
-                }.ToJson();
+                JObject validator = new JObject();
+                validator["publickey"] = p.PublicKey.ToString();
+                validator["votes"] = p.Votes.ToString();
+                validator["active"] = validators.Contains(p.PublicKey);
+                return validator;
             }).ToArray();
         }
     }

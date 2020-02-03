@@ -1,6 +1,6 @@
 using Neo.IO.Json;
 
-namespace Neo.Plugins
+namespace Neo.Network.RPC.Models
 {
     public class RpcResponse
     {

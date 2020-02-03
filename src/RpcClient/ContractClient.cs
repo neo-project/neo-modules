@@ -1,5 +1,5 @@
 using Neo.Network.P2P.Payloads;
-using Neo.Plugins;
+using Neo.Network.RPC.Models;
 using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
 using Neo.VM;

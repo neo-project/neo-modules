@@ -1,7 +1,7 @@
 using Neo.IO.Json;
 using System.Linq;
 
-namespace Neo.Plugins
+namespace Neo.Network.RPC.Models
 {
     public class RpcRequest
     {
