@@ -167,11 +167,11 @@ namespace Neo.Plugins
         [RpcMethod]
         private JObject GetStorage(JArray _params)
         {
-            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
+            int id = int.Parse(_params[0].AsString());
             byte[] key = _params[1].AsString().HexToBytes();
             StorageItem item = Blockchain.Singleton.View.Storages.TryGet(new StorageKey
             {
-                ScriptHash = script_hash,
+                Id = id,
                 Key = key
             }) ?? new StorageItem();
             return item.Value?.ToHexString();
