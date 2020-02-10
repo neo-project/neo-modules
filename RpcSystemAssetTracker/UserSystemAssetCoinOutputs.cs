@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using Neo.IO;
 using Neo.Ledger;
@@ -23,17 +22,8 @@ namespace Neo.Plugins
             public void AddTxIndex(ushort index, Fixed8 amount)
             {
                 TotalAmount += amount;
-                try
-                {
-                    AmountByTxIndex.Add(index, amount);
-                }
-                catch (Exception ex)
-                {
-#if DEBUG
-                    Console.WriteLine("UserSystemAssetCoinOutputs: Error: " + ex.Message);
-#endif
-                }
-        }
+                AmountByTxIndex.Add(index, amount);
+            }
 
             public bool RemoveTxIndex(ushort index)
             {

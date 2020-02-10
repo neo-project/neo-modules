@@ -1,29 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>2.9.4.6</Version>
+    <Version>2.10.3</Version>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <RootNamespace>Neo.Plugins</RootNamespace>
     <LangVersion>latest</LangVersion>
-    <Authors>NEO Project feat. CRON FOUNDATION</Authors>
+	<Authors>CRON Foundation, The Neo Project</Authors>
     <Product>RpcSystemAssetTracker Plugin for CRONIUM</Product>
     <Description>A plugin for calling contracts and sending assets with raw transactions using UTxO and without indexing wallets. This is NEO's RpcSystemAssetTracker plugin, downgraded for usage with CRONIUM 2.9.4 package but extended with cron_send, cron_invoke_contract_as, cron_get_address and cron_tx_block JSON-RPC methods</Description>
-    <Copyright>NEO Project feat. CRON FOUNDATION</Copyright>
-    <Company>NEO Project feat. CRON FOUNDATION</Company>
+    <Copyright>CRON Foundation, The Neo Project</Copyright>
+    <Company>CRON Foundation, The Neo Project</Company>
     <PackageLicenseUrl>https://github.com/cronfoundation/neo-plugins/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/cronfoundation/neo-plugins</PackageProjectUrl>
     <RepositoryType>https://avatars2.githubusercontent.com/u/47320988</RepositoryType>
     <RepositoryUrl>https://github.com/cronfoundation/neo-plugins</RepositoryUrl>
     <PackageReleaseNotes>Fixed a bug in cron_send, so the caller can transfer full precision amounts</PackageReleaseNotes>
-    <AssemblyVersion>2.9.4.6</AssemblyVersion>
-    <FileVersion>2.9.4.6</FileVersion>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="CRONIUM" Version="2.9.4" />
-  </ItemGroup>
   <ItemGroup>
     <None Update="RpcSystemAssetTracker\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CRONIUM" Version="2.10.3" />
   </ItemGroup>
 </Project>
