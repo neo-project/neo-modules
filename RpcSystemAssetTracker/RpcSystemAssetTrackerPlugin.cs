@@ -31,6 +31,79 @@ namespace Neo.Plugins
         private bool _shouldPersistBlock;
         private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
 
+ public JObject OnProcess(HttpContext context, string method, JArray parameters)
+        {
+            if (_shouldTrackUnclaimed)
+            {
+                if (method == "getclaimable") return ProcessGetClaimableSpents(parameters);
+                if (method == "getunclaimed") return ProcessGetUnclaimed(parameters);
+            }
+
+            if (method == "cron_send")
+            {
+                return Send(parameters);
+            }
+
+            if (method == "cron_send_1xN")
+            {
+                return SendToMultipleSimple(parameters);
+            }
+
+            if (method == "cron_invoke_contract_as")
+            {
+                return InvokeSmartContractEntryPointAs(
+                    parameters[0].AsString(),
+                    parameters[1].AsString(),
+                    parameters.Skip(2).ToArray());
+            }
+
+            if (method == "cron_get_address")
+            {
+                return GetAddress(parameters[0].AsString());
+            }
+
+            if (method == "cron_get_stat_special")
+            {
+
+                int code = (int)parameters[0].AsNumber();
+                switch (code)
+                {
+                    case 0: return StatScenarioZero(parameters);
+                }
+
+                throw new Neo.Network.RPC.RpcException(-7171, "Wrong submethod code");
+            }
+
+            if (method == "cron_search_special")
+            {
+                int code = (int)parameters[0].AsNumber();
+                switch (code)
+                {
+                    case 0: return SearchScenarioZero(parameters);
+                }
+
+                throw new Neo.Network.RPC.RpcException(-7171, "Wrong submethod code");
+            }
+
+            if (method == "cron_tx_block")
+            {
+                UInt256 txHash = UInt256.Parse(parameters[0].AsString());
+
+                Transaction tx = Blockchain.Singleton.GetTransaction(txHash);
+                uint? txBlock = Blockchain.Singleton.Store.GetTransactions().TryGet(txHash)?.BlockIndex;
+
+                JObject jo = new JObject[] { txBlock, tx?.ToJson() };
+
+                return jo;
+            }
+
+            return method != "getunspents" ? null : ProcessGetUnspents(parameters);
+        }
+
+        public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
+        {
+        }
+
         public override void Configure()
         {
 #if DEBUG
@@ -41,6 +114,7 @@ namespace Neo.Plugins
             Console.WriteLine($"PID: {Process.GetCurrentProcess().Id} RpcSystemAssetTrackerPlugin v2.9.4.5: Configure()");
             Console.WriteLine(h);
 #endif
+
 
             if (_db == null)
             {
@@ -419,77 +493,6 @@ namespace Neo.Plugins
             return json;
         }
 
-        public JObject OnProcess(HttpContext context, string method, JArray parameters)
-        {
-            if (_shouldTrackUnclaimed)
-            {
-                if (method == "getclaimable") return ProcessGetClaimableSpents(parameters);
-                if (method == "getunclaimed") return ProcessGetUnclaimed(parameters);
-            }
-
-            if (method == "cron_send")
-            {
-                return Send(parameters);
-            }
-
-            if (method == "cron_send_1xN")
-            {
-                return SendToMultipleSimple(parameters);
-            }
-
-            if (method == "cron_invoke_contract_as")
-            {
-                return InvokeSmartContractEntryPointAs(
-                    parameters[0].AsString(),
-                    parameters[1].AsString(),
-                    parameters.Skip(2).ToArray());
-            }
-
-            if (method == "cron_get_address")
-            {
-                return GetAddress(parameters[0].AsString());
-            }
-
-            if (method == "cron_get_stat_special")
-            {
-
-                int code = (int)parameters[0].AsNumber();
-                switch (code)
-                {
-                    case 0: return StatScenarioZero(parameters);
-                }
-
-                throw new Neo.Network.RPC.RpcException(-7171, "Wrong submethod code");
-            }
-
-            if (method == "cron_search_special")
-            {
-                int code = (int)parameters[0].AsNumber();
-                switch (code)
-                {
-                    case 0: return SearchScenarioZero(parameters);
-                }
-
-                throw new Neo.Network.RPC.RpcException(-7171, "Wrong submethod code");
-            }
-
-            if (method == "cron_tx_block")
-            {
-                UInt256 txHash = UInt256.Parse(parameters[0].AsString());
-
-                Transaction tx = Blockchain.Singleton.GetTransaction(txHash);
-                uint? txBlock = Blockchain.Singleton.Store.GetTransactions().TryGet(txHash)?.BlockIndex;
-
-                JObject jo = new JObject[] { txBlock, tx?.ToJson() };
-
-                return jo;
-            }
-
-            return method != "getunspents" ? null : ProcessGetUnspents(parameters);
-        }
-
-        public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
-        {
-        }
+       
     }
 }
