@@ -145,9 +145,9 @@ namespace Neo.Network.RPC
         /// Transfer NEP5 token balance
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
-        /// <param name="fromKey">from KeyPair</param>
+        /// <param name="from">from KeyPair</param>
         /// <param name="to">to account script hash</param>
-        /// <param name="amount">transfer amount</param>
+        /// <param name="amountInteger">transfer amount</param>
         /// <returns></returns>
         public Transaction Transfer(UInt160 scriptHash, KeyPair from, UInt160 to, BigInteger amountInteger)
         {

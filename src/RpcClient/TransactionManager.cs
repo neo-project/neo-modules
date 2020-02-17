@@ -119,8 +119,6 @@ namespace Neo.Network.RPC
                 }
 
                 if (witness_script is null) continue;
-
-
                 networkFee += Wallet.CalculateNetworkFee(witness_script, ref size);
             }
             networkFee += size * policyAPI.GetFeePerByte();
@@ -208,7 +206,6 @@ namespace Neo.Network.RPC
 
             // Sign with signStore
             foreach (var item in signStore)
-            {
                 foreach (var key in item.KeyPairs)
                 {
                     byte[] signature = Tx.Sign(key);
@@ -217,7 +214,6 @@ namespace Neo.Network.RPC
                         throw new Exception("AddSignature failed!");
                     }
                 }
-            }
 
             // Verify witness count
             if (!context.Completed)
