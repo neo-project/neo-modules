@@ -6,6 +6,8 @@ using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Neo.Network.RPC
 {
@@ -19,10 +21,17 @@ namespace Neo.Network.RPC
         private readonly Nep5API nep5API;
         private readonly UInt160 sender;
 
+        private class SignItem { public Contract Contract; public HashSet<KeyPair> KeyPairs; }
+
         /// <summary>
         /// The Transaction context to manage the witnesses
         /// </summary>
         private ContractParametersContext context;
+
+        /// <summary>
+        /// This container stores the keys for sign the transaction
+        /// </summary>
+        private List<SignItem> signStore;
 
         /// <summary>
         /// The Transaction managed by this class
@@ -48,9 +57,8 @@ namespace Neo.Network.RPC
         /// <param name="script">Transaction Script</param>
         /// <param name="attributes">Transaction Attributes</param>
         /// <param name="cosigners">Transaction Cosigners</param>
-        /// <param name="networkFee">Transaction NetworkFee, will set to estimate value(with only basic signatures) when networkFee is 0</param>
         /// <returns></returns>
-        public TransactionManager MakeTransaction(byte[] script, TransactionAttribute[] attributes = null, Cosigner[] cosigners = null, long networkFee = 0)
+        public TransactionManager MakeTransaction(byte[] script, TransactionAttribute[] attributes = null, Cosigner[] cosigners = null)
         {
             var random = new Random();
             uint height = rpcClient.GetBlockCount() - 1;
@@ -81,21 +89,16 @@ namespace Neo.Network.RPC
             }
 
             context = new ContractParametersContext(Tx);
+            signStore = new List<SignItem>();
 
-            // set networkfee to estimate value when networkFee is 0
-            Tx.NetworkFee = networkFee == 0 ? CalculateNetworkFee(true) : networkFee;
-
-            var gasBalance = nep5API.BalanceOf(NativeContract.GAS.Hash, sender);
-            if (gasBalance >= Tx.SystemFee + Tx.NetworkFee) return this;
-            throw new InvalidOperationException($"Insufficient GAS in address: {sender.ToAddress()}");
+            return this;
         }
 
         /// <summary>
         /// Calculate NetworkFee
         /// </summary>
-        /// <param name="isEstimate">assuming the witnesses are basic Signature Contract if set to true</param>
         /// <returns></returns>
-        private long CalculateNetworkFee(bool isEstimate = false)
+        private long CalculateNetworkFee()
         {
             long networkFee = 0;
             UInt160[] hashes = Tx.GetScriptHashesForVerifying(null);
@@ -103,29 +106,20 @@ namespace Neo.Network.RPC
             foreach (UInt160 hash in hashes)
             {
                 byte[] witness_script = null;
-                if (isEstimate)
-                {
-                    // assuming the witnesses are basic Signature Contract
-                    var dummyKey = new byte[32];
-                    dummyKey[31] = 0x01;
-                    KeyPair one = new KeyPair(dummyKey);
-                    witness_script = Contract.CreateSignatureRedeemScript(one.PublicKey);
-                }
-                else
-                {
-                    // calculate NetworkFee with context items
-                    witness_script = context.GetScript(hash);
-                    if (witness_script is null || witness_script.Length == 0)
-                    {
-                        try
-                        {
-                            witness_script = rpcClient.GetContractState(hash.ToString())?.Script;
-                        }
-                        catch { }
-                    }
 
-                    if (witness_script is null) continue;
+                // calculate NetworkFee
+                witness_script = signStore.FirstOrDefault(p => p.Contract.ScriptHash == hash)?.Contract?.Script;
+                if (witness_script is null || witness_script.Length == 0)
+                {
+                    try
+                    {
+                        witness_script = rpcClient.GetContractState(hash.ToString())?.Script;
+                    }
+                    catch { }
                 }
+
+                if (witness_script is null) continue;
+
 
                 networkFee += Wallet.CalculateNetworkFee(witness_script, ref size);
             }
@@ -141,13 +135,7 @@ namespace Neo.Network.RPC
         public TransactionManager AddSignature(KeyPair key)
         {
             var contract = Contract.CreateSignatureContract(key.PublicKey);
-
-            byte[] signature = Tx.Sign(key);
-            if (!context.AddSignature(contract, key.PublicKey, signature))
-            {
-                throw new Exception("AddSignature failed!");
-            }
-
+            AddSignItem(contract, key);
             return this;
         }
 
@@ -160,14 +148,26 @@ namespace Neo.Network.RPC
         public TransactionManager AddMultiSig(KeyPair key, int m, params ECPoint[] publicKeys)
         {
             Contract contract = Contract.CreateMultiSigContract(m, publicKeys);
+            AddSignItem(contract, key);
+            return this;
+        }
 
-            byte[] signature = Tx.Sign(key);
-            if (!context.AddSignature(contract, key.PublicKey, signature))
+        private void AddSignItem(Contract contract, KeyPair key)
+        {
+            if (!Tx.GetScriptHashesForVerifying(null).Contains(contract.ScriptHash))
             {
-                throw new Exception("AddMultiSig failed!");
+                throw new Exception($"AddSignature error: useless hash ({contract.ScriptHash.ToString()})");
             }
 
-            return this;
+            SignItem item = signStore.FirstOrDefault(p => p.Contract.ScriptHash == contract.ScriptHash);
+            if (item is null)
+            {
+                signStore.Add(new SignItem { Contract = contract, KeyPairs = new HashSet<KeyPair> { key } });
+            }
+            else if (!item.KeyPairs.Contains(key))
+            {
+                item.KeyPairs.Add(key);
+            }
         }
 
         /// <summary>
@@ -200,19 +200,30 @@ namespace Neo.Network.RPC
         /// </summary>
         public TransactionManager Sign()
         {
+            // Calculate NetworkFee
+            Tx.NetworkFee = CalculateNetworkFee();
+            var gasBalance = nep5API.BalanceOf(NativeContract.GAS.Hash, sender);
+            if (gasBalance < Tx.SystemFee + Tx.NetworkFee)
+                throw new InvalidOperationException($"Insufficient GAS in address: {sender.ToAddress()}");
+
+            // Sign with signStore
+            foreach (var item in signStore)
+            {
+                foreach (var key in item.KeyPairs)
+                {
+                    byte[] signature = Tx.Sign(key);
+                    if (!context.AddSignature(item.Contract, key.PublicKey, signature))
+                    {
+                        throw new Exception("AddSignature failed!");
+                    }
+                }
+            }
+
             // Verify witness count
             if (!context.Completed)
             {
                 throw new Exception($"Please add signature or witness first!");
             }
-
-            // Calculate NetworkFee
-            long leastNetworkFee = CalculateNetworkFee();
-            if (Tx.NetworkFee < leastNetworkFee)
-            {
-                throw new InvalidOperationException("Insufficient NetworkFee");
-            }
-
             Tx.Witnesses = context.GetWitnesses();
             return this;
         }

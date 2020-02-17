@@ -129,9 +129,8 @@ namespace Neo.Network.RPC
         /// Example: WIF ("KyXwTh1hB76RRMquSvnxZrJzQx7h9nQP2PCRL38v6VDb5ip3nf1p"), PrivateKey ("450d6c2a04b5b470339a745427bae6828400cf048400837d73c415063835e005")</param>
         /// <param name="toAddress">address or account script hash</param>
         /// <param name="amount">token amount</param>
-        /// <param name="networkFee">netwotk fee, set to be 0 will auto calculate the least fee</param>
         /// <returns></returns>
-        public Transaction Transfer(string tokenHash, string fromKey, string toAddress, decimal amount, decimal networkFee = 0)
+        public Transaction Transfer(string tokenHash, string fromKey, string toAddress, decimal amount)
         {
             UInt160 scriptHash = Utility.GetScriptHash(tokenHash);
             var decimals = nep5API.Decimals(scriptHash);
@@ -139,8 +138,7 @@ namespace Neo.Network.RPC
             KeyPair from = Utility.GetKeyPair(fromKey);
             UInt160 to = Utility.GetScriptHash(toAddress);
             BigInteger amountInteger = amount.ToBigInteger(decimals);
-            BigInteger networkFeeInteger = networkFee.ToBigInteger(NativeContract.GAS.Decimals);
-            return Transfer(scriptHash, from, to, amountInteger, (long)networkFeeInteger);
+            return Transfer(scriptHash, from, to, amountInteger);
         }
 
         /// <summary>
@@ -150,11 +148,10 @@ namespace Neo.Network.RPC
         /// <param name="fromKey">from KeyPair</param>
         /// <param name="to">to account script hash</param>
         /// <param name="amount">transfer amount</param>
-        /// <param name="networkFee">netwotk fee, set to be 0 will auto calculate the least fee</param>
         /// <returns></returns>
-        public Transaction Transfer(UInt160 scriptHash, KeyPair from, UInt160 to, BigInteger amountInteger, BigInteger networkFeeInteger = default)
+        public Transaction Transfer(UInt160 scriptHash, KeyPair from, UInt160 to, BigInteger amountInteger)
         {
-            Transaction transaction = nep5API.CreateTransferTx(scriptHash, from, to, amountInteger, (long)networkFeeInteger);
+            Transaction transaction = nep5API.CreateTransferTx(scriptHash, from, to, amountInteger);
             rpcClient.SendRawTransaction(transaction);
             return transaction;
         }

@@ -102,16 +102,15 @@ namespace Neo.Network.RPC
         /// <param name="fromKey">from KeyPair</param>
         /// <param name="to">to account script hash</param>
         /// <param name="amount">transfer amount</param>
-        /// <param name="networkFee">netwotk fee, set to be 0 will auto calculate the least fee</param>
         /// <returns></returns>
-        public Transaction CreateTransferTx(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount, long networkFee = 0)
+        public Transaction CreateTransferTx(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount)
         {
             var sender = Contract.CreateSignatureRedeemScript(fromKey.PublicKey).ToScriptHash();
             Cosigner[] cosigners = new[] { new Cosigner { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
             byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
             Transaction tx = new TransactionManager(rpcClient, sender)
-                .MakeTransaction(script, null, cosigners, networkFee)
+                .MakeTransaction(script, null, cosigners)
                 .AddSignature(fromKey)
                 .Sign()
                 .Tx;

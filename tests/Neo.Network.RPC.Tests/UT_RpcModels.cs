@@ -41,6 +41,14 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod()]
+        public void TestGetContractState()
+        {
+            JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.GetContractState).ToLower()).Response.Result;
+            var item = RpcContractState.FromJson(json);
+            Assert.AreEqual(json.ToString(), item.ToJson().ToString());
+        }
+
+        [TestMethod()]
         public void TestRpcInvokeResult()
         {
             JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.InvokeFunction).ToLower()).Response.Result;

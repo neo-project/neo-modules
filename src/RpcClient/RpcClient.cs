@@ -187,7 +187,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public ContractState GetContractState(string hash)
         {
-            return ContractState.FromJson(RpcSend("getcontractstate", hash));
+            return RpcContractState.FromJson(RpcSend("getcontractstate", hash)).ContractState;
         }
 
         /// <summary>

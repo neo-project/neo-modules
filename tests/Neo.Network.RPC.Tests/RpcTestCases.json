@@ -202,6 +202,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
+        "id": -2,
         "hash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
         "script": "QetD9PQ=",
         "manifest": {
