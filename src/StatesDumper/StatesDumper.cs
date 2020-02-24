@@ -37,7 +37,7 @@ namespace Neo.Plugins
         }
 
         /// <summary>
-        /// Process "change view" command
+        /// Process "dump storage" command
         /// </summary>
         [ConsoleCommand("dump", "storage", HelpCategory = "Dump storage")]
         private void OnDumpStorage(UInt160 key = null)
