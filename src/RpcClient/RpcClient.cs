@@ -225,11 +225,16 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Returns the stored value, according to the contract script hash and the stored key.
+        /// Returns the stored value, according to the contract script hash(or Id) and the stored key.
         /// </summary>
-        public string GetStorage(string scriptHash, string key)
+        public string GetStorage(string scriptHashOrId, string key)
         {
-            return RpcSend("getstorage", scriptHash, key).AsString();
+            if (int.TryParse(scriptHashOrId, out int id))
+            {
+                return RpcSend("getstorage", id, key).AsString();
+            }
+
+            return RpcSend("getstorage", scriptHashOrId, key).AsString();
         }
 
         /// <summary>
