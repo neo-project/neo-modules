@@ -101,17 +101,23 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public void TestGetBlockHex()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlockHex).ToLower());
-            var result = rpc.GetBlockHex(test.Request.Params[0].AsString());
-            Assert.AreEqual(test.Response.Result.AsString(), result);
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlockHex).ToLower());
+            foreach (var test in tests)
+            {
+                var result = rpc.GetBlockHex(test.Request.Params[0].AsString());
+                Assert.AreEqual(test.Response.Result.AsString(), result);
+            }
         }
 
         [TestMethod]
         public void TestGetBlock()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlock).ToLower());
-            var result = rpc.GetBlock(test.Request.Params[0].AsString());
-            Assert.AreEqual(test.Response.Result.AsString(), result.ToJson().ToString());
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlock).ToLower());
+            foreach (var test in tests)
+            {
+                var result = rpc.GetBlock(test.Request.Params[0].AsString());
+                Assert.AreEqual(test.Response.Result.AsString(), result.ToJson().ToString());
+            }
         }
 
         [TestMethod]
@@ -133,17 +139,23 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public void TestGetBlockHeaderHex()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlockHeaderHex).ToLower());
-            var result = rpc.GetBlockHeaderHex(test.Request.Params[0].AsString());
-            Assert.AreEqual(test.Response.Result.AsString(), result);
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlockHeaderHex).ToLower());
+            foreach (var test in tests)
+            {
+                var result = rpc.GetBlockHeaderHex(test.Request.Params[0].AsString());
+                Assert.AreEqual(test.Response.Result.AsString(), result);
+            }
         }
 
         [TestMethod]
         public void TestGetBlockHeader()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlockHeader).ToLower());
-            var result = rpc.GetBlockHeader(test.Request.Params[0].AsString());
-            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlockHeader).ToLower());
+            foreach (var test in tests)
+            {
+                var result = rpc.GetBlockHeader(test.Request.Params[0].AsString());
+                Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            }
         }
 
         [TestMethod]
@@ -157,9 +169,12 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public void TestGetContractState()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetContractState).ToLower());
-            var result = rpc.GetContractState(test.Request.Params[0].AsString());
-            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetContractState).ToLower());
+            foreach (var test in tests)
+            {
+                var result = rpc.GetContractState(test.Request.Params[0].AsString());
+                Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            }
         }
 
         [TestMethod]
@@ -233,9 +248,9 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public void TestGetPeers()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetConnectionCount).ToLower());
-            var result = rpc.GetConnectionCount();
-            Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetPeers).ToLower());
+            var result = rpc.GetPeers();
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
         [TestMethod]

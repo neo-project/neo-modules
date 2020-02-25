@@ -479,7 +479,7 @@ namespace Neo.Network.RPC
         /// <param name="endTimestamp">The end block Timestamp, default to UtcNow</param>
         public RpcNep5Transfers GetNep5Transfers(string address, ulong? startTimestamp = default, ulong? endTimestamp = default)
         {
-            startTimestamp ??= (DateTime.UtcNow - TimeSpan.FromDays(7)).ToTimestampMS();
+            startTimestamp ??= 0;
             endTimestamp ??= DateTime.UtcNow.ToTimestampMS();
             return RpcNep5Transfers.FromJson(RpcSend("getnep5transfers", address, startTimestamp, endTimestamp));
         }

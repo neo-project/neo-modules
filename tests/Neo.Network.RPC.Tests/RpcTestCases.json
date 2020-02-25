@@ -48,11 +48,81 @@
     }
   },
   {
+    "Name": "getblockhex",
+    "Request": {
+      "jsonrpc": "2.0",
+      "method": "getblock",
+      "params": [ "0x5bb05a3b857c9eaaf94dc33fa5b4a2278601eefcdb90703698972ef7d029e445" ],
+      "id": 1
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": "0000000000000000000000000000000000000000000000000000000000000000000000002bbb6298fc7039330cdfd2e4dfbe976ee72c4cba6c16d68f0b49ab1bca685b7388ea19ef55010000000000009903b0c3d292988febe5f306a02f654ea2eb16290100011102001dac2b7c000000000000000000ca61e52e881d41374e640f819cd118cc153b21a7000000000000000000000000000000000000000000000541123e7fe801000111"
+    }
+  },
+  {
     "Name": "getblock",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblock",
       "params": [ 0, true ],
+      "id": 1
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "hash": "0x5bb05a3b857c9eaaf94dc33fa5b4a2278601eefcdb90703698972ef7d029e445",
+        "size": 171,
+        "version": 0,
+        "previousblockhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "merkleroot": "0x735b68ca1bab490b8fd6166cba4c2ce76e97bedfe4d2df0c333970fc9862bb2b",
+        "time": 1468595301000,
+        "index": 0,
+        "nextconsensus": "NZs2zXSPuuv9ZF6TDGSWT1RBmE8rfGj7UW",
+        "witnesses": [
+          {
+            "invocation": "",
+            "verification": "EQ=="
+          }
+        ],
+        "consensus_data": {
+          "primary": 0,
+          "nonce": "000000007c2bac1d"
+        },
+        "tx": [
+          {
+            "hash": "0xb13fd7940186896233272811e61b69a0c4b7dd576fdf3b89987c8cdee2d71e37",
+            "size": 57,
+            "version": 0,
+            "nonce": 0,
+            "sender": "NeN4xPMn4kHoj7G8Lciq9oorgLTvqt4qi1",
+            "sys_fee": "0",
+            "net_fee": "0",
+            "valid_until_block": 0,
+            "attributes": [],
+            "cosigners": [],
+            "script": "QRI+f+g=",
+            "witnesses": [
+              {
+                "invocation": "",
+                "verification": "EQ=="
+              }
+            ]
+          }
+        ],
+        "confirmations": 2671,
+        "nextblockhash": "0x423173109798b038019b35129417b55cc4b5976ac79978dfab8ea2512d155f69"
+      }
+    }
+  },
+  {
+    "Name": "getblock",
+    "Request": {
+      "jsonrpc": "2.0",
+      "method": "getblock",
+      "params": [ "0x5bb05a3b857c9eaaf94dc33fa5b4a2278601eefcdb90703698972ef7d029e445", true ],
       "id": 1
     },
     "Response": {
@@ -146,11 +216,56 @@
     }
   },
   {
+    "Name": "getblockheaderhex",
+    "Request": {
+      "jsonrpc": "2.0",
+      "method": "getblockheader",
+      "params": [ "0x5bb05a3b857c9eaaf94dc33fa5b4a2278601eefcdb90703698972ef7d029e445" ],
+      "id": 1
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": "0000000000000000000000000000000000000000000000000000000000000000000000002bbb6298fc7039330cdfd2e4dfbe976ee72c4cba6c16d68f0b49ab1bca685b7388ea19ef55010000000000009903b0c3d292988febe5f306a02f654ea2eb16290100011100"
+    }
+  },
+  {
     "Name": "getblockheader",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblockheader",
       "params": [ 0, true ],
+      "id": 1
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "hash": "0x5bb05a3b857c9eaaf94dc33fa5b4a2278601eefcdb90703698972ef7d029e445",
+        "size": 105,
+        "version": 0,
+        "previousblockhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "merkleroot": "0x735b68ca1bab490b8fd6166cba4c2ce76e97bedfe4d2df0c333970fc9862bb2b",
+        "time": 1468595301000,
+        "index": 0,
+        "nextconsensus": "NZs2zXSPuuv9ZF6TDGSWT1RBmE8rfGj7UW",
+        "witnesses": [
+          {
+            "invocation": "",
+            "verification": "EQ=="
+          }
+        ],
+        "confirmations": 2700,
+        "nextblockhash": "0x423173109798b038019b35129417b55cc4b5976ac79978dfab8ea2512d155f69"
+      }
+    }
+  },
+  {
+    "Name": "getblockheader",
+    "Request": {
+      "jsonrpc": "2.0",
+      "method": "getblockheader",
+      "params": [ "0x5bb05a3b857c9eaaf94dc33fa5b4a2278601eefcdb90703698972ef7d029e445", true ],
       "id": 1
     },
     "Response": {
@@ -432,6 +547,20 @@
       "jsonrpc": "2.0",
       "method": "getstorage",
       "params": [ "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b", "146925aa554712439a9c613ba114efa3fac23ddbca" ],
+      "id": 1
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": "410121064c5d11a2a700"
+    }
+  },
+  {
+    "Name": "getstorage",
+    "Request": {
+      "jsonrpc": "2.0",
+      "method": "getstorage",
+      "params": [ -2, "146925aa554712439a9c613ba114efa3fac23ddbca" ],
       "id": 1
     },
     "Response": {
