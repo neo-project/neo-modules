@@ -157,7 +157,7 @@ namespace Neo.Plugins
                     json["blockhash"] = header.Hash.ToString();
                     json["confirmations"] = Blockchain.Singleton.Height - header.Index + 1;
                     json["blocktime"] = header.Timestamp;
-                    json["vmState"] = txState.VMState;
+                    json["vm_state"] = txState.VMState;
                 }
                 return json;
             }

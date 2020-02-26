@@ -17,8 +17,6 @@
       }
     }
   },
-
-
   {
     "Name": "getbestblockhash",
     "Request": {
@@ -537,7 +535,7 @@
         "blockhash": "0xc1ed259e394c9cd93c1e0eb1e0f144c0d10da64861a24c0084f0d98270b698f1",
         "confirmations": 643,
         "blocktime": 1579417249620,
-        "vmState": "HALT"
+        "vm_state": "HALT"
       }
     }
   },
@@ -663,10 +661,10 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "tcpPort": 20333,
-        "wsPort": 20334,
+        "tcp_port": 20333,
+        "ws_port": 20334,
         "nonce": 592651621,
-        "useragent": "/Neo:3.0.0-preview1/"
+        "user_agent": "/Neo:3.0.0-preview1/"
       }
     }
   },

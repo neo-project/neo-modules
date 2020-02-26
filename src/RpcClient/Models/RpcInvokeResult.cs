@@ -32,7 +32,7 @@ namespace Neo.Network.RPC.Models
                 // ContractParameter.ToJson() may cause InvalidOperationException
                 json["stack"] = "error: recursive reference";
             }
-            if (Tx != null) json["tx"] = Tx;
+            if (!string.IsNullOrEmpty(Tx)) json["tx"] = Tx;
             return json;
         }
 

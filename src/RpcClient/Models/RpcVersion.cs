@@ -15,20 +15,20 @@ namespace Neo.Network.RPC.Models
         public JObject ToJson()
         {
             JObject json = new JObject();
-            json["tcpPort"] = TcpPort;
-            json["wsPort"] = WsPort;
+            json["tcp_port"] = TcpPort;
+            json["ws_port"] = WsPort;
             json["nonce"] = Nonce;
-            json["useragent"] = UserAgent;
+            json["user_agent"] = UserAgent;
             return json;
         }
 
         public static RpcVersion FromJson(JObject json)
         {
             RpcVersion version = new RpcVersion();
-            version.TcpPort = (int)json["tcpPort"].AsNumber();
-            version.WsPort = (int)json["wsPort"].AsNumber();
+            version.TcpPort = (int)json["tcp_port"].AsNumber();
+            version.WsPort = (int)json["ws_port"].AsNumber();
             version.Nonce = (uint)json["nonce"].AsNumber();
-            version.UserAgent = json["useragent"].AsString();
+            version.UserAgent = json["user_agent"].AsString();
             return version;
         }
     }
