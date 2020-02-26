@@ -161,9 +161,9 @@ namespace Neo.Plugins
                 }
 
                 // Handle SystemFee and NetworkFee GAS burn for each transaction
-                if (!(appExecuted.Transaction is Transaction tx)) continue;
+                if (appExecuted.Transaction is null) continue;
                 HandleNotification(snapshot, appExecuted.Transaction, NativeContract.GAS.Hash,
-                    new VM.Types.Array(new VM.Types.StackItem[] { "Transfer", appExecuted.Transaction.Sender.ToArray(), null, tx.SystemFee + tx.NetworkFee }),
+                    new VM.Types.Array(new VM.Types.StackItem[] { "Transfer", appExecuted.Transaction.Sender.ToArray(), null, appExecuted.Transaction.SystemFee + appExecuted.Transaction.NetworkFee }),
                     nep5BalancesChanged, ref transferIndex);
             }
 
