@@ -30,8 +30,6 @@ namespace Neo.Plugins
         /// <summary>
         /// Process "help" command
         /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
         private bool OnHelpCommand(string[] args)
         {
             if (args.Length < 2)
@@ -43,7 +41,7 @@ namespace Neo.Plugins
             Console.WriteLine($"{Name} Commands:\n");
             Console.WriteLine("Block Commands:");
             Console.WriteLine("\tblock time <index/hash>");
-            Console.WriteLine("\tblock avgtime [2 - 10000]");
+            Console.WriteLine("\tblock avgtime [1 - 10000]");
 
             return true;
         }
@@ -51,8 +49,6 @@ namespace Neo.Plugins
         /// <summary>
         /// Process "block" command
         /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
         private bool OnBlockCommand(string[] args)
         {
             if (args.Length < 2) return false;
@@ -69,10 +65,9 @@ namespace Neo.Plugins
         }
 
         /// <summary>
-        /// Calculates and prints the average time the latest blocks are active
+        /// Process "block avgtime" command
+        /// Prints the average time in seconds the latest blocks are active
         /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
         private bool OnBlockAverageTimeCommand(string[] args)
         {
             if (args.Length > 3)
@@ -81,68 +76,42 @@ namespace Neo.Plugins
             }
             else
             {
-                uint desiredCount;
+                uint desiredCount = 1000;
                 if (args.Length == 3)
                 {
-                    desiredCount = uint.Parse(args[2]);
-                    if (desiredCount < 2)
+                    if (!uint.TryParse(args[2], out desiredCount))
                     {
-                        Console.WriteLine("Minimum 2 block");
+                        Console.WriteLine("Invalid parameter");
                         return true;
                     }
+
+                    if (desiredCount < 1)
+                    {
+                        Console.WriteLine("Minimum 1 block");
+                        return true;
+                    }
+
                     if (desiredCount > 10000)
                     {
                         Console.WriteLine("Maximum 10000 blocks");
                         return true;
                     }
                 }
-                else
-                {
-                    desiredCount = 1000;
-                }
 
-                var firstIndex = Blockchain.GenesisBlock.Index;
                 using (var snapshot = Blockchain.Singleton.GetSnapshot())
                 {
-                    var blockHash = snapshot.CurrentBlockHash;
-                    var countedBlocks = 0;
-                    ulong totaltime = 0;
-                    Block block = snapshot.GetBlock(blockHash);
-
-                    ulong nextTimestamp = block.Timestamp;
-                    block = snapshot.GetBlock(block.PrevHash);
-
-                    while (block != null && block.Index != firstIndex && desiredCount > countedBlocks)
-                    {
-                        totaltime += nextTimestamp - block.Timestamp;
-                        nextTimestamp = block.Timestamp;
-
-                        block = snapshot.GetBlock(block.PrevHash);
-                        countedBlocks++;
-                    }
-
-                    double averageInSeconds;
-                    if (countedBlocks > 0)
-                    {
-                        var timeInSeconds = totaltime / 1000.0;
-                        averageInSeconds = timeInSeconds / countedBlocks;
-                    }
-                    else
-                    {
-                        averageInSeconds = 0.0;
-                    }
-
+                    var averageInSeconds = snapshot.GetAverageTimePerBlock(desiredCount) / 1000;
                     Console.WriteLine(averageInSeconds.ToString("Average time/block: 0.00 seconds"));
                 }
+
                 return true;
             }
         }
 
         /// <summary>
-        /// Calculates and prints the block time of the given block index or block hash
+        /// Process "block time" command
+        /// Prints the block time in seconds of the given block index or block hash
         /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
         private bool OnBlockTimeCommand(string[] args)
         {
             if (args.Length != 3)
@@ -152,35 +121,28 @@ namespace Neo.Plugins
             else
             {
                 string blockId = args[2];
-                Block block;
+                Block block = null;
 
-                if (blockId.Length == 66)
+                if (UInt256.TryParse(blockId, out var blockHash))
                 {
-                    var blockHash = UInt256.Parse(blockId);
                     block = Blockchain.Singleton.GetBlock(blockHash);
                 }
-                else
+                else if (uint.TryParse(blockId, out var blockIndex))
                 {
-                    var blockIndex = uint.Parse(blockId);
                     block = Blockchain.Singleton.GetBlock(blockIndex);
                 }
 
-                if (block != null)
+                if (block == null)
                 {
-                    var previousBlock = Blockchain.Singleton.GetBlock(block.PrevHash);
-                    ulong time = 0;
-                    if (previousBlock != null)
-                    {
-                        time = block.Timestamp - previousBlock.Timestamp;
-                    }
-
-                    Console.WriteLine($"Block Hash: {block.Hash}");
-                    Console.WriteLine($"      Index: {block.Index}");
-                    Console.WriteLine($"      Time: {time / 1000}");
+                    Console.WriteLine("Block not found");
                 }
                 else
                 {
-                    Console.WriteLine("Block not found");
+                    ulong time = block.GetTime();
+
+                    Console.WriteLine($"Block Hash: {block.Hash}");
+                    Console.WriteLine($"      Index: {block.Index}");
+                    Console.WriteLine($"      Time: {time / 1000} seconds");
                 }
 
                 return true;
