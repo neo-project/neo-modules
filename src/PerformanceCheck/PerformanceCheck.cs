@@ -202,11 +202,12 @@ namespace Neo.Plugins
 
                     while (run)
                     {
-                        long totalTime = watch.ElapsedMilliseconds;
                         try
                         {
+                            double total = 0;
                             var processName = Process.GetCurrentProcess().ProcessName;
                             string result = "";
+                            var threadsLastProcessorTime = new Dictionary<int, double>();
 
                             foreach (ProcessThread thread in Process.GetCurrentProcess().Threads)
                             {
@@ -215,13 +216,14 @@ namespace Neo.Plugins
                                     var newTime = thread.TotalProcessorTime.TotalMilliseconds;
                                     if (!threadsProcessorTime.TryGetValue(thread.Id, out var oldTime))
                                     {
-                                        threadsProcessorTime.Add(thread.Id, newTime);
                                         oldTime = newTime;
                                     }
+                                    threadsLastProcessorTime.Add(thread.Id, newTime);
 
-                                    totalTime += watch.ElapsedMilliseconds;
-                                    var cpuUsage = (newTime - oldTime) / totalTime;
-                                    result += $"{processName}/{thread.Id,-8} CPU usage: {cpuUsage,8:0.00 %}\n";
+                                    var cpuUsage = (newTime - oldTime) / watch.ElapsedMilliseconds;
+
+                                    result += $"{processName,10}/{thread.Id,-8}\t      CPU usage: {cpuUsage,8:0.00 %}\n";
+                                    total += cpuUsage;
                                 }
                                 catch (Exception e)
                                 {
@@ -232,6 +234,10 @@ namespace Neo.Plugins
                                     }
                                 }
                             }
+
+                            threadsProcessorTime = threadsLastProcessorTime;
+                            result = $"Active threads: {threadsProcessorTime.Count,3}\tTotal CPU usage: {total,8:0.00 %}\n{result}";
+                            watch.Restart();
 
                             Console.Clear();
                             Console.Write(result);
