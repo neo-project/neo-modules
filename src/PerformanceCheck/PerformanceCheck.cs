@@ -1,19 +1,40 @@
+using Akka.Actor;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
+using Neo.Persistence;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Neo.Plugins
 {
-    public class PerformanceCheck : Plugin
+    public class PerformanceCheck : Plugin, IPersistencePlugin, IP2PPlugin
     {
         public override string Name => "PerformanceCheck";
 
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
+        }
+
+        private delegate void CommitHandler(StoreView snapshot);
+        private event CommitHandler OnCommitEvent;
+
+        public void OnCommit(StoreView snapshot)
+        {
+            OnCommitEvent?.Invoke(snapshot);
+        }
+
+        private delegate void P2PMessageHandler(Message message);
+        private event P2PMessageHandler OnP2PMessageEvent;
+
+        public bool OnP2PMessage(Message message)
+        {
+            OnP2PMessageEvent?.Invoke(message);
+            return true;
         }
 
         protected override bool OnMessage(object message)
@@ -183,93 +204,206 @@ namespace Neo.Plugins
             }
             else
             {
-                Console.WriteLine("Waiting for the next block...");
-                var delayInSeconds = GetBlockSynchronizationDelay() / 1000.0;
-                Console.WriteLine($"Time to synchronize to the last remote block: {delayInSeconds:0.#} sec");
+                var delayInMilliseconds = GetBlockSynchronizationDelay(true);
+                if (delayInMilliseconds <= 0)
+                {
+                    Console.WriteLine("The time to confirm that a new block has timed out.");
+                }
+                else if (delayInMilliseconds < 1000)
+                {
+                    Console.WriteLine($"Time to synchronize to the last remote block: {delayInMilliseconds:0.#} ms");
+                }
+                else
+                {
+                    var delayInSeconds = delayInMilliseconds / 1000.0;
+                    Console.WriteLine($"Time to synchronize to the last remote block: {delayInSeconds:0.#} sec");
+                }
             }
 
             return true;
         }
 
         /// <summary>
-        /// Calculates the delay in the synchronization of the blocks in the network
+        /// Calculates the delay in the synchronization of the blocks between the connected nodes
         /// </summary>
+        /// <param name="printMessages">
+        /// Specifies if the messages should be printed in the console.
+        /// </param>
         /// <returns>
         /// If the number of remote nodes is greater than zero, returns the delay in the
         /// synchronization between the local and the remote nodes in milliseconds; otherwise,
         /// returns zero.
         /// </returns>
-        private long GetBlockSynchronizationDelay()
+        private double GetBlockSynchronizationDelay(bool printMessages = false)
         {
+            var cancel = new CancellationTokenSource();
+            var timeLimitInMilliseconds = 60000; // limit the waiting time to 1 second
+
             var lastBlockRemote = GetMaxRemoteBlockCount();
             if (lastBlockRemote == 0)
             {
                 return 0;
             }
 
-            var lastBlockLocal = Blockchain.Singleton.Height;
+            var lastBlock = Math.Max(lastBlockRemote, Blockchain.Singleton.Height);
 
-            long remoteDelay = 0;
-            long localDelay = 0;
-            long delay = 0;
+            bool showBlock = printMessages;
+            DateTime remote = DateTime.Now;
+            DateTime local = remote;
 
             Task monitorRemote = new Task(() =>
             {
-                var currentBlockRemote = lastBlockRemote;
-                do
+                var lastRemoteBlockIndex = WaitPersistedBlock(lastBlock, cancel.Token);
+                remote = DateTime.Now;
+                if (showBlock && lastRemoteBlockIndex > lastBlock)
                 {
-                    // just wait for the next remote block
-                    currentBlockRemote = GetMaxRemoteBlockCount();
-                } while (lastBlockRemote == currentBlockRemote);
-
-                Stopwatch watch = Stopwatch.StartNew();
-                while (currentBlockRemote > Blockchain.Singleton.Height)
-                {
-                    // just wait for the next local block
+                    showBlock = false;
+                    Console.WriteLine($"Updated block index to {lastRemoteBlockIndex}");
                 }
-                watch.Stop();
-                remoteDelay = watch.ElapsedMilliseconds;
-            });
+            }, cancel.Token);
+
             Task monitorLocal = new Task(() =>
             {
-                var currentBlockLocal = lastBlockLocal;
-                do
+                var lastPersistedBlockIndex = WaitRemoteBlock(lastBlock, cancel.Token);
+                local = DateTime.Now;
+                if (showBlock && lastPersistedBlockIndex > lastBlock)
                 {
-                    // just wait for the next local block
-                    currentBlockLocal = Blockchain.Singleton.Height;
-                } while (lastBlockLocal == currentBlockLocal);
-
-                Stopwatch watch = Stopwatch.StartNew();
-                while (currentBlockLocal > GetMaxRemoteBlockCount())
-                {
-                    // just wait for the next next block
+                    showBlock = false;
+                    Console.WriteLine($"Updated block index to {lastPersistedBlockIndex}");
                 }
-                watch.Stop();
-                localDelay = watch.ElapsedMilliseconds;
+            }, cancel.Token);
+
+            Task timer = new Task(async () =>
+            {
+                try
+                {
+                    await Task.Delay(timeLimitInMilliseconds, cancel.Token);
+                    cancel.Cancel();
+                }
+                catch (OperationCanceledException) { }
+            }, cancel.Token);
+
+            if (printMessages)
+            {
+                Console.WriteLine($"Current block index is {lastBlock}");
+                Console.WriteLine("Waiting for the next block...");
+            }
+
+            List<Task> tasks = new List<Task>()
+            {
+                monitorRemote, monitorLocal
+            };
+
+            monitorRemote.Start();
+            monitorLocal.Start();
+            timer.Start();
+
+            try
+            {
+                Task.WaitAll(tasks.ToArray(), cancel.Token);
+                cancel.Cancel();
+            }
+            catch (OperationCanceledException)
+            {
+                return 0;
+            }
+
+            var delay = remote - local;
+
+            return Math.Abs(delay.TotalMilliseconds);
+        }
+
+        /// <summary>
+        /// Pauses the current thread until a new block is persisted in the blockchain
+        /// </summary>
+        /// <param name="blockIndex">
+        /// Specifies if the block index to start monitoring.
+        /// </param>
+        /// <param name="token">
+        /// A cancellation token to stop the task if the caller is canceled
+        /// </param>
+        /// <returns>
+        /// If the <paramref name="token"/> is canceled, returns <param name="blockIndex">;
+        /// otherwise, returns the index of the persisted block.
+        /// </returns>
+        private uint WaitPersistedBlock(uint blockIndex, CancellationToken token)
+        {
+            var persistedBlockIndex = blockIndex;
+            var updatePersistedBlock = new TaskCompletionSource<bool>();
+
+            CommitHandler commit = (snapshot) =>
+            {
+                if (snapshot.Height > blockIndex)
+                {
+                    persistedBlockIndex = snapshot.Height;
+                    updatePersistedBlock.TrySetResult(true);
+                }
+            };
+
+            OnCommitEvent += commit;
+            try
+            {
+                updatePersistedBlock.Task.Wait(token);
+            }
+            catch (OperationCanceledException) { }
+            OnCommitEvent -= commit;
+
+            return persistedBlockIndex;
+        }
+
+        /// <summary>
+        /// Pauses the current thread until a new block is received from remote nodes
+        /// </summary>
+        /// <param name="blockIndex">
+        /// Specifies if the block index to start monitoring.
+        /// </param>
+        /// <param name="token">
+        /// A cancellation token to stop the task if the caller is canceled
+        /// </param>
+        /// <returns>
+        /// If the <paramref name="token"/> is canceled, returns <param name="blockIndex">;
+        /// otherwise, returns the index of the received block.
+        /// </returns>
+        private uint WaitRemoteBlock(uint blockIndex, CancellationToken token)
+        {
+            var remoteBlockIndex = blockIndex;
+            var updateRemoteBlock = new TaskCompletionSource<bool>();
+
+            var stopBroadcast = new CancellationTokenSource();
+
+            Task broadcast = Task.Run(() =>
+            {
+                while (!stopBroadcast.Token.IsCancellationRequested)
+                {
+                    // receive a PingPayload is what updates RemoteNode LastBlockIndex
+                    System.LocalNode.Tell(Message.Create(MessageCommand.Ping, PingPayload.Create(blockIndex)));
+                }
             });
 
-            if (lastBlockRemote <= lastBlockLocal)
+            P2PMessageHandler p2pMessage = (message) =>
             {
-                // the local node is fully synchronized
-                monitorLocal.Start();
-                monitorRemote.Start();
-
-                Task.WaitAll(monitorLocal, monitorRemote);
-                delay = Math.Max(remoteDelay, localDelay);
-            }
-            else
-            {
-                // the local node is synchronizing
-                Stopwatch watch = Stopwatch.StartNew();
-                while (lastBlockRemote > Blockchain.Singleton.Height)
+                if (message.Command == MessageCommand.Pong && message.Payload is PingPayload)
                 {
-                    // just wait for local node synchronize
+                    var lastBlockIndex = GetMaxRemoteBlockCount();
+                    if (lastBlockIndex > remoteBlockIndex && !token.IsCancellationRequested)
+                    {
+                        remoteBlockIndex = lastBlockIndex;
+                        updateRemoteBlock.TrySetResult(true);
+                    }
                 }
-                watch.Stop();
-                delay = watch.ElapsedMilliseconds;
-            }
+            };
 
-            return delay;
+            OnP2PMessageEvent += p2pMessage;
+            try
+            {
+                updateRemoteBlock.Task.Wait(token);
+            }
+            catch (OperationCanceledException) { }
+            stopBroadcast.Cancel();
+
+            OnP2PMessageEvent -= p2pMessage;
+
+            return remoteBlockIndex;
         }
 
         /// <summary>
@@ -282,6 +416,7 @@ namespace Neo.Plugins
         private uint GetMaxRemoteBlockCount()
         {
             var remotes = LocalNode.Singleton.GetRemoteNodes();
+
             uint maxCount = 0;
 
             foreach (var node in remotes)
@@ -304,10 +439,10 @@ namespace Neo.Plugins
             switch (args[1].ToLower())
             {
                 case "size":
-                    return OnTransactionSize(args);
+                    return OnTransactionSizeCommand(args);
                 case "avgsize":
                 case "averagesize":
-                    return OnTransactionAverageSize(args);
+                    return OnTransactionAverageSizeCommand(args);
                 default:
                     return false;
             }
@@ -317,7 +452,7 @@ namespace Neo.Plugins
         /// Process "transaction size" command
         /// Prints the size of the transaction in bytes identified by its hash
         /// </summary>
-        private bool OnTransactionSize(string[] args)
+        private bool OnTransactionSizeCommand(string[] args)
         {
             if (args.Length != 3)
             {
@@ -352,7 +487,7 @@ namespace Neo.Plugins
         /// Process "transaction avgsize" command
         /// Prints the average size in bytes of the latest transactions
         /// </summary>
-        private bool OnTransactionAverageSize(string[] args)
+        private bool OnTransactionAverageSizeCommand(string[] args)
         {
             if (args.Length > 3)
             {
@@ -467,35 +602,33 @@ namespace Neo.Plugins
         /// </summary>
         private bool OnCheckCPUCommand()
         {
-            bool run = true;
+            var cancel = new CancellationTokenSource();
 
             Task task = Task.Run(async () =>
             {
                 var monitor = new CpuUsageMonitor();
 
-                while (run)
+                while (!cancel.Token.IsCancellationRequested)
                 {
                     try
                     {
-                        var total = monitor.CheckAllThreads(run);
-                        if (run)
+                        var total = monitor.CheckAllThreads(true);
+                        if (!cancel.Token.IsCancellationRequested)
                         {
                             Console.WriteLine($"Active threads: {monitor.ThreadCount,3}\tTotal CPU usage: {total,8:0.00 %}");
                         }
 
-                        await Task.Delay(1000);
+                        await Task.Delay(1000, cancel.Token);
                     }
                     catch
                     {
                         // if any unexpected exception is thrown, stop the loop and finish the task
-                        run = false;
+                        cancel.Cancel();
                     }
                 }
             });
             Console.ReadLine();
-
-            run = false;
-            task.Wait();
+            cancel.Cancel();
 
             return true;
         }
@@ -540,10 +673,10 @@ namespace Neo.Plugins
             var writePerSec = new PerformanceCounter("Process", "IO Write Bytes/sec", "_Total");
             var readPerSec = new PerformanceCounter("Process", "IO Read Bytes/sec", "_Total");
 
-            bool run = true;
+            var cancel = new CancellationTokenSource();
             Task task = Task.Run(async () =>
             {
-                while (run)
+                while (!cancel.Token.IsCancellationRequested)
                 {
                     Console.Clear();
                     string diskWriteUnit = "KB/s";
@@ -565,11 +698,11 @@ namespace Neo.Plugins
 
                     Console.WriteLine($"Disk write: {diskWritePerSec:0.0#} {diskWriteUnit}");
                     Console.WriteLine($"Disk read:  {diskReadPerSec:0.0#} {diskReadUnit}");
-                    await Task.Delay(1000);
+                    await Task.Delay(1000, cancel.Token);
                 }
             });
             Console.ReadLine();
-            run = false;
+            cancel.Cancel();
 
             return true;
         }
