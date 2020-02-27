@@ -1,7 +1,6 @@
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -167,13 +166,13 @@ namespace Neo.Plugins
             switch (args[1].ToLower())
             {
                 case "cpu":
-                    return OnCheckCPUCommand(args);
+                    return OnCheckCPUCommand();
                 case "threads":
                 case "activethreads":
-                    return OnCheckActiveThreadsCommand(args);
+                    return OnCheckActiveThreadsCommand();
                 case "mem":
                 case "memory":
-                    return OnCheckMemoryCommand(args);
+                    return OnCheckMemoryCommand();
                 default:
                     return false;
             }
@@ -183,100 +182,52 @@ namespace Neo.Plugins
         /// Process "check cpu" command
         /// Prints each thread CPU usage information every second
         /// </summary>
-        private bool OnCheckCPUCommand(string[] args)
+        private bool OnCheckCPUCommand()
         {
-            if (args.Length > 3)
-            {
-                return false;
-            }
-            else
-            {
-                var intervalInMilliseconds = 1000;
+            bool run = true;
 
-                bool run = true;
-                Task task = Task.Run(async () =>
+            Task task = Task.Run(async () =>
+            {
+                var monitor = new CpuUsageMonitor();
+
+                while (run)
                 {
-                    // key: thread Id       value: thread total processor time in milliseconds
-                    var threadsProcessorTime = new Dictionary<int, double>();
-                    var watch = Stopwatch.StartNew();
-
-                    while (run)
+                    try
                     {
-                        try
+                        var total = monitor.CheckAllThreads(run);
+                        if (run)
                         {
-                            double total = 0;
-                            var processName = Process.GetCurrentProcess().ProcessName;
-                            string result = "";
-                            var threadsLastProcessorTime = new Dictionary<int, double>();
-
-                            foreach (ProcessThread thread in Process.GetCurrentProcess().Threads)
-                            {
-                                try
-                                {
-                                    var newTime = thread.TotalProcessorTime.TotalMilliseconds;
-                                    if (!threadsProcessorTime.TryGetValue(thread.Id, out var oldTime))
-                                    {
-                                        oldTime = newTime;
-                                    }
-                                    threadsLastProcessorTime.Add(thread.Id, newTime);
-
-                                    var cpuUsage = (newTime - oldTime) / watch.ElapsedMilliseconds;
-
-                                    result += $"{processName,10}/{thread.Id,-8}\t      CPU usage: {cpuUsage,8:0.00 %}\n";
-                                    total += cpuUsage;
-                                }
-                                catch (Exception e)
-                                {
-                                    Console.WriteLine(e.Message);
-                                    if (threadsProcessorTime.ContainsKey(thread.Id))
-                                    {
-                                        threadsProcessorTime.Remove(thread.Id);
-                                    }
-                                }
-                            }
-
-                            threadsProcessorTime = threadsLastProcessorTime;
-                            result = $"Active threads: {threadsProcessorTime.Count,3}\tTotal CPU usage: {total,8:0.00 %}\n{result}";
-                            watch.Restart();
-
-                            Console.Clear();
-                            Console.Write(result);
-                            await Task.Delay(intervalInMilliseconds);
+                            Console.WriteLine($"Active threads: {monitor.ThreadCount,3}\tTotal CPU usage: {total,8:0.00 %}");
                         }
-                        catch
-                        {
-                            run = false;
-                        }
+
+                        await Task.Delay(1000);
                     }
-                    watch.Stop();
-                });
-                Console.ReadLine();
+                    catch
+                    {
+                        // if any unexpected exception is thrown, stop the loop and finish the task
+                        run = false;
+                    }
+                }
+            });
+            Console.ReadLine();
 
-                run = false;
-                task.Wait();
+            run = false;
+            task.Wait();
 
-                return true;
-            }
+            return true;
         }
 
         /// <summary>
         /// Process "check threads" command
         /// Prints the number of active threads in the current process
         /// </summary>
-        private bool OnCheckActiveThreadsCommand(string[] args)
+        private bool OnCheckActiveThreadsCommand()
         {
-            if (args.Length != 2)
-            {
-                return false;
-            }
-            else
-            {
-                var current = Process.GetCurrentProcess();
+            var current = Process.GetCurrentProcess();
 
-                Console.WriteLine($"Active threads: {current.Threads.Count}");
+            Console.WriteLine($"Active threads: {current.Threads.Count}");
 
-                return true;
-            }
+            return true;
         }
 
         /// <summary>
@@ -285,21 +236,14 @@ namespace Neo.Plugins
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
-        private bool OnCheckMemoryCommand(string[] args)
+        private bool OnCheckMemoryCommand()
         {
-            if (args.Length != 2)
-            {
-                return false;
-            }
-            else
-            {
-                var current = Process.GetCurrentProcess();
-                var memoryInMB = current.PagedMemorySize64 / 1024 / 1024.0;
+            var current = Process.GetCurrentProcess();
+            var memoryInMB = current.PagedMemorySize64 / 1024 / 1024.0;
 
-                Console.WriteLine($"Allocated memory: {memoryInMB:0.00} MB");
+            Console.WriteLine($"Allocated memory: {memoryInMB:0.00} MB");
 
-                return true;
-            }
+            return true;
         }
     }
 }
