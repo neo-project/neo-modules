@@ -24,7 +24,7 @@ namespace Neo.Network.RPC
         public RpcClient(string url, string rpcUser = default, string rpcPass = default)
         {
             httpClient = new HttpClient() { BaseAddress = new Uri(url) };
-            if (rpcUser != default && rpcPass != default)
+            if (!string.IsNullOrEmpty(rpcUser) && !string.IsNullOrEmpty(rpcPass))
             {
                 string token = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{rpcUser}:{rpcPass}"));
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", token);
