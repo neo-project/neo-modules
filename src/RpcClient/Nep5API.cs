@@ -57,9 +57,9 @@ namespace Neo.Network.RPC
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <returns></returns>
-        public uint Decimals(UInt160 scriptHash)
+        public byte Decimals(UInt160 scriptHash)
         {
-            return (uint)TestInvoke(scriptHash, "decimals").Stack.Single().ToStackItem().GetBigInteger();
+            return (byte)TestInvoke(scriptHash, "decimals").Stack.Single().ToStackItem().GetBigInteger();
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace Neo.Network.RPC
             {
                 Name = result[0].ToStackItem().GetString(),
                 Symbol = result[1].ToStackItem().GetString(),
-                Decimals = (uint)result[2].ToStackItem().GetBigInteger(),
+                Decimals = (byte)result[2].ToStackItem().GetBigInteger(),
                 TotalSupply = result[3].ToStackItem().GetBigInteger()
             };
         }

@@ -266,7 +266,7 @@ namespace Neo.Network.RPC.Tests
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendRawTransaction).ToLower());
             var result = rpc.SendRawTransaction(test.Request.Params[0].AsString().HexToBytes().AsSerializable<Transaction>());
-            Assert.AreEqual(test.Response.Result["hash"].AsString(), result);
+            Assert.AreEqual(test.Response.Result["hash"].AsString(), result.ToString());
         }
 
         [TestMethod]
@@ -275,7 +275,7 @@ namespace Neo.Network.RPC.Tests
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SubmitBlock).ToLower());
             var block = TestUtils.GetBlock(2).Hash;
             var result = rpc.SubmitBlock(test.Request.Params[0].AsString().HexToBytes());
-            Assert.AreEqual(test.Response.Result["hash"].AsString(), result);
+            Assert.AreEqual(test.Response.Result["hash"].AsString(), result.ToString());
         }
 
         #endregion Node
@@ -344,7 +344,7 @@ namespace Neo.Network.RPC.Tests
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBalance).ToLower());
             var result = rpc.GetBalance(test.Request.Params[0].AsString());
-            Assert.AreEqual(test.Response.Result["balance"].AsString(), result.ToString());
+            Assert.AreEqual(test.Response.Result["balance"].AsString(), result.Value.ToString());
         }
 
         [TestMethod]

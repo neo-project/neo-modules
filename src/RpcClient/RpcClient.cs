@@ -284,15 +284,15 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Broadcasts a serialized transaction over the NEO network.
         /// </summary>
-        public string SendRawTransaction(byte[] rawTransaction)
+        public UInt256 SendRawTransaction(byte[] rawTransaction)
         {
-            return RpcSend("sendrawtransaction", rawTransaction.ToHexString())["hash"].AsString();
+            return UInt256.Parse(RpcSend("sendrawtransaction", rawTransaction.ToHexString())["hash"].AsString());
         }
 
         /// <summary>
         /// Broadcasts a transaction over the NEO network.
         /// </summary>
-        public string SendRawTransaction(Transaction transaction)
+        public UInt256 SendRawTransaction(Transaction transaction)
         {
             return SendRawTransaction(transaction.ToArray());
         }
@@ -300,9 +300,9 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Broadcasts a serialized block over the NEO network.
         /// </summary>
-        public string SubmitBlock(byte[] block)
+        public UInt256 SubmitBlock(byte[] block)
         {
-            return RpcSend("submitblock", block.ToHexString())["hash"].AsString();
+            return UInt256.Parse(RpcSend("submitblock", block.ToHexString())["hash"].AsString());
         }
 
         #endregion Node
@@ -373,13 +373,15 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Returns the balance of the corresponding asset in the wallet, based on the specified asset number.
+        /// Returns the balance of the corresponding asset in the wallet, based on the specified asset Id.
         /// This method applies to assets that conform to NEP-5 standards.
         /// </summary>
         /// <returns>new address as string</returns>
-        public BigInteger GetBalance(string assetId)
+        public BigDecimal GetBalance(string assetId)
         {
-            return BigInteger.Parse(RpcSend("getbalance", assetId)["balance"].AsString());
+            byte decimals = new Nep5API(this).Decimals(UInt160.Parse(assetId));
+            BigInteger balance = BigInteger.Parse(RpcSend("getbalance", assetId)["balance"].AsString());
+            return new BigDecimal(balance, decimals);
         }
 
         /// <summary>
