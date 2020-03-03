@@ -15,9 +15,9 @@ using System.Threading.Tasks;
 
 namespace Neo.Plugins
 {
-    public class PerformanceCheck : Plugin, IPersistencePlugin, IP2PPlugin
+    public class PerformanceMonitor : Plugin, IPersistencePlugin, IP2PPlugin
     {
-        public override string Name => "PerformanceCheck";
+        public override string Name => "PerformanceMonitor";
 
         protected override void Configure()
         {

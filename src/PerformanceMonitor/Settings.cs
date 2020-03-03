@@ -10,7 +10,7 @@ namespace Neo.Plugins
 
         private Settings(IConfigurationSection section)
         {
-            this.Path = string.Format(section.GetSection("Path").Value ?? "PerformanceCheck_{0}", ProtocolSettings.Default.Magic.ToString("X8"));
+            this.Path = string.Format(section.GetSection("Path").Value ?? "PerformanceMonitor_{0}", ProtocolSettings.Default.Magic.ToString("X8"));
         }
 
         public static void Load(IConfigurationSection section)
