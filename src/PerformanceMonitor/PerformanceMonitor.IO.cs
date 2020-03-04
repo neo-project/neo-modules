@@ -59,7 +59,7 @@ namespace Neo.Plugins
         private double GetBlockSynchronizationDelay(bool printMessages = false)
         {
             var cancel = new CancellationTokenSource();
-            var timeLimitInMilliseconds = 60000; // limit the waiting time to 1 second
+            var timeLimitInMilliseconds = 60 * 1000; // limit the waiting time to 1 minute
 
             var lastBlockRemote = GetMaxRemoteBlockCount();
             if (lastBlockRemote == 0)

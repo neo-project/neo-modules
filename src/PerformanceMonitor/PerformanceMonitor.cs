@@ -183,6 +183,51 @@ namespace Neo.Plugins
         }
 
         /// <summary>
+        /// Process "commit" command
+        /// </summary>
+        private bool OnCommitCommand(string[] args)
+        {
+            if (args.Length < 2) return false;
+            switch (args[1].ToLower())
+            {
+                case "time":
+                    return OnCommitTimeCommand();
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Process "confirmation" command
+        /// </summary>
+        private bool OnConfirmationCommand(string[] args)
+        {
+            if (args.Length < 2) return false;
+            switch (args[1].ToLower())
+            {
+                case "time":
+                    return OnConfirmationTimeCommand();
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Process "payload" command
+        /// </summary>
+        private bool OnPayloadCommand(string[] args)
+        {
+            if (args.Length < 2) return false;
+            switch (args[1].ToLower())
+            {
+                case "time":
+                    return OnPayloadTimeCommand();
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
         /// Process "check" command
         /// </summary>
         private bool OnCheckCommand(string[] args)
@@ -267,51 +312,6 @@ namespace Neo.Plugins
             Console.WriteLine($"Allocated memory: {memoryInMB:0.00} MB");
 
             return true;
-        }
-
-        /// <summary>
-        /// Process "commit" command
-        /// </summary>
-        private bool OnCommitCommand(string[] args)
-        {
-            if (args.Length < 2) return false;
-            switch (args[1].ToLower())
-            {
-                case "time":
-                    return OnCommitTimeCommand();
-                default:
-                    return false;
-            }
-        }
-
-        /// <summary>
-        /// Process "confirmation" command
-        /// </summary>
-        private bool OnConfirmationCommand(string[] args)
-        {
-            if (args.Length < 2) return false;
-            switch (args[1].ToLower())
-            {
-                case "time":
-                    return OnConfirmationTimeCommand();
-                default:
-                    return false;
-            }
-        }
-
-        /// <summary>
-        /// Process "payload" command
-        /// </summary>
-        private bool OnPayloadCommand(string[] args)
-        {
-            if (args.Length < 2) return false;
-            switch (args[1].ToLower())
-            {
-                case "time":
-                    return OnPayloadTimeCommand();
-                default:
-                    return false;
-            }
         }
     }
 }
