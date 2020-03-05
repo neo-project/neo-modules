@@ -77,19 +77,11 @@ namespace Neo.Plugins.Storage
 
             session = db.NewSession();
 
-            if (File.Exists(Path.Combine(path, "session.id")))
+            try
             {
-                var data = new byte[16];
-                using (var file = File.OpenRead(Path.Combine(path, "session.id")))
-                {
-                    if (file.Read(data, 0, 16) == 16)
-                    {
-                        // Recover the last storage state
-
-                        db.Recover(new Guid(data));
-                    }
-                }
+                db.Recover();
             }
+            catch { }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -103,9 +95,9 @@ namespace Neo.Plugins.Storage
             // Make sure operations are completed
             session.CompletePending(true);
 
-            db.TakeFullCheckpoint(out var uid);
-            db.CompleteCheckpointAsync();
-            File.WriteAllBytes(Path.Combine(StorePath, "session.id"), uid.ToByteArray());
+            db.TakeFullCheckpoint(out _);
+            db.CompleteCheckpointAsync().GetAwaiter().GetResult();
+            //File.WriteAllBytes(Path.Combine(StorePath, "session.id"), uid.ToByteArray());
 
             // Copy entire log to disk, but retain tail of log in memory
             //db.Log.Flush(true);
