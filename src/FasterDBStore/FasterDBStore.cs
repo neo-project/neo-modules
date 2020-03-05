@@ -15,7 +15,7 @@ namespace Neo.Plugins.Storage
         /// <summary>
         /// Get store
         /// </summary>
-        /// <returns>RocksDbStore</returns>
+        /// <returns>FasterDbStore</returns>
         public IStore GetStore() => new Store(Settings.Default.Path);
     }
 }
