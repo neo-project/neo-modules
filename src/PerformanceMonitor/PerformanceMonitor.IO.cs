@@ -4,6 +4,7 @@ using Neo.Network.P2P.Payloads;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -379,8 +380,33 @@ namespace Neo.Plugins
         /// <summary>
         /// Process "check disk" command
         /// Prints the disk access information
+        /// Shows a friendly message if it's not possible to access the information
         /// </summary>
         private bool OnCheckDiskCommand()
+        {
+            try
+            {
+                CheckDisk();
+            }
+            catch (FileNotFoundException)
+            {
+                // missing System.Diagnostics.PerformanceCounter.dll
+                Console.WriteLine("Add System.Diagnostics.PerformanceCounter.dll to the neo-cli folder" +
+                    " or get a newer version of neo-cli to use the check disk command.");
+            }
+            catch (PlatformNotSupportedException)
+            {
+                Console.WriteLine("This version of neo-cli doesn't support Performance Counter.\n" +
+                    "Performance Counter is required to use the check disk command");
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Prints the disk access information
+        /// </summary>
+        private void CheckDisk()
         {
             var megabyte = 1024;
 
@@ -417,8 +443,6 @@ namespace Neo.Plugins
             });
             Console.ReadLine();
             cancel.Cancel();
-
-            return true;
         }
     }
 }

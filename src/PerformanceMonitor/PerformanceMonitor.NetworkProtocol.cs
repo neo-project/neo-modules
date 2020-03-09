@@ -4,6 +4,7 @@ using Neo.Network.RPC;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Threading.Tasks;
@@ -273,11 +274,19 @@ namespace Neo.Plugins
                     return true;
                 }
 
-                var responseTime = GetRpcResponseTime(url);
-
-                if (responseTime > 0)
+                try
                 {
-                    Console.WriteLine($"RPC response time: {responseTime:0.##} milliseconds");
+                    var responseTime = GetRpcResponseTime(url);
+
+                    if (responseTime > 0)
+                    {
+                        Console.WriteLine($"RPC response time: {responseTime:0.##} milliseconds");
+                    }
+                }
+                catch (FileNotFoundException)
+                {
+                    // for this command it is required that the RpcClient plugin is installed
+                    Console.WriteLine("Install RpcClient module to use the rpc time command.");
                 }
 
                 return true;
