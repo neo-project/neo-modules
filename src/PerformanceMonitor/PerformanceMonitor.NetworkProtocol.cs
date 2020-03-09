@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 
@@ -314,6 +315,11 @@ namespace Neo.Plugins
             try
             {
                 client.GetBlockCount();
+            }
+            catch (HttpRequestException)
+            {
+                Console.WriteLine("Input url is not a the url of a valid RPC server");
+                hasThrownException = true;
             }
             catch (Exception e)
             {

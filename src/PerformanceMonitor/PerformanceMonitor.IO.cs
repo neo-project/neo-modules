@@ -342,11 +342,17 @@ namespace Neo.Plugins
         {
             using (var snapshot = Blockchain.Singleton.GetSnapshot())
             {
+                var firstIndex = Blockchain.GenesisBlock.Index;
                 var blockHash = snapshot.CurrentBlockHash;
                 var countedTxs = 0;
 
                 Block block = snapshot.GetBlock(blockHash);
                 int totalsize = 0;
+
+                if (block.Index == firstIndex)
+                {
+                    return totalsize;
+                }
 
                 do
                 {
@@ -365,7 +371,7 @@ namespace Neo.Plugins
                     }
 
                     block = snapshot.GetBlock(block.PrevHash);
-                } while (block != null && desiredCount > countedTxs);
+                } while (block != null && block.Index != firstIndex && desiredCount > countedTxs);
 
                 double averageSize = 0.0;
                 if (countedTxs > 0)

@@ -100,7 +100,7 @@ namespace Neo.Plugins
             }
             else
             {
-                Console.WriteLine("Timeout");
+                Console.WriteLine("Timeout. Make sure the start consensus command has been run.");
             }
 
             return true;
@@ -183,7 +183,7 @@ namespace Neo.Plugins
             }
             else
             {
-                Console.WriteLine("Timeout");
+                Console.WriteLine("Timeout. Make sure the start consensus command has been run.");
             }
 
             return true;

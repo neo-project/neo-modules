@@ -308,9 +308,17 @@ namespace Neo.Plugins
         private bool OnCheckMemoryCommand()
         {
             var current = Process.GetCurrentProcess();
-            var memoryInMB = current.PagedMemorySize64 / 1024 / 1024.0;
+            current.Refresh();
+            string memoryUnit = "KB";
+            var memory = current.WorkingSet64 / 1024.0;
 
-            Console.WriteLine($"Allocated memory: {memoryInMB:0.00} MB");
+            if (memory > 1024)
+            {
+                memory = memory / 1024;
+                memoryUnit = "MB";
+            }
+
+            Console.WriteLine($"Allocated memory: {memory:0.00} {memoryUnit}");
 
             return true;
         }
