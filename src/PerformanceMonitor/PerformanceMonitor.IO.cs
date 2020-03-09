@@ -1,4 +1,3 @@
-using Akka.Actor;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
@@ -198,7 +197,7 @@ namespace Neo.Plugins
                 while (!stopBroadcast.Token.IsCancellationRequested)
                 {
                     // receive a PingPayload is what updates RemoteNode LastBlockIndex
-                    System.LocalNode.Tell(Message.Create(MessageCommand.Ping, PingPayload.Create(blockIndex)));
+                    SendBlockchainPingMessage(blockIndex);
                 }
             });
 

@@ -44,11 +44,38 @@ namespace Neo.Plugins
         private bool OnConnectedNodesCommand()
         {
             Console.WriteLine($"Connected nodes: {LocalNode.Singleton.ConnectedCount}");
+
+            UpdateRemotesHeight();
+
             foreach (RemoteNode node in LocalNode.Singleton.GetRemoteNodes())
             {
                 Console.WriteLine($"  ip: {node.Remote.Address,-15}\theight: {node.LastBlockIndex,-8}");
             }
             return true;
+        }
+
+        /// <summary>
+        /// Updates the remote nodes block height
+        /// </summary>
+        private void UpdateRemotesHeight()
+        {
+            var remotesHeightUpdate = new TaskCompletionSource<bool>();
+
+            P2PMessageHandler p2pMessage = (message) =>
+            {
+                remotesHeightUpdate.TrySetResult(true);
+            };
+
+            OnP2PMessageEvent += p2pMessage;
+            using (var snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                // updates the height of the remote nodes
+                SendBlockchainPingMessage(snapshot.Height);
+            }
+
+            // waits the ping message response to continue
+            remotesHeightUpdate.Task.Wait(1000);
+            OnP2PMessageEvent -= p2pMessage;
         }
 
         /// <summary>
@@ -63,6 +90,7 @@ namespace Neo.Plugins
             }
             else
             {
+                UpdateRemotesHeight();
                 if (args.Length == 2)
                 {
                     if (args[1] == null || !IPAddress.TryParse(args[1], out var ipaddress))

@@ -1,3 +1,4 @@
+using Akka.Actor;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
@@ -312,6 +313,17 @@ namespace Neo.Plugins
             Console.WriteLine($"Allocated memory: {memoryInMB:0.00} MB");
 
             return true;
+        }
+
+        /// <summary>
+        /// Sends a ping message to the blockchain
+        /// </summary>
+        /// <param name="height">
+        /// The block height to be passed in the ping message
+        /// </param>
+        private void SendBlockchainPingMessage(uint height)
+        {
+            System.LocalNode.Tell(Message.Create(MessageCommand.Ping, PingPayload.Create(height)));
         }
     }
 }
