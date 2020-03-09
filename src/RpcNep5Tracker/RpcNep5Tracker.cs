@@ -98,7 +98,7 @@ namespace Neo.Plugins
             transferIndex++;
         }
 
-        private void HandleNotification(StoreView snapshot, Transaction transaction, UInt160 scriptHash,
+        private void HandleNotification(StoreView snapshot, IVerifiable scriptContainer, UInt160 scriptHash,
             VM.Types.Array stateItems,
             Dictionary<Nep5BalanceKey, Nep5Balance> nep5BalancesChanged, ref ushort transferIndex)
         {
@@ -137,7 +137,8 @@ namespace Neo.Plugins
                 var toKey = new Nep5BalanceKey(to, scriptHash);
                 if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
             }
-            RecordTransferHistory(snapshot, scriptHash, from, to, amountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
+            if(scriptContainer is Transaction transaction)
+                RecordTransferHistory(snapshot, scriptHash, from, to, amountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
         }
 
         public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
@@ -153,18 +154,11 @@ namespace Neo.Plugins
                 if (appExecuted.VMState.HasFlag(VMState.FAULT)) continue;
                 foreach (var notifyEventArgs in appExecuted.Notifications)
                 {
-                    if (!(notifyEventArgs?.State is VM.Types.Array stateItems) || stateItems.Count == 0
-                        || !(notifyEventArgs.ScriptContainer is Transaction transaction))
+                    if (!(notifyEventArgs?.State is VM.Types.Array stateItems) || stateItems.Count == 0)
                         continue;
-                    HandleNotification(snapshot, transaction, notifyEventArgs.ScriptHash, stateItems,
+                    HandleNotification(snapshot, notifyEventArgs.ScriptContainer, notifyEventArgs.ScriptHash, stateItems,
                         nep5BalancesChanged, ref transferIndex);
                 }
-
-                // Handle SystemFee and NetworkFee GAS burn for each transaction
-                if (appExecuted.Transaction is null) continue;
-                HandleNotification(snapshot, appExecuted.Transaction, NativeContract.GAS.Hash,
-                    new VM.Types.Array(new VM.Types.StackItem[] { "Transfer", appExecuted.Transaction.Sender.ToArray(), VM.Types.StackItem.Null, appExecuted.Transaction.SystemFee + appExecuted.Transaction.NetworkFee }),
-                    nep5BalancesChanged, ref transferIndex);
             }
 
             foreach (var nep5BalancePair in nep5BalancesChanged)
