@@ -137,7 +137,7 @@ namespace Neo.Plugins
                 var toKey = new Nep5BalanceKey(to, scriptHash);
                 if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
             }
-            if(scriptContainer is Transaction transaction)
+            if (scriptContainer is Transaction transaction)
             {
                 RecordTransferHistory(snapshot, scriptHash, from, to, amountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
             }
