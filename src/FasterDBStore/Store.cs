@@ -173,18 +173,12 @@ namespace Neo.Plugins.Storage
 
             var status = session.Read(ref k, ref input, ref g1, Empty.Default, 0);
 
-            if (status == Status.OK)
-            {
-                return g1.Value.Value;
-            }
-            else if (status == Status.PENDING)
+            if (status == Status.PENDING)
             {
                 session.CompletePending(true);
-
-                // TODO: shall we read it again?
             }
 
-            return null;
+            return g1.Value?.Value;
         }
     }
 }

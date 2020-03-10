@@ -4,7 +4,7 @@ namespace Neo.Plugins.Storage
 {
     internal class BufferValue : IFasterEqualityComparer<BufferValue>
     {
-        public byte[] Value;
+        public byte[] Value = null;
 
         /// <summary>
         /// Constructor
