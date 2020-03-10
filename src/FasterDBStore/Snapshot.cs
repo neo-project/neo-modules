@@ -10,12 +10,12 @@ namespace Neo.Plugins.Storage
     {
         private readonly Store store;
         private Guid checkpoint;
-        private long sno = 0;
+        private bool commit;
+        private bool actived;
 
         public Snapshot(Store store)
         {
             this.store = store;
-
             store.db.TakeFullCheckpoint(out checkpoint);
             store.db.CompleteCheckpointAsync().GetAwaiter().GetResult();
         }
@@ -23,28 +23,26 @@ namespace Neo.Plugins.Storage
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Commit()
         {
+            commit = true;
             store.session.CompletePending(true);
-            store.db.TakeFullCheckpoint(out checkpoint);
-            store.db.CompleteCheckpointAsync().GetAwaiter().GetResult();
         }
 
         public void Dispose()
         {
-            if (sno == 0) return;
-
-            // Recover the checkpoint
-            store.db.Recover(checkpoint);
+            if (!commit && actived)
+                store.db.Recover(checkpoint);
             checkpoint = Guid.Empty;
-            sno = 0;
+            commit = false;
+            actived = false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Delete(byte table, byte[] key)
         {
             //store.Delete(table, key);
-
+            actived = true;
             var k = new BufferKey(table, key);
-            store.session.Delete(ref k, Empty.Default, ++sno);
+            store.session.Delete(ref k, Empty.Default, 0);
         }
 
         public IEnumerable<(byte[] Key, byte[] Value)> Find(byte table, byte[] prefix)
@@ -56,11 +54,11 @@ namespace Neo.Plugins.Storage
         public void Put(byte table, byte[] key, byte[] value)
         {
             //store.Put(table, key, value);
-
+            actived = true;
             var k = new BufferKey(table, key);
             var v = new BufferValue(value);
 
-            store.session.Upsert(ref k, ref v, Empty.Default, ++sno);
+            store.session.Upsert(ref k, ref v, Empty.Default, 0);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
