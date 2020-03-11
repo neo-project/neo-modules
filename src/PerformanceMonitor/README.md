@@ -1,4 +1,4 @@
-It is a plugin to create performance metrics used to benchmark MEO3. You can follow the instructions on [neo-modules](https://github.com/neo-project/neo-modules/blob/master/README.md) to install the plugin.
+It is a plugin to create performance metrics used to benchmark NEO3. You can follow the instructions on [neo-modules](https://github.com/neo-project/neo-modules/blob/master/README.md) to install the plugin.
 
 >Note: 
 > 1. Add the `System.Diagnostics.PerformanceCounter` as a dependency in neo-cli to use the `check disk` command.
