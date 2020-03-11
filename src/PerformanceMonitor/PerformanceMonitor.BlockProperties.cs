@@ -40,7 +40,7 @@ namespace Neo.Plugins
 
                     Console.WriteLine($"Block Hash: {block.Hash}");
                     Console.WriteLine($"      Index: {block.Index}");
-                    Console.WriteLine($"      Time: {time / 1000} seconds");
+                    Console.WriteLine($"      Time: {time / 1000.0: 0.00} seconds");
                 }
 
                 return true;
