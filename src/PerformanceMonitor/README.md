@@ -1,8 +1,9 @@
 It is a plugin to create performance metrics used to benchmark NEO3. You can follow the instructions on [neo-modules](https://github.com/neo-project/neo-modules/blob/master/README.md) to install the plugin.
 
 >Note: 
-> 1. Add the `System.Diagnostics.PerformanceCounter` as a dependency in neo-cli to use the `check disk` command.
-> 2. Install `RpcClient` module to use the `rpc time` command. 
+> 1. Add the `System.Diagnostics.PerformanceCounter` as a dependency in neo-cli to use the command `check disk`.
+> 2. Install `RpcClient` module to use the command `rpc time`. 
+> 3. It is required to start consensus to use the command `confirmation time` and `payload time`.
  
 After installing the plugin, you can type the command `help PerformanceMonitor` to get the full list of available commands.
 
