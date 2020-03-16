@@ -234,7 +234,7 @@ namespace Neo.Plugins
                 JObject transfer = new JObject();
                 transfer["timestamp"] = key.TimestampMS;
                 transfer["asset_hash"] = key.AssetScriptHash.ToString();
-                transfer["transfer_address"] = value.UserScriptHash.ToAddress();
+                transfer["transfer_address"] = value.UserScriptHash.ToString();
                 transfer["amount"] = value.Amount.ToString();
                 transfer["block_index"] = value.BlockIndex;
                 transfer["transfer_notify_index"] = key.BlockXferNotificationIndex;
@@ -243,10 +243,9 @@ namespace Neo.Plugins
             }
         }
 
-        private UInt160 GetScriptHashFromParam(string addressOrScriptHash)
+        private UInt160 GetScriptHashFromParam(string scriptHash)
         {
-            return addressOrScriptHash.Length < 40 ?
-                addressOrScriptHash.ToScriptHash() : UInt160.Parse(addressOrScriptHash);
+            return UInt160.Parse(scriptHash);
         }
 
         [RpcMethod]
@@ -266,7 +265,7 @@ namespace Neo.Plugins
             json["sent"] = transfersSent;
             JArray transfersReceived = new JArray();
             json["received"] = transfersReceived;
-            json["address"] = userScriptHash.ToAddress();
+            json["address"] = userScriptHash.ToString();
             AddTransfers(Nep5TransferSentPrefix, userScriptHash, startTime, endTime, transfersSent);
             AddTransfers(Nep5TransferReceivedPrefix, userScriptHash, startTime, endTime, transfersReceived);
             return json;
@@ -280,7 +279,7 @@ namespace Neo.Plugins
             JObject json = new JObject();
             JArray balances = new JArray();
             json["balance"] = balances;
-            json["address"] = userScriptHash.ToAddress();
+            json["address"] = userScriptHash.ToString();
             var dbCache = new DbCache<Nep5BalanceKey, Nep5Balance>(_db, null, null, Nep5BalancePrefix);
             byte[] prefix = userScriptHash.ToArray();
             foreach (var (key, value) in dbCache.Find(prefix))

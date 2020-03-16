@@ -88,7 +88,7 @@ namespace Neo.Network.RPC
 
             var gasBalance = nep5API.BalanceOf(NativeContract.GAS.Hash, sender);
             if (gasBalance >= Tx.SystemFee + Tx.NetworkFee) return this;
-            throw new InvalidOperationException($"Insufficient GAS in address: {sender.ToAddress()}");
+            throw new InvalidOperationException($"Insufficient GAS in address: {sender.ToString()}");
         }
 
         /// <summary>
