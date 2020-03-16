@@ -246,7 +246,7 @@ namespace Neo.Plugins
         {
             CheckWallet();
             UInt160 assetId = UInt160.Parse(_params[0].AsString());
-            UInt160 scriptHash = UInt160.Parse( _params[1].AsString());
+            UInt160 scriptHash = UInt160.Parse(_params[1].AsString());
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
             BigDecimal amount = BigDecimal.Parse(_params[2].AsString(), descriptor.Decimals);
             if (amount.Sign <= 0)
