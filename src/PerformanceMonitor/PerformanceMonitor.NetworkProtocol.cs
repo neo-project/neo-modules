@@ -51,7 +51,8 @@ namespace Neo.Plugins
 
             foreach (RemoteNode node in LocalNode.Singleton.GetRemoteNodes())
             {
-                Console.WriteLine($"  ip: {node.Remote.Address,-15}\theight: {node.LastBlockIndex,-8}");
+                var remoteAddressAndPort = $"{node.Remote.Address}:{node.Remote.Port}";
+                Console.WriteLine($"  ip: {remoteAddressAndPort,-25}\theight: {node.LastBlockIndex,-8}");
             }
             return true;
         }
@@ -134,13 +135,14 @@ namespace Neo.Plugins
                     var reply = TryPing(node.Remote.Address);
                     if (printMessages && reply != null)
                     {
+                        var remoteAddressAndPort = $"{node.Remote.Address}:{node.Remote.Port}";
                         if (reply.Status == IPStatus.Success)
                         {
-                            Console.WriteLine($"  {node.Remote.Address,-15}\t{reply.RoundtripTime,-30:###0 ms}\theight: {node.LastBlockIndex,-7}");
+                            Console.WriteLine($"  {remoteAddressAndPort,-25}\theight: {node.LastBlockIndex,-8}\t{reply.RoundtripTime,-30:###0 ms}");
                         }
                         else
                         {
-                            Console.WriteLine($"  {node.Remote.Address,-15}\t{reply.Status,-30}\theight: {node.LastBlockIndex,-7}");
+                            Console.WriteLine($"  {remoteAddressAndPort,-25}\theight: {node.LastBlockIndex,-8}\t{reply.Status,-30}");
                         }
                     }
                 });
@@ -156,13 +158,14 @@ namespace Neo.Plugins
                     var reply = TryPing(node.Address);
                     if (printMessages && reply != null)
                     {
+                        var remoteAddressAndPort = $"{node.Address}:{node.Port}";
                         if (reply.Status == IPStatus.Success)
                         {
-                            Console.WriteLine($"  {node.Address,-15}\t{reply.RoundtripTime,-30:###0 ms}\tunconnected");
+                            Console.WriteLine($"  {remoteAddressAndPort,-25}\t{"unconnected",-16}\t{reply.RoundtripTime,-30:###0 ms}");
                         }
                         else
                         {
-                            Console.WriteLine($"  {node.Address,-15}\t{reply.Status,-30}\tunconnected");
+                            Console.WriteLine($"  {remoteAddressAndPort,-25}\t{"unconnected",-16}\t{reply.Status,-30}");
                         }
                     }
                 });
@@ -181,8 +184,8 @@ namespace Neo.Plugins
         /// </param>
         private void PingRemoteNode(IPAddress ipaddress, bool printMessages = false)
         {
-            var remoteNode = GetRemoteNode(ipaddress);
-            if (remoteNode == null)
+            var remoteNodes = GetRemoteNode(ipaddress);
+            if (remoteNodes == null || remoteNodes.Count == 0)
             {
                 if (printMessages)
                 {
@@ -194,13 +197,17 @@ namespace Neo.Plugins
             var reply = TryPing(ipaddress);
             if (printMessages && reply != null)
             {
-                if (reply.Status == IPStatus.Success)
+                foreach (var node in remoteNodes)
                 {
-                    Console.WriteLine($"  {ipaddress,-15}\t{reply.RoundtripTime,-30:###0 ms}\theight: {remoteNode.LastBlockIndex,-7}");
-                }
-                else
-                {
-                    Console.WriteLine($"  {ipaddress,-15}\t{reply.Status,-30}\theight: {remoteNode.LastBlockIndex,-7}");
+                    var remoteAddressAndPort = $"{ipaddress}:{node.Remote.Port}";
+                    if (reply.Status == IPStatus.Success)
+                    {
+                        Console.WriteLine($"  {remoteAddressAndPort,-25}\theight: {node.LastBlockIndex,-8}\t{reply.RoundtripTime,-30:###0 ms}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"  {remoteAddressAndPort,-25}\theight: {node.LastBlockIndex,-8}\t{reply.Status,-30}");
+                    }
                 }
             }
         }
@@ -212,20 +219,21 @@ namespace Neo.Plugins
         /// The IP address to be verified.
         /// </param>
         /// <returns>
-        /// If the <paramref name="ipaddress"/> is the address of a remote node, returns the
-        /// corresponding remote node; otherwise, returns null.
+        /// If the <paramref name="ipaddress"/> is the address of a remote node, returns a list
+        /// of the remote nodes with that address; otherwise, returns an empty list.
         /// </returns>
-        private RemoteNode GetRemoteNode(IPAddress ipaddress)
+        private List<RemoteNode> GetRemoteNode(IPAddress ipaddress)
         {
+            List<RemoteNode> nodes = new List<RemoteNode>();
             foreach (RemoteNode node in LocalNode.Singleton.GetRemoteNodes())
             {
                 if (node.Remote.Address.Equals(ipaddress))
                 {
-                    return node;
+                    nodes.Add(node);
                 }
             }
 
-            return null;
+            return nodes;
         }
 
         /// <summary>
