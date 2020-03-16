@@ -106,7 +106,6 @@ namespace Neo.Plugins
             Console.WriteLine("\tblock timesincelast");
             Console.WriteLine("\tblock sync");
             Console.WriteLine("Check Commands:");
-            Console.WriteLine("\tcheck disk");
             Console.WriteLine("\tcheck cpu");
             Console.WriteLine("\tcheck memory");
             Console.WriteLine("\tcheck threads");
@@ -236,8 +235,6 @@ namespace Neo.Plugins
             if (args.Length < 2) return false;
             switch (args[1].ToLower())
             {
-                case "disk":
-                    return OnCheckDiskCommand();
                 case "cpu":
                     return OnCheckCPUCommand();
                 case "threads":
