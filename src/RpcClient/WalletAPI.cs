@@ -34,7 +34,7 @@ namespace Neo.Network.RPC
         /// Get unclaimed gas with address, scripthash or public key string
         /// </summary>
         /// <param name="account">address, scripthash or public key string
-        /// Example: address ("AV556nYUwyJKNv8Xy7hVMLQnkmKPukw6x5"), scripthash ("0x6a38cd693b615aea24dd00de12a9f5836844da91"), public key ("02f9ec1fd0a98796cf75b586772a4ddd41a0af07a1dbdf86a7238f74fb72503575")</param>
+        /// Example: address ("Ncm9TEzrp8SSer6Wa3UCSLTRnqzwVhCfuE"), scripthash ("0xb0a31817c80ad5f87b6ed390ecb3f9d312f7ceb8"), public key ("02f9ec1fd0a98796cf75b586772a4ddd41a0af07a1dbdf86a7238f74fb72503575")</param>
         /// <returns></returns>
         public decimal GetUnclaimedGas(string account)
         {
@@ -59,7 +59,7 @@ namespace Neo.Network.RPC
         /// Get Neo Balance
         /// </summary>
         /// <param name="account">address, scripthash or public key string
-        /// Example: address ("AV556nYUwyJKNv8Xy7hVMLQnkmKPukw6x5"), scripthash ("0x6a38cd693b615aea24dd00de12a9f5836844da91"), public key ("02f9ec1fd0a98796cf75b586772a4ddd41a0af07a1dbdf86a7238f74fb72503575")</param>
+        /// Example: address ("Ncm9TEzrp8SSer6Wa3UCSLTRnqzwVhCfuE"), scripthash ("0xb0a31817c80ad5f87b6ed390ecb3f9d312f7ceb8"), public key ("02f9ec1fd0a98796cf75b586772a4ddd41a0af07a1dbdf86a7238f74fb72503575")</param>
         /// <returns></returns>
         public uint GetNeoBalance(string account)
         {
@@ -71,7 +71,7 @@ namespace Neo.Network.RPC
         /// Get Gas Balance
         /// </summary>
         /// <param name="account">address, scripthash or public key string
-        /// Example: address ("AV556nYUwyJKNv8Xy7hVMLQnkmKPukw6x5"), scripthash ("0x6a38cd693b615aea24dd00de12a9f5836844da91"), public key ("02f9ec1fd0a98796cf75b586772a4ddd41a0af07a1dbdf86a7238f74fb72503575")</param>
+        /// Example: address ("Ncm9TEzrp8SSer6Wa3UCSLTRnqzwVhCfuE"), scripthash ("0xb0a31817c80ad5f87b6ed390ecb3f9d312f7ceb8"), public key ("02f9ec1fd0a98796cf75b586772a4ddd41a0af07a1dbdf86a7238f74fb72503575")</param>
         /// <returns></returns>
         public decimal GetGasBalance(string account)
         {
@@ -84,7 +84,7 @@ namespace Neo.Network.RPC
         /// </summary>
         /// <param name="tokenHash">token script hash, Example: "0x43cf98eddbe047e198a3e5d57006311442a0ca15"(NEO)</param>
         /// <param name="account">address, scripthash or public key string
-        /// Example: address ("AV556nYUwyJKNv8Xy7hVMLQnkmKPukw6x5"), scripthash ("0x6a38cd693b615aea24dd00de12a9f5836844da91"), public key ("02f9ec1fd0a98796cf75b586772a4ddd41a0af07a1dbdf86a7238f74fb72503575")</param>
+        /// Example: address ("Ncm9TEzrp8SSer6Wa3UCSLTRnqzwVhCfuE"), scripthash ("0xb0a31817c80ad5f87b6ed390ecb3f9d312f7ceb8"), public key ("02f9ec1fd0a98796cf75b586772a4ddd41a0af07a1dbdf86a7238f74fb72503575")</param>
         /// <returns></returns>
         public BigInteger GetTokenBalance(string tokenHash, string account)
         {
@@ -124,14 +124,13 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Transfer NEP5 token balance, with common data types
         /// </summary>
-        /// <param name="tokenHash">nep5 token script hash, Example: scripthash ("0x6a38cd693b615aea24dd00de12a9f5836844da91")</param>
+        /// <param name="tokenHash">nep5 token script hash, Example: scripthash ("0xb0a31817c80ad5f87b6ed390ecb3f9d312f7ceb8")</param>
         /// <param name="fromKey">wif or private key
         /// Example: WIF ("KyXwTh1hB76RRMquSvnxZrJzQx7h9nQP2PCRL38v6VDb5ip3nf1p"), PrivateKey ("450d6c2a04b5b470339a745427bae6828400cf048400837d73c415063835e005")</param>
         /// <param name="toAddress">address or account script hash</param>
         /// <param name="amount">token amount</param>
-        /// <param name="networkFee">netwotk fee, set to be 0 will auto calculate the least fee</param>
         /// <returns></returns>
-        public Transaction Transfer(string tokenHash, string fromKey, string toAddress, decimal amount, decimal networkFee = 0)
+        public Transaction Transfer(string tokenHash, string fromKey, string toAddress, decimal amount)
         {
             UInt160 scriptHash = Utility.GetScriptHash(tokenHash);
             var decimals = nep5API.Decimals(scriptHash);
@@ -139,22 +138,20 @@ namespace Neo.Network.RPC
             KeyPair from = Utility.GetKeyPair(fromKey);
             UInt160 to = Utility.GetScriptHash(toAddress);
             BigInteger amountInteger = amount.ToBigInteger(decimals);
-            BigInteger networkFeeInteger = networkFee.ToBigInteger(NativeContract.GAS.Decimals);
-            return Transfer(scriptHash, from, to, amountInteger, (long)networkFeeInteger);
+            return Transfer(scriptHash, from, to, amountInteger);
         }
 
         /// <summary>
         /// Transfer NEP5 token balance
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
-        /// <param name="fromKey">from KeyPair</param>
+        /// <param name="from">from KeyPair</param>
         /// <param name="to">to account script hash</param>
-        /// <param name="amount">transfer amount</param>
-        /// <param name="networkFee">netwotk fee, set to be 0 will auto calculate the least fee</param>
+        /// <param name="amountInteger">transfer amount</param>
         /// <returns></returns>
-        public Transaction Transfer(UInt160 scriptHash, KeyPair from, UInt160 to, BigInteger amountInteger, BigInteger networkFeeInteger = default)
+        public Transaction Transfer(UInt160 scriptHash, KeyPair from, UInt160 to, BigInteger amountInteger)
         {
-            Transaction transaction = nep5API.CreateTransferTx(scriptHash, from, to, amountInteger, (long)networkFeeInteger);
+            Transaction transaction = nep5API.CreateTransferTx(scriptHash, from, to, amountInteger);
             rpcClient.SendRawTransaction(transaction);
             return transaction;
         }
