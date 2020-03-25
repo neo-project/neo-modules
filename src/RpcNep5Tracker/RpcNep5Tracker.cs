@@ -286,6 +286,11 @@ namespace Neo.Plugins
             foreach (var (key, value) in dbCache.Find(prefix))
             {
                 JObject balance = new JObject();
+                if (Blockchain.Singleton.View.Contracts.TryGet(key.AssetScriptHash) is null)
+                {
+                    dbCache.Delete(key);
+                    continue;
+                }
                 balance["asset_hash"] = key.AssetScriptHash.ToString();
                 balance["amount"] = value.Balance.ToString();
                 balance["last_updated_block"] = value.LastUpdatedBlock;
