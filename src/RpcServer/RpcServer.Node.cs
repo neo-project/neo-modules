@@ -41,9 +41,9 @@ namespace Neo.Plugins
             return json;
         }
 
-        private static JObject GetRelayResult(RelayResultReason reason, UInt256 hash)
+        private static JObject GetRelayResult(VerifyResult reason, UInt256 hash)
         {
-            if (reason == RelayResultReason.Succeed)
+            if (reason == VerifyResult.Succeed)
             {
                 var ret = new JObject();
                 ret["hash"] = hash.ToString();
