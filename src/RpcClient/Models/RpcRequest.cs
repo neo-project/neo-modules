@@ -5,9 +5,9 @@ namespace Neo.Network.RPC.Models
 {
     public class RpcRequest
     {
-        public int Id { get; set; }
+        public JObject Id { get; set; }
 
-        public string Jsonrpc { get; set; }
+        public string JsonRpc { get; set; }
 
         public string Method { get; set; }
 
@@ -17,8 +17,8 @@ namespace Neo.Network.RPC.Models
         {
             return new RpcRequest
             {
-                Id = (int)json["id"].AsNumber(),
-                Jsonrpc = json["jsonrpc"].AsString(),
+                Id = json["id"],
+                JsonRpc = json["jsonrpc"].AsString(),
                 Method = json["method"].AsString(),
                 Params = ((JArray)json["params"]).ToArray()
             };
@@ -28,7 +28,7 @@ namespace Neo.Network.RPC.Models
         {
             var json = new JObject();
             json["id"] = Id;
-            json["jsonrpc"] = Jsonrpc;
+            json["jsonrpc"] = JsonRpc;
             json["method"] = Method;
             json["params"] = new JArray(Params);
             return json;

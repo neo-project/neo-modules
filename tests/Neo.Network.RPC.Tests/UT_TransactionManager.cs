@@ -36,7 +36,7 @@ namespace Neo.Network.RPC.Tests
 
         public static Mock<RpcClient> MockRpcClient(UInt160 sender, byte[] script)
         {
-            var mockRpc = new Mock<RpcClient>(MockBehavior.Strict, "http://seed1.neo.org:10331");
+            var mockRpc = new Mock<RpcClient>(MockBehavior.Strict, "http://seed1.neo.org:10331", null, null);
 
             // MockHeight
             mockRpc.Setup(p => p.RpcSend("getblockcount")).Returns(100).Verifiable();
@@ -67,7 +67,7 @@ namespace Neo.Network.RPC.Tests
                 Stack = parameters,
                 GasConsumed = "100",
                 Script = script.ToHexString(),
-                State = ""
+                State = VMState.HALT
             };
 
             mockClient.Setup(p => p.RpcSend("invokescript", It.Is<JObject[]>(j => j[0].AsString() == script.ToHexString())))
@@ -90,12 +90,11 @@ namespace Neo.Network.RPC.Tests
             };
 
             byte[] script = new byte[1];
-            txManager.MakeTransaction(script, attributes, null, 60000);
+            txManager.MakeTransaction(script, attributes, null);
 
             var tx = txManager.Tx;
             Assert.AreEqual("53616d706c6555726c", tx.Attributes[0].Data.ToHexString());
-            Assert.AreEqual(0, tx.SystemFee % (long)NativeContract.GAS.Factor);
-            Assert.AreEqual(60000, tx.NetworkFee);
+            Assert.AreEqual(1, tx.SystemFee / (long)NativeContract.GAS.Factor);
         }
 
         [TestMethod]
@@ -138,7 +137,7 @@ namespace Neo.Network.RPC.Tests
             Assert.AreEqual(1, txManager.Tx.Witnesses.Length);
 
             // throw exception when the KeyPair is wrong
-            Assert.ThrowsException<Exception>(() => txManager.AddSignature(keyPair2));
+            Assert.ThrowsException<Exception>(() => txManager.AddSignature(keyPair2).Sign());
         }
 
         [TestMethod]
@@ -159,7 +158,7 @@ namespace Neo.Network.RPC.Tests
             };
 
             byte[] script = new byte[1];
-            txManager.MakeTransaction(script, null, cosigners, 0_10000000)
+            txManager.MakeTransaction(script, null, cosigners)
                 .AddMultiSig(keyPair1, 2, keyPair1.PublicKey, keyPair2.PublicKey)
                 .AddMultiSig(keyPair2, 2, keyPair1.PublicKey, keyPair2.PublicKey)
                 .AddSignature(keyPair1)
@@ -182,7 +181,7 @@ namespace Neo.Network.RPC.Tests
             };
 
             byte[] script = new byte[1];
-            txManager.MakeTransaction(script, null, cosigners, 0_10000000);
+            txManager.MakeTransaction(script, null, cosigners);
             txManager.AddWitness(UInt160.Zero);
             txManager.AddSignature(keyPair1);
             txManager.Sign();

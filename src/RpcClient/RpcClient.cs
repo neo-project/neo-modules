@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,11 +20,16 @@ namespace Neo.Network.RPC
     /// </summary>
     public class RpcClient : IDisposable
     {
-        private readonly HttpClient httpClient;
+        private HttpClient httpClient;
 
-        public RpcClient(string url)
+        public RpcClient(string url, string rpcUser = default, string rpcPass = default)
         {
             httpClient = new HttpClient() { BaseAddress = new Uri(url) };
+            if (!string.IsNullOrEmpty(rpcUser) && !string.IsNullOrEmpty(rpcPass))
+            {
+                string token = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{rpcUser}:{rpcPass}"));
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", token);
+            }
         }
 
         public RpcClient(HttpClient client)
@@ -30,10 +37,28 @@ namespace Neo.Network.RPC
             httpClient = client;
         }
 
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    httpClient?.Dispose();
+                }
+
+                httpClient = null;
+                disposedValue = true;
+            }
+        }
+
         public void Dispose()
         {
-            httpClient?.Dispose();
+            Dispose(true);
         }
+        #endregion
 
         public async Task<RpcResponse> SendAsync(RpcRequest request)
         {
@@ -68,12 +93,14 @@ namespace Neo.Network.RPC
             var request = new RpcRequest
             {
                 Id = 1,
-                Jsonrpc = "2.0",
+                JsonRpc = "2.0",
                 Method = method,
-                Params = paraArgs.Select(p => p).ToArray()
+                Params = paraArgs
             };
             return Send(request).Result;
         }
+
+        #region Blockchain
 
         /// <summary>
         /// Returns the hash of the tallest block in the main chain.
@@ -151,17 +178,9 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns the system fees of the block, based on the specified index.
         /// </summary>
-        public string GetBlockSysFee(int height)
+        public BigInteger GetBlockSysFee(int height)
         {
-            return RpcSend("getblocksysfee", height).AsString();
-        }
-
-        /// <summary>
-        /// Gets the current number of connections for the node.
-        /// </summary>
-        public int GetConnectionCount()
-        {
-            return (int)RpcSend("getconnectioncount").AsNumber();
+            return BigInteger.Parse(RpcSend("getblocksysfee", height).AsString());
         }
 
         /// <summary>
@@ -210,34 +229,39 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns the corresponding transaction information, based on the specified hash value.
         /// </summary>
-        public string GetRawTransactionHex(string txid)
+        public string GetRawTransactionHex(string txHash)
         {
-            return RpcSend("getrawtransaction", txid).AsString();
+            return RpcSend("getrawtransaction", txHash).AsString();
         }
 
         /// <summary>
         /// Returns the corresponding transaction information, based on the specified hash value.
         /// verbose = true
         /// </summary>
-        public RpcTransaction GetRawTransaction(string txid)
+        public RpcTransaction GetRawTransaction(string txHash)
         {
-            return RpcTransaction.FromJson(RpcSend("getrawtransaction", txid, true));
+            return RpcTransaction.FromJson(RpcSend("getrawtransaction", txHash, true));
         }
 
         /// <summary>
-        /// Returns the stored value, according to the contract script hash and the stored key.
+        /// Returns the stored value, according to the contract script hash (or Id) and the stored key.
         /// </summary>
-        public string GetStorage(string script_hash, string key)
+        public string GetStorage(string scriptHashOrId, string key)
         {
-            return RpcSend("getstorage", script_hash, key).AsString();
+            if (int.TryParse(scriptHashOrId, out int id))
+            {
+                return RpcSend("getstorage", id, key).AsString();
+            }
+
+            return RpcSend("getstorage", scriptHashOrId, key).AsString();
         }
 
         /// <summary>
         /// Returns the block index in which the transaction is found.
         /// </summary>
-        public uint GetTransactionHeight(string txid)
+        public uint GetTransactionHeight(string txHash)
         {
-            return uint.Parse(RpcSend("gettransactionheight", txid).AsString());
+            return uint.Parse(RpcSend("gettransactionheight", txHash).AsString());
         }
 
         /// <summary>
@@ -246,6 +270,26 @@ namespace Neo.Network.RPC
         public RpcValidator[] GetValidators()
         {
             return ((JArray)RpcSend("getvalidators")).Select(p => RpcValidator.FromJson(p)).ToArray();
+        }
+
+        #endregion Blockchain
+
+        #region Node
+
+        /// <summary>
+        /// Gets the current number of connections for the node.
+        /// </summary>
+        public int GetConnectionCount()
+        {
+            return (int)RpcSend("getconnectioncount").AsNumber();
+        }
+
+        /// <summary>
+        /// Gets the list of nodes that the node is currently connected/disconnected from.
+        /// </summary>
+        public RpcPeers GetPeers()
+        {
+            return RpcPeers.FromJson(RpcSend("getpeers"));
         }
 
         /// <summary>
@@ -257,12 +301,40 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
+        /// Broadcasts a serialized transaction over the NEO network.
+        /// </summary>
+        public UInt256 SendRawTransaction(byte[] rawTransaction)
+        {
+            return UInt256.Parse(RpcSend("sendrawtransaction", rawTransaction.ToHexString())["hash"].AsString());
+        }
+
+        /// <summary>
+        /// Broadcasts a transaction over the NEO network.
+        /// </summary>
+        public UInt256 SendRawTransaction(Transaction transaction)
+        {
+            return SendRawTransaction(transaction.ToArray());
+        }
+
+        /// <summary>
+        /// Broadcasts a serialized block over the NEO network.
+        /// </summary>
+        public UInt256 SubmitBlock(byte[] block)
+        {
+            return UInt256.Parse(RpcSend("submitblock", block.ToHexString())["hash"].AsString());
+        }
+
+        #endregion Node
+
+        #region SmartContract
+
+        /// <summary>
         /// Returns the result after calling a smart contract at scripthash with the given operation and parameters.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
-        public RpcInvokeResult InvokeFunction(string address, string function, RpcStack[] stacks)
+        public RpcInvokeResult InvokeFunction(string scriptHash, string operation, RpcStack[] stacks)
         {
-            return RpcInvokeResult.FromJson(RpcSend("invokefunction", address, function, stacks.Select(p => p.ToJson()).ToArray()));
+            return RpcInvokeResult.FromJson(RpcSend("invokefunction", scriptHash, operation, stacks.Select(p => p.ToJson()).ToArray()));
         }
 
         /// <summary>
@@ -279,6 +351,10 @@ namespace Neo.Network.RPC
             return RpcInvokeResult.FromJson(RpcSend("invokescript", parameters.ToArray()));
         }
 
+        #endregion SmartContract
+
+        #region Utilities
+
         /// <summary>
         /// Returns a list of plugins loaded by the node.
         /// </summary>
@@ -288,35 +364,156 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Broadcasts a serialized transaction over the NEO network.
-        /// </summary>
-        public bool SendRawTransaction(byte[] rawTransaction)
-        {
-            return RpcSend("sendrawtransaction", rawTransaction.ToHexString()).AsBoolean();
-        }
-
-        /// <summary>
-        /// Broadcasts a transaction over the NEO network.
-        /// </summary>
-        public bool SendRawTransaction(Transaction transaction)
-        {
-            return SendRawTransaction(transaction.ToArray());
-        }
-
-        /// <summary>
-        /// Broadcasts a serialized block over the NEO network.
-        /// </summary>
-        public bool SubmitBlock(byte[] block)
-        {
-            return RpcSend("submitblock", block.ToHexString()).AsBoolean();
-        }
-
-        /// <summary>
         /// Verifies that the address is a correct NEO address.
         /// </summary>
         public RpcValidateAddressResult ValidateAddress(string address)
         {
             return RpcValidateAddressResult.FromJson(RpcSend("validateaddress", address));
         }
+
+        #endregion Utilities
+
+        #region Wallet
+
+        /// <summary>
+        /// Close the wallet opened by RPC.
+        /// </summary>
+        public bool CloseWallet()
+        {
+            return RpcSend("closewallet").AsBoolean();
+        }
+
+        /// <summary>
+        /// Exports the private key of the specified address.
+        /// </summary>
+        public string DumpPrivKey(string address)
+        {
+            return RpcSend("dumpprivkey", address).AsString();
+        }
+
+        /// <summary>
+        /// Returns the balance of the corresponding asset in the wallet, based on the specified asset Id.
+        /// This method applies to assets that conform to NEP-5 standards.
+        /// </summary>
+        /// <returns>new address as string</returns>
+        public BigDecimal GetBalance(string assetId)
+        {
+            byte decimals = new Nep5API(this).Decimals(UInt160.Parse(assetId));
+            BigInteger balance = BigInteger.Parse(RpcSend("getbalance", assetId)["balance"].AsString());
+            return new BigDecimal(balance, decimals);
+        }
+
+        /// <summary>
+        /// Creates a new account in the wallet opened by RPC.
+        /// </summary>
+        public string GetNewAddress()
+        {
+            return RpcSend("getnewaddress").AsString();
+        }
+
+        /// <summary>
+        /// Gets the amount of unclaimed GAS in the wallet.
+        /// </summary>
+        public BigInteger GetUnclaimedGas()
+        {
+            return BigInteger.Parse(RpcSend("getunclaimedgas").AsString());
+        }
+
+        /// <summary>
+        /// Imports the private key to the wallet.
+        /// </summary>
+        public RpcAccount ImportPrivKey(string wif)
+        {
+            return RpcAccount.FromJson(RpcSend("importprivkey", wif));
+        }
+
+        /// <summary>
+        /// Lists all the accounts in the current wallet.
+        /// </summary>
+        public List<RpcAccount> ListAddress()
+        {
+            return ((JArray)RpcSend("listaddress")).Select(p => RpcAccount.FromJson(p)).ToList();
+        }
+
+        /// <summary>
+        /// Open wallet file in the provider's machine.
+        /// By default, this method is disabled by RpcServer config.json.
+        /// </summary>
+        public bool OpenWallet(string path, string password)
+        {
+            return RpcSend("openwallet", path, password).AsBoolean();
+        }
+
+        /// <summary>
+        /// Transfer from the specified address to the destination address.
+        /// </summary>
+        /// <returns>This function returns Signed Transaction JSON if successful, ContractParametersContext JSON if signing failed.</returns>
+        public JObject SendFrom(string assetId, string fromAddress, string toAddress, string amount)
+        {
+            return RpcSend("sendfrom", assetId, fromAddress, toAddress, amount);
+        }
+
+        /// <summary>
+        /// Bulk transfer order, and you can specify a sender address.
+        /// </summary>
+        /// <returns>This function returns Signed Transaction JSON if successful, ContractParametersContext JSON if signing failed.</returns>
+        public JObject SendMany(string fromAddress, IEnumerable<RpcTransferOut> outputs)
+        {
+            var parameters = new List<JObject>();
+            if (!string.IsNullOrEmpty(fromAddress))
+            {
+                parameters.Add(fromAddress);
+            }
+            parameters.Add(outputs.Select(p => p.ToJson()).ToArray());
+
+            return RpcSend("sendmany", paraArgs: parameters.ToArray());
+        }
+
+        /// <summary>
+        /// Transfer asset from the wallet to the destination address.
+        /// </summary>
+        /// <returns>This function returns Signed Transaction JSON if successful, ContractParametersContext JSON if signing failed.</returns>
+        public JObject SendToAddress(string assetId, string address, string amount)
+        {
+            return RpcSend("sendtoaddress", assetId, address, amount);
+        }
+
+        #endregion Utilities
+
+        #region Plugins
+
+        /// <summary>
+        /// Returns the contract log based on the specified txHash. The complete contract logs are stored under the ApplicationLogs directory.
+        /// This method is provided by the plugin ApplicationLogs.
+        /// </summary>
+        public RpcApplicationLog GetApplicationLog(string txHash)
+        {
+            return RpcApplicationLog.FromJson(RpcSend("getapplicationlog", txHash));
+        }
+
+        /// <summary>
+        /// Returns all the NEP-5 transaction information occurred in the specified address.
+        /// This method is provided by the plugin RpcNep5Tracker.
+        /// </summary>
+        /// <param name="address">The address to query the transaction information.</param>
+        /// <param name="startTimestamp">The start block Timestamp, default to seven days before UtcNow</param>
+        /// <param name="endTimestamp">The end block Timestamp, default to UtcNow</param>
+        public RpcNep5Transfers GetNep5Transfers(string address, ulong? startTimestamp = default, ulong? endTimestamp = default)
+        {
+            startTimestamp ??= 0;
+            endTimestamp ??= DateTime.UtcNow.ToTimestampMS();
+            return RpcNep5Transfers.FromJson(RpcSend("getnep5transfers", address, startTimestamp, endTimestamp));
+        }
+
+        /// <summary>
+        /// Returns the balance of all NEP-5 assets in the specified address.
+        /// This method is provided by the plugin RpcNep5Tracker.
+        /// </summary>
+        public RpcNep5Balances GetNep5Balances(string address)
+        {
+            return RpcNep5Balances.FromJson(RpcSend("getnep5balances", address));
+        }
+
+        #endregion Plugins
     }
 }

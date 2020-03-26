@@ -1,5 +1,6 @@
 using Neo.IO.Json;
 using Neo.SmartContract;
+using System;
 using System.Linq;
 
 namespace Neo.Network.RPC.Models
@@ -8,11 +9,13 @@ namespace Neo.Network.RPC.Models
     {
         public string Script { get; set; }
 
-        public string State { get; set; }
+        public VM.VMState State { get; set; }
 
         public string GasConsumed { get; set; }
 
         public ContractParameter[] Stack { get; set; }
+
+        public string Tx { get; set; }
 
         public JObject ToJson()
         {
@@ -20,7 +23,16 @@ namespace Neo.Network.RPC.Models
             json["script"] = Script;
             json["state"] = State;
             json["gas_consumed"] = GasConsumed;
-            json["stack"] = new JArray(Stack.Select(p => p.ToJson()));
+            try
+            {
+                json["stack"] = new JArray(Stack.Select(p => p.ToJson()));
+            }
+            catch (InvalidOperationException)
+            {
+                // ContractParameter.ToJson() may cause InvalidOperationException
+                json["stack"] = "error: recursive reference";
+            }
+            if (!string.IsNullOrEmpty(Tx)) json["tx"] = Tx;
             return json;
         }
 
@@ -28,9 +40,14 @@ namespace Neo.Network.RPC.Models
         {
             RpcInvokeResult invokeScriptResult = new RpcInvokeResult();
             invokeScriptResult.Script = json["script"].AsString();
-            invokeScriptResult.State = json["state"].AsString();
+            invokeScriptResult.State = json["state"].TryGetEnum<VM.VMState>();
             invokeScriptResult.GasConsumed = json["gas_consumed"].AsString();
-            invokeScriptResult.Stack = ((JArray)json["stack"]).Select(p => ContractParameter.FromJson(p)).ToArray();
+            try
+            {
+                invokeScriptResult.Stack = ((JArray)json["stack"]).Select(p => ContractParameter.FromJson(p)).ToArray();
+            }
+            catch { }
+            invokeScriptResult.Tx = json["tx"]?.AsString();
             return invokeScriptResult;
         }
     }

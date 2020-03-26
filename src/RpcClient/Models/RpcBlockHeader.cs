@@ -7,7 +7,7 @@ namespace Neo.Network.RPC.Models
     {
         public Header Header { get; set; }
 
-        public int Confirmations { get; set; }
+        public uint Confirmations { get; set; }
 
         public UInt256 NextBlockHash { get; set; }
 
@@ -15,10 +15,7 @@ namespace Neo.Network.RPC.Models
         {
             JObject json = Header.ToJson();
             json["confirmations"] = Confirmations;
-            if (NextBlockHash != null)
-            {
-                json["nextblockhash"] = NextBlockHash.ToString();
-            }
+            json["nextblockhash"] = NextBlockHash?.ToString();
             return json;
         }
 
@@ -26,11 +23,8 @@ namespace Neo.Network.RPC.Models
         {
             RpcBlockHeader block = new RpcBlockHeader();
             block.Header = Header.FromJson(json);
-            block.Confirmations = (int)json["confirmations"].AsNumber();
-            if (json["nextblockhash"] != null)
-            {
-                block.NextBlockHash = UInt256.Parse(json["nextblockhash"].AsString());
-            }
+            block.Confirmations = (uint)json["confirmations"].AsNumber();
+            block.NextBlockHash = json["nextblockhash"] is null ? null : UInt256.Parse(json["nextblockhash"].AsString());
             return block;
         }
     }
