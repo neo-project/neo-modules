@@ -202,14 +202,6 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Gets the list of nodes that the node is currently connected/disconnected from.
-        /// </summary>
-        public RpcPeers GetPeers()
-        {
-            return RpcPeers.FromJson(RpcSend("getpeers"));
-        }
-
-        /// <summary>
         /// Obtains the list of unconfirmed transactions in memory.
         /// </summary>
         public string[] GetRawMempool()
