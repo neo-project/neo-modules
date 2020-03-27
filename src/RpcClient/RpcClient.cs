@@ -175,14 +175,6 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Returns the system fees of the block, based on the specified index.
-        /// </summary>
-        public BigInteger GetBlockSysFee(int height)
-        {
-            return BigInteger.Parse(RpcSend("getblocksysfee", height).AsString());
-        }
-
-        /// <summary>
         /// Queries contract information, according to the contract script hash.
         /// </summary>
         public ContractState GetContractState(string hash)

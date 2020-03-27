@@ -159,14 +159,6 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
-        public void TestGetBlockSysFee()
-        {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlockSysFee).ToLower());
-            var result = rpc.GetBlockSysFee((int)test.Request.Params[0].AsNumber());
-            Assert.AreEqual(test.Response.Result.AsString(), result.ToString());
-        }
-
-        [TestMethod]
         public void TestGetContractState()
         {
             var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetContractState).ToLower());

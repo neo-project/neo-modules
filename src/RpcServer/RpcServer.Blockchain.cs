@@ -103,18 +103,6 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject GetBlockSysFee(JArray _params)
-        {
-            uint height = uint.Parse(_params[0].AsString());
-            if (height <= Blockchain.Singleton.Height)
-                using (ApplicationEngine engine = NativeContract.GAS.TestCall("getSysFeeAmount", height))
-                {
-                    return engine.ResultStack.Peek().GetBigInteger().ToString();
-                }
-            throw new RpcException(-100, "Invalid Height");
-        }
-
-        [RpcMethod]
         private JObject GetContractState(JArray _params)
         {
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
