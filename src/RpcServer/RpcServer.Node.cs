@@ -2,12 +2,16 @@
 #pragma warning disable IDE0060
 
 using Akka.Actor;
+using Akka.Event;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
+using System;
 using System.Linq;
+using System.Threading.Tasks;
+using static Neo.Ledger.Blockchain;
 
 namespace Neo.Plugins
 {
@@ -70,16 +74,50 @@ namespace Neo.Plugins
         private JObject SendRawTransaction(JArray _params)
         {
             Transaction tx = _params[0].AsString().HexToBytes().AsSerializable<Transaction>();
-            VerifyResult reason = System.Blockchain.Ask<VerifyResult>(tx).Result;
-            return GetRelayResult(reason, tx.Hash);
+            return Send(tx);
         }
 
         [RpcMethod]
         private JObject SubmitBlock(JArray _params)
         {
             Block block = _params[0].AsString().HexToBytes().AsSerializable<Block>();
-            VerifyResult reason = System.Blockchain.Ask<VerifyResult>(block).Result;
-            return GetRelayResult(reason, block.Hash);
+            return Send(block);
+        }
+
+        private JObject Send(IInventory inventory)
+        {
+            var a = System.ActorSystem.ActorOf(RpcActor.Props());
+            System.ActorSystem.EventStream.Subscribe(a, typeof(RelayResult));
+            System.Blockchain.Tell(inventory);
+
+            int timeOut = 1000;
+            DateTime current = DateTime.Now;
+            while (a.Ask<RelayResult>(0).Result == null && DateTime.Now.Subtract(current).Milliseconds < timeOut) { Task.Delay(50); }
+            var result = a.Ask<RelayResult>(0).Result;
+            return GetRelayResult(result.Result, inventory.Hash);
+        }
+
+        private class RpcActor : UntypedActor
+        {
+            public static Props Props()
+            {
+                return Akka.Actor.Props.Create(() => new RpcActor());
+            }
+
+            private RelayResult result;
+
+            protected override void OnReceive(object message)
+            {
+                switch (message)
+                {
+                    case RelayResult reason:
+                        result = reason;
+                        break;
+                    case 0:
+                        Sender.Tell(result);
+                        break;
+                }
+            }
         }
     }
 }
