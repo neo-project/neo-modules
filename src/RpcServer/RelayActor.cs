@@ -21,17 +21,19 @@ namespace Neo.Plugins
             switch (message)
             {
                 case IInventory inventory:
-                    this.senders.Add(inventory.Hash, Sender);
-                    neoSystem.Blockchain.Tell(inventory);
-                    break;
-                case RelayResult reason:
-                    UInt256 hash = reason.Inventory.Hash;
-                    if (senders.ContainsKey(reason.Inventory.Hash))
                     {
-                        senders[hash].Tell(reason);
-                        senders.Remove(hash);
+                        senders.Add(inventory.Hash, Sender);
+                        neoSystem.Blockchain.Tell(inventory);
+                        break;
                     }
-                    break;
+                case RelayResult reason:
+                    {
+                        if (senders.Remove(reason.Inventory.Hash, out var actor))
+                        {
+                            actor.Tell(reason);
+                        }
+                        break;
+                    }
             }
         }
 
