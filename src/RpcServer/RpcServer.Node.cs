@@ -16,7 +16,7 @@ namespace Neo.Plugins
 {
     partial class RpcServer
     {
-        private static readonly IActorRef rpcActor = System.ActorSystem.ActorOf(RpcActor.Props());
+        private static readonly IActorRef relayActor = System.ActorSystem.ActorOf(RelayActor.Props());
 
         [RpcMethod]
         private JObject GetConnectionCount(JArray _params)
@@ -91,8 +91,8 @@ namespace Neo.Plugins
 
             int timeOut = 1000;
             DateTime current = DateTime.Now;
-            while (rpcActor.Ask<RelayResult>(0).Result == null && DateTime.Now.Subtract(current).Milliseconds < timeOut) { Task.Delay(50); }
-            var result = rpcActor.Ask<RelayResult>(0).Result;
+            while (relayActor.Ask<RelayResult>(0).Result == null && DateTime.Now.Subtract(current).Milliseconds < timeOut) { Task.Delay(50); }
+            var result = relayActor.Ask<RelayResult>(0).Result;
             return GetRelayResult(result.Result, inventory.Hash);
         }
     }

@@ -3,11 +3,11 @@ using static Neo.Ledger.Blockchain;
 
 namespace Neo.Plugins
 {
-    public class RpcActor : UntypedActor
+    public class RelayActor : UntypedActor
     {
         private RelayResult result;
 
-        public RpcActor()
+        public RelayActor()
         {
             Context.System.EventStream.Subscribe(Self, typeof(RelayResult));
         }
@@ -27,7 +27,7 @@ namespace Neo.Plugins
 
         public static Props Props()
         {
-            return Akka.Actor.Props.Create(() => new RpcActor());
+            return Akka.Actor.Props.Create(() => new RelayActor());
         }
     }
 }
