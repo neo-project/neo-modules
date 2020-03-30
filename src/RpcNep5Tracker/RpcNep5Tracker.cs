@@ -106,7 +106,7 @@ namespace Neo.Plugins
             // Event name should be encoded as a byte array.
             if (!(stateItems[0] is VM.Types.ByteArray)) return;
             var eventName = stateItems[0].GetString();
-            if (eventName != "Transfer") return;
+            if (eventName.ToLower() != "transfer") return;
             if (stateItems.Count < 4) return;
 
             if (!(stateItems[1].IsNull) && !(stateItems[1] is VM.Types.ByteArray))
