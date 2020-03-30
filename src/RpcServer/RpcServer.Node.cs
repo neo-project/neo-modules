@@ -16,7 +16,7 @@ namespace Neo.Plugins
 {
     partial class RpcServer
     {
-        private static readonly IActorRef relayActor = System.ActorSystem.ActorOf(RelayActor.Props());
+        private static readonly IActorRef relayActor = System.ActorSystem.ActorOf(RelayActor.Props(System.Blockchain));
 
         [RpcMethod]
         private JObject GetConnectionCount(JArray _params)
@@ -46,17 +46,19 @@ namespace Neo.Plugins
             return json;
         }
 
-        private static JObject GetRelayResult(VerifyResult reason, UInt256 hash)
+        private JObject GetRelayResult(IInventory inventory)
         {
-            if (reason == VerifyResult.Succeed)
+            const int timeOut = 1000;
+            var result = relayActor.Ask<RelayResult>(inventory, TimeSpan.FromMilliseconds(timeOut)).Result;
+            if (result.Result == VerifyResult.Succeed)
             {
                 var ret = new JObject();
-                ret["hash"] = hash.ToString();
+                ret["hash"] = inventory.Hash.ToString();
                 return ret;
             }
             else
             {
-                throw new RpcException(-500, reason.ToString());
+                throw new RpcException(-500, result.Result.ToString());
             }
         }
 
@@ -75,25 +77,14 @@ namespace Neo.Plugins
         private JObject SendRawTransaction(JArray _params)
         {
             Transaction tx = _params[0].AsString().HexToBytes().AsSerializable<Transaction>();
-            return Send(tx);
+            return GetRelayResult(tx);
         }
 
         [RpcMethod]
         private JObject SubmitBlock(JArray _params)
         {
             Block block = _params[0].AsString().HexToBytes().AsSerializable<Block>();
-            return Send(block);
-        }
-
-        private JObject Send(IInventory inventory)
-        {
-            System.Blockchain.Tell(inventory);
-
-            int timeOut = 1000;
-            DateTime current = DateTime.Now;
-            while (relayActor.Ask<RelayResult>(0).Result == null && DateTime.Now.Subtract(current).Milliseconds < timeOut) { Task.Delay(50); }
-            var result = relayActor.Ask<RelayResult>(0).Result;
-            return GetRelayResult(result.Result, inventory.Hash);
+            return GetRelayResult(block);
         }
     }
 }
