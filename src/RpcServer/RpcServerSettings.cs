@@ -1,11 +1,12 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Neo.SmartContract.Native;
+using System;
 using System.Linq;
 using System.Net;
 
 namespace Neo.Plugins
 {
-    internal class Settings
+    public class RpcServerSettings
     {
         public IPAddress BindAddress { get; }
         public ushort Port { get; }
@@ -19,9 +20,32 @@ namespace Neo.Plugins
         public string[] DisabledMethods { get; }
         public int MaxConcurrentConnections { get; }
 
-        public static Settings Default { get; private set; }
+        public RpcServerSettings(IPAddress bindAddress = null,
+            ushort port = 10332,
+            string sslCert = "",
+            string sslCertPassword = "",
+            string[] trustedAuthorities = null,
+            string rpcUser = "",
+            string rpcPass = "",
+            string masGasInvoke = "10",
+            string maxFee = "0.1",
+            string[] disabledMethods = null,
+            int maxConcurrentConnections = 40)
+        {
+            this.BindAddress = bindAddress ?? IPAddress.Loopback;
+            this.Port = port;
+            this.SslCert = sslCert;
+            this.SslCertPassword = sslCertPassword;
+            this.TrustedAuthorities = trustedAuthorities ?? Array.Empty<string>();
+            this.RpcUser = rpcUser;
+            this.RpcPass = rpcPass;
+            this.MaxGasInvoke = (long)BigDecimal.Parse(masGasInvoke, NativeContract.GAS.Decimals).Value;
+            this.MaxFee = (long)BigDecimal.Parse(maxFee, NativeContract.GAS.Decimals).Value;
+            this.DisabledMethods = disabledMethods ?? Array.Empty<string>();
+            this.MaxConcurrentConnections = maxConcurrentConnections;
+        }
 
-        private Settings(IConfigurationSection section)
+        public RpcServerSettings(IConfigurationSection section)
         {
             this.BindAddress = IPAddress.Parse(section.GetSection("BindAddress").Value);
             this.Port = ushort.Parse(section.GetSection("Port").Value);
@@ -34,11 +58,6 @@ namespace Neo.Plugins
             this.MaxFee = (long)BigDecimal.Parse(section.GetValue("MaxFee", "0.1"), NativeContract.GAS.Decimals).Value;
             this.DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray();
             this.MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", 40);
-        }
-
-        public static void Load(IConfigurationSection section)
-        {
-            Default = new Settings(section);
         }
     }
 }

@@ -70,7 +70,7 @@ namespace Neo.Plugins
         private JObject SendRawTransaction(JArray _params)
         {
             Transaction tx = _params[0].AsString().HexToBytes().AsSerializable<Transaction>();
-            RelayResultReason reason = System.Blockchain.Ask<RelayResultReason>(tx).Result;
+            RelayResultReason reason = system.Blockchain.Ask<RelayResultReason>(tx).Result;
             return GetRelayResult(reason, tx.Hash);
         }
 
@@ -78,7 +78,7 @@ namespace Neo.Plugins
         private JObject SubmitBlock(JArray _params)
         {
             Block block = _params[0].AsString().HexToBytes().AsSerializable<Block>();
-            RelayResultReason reason = System.Blockchain.Ask<RelayResultReason>(block).Result;
+            RelayResultReason reason = system.Blockchain.Ask<RelayResultReason>(block).Result;
             return GetRelayResult(reason, block.Hash);
         }
     }
