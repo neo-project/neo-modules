@@ -9,7 +9,6 @@ using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using static Neo.Ledger.Blockchain;
 
 namespace Neo.Plugins
