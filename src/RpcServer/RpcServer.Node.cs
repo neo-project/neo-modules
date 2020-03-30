@@ -15,7 +15,7 @@ namespace Neo.Plugins
 {
     partial class RpcServer
     {
-        private static readonly IActorRef relayActor = System.ActorSystem.ActorOf(RelayActor.Props(System.Blockchain));
+        private static readonly IActorRef relayActor = System.ActorSystem.ActorOf(RelayActor.Props(System));
 
         [RpcMethod]
         private JObject GetConnectionCount(JArray _params)
