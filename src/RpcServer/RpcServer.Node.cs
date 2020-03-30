@@ -45,7 +45,7 @@ namespace Neo.Plugins
             return json;
         }
 
-        private JObject GetRelayResult(IInventory inventory)
+        private static JObject GetRelayResult(IInventory inventory)
         {
             const int timeOut = 1000;
             var result = relayActor.Ask<RelayResult>(inventory, TimeSpan.FromMilliseconds(timeOut)).Result;
