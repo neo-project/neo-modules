@@ -33,29 +33,6 @@ namespace Neo.Plugins
             System.ActorSystem.EventStream.Subscribe(rpcActor, typeof(RelayResult));
         }
 
-        private class RpcActor : UntypedActor
-        {
-            public static Props Props()
-            {
-                return Akka.Actor.Props.Create(() => new RpcActor());
-            }
-
-            private RelayResult result;
-
-            protected override void OnReceive(object message)
-            {
-                switch (message)
-                {
-                    case RelayResult reason:
-                        result = reason;
-                        break;
-                    case 0:
-                        Sender.Tell(result);
-                        break;
-                }
-            }
-        }
-
         private bool CheckAuth(HttpContext context)
         {
             if (string.IsNullOrEmpty(Settings.Default.RpcUser)) return true;

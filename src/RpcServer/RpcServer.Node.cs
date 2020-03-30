@@ -2,7 +2,6 @@
 #pragma warning disable IDE0060
 
 using Akka.Actor;
-using Akka.Event;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Ledger;
