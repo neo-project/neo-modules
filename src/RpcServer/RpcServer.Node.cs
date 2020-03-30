@@ -86,38 +86,13 @@ namespace Neo.Plugins
 
         private JObject Send(IInventory inventory)
         {
-            var a = System.ActorSystem.ActorOf(RpcActor.Props());
-            System.ActorSystem.EventStream.Subscribe(a, typeof(RelayResult));
             System.Blockchain.Tell(inventory);
 
             int timeOut = 1000;
             DateTime current = DateTime.Now;
-            while (a.Ask<RelayResult>(0).Result == null && DateTime.Now.Subtract(current).Milliseconds < timeOut) { Task.Delay(50); }
-            var result = a.Ask<RelayResult>(0).Result;
+            while (rpcActor.Ask<RelayResult>(0).Result == null && DateTime.Now.Subtract(current).Milliseconds < timeOut) { Task.Delay(50); }
+            var result = rpcActor.Ask<RelayResult>(0).Result;
             return GetRelayResult(result.Result, inventory.Hash);
-        }
-
-        private class RpcActor : UntypedActor
-        {
-            public static Props Props()
-            {
-                return Akka.Actor.Props.Create(() => new RpcActor());
-            }
-
-            private RelayResult result;
-
-            protected override void OnReceive(object message)
-            {
-                switch (message)
-                {
-                    case RelayResult reason:
-                        result = reason;
-                        break;
-                    case 0:
-                        Sender.Tell(result);
-                        break;
-                }
-            }
         }
     }
 }
