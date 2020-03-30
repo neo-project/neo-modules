@@ -5,12 +5,12 @@ namespace Neo.Plugins
 {
     public class RpcActor : UntypedActor
     {
-        public static Props Props()
-        {
-            return Akka.Actor.Props.Create(() => new RpcActor());
-        }
-
         private RelayResult result;
+
+        public RpcActor()
+        {
+            Context.System.EventStream.Subscribe(Self, typeof(RelayResult));
+        }
 
         protected override void OnReceive(object message)
         {
@@ -23,6 +23,11 @@ namespace Neo.Plugins
                     Sender.Tell(result);
                     break;
             }
+        }
+
+        public static Props Props()
+        {
+            return Akka.Actor.Props.Create(() => new RpcActor());
         }
     }
 }

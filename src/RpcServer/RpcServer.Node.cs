@@ -16,6 +16,8 @@ namespace Neo.Plugins
 {
     partial class RpcServer
     {
+        private static readonly IActorRef rpcActor = System.ActorSystem.ActorOf(RpcActor.Props());
+
         [RpcMethod]
         private JObject GetConnectionCount(JArray _params)
         {

@@ -1,4 +1,3 @@
-using Akka.Actor;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -17,7 +16,6 @@ using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
-using static Neo.Ledger.Blockchain;
 
 namespace Neo.Plugins
 {
@@ -25,12 +23,10 @@ namespace Neo.Plugins
     {
         private static readonly Dictionary<string, Func<JArray, JObject>> methods = new Dictionary<string, Func<JArray, JObject>>();
         private IWebHost host;
-        private static readonly IActorRef rpcActor = System.ActorSystem.ActorOf(RpcActor.Props());
 
         public RpcServer()
         {
             RegisterMethods(this);
-            System.ActorSystem.EventStream.Subscribe(rpcActor, typeof(RelayResult));
         }
 
         private bool CheckAuth(HttpContext context)
@@ -250,7 +246,5 @@ namespace Neo.Plugins
                 methods[name] = (Func<JArray, JObject>)method.CreateDelegate(typeof(Func<JArray, JObject>), handler);
             }
         }
-
-
     }
 }
