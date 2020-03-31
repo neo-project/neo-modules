@@ -77,7 +77,7 @@ namespace Neo.Plugins
             return response;
         }
 
-        public  void Dispose()
+        public void Dispose()
         {
             if (host != null)
             {
