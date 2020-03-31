@@ -1,4 +1,5 @@
 using Neo.Consensus;
+using Neo.ConsoleService;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using System;
@@ -13,7 +14,8 @@ namespace Neo.Plugins
         /// Process "commit time" command
         /// Prints the time in milliseconds to commit in the network
         /// </summary>
-        private bool OnCommitTimeCommand()
+        [ConsoleCommand("commit time", Category = "Consensus Commands", Description = "Show the time in milliseconds to commit in the network.")]
+        private void OnCommitTimeCommand()
         {
             var time = GetTimeToCommit(true);
             if (time > 0)
@@ -24,8 +26,6 @@ namespace Neo.Plugins
             {
                 Console.WriteLine("Timeout");
             }
-
-            return true;
         }
 
         /// <summary>
@@ -90,7 +90,8 @@ namespace Neo.Plugins
         /// Process "confirmation time" command
         /// Prints the time in milliseconds to confirm the block
         /// </summary>
-        private bool OnConfirmationTimeCommand()
+        [ConsoleCommand("confirmation time", Category = "Consensus Commands", Description = "Show the time in milliseconds to confirm the block.")]
+        private void OnConfirmationTimeCommand()
         {
             var time = GetTimeToConfirm(true);
 
@@ -102,8 +103,6 @@ namespace Neo.Plugins
             {
                 Console.WriteLine("Timeout. Make sure the start consensus command has been run.");
             }
-
-            return true;
         }
 
         /// <summary>
@@ -174,7 +173,8 @@ namespace Neo.Plugins
         /// Process "payload time" command
         /// Prints the time in milliseconds to receive a payload
         /// </summary>
-        private bool OnPayloadTimeCommand()
+        [ConsoleCommand("payload time", Category = "Consensus Commands", Description = "Show the time in milliseconds to receive a payload.")]
+        private void OnPayloadTimeCommand()
         {
             var time = GetPayloadTime(true);
             if (time > 0)
@@ -185,8 +185,6 @@ namespace Neo.Plugins
             {
                 Console.WriteLine("Timeout. Make sure the start consensus command has been run.");
             }
-
-            return true;
         }
 
         /// <summary>

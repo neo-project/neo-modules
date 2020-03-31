@@ -1,3 +1,4 @@
+using Neo.ConsoleService;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using System;
@@ -10,40 +11,31 @@ namespace Neo.Plugins
         /// Process "block time" command
         /// Prints the block time in seconds of the given block index or block hash
         /// </summary>
-        private bool OnBlockTimeCommand(string[] args)
+        [ConsoleCommand("block time", Category = "Block Commands", Description = "Show the block time in seconds of the given block index or block hash.")]
+        private void OnBlockTimeCommand(string blockIndexOrHash)
         {
-            if (args.Length != 3)
+            Block block = null;
+
+            if (UInt256.TryParse(blockIndexOrHash, out var blockHash))
             {
-                return false;
+                block = Blockchain.Singleton.GetBlock(blockHash);
+            }
+            else if (uint.TryParse(blockIndexOrHash, out var blockIndex))
+            {
+                block = Blockchain.Singleton.GetBlock(blockIndex);
+            }
+
+            if (block == null)
+            {
+                Console.WriteLine("Block not found");
             }
             else
             {
-                string blockId = args[2];
-                Block block = null;
+                ulong time = block.GetTime();
 
-                if (UInt256.TryParse(blockId, out var blockHash))
-                {
-                    block = Blockchain.Singleton.GetBlock(blockHash);
-                }
-                else if (uint.TryParse(blockId, out var blockIndex))
-                {
-                    block = Blockchain.Singleton.GetBlock(blockIndex);
-                }
-
-                if (block == null)
-                {
-                    Console.WriteLine("Block not found");
-                }
-                else
-                {
-                    ulong time = block.GetTime();
-
-                    Console.WriteLine($"Block Hash: {block.Hash}");
-                    Console.WriteLine($"      Index: {block.Index}");
-                    Console.WriteLine($"      Time: {time / 1000.0: 0.00} seconds");
-                }
-
-                return true;
+                Console.WriteLine($"Block Hash: {block.Hash}");
+                Console.WriteLine($"      Index: {block.Index}");
+                Console.WriteLine($"      Time: {time / 1000.0: 0.00} seconds");
             }
         }
 
@@ -51,43 +43,27 @@ namespace Neo.Plugins
         /// Process "block avgtime" command
         /// Prints the average time in seconds the latest blocks are active
         /// </summary>
-        private bool OnBlockAverageTimeCommand(string[] args)
+        [ConsoleCommand("block avgtime", Category = "Block Commands", Description = "Show the average time in seconds the latest blocks are active.")]
+        private void OnBlockAverageTimeCommand(uint blockCount = 1000)
         {
-            if (args.Length > 3)
+            uint desiredCount = blockCount;
+
+            if (desiredCount < 1)
             {
-                return false;
+                Console.WriteLine("Minimum 1 block");
+                return;
             }
-            else
+
+            if (desiredCount > 10000)
             {
-                uint desiredCount = 1000;
-                if (args.Length == 3)
-                {
-                    if (!uint.TryParse(args[2], out desiredCount))
-                    {
-                        Console.WriteLine("Invalid parameter");
-                        return true;
-                    }
+                Console.WriteLine("Maximum 10000 blocks");
+                return;
+            }
 
-                    if (desiredCount < 1)
-                    {
-                        Console.WriteLine("Minimum 1 block");
-                        return true;
-                    }
-
-                    if (desiredCount > 10000)
-                    {
-                        Console.WriteLine("Maximum 10000 blocks");
-                        return true;
-                    }
-                }
-
-                using (var snapshot = Blockchain.Singleton.GetSnapshot())
-                {
-                    var averageInSeconds = snapshot.GetAverageTimePerBlock(desiredCount) / 1000;
-                    Console.WriteLine(averageInSeconds.ToString("Average time/block: 0.00 seconds"));
-                }
-
-                return true;
+            using (var snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                var averageInSeconds = snapshot.GetAverageTimePerBlock(desiredCount) / 1000;
+                Console.WriteLine(averageInSeconds.ToString("Average time/block: 0.00 seconds"));
             }
         }
     }

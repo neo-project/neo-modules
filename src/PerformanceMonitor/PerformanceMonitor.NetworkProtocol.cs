@@ -1,3 +1,4 @@
+using Neo.ConsoleService;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.RPC;
@@ -17,12 +18,11 @@ namespace Neo.Plugins
         /// <summary>
         /// Prints the time passed in seconds since the last block
         /// </summary>
-        private bool OnBlockTimeSinceLastCommand()
+        [ConsoleCommand("block timesincelast", Category = "Block Commands", Description = "Show the time passed in seconds since the last block.")]
+        private void OnBlockTimeSinceLastCommand()
         {
             var timeSinceLastBlockInSec = GetTimeSinceLastBlock() / 1000;
             Console.WriteLine($"Time since last block: {timeSinceLastBlockInSec} seconds");
-
-            return true;
         }
 
         /// <summary>
@@ -43,7 +43,8 @@ namespace Neo.Plugins
         /// <summary>
         /// Prints the number of nodes connected to the local node
         /// </summary>
-        private bool OnConnectedNodesCommand()
+        [ConsoleCommand("connected", Category = "Network Commands", Description = "Show the number of nodes connected to the local node.")]
+        private void OnConnectedNodesCommand()
         {
             Console.WriteLine($"Connected nodes: {LocalNode.Singleton.ConnectedCount}");
 
@@ -54,7 +55,6 @@ namespace Neo.Plugins
                 var remoteAddressAndPort = $"{node.Remote.Address}:{node.Remote.Port}";
                 Console.WriteLine($"  ip: {remoteAddressAndPort,-25}\theight: {node.LastBlockIndex,-8}");
             }
-            return true;
         }
 
         /// <summary>
@@ -85,31 +85,25 @@ namespace Neo.Plugins
         /// Send a ping message to the node specified by its IP address.
         /// If none is specified, send a ping message to each peer connected to the local node
         /// </summary>
-        private bool OnPingPeersCommand(string[] args)
+        [ConsoleCommand("ping", Category = "Network Commands",
+            Description = "Send a ping message to the node specified by its IP address.\n" +
+                          "If none is specified, send a ping message to each peer connected to the local node")]
+        private void OnPingPeersCommand(string ipaddress = null)
         {
-            if (args.Length > 2)
+            UpdateRemotesHeight();
+            if (ipaddress != null)
             {
-                return false;
+                if (!IPAddress.TryParse(ipaddress, out var address))
+                {
+                    Console.WriteLine("Invalid parameter");
+                    return;
+                }
+
+                PingRemoteNode(address, true);
             }
             else
             {
-                UpdateRemotesHeight();
-                if (args.Length == 2)
-                {
-                    if (args[1] == null || !IPAddress.TryParse(args[1], out var ipaddress))
-                    {
-                        Console.WriteLine("Invalid parameter");
-                        return true;
-                    }
-
-                    PingRemoteNode(ipaddress, true);
-                }
-                else
-                {
-                    PingAll(true);
-                }
-
-                return true;
+                PingAll(true);
             }
         }
 
@@ -267,38 +261,31 @@ namespace Neo.Plugins
         /// Process "rpc time" command
         /// Prints the time in milliseconds to receive the response of a rpc request
         /// </summary>
-        private bool OnRpcTimeCommand(string[] args)
+        /// <param name="url">
+        /// The url of the rpc server
+        /// </param>
+        [ConsoleCommand("rpc time", Category = "Network Commands", Description = "Show the time in milliseconds to receive the response of a rpc request.")]
+        private void OnRpcTimeCommand(string url)
         {
-            if (args.Length != 3)
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
             {
-                return false;
+                Console.WriteLine("Input url is invalid");
+                return;
             }
-            else
+
+            try
             {
-                var url = args[2];
+                var responseTime = GetRpcResponseTime(url);
 
-                if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+                if (responseTime > 0)
                 {
-                    Console.WriteLine("Input url is invalid");
-                    return true;
+                    Console.WriteLine($"RPC response time: {responseTime:0.##} milliseconds");
                 }
-
-                try
-                {
-                    var responseTime = GetRpcResponseTime(url);
-
-                    if (responseTime > 0)
-                    {
-                        Console.WriteLine($"RPC response time: {responseTime:0.##} milliseconds");
-                    }
-                }
-                catch (FileNotFoundException)
-                {
-                    // for this command it is required that the RpcClient plugin is installed
-                    Console.WriteLine("Install RpcClient module to use the rpc time command.");
-                }
-
-                return true;
+            }
+            catch (FileNotFoundException)
+            {
+                // for this command it is required that the RpcClient plugin is installed
+                Console.WriteLine("Install RpcClient module to use the rpc time command.");
             }
         }
 

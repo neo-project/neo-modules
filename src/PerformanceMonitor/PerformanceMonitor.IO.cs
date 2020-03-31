@@ -1,3 +1,4 @@
+using Neo.ConsoleService;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
@@ -14,9 +15,9 @@ namespace Neo.Plugins
     {
         /// <summary>
         /// Process "block sync" command
-        /// Prints the delay in seconds in the synchronization of the blocks in the network
         /// </summary>
-        private bool OnBlockSynchronizationCommand()
+        [ConsoleCommand("block sync", Category = "Block Commands", Description = "Show the delay in seconds in the synchronization of the blocks in the network.")]
+        private void OnBlockSynchronizationCommand()
         {
             var lastBlockRemote = GetMaxRemoteBlockCount();
 
@@ -41,8 +42,6 @@ namespace Neo.Plugins
                     Console.WriteLine($"Time to synchronize to the last remote block: {delayInSeconds:0.#} sec");
                 }
             }
-
-            return true;
         }
 
         /// <summary>
@@ -256,76 +255,48 @@ namespace Neo.Plugins
         /// Process "transaction size" command
         /// Prints the size of the transaction in bytes identified by its hash
         /// </summary>
-        private bool OnTransactionSizeCommand(string[] args)
+        [ConsoleCommand("tx size", Category = "Transaction Commands", Description = "Show the size of the transaction in bytes identified by its hash.")]
+        private void OnTransactionSizeCommand(UInt256 transactionHash)
         {
-            if (args.Length != 3)
+            using (var snapshot = Blockchain.Singleton.GetSnapshot())
             {
-                return false;
-            }
-            else
-            {
-                using (var snapshot = Blockchain.Singleton.GetSnapshot())
-                {
-                    Transaction tx = null;
-                    if (UInt256.TryParse(args[2], out var transactionHash))
-                    {
-                        tx = snapshot.GetTransaction(transactionHash);
-                    }
+                Transaction tx = snapshot.GetTransaction(transactionHash);
 
-                    if (tx == null)
-                    {
-                        Console.WriteLine("Transaction not found");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Transaction Hash: {tx.Hash}");
-                        Console.WriteLine($"            Size: {tx.Size} bytes");
-                    }
+                if (tx == null)
+                {
+                    Console.WriteLine("Transaction not found");
+                }
+                else
+                {
+                    Console.WriteLine($"Transaction Hash: {tx.Hash}");
+                    Console.WriteLine($"            Size: {tx.Size} bytes");
                 }
             }
-
-            return true;
         }
 
         /// <summary>
         /// Process "transaction avgsize" command
         /// Prints the average size in bytes of the latest transactions
         /// </summary>
-        private bool OnTransactionAverageSizeCommand(string[] args)
+        [ConsoleCommand("tx avgsize", Category = "Transaction Commands", Description = "Show the average size in bytes of the latest transactions.")]
+        private void OnTransactionAverageSizeCommand(uint txCount = 1000)
         {
-            if (args.Length > 3)
+            uint desiredCount = txCount;
+
+            if (desiredCount < 1)
             {
-                return false;
-            }
-            else
-            {
-                uint desiredCount = 1000;
-                if (args.Length == 3)
-                {
-                    if (!uint.TryParse(args[2], out desiredCount))
-                    {
-                        Console.WriteLine("Invalid parameter");
-                        return true;
-                    }
-
-                    if (desiredCount < 1)
-                    {
-                        Console.WriteLine("Minimum 1 transaction");
-                        return true;
-                    }
-
-                    if (desiredCount > 10000)
-                    {
-                        Console.WriteLine("Maximum 10000 transactions");
-                        return true;
-                    }
-                }
-
-                var averageInKbytes = GetSizePerTransaction(desiredCount);
-                Console.WriteLine(averageInKbytes.ToString("Average size/tx: 0 bytes"));
+                Console.WriteLine("Minimum 1 transaction");
+                return;
             }
 
-            return true;
+            if (desiredCount > 10000)
+            {
+                Console.WriteLine("Maximum 10000 transactions");
+                return;
+            }
+
+            var averageInKbytes = GetSizePerTransaction(desiredCount);
+            Console.WriteLine(averageInKbytes.ToString("Average size/tx: 0 bytes"));
         }
 
         /// <summary>
