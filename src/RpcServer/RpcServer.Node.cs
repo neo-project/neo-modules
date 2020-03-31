@@ -41,9 +41,9 @@ namespace Neo.Plugins
             return json;
         }
 
-        private static JObject GetRelayResult(RelayResultReason reason, UInt256 hash)
+        private static JObject GetVerifyResult(VerifyResult reason, UInt256 hash)
         {
-            if (reason == RelayResultReason.Succeed)
+            if (reason == VerifyResult.Succeed)
             {
                 var ret = new JObject();
                 ret["hash"] = hash.ToString();
@@ -70,16 +70,16 @@ namespace Neo.Plugins
         private JObject SendRawTransaction(JArray _params)
         {
             Transaction tx = _params[0].AsString().HexToBytes().AsSerializable<Transaction>();
-            RelayResultReason reason = System.Blockchain.Ask<RelayResultReason>(tx).Result;
-            return GetRelayResult(reason, tx.Hash);
+            VerifyResult reason = System.Blockchain.Ask<VerifyResult>(tx).Result;
+            return GetVerifyResult(reason, tx.Hash);
         }
 
         [RpcMethod]
         private JObject SubmitBlock(JArray _params)
         {
             Block block = _params[0].AsString().HexToBytes().AsSerializable<Block>();
-            RelayResultReason reason = System.Blockchain.Ask<RelayResultReason>(block).Result;
-            return GetRelayResult(reason, block.Hash);
+            VerifyResult reason = System.Blockchain.Ask<VerifyResult>(block).Result;
+            return GetVerifyResult(reason, block.Hash);
         }
     }
 }
