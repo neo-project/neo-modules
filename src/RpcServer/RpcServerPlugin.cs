@@ -10,7 +10,15 @@ namespace Neo.Plugins
 
         protected override void Configure()
         {
-            settings = new RpcServerSettings(GetConfiguration());
+            var loadedSettings = new RpcServerSettings(GetConfiguration());
+            if (this.settings == null)
+            {
+                this.settings = loadedSettings;
+            }
+            else
+            {
+                this.settings.UpdateSettings(loadedSettings);
+            }
         }
 
         public override void Dispose()
@@ -33,7 +41,7 @@ namespace Neo.Plugins
             }
             handlers.Clear();
 
-            server.StartHost();
+            server.StartRpcServer();
         }
 
         public static void RegisterMethods(object handler)

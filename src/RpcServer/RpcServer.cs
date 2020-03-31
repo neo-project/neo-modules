@@ -86,7 +86,7 @@ namespace Neo.Plugins
             }
         }
 
-        public void StartHost()
+        public void StartRpcServer()
         {
             host = new WebHostBuilder().UseKestrel(options => options.Listen(settings.BindAddress, settings.Port, listenOptions =>
             {
