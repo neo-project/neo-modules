@@ -4,12 +4,8 @@ using Moq;
 using Moq.Protected;
 using Neo.IO;
 using Neo.IO.Json;
-using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
-using Neo.SmartContract;
-using Neo.SmartContract.Manifest;
-using Neo.VM;
 using System;
 using System.Linq;
 using System.Net;
@@ -37,513 +33,43 @@ namespace Neo.Network.RPC.Tests
             };
 
             rpc = new RpcClient(httpClient);
+            foreach (var test in TestUtils.RpcTestCases)
+            {
+                MockResponse(test.Request, test.Response);
+            }
         }
 
-        private void MockResponse(string content)
+        private void MockResponse(RpcRequest request, RpcResponse response)
         {
             handlerMock.Protected()
                // Setup the PROTECTED method to mock
                .Setup<Task<HttpResponseMessage>>(
                   "SendAsync",
-                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.Is<HttpRequestMessage>(p => p.Content.ReadAsStringAsync().Result == request.ToJson().ToString()),
                   ItExpr.IsAny<CancellationToken>()
                )
                // prepare the expected response of the mocked http call
                .ReturnsAsync(new HttpResponseMessage()
                {
                    StatusCode = HttpStatusCode.OK,
-                   Content = new StringContent(content),
+                   Content = new StringContent(response.ToJson().ToString()),
                })
                .Verifiable();
-        }
-
-        private JObject CreateErrorResponse(JObject id, int code, string message, JObject data = null)
-        {
-            JObject response = CreateResponse(id);
-            response["error"] = new JObject();
-            response["error"]["code"] = code;
-            response["error"]["message"] = message;
-            if (data != null)
-                response["error"]["data"] = data;
-            return response;
-        }
-
-        private JObject CreateResponse(JObject id)
-        {
-            JObject response = new JObject();
-            response["jsonrpc"] = "2.0";
-            response["id"] = id;
-            return response;
         }
 
         [TestMethod]
         public void TestErrorResponse()
         {
-            JObject response = CreateErrorResponse(null, -32700, "Parse error");
-            MockResponse(response.ToString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.SendRawTransaction) + "error").ToLower());
             try
             {
-                var result = rpc.GetBlockHex("773dd2dae4a9c9275290f89b56e67d7363ea4826dfd4fc13cc01cf73a44b0d0e");
+                var result = rpc.SendRawTransaction(test.Request.Params[0].AsString().HexToBytes().AsSerializable<Transaction>());
             }
             catch (RpcException ex)
             {
-                Assert.AreEqual(-32700, ex.HResult);
-                Assert.AreEqual("Parse error", ex.Message);
+                Assert.AreEqual(-500, ex.HResult);
+                Assert.AreEqual("InsufficientFunds", ex.Message);
             }
-        }
-
-        [TestMethod]
-        public void TestGetBestBlockHash()
-        {
-            JObject response = CreateResponse(1);
-            response["result"] = "000000002deadfa82cbc4682f5800";
-            MockResponse(response.ToString());
-
-            var result = rpc.GetBestBlockHash();
-            Assert.AreEqual("000000002deadfa82cbc4682f5800", result);
-        }
-
-        [TestMethod]
-        public void TestGetBlockHex()
-        {
-            JObject response = CreateResponse(1);
-            response["result"] = "000000002deadfa82cbc4682f5800";
-            MockResponse(response.ToString());
-
-            var result = rpc.GetBlockHex("773dd2dae4a9c9275290f89b56e67d7363ea4826dfd4fc13cc01cf73a44b0d0e");
-            Assert.AreEqual("000000002deadfa82cbc4682f5800", result);
-        }
-
-        [TestMethod]
-        public void TestGetBlock()
-        {
-            // create block
-            var block = TestUtils.GetBlock(3);
-
-            JObject json = block.ToJson();
-            json["confirmations"] = 20;
-            JObject response = CreateResponse(1);
-            response["result"] = json;
-            MockResponse(response.ToString());
-
-            var result = rpc.GetBlock("773dd2dae4a9c9275290f89b56e67d7363ea4826dfd4fc13cc01cf73a44b0d0e");
-            Assert.AreEqual(block.Hash.ToString(), result.Block.Hash.ToString());
-            Assert.IsNull(result.NextBlockHash);
-            Assert.AreEqual(20, result.Confirmations);
-            Assert.AreEqual(block.Transactions.Length, result.Block.Transactions.Length);
-            Assert.AreEqual(block.Transactions[0].Hash.ToString(), result.Block.Transactions[0].Hash.ToString());
-
-            // verbose with confirmations
-            json["confirmations"] = 20;
-            json["nextblockhash"] = "773dd2dae4a9c9275290f89b56e67d7363ea4826dfd4fc13cc01cf73a44b0d0e";
-            MockResponse(response.ToString());
-            result = rpc.GetBlock("773dd2dae4a9c9275290f89b56e67d7363ea4826dfd4fc13cc01cf73a44b0d0e");
-            Assert.AreEqual(block.Hash.ToString(), result.Block.Hash.ToString());
-            Assert.AreEqual(20, result.Confirmations);
-            Assert.AreEqual("0x773dd2dae4a9c9275290f89b56e67d7363ea4826dfd4fc13cc01cf73a44b0d0e", result.NextBlockHash.ToString());
-            Assert.AreEqual(block.Transactions.Length, result.Block.Transactions.Length);
-            Assert.AreEqual(block.Transactions[0].Hash.ToString(), result.Block.Transactions[0].Hash.ToString());
-        }
-
-        [TestMethod]
-        public void TestGetBlockCount()
-        {
-            JObject response = CreateResponse(1);
-            response["result"] = 100;
-            MockResponse(response.ToString());
-
-            var result = rpc.GetBlockCount();
-            Assert.AreEqual(100u, result);
-        }
-
-        [TestMethod]
-        public void TestGetBlockHash()
-        {
-            JObject response = CreateResponse(1);
-            response["result"] = "0x4c1e879872344349067c3b1a30781eeb4f9040d3795db7922f513f6f9660b9b2";
-            MockResponse(response.ToString());
-
-            var result = rpc.GetBlockHash(100);
-            Assert.AreEqual("0x4c1e879872344349067c3b1a30781eeb4f9040d3795db7922f513f6f9660b9b2", result);
-        }
-
-        [TestMethod]
-        public void TestGetBlockHeaderHex()
-        {
-            JObject response = CreateResponse(1);
-            response["result"] = "0x4c1e879872344349067c3b1a30781eeb4f9040d3795db7922f513f6f9660b9b2";
-            MockResponse(response.ToString());
-
-            var result = rpc.GetBlockHeaderHex("100");
-            Assert.AreEqual("0x4c1e879872344349067c3b1a30781eeb4f9040d3795db7922f513f6f9660b9b2", result);
-        }
-
-        [TestMethod]
-        public void TestGetBlockHeader()
-        {
-            Header header = TestUtils.GetHeader();
-
-            JObject json = header.ToJson();
-            json["confirmations"] = 20;
-            JObject response = CreateResponse(1);
-            response["result"] = json;
-            MockResponse(response.ToString());
-
-            var result = rpc.GetBlockHeader("100");
-            Assert.AreEqual(header.Hash.ToString(), result.Header.Hash.ToString());
-            Assert.IsNull(result.NextBlockHash);
-            Assert.AreEqual(20, result.Confirmations);
-
-            json["confirmations"] = 20;
-            json["nextblockhash"] = "4c1e879872344349067c3b1a30781eeb4f9040d3795db7922f513f6f9660b9b2";
-            MockResponse(response.ToString());
-            result = rpc.GetBlockHeader("100");
-            Assert.AreEqual(header.Hash.ToString(), result.Header.Hash.ToString());
-            Assert.AreEqual(20, result.Confirmations);
-        }
-
-        [TestMethod]
-        public void TestGetBlockSysFee()
-        {
-            JObject response = CreateResponse(1);
-            response["result"] = "195500";
-            MockResponse(response.ToString());
-
-            var result = rpc.GetBlockSysFee(100);
-            Assert.AreEqual("195500", result);
-        }
-
-        [TestMethod]
-        public void TestGetConnectionCount()
-        {
-            JObject response = CreateResponse(1);
-            response["result"] = 9;
-            MockResponse(response.ToString());
-
-            var result = rpc.GetConnectionCount();
-            Assert.AreEqual(9, result);
-        }
-
-        [TestMethod]
-        public void TestGetContractState()
-        {
-            byte[] script;
-            using (var sb = new ScriptBuilder())
-            {
-                sb.EmitSysCall(InteropService.Runtime.GetInvocationCounter);
-                script = sb.ToArray();
-            }
-
-            ContractState state = new ContractState
-            {
-                Script = new byte[] { (byte)OpCode.DROP, (byte)OpCode.DROP }.Concat(script).ToArray(),
-                Manifest = ContractManifest.CreateDefault(UInt160.Parse("0xa400ff00ff00ff00ff00ff00ff00ff00ff00ff01"))
-            };
-
-            JObject response = CreateResponse(1);
-            response["result"] = state.ToJson();
-            MockResponse(response.ToString());
-
-            var result = rpc.GetContractState("17694b31cc7ee215cea2ded146e0b2b28768fc46");
-
-            Assert.AreEqual(state.Script.ToHexString(), result.Script.ToHexString());
-            Assert.AreEqual(state.Manifest.Abi.EntryPoint.Name, result.Manifest.Abi.EntryPoint.Name);
-        }
-
-        [TestMethod]
-        public void TestGetPeers()
-        {
-            JObject response = CreateResponse(1);
-            response["result"] = JObject.Parse(@"{
-                                                    ""unconnected"": [
-                                                        {
-                                                            ""address"": ""::ffff:70.73.16.236"",
-                                                            ""port"": 10333
-                                                        },
-                                                        {
-                                                            ""address"": ""::ffff:82.95.77.148"",
-                                                            ""port"": 10333
-                                                        },
-                                                        {
-                                                            ""address"": ""::ffff:49.50.215.166"",
-                                                            ""port"": 10333
-                                                        }
-                                                    ],
-                                                    ""bad"": [],
-                                                    ""connected"": [
-                                                        {
-                                                            ""address"": ""::ffff:139.219.106.33"",
-                                                            ""port"": 10333
-                                                        },
-                                                        {
-                                                            ""address"": ""::ffff:47.88.53.224"",
-                                                            ""port"": 10333
-                                                        }
-                                                    ]
-                                                }");
-            MockResponse(response.ToString());
-
-            var result = rpc.GetPeers();
-            Assert.AreEqual("::ffff:139.219.106.33", result.Connected[0].Address);
-            Assert.AreEqual("::ffff:82.95.77.148", result.Unconnected[1].Address);
-        }
-
-        [TestMethod]
-        public void TestGetRawMempool()
-        {
-            JObject response = CreateResponse(1);
-            response["result"] = JObject.Parse(@"[
-                                                    ""0x9786cce0dddb524c40ddbdd5e31a41ed1f6b5c8a683c122f627ca4a007a7cf4e"",
-                                                    ""0xb488ad25eb474f89d5ca3f985cc047ca96bc7373a6d3da8c0f192722896c1cd7"",
-                                                    ""0xf86f6f2c08fbf766ebe59dc84bc3b8829f1053f0a01deb26bf7960d99fa86cd6""
-                                                ]");
-            MockResponse(response.ToString());
-
-            var result = rpc.GetRawMempool();
-            Assert.AreEqual("0xb488ad25eb474f89d5ca3f985cc047ca96bc7373a6d3da8c0f192722896c1cd7", result[1]);
-        }
-
-        [TestMethod]
-        public void TestGetRawMempoolBoth()
-        {
-            JObject json = new JObject();
-            json["height"] = 65535;
-            json["verified"] = new JArray(new[] { "0x9786cce0dddb524c40ddbdd5e31a41ed1f6b5c8a683c122f627ca4a007a7cf4e" }.Select(p => (JObject)p));
-            json["unverified"] = new JArray(new[] { "0xb488ad25eb474f89d5ca3f985cc047ca96bc7373a6d3da8c0f192722896c1cd7", "0xf86f6f2c08fbf766ebe59dc84bc3b8829f1053f0a01deb26bf7960d99fa86cd6" }.Select(p => (JObject)p));
-
-            JObject response = CreateResponse(1);
-            response["result"] = json;
-            MockResponse(response.ToString());
-
-            var result = rpc.GetRawMempoolBoth();
-            Assert.AreEqual(65535u, result.Height);
-            Assert.AreEqual("0x9786cce0dddb524c40ddbdd5e31a41ed1f6b5c8a683c122f627ca4a007a7cf4e", result.Verified[0]);
-            Assert.AreEqual("0xf86f6f2c08fbf766ebe59dc84bc3b8829f1053f0a01deb26bf7960d99fa86cd6", result.UnVerified[1]);
-        }
-
-        [TestMethod]
-        public void TestGetRawTransactionHex()
-        {
-            var json = TestUtils.GetTransaction().ToArray().ToHexString();
-
-            JObject response = CreateResponse(1);
-            response["result"] = json;
-            MockResponse(response.ToString());
-
-            //var result = rpc.GetRawTransactionHex("0x9786cce0dddb524c40ddbdd5e31a41ed1f6b5c8a683c122f627ca4a007a7cf4e");
-            var result = rpc.GetRawTransactionHex(TestUtils.GetTransaction().Hash.ToString());
-            Assert.AreEqual(json, result);
-        }
-
-        [TestMethod]
-        public void TestGetRawTransaction()
-        {
-            var transaction = TestUtils.GetTransaction();
-            JObject json = transaction.ToJson();
-            JObject response = CreateResponse(1);
-            response["result"] = json;
-            MockResponse(response.ToString());
-
-            var result = rpc.GetRawTransaction("0x9786cce0dddb524c40ddbdd5e31a41ed1f6b5c8a683c122f627ca4a007a7cf4e");
-            Assert.AreEqual(transaction.Hash, result.Transaction.Hash);
-            Assert.AreEqual(json.ToString(), result.ToJson().ToString());
-
-            // make the code compatible with the old version
-            json["blockhash"] = UInt256.Zero.ToString();
-            json["confirmations"] = 100;
-            json["blocktime"] = 10;
-            MockResponse(response.ToString());
-
-            result = rpc.GetRawTransaction("0x9786cce0dddb524c40ddbdd5e31a41ed1f6b5c8a683c122f627ca4a007a7cf4e");
-            Assert.AreEqual(transaction.Hash, result.Transaction.Hash);
-            Assert.AreEqual(100, result.Confirmations);
-            Assert.AreEqual(null, result.VMState);
-            Assert.AreEqual(json.ToString(), result.ToJson().ToString());
-
-            json["vmState"] = VMState.HALT;
-            MockResponse(response.ToString());
-
-            result = rpc.GetRawTransaction("0x9786cce0dddb524c40ddbdd5e31a41ed1f6b5c8a683c122f627ca4a007a7cf4e");
-            Assert.AreEqual(transaction.Hash, result.Transaction.Hash);
-            Assert.AreEqual(100, result.Confirmations);
-            Assert.AreEqual(VMState.HALT, result.VMState);
-            Assert.AreEqual(json.ToString(), result.ToJson().ToString());
-        }
-
-        [TestMethod]
-        public void TestGetStorage()
-        {
-            JObject json = "4c696e";
-            JObject response = CreateResponse(1);
-            response["result"] = json;
-            MockResponse(response.ToString());
-
-            var result = rpc.GetStorage("03febccf81ac85e3d795bc5cbd4e84e907812aa3", "5065746572");
-            Assert.AreEqual("4c696e", result);
-        }
-
-        [TestMethod]
-        public void TestGetTransactionHeight()
-        {
-            JObject json = 10000;
-            JObject response = CreateResponse(1);
-            response["result"] = json;
-            MockResponse(response.ToString());
-
-            var result = rpc.GetTransactionHeight("9c909e1e3ba03290553a68d862e002c7a21ba302e043fc492fe069bf6a134d29");
-            Assert.AreEqual(json.ToString(), result.ToString());
-        }
-
-        [TestMethod]
-        public void TestGetValidators()
-        {
-            JObject json = JObject.Parse(@"[
-                                                {
-                                                    ""publickey"": ""02486fd15702c4490a26703112a5cc1d0923fd697a33406bd5a1c00e0013b09a70"",
-                                                    ""votes"": ""46632420"",
-                                                    ""active"": true
-                                                },
-                                                {
-                                                    ""publickey"": ""024c7b7fb6c310fccf1ba33b082519d82964ea93868d676662d4a59ad548df0e7d"",
-                                                    ""votes"": ""46632420"",
-                                                    ""active"": true
-                                                }
-                                            ]");
-            JObject response = CreateResponse(1);
-            response["result"] = json;
-            MockResponse(response.ToString());
-
-            var result = rpc.GetValidators();
-            Assert.AreEqual(((JArray)json)[0].ToString(), (result[0]).ToJson().ToString());
-        }
-
-        [TestMethod]
-        public void TestGetVersion()
-        {
-            JObject json = new JObject();
-            json["tcpPort"] = 30001;
-            json["wsPort"] = 30002;
-            json["nonce"] = 1546258664;
-            json["useragent"] = "/NEO:2.7.5/";
-
-            var json1 = JObject.Parse(@"{
-                                            ""tcpPort"": 30001,
-                                            ""wsPort"": 30002,
-                                            ""nonce"": 1546258664,
-                                            ""useragent"": ""/NEO:2.7.5/""
-                                        }");
-            Assert.AreEqual(json.ToString(), json1.ToString());
-
-            JObject response = CreateResponse(1);
-            response["result"] = json;
-            MockResponse(response.ToString());
-
-            var result = rpc.GetVersion();
-            Assert.AreEqual(30001, result.TcpPort);
-            Assert.AreEqual("/NEO:2.7.5/", result.UserAgent);
-        }
-
-        [TestMethod]
-        public void TestInvokeFunction()
-        {
-            JObject json = JObject.Parse(@"
-            {
-                ""script"": ""1426ae7c6c9861ec418468c1f0fdc4a7f2963eb89151c10962616c616e63654f6667be39e7b562f60cbfe2aebca375a2e5ee28737caf"",
-                ""state"": ""HALT"",
-                ""gas_consumed"": ""0.311"",
-                ""stack"": [
-                    {
-                        ""type"": ""ByteArray"",
-                        ""value"": ""262bec084432""
-                    }
-                ]
-            }");
-            JObject response = CreateResponse(1);
-            response["result"] = json;
-            MockResponse(response.ToString());
-
-            var result = rpc.InvokeFunction("af7c7328eee5a275a3bcaee2bf0cf662b5e739be", "balanceOf", new[] { new RpcStack { Type = "Hash160", Value = "91b83e96f2a7c4fdf0c1688441ec61986c7cae26" } });
-            Assert.AreEqual(json.ToString(), result.ToJson().ToString());
-        }
-
-        [TestMethod]
-        public void TestInvokeScript()
-        {
-            JObject json = JObject.Parse(@"
-            {
-                ""script"": ""1426ae7c6c9861ec418468c1f0fdc4a7f2963eb89151c10962616c616e63654f6667be39e7b562f60cbfe2aebca375a2e5ee28737caf"",
-                ""state"": ""HALT"",
-                ""gas_consumed"": ""0.311"",
-                ""stack"": [
-                    {
-                        ""type"": ""ByteArray"",
-                        ""value"": ""262bec084432""
-                    }
-                ]
-            }");
-            JObject response = CreateResponse(1);
-            response["result"] = json;
-            MockResponse(response.ToString());
-
-            var result = rpc.InvokeScript("00046e616d656724058e5e1b6008847cd662728549088a9ee82191".HexToBytes());
-            Assert.AreEqual(json.ToString(), result.ToJson().ToString());
-        }
-
-        [TestMethod]
-        public void TestListPlugins()
-        {
-            JObject json = JObject.Parse(@"[{
-                ""name"": ""SimplePolicyPlugin"",
-                ""version"": ""2.10.1.0"",
-                ""interfaces"": [
-                    ""ILogPlugin"",
-                    ""IPolicyPlugin""
-                ]
-            }]");
-            JObject response = CreateResponse(1);
-            response["result"] = json;
-            MockResponse(response.ToString());
-
-            var result = rpc.ListPlugins();
-            Assert.AreEqual(((JArray)json)[0].ToString(), result[0].ToJson().ToString());
-        }
-
-        [TestMethod]
-        public void TestSendRawTransaction()
-        {
-            JObject json = true;
-            JObject response = CreateResponse(1);
-            response["result"] = json;
-            MockResponse(response.ToString());
-
-            var result = rpc.SendRawTransaction("80000001195876cb34364dc38b730077156c6bc3a7fc570044a66fbfeeea56f71327e8ab0000029b7cffdaa674beae0f930ebe6085af9093e5fe56b34a5c220ccdcf6efc336fc500c65eaf440000000f9a23e06f74cf86b8827a9108ec2e0f89ad956c9b7cffdaa674beae0f930ebe6085af9093e5fe56b34a5c220ccdcf6efc336fc50092e14b5e00000030aab52ad93f6ce17ca07fa88fc191828c58cb71014140915467ecd359684b2dc358024ca750609591aa731a0b309c7fb3cab5cd0836ad3992aa0a24da431f43b68883ea5651d548feb6bd3c8e16376e6e426f91f84c58232103322f35c7819267e721335948d385fae5be66e7ba8c748ac15467dcca0693692dac".HexToBytes());
-            Assert.AreEqual(json.ToString(), ((JObject)result).ToString());
-        }
-
-        [TestMethod]
-        public void TestSubmitBlock()
-        {
-            JObject json = true;
-            JObject response = CreateResponse(1);
-            response["result"] = json;
-            MockResponse(response.ToString());
-
-            var result = rpc.SubmitBlock("03febccf81ac85e3d795bc5cbd4e84e907812aa3".HexToBytes());
-            Assert.AreEqual(json.ToString(), ((JObject)result).ToString());
-        }
-
-        [TestMethod]
-        public void TestValidateAddress()
-        {
-            JObject json = new JObject();
-            json["address"] = "AQVh2pG732YvtNaxEGkQUei3YA4cvo7d2i";
-            json["isvalid"] = false;
-            JObject response = CreateResponse(1);
-            response["result"] = json;
-            MockResponse(response.ToString());
-
-            var result = rpc.ValidateAddress("AQVh2pG732YvtNaxEGkQUei3YA4cvo7d2i");
-            Assert.AreEqual(json.ToString(), result.ToJson().ToString());
         }
 
         [TestMethod]
@@ -554,5 +80,359 @@ namespace Neo.Network.RPC.Tests
             Action action = () => client.Dispose();
             action.Should().NotThrow<Exception>();
         }
+
+        [TestMethod]
+        public void TestConstructorWithBasicAuth()
+        {
+            var client = new RpcClient("http://www.xxx.yyy", "krain", "123456");
+            client.Dispose();
+        }
+
+        #region Blockchain
+
+        [TestMethod]
+        public void TestGetBestBlockHash()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBestBlockHash).ToLower());
+            var result = rpc.GetBestBlockHash();
+            Assert.AreEqual(test.Response.Result.AsString(), result);
+        }
+
+        [TestMethod]
+        public void TestGetBlockHex()
+        {
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlockHex).ToLower());
+            foreach (var test in tests)
+            {
+                var result = rpc.GetBlockHex(test.Request.Params[0].AsString());
+                Assert.AreEqual(test.Response.Result.AsString(), result);
+            }
+        }
+
+        [TestMethod]
+        public void TestGetBlock()
+        {
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlock).ToLower());
+            foreach (var test in tests)
+            {
+                var result = rpc.GetBlock(test.Request.Params[0].AsString());
+                Assert.AreEqual(test.Response.Result.AsString(), result.ToJson().ToString());
+            }
+        }
+
+        [TestMethod]
+        public void TestGetBlockCount()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlockCount).ToLower());
+            var result = rpc.GetBlockCount();
+            Assert.AreEqual(test.Response.Result.AsString(), result.ToString());
+        }
+
+        [TestMethod]
+        public void TestGetBlockHash()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlockHash).ToLower());
+            var result = rpc.GetBlockHash((int)test.Request.Params[0].AsNumber());
+            Assert.AreEqual(test.Response.Result.AsString(), result.ToString());
+        }
+
+        [TestMethod]
+        public void TestGetBlockHeaderHex()
+        {
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlockHeaderHex).ToLower());
+            foreach (var test in tests)
+            {
+                var result = rpc.GetBlockHeaderHex(test.Request.Params[0].AsString());
+                Assert.AreEqual(test.Response.Result.AsString(), result);
+            }
+        }
+
+        [TestMethod]
+        public void TestGetBlockHeader()
+        {
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlockHeader).ToLower());
+            foreach (var test in tests)
+            {
+                var result = rpc.GetBlockHeader(test.Request.Params[0].AsString());
+                Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            }
+        }
+
+        [TestMethod]
+        public void TestGetContractState()
+        {
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetContractState).ToLower());
+            foreach (var test in tests)
+            {
+                var result = rpc.GetContractState(test.Request.Params[0].AsString());
+                Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            }
+        }
+
+        [TestMethod]
+        public void TestGetRawMempool()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawMempool).ToLower());
+            var result = rpc.GetRawMempool();
+            Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => (JObject)p).ToArray()).ToString());
+        }
+
+        [TestMethod]
+        public void TestGetRawMempoolBoth()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawMempoolBoth).ToLower());
+            var result = rpc.GetRawMempoolBoth();
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+        }
+
+        [TestMethod]
+        public void TestGetRawTransactionHex()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawTransactionHex).ToLower());
+            var result = rpc.GetRawTransactionHex(test.Request.Params[0].AsString());
+            Assert.AreEqual(test.Response.Result.AsString(), result);
+        }
+
+        [TestMethod]
+        public void TestGetRawTransaction()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawTransaction).ToLower());
+            var result = rpc.GetRawTransaction(test.Request.Params[0].AsString());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+        }
+
+        [TestMethod]
+        public void TestGetStorage()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetStorage).ToLower());
+            var result = rpc.GetStorage(test.Request.Params[0].AsString(), test.Request.Params[1].AsString());
+            Assert.AreEqual(test.Response.Result.AsString(), result);
+        }
+
+        [TestMethod]
+        public void TestGetTransactionHeight()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetTransactionHeight).ToLower());
+            var result = rpc.GetTransactionHeight(test.Request.Params[0].AsString());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
+        }
+
+        [TestMethod]
+        public void TestGetValidators()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetValidators).ToLower());
+            var result = rpc.GetValidators();
+            Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => p.ToJson()).ToArray()).ToString());
+        }
+
+        #endregion Blockchain
+
+        #region Node
+
+        [TestMethod]
+        public void TestGetConnectionCount()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetConnectionCount).ToLower());
+            var result = rpc.GetConnectionCount();
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
+        }
+
+        [TestMethod]
+        public void TestGetPeers()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetPeers).ToLower());
+            var result = rpc.GetPeers();
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+        }
+
+        [TestMethod]
+        public void TestGetVersion()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetVersion).ToLower());
+            var result = rpc.GetVersion();
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+        }
+
+        [TestMethod]
+        public void TestSendRawTransaction()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendRawTransaction).ToLower());
+            var result = rpc.SendRawTransaction(test.Request.Params[0].AsString().HexToBytes().AsSerializable<Transaction>());
+            Assert.AreEqual(test.Response.Result["hash"].AsString(), result.ToString());
+        }
+
+        [TestMethod]
+        public void TestSubmitBlock()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SubmitBlock).ToLower());
+            var block = TestUtils.GetBlock(2).Hash;
+            var result = rpc.SubmitBlock(test.Request.Params[0].AsString().HexToBytes());
+            Assert.AreEqual(test.Response.Result["hash"].AsString(), result.ToString());
+        }
+
+        #endregion Node
+
+        #region SmartContract
+
+        [TestMethod]
+        public void TestInvokeFunction()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.InvokeFunction).ToLower());
+            var result = rpc.InvokeFunction(test.Request.Params[0].AsString(), test.Request.Params[1].AsString(),
+                ((JArray)test.Request.Params[2]).Select(p => RpcStack.FromJson(p)).ToArray());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+        }
+
+        [TestMethod]
+        public void TestInvokeScript()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.InvokeScript).ToLower());
+            var result = rpc.InvokeScript(test.Request.Params[0].AsString().HexToBytes());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+        }
+
+        #endregion SmartContract
+
+        #region Utilities
+
+        [TestMethod]
+        public void TestListPlugins()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.ListPlugins).ToLower());
+            var result = rpc.ListPlugins();
+            Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => p.ToJson()).ToArray()).ToString());
+        }
+
+        [TestMethod]
+        public void TestValidateAddress()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.ValidateAddress).ToLower());
+            var result = rpc.ValidateAddress(test.Request.Params[0].AsString());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+        }
+
+        #endregion Utilities
+
+        #region Wallet
+
+        [TestMethod]
+        public void TestCloseWallet()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.CloseWallet).ToLower());
+            var result = rpc.CloseWallet();
+            Assert.AreEqual(test.Response.Result.AsBoolean(), result);
+        }
+
+        [TestMethod]
+        public void TestDumpPrivKey()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.DumpPrivKey).ToLower());
+            var result = rpc.DumpPrivKey(test.Request.Params[0].AsString());
+            Assert.AreEqual(test.Response.Result.AsString(), result);
+        }
+
+        [TestMethod]
+        public void TestGetBalance()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBalance).ToLower());
+            var result = rpc.GetBalance(test.Request.Params[0].AsString());
+            Assert.AreEqual(test.Response.Result["balance"].AsString(), result.Value.ToString());
+        }
+
+        [TestMethod]
+        public void TestGetNewAddress()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNewAddress).ToLower());
+            var result = rpc.GetNewAddress();
+            Assert.AreEqual(test.Response.Result.AsString(), result);
+        }
+
+        [TestMethod]
+        public void TestGetUnclaimedGas()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetUnclaimedGas).ToLower());
+            var result = rpc.GetUnclaimedGas();
+            Assert.AreEqual(test.Response.Result.AsString(), result.ToString());
+        }
+
+        [TestMethod]
+        public void TestImportPrivKey()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.ImportPrivKey).ToLower());
+            var result = rpc.ImportPrivKey(test.Request.Params[0].AsString());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+        }
+
+        [TestMethod]
+        public void TestListAddress()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.ListAddress).ToLower());
+            var result = rpc.ListAddress();
+            Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => p.ToJson()).ToArray()).ToString());
+        }
+
+        [TestMethod]
+        public void TestOpenWallet()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.OpenWallet).ToLower());
+            var result = rpc.OpenWallet(test.Request.Params[0].AsString(), test.Request.Params[1].AsString());
+            Assert.AreEqual(test.Response.Result.AsBoolean(), result);
+        }
+
+        [TestMethod]
+        public void TestSendFrom()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendFrom).ToLower());
+            var result = rpc.SendFrom(test.Request.Params[0].AsString(), test.Request.Params[1].AsString(),
+                test.Request.Params[2].AsString(), test.Request.Params[3].AsString());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
+        }
+
+        [TestMethod]
+        public void TestSendMany()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendMany).ToLower());
+            var result = rpc.SendMany(test.Request.Params[0].AsString(), ((JArray)test.Request.Params[1]).Select(p => RpcTransferOut.FromJson(p)));
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
+        }
+
+        [TestMethod]
+        public void TestSendToAddress()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendToAddress).ToLower());
+            var result = rpc.SendToAddress(test.Request.Params[0].AsString(), test.Request.Params[1].AsString(), test.Request.Params[2].AsString());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
+        }
+
+        #endregion Wallet
+
+        #region Plugins
+
+        [TestMethod()]
+        public void GetApplicationLogTest()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetApplicationLog).ToLower());
+            var result = rpc.GetApplicationLog(test.Request.Params[0].AsString());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+        }
+
+        [TestMethod()]
+        public void GetNep5TransfersTest()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep5Transfers).ToLower());
+            var result = rpc.GetNep5Transfers(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(),
+                (ulong)test.Request.Params[2].AsNumber());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+        }
+
+        [TestMethod()]
+        public void GetNep5BalancesTest()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep5Balances).ToLower());
+            var result = rpc.GetNep5Balances(test.Request.Params[0].AsString());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+        }
+
+        #endregion Plugins
     }
 }

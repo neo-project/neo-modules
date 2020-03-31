@@ -63,7 +63,7 @@ namespace Neo.Network.RPC.Tests
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(NativeContract.GAS.Decimals) });
 
             var result = nep5API.Decimals(NativeContract.GAS.Hash);
-            Assert.AreEqual(NativeContract.GAS.Decimals, (byte)result);
+            Assert.AreEqual(NativeContract.GAS.Decimals, result);
         }
 
         [TestMethod]

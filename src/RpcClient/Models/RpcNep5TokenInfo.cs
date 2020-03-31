@@ -8,7 +8,7 @@ namespace Neo.Network.RPC.Models
 
         public string Symbol { get; set; }
 
-        public uint Decimals { get; set; }
+        public byte Decimals { get; set; }
 
         public BigInteger TotalSupply { get; set; }
     }

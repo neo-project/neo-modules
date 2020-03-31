@@ -68,7 +68,7 @@ namespace Neo.Network.RPC.Tests
 
             amount = 1.23456789m;
             decimals = 4;
-            Assert.ThrowsException<OverflowException>(() => result = amount.ToBigInteger(decimals));
+            Assert.ThrowsException<ArgumentException>(() => result = amount.ToBigInteger(decimals));
         }
     }
 }
