@@ -39,7 +39,7 @@ namespace Neo.Plugins
         /// <summary>
         /// Process "dump storage" command
         /// </summary>
-        [ConsoleCommand("dump storage", Category = "Dump storage", Description = "You can specify the key or use null to get the corresponding information from the storage")]
+        [ConsoleCommand("dump storage", Category = "Storage", Description = "You can specify the key or use null to get the corresponding information from the storage")]
         private void OnDumpStorage(UInt160 key = null)
         {
             Dump(key != null
