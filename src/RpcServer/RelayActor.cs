@@ -1,6 +1,7 @@
 using Akka.Actor;
 using Neo.Network.P2P.Payloads;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using static Neo.Ledger.Blockchain;
 
 namespace Neo.Plugins
@@ -9,10 +10,12 @@ namespace Neo.Plugins
     {
         private readonly NeoSystem neoSystem;
         private readonly Dictionary<UInt256, IActorRef> senders = new Dictionary<UInt256, IActorRef>();
+        private readonly int expireMs;
 
-        public RelayActor(NeoSystem neoSystem)
+        public RelayActor(NeoSystem neoSystem, int expireMs)
         {
             this.neoSystem = neoSystem;
+            this.expireMs = expireMs;
             Context.System.EventStream.Subscribe(Self, typeof(RelayResult));
         }
 
@@ -22,8 +25,15 @@ namespace Neo.Plugins
             {
                 case IInventory inventory:
                     {
-                        senders.Add(inventory.Hash, Sender);
+                        UInt256 hash = inventory.Hash;
+                        senders.Add(hash, Sender);
                         neoSystem.Blockchain.Tell(inventory);
+                        // the sender will clean the record after expireMs
+                        Task.Run(async () =>
+                        {
+                            await Task.Delay(expireMs);
+                            senders.Remove(hash);
+                        });
                         break;
                     }
                 case RelayResult reason:
@@ -37,9 +47,9 @@ namespace Neo.Plugins
             }
         }
 
-        public static Props Props(NeoSystem neoSystem)
+        public static Props Props(NeoSystem neoSystem, int expire = 10000)
         {
-            return Akka.Actor.Props.Create(() => new RelayActor(neoSystem));
+            return Akka.Actor.Props.Create(() => new RelayActor(neoSystem, expire));
         }
     }
 }
