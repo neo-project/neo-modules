@@ -16,7 +16,7 @@
   <ItemGroup>
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.7.0" />
     <PackageReference Include="Neo" Version="3.0.0-CI00863" />
-    <ProjectReference Include="..\..\..\neo-cli\Neo.ConsoleService\Neo.ConsoleService.csproj" />
+    <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
     <ProjectReference Include="..\RpcClient\RpcClient.csproj" />
   </ItemGroup>
 

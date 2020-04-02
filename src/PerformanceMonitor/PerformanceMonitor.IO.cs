@@ -262,16 +262,37 @@ namespace Neo.Plugins
             {
                 Transaction tx = snapshot.GetTransaction(transactionHash);
 
-                if (tx == null)
+                var size = GetSize(tx);
+                if (size <= 0)
                 {
                     Console.WriteLine("Transaction not found");
                 }
                 else
                 {
                     Console.WriteLine($"Transaction Hash: {tx.Hash}");
-                    Console.WriteLine($"            Size: {tx.Size} bytes");
+                    Console.WriteLine($"            Size: {size} bytes");
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the time the given block was active
+        /// </summary>
+        /// <param name="tx">
+        /// The given tx to verify the size
+        /// </param>
+        /// <returns>
+        /// Returns 0 if <paramref name="tx"/> is is null; otherwise,
+        /// returns the size of the transaction in bytes
+        /// </returns>
+        public int GetSize(Transaction tx)
+        {
+            if (tx != null)
+            {
+                return tx.Size;
+            }
+
+            return 0;
         }
 
         /// <summary>

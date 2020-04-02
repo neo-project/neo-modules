@@ -98,9 +98,26 @@ namespace Neo.Plugins
         [ConsoleCommand("check threads", Category = "Check Commands", Description = "Show the number of active threads in the current process.")]
         private void OnCheckActiveThreadsCommand()
         {
-            var current = Process.GetCurrentProcess();
+            var threadCount = GetActiveThreadsCount();
 
-            Console.WriteLine($"Active threads: {current.Threads.Count}");
+            Console.WriteLine($"Active threads: {threadCount}");
+        }
+
+        /// <summary>
+        /// Gets the number of active threads in the current process
+        /// </summary>
+        /// <returns>
+        /// Returns the number of active threads.
+        /// </returns>
+        private int GetActiveThreadsCount()
+        {
+            var current = Process.GetCurrentProcess();
+            if (current == null || current.Threads == null)
+            {
+                return 0;
+            }
+
+            return current.Threads.Count;
         }
 
         /// <summary>
@@ -110,10 +127,8 @@ namespace Neo.Plugins
         [ConsoleCommand("check memory", Category = "Check Commands", Description = "Show the amount of memory allocated for the current process in megabytes.")]
         private void OnCheckMemoryCommand()
         {
-            var current = Process.GetCurrentProcess();
-            current.Refresh();
             string memoryUnit = "KB";
-            var memory = current.WorkingSet64 / 1024.0;
+            var memory = GetAllocatedMemory() / 1024.0;
 
             if (memory > 1024)
             {
@@ -122,6 +137,24 @@ namespace Neo.Plugins
             }
 
             Console.WriteLine($"Allocated memory: {memory:0.00} {memoryUnit}");
+        }
+
+        /// <summary>
+        /// Gets the amount of memory allocated for the current process in bytes
+        /// </summary>
+        /// <returns>
+        /// Returns the allocated memory in bytes
+        /// </returns>
+        private long GetAllocatedMemory()
+        {
+            var current = Process.GetCurrentProcess();
+            if (current == null)
+            {
+                return 0;
+            }
+
+            current.Refresh();
+            return current.WorkingSet64;
         }
 
         /// <summary>
