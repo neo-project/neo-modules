@@ -62,18 +62,19 @@ namespace Neo.Plugins
         /// Get a list of the nodes connected to the local node
         /// </summary>
         /// <returns>
-        /// Returns a list with the connected nodes
+        /// Returns a list with the connected nodes if the <see cref="LocalNode.GetRemoteNodes"/>
+        /// is a implementation of <see cref="ICollection{RemoteNode}"/>; otherwise,
+        /// returns an empty list
         /// </returns>
-        private List<RemoteNode> GetConnectedNodes()
+        private ICollection<RemoteNode> GetConnectedNodes()
         {
-            List<RemoteNode> nodes = new List<RemoteNode>();
-
-            // GetRemoteNodes returns a IEnumerable and in some places is needed a list
-            foreach (RemoteNode node in LocalNode.Singleton.GetRemoteNodes())
+            var remotes = LocalNode.Singleton.GetRemoteNodes();
+            if (remotes is ICollection<RemoteNode>)
             {
-                nodes.Add(node);
+                return LocalNode.Singleton.GetRemoteNodes() as ICollection<RemoteNode>;
             }
-            return nodes;
+
+            return new List<RemoteNode>();
         }
 
         /// <summary>
