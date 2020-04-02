@@ -46,15 +46,35 @@ namespace Neo.Plugins
         [ConsoleCommand("connected", Category = "Network Commands", Description = "Show the number of nodes connected to the local node.")]
         private void OnConnectedNodesCommand()
         {
-            Console.WriteLine($"Connected nodes: {LocalNode.Singleton.ConnectedCount}");
-
             UpdateRemotesHeight();
+            var nodes = GetConnectedNodes();
 
-            foreach (RemoteNode node in LocalNode.Singleton.GetRemoteNodes())
+            Console.WriteLine($"Connected nodes: {nodes.Count}");
+
+            foreach (var node in nodes)
             {
                 var remoteAddressAndPort = $"{node.Remote.Address}:{node.Remote.Port}";
                 Console.WriteLine($"  ip: {remoteAddressAndPort,-25}\theight: {node.LastBlockIndex,-8}");
             }
+        }
+
+        /// <summary>
+        /// Get a list of the nodes connected to the local node
+        /// </summary>
+        /// <returns>
+        /// Returns a list with the connected nodes if the <see cref="LocalNode.GetRemoteNodes"/>
+        /// is a implementation of <see cref="ICollection{RemoteNode}"/>; otherwise,
+        /// returns an empty list
+        /// </returns>
+        private ICollection<RemoteNode> GetConnectedNodes()
+        {
+            var remotes = LocalNode.Singleton.GetRemoteNodes();
+            if (remotes is ICollection<RemoteNode>)
+            {
+                return LocalNode.Singleton.GetRemoteNodes() as ICollection<RemoteNode>;
+            }
+
+            return new List<RemoteNode>();
         }
 
         /// <summary>
@@ -113,8 +133,13 @@ namespace Neo.Plugins
         /// <param name="printMessages">
         /// Specifies if the messages should be printed in the console.
         /// </param>
-        private void PingAll(bool printMessages = false)
+        /// <returns>
+        /// Returns a list with the ping replies of each peer
+        /// </returns>
+        private List<NodePingReply> PingAll(bool printMessages = false)
         {
+            List<NodePingReply> replies = new List<NodePingReply>();
+
             var tasks = new List<Task>();
             if (printMessages)
             {
@@ -127,17 +152,12 @@ namespace Neo.Plugins
                 Task ping = new Task(() =>
                 {
                     var reply = TryPing(node.Remote.Address);
+                    var nodeReply = new NodePingReply(node, reply);
+                    replies.Add(nodeReply);
+
                     if (printMessages && reply != null)
                     {
-                        var remoteAddressAndPort = $"{node.Remote.Address}:{node.Remote.Port}";
-                        if (reply.Status == IPStatus.Success)
-                        {
-                            Console.WriteLine($"  {remoteAddressAndPort,-25}\theight: {node.LastBlockIndex,-8}\t{reply.RoundtripTime,-30:###0 ms}");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"  {remoteAddressAndPort,-25}\theight: {node.LastBlockIndex,-8}\t{reply.Status,-30}");
-                        }
+                        PrintPingReply(nodeReply);
                     }
                 });
                 tasks.Add(ping);
@@ -150,17 +170,12 @@ namespace Neo.Plugins
                 Task ping = new Task(() =>
                 {
                     var reply = TryPing(node.Address);
+                    var nodeReply = new NodePingReply(node, reply);
+                    replies.Add(nodeReply);
+
                     if (printMessages && reply != null)
                     {
-                        var remoteAddressAndPort = $"{node.Address}:{node.Port}";
-                        if (reply.Status == IPStatus.Success)
-                        {
-                            Console.WriteLine($"  {remoteAddressAndPort,-25}\t{"unconnected",-16}\t{reply.RoundtripTime,-30:###0 ms}");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"  {remoteAddressAndPort,-25}\t{"unconnected",-16}\t{reply.Status,-30}");
-                        }
+                        PrintPingReply(nodeReply);
                     }
                 });
                 tasks.Add(ping);
@@ -168,6 +183,8 @@ namespace Neo.Plugins
             }
 
             Task.WaitAll(tasks.ToArray());
+            // return all ping replies
+            return replies;
         }
 
         /// <summary>
@@ -176,8 +193,13 @@ namespace Neo.Plugins
         /// <param name="printMessages">
         /// Specifies if the messages should be printed in the console.
         /// </param>
-        private void PingRemoteNode(IPAddress ipaddress, bool printMessages = false)
+        /// <returns>
+        /// Returns a list with the ping reply of each peer
+        /// </returns>
+        private List<NodePingReply> PingRemoteNode(IPAddress ipaddress, bool printMessages = false)
         {
+            List<NodePingReply> replies = new List<NodePingReply>();
+
             var remoteNodes = GetRemoteNode(ipaddress);
             if (remoteNodes == null || remoteNodes.Count == 0)
             {
@@ -185,23 +207,46 @@ namespace Neo.Plugins
                 {
                     Console.WriteLine("Input address was not a connected peer");
                 }
-                return;
+                return replies;
             }
 
             var reply = TryPing(ipaddress);
-            if (printMessages && reply != null)
+            foreach (var node in remoteNodes)
             {
-                foreach (var node in remoteNodes)
+                var nodeReply = new NodePingReply(node, reply);
+                replies.Add(nodeReply);
+                if (printMessages)
                 {
-                    var remoteAddressAndPort = $"{ipaddress}:{node.Remote.Port}";
-                    if (reply.Status == IPStatus.Success)
-                    {
-                        Console.WriteLine($"  {remoteAddressAndPort,-25}\theight: {node.LastBlockIndex,-8}\t{reply.RoundtripTime,-30:###0 ms}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"  {remoteAddressAndPort,-25}\theight: {node.LastBlockIndex,-8}\t{reply.Status,-30}");
-                    }
+                    PrintPingReply(nodeReply);
+                }
+            }
+
+            return replies;
+        }
+
+        /// <summary>
+        /// Prints the information of the ping reply sent to a peer
+        /// </summary>
+        /// <param name="nodeReply">
+        /// The object with the information about the node and the ping reply
+        /// </param>
+        private void PrintPingReply(NodePingReply nodeReply)
+        {
+            if (nodeReply != null)
+            {
+                if (nodeReply.Status == IPStatus.Success)
+                {
+                    Console.WriteLine(
+                        $"  {nodeReply.AddressAndPort,-25}" +
+                        $"\t{nodeReply.GetNodeInfo(),-16}" +
+                        $"\t{nodeReply.RoundtripTime,-30:###0 ms}");
+                }
+                else
+                {
+                    Console.WriteLine(
+                        $"  {nodeReply.AddressAndPort,-25}" +
+                        $"\t{nodeReply.GetNodeInfo(),-16}" +
+                        $"\t{nodeReply.Status,-30}");
                 }
             }
         }
