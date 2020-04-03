@@ -104,17 +104,17 @@ namespace Neo.Plugins
         {
             if (stateItems.Count == 0) return;
             // Event name should be encoded as a byte array.
-            if (!(stateItems[0] is VM.Types.ByteArray)) return;
+            if (!(stateItems[0] is VM.Types.ByteString)) return;
             var eventName = stateItems[0].GetString();
             if (eventName != "Transfer") return;
             if (stateItems.Count < 4) return;
 
-            if (!(stateItems[1].IsNull) && !(stateItems[1] is VM.Types.ByteArray))
+            if (!(stateItems[1].IsNull) && !(stateItems[1] is VM.Types.ByteString))
                 return;
-            if (!(stateItems[2].IsNull) && !(stateItems[2] is VM.Types.ByteArray))
+            if (!(stateItems[2].IsNull) && !(stateItems[2] is VM.Types.ByteString))
                 return;
             var amountItem = stateItems[3];
-            if (!(amountItem is VM.Types.ByteArray || amountItem is VM.Types.Integer))
+            if (!(amountItem is VM.Types.ByteString || amountItem is VM.Types.Integer))
                 return;
             byte[] fromBytes = stateItems[1].IsNull ? null : stateItems[1].GetSpan().ToArray();
             if (fromBytes != null && fromBytes.Length != UInt160.Length)
