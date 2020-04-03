@@ -1,3 +1,4 @@
+using Neo.Cryptography.ECC;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
@@ -142,7 +143,7 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Transfer NEP5 token balance
+        /// Transfer NEP5 token from single-sig account
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <param name="from">from KeyPair</param>
@@ -152,6 +153,23 @@ namespace Neo.Network.RPC
         public Transaction Transfer(UInt160 scriptHash, KeyPair from, UInt160 to, BigInteger amountInteger)
         {
             Transaction transaction = nep5API.CreateTransferTx(scriptHash, from, to, amountInteger);
+            rpcClient.SendRawTransaction(transaction);
+            return transaction;
+        }
+
+        /// <summary>
+        /// Transfer NEP5 token from multi-sig account
+        /// </summary>
+        /// <param name="scriptHash">contract script hash</param>
+        /// <param name="m">multi-sig min signature count</param>
+        /// <param name="pubKeys">multi-sig pubKeys</param>
+        /// <param name="keys">sign keys</param>
+        /// <param name="to">to account</param>
+        /// <param name="amountInteger">transfer amount</param>
+        /// <returns></returns>
+        public Transaction Transfer(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] keys, UInt160 to, BigInteger amountInteger)
+        {
+            Transaction transaction = nep5API.CreateTransferTx(scriptHash, m, pubKeys, keys, to, amountInteger);
             rpcClient.SendRawTransaction(transaction);
             return transaction;
         }

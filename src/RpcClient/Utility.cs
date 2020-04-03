@@ -76,7 +76,7 @@ namespace Neo.Network.RPC
         /// <param name="amount">float value</param>
         /// <param name="decimals">token decimals</param>
         /// <returns></returns>
-        internal static BigInteger ToBigInteger(this decimal amount, uint decimals)
+        public static BigInteger ToBigInteger(this decimal amount, uint decimals)
         {
             BigInteger factor = BigInteger.Pow(10, (int)decimals);
             var (numerator, denominator) = Fraction(amount);
