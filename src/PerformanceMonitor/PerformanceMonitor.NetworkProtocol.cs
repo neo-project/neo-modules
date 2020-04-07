@@ -1,4 +1,5 @@
 using Neo.ConsoleService;
+using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.RPC;
@@ -23,6 +24,22 @@ namespace Neo.Plugins
         {
             var timeSinceLastBlockInSec = GetTimeSinceLastBlock() / 1000;
             Console.WriteLine($"Time since last block: {timeSinceLastBlockInSec} seconds");
+        }
+
+        /// <summary>
+        /// Gets the time passed in seconds since the last block
+        /// </summary>
+        /// <returns>
+        /// Returns the time since the last block was persisted in milliseconds
+        /// </returns>
+        [RpcMethod]
+        public JObject GetTimeSinceLastBlock(JArray _params)
+        {
+            if (_params.Count != 0)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+            return GetTimeSinceLastBlock();
         }
 
         /// <summary>
@@ -331,6 +348,42 @@ namespace Neo.Plugins
             {
                 // for this command it is required that the RpcClient plugin is installed
                 Console.WriteLine("Install RpcClient module to use the rpc time command.");
+            }
+        }
+
+        /// <summary>
+        /// Gets the time in milliseconds to receive the response of a rpc request
+        /// </summary>
+        /// <returns>
+        /// Returns the time of the response from the rpc request in milliseconds
+        /// </returns>
+        [RpcMethod]
+        public JObject GetRpcTime(JArray _params)
+        {
+            if (_params.Count != 1)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+            var url = _params[0].AsString();
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+
+            try
+            {
+                var responseTime = GetRpcResponseTime(url);
+                if (responseTime <= 0)
+                {
+                    throw new RpcException(-100, "TimeOut");
+                }
+
+                return responseTime;
+            }
+            catch (FileNotFoundException)
+            {
+                // for this command it is required that the RpcClient plugin is installed
+                throw new RpcException(-32500, "Application error");
             }
         }
 

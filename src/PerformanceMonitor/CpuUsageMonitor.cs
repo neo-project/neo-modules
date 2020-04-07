@@ -4,6 +4,18 @@ using System.Diagnostics;
 
 namespace Neo.Plugins
 {
+    class CpuUsage
+    {
+        public double TotalUsage;
+        public Dictionary<int, double> ThreadsUsage;
+
+        public CpuUsage(double totalUsage, Dictionary<int, double> threadsUsage)
+        {
+            TotalUsage = totalUsage;
+            ThreadsUsage = threadsUsage;
+        }
+    }
+
     class CpuUsageMonitor
     {
         /// <summary>
@@ -32,17 +44,34 @@ namespace Neo.Plugins
         /// <returns>
         /// Total CPU usage of the threads.
         /// </returns>
-        public double CheckAllThreads(bool printEachThread = false)
+        public double GetCpuTotalProcessorTime(bool printEachThread = false)
+        {
+            var result = CheckAllThreads(printEachThread);
+            return result.TotalUsage;
+        }
+
+        /// <summary>
+        /// Checks the percentage of CPU usage of each thread of the current process.
+        /// </summary>
+        /// <param name="printEachThread">
+        /// Specifies if the CPU usage information should be printed in the console.
+        /// </param>
+        /// <returns>
+        /// An object with the total CPU usage and the CPU usage of each thread.
+        /// </returns>
+        public CpuUsage CheckAllThreads(bool printEachThread = false)
         {
             double total = 0;
             string result = "";
             var processName = Process.GetCurrentProcess().ProcessName;
             var lastProcessorTime = new Dictionary<int, double>();
+            var threadUsage = new Dictionary<int, double>();
 
             foreach (ProcessThread thread in Process.GetCurrentProcess().Threads)
             {
                 var cpuUsage = CheckCPUThread(thread, out var newTime);
                 lastProcessorTime.Add(thread.Id, newTime);
+                threadUsage.Add(thread.Id, cpuUsage);
 
                 result += $"{processName,10}/{thread.Id,-8}\t      CPU usage: {cpuUsage,8:0.00 %}\n";
                 total += cpuUsage;
@@ -57,7 +86,7 @@ namespace Neo.Plugins
                 Console.Write(result);
             }
 
-            return total;
+            return new CpuUsage(total, threadUsage);
         }
 
         /// <summary>
