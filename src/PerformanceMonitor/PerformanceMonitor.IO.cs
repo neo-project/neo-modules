@@ -66,7 +66,7 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "There are no connected nodes");
             }
 
-            var delayInMilliseconds = GetBlockSynchronizationDelay(true);
+            var delayInMilliseconds = GetBlockSynchronizationDelay();
             if (delayInMilliseconds <= 0)
             {
                 throw new RpcException(-100, "TimeOut");

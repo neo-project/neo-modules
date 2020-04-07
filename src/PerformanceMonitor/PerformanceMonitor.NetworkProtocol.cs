@@ -375,7 +375,7 @@ namespace Neo.Plugins
                 var responseTime = GetRpcResponseTime(url);
                 if (responseTime <= 0)
                 {
-                    throw new RpcException(-100, "TimeOut");
+                    throw new RpcException(-32602, "Invalid params");
                 }
 
                 return responseTime;
@@ -397,9 +397,12 @@ namespace Neo.Plugins
         /// Returns zero if any exception is thrown; otherwise, returns the time in milliseconds of
         /// the response from the rpc request
         /// </returns>
-        private long GetRpcResponseTime(string url)
+        private long GetRpcResponseTime(string url, bool printMessages = false)
         {
-            Console.WriteLine($"Sending a RPC request to '{url}'...");
+            if (printMessages)
+            {
+                Console.WriteLine($"Sending a RPC request to '{url}'...");
+            }
             bool hasThrownException = false;
 
             RpcClient client = new RpcClient(url);
@@ -411,15 +414,21 @@ namespace Neo.Plugins
             }
             catch (HttpRequestException)
             {
-                Console.WriteLine("Input url is not a the url of a valid RPC server");
+                if (printMessages)
+                {
+                    Console.WriteLine("Input url is not a the url of a valid RPC server");
+                }
                 hasThrownException = true;
             }
             catch (Exception e)
             {
-                Console.WriteLine(
-                    "An exception was thrown while trying to send the RPC request:\n" +
-                    $"\t{e.GetType()}\n" +
-                    $"\t{e.Message}");
+                if (printMessages)
+                {
+                    Console.WriteLine(
+                        "An exception was thrown while trying to send the RPC request:\n" +
+                        $"\t{e.GetType()}\n" +
+                        $"\t{e.Message}");
+                }
                 hasThrownException = true;
             }
 
