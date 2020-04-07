@@ -18,6 +18,7 @@
     <PackageReference Include="Neo" Version="3.0.0-CI00863" />
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
     <ProjectReference Include="..\RpcClient\RpcClient.csproj" />
+    <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
   </ItemGroup>
 
 </Project>

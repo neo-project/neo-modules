@@ -1,5 +1,6 @@
 using Akka.Actor;
 using Neo.ConsoleService;
+using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
@@ -15,6 +16,11 @@ namespace Neo.Plugins
     public partial class PerformanceMonitor : Plugin, IPersistencePlugin, IP2PPlugin
     {
         public override string Name => "PerformanceMonitor";
+
+        public PerformanceMonitor()
+        {
+            RpcServer.RegisterMethods(this);
+        }
 
         protected override void Configure()
         {
@@ -109,6 +115,22 @@ namespace Neo.Plugins
         /// <returns>
         /// Returns the number of active threads.
         /// </returns>
+        [RpcMethod]
+        public JObject GetActiveThreadsCount(JArray _params)
+        {
+            if (_params.Count != 0)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+            return GetActiveThreadsCount();
+        }
+
+        /// <summary>
+        /// Gets the number of active threads in the current process
+        /// </summary>
+        /// <returns>
+        /// Returns the number of active threads.
+        /// </returns>
         private int GetActiveThreadsCount()
         {
             var current = Process.GetCurrentProcess();
@@ -137,6 +159,22 @@ namespace Neo.Plugins
             }
 
             Console.WriteLine($"Allocated memory: {memory:0.00} {memoryUnit}");
+        }
+
+
+        /// <summary>
+        /// Gets the amount of memory allocated for the current process in bytes
+        /// </summary>
+        /// Returns the allocated memory in bytes
+        /// </returns>
+        [RpcMethod]
+        public JObject GetMemory(JArray _params)
+        {
+            if (_params.Count != 0)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+            return GetAllocatedMemory();
         }
 
         /// <summary>
