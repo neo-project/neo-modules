@@ -4,6 +4,7 @@ using Neo.Network.RPC.Models;
 using Neo.SmartContract;
 using Neo.VM;
 using Neo.Wallets;
+using System;
 using System.Linq;
 using System.Numerics;
 using static Neo.Helper;
@@ -131,8 +132,8 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public Transaction CreateTransferTx(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] fromKeys, UInt160 to, BigInteger amount)
         {
-            if (m > fromKeys.Length) throw new System.Exception($"Need at least {m} KeyPairs for signing!");
-
+            if (m > fromKeys.Length)
+                throw new ArgumentException($"Need at least {m} KeyPairs for signing!");
             var sender = Contract.CreateMultiSigContract(m, pubKeys).ScriptHash;
             Cosigner[] cosigners = new[] { new Cosigner { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
