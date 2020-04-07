@@ -1,7 +1,5 @@
 using Akka.Actor;
 using Neo.Network.P2P.Payloads;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using static Neo.Ledger.Blockchain;
 
 namespace Neo.Plugins
@@ -9,13 +7,12 @@ namespace Neo.Plugins
     public class RelayActor : UntypedActor
     {
         private readonly NeoSystem neoSystem;
-        private readonly Dictionary<UInt256, IActorRef> senders = new Dictionary<UInt256, IActorRef>();
-        private readonly int expireMs;
+        private readonly FixedDictionary<UInt256, IActorRef> senders;
 
-        public RelayActor(NeoSystem neoSystem, int expireMs)
+        public RelayActor(NeoSystem neoSystem, int capacity)
         {
             this.neoSystem = neoSystem;
-            this.expireMs = expireMs;
+            senders = new FixedDictionary<UInt256, IActorRef>(capacity);
             Context.System.EventStream.Subscribe(Self, typeof(RelayResult));
         }
 
@@ -28,28 +25,24 @@ namespace Neo.Plugins
                         UInt256 hash = inventory.Hash;
                         senders.Add(hash, Sender);
                         neoSystem.Blockchain.Tell(inventory);
-                        // the sender will clean the record after expireMs
-                        Task.Run(async () =>
-                        {
-                            await Task.Delay(expireMs);
-                            senders.Remove(hash);
-                        });
                         break;
                     }
                 case RelayResult reason:
                     {
-                        if (senders.Remove(reason.Inventory.Hash, out var actor))
+                        UInt256 hash = reason.Inventory.Hash;
+                        if (senders.ContainsKey(hash))
                         {
-                            actor.Tell(reason);
+                            senders[hash].Tell(reason);
+                            senders.Remove(hash);
                         }
                         break;
                     }
             }
         }
 
-        public static Props Props(NeoSystem neoSystem, int expire = 10000)
+        public static Props Props(NeoSystem neoSystem, int capacity = 1000)
         {
-            return Akka.Actor.Props.Create(() => new RelayActor(neoSystem, expire));
+            return Akka.Actor.Props.Create(() => new RelayActor(neoSystem, capacity));
         }
     }
 }
