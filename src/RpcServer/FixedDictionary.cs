@@ -15,26 +15,32 @@ namespace Neo.Plugins
 
         public void Add(TKey key, TValue value)
         {
-            if (dictionary.Count == capacity)
+            if (dictionary.TryAdd(key, value))
             {
-                var oldestKey = keys[0];
-                dictionary.Remove(oldestKey);
-                keys.RemoveAt(0);
-            }
+                keys.Add(key);
 
-            dictionary.Add(key, value);
-            keys.Add(key);
+                if (dictionary.Count >= capacity)
+                {
+                    var oldestKey = keys[0];
+                    dictionary.Remove(oldestKey);
+                    keys.RemoveAt(0);
+                }
+            }
         }
 
-        public void Remove(TKey key)
+        public bool Remove(TKey key, out TValue value)
         {
-            dictionary.Remove(key);
-            keys.Remove(key);
+            if (dictionary.Remove(key, out value))
+            {
+                keys.Remove(key);
+                return true;
+            }
+            return false;
         }
 
         public bool ContainsKey(TKey key)
         {
-            return keys.Contains(key);
+            return dictionary.ContainsKey(key);
         }
 
         public TValue this[TKey key]

@@ -30,10 +30,9 @@ namespace Neo.Plugins
                 case RelayResult reason:
                     {
                         UInt256 hash = reason.Inventory.Hash;
-                        if (senders.ContainsKey(hash))
+                        if (senders.Remove(hash, out var entry))
                         {
-                            senders[hash].Tell(reason);
-                            senders.Remove(hash);
+                            entry.Tell(reason);
                         }
                         break;
                     }
