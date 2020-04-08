@@ -1,4 +1,5 @@
 using Neo.ConsoleService;
+using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
@@ -42,6 +43,36 @@ namespace Neo.Plugins
                     Console.WriteLine($"Time to synchronize to the last remote block: {delayInSeconds:0.#} sec");
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets the delay in the synchronization of the blocks between the
+        /// connected nodes
+        /// </summary>
+        /// <returns>
+        /// Returns the delay in the synchronization between the local and
+        /// the remote nodes in milliseconds
+        /// </returns>
+        [RpcMethod]
+        public JObject GetBlockSyncTime(JArray _params)
+        {
+            if (_params.Count != 0)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+            var lastBlockRemote = GetMaxRemoteBlockCount();
+            if (lastBlockRemote <= 0)
+            {
+                throw new RpcException(-100, "There are no connected nodes");
+            }
+
+            var delayInMilliseconds = GetBlockSynchronizationDelay();
+            if (delayInMilliseconds <= 0)
+            {
+                throw new RpcException(-100, "TimeOut");
+            }
+
+            return delayInMilliseconds;
         }
 
         /// <summary>
@@ -316,8 +347,46 @@ namespace Neo.Plugins
                 return;
             }
 
-            var averageInKbytes = GetSizePerTransaction(desiredCount);
-            Console.WriteLine(averageInKbytes.ToString("Average size/tx: 0 bytes"));
+            var averageInBytes = GetSizePerTransaction(desiredCount);
+            Console.WriteLine(averageInBytes.ToString("Average size/tx: 0 bytes"));
+        }
+
+        /// <summary>
+        /// Gets the average size of the latest transactions in bytes
+        /// </summary>
+        /// <returns>
+        /// Returns the average size per transaction in bytes
+        /// </returns>
+        [RpcMethod]
+        public JObject GetTxAvgSize(JArray _params)
+        {
+            if (_params.Count > 1)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+            uint desiredCount = 1000;
+            if (_params.Count > 0)
+            {
+                if (!uint.TryParse(_params[0].AsString(), out desiredCount))
+                {
+                    throw new RpcException(-32602, "Invalid params");
+                }
+
+                if (desiredCount < 1)
+                {
+                    throw new RpcException(-100, "Minimum 1 transaction");
+                }
+
+                if (desiredCount > 10000)
+                {
+                    throw new RpcException(-100, "Maximum 10000 transaction");
+                }
+            }
+
+            using (var snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                return GetSizePerTransaction(desiredCount);
+            }
         }
 
         /// <summary>

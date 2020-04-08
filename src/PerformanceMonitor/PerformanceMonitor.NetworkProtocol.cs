@@ -1,4 +1,5 @@
 using Neo.ConsoleService;
+using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.RPC;
@@ -23,6 +24,22 @@ namespace Neo.Plugins
         {
             var timeSinceLastBlockInSec = GetTimeSinceLastBlock() / 1000;
             Console.WriteLine($"Time since last block: {timeSinceLastBlockInSec} seconds");
+        }
+
+        /// <summary>
+        /// Gets the time passed in seconds since the last block
+        /// </summary>
+        /// <returns>
+        /// Returns the time since the last block was persisted in milliseconds
+        /// </returns>
+        [RpcMethod]
+        public JObject GetTimeSinceLastBlock(JArray _params)
+        {
+            if (_params.Count != 0)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+            return GetTimeSinceLastBlock();
         }
 
         /// <summary>
@@ -335,6 +352,42 @@ namespace Neo.Plugins
         }
 
         /// <summary>
+        /// Gets the time in milliseconds to receive the response of a rpc request
+        /// </summary>
+        /// <returns>
+        /// Returns the time of the response from the rpc request in milliseconds
+        /// </returns>
+        [RpcMethod]
+        public JObject GetRpcTime(JArray _params)
+        {
+            if (_params.Count != 1)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+            var url = _params[0].AsString();
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+
+            try
+            {
+                var responseTime = GetRpcResponseTime(url);
+                if (responseTime <= 0)
+                {
+                    throw new RpcException(-32602, "Invalid params");
+                }
+
+                return responseTime;
+            }
+            catch (FileNotFoundException)
+            {
+                // for this command it is required that the RpcClient plugin is installed
+                throw new RpcException(-32500, "Application error");
+            }
+        }
+
+        /// <summary>
         /// Gets the time to receive the response of a rpc request
         /// </summary>
         /// <param name="url">
@@ -344,9 +397,12 @@ namespace Neo.Plugins
         /// Returns zero if any exception is thrown; otherwise, returns the time in milliseconds of
         /// the response from the rpc request
         /// </returns>
-        private long GetRpcResponseTime(string url)
+        private long GetRpcResponseTime(string url, bool printMessages = false)
         {
-            Console.WriteLine($"Sending a RPC request to '{url}'...");
+            if (printMessages)
+            {
+                Console.WriteLine($"Sending a RPC request to '{url}'...");
+            }
             bool hasThrownException = false;
 
             RpcClient client = new RpcClient(url);
@@ -358,15 +414,21 @@ namespace Neo.Plugins
             }
             catch (HttpRequestException)
             {
-                Console.WriteLine("Input url is not a the url of a valid RPC server");
+                if (printMessages)
+                {
+                    Console.WriteLine("Input url is not a the url of a valid RPC server");
+                }
                 hasThrownException = true;
             }
             catch (Exception e)
             {
-                Console.WriteLine(
-                    "An exception was thrown while trying to send the RPC request:\n" +
-                    $"\t{e.GetType()}\n" +
-                    $"\t{e.Message}");
+                if (printMessages)
+                {
+                    Console.WriteLine(
+                        "An exception was thrown while trying to send the RPC request:\n" +
+                        $"\t{e.GetType()}\n" +
+                        $"\t{e.Message}");
+                }
                 hasThrownException = true;
             }
 

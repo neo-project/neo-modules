@@ -1,5 +1,6 @@
 using Neo.Consensus;
 using Neo.ConsoleService;
+using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using System;
@@ -26,6 +27,28 @@ namespace Neo.Plugins
             {
                 Console.WriteLine("Timeout");
             }
+        }
+
+        /// <summary>
+        /// Gets the time to commit in the network in milliseconds
+        /// </summary>
+        /// <returns>
+        /// Returns the difference between the persist time and the commit time
+        /// </returns>
+        [RpcMethod]
+        public JObject GetCommitTime(JArray _params)
+        {
+            if (_params.Count != 0)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+            var time = GetTimeToCommit();
+            if (time <= 0)
+            {
+                throw new RpcException(-100, "TimeOut");
+            }
+
+            return time;
         }
 
         /// <summary>
@@ -103,6 +126,28 @@ namespace Neo.Plugins
             {
                 Console.WriteLine("Timeout. Make sure the start consensus command has been run.");
             }
+        }
+
+        /// <summary>
+        /// Gets the time to confirm the block in milliseconds
+        /// </summary>
+        /// <returns>
+        /// Returns the difference between the commit request time and the actual commit time
+        /// </returns>
+        [RpcMethod]
+        public JObject GetConfirmTime(JArray _params)
+        {
+            if (_params.Count != 0)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+            var time = GetTimeToConfirm();
+            if (time <= 0)
+            {
+                throw new RpcException(-100, "TimeOut");
+            }
+
+            return time;
         }
 
         /// <summary>
@@ -185,6 +230,28 @@ namespace Neo.Plugins
             {
                 Console.WriteLine("Timeout. Make sure the start consensus command has been run.");
             }
+        }
+
+        /// <summary>
+        /// Gets the time in milliseconds to receive a payload
+        /// </summary>
+        /// <returns>
+        /// Returns the difference between the payload send time and receive time
+        /// </returns>
+        [RpcMethod]
+        public JObject GetPayloadTime(JArray _params)
+        {
+            if (_params.Count != 0)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+            var time = GetPayloadTime();
+            if (time <= 0)
+            {
+                throw new RpcException(-100, "TimeOut");
+            }
+
+            return time;
         }
 
         /// <summary>

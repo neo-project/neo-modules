@@ -1,5 +1,6 @@
 using Akka.Actor;
 using Neo.ConsoleService;
+using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
@@ -7,6 +8,7 @@ using Neo.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,6 +17,11 @@ namespace Neo.Plugins
     public partial class PerformanceMonitor : Plugin, IPersistencePlugin, IP2PPlugin
     {
         public override string Name => "PerformanceMonitor";
+
+        public PerformanceMonitor()
+        {
+            RpcServer.RegisterMethods(this);
+        }
 
         protected override void Configure()
         {
@@ -72,7 +79,7 @@ namespace Neo.Plugins
                 {
                     try
                     {
-                        var total = monitor.CheckAllThreads(true);
+                        var total = monitor.GetCpuTotalProcessorTime(true);
                         if (!cancel.Token.IsCancellationRequested)
                         {
                             Console.WriteLine($"Active threads: {monitor.ThreadCount,3}\tTotal CPU usage: {total,8:0.00 %}");
@@ -89,6 +96,41 @@ namespace Neo.Plugins
             });
             Console.ReadLine();
             cancel.Cancel();
+        }
+
+        /// <summary>
+        /// Gets each thread CPU usage information
+        /// </summary>
+        /// <returns>
+        /// The total CPU usage and the CPU usage of each active thread in the last second
+        /// </returns>
+        [RpcMethod]
+        public JObject GetCpuUsage(JArray _params)
+        {
+            if (_params.Count != 0)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+            var monitor = new CpuUsageMonitor();
+
+            // wait a second to get the cpu usage info
+            Task.Delay(1000).Wait();
+            var cpuUsage = monitor.CheckAllThreads();
+
+            var result = new JObject();
+            result["totalusage"] = cpuUsage.TotalUsage;
+
+            var threads = new JArray();
+            foreach (var threadTime in cpuUsage.ThreadsUsage.OrderByDescending(usage => usage.Value))
+            {
+                var thread = new JObject();
+                thread["id"] = threadTime.Key;
+                thread["usage"] = threadTime.Value;
+                threads.Add(thread);
+            }
+            result["threads"] = threads;
+
+            return result;
         }
 
         /// <summary>
