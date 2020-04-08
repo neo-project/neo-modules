@@ -58,21 +58,12 @@ namespace Neo.Plugins
         protected override void Configure()
         {
             IConfigurationSection config = null;
-            int remainingTimes = 3;
-            while (remainingTimes > 0 && config == null)
+            try
             {
-                try
-                {
-                    config = GetConfiguration();
-                }
-                catch (FormatException)
-                {
-                    remainingTimes--;
-                    Thread.Sleep(10);
-                }
+                config = GetConfiguration();
             }
-            if (config == null) throw new FormatException();
-            Settings.Load(config);
+            catch (FormatException){ }
+            if (config != null) Settings.Load(config);
         }
 
         private static JObject CreateErrorResponse(JObject id, int code, string message, JObject data = null)
