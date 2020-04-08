@@ -16,7 +16,6 @@ using System.Net.Security;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Neo.Plugins
@@ -62,7 +61,7 @@ namespace Neo.Plugins
             {
                 config = GetConfiguration();
             }
-            catch (FormatException){ }
+            catch (FormatException) { }
             if (config != null) Settings.Load(config);
         }
 
