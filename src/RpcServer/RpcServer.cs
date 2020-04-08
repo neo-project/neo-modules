@@ -59,7 +59,7 @@ namespace Neo.Plugins
             {
                 Settings.Load(GetConfiguration());
             }
-            catch { }
+            catch (FormatException) { }
         }
 
         private static JObject CreateErrorResponse(JObject id, int code, string message, JObject data = null)
