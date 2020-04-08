@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Neo.IO;
 using Neo.IO.Json;
@@ -15,6 +16,7 @@ using System.Net.Security;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Neo.Plugins
@@ -55,7 +57,22 @@ namespace Neo.Plugins
 
         protected override void Configure()
         {
-            Settings.Load(GetConfiguration());
+            IConfigurationSection config = null;
+            int remainingTimes = 3;
+            while (remainingTimes > 0 && config == null)
+            {
+                try
+                {
+                    config = GetConfiguration();
+                }
+                catch (FormatException)
+                {
+                    remainingTimes--;
+                    Thread.Sleep(10);
+                }
+            }
+            if (config == null) throw new FormatException();
+            Settings.Load(config);
         }
 
         private static JObject CreateErrorResponse(JObject id, int code, string message, JObject data = null)
