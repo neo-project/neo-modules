@@ -33,6 +33,8 @@ namespace Neo.Plugins
         {
             ThreadsProcessorTime = new Dictionary<int, double>();
             Watch = Stopwatch.StartNew();
+            // initialize processor time
+            CheckAllThreads();
         }
 
         /// <summary>

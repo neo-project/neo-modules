@@ -102,7 +102,7 @@ namespace Neo.Plugins
         /// Gets each thread CPU usage information
         /// </summary>
         /// <returns>
-        /// The total CPU usage and the CPU usage of each active thread
+        /// The total CPU usage and the CPU usage of each active thread in the last second
         /// </returns>
         [RpcMethod]
         public JObject GetCpuUsage(JArray _params)
@@ -112,15 +112,16 @@ namespace Neo.Plugins
                 throw new RpcException(-32602, "Invalid params");
             }
             var monitor = new CpuUsageMonitor();
-            // first call returns zero time
-            monitor.CheckAllThreads();
+
+            // wait a second to get the cpu usage info
+            Task.Delay(1000).Wait();
             var cpuUsage = monitor.CheckAllThreads();
 
             var result = new JObject();
             result["totalusage"] = cpuUsage.TotalUsage;
 
             var threads = new JArray();
-            foreach (var threadTime in cpuUsage.ThreadsUsage)
+            foreach (var threadTime in cpuUsage.ThreadsUsage.OrderByDescending(usage => usage.Value))
             {
                 var thread = new JObject();
                 thread["id"] = threadTime.Key;
