@@ -7,12 +7,12 @@ namespace Neo.Plugins
     public class RelayActor : UntypedActor
     {
         private readonly NeoSystem neoSystem;
-        private readonly FixedDictionary<UInt256, IActorRef> senders;
+        private readonly FixedDictionary senders;
 
         public RelayActor(NeoSystem neoSystem, int capacity)
         {
             this.neoSystem = neoSystem;
-            senders = new FixedDictionary<UInt256, IActorRef>(capacity);
+            senders = new FixedDictionary(capacity);
             Context.System.EventStream.Subscribe(Self, typeof(RelayResult));
         }
 
@@ -23,16 +23,17 @@ namespace Neo.Plugins
                 case IInventory inventory:
                     {
                         UInt256 hash = inventory.Hash;
-                        senders.Add(hash, Sender);
+                        senders.Add(new ActorItem { Hash = hash, Actor = Sender });
                         neoSystem.Blockchain.Tell(inventory);
                         break;
                     }
                 case RelayResult reason:
                     {
                         UInt256 hash = reason.Inventory.Hash;
-                        if (senders.Remove(hash, out var entry))
+                        if (senders.TryGetValue(hash, out var entry))
                         {
-                            entry.Tell(reason);
+                            entry.Actor.Tell(reason);
+                            senders.Remove(entry.Hash);
                         }
                         break;
                     }

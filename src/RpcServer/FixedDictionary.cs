@@ -1,11 +1,10 @@
-using System.Collections.Generic;
+using Akka.Actor;
+using System.Collections.ObjectModel;
 
 namespace Neo.Plugins
 {
-    public class FixedDictionary<TKey, TValue>
+    public class FixedDictionary : KeyedCollection<UInt256, ActorItem>
     {
-        private readonly Dictionary<TKey, TValue> dictionary = new Dictionary<TKey, TValue>();
-        private readonly List<TKey> keys = new List<TKey>();
         private readonly int capacity;
 
         public FixedDictionary(int capacity)
@@ -13,39 +12,26 @@ namespace Neo.Plugins
             this.capacity = capacity;
         }
 
-        public void Add(TKey key, TValue value)
+        protected override UInt256 GetKeyForItem(ActorItem item)
         {
-            if (dictionary.TryAdd(key, value))
-            {
-                keys.Add(key);
+            return item.Hash;
+        }
 
-                if (dictionary.Count >= capacity)
-                {
-                    var oldestKey = keys[0];
-                    dictionary.Remove(oldestKey);
-                    keys.RemoveAt(0);
-                }
+        protected override void InsertItem(int index, ActorItem newItem)
+        {
+            base.InsertItem(index, newItem);
+
+            if (Count > capacity)
+            {
+                RemoveAt(0);
             }
         }
+    }
 
-        public bool Remove(TKey key, out TValue value)
-        {
-            if (dictionary.Remove(key, out value))
-            {
-                keys.Remove(key);
-                return true;
-            }
-            return false;
-        }
+    public class ActorItem
+    {
+        public UInt256 Hash { get; set; }
 
-        public bool ContainsKey(TKey key)
-        {
-            return dictionary.ContainsKey(key);
-        }
-
-        public TValue this[TKey key]
-        {
-            get { return dictionary[key]; }
-        }
+        public IActorRef Actor { get; set; }
     }
 }
