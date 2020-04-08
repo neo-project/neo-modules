@@ -293,16 +293,40 @@ namespace Neo.Plugins
             {
                 Transaction tx = snapshot.GetTransaction(transactionHash);
 
-                var size = GetSize(tx);
-                if (size <= 0)
+                if (tx == null)
                 {
                     Console.WriteLine("Transaction not found");
                 }
                 else
                 {
+                    var size = GetSize(tx);
                     Console.WriteLine($"Transaction Hash: {tx.Hash}");
                     Console.WriteLine($"            Size: {size} bytes");
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets the size in bytes of the transaction identified by its hash
+        /// </summary>
+        /// Returns the size of the transaction in bytes
+        /// </returns>
+        [RpcMethod]
+        public JObject GetTxSize(JArray _params)
+        {
+            if (_params.Count != 1 || !UInt256.TryParse(_params[0].AsString(), out var txHash))
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+
+            using (var snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                Transaction tx = snapshot.GetTransaction(txHash);
+
+                if (tx is null)
+                    throw new RpcException(-100, "Transaction not found");
+
+                return GetSize(tx);
             }
         }
 

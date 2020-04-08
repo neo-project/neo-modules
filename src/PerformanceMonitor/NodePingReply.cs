@@ -11,9 +11,8 @@ namespace Neo.Plugins
         public string AddressAndPort => Address.ToString();
         public IPStatus Status => GetStatus();
         public long RoundtripTime => GetRoundtripTime();
-
-        private bool isConnectedNode;
-        private uint LastBlockIndex = 0;
+        public bool isConnectedNode { get; private set; }
+        public uint LastBlockIndex { get; private set; } = 0;
 
         public NodePingReply(RemoteNode node, PingReply reply)
         {

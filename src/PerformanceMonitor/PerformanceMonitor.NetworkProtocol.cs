@@ -63,7 +63,6 @@ namespace Neo.Plugins
         [ConsoleCommand("connected", Category = "Network Commands", Description = "Show the number of nodes connected to the local node.")]
         private void OnConnectedNodesCommand()
         {
-            UpdateRemotesHeight();
             var nodes = GetConnectedNodes();
 
             Console.WriteLine($"Connected nodes: {nodes.Count}");
@@ -76,6 +75,33 @@ namespace Neo.Plugins
         }
 
         /// <summary>
+        /// Prints the number of nodes connected to the local node
+        /// </summary>
+        /// <returns>
+        /// Returns a list with the connected nodes
+        /// </returns>
+        [RpcMethod]
+        public JObject GetConnectedNodes(JArray _params)
+        {
+            if (_params.Count != 0)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+
+            var connectedNodes = GetConnectedNodes();
+            var nodes = new JArray();
+            foreach (var remoteNode in connectedNodes)
+            {
+                var node = new JObject();
+                node["address"] = $"{remoteNode.Remote.Address}:{remoteNode.Remote.Port}";
+                node["lastblockindex"] = remoteNode.LastBlockIndex;
+                nodes.Add(node);
+            }
+
+            return nodes;
+        }
+
+        /// <summary>
         /// Get a list of the nodes connected to the local node
         /// </summary>
         /// <returns>
@@ -85,6 +111,7 @@ namespace Neo.Plugins
         /// </returns>
         private ICollection<RemoteNode> GetConnectedNodes()
         {
+            UpdateRemotesHeight();
             var remotes = LocalNode.Singleton.GetRemoteNodes();
             if (remotes is ICollection<RemoteNode>)
             {
@@ -142,6 +169,48 @@ namespace Neo.Plugins
             {
                 PingAll(true);
             }
+        }
+
+        /// <summary>
+        /// Send a ping message to each peer connected to the local node
+        /// </summary>
+        /// <returns>
+        /// Returns a list with the ping replies of each peer
+        /// </returns>
+        [RpcMethod]
+        public JObject Ping(JArray _params)
+        {
+            if (_params.Count != 0)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+
+            var replies = PingAll();
+            var result = new JArray();
+
+            foreach (var reply in replies)
+            {
+                var node = new JObject();
+                node["address"] = reply.AddressAndPort;
+                node["connected"] = reply.isConnectedNode;
+                if (reply.isConnectedNode)
+                {
+                    node["lastblockindex"] = reply.LastBlockIndex;
+                }
+
+                var pingReply = new JObject();
+                pingReply["status"] = reply.Status;
+                if (reply.Status == IPStatus.Success)
+                {
+                    pingReply["roundtriptime"] = reply.RoundtripTime;
+                }
+
+                var nodeReply = new JObject();
+                nodeReply["node"] = node;
+                nodeReply["pingreply"] = pingReply;
+                result.Add(nodeReply);
+            }
+            return result;
         }
 
         /// <summary>

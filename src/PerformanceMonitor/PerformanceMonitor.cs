@@ -151,6 +151,22 @@ namespace Neo.Plugins
         /// <returns>
         /// Returns the number of active threads.
         /// </returns>
+        [RpcMethod]
+        public JObject GetActiveThreadsCount(JArray _params)
+        {
+            if (_params.Count != 0)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+            return GetActiveThreadsCount();
+        }
+
+        /// <summary>
+        /// Gets the number of active threads in the current process
+        /// </summary>
+        /// <returns>
+        /// Returns the number of active threads.
+        /// </returns>
         private int GetActiveThreadsCount()
         {
             var current = Process.GetCurrentProcess();
@@ -179,6 +195,22 @@ namespace Neo.Plugins
             }
 
             Console.WriteLine($"Allocated memory: {memory:0.00} {memoryUnit}");
+        }
+
+
+        /// <summary>
+        /// Gets the amount of memory allocated for the current process in bytes
+        /// </summary>
+        /// Returns the allocated memory in bytes
+        /// </returns>
+        [RpcMethod]
+        public JObject GetMemory(JArray _params)
+        {
+            if (_params.Count != 0)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+            return GetAllocatedMemory();
         }
 
         /// <summary>
