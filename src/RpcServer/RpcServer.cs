@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Neo.IO;
 using Neo.IO.Json;
@@ -56,13 +55,11 @@ namespace Neo.Plugins
 
         protected override void Configure()
         {
-            IConfigurationSection config = null;
             try
             {
-                config = GetConfiguration();
+                Settings.Load(GetConfiguration());
             }
-            catch (FormatException) { }
-            if (config != null) Settings.Load(config);
+            catch { }
         }
 
         private static JObject CreateErrorResponse(JObject id, int code, string message, JObject data = null)
