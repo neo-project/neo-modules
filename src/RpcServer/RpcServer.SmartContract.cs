@@ -79,8 +79,14 @@ namespace Neo.Plugins
             CheckWitnessHashes checkWitnessHashes = null;
             if (_params.Count > 3)
             {
-                UInt160[] scriptHashesForVerifying = _params.Skip(3).Select(u => UInt160.Parse(u.AsString())).ToArray();
-                checkWitnessHashes = new CheckWitnessHashes(scriptHashesForVerifying);
+                if (_params[3] is JArray array)
+                {
+                    checkWitnessHashes = new CheckWitnessHashes(array.Select(u => UInt160.Parse(u.AsString())).ToArray());
+                }
+                else
+                {
+                    checkWitnessHashes = new CheckWitnessHashes(_params.Skip(3).Select(u => UInt160.Parse(u.AsString())).ToArray());
+                }
             }
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
@@ -97,8 +103,14 @@ namespace Neo.Plugins
             CheckWitnessHashes checkWitnessHashes = null;
             if (_params.Count > 1)
             {
-                UInt160[] scriptHashesForVerifying = _params.Skip(1).Select(u => UInt160.Parse(u.AsString())).ToArray();
-                checkWitnessHashes = new CheckWitnessHashes(scriptHashesForVerifying);
+                if (_params[1] is JArray array)
+                {
+                    checkWitnessHashes = new CheckWitnessHashes(array.Select(u => UInt160.Parse(u.AsString())).ToArray());
+                }
+                else
+                {
+                    checkWitnessHashes = new CheckWitnessHashes(_params.Skip(1).Select(u => UInt160.Parse(u.AsString())).ToArray());
+                }
             }
             return GetInvokeResult(script, checkWitnessHashes);
         }
