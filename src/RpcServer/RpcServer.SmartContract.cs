@@ -76,11 +76,7 @@ namespace Neo.Plugins
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
-            CheckWitnessHashes checkWitnessHashes = null;
-            if (_params.Count > 3)
-            {
-                checkWitnessHashes = new CheckWitnessHashes(((JArray)_params[3]).Select(u => UInt160.Parse(u.AsString())).ToArray());
-            }
+            CheckWitnessHashes checkWitnessHashes = _params.Count >= 4 ? new CheckWitnessHashes(((JArray)_params[3]).Select(u => UInt160.Parse(u.AsString())).ToArray()) : null;
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
