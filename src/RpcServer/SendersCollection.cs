@@ -3,11 +3,11 @@ using System.Collections.ObjectModel;
 
 namespace Neo.Plugins
 {
-    public class FixedDictionary : KeyedCollection<UInt256, ActorItem>
+    internal class SendersCollection : KeyedCollection<UInt256, ActorItem>
     {
         private readonly int capacity;
 
-        public FixedDictionary(int capacity)
+        public SendersCollection(int capacity)
         {
             this.capacity = capacity;
         }

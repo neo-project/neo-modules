@@ -7,12 +7,12 @@ namespace Neo.Plugins
     public class RelayActor : UntypedActor
     {
         private readonly NeoSystem neoSystem;
-        private readonly FixedDictionary senders;
+        private readonly SendersCollection senders;
 
         public RelayActor(NeoSystem neoSystem, int capacity)
         {
             this.neoSystem = neoSystem;
-            senders = new FixedDictionary(capacity);
+            senders = new SendersCollection(capacity);
             Context.System.EventStream.Subscribe(Self, typeof(RelayResult));
         }
 
