@@ -28,7 +28,7 @@ namespace Neo.Plugins
         }
     }
 
-    public class ActorItem
+    internal class ActorItem
     {
         public UInt256 Hash { get; set; }
 
