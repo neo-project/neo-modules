@@ -1,3 +1,3 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Neo.Network.RPC.Tests")]
+[assembly: InternalsVisibleTo("Neo.Plugin.RpcServer.Tests")]

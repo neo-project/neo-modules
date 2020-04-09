@@ -1,10 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Plugins;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Neo.Plugins.Tests
+namespace Neo.Plugin.RpcServer.Tests
 {
     [TestClass()]
     public class SendersCollectionTests
