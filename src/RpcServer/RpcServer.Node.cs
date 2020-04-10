@@ -7,7 +7,6 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
-using System;
 using System.Linq;
 using static Neo.Ledger.Blockchain;
 
@@ -42,6 +41,7 @@ namespace Neo.Plugins
             }));
             return json;
         }
+
         private static JObject GetRelayResult(VerifyResult reason, UInt256 hash)
         {
             if (reason == VerifyResult.Succeed)
