@@ -78,15 +78,6 @@ namespace Neo.Network.RPC
             UInt160[] hashes = Tx.GetScriptHashesForVerifying(null);
             RpcInvokeResult result = rpcClient.InvokeScript(script, hashes);
             Tx.SystemFee = Math.Max(long.Parse(result.GasConsumed) - ApplicationEngine.GasFree, 0);
-            if (Tx.SystemFee > 0)
-            {
-                long d = (long)NativeContract.GAS.Factor;
-                long remainder = Tx.SystemFee % d;
-                if (remainder > 0)
-                    Tx.SystemFee += d - remainder;
-                else if (remainder < 0)
-                    Tx.SystemFee -= remainder;
-            }
 
             context = new ContractParametersContext(Tx);
             signStore = new List<SignItem>();
