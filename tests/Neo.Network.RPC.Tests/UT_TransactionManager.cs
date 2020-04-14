@@ -94,7 +94,6 @@ namespace Neo.Network.RPC.Tests
 
             var tx = txManager.Tx;
             Assert.AreEqual("53616d706c6555726c", tx.Attributes[0].Data.ToHexString());
-            Assert.AreEqual(1, tx.SystemFee / (long)NativeContract.GAS.Factor);
         }
 
         [TestMethod]
