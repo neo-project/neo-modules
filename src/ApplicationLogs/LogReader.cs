@@ -52,7 +52,7 @@ namespace Neo.Plugins
                 json["gas_consumed"] = appExec.GasConsumed.ToString();
                 try
                 {
-                    json["stack"] = appExec.Stack.Select(q => q.ToParameter().ToJson()).ToArray();
+                    json["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
                 }
                 catch (InvalidOperationException)
                 {
@@ -64,7 +64,7 @@ namespace Neo.Plugins
                     notification["contract"] = q.ScriptHash.ToString();
                     try
                     {
-                        notification["state"] = q.State.ToParameter().ToJson();
+                        notification["state"] = q.State.ToJson();
                     }
                     catch (InvalidOperationException)
                     {
