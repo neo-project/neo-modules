@@ -43,7 +43,7 @@ namespace Neo.Plugins
                     StringBuilder sb = new StringBuilder(source);
                     foreach (char c in GetInvalidFileNameChars())
                         sb.Replace(c, '-');
-                    var path = Combine(Settings.Default.Path, source);
+                    var path = Combine(Settings.Default.Path, sb.ToString());
                     Directory.CreateDirectory(path);
                     path = Combine(path, $"{now:yyyy-MM-dd}.log");
                     File.AppendAllLines(path, new[] { $"[{level}]{log}" });
