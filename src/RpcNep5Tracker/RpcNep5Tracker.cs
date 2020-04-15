@@ -35,7 +35,7 @@ namespace Neo.Plugins
 
         public RpcNep5Tracker()
         {
-            RpcServer.RegisterMethods(this);
+            RpcServerPlugin.RegisterMethods(this);
         }
 
         protected override void Configure()
