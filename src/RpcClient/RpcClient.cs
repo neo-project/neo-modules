@@ -3,6 +3,7 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
+using Neo.SmartContract.Manifest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -179,7 +180,17 @@ namespace Neo.Network.RPC
         /// </summary>
         public ContractState GetContractState(string hash)
         {
-            return RpcContractState.FromJson(RpcSend("getcontractstate", hash)).ContractState;
+            return ContractStateFromJson(RpcSend("getcontractstate", hash));
+        }
+
+        public static ContractState ContractStateFromJson(JObject json)
+        {
+            return new ContractState
+            {
+                Id = (int)json["id"].AsNumber(),
+                Script = Convert.FromBase64String(json["script"].AsString()),
+                Manifest = ContractManifest.FromJson(json["manifest"])
+            };
         }
 
         /// <summary>
