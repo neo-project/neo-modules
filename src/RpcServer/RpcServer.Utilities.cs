@@ -12,7 +12,7 @@ namespace Neo.Plugins
         [RpcMethod]
         private JObject ListPlugins(JArray _params)
         {
-            return new JArray(Plugins
+            return new JArray(Neo.Plugins.Plugin.Plugins
                 .OrderBy(u => u.Name)
                 .Select(u => new JObject
                 {
