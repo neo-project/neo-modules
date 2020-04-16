@@ -11,7 +11,6 @@ namespace Neo.Plugins
 {
     internal static class Helper
     {
-
         public static JObject ToJson(this StackItem item)
         {
             return ToJson(item, null);
