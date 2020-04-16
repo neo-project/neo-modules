@@ -21,7 +21,7 @@ namespace Neo.Plugins
         public LogReader()
         {
             db = DB.Open(GetFullPath(Settings.Default.Path), new Options { CreateIfMissing = true });
-            RpcServer.RegisterMethods(this);
+            RpcServerPlugin.RegisterMethods(this);
         }
 
         protected override void Configure()
