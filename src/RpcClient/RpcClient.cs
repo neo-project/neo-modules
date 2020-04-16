@@ -316,9 +316,9 @@ namespace Neo.Network.RPC
         /// Returns the result after calling a smart contract at scripthash with the given operation and parameters.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
-        public RpcInvokeResult InvokeFunction(string scriptHash, string operation, RpcStack[] stacks)
+        public RpcInvokeResult InvokeFunction(string scriptHash, string operation, RpcStack[] stacks, params UInt160[] scriptHashesForVerifying)
         {
-            return RpcInvokeResult.FromJson(RpcSend("invokefunction", scriptHash, operation, stacks.Select(p => p.ToJson()).ToArray()));
+            return RpcInvokeResult.FromJson(RpcSend("invokefunction", scriptHash, operation, stacks.Select(p => p.ToJson()).ToArray(), scriptHashesForVerifying.Select(p => (JObject)p.ToString()).ToArray()));
         }
 
         /// <summary>
@@ -327,12 +327,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public RpcInvokeResult InvokeScript(byte[] script, params UInt160[] scriptHashesForVerifying)
         {
-            List<JObject> parameters = new List<JObject>
-            {
-                script.ToHexString()
-            };
-            parameters.AddRange(scriptHashesForVerifying.Select(p => (JObject)p.ToString()));
-            return RpcInvokeResult.FromJson(RpcSend("invokescript", parameters.ToArray()));
+            return RpcInvokeResult.FromJson(RpcSend("invokescript", script.ToHexString(), scriptHashesForVerifying.Select(p => (JObject)p.ToString()).ToArray()));
         }
 
         #endregion SmartContract
