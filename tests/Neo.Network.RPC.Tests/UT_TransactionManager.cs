@@ -127,9 +127,10 @@ namespace Neo.Network.RPC.Tests
             byte[] signature = tx.Witnesses[0].InvocationScript.Skip(2).ToArray();
 
             Assert.IsTrue(Crypto.VerifySignature(tx.GetHashData(), signature, keyPair1.PublicKey.EncodePoint(false).Skip(1).ToArray()));
-            // verify network fee
+            // verify network fee and system fee
             long networkFee = tx.Size * (long)1000 + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHNULL] + InteropService.GetPrice(InteropService.Crypto.ECDsaVerify, null, null);
             Assert.AreEqual(networkFee, tx.NetworkFee);
+            Assert.AreEqual(100, tx.SystemFee);
 
             // duplicate sign should not add new witness
             txManager.AddSignature(keyPair1).Sign();
