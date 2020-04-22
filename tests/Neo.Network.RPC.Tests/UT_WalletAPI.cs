@@ -19,12 +19,14 @@ namespace Neo.Network.RPC.Tests
         string address1;
         UInt160 sender;
         WalletAPI walletAPI;
+        UInt160 multiSender;
 
         [TestInitialize]
         public void TestSetup()
         {
             keyPair1 = new KeyPair(Wallet.GetPrivateKeyFromWIF("KyXwTh1hB76RRMquSvnxZrJzQx7h9nQP2PCRL38v6VDb5ip3nf1p"));
             sender = Contract.CreateSignatureRedeemScript(keyPair1.PublicKey).ToScriptHash();
+            multiSender = Contract.CreateMultiSigContract(1, keyPair1.PublicKey).ScriptHash;
             address1 = Wallets.Helper.ToAddress(sender);
             rpcClientMock = UT_TransactionManager.MockRpcClient(sender, new byte[0]);
             walletAPI = new WalletAPI(rpcClientMock.Object);
@@ -101,6 +103,28 @@ namespace Neo.Network.RPC.Tests
             rpcClientMock.Setup(p => p.RpcSend("sendrawtransaction", It.IsAny<JObject>())).Returns(json);
 
             var tranaction = walletAPI.Transfer(NativeContract.GAS.Hash.ToString(), keyPair1.Export(), UInt160.Zero.ToAddress(), 100);
+            Assert.AreEqual(testScript.ToHexString(), tranaction.Script.ToHexString());
+        }
+
+        [TestMethod]
+        public void TestTransferfromMultiSigAccount()
+        {
+            byte[] balanceScript = NativeContract.GAS.Hash.MakeScript("balanceOf", multiSender);
+            var balanceResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("10000000000000000") };
+
+            UT_TransactionManager.MockInvokeScript(rpcClientMock, balanceScript, balanceResult);
+
+            byte[] decimalsScript = NativeContract.GAS.Hash.MakeScript("decimals");
+            UT_TransactionManager.MockInvokeScript(rpcClientMock, decimalsScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(8) });
+
+            byte[] testScript = NativeContract.GAS.Hash.MakeScript("transfer", multiSender, UInt160.Zero, NativeContract.GAS.Factor * 100);
+            UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1_10000000) });
+
+            var json = new JObject();
+            json["hash"] = UInt256.Zero.ToString();
+            rpcClientMock.Setup(p => p.RpcSend("sendrawtransaction", It.IsAny<JObject>())).Returns(json);
+
+            var tranaction = walletAPI.Transfer(NativeContract.GAS.Hash, 1, new[] { keyPair1.PublicKey }, new[] { keyPair1 }, UInt160.Zero, NativeContract.GAS.Factor * 100);
             Assert.AreEqual(testScript.ToHexString(), tranaction.Script.ToHexString());
         }
 
