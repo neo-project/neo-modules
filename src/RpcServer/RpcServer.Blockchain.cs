@@ -185,7 +185,7 @@ namespace Neo.Plugins
         {
             using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
             var validators = NativeContract.NEO.GetValidators(snapshot);
-            return NativeContract.NEO.GetRegisteredValidators(snapshot).Select(p =>
+            return NativeContract.NEO.GetCandidates(snapshot).Select(p =>
             {
                 JObject validator = new JObject();
                 validator["publickey"] = p.PublicKey.ToString();

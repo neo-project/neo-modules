@@ -50,7 +50,7 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblock",
-      "params": [ "0x5bb05a3b857c9eaaf94dc33fa5b4a2278601eefcdb90703698972ef7d029e445" ],
+      "params": [ "0xe191fe1aea732c3e23f20af8a95e09f95891176f8064a2fce8571d51f80619a8" ],
       "id": 1
     },
     "Response": {
@@ -71,7 +71,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0x5bb05a3b857c9eaaf94dc33fa5b4a2278601eefcdb90703698972ef7d029e445",
+        "hash": "0xe191fe1aea732c3e23f20af8a95e09f95891176f8064a2fce8571d51f80619a8",
         "size": 171,
         "version": 0,
         "previousblockhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -91,7 +91,7 @@
         },
         "tx": [
           {
-            "hash": "0xb13fd7940186896233272811e61b69a0c4b7dd576fdf3b89987c8cdee2d71e37",
+            "hash": "0x019befa728a371a08fb0f78330b3c697ebc9d8bbf252bd173b17cc2bd6e97e9c",
             "size": 57,
             "version": 0,
             "nonce": 0,
@@ -120,14 +120,14 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblock",
-      "params": [ "0x5bb05a3b857c9eaaf94dc33fa5b4a2278601eefcdb90703698972ef7d029e445", true ],
+      "params": [ "0xe191fe1aea732c3e23f20af8a95e09f95891176f8064a2fce8571d51f80619a8", true ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0x5bb05a3b857c9eaaf94dc33fa5b4a2278601eefcdb90703698972ef7d029e445",
+        "hash": "0xe191fe1aea732c3e23f20af8a95e09f95891176f8064a2fce8571d51f80619a8",
         "size": 171,
         "version": 0,
         "previousblockhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -147,7 +147,7 @@
         },
         "tx": [
           {
-            "hash": "0xb13fd7940186896233272811e61b69a0c4b7dd576fdf3b89987c8cdee2d71e37",
+            "hash": "0x019befa728a371a08fb0f78330b3c697ebc9d8bbf252bd173b17cc2bd6e97e9c",
             "size": 57,
             "version": 0,
             "nonce": 0,
@@ -196,7 +196,7 @@
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
-      "result": "0x5bb05a3b857c9eaaf94dc33fa5b4a2278601eefcdb90703698972ef7d029e445"
+      "result": "0xe191fe1aea732c3e23f20af8a95e09f95891176f8064a2fce8571d51f80619a8"
     }
   },
   {
@@ -218,7 +218,7 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblockheader",
-      "params": [ "0x5bb05a3b857c9eaaf94dc33fa5b4a2278601eefcdb90703698972ef7d029e445" ],
+      "params": [ "0xe191fe1aea732c3e23f20af8a95e09f95891176f8064a2fce8571d51f80619a8" ],
       "id": 1
     },
     "Response": {
@@ -239,7 +239,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0x5bb05a3b857c9eaaf94dc33fa5b4a2278601eefcdb90703698972ef7d029e445",
+        "hash": "0xe191fe1aea732c3e23f20af8a95e09f95891176f8064a2fce8571d51f80619a8",
         "size": 105,
         "version": 0,
         "previousblockhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -263,14 +263,14 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblockheader",
-      "params": [ "0x5bb05a3b857c9eaaf94dc33fa5b4a2278601eefcdb90703698972ef7d029e445", true ],
+      "params": [ "0xe191fe1aea732c3e23f20af8a95e09f95891176f8064a2fce8571d51f80619a8", true ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0x5bb05a3b857c9eaaf94dc33fa5b4a2278601eefcdb90703698972ef7d029e445",
+        "hash": "0xe191fe1aea732c3e23f20af8a95e09f95891176f8064a2fce8571d51f80619a8",
         "size": 105,
         "version": 0,
         "previousblockhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -308,106 +308,107 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "getcontractstate",
-      "params": [ "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b" ],
+      "params": [ "0x806b7fa0db3b46d6c42e1e1b0a7fd50db9d4a9b0" ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "id": -2,
-        "hash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
-        "script": "QetD9PQ=",
+        "id": 0,
+        "hash": "0x806b7fa0db3b46d6c42e1e1b0a7fd50db9d4a9b0",
+        "script": "VgIMFGklqlVHEkOanGE7oRTvo/rCPdvKYAwDKiwKYVcDAiFB6X04oAwBINshmlCaULQlIwAAACEMFGklqlVHEkOanGE7oRTvo/rCPdvKIUH4J+yMQCFB6X04oAwBQNshmlCaULQlKQEAAHgMCWJhbGFuY2VPZpcnDwAAAHkQziE1WgEAAEB4DAhkZWNpbWFsc5cnDAAAACE1sQEAAEB4DAZkZXBsb3mXJwwAAAAhNbQBAABAeAwEbmFtZZcnDAAAACE1OQIAAEB4DAZzeW1ib2yXJwwAAAAhNTsCAABAeAwSc3VwcG9ydGVkU3RhbmRhcmRzlycMAAAAITUfAgAAQHgMC3RvdGFsU3VwcGx5lycMAAAAITUmAgAAQHgMCHRyYW5zZmVylyclAAAAecoTsyUHAAAAEEB5EM55Ec5weRLOcWhpIVM1EgIAAEB4DAdkZXN0cm95lycMAAAAITUzAAAAQHgMB21pZ3JhdGWXJyAAAAB5yhKzJQcAAAAQQHkQznkRznJqIVA1EAAAAEAQQCFBxp8d8BFAVwACIQwUaSWqVUcSQ5qcYTuhFO+j+sI928ohQfgn7IwlBwAAABBAeMonDAAAAHnKJQcAAAAQQHh5IVBBMcYzHRFAVwEBeMoMARTbIbMlPAAAAAwyVGhlIHBhcmFtZXRlciBhY2NvdW50IFNIT1VMRCBiZSAyMC1ieXRlIGFkZHJlc3Nlcy4hRTohQZv2Z854IVBBkl3oMRBwJQcAAABoQCFBm/ZnznghUEGSXegx2yFAGEBXAQF4IUGpxUtBcGgnCQAAAGgSzkARQCFBm/ZnzgwLdG90YWxTdXBwbHkhUEGSXegxRSFBm/ZnziEMFGklqlVHEkOanGE7oRTvo/rCPdvKIQwDKiwKIVNB5j8YhCFBm/ZnzgwLdG90YWxTdXBwbHkhDAMqLAohU0HmPxiEIQshDBRpJapVRxJDmpxhO6EU76P6wj3byiEMAyosCiFTDAhUcmFuc2ZlchTAQZUBb2ERQAwVTmVwNSBOZW8zIFRlbXBsYXRlIDEgQAwDTk5EQBPDShAMBU5FUC010EoRDAVORVAtN9BKEgwGTkVQLTEw0EAhQZv2Z84MC3RvdGFsU3VwcGx5IVBBkl3oMdshQFcCA3oQticHAAAAEEB4IUH4J+yMJQcAAAAQQHnKDAEU2yGzJQcAAAAQQCFBm/ZnznghUEGSXegx2yFwaHq1JwcAAAAQQHh5mlCaULQlBwAAABFAaHqzJxgAAAAhQZv2Z854IVBBL1jF7SMWAAAAIUGb9mfOeGh6nyFTQeY/GIQhQZv2Z855IVBBkl3oMXFpJ0QAAAAMB2lmIHBhc3MhQc/nR5YhQZv2Z855adshep4hU0HmPxiEDBBTdG9yYWdlLnB1dCBwYXNzIUHP50eWIzsAAAAMCWVsc2UgcGFzcyFBz+dHliFBm/Znznl6IVNB5j8YhAwOYW1vdW50IC0+IHBhc3MhQc/nR5YheHl6IVMMCFRyYW5zZmVyFMBBlQFvYRFA",
         "manifest": {
           "groups": [],
           "features": {
             "storage": true,
-            "payable": false
+            "payable": true
           },
           "abi": {
-            "hash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
-            "entryPoint": {
-              "name": "Main",
-              "parameters": [
-                {
-                  "name": "operation",
-                  "type": "String"
-                },
-                {
-                  "name": "args",
-                  "type": "Array"
-                }
-              ],
-              "returnType": "Any"
-            },
+            "hash": "0x806b7fa0db3b46d6c42e1e1b0a7fd50db9d4a9b0",
             "methods": [
               {
-                "name": "getSysFeeAmount",
+                "name": "main",
                 "parameters": [
                   {
-                    "name": "index",
-                    "type": "Integer"
+                    "name": "method",
+                    "type": "String"
+                  },
+                  {
+                    "name": "args",
+                    "type": "Array"
                   }
                 ],
-                "returnType": "Integer"
+                "offset": 0,
+                "returnType": "ByteArray"
               },
               {
-                "name": "name",
+                "name": "Destroy",
                 "parameters": [],
-                "returnType": "String"
+                "offset": 400,
+                "returnType": "Boolean"
               },
               {
-                "name": "symbol",
-                "parameters": [],
-                "returnType": "String"
+                "name": "Migrate",
+                "parameters": [
+                  {
+                    "name": "script",
+                    "type": "ByteArray"
+                  },
+                  {
+                    "name": "manifest",
+                    "type": "String"
+                  }
+                ],
+                "offset": 408,
+                "returnType": "Boolean"
               },
               {
-                "name": "decimals",
-                "parameters": [],
-                "returnType": "Integer"
-              },
-              {
-                "name": "totalSupply",
-                "parameters": [],
-                "returnType": "Integer"
-              },
-              {
-                "name": "balanceOf",
+                "name": "BalanceOf",
                 "parameters": [
                   {
                     "name": "account",
-                    "type": "Hash160"
+                    "type": "ByteArray"
                   }
                 ],
+                "offset": 474,
                 "returnType": "Integer"
               },
               {
-                "name": "transfer",
-                "parameters": [
-                  {
-                    "name": "from",
-                    "type": "Hash160"
-                  },
-                  {
-                    "name": "to",
-                    "type": "Hash160"
-                  },
-                  {
-                    "name": "amount",
-                    "type": "Integer"
-                  }
-                ],
+                "name": "Decimals",
+                "parameters": [],
+                "offset": 585,
+                "returnType": "Integer"
+              },
+              {
+                "name": "Deploy",
+                "parameters": [],
+                "offset": 610,
                 "returnType": "Boolean"
               },
               {
-                "name": "onPersist",
+                "name": "Name",
                 "parameters": [],
-                "returnType": "Boolean"
+                "offset": 763,
+                "returnType": "String"
               },
               {
-                "name": "supportedStandards",
+                "name": "Symbol",
                 "parameters": [],
+                "offset": 787,
+                "returnType": "String"
+              },
+              {
+                "name": "SupportedStandards",
+                "parameters": [],
+                "offset": 793,
                 "returnType": "Array"
+              },
+              {
+                "name": "TotalSupply",
+                "parameters": [],
+                "offset": 827,
+                "returnType": "Integer"
               }
             ],
             "events": [
@@ -415,18 +416,19 @@
                 "name": "Transfer",
                 "parameters": [
                   {
-                    "name": "from",
-                    "type": "Hash160"
+                    "name": "arg1",
+                    "type": "ByteArray"
                   },
                   {
-                    "name": "to",
-                    "type": "Hash160"
+                    "name": "arg2",
+                    "type": "ByteArray"
                   },
                   {
-                    "name": "amount",
+                    "name": "arg3",
                     "type": "Integer"
                   }
                 ],
+                "offset": 0,
                 "returnType": "Signature"
               }
             ]
@@ -438,15 +440,7 @@
             }
           ],
           "trusts": [],
-          "safeMethods": [
-            "getSysFeeAmount",
-            "name",
-            "symbol",
-            "decimals",
-            "totalSupply",
-            "balanceOf",
-            "supportedStandards"
-          ],
+          "safeMethods": [],
           "extra": null
         }
       }
@@ -489,7 +483,7 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "getrawtransaction",
-      "params": [ "0xd159457e12f6b0d4910fc6729f426be5d0c06f0f149d0836db9f634a5cf216fb" ],
+      "params": [ "0x0cfd49c48306f9027dc71585589b6456bcc53567c359fb7858eabca482186b78" ],
       "id": 1
     },
     "Response": {
@@ -503,14 +497,14 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "getrawtransaction",
-      "params": [ "0xd159457e12f6b0d4910fc6729f426be5d0c06f0f149d0836db9f634a5cf216fb", true ],
+      "params": [ "0x0cfd49c48306f9027dc71585589b6456bcc53567c359fb7858eabca482186b78", true ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0xd159457e12f6b0d4910fc6729f426be5d0c06f0f149d0836db9f634a5cf216fb",
+        "hash": "0x0cfd49c48306f9027dc71585589b6456bcc53567c359fb7858eabca482186b78",
         "size": 272,
         "version": 0,
         "nonce": 969006668,
@@ -572,7 +566,7 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "gettransactionheight",
-      "params": [ "0xd159457e12f6b0d4910fc6729f426be5d0c06f0f149d0836db9f634a5cf216fb" ],
+      "params": [ "0x0cfd49c48306f9027dc71585589b6456bcc53567c359fb7858eabca482186b78" ],
       "id": 1
     },
     "Response": {
