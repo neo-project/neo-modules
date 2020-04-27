@@ -12,6 +12,8 @@ using Neo.Ledger;
 using Akka.Actor;
 using Neo.Network.RPC;
 using Neo.IO;
+using Newtonsoft.Json;
+using System.Globalization;
 
 namespace Neo.Plugins
 {
@@ -22,27 +24,28 @@ namespace Neo.Plugins
         public const string ASSET_CRONIUM = "c56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b";
         public const string ASSET_CRON = "602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7";
         private static Dictionary<string, string> _systemAssets;
-                 
 
-        private string SendWithKey(byte[] privateKeyFrom, decimal amount, decimal systemFee, string addressTo, UInt256 th, byte [] remarksAttr)
+
+        private string SendWithKey(byte[][] privateKeyFrom, decimal amount, decimal systemFee, string addressTo, UInt256 th, byte[] remarksAttr)
         {
-            KeyPair fromKey = new KeyPair(privateKeyFrom);
+            KeyPair[] fromKey = privateKeyFrom.Select(x => new KeyPair(x)).ToArray();
 
             bool b = SendAsset(fromKey, addressTo, th, amount, systemFee, remarksAttr, out string tx_hash);
-            return tx_hash;            
+            return tx_hash;
         }
 
-        public bool SendAsset(KeyPair fromKey, string toAddress, UInt256 symbol, decimal amount, 
+        public bool SendAsset(KeyPair[] fromKey, string toAddress, UInt256 symbol, decimal amount,
             decimal systemFee, byte[] remarksAttr, out string tx_hash)
         {
             tx_hash = null;
-            if (String.Equals(fromKey.AsAddress(), toAddress, StringComparison.OrdinalIgnoreCase))
+            if (String.Equals(fromKey.First().AsAddress(), toAddress, StringComparison.OrdinalIgnoreCase))
             {
                 throw new RpcException(-7090, "Source and dest addresses are the same");
             }
 
             var toScriptHash = toAddress.ToScriptHash();
-            var target = new  TransactionOutput() {
+            var target = new TransactionOutput()
+            {
                 ScriptHash = toScriptHash,
                 Value = Fixed8.FromDecimal(amount),
                 AssetId = symbol
@@ -51,13 +54,13 @@ namespace Neo.Plugins
             return SendAsset(fromKey, symbol, targets, remarksAttr, systemFee, out tx_hash);
         }
 
-        public bool SendAsset(KeyPair fromKey, UInt256 symbol, IEnumerable<TransactionOutput> targets,
+        public bool SendAsset(KeyPair[] fromKey, UInt256 symbol, IEnumerable<TransactionOutput> targets,
             byte[] remarksAttr, decimal system_fee, out string tx_hash)
         {
             List<CoinReference> inputs;
             List<TransactionOutput> outputs;
             GenerateInputsOutputsWithSymbol(fromKey, symbol, targets, out inputs, out outputs, system_fee);
-            
+
             ContractTransaction tx = new ContractTransaction()
             {
                 Attributes = GetRemarksAttrArray(remarksAttr),
@@ -65,7 +68,7 @@ namespace Neo.Plugins
                 Inputs = inputs.ToArray(),
                 Outputs = outputs.ToArray()
             };
-            
+
             tx_hash = tx.Hash.ToString();
 
             return SignAndRelay(tx, fromKey);
@@ -79,29 +82,29 @@ namespace Neo.Plugins
             };
         }
 
-        public void GenerateInputsOutputsWithSymbol(KeyPair key, UInt256 symbol, 
-            IEnumerable<TransactionOutput> targets, 
-            out List<CoinReference> inputs, 
+        public void GenerateInputsOutputsWithSymbol(KeyPair[] key, UInt256 symbol,
+            IEnumerable<TransactionOutput> targets,
+            out List<CoinReference> inputs,
             out List<TransactionOutput> outputs, decimal system_fee = 0)
         {
-            var from_script_hash = (key.AsSignatureScript().HexToBytes().ToScriptHash());
+            var from_script_hash = (key.First().AsSignatureScript().HexToBytes().ToScriptHash());
 
             List<TransactionOutput> tgts = targets?.ToList();
             if (tgts != null)
-                tgts.ForEach( t => {
+                tgts.ForEach(t => {
                     if (t.AssetId == null)
-                        t.AssetId = symbol; 
+                        t.AssetId = symbol;
                 });
             //else Console.WriteLine("ASSETID target already existed: " + symbol);
-            GenerateInputsOutputs(from_script_hash, tgts, out inputs, out outputs, system_fee);
+            GenerateInputsOutputs(symbol, from_script_hash, tgts, out inputs, out outputs, system_fee);
         }
 
-        public void GenerateInputsOutputs(UInt160 from_script_hash, 
+        public void GenerateInputsOutputs(UInt256 symbol, UInt160 from_script_hash,
             IEnumerable<TransactionOutput> targets,
-            out List<CoinReference> inputs, 
+            out List<CoinReference> inputs,
             out List<TransactionOutput> outputs, decimal system_fee = 0)
         {
-            var unspent = GetUnspent(from_script_hash.ToAddress());
+            var unspent = GetUnspent(from_script_hash.ToAddress(), symbol);
             // filter any asset lists with zero unspent inputs
             unspent = unspent.Where(pair => pair.Value.Count > 0).ToDictionary(pair => pair.Key, pair => pair.Value);
 
@@ -109,7 +112,14 @@ namespace Neo.Plugins
             outputs = new List<TransactionOutput>();
 
             var from_address = from_script_hash.ToAddress();
+
+            var r = Blockchain.Singleton.GetSnapshot().Assets.TryGet(symbol);
+            if (r == null)
+                throw new RpcException(-7166, "Token not found");
             var info = GetAssetsInfo();
+            if (!info.ContainsKey(r.GetName()))
+                info[r.GetName()] = symbol.ToString().Substring(2);
+
 
             // dummy tx to self
             if (targets == null)
@@ -126,15 +136,15 @@ namespace Neo.Plugins
 
                 inputs.Add(new CoinReference()
                 {
-                    PrevHash = UInt256.Parse( src.txid ),
-                    PrevIndex = (ushort) src.index,
+                    PrevHash = UInt256.Parse(src.txid),
+                    PrevIndex = (ushort)src.index,
                 });
 
                 outputs.Add(new TransactionOutput()
                 {
                     AssetId = new UInt256(targetAssetID),
                     ScriptHash = from_script_hash,
-                    Value = Fixed8.FromDecimal( selected )
+                    Value = Fixed8.FromDecimal(selected)
                 });
                 return;
             }
@@ -162,7 +172,7 @@ namespace Neo.Plugins
                     {
                         if (cost < 0)
                             cost = 0;
-                        cost += decimal.Parse( target.Value.ToString());
+                        cost += decimal.Parse(target.Value.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture);
                     }
 
                 // incorporate fee in GAS utxo, if sending GAS
@@ -191,8 +201,8 @@ namespace Neo.Plugins
                     selected += src.value;
                     inputs.Add(new CoinReference
                     {
-                        PrevHash = UInt256.Parse( src.txid ),
-                        PrevIndex = (ushort) src.index,
+                        PrevHash = UInt256.Parse(src.txid),
+                        PrevIndex = (ushort)src.index,
                     });
                     // Console.WriteLine("ADD inp " + src.ToString());
                 }
@@ -212,7 +222,7 @@ namespace Neo.Plugins
                         Value = Fixed8.FromDecimal(selected - cost)
                     });
             }
-          
+
 
         }
 
@@ -221,7 +231,7 @@ namespace Neo.Plugins
             if (_systemAssets == null)
             {
                 _systemAssets = new Dictionary<string, string>();
-                AddAsset("CRONIUM",  ASSET_CRONIUM);
+                AddAsset("CRONIUM", ASSET_CRONIUM);
                 AddAsset("CRON", ASSET_CRON);
             }
 
@@ -259,92 +269,126 @@ namespace Neo.Plugins
             }
             return script;
         }
-        
+
 
         public bool CallContract(KeyPair key, string scriptHash, byte[] bytes, out byte[] txhash)
         {
-            var unspent = GetUnspent(key.AsAddress());
-
-            if (!unspent.ContainsKey("CRON"))
-            {
-                throw new RpcException(-3227, "No CRONs available");
-            }
-
-            var sources = unspent["CRON"];
             var inputs = new List<CoinReference>();
-            var outputs = new List<TransactionOutput>();         
+            var outputs = new List<TransactionOutput>();
             decimal gasCost = 0;
 
-            decimal selectedGas = 0;
-            foreach (var src in sources)
+            if (key != null)
             {
-                selectedGas += src.value;
+                var unspent = GetUnspent(key.AsAddress(), UInt256.Zero);
 
-                var input = new CoinReference()
+                if (!unspent.ContainsKey("CRON"))
                 {
-                    PrevHash = UInt256.Parse( src.txid ),
-                    PrevIndex = (ushort) src.index,
-                };
+                    throw new RpcException(-3227, "No CRONs available");
+                }
 
-                inputs.Add(input);
+                var sources = unspent["CRON"];
 
-                if (selectedGas >= gasCost)
+                decimal selectedGas = 0;
+                foreach (var src in sources)
                 {
-                    break;
+                    selectedGas += src.value;
+
+                    var input = new CoinReference()
+                    {
+                        PrevHash = UInt256.Parse(src.txid),
+                        PrevIndex = (ushort)src.index,
+                    };
+
+                    inputs.Add(input);
+
+                    if (selectedGas >= gasCost)
+                    {
+                        break;
+                    }
+                }
+
+                if (selectedGas < gasCost)
+                {
+                    throw new RpcException(-3228, "Not enough CRONs available");
+                }
+
+                var targetAssetID = reverseHex(ASSET_CRON).HexToBytes();
+
+                if (selectedGas > gasCost)
+                {
+                    var left = selectedGas - gasCost;
+
+                    var change = new TransactionOutput()
+                    {
+                        AssetId = new UInt256(targetAssetID),
+                        ScriptHash = key.AsSignatureScript().HexToBytes().ToScriptHash(),
+                        Value = Fixed8.FromDecimal(left)
+                    };
+                    outputs.Add(change);
                 }
             }
 
-            if (selectedGas < gasCost)
-            {
-                throw new RpcException(-3228, "Not enough CRONs available");
-            }
-
-            var targetAssetID = reverseHex(ASSET_CRON).HexToBytes();
-
-            if (selectedGas > gasCost)
-            {
-                var left = selectedGas - gasCost;
-
-                var change = new  TransactionOutput()
-                {
-                    AssetId = new UInt256(targetAssetID),
-                    ScriptHash = key.AsSignatureScript().HexToBytes().ToScriptHash(),
-                    Value = Fixed8.FromDecimal(left)
-                };
-                outputs.Add(change);
-            }
-
             InvocationTransaction tx = new InvocationTransaction()
-            {                
+            {
                 Attributes = new TransactionAttribute[0],
                 Version = 0,
                 Script = bytes,
-                Gas = Fixed8.FromDecimal( gasCost ),
+                Gas = Fixed8.FromDecimal(gasCost),
                 Inputs = inputs.ToArray(),
                 Outputs = outputs.ToArray()
             };
 
+            if (key == null)
+                return CallNoInvoke(tx, out txhash);
+
+
             txhash = tx.Hash.ToArray().Reverse().ToArray();
-                        
-            return SignAndRelay(tx, key);            
+
+            return SignAndRelay(tx, new[] { key });
         }
 
-        private bool SignAndRelay(Transaction tx, KeyPair key)
+        private bool CallNoInvoke(InvocationTransaction tx, out byte[] txhash)
         {
-            byte[] signature = tx.Sign(key);
+            ApplicationEngine engine = ApplicationEngine.Run(tx.Script, tx);
 
-            var invocationScript = "40" + signature.ToHexString();
-            var verificationScript = key.AsSignatureScript();
-            tx.Witnesses =
-                new Witness[]
-                { new Witness()
-                {
-                  InvocationScript = invocationScript.HexToBytes(),
-                  VerificationScript = verificationScript.HexToBytes() }
-                };
+            bool fault = engine.State.HasFlag(VMState.FAULT);
 
+            Fixed8 gas = engine.GasConsumed - Fixed8.FromDecimal(10);
+            if (gas < Fixed8.Zero) gas = Fixed8.Zero;
+
+            var obj = new
+            {
+                VMState = engine.State.ToString(),
+                GasConsumed = (decimal)engine.GasConsumed,
+                EvaluationStack = engine.ResultStack.Select(p => p.ToParameter()).ToArray(),
+                GasToSpend = (decimal)gas.Ceiling()
+            };
+
+            string res = JsonConvert.SerializeObject(obj);
+            txhash = Encoding.UTF8.GetBytes(res);
+            return !fault;
+        }
+
+        private bool SignAndRelay(Transaction tx, KeyPair[] keys)
+        {
+            tx.Witnesses = keys
+                // if Share asset, it must be a set of keys for signatures.
+                // So in this case txn must be signed separately in order not to share 
+                // the private keys of receiving parties.
+                // And so it isn't multisig here. 
+                .Select(x => WitnessFor(tx, x))
+                .OrderBy(y => y.ScriptHash).ToArray();
             RelayResultReason reason = System.Blockchain.Ask<RelayResultReason>(tx).Result;
             return GetRelayResult(reason);
+        }
+
+        private Witness WitnessFor(Transaction tx, KeyPair key)
+        {
+            return new Witness()
+            {
+                InvocationScript = ("40" + tx.Sign(key).ToHexString()).HexToBytes(),
+                VerificationScript = (key.AsSignatureScript()).HexToBytes()
+            };
         }
 
         private static bool GetRelayResult(RelayResultReason reason)
@@ -380,26 +424,29 @@ namespace Neo.Plugins
             }
             return result;
         }
-        
+
 
         #endregion
-  
+
 
         public struct UnspentEntry
         {
             public string txid;
             public uint index;
             public decimal value;
-        }        
+        }
 
-        public Dictionary<string, List<UnspentEntry>> GetUnspent(string address)
+        public Dictionary<string, List<UnspentEntry>> GetUnspent(string address, UInt256 th)
         {
-            JObject unspent = ProcessGetUnspents(new JArray(address));
-            
+            JObject unspent =
+                th.Equals(UInt256.Zero) ?
+                ProcessGetUnspents(new JArray(address)) :
+                ProcessGetUnspents(new JArray(address, true, th.ToString()));
+
             var result = new Dictionary<string, List<UnspentEntry>>();
-            foreach (var node in (JArray) unspent["balance"])
+            foreach (var node in (JArray)unspent["balance"])
             {
-                var child = (JArray) node["unspent"];
+                var child = (JArray)node["unspent"];
                 if (child != null)
                 {
                     List<UnspentEntry> list;
@@ -446,7 +493,6 @@ namespace Neo.Plugins
             var bytes = kp.PublicKey.EncodePoint(true);
             return ("21" + bytes.ToHexString() + "ac");
         }
-
 
         public static byte[] ToBytePrivateKey(this string k1)
         {
