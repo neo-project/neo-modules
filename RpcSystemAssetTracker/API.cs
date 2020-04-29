@@ -13,6 +13,7 @@ using Akka.Actor;
 using Neo.Network.RPC;
 using Neo.IO;
 using Newtonsoft.Json;
+using System.Globalization;
 
 namespace Neo.Plugins
 {
@@ -25,19 +26,19 @@ namespace Neo.Plugins
         private static Dictionary<string, string> _systemAssets;
                  
 
-        private string SendWithKey(byte[] privateKeyFrom, decimal amount, decimal systemFee, string addressTo, UInt256 th, byte [] remarksAttr)
+        private string SendWithKey(byte[][] privateKeyFrom, decimal amount, decimal systemFee, string addressTo, UInt256 th, byte [] remarksAttr)
         {
-            KeyPair fromKey = new KeyPair(privateKeyFrom);
+            KeyPair [] fromKey = privateKeyFrom.Select(x=> new KeyPair(x)).ToArray();
 
             bool b = SendAsset(fromKey, addressTo, th, amount, systemFee, remarksAttr, out string tx_hash);
             return tx_hash;            
         }
 
-        public bool SendAsset(KeyPair fromKey, string toAddress, UInt256 symbol, decimal amount, 
+        public bool SendAsset(KeyPair []fromKey, string toAddress, UInt256 symbol, decimal amount, 
             decimal systemFee, byte[] remarksAttr, out string tx_hash)
         {
             tx_hash = null;
-            if (String.Equals(fromKey.AsAddress(), toAddress, StringComparison.OrdinalIgnoreCase))
+            if (String.Equals(fromKey.First().AsAddress(), toAddress, StringComparison.OrdinalIgnoreCase))
             {
                 throw new RpcException(-7090, "Source and dest addresses are the same");
             }
@@ -52,7 +53,7 @@ namespace Neo.Plugins
             return SendAsset(fromKey, symbol, targets, remarksAttr, systemFee, out tx_hash);
         }
 
-        public bool SendAsset(KeyPair fromKey, UInt256 symbol, IEnumerable<TransactionOutput> targets,
+        public bool SendAsset(KeyPair [] fromKey, UInt256 symbol, IEnumerable<TransactionOutput> targets,
             byte[] remarksAttr, decimal system_fee, out string tx_hash)
         {
             List<CoinReference> inputs;
@@ -80,12 +81,12 @@ namespace Neo.Plugins
             };
         }
 
-        public void GenerateInputsOutputsWithSymbol(KeyPair key, UInt256 symbol, 
+        public void GenerateInputsOutputsWithSymbol(KeyPair []key, UInt256 symbol, 
             IEnumerable<TransactionOutput> targets, 
             out List<CoinReference> inputs, 
             out List<TransactionOutput> outputs, decimal system_fee = 0)
         {
-            var from_script_hash = (key.AsSignatureScript().HexToBytes().ToScriptHash());
+            var from_script_hash = (key.First().AsSignatureScript().HexToBytes().ToScriptHash());
 
             List<TransactionOutput> tgts = targets?.ToList();
             if (tgts != null)
@@ -94,15 +95,15 @@ namespace Neo.Plugins
                         t.AssetId = symbol; 
                 });
             //else Console.WriteLine("ASSETID target already existed: " + symbol);
-            GenerateInputsOutputs(from_script_hash, tgts, out inputs, out outputs, system_fee);
+            GenerateInputsOutputs(symbol, from_script_hash, tgts, out inputs, out outputs, system_fee);
         }
 
-        public void GenerateInputsOutputs(UInt160 from_script_hash, 
+        public void GenerateInputsOutputs(UInt256 symbol, UInt160 from_script_hash, 
             IEnumerable<TransactionOutput> targets,
             out List<CoinReference> inputs, 
             out List<TransactionOutput> outputs, decimal system_fee = 0)
         {
-            var unspent = GetUnspent(from_script_hash.ToAddress());
+            var unspent = GetUnspent(from_script_hash.ToAddress(), symbol);
             // filter any asset lists with zero unspent inputs
             unspent = unspent.Where(pair => pair.Value.Count > 0).ToDictionary(pair => pair.Key, pair => pair.Value);
 
@@ -110,7 +111,14 @@ namespace Neo.Plugins
             outputs = new List<TransactionOutput>();
 
             var from_address = from_script_hash.ToAddress();
+
+            var r = Blockchain.Singleton.GetSnapshot().Assets.TryGet(symbol);
+            if (r == null)
+                throw new RpcException(-7166, "Token not found");
             var info = GetAssetsInfo();
+            if(!info.ContainsKey(r.GetName()))            
+                info[r.GetName()] = symbol.ToString().Substring(2);
+            
 
             // dummy tx to self
             if (targets == null)
@@ -163,7 +171,7 @@ namespace Neo.Plugins
                     {
                         if (cost < 0)
                             cost = 0;
-                        cost += decimal.Parse( target.Value.ToString());
+                        cost += decimal.Parse( target.Value.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture);
                     }
 
                 // incorporate fee in GAS utxo, if sending GAS
@@ -270,7 +278,7 @@ namespace Neo.Plugins
 
             if (key != null)
             {
-                var unspent = GetUnspent(key.AsAddress());
+                var unspent = GetUnspent(key.AsAddress(), UInt256.Zero);
 
                 if (!unspent.ContainsKey("CRON"))
                 {
@@ -335,7 +343,7 @@ namespace Neo.Plugins
 
             txhash = tx.Hash.ToArray().Reverse().ToArray();
                         
-            return SignAndRelay(tx, key);            
+            return SignAndRelay(tx, new[] { key });            
         }
 
         private bool CallNoInvoke(InvocationTransaction tx, out byte[] txhash)
@@ -360,22 +368,26 @@ namespace Neo.Plugins
             return !fault;
         }
 
-        private bool SignAndRelay(Transaction tx, KeyPair key)
-        {
-            byte[] signature = tx.Sign(key);
-
-            var invocationScript = "40" + signature.ToHexString();
-            var verificationScript = key.AsSignatureScript();
-            tx.Witnesses =
-                new Witness[]
-                { new Witness()
-                {
-                  InvocationScript = invocationScript.HexToBytes(),
-                  VerificationScript = verificationScript.HexToBytes() }
-                };
-
+        private bool SignAndRelay(Transaction tx, KeyPair []keys )
+        {  
+            tx.Witnesses = keys 
+                // if Share asset, it must be a set of keys for signatures.
+                // So in this case txn must be signed separately in order not to share 
+                // the private keys of receiving parties.
+                // And so it isn't multisig here. 
+                .Select(x => WitnessFor(tx, x))
+                .OrderBy(y => y.ScriptHash).ToArray();
             RelayResultReason reason = System.Blockchain.Ask<RelayResultReason>(tx).Result;
             return GetRelayResult(reason);
+        }
+
+        private Witness WitnessFor(Transaction tx, KeyPair key)
+        {
+            return new Witness()
+            {
+                InvocationScript = ("40" + tx.Sign(key).ToHexString()).HexToBytes(),
+                VerificationScript = (key.AsSignatureScript()).HexToBytes()
+            };
         }
 
         private static bool GetRelayResult(RelayResultReason reason)
@@ -423,9 +435,12 @@ namespace Neo.Plugins
             public decimal value;
         }        
 
-        public Dictionary<string, List<UnspentEntry>> GetUnspent(string address)
+        public Dictionary<string, List<UnspentEntry>> GetUnspent(string address, UInt256 th)
         {
-            JObject unspent = ProcessGetUnspents(new JArray(address));
+            JObject unspent = 
+                th.Equals(UInt256.Zero) ?
+                ProcessGetUnspents(new JArray(address)) :
+                ProcessGetUnspents(new JArray(address, true, th.ToString()));
             
             var result = new Dictionary<string, List<UnspentEntry>>();
             foreach (var node in (JArray) unspent["balance"])
@@ -477,7 +492,6 @@ namespace Neo.Plugins
             var bytes = kp.PublicKey.EncodePoint(true);
             return ("21" + bytes.ToHexString() + "ac");
         }
-
 
         public static byte[] ToBytePrivateKey(this string k1)
         {

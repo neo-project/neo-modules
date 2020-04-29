@@ -69,6 +69,7 @@ namespace Neo.Plugins
                 switch (code)
                 {
                     case 0: return StatScenarioZero(parameters);
+                    case 1: return Assets();
                 }
 
                 throw new Neo.Network.RPC.RpcException(-7171, "Wrong submethod code");
@@ -100,6 +101,22 @@ namespace Neo.Plugins
             return method != "getunspents" ? null : ProcessGetUnspents(parameters);
         }
 
+        private JObject Assets()
+        { 
+            JArray aa = new JArray(); 
+
+            var r = Blockchain.Singleton.GetSnapshot().Assets.Find();
+            foreach(var rr in r)
+            {
+                JObject o = new JObject();
+                o["id"] = rr.Key.ToString();
+                o["name"] = rr.Value.GetName();
+                aa.Add(o);
+            }
+
+            return aa;
+        }
+
         public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
         {
         }
@@ -107,11 +124,17 @@ namespace Neo.Plugins
         public override void Configure()
         {
 #if DEBUG
-            string h = string.Join(Environment.NewLine, Assembly.GetCallingAssembly().CustomAttributes.Select
+            var ce = Assembly.GetExecutingAssembly().CustomAttributes;
+            string h = string.Join(Environment.NewLine, ce.Select
                 (x => x.AttributeType.Name + ": "
                      + string.Join(", ", x.ConstructorArguments.Select(y => y.Value.ToString()))));
 
-            Console.WriteLine($"PID: {Process.GetCurrentProcess().Id} RpcSystemAssetTrackerPlugin v2.9.4.5: Configure()");
+            var ver = ce.Where(x => x.AttributeType.Name == "AssemblyFileVersionAttribute")
+                .FirstOrDefault()?
+                .ConstructorArguments?.Select(y => y.Value.ToString())
+                .FirstOrDefault();            
+
+            Console.WriteLine($"PID: {Process.GetCurrentProcess().Id} RpcSystemAssetTrackerPlugin v{ver}: Configure()");
             Console.WriteLine(h);
 #endif
 
@@ -157,6 +180,8 @@ namespace Neo.Plugins
             }
 
             ResetBatch();
+            
+            var r = snapshot.Assets.Find();
 
             var transactionsCache = snapshot.Transactions;
             foreach (Transaction tx in block.Transactions)
@@ -164,12 +189,14 @@ namespace Neo.Plugins
                 ushort outputIndex = 0;
                 foreach (TransactionOutput output in tx.Outputs)
                 {
+                    byte idToken = GetTokenID(r, output.AssetId, transactionsCache);
                     bool isGoverningToken = output.AssetId.Equals(Blockchain.GoverningToken.Hash);
-                    if (isGoverningToken || output.AssetId.Equals(Blockchain.UtilityToken.Hash))
+                    //  if (isGoverningToken || output.AssetId.Equals(Blockchain.UtilityToken.Hash))
+                    if(idToken != 255)
                     {
                         // Add new unspent UTXOs by account script hash.
                         UserSystemAssetCoinOutputs outputs = _userUnspentCoins.GetAndChange(
-                            new UserSystemAssetCoinOutputsKey(isGoverningToken, output.ScriptHash, tx.Hash),
+                            new UserSystemAssetCoinOutputsKey(idToken, output.ScriptHash, tx.Hash),
                             () => new UserSystemAssetCoinOutputs());
                         outputs.AddTxIndex(outputIndex, output.Value);
                     }
@@ -186,12 +213,14 @@ namespace Neo.Plugins
                         // Get the output from the the previous transaction that is now being spent.
                         var outPrev = txPrev.Transaction.Outputs[input.PrevIndex];
 
+                        byte idToken = GetTokenID(r, outPrev.AssetId, transactionsCache);
                         bool isGoverningToken = outPrev.AssetId.Equals(Blockchain.GoverningToken.Hash);
-                        if (isGoverningToken || outPrev.AssetId.Equals(Blockchain.UtilityToken.Hash))
+                        // if (isGoverningToken || outPrev.AssetId.Equals(Blockchain.UtilityToken.Hash))
+                        if (idToken != 255)
                         {
                             // Remove spent UTXOs for unspent outputs by account script hash.
                             var userCoinOutputsKey =
-                                new UserSystemAssetCoinOutputsKey(isGoverningToken, outPrev.ScriptHash, input.PrevHash);
+                                new UserSystemAssetCoinOutputsKey(idToken, outPrev.ScriptHash, input.PrevHash);
                             UserSystemAssetCoinOutputs outputs = _userUnspentCoins.GetAndChange(
                                 userCoinOutputsKey, () => new UserSystemAssetCoinOutputs());
                             outputs.RemoveTxIndex(input.PrevIndex);
@@ -216,7 +245,7 @@ namespace Neo.Plugins
                         var outPrev = txPrev.Transaction.Outputs[input.PrevIndex];
 
                         var claimedCoinKey =
-                            new UserSystemAssetCoinOutputsKey(true, outPrev.ScriptHash, input.PrevHash);
+                            new UserSystemAssetCoinOutputsKey(1, outPrev.ScriptHash, input.PrevHash);
                         UserSystemAssetCoinOutputs spentUnclaimedOutputs = _userSpentUnclaimedCoins.GetAndChange(
                             claimedCoinKey, () => new UserSystemAssetCoinOutputs());
                         spentUnclaimedOutputs.RemoveTxIndex(input.PrevIndex);
@@ -234,6 +263,70 @@ namespace Neo.Plugins
             _lastPersistedBlock = block.Index;
             return true;
         }
+
+        private byte GetTokenID(IEnumerable<KeyValuePair<UInt256, AssetState>> r,
+            UInt256 assetId,
+            DataCache<UInt256, TransactionState> transactionsCache)
+        {
+            if (assetId.Equals(Blockchain.UtilityToken.Hash))
+                return 0;
+            if (assetId.Equals(Blockchain.GoverningToken.Hash))
+                return 1;
+
+            var asset = r.Where(x => x.Key.Equals(assetId)).Select(x => x.Value).FirstOrDefault();
+            if (asset == null)
+                return 255;
+            if (!EnsureCreatedTokenIdMap(r, asset, assetId, transactionsCache))
+                return 255;
+
+            return _dicTokenIds[assetId];
+        }
+
+        private bool EnsureCreatedTokenIdMap(
+            IEnumerable<KeyValuePair<UInt256, AssetState>> assets,
+            AssetState r, UInt256 id,
+            DataCache<UInt256, TransactionState> transactionsCache)
+        {
+            if (_dicTokenIds.ContainsKey(id))
+                return true;
+
+            Dictionary<string, UInt256> L = new Dictionary<string, UInt256>();
+            
+            assets = assets.Where(x => 
+               (!x.Key.Equals(Blockchain.GoverningToken.Hash)) 
+            && (!x.Key.Equals(Blockchain.UtilityToken.Hash)));
+
+            Console.WriteLine($"== Preparing assets: {assets.Count()}");
+
+            foreach (var s in assets)
+            {
+                Console.WriteLine($"==== {s.Value.GetName()} {s.Key.ToString()}");
+                var tx = transactionsCache.TryGet(s.Value.AssetId);
+                string f = tx.BlockIndex.ToString() + s.Value.AssetId.ToString();
+                L[f] = s.Value.AssetId;
+            }
+
+            var LKS = L.Keys.ToList();
+            LKS.Sort();
+
+            byte baseTokenID = 2;
+            foreach(var k in LKS)
+            {
+                var aid = L[k];
+                if (baseTokenID > 254)
+                    return false;       // still only 255 token IDs available
+                if (id.Equals(aid))
+                {
+                    Console.WriteLine($"=== Adding {aid.ToString()} with id = {baseTokenID}");
+                    _dicTokenIds[aid] = baseTokenID;
+                    return true;
+                }
+                baseTokenID++;
+            }
+            return false;
+        }
+
+        private Dictionary<UInt256, byte> _dicTokenIds = new Dictionary<UInt256, byte>();
 
         private void ProcessSkippedBlocks(Snapshot snapshot)
         {
@@ -437,7 +530,7 @@ namespace Neo.Plugins
                 var utxo = new JObject();
                 utxo["txid"] = txId;
                 utxo["n"] = unspent.Key;
-                utxo["value"] = (double)(decimal)unspent.Value;
+                utxo["value"] = new JNumber((double)(decimal)unspent.Value);
                 runningTotal += unspent.Value;
 
                 unspents.Add(utxo);
@@ -453,11 +546,20 @@ namespace Neo.Plugins
             byte startingToken = 0; // 0 = Utility Token (CRON), 1 = Governing Token (CRONIUM)
             int maxIterations = 2;
 
+            UInt256 th = UInt256.Zero; 
+
             if (_params.Count > 1)
             {
                 maxIterations = 1;
-                bool isGoverningToken = _params[1].AsBoolean();
+                bool isGoverningToken = (_params[1].AsString() == "yes");
                 if (isGoverningToken) startingToken = 1;
+
+                if (_params.Count > 2)
+                {
+                    th = ParseTokenHash(_params[2].AsString());
+                    startingToken = 0;
+                    maxIterations = 2;
+                }
             }
 
             var unspentsCache = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(
@@ -466,13 +568,31 @@ namespace Neo.Plugins
             string[] nativeAssetNames = { "CRON", "CRONIUM" };
             UInt256[] nativeAssetIds = { Blockchain.UtilityToken.Hash, Blockchain.GoverningToken.Hash };
 
+            byte tokenId = 255;
+            var snapshot =  Blockchain.Singleton.GetSnapshot();
+            var r = snapshot.Assets.Find();
+            var txs = snapshot.Transactions;
+            if (!th.Equals(UInt256.Zero))
+            {
+                tokenId = GetTokenID(r, th, txs);
+                if (tokenId != 255)
+                {
+                    nativeAssetNames[1] = snapshot.Assets.TryGet(th).GetName();
+                    nativeAssetIds[1] = th;
+                }
+                else
+                {
+                    throw new Neo.Network.RPC.RpcException(-7166, "Token not found");
+                }
+            }            
+
             JObject json = new JObject();
             JArray balances = new JArray();
             json["balance"] = balances;
             json["address"] = scriptHash.ToAddress();
             for (byte tokenIndex = startingToken; maxIterations-- > 0; tokenIndex++)
             {
-                byte[] prefix = new[] { tokenIndex }.Concat(scriptHash.ToArray()).ToArray();
+                byte[] prefix = new[] { (tokenId == 255 || tokenIndex == 0? tokenIndex : tokenId) }.Concat(scriptHash.ToArray()).ToArray();
 
                 var unspents = new JArray();
                 Fixed8 total = new Fixed8(0);

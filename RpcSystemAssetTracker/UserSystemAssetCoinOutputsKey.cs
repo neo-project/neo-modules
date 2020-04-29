@@ -8,7 +8,7 @@ namespace Neo.Plugins
     public class UserSystemAssetCoinOutputsKey : IComparable<UserSystemAssetCoinOutputsKey>, IEquatable<UserSystemAssetCoinOutputsKey>,
         ISerializable
     {
-        public bool IsGoverningToken; // It's either the governing token or the utility token
+        public byte IdToken; // It's either the governing token or the utility token
         public readonly UInt160 UserAddress;
         public readonly UInt256 TxHash;
 
@@ -18,7 +18,7 @@ namespace Neo.Plugins
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return IsGoverningToken == other.IsGoverningToken && Equals(UserAddress, other.UserAddress) && Equals(TxHash, other.TxHash);
+            return (IdToken == other.IdToken) && Equals(UserAddress, other.UserAddress) && Equals(TxHash, other.TxHash);
         }
 
         public override bool Equals(object obj)
@@ -33,7 +33,7 @@ namespace Neo.Plugins
         {
             if (ReferenceEquals(this, other)) return 0;
             if (ReferenceEquals(null, other)) return 1;
-            var isGoverningTokenComparison = IsGoverningToken.CompareTo(other.IsGoverningToken);
+            var isGoverningTokenComparison = IdToken.CompareTo(other.IdToken);
             if (isGoverningTokenComparison != 0) return isGoverningTokenComparison;
             var userAddressComparison = Comparer<UInt160>.Default.Compare(UserAddress, other.UserAddress);
             if (userAddressComparison != 0) return userAddressComparison;
@@ -44,7 +44,7 @@ namespace Neo.Plugins
         {
             unchecked
             {
-                var hashCode = IsGoverningToken.GetHashCode();
+                var hashCode = IdToken.GetHashCode();
                 hashCode = (hashCode * 397) ^ (UserAddress != null ? UserAddress.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (TxHash != null ? TxHash.GetHashCode() : 0);
                 return hashCode;
@@ -57,23 +57,23 @@ namespace Neo.Plugins
             TxHash = new UInt256();
         }
 
-        public UserSystemAssetCoinOutputsKey(bool isGoverningToken, UInt160 userAddress, UInt256 txHash)
+        public UserSystemAssetCoinOutputsKey(byte idToken, UInt160 userAddress, UInt256 txHash)
         {
-            IsGoverningToken = isGoverningToken;
+            IdToken = idToken;
             UserAddress = userAddress;
             TxHash = txHash;
         }
 
         public void Serialize(BinaryWriter writer)
         {
-            writer.Write(IsGoverningToken);
+            writer.Write(IdToken);
             writer.Write(UserAddress.ToArray());
             writer.Write(TxHash.ToArray());
         }
 
         public void Deserialize(BinaryReader reader)
         {
-            IsGoverningToken = reader.ReadBoolean();
+            IdToken = reader.ReadByte();
             ((ISerializable) UserAddress).Deserialize(reader);
             ((ISerializable) TxHash).Deserialize(reader);
         }

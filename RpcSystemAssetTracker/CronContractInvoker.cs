@@ -51,7 +51,7 @@ namespace Neo.Plugins
         {
             JObject obj = new JObject();
 
-            var privateKey = jArray[0].AsString().ToBytePrivateKey();
+            var privateKey = jArray[0].AsString().Split(';').Select(x => x.ToBytePrivateKey()).ToArray();
             var addressTo = jArray[1].AsString();
 
             var amount = GetDecimal(jArray[2]); 
@@ -82,7 +82,7 @@ namespace Neo.Plugins
         {
             JObject obj = new JObject();
 
-            var privateKey = jArray[0].AsString().ToBytePrivateKey();
+            var privateKey = jArray[0].AsString().Split(';').Select(x => x.ToBytePrivateKey()).ToArray();
             var arrayTargets = (JArray)jArray[1]; 
             UInt256 th = (jArray.Count > 2) ? ParseTokenHash(jArray[2].AsString()) : Blockchain.UtilityToken.Hash;
 
@@ -106,7 +106,7 @@ namespace Neo.Plugins
             byte[] bRemarks = (jArray.Count > 3) ? jArray[3].AsString().HexToBytes() : null;
             decimal systemFee = (jArray.Count > 4) ? (decimal)jArray[4].AsNumber() : 0.0m;
             
-            KeyPair fromKey = new KeyPair(privateKey);
+            KeyPair[] fromKey = privateKey.Select(x => new KeyPair(x)).ToArray();
             bool b = SendAsset(fromKey, th, targets, bRemarks, systemFee, out string txn_hash );
 
             obj["txn_hash"] = txn_hash;
@@ -129,10 +129,18 @@ namespace Neo.Plugins
             if(string.IsNullOrWhiteSpace(v))
                 return Blockchain.UtilityToken.Hash;
             v = v.Trim();
-            if (v.ToUpper() == "CRON" || v.Length == 0)
+            var rv = v.ToUpper();
+            if (rv == "CRON" || v.Length == 0)
                 return Blockchain.UtilityToken.Hash;
-            if (v.ToUpper() == "CRONIUM")
+            if (rv == "CRONIUM")
                 return Blockchain.GoverningToken.Hash;
+             
+             var r = Blockchain.Singleton.Store.GetAssets()?.Find();
+             var asset = r?.FirstOrDefault(x => x.Value.GetName().ToUpper() == rv).Value;
+            
+             if (asset != null)
+                    return asset.AssetId;           
+
             return UInt256.Parse(v);
         }
 
