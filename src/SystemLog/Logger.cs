@@ -14,7 +14,7 @@ namespace Neo.Plugins
             Settings.Load(GetConfiguration());
         }
 
-        void ILogPlugin.Log(string source, LogLevel level, string message)
+        void ILogPlugin.Log(string source, LogLevel level, object message)
         {
             lock (typeof(Logger))
             {
