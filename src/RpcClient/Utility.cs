@@ -1,7 +1,11 @@
 using Neo.Cryptography.ECC;
+using Neo.IO.Json;
+using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.Wallets;
 using System;
+using System.Globalization;
+using System.Linq;
 using System.Numerics;
 
 namespace Neo.Network.RPC
@@ -87,6 +91,88 @@ namespace Neo.Network.RPC
 
             BigInteger res = factor * numerator / denominator;
             return res;
+        }
+
+        public static Block BlockFromJson(JObject json)
+        {
+            Block block = new Block();
+            BlockBase blockBase = block;
+            blockBase.FromJson(json);
+            block.ConsensusData = ConsensusDataFromJson(json["consensus_data"]);
+            block.Transactions = ((JArray)json["tx"]).Select(p => TransactionFromJson(p)).ToArray();
+            return block;
+        }
+
+        public static void FromJson(this BlockBase block, JObject json)
+        {
+            block.Version = (uint)json["version"].AsNumber();
+            block.PrevHash = UInt256.Parse(json["previousblockhash"].AsString());
+            block.MerkleRoot = UInt256.Parse(json["merkleroot"].AsString());
+            block.Timestamp = (ulong)json["time"].AsNumber();
+            block.Index = (uint)json["index"].AsNumber();
+            block.NextConsensus = json["nextconsensus"].AsString().ToScriptHash();
+            block.Witness = ((JArray)json["witnesses"]).Select(p => WitnessFromJson(p)).FirstOrDefault();
+        }
+
+        public static Transaction TransactionFromJson(JObject json)
+        {
+            Transaction tx = new Transaction();
+            tx.Version = byte.Parse(json["version"].AsString());
+            tx.Nonce = uint.Parse(json["nonce"].AsString());
+            tx.Sender = json["sender"].AsString().ToScriptHash();
+            tx.SystemFee = long.Parse(json["sys_fee"].AsString());
+            tx.NetworkFee = long.Parse(json["net_fee"].AsString());
+            tx.ValidUntilBlock = uint.Parse(json["valid_until_block"].AsString());
+            tx.Attributes = ((JArray)json["attributes"]).Select(p => TransactionAttributeFromJson(p)).ToArray();
+            tx.Cosigners = ((JArray)json["cosigners"]).Select(p => CosignerFromJson(p)).ToArray();
+            tx.Script = Convert.FromBase64String(json["script"].AsString());
+            tx.Witnesses = ((JArray)json["witnesses"]).Select(p => WitnessFromJson(p)).ToArray();
+            return tx;
+        }
+
+        public static Header HeaderFromJson(JObject json)
+        {
+            Header header = new Header();
+            BlockBase blockBase = header;
+            blockBase.FromJson(json);
+            return header;
+        }
+
+        public static Cosigner CosignerFromJson(JObject json)
+        {
+            return new Cosigner
+            {
+                Account = UInt160.Parse(json["account"].AsString()),
+                Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), json["scopes"].AsString()),
+                AllowedContracts = ((JArray)json["allowedContracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray(),
+                AllowedGroups = ((JArray)json["allowedGroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
+            };
+        }
+
+        public static ConsensusData ConsensusDataFromJson(JObject json)
+        {
+            ConsensusData block = new ConsensusData();
+            block.PrimaryIndex = (uint)json["primary"].AsNumber();
+            block.Nonce = ulong.Parse(json["nonce"].AsString(), NumberStyles.HexNumber);
+            return block;
+        }
+
+        public static TransactionAttribute TransactionAttributeFromJson(JObject json)
+        {
+            TransactionAttribute transactionAttribute = new TransactionAttribute();
+            transactionAttribute.Usage = (TransactionAttributeUsage)byte.Parse(json["usage"].AsString());
+            if (!Enum.IsDefined(typeof(TransactionAttributeUsage), transactionAttribute.Usage))
+                throw new ArgumentException();
+            transactionAttribute.Data = Convert.FromBase64String(json["data"].AsString());
+            return transactionAttribute;
+        }
+
+        public static Witness WitnessFromJson(JObject json)
+        {
+            Witness witness = new Witness();
+            witness.InvocationScript = Convert.FromBase64String(json["invocation"].AsString());
+            witness.VerificationScript = Convert.FromBase64String(json["verification"].AsString());
+            return witness;
         }
     }
 }

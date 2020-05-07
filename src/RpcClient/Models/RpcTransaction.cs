@@ -35,7 +35,7 @@ namespace Neo.Network.RPC.Models
         public static RpcTransaction FromJson(JObject json)
         {
             RpcTransaction transaction = new RpcTransaction();
-            transaction.Transaction = Transaction.FromJson(json);
+            transaction.Transaction = Utility.TransactionFromJson(json);
             if (json["confirmations"] != null)
             {
                 transaction.BlockHash = UInt256.Parse(json["blockhash"].AsString());
