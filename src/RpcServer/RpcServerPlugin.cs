@@ -5,6 +5,7 @@ namespace Neo.Plugins
     public sealed class RpcServerPlugin : Plugin
     {
         static List<object> handlers = new List<object>();
+        public override string Name => "RpcServer";
         RpcServer server;
         RpcServerSettings settings;
 
