@@ -112,7 +112,7 @@ namespace Neo.Network.RPC
 
             byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
             Transaction tx = new TransactionManager(rpcClient, sender)
-                .MakeTransaction(script, null, cosigners)
+                .MakeTransaction(script, cosigners)
                 .AddSignature(fromKey)
                 .Sign()
                 .Tx;
@@ -139,7 +139,7 @@ namespace Neo.Network.RPC
 
             byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
             Transaction tx = new TransactionManager(rpcClient, sender)
-                .MakeTransaction(script, null, cosigners)
+                .MakeTransaction(script, cosigners)
                 .AddMultiSig(fromKeys, m, pubKeys)
                 .Sign()
                 .Tx;

@@ -40,7 +40,6 @@ namespace Neo.Network.RPC.Tests
                 Script = new byte[1],
                 Sender = UInt160.Zero,
                 Attributes = new TransactionAttribute[0],
-                Cosigners = new Cosigner[0],
                 Witnesses = new Witness[]
                 {
                     new Witness

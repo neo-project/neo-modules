@@ -56,9 +56,8 @@ namespace Neo.Network.RPC
         /// </summary>
         /// <param name="script">Transaction Script</param>
         /// <param name="attributes">Transaction Attributes</param>
-        /// <param name="cosigners">Transaction Cosigners</param>
         /// <returns></returns>
-        public TransactionManager MakeTransaction(byte[] script, TransactionAttribute[] attributes = null, Cosigner[] cosigners = null)
+        public TransactionManager MakeTransaction(byte[] script, TransactionAttribute[] attributes = null)
         {
             var random = new Random();
             uint height = rpcClient.GetBlockCount() - 1;
@@ -70,7 +69,6 @@ namespace Neo.Network.RPC
                 Sender = sender,
                 ValidUntilBlock = height + Transaction.MaxValidUntilBlockIncrement,
                 Attributes = attributes ?? Array.Empty<TransactionAttribute>(),
-                Cosigners = cosigners ?? Array.Empty<Cosigner>(),
                 Witnesses = Array.Empty<Witness>()
             };
 

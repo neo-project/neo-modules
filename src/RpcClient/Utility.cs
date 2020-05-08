@@ -124,7 +124,6 @@ namespace Neo.Network.RPC
             tx.NetworkFee = long.Parse(json["net_fee"].AsString());
             tx.ValidUntilBlock = uint.Parse(json["valid_until_block"].AsString());
             tx.Attributes = ((JArray)json["attributes"]).Select(p => TransactionAttributeFromJson(p)).ToArray();
-            tx.Cosigners = ((JArray)json["cosigners"]).Select(p => CosignerFromJson(p)).ToArray();
             tx.Script = Convert.FromBase64String(json["script"].AsString());
             tx.Witnesses = ((JArray)json["witnesses"]).Select(p => WitnessFromJson(p)).ToArray();
             return tx;
@@ -159,12 +158,13 @@ namespace Neo.Network.RPC
 
         public static TransactionAttribute TransactionAttributeFromJson(JObject json)
         {
-            TransactionAttribute transactionAttribute = new TransactionAttribute();
-            transactionAttribute.Usage = (TransactionAttributeUsage)byte.Parse(json["usage"].AsString());
-            if (!Enum.IsDefined(typeof(TransactionAttributeUsage), transactionAttribute.Usage))
-                throw new ArgumentException();
-            transactionAttribute.Data = Convert.FromBase64String(json["data"].AsString());
-            return transactionAttribute;
+            TransactionAttributeType usage = Enum.Parse<TransactionAttributeType>(json["type"].AsString());
+
+            switch (usage)
+            {
+                case TransactionAttributeType.Cosigner: return CosignerFromJson(json);
+                default: throw new FormatException();
+            }
         }
 
         public static Witness WitnessFromJson(JObject json)
