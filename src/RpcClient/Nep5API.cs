@@ -1,8 +1,10 @@
+using Neo.Cryptography.ECC;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
 using Neo.VM;
 using Neo.Wallets;
+using System;
 using System.Linq;
 using System.Numerics;
 using static Neo.Helper;
@@ -112,6 +114,33 @@ namespace Neo.Network.RPC
             Transaction tx = new TransactionManager(rpcClient, sender)
                 .MakeTransaction(script, null, cosigners)
                 .AddSignature(fromKey)
+                .Sign()
+                .Tx;
+
+            return tx;
+        }
+
+        /// <summary>
+        /// Create NEP5 token transfer transaction from multi-sig account
+        /// </summary>
+        /// <param name="scriptHash">contract script hash</param>
+        /// <param name="m">multi-sig min signature count</param>
+        /// <param name="pubKeys">multi-sig pubKeys</param>
+        /// <param name="fromKeys">sign keys</param>
+        /// <param name="to">to account</param>
+        /// <param name="amount">transfer amount</param>
+        /// <returns></returns>
+        public Transaction CreateTransferTx(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] fromKeys, UInt160 to, BigInteger amount)
+        {
+            if (m > fromKeys.Length)
+                throw new ArgumentException($"Need at least {m} KeyPairs for signing!");
+            var sender = Contract.CreateMultiSigContract(m, pubKeys).ScriptHash;
+            Cosigner[] cosigners = new[] { new Cosigner { Scopes = WitnessScope.CalledByEntry, Account = sender } };
+
+            byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
+            Transaction tx = new TransactionManager(rpcClient, sender)
+                .MakeTransaction(script, null, cosigners)
+                .AddMultiSig(fromKeys, m, pubKeys)
                 .Sign()
                 .Tx;
 

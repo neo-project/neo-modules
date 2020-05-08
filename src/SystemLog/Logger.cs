@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using static System.IO.Path;
 
 namespace Neo.Plugins
@@ -39,7 +40,10 @@ namespace Neo.Plugins
 
                 if (!string.IsNullOrEmpty(Settings.Default.Path))
                 {
-                    var path = Combine(Settings.Default.Path, source);
+                    StringBuilder sb = new StringBuilder(source);
+                    foreach (char c in GetInvalidFileNameChars())
+                        sb.Replace(c, '-');
+                    var path = Combine(Settings.Default.Path, sb.ToString());
                     Directory.CreateDirectory(path);
                     path = Combine(path, $"{now:yyyy-MM-dd}.log");
                     File.AppendAllLines(path, new[] { $"[{level}]{log}" });

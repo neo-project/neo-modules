@@ -39,7 +39,20 @@ namespace Neo.Network.RPC.Tests
         public void TestDeployContract()
         {
             byte[] script;
-            var manifest = ContractManifest.CreateDefault(new byte[1].ToScriptHash());
+            var manifest = new ContractManifest()
+            {
+                Permissions = new[] { ContractPermission.DefaultPermission },
+                Abi = new ContractAbi()
+                {
+                    Hash = new byte[1].ToScriptHash(),
+                    Events = new ContractEventDescriptor[0],
+                    Methods = new ContractMethodDescriptor[0]
+                },
+                Groups = new ContractGroup[0],
+                SafeMethods = WildcardContainer<string>.Create(),
+                Trusts = WildcardContainer<UInt160>.Create(),
+                Extra = null,
+            };
             manifest.Features = ContractFeatures.HasStorage | ContractFeatures.Payable;
             using (ScriptBuilder sb = new ScriptBuilder())
             {

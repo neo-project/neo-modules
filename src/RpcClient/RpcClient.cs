@@ -3,6 +3,7 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
+using Neo.SmartContract.Manifest;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -179,7 +180,17 @@ namespace Neo.Network.RPC
         /// </summary>
         public ContractState GetContractState(string hash)
         {
-            return RpcContractState.FromJson(RpcSend("getcontractstate", hash)).ContractState;
+            return ContractStateFromJson(RpcSend("getcontractstate", hash));
+        }
+
+        public static ContractState ContractStateFromJson(JObject json)
+        {
+            return new ContractState
+            {
+                Id = (int)json["id"].AsNumber(),
+                Script = Convert.FromBase64String(json["script"].AsString()),
+                Manifest = ContractManifest.FromJson(json["manifest"])
+            };
         }
 
         /// <summary>
@@ -305,9 +316,14 @@ namespace Neo.Network.RPC
         /// Returns the result after calling a smart contract at scripthash with the given operation and parameters.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
-        public RpcInvokeResult InvokeFunction(string scriptHash, string operation, RpcStack[] stacks)
+        public RpcInvokeResult InvokeFunction(string scriptHash, string operation, RpcStack[] stacks, params UInt160[] scriptHashesForVerifying)
         {
-            return RpcInvokeResult.FromJson(RpcSend("invokefunction", scriptHash, operation, stacks.Select(p => p.ToJson()).ToArray()));
+            List<JObject> parameters = new List<JObject> { scriptHash, operation, stacks.Select(p => p.ToJson()).ToArray() };
+            if (scriptHashesForVerifying.Length > 0)
+            {
+                parameters.Add(scriptHashesForVerifying.Select(p => (JObject)p.ToString()).ToArray());
+            }
+            return RpcInvokeResult.FromJson(RpcSend("invokefunction", parameters.ToArray()));
         }
 
         /// <summary>
@@ -316,11 +332,11 @@ namespace Neo.Network.RPC
         /// </summary>
         public RpcInvokeResult InvokeScript(byte[] script, params UInt160[] scriptHashesForVerifying)
         {
-            List<JObject> parameters = new List<JObject>
+            List<JObject> parameters = new List<JObject> { script.ToHexString() };
+            if (scriptHashesForVerifying.Length > 0)
             {
-                script.ToHexString()
-            };
-            parameters.AddRange(scriptHashesForVerifying.Select(p => (JObject)p.ToString()));
+                parameters.Add(scriptHashesForVerifying.Select(p => (JObject)p.ToString()).ToArray());
+            }
             return RpcInvokeResult.FromJson(RpcSend("invokescript", parameters.ToArray()));
         }
 

@@ -78,16 +78,6 @@ namespace Neo.Network.RPC
             UInt160[] hashes = Tx.GetScriptHashesForVerifying(null);
             RpcInvokeResult result = rpcClient.InvokeScript(script, hashes);
             Tx.SystemFee = Math.Max(long.Parse(result.GasConsumed) - ApplicationEngine.GasFree, 0);
-            if (Tx.SystemFee > 0)
-            {
-                long d = (long)NativeContract.GAS.Factor;
-                long remainder = Tx.SystemFee % d;
-                if (remainder > 0)
-                    Tx.SystemFee += d - remainder;
-                else if (remainder < 0)
-                    Tx.SystemFee -= remainder;
-            }
-
             context = new ContractParametersContext(Tx);
             signStore = new List<SignItem>();
 
@@ -147,6 +137,21 @@ namespace Neo.Network.RPC
         {
             Contract contract = Contract.CreateMultiSigContract(m, publicKeys);
             AddSignItem(contract, key);
+            return this;
+        }
+
+        /// <summary>
+        /// Add Multi-Signature
+        /// </summary>
+        /// <param name="keys">The KeyPairs to sign transction</param>
+        /// <param name="m">The least count of signatures needed for multiple signature contract</param>
+        /// <param name="publicKeys">The Public Keys construct the multiple signature contract</param>
+        public TransactionManager AddMultiSig(KeyPair[] keys, int m, params ECPoint[] publicKeys)
+        {
+            foreach (var key in keys)
+            {
+                AddMultiSig(key, m, publicKeys);
+            }
             return this;
         }
 
