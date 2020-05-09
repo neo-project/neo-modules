@@ -48,15 +48,6 @@ namespace Neo.Plugins
         public static void RegisterMethods(object handler)
         {
             handlers.Add(handler);
-
-            foreach (var plugin in Plugin.Plugins)
-            {
-                if (plugin is RpcServerPlugin rpcServerPlugin)
-                {
-                    rpcServerPlugin.server.RegisterMethods(handler);
-                    return;
-                }
-            }
         }
     }
 }
