@@ -84,7 +84,8 @@ namespace Neo.Network.RPC.Tests
             {
                 new Cosigner
                 {
-                      Scopes= WitnessScope.Global
+                    Account = sender,
+                    Scopes= WitnessScope.Global
                 }
             };
 
@@ -92,7 +93,7 @@ namespace Neo.Network.RPC.Tests
             txManager.MakeTransaction(script, attributes);
 
             var tx = txManager.Tx;
-            Assert.AreEqual(WitnessScope.Global, (tx.Attributes[0] as Cosigner));
+            Assert.AreEqual(WitnessScope.Global, (tx.Attributes[0] as Cosigner).Scopes);
         }
 
         [TestMethod]
@@ -100,15 +101,17 @@ namespace Neo.Network.RPC.Tests
         {
             txManager = new TransactionManager(rpcClientMock.Object, sender);
 
-            Cosigner[] cosigners = new Cosigner[1] {
-                new Cosigner{
+            var attributes = new TransactionAttribute[1]
+            {
+                new Cosigner
+                {
                     Account  =  sender,
                     Scopes = WitnessScope.Global
                 }
             };
 
             byte[] script = new byte[1];
-            txManager.MakeTransaction(script, cosigners)
+            txManager.MakeTransaction(script, attributes)
                 .AddSignature(keyPair1)
                 .Sign();
 
