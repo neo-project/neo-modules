@@ -75,10 +75,17 @@ namespace Neo.Plugins
                     Directory.CreateDirectory(path);
                     path = Combine(path, $"{now:yyyy-MM-dd}.log");
 
-                    using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read))
-                    using (var writer = new StreamWriter(fs))
+                    try
                     {
-                        writer.WriteLine($"[{level}]{log}");
+                        using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read))
+                        using (var writer = new StreamWriter(fs))
+                        {
+                            writer.WriteLine($"[{level}]{log}");
+                        }
+                    }
+                    catch (IOException)
+                    {
+                        Console.WriteLine("Error writing the log file: " + path);
                     }
                 }
             }
