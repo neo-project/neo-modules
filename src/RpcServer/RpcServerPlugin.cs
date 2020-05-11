@@ -47,17 +47,6 @@ namespace Neo.Plugins
 
         public static void RegisterMethods(object handler)
         {
-            // if RpcServerPlugin is already loaded, call RegisterMethods directly
-            foreach (var plugin in Plugin.Plugins)
-            {
-                if (plugin is RpcServerPlugin rpcServerPlugin)
-                {
-                    rpcServerPlugin.server.RegisterMethods(handler);
-                    return;
-                }
-            }
-
-            // otherwise, save the handler for use during RpcServerPlugin load
             handlers.Add(handler);
         }
     }
