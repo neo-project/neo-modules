@@ -77,11 +77,7 @@ namespace Neo.Plugins
 
                     try
                     {
-                        using (var fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read))
-                        using (var writer = new StreamWriter(fs))
-                        {
-                            writer.WriteLine($"[{level}]{log}");
-                        }
+                         File.AppendAllLines(path, new[] { $"[{level}]{log}" });
                     }
                     catch (IOException)
                     {
