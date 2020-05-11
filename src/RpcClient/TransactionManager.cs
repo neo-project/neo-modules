@@ -56,9 +56,8 @@ namespace Neo.Network.RPC
         /// </summary>
         /// <param name="script">Transaction Script</param>
         /// <param name="attributes">Transaction Attributes</param>
-        /// <param name="cosigners">Transaction Cosigners</param>
         /// <returns></returns>
-        public TransactionManager MakeTransaction(byte[] script, TransactionAttribute[] attributes = null, Cosigner[] cosigners = null)
+        public TransactionManager MakeTransaction(byte[] script, TransactionAttribute[] attributes = null)
         {
             var random = new Random();
             uint height = rpcClient.GetBlockCount() - 1;
@@ -70,7 +69,6 @@ namespace Neo.Network.RPC
                 Sender = sender,
                 ValidUntilBlock = height + Transaction.MaxValidUntilBlockIncrement,
                 Attributes = attributes ?? Array.Empty<TransactionAttribute>(),
-                Cosigners = cosigners ?? Array.Empty<Cosigner>(),
                 Witnesses = Array.Empty<Witness>()
             };
 
@@ -92,7 +90,7 @@ namespace Neo.Network.RPC
         {
             long networkFee = 0;
             UInt160[] hashes = Tx.GetScriptHashesForVerifying(null);
-            int size = Transaction.HeaderSize + Tx.Attributes.GetVarSize() + Tx.Cosigners.GetVarSize() + Tx.Script.GetVarSize() + IO.Helper.GetVarSize(hashes.Length);
+            int size = Transaction.HeaderSize + Tx.Attributes.GetVarSize() + Tx.Script.GetVarSize() + IO.Helper.GetVarSize(hashes.Length);
             foreach (UInt160 hash in hashes)
             {
                 byte[] witness_script = null;
