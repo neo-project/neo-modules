@@ -74,14 +74,14 @@ namespace Neo.Plugins
                     var path = Combine(Settings.Default.Path, sb.ToString());
                     Directory.CreateDirectory(path);
                     path = Combine(path, $"{now:yyyy-MM-dd}.log");
-
                     try
                     {
-                         File.AppendAllLines(path, new[] { $"[{level}]{log}" });
+                        File.AppendAllLines(path, new[] { $"[{level}]{log}" });
                     }
                     catch (IOException)
                     {
                         Console.WriteLine("Error writing the log file: " + path);
+
                     }
                 }
             }
