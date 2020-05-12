@@ -54,7 +54,7 @@ namespace Neo.Network.RPC
 
             UInt160 sender = Contract.CreateSignatureRedeemScript(key.PublicKey).ToScriptHash();
             Transaction tx = new TransactionManager(rpcClient, sender)
-                .MakeTransaction(script, null, null)
+                .MakeTransaction(script, null)
                 .AddSignature(key)
                 .Sign()
                 .Tx;

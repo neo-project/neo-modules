@@ -80,20 +80,20 @@ namespace Neo.Network.RPC.Tests
         {
             txManager = new TransactionManager(rpcClientMock.Object, sender);
 
-            TransactionAttribute[] attributes = new TransactionAttribute[1]
+            var attributes = new TransactionAttribute[1]
             {
-                new TransactionAttribute
+                new Cosigner
                 {
-                    Usage = TransactionAttributeUsage.Url,
-                    Data = "53616d706c6555726c".HexToBytes() // "SampleUrl"
+                    Account = sender,
+                    Scopes= WitnessScope.Global
                 }
             };
 
             byte[] script = new byte[1];
-            txManager.MakeTransaction(script, attributes, null);
+            txManager.MakeTransaction(script, attributes);
 
             var tx = txManager.Tx;
-            Assert.AreEqual("53616d706c6555726c", tx.Attributes[0].Data.ToHexString());
+            Assert.AreEqual(WitnessScope.Global, (tx.Attributes[0] as Cosigner).Scopes);
         }
 
         [TestMethod]
@@ -101,24 +101,17 @@ namespace Neo.Network.RPC.Tests
         {
             txManager = new TransactionManager(rpcClientMock.Object, sender);
 
-            TransactionAttribute[] attributes = new TransactionAttribute[1]
+            var attributes = new TransactionAttribute[1]
             {
-                new TransactionAttribute
+                new Cosigner
                 {
-                    Usage = TransactionAttributeUsage.Url,
-                    Data = "53616d706c6555726c".HexToBytes() // "SampleUrl"
-                }
-            };
-
-            Cosigner[] cosigners = new Cosigner[1] {
-                new Cosigner{
                     Account  =  sender,
                     Scopes = WitnessScope.Global
                 }
             };
 
             byte[] script = new byte[1];
-            txManager.MakeTransaction(script, attributes, cosigners)
+            txManager.MakeTransaction(script, attributes)
                 .AddSignature(keyPair1)
                 .Sign();
 
@@ -126,9 +119,9 @@ namespace Neo.Network.RPC.Tests
             var tx = txManager.Tx;
             byte[] signature = tx.Witnesses[0].InvocationScript.Skip(2).ToArray();
 
-            Assert.IsTrue(Crypto.VerifySignature(tx.GetHashData(), signature, keyPair1.PublicKey.EncodePoint(false).Skip(1).ToArray()));
+            Assert.IsTrue(Crypto.VerifySignature(tx.GetHashData(), signature, keyPair1.PublicKey));
             // verify network fee and system fee
-            long networkFee = tx.Size * (long)1000 + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHNULL] + InteropService.GetPrice(InteropService.Crypto.ECDsaVerify, null, null);
+            long networkFee = tx.Size * (long)1000 + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHNULL] + InteropService.GetPrice(InteropService.Crypto.VerifyWithECDsaSecp256r1, null, null);
             Assert.AreEqual(networkFee, tx.NetworkFee);
             Assert.AreEqual(100, tx.SystemFee);
 
@@ -158,7 +151,7 @@ namespace Neo.Network.RPC.Tests
             };
 
             byte[] script = new byte[1];
-            txManager.MakeTransaction(script, null, cosigners)
+            txManager.MakeTransaction(script, cosigners)
                 .AddMultiSig(keyPair1, 2, keyPair1.PublicKey, keyPair2.PublicKey)
                 .AddMultiSig(keyPair2, 2, keyPair1.PublicKey, keyPair2.PublicKey)
                 .AddSignature(keyPair1)
@@ -181,7 +174,7 @@ namespace Neo.Network.RPC.Tests
             };
 
             byte[] script = new byte[1];
-            txManager.MakeTransaction(script, null, cosigners);
+            txManager.MakeTransaction(script, cosigners);
             txManager.AddWitness(UInt160.Zero);
             txManager.AddSignature(keyPair1);
             txManager.Sign();
