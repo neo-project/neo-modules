@@ -50,28 +50,38 @@ namespace Neo.Plugins
             return ja;
         }
 
+        private IReadOnlyList<Transaction> FindTransactions(UInt160 scriptHash)
+        {
+            using (var snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                return snapshot.Transactions.Find()
+                    .Where(x => this.ContainsInput(x.Value.Transaction.Inputs, scriptHash) || this.ContainsOutput(x.Value.Transaction.Outputs, scriptHash))
+                    .Select(x => x.Value.Transaction)
+                    .ToList();
+            }
+        }
+
         public JObject GetTransactions(string address)
         {
             var scriptHash = address.ToScriptHash();
 
-            var transactions = this.GetTransactions<ContractTransaction>()
-                .Where(x => this.ContainsInput(x.Inputs, scriptHash) || this.ContainsOutput(x.Outputs, scriptHash))
-                .ToList();
+            var transactions = this.FindTransactions(scriptHash);
 
             var result = new JArray();
 
-            foreach (var tx in transactions)
+            foreach (var transaction in transactions)
             {
                 var jtransaction = new JObject();
 
-                jtransaction["hash"] = tx.Hash.ToString();
-                jtransaction["networkFee"] = (double)tx.NetworkFee;
-                jtransaction["systemFee"] = (double)tx.SystemFee;
-                jtransaction["size"] = tx.Size;
+                jtransaction["hash"] = transaction.Hash.ToString();
+                jtransaction["networkFee"] = new JNumber((double)(decimal)transaction.NetworkFee);
+                jtransaction["systemFee"] = new JNumber((double)(decimal)transaction.SystemFee);
+                jtransaction["size"] = transaction.Size;
+                jtransaction["type"] = transaction.GetType().Name;
 
                 var jinputs = new JArray();
 
-                foreach (var input in tx.Inputs)
+                foreach (var input in transaction.Inputs)
                 {
                     var jinput = new JObject();
 
@@ -84,12 +94,12 @@ namespace Neo.Plugins
 
                 var joutputs = new JArray();
 
-                foreach (var output in tx.Outputs)
+                foreach (var output in transaction.Outputs)
                 {
                     var joutput = new JObject();
 
                     joutput["assetId"] = output.AssetId.ToString();
-                    joutput["value"] = (double)output.Value;
+                    joutput["value"] = new JNumber((double)(decimal)output.Value);
                     joutput["scriptHash"] = output.ScriptHash.ToString();
                     joutput["size"] = output.Size;
 
@@ -103,18 +113,6 @@ namespace Neo.Plugins
             }
 
             return result;
-        }
-
-        private IEnumerable<T> GetTransactions<T>()
-        {
-            using (var snapshot = Blockchain.Singleton.GetSnapshot())
-            {
-                return snapshot.Transactions.Find()
-                   .Where(x => x.Value.Transaction is T)
-                   .Select(x => x.Value.Transaction)
-                   .Cast<T>()
-                   .ToList();
-            }
         }
 
         private T Try<T>(Func<T> p)
