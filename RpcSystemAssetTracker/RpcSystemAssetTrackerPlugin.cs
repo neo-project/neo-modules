@@ -122,27 +122,6 @@ namespace Neo.Plugins
             return aa;
         }
 
-        private JObject Transactions(string privateKey)
-        {
-            KeyPair keyPair = new KeyPair(privateKey.ToBytePrivateKey());
-            
-            var address = keyPair.AsAddress();
-            var scriptHash = address.ToScriptHash();
-
-            JArray aa = new JArray();
-
-            var r = Blockchain.Singleton.GetSnapshot().Assets.Find();
-            foreach (var rr in r)
-            {
-                JObject o = new JObject();
-                o["id"] = rr.Key.ToString();
-                o["name"] = rr.Value.GetName();
-                aa.Add(o);
-            }
-
-            return aa;
-        }
-
         public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
         {
         }
