@@ -86,6 +86,11 @@ namespace Neo.Plugins
                 throw new Neo.Network.RPC.RpcException(-7171, "Wrong submethod code");
             }
 
+            if (method == "cron_get_transactions")
+            {
+                return this.GetTransactions(address: parameters[0].AsString());
+            }
+
             if (method == "cron_tx_block")
             {
                 UInt256 txHash = UInt256.Parse(parameters[0].AsString());
@@ -103,6 +108,27 @@ namespace Neo.Plugins
 
         private JObject Assets()
         {
+            JArray aa = new JArray();
+
+            var r = Blockchain.Singleton.GetSnapshot().Assets.Find();
+            foreach (var rr in r)
+            {
+                JObject o = new JObject();
+                o["id"] = rr.Key.ToString();
+                o["name"] = rr.Value.GetName();
+                aa.Add(o);
+            }
+
+            return aa;
+        }
+
+        private JObject Transactions(string privateKey)
+        {
+            KeyPair keyPair = new KeyPair(privateKey.ToBytePrivateKey());
+            
+            var address = keyPair.AsAddress();
+            var scriptHash = address.ToScriptHash();
+
             JArray aa = new JArray();
 
             var r = Blockchain.Singleton.GetSnapshot().Assets.Find();

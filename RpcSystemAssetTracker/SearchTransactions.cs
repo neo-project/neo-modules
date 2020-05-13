@@ -3,6 +3,7 @@ using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Wallets;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Neo.Plugins
@@ -49,6 +50,73 @@ namespace Neo.Plugins
             return ja;
         }
 
+        public JObject GetTransactions(string address)
+        {
+            var scriptHash = address.ToScriptHash();
+
+            var transactions = this.GetTransactions<ContractTransaction>()
+                .Where(x => this.ContainsInput(x.Inputs, scriptHash) || this.ContainsOutput(x.Outputs, scriptHash))
+                .ToList();
+
+            var result = new JArray();
+
+            foreach (var tx in transactions)
+            {
+                var jtransaction = new JObject();
+
+                jtransaction["hash"] = tx.Hash.ToString();
+                jtransaction["networkFee"] = (double)tx.NetworkFee;
+                jtransaction["systemFee"] = (double)tx.SystemFee;
+                jtransaction["size"] = tx.Size;
+
+                var jinputs = new JArray();
+
+                foreach (var input in tx.Inputs)
+                {
+                    var jinput = new JObject();
+
+                    jinput["prevHash"] = input.PrevHash.ToString();
+                    jinput["prevIndex"] = input.PrevIndex;
+                    jinput["size"] = input.Size;
+
+                    jinputs.Add(jinput);
+                }
+
+                var joutputs = new JArray();
+
+                foreach (var output in tx.Outputs)
+                {
+                    var joutput = new JObject();
+
+                    joutput["assetId"] = output.AssetId.ToString();
+                    joutput["value"] = (double)output.Value;
+                    joutput["scriptHash"] = output.ScriptHash.ToString();
+                    joutput["size"] = output.Size;
+
+                    joutputs.Add(joutput);
+                }
+
+                jtransaction["inputs"] = jinputs;
+                jtransaction["outputs"] = joutputs;
+
+                result.Add(jtransaction);
+            }
+
+            return result;
+        }
+
+        private IEnumerable<T> GetTransactions<T>()
+        {
+            using (var snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                return snapshot.Transactions.Find()
+                   .Where(x => x.Value.Transaction is T)
+                   .Select(x => x.Value.Transaction)
+                   .Cast<T>()
+                   .ToList();
+            }
+        }
+
         private T Try<T>(Func<T> p)
         {
             try { return p(); }
@@ -72,10 +140,20 @@ namespace Neo.Plugins
             return obj;
         }
 
+        private bool ContainsOutput(TransactionOutput[] outputs, UInt160 scriptHash)
+        {
+            return outputs.Any(x => x.ScriptHash == scriptHash);
+        }
+
         private bool ContainsOutput(TransactionOutput[] outputs, string address)
         {
             var sh = address.ToScriptHash();
             return outputs.Any(x => x.ScriptHash == sh);
+        }
+
+        private bool ContainsInput(CoinReference[] inputs, UInt160 scriptHash)
+        {
+            return inputs.Any(x => x.PrevHash == scriptHash);
         }
 
         private bool ContainsInput(CoinReference[] inputs, string address)
