@@ -72,7 +72,7 @@ namespace Neo.Plugins
         /// [0] MANDATORY; HEX or WIF private key, string
         /// [1] MANDATORY; array of objects {"address": string, "amount": decimal}.
         //      At least one item is needed to send successful txn
-        /// [2] OPTIONAL;  system token hash (hex bytes string) or its name (string). Default is CRON 
+        /// [2] OPTIONAL;  asset hash (hex bytes string) or its name (string). Default is CRON 
         /// [3] OPTIONAL;  remarks attribute value. Default is null 
         /// [4] OPTIONAL;  system fee (decimal) . Default is zero 
         /// </param>

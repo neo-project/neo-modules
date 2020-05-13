@@ -550,15 +550,25 @@ namespace Neo.Plugins
 
             if (_params.Count > 1)
             {
-                maxIterations = 1;
-                bool isGoverningToken = (_params[1].AsString() == "yes");
-                if (isGoverningToken) startingToken = 1;
+                string gh = _params[1].AsString();
+                bool isGoverningToken = (gh == "yes");
+                bool isUtilityToken = (gh == "util");
+                if (isGoverningToken)
+                {
+                    startingToken = 1;
+                    maxIterations = 1;
+                }
+                else if (isUtilityToken)
+                {
+                    startingToken = 0;
+                    maxIterations = 1;
+                }
 
                 if (_params.Count > 2)
                 {
                     th = ParseTokenHash(_params[2].AsString());
-                    startingToken = 0;
-                    maxIterations = 2;
+                    if (th.Equals(Blockchain.UtilityToken.Hash))
+                        th = UInt256.Zero;
                 }
             }
 
