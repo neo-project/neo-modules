@@ -91,6 +91,11 @@ namespace Neo.Plugins
                 return this.GetTransactions(addresses: parameters.Select(x => x.AsString()).ToList());
             }
 
+            if(method == "cron_get_assets")
+            {
+                return this.Assets();
+            }
+
             if (method == "cron_tx_block")
             {
                 UInt256 txHash = UInt256.Parse(parameters[0].AsString());
@@ -108,18 +113,28 @@ namespace Neo.Plugins
 
         private JObject Assets()
         {
-            JArray aa = new JArray();
+            var jassets = new JArray();
 
-            var r = Blockchain.Singleton.GetSnapshot().Assets.Find();
-            foreach (var rr in r)
+            using (var snapshot = Blockchain.Singleton.GetSnapshot())
             {
-                JObject o = new JObject();
-                o["id"] = rr.Key.ToString();
-                o["name"] = rr.Value.GetName();
-                aa.Add(o);
+                var assets = snapshot.Assets.Find();
+
+                foreach (var asset in assets)
+                {
+                    var jasset = new JObject();
+
+                    jasset["id"] = asset.Key.ToString();
+                    jasset["name"] = asset.Value.GetName();
+                    jasset["type"] = asset.Value.AssetType;
+                    jasset["amount"] = new JNumber((double)(decimal)asset.Value.Amount);
+                    jasset["available"] = new JNumber((double)(decimal)asset.Value.Available);
+                    jasset["issuer"] = asset.Value.Issuer.ToString();
+
+                    jassets.Add(jasset);
+                }
             }
 
-            return aa;
+            return jassets;
         }
 
         public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
