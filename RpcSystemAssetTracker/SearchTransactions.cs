@@ -50,22 +50,22 @@ namespace Neo.Plugins
             return ja;
         }
 
-        private IReadOnlyList<Transaction> FindTransactions(UInt160 scriptHash)
+        private IReadOnlyList<Transaction> FindTransactions(IReadOnlyList<UInt160> scriptHashes)
         {
             using (var snapshot = Blockchain.Singleton.GetSnapshot())
             {
                 return snapshot.Transactions.Find()
-                    .Where(x => this.ContainsInput(x.Value.Transaction.Inputs, scriptHash) || this.ContainsOutput(x.Value.Transaction.Outputs, scriptHash))
+                    .Where(x => this.ContainsInput(x.Value.Transaction.Inputs, scriptHashes) || this.ContainsOutput(x.Value.Transaction.Outputs, scriptHashes))
                     .Select(x => x.Value.Transaction)
                     .ToList();
             }
         }
 
-        public JObject GetTransactions(string address)
+        public JObject GetTransactions(IEnumerable<string> addresses)
         {
-            var scriptHash = address.ToScriptHash();
+            var scriptHashes = addresses.Select(x => x.ToScriptHash()).ToList();
 
-            var transactions = this.FindTransactions(scriptHash);
+            var transactions = this.FindTransactions(scriptHashes);
 
             var result = new JArray();
 
@@ -138,9 +138,9 @@ namespace Neo.Plugins
             return obj;
         }
 
-        private bool ContainsOutput(TransactionOutput[] outputs, UInt160 scriptHash)
+        private bool ContainsOutput(TransactionOutput[] outputs, IEnumerable<UInt160> scriptHash)
         {
-            return outputs.Any(x => x.ScriptHash == scriptHash);
+            return outputs.Any(x => scriptHash.Any(y => y == x.ScriptHash));
         }
 
         private bool ContainsOutput(TransactionOutput[] outputs, string address)
@@ -149,9 +149,9 @@ namespace Neo.Plugins
             return outputs.Any(x => x.ScriptHash == sh);
         }
 
-        private bool ContainsInput(CoinReference[] inputs, UInt160 scriptHash)
+        private bool ContainsInput(CoinReference[] inputs, IEnumerable<UInt160> scriptHashes)
         {
-            return inputs.Any(x => x.PrevHash == scriptHash);
+            return inputs.Any(x => scriptHashes.Any(y => y == x.PrevHash));
         }
 
         private bool ContainsInput(CoinReference[] inputs, string address)

@@ -88,7 +88,7 @@ namespace Neo.Plugins
 
             if (method == "cron_get_transactions")
             {
-                return this.GetTransactions(address: parameters[0].AsString());
+                return this.GetTransactions(addresses: parameters.Select(x => x.AsString()).ToList());
             }
 
             if (method == "cron_tx_block")
