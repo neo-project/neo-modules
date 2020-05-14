@@ -91,7 +91,7 @@ namespace Neo.Plugins
                 return this.GetTransactions(addresses: parameters.Select(x => x.AsString()).ToList());
             }
 
-            if(method == "cron_get_assets")
+            if (method == "cron_get_assets")
             {
                 return this.Assets();
             }
@@ -108,7 +108,12 @@ namespace Neo.Plugins
                 return jo;
             }
 
-            return method != "getunspents" ? null : ProcessGetUnspents(parameters);
+            if (method == "getunspents")
+            {
+                return this.ProcessGetUnspents(parameters);
+            }
+
+            return null;
         }
 
         private JObject Assets()
