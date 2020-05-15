@@ -10,9 +10,9 @@ namespace Neo.Network.RPC.Models
 
         public UInt256 BlockHash { get; set; }
 
-        public int? Confirmations { get; set; }
+        public uint? Confirmations { get; set; }
 
-        public uint? BlockTime { get; set; }
+        public ulong? BlockTime { get; set; }
 
         public VMState? VMState { get; set; }
 
@@ -26,7 +26,7 @@ namespace Neo.Network.RPC.Models
                 json["blocktime"] = BlockTime;
                 if (VMState != null)
                 {
-                    json["vmState"] = VMState;
+                    json["vm_state"] = VMState;
                 }
             }
             return json;
@@ -35,13 +35,13 @@ namespace Neo.Network.RPC.Models
         public static RpcTransaction FromJson(JObject json)
         {
             RpcTransaction transaction = new RpcTransaction();
-            transaction.Transaction = Transaction.FromJson(json);
+            transaction.Transaction = Utility.TransactionFromJson(json);
             if (json["confirmations"] != null)
             {
                 transaction.BlockHash = UInt256.Parse(json["blockhash"].AsString());
-                transaction.Confirmations = (int)json["confirmations"].AsNumber();
-                transaction.BlockTime = (uint)json["blocktime"].AsNumber();
-                transaction.VMState = json["vmState"]?.TryGetEnum<VMState>();
+                transaction.Confirmations = (uint)json["confirmations"].AsNumber();
+                transaction.BlockTime = (ulong)json["blocktime"].AsNumber();
+                transaction.VMState = json["vm_state"]?.TryGetEnum<VMState>();
             }
             return transaction;
         }

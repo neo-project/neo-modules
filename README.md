@@ -72,5 +72,5 @@ This module works in conjunction with RpcServer, otherwise, just local storage (
 ## C# SDK
 
 ### RpcClient
-The RpcClient Plugin is an individual SDK which is used to call NEO RPC methods for development using.
-In order to use the module for interacting with NEP5 functionalities `RPC NEP5 Tracker` Plugin will be needed.
+The RpcClient Project is an individual SDK that is used to interact with NEO blockchain through NEO RPC methods for development using. The main functions include RPC calling, Transaction making, Contract deployment & calling, and Asset transfering.
+It needs a NEO node with the `RpcServer` plugin as a provider. And the provider needs more plugins like `RpcNep5Tracker` and `ApplicationLogs` if you want to call RPC methods supplied by the plugins.

@@ -1,8 +1,10 @@
+using Neo.Cryptography.ECC;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
 using Neo.VM;
 using Neo.Wallets;
+using System;
 using System.Linq;
 using System.Numerics;
 using static Neo.Helper;
@@ -57,9 +59,9 @@ namespace Neo.Network.RPC
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <returns></returns>
-        public uint Decimals(UInt160 scriptHash)
+        public byte Decimals(UInt160 scriptHash)
         {
-            return (uint)TestInvoke(scriptHash, "decimals").Stack.Single().ToStackItem().GetBigInteger();
+            return (byte)TestInvoke(scriptHash, "decimals").Stack.Single().ToStackItem().GetBigInteger();
         }
 
         /// <summary>
@@ -90,7 +92,7 @@ namespace Neo.Network.RPC
             {
                 Name = result[0].ToStackItem().GetString(),
                 Symbol = result[1].ToStackItem().GetString(),
-                Decimals = (uint)result[2].ToStackItem().GetBigInteger(),
+                Decimals = (byte)result[2].ToStackItem().GetBigInteger(),
                 TotalSupply = result[3].ToStackItem().GetBigInteger()
             };
         }
@@ -102,17 +104,43 @@ namespace Neo.Network.RPC
         /// <param name="fromKey">from KeyPair</param>
         /// <param name="to">to account script hash</param>
         /// <param name="amount">transfer amount</param>
-        /// <param name="networkFee">netwotk fee, set to be 0 will auto calculate the least fee</param>
         /// <returns></returns>
-        public Transaction CreateTransferTx(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount, long networkFee = 0)
+        public Transaction CreateTransferTx(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount)
         {
             var sender = Contract.CreateSignatureRedeemScript(fromKey.PublicKey).ToScriptHash();
             Cosigner[] cosigners = new[] { new Cosigner { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
             byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
             Transaction tx = new TransactionManager(rpcClient, sender)
-                .MakeTransaction(script, null, cosigners, networkFee)
+                .MakeTransaction(script, cosigners)
                 .AddSignature(fromKey)
+                .Sign()
+                .Tx;
+
+            return tx;
+        }
+
+        /// <summary>
+        /// Create NEP5 token transfer transaction from multi-sig account
+        /// </summary>
+        /// <param name="scriptHash">contract script hash</param>
+        /// <param name="m">multi-sig min signature count</param>
+        /// <param name="pubKeys">multi-sig pubKeys</param>
+        /// <param name="fromKeys">sign keys</param>
+        /// <param name="to">to account</param>
+        /// <param name="amount">transfer amount</param>
+        /// <returns></returns>
+        public Transaction CreateTransferTx(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] fromKeys, UInt160 to, BigInteger amount)
+        {
+            if (m > fromKeys.Length)
+                throw new ArgumentException($"Need at least {m} KeyPairs for signing!");
+            var sender = Contract.CreateMultiSigContract(m, pubKeys).ScriptHash;
+            Cosigner[] cosigners = new[] { new Cosigner { Scopes = WitnessScope.CalledByEntry, Account = sender } };
+
+            byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
+            Transaction tx = new TransactionManager(rpcClient, sender)
+                .MakeTransaction(script, cosigners)
+                .AddMultiSig(fromKeys, m, pubKeys)
                 .Sign()
                 .Tx;
 

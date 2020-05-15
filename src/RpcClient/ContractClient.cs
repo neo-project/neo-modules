@@ -42,9 +42,8 @@ namespace Neo.Network.RPC
         /// <param name="contractScript">contract script</param>
         /// <param name="manifest">contract manifest</param>
         /// <param name="key">sender KeyPair</param>
-        /// <param name="networkFee">transaction NetworkFee, set to be 0 if you don't need higher priority</param>
         /// <returns></returns>
-        public Transaction CreateDeployContractTx(byte[] contractScript, ContractManifest manifest, KeyPair key, long networkFee = 0)
+        public Transaction CreateDeployContractTx(byte[] contractScript, ContractManifest manifest, KeyPair key)
         {
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
@@ -55,7 +54,7 @@ namespace Neo.Network.RPC
 
             UInt160 sender = Contract.CreateSignatureRedeemScript(key.PublicKey).ToScriptHash();
             Transaction tx = new TransactionManager(rpcClient, sender)
-                .MakeTransaction(script, null, null, networkFee)
+                .MakeTransaction(script, null)
                 .AddSignature(key)
                 .Sign()
                 .Tx;

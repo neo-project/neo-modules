@@ -103,18 +103,6 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject GetBlockSysFee(JArray _params)
-        {
-            uint height = uint.Parse(_params[0].AsString());
-            if (height <= Blockchain.Singleton.Height)
-                using (ApplicationEngine engine = NativeContract.GAS.TestCall("getSysFeeAmount", height))
-                {
-                    return engine.ResultStack.Peek().GetBigInteger().ToString();
-                }
-            throw new RpcException(-100, "Invalid Height");
-        }
-
-        [RpcMethod]
         private JObject GetContractState(JArray _params)
         {
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
@@ -157,7 +145,7 @@ namespace Neo.Plugins
                     json["blockhash"] = header.Hash.ToString();
                     json["confirmations"] = Blockchain.Singleton.Height - header.Index + 1;
                     json["blocktime"] = header.Timestamp;
-                    json["vmState"] = txState.VMState;
+                    json["vm_state"] = txState.VMState;
                 }
                 return json;
             }
@@ -197,7 +185,7 @@ namespace Neo.Plugins
         {
             using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
             var validators = NativeContract.NEO.GetValidators(snapshot);
-            return NativeContract.NEO.GetRegisteredValidators(snapshot).Select(p =>
+            return NativeContract.NEO.GetCandidates(snapshot).Select(p =>
             {
                 JObject validator = new JObject();
                 validator["publickey"] = p.PublicKey.ToString();

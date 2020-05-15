@@ -187,7 +187,7 @@ namespace Neo.Plugins
                 if (tx.NetworkFee < calFee)
                     tx.NetworkFee = calFee;
             }
-            if (tx.NetworkFee > Settings.Default.MaxFee)
+            if (tx.NetworkFee > settings.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
         }
@@ -235,7 +235,7 @@ namespace Neo.Plugins
                 if (tx.NetworkFee < calFee)
                     tx.NetworkFee = calFee;
             }
-            if (tx.NetworkFee > Settings.Default.MaxFee)
+            if (tx.NetworkFee > settings.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
         }
@@ -273,7 +273,7 @@ namespace Neo.Plugins
                 if (tx.NetworkFee < calFee)
                     tx.NetworkFee = calFee;
             }
-            if (tx.NetworkFee > Settings.Default.MaxFee)
+            if (tx.NetworkFee > settings.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
         }
@@ -285,7 +285,7 @@ namespace Neo.Plugins
             if (context.Completed)
             {
                 tx.Witnesses = context.GetWitnesses();
-                System.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
+                system.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
                 return tx.ToJson();
             }
             else

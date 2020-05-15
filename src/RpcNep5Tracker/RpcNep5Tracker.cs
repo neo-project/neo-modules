@@ -7,6 +7,7 @@ using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
 using System;
@@ -30,11 +31,11 @@ namespace Neo.Plugins
         private bool _shouldTrackHistory;
         private bool _recordNullAddressHistory;
         private uint _maxResults;
-        private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
+        private Snapshot _levelDbSnapshot;
 
         public RpcNep5Tracker()
         {
-            RpcServer.RegisterMethods(this);
+            RpcServerPlugin.RegisterMethods(this);
         }
 
         protected override void Configure()
@@ -97,44 +98,51 @@ namespace Neo.Plugins
             transferIndex++;
         }
 
-        private void HandleNotification(StoreView snapshot, Transaction transaction, UInt160 scriptHash,
+        private void HandleNotification(StoreView snapshot, IVerifiable scriptContainer, UInt160 scriptHash,
             VM.Types.Array stateItems,
             Dictionary<Nep5BalanceKey, Nep5Balance> nep5BalancesChanged, ref ushort transferIndex)
         {
             if (stateItems.Count == 0) return;
             // Event name should be encoded as a byte array.
-            if (!(stateItems[0] is VM.Types.ByteArray)) return;
+            if (!(stateItems[0] is VM.Types.ByteString)) return;
             var eventName = stateItems[0].GetString();
             if (eventName != "Transfer") return;
             if (stateItems.Count < 4) return;
 
-            if (!(stateItems[1] is null) && !(stateItems[1] is VM.Types.ByteArray))
+            if (!(stateItems[1].IsNull) && !(stateItems[1] is VM.Types.ByteString))
                 return;
-            if (!(stateItems[2] is null) && !(stateItems[2] is VM.Types.ByteArray))
+            if (!(stateItems[2].IsNull) && !(stateItems[2] is VM.Types.ByteString))
                 return;
             var amountItem = stateItems[3];
-            if (!(amountItem is VM.Types.ByteArray || amountItem is VM.Types.Integer))
+            if (!(amountItem is VM.Types.ByteString || amountItem is VM.Types.Integer))
                 return;
-            byte[] fromBytes = stateItems[1]?.GetSpan().ToArray();
-            if (fromBytes?.Length != 20) fromBytes = null;
-            byte[] toBytes = stateItems[2]?.GetSpan().ToArray();
-            if (toBytes?.Length != 20) toBytes = null;
+            byte[] fromBytes = stateItems[1].IsNull ? null : stateItems[1].GetSpan().ToArray();
+            if (fromBytes != null && fromBytes.Length != UInt160.Length)
+                return;
+            byte[] toBytes = stateItems[2].IsNull ? null : stateItems[2].GetSpan().ToArray();
+            if (toBytes != null && toBytes.Length != UInt160.Length)
+                return;
             if (fromBytes == null && toBytes == null) return;
-            var from = new UInt160(fromBytes);
-            var to = new UInt160(toBytes);
+            var from = UInt160.Zero;
+            var to = UInt160.Zero;
 
             if (fromBytes != null)
             {
+                from = new UInt160(fromBytes);
                 var fromKey = new Nep5BalanceKey(from, scriptHash);
                 if (!nep5BalancesChanged.ContainsKey(fromKey)) nep5BalancesChanged.Add(fromKey, new Nep5Balance());
             }
 
             if (toBytes != null)
             {
+                to = new UInt160(toBytes);
                 var toKey = new Nep5BalanceKey(to, scriptHash);
                 if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
             }
-            RecordTransferHistory(snapshot, scriptHash, from, to, amountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
+            if (scriptContainer is Transaction transaction)
+            {
+                RecordTransferHistory(snapshot, scriptHash, from, to, amountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
+            }
         }
 
         public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
@@ -150,10 +158,9 @@ namespace Neo.Plugins
                 if (appExecuted.VMState.HasFlag(VMState.FAULT)) continue;
                 foreach (var notifyEventArgs in appExecuted.Notifications)
                 {
-                    if (!(notifyEventArgs?.State is VM.Types.Array stateItems) || stateItems.Count == 0
-                        || !(notifyEventArgs.ScriptContainer is Transaction transaction))
+                    if (!(notifyEventArgs?.State is VM.Types.Array stateItems) || stateItems.Count == 0)
                         continue;
-                    HandleNotification(snapshot, transaction, notifyEventArgs.ScriptHash, stateItems,
+                    HandleNotification(snapshot, notifyEventArgs.ScriptContainer, notifyEventArgs.ScriptHash, stateItems,
                         nep5BalancesChanged, ref transferIndex);
                 }
             }
@@ -279,6 +286,8 @@ namespace Neo.Plugins
             foreach (var (key, value) in dbCache.Find(prefix))
             {
                 JObject balance = new JObject();
+                if (Blockchain.Singleton.View.Contracts.TryGet(key.AssetScriptHash) is null)
+                    continue;
                 balance["asset_hash"] = key.AssetScriptHash.ToString();
                 balance["amount"] = value.Balance.ToString();
                 balance["last_updated_block"] = value.LastUpdatedBlock;
