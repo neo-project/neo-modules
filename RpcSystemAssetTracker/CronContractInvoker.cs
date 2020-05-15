@@ -10,12 +10,37 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
+using RandomNumberGenerator = System.Security.Cryptography.RandomNumberGenerator;
 
 namespace Neo.Plugins
 {
 
     public partial class RpcSystemAssetTrackerPlugin
     {
+        private JObject CreateAddress()
+        {
+            var privateKey = new byte[32];
+
+            using (var generator = RandomNumberGenerator.Create())
+            {
+                generator.GetBytes(privateKey);
+            }
+
+            var kp = new KeyPair(privateKey);
+
+            var jaddress = new JObject();
+
+            var address = kp.AsAddress();
+
+            jaddress["wif"] = kp.Export();
+            jaddress["address"] = address;
+            jaddress["privkey"] = kp.PrivateKey.ToHexString();
+            jaddress["pubkey"] = kp.PublicKey.ToString();
+            jaddress["scripthash"] = address.ToScriptHash().ToString();
+
+            return jaddress;
+        }
+
         /// <summary>
         /// Derives an address and keys from given private key 
         /// </summary>

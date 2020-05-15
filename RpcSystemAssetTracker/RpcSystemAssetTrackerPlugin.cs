@@ -57,6 +57,11 @@ namespace Neo.Plugins
                     parameters.Skip(2).ToArray());
             }
 
+            if (method == "cron_create_address")
+            {
+                return this.CreateAddress();
+            }
+
             if (method == "cron_get_address")
             {
                 return GetAddress(parameters[0].AsString());
