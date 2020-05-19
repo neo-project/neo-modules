@@ -85,7 +85,7 @@ namespace Neo.Plugins
                     {
                         Array array = new Array();
                         while (enumerator.MoveNext())
-                        { 
+                        {
                             var current = enumerator.Current;
                             array.Add(current is StackItem stackItem ? stackItem : current is IInteroperable interoperable ? interoperable.ToStackItem(null) : new InteropInterface(current));
                         }
