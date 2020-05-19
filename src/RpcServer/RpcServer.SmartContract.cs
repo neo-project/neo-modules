@@ -6,9 +6,12 @@ using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.VM;
+using Neo.VM.Types;
 using System;
+using System.Collections;
 using System.IO;
 using System.Linq;
+using Array = Neo.VM.Types.Array;
 
 namespace Neo.Plugins
 {
@@ -60,7 +63,9 @@ namespace Neo.Plugins
             json["gas_consumed"] = engine.GasConsumed.ToString();
             try
             {
-                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToParameter().ToJson()));
+                var stackItems = engine.ResultStack.ToArray();
+                stackItems = ConvertIEnumeratorToArray(stackItems); // convert InteropInterface<IEnumerator> to Array for RpcClient to digest
+                json["stack"] = new JArray(stackItems.Select(p => p.ToParameter().ToJson()));
             }
             catch (InvalidOperationException)
             {
@@ -68,6 +73,27 @@ namespace Neo.Plugins
             }
             ProcessInvokeWithWallet(json);
             return json;
+        }
+
+        public static StackItem[] ConvertIEnumeratorToArray(StackItem[] stackItems)
+        {
+            for (int i = 0; i < stackItems.Length; i++)
+            {
+                if (stackItems[i] is InteropInterface interopInterface)
+                {
+                    if (interopInterface.TryGetInterface<IEnumerator>(out IEnumerator enumerator))
+                    {
+                        Array array = new Array();
+                        while (enumerator.MoveNext())
+                        { 
+                            var current = enumerator.Current;
+                            array.Add(current is StackItem stackItem ? stackItem : current is IInteroperable interoperable ? interoperable.ToStackItem(null) : new InteropInterface(current));
+                        }
+                        stackItems[i] = array;
+                    }
+                }
+            }
+            return stackItems;
         }
 
         [RpcMethod]
