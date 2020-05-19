@@ -46,7 +46,7 @@ namespace Neo.Plugins
                 path = $"root.{start}.acc";
                 WriteStateRoots(start, count, path);
             }
-            if (string.Equals(args[1], "block", StringComparison.OrdinalIgnoreCase)
+            else if (string.Equals(args[1], "block", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(args[1], "blocks", StringComparison.OrdinalIgnoreCase))
             {
                 if (args.Length >= 3 && uint.TryParse(args[2], out start))
@@ -66,6 +66,10 @@ namespace Neo.Plugins
                 }
 
                 WriteBlocks(start, count, path, writeStart);
+            }
+            else
+            {
+                return false;
             }
 
             Console.WriteLine();
