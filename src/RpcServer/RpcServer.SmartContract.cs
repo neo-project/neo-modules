@@ -8,7 +8,6 @@ using Neo.SmartContract;
 using Neo.VM;
 using Neo.VM.Types;
 using System;
-using System.Collections;
 using System.IO;
 using System.Linq;
 using Array = Neo.VM.Types.Array;
@@ -81,13 +80,22 @@ namespace Neo.Plugins
             {
                 if (stackItems[i] is InteropInterface interopInterface)
                 {
-                    if (interopInterface.TryGetInterface<IEnumerator>(out IEnumerator enumerator))
+                    if (interopInterface.TryGetInterface(out System.Collections.IEnumerator sysEnum))
                     {
                         Array array = new Array();
-                        while (enumerator.MoveNext())
+                        while (sysEnum.MoveNext())
                         {
-                            var current = enumerator.Current;
+                            var current = sysEnum.Current;
                             array.Add(current is StackItem stackItem ? stackItem : current is IInteroperable interoperable ? interoperable.ToStackItem(null) : new InteropInterface(current));
+                        }
+                        stackItems[i] = array;
+                    }
+                    if (interopInterface.TryGetInterface(out Neo.SmartContract.Enumerators.IEnumerator neoEnum))
+                    {
+                        Array array = new Array();
+                        while (neoEnum.Next())
+                        {
+                            array.Add(neoEnum.Value());
                         }
                         stackItems[i] = array;
                     }
