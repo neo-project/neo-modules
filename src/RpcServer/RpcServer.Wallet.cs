@@ -48,7 +48,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject GetBalance(JArray _params)
+        private JObject GetWalletBalance(JArray _params)
         {
             CheckWallet();
             UInt160 asset_id = UInt160.Parse(_params[0].AsString());
@@ -68,7 +68,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject GetUnclaimedGas(JArray _params)
+        private JObject GetWalletUnclaimedGas(JArray _params)
         {
             CheckWallet();
             BigInteger gas = BigInteger.Zero;
