@@ -36,7 +36,7 @@ namespace Neo.Plugins
             {
                 uint start = read_start ? r.ReadUInt32() : 0;
                 uint count = r.ReadUInt32();
-                uint end = start + count - 1;
+                uint end = checked(start + count) - 1;
                 if (end <= Blockchain.Singleton.Height) yield break;
                 for (uint height = start; height <= end; height++)
                 {
@@ -57,7 +57,7 @@ namespace Neo.Plugins
             {
                 uint start = r.ReadUInt32();
                 uint count = r.ReadUInt32();
-                uint end = start + count - 1;
+                uint end = checked(start + count) - 1;
                 if (end <= Blockchain.Singleton.StateHeight) yield break;
                 for (uint height = start; height <= end; height++)
                 {
