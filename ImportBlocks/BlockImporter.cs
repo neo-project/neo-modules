@@ -15,7 +15,7 @@ namespace Neo.Plugins
     {
         public class StartImport { public IActorRef BlockchainActorRef; public Action OnComplete; }
 
-        private const int BlocksPerBatch = 100;
+        private const int BlocksPerBatch = 10;
         private const int RootsPerBatch = 2000;
         private IActorRef _blockchainActorRef;
         private bool isImporting;
