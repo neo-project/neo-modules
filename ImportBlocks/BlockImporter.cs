@@ -83,14 +83,13 @@ namespace Neo.Plugins
             foreach (var path in paths)
             {
                 if (path.Start > Blockchain.Singleton.Height + 1) break;
-                if (path.IsCompressed)
-                    using (FileStream fs = new FileStream(path.FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Read))
-                    using (Stream zs = zip.GetEntry(Path.GetFileNameWithoutExtension(path.FileName)).Open())
-                        foreach (var root in GetStateRoots(zs))
-                            yield return root;
-                else
-                    using (FileStream fs = new FileStream(path.FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (FileStream fs = new FileStream(path.FileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    if (path.IsCompressed)
+                        using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Read))
+                        using (Stream zs = zip.GetEntry(Path.GetFileNameWithoutExtension(path.FileName)).Open())
+                            foreach (var root in GetStateRoots(zs))
+                                yield return root;
+                    else
                         foreach (var root in GetStateRoots(fs))
                             yield return root;
             }
