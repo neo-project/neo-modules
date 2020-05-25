@@ -31,12 +31,12 @@ namespace Neo.Plugins
                     if (start < ProtocolSettings.Default.StateRootEnableIndex)
                         start = ProtocolSettings.Default.StateRootEnableIndex;
                     count = args.Length >= 4 ? uint.Parse(args[3]) : uint.MaxValue;
-                    count = Math.Min(count, Blockchain.Singleton.StateHeight - start + 1);
+                    count = (uint)Math.Min(count, Blockchain.Singleton.StateHeight - start + 1);
                 }
                 else
                 {
                     start = ProtocolSettings.Default.StateRootEnableIndex;
-                    count = Blockchain.Singleton.StateHeight - start + 1;
+                    count = (uint)Blockchain.Singleton.StateHeight - start + 1;
                 }
                 if (count <= 0)
                 {
