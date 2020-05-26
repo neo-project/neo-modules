@@ -64,6 +64,7 @@ namespace Neo.Plugins
                     var len = r.ReadInt32();
                     if (len > ushort.MaxValue * 3) yield break;
                     byte[] array = r.ReadBytes(len);
+                    if (height > Blockchain.Singleton.Height) yield break;
                     if (height > Blockchain.Singleton.StateHeight)
                     {
                         StateRoot root = array.AsSerializable<StateRoot>();
