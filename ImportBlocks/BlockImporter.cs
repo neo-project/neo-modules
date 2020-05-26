@@ -153,7 +153,7 @@ namespace Neo.Plugins
                     break;
                 case Blockchain.ImportCompleted _:
                     // Import the next batch
-                    if (!(blocksBeingImported is null))
+                    if (blocksBeingImported != null)
                     {
                         List<Block> blocksToImport = new List<Block>();
                         for (int i = 0; i < BlocksPerBatch; i++)
@@ -171,7 +171,7 @@ namespace Neo.Plugins
                         }
                         blocksBeingImported.Dispose();
                     }
-                    if (!(stateRootsBeingImported is null))
+                    if (stateRootsBeingImported != null)
                     {
                         List<StateRoot> rootsToImport = new List<StateRoot>();
                         for (int i = 0; i < RootsPerBatch; i++)
