@@ -2,11 +2,14 @@
 #pragma warning disable IDE0060
 
 using Neo.IO.Json;
+using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.VM.Types;
+using Neo.Wallets;
 using System;
 using System.IO;
 using System.Linq;
@@ -89,6 +92,7 @@ namespace Neo.Plugins
                             array.Add(current is StackItem stackItem ? stackItem : current is IInteroperable interoperable ? interoperable.ToStackItem(null) : new InteropInterface(current));
                         }
                         stackItems[i] = array;
+                        continue;
                     }
                     if (interopInterface.TryGetInterface(out Neo.SmartContract.Enumerators.IEnumerator neoEnum))
                     {
