@@ -67,7 +67,7 @@ namespace Neo.Plugins
             {
                 var stackItems = engine.ResultStack.ToArray();
                 stackItems = ConvertIEnumeratorToArray(stackItems); // convert InteropInterface<IEnumerator> to Array for RpcClient to digest
-                json["stack"] = new JArray(stackItems.Select(p => p.ToParameter().ToJson()));
+                json["stack"] = new JArray(stackItems.Select(p => p.ToJson()));
             }
             catch (InvalidOperationException)
             {
