@@ -188,6 +188,9 @@ namespace Neo.Plugins
                             break;
                         }
                         stateRootsBeingImported.Dispose();
+                        blocksBeingImported.Dispose();
+                        stateRootsBeingImported = null;
+                        blocksBeingImported = null;
                     }
                     _doneAction();
                     break;
