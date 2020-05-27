@@ -285,7 +285,7 @@ namespace Neo.Plugins
             if (context.Completed)
             {
                 tx.Witnesses = context.GetWitnesses();
-                system.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
+                system.Blockchain.Tell(tx);
                 return tx.ToJson();
             }
             else
