@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using static System.IO.Path;
 
 namespace Neo.Plugins
@@ -13,8 +14,35 @@ namespace Neo.Plugins
             Settings.Load(GetConfiguration());
         }
 
-        void ILogPlugin.Log(string source, LogLevel level, string message)
+        private static void GetErrorLogs(StringBuilder sb, Exception ex)
         {
+            sb.AppendLine(ex.GetType().ToString());
+            sb.AppendLine(ex.Message);
+            sb.AppendLine(ex.StackTrace);
+            if (ex is AggregateException ex2)
+            {
+                foreach (Exception inner in ex2.InnerExceptions)
+                {
+                    sb.AppendLine();
+                    GetErrorLogs(sb, inner);
+                }
+            }
+            else if (ex.InnerException != null)
+            {
+                sb.AppendLine();
+                GetErrorLogs(sb, ex.InnerException);
+            }
+        }
+
+        void ILogPlugin.Log(string source, LogLevel level, object message)
+        {
+            if (message is Exception ex)
+            {
+                var sb = new StringBuilder();
+                GetErrorLogs(sb, ex);
+                message = sb.ToString();
+            }
+
             lock (typeof(Logger))
             {
                 DateTime now = DateTime.Now;
@@ -39,10 +67,22 @@ namespace Neo.Plugins
 
                 if (!string.IsNullOrEmpty(Settings.Default.Path))
                 {
-                    var path = Combine(Settings.Default.Path, source);
+                    StringBuilder sb = new StringBuilder(source);
+                    foreach (char c in GetInvalidFileNameChars())
+                        sb.Replace(c, '-');
+
+                    var path = Combine(Settings.Default.Path, sb.ToString());
                     Directory.CreateDirectory(path);
                     path = Combine(path, $"{now:yyyy-MM-dd}.log");
-                    File.AppendAllLines(path, new[] { $"[{level}]{log}" });
+                    try
+                    {
+                        File.AppendAllLines(path, new[] { $"[{level}]{log}" });
+                    }
+                    catch (IOException)
+                    {
+                        Console.WriteLine("Error writing the log file: " + path);
+
+                    }
                 }
             }
         }

@@ -19,19 +19,24 @@ using System.Threading.Tasks;
 
 namespace Neo.Plugins
 {
-    public sealed partial class RpcServer : Plugin
+    public sealed partial class RpcServer : IDisposable
     {
-        private static readonly Dictionary<string, Func<JArray, JObject>> methods = new Dictionary<string, Func<JArray, JObject>>();
-        private IWebHost host;
+        private readonly Dictionary<string, Func<JArray, JObject>> methods = new Dictionary<string, Func<JArray, JObject>>();
 
-        public RpcServer()
+        private IWebHost host;
+        private readonly RpcServerSettings settings;
+        private readonly NeoSystem system;
+
+        public RpcServer(NeoSystem system, RpcServerSettings settings)
         {
+            this.system = system;
+            this.settings = settings;
             RegisterMethods(this);
         }
 
         private bool CheckAuth(HttpContext context)
         {
-            if (string.IsNullOrEmpty(Settings.Default.RpcUser)) return true;
+            if (string.IsNullOrEmpty(settings.RpcUser)) return true;
 
             context.Response.Headers["WWW-Authenticate"] = "Basic realm=\"Restricted\"";
 
@@ -50,12 +55,7 @@ namespace Neo.Plugins
             if (authvalues.Length < 2)
                 return false;
 
-            return authvalues[0] == Settings.Default.RpcUser && authvalues[1] == Settings.Default.RpcPass;
-        }
-
-        protected override void Configure()
-        {
-            Settings.Load(GetConfiguration());
+            return authvalues[0] == settings.RpcUser && authvalues[1] == settings.RpcPass;
         }
 
         private static JObject CreateErrorResponse(JObject id, int code, string message, JObject data = null)
@@ -77,9 +77,8 @@ namespace Neo.Plugins
             return response;
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
-            base.Dispose();
             if (host != null)
             {
                 host.Dispose();
@@ -87,21 +86,21 @@ namespace Neo.Plugins
             }
         }
 
-        protected override void OnPluginsLoaded()
+        public void StartRpcServer()
         {
-            host = new WebHostBuilder().UseKestrel(options => options.Listen(Settings.Default.BindAddress, Settings.Default.Port, listenOptions =>
+            host = new WebHostBuilder().UseKestrel(options => options.Listen(settings.BindAddress, settings.Port, listenOptions =>
             {
                 // Default value is unlimited
-                options.Limits.MaxConcurrentConnections = Settings.Default.MaxConcurrentConnections;
+                options.Limits.MaxConcurrentConnections = settings.MaxConcurrentConnections;
                 // Default value is 2 minutes
                 options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(1);
                 // Default value is 30 seconds
                 options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(15);
 
-                if (string.IsNullOrEmpty(Settings.Default.SslCert)) return;
-                listenOptions.UseHttps(Settings.Default.SslCert, Settings.Default.SslCertPassword, httpsConnectionAdapterOptions =>
+                if (string.IsNullOrEmpty(settings.SslCert)) return;
+                listenOptions.UseHttps(settings.SslCert, settings.SslCertPassword, httpsConnectionAdapterOptions =>
                 {
-                    if (Settings.Default.TrustedAuthorities is null || Settings.Default.TrustedAuthorities.Length == 0)
+                    if (settings.TrustedAuthorities is null || settings.TrustedAuthorities.Length == 0)
                         return;
                     httpsConnectionAdapterOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
                     httpsConnectionAdapterOptions.ClientCertificateValidation = (cert, chain, err) =>
@@ -109,7 +108,7 @@ namespace Neo.Plugins
                         if (err != SslPolicyErrors.None)
                             return false;
                         X509Certificate2 authority = chain.ChainElements[chain.ChainElements.Count - 1].Certificate;
-                        return Settings.Default.TrustedAuthorities.Contains(authority.Thumbprint);
+                        return settings.TrustedAuthorities.Contains(authority.Thumbprint);
                     };
                 });
             }))
@@ -211,7 +210,7 @@ namespace Neo.Plugins
             try
             {
                 string method = request["method"].AsString();
-                if (!CheckAuth(context) || Settings.Default.DisabledMethods.Contains(method))
+                if (!CheckAuth(context) || settings.DisabledMethods.Contains(method))
                     throw new RpcException(-400, "Access denied");
                 if (!methods.TryGetValue(method, out var func))
                     throw new RpcException(-32601, "Method not found");
@@ -236,7 +235,7 @@ namespace Neo.Plugins
             }
         }
 
-        public static void RegisterMethods(object handler)
+        public void RegisterMethods(object handler)
         {
             foreach (MethodInfo method in handler.GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {

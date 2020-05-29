@@ -19,4 +19,10 @@
     <ProjectReference Include="..\..\src\RpcClient\RpcClient.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="RpcTestCases.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

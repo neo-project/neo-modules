@@ -48,7 +48,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject GetBalance(JArray _params)
+        private JObject GetWalletBalance(JArray _params)
         {
             CheckWallet();
             UInt160 asset_id = UInt160.Parse(_params[0].AsString());
@@ -68,7 +68,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject GetUnclaimedGas(JArray _params)
+        private JObject GetWalletUnclaimedGas(JArray _params)
         {
             CheckWallet();
             BigInteger gas = BigInteger.Zero;
@@ -187,7 +187,7 @@ namespace Neo.Plugins
                 if (tx.NetworkFee < calFee)
                     tx.NetworkFee = calFee;
             }
-            if (tx.NetworkFee > Settings.Default.MaxFee)
+            if (tx.NetworkFee > settings.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
         }
@@ -235,7 +235,7 @@ namespace Neo.Plugins
                 if (tx.NetworkFee < calFee)
                     tx.NetworkFee = calFee;
             }
-            if (tx.NetworkFee > Settings.Default.MaxFee)
+            if (tx.NetworkFee > settings.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
         }
@@ -273,7 +273,7 @@ namespace Neo.Plugins
                 if (tx.NetworkFee < calFee)
                     tx.NetworkFee = calFee;
             }
-            if (tx.NetworkFee > Settings.Default.MaxFee)
+            if (tx.NetworkFee > settings.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
         }
@@ -285,7 +285,7 @@ namespace Neo.Plugins
             if (context.Completed)
             {
                 tx.Witnesses = context.GetWitnesses();
-                System.LocalNode.Tell(new LocalNode.Relay { Inventory = tx });
+                system.Blockchain.Tell(tx);
                 return tx.ToJson();
             }
             else
