@@ -20,7 +20,7 @@ namespace Neo.Plugins
 
         public PerformanceMonitor()
         {
-            RpcServer.RegisterMethods(this);
+            RpcServerPlugin.RegisterMethods(this);
         }
 
         protected override void Configure()
