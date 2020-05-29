@@ -66,7 +66,7 @@ namespace Neo.Plugins
             try
             {
                 var stackItems = engine.ResultStack.ToArray();
-                stackItems = ConvertIEnumeratorToArray(stackItems); // convert InteropInterface<IEnumerator> to Array for RpcClient to digest
+                ConvertIEnumeratorToArray(stackItems); // convert InteropInterface<IEnumerator> to Array for RpcClient to digest
                 json["stack"] = new JArray(stackItems.Select(p => p.ToJson()));
             }
             catch (InvalidOperationException)
@@ -77,7 +77,7 @@ namespace Neo.Plugins
             return json;
         }
 
-        public static StackItem[] ConvertIEnumeratorToArray(StackItem[] stackItems)
+        public static void ConvertIEnumeratorToArray(StackItem[] stackItems)
         {
             for (int i = 0; i < stackItems.Length; i++)
             {
@@ -89,7 +89,14 @@ namespace Neo.Plugins
                         while (sysEnum.MoveNext())
                         {
                             var current = sysEnum.Current;
-                            array.Add(current is StackItem stackItem ? stackItem : current is IInteroperable interoperable ? interoperable.ToStackItem(null) : new InteropInterface(current));
+                            if (!(current is StackItem))
+                            {
+                                if (current is IInteroperable interoperable)
+                                    current = interoperable.ToStackItem(null);
+                                else
+                                    current = new InteropInterface(current);
+                            }
+                            array.Add((StackItem)current);
                         }
                         stackItems[i] = array;
                         continue;
@@ -105,7 +112,6 @@ namespace Neo.Plugins
                     }
                 }
             }
-            return stackItems;
         }
 
         [RpcMethod]

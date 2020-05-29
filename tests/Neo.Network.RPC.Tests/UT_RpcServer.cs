@@ -31,7 +31,7 @@ namespace Neo.Network.RPC.Tests
             Assert.AreEqual(stackItems[3].Type, StackItemType.InteropInterface);
             Assert.AreEqual(stackItems[4].Type, StackItemType.InteropInterface);
 
-            var newStackItems = RpcServer.ConvertIEnumeratorToArray(stackItems);
+            RpcServer.ConvertIEnumeratorToArray(stackItems);
 
             Assert.AreEqual(stackItems[3].Type, StackItemType.Array);
             Assert.AreEqual(stackItems[4].Type, StackItemType.Array);
