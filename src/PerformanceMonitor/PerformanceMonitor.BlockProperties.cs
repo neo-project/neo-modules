@@ -3,7 +3,6 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using System;
-using System.Text;
 
 namespace Neo.Plugins
 {
@@ -141,6 +140,92 @@ namespace Neo.Plugins
             using (var snapshot = Blockchain.Singleton.GetSnapshot())
             {
                 return snapshot.GetAverageTimePerBlock(desiredCount);
+            }
+        }
+
+        /// <summary>
+        /// Process "block time" command
+        /// Prints the timestamp of the latest blocks
+        /// </summary>
+        [ConsoleCommand("block timestamp", Category = "Block Commands", Description = "Show the block timestamp for each of the n latest blocks.")]
+        private void OnBlockTimestampCommand(uint blockCount)
+        {
+            uint desiredCount = blockCount;
+
+            if (desiredCount < 1)
+            {
+                Console.WriteLine("Minimum 1 block");
+                return;
+            }
+
+            if (desiredCount > 1000)
+            {
+                Console.WriteLine("Maximum 1000 blocks");
+                return;
+            }
+
+            using (var snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                var block = GetBlock(snapshot.CurrentBlockHash.ToString());
+                var blocksTime = snapshot.GetBlocksTimestamp(desiredCount, block);
+
+                foreach (var blockTime in blocksTime)
+                {
+                    Console.WriteLine($"{blockTime.Key,10}/{blockTime.Value,-8}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the block time in seconds for each of the latest blocks.
+        /// </summary>
+        /// <returns>
+        /// Returns the average time per block in milliseconds
+        /// </returns>
+        [RpcMethod]
+        public JObject GetBlocksTime(JArray _params)
+        {
+            if (_params.Count != 2)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+
+            if (!uint.TryParse(_params[0].AsString(), out uint desiredCount))
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+
+            if (desiredCount < 1)
+            {
+                throw new RpcException(-100, "Minimum 1 block");
+            }
+
+            // It is currently limited to query blocks generated in the last 24 hours
+            uint maxNBlocksPerDay = 24 * 60 * 60 / (Blockchain.MillisecondsPerBlock / 1000);
+            if (desiredCount > maxNBlocksPerDay)
+            {
+                throw new RpcException(-100, maxNBlocksPerDay.ToString("Maximum 0 blocks"));
+            }
+
+            if (!uint.TryParse(_params[1].AsString(), out uint height) || desiredCount > height)
+            {
+                throw new RpcException(-32602, "Invalid params");
+            }
+
+            using (var snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                var block = GetBlock(height.ToString());
+                var blocksTime = snapshot.GetBlocksTimestamp(desiredCount, block);
+
+                var array = new JArray();
+                foreach (var blockTime in blocksTime)
+                {
+                    JObject json = new JObject();
+                    json["height"] = blockTime.Key;
+                    json["timestamp"] = blockTime.Value;
+                    array.Add(json);
+                }
+                return array;
             }
         }
     }

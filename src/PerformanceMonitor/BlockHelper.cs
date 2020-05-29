@@ -1,6 +1,7 @@
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using System.Collections.Generic;
 
 namespace Neo.Plugins
 {
@@ -66,6 +67,48 @@ namespace Neo.Plugins
             }
 
             return averageTime;
+        }
+
+        /// <summary>
+        /// Returns the block timestamp for each of the n latest blocks.
+        /// </summary>
+        /// <param name="desiredCount">
+        /// The desired number of blocks that should map the timestamp
+        /// </param>
+        /// <param name="lastHeight">
+        /// The current height of the blockchain
+        /// </param>
+        /// <returns>
+        /// Returns a dictionary that maps each block index with its timestamp if the number of blocks
+        /// is greater than zero; otherwise, returns an empty dictionary.
+        /// </returns>
+        public static Dictionary<uint, ulong> GetBlocksTimestamp(this SnapshotView snapshot, uint desiredCount, Block lastBlock = null)
+        {
+            var dictionary = new Dictionary<uint, ulong>();
+            var firstIndex = Blockchain.GenesisBlock.Index;
+            var blockHash = snapshot.CurrentBlockHash;
+
+            var countedBlocks = -1;
+            Block block;
+
+            if (lastBlock != null && lastBlock.Index < snapshot.Height)
+            {
+                block = lastBlock;
+            }
+            else
+            {
+                block = snapshot.GetBlock(blockHash);
+            }
+
+            do
+            {
+                dictionary.Add(block.Index, block.Timestamp);
+
+                block = snapshot.GetBlock(block.PrevHash);
+                countedBlocks++;
+            } while (block != null && block.Index != firstIndex && desiredCount > countedBlocks);
+
+            return dictionary;
         }
     }
 }
