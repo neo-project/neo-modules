@@ -24,7 +24,7 @@ namespace Neo.Network.RPC.Tests
                 12345,
                 "hello",
                 new InteropInterface(new int[] { 1, 2, 3 }.GetEnumerator()),
-                new InteropInterface(new Nep5AccountState[] {new Nep5AccountState()}.GetEnumerator()),
+                new InteropInterface(new AccountState[] {new AccountState()}.GetEnumerator()),
                 new InteropInterface(iterator)
             };
 
