@@ -14,7 +14,7 @@ namespace Neo.Plugins.Storage
 
         public Store(string path)
         {
-            this.db = DB.Open(path, new Options { CreateIfMissing = true });
+            this.db = DB.Open(path, new Options { CreateIfMissing = true, FilterPolicy = Native.leveldb_filterpolicy_create_bloom(20) });
             byte[] value = db.Get(ReadOptions.Default, Helper.CreateKey(SYS_Version));
             if (value != null && Version.TryParse(Encoding.ASCII.GetString(value), out Version version) && version >= Version.Parse("3.0.0"))
                 return;

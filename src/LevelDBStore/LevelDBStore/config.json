@@ -1,5 +1,6 @@
-﻿{
+{
   "PluginConfiguration": {
-    "Path": "Data_LevelDB_{0}"
+    "Path": "Data_LevelDB_{0}",
+    "BloomFilterBitsPerKey": "20"
   }
 }
