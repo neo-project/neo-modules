@@ -88,7 +88,7 @@ namespace Neo.Plugins
             var firstIndex = Blockchain.GenesisBlock.Index;
             var blockHash = snapshot.CurrentBlockHash;
 
-            var countedBlocks = -1;
+            var countedBlocks = 0;
             Block block;
 
             if (lastBlock != null && lastBlock.Index < snapshot.Height)
@@ -100,13 +100,13 @@ namespace Neo.Plugins
                 block = snapshot.GetBlock(blockHash);
             }
 
-            do
+            while (block != null && block.Index != firstIndex && desiredCount > countedBlocks)
             {
                 dictionary.Add(block.Index, block.Timestamp);
 
                 block = snapshot.GetBlock(block.PrevHash);
                 countedBlocks++;
-            } while (block != null && block.Index != firstIndex && desiredCount > countedBlocks);
+            }
 
             return dictionary;
         }

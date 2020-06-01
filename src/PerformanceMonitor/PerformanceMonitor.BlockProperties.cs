@@ -169,9 +169,19 @@ namespace Neo.Plugins
                 var block = GetBlock(snapshot.CurrentBlockHash.ToString());
                 var blocksTime = snapshot.GetBlocksTimestamp(desiredCount, block);
 
-                foreach (var blockTime in blocksTime)
+                if (blocksTime.Count == 0)
                 {
-                    Console.WriteLine($"{blockTime.Key,10}/{blockTime.Value,-8}");
+                    Console.WriteLine("No blocks were found");
+                }
+                else
+                {
+                    Console.WriteLine($"{"Index",10}\tTimestamp");
+                    foreach (var blockTime in blocksTime)
+                    {
+                        var timestamp = DateTime.UnixEpoch.AddMilliseconds(blockTime.Value);
+                        timestamp = TimeZoneInfo.ConvertTimeFromUtc(timestamp, TimeZoneInfo.Local);
+                        Console.WriteLine($"{blockTime.Key,10}\t{timestamp.ToShortDateString()} {timestamp.ToLongTimeString()}");
+                    }
                 }
             }
         }
