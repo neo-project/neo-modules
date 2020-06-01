@@ -12,7 +12,7 @@ namespace Neo.Plugins.Storage
         {
             IConfigurationSection config = GetConfiguration();
             path = string.Format(config.GetSection("Path").Value ?? "Data_LevelDB_{0}", ProtocolSettings.Default.Magic.ToString("X8"));
-            int.TryParse(config.GetSection("BloomFilterBitsPerKey")?.Value, out bloomFilterBitsPerKey);
+            bloomFilterBitsPerKey = config.GetSection("BloomFilterBitsPerKey")?.Get<int>() ?? 0;
         }
 
         public IStore GetStore()
