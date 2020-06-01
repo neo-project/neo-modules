@@ -11,8 +11,9 @@ namespace Neo.Plugins.Storage
     {
         private const byte SYS_Version = 0xf0;
         private readonly DB db;
+        private bool readCache;
 
-        public Store(string path)
+        public Store(string path, bool readCache)
         {
             this.db = DB.Open(path, new Options { CreateIfMissing = true });
             byte[] value = db.Get(ReadOptions.Default, Helper.CreateKey(SYS_Version));
@@ -20,12 +21,13 @@ namespace Neo.Plugins.Storage
                 return;
 
             WriteBatch batch = new WriteBatch();
+            this.readCache = readCache;
 
             if (value != null)
             {
                 // Clean all entries only if the version are different
 
-                ReadOptions options = new ReadOptions { FillCache = false };
+                ReadOptions options = new ReadOptions { FillCache = readCache };
                 using (Iterator it = db.NewIterator(options))
                 {
                     for (it.SeekToFirst(); it.Valid(); it.Next())
@@ -56,7 +58,7 @@ namespace Neo.Plugins.Storage
 
         public ISnapshot GetSnapshot()
         {
-            return new Snapshot(db);
+            return new Snapshot(db, readCache);
         }
 
         public void Put(byte table, byte[] key, byte[] value)

@@ -16,12 +16,13 @@ namespace Neo.Plugins.Storage
         private readonly RocksDb db;
         private readonly Dictionary<byte, ColumnFamilyHandle> _families = new Dictionary<byte, ColumnFamilyHandle>();
 
-        public Store(string path)
+        public Store(string path, bool readCache)
         {
             var families = new ColumnFamilies();
             for (int x = 0; x <= byte.MaxValue; x++)
                 families.Add(new ColumnFamilies.Descriptor(x.ToString(), new ColumnFamilyOptions()));
             db = RocksDb.Open(Options.Default, Path.GetFullPath(path), families);
+            Options.SetDefaultReadOptions(readCache);
 
             ColumnFamilyHandle defaultFamily = db.GetDefaultColumnFamily();
             byte[] value = db.Get(SYS_Version, defaultFamily, Options.ReadDefault);

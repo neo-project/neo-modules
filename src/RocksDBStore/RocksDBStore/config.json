@@ -1,5 +1,6 @@
 {
   "PluginConfiguration": {
-    "Path": "Data_RocksDB_{0}"
+    "Path": "Data_RocksDB_{0}",
+    "ReadCache": "True"
   }
 }

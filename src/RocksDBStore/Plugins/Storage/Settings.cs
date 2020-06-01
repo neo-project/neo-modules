@@ -6,11 +6,15 @@ namespace Neo.Plugins.Storage
     {
         public string Path { get; }
 
+        public bool ReadCache { get; }
+
         public static Settings Default { get; private set; }
 
         private Settings(IConfigurationSection section)
         {
             this.Path = string.Format(section.GetSection("Path").Value ?? "Data_RocksDB_{0}", ProtocolSettings.Default.Magic.ToString("X8"));
+            bool.TryParse(section.GetSection("ReadCache")?.Value, out bool readCache);
+            this.ReadCache = readCache;
         }
 
         public static void Load(IConfigurationSection section)

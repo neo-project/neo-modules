@@ -12,11 +12,11 @@ namespace Neo.Plugins.Storage
         private readonly ReadOptions options;
         private readonly WriteBatch batch;
 
-        public Snapshot(DB db)
+        public Snapshot(DB db, bool readCache)
         {
             this.db = db;
             this.snapshot = db.GetSnapshot();
-            this.options = new ReadOptions { FillCache = false, Snapshot = snapshot };
+            this.options = new ReadOptions { FillCache = readCache, Snapshot = snapshot };
             this.batch = new WriteBatch();
         }
 

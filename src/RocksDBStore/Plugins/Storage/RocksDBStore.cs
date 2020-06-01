@@ -16,6 +16,6 @@ namespace Neo.Plugins.Storage
         /// Get store
         /// </summary>
         /// <returns>RocksDbStore</returns>
-        public IStore GetStore() => new Store(Settings.Default.Path);
+        public IStore GetStore() => new Store(Settings.Default.Path, Settings.Default.ReadCache);
     }
 }

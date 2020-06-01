@@ -5,7 +5,7 @@ namespace Neo.Plugins.Storage
     public static class Options
     {
         public static readonly DbOptions Default = CreateDbOptions();
-        public static readonly ReadOptions ReadDefault = new ReadOptions();
+        public static ReadOptions ReadDefault { get; private set; }
         public static readonly WriteOptions WriteDefault = new WriteOptions();
         public static readonly WriteOptions WriteDefaultSync = new WriteOptions().SetSync(true);
 
@@ -20,6 +20,12 @@ namespace Neo.Plugins.Storage
             options.SetWriteBufferSize(4 << 20);
             options.SetBlockBasedTableFactory(new BlockBasedTableOptions().SetBlockSize(4096));
             return options;
+        }
+
+        public static void SetDefaultReadOptions(bool readCache)
+        {
+            ReadDefault = new ReadOptions();
+            ReadDefault.SetFillCache(readCache);
         }
     }
 }
