@@ -1,6 +1,6 @@
 {
   "PluginConfiguration": {
     "Path": "Data_LevelDB_{0}",
-    "ReadCache": "True"
+    "ReadCache": true
   }
 }

@@ -12,7 +12,7 @@ namespace Neo.Plugins.Storage
         {
             IConfigurationSection config = GetConfiguration();
             path = string.Format(config.GetSection("Path").Value ?? "Data_LevelDB_{0}", ProtocolSettings.Default.Magic.ToString("X8"));
-            bool.TryParse(config.GetSection("ReadCache")?.Value, out readCache);
+            readCache = config.GetSection("ReadCache")?.Get<bool>() ?? false;
         }
 
         public IStore GetStore()

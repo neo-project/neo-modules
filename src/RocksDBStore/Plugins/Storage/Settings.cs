@@ -13,8 +13,7 @@ namespace Neo.Plugins.Storage
         private Settings(IConfigurationSection section)
         {
             this.Path = string.Format(section.GetSection("Path").Value ?? "Data_RocksDB_{0}", ProtocolSettings.Default.Magic.ToString("X8"));
-            bool.TryParse(section.GetSection("ReadCache")?.Value, out bool readCache);
-            this.ReadCache = readCache;
+            this.ReadCache = section.GetSection("ReadCache")?.Get<bool>() ?? false;
         }
 
         public static void Load(IConfigurationSection section)
