@@ -27,7 +27,7 @@ namespace Neo.Plugins.Storage
             {
                 // Clean all entries only if the version are different
 
-                ReadOptions options = new ReadOptions { FillCache = readCache };
+                ReadOptions options = new ReadOptions { FillCache = false };
                 using (Iterator it = db.NewIterator(options))
                 {
                     for (it.SeekToFirst(); it.Valid(); it.Next())
