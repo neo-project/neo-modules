@@ -123,7 +123,7 @@ namespace Neo.Network.RPC.Tests
             // verify network fee and system fee
             long networkFee = tx.Size * (long)1000 + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHNULL] + ApplicationEngine.ECDsaVerifyPrice * 1;
             Assert.AreEqual(networkFee, tx.NetworkFee);
-            Assert.AreEqual(100, tx.SystemFee); 
+            Assert.AreEqual(100, tx.SystemFee);
 
             // duplicate sign should not add new witness
             txManager.AddSignature(keyPair1).Sign();
