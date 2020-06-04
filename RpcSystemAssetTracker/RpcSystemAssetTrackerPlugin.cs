@@ -177,15 +177,16 @@ namespace Neo.Plugins
                         from = prevOutputs.First().ScriptHash;
                         dic = prevOutputs.GroupBy(p => p.AssetId).ToDictionary(p => p.Key, p => p.Sum(q => q.Value));
                     }
-                    
+
+                    ushort index = 0;
                     foreach (TransactionOutput output in tx.Outputs)
                     {
                         if (output.AssetId.Equals(Blockchain.GoverningToken.Hash) || output.AssetId.Equals(Blockchain.UtilityToken.Hash))
                         {
-                            // add transfers
+                            // add transfers except from and to are same
                             if (!from.Equals(output.ScriptHash))
                             {
-                                _transfersSent.Add(new UserSystemAssetTransferKey(from, output.AssetId, block.Timestamp),
+                                _transfersSent.Add(new UserSystemAssetTransferKey(from, output.AssetId, block.Timestamp, index),
                                     new UserSystemAssetTransfer()
                                     {
                                         UserScriptHash = output.ScriptHash,
@@ -193,7 +194,7 @@ namespace Neo.Plugins
                                         TxHash = tx.Hash,
                                         Amount = output.Value
                                     });
-                                _transfersReceived.Add(new UserSystemAssetTransferKey(output.ScriptHash, output.AssetId, block.Timestamp),
+                                _transfersReceived.Add(new UserSystemAssetTransferKey(output.ScriptHash, output.AssetId, block.Timestamp, index),
                                     new UserSystemAssetTransfer
                                     {
                                         UserScriptHash = from,
@@ -201,7 +202,9 @@ namespace Neo.Plugins
                                         TxHash = tx.Hash,
                                         Amount = output.Value
                                     });
+                                index++;
                             }
+                            // deduct corresponding asset value
                             if (dic.TryGetValue(output.AssetId, out Fixed8 remain))
                             {
                                 remain -= output.Value;
@@ -218,7 +221,7 @@ namespace Neo.Plugins
                     {
                         if (pair.Value > Fixed8.Zero)
                         {
-                            _transfersSent.Add(new UserSystemAssetTransferKey(from, pair.Key, block.Timestamp),
+                            _transfersSent.Add(new UserSystemAssetTransferKey(from, pair.Key, block.Timestamp, index),
                                 new UserSystemAssetTransfer()
                                 {
                                     UserScriptHash = UInt160.Zero,
@@ -226,7 +229,7 @@ namespace Neo.Plugins
                                     TxHash = tx.Hash,
                                     Amount = pair.Value
                                 });
-                            _transfersReceived.Add(new UserSystemAssetTransferKey(UInt160.Zero, pair.Key, block.Timestamp),
+                            _transfersReceived.Add(new UserSystemAssetTransferKey(UInt160.Zero, pair.Key, block.Timestamp, index),
                                 new UserSystemAssetTransfer
                                 {
                                     UserScriptHash = from,
@@ -234,6 +237,7 @@ namespace Neo.Plugins
                                     TxHash = tx.Hash,
                                     Amount = pair.Value
                                 });
+                            index++;
                         }
                     }
                 }
@@ -601,7 +605,8 @@ namespace Neo.Plugins
                 if (method == "getclaimable") return ProcessGetClaimableSpents(parameters);
                 if (method == "getunclaimed") return ProcessGetUnclaimed(parameters);
             }
-            if (method == "getutxotransfers") return ProcessGetUtxoTransfers(parameters);
+            if (_shouldTrackHistory)
+                if (method == "getutxotransfers") return ProcessGetUtxoTransfers(parameters);
             return method != "getunspents" ? null : ProcessGetUnspents(parameters);
         }
 
