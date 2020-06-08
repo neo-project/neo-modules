@@ -6,6 +6,7 @@ namespace Neo.Plugins
     {
         static List<object> handlers = new List<object>();
         public override string Name => "RpcServer";
+        public override string Description => "Enables RPC for the node";
         RpcServer server;
         RpcServerSettings settings;
 

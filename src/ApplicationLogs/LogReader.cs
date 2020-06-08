@@ -18,6 +18,8 @@ namespace Neo.Plugins
 
         public override string Name => "ApplicationLogs";
 
+        public override string Description => "Synchronizes the smart contract log with the NativeContract log (Notify)";
+
         public LogReader()
         {
             db = DB.Open(GetFullPath(Settings.Default.Path), new Options { CreateIfMissing = true });
