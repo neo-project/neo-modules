@@ -48,7 +48,7 @@ namespace Neo.Network.RPC
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitSysCall(InteropService.Contract.Create, contractScript, manifest.ToString());
+                sb.EmitSysCall(ApplicationEngine.System_Contract_Create, contractScript, manifest.ToString());
                 script = sb.ToArray();
             }
 
