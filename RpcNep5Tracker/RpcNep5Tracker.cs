@@ -192,7 +192,7 @@ namespace Neo.Plugins
                     script = sb.ToArray();
                 }
 
-                using (ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, extraGAS: maxGas))
+                using (ApplicationEngine engine = ApplicationEngine.Run(script, snapshot.Clone(), extraGAS: maxGas))
                 {
                     if (engine.State.HasFlag(VMState.FAULT)) continue;
                     if (engine.ResultStack.Count <= 0) continue;
