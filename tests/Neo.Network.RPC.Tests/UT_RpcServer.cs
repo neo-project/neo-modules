@@ -7,6 +7,7 @@ using Neo.VM.Types;
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Neo.Network.RPC.Tests
 {
@@ -16,25 +17,39 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public void Test_ConvertIEnumeratorToArray()
         {
-            IReadOnlyList<byte[]> values = new byte[1][] { "NeHNBbeLNtiCEeaFQ6tLLpXkr5Xw6esKnV".ToScriptHash().ToArray() };
+            var a = new byte[100][];
+            for (int i = 0; i < a.Length; i++)
+            {
+                a[i] = "NeHNBbeLNtiCEeaFQ6tLLpXkr5Xw6esKnV".ToScriptHash().ToArray();
+            }
+            IReadOnlyList<byte[]> values = a;
+            
             IIterator iterator = new TestIterator(values);
 
             StackItem[] stackItems = new StackItem[]
             {
                 12345,
                 "hello",
-                new InteropInterface(new int[] { 1, 2, 3 }.GetEnumerator()),
+                new InteropInterface(Enumerable.Range(1, 100).GetEnumerator()),
                 new InteropInterface(new AccountState[] {new AccountState()}.GetEnumerator()),
                 new InteropInterface(iterator)
             };
 
-            Assert.AreEqual(stackItems[3].Type, StackItemType.InteropInterface);
-            Assert.AreEqual(stackItems[4].Type, StackItemType.InteropInterface);
+            Assert.AreEqual(StackItemType.InteropInterface, stackItems[2].Type);
+            Assert.AreEqual(StackItemType.InteropInterface, stackItems[3].Type);
+            Assert.AreEqual(StackItemType.InteropInterface, stackItems[4].Type);
 
-            RpcServer.ConvertIEnumeratorToArray(stackItems);
+            RpcServer.ConvertIEnumeratorToArray(stackItems, 1);
 
-            Assert.AreEqual(stackItems[3].Type, StackItemType.Array);
-            Assert.AreEqual(stackItems[4].Type, StackItemType.Array);
+            Assert.AreEqual(StackItemType.Array, stackItems[2].Type);
+            Assert.AreEqual(50, ((VM.Types.Array)stackItems[2]).Count);
+            Assert.AreEqual(new InteropInterface(51), ((VM.Types.Array)stackItems[2])[0]);
+
+            Assert.AreEqual(StackItemType.Array, stackItems[3].Type);
+
+            Assert.AreEqual(StackItemType.Array, stackItems[4].Type);
+            Assert.AreEqual(50, ((VM.Types.Array)stackItems[4]).Count);
+            Assert.AreEqual(new ByteString("NeHNBbeLNtiCEeaFQ6tLLpXkr5Xw6esKnV".ToScriptHash().ToArray()), ((VM.Types.Array)stackItems[4])[0]);
         }
     }
 

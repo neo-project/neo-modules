@@ -56,7 +56,9 @@ namespace Neo.Plugins
             }
         }
 
-        private JObject GetInvokeResult(byte[] script, IVerifiable checkWitnessHashes = null)
+        private const int ResultsPerPage = 50;
+
+        private JObject GetInvokeResult(byte[] script, IVerifiable checkWitnessHashes = null, int page = 0)
         {
             using ApplicationEngine engine = ApplicationEngine.Run(script, checkWitnessHashes, extraGAS: settings.MaxGasInvoke);
             JObject json = new JObject();
@@ -66,7 +68,7 @@ namespace Neo.Plugins
             try
             {
                 var stackItems = engine.ResultStack.ToArray();
-                ConvertIEnumeratorToArray(stackItems); // convert InteropInterface<IEnumerator> to Array for RpcClient to digest
+                ConvertIEnumeratorToArray(stackItems, page); // convert InteropInterface<IEnumerator> to Array for RpcClient to digest
                 json["stack"] = new JArray(stackItems.Select(p => p.ToJson()));
             }
             catch (InvalidOperationException)
@@ -77,7 +79,7 @@ namespace Neo.Plugins
             return json;
         }
 
-        public static void ConvertIEnumeratorToArray(StackItem[] stackItems)
+        public static void ConvertIEnumeratorToArray(StackItem[] stackItems, int page = 0)
         {
             for (int i = 0; i < stackItems.Length; i++)
             {
@@ -86,17 +88,32 @@ namespace Neo.Plugins
                     if (interopInterface.TryGetInterface(out System.Collections.IEnumerator sysEnum))
                     {
                         Array array = new Array();
-                        while (sysEnum.MoveNext())
+                        int index = 0;
+                        int low = page * ResultsPerPage; // 0, 50, 100...
+                        int high = (page + 1) * ResultsPerPage - 1; // 49, 99, 149...
+                        while (sysEnum.MoveNext() && index <= high)
                         {
-                            var current = sysEnum.Current;
-                            if (!(current is StackItem))
+                            if (index >= low)
                             {
-                                if (current is IInteroperable interoperable)
-                                    current = interoperable.ToStackItem(null);
-                                else
-                                    current = new InteropInterface(current);
+                                StackItem current = null;
+                                var obj = sysEnum.Current;
+                                try
+                                {
+                                    current = (StackItem)obj;
+                                }
+                                catch (InvalidCastException)
+                                {
+                                }
+                                if (!(current is StackItem))
+                                {
+                                    if (obj is IInteroperable interoperable)
+                                        current = interoperable.ToStackItem(null);
+                                    else
+                                        current = new InteropInterface(obj);
+                                }
+                                array.Add(current); 
                             }
-                            array.Add((StackItem)current);
+                            index++;
                         }
                         stackItems[i] = array;
                         continue;
@@ -104,9 +121,16 @@ namespace Neo.Plugins
                     if (interopInterface.TryGetInterface(out Neo.SmartContract.Enumerators.IEnumerator neoEnum))
                     {
                         Array array = new Array();
-                        while (neoEnum.Next())
+                        int index = 0;
+                        int low = page * ResultsPerPage; // 0, 50, 100...
+                        int high = (page + 1) * ResultsPerPage - 1; // 49, 99, 149...
+                        while (neoEnum.Next() && index <= high)
                         {
-                            array.Add(neoEnum.Value());
+                            if (index >= low)
+                            {
+                                array.Add(neoEnum.Value()); 
+                            }
+                            index++;
                         }
                         stackItems[i] = array;
                     }
@@ -126,7 +150,8 @@ namespace Neo.Plugins
             {
                 script = sb.EmitAppCall(script_hash, operation, args).ToArray();
             }
-            return GetInvokeResult(script, checkWitnessHashes);
+            int page = _params.Count >= 5 ? int.Parse(_params[4].AsString()) : 0;
+            return GetInvokeResult(script, checkWitnessHashes, page);
         }
 
         [RpcMethod]
@@ -134,7 +159,8 @@ namespace Neo.Plugins
         {
             byte[] script = _params[0].AsString().HexToBytes();
             CheckWitnessHashes checkWitnessHashes = _params.Count >= 2 ? new CheckWitnessHashes(((JArray)_params[1]).Select(u => UInt160.Parse(u.AsString())).ToArray()) : null;
-            return GetInvokeResult(script, checkWitnessHashes);
+            int page = _params.Count >= 3 ? int.Parse(_params[4].AsString()) : 0;
+            return GetInvokeResult(script, checkWitnessHashes, page);
         }
 
         [RpcMethod]
