@@ -111,7 +111,7 @@ namespace Neo.Plugins
                                     else
                                         current = new InteropInterface(obj);
                                 }
-                                array.Add(current); 
+                                array.Add(current);
                             }
                             index++;
                         }
@@ -128,7 +128,7 @@ namespace Neo.Plugins
                         {
                             if (index >= low)
                             {
-                                array.Add(neoEnum.Value()); 
+                                array.Add(neoEnum.Value());
                             }
                             index++;
                         }

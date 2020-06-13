@@ -23,7 +23,7 @@ namespace Neo.Network.RPC.Tests
                 a[i] = "NeHNBbeLNtiCEeaFQ6tLLpXkr5Xw6esKnV".ToScriptHash().ToArray();
             }
             IReadOnlyList<byte[]> values = a;
-            
+
             IIterator iterator = new TestIterator(values);
 
             StackItem[] stackItems = new StackItem[]
