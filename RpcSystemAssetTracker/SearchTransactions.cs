@@ -70,19 +70,71 @@ namespace Neo.Plugins
 
             var result = new JArray();
 
-            foreach (var state in transactionStates)
+            foreach (var transactionState in transactionStates)
             {
-                var blockIndex = state.BlockIndex;
-                var block = Blockchain.Singleton.Store.GetBlock(state.BlockIndex);
+                var transaction = transactionState.Transaction;
+                var blockIndex = transactionState.BlockIndex;
 
-                var jtransaction = state.Transaction.ToJson();
-                jtransaction["blockIndex"] = blockIndex;
-                jtransaction["blockTimestamp"] = DateTimeOffset.FromUnixTimeSeconds(block.Timestamp).ToString("yyyy-MM-ddTHH:mm:ssZ");
+                var block = Blockchain.Singleton.Store.GetBlock(blockIndex);
 
-                result.Add(jtransaction);
+                var json = new JObject();
+
+                json["txid"] = transaction.Hash.ToString();
+                json["size"] = transaction.Size;
+                json["type"] = transaction.Type;
+                json["version"] = transaction.Version;
+                json["attributes"] = transaction.Attributes.Select(ConvertTransactionAttribute).ToArray();
+                json["vin"] = transaction.Inputs.Select(ConvertTransactionInputs).ToArray();
+                json["vout"] = transaction.Outputs.Select((x, i) => ConvertTransactionOutputs(i, x)).ToArray();
+                json["sys_fee"] = transaction.SystemFee.ToString();
+                json["net_fee"] = transaction.NetworkFee.ToString();
+                json["scripts"] = transaction.Witnesses.Select(ConvertTransactionWitness).ToArray();
+
+                json["blockIndex"] = blockIndex;
+                json["blockTimestamp"] = DateTimeOffset.FromUnixTimeSeconds(block.Timestamp).ToString("yyyy-MM-ddTHH:mm:ssZ");
+
+                result.Add(json);
             }
 
             return result;
+        }
+
+        private JObject ConvertTransactionAttribute(TransactionAttribute transactionAttribute)
+        {
+            var json = new JObject();
+            json["usage"] = transactionAttribute.Usage;
+            json["data"] = transactionAttribute.Data.ToHexString();
+
+            return json;
+        }
+
+        private JObject ConvertTransactionInputs(CoinReference coinReference)
+        {
+            var json = new JObject();
+            json["txid"] = coinReference.PrevHash.ToString();
+            json["vout"] = coinReference.PrevIndex;
+
+            return json;
+        }
+
+        private JObject ConvertTransactionOutputs(int index, TransactionOutput transactionOutput)
+        {
+            var json = new JObject();
+            json["n"] = index;
+            json["asset"] = transactionOutput.AssetId.ToString();
+            json["value"] = transactionOutput.Value.ToString();
+            json["address"] = transactionOutput.ScriptHash.ToAddress();
+
+            return json;
+        }
+
+        private JObject ConvertTransactionWitness(Witness witness)
+        {
+            var json = new JObject();
+            json["invocation"] = witness.InvocationScript.ToHexString();
+            json["verification"] = witness.VerificationScript.ToHexString();
+
+            return json;
         }
 
         private T Try<T>(Func<T> p)
