@@ -1,6 +1,7 @@
 ﻿using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
+using Neo.Persistence;
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
@@ -50,13 +51,13 @@ namespace Neo.Plugins
             return ja;
         }
 
-        private IReadOnlyList<Transaction> FindTransactions(IReadOnlyList<UInt160> scriptHashes)
+        private IReadOnlyList<TransactionState> FindTransactions(IReadOnlyList<UInt160> scriptHashes)
         {
             using (var snapshot = Blockchain.Singleton.GetSnapshot())
             {
                 return snapshot.Transactions.Find()
                     .Where(x => this.ContainsInput(x.Value.Transaction.Inputs, scriptHashes) || this.ContainsOutput(x.Value.Transaction.Outputs, scriptHashes))
-                    .Select(x => x.Value.Transaction)
+                    .Select(x => x.Value)
                     .ToList();
             }
         }
@@ -65,49 +66,18 @@ namespace Neo.Plugins
         {
             var scriptHashes = addresses.Select(x => x.ToScriptHash()).ToList();
 
-            var transactions = this.FindTransactions(scriptHashes);
+            var transactionStates = this.FindTransactions(scriptHashes);
 
             var result = new JArray();
 
-            foreach (var transaction in transactions)
+            foreach (var state in transactionStates)
             {
-                var jtransaction = new JObject();
+                var blockIndex = state.BlockIndex;
+                var block = Blockchain.Singleton.Store.GetBlock(state.BlockIndex);
 
-                jtransaction["hash"] = transaction.Hash.ToString();
-                jtransaction["networkFee"] = new JNumber((double)(decimal)transaction.NetworkFee);
-                jtransaction["systemFee"] = new JNumber((double)(decimal)transaction.SystemFee);
-                jtransaction["size"] = transaction.Size;
-                jtransaction["type"] = transaction.GetType().Name;
-
-                var jinputs = new JArray();
-
-                foreach (var input in transaction.Inputs)
-                {
-                    var jinput = new JObject();
-
-                    jinput["prevHash"] = input.PrevHash.ToString();
-                    jinput["prevIndex"] = input.PrevIndex;
-                    jinput["size"] = input.Size;
-
-                    jinputs.Add(jinput);
-                }
-
-                var joutputs = new JArray();
-
-                foreach (var output in transaction.Outputs)
-                {
-                    var joutput = new JObject();
-
-                    joutput["assetId"] = output.AssetId.ToString();
-                    joutput["value"] = new JNumber((double)(decimal)output.Value);
-                    joutput["scriptHash"] = output.ScriptHash.ToString();
-                    joutput["size"] = output.Size;
-
-                    joutputs.Add(joutput);
-                }
-
-                jtransaction["inputs"] = jinputs;
-                jtransaction["outputs"] = joutputs;
+                var jtransaction = state.Transaction.ToJson();
+                jtransaction["blockIndex"] = blockIndex;
+                jtransaction["blockTimestamp"] = DateTimeOffset.FromUnixTimeSeconds(block.Timestamp).ToString("yyyy-MM-ddTHH:mm:ssZ");
 
                 result.Add(jtransaction);
             }
