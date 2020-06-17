@@ -189,14 +189,14 @@ namespace Neo.Plugins
                 Console.WriteLine("Waiting for the next commit...");
             }
 
-            List<Task<bool>> tasks = new List<Task<bool>>
+            Task<bool>[] tasks = new Task<bool>[]
             {
                 commit.Task,
                 consensusMessage.Task
             };
 
             var millisecondsToTimeOut = (int)Blockchain.MillisecondsPerBlock;
-            Task.WaitAll(tasks.ToArray(), millisecondsToTimeOut);
+            Task.WaitAll(tasks, millisecondsToTimeOut);
 
             OnCommitEvent -= commitAction;
             OnConsensusMessageEvent -= consensusMessageAction;

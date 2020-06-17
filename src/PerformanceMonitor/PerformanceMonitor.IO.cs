@@ -141,7 +141,7 @@ namespace Neo.Plugins
                 Console.WriteLine("Waiting for the next block...");
             }
 
-            List<Task> tasks = new List<Task>()
+            Task[] tasks = new Task[]
             {
                 monitorRemote, monitorLocal
             };
@@ -152,7 +152,7 @@ namespace Neo.Plugins
 
             try
             {
-                Task.WaitAll(tasks.ToArray(), cancel.Token);
+                Task.WaitAll(tasks, cancel.Token);
                 cancel.Cancel();
             }
             catch (OperationCanceledException)
@@ -221,17 +221,6 @@ namespace Neo.Plugins
             var remoteBlockIndex = blockIndex;
             var updateRemoteBlock = new TaskCompletionSource<bool>();
 
-            var stopBroadcast = new CancellationTokenSource();
-
-            Task broadcast = Task.Run(() =>
-            {
-                while (!stopBroadcast.Token.IsCancellationRequested)
-                {
-                    // receive a PingPayload is what updates RemoteNode LastBlockIndex
-                    SendBlockchainPingMessage(blockIndex);
-                }
-            });
-
             P2PMessageHandler p2pMessage = (message) =>
             {
                 if (message.Command == MessageCommand.Pong && message.Payload is PingPayload)
@@ -246,12 +235,14 @@ namespace Neo.Plugins
             };
 
             OnP2PMessageEvent += p2pMessage;
+
+            // receive a PingPayload is what updates RemoteNode LastBlockIndex
+            SendBlockchainPingMessage(blockIndex);
             try
             {
                 updateRemoteBlock.Task.Wait(token);
             }
             catch (OperationCanceledException) { }
-            stopBroadcast.Cancel();
 
             OnP2PMessageEvent -= p2pMessage;
 
