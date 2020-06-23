@@ -33,23 +33,154 @@ namespace OracleTracker
 
         public Func<OracleRequest, OracleResponse> Protocols { get; }
 
-        private readonly SortedBlockingCollection<UInt256, Transaction> _processingQueue;
+        private readonly SortedBlockingCollection<UInt256, OracleTask> _processingQueue;
 
-        private readonly SortedConcurrentDictionary<UInt256, RequestItem> _pendingRequests;
+        private readonly SortedConcurrentDictionary<UInt256, OracleTask> _pendingQueue;
 
-        private readonly SortedConcurrentDictionary<UInt256, ResponseCollection> _pendingResponses;
-
-
-        public int PendingCapacity => _pendingRequests.Capacity;
-        public int PendingRequestCount => _pendingRequests.Count;
-        public int PendingResponseCount => _pendingResponses.Count;
+        public int PendingCapacity => _pendingQueue.Capacity;
+        public int PendingQueueCount => _pendingQueue.Count;
 
         public bool IsStarted => Interlocked.Read(ref _isStarted) == 1;
 
         internal static IOracleProtocol HTTPSProtocol { get; } = new OracleHttpProtocol();
 
-        private Contract _lastContract;
 
+        internal class OracleTask
+        {
+            public readonly DateTime Timestamp;
+            public UInt256 requestTxHash;
+            public OracleRequest request;
+            public OracleResponse response;
+            public ResponseCollection responseItems;
+            private Object locker = new Object();
+
+            public OracleTask(UInt256 requestTxHash, OracleRequest request = null, OracleResponse response = null)
+            {
+                this.requestTxHash = requestTxHash;
+                this.request = request;
+                this.response = response;
+                this.responseItems = new ResponseCollection();
+                this.Timestamp = TimeProvider.Current.UtcNow;
+            }
+
+            public bool UpdateTaskState(OracleRequest request = null, OracleResponse response = null)
+            {
+                if (request != null) this.request = request;
+                if (response != null) this.response = response;
+                return true;
+            }
+
+            public bool AddResponseItem(Contract contract, ECPoint[] publicKeys, ResponseItem item, IActorRef _blockChain, SortedConcurrentDictionary<UInt256, OracleTask> _pendingQueue)
+            {
+                lock (locker)
+                {
+                    responseItems.RemoveOutOfDateResponseItem(publicKeys);
+                    responseItems.Add(item);
+
+                    var mine_responseItem = responseItems.Where(p => p.IsMine).FirstOrDefault();
+                    if (mine_responseItem is null) return true;
+                    ContractParametersContext responseTransactionContext = new ContractParametersContext(mine_responseItem.Tx);
+
+                    foreach (var responseItem in responseItems)
+                    {
+                        responseTransactionContext.AddSignature(contract, responseItem.OraclePub, responseItem.Signature);
+                    }
+                    if (responseTransactionContext.Completed)
+                    {
+                        mine_responseItem.Tx.Witnesses = responseTransactionContext.GetWitnesses();
+                        Log($"Send response tx: responseTx={mine_responseItem.Tx.Hash}");
+                        _pendingQueue.TryRemove(mine_responseItem.TransactionRequestHash, out _);
+                        _blockChain.Tell(new Blockchain.RelayResult { Inventory = mine_responseItem.Tx });
+                    }
+                }
+                return true;
+            }
+
+        }
+
+        internal class ResponseItem
+        {
+            public readonly Transaction Tx;
+            public readonly OraclePayload Payload;
+            public readonly OracleResponseSignature Data;
+            public readonly DateTime Timestamp;
+
+            public ECPoint OraclePub => Payload.OraclePub;
+            public byte[] Signature => Data.Signature;
+            public UInt256 TransactionResponseHash => Data.TransactionResponseHash;
+            public UInt256 TransactionRequestHash => Data.TransactionRequestHash;
+            public bool IsMine => Tx != null;
+
+            public ResponseItem(OraclePayload payload, Transaction responseTx = null)
+            {
+                this.Tx = responseTx;
+                this.Payload = payload;
+                this.Data = payload.OracleSignature;
+                this.Timestamp = TimeProvider.Current.UtcNow;
+            }
+
+            public bool Verify(StoreView snapshot)
+            {
+                return Payload.Verify(snapshot);
+            }
+        }
+
+        internal class ResponseCollection : IEnumerable<ResponseItem>
+        {
+            private readonly SortedConcurrentDictionary<ECPoint, ResponseItem> _items;
+
+            public int Count => _items.Count;
+
+            public ResponseCollection()
+            {
+                _items = new SortedConcurrentDictionary<ECPoint, ResponseItem>
+                    (
+                    Comparer<KeyValuePair<ECPoint, ResponseItem>>.Create(Sort), 1_000
+                    );
+            }
+
+            public bool Add(ResponseItem item)
+            {
+                if (_items.TryGetValue(item.OraclePub, out var prev))
+                {
+                    if (prev.Timestamp > item.Timestamp) return false;
+                    _items.Set(item.OraclePub, item);
+                    return true;
+                }
+                if (_items.TryAdd(item.OraclePub, item))
+                {
+                    return true;
+                }
+                return false;
+            }
+
+            public bool RemoveOutOfDateResponseItem(ECPoint[] publicKeys)
+            {
+                List<ECPoint> temp = new List<ECPoint>();
+                foreach (var item in _items)
+                {
+                    if (!publicKeys.Contains(item.Key))
+                    {
+
+                    }
+                }
+                foreach (var e in temp)
+                {
+                    _items.TryRemove(e, out _);
+                }
+                return true;
+            }
+
+            public IEnumerator<ResponseItem> GetEnumerator()
+            {
+                return (IEnumerator<ResponseItem>)_items.Select(u => u.Value).ToArray().GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return this.GetEnumerator();
+            }
+        }
 
         public OracleService(IActorRef blockChain, int capacity)
         {
@@ -57,86 +188,160 @@ namespace OracleTracker
             _accounts = new (Contract Contract, KeyPair Key)[0];
             _snapshotFactory = new Func<SnapshotView>(() => Blockchain.Singleton.GetSnapshot());
             _blockChain = blockChain;
-            _processingQueue = new SortedBlockingCollection<UInt256, Transaction>(Comparer<KeyValuePair<UInt256, Transaction>>.Create(SortDefaultProcessTx), capacity);
-            _pendingRequests = new SortedConcurrentDictionary<UInt256, RequestItem>(Comparer<KeyValuePair<UInt256, RequestItem>>.Create(SortDefaultPeddingRequest), capacity);
-            _pendingResponses = new SortedConcurrentDictionary<UInt256, ResponseCollection>(Comparer<KeyValuePair<UInt256, ResponseCollection>>.Create(SortDefaultPeddingResponse), capacity);
+            _processingQueue = new SortedBlockingCollection<UInt256, OracleTask>(Comparer<KeyValuePair<UInt256, OracleTask>>.Create(SortTask), capacity);
+            _pendingQueue = new SortedConcurrentDictionary<UInt256, OracleTask>(Comparer<KeyValuePair<UInt256, OracleTask>>.Create(SortTask), capacity);
         }
 
-        private OracleResponseResult TryAddOracleResponse(StoreView snapshot, ResponseItem response)
+        public bool Start(Wallet wallet, byte numberOfTasks = 4)
         {
-            if (!response.Verify(snapshot))
-            {
-                Log($"Received wrong signed payload: oracle={response.OraclePub} requestTx={response.TransactionRequestHash} responseTx={response.TransactionRequestHash}", LogLevel.Error);
+            if (Interlocked.Exchange(ref _isStarted, 1) != 0) return false;
+            if (numberOfTasks == 0) throw new ArgumentException("The task count must be greater than 0");
+            using var snapshot = _snapshotFactory();
+            var oracles = NativeContract.Oracle.GetOracleValidators(snapshot)
+                .Select(u => Contract.CreateSignatureRedeemScript(u).ToScriptHash());
 
-                return OracleResponseResult.Invalid;
+            _accounts = wallet?.GetAccounts()
+                .Where(u => u.HasKey && !u.Lock && oracles.Contains(u.ScriptHash))
+                .Select(u => (u.Contract, u.GetKey()))
+                .ToArray();
+
+            if (_accounts.Length == 0)
+            {
+                throw new ArgumentException("The wallet doesn't have any oracle accounts");
             }
 
-            if (!response.IsMine)
+            // Create tasks
+            Log($"OnStart: tasks={numberOfTasks + 1}");
+
+            _cancel = new CancellationTokenSource();
+            _oracleTasks = new Task[numberOfTasks + 1];
+
+            for (int x = 0; x < _oracleTasks.Length-1;x++)
             {
-                Log($"Received oracle signature: oracle={response.OraclePub} requestTx={response.TransactionRequestHash} responseTx={response.TransactionRequestHash}");
-            }
-
-            // Find the request tx
-
-            if (_pendingRequests.TryGetValue(response.TransactionRequestHash, out var request))
-            {
-                // Append the signature if it's possible
-
-                if (request.AddSignature(response))
+                _oracleTasks[x] = new Task(() =>
                 {
-                    if (request.IsCompleted)
+                    foreach (var tx in _processingQueue.GetConsumingEnumerable(_cancel.Token))
                     {
-                        Log($"Send response tx: oracle={response.OraclePub} responseTx={request.ResponseTransaction.Hash}");
+                        ProcessRequest(tx, false);
+                    }
+                },
+                _cancel.Token);
+            }
+            _oracleTasks[_oracleTasks.Length - 1] = new Task(() =>
+            {
+                CleanOutOfDateOracleTask();
+            },
+            _cancel.Token);
+            // Start tasks
+            foreach (var task in _oracleTasks) task.Start();
+            return true;
+        }
 
-                        // Done! Send to mem pool
+        public void Stop()
+        {
+            if (Interlocked.Exchange(ref _isStarted, 0) != 1) return;
 
-                        _pendingRequests.TryRemove(response.TransactionRequestHash, out _);
-                        _pendingResponses.TryRemove(response.TransactionRequestHash, out _);
-                        _blockChain.Tell(new Blockchain.RelayResult { Inventory = request.ResponseTransaction });
-                        return OracleResponseResult.RelayedTx;
+            Log("OnStop");
+            _cancel.Cancel();
+            for (int x = 0; x < _oracleTasks.Length; x++)
+            {
+                try { _oracleTasks[x].Wait(); } catch { }
+                try { _oracleTasks[x].Dispose(); } catch { }
+            }
+            _cancel.Dispose();
+            _cancel = null;
+            _oracleTasks = null;
+
+            // Clean queue
+            _processingQueue.Clear();
+            _pendingQueue.Clear();
+            _accounts = new (Contract Contract, KeyPair Key)[0];
+        }
+
+        public void CleanOutOfDateOracleTask()
+        {
+            while (true) {
+                List<UInt256> outOfDateTaskHashs = new List<UInt256>();
+                foreach(var outOfDateTask in _pendingQueue) {
+                    DateTime now=TimeProvider.Current.UtcNow;
+                    if (now - outOfDateTask.Value.Timestamp > TimeoutInterval)
+                        outOfDateTaskHashs.Add(outOfDateTask.Key);
+
+                }
+                foreach (UInt256 txHash in outOfDateTaskHashs) {
+                    _pendingQueue.TryRemove(txHash, out _);
+                }
+
+                Thread.Sleep(TimeoutInterval);
+            }
+        }
+
+        public void SubmitRequest(Transaction tx)
+        {
+            _processingQueue.Add(tx.Hash, new OracleTask(tx.Hash));
+        }
+
+        public void ProcessRequest(OracleTask task, bool forceError)
+        {
+            Log($"Process oracle request: requestTx={task.requestTxHash} forceError={forceError}");
+
+            using var snapshot = _snapshotFactory();
+            //check request status.
+            RequestState requestState = NativeContract.Oracle.GetRequestState(snapshot, task.requestTxHash);
+            if (requestState is null) return;
+            if (requestState.Status != RequestStatusType.REQUEST) return;
+            OracleRequest request = requestState.Request;
+            ECPoint[] oraclePublicKeys = NativeContract.Oracle.GetOracleValidators(snapshot);
+            var contract = Contract.CreateMultiSigContract(oraclePublicKeys.Length - (oraclePublicKeys.Length - 1) / 3, oraclePublicKeys);
+            OracleResponse response;
+            if (!forceError)
+            {
+                response = Protocols(request);
+            }
+            else
+            {
+                response = OracleResponse.CreateError(task.requestTxHash);
+            }
+
+            var responseTx = CreateResponseTransaction(snapshot, response, contract);
+
+            Log($"Generated response tx: requestTx={task.requestTxHash} responseTx={responseTx.Hash}");
+
+            foreach (var account in _accounts)
+            {
+                // Create the payload with the signed transction
+                var response_payload = new OraclePayload()
+                {
+                    OraclePub = account.Key.PublicKey,
+                    OracleSignature = new OracleResponseSignature()
+                    {
+                        TransactionResponseHash = responseTx.Hash,
+                        Signature = responseTx.Sign(account.Key),
+                        TransactionRequestHash = task.requestTxHash
+                    }
+                };
+
+                var signatureMsg = response_payload.Sign(account.Key);
+                var signPayload = new ContractParametersContext(response_payload);
+
+                if (signPayload.AddSignature(account.Contract, response_payload.OraclePub, signatureMsg) && signPayload.Completed)
+                {
+                    response_payload.Witness = signPayload.GetWitnesses()[0];
+                    task.UpdateTaskState(request, response);
+                    task.AddResponseItem(contract, oraclePublicKeys, new ResponseItem(response_payload, responseTx), _blockChain, _pendingQueue);
+                    if (!_pendingQueue.TryAdd(task.requestTxHash, task))
+                    {
+                        _pendingQueue.TryGetValue(task.requestTxHash, out OracleTask new_oracleTask);
+                        if (new_oracleTask != null)
+                        {
+                            new_oracleTask.UpdateTaskState(task.request, task.response);
+                            new_oracleTask.AddResponseItem(contract, oraclePublicKeys, new ResponseItem(response_payload, responseTx), _blockChain, _pendingQueue);
+                        }
                     }
 
-                    return OracleResponseResult.Merged;
+                    Log($"Send oracle signature: oracle={response_payload.OraclePub} requestTx={task.requestTxHash} signaturePayload={response_payload.Hash}");
+                    _blockChain.Tell(new Blockchain.RelayResult { Inventory = response_payload, Result = VerifyResult.Succeed });
                 }
-            }
-
-            // Save this payload for check it later
-
-            if (_pendingResponses.TryGetValue(response.TransactionRequestHash, out var collection, new ResponseCollection(response)))
-            {
-                if (collection != null)
-                {
-                    // It was getted
-
-                    return collection.Add(response) ? OracleResponseResult.Merged : OracleResponseResult.Duplicated;
-                }
-
-                // It was added
-
-                return OracleResponseResult.Merged;
-            }
-
-            return OracleResponseResult.Duplicated;
-        }
-
-        private static void Log(string message, LogLevel level = LogLevel.Info)
-        {
-            Utility.Log(nameof(OracleService), level, message);
-        }
-
-        public static OracleResponse Process(OracleRequest request)
-        {
-            try
-            {
-                return request switch
-                {
-                    OracleHttpRequest https => HTTPSProtocol.Process(https),
-                    _ => OracleResponse.CreateError(request.RequestTxHash),
-                };
-            }
-            catch
-            {
-                return OracleResponse.CreateError(request.RequestTxHash);
             }
         }
 
@@ -199,274 +404,54 @@ namespace OracleTracker
             return tx;
         }
 
-        public void ProcessRequest(Transaction requestTransaction, bool forceError)
-        {
-            UInt256 requestTxHash = requestTransaction.Hash;
-            Log($"Process oracle request: requestTx={requestTxHash} forceError={forceError}");
-
-            using var snapshot = _snapshotFactory();
-            //check request status.
-            RequestState requestState = NativeContract.Oracle.GetRequestState(snapshot, requestTxHash);
-            if (requestState is null) return;
-            if (requestState.Status != RequestStatusType.REQUEST) return;
-            OracleRequest request = requestState.Request;
-            // Check the oracle contract and update the cached one
-            var contract = NativeContract.Oracle.GetOracleMultiSigContract(snapshot);
-            if (_lastContract?.ScriptHash != contract.ScriptHash)
-            {
-                // Reduce the memory load using the same Contract class
-                _lastContract = contract;
-            }
-            else
-            {
-                // Use the same cached object in order to save memory in the pools
-                contract = _lastContract;
-            }
-            OracleResponse response;
-            if (!forceError)
-            {
-                response = Protocols(request);
-            }
-            else
-            {
-                response = OracleResponse.CreateError(requestTxHash);
-            }
-            // Create deterministic oracle response
-
-            var responseTx = CreateResponseTransaction(snapshot, response, contract);
-
-            Log($"Generated response tx: requestTx={requestTxHash} responseTx={responseTx.Hash}");
-
-            foreach (var account in _accounts)
-            {
-                // Create the payload with the signed transction
-
-                var response_payload = new OraclePayload()
-                {
-                    OraclePub = account.Key.PublicKey,
-                    OracleSignature = new OracleResponseSignature()
-                    {
-                        TransactionResponseHash = responseTx.Hash,
-                        Signature = responseTx.Sign(account.Key),
-                        TransactionRequestHash = requestTxHash
-                    }
-                };
-
-                var signatureMsg = response_payload.Sign(account.Key);
-                var signPayload = new ContractParametersContext(response_payload);
-
-                if (signPayload.AddSignature(account.Contract, response_payload.OraclePub, signatureMsg) && signPayload.Completed)
-                {
-                    response_payload.Witness = signPayload.GetWitnesses()[0];
-
-                    switch (TryAddOracleResponse(snapshot, new ResponseItem(response_payload, contract, responseTx)))
-                    {
-                        case OracleResponseResult.Merged:
-                            {
-                                Log($"Send oracle signature: oracle={response_payload.OraclePub} requestTx={requestTxHash} signaturePayload={response_payload.Hash}");
-
-                                _blockChain.Tell(new Blockchain.RelayResult { Inventory = response_payload, Result = VerifyResult.Succeed });
-                                break;
-                            }
-                    }
-                }
-            }
-        }
-
-        public bool Start(Wallet wallet, byte numberOfTasks = 4)
-        {
-            if (Interlocked.Exchange(ref _isStarted, 1) != 0) return false;
-            if (numberOfTasks == 0) throw new ArgumentException("The task count must be greater than 0");
-            using var snapshot = _snapshotFactory();
-            var oracles = NativeContract.Oracle.GetOracleValidators(snapshot)
-                .Select(u => Contract.CreateSignatureRedeemScript(u).ToScriptHash());
-
-            _accounts = wallet?.GetAccounts()
-                .Where(u => u.HasKey && !u.Lock && oracles.Contains(u.ScriptHash))
-                .Select(u => (u.Contract, u.GetKey()))
-                .ToArray();
-
-            if (_accounts.Length == 0)
-            {
-                throw new ArgumentException("The wallet doesn't have any oracle accounts");
-            }
-
-            // Create tasks
-            Log($"OnStart: tasks={numberOfTasks}");
-
-            _cancel = new CancellationTokenSource();
-            _oracleTasks = new Task[numberOfTasks];
-
-            for (int x = 0; x < _oracleTasks.Length; x++)
-            {
-                _oracleTasks[x] = new Task(() =>
-                {
-                    foreach (var tx in _processingQueue.GetConsumingEnumerable(_cancel.Token))
-                    {
-                        ProcessRequest(tx, false);
-                    }
-                },
-                _cancel.Token);
-            }
-            // Start tasks
-            foreach (var task in _oracleTasks) task.Start();
-            return true;
-        }
-
-        public void Stop()
-        {
-            if (Interlocked.Exchange(ref _isStarted, 0) != 1) return;
-
-            Log("OnStop");
-            _cancel.Cancel();
-            for (int x = 0; x < _oracleTasks.Length; x++)
-            {
-                try { _oracleTasks[x].Wait(); } catch { }
-                try { _oracleTasks[x].Dispose(); } catch { }
-            }
-            _cancel.Dispose();
-            _cancel = null;
-            _oracleTasks = null;
-
-            // Clean queue
-            _processingQueue.Clear();
-            _pendingRequests.Clear();
-            _pendingResponses.Clear();
-            _accounts = new (Contract Contract, KeyPair Key)[0];
-        }
-
-        public void SubmitRequest(Transaction tx)
-        {
-            _processingQueue.Add(tx.Hash, tx);
-        }
-
         public void SubmitOraclePayload(OraclePayload msg)
         {
-            using (var snapshot = _snapshotFactory())
+            var snapshot = _snapshotFactory();
+            //check request status.
+            RequestState requestState = NativeContract.Oracle.GetRequestState(snapshot, msg.OracleSignature.TransactionRequestHash);
+            if (requestState != null)
             {
-                TryAddOracleResponse(snapshot, new ResponseItem(msg, _lastContract));
+                if (requestState.Status != RequestStatusType.REQUEST) return;
+            }
+            ECPoint[] oraclePublicKeys = NativeContract.Oracle.GetOracleValidators(snapshot);
+            var contract = Contract.CreateMultiSigContract(oraclePublicKeys.Length - (oraclePublicKeys.Length - 1) / 3, oraclePublicKeys);
+            OracleTask task = new OracleTask(msg.OracleSignature.TransactionRequestHash, null, null);
+            task.AddResponseItem(contract, oraclePublicKeys, new ResponseItem(msg), _blockChain, _pendingQueue);
+            if (!_pendingQueue.TryAdd(msg.OracleSignature.TransactionRequestHash, task))
+            {
+                _pendingQueue.TryGetValue(task.requestTxHash, out OracleTask new_oracleTask);
+                if (new_oracleTask != null)
+                {
+                    new_oracleTask.AddResponseItem(contract, oraclePublicKeys, new ResponseItem(msg), _blockChain, _pendingQueue);
+                }
             }
         }
 
-        private class RequestItem
+        private static void Log(string message, LogLevel level = LogLevel.Info)
         {
-            public readonly Transaction RequestTransaction;
-            public readonly OracleRequest request;
-            public readonly ResponseCollection responseProposals;
+            Utility.Log(nameof(OracleService), level, message);
+        }
 
-            // Proposal
-
-            private ResponseItem Proposal;
-            private ContractParametersContext ResponseContext;
-
-            public Transaction ResponseTransaction => Proposal?.Tx;
-            public bool IsCompleted => ResponseContext?.Completed == true;
-
-            public RequestItem(Transaction requestTx)
+        public static OracleResponse Process(OracleRequest request)
+        {
+            try
             {
-                RequestTransaction = requestTx;
+                return request switch
+                {
+                    OracleHttpRequest https => HTTPSProtocol.Process(https),
+                    _ => OracleResponse.CreateError(request.RequestTxHash),
+                };
             }
-
-            public bool AddSignature(ResponseItem response)
+            catch
             {
-                if (response.TransactionRequestHash != RequestTransaction.Hash)
-                {
-                    return false;
-                }
-
-                if (Proposal == null)
-                {
-                    if (!response.IsMine)
-                    {
-                        return false;
-                    }
-
-                    // Oracle service could attach the real TX
-
-                    Proposal = response;
-                    ResponseContext = new ContractParametersContext(response.Tx);
-                }
-                else
-                {
-                    if (response.TransactionResponseHash != Proposal.TransactionResponseHash)
-                    {
-                        // Unexpected result
-
-                        return false;
-                    }
-                }
-
-                if (ResponseContext.AddSignature(Proposal.Contract, response.OraclePub, response.Signature) == true)
-                {
-                    if (ResponseContext.Completed)
-                    {
-                        // Append the witness to the response TX
-
-                        Proposal.Tx.Witnesses = ResponseContext.GetWitnesses();
-                    }
-                    return true;
-                }
-
-                return false;
-            }
-
-            /// <summary>
-            /// Clear responses
-            /// </summary>
-            public void CleanResponses()
-            {
-                Proposal = null;
-                ResponseContext = null;
+                return OracleResponse.CreateError(request.RequestTxHash);
             }
         }
 
-        private class ResponseCollection : IEnumerable<ResponseItem>
+        private static int SortTask(KeyValuePair<UInt256, OracleTask> a, KeyValuePair<UInt256, OracleTask> b)
         {
-            private readonly SortedConcurrentDictionary<ECPoint, ResponseItem> _items;
-
-            public int Count => _items.Count;
-
-            public ResponseCollection(ResponseItem item)
-            {
-                _items = new SortedConcurrentDictionary<ECPoint, ResponseItem>
-                    (
-                    Comparer<KeyValuePair<ECPoint, ResponseItem>>.Create(Sort), 1_000
-                    );
-
-                Add(item);
-            }
-
-            public bool Add(ResponseItem item)
-            {
-                // Prevent duplicate messages using the publicKey as key
-
-                if (_items.TryGetValue(item.OraclePub, out var prev))
-                {
-                    // If it's new, replace it
-
-                    if (prev.Timestamp > item.Timestamp) return false;
-
-                    _items.Set(item.OraclePub, item);
-                    return true;
-                }
-
-                if (_items.TryAdd(item.OraclePub, item))
-                {
-                    return true;
-                }
-
-                return false;
-            }
-
-            public IEnumerator<ResponseItem> GetEnumerator()
-            {
-                return (IEnumerator<ResponseItem>)_items.Select(u => u.Value).ToArray().GetEnumerator();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return this.GetEnumerator();
-            }
+            // Sort by age
+            return a.Value.Timestamp.CompareTo(b.Value.Timestamp);
         }
 
         private static int Sort(KeyValuePair<ECPoint, ResponseItem> a, KeyValuePair<ECPoint, ResponseItem> b)
@@ -480,52 +465,10 @@ namespace OracleTracker
             return a.Value.Timestamp.CompareTo(b.Value.Timestamp);
         }
 
-        private static int SortDefaultProcessTx(KeyValuePair<UInt256, Transaction> a, KeyValuePair<UInt256, Transaction> b)
-        {
-            // Transaction hash sorted descending
-            return b.Key.CompareTo(a.Key);
-        }
-
-        private static int SortDefaultPeddingRequest(KeyValuePair<UInt256, RequestItem> a, KeyValuePair<UInt256, RequestItem> b)
-        {
-            // Transaction hash sorted descending
-            return b.Key.CompareTo(a.Key);
-        }
-
         private static int SortDefaultPeddingResponse(KeyValuePair<UInt256, ResponseCollection> a, KeyValuePair<UInt256, ResponseCollection> b)
         {
             // Transaction hash sorted descending
             return b.Key.CompareTo(a.Key);
-        }
-
-
-        private class ResponseItem
-        {
-            public readonly Transaction Tx;
-            public readonly OracleResponseSignature Data;
-            public readonly OraclePayload Msg;
-            public readonly DateTime Timestamp;
-
-            public readonly Contract Contract;
-            public ECPoint OraclePub => Msg.OraclePub;
-            public byte[] Signature => Data.Signature;
-            public UInt256 TransactionResponseHash => Data.TransactionResponseHash;
-            public UInt256 TransactionRequestHash => Data.TransactionRequestHash;
-            public bool IsMine => Tx != null;
-
-            public ResponseItem(OraclePayload payload, Contract contract = null, Transaction responseTx = null)
-            {
-                Tx = responseTx;
-                Timestamp = TimeProvider.Current.UtcNow;
-                Contract = contract;
-                Msg = payload;
-                Data = payload.OracleSignature;
-            }
-
-            public bool Verify(StoreView snapshot)
-            {
-                return Msg.Verify(snapshot);
-            }
         }
 
         private enum OracleResponseResult : byte
