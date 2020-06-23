@@ -100,31 +100,29 @@ namespace Neo.Plugins
             transferIndex++;
         }
 
-        private void HandleNotification(StoreView snapshot, IVerifiable scriptContainer, UInt160 scriptHash,
+        private void HandleNotification(StoreView snapshot, IVerifiable scriptContainer, UInt160 scriptHash, string eventName,
             VM.Types.Array stateItems,
             Dictionary<Nep5BalanceKey, Nep5Balance> nep5BalancesChanged, ref ushort transferIndex)
         {
             if (stateItems.Count == 0) return;
-            // Event name should be encoded as a byte array.
-            if (!(stateItems[0] is VM.Types.ByteString)) return;
-            var eventName = stateItems[0].GetString();
             if (eventName != "Transfer") return;
-            if (stateItems.Count < 4) return;
+            if (stateItems.Count < 3) return;
 
+            if (!(stateItems[0].IsNull) && !(stateItems[0] is VM.Types.ByteString))
+                return;
             if (!(stateItems[1].IsNull) && !(stateItems[1] is VM.Types.ByteString))
                 return;
-            if (!(stateItems[2].IsNull) && !(stateItems[2] is VM.Types.ByteString))
-                return;
-            var amountItem = stateItems[3];
+            var amountItem = stateItems[2];
             if (!(amountItem is VM.Types.ByteString || amountItem is VM.Types.Integer))
                 return;
-            byte[] fromBytes = stateItems[1].IsNull ? null : stateItems[1].GetSpan().ToArray();
+            byte[] fromBytes = stateItems[0].IsNull ? null : stateItems[0].GetSpan().ToArray();
             if (fromBytes != null && fromBytes.Length != UInt160.Length)
                 return;
-            byte[] toBytes = stateItems[2].IsNull ? null : stateItems[2].GetSpan().ToArray();
+            byte[] toBytes = stateItems[1].IsNull ? null : stateItems[1].GetSpan().ToArray();
             if (toBytes != null && toBytes.Length != UInt160.Length)
                 return;
             if (fromBytes == null && toBytes == null) return;
+
             var from = UInt160.Zero;
             var to = UInt160.Zero;
 
@@ -162,8 +160,8 @@ namespace Neo.Plugins
                 {
                     if (!(notifyEventArgs?.State is VM.Types.Array stateItems) || stateItems.Count == 0)
                         continue;
-                    HandleNotification(snapshot, notifyEventArgs.ScriptContainer, notifyEventArgs.ScriptHash, stateItems,
-                        nep5BalancesChanged, ref transferIndex);
+                    HandleNotification(snapshot, notifyEventArgs.ScriptContainer, notifyEventArgs.ScriptHash, notifyEventArgs.EventName,
+                        stateItems, nep5BalancesChanged, ref transferIndex);
                 }
             }
 

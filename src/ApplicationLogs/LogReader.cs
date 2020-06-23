@@ -64,6 +64,7 @@ namespace Neo.Plugins
                 {
                     JObject notification = new JObject();
                     notification["contract"] = q.ScriptHash.ToString();
+                    notification["event_name"] = q.EventName;
                     try
                     {
                         notification["state"] = q.State.ToJson();
