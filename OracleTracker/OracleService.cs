@@ -13,6 +13,7 @@ using Neo.Wallets;
 using OracleTracker.Protocols;
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -36,8 +37,8 @@ namespace OracleTracker
         private Func<OracleRequest, OracleResponse> Protocols { get; }
         private static IOracleProtocol HTTPSProtocol { get; } = new OracleHttpProtocol();
 
-        private readonly SortedBlockingCollection<UInt256, OracleTask> _processingQueue;
-        private readonly SortedConcurrentDictionary<UInt256, OracleTask> _pendingQueue;
+        private readonly BlockingCollection<OracleTask> _processingQueue;
+        private readonly ConcurrentDictionary<UInt256, OracleTask> _pendingQueue;
 
         internal class OracleTask
         {
@@ -62,7 +63,7 @@ namespace OracleTracker
                 return true;
             }
 
-            public bool AddResponseItem(Contract contract, ECPoint[] publicKeys, ResponseItem item, IActorRef _blockChain, SortedConcurrentDictionary<UInt256, OracleTask> _pendingQueue)
+            public bool AddResponseItem(Contract contract, ECPoint[] publicKeys, ResponseItem item, IActorRef _blockChain, ConcurrentDictionary<UInt256, OracleTask> _pendingQueue)
             {
                 lock (locker)
                 {
@@ -166,8 +167,8 @@ namespace OracleTracker
             _accounts = new (Contract Contract, KeyPair Key)[0];
             _snapshotFactory = new Func<SnapshotView>(() => Blockchain.Singleton.GetSnapshot());
             _blockChain = blockChain;
-            _processingQueue = new SortedBlockingCollection<UInt256, OracleTask>(Comparer<KeyValuePair<UInt256, OracleTask>>.Create(SortTask), capacity);
-            _pendingQueue = new SortedConcurrentDictionary<UInt256, OracleTask>(Comparer<KeyValuePair<UInt256, OracleTask>>.Create(SortTask), capacity);
+            _processingQueue = new BlockingCollection<OracleTask>(new ConcurrentQueue<OracleTask>(),capacity);
+            _pendingQueue = new ConcurrentDictionary<UInt256, OracleTask>();
         }
 
         public bool Start(Wallet wallet, byte numberOfTasks = 4)
@@ -229,7 +230,9 @@ namespace OracleTracker
             _cancel = null;
             _oracleTasks = null;
             // Clean queue
-            _processingQueue.Clear();
+            while (true) {
+                if (!_processingQueue.TryTake(out _)) break;
+            }
             _pendingQueue.Clear();
             _accounts = new (Contract Contract, KeyPair Key)[0];
         }
@@ -251,7 +254,7 @@ namespace OracleTracker
 
         public void SubmitRequest(Transaction tx)
         {
-            _processingQueue.Add(tx.Hash, new OracleTask(tx.Hash));
+            _processingQueue.Add(new OracleTask(tx.Hash));
         }
 
         public void ProcessRequest(OracleTask task)
@@ -309,7 +312,7 @@ namespace OracleTracker
         private static Transaction CreateResponseTransaction(SnapshotView snapshot, OracleResponse response, Contract contract)
         {
             ScriptBuilder script = new ScriptBuilder();
-            script.EmitAppCall(NativeContract.Oracle.Hash, "invokeCallBackMethod");
+            script.EmitAppCall(NativeContract.Oracle.Hash, "callBack");
             var tx = new Transaction()
             {
                 Version = 0,
