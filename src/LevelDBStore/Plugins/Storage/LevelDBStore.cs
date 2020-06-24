@@ -8,6 +8,8 @@ namespace Neo.Plugins.Storage
         private string path;
         private int bloomFilterBitsPerKey;
 
+        public override string Description => "Uses LevelDB to store the blockchain data";
+
         protected override void Configure()
         {
             IConfigurationSection config = GetConfiguration();

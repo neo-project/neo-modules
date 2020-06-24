@@ -64,7 +64,7 @@ namespace Neo.Plugins
             json["gas_consumed"] = engine.GasConsumed.ToString();
             try
             {
-                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToParameter().ToJson()));
+                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
             }
             catch (InvalidOperationException)
             {

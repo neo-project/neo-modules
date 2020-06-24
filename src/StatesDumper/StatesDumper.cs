@@ -15,6 +15,8 @@ namespace Neo.Plugins
     {
         private readonly JArray bs_cache = new JArray();
 
+        public override string Description => "Exports Neo-CLI status data";
+
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());

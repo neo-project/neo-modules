@@ -4,6 +4,8 @@ namespace Neo.Plugins.Storage
 {
     public class RocksDBStore : Plugin, IStoragePlugin
     {
+        public override string Description => "Uses RocksDBStore to store the blockchain data";
+
         /// <summary>
         /// Configure
         /// </summary>
