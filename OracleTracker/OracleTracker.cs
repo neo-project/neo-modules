@@ -43,11 +43,7 @@ namespace OracleTracker
                 if (tx is null) continue;
                 if (state != VMState.HALT) continue;
                 var notify=appExec.Notifications.Where(q => {
-                    if (q.ScriptHash.Equals(NativeContract.Oracle.Hash)) {
-                        if (q.EventName.Equals("Request")) {
-                            return true;
-                        }
-                    }
+                    if (q.ScriptHash.Equals(NativeContract.Oracle.Hash)&&(q.EventName.Equals("Request"))) return true;
                     return false;
                 }).FirstOrDefault();
                 if (notify is null) continue;

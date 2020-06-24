@@ -15,27 +15,14 @@ namespace Neo.Oracle.Protocols.Https
 {
     internal class OracleHttpProtocol: IOracleProtocol
     {
-        /// <summary>
-        /// Config
-        /// </summary>
         public HttpConfig Config { get; internal set; }
-
-        /// <summary>
-        /// Allow private host
-        /// </summary>
         public bool AllowPrivateHost { get; internal set; } = false;
 
-        /// <summary>
-        /// Constructor
-        /// </summary>
         public OracleHttpProtocol()
         {
             LoadConfig();
         }
 
-        /// <summary>
-        /// Load config
-        /// </summary>
         private void LoadConfig()
         {
             // Load the configuration
@@ -45,11 +32,6 @@ namespace Neo.Oracle.Protocols.Https
             }
         }
 
-        // <summary>
-        /// Process HTTP oracle request
-        /// </summary>
-        /// <param name="request">Request</param>
-        /// <returns>Oracle result</returns>
         public OracleResponse Process(OracleRequest init_request)
         {
             OracleHttpRequest request = (OracleHttpRequest)init_request;
@@ -142,21 +124,11 @@ namespace Neo.Oracle.Protocols.Https
             return OracleResponse.CreateResult(request.RequestTxHash, output, FilterFee);
         }
 
-        /// <summary>
-        /// Log error
-        /// </summary>
-        /// <param name="url">Url</param>
-        /// <param name="error">Error</param>
         private static void LogError(Uri url, string error)
         {
             Log($"{error} at {url.ToString()}", LogLevel.Error);
         }
 
-        /// <summary>
-        /// Log
-        /// </summary>
-        /// <param name="line">Line</param>
-        /// <param name="level">Level</param>
         private static void Log(string line, LogLevel level)
         {
             Utility.Log(nameof(OracleHttpProtocol), level, line);
