@@ -48,19 +48,17 @@ namespace OracleTracker
             public ResponseCollection responseItems;
             private Object locker = new Object();
 
-            public OracleTask(UInt256 requestTxHash, OracleRequest request = null, OracleResponse response = null)
+            public OracleTask(UInt256 requestTxHash, OracleRequest request = null)
             {
                 this.requestTxHash = requestTxHash;
                 this.request = request;
-                this.response = response;
                 this.responseItems = new ResponseCollection();
                 this.Timestamp = TimeProvider.Current.UtcNow;
             }
 
-            public bool UpdateTaskState(OracleRequest request = null, OracleResponse response = null)
+            public bool UpdateTaskState(OracleRequest request = null)
             {
                 if (request != null) this.request = request;
-                if (response != null) this.response = response;
                 return true;
             }
 
@@ -184,12 +182,10 @@ namespace OracleTracker
                 .Where(u => u.HasKey && !u.Lock && oracles.Contains(u.ScriptHash))
                 .Select(u => (u.Contract, u.GetKey()))
                 .ToArray();
-
             if (_accounts.Length == 0)
             {
                 throw new ArgumentException("The wallet doesn't have any oracle accounts");
             }
-
             // Create tasks
             Log($"OnStart: tasks={numberOfTasks}");
 
@@ -210,7 +206,7 @@ namespace OracleTracker
 
             _gcTimer = new System.Timers.Timer();
             _gcTimer.Elapsed += new ElapsedEventHandler(CleanOutOfDateOracleTask);
-            _gcTimer.Interval = 5000;
+            _gcTimer.Interval = TimeoutInterval.TotalMilliseconds;
             _gcTimer.AutoReset = true;
             _gcTimer.Enabled = true;
             // Start tasks
@@ -244,13 +240,8 @@ namespace OracleTracker
             foreach (var outOfDateTask in _pendingQueue)
             {
                 DateTime now = TimeProvider.Current.UtcNow;
-                if (now - outOfDateTask.Value.Timestamp > TimeoutInterval)
-                {
-                    outOfDateTaskHashs.Add(outOfDateTask.Key);
-                }
-                else
-                    break;
-
+                if (now - outOfDateTask.Value.Timestamp <= TimeoutInterval) break;
+                outOfDateTaskHashs.Add(outOfDateTask.Key);
             }
             foreach (UInt256 txHash in outOfDateTaskHashs)
             {
@@ -297,14 +288,14 @@ namespace OracleTracker
                 if (signPayload.AddSignature(account.Contract, response_payload.OraclePub, signatureMsg) && signPayload.Completed)
                 {
                     response_payload.Witness = signPayload.GetWitnesses()[0];
-                    task.UpdateTaskState(request, response);
+                    task.UpdateTaskState(request);
                     task.AddResponseItem(contract, oraclePublicKeys, new ResponseItem(response_payload, responseTx), _blockChain, _pendingQueue);
                     if (!_pendingQueue.TryAdd(task.requestTxHash, task))
                     {
                         _pendingQueue.TryGetValue(task.requestTxHash, out OracleTask new_oracleTask);
                         if (new_oracleTask != null)
                         {
-                            new_oracleTask.UpdateTaskState(task.request, task.response);
+                            new_oracleTask.UpdateTaskState(task.request);
                             new_oracleTask.AddResponseItem(contract, oraclePublicKeys, new ResponseItem(response_payload, responseTx), _blockChain, _pendingQueue);
                         }
                     }
@@ -371,7 +362,7 @@ namespace OracleTracker
             if (requestState != null && requestState.Status != RequestStatusType.REQUEST) return;
             ECPoint[] oraclePublicKeys = NativeContract.Oracle.GetOracleValidators(snapshot);
             var contract = Contract.CreateMultiSigContract(oraclePublicKeys.Length - (oraclePublicKeys.Length - 1) / 3, oraclePublicKeys);
-            OracleTask task = new OracleTask(msg.OracleSignature.TransactionRequestHash, null, null);
+            OracleTask task = new OracleTask(msg.OracleSignature.TransactionRequestHash, null);
             task.AddResponseItem(contract, oraclePublicKeys, new ResponseItem(msg), _blockChain, _pendingQueue);
             if (!_pendingQueue.TryAdd(msg.OracleSignature.TransactionRequestHash, task))
             {
@@ -387,17 +378,13 @@ namespace OracleTracker
 
         public static OracleResponse Process(OracleRequest request)
         {
-            try
+            switch (request.URL.Scheme.ToLowerInvariant())
             {
-                return request switch
-                {
-                    OracleHttpRequest https => HTTPSProtocol.Process(https),
-                    _ => OracleResponse.CreateError(request.RequestTxHash),
-                };
-            }
-            catch
-            {
-                return OracleResponse.CreateError(request.RequestTxHash);
+                case "http":
+                case "https":
+                    return HTTPSProtocol.Process(request);
+                default:
+                    return OracleResponse.CreateError(request.RequestTxHash);
             }
         }
 

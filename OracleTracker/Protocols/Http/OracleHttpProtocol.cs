@@ -9,11 +9,10 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using HttpMethod = Neo.SmartContract.Native.Tokens.HttpMethod;
 
 namespace Neo.Oracle.Protocols.Https
 {
-    internal class OracleHttpProtocol: IOracleProtocol
+    internal class OracleHttpProtocol : IOracleProtocol
     {
         public HttpConfig Config { get; internal set; }
         public bool AllowPrivateHost { get; internal set; } = false;
@@ -32,21 +31,18 @@ namespace Neo.Oracle.Protocols.Https
             }
         }
 
-        public OracleResponse Process(OracleRequest init_request)
+        public OracleResponse Process(OracleRequest request)
         {
-            OracleHttpRequest request = (OracleHttpRequest)init_request;
-            Log($"Downloading HTTPS request: url={request.URL.ToString()} method={request.Method}", LogLevel.Debug);
+            Log($"Downloading HTTPS request: url={request.URL.ToString()}", LogLevel.Debug);
             LoadConfig();
 
             if (!AllowPrivateHost && IsInternal(Dns.GetHostEntry(request.URL.Host)))
             {
                 // Don't allow private host in order to prevent SSRF
-
                 LogError(request.URL, "PolicyError");
                 return OracleResponse.CreateError(request.RequestTxHash);
             }
 
-            Task<HttpResponseMessage> result;
             using var handler = new HttpClientHandler
             {
                 // TODO: Accept all certificates
@@ -56,24 +52,11 @@ namespace Neo.Oracle.Protocols.Https
 
             client.DefaultRequestHeaders.Add("Accept", string.Join(",", HttpConfig.AllowedFormats));
 
-            switch (request.Method)
-            {
-                case HttpMethod.GET:
-                    {
-                        result = client.GetAsync(request.URL);
-                        break;
-                    }
-                default:
-                    {
-                        LogError(request.URL, "PolicyError");
-                        return OracleResponse.CreateError(request.RequestTxHash);
-                    }
-            }
+            Task<HttpResponseMessage> result = client.GetAsync(request.URL);
 
             if (!result.Wait(Config.TimeOut))
             {
                 // Timeout
-
                 LogError(request.URL, "Timeout");
                 return OracleResponse.CreateError(request.RequestTxHash);
             }
@@ -81,7 +64,6 @@ namespace Neo.Oracle.Protocols.Https
             if (!result.Result.IsSuccessStatusCode)
             {
                 // Error with response
-
                 LogError(request.URL, "ResponseError");
                 return OracleResponse.CreateError(request.RequestTxHash);
             }
@@ -89,7 +71,6 @@ namespace Neo.Oracle.Protocols.Https
             if (!HttpConfig.AllowedFormats.Contains(result.Result.Content.Headers.ContentType.MediaType))
             {
                 // Error with the ContentType
-
                 LogError(request.URL, "ContentType it's not allowed");
                 return OracleResponse.CreateError(request.RequestTxHash);
             }
@@ -100,14 +81,12 @@ namespace Neo.Oracle.Protocols.Https
             if (!taskRet.Wait(Config.TimeOut))
             {
                 // Timeout
-
                 LogError(request.URL, "Timeout");
                 return OracleResponse.CreateError(request.RequestTxHash);
             }
             else
             {
                 // Good response
-
                 ret = taskRet.Result;
             }
 
