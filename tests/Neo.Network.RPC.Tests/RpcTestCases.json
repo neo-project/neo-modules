@@ -427,7 +427,7 @@
                   }
                 ],
                 "offset": 0,
-                "returnType": "Signature"
+                "returnType": "Any"
               }
             ]
           },
