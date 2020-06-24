@@ -866,7 +866,6 @@
       "result": "KyoYyZpoccbR6KZ25eLzhMTUxREwCpJzDsnuodGTKXSG8fDW9t7x"
     }
   },
-  // mock decimals
   {
     "Name": "invokescript",
     "Request": {
