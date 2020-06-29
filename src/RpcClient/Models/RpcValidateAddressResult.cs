@@ -12,7 +12,7 @@ namespace Neo.Network.RPC.Models
         {
             JObject json = new JObject();
             json["address"] = Address;
-            json["is_valid"] = IsValid;
+            json["isvalid"] = IsValid;
             return json;
         }
 
@@ -20,7 +20,7 @@ namespace Neo.Network.RPC.Models
         {
             RpcValidateAddressResult validateAddress = new RpcValidateAddressResult();
             validateAddress.Address = json["address"].AsString();
-            validateAddress.IsValid = json["is_valid"].AsBoolean();
+            validateAddress.IsValid = json["isvalid"].AsBoolean();
             return validateAddress;
         }
     }

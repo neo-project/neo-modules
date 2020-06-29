@@ -23,10 +23,10 @@ namespace Neo.Network.RPC.Models
         public JObject ToJson()
         {
             JObject json = new JObject();
-            json["tx_id"] = TxId?.ToString();
+            json["txid"] = TxId?.ToString();
             json["trigger"] = Trigger;
-            json["vm_state"] = VMState;
-            json["gas_consumed"] = GasConsumed.ToString();
+            json["vmstate"] = VMState;
+            json["gasconsumed"] = GasConsumed.ToString();
             json["stack"] = Stack.Select(q => q.ToJson()).ToArray();
             json["notifications"] = Notifications.Select(q => q.ToJson()).ToArray();
             return json;
@@ -35,10 +35,10 @@ namespace Neo.Network.RPC.Models
         public static RpcApplicationLog FromJson(JObject json)
         {
             RpcApplicationLog log = new RpcApplicationLog();
-            log.TxId = json["tx_id"] is null ? null : UInt256.Parse(json["tx_id"].AsString());
+            log.TxId = json["txid"] is null ? null : UInt256.Parse(json["tx_id"].AsString());
             log.Trigger = json["trigger"].TryGetEnum<TriggerType>();
-            log.VMState = json["vm_state"].TryGetEnum<VMState>();
-            log.GasConsumed = long.Parse(json["gas_consumed"].AsString());
+            log.VMState = json["vmstate"].TryGetEnum<VMState>();
+            log.GasConsumed = long.Parse(json["gasconsumed"].AsString());
             log.Stack = ((JArray)json["stack"]).Select(p => ContractParameter.FromJson(p)).ToList();
             log.Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson(p)).ToList();
             return log;

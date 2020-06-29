@@ -47,7 +47,7 @@ namespace Neo.Plugins
                 json["confirmations"] = Blockchain.Singleton.Height - block.Index + 1;
                 UInt256 hash = Blockchain.Singleton.GetNextBlockHash(block.Hash);
                 if (hash != null)
-                    json["next_block_hash"] = hash.ToString();
+                    json["nextblockhash"] = hash.ToString();
                 return json;
             }
             return block.ToArray().ToHexString();
@@ -95,7 +95,7 @@ namespace Neo.Plugins
                 json["confirmations"] = Blockchain.Singleton.Height - header.Index + 1;
                 UInt256 hash = Blockchain.Singleton.GetNextBlockHash(header.Hash);
                 if (hash != null)
-                    json["next_block_hash"] = hash.ToString();
+                    json["nextblockhash"] = hash.ToString();
                 return json;
             }
 
@@ -142,10 +142,10 @@ namespace Neo.Plugins
                 if (txState != null)
                 {
                     Header header = Blockchain.Singleton.GetHeader(txState.BlockIndex);
-                    json["block_hash"] = header.Hash.ToString();
+                    json["blockhash"] = header.Hash.ToString();
                     json["confirmations"] = Blockchain.Singleton.Height - header.Index + 1;
-                    json["block_time"] = header.Timestamp;
-                    json["vm_state"] = txState.VMState;
+                    json["blocktime"] = header.Timestamp;
+                    json["vmstate"] = txState.VMState;
                 }
                 return json;
             }
@@ -188,7 +188,7 @@ namespace Neo.Plugins
             return NativeContract.NEO.GetCandidates(snapshot).Select(p =>
             {
                 JObject validator = new JObject();
-                validator["public_key"] = p.PublicKey.ToString();
+                validator["publickey"] = p.PublicKey.ToString();
                 validator["votes"] = p.Votes.ToString();
                 validator["active"] = validators.Contains(p.PublicKey);
                 return validator;

@@ -91,9 +91,9 @@ namespace Neo.Plugins
             return new JObject
             {
                 ["address"] = account.Address,
-                ["has_key"] = account.HasKey,
+                ["haskey"] = account.HasKey,
                 ["label"] = account.Label,
-                ["watch_only"] = account.WatchOnly
+                ["watchonly"] = account.WatchOnly
             };
         }
 
@@ -105,9 +105,9 @@ namespace Neo.Plugins
             {
                 JObject account = new JObject();
                 account["address"] = p.Address;
-                account["has_key"] = p.HasKey;
+                account["haskey"] = p.HasKey;
                 account["label"] = p.Label;
-                account["watch_only"] = p.WatchOnly;
+                account["watchonly"] = p.WatchOnly;
                 return account;
             }).ToArray();
         }

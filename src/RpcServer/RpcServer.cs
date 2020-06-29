@@ -72,7 +72,7 @@ namespace Neo.Plugins
         private static JObject CreateResponse(JObject id)
         {
             JObject response = new JObject();
-            response["json_rpc"] = "2.0";
+            response["jsonrpc"] = "2.0";
             response["id"] = id;
             return response;
         }
@@ -146,7 +146,7 @@ namespace Neo.Plugins
             JObject request = null;
             if (context.Request.Method == "GET")
             {
-                string jsonrpc = context.Request.Query["json_rpc"];
+                string jsonrpc = context.Request.Query["jsonrpc"];
                 string id = context.Request.Query["id"];
                 string method = context.Request.Query["method"];
                 string _params = context.Request.Query["params"];
@@ -159,7 +159,7 @@ namespace Neo.Plugins
                     catch (FormatException) { }
                     request = new JObject();
                     if (!string.IsNullOrEmpty(jsonrpc))
-                        request["json_rpc"] = jsonrpc;
+                        request["jsonrpc"] = jsonrpc;
                     request["id"] = id;
                     request["method"] = method;
                     request["params"] = JObject.Parse(_params);

@@ -17,9 +17,9 @@ namespace Neo.Network.RPC.Models
             return new JObject
             {
                 ["address"] = Address,
-                ["has_key"] = HasKey,
+                ["haskey"] = HasKey,
                 ["label"] = Label,
-                ["watch_only"] = WatchOnly
+                ["watchonly"] = WatchOnly
             };
         }
 
@@ -28,9 +28,9 @@ namespace Neo.Network.RPC.Models
             return new RpcAccount
             {
                 Address = json["address"].AsString(),
-                HasKey = json["has_key"].AsBoolean(),
+                HasKey = json["haskey"].AsBoolean(),
                 Label = json["label"]?.AsString(),
-                WatchOnly = json["watch_only"].AsBoolean(),
+                WatchOnly = json["watchonly"].AsBoolean(),
             };
         }
     }

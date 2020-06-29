@@ -57,7 +57,7 @@ namespace Neo.Plugins
             JObject json = new JObject();
             json["script"] = script.ToHexString();
             json["state"] = engine.State;
-            json["gas_consumed"] = engine.GasConsumed.ToString();
+            json["gasconsumed"] = engine.GasConsumed.ToString();
             try
             {
                 json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));

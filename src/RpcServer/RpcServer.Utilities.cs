@@ -40,7 +40,7 @@ namespace Neo.Plugins
                 scriptHash = null;
             }
             json["address"] = address;
-            json["is_valid"] = scriptHash != null;
+            json["isvalid"] = scriptHash != null;
             return json;
         }
     }
