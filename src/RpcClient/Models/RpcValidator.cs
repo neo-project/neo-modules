@@ -14,7 +14,7 @@ namespace Neo.Network.RPC.Models
         public JObject ToJson()
         {
             JObject json = new JObject();
-            json["publickey"] = PublicKey;
+            json["public_key"] = PublicKey;
             json["votes"] = Votes.ToString();
             json["active"] = Active;
             return json;
@@ -23,7 +23,7 @@ namespace Neo.Network.RPC.Models
         public static RpcValidator FromJson(JObject json)
         {
             RpcValidator validator = new RpcValidator();
-            validator.PublicKey = json["publickey"].AsString();
+            validator.PublicKey = json["public_key"].AsString();
             validator.Votes = BigInteger.Parse(json["votes"].AsString());
             validator.Active = json["active"].AsBoolean();
             return validator;

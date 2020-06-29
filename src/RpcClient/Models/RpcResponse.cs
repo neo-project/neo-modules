@@ -19,7 +19,7 @@ namespace Neo.Network.RPC.Models
             var response = new RpcResponse
             {
                 Id = json["id"],
-                JsonRpc = json["jsonrpc"].AsString(),
+                JsonRpc = json["json_rpc"].AsString(),
                 Result = json["result"]
             };
 
@@ -35,7 +35,7 @@ namespace Neo.Network.RPC.Models
         {
             var json = new JObject();
             json["id"] = Id;
-            json["jsonrpc"] = JsonRpc;
+            json["json_rpc"] = JsonRpc;
             json["error"] = Error?.ToJson();
             json["result"] = Result;
             return json;

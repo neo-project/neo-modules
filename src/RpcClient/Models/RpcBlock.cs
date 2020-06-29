@@ -15,7 +15,7 @@ namespace Neo.Network.RPC.Models
         {
             JObject json = Block.ToJson();
             json["confirmations"] = Confirmations;
-            json["nextblockhash"] = NextBlockHash?.ToString();
+            json["next_block_hash"] = NextBlockHash?.ToString();
             return json;
         }
 
@@ -24,7 +24,7 @@ namespace Neo.Network.RPC.Models
             RpcBlock block = new RpcBlock();
             block.Block = Utility.BlockFromJson(json);
             block.Confirmations = (uint)json["confirmations"].AsNumber();
-            block.NextBlockHash = json["nextblockhash"] is null ? null : UInt256.Parse(json["nextblockhash"].AsString());
+            block.NextBlockHash = json["next_block_hash"] is null ? null : UInt256.Parse(json["next_block_hash"].AsString());
             return block;
         }
     }
