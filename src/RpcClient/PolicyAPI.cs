@@ -23,7 +23,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public uint GetMaxTransactionsPerBlock()
         {
-            return (uint)TestInvoke(scriptHash, "getMaxTransactionsPerBlock").Stack.Single().ToStackItem().GetBigInteger();
+            return (uint)TestInvoke(scriptHash, "getMaxTransactionsPerBlock").Stack.Single().ToStackItem().GetInteger();
         }
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public uint GetMaxBlockSize()
         {
-            return (uint)TestInvoke(scriptHash, "getMaxBlockSize").Stack.Single().ToStackItem().GetBigInteger();
+            return (uint)TestInvoke(scriptHash, "getMaxBlockSize").Stack.Single().ToStackItem().GetInteger();
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public long GetFeePerByte()
         {
-            return (long)TestInvoke(scriptHash, "getFeePerByte").Stack.Single().ToStackItem().GetBigInteger();
+            return (long)TestInvoke(scriptHash, "getFeePerByte").Stack.Single().ToStackItem().GetInteger();
         }
 
         /// <summary>
