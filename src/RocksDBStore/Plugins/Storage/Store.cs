@@ -81,7 +81,7 @@ namespace Neo.Plugins.Storage
             return new Snapshot(this, db);
         }
 
-        public IEnumerable<(byte[] Key, byte[] Value)> Find(byte table, byte[] prefix)
+        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] prefix)
         {
             using var it = db.NewIterator(GetFamily(table), Options.ReadDefault);
             for (it.Seek(prefix); it.Valid(); it.Next())

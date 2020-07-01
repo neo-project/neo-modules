@@ -47,7 +47,7 @@ namespace Neo.Plugins
             batch?.Delete(CreateKey(prefix, key));
         }
 
-        protected override IEnumerable<(TKey, TValue)> FindInternal(byte[] key_prefix)
+        protected override IEnumerable<(TKey, TValue)> SeekInternal(byte[] key_prefix)
         {
             return db.Find(options, CreateKey(prefix, key_prefix), (k, v) => (k.AsSerializable<TKey>(1), v.AsSerializable<TValue>()));
         }

@@ -6,7 +6,7 @@ namespace Neo.IO.Data.LevelDB
 {
     public static class Helper
     {
-        public static IEnumerable<T> Find<T>(this DB db, ReadOptions options, byte[] prefix, Func<byte[], byte[], T> resultSelector)
+        public static IEnumerable<T> Seek<T>(this DB db, ReadOptions options, byte[] prefix, Func<byte[], byte[], T> resultSelector)
         {
             using Iterator it = db.NewIterator(options);
             for (it.Seek(prefix); it.Valid(); it.Next())
