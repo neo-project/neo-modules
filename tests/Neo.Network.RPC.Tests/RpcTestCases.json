@@ -1131,7 +1131,7 @@
         "txid": "0x183cd84359cd9f8b956afcd02403ec07361c1dba55f0800241b4ef2b28e88bbb",
         "trigger": "Application",
         "vmstate": "HALT",
-        "gas_consumed": "9007810",
+        "gasconsumed": "9007810",
         "stack": [],
         "notifications": [
           {
