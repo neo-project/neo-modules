@@ -141,7 +141,7 @@ namespace Neo.Plugins
             }
             if (scriptContainer is Transaction transaction)
             {
-                RecordTransferHistory(snapshot, scriptHash, from, to, amountItem.GetBigInteger(), transaction.Hash, ref transferIndex);
+                RecordTransferHistory(snapshot, scriptHash, from, to, amountItem.GetInteger(), transaction.Hash, ref transferIndex);
             }
         }
 
@@ -180,7 +180,7 @@ namespace Neo.Plugins
                 {
                     if (engine.State.HasFlag(VMState.FAULT)) continue;
                     if (engine.ResultStack.Count <= 0) continue;
-                    nep5BalancePair.Value.Balance = engine.ResultStack.Pop().GetBigInteger();
+                    nep5BalancePair.Value.Balance = engine.ResultStack.Pop().GetInteger();
                 }
                 nep5BalancePair.Value.LastUpdatedBlock = snapshot.Height;
                 if (nep5BalancePair.Value.Balance == 0)
