@@ -7,15 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\LevelDBStore\LevelDBStore.csproj" />
+    <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="ApplicationLogs\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\LevelDBStore\LevelDBStore.csproj" />
-    <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
   </ItemGroup>
 
 </Project>
