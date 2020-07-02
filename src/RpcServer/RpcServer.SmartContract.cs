@@ -98,7 +98,7 @@ namespace Neo.Plugins
         private JObject InvokeScript(JArray _params)
         {
             byte[] script = _params[0].AsString().HexToBytes();
-            CheckWitnessHashes checkWitnessHashes = _params.Count >= 2 ? new CheckWitnessHashes(((JArray)_params[1]).Select(u => new Cosigner() { Account = UInt160.Parse(u["account"].AsString()), Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"].AsString(), true) }).ToArray()) : null;
+            CheckWitnessHashes checkWitnessHashes = _params.Count >= 2 ? new CheckWitnessHashes(((JArray)_params[1]).Select(u => new Cosigner() { Account = UInt160.Parse(u["account"].AsString()), Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"].AsString()) }).ToArray()) : null;
             return GetInvokeResult(script, checkWitnessHashes);
         }
 
