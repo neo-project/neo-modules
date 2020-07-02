@@ -20,13 +20,13 @@ namespace Neo.Plugins
     {
         private class CheckWitnessHashes : IVerifiable
         {
-            private readonly UInt160[] _scriptHashesForVerifying;
+            private readonly Cosigner[] _cosigners;
             public Witness[] Witnesses { get; set; }
             public int Size { get; }
 
-            public CheckWitnessHashes(UInt160[] scriptHashesForVerifying)
+            public CheckWitnessHashes(Cosigner[] cosigners)
             {
-                _scriptHashesForVerifying = scriptHashesForVerifying;
+                _cosigners = cosigners;
             }
 
             public void Serialize(BinaryWriter writer)
@@ -46,7 +46,12 @@ namespace Neo.Plugins
 
             public UInt160[] GetScriptHashesForVerifying(StoreView snapshot)
             {
-                return _scriptHashesForVerifying;
+                return _cosigners.Select(p => p.Account).ToArray();
+            }
+
+            public Cosigner[] GetCosigners()
+            {
+                return _cosigners;
             }
 
             public void SerializeUnsigned(BinaryWriter writer)
@@ -55,7 +60,7 @@ namespace Neo.Plugins
             }
         }
 
-        private JObject GetInvokeResult(byte[] script, IVerifiable checkWitnessHashes = null)
+        private JObject GetInvokeResult(byte[] script, CheckWitnessHashes checkWitnessHashes = null)
         {
             using ApplicationEngine engine = ApplicationEngine.Run(script, checkWitnessHashes, extraGAS: settings.MaxGasInvoke);
             JObject json = new JObject();
@@ -70,7 +75,7 @@ namespace Neo.Plugins
             {
                 json["stack"] = "error: recursive reference";
             }
-            ProcessInvokeWithWallet(json);
+            ProcessInvokeWithWallet(json, checkWitnessHashes);
             return json;
         }
 
@@ -80,7 +85,7 @@ namespace Neo.Plugins
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
-            CheckWitnessHashes checkWitnessHashes = _params.Count >= 4 ? new CheckWitnessHashes(((JArray)_params[3]).Select(u => UInt160.Parse(u.AsString())).ToArray()) : null;
+            CheckWitnessHashes checkWitnessHashes = _params.Count >= 4 ? new CheckWitnessHashes(((JArray)_params[3]).Select(u => new Cosigner() { Account = UInt160.Parse(u["account"].AsString()), Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"].AsString()) }).ToArray()) : null;
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
@@ -93,7 +98,7 @@ namespace Neo.Plugins
         private JObject InvokeScript(JArray _params)
         {
             byte[] script = _params[0].AsString().HexToBytes();
-            CheckWitnessHashes checkWitnessHashes = _params.Count >= 2 ? new CheckWitnessHashes(((JArray)_params[1]).Select(u => UInt160.Parse(u.AsString())).ToArray()) : null;
+            CheckWitnessHashes checkWitnessHashes = _params.Count >= 2 ? new CheckWitnessHashes(((JArray)_params[1]).Select(u => new Cosigner() { Account = UInt160.Parse(u["account"].AsString()), Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"].AsString(), true) }).ToArray()) : null;
             return GetInvokeResult(script, checkWitnessHashes);
         }
 
