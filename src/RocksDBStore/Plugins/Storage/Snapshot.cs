@@ -46,11 +46,7 @@ namespace Neo.Plugins.Storage
             using var it = db.NewIterator(store.GetFamily(table), options);
             for (it.Seek(keyOrPrefix); it.Valid();)
             {
-                var key = it.Key();
-                byte[] y = keyOrPrefix;
-                if (key.Length < y.Length) break;
-                if (!key.AsSpan().StartsWith(y)) break;
-                yield return (key, it.Value());
+                yield return (it.Key(), it.Value());
 
                 if(direction == SeekDirection.Forward)
                     it.Next();
