@@ -143,7 +143,7 @@ namespace Neo.Plugins
             if (wallet != null && cosigners != null)
             {
                 UInt160[] accounts = wallet.GetAccounts().Where(p => !p.Lock && !p.WatchOnly).Select(p => p.ScriptHash).ToArray();
-                Cosigner[] witnessCosigners= cosigners.GetCosigners().Where(p => accounts.Contains(p.Account)).ToArray();
+                Cosigner[] witnessCosigners = cosigners.GetCosigners().Where(p => accounts.Contains(p.Account)).ToArray();
 
                 Transaction tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes(), null, witnessCosigners);
                 ContractParametersContext context = new ContractParametersContext(tx);
