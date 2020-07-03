@@ -1131,18 +1131,15 @@
         "txid": "0x183cd84359cd9f8b956afcd02403ec07361c1dba55f0800241b4ef2b28e88bbb",
         "trigger": "Application",
         "vmstate": "HALT",
-        "gas_consumed": "9007810",
+        "gasconsumed": "9007810",
         "stack": [],
         "notifications": [
           {
             "contract": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
+            "eventname": "Transfer",
             "state": {
               "type": "Array",
               "value": [
-                {
-                  "type": "ByteArray",
-                  "value": "VHJhbnNmZXI="
-                },
                 {
                   "type": "Any"
                 },
@@ -1159,13 +1156,10 @@
           },
           {
             "contract": "0x9bde8f209c88dd0e7ca3bf0af0f476cdd8207789",
+            "eventname": "Transfer",
             "state": {
               "type": "Array",
               "value": [
-                {
-                  "type": "ByteArray",
-                  "value": "VHJhbnNmZXI="
-                },
                 {
                   "type": "ByteArray",
                   "value": "eU9We10tADBFvus3caGe5hjcaNE="
