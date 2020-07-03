@@ -48,7 +48,7 @@ namespace Neo.Plugins.Storage
             {
                 yield return (it.Key(), it.Value());
 
-                if(direction == SeekDirection.Forward)
+                if (direction == SeekDirection.Forward)
                     it.Next();
                 else
                     it.Prev();
