@@ -338,13 +338,13 @@
                   }
                 ],
                 "offset": 0,
-                "returnType": "ByteArray"
+                "returntype": "ByteArray"
               },
               {
                 "name": "Destroy",
                 "parameters": [],
                 "offset": 400,
-                "returnType": "Boolean"
+                "returntype": "Boolean"
               },
               {
                 "name": "Migrate",
@@ -359,7 +359,7 @@
                   }
                 ],
                 "offset": 408,
-                "returnType": "Boolean"
+                "returntype": "Boolean"
               },
               {
                 "name": "BalanceOf",
@@ -370,43 +370,43 @@
                   }
                 ],
                 "offset": 474,
-                "returnType": "Integer"
+                "returntype": "Integer"
               },
               {
                 "name": "Decimals",
                 "parameters": [],
                 "offset": 585,
-                "returnType": "Integer"
+                "returntype": "Integer"
               },
               {
                 "name": "Deploy",
                 "parameters": [],
                 "offset": 610,
-                "returnType": "Boolean"
+                "returntype": "Boolean"
               },
               {
                 "name": "Name",
                 "parameters": [],
                 "offset": 763,
-                "returnType": "String"
+                "returntype": "String"
               },
               {
                 "name": "Symbol",
                 "parameters": [],
                 "offset": 787,
-                "returnType": "String"
+                "returntype": "String"
               },
               {
                 "name": "SupportedStandards",
                 "parameters": [],
                 "offset": 793,
-                "returnType": "Array"
+                "returntype": "Array"
               },
               {
                 "name": "TotalSupply",
                 "parameters": [],
                 "offset": 827,
-                "returnType": "Integer"
+                "returntype": "Integer"
               }
             ],
             "events": [
@@ -436,7 +436,7 @@
             }
           ],
           "trusts": [],
-          "safeMethods": [],
+          "safemethods": [],
           "extra": null
         }
       }

@@ -1,3 +1,4 @@
+using Neo.IO.Caching;
 using Neo.IO.Data.LevelDB;
 using Neo.Persistence;
 using System;
@@ -49,7 +50,7 @@ namespace Neo.Plugins.Storage
             db.Dispose();
         }
 
-        public IEnumerable<(byte[], byte[])> Find(byte table, byte[] prefix)
+        public IEnumerable<(byte[], byte[])> Seek(byte table, byte[] prefix, SeekDirection direction = SeekDirection.Forward)
         {
             return db.Find(ReadOptions.Default, Helper.CreateKey(table, prefix), (k, v) => (k[1..], v));
         }

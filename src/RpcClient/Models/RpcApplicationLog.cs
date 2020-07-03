@@ -35,7 +35,7 @@ namespace Neo.Network.RPC.Models
         public static RpcApplicationLog FromJson(JObject json)
         {
             RpcApplicationLog log = new RpcApplicationLog();
-            log.TxId = json["txid"] is null ? null : UInt256.Parse(json["tx_id"].AsString());
+            log.TxId = json["txid"] is null ? null : UInt256.Parse(json["txid"].AsString());
             log.Trigger = json["trigger"].TryGetEnum<TriggerType>();
             log.VMState = json["vmstate"].TryGetEnum<VMState>();
             log.GasConsumed = long.Parse(json["gasconsumed"].AsString());
