@@ -49,12 +49,15 @@ namespace Neo.Network.RPC.Models
     {
         public UInt160 Contract { get; set; }
 
+        public string EventName { get; set; }
+
         public ContractParameter State { get; set; }
 
         public JObject ToJson()
         {
             JObject json = new JObject();
             json["contract"] = Contract.ToString();
+            json["eventname"] = EventName;
             json["state"] = State.ToJson();
             return json;
         }
@@ -64,6 +67,7 @@ namespace Neo.Network.RPC.Models
             return new RpcNotifyEventArgs
             {
                 Contract = UInt160.Parse(json["contract"].AsString()),
+                EventName = json["eventname"].AsString(),
                 State = ContractParameter.FromJson(json["state"])
             };
         }
