@@ -140,21 +140,23 @@ namespace Neo.Plugins
 
         private void ProcessInvokeWithWallet(JObject result, Cosigners cosigners = null)
         {
+            Transaction tx = null;
             if (wallet != null && cosigners != null)
             {
                 UInt160[] accounts = wallet.GetAccounts().Where(p => !p.Lock && !p.WatchOnly).Select(p => p.ScriptHash).ToArray();
                 Cosigner[] witnessCosigners = cosigners.GetCosigners().Where(p => accounts.Contains(p.Account)).ToArray();
-                if (witnessCosigners.Count() == 0)
-                    throw new RpcException(-32603, "Didn't open wallet or cosigners incorrect");
-                Transaction tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes(), null, witnessCosigners);
-                ContractParametersContext context = new ContractParametersContext(tx);
-                wallet.Sign(context);
-                if (context.Completed)
-                    tx.Witnesses = context.GetWitnesses();
-                else
-                    tx = null;
-                result["tx"] = tx?.ToArray().ToHexString();
+                if (witnessCosigners.Count() > 0)
+                {
+                    tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes(), null, witnessCosigners);
+                    ContractParametersContext context = new ContractParametersContext(tx);
+                    wallet.Sign(context);
+                    if (context.Completed)
+                        tx.Witnesses = context.GetWitnesses();
+                    else
+                        tx = null;
+                }
             }
+            result["tx"] = tx?.ToArray().ToHexString();
         }
 
         [RpcMethod]
