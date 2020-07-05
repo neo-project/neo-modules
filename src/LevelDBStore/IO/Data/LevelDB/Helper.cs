@@ -1,3 +1,4 @@
+using Neo.IO.Caching;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -6,15 +7,17 @@ namespace Neo.IO.Data.LevelDB
 {
     public static class Helper
     {
-        public static IEnumerable<T> Find<T>(this DB db, ReadOptions options, byte[] prefix, Func<byte[], byte[], T> resultSelector)
+        public static IEnumerable<T> Seek<T>(this DB db, ReadOptions options, byte[] keyOrPrefix, SeekDirection direction, Func<byte[], byte[], T> resultSelector)
         {
             using Iterator it = db.NewIterator(options);
-            for (it.Seek(prefix); it.Valid(); it.Next())
+            for (it.Seek(keyOrPrefix); it.Valid();)
             {
-                byte[] key = it.Key();
-                if (key.Length < prefix.Length) break;
-                if (!key.AsSpan().StartsWith(prefix)) break;
-                yield return resultSelector(key, it.Value());
+                yield return resultSelector(it.Key(), it.Value());
+
+                if (direction == SeekDirection.Forward)
+                    it.Next();
+                else
+                    it.Prev();
             }
         }
 
