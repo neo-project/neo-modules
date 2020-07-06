@@ -32,7 +32,7 @@ namespace Neo.Network.RPC.Tests
             ContractClient contractClient = new ContractClient(rpcClientMock.Object);
             var result = contractClient.TestInvoke(NativeContract.GAS.Hash, "balanceOf", UInt160.Zero);
 
-            Assert.AreEqual(30000000000000L, (long)result.Stack[0].ToStackItem().GetBigInteger());
+            Assert.AreEqual(30000000000000L, (long)result.Stack[0].ToStackItem().GetInteger());
         }
 
         [TestMethod]
@@ -56,7 +56,7 @@ namespace Neo.Network.RPC.Tests
             manifest.Features = ContractFeatures.HasStorage | ContractFeatures.Payable;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitSysCall(InteropService.Contract.Create, new byte[1], manifest.ToString());
+                sb.EmitSysCall(ApplicationEngine.System_Contract_Create, new byte[1], manifest.ToString());
                 script = sb.ToArray();
             }
 
