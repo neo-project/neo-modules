@@ -38,7 +38,7 @@ namespace Neo.Plugins.Storage
 
         public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] prefix, SeekDirection direction)
         {
-            return db.Seek(options, Helper.CreateKey(table, prefix), direction, (k, v) => (k[1..], v));
+            return db.Seek(options, table, prefix, direction, (k, v) => (k[1..], v));
         }
 
         public void Put(byte table, byte[] key, byte[] value)

@@ -52,7 +52,7 @@ namespace Neo.Plugins.Storage
 
         public IEnumerable<(byte[], byte[])> Seek(byte table, byte[] prefix, SeekDirection direction)
         {
-            return db.Seek(ReadOptions.Default, Helper.CreateKey(table, prefix), direction, (k, v) => (k[1..], v));
+            return db.Seek(ReadOptions.Default, table, prefix, direction, (k, v) => (k[1..], v));
         }
 
         public ISnapshot GetSnapshot()
