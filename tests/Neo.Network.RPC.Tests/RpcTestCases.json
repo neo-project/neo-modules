@@ -758,6 +758,23 @@
     }
   },
 
+  {
+    "Name": "getunclaimedgas",
+    "Request": {
+      "jsonrpc": "2.0",
+      "method": "getunclaimedgas",
+      "params": [ "NPvKVTGZapmFWABLsyvfreuqn73jCjJtN1" ],
+      "id": 1
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "unclaimed": "735870007400",
+        "address": "NPvKVTGZapmFWABLsyvfreuqn73jCjJtN1"
+      }
+    }
+  },
 
   {
     "Name": "listplugins",
@@ -848,23 +865,6 @@
     }
   },
   {
-    "Name": "getbalance",
-    "Request": {
-      "jsonrpc": "2.0",
-      "method": "getbalance",
-      "params": [ "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b" ],
-      "id": 1
-    },
-    "Response": {
-      "jsonrpc": "2.0",
-      "id": 1,
-      "result": {
-        "balance": "3001101329992600"
-      }
-    }
-  },
-  // mock decimals
-  {
     "Name": "invokescript",
     "Request": {
       "jsonrpc": "2.0",
@@ -904,10 +904,26 @@
     }
   },
   {
-    "Name": "getunclaimedgas",
+    "Name": "getwalletbalance",
     "Request": {
       "jsonrpc": "2.0",
-      "method": "getunclaimedgas",
+      "method": "getwalletbalance",
+      "params": [ "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b" ],
+      "id": 1
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "balance": "3001101329992600"
+      }
+    }
+  },
+  {
+    "Name": "getwalletunclaimedgas",
+    "Request": {
+      "jsonrpc": "2.0",
+      "method": "getwalletunclaimedgas",
       "params": [],
       "id": 1
     },

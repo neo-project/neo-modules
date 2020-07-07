@@ -1,3 +1,4 @@
+using Neo.IO.Caching;
 using Neo.IO.Data.LevelDB;
 using Neo.Persistence;
 using System.Collections.Generic;
@@ -35,9 +36,9 @@ namespace Neo.Plugins.Storage
             snapshot.Dispose();
         }
 
-        public IEnumerable<(byte[] Key, byte[] Value)> Find(byte table, byte[] prefix)
+        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] prefix, SeekDirection direction)
         {
-            return db.Find(options, Helper.CreateKey(table, prefix), (k, v) => (k[1..], v));
+            return db.Seek(options, Helper.CreateKey(table, prefix), direction, (k, v) => (k[1..], v));
         }
 
         public void Put(byte table, byte[] key, byte[] value)

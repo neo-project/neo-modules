@@ -48,16 +48,6 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject GetWalletBalance(JArray _params)
-        {
-            CheckWallet();
-            UInt160 asset_id = UInt160.Parse(_params[0].AsString());
-            JObject json = new JObject();
-            json["balance"] = wallet.GetAvailable(asset_id).Value.ToString();
-            return json;
-        }
-
-        [RpcMethod]
         private JObject GetNewAddress(JArray _params)
         {
             CheckWallet();
@@ -65,6 +55,16 @@ namespace Neo.Plugins
             if (wallet is NEP6Wallet nep6)
                 nep6.Save();
             return account.Address;
+        }
+
+        [RpcMethod]
+        private JObject GetWalletBalance(JArray _params)
+        {
+            CheckWallet();
+            UInt160 asset_id = UInt160.Parse(_params[0].AsString());
+            JObject json = new JObject();
+            json["balance"] = wallet.GetAvailable(asset_id).Value.ToString();
+            return json;
         }
 
         [RpcMethod]
