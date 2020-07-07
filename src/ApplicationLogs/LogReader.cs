@@ -51,7 +51,7 @@ namespace Neo.Plugins
                 json["txid"] = appExec.Transaction?.Hash.ToString();
                 json["trigger"] = appExec.Trigger;
                 json["vmstate"] = appExec.VMState;
-                json["gas_consumed"] = appExec.GasConsumed.ToString();
+                json["gasconsumed"] = appExec.GasConsumed.ToString();
                 try
                 {
                     json["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
@@ -64,6 +64,7 @@ namespace Neo.Plugins
                 {
                     JObject notification = new JObject();
                     notification["contract"] = q.ScriptHash.ToString();
+                    notification["eventname"] = q.EventName;
                     try
                     {
                         notification["state"] = q.State.ToJson();
