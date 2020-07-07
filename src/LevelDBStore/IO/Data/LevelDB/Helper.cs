@@ -42,7 +42,7 @@ namespace Neo.IO.Data.LevelDB
             return buffer;
         }
 
-        internal static byte[] CreateKey(byte table, byte[] key = null)
+        public static byte[] CreateKey(byte table, byte[] key = null)
         {
             if (key is null) return new[] { table };
             byte[] buffer = new byte[1 + key.Length];
