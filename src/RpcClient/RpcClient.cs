@@ -340,6 +340,11 @@ namespace Neo.Network.RPC
             return RpcInvokeResult.FromJson(RpcSend("invokescript", parameters.ToArray()));
         }
 
+        public RpcUnclaimedGas GetUnclaimedGas(string address)
+        {
+            return RpcUnclaimedGas.FromJson(RpcSend("getunclaimedgas", address));
+        }
+
         #endregion SmartContract
 
         #region Utilities
@@ -381,18 +386,6 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Returns the balance of the corresponding asset in the wallet, based on the specified asset Id.
-        /// This method applies to assets that conform to NEP-5 standards.
-        /// </summary>
-        /// <returns>new address as string</returns>
-        public BigDecimal GetBalance(string assetId)
-        {
-            byte decimals = new Nep5API(this).Decimals(UInt160.Parse(assetId));
-            BigInteger balance = BigInteger.Parse(RpcSend("getbalance", assetId)["balance"].AsString());
-            return new BigDecimal(balance, decimals);
-        }
-
-        /// <summary>
         /// Creates a new account in the wallet opened by RPC.
         /// </summary>
         public string GetNewAddress()
@@ -401,11 +394,23 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
+        /// Returns the balance of the corresponding asset in the wallet, based on the specified asset Id.
+        /// This method applies to assets that conform to NEP-5 standards.
+        /// </summary>
+        /// <returns>new address as string</returns>
+        public BigDecimal GetWalletBalance(string assetId)
+        {
+            byte decimals = new Nep5API(this).Decimals(UInt160.Parse(assetId));
+            BigInteger balance = BigInteger.Parse(RpcSend("getwalletbalance", assetId)["balance"].AsString());
+            return new BigDecimal(balance, decimals);
+        }
+
+        /// <summary>
         /// Gets the amount of unclaimed GAS in the wallet.
         /// </summary>
-        public BigInteger GetUnclaimedGas()
+        public BigInteger GetWalletUnclaimedGas()
         {
-            return BigInteger.Parse(RpcSend("getunclaimedgas").AsString());
+            return BigInteger.Parse(RpcSend("getwalletunclaimedgas").AsString());
         }
 
         /// <summary>
@@ -467,7 +472,7 @@ namespace Neo.Network.RPC
             return RpcSend("sendtoaddress", assetId, address, amount);
         }
 
-        #endregion Utilities
+        #endregion Wallet
 
         #region Plugins
 

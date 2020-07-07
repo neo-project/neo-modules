@@ -291,6 +291,14 @@ namespace Neo.Network.RPC.Tests
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
+        [TestMethod]
+        public void TestGetUnclaimedGas()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetUnclaimedGas).ToLower());
+            var result = rpc.GetUnclaimedGas(test.Request.Params[0].AsString());
+            Assert.AreEqual(test.Response.Result["unclaimed"].AsString(), result.Unclaimed.ToString());
+        }
+
         #endregion SmartContract
 
         #region Utilities
@@ -332,14 +340,6 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
-        public void TestGetBalance()
-        {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBalance).ToLower());
-            var result = rpc.GetBalance(test.Request.Params[0].AsString());
-            Assert.AreEqual(test.Response.Result["balance"].AsString(), result.Value.ToString());
-        }
-
-        [TestMethod]
         public void TestGetNewAddress()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNewAddress).ToLower());
@@ -348,10 +348,18 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
-        public void TestGetUnclaimedGas()
+        public void TestGetWalletBalance()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetUnclaimedGas).ToLower());
-            var result = rpc.GetUnclaimedGas();
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetWalletBalance).ToLower());
+            var result = rpc.GetWalletBalance(test.Request.Params[0].AsString());
+            Assert.AreEqual(test.Response.Result["balance"].AsString(), result.Value.ToString());
+        }
+
+        [TestMethod]
+        public void TestGetWalletUnclaimedGas()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetWalletUnclaimedGas).ToLower());
+            var result = rpc.GetWalletUnclaimedGas();
             Assert.AreEqual(test.Response.Result.AsString(), result.ToString());
         }
 
