@@ -1,7 +1,6 @@
 using Neo.IO.Caching;
 using Neo.Persistence;
 using RocksDbSharp;
-using System;
 using System.Collections.Generic;
 
 namespace Neo.Plugins.Storage

@@ -82,16 +82,17 @@ namespace Neo.Plugins.Storage
             return new Snapshot(this, db);
         }
 
-        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] prefix, SeekDirection direction)
+        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] prefix, SeekDirection direction = SeekDirection.Forward)
         {
             using var it = db.NewIterator(GetFamily(table), Options.ReadDefault);
-            for (it.Seek(prefix); it.Valid(); it.Next())
+            for (it.Seek(prefix); it.Valid();)
             {
-                var key = it.Key();
-                byte[] y = prefix;
-                if (key.Length < y.Length) break;
-                if (!key.AsSpan().StartsWith(y)) break;
-                yield return (key, it.Value());
+                yield return (it.Key(), it.Value());
+
+                if (direction == SeekDirection.Forward)
+                    it.Next();
+                else
+                    it.Prev();
             }
         }
 
