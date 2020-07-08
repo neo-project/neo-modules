@@ -233,12 +233,12 @@ namespace Neo.Plugins
                 if (++resultCount > _maxResults) break;
                 JObject transfer = new JObject();
                 transfer["timestamp"] = key.TimestampMS;
-                transfer["asset_hash"] = key.AssetScriptHash.ToString();
-                transfer["transfer_address"] = value.UserScriptHash.ToAddress();
+                transfer["assethash"] = key.AssetScriptHash.ToString();
+                transfer["transferaddress"] = value.UserScriptHash.ToAddress();
                 transfer["amount"] = value.Amount.ToString();
-                transfer["block_index"] = value.BlockIndex;
-                transfer["transfer_notify_index"] = key.BlockXferNotificationIndex;
-                transfer["tx_hash"] = value.TxHash.ToString();
+                transfer["blockindex"] = value.BlockIndex;
+                transfer["transfernotifyindex"] = key.BlockXferNotificationIndex;
+                transfer["txhash"] = value.TxHash.ToString();
                 parentJArray.Add(transfer);
             }
         }
@@ -288,9 +288,9 @@ namespace Neo.Plugins
                 JObject balance = new JObject();
                 if (Blockchain.Singleton.View.Contracts.TryGet(key.AssetScriptHash) is null)
                     continue;
-                balance["asset_hash"] = key.AssetScriptHash.ToString();
+                balance["assethash"] = key.AssetScriptHash.ToString();
                 balance["amount"] = value.Balance.ToString();
-                balance["last_updated_block"] = value.LastUpdatedBlock;
+                balance["lastupdatedblock"] = value.LastUpdatedBlock;
                 balances.Add(balance);
             }
             return json;
