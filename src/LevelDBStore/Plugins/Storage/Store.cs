@@ -51,7 +51,7 @@ namespace Neo.Plugins.Storage
             db.Dispose();
         }
 
-        public IEnumerable<(byte[], byte[])> Seek(byte table, byte[] prefix, SeekDirection direction)
+        public IEnumerable<(byte[], byte[])> Seek(byte table, byte[] prefix, SeekDirection direction = SeekDirection.Forward)
         {
             return db.Seek(ReadOptions.Default, table, prefix, direction, (k, v) => (k[1..], v));
         }

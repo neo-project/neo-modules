@@ -85,7 +85,7 @@
             "verification": "EQ=="
           }
         ],
-        "consensus_data": {
+        "consensusdata": {
           "primary": 0,
           "nonce": "000000007c2bac1d"
         },
@@ -96,9 +96,9 @@
             "version": 0,
             "nonce": 0,
             "sender": "NeN4xPMn4kHoj7G8Lciq9oorgLTvqt4qi1",
-            "sys_fee": "0",
-            "net_fee": "0",
-            "valid_until_block": 0,
+            "sysfee": "0",
+            "netfee": "0",
+            "validuntilblock": 0,
             "attributes": [],
             "script": "QRI+f+g=",
             "witnesses": [
@@ -140,7 +140,7 @@
             "verification": "EQ=="
           }
         ],
-        "consensus_data": {
+        "consensusdata": {
           "primary": 0,
           "nonce": "000000007c2bac1d"
         },
@@ -151,9 +151,9 @@
             "version": 0,
             "nonce": 0,
             "sender": "NeN4xPMn4kHoj7G8Lciq9oorgLTvqt4qi1",
-            "sys_fee": "0",
-            "net_fee": "0",
-            "valid_until_block": 0,
+            "sysfee": "0",
+            "netfee": "0",
+            "validuntilblock": 0,
             "attributes": [],
             "script": "QRI+f+g=",
             "witnesses": [
@@ -338,13 +338,13 @@
                   }
                 ],
                 "offset": 0,
-                "returnType": "ByteArray"
+                "returntype": "ByteArray"
               },
               {
                 "name": "Destroy",
                 "parameters": [],
                 "offset": 400,
-                "returnType": "Boolean"
+                "returntype": "Boolean"
               },
               {
                 "name": "Migrate",
@@ -359,7 +359,7 @@
                   }
                 ],
                 "offset": 408,
-                "returnType": "Boolean"
+                "returntype": "Boolean"
               },
               {
                 "name": "BalanceOf",
@@ -370,43 +370,43 @@
                   }
                 ],
                 "offset": 474,
-                "returnType": "Integer"
+                "returntype": "Integer"
               },
               {
                 "name": "Decimals",
                 "parameters": [],
                 "offset": 585,
-                "returnType": "Integer"
+                "returntype": "Integer"
               },
               {
                 "name": "Deploy",
                 "parameters": [],
                 "offset": 610,
-                "returnType": "Boolean"
+                "returntype": "Boolean"
               },
               {
                 "name": "Name",
                 "parameters": [],
                 "offset": 763,
-                "returnType": "String"
+                "returntype": "String"
               },
               {
                 "name": "Symbol",
                 "parameters": [],
                 "offset": 787,
-                "returnType": "String"
+                "returntype": "String"
               },
               {
                 "name": "SupportedStandards",
                 "parameters": [],
                 "offset": 793,
-                "returnType": "Array"
+                "returntype": "Array"
               },
               {
                 "name": "TotalSupply",
                 "parameters": [],
                 "offset": 827,
-                "returnType": "Integer"
+                "returntype": "Integer"
               }
             ],
             "events": [
@@ -436,7 +436,7 @@
             }
           ],
           "trusts": [],
-          "safeMethods": [],
+          "safemethods": [],
           "extra": null
         }
       }
@@ -505,9 +505,9 @@
         "version": 0,
         "nonce": 969006668,
         "sender": "NVVwFw6XyhtRCFQ8SpUTMdPyYt4Vd9A1XQ",
-        "sys_fee": "100000000",
-        "net_fee": "1272390",
-        "valid_until_block": 2104625,
+        "sysfee": "100000000",
+        "netfee": "1272390",
+        "validuntilblock": 2104625,
         "attributes": [],
         "script": "AwAQpdToAAAADBSZA7DD0pKYj+vl8wagL2VOousWKQwUaSWqVUcSQ5qcYTuhFO+j+sI928oTwAwIdHJhbnNmZXIMFDt9NxHG8Mz5sdypA9G/odiW8SOMQWJ9W1I5",
         "witnesses": [
@@ -519,7 +519,7 @@
         "blockhash": "0xc1ed259e394c9cd93c1e0eb1e0f144c0d10da64861a24c0084f0d98270b698f1",
         "confirmations": 643,
         "blocktime": 1579417249620,
-        "vm_state": "HALT"
+        "vmstate": "HALT"
       }
     }
   },
@@ -645,10 +645,10 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "tcp_port": 20333,
-        "ws_port": 20334,
+        "tcpport": 20333,
+        "wsport": 20334,
         "nonce": 592651621,
-        "user_agent": "/Neo:3.0.0-preview1/"
+        "useragent": "/Neo:3.0.0-preview1/"
       }
     }
   },
@@ -709,7 +709,7 @@
       "result": {
         "script": "0c1426ae7c6c9861ec418468c1f0fdc4a7f2963eb89111c00c0962616c616e63654f660c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52",
         "state": "HALT",
-        "gas_consumed": "2007570",
+        "gasconsumed": "2007570",
         "stack": [
           {
             "type": "Integer",
@@ -734,7 +734,7 @@
       "result": {
         "script": "10c30c046e616d650c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0673796d626f6c0c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0b746f74616c537570706c790c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52",
         "state": "HALT",
-        "gas_consumed": "5061560",
+        "gasconsumed": "5061560",
         "stack": [
           {
             "type": "ByteArray",
@@ -878,7 +878,7 @@
       "result": {
         "script": "10c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52",
         "state": "HALT",
-        "gas_consumed": "5061560",
+        "gasconsumed": "5061560",
         "stack": [
           {
             "type": "Integer",
@@ -1010,9 +1010,9 @@
         "version": 0,
         "nonce": 1553700339,
         "sender": "NVVwFw6XyhtRCFQ8SpUTMdPyYt4Vd9A1XQ",
-        "sys_fee": "100000000",
-        "net_fee": "1272390",
-        "valid_until_block": 2105487,
+        "sysfee": "100000000",
+        "netfee": "1272390",
+        "validuntilblock": 2105487,
         "attributes": [],
         "cosigners": [
           {
@@ -1061,9 +1061,9 @@
         "version": 0,
         "nonce": 34429660,
         "sender": "NUMK37TV9yYKbJr1Gufh74nZiM623eBLqX",
-        "sys_fee": "100000000",
-        "net_fee": "2483780",
-        "valid_until_block": 2105494,
+        "sysfee": "100000000",
+        "netfee": "2483780",
+        "validuntilblock": 2105494,
         "attributes": [],
         "cosigners": [
           {
@@ -1106,9 +1106,9 @@
         "version": 0,
         "nonce": 330056065,
         "sender": "NUMK37TV9yYKbJr1Gufh74nZiM623eBLqX",
-        "sys_fee": "100000000",
-        "net_fee": "2381780",
-        "valid_until_block": 2105500,
+        "sysfee": "100000000",
+        "netfee": "2381780",
+        "validuntilblock": 2105500,
         "attributes": [],
         "cosigners": [
           {
@@ -1210,32 +1210,32 @@
         "sent": [
           {
             "timestamp": 1579250114541,
-            "asset_hash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
-            "transfer_address": "NVVwFw6XyhtRCFQ8SpUTMdPyYt4Vd9A1XQ",
+            "assethash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
+            "transferaddress": "NVVwFw6XyhtRCFQ8SpUTMdPyYt4Vd9A1XQ",
             "amount": "1000000000",
-            "block_index": 603,
-            "transfer_notify_index": 0,
-            "tx_hash": "0x5e177b8d1dc33e9103c0cfd42f6dbf4efbe43029e2d6a18ea5ba0cb8437056b3"
+            "blockindex": 603,
+            "transfernotifyindex": 0,
+            "txhash": "0x5e177b8d1dc33e9103c0cfd42f6dbf4efbe43029e2d6a18ea5ba0cb8437056b3"
           },
           {
             "timestamp": 1579406581635,
-            "asset_hash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
-            "transfer_address": "NUMK37TV9yYKbJr1Gufh74nZiM623eBLqX",
+            "assethash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
+            "transferaddress": "NUMK37TV9yYKbJr1Gufh74nZiM623eBLqX",
             "amount": "1000000000",
-            "block_index": 1525,
-            "transfer_notify_index": 0,
-            "tx_hash": "0xc9c618b48972b240e0058d97b8d79b807ad51015418c84012765298526aeb77d"
+            "blockindex": 1525,
+            "transfernotifyindex": 0,
+            "txhash": "0xc9c618b48972b240e0058d97b8d79b807ad51015418c84012765298526aeb77d"
           }
         ],
         "received": [
           {
             "timestamp": 1579250114541,
-            "asset_hash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
-            "transfer_address": "NVVwFw6XyhtRCFQ8SpUTMdPyYt4Vd9A1XQ",
+            "assethash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
+            "transferaddress": "NVVwFw6XyhtRCFQ8SpUTMdPyYt4Vd9A1XQ",
             "amount": "1000000000",
-            "block_index": 603,
-            "transfer_notify_index": 0,
-            "tx_hash": "0x5e177b8d1dc33e9103c0cfd42f6dbf4efbe43029e2d6a18ea5ba0cb8437056b3"
+            "blockindex": 603,
+            "transfernotifyindex": 0,
+            "txhash": "0x5e177b8d1dc33e9103c0cfd42f6dbf4efbe43029e2d6a18ea5ba0cb8437056b3"
           }
         ],
         "address": "NVVwFw6XyhtRCFQ8SpUTMdPyYt4Vd9A1XQ"
@@ -1256,14 +1256,14 @@
       "result": {
         "balance": [
           {
-            "asset_hash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
+            "assethash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
             "amount": "719978585420",
-            "last_updated_block": 3101
+            "lastupdatedblock": 3101
           },
           {
-            "asset_hash": "0x9bde8f209c88dd0e7ca3bf0af0f476cdd8207789",
+            "assethash": "0x9bde8f209c88dd0e7ca3bf0af0f476cdd8207789",
             "amount": "89999810",
-            "last_updated_block": 3096
+            "lastupdatedblock": 3096
           }
         ],
         "address": "NVVwFw6XyhtRCFQ8SpUTMdPyYt4Vd9A1XQ"

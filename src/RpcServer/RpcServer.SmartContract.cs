@@ -2,17 +2,16 @@
 #pragma warning disable IDE0060
 
 using Neo.IO.Json;
+using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
 using Neo.VM;
+using Neo.Wallets;
 using System;
 using System.IO;
 using System.Linq;
-using Neo.IO;
-using Neo.Ledger;
-using Neo.SmartContract.Native;
-using Neo.Wallets;
 
 namespace Neo.Plugins
 {
@@ -61,7 +60,7 @@ namespace Neo.Plugins
             JObject json = new JObject();
             json["script"] = script.ToHexString();
             json["state"] = engine.State;
-            json["gas_consumed"] = engine.GasConsumed.ToString();
+            json["gasconsumed"] = engine.GasConsumed.ToString();
             try
             {
                 json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
