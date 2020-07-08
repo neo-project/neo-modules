@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neo" Version="3.0.0-CI00958" />
+    <PackageReference Include="Neo" Version="3.0.0-CI00961" />
   </ItemGroup>
 
 </Project>

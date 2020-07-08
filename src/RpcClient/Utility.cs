@@ -98,7 +98,7 @@ namespace Neo.Network.RPC
             Block block = new Block();
             BlockBase blockBase = block;
             blockBase.FromJson(json);
-            block.ConsensusData = ConsensusDataFromJson(json["consensus_data"]);
+            block.ConsensusData = ConsensusDataFromJson(json["consensusdata"]);
             block.Transactions = ((JArray)json["tx"]).Select(p => TransactionFromJson(p)).ToArray();
             return block;
         }
@@ -120,9 +120,9 @@ namespace Neo.Network.RPC
             tx.Version = byte.Parse(json["version"].AsString());
             tx.Nonce = uint.Parse(json["nonce"].AsString());
             tx.Sender = json["sender"].AsString().ToScriptHash();
-            tx.SystemFee = long.Parse(json["sys_fee"].AsString());
-            tx.NetworkFee = long.Parse(json["net_fee"].AsString());
-            tx.ValidUntilBlock = uint.Parse(json["valid_until_block"].AsString());
+            tx.SystemFee = long.Parse(json["sysfee"].AsString());
+            tx.NetworkFee = long.Parse(json["netfee"].AsString());
+            tx.ValidUntilBlock = uint.Parse(json["validuntilblock"].AsString());
             tx.Attributes = ((JArray)json["attributes"]).Select(p => TransactionAttributeFromJson(p)).ToArray();
             tx.Script = Convert.FromBase64String(json["script"].AsString());
             tx.Witnesses = ((JArray)json["witnesses"]).Select(p => WitnessFromJson(p)).ToArray();
