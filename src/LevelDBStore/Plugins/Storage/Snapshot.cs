@@ -3,6 +3,7 @@ using Neo.IO.Data.LevelDB;
 using Neo.Persistence;
 using System.Collections.Generic;
 using LSnapshot = Neo.IO.Data.LevelDB.Snapshot;
+using LHelper = Neo.IO.Data.LevelDB.Helper;
 
 namespace Neo.Plugins.Storage
 {
@@ -28,7 +29,7 @@ namespace Neo.Plugins.Storage
 
         public void Delete(byte table, byte[] key)
         {
-            batch.Delete(Helper.CreateKey(table, key));
+            batch.Delete(LHelper.CreateKey(table, key));
         }
 
         public void Dispose()
@@ -38,17 +39,17 @@ namespace Neo.Plugins.Storage
 
         public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] prefix, SeekDirection direction)
         {
-            return db.Seek(options, Helper.CreateKey(table, prefix), direction, (k, v) => (k[1..], v));
+            return db.Seek(options, table, prefix, direction, (k, v) => (k[1..], v));
         }
 
         public void Put(byte table, byte[] key, byte[] value)
         {
-            batch.Put(Helper.CreateKey(table, key), value);
+            batch.Put(LHelper.CreateKey(table, key), value);
         }
 
         public byte[] TryGet(byte table, byte[] key)
         {
-            return db.Get(options, Helper.CreateKey(table, key));
+            return db.Get(options, LHelper.CreateKey(table, key));
         }
     }
 }

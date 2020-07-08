@@ -49,7 +49,7 @@ namespace Neo.Plugins
 
         protected override IEnumerable<(TKey, TValue)> SeekInternal(byte[] key_prefix, SeekDirection direction)
         {
-            return db.Seek(options, CreateKey(prefix, key_prefix), direction, (k, v) => (k.AsSerializable<TKey>(1), v.AsSerializable<TValue>()));
+            return db.Seek(options, prefix, key_prefix, direction, (k, v) => (k.AsSerializable<TKey>(1), v.AsSerializable<TValue>()));
         }
 
         protected override TValue GetInternal(TKey key)
