@@ -2,10 +2,13 @@
 #pragma warning disable IDE0060
 
 using Neo.IO.Json;
+using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
 using Neo.VM;
+using Neo.Wallets;
 using System;
 using System.IO;
 using System.Linq;
@@ -91,6 +94,28 @@ namespace Neo.Plugins
             byte[] script = _params[0].AsString().HexToBytes();
             CheckWitnessHashes checkWitnessHashes = _params.Count >= 2 ? new CheckWitnessHashes(((JArray)_params[1]).Select(u => UInt160.Parse(u.AsString())).ToArray()) : null;
             return GetInvokeResult(script, checkWitnessHashes);
+        }
+
+        [RpcMethod]
+        private JObject GetUnclaimedGas(JArray _params)
+        {
+            string address = _params[0].AsString();
+            JObject json = new JObject();
+            UInt160 script_hash;
+            try
+            {
+                script_hash = address.ToScriptHash();
+            }
+            catch
+            {
+                script_hash = null;
+            }
+            if (script_hash == null)
+                throw new RpcException(-100, "Invalid address");
+            SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
+            json["unclaimed"] = NativeContract.NEO.UnclaimedGas(snapshot, script_hash, snapshot.Height + 1).ToString();
+            json["address"] = script_hash.ToAddress();
+            return json;
         }
     }
 }
