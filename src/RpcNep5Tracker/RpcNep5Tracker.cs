@@ -33,7 +33,7 @@ namespace Neo.Plugins
         private uint _maxResults;
         private Snapshot _levelDbSnapshot;
 
-        public override string Description => "Enquiries NEP-5 balance and transactions history of accounts through RPC";
+        public override string Description => "Enquiries NEP-5 balances and transaction history of accounts through RPC";
 
         public RpcNep5Tracker()
         {
