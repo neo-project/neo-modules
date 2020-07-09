@@ -75,7 +75,7 @@ namespace Neo.Network.RPC
             // Add witness hashes parameter to pass CheckWitness
             UInt160[] hashes = Tx.GetScriptHashesForVerifying(null);
             RpcInvokeResult result = rpcClient.InvokeScript(script, hashes);
-            Tx.SystemFee = Math.Max(long.Parse(result.GasConsumed) - ApplicationEngine.GasFree, 0);
+            Tx.SystemFee = long.Parse(result.GasConsumed);
             context = new ContractParametersContext(Tx);
             signStore = new List<SignItem>();
 
