@@ -1,9 +1,8 @@
 It is a plugin to create performance metrics used to benchmark NEO3. You can follow the instructions on [neo-modules](https://github.com/neo-project/neo-modules/blob/master/README.md) to install the plugin.
 
 >Note: 
-> 1. Add the `System.Diagnostics.PerformanceCounter` as a dependency in neo-cli to use the command `check disk`.
-> 2. Install `RpcClient` module to use the command `rpc time`. 
-> 3. It is required to start consensus to use the command `confirmation time` and `payload time`.
+> 1. Install `RpcClient` module to use the command `rpc time`. 
+> 2. It is required to start consensus to use the command `confirmation time` and `payload time`.
  
 After installing the plugin, you can type the command `help PerformanceMonitor` to get the full list of available commands.
 
@@ -25,7 +24,4 @@ The available metrics cover:
     - `tx size <hash>`: the size of the transaction (bytes)
     - `tx avgsize [1-10000]`: the average size of the latest transactions (bytes), 1000 by default
 - Others:
-    - `check disk`: the disk access information
-    - `check cpu`: each thread CPU usage information every seconds
-    - `check memory`: the amount of memory allocated for the current process (MB)
-    - `check threads`: the number of active threads in the current process
+    - `check state`: the amount of memory allocated for the current process (MB), total CPU usage and each thread CPU usage information (%)

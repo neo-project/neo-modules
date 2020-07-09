@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 
 namespace Neo.Plugins
 {
@@ -72,11 +73,29 @@ namespace Neo.Plugins
 
             if (printEachThread)
             {
-                Console.Clear();
-                Console.Write(result);
+                UpdateConsole(result);
             }
 
             return new CpuUsage(total, threadUsage);
+        }
+
+        public static void UpdateConsole(string str)
+        {
+            var visible = Console.CursorVisible;
+            if (visible) Console.CursorVisible = false;
+
+            var builder = new StringBuilder();
+            builder.Append(' ', Console.WindowHeight * Console.WindowWidth);
+
+            // Reset the cursor position to the top of the console and write out the string builder
+            Console.SetCursorPosition(0, 0);
+            Console.WriteLine(builder);
+
+            // Reset the cursor position to the top of the console and write out the string builder
+            Console.SetCursorPosition(0, 0);
+            Console.WriteLine(str);
+
+            if (visible) Console.CursorVisible = true;
         }
 
         /// <summary>

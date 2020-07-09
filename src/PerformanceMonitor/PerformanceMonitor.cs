@@ -22,6 +22,7 @@ namespace Neo.Plugins
         private delegate void ConsensusMessageHandler(ConsensusPayload payload);
 
         public override string Name => "PerformanceMonitor";
+        public override string Description => "Provides performance metrics commands for the node";
 
         public PerformanceMonitor()
         {
@@ -60,12 +61,13 @@ namespace Neo.Plugins
         }
 
         /// <summary>
-        /// Process "check cpu" command
-        /// Prints each thread CPU usage information every second
+        /// Process "check state" command
+        /// Prints allocated memory, CPU usage and active threads every second
         /// </summary>
-        [ConsoleCommand("check cpu", Category = "Check Commands", Description = "Show CPU usage information of each thread every second.")]
-        private void OnCheckCPUCommand()
+        [ConsoleCommand("check state", Category = "Node Commands", Description = "Show allocated memory, CPU usage and active threads every second.")]
+        private void OnCheckStateCommand()
         {
+            Console.Clear();
             var cancel = new CancellationTokenSource();
 
             Task task = Task.Run(async () =>
@@ -80,6 +82,7 @@ namespace Neo.Plugins
                         if (!cancel.Token.IsCancellationRequested)
                         {
                             Console.WriteLine($"Active threads: {monitor.ThreadCount,3}\tTotal CPU usage: {total,8:0.00 %}");
+                            PrintAllocatedMemory();
                         }
 
                         await Task.Delay(1000, cancel.Token);
@@ -96,13 +99,13 @@ namespace Neo.Plugins
         }
 
         /// <summary>
-        /// Gets each thread CPU usage information
+        /// Gets node state information
         /// </summary>
         /// <returns>
-        /// The total CPU usage and the CPU usage of each active thread in the last second
+        /// The total allocated memory, total CPU usage and the CPU usage of each active thread in the last second
         /// </returns>
         [RpcMethod]
-        public JObject GetCpuUsage(JArray _params)
+        public JObject GetState(JArray _params)
         {
             if (_params.Count != 0)
             {
@@ -111,7 +114,7 @@ namespace Neo.Plugins
             var monitor = new CpuUsageMonitor();
 
             // wait a second to get the cpu usage info
-            Task.Delay(1000).Wait();
+            Thread.Sleep(1000);
             var cpuUsage = monitor.CheckAllThreads();
 
             var result = new JObject();
@@ -126,61 +129,15 @@ namespace Neo.Plugins
                 threads.Add(thread);
             }
             result["threads"] = threads;
+            result["memory"] = GetAllocatedMemory();
 
             return result;
         }
 
         /// <summary>
-        /// Process "check threads" command
-        /// Prints the number of active threads in the current process
-        /// </summary>
-        [ConsoleCommand("check threads", Category = "Check Commands", Description = "Show the number of active threads in the current process.")]
-        private void OnCheckActiveThreadsCommand()
-        {
-            var threadCount = GetActiveThreadsCount();
-
-            Console.WriteLine($"Active threads: {threadCount}");
-        }
-
-        /// <summary>
-        /// Gets the number of active threads in the current process
-        /// </summary>
-        /// <returns>
-        /// Returns the number of active threads.
-        /// </returns>
-        [RpcMethod]
-        public JObject GetActiveThreadsCount(JArray _params)
-        {
-            if (_params.Count != 0)
-            {
-                throw new RpcException(-32602, "Invalid params");
-            }
-            return GetActiveThreadsCount();
-        }
-
-        /// <summary>
-        /// Gets the number of active threads in the current process
-        /// </summary>
-        /// <returns>
-        /// Returns the number of active threads.
-        /// </returns>
-        private int GetActiveThreadsCount()
-        {
-            var current = Process.GetCurrentProcess();
-            if (current == null || current.Threads == null)
-            {
-                return 0;
-            }
-
-            return current.Threads.Count;
-        }
-
-        /// <summary>
-        /// Process "check memory" command
         /// Prints the amount of memory allocated for the current process in megabytes
         /// </summary>
-        [ConsoleCommand("check memory", Category = "Check Commands", Description = "Show the amount of memory allocated for the current process in megabytes.")]
-        private void OnCheckMemoryCommand()
+        private void PrintAllocatedMemory()
         {
             string memoryUnit = "KB";
             var memory = GetAllocatedMemory() / 1024.0;
@@ -197,21 +154,6 @@ namespace Neo.Plugins
             }
 
             Console.WriteLine($"Allocated memory: {memory:0.00} {memoryUnit}");
-        }
-
-        /// <summary>
-        /// Gets the amount of memory allocated for the current process in bytes
-        /// </summary>
-        /// Returns the allocated memory in bytes
-        /// </returns>
-        [RpcMethod]
-        public JObject GetMemory(JArray _params)
-        {
-            if (_params.Count != 0)
-            {
-                throw new RpcException(-32602, "Invalid params");
-            }
-            return GetAllocatedMemory();
         }
 
         /// <summary>

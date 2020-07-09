@@ -33,14 +33,18 @@ namespace Neo.Plugins
                 {
                     Console.WriteLine("The time to confirm a new block has timed out.");
                 }
-                else if (delayInMilliseconds < 1000)
-                {
-                    Console.WriteLine($"Time to synchronize to the last remote block: {delayInMilliseconds:0.#} ms");
-                }
                 else
                 {
-                    var delayInSeconds = delayInMilliseconds / 1000.0;
-                    Console.WriteLine($"Time to synchronize to the last remote block: {delayInSeconds:0.#} sec");
+                    string time;
+                    if (delayInMilliseconds < 1000)
+                    {
+                        time = $"{delayInMilliseconds:0.#} ms";
+                    }
+                    else
+                    {
+                        time = $"{(delayInMilliseconds / 1000.0):0.#} sec";
+                    }
+                    Console.WriteLine($"Time to synchronize to the last remote block: {time}");
                 }
             }
         }
@@ -111,6 +115,7 @@ namespace Neo.Plugins
                 {
                     showBlock = false;
                     Console.WriteLine($"Updated block index to {lastRemoteBlockIndex}");
+                    SendBlockchainPingMessage();
                 }
             }, cancel.Token);
 
@@ -122,6 +127,7 @@ namespace Neo.Plugins
                 {
                     showBlock = false;
                     Console.WriteLine($"Updated block index to {lastPersistedBlockIndex}");
+                    SendBlockchainPingMessage();
                 }
             }, cancel.Token);
 
@@ -220,6 +226,19 @@ namespace Neo.Plugins
         {
             var updateRemoteBlock = new TaskCompletionSource<bool>();
 
+            var stopBroadcast = new CancellationTokenSource();
+
+            Task broadcast = Task.Run(() =>
+            {
+                while (!stopBroadcast.Token.IsCancellationRequested)
+                {
+                    // receive a PingPayload is what updates RemoteNode LastBlockIndex
+                    SendBlockchainPingMessage();
+                    Thread.Sleep(1000);
+                }
+            });
+
+
             P2PMessageHandler p2pMessage = (message) =>
             {
                 if (message.Command == MessageCommand.Pong && message.Payload is PingPayload)
@@ -242,6 +261,7 @@ namespace Neo.Plugins
                 updateRemoteBlock.Task.Wait(token);
             }
             catch (OperationCanceledException) { }
+            stopBroadcast.Cancel();
 
             OnP2PMessageEvent -= p2pMessage;
 

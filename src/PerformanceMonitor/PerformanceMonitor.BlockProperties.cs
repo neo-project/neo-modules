@@ -99,7 +99,7 @@ namespace Neo.Plugins
             using (var snapshot = Blockchain.Singleton.GetSnapshot())
             {
                 var averageInSeconds = snapshot.GetAverageTimePerBlock(blockCount) / 1000;
-                Console.WriteLine(averageInSeconds.ToString("Average time/block: 0.00 seconds"));
+                Console.WriteLine($"Average time/block: {averageInSeconds:0.00} seconds");
             }
         }
 
