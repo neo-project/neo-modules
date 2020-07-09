@@ -134,11 +134,8 @@ namespace Neo.Plugins
             };
 
             OnP2PMessageEvent += p2pMessage;
-            using (var snapshot = Blockchain.Singleton.GetSnapshot())
-            {
-                // updates the height of the remote nodes
-                SendBlockchainPingMessage(snapshot.Height);
-            }
+            // updates the height of the remote nodes
+            SendBlockchainPingMessage();
 
             // waits the ping message response to continue
             remotesHeightUpdate.Task.Wait(1000);

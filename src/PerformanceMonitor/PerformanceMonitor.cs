@@ -16,6 +16,11 @@ namespace Neo.Plugins
 {
     public partial class PerformanceMonitor : Plugin, IPersistencePlugin, IP2PPlugin
     {
+        private delegate void CommitHandler(StoreView snapshot);
+        private delegate void PersistHandler(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList);
+        private delegate void P2PMessageHandler(Message message);
+        private delegate void ConsensusMessageHandler(ConsensusPayload payload);
+
         public override string Name => "PerformanceMonitor";
 
         public PerformanceMonitor()
@@ -28,34 +33,26 @@ namespace Neo.Plugins
             Settings.Load(GetConfiguration());
         }
 
-        private delegate void CommitHandler(StoreView snapshot);
         private event CommitHandler OnCommitEvent;
-
         public void OnCommit(StoreView snapshot)
         {
             OnCommitEvent?.Invoke(snapshot);
         }
 
-        private delegate void PersistHandler(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList);
         private event PersistHandler OnPersistEvent;
-
         public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             OnPersistEvent?.Invoke(snapshot, applicationExecutedList);
         }
 
-        private delegate void P2PMessageHandler(Message message);
         private event P2PMessageHandler OnP2PMessageEvent;
-
         public bool OnP2PMessage(Message message)
         {
             OnP2PMessageEvent?.Invoke(message);
             return true;
         }
 
-        private delegate void ConsensusMessageHandler(ConsensusPayload payload);
         private event ConsensusMessageHandler OnConsensusMessageEvent;
-
         public bool OnConsensusMessage(ConsensusPayload payload)
         {
             OnConsensusMessageEvent?.Invoke(payload);
@@ -190,13 +187,17 @@ namespace Neo.Plugins
 
             if (memory > 1024)
             {
-                memory = memory / 1024;
+                memory /= 1024;
                 memoryUnit = "MB";
+            }
+            if (memory > 1024)
+            {
+                memory /= 1024;
+                memoryUnit = "GB";
             }
 
             Console.WriteLine($"Allocated memory: {memory:0.00} {memoryUnit}");
         }
-
 
         /// <summary>
         /// Gets the amount of memory allocated for the current process in bytes
@@ -237,9 +238,12 @@ namespace Neo.Plugins
         /// <param name="height">
         /// The block height to be passed in the ping message
         /// </param>
-        private void SendBlockchainPingMessage(uint height)
+        private void SendBlockchainPingMessage()
         {
-            System.LocalNode.Tell(Message.Create(MessageCommand.Ping, PingPayload.Create(height)));
+            using (var snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                System.LocalNode.Tell(Message.Create(MessageCommand.Ping, PingPayload.Create(snapshot.Height)));
+            }
         }
     }
 }

@@ -84,15 +84,13 @@ namespace Neo.Plugins
         [ConsoleCommand("block avgtime", Category = "Block Commands", Description = "Show the average time in seconds the latest blocks are active.")]
         private void OnBlockAverageTimeCommand(uint blockCount = 1000)
         {
-            uint desiredCount = blockCount;
-
-            if (desiredCount < 1)
+            if (blockCount < 1)
             {
                 Console.WriteLine("Minimum 1 block");
                 return;
             }
 
-            if (desiredCount > 10000)
+            if (blockCount > 10000)
             {
                 Console.WriteLine("Maximum 10000 blocks");
                 return;
@@ -100,7 +98,7 @@ namespace Neo.Plugins
 
             using (var snapshot = Blockchain.Singleton.GetSnapshot())
             {
-                var averageInSeconds = snapshot.GetAverageTimePerBlock(desiredCount) / 1000;
+                var averageInSeconds = snapshot.GetAverageTimePerBlock(blockCount) / 1000;
                 Console.WriteLine(averageInSeconds.ToString("Average time/block: 0.00 seconds"));
             }
         }
@@ -150,15 +148,13 @@ namespace Neo.Plugins
         [ConsoleCommand("block timestamp", Category = "Block Commands", Description = "Show the block timestamp for each of the n latest blocks.")]
         private void OnBlockTimestampCommand(uint blockCount)
         {
-            uint desiredCount = blockCount;
-
-            if (desiredCount < 1)
+            if (blockCount < 1)
             {
                 Console.WriteLine("Minimum 1 block");
                 return;
             }
 
-            if (desiredCount > 1000)
+            if (blockCount > 1000)
             {
                 Console.WriteLine("Maximum 1000 blocks");
                 return;
@@ -167,7 +163,7 @@ namespace Neo.Plugins
             using (var snapshot = Blockchain.Singleton.GetSnapshot())
             {
                 var block = GetBlock(snapshot.CurrentBlockHash.ToString());
-                var blocksTime = snapshot.GetBlocksTimestamp(desiredCount, block);
+                var blocksTime = snapshot.GetBlocksTimestamp(blockCount, block);
 
                 if (blocksTime.Count == 0)
                 {
@@ -214,7 +210,7 @@ namespace Neo.Plugins
             uint maxNBlocksPerDay = 24 * 60 * 60 / (Blockchain.MillisecondsPerBlock / 1000);
             if (desiredCount > maxNBlocksPerDay)
             {
-                throw new RpcException(-100, maxNBlocksPerDay.ToString("Maximum 0 blocks"));
+                throw new RpcException(-100, $"Maximum {maxNBlocksPerDay} blocks");
             }
 
             if (!uint.TryParse(_params[1].AsString(), out uint height) || desiredCount > height)

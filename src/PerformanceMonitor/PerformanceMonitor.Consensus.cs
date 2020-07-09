@@ -65,17 +65,17 @@ namespace Neo.Plugins
             var commit = new TaskCompletionSource<bool>();
             var persist = new TaskCompletionSource<bool>();
 
-            DateTime persistTime = DateTime.Now;
+            DateTime persistTime = DateTime.UtcNow;
             DateTime commitTime = persistTime;
 
             CommitHandler commitAction = (store) =>
             {
-                commitTime = DateTime.Now;
+                commitTime = DateTime.UtcNow;
                 commit?.TrySetResult(true);
             };
             PersistHandler persistAction = (store, app) =>
             {
-                persistTime = DateTime.Now;
+                persistTime = DateTime.UtcNow;
                 persist?.TrySetResult(true);
             };
 
@@ -164,19 +164,19 @@ namespace Neo.Plugins
             var commit = new TaskCompletionSource<bool>(false);
             var consensusMessage = new TaskCompletionSource<bool>(false);
 
-            DateTime consensusMessageTime = DateTime.Now;
-            DateTime commitTime = DateTime.Now;
+            DateTime consensusMessageTime = DateTime.UtcNow;
+            DateTime commitTime = DateTime.UtcNow;
 
             CommitHandler commitAction = (store) =>
             {
-                commitTime = DateTime.Now;
+                commitTime = DateTime.UtcNow;
                 commit?.TrySetResult(true);
             };
             ConsensusMessageHandler consensusMessageAction = (payload) =>
             {
                 if (payload.ConsensusMessage is Commit)
                 {
-                    consensusMessageTime = DateTime.Now;
+                    consensusMessageTime = DateTime.UtcNow;
                     consensusMessage?.TrySetResult(true);
                 }
             };
@@ -267,7 +267,7 @@ namespace Neo.Plugins
         {
             var consensusMessage = new TaskCompletionSource<bool>();
 
-            DateTime consensusMessageTime = DateTime.Now;
+            DateTime consensusMessageTime = DateTime.UtcNow;
             DateTime consensusPayloadTime = consensusMessageTime;
 
             ConsensusMessageHandler consensusMessageAction = (payload) =>

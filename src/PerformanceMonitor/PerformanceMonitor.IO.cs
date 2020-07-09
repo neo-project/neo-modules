@@ -100,13 +100,13 @@ namespace Neo.Plugins
             var lastBlock = Math.Max(lastBlockRemote, Blockchain.Singleton.Height);
 
             bool showBlock = printMessages;
-            DateTime remote = DateTime.Now;
+            DateTime remote = DateTime.UtcNow;
             DateTime local = remote;
 
             Task monitorRemote = new Task(() =>
             {
                 var lastRemoteBlockIndex = WaitPersistedBlock(lastBlock, cancel.Token);
-                remote = DateTime.Now;
+                remote = DateTime.UtcNow;
                 if (showBlock && lastRemoteBlockIndex > lastBlock)
                 {
                     showBlock = false;
@@ -117,7 +117,7 @@ namespace Neo.Plugins
             Task monitorLocal = new Task(() =>
             {
                 var lastPersistedBlockIndex = WaitRemoteBlock(lastBlock, cancel.Token);
-                local = DateTime.Now;
+                local = DateTime.UtcNow;
                 if (showBlock && lastPersistedBlockIndex > lastBlock)
                 {
                     showBlock = false;
@@ -218,7 +218,6 @@ namespace Neo.Plugins
         /// </returns>
         private uint WaitRemoteBlock(uint blockIndex, CancellationToken token)
         {
-            var remoteBlockIndex = blockIndex;
             var updateRemoteBlock = new TaskCompletionSource<bool>();
 
             P2PMessageHandler p2pMessage = (message) =>
@@ -226,9 +225,9 @@ namespace Neo.Plugins
                 if (message.Command == MessageCommand.Pong && message.Payload is PingPayload)
                 {
                     var lastBlockIndex = GetMaxRemoteBlockCount();
-                    if (lastBlockIndex > remoteBlockIndex && !token.IsCancellationRequested)
+                    if (lastBlockIndex > blockIndex && !token.IsCancellationRequested)
                     {
-                        remoteBlockIndex = lastBlockIndex;
+                        blockIndex = lastBlockIndex;
                         updateRemoteBlock.TrySetResult(true);
                     }
                 }
@@ -237,7 +236,7 @@ namespace Neo.Plugins
             OnP2PMessageEvent += p2pMessage;
 
             // receive a PingPayload is what updates RemoteNode LastBlockIndex
-            SendBlockchainPingMessage(blockIndex);
+            SendBlockchainPingMessage();
             try
             {
                 updateRemoteBlock.Task.Wait(token);
@@ -246,7 +245,7 @@ namespace Neo.Plugins
 
             OnP2PMessageEvent -= p2pMessage;
 
-            return remoteBlockIndex;
+            return blockIndex;
         }
 
         /// <summary>
