@@ -17,15 +17,15 @@ namespace Neo.Plugins
 {
     partial class RpcServer
     {
-        private class CheckWitnessHashes : IVerifiable
+        private class Cosigners : IVerifiable
         {
-            private readonly UInt160[] _scriptHashesForVerifying;
+            private readonly Cosigner[] _cosigners;
             public Witness[] Witnesses { get; set; }
             public int Size { get; }
 
-            public CheckWitnessHashes(UInt160[] scriptHashesForVerifying)
+            public Cosigners(Cosigner[] cosigners)
             {
-                _scriptHashesForVerifying = scriptHashesForVerifying;
+                _cosigners = cosigners;
             }
 
             public void Serialize(BinaryWriter writer)
@@ -45,7 +45,12 @@ namespace Neo.Plugins
 
             public UInt160[] GetScriptHashesForVerifying(StoreView snapshot)
             {
-                return _scriptHashesForVerifying;
+                return _cosigners.Select(p => p.Account).ToArray();
+            }
+
+            public Cosigner[] GetCosigners()
+            {
+                return _cosigners;
             }
 
             public void SerializeUnsigned(BinaryWriter writer)
@@ -54,9 +59,9 @@ namespace Neo.Plugins
             }
         }
 
-        private JObject GetInvokeResult(byte[] script, IVerifiable checkWitnessHashes = null)
+        private JObject GetInvokeResult(byte[] script, Cosigners cosigners = null)
         {
-            using ApplicationEngine engine = ApplicationEngine.Run(script, checkWitnessHashes, extraGAS: settings.MaxGasInvoke);
+            using ApplicationEngine engine = ApplicationEngine.Run(script, cosigners, extraGAS: settings.MaxGasInvoke);
             JObject json = new JObject();
             json["script"] = script.ToHexString();
             json["state"] = engine.State;
@@ -69,7 +74,7 @@ namespace Neo.Plugins
             {
                 json["stack"] = "error: recursive reference";
             }
-            ProcessInvokeWithWallet(json);
+            ProcessInvokeWithWallet(json, cosigners);
             return json;
         }
 
@@ -79,21 +84,21 @@ namespace Neo.Plugins
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
-            CheckWitnessHashes checkWitnessHashes = _params.Count >= 4 ? new CheckWitnessHashes(((JArray)_params[3]).Select(u => UInt160.Parse(u.AsString())).ToArray()) : null;
+            Cosigners cosigners = _params.Count >= 4 ? new Cosigners(((JArray)_params[3]).Select(u => new Cosigner() { Account = UInt160.Parse(u["account"].AsString()), Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"].AsString()) }).ToArray()) : null;
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
                 script = sb.EmitAppCall(script_hash, operation, args).ToArray();
             }
-            return GetInvokeResult(script, checkWitnessHashes);
+            return GetInvokeResult(script, cosigners);
         }
 
         [RpcMethod]
         private JObject InvokeScript(JArray _params)
         {
             byte[] script = _params[0].AsString().HexToBytes();
-            CheckWitnessHashes checkWitnessHashes = _params.Count >= 2 ? new CheckWitnessHashes(((JArray)_params[1]).Select(u => UInt160.Parse(u.AsString())).ToArray()) : null;
-            return GetInvokeResult(script, checkWitnessHashes);
+            Cosigners cosigners = _params.Count >= 2 ? new Cosigners(((JArray)_params[1]).Select(u => new Cosigner() { Account = UInt160.Parse(u["account"].AsString()), Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"].AsString()) }).ToArray()) : null;
+            return GetInvokeResult(script, cosigners);
         }
 
         [RpcMethod]
