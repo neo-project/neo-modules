@@ -138,19 +138,25 @@ namespace Neo.Plugins
             return true;
         }
 
-        private void ProcessInvokeWithWallet(JObject result)
+        private void ProcessInvokeWithWallet(JObject result, Cosigners cosigners = null)
         {
-            if (wallet != null)
+            Transaction tx = null;
+            if (wallet != null && cosigners != null)
             {
-                Transaction tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes());
-                ContractParametersContext context = new ContractParametersContext(tx);
-                wallet.Sign(context);
-                if (context.Completed)
-                    tx.Witnesses = context.GetWitnesses();
-                else
-                    tx = null;
-                result["tx"] = tx?.ToArray().ToHexString();
+                UInt160[] accounts = wallet.GetAccounts().Where(p => !p.Lock && !p.WatchOnly).Select(p => p.ScriptHash).ToArray();
+                Cosigner[] witnessCosigners = cosigners.GetCosigners().Where(p => accounts.Contains(p.Account)).ToArray();
+                if (witnessCosigners.Count() > 0)
+                {
+                    tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes(), null, witnessCosigners);
+                    ContractParametersContext context = new ContractParametersContext(tx);
+                    wallet.Sign(context);
+                    if (context.Completed)
+                        tx.Witnesses = context.GetWitnesses();
+                    else
+                        tx = null;
+                }
             }
+            result["tx"] = tx?.ToArray().ToHexString();
         }
 
         [RpcMethod]
