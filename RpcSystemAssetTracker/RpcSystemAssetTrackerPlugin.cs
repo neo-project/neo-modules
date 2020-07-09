@@ -41,8 +41,8 @@ namespace Neo.Plugins
             {
                 var dbPath = GetConfiguration().GetSection("DBPath").Value ?? "SystemAssetBalanceData";
                 _db = DB.Open(Path.GetFullPath(dbPath), new Options { CreateIfMissing = true });
-                _shouldTrackUnclaimed = (GetConfiguration().GetSection("TrackUnclaimed").Value ?? true.ToString()) != false.ToString();
-                _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
+                _shouldTrackUnclaimed = bool.TryParse(GetConfiguration().GetSection("TrackUnclaimed").Value, out bool shouldTrackUnclaimed) && shouldTrackUnclaimed;
+                _shouldTrackHistory = bool.TryParse(GetConfiguration().GetSection("TrackHistory").Value, out bool shouldTrackHistory) && shouldTrackHistory;
                 try
                 {
                     _lastPersistedBlock = _db.Get(ReadOptions.Default, SystemAssetUnspentCoinsPrefix).ToUInt32();

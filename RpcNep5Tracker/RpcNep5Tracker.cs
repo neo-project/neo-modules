@@ -44,10 +44,10 @@ namespace Neo.Plugins
                 var dbPath = GetConfiguration().GetSection("DBPath").Value ?? "Nep5BalanceData";
                 _db = DB.Open(Path.GetFullPath(dbPath), new Options { CreateIfMissing = true });
             }
-            _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
-            _recordNullAddressHistory = (GetConfiguration().GetSection("RecordNullAddressHistory").Value ?? false.ToString()) != false.ToString();
+            _shouldTrackHistory = bool.TryParse(GetConfiguration().GetSection("TrackHistory").Value, out bool b1) && b1;
+            _recordNullAddressHistory = bool.TryParse(GetConfiguration().GetSection("RecordNullAddressHistory").Value, out bool b2) && b2;
             _maxResults = uint.Parse(GetConfiguration().GetSection("MaxResults").Value ?? "1000");
-            _shouldTrackNonStandardMintTokensEvent = (GetConfiguration().GetSection("TrackNonStandardMintTokens").Value ?? false.ToString()) != false.ToString();
+            _shouldTrackNonStandardMintTokensEvent = bool.TryParse(GetConfiguration().GetSection("TrackNonStandardMintTokens").Value, out bool b3) && b3;
         }
 
         private void ResetBatch()
