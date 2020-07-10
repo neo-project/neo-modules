@@ -1,6 +1,6 @@
+using Neo.IO.Caching;
 using Neo.Persistence;
 using RocksDbSharp;
-using System;
 using System.Collections.Generic;
 
 namespace Neo.Plugins.Storage
@@ -40,16 +40,17 @@ namespace Neo.Plugins.Storage
             batch.Put(key, value, store.GetFamily(table));
         }
 
-        public IEnumerable<(byte[] Key, byte[] Value)> Find(byte table, byte[] prefix)
+        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] keyOrPrefix, SeekDirection direction)
         {
             using var it = db.NewIterator(store.GetFamily(table), options);
-            for (it.Seek(prefix); it.Valid(); it.Next())
+            for (it.Seek(keyOrPrefix); it.Valid();)
             {
-                var key = it.Key();
-                byte[] y = prefix;
-                if (key.Length < y.Length) break;
-                if (!key.AsSpan().StartsWith(y)) break;
-                yield return (key, it.Value());
+                yield return (it.Key(), it.Value());
+
+                if (direction == SeekDirection.Forward)
+                    it.Next();
+                else
+                    it.Prev();
             }
         }
 
