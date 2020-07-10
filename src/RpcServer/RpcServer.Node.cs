@@ -60,10 +60,10 @@ namespace Neo.Plugins
         private JObject GetVersion(JArray _params)
         {
             JObject json = new JObject();
-            json["tcpPort"] = LocalNode.Singleton.ListenerTcpPort;
-            json["wsPort"] = LocalNode.Singleton.ListenerWsPort;
+            json["tcpport"] = LocalNode.Singleton.ListenerTcpPort;
+            json["wsport"] = LocalNode.Singleton.ListenerWsPort;
             json["nonce"] = LocalNode.Nonce;
-            json["userAgent"] = LocalNode.UserAgent;
+            json["useragent"] = LocalNode.UserAgent;
             return json;
         }
 

@@ -42,9 +42,9 @@ namespace Neo.Network.RPC.Models
         public JObject ToJson()
         {
             JObject json = new JObject();
-            json["asset_hash"] = AssetHash.ToString();
+            json["assethash"] = AssetHash.ToString();
             json["amount"] = Amount.ToString();
-            json["last_updated_block"] = LastUpdatedBlock;
+            json["lastupdatedblock"] = LastUpdatedBlock;
             return json;
         }
 
@@ -52,9 +52,9 @@ namespace Neo.Network.RPC.Models
         {
             RpcNep5Balance balance = new RpcNep5Balance
             {
-                AssetHash = UInt160.Parse(json["asset_hash"].AsString()),
+                AssetHash = UInt160.Parse(json["assethash"].AsString()),
                 Amount = BigInteger.Parse(json["amount"].AsString()),
-                LastUpdatedBlock = (uint)json["last_updated_block"].AsNumber()
+                LastUpdatedBlock = (uint)json["lastupdatedblock"].AsNumber()
             };
             return balance;
         }
