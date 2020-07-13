@@ -206,11 +206,11 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "Minimum 1 block");
             }
 
-            // It is currently limited to query blocks generated in the last 24 hours
-            uint maxNBlocksPerDay = 24 * 60 * 60 / (Blockchain.MillisecondsPerBlock / 1000);
-            if (desiredCount > maxNBlocksPerDay)
+            // It is currently limited to query blocks generated in the last 3 hours = latest 720 blocks
+            uint maxBlockCount = 3 * 60 * 60 / (Blockchain.MillisecondsPerBlock / 1000);
+            if (desiredCount > maxBlockCount)
             {
-                throw new RpcException(-100, $"Maximum {maxNBlocksPerDay} blocks");
+                throw new RpcException(-100, $"Maximum {maxBlockCount} blocks");
             }
 
             if (!uint.TryParse(_params[1].AsString(), out uint height) || desiredCount > height)

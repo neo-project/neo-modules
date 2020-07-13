@@ -10,6 +10,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Neo.Plugins
@@ -469,14 +470,24 @@ namespace Neo.Plugins
             {
                 Console.WriteLine($"Sending a RPC request to '{url}'...");
             }
-            bool hasThrownException = false;
+            bool hasThrownException = true;
 
             RpcClient client = new RpcClient(url);
             Stopwatch watch = Stopwatch.StartNew();
 
             try
             {
-                client.GetBlockCount();
+                var success = Task.Run(() =>
+                {
+                    client.GetBlockCount();
+                    hasThrownException = false;
+                }).Wait(30 * 1000);  // set timeout to 30 seconds
+
+                if (!success && printMessages)
+                {
+                    hasThrownException = true;
+                    Console.WriteLine("Timeout");
+                }
             }
             catch (HttpRequestException)
             {
@@ -484,7 +495,6 @@ namespace Neo.Plugins
                 {
                     Console.WriteLine("Input url is not a the url of a valid RPC server");
                 }
-                hasThrownException = true;
             }
             catch (Exception e)
             {
@@ -495,7 +505,6 @@ namespace Neo.Plugins
                         $"\t{e.GetType()}\n" +
                         $"\t{e.Message}");
                 }
-                hasThrownException = true;
             }
 
             watch.Stop();
