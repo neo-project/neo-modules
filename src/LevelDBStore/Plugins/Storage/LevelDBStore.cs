@@ -2,7 +2,7 @@ using Neo.Persistence;
 
 namespace Neo.Plugins.Storage
 {
-    public class LevelDBStore : Plugin, IStoragePlugin
+    public class LevelDBStore : Plugin, IStorageProvider
     {
         private string path;
 
