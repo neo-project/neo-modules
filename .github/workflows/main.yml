@@ -1,7 +1,10 @@
 name: .NET Core Test and Publish
 
-on: pull_request
-
+on: 
+  push:
+    branches: master
+  pull_request:
+    
 env:
   DOTNET_VERSION: 2.1
 
@@ -20,8 +23,8 @@ jobs:
       run: |
         sudo apt-get --assume-yes install libleveldb-dev libsnappy-dev libc6-dev
         find tests -name *.csproj | xargs -I % dotnet add % package coverlet.msbuild
-        dotnet test SimplePolicy.UnitTests /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov
-    - name: Coveralls GitHub Action
+        dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov
+    - name: Coveralls
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
