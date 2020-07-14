@@ -19,10 +19,6 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
-    - name: Check format
-      run: |
-        dotnet tool install --version 2.1 --tool-path ./ dotnet-format --add-source https://dotnet.myget.org/F/format/api/v3/index.json
-        ./dotnet-format --check --dry-run -v diagnostic
     - name: Test
       run: |
         sudo apt-get --assume-yes install libleveldb-dev libsnappy-dev libc6-dev
