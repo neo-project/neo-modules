@@ -82,13 +82,19 @@ namespace Neo.Plugins
 
         private static Signers SignersFromJson(JArray _params)
         {
-            return new Signers(_params.Select(u => new Signer()
+            var ret = new Signers(_params.Select(u => new Signer()
             {
                 Account = UInt160.Parse(u["account"].AsString()),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"]?.AsString()),
                 AllowedContracts = ((JArray)u["contracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray(),
                 AllowedGroups = ((JArray)u["groups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
             }).ToArray());
+
+            // Validate format
+
+            _ = IO.Helper.ToByteArray(ret.GetSigners()).AsSerializableArray<Signer>();
+
+            return ret;
         }
 
         [RpcMethod]
