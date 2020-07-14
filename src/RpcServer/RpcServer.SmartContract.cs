@@ -81,7 +81,7 @@ namespace Neo.Plugins
         }
 
         private static Signers SignersFromJson(JArray _params)
-        {           
+        {
             return new Signers(_params.Select(u => new Signer()
             {
                 Account = UInt160.Parse(u["account"].AsString()),
