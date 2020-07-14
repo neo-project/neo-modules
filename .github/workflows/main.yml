@@ -1,9 +1,6 @@
 name: .NET Core Test and Publish
 
-on:
-  push:
-    branches: [ master-2.x ]
-  pull_request:
+on: pull_request
 
 env:
   DOTNET_VERSION: 2.1
