@@ -20,8 +20,8 @@ jobs:
       run: |
         sudo apt-get --assume-yes install libleveldb-dev libsnappy-dev libc6-dev
         find tests -name *.csproj | xargs -I % dotnet add % package coverlet.msbuild
-        dotnet test SimplePolicy.UnitTests /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov
-    - name: Coveralls
+        dotnet test SimplePolicy.UnitTests
+    - name: Coveralls GitHub Action
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
