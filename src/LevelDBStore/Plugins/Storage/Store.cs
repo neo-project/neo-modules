@@ -14,12 +14,9 @@ namespace Neo.Plugins.Storage
         private const byte SYS_Version = 0xf0;
         private readonly DB db;
 
-        public Store(string path, int bloomFilterBitsPerKey)
+        public Store(string path)
         {
-            if (bloomFilterBitsPerKey > 0)
-                this.db = DB.Open(path, new Options { CreateIfMissing = true, FilterPolicy = Native.leveldb_filterpolicy_create_bloom(bloomFilterBitsPerKey) });
-            else
-                this.db = DB.Open(path, new Options { CreateIfMissing = true });
+            this.db = DB.Open(path, new Options { CreateIfMissing = true, FilterPolicy = Native.leveldb_filterpolicy_create_bloom(15) });
             byte[] value = db.Get(ReadOptions.Default, LHelper.CreateKey(SYS_Version));
             if (value != null && Version.TryParse(Encoding.ASCII.GetString(value), out Version version) && version >= Version.Parse("3.0.0"))
                 return;
