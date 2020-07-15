@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Configuration;
 using Neo.Persistence;
 
 namespace Neo.Plugins.Storage
