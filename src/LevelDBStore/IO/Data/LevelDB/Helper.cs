@@ -7,17 +7,6 @@ namespace Neo.IO.Data.LevelDB
 {
     public static class Helper
     {
-        private static int ByteArrayCompare(byte[] x, byte[] y)
-        {
-            int length = Math.Min(x.Length, y.Length);
-            for (int i = 0; i < length; i++)
-            {
-                int r = x[i].CompareTo(y[i]);
-                if (r != 0) return r;
-            }
-            return x.Length.CompareTo(y.Length);
-        }
-
         public static IEnumerable<T> Seek<T>(this DB db, ReadOptions options, byte table, byte[] prefix, SeekDirection direction, Func<byte[], byte[], T> resultSelector)
         {
             using Iterator it = db.NewIterator(options);
@@ -38,7 +27,7 @@ namespace Neo.IO.Data.LevelDB
                 it.Seek(target);
                 if (!it.Valid())
                     it.SeekToLast();
-                else if (ByteArrayCompare(it.Key(), target) > 0)
+                else if (it.Key().AsSpan().SequenceCompareTo(target) > 0)
                     it.Prev();
 
                 for (; it.Valid(); it.Prev())
