@@ -1,6 +1,8 @@
 #pragma warning disable IDE0051
 #pragma warning disable IDE0060
 
+using Neo.Cryptography.ECC;
+using Neo.IO;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
@@ -17,15 +19,15 @@ namespace Neo.Plugins
 {
     partial class RpcServer
     {
-        private class Cosigners : IVerifiable
+        private class Signers : IVerifiable
         {
-            private readonly Cosigner[] _cosigners;
+            private readonly Signer[] _signers;
             public Witness[] Witnesses { get; set; }
             public int Size { get; }
 
-            public Cosigners(Cosigner[] cosigners)
+            public Signers(Signer[] signers)
             {
-                _cosigners = cosigners;
+                _signers = signers;
             }
 
             public void Serialize(BinaryWriter writer)
@@ -45,12 +47,12 @@ namespace Neo.Plugins
 
             public UInt160[] GetScriptHashesForVerifying(StoreView snapshot)
             {
-                return _cosigners.Select(p => p.Account).ToArray();
+                return _signers.Select(p => p.Account).ToArray();
             }
 
-            public Cosigner[] GetCosigners()
+            public Signer[] GetSigners()
             {
-                return _cosigners;
+                return _signers;
             }
 
             public void SerializeUnsigned(BinaryWriter writer)
@@ -59,9 +61,9 @@ namespace Neo.Plugins
             }
         }
 
-        private JObject GetInvokeResult(byte[] script, Cosigners cosigners = null)
+        private JObject GetInvokeResult(byte[] script, Signers signers = null)
         {
-            using ApplicationEngine engine = ApplicationEngine.Run(script, cosigners, gas: settings.MaxGasInvoke);
+            using ApplicationEngine engine = ApplicationEngine.Run(script, signers, gas: settings.MaxGasInvoke);
             JObject json = new JObject();
             json["script"] = script.ToHexString();
             json["state"] = engine.State;
@@ -74,8 +76,25 @@ namespace Neo.Plugins
             {
                 json["stack"] = "error: recursive reference";
             }
-            ProcessInvokeWithWallet(json, cosigners);
+            ProcessInvokeWithWallet(json, signers);
             return json;
+        }
+
+        private static Signers SignersFromJson(JArray _params)
+        {
+            var ret = new Signers(_params.Select(u => new Signer()
+            {
+                Account = UInt160.Parse(u["account"].AsString()),
+                Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"]?.AsString()),
+                AllowedContracts = ((JArray)u["contracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray(),
+                AllowedGroups = ((JArray)u["groups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
+            }).ToArray());
+
+            // Validate format
+
+            _ = IO.Helper.ToByteArray(ret.GetSigners()).AsSerializableArray<Signer>();
+
+            return ret;
         }
 
         [RpcMethod]
@@ -84,21 +103,21 @@ namespace Neo.Plugins
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
-            Cosigners cosigners = _params.Count >= 4 ? new Cosigners(((JArray)_params[3]).Select(u => new Cosigner() { Account = UInt160.Parse(u["account"].AsString()), Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"].AsString()) }).ToArray()) : null;
+            Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3]) : null;
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
                 script = sb.EmitAppCall(script_hash, operation, args).ToArray();
             }
-            return GetInvokeResult(script, cosigners);
+            return GetInvokeResult(script, signers);
         }
 
         [RpcMethod]
         private JObject InvokeScript(JArray _params)
         {
             byte[] script = _params[0].AsString().HexToBytes();
-            Cosigners cosigners = _params.Count >= 2 ? new Cosigners(((JArray)_params[1]).Select(u => new Cosigner() { Account = UInt160.Parse(u["account"].AsString()), Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"].AsString()) }).ToArray()) : null;
-            return GetInvokeResult(script, cosigners);
+            Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1]) : null;
+            return GetInvokeResult(script, signers);
         }
 
         [RpcMethod]
