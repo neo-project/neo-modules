@@ -7,19 +7,46 @@ namespace Neo.IO.Data.LevelDB
 {
     public static class Helper
     {
+        private static int ByteArrayCompare(byte[] x, byte[] y)
+        {
+            int length = Math.Min(x.Length, y.Length);
+            for (int i = 0; i < length; i++)
+            {
+                int r = x[i].CompareTo(y[i]);
+                if (r != 0) return r;
+            }
+            return x.Length.CompareTo(y.Length);
+        }
+
         public static IEnumerable<T> Seek<T>(this DB db, ReadOptions options, byte table, byte[] prefix, SeekDirection direction, Func<byte[], byte[], T> resultSelector)
         {
             using Iterator it = db.NewIterator(options);
-            for (it.Seek(CreateKey(table, prefix)); it.Valid();)
+            byte[] target = CreateKey(table, prefix);
+            if (direction == SeekDirection.Forward)
             {
-                var key = it.Key();
-                if (key.Length < 1 || key[0] != table) break;
-                yield return resultSelector(it.Key(), it.Value());
+                for (it.Seek(target); it.Valid(); it.Next())
+                {
+                    var key = it.Key();
+                    if (key.Length < 1 || key[0] != table) break;
+                    yield return resultSelector(it.Key(), it.Value());
+                }
+            }
+            else
+            {
+                // SeekForPrev
 
-                if (direction == SeekDirection.Forward)
-                    it.Next();
-                else
+                it.Seek(target);
+                if (!it.Valid())
+                    it.SeekToLast();
+                else if (ByteArrayCompare(it.Key(), target) > 0)
                     it.Prev();
+
+                for (; it.Valid(); it.Prev())
+                {
+                    var key = it.Key();
+                    if (key.Length < 1 || key[0] != table) break;
+                    yield return resultSelector(it.Key(), it.Value());
+                }
             }
         }
 
