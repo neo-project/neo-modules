@@ -1,7 +1,10 @@
 name: .NET Core Test and Publish
 
-on: pull_request
-
+on: 
+  push:
+    branches: master
+  pull_request:
+    
 env:
   DOTNET_VERSION: 3.1.100
 
