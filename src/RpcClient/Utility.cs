@@ -157,11 +157,11 @@ namespace Neo.Network.RPC
         }
 
         public static TransactionAttribute TransactionAttributeFromJson(JObject json)
-        {            
+        {
             TransactionAttributeType usage = Enum.Parse<TransactionAttributeType>(json["type"].AsString());
 
             switch (usage)
-            {                
+            {
                 default: throw new FormatException();
             }
         }

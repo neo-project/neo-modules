@@ -111,7 +111,7 @@ namespace Neo.Network.RPC.Tests
         {
             txManager = new TransactionManager(rpcClientMock.Object);
 
-            Signer[] signers  = new Signer[1]
+            Signer[] signers = new Signer[1]
             {
                 new Signer
                 {
