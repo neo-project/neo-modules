@@ -66,7 +66,7 @@ namespace Neo.Network.RPC
                 Script = script,
                 Signers = signers,
                 ValidUntilBlock = height + Transaction.MaxValidUntilBlockIncrement,
-                Attributes = attributes ?? Array.Empty<TransactionAttribute>(),                
+                Attributes = attributes ?? Array.Empty<TransactionAttribute>(),
             };
 
             RpcInvokeResult result = rpcClient.InvokeScript(script, signers);
