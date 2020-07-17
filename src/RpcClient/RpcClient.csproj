@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <Version>3.0.0-preview2</Version>
@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neo" Version="3.0.0-CI00966" />
+    <ProjectReference Include="..\..\..\..\neo_code\neo\src\neo\neo.csproj" />
   </ItemGroup>
 
 </Project>
