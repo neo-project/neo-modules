@@ -15,9 +15,9 @@ namespace Neo.Network.RPC.Models
         public JObject ToJson()
         {
             JObject json = new JObject();
-            json["topPort"] = TcpPort.ToString();
-            json["wsPort"] = WsPort.ToString();
-            json["nonce"] = Nonce.ToString();
+            json["tcpport"] = TcpPort;
+            json["wsport"] = WsPort;
+            json["nonce"] = Nonce;
             json["useragent"] = UserAgent;
             return json;
         }
@@ -25,9 +25,9 @@ namespace Neo.Network.RPC.Models
         public static RpcVersion FromJson(JObject json)
         {
             RpcVersion version = new RpcVersion();
-            version.TcpPort = int.Parse(json["tcpPort"].AsString());
-            version.WsPort = int.Parse(json["wsPort"].AsString());
-            version.Nonce = uint.Parse(json["nonce"].AsString());
+            version.TcpPort = (int)json["tcpport"].AsNumber();
+            version.WsPort = (int)json["wsport"].AsNumber();
+            version.Nonce = (uint)json["nonce"].AsNumber();
             version.UserAgent = json["useragent"].AsString();
             return version;
         }

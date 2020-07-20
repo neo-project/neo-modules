@@ -1,3 +1,4 @@
+using Neo.ConsoleService;
 using Neo.IO;
 using Neo.IO.Caching;
 using Neo.IO.Json;
@@ -13,6 +14,8 @@ namespace Neo.Plugins
     public class StatesDumper : Plugin, IPersistencePlugin
     {
         private readonly JArray bs_cache = new JArray();
+
+        public override string Description => "Exports Neo-CLI status data";
 
         protected override void Configure()
         {
@@ -35,40 +38,15 @@ namespace Neo.Plugins
             Console.WriteLine($"States ({array.Count}) have been dumped into file {path}");
         }
 
-        protected override bool OnMessage(object message)
+        /// <summary>
+        /// Process "dump storage" command
+        /// </summary>
+        [ConsoleCommand("dump storage", Category = "Storage", Description = "You can specify the key or use null to get the corresponding information from the storage")]
+        private void OnDumpStorage(UInt160 key = null)
         {
-            if (!(message is string[] args)) return false;
-            if (args.Length == 0) return false;
-            return (args[0].ToLower()) switch
-            {
-                "help" => OnHelp(args),
-                "dump" => OnDump(args),
-                _ => false,
-            };
-        }
-
-        private bool OnDump(string[] args)
-        {
-            if (args.Length < 2) return false;
-            switch (args[1].ToLower())
-            {
-                case "storage":
-                    Dump(args.Length >= 3
-                        ? Blockchain.Singleton.View.Storages.Find(UInt160.Parse(args[2]).ToArray())
-                        : Blockchain.Singleton.View.Storages.Find());
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-        private bool OnHelp(string[] args)
-        {
-            if (args.Length < 2) return false;
-            if (!string.Equals(args[1], Name, StringComparison.OrdinalIgnoreCase))
-                return false;
-            Console.Write($"{Name} Commands:\n" + "\tdump storage <key>\n");
-            return true;
+            Dump(key != null
+                ? Blockchain.Singleton.View.Storages.Find(key.ToArray())
+                : Blockchain.Singleton.View.Storages.Find());
         }
 
         public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)

@@ -18,10 +18,12 @@ namespace Neo.Plugins
 
         public override string Name => "ApplicationLogs";
 
+        public override string Description => "Synchronizes the smart contract log with the NativeContract log (Notify)";
+
         public LogReader()
         {
             db = DB.Open(GetFullPath(Settings.Default.Path), new Options { CreateIfMissing = true });
-            RpcServer.RegisterMethods(this);
+            RpcServerPlugin.RegisterMethods(this);
         }
 
         protected override void Configure()
@@ -49,10 +51,10 @@ namespace Neo.Plugins
                 json["txid"] = appExec.Transaction?.Hash.ToString();
                 json["trigger"] = appExec.Trigger;
                 json["vmstate"] = appExec.VMState;
-                json["gas_consumed"] = appExec.GasConsumed.ToString();
+                json["gasconsumed"] = appExec.GasConsumed.ToString();
                 try
                 {
-                    json["stack"] = appExec.Stack.Select(q => q.ToParameter().ToJson()).ToArray();
+                    json["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
                 }
                 catch (InvalidOperationException)
                 {
@@ -62,9 +64,10 @@ namespace Neo.Plugins
                 {
                     JObject notification = new JObject();
                     notification["contract"] = q.ScriptHash.ToString();
+                    notification["eventname"] = q.EventName;
                     try
                     {
-                        notification["state"] = q.State.ToParameter().ToJson();
+                        notification["state"] = q.State.ToJson();
                     }
                     catch (InvalidOperationException)
                     {

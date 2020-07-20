@@ -1,9 +1,11 @@
+using Neo.IO.Caching;
 using Neo.IO.Data.LevelDB;
 using Neo.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using LHelper = Neo.IO.Data.LevelDB.Helper;
 
 namespace Neo.Plugins.Storage
 {
@@ -14,8 +16,8 @@ namespace Neo.Plugins.Storage
 
         public Store(string path)
         {
-            this.db = DB.Open(path, new Options { CreateIfMissing = true });
-            byte[] value = db.Get(ReadOptions.Default, Helper.CreateKey(SYS_Version));
+            this.db = DB.Open(path, new Options { CreateIfMissing = true, FilterPolicy = Native.leveldb_filterpolicy_create_bloom(15) });
+            byte[] value = db.Get(ReadOptions.Default, LHelper.CreateKey(SYS_Version));
             if (value != null && Version.TryParse(Encoding.ASCII.GetString(value), out Version version) && version >= Version.Parse("3.0.0"))
                 return;
 
@@ -35,13 +37,13 @@ namespace Neo.Plugins.Storage
                 }
             }
 
-            db.Put(WriteOptions.Default, Helper.CreateKey(SYS_Version), Encoding.ASCII.GetBytes(Assembly.GetExecutingAssembly().GetName().Version.ToString()));
+            db.Put(WriteOptions.Default, LHelper.CreateKey(SYS_Version), Encoding.ASCII.GetBytes(Assembly.GetExecutingAssembly().GetName().Version.ToString()));
             db.Write(WriteOptions.Default, batch);
         }
 
         public void Delete(byte table, byte[] key)
         {
-            db.Delete(WriteOptions.Default, Helper.CreateKey(table, key));
+            db.Delete(WriteOptions.Default, LHelper.CreateKey(table, key));
         }
 
         public void Dispose()
@@ -49,9 +51,9 @@ namespace Neo.Plugins.Storage
             db.Dispose();
         }
 
-        public IEnumerable<(byte[], byte[])> Find(byte table, byte[] prefix)
+        public IEnumerable<(byte[], byte[])> Seek(byte table, byte[] prefix, SeekDirection direction = SeekDirection.Forward)
         {
-            return db.Find(ReadOptions.Default, Helper.CreateKey(table, prefix), (k, v) => (k[1..], v));
+            return db.Seek(ReadOptions.Default, table, prefix, direction, (k, v) => (k[1..], v));
         }
 
         public ISnapshot GetSnapshot()
@@ -61,17 +63,17 @@ namespace Neo.Plugins.Storage
 
         public void Put(byte table, byte[] key, byte[] value)
         {
-            db.Put(WriteOptions.Default, Helper.CreateKey(table, key), value);
+            db.Put(WriteOptions.Default, LHelper.CreateKey(table, key), value);
         }
 
         public void PutSync(byte table, byte[] key, byte[] value)
         {
-            db.Put(WriteOptions.SyncWrite, Helper.CreateKey(table, key), value);
+            db.Put(WriteOptions.SyncWrite, LHelper.CreateKey(table, key), value);
         }
 
         public byte[] TryGet(byte table, byte[] key)
         {
-            return db.Get(ReadOptions.Default, Helper.CreateKey(table, key));
+            return db.Get(ReadOptions.Default, LHelper.CreateKey(table, key));
         }
     }
 }

@@ -1,4 +1,6 @@
 using Neo.IO.Json;
+using Neo.Wallets;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 
@@ -6,24 +8,25 @@ namespace Neo.Network.RPC.Models
 {
     public class RpcNep5Balances
     {
-        public string Address { get; set; }
+        public UInt160 UserScriptHash { get; set; }
 
-        public RpcNep5Balance[] Balances { get; set; }
+        public List<RpcNep5Balance> Balances { get; set; }
 
         public JObject ToJson()
         {
             JObject json = new JObject();
-            json["address"] = Address;
             json["balance"] = Balances.Select(p => p.ToJson()).ToArray();
+            json["address"] = UserScriptHash.ToAddress();
             return json;
         }
 
         public static RpcNep5Balances FromJson(JObject json)
         {
-            RpcNep5Balances nep5Balance = new RpcNep5Balances();
-            nep5Balance.Address = json["address"].AsString();
-            //List<Balance> listBalance = new List<Balance>();
-            nep5Balance.Balances = ((JArray)json["balance"]).Select(p => RpcNep5Balance.FromJson(p)).ToArray();
+            RpcNep5Balances nep5Balance = new RpcNep5Balances
+            {
+                Balances = ((JArray)json["balance"]).Select(p => RpcNep5Balance.FromJson(p)).ToList(),
+                UserScriptHash = json["address"].AsString().ToScriptHash()
+            };
             return nep5Balance;
         }
     }
@@ -39,18 +42,20 @@ namespace Neo.Network.RPC.Models
         public JObject ToJson()
         {
             JObject json = new JObject();
-            json["asset_hash"] = AssetHash.ToString();
+            json["assethash"] = AssetHash.ToString();
             json["amount"] = Amount.ToString();
-            json["last_updated_block"] = LastUpdatedBlock.ToString();
+            json["lastupdatedblock"] = LastUpdatedBlock;
             return json;
         }
 
         public static RpcNep5Balance FromJson(JObject json)
         {
-            RpcNep5Balance balance = new RpcNep5Balance();
-            balance.AssetHash = UInt160.Parse(json["asset_hash"].AsString());
-            balance.Amount = BigInteger.Parse(json["amount"].AsString());
-            balance.LastUpdatedBlock = uint.Parse(json["last_updated_block"].AsString());
+            RpcNep5Balance balance = new RpcNep5Balance
+            {
+                AssetHash = UInt160.Parse(json["assethash"].AsString()),
+                Amount = BigInteger.Parse(json["amount"].AsString()),
+                LastUpdatedBlock = (uint)json["lastupdatedblock"].AsNumber()
+            };
             return balance;
         }
     }

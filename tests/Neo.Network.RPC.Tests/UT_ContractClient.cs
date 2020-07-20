@@ -32,18 +32,31 @@ namespace Neo.Network.RPC.Tests
             ContractClient contractClient = new ContractClient(rpcClientMock.Object);
             var result = contractClient.TestInvoke(NativeContract.GAS.Hash, "balanceOf", UInt160.Zero);
 
-            Assert.AreEqual(30000000000000L, (long)result.Stack[0].ToStackItem().GetBigInteger());
+            Assert.AreEqual(30000000000000L, (long)result.Stack[0].ToStackItem().GetInteger());
         }
 
         [TestMethod]
         public void TestDeployContract()
         {
             byte[] script;
-            var manifest = ContractManifest.CreateDefault(new byte[1].ToScriptHash());
+            var manifest = new ContractManifest()
+            {
+                Permissions = new[] { ContractPermission.DefaultPermission },
+                Abi = new ContractAbi()
+                {
+                    Hash = new byte[1].ToScriptHash(),
+                    Events = new ContractEventDescriptor[0],
+                    Methods = new ContractMethodDescriptor[0]
+                },
+                Groups = new ContractGroup[0],
+                SafeMethods = WildcardContainer<string>.Create(),
+                Trusts = WildcardContainer<UInt160>.Create(),
+                Extra = null,
+            };
             manifest.Features = ContractFeatures.HasStorage | ContractFeatures.Payable;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitSysCall(InteropService.Neo_Contract_Create, new byte[1], manifest.ToString());
+                sb.EmitSysCall(ApplicationEngine.System_Contract_Create, new byte[1], manifest.ToString());
                 script = sb.ToArray();
             }
 

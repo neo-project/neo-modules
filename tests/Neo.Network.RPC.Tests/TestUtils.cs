@@ -1,10 +1,16 @@
+using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
+using Neo.Network.RPC.Models;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Neo.Network.RPC.Tests
 {
     internal static class TestUtils
     {
+        public readonly static List<RpcTestCase> RpcTestCases = ((JArray)JObject.Parse(File.ReadAllText("RpcTestCases.json"))).Select(p => RpcTestCase.FromJson(p)).ToList();
+
         public static Block GetBlock(int txCount)
         {
             return new Block
@@ -34,7 +40,6 @@ namespace Neo.Network.RPC.Tests
                 Script = new byte[1],
                 Sender = UInt160.Zero,
                 Attributes = new TransactionAttribute[0],
-                Cosigners = new Cosigner[0],
                 Witnesses = new Witness[]
                 {
                     new Witness
@@ -45,5 +50,33 @@ namespace Neo.Network.RPC.Tests
                 }
             };
         }
+    }
+
+    internal class RpcTestCase
+    {
+        public string Name { get; set; }
+        public RpcRequest Request { get; set; }
+        public RpcResponse Response { get; set; }
+
+        public JObject ToJson()
+        {
+            return new JObject
+            {
+                ["Name"] = Name,
+                ["Request"] = Request.ToJson(),
+                ["Response"] = Response.ToJson(),
+            };
+        }
+
+        public static RpcTestCase FromJson(JObject json)
+        {
+            return new RpcTestCase
+            {
+                Name = json["Name"].AsString(),
+                Request = RpcRequest.FromJson(json["Request"]),
+                Response = RpcResponse.FromJson(json["Response"]),
+            };
+        }
+
     }
 }
