@@ -51,6 +51,7 @@ namespace Neo.Network.RPC.Tests
                 Groups = new ContractGroup[0],
                 SafeMethods = WildcardContainer<string>.Create(),
                 Trusts = WildcardContainer<UInt160>.Create(),
+                SupportedStandards = new string[] { "NEP-10" },
                 Extra = null,
             };
             manifest.Features = ContractFeatures.HasStorage | ContractFeatures.Payable;

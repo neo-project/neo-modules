@@ -10,6 +10,7 @@ using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
+using Neo.Wallets.NEP6;
 using System;
 using System.Linq;
 using System.Numerics;
@@ -21,9 +22,11 @@ namespace Neo.Network.RPC.Tests
     {
         TransactionManager txManager;
         Mock<RpcClient> rpcClientMock;
+        Mock<RpcClient> multiSigMock;
         KeyPair keyPair1;
         KeyPair keyPair2;
         UInt160 sender;
+        UInt160 multiHash;
 
         [TestInitialize]
         public void TestSetup()
@@ -31,7 +34,9 @@ namespace Neo.Network.RPC.Tests
             keyPair1 = new KeyPair(Wallet.GetPrivateKeyFromWIF("KyXwTh1hB76RRMquSvnxZrJzQx7h9nQP2PCRL38v6VDb5ip3nf1p"));
             keyPair2 = new KeyPair(Wallet.GetPrivateKeyFromWIF("L2LGkrwiNmUAnWYb1XGd5mv7v2eDf6P4F3gHyXSrNJJR4ArmBp7Q"));
             sender = Contract.CreateSignatureRedeemScript(keyPair1.PublicKey).ToScriptHash();
+            multiHash = Contract.CreateMultiSigContract(2, keyPair1.PublicKey, keyPair2.PublicKey).ScriptHash;
             rpcClientMock = MockRpcClient(sender, new byte[1]);
+            multiSigMock = MockMultiSig(multiHash, new byte[1]);
         }
 
         public static Mock<RpcClient> MockRpcClient(UInt160 sender, byte[] script)
@@ -43,6 +48,32 @@ namespace Neo.Network.RPC.Tests
 
             // MockGasBalance
             byte[] balanceScript = NativeContract.GAS.Hash.MakeScript("balanceOf", sender);
+            var balanceResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("10000000000000000") };
+
+            MockInvokeScript(mockRpc, balanceScript, balanceResult);
+
+            // MockFeePerByte
+            byte[] policyScript = NativeContract.Policy.Hash.MakeScript("getFeePerByte");
+            var policyResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("1000") };
+
+            MockInvokeScript(mockRpc, policyScript, policyResult);
+
+            // MockGasConsumed
+            var result = new ContractParameter();
+            MockInvokeScript(mockRpc, script, result);
+
+            return mockRpc;
+        }
+
+        public static Mock<RpcClient> MockMultiSig(UInt160 multiHash, byte[] script)
+        {
+            var mockRpc = new Mock<RpcClient>(MockBehavior.Strict, "http://seed1.neo.org:10331", null, null);
+
+            // MockHeight
+            mockRpc.Setup(p => p.RpcSend("getblockcount")).Returns(100).Verifiable();
+
+            // MockGasBalance
+            byte[] balanceScript = NativeContract.GAS.Hash.MakeScript("balanceOf", multiHash);
             var balanceResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("10000000000000000") };
 
             MockInvokeScript(mockRpc, balanceScript, balanceResult);
@@ -78,11 +109,11 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public void TestMakeTransaction()
         {
-            txManager = new TransactionManager(rpcClientMock.Object, sender);
+            txManager = new TransactionManager(rpcClientMock.Object);
 
-            var attributes = new TransactionAttribute[1]
+            Signer[] signers = new Signer[1]
             {
-                new Cosigner
+                new Signer
                 {
                     Account = sender,
                     Scopes= WitnessScope.Global
@@ -90,20 +121,20 @@ namespace Neo.Network.RPC.Tests
             };
 
             byte[] script = new byte[1];
-            txManager.MakeTransaction(script, attributes);
+            txManager.MakeTransaction(script, signers);
 
             var tx = txManager.Tx;
-            Assert.AreEqual(WitnessScope.Global, (tx.Attributes[0] as Cosigner).Scopes);
+            Assert.AreEqual(WitnessScope.Global, tx.Signers[0].Scopes);
         }
 
         [TestMethod]
         public void TestSign()
         {
-            txManager = new TransactionManager(rpcClientMock.Object, sender);
+            txManager = new TransactionManager(rpcClientMock.Object);
 
-            var attributes = new TransactionAttribute[1]
+            Signer[] signers = new Signer[1]
             {
-                new Cosigner
+                new Signer
                 {
                     Account  =  sender,
                     Scopes = WitnessScope.Global
@@ -111,7 +142,7 @@ namespace Neo.Network.RPC.Tests
             };
 
             byte[] script = new byte[1];
-            txManager.MakeTransaction(script, attributes)
+            txManager.MakeTransaction(script, signers)
                 .AddSignature(keyPair1)
                 .Sign();
 
@@ -136,37 +167,39 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public void TestSignMulti()
         {
-            txManager = new TransactionManager(rpcClientMock.Object, sender);
-
-            var multiContract = Contract.CreateMultiSigContract(2, keyPair1.PublicKey, keyPair2.PublicKey);
+            txManager = new TransactionManager(multiSigMock.Object);
 
             // Cosigner needs multi signature
-            Cosigner[] cosigners = new Cosigner[1]
+            Signer[] signers = new Signer[1]
             {
-                new Cosigner
+                new Signer
                 {
-                    Account = multiContract.ScriptHash,
+                    Account = multiHash,
                     Scopes = WitnessScope.Global
                 }
             };
 
             byte[] script = new byte[1];
-            txManager.MakeTransaction(script, cosigners)
+            txManager.MakeTransaction(script, signers)
                 .AddMultiSig(keyPair1, 2, keyPair1.PublicKey, keyPair2.PublicKey)
                 .AddMultiSig(keyPair2, 2, keyPair1.PublicKey, keyPair2.PublicKey)
-                .AddSignature(keyPair1)
                 .Sign();
         }
 
         [TestMethod]
         public void TestAddWitness()
         {
-            txManager = new TransactionManager(rpcClientMock.Object, sender);
+            txManager = new TransactionManager(rpcClientMock.Object);
 
             // Cosigner as contract scripthash
-            Cosigner[] cosigners = new Cosigner[1]
+            Signer[] signers = new Signer[2]
             {
-                new Cosigner
+                new Signer
+                {
+                    Account = sender,
+                    Scopes = WitnessScope.Global
+                },
+                new Signer
                 {
                     Account = UInt160.Zero,
                     Scopes = WitnessScope.Global
@@ -174,15 +207,15 @@ namespace Neo.Network.RPC.Tests
             };
 
             byte[] script = new byte[1];
-            txManager.MakeTransaction(script, cosigners);
+            txManager.MakeTransaction(script, signers);
             txManager.AddWitness(UInt160.Zero);
             txManager.AddSignature(keyPair1);
             txManager.Sign();
 
             var tx = txManager.Tx;
             Assert.AreEqual(2, tx.Witnesses.Length);
-            Assert.AreEqual(0, tx.Witnesses[0].VerificationScript.Length);
-            Assert.AreEqual(0, tx.Witnesses[0].InvocationScript.Length);
+            Assert.AreEqual(41, tx.Witnesses[0].VerificationScript.Length);
+            Assert.AreEqual(66, tx.Witnesses[0].InvocationScript.Length);
         }
     }
 }

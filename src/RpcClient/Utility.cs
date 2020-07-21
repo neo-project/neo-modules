@@ -119,7 +119,7 @@ namespace Neo.Network.RPC
             Transaction tx = new Transaction();
             tx.Version = byte.Parse(json["version"].AsString());
             tx.Nonce = uint.Parse(json["nonce"].AsString());
-            tx.Sender = json["sender"].AsString().ToScriptHash();
+            tx.Signers = ((JArray)json["signers"]).Select(p => SignerFromJson(p)).ToArray();
             tx.SystemFee = long.Parse(json["sysfee"].AsString());
             tx.NetworkFee = long.Parse(json["netfee"].AsString());
             tx.ValidUntilBlock = uint.Parse(json["validuntilblock"].AsString());
@@ -137,9 +137,9 @@ namespace Neo.Network.RPC
             return header;
         }
 
-        public static Cosigner CosignerFromJson(JObject json)
+        public static Signer SignerFromJson(JObject json)
         {
-            return new Cosigner
+            return new Signer
             {
                 Account = UInt160.Parse(json["account"].AsString()),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), json["scopes"].AsString()),
@@ -162,7 +162,6 @@ namespace Neo.Network.RPC
 
             switch (usage)
             {
-                case TransactionAttributeType.Cosigner: return CosignerFromJson(json);
                 default: throw new FormatException();
             }
         }

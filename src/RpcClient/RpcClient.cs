@@ -316,12 +316,12 @@ namespace Neo.Network.RPC
         /// Returns the result after calling a smart contract at scripthash with the given operation and parameters.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
-        public RpcInvokeResult InvokeFunction(string scriptHash, string operation, RpcStack[] stacks, params UInt160[] scriptHashesForVerifying)
+        public RpcInvokeResult InvokeFunction(string scriptHash, string operation, RpcStack[] stacks, params Signer[] signer)
         {
             List<JObject> parameters = new List<JObject> { scriptHash, operation, stacks.Select(p => p.ToJson()).ToArray() };
-            if (scriptHashesForVerifying.Length > 0)
+            if (signer.Length > 0)
             {
-                parameters.Add(scriptHashesForVerifying.Select(p => (JObject)p.ToString()).ToArray());
+                parameters.Add(signer.Select(p => (JObject)p.ToJson()).ToArray());
             }
             return RpcInvokeResult.FromJson(RpcSend("invokefunction", parameters.ToArray()));
         }
@@ -330,12 +330,12 @@ namespace Neo.Network.RPC
         /// Returns the result after passing a script through the VM.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
-        public RpcInvokeResult InvokeScript(byte[] script, params UInt160[] scriptHashesForVerifying)
+        public RpcInvokeResult InvokeScript(byte[] script, params Signer[] signers)
         {
             List<JObject> parameters = new List<JObject> { script.ToHexString() };
-            if (scriptHashesForVerifying.Length > 0)
+            if (signers.Length > 0)
             {
-                parameters.Add(scriptHashesForVerifying.Select(p => (JObject)p.ToString()).ToArray());
+                parameters.Add(signers.Select(p => p.ToJson()).ToArray());
             }
             return RpcInvokeResult.FromJson(RpcSend("invokescript", parameters.ToArray()));
         }
