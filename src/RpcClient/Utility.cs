@@ -2,11 +2,16 @@ using Neo.Cryptography.ECC;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
+using Neo.VM.Types;
 using Neo.Wallets;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
+using Array = Neo.VM.Types.Array;
+using Boolean = Neo.VM.Types.Boolean;
+using Buffer = Neo.VM.Types.Buffer;
 
 namespace Neo.Network.RPC
 {
@@ -172,6 +177,44 @@ namespace Neo.Network.RPC
             witness.InvocationScript = Convert.FromBase64String(json["invocation"].AsString());
             witness.VerificationScript = Convert.FromBase64String(json["verification"].AsString());
             return witness;
+        }
+
+        public static StackItem StackItemFromJson(JObject json)
+        {
+            StackItemType type = json["type"].TryGetEnum<StackItemType>();
+            switch (type)
+            {
+                //case Array array:
+                //    context ??= new HashSet<StackItem>(ReferenceEqualityComparer.Default);
+                //    if (!context.Add(array)) throw new InvalidOperationException();
+                //    json["value"] = new JArray(array.Select(p => ToJson(p, context)));
+                //    break;
+                //case Boolean boolean:
+                //    json["value"] = boolean.GetBoolean();
+                //    break;
+                //case Buffer _:
+                //case ByteString _:
+                //    json["value"] = Convert.ToBase64String(item.GetSpan());
+                //    break;
+                //case Integer integer:
+                //    json["value"] = integer.GetInteger().ToString();
+                //    break;
+                //case Map map:
+                //    context ??= new HashSet<StackItem>(ReferenceEqualityComparer.Default);
+                //    if (!context.Add(map)) throw new InvalidOperationException();
+                //    json["value"] = new JArray(map.Select(p =>
+                //    {
+                //        JObject item = new JObject();
+                //        item["key"] = ToJson(p.Key, context);
+                //        item["value"] = ToJson(p.Value, context);
+                //        return item;
+                //    }));
+                //    break;
+                //case Pointer pointer:
+                //    json["value"] = pointer.Position;
+                //    break;
+            }
+            return null;
         }
     }
 }
