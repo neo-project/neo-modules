@@ -52,7 +52,7 @@ namespace Neo.Network.RPC
         {
             UInt160 scriptHash = NativeContract.NEO.Hash;
             BigInteger balance = nep5API.TestInvoke(scriptHash, "unclaimedGas", account, rpcClient.GetBlockCount() - 1)
-                .Stack.Single().ToStackItem().GetInteger();
+                .Stack.Single().GetInteger();
             return ((decimal)balance) / (long)NativeContract.GAS.Factor;
         }
 

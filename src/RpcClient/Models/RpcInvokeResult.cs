@@ -26,6 +26,8 @@ namespace Neo.Network.RPC.Models
             json["gasconsumed"] = GasConsumed;
             try
             {
+                foreach (var item in Stack)
+                    Console.WriteLine("-> " + item);
                 json["stack"] = new JArray(Stack.Select(p => p.ToJson()));
             }
             catch (InvalidOperationException)
@@ -45,6 +47,7 @@ namespace Neo.Network.RPC.Models
             invokeScriptResult.GasConsumed = json["gasconsumed"].AsString();
             try
             {
+                Console.WriteLine(json.ToString());
                 invokeScriptResult.Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToArray();
             }
             catch { }

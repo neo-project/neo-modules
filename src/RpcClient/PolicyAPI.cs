@@ -23,7 +23,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public uint GetMaxTransactionsPerBlock()
         {
-            return (uint)TestInvoke(scriptHash, "getMaxTransactionsPerBlock").Stack.Single().ToStackItem().GetInteger();
+            return (uint)TestInvoke(scriptHash, "getMaxTransactionsPerBlock").Stack.Single().GetInteger();
         }
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public uint GetMaxBlockSize()
         {
-            return (uint)TestInvoke(scriptHash, "getMaxBlockSize").Stack.Single().ToStackItem().GetInteger();
+            return (uint)TestInvoke(scriptHash, "getMaxBlockSize").Stack.Single().GetInteger();
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public long GetFeePerByte()
         {
-            return (long)TestInvoke(scriptHash, "getFeePerByte").Stack.Single().ToStackItem().GetInteger();
+            return (long)TestInvoke(scriptHash, "getFeePerByte").Stack.Single().GetInteger();
         }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public UInt160[] GetBlockedAccounts()
         {
-            var result = (VM.Types.Array)TestInvoke(scriptHash, "getBlockedAccounts").Stack.Single().ToStackItem();
+            var result = (VM.Types.Array)TestInvoke(scriptHash, "getBlockedAccounts").Stack.Single();
             return result.Select(p => new UInt160(p.GetSpan().ToArray())).ToArray();
         }
     }

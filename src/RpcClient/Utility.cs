@@ -5,7 +5,6 @@ using Neo.SmartContract;
 using Neo.VM.Types;
 using Neo.Wallets;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
@@ -184,35 +183,36 @@ namespace Neo.Network.RPC
             StackItemType type = json["type"].TryGetEnum<StackItemType>();
             switch (type)
             {
-                //case Array array:
-                //    context ??= new HashSet<StackItem>(ReferenceEqualityComparer.Default);
-                //    if (!context.Add(array)) throw new InvalidOperationException();
-                //    json["value"] = new JArray(array.Select(p => ToJson(p, context)));
-                //    break;
-                //case Boolean boolean:
-                //    json["value"] = boolean.GetBoolean();
-                //    break;
-                //case Buffer _:
-                //case ByteString _:
-                //    json["value"] = Convert.ToBase64String(item.GetSpan());
-                //    break;
-                //case Integer integer:
-                //    json["value"] = integer.GetInteger().ToString();
-                //    break;
-                //case Map map:
-                //    context ??= new HashSet<StackItem>(ReferenceEqualityComparer.Default);
-                //    if (!context.Add(map)) throw new InvalidOperationException();
-                //    json["value"] = new JArray(map.Select(p =>
-                //    {
-                //        JObject item = new JObject();
-                //        item["key"] = ToJson(p.Key, context);
-                //        item["value"] = ToJson(p.Value, context);
-                //        return item;
-                //    }));
-                //    break;
-                //case Pointer pointer:
-                //    json["value"] = pointer.Position;
-                //    break;
+                case StackItemType.Boolean:
+                    return new Boolean(json["value"].AsBoolean());
+                case StackItemType.Buffer:
+                    return new Buffer(Convert.FromBase64String(json["value"].AsString()));
+                case StackItemType.ByteString:
+                    return new ByteString(Convert.FromBase64String(json["value"].AsString()));
+                case StackItemType.Integer:
+                    return new Integer(new BigInteger(json["value"].AsNumber()));
+                case StackItemType.Array:
+                    Array array = new Array();
+                    foreach (var item in (JArray)json["value"])
+                        array.Add(StackItemFromJson(item));
+                    return array;
+                case StackItemType.Struct:
+                    Struct @struct = new Struct();
+                    foreach (var item in (JArray)json["value"])
+                        @struct.Add(StackItemFromJson(item));
+                    return @struct;
+                case StackItemType.Map:
+                    Map map = new Map();
+                    foreach (var item in (JArray)json["value"])
+                    {
+                        PrimitiveType key = (PrimitiveType)StackItemFromJson(item["key"]);
+                        map[key] = StackItemFromJson(item["value"]);
+                    }
+                    return map;
+                case StackItemType.Pointer:
+                    return new Pointer(null, (int)json["value"].AsNumber());
+                case StackItemType.InteropInterface:
+                    return new InteropInterface(new object()); // See https://github.com/neo-project/neo/blob/master/src/neo/VM/Helper.cs#L194
             }
             return null;
         }
