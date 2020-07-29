@@ -2,16 +2,17 @@ using Microsoft.AspNetCore.Http;
 using Neo.IO.Caching;
 using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
+using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
+using Neo.Network.RPC;
+using Neo.Persistence;
 using Neo.Persistence.LevelDB;
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Neo.Ledger;
-using Neo.Persistence;
-using Snapshot = Neo.Persistence.Snapshot;
 using System.IO;
+using System.Linq;
+using Snapshot = Neo.Persistence.Snapshot;
 
 namespace Neo.Plugins
 {
@@ -19,12 +20,17 @@ namespace Neo.Plugins
     {
         private const byte SystemAssetUnspentCoinsPrefix = 0xfb;
         private const byte SystemAssetSpentUnclaimedCoinsPrefix = 0xfc;
+        private const byte SystemAssetSentPrefix = 0xfd;
+        private const byte SystemAssetReceivedPrefix = 0xfe;
         private DB _db;
         private DataCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs> _userUnspentCoins;
         private bool _shouldTrackUnclaimed;
         private DataCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs> _userSpentUnclaimedCoins;
+        private bool _shouldTrackHistory;
+        private DataCache<UserSystemAssetTransferKey, UserSystemAssetTransfer> _transfersSent;
+        private DataCache<UserSystemAssetTransferKey, UserSystemAssetTransfer> _transfersReceived;
         private WriteBatch _writeBatch;
-        private int _rpcMaxUnspents;
+        private int _maxResults;
         private uint _lastPersistedBlock;
         private bool _shouldPersistBlock;
         private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
@@ -35,7 +41,8 @@ namespace Neo.Plugins
             {
                 var dbPath = GetConfiguration().GetSection("DBPath").Value ?? "SystemAssetBalanceData";
                 _db = DB.Open(Path.GetFullPath(dbPath), new Options { CreateIfMissing = true });
-                _shouldTrackUnclaimed = (GetConfiguration().GetSection("TrackUnclaimed").Value ?? true.ToString()) != false.ToString();
+                _shouldTrackUnclaimed = bool.TryParse(GetConfiguration().GetSection("TrackUnclaimed").Value, out bool shouldTrackUnclaimed) && shouldTrackUnclaimed;
+                _shouldTrackHistory = bool.TryParse(GetConfiguration().GetSection("TrackHistory").Value, out bool shouldTrackHistory) && shouldTrackHistory;
                 try
                 {
                     _lastPersistedBlock = _db.Get(ReadOptions.Default, SystemAssetUnspentCoinsPrefix).ToUInt32();
@@ -47,7 +54,7 @@ namespace Neo.Plugins
                     _lastPersistedBlock = 0;
                 }
             }
-            _rpcMaxUnspents = int.Parse(GetConfiguration().GetSection("MaxReturnedUnspents").Value ?? "0");
+            _maxResults = int.Parse(GetConfiguration().GetSection("MaxResults").Value ?? "0");
         }
 
         private void ResetBatch()
@@ -56,11 +63,15 @@ namespace Neo.Plugins
             _levelDbSnapshot?.Dispose();
             _levelDbSnapshot = _db.GetSnapshot();
             var dbOptions = new ReadOptions { FillCache = false, Snapshot = _levelDbSnapshot };
-            _userUnspentCoins = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(_db, dbOptions,
-                _writeBatch, SystemAssetUnspentCoinsPrefix);
-            if (!_shouldTrackUnclaimed) return;
-            _userSpentUnclaimedCoins = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(_db, dbOptions,
-                _writeBatch, SystemAssetSpentUnclaimedCoinsPrefix);
+            _userUnspentCoins = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(_db, dbOptions, _writeBatch, SystemAssetUnspentCoinsPrefix);
+            if (_shouldTrackUnclaimed)
+                _userSpentUnclaimedCoins = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(_db, dbOptions, _writeBatch, SystemAssetSpentUnclaimedCoinsPrefix);
+            if (_shouldTrackHistory)
+            {
+                _transfersSent = new DbCache<UserSystemAssetTransferKey, UserSystemAssetTransfer>(_db, dbOptions, _writeBatch, SystemAssetSentPrefix);
+                _transfersReceived = new DbCache<UserSystemAssetTransferKey, UserSystemAssetTransfer>(_db, dbOptions, _writeBatch, SystemAssetReceivedPrefix);
+            }
+                
         }
 
         private bool ProcessBlock(Snapshot snapshot, Block block)
@@ -98,7 +109,7 @@ namespace Neo.Plugins
                     // For each input being spent by this transaction.
                     foreach (CoinReference input in group)
                     {
-                        // Get the output from the the previous transaction that is now being spent.
+                        // Get the output from the previous transaction that is now being spent.
                         var outPrev = txPrev.Transaction.Outputs[input.PrevIndex];
 
                         bool isGoverningToken = outPrev.AssetId.Equals(Blockchain.GoverningToken.Hash);
@@ -142,6 +153,94 @@ namespace Neo.Plugins
                             snapshot.SpentCoins.GetAndChange(input.PrevHash);
                     }
                 }
+
+                if (_shouldTrackHistory)
+                {
+                    UInt160 from = UInt160.Zero;
+                    // need to get all the neo and gas outputs from the inputs
+                    List<TransactionOutput> prevOutputs = new List<TransactionOutput>();
+                    foreach (var group in tx.Inputs.GroupBy(p => p.PrevHash))
+                    {
+                        TransactionState txPrev = transactionsCache[group.Key];
+                        foreach (CoinReference input in group)
+                        {
+                            TransactionOutput outPrev = txPrev.Transaction.Outputs[input.PrevIndex];
+                            if (outPrev.AssetId.Equals(Blockchain.GoverningToken.Hash) || outPrev.AssetId.Equals(Blockchain.UtilityToken.Hash))
+                                prevOutputs.Add(outPrev);
+                        }
+                    }
+
+                    Dictionary<UInt256, Fixed8> dic = new Dictionary<UInt256, Fixed8>();
+                    if (prevOutputs.Count > 0)
+                    {
+                        // has neo or gas input, group by asset id, sum each token value
+                        from = prevOutputs.First().ScriptHash;
+                        dic = prevOutputs.GroupBy(p => p.AssetId).ToDictionary(p => p.Key, p => p.Sum(q => q.Value));
+                    }
+
+                    ushort index = 0;
+                    foreach (TransactionOutput output in tx.Outputs)
+                    {
+                        if (output.AssetId.Equals(Blockchain.GoverningToken.Hash) || output.AssetId.Equals(Blockchain.UtilityToken.Hash))
+                        {
+                            // add transfers except from and to are same
+                            if (!from.Equals(output.ScriptHash))
+                            {
+                                _transfersSent.Add(new UserSystemAssetTransferKey(from, output.AssetId, block.Timestamp, index),
+                                    new UserSystemAssetTransfer()
+                                    {
+                                        UserScriptHash = output.ScriptHash,
+                                        BlockIndex = block.Index,
+                                        TxHash = tx.Hash,
+                                        Amount = output.Value
+                                    });
+                                _transfersReceived.Add(new UserSystemAssetTransferKey(output.ScriptHash, output.AssetId, block.Timestamp, index),
+                                    new UserSystemAssetTransfer
+                                    {
+                                        UserScriptHash = from,
+                                        BlockIndex = block.Index,
+                                        TxHash = tx.Hash,
+                                        Amount = output.Value
+                                    });
+                                index++;
+                            }
+                            // deduct corresponding asset value
+                            if (dic.TryGetValue(output.AssetId, out Fixed8 remain))
+                            {
+                                remain -= output.Value;
+                                if (remain <= Fixed8.Zero)
+                                    dic.Remove(output.AssetId);
+                                else
+                                    dic[output.AssetId] = remain;
+                            }
+                        }
+                    }
+
+                    // handle the remainings in the dic
+                    foreach (var pair in dic)
+                    {
+                        if (pair.Value > Fixed8.Zero)
+                        {
+                            _transfersSent.Add(new UserSystemAssetTransferKey(from, pair.Key, block.Timestamp, index),
+                                new UserSystemAssetTransfer()
+                                {
+                                    UserScriptHash = UInt160.Zero,
+                                    BlockIndex = block.Index,
+                                    TxHash = tx.Hash,
+                                    Amount = pair.Value
+                                });
+                            _transfersReceived.Add(new UserSystemAssetTransferKey(UInt160.Zero, pair.Key, block.Timestamp, index),
+                                new UserSystemAssetTransfer
+                                {
+                                    UserScriptHash = from,
+                                    BlockIndex = block.Index,
+                                    TxHash = tx.Hash,
+                                    Amount = pair.Value
+                                });
+                            index++;
+                        }
+                    }
+                }
             }
 
             // Write the current height into the key of the prefix itself
@@ -149,7 +248,6 @@ namespace Neo.Plugins
             _lastPersistedBlock = block.Index;
             return true;
         }
-
 
         private void ProcessSkippedBlocks(Snapshot snapshot)
         {
@@ -180,6 +278,11 @@ namespace Neo.Plugins
             if (!_shouldPersistBlock) return;
             _userUnspentCoins.Commit();
             if (_shouldTrackUnclaimed) _userSpentUnclaimedCoins.Commit();
+            if (_shouldTrackHistory)
+            {
+                _transfersSent.Commit();
+                _transfersReceived.Commit();
+            }
             _db.Write(WriteOptions.Default, _writeBatch);
         }
 
@@ -197,7 +300,6 @@ namespace Neo.Plugins
             return addressOrScriptHash.Length < 40 ?
                 addressOrScriptHash.ToScriptHash() : UInt160.Parse(addressOrScriptHash);
         }
-
 
         private long GetSysFeeAmountForHeight(DataCache<UInt256, BlockState> blocks, uint height)
         {
@@ -286,7 +388,7 @@ namespace Neo.Plugins
                 var storeSpentCoins = snapshot.SpentCoins;
                 byte[] prefix = new [] { (byte) 1 }.Concat(scriptHash.ToArray()).ToArray();
                 foreach (var claimableInTx in dbCache.Find(prefix))
-                    if (!AddClaims(claimable, ref totalUnclaimed, _rpcMaxUnspents, snapshot, storeSpentCoins,
+                    if (!AddClaims(claimable, ref totalUnclaimed, _maxResults, snapshot, storeSpentCoins,
                         claimableInTx))
                         break;
             }
@@ -358,7 +460,7 @@ namespace Neo.Plugins
                 runningTotal += unspent.Value;
 
                 unspents.Add(utxo);
-                if (unspents.Count > _rpcMaxUnspents)
+                if (unspents.Count > _maxResults)
                     return false;
             }
             return true;
@@ -410,6 +512,92 @@ namespace Neo.Plugins
             return json;
         }
 
+        private JObject ProcessGetUtxoTransfers(JArray _params)
+        {
+            UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
+            DateTime now = DateTime.UtcNow;
+            DateTime sevenDaysAgo = now - TimeSpan.FromDays(7);
+            List<UInt256> tokens = new List<UInt256>() { Blockchain.GoverningToken.Hash, Blockchain.UtilityToken.Hash };
+            uint start, end;
+            if (_params.Count > 1)
+            {
+                if (!uint.TryParse(_params[1].AsString(), out start))
+                {   // neo or gas
+                    if (_params[1].AsString().ToLower() == "neo")
+                        tokens.Remove(Blockchain.UtilityToken.Hash);
+                    else if (_params[1].AsString().ToLower() == "gas")
+                        tokens.Remove(Blockchain.GoverningToken.Hash);
+                    else
+                        throw new RpcException(-32602, "Invalid params");
+                    start = _params.Count > 2 ? (uint)_params[2].AsNumber() : sevenDaysAgo.ToTimestamp();
+                    end = _params.Count > 3 ? (uint)_params[3].AsNumber() : now.ToTimestamp();
+                }
+                else
+                {
+                    start = (uint)_params[1].AsNumber();
+                    end = _params.Count > 2 ? (uint)_params[2].AsNumber() : now.ToTimestamp();
+                }
+            }
+            else
+            {
+                start = sevenDaysAgo.ToTimestamp();
+                end = now.ToTimestamp();
+            }
+            if (end < start) throw new RpcException(-32602, "Invalid params");
+
+            JObject json = new JObject();
+            JArray transfersSent = new JArray();
+            json["address"] = userScriptHash.ToAddress();
+            json["sent"] = transfersSent;
+            JArray transfersReceived = new JArray();
+            json["received"] = transfersReceived;
+            foreach (var assetId in tokens)
+            {
+                AddTransfers(SystemAssetSentPrefix, userScriptHash, assetId, start, end, transfersSent);
+                AddTransfers(SystemAssetReceivedPrefix, userScriptHash, assetId, start, end, transfersReceived);
+            }
+            return json;
+        }
+
+        private void AddTransfers(byte dbPrefix, UInt160 userScriptHash, UInt256 assetId, uint startTime, uint endTime, JArray parentJArray)
+        {
+            var prefix = new[] { dbPrefix }.Concat(userScriptHash.ToArray()).Concat(assetId.ToArray()).ToArray();
+            var startTimeBytes = BitConverter.GetBytes(startTime);
+            var endTimeBytes = BitConverter.GetBytes(endTime);
+            if (BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(startTimeBytes);
+                Array.Reverse(endTimeBytes);
+            }
+
+            var transferPairs = _db.FindRange<UserSystemAssetTransferKey, UserSystemAssetTransfer>(
+                prefix.Concat(startTimeBytes).ToArray(),
+                prefix.Concat(endTimeBytes).ToArray());
+
+            Fixed8 sum = Fixed8.Zero;
+            JArray transfers = new JArray();
+            JObject group = new JObject();
+            group["asset_hash"] = assetId.ToString();
+            group["asset"] = assetId == Blockchain.GoverningToken.Hash ? "NEO" : assetId == Blockchain.UtilityToken.Hash ? "GAS" : "";
+            int resultCount = 0;
+            foreach (var pair in transferPairs)
+            {
+                if (++resultCount > _maxResults) break;
+                JObject transfer = new JObject();
+                transfer["block_index"] = pair.Value.BlockIndex;
+                transfer["timestamp"] = pair.Key.Timestamp;
+                transfer["txid"] = pair.Value.TxHash.ToString();
+                transfer["transfer_address"] = pair.Value.UserScriptHash.ToString();
+                transfer["amount"] = pair.Value.Amount.ToString();
+                sum += pair.Value.Amount;
+                transfers.Add(transfer);
+            }
+            group["total_amount"] = sum.ToString();
+            group["transactions"] = transfers;
+
+            parentJArray.Add(group);
+        }
+
         public JObject OnProcess(HttpContext context, string method, JArray parameters)
         {
             if (_shouldTrackUnclaimed)
@@ -417,6 +605,8 @@ namespace Neo.Plugins
                 if (method == "getclaimable") return ProcessGetClaimableSpents(parameters);
                 if (method == "getunclaimed") return ProcessGetUnclaimed(parameters);
             }
+            if (_shouldTrackHistory)
+                if (method == "getutxotransfers") return ProcessGetUtxoTransfers(parameters);
             return method != "getunspents" ? null : ProcessGetUnspents(parameters);
         }
 
