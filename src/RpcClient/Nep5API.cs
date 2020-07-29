@@ -30,7 +30,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public BigInteger BalanceOf(UInt160 scriptHash, UInt160 account)
         {
-            BigInteger balance = TestInvoke(scriptHash, "balanceOf", account).Stack.Single().ToStackItem().GetInteger();
+            BigInteger balance = TestInvoke(scriptHash, "balanceOf", account).Stack.Single().GetInteger();
             return balance;
         }
 
@@ -41,7 +41,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public string Name(UInt160 scriptHash)
         {
-            return TestInvoke(scriptHash, "name").Stack.Single().ToStackItem().GetString();
+            return TestInvoke(scriptHash, "name").Stack.Single().GetString();
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public string Symbol(UInt160 scriptHash)
         {
-            return TestInvoke(scriptHash, "symbol").Stack.Single().ToStackItem().GetString();
+            return TestInvoke(scriptHash, "symbol").Stack.Single().GetString();
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public byte Decimals(UInt160 scriptHash)
         {
-            return (byte)TestInvoke(scriptHash, "decimals").Stack.Single().ToStackItem().GetInteger();
+            return (byte)TestInvoke(scriptHash, "decimals").Stack.Single().GetInteger();
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public BigInteger TotalSupply(UInt160 scriptHash)
         {
-            return TestInvoke(scriptHash, "totalSupply").Stack.Single().ToStackItem().GetInteger();
+            return TestInvoke(scriptHash, "totalSupply").Stack.Single().GetInteger();
         }
 
         /// <summary>
@@ -90,10 +90,10 @@ namespace Neo.Network.RPC
 
             return new RpcNep5TokenInfo
             {
-                Name = result[0].ToStackItem().GetString(),
-                Symbol = result[1].ToStackItem().GetString(),
-                Decimals = (byte)result[2].ToStackItem().GetInteger(),
-                TotalSupply = result[3].ToStackItem().GetInteger()
+                Name = result[0].GetString(),
+                Symbol = result[1].GetString(),
+                Decimals = (byte)result[2].GetInteger(),
+                TotalSupply = result[3].GetInteger()
             };
         }
 
