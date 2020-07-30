@@ -32,7 +32,7 @@ namespace Neo.Network.RPC.Tests
             ContractClient contractClient = new ContractClient(rpcClientMock.Object);
             var result = contractClient.TestInvoke(NativeContract.GAS.Hash, "balanceOf", UInt160.Zero);
 
-            Assert.AreEqual(30000000000000L, (long)result.Stack[0].ToStackItem().GetInteger());
+            Assert.AreEqual(30000000000000L, (long)result.Stack[0].GetInteger());
         }
 
         [TestMethod]
