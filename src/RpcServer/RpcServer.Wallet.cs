@@ -138,13 +138,13 @@ namespace Neo.Plugins
             return true;
         }
 
-        private void ProcessInvokeWithWallet(JObject result, Cosigners cosigners = null)
+        private void ProcessInvokeWithWallet(JObject result, Signers signers = null)
         {
             Transaction tx = null;
-            if (wallet != null && cosigners != null)
+            if (wallet != null && signers != null)
             {
                 UInt160[] accounts = wallet.GetAccounts().Where(p => !p.Lock && !p.WatchOnly).Select(p => p.ScriptHash).ToArray();
-                Cosigner[] witnessCosigners = cosigners.GetCosigners().Where(p => accounts.Contains(p.Account)).ToArray();
+                Signer[] witnessCosigners = signers.GetSigners().Where(p => accounts.Contains(p.Account)).ToArray();
                 if (witnessCosigners.Count() > 0)
                 {
                     tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes(), null, witnessCosigners);

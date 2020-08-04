@@ -32,7 +32,7 @@ namespace Neo.Network.RPC.Tests
             ContractClient contractClient = new ContractClient(rpcClientMock.Object);
             var result = contractClient.TestInvoke(NativeContract.GAS.Hash, "balanceOf", UInt160.Zero);
 
-            Assert.AreEqual(30000000000000L, (long)result.Stack[0].ToStackItem().GetInteger());
+            Assert.AreEqual(30000000000000L, (long)result.Stack[0].GetInteger());
         }
 
         [TestMethod]
@@ -51,6 +51,7 @@ namespace Neo.Network.RPC.Tests
                 Groups = new ContractGroup[0],
                 SafeMethods = WildcardContainer<string>.Create(),
                 Trusts = WildcardContainer<UInt160>.Create(),
+                SupportedStandards = new string[] { "NEP-10" },
                 Extra = null,
             };
             manifest.Features = ContractFeatures.HasStorage | ContractFeatures.Payable;

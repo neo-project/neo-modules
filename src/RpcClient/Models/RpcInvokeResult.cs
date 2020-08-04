@@ -1,5 +1,6 @@
 using Neo.IO.Json;
-using Neo.SmartContract;
+using Neo.VM;
+using Neo.VM.Types;
 using System;
 using System.Linq;
 
@@ -13,7 +14,7 @@ namespace Neo.Network.RPC.Models
 
         public string GasConsumed { get; set; }
 
-        public ContractParameter[] Stack { get; set; }
+        public StackItem[] Stack { get; set; }
 
         public string Tx { get; set; }
 
@@ -44,7 +45,7 @@ namespace Neo.Network.RPC.Models
             invokeScriptResult.GasConsumed = json["gasconsumed"].AsString();
             try
             {
-                invokeScriptResult.Stack = ((JArray)json["stack"]).Select(p => ContractParameter.FromJson(p)).ToArray();
+                invokeScriptResult.Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToArray();
             }
             catch { }
             invokeScriptResult.Tx = json["tx"]?.AsString();
