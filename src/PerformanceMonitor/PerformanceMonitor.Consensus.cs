@@ -2,6 +2,7 @@ using Neo.Consensus;
 using Neo.ConsoleService;
 using Neo.IO.Json;
 using Neo.Ledger;
+using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using System;
 using System.Collections.Generic;
@@ -124,7 +125,7 @@ namespace Neo.Plugins
             }
             else
             {
-                Console.WriteLine("Timeout. Make sure the start consensus command has been run.");
+                Console.WriteLine("Timeout. Make sure the blockchain is active.");
             }
         }
 
@@ -172,9 +173,9 @@ namespace Neo.Plugins
                 commitTime = DateTime.UtcNow;
                 commit?.TrySetResult(true);
             };
-            ConsensusMessageHandler consensusMessageAction = (payload) =>
+            P2PMessageHandler p2pMessage = (message) =>
             {
-                if (payload.ConsensusMessage is Commit)
+                if (message.Command is MessageCommand.Consensus)
                 {
                     consensusMessageTime = DateTime.UtcNow;
                     consensusMessage?.TrySetResult(true);
@@ -182,7 +183,7 @@ namespace Neo.Plugins
             };
 
             OnCommitEvent += commitAction;
-            OnConsensusMessageEvent += consensusMessageAction;
+            OnP2PMessageEvent += p2pMessage;
 
             if (printMessages)
             {
@@ -199,7 +200,7 @@ namespace Neo.Plugins
             Task.WaitAll(tasks, millisecondsToTimeOut);
 
             OnCommitEvent -= commitAction;
-            OnConsensusMessageEvent -= consensusMessageAction;
+            OnP2PMessageEvent -= p2pMessage;
 
             foreach (Task<bool> task in tasks)
             {
@@ -228,7 +229,7 @@ namespace Neo.Plugins
             }
             else
             {
-                Console.WriteLine("Timeout. Make sure the start consensus command has been run.");
+                Console.WriteLine("Timeout. Make sure the blockchain is active.");
             }
         }
 
@@ -270,18 +271,22 @@ namespace Neo.Plugins
             DateTime consensusMessageTime = DateTime.UtcNow;
             DateTime consensusPayloadTime = consensusMessageTime;
 
-            ConsensusMessageHandler consensusMessageAction = (payload) =>
+            P2PMessageHandler p2pMessage = (message) =>
             {
-                var timestamp = GetPayloadTimestamp(payload);
-                if (timestamp > ulong.MinValue)
+
+                if (message.Command is MessageCommand.Consensus && message.Payload is ConsensusPayload)
                 {
-                    consensusMessageTime = DateTime.UtcNow;
-                    consensusPayloadTime = TimestampToDateTime(timestamp);
-                    consensusMessage?.TrySetResult(true);
+                    var timestamp = GetPayloadTimestamp((ConsensusPayload)message.Payload);
+                    if (timestamp > ulong.MinValue)
+                    {
+                        consensusMessageTime = DateTime.UtcNow;
+                        consensusPayloadTime = TimestampToDateTime(timestamp);
+                        consensusMessage?.TrySetResult(true);
+                    }
                 }
             };
 
-            OnConsensusMessageEvent += consensusMessageAction;
+            OnP2PMessageEvent += p2pMessage;
 
             if (printMessages)
             {
@@ -290,7 +295,7 @@ namespace Neo.Plugins
             var millisecondsToTimeOut = (int)Blockchain.MillisecondsPerBlock;
             consensusMessage.Task.Wait(millisecondsToTimeOut);
 
-            OnConsensusMessageEvent -= consensusMessageAction;
+            OnP2PMessageEvent -= p2pMessage;
 
             if (!consensusMessage.Task.IsCompleted)
             {

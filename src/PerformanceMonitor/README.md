@@ -14,8 +14,8 @@ The available metrics cover:
     - `block sync`: the delay time in the synchronization of the blocks (s)
 - Consensus Algorithm:
     - `commit time`: the time to commit in the network (ms)
-    - `confirmation time`: the time to confirm the block (ms), required to start consensus
-    - `payload time`: the time to receive a payload (ms), required to start consensus
+    - `confirmation time`: the time to confirm the block (ms)
+    - `payload time`: the time to receive a payload (ms)
 - Network Protocol:
     - `connected`: the number of nodes connected to the local node
     - `ping [ipaddress]`: If `ipaddress` specified, send a ping message to the specified node; otherwise, send a ping message to each peer connected 
