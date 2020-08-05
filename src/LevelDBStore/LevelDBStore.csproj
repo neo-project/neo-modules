@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>3.0.0-preview2</Version>
+    <Version>3.0.0-preview3</Version>
     <TargetFramework>netstandard2.1</TargetFramework>
     <RootNamespace>Neo</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neo" Version="3.0.0-CI00970" />
+    <PackageReference Include="Neo" Version="3.0.0-preview3-00" />
   </ItemGroup>
 
 </Project>
