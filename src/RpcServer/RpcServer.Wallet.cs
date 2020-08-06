@@ -173,7 +173,7 @@ namespace Neo.Plugins
             CheckWallet();
             UInt160 assetId = TryScriptHash(_params[0].AsString());
             UInt160 from = TryScriptHash(_params[1].AsString());
-            UInt160 to = TryScriptHash(_params[2].AsString());            
+            UInt160 to = TryScriptHash(_params[2].AsString());
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
             BigDecimal amount = BigDecimal.Parse(_params[3].AsString(), descriptor.Decimals);
             if (amount.Sign <= 0)
@@ -324,7 +324,7 @@ namespace Neo.Plugins
             {
                 return scriptHash;
             }
-            
+
             return input.ToScriptHash();
         }
     }
