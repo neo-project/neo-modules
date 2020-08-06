@@ -25,7 +25,6 @@ namespace Neo.Plugins
             AssetId = assetId;
             Timestamp = timestamp;
             TxId = txId;
-            Index = index;
         }
 
         public int CompareTo(UserSystemAssetTransferKey other)

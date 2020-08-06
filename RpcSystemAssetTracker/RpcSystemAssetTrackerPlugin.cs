@@ -527,6 +527,7 @@ namespace Neo.Plugins
             JObject group = new JObject();
             group["asset_hash"] = assetId.ToString();
             group["asset"] = assetId == Blockchain.GoverningToken.Hash ? "NEO" : assetId == Blockchain.UtilityToken.Hash ? "GAS" : throw new NotSupportedException();
+
             int resultCount = 0;
             foreach (var pair in transferPairs)
             {
