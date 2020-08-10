@@ -155,6 +155,9 @@ namespace Neo.IO.Data.LevelDB
 
         [DllImport("libleveldb", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public static extern void leveldb_options_set_filter_policy(IntPtr /*Options*/ options, IntPtr /*FilterPolicy*/ policy);
+
+        [DllImport("libleveldb", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public static extern IntPtr leveldb_filterpolicy_create_bloom(int bits_per_key);
         #endregion
 
         #region ReadOptions

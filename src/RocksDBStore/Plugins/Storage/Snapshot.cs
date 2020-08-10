@@ -43,15 +43,13 @@ namespace Neo.Plugins.Storage
         public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] keyOrPrefix, SeekDirection direction)
         {
             using var it = db.NewIterator(store.GetFamily(table), options);
-            for (it.Seek(keyOrPrefix); it.Valid();)
-            {
-                yield return (it.Key(), it.Value());
 
-                if (direction == SeekDirection.Forward)
-                    it.Next();
-                else
-                    it.Prev();
-            }
+            if (direction == SeekDirection.Forward)
+                for (it.Seek(keyOrPrefix); it.Valid(); it.Next())
+                    yield return (it.Key(), it.Value());
+            else
+                for (it.SeekForPrev(keyOrPrefix); it.Valid(); it.Prev())
+                    yield return (it.Key(), it.Value());
         }
 
         public byte[] TryGet(byte table, byte[] key)

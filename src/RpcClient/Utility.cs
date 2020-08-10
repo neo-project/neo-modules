@@ -2,11 +2,15 @@ using Neo.Cryptography.ECC;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
+using Neo.VM.Types;
 using Neo.Wallets;
 using System;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
+using Array = Neo.VM.Types.Array;
+using Boolean = Neo.VM.Types.Boolean;
+using Buffer = Neo.VM.Types.Buffer;
 
 namespace Neo.Network.RPC
 {
@@ -119,7 +123,7 @@ namespace Neo.Network.RPC
             Transaction tx = new Transaction();
             tx.Version = byte.Parse(json["version"].AsString());
             tx.Nonce = uint.Parse(json["nonce"].AsString());
-            tx.Sender = json["sender"].AsString().ToScriptHash();
+            tx.Signers = ((JArray)json["signers"]).Select(p => SignerFromJson(p)).ToArray();
             tx.SystemFee = long.Parse(json["sysfee"].AsString());
             tx.NetworkFee = long.Parse(json["netfee"].AsString());
             tx.ValidUntilBlock = uint.Parse(json["validuntilblock"].AsString());
@@ -137,9 +141,9 @@ namespace Neo.Network.RPC
             return header;
         }
 
-        public static Cosigner CosignerFromJson(JObject json)
+        public static Signer SignerFromJson(JObject json)
         {
-            return new Cosigner
+            return new Signer
             {
                 Account = UInt160.Parse(json["account"].AsString()),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), json["scopes"].AsString()),
@@ -162,7 +166,6 @@ namespace Neo.Network.RPC
 
             switch (usage)
             {
-                case TransactionAttributeType.Cosigner: return CosignerFromJson(json);
                 default: throw new FormatException();
             }
         }
@@ -173,6 +176,45 @@ namespace Neo.Network.RPC
             witness.InvocationScript = Convert.FromBase64String(json["invocation"].AsString());
             witness.VerificationScript = Convert.FromBase64String(json["verification"].AsString());
             return witness;
+        }
+
+        public static StackItem StackItemFromJson(JObject json)
+        {
+            StackItemType type = json["type"].TryGetEnum<StackItemType>();
+            switch (type)
+            {
+                case StackItemType.Boolean:
+                    return new Boolean(json["value"].AsBoolean());
+                case StackItemType.Buffer:
+                    return new Buffer(Convert.FromBase64String(json["value"].AsString()));
+                case StackItemType.ByteString:
+                    return new ByteString(Convert.FromBase64String(json["value"].AsString()));
+                case StackItemType.Integer:
+                    return new Integer(new BigInteger(json["value"].AsNumber()));
+                case StackItemType.Array:
+                    Array array = new Array();
+                    foreach (var item in (JArray)json["value"])
+                        array.Add(StackItemFromJson(item));
+                    return array;
+                case StackItemType.Struct:
+                    Struct @struct = new Struct();
+                    foreach (var item in (JArray)json["value"])
+                        @struct.Add(StackItemFromJson(item));
+                    return @struct;
+                case StackItemType.Map:
+                    Map map = new Map();
+                    foreach (var item in (JArray)json["value"])
+                    {
+                        PrimitiveType key = (PrimitiveType)StackItemFromJson(item["key"]);
+                        map[key] = StackItemFromJson(item["value"]);
+                    }
+                    return map;
+                case StackItemType.Pointer:
+                    return new Pointer(null, (int)json["value"].AsNumber());
+                case StackItemType.InteropInterface:
+                    return new InteropInterface(new object()); // See https://github.com/neo-project/neo/blob/master/src/neo/VM/Helper.cs#L194
+            }
+            return null;
         }
     }
 }
