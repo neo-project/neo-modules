@@ -10,19 +10,21 @@ namespace Neo.Plugins
         public readonly UInt160 UserScriptHash;
         public readonly UInt256 AssetId;
         public uint Timestamp { get; private set; }
+        public UInt256 TxId { get; private set; }
         public ushort Index { get; private set; }
         
-        public int Size => 20 + 32 + sizeof(uint) + sizeof(ushort);
+        public int Size => 20 + 32 + sizeof(uint) + 32 + sizeof(ushort);
 
-        public UserSystemAssetTransferKey() : this(new UInt160(), new UInt256(), 0, 0)
+        public UserSystemAssetTransferKey() : this(new UInt160(), new UInt256(), 0, new UInt256(), 0)
         {
         }
 
-        public UserSystemAssetTransferKey(UInt160 userScriptHash, UInt256 assetId, uint timestamp, ushort index)
+        public UserSystemAssetTransferKey(UInt160 userScriptHash, UInt256 assetId, uint timestamp, UInt256 txId, ushort index)
         {
             UserScriptHash = userScriptHash;
             AssetId = assetId;
             Timestamp = timestamp;
+            TxId = txId;
             Index = index;
         }
 
@@ -36,6 +38,8 @@ namespace Neo.Plugins
             if (r2 != 0) return r2;
             var r3 = Timestamp.CompareTo(other.Timestamp);
             if (r3 != 0) return r3;
+            var r4 = TxId.CompareTo(other.TxId);
+            if (r4 != 0) return r4;
             return Index.CompareTo(other.Index);
         }
 
@@ -46,6 +50,7 @@ namespace Neo.Plugins
                 var hashCode = UserScriptHash.GetHashCode();
                 hashCode = (hashCode * 397) ^ AssetId.GetHashCode();
                 hashCode = (hashCode * 397) ^ Timestamp.GetHashCode();
+                hashCode = (hashCode * 397) ^ TxId.GetHashCode();
                 hashCode = (hashCode * 397) ^ Index.GetHashCode();
                 return hashCode;
             }
@@ -66,6 +71,7 @@ namespace Neo.Plugins
             return Equals(UserScriptHash, other.UserScriptHash)
                 && Equals(AssetId, other.AssetId) 
                 && Equals(Timestamp, other.Timestamp)
+                && Equals(TxId, other.TxId)
                 && Equals(Index, other.Index);
         }
 
@@ -76,6 +82,7 @@ namespace Neo.Plugins
             var timestampBytes = BitConverter.GetBytes(Timestamp);
             if (BitConverter.IsLittleEndian) Array.Reverse(timestampBytes);
             writer.Write(timestampBytes);
+            writer.Write(TxId.ToArray());
             writer.Write(Index);
         }
 
@@ -87,6 +94,7 @@ namespace Neo.Plugins
             reader.Read(timestampBytes, 0, sizeof(uint));
             if (BitConverter.IsLittleEndian) Array.Reverse(timestampBytes);
             Timestamp = BitConverter.ToUInt32(timestampBytes, 0);
+            ((ISerializable)TxId).Deserialize(reader);
             Index = reader.ReadUInt16();
         }
     }
