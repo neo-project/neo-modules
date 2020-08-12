@@ -156,88 +156,36 @@ namespace Neo.Plugins
 
                 if (_shouldTrackHistory)
                 {
-                    UInt160 from = UInt160.Zero;
-                    // need to get all the neo and gas outputs from the inputs
-                    List<TransactionOutput> prevOutputs = new List<TransactionOutput>();
-                    foreach (var group in tx.Inputs.GroupBy(p => p.PrevHash))
+                    // treat each input as a "sent"
+                    for (int i = 0; i < tx.Inputs.Length; i++)
                     {
-                        TransactionState txPrev = transactionsCache[group.Key];
-                        foreach (CoinReference input in group)
+                        var input = tx.Inputs[i];
+                        // find the previous tx
+                        TransactionState prevTx = transactionsCache[input.PrevHash];
+                        TransactionOutput prevOut = prevTx.Transaction.Outputs[input.PrevIndex];
+                        if (prevOut.AssetId.Equals(Blockchain.GoverningToken.Hash) || prevOut.AssetId.Equals(Blockchain.UtilityToken.Hash))
                         {
-                            TransactionOutput outPrev = txPrev.Transaction.Outputs[input.PrevIndex];
-                            if (outPrev.AssetId.Equals(Blockchain.GoverningToken.Hash) || outPrev.AssetId.Equals(Blockchain.UtilityToken.Hash))
-                                prevOutputs.Add(outPrev);
-                        }
-                    }
-
-                    Dictionary<UInt256, Fixed8> dic = new Dictionary<UInt256, Fixed8>();
-                    if (prevOutputs.Count > 0)
-                    {
-                        // has neo or gas input, group by asset id, sum each token value
-                        from = prevOutputs.First().ScriptHash;
-                        dic = prevOutputs.GroupBy(p => p.AssetId).ToDictionary(p => p.Key, p => p.Sum(q => q.Value));
-                    }
-
-                    ushort index = 0;
-                    foreach (TransactionOutput output in tx.Outputs)
-                    {
-                        if (output.AssetId.Equals(Blockchain.GoverningToken.Hash) || output.AssetId.Equals(Blockchain.UtilityToken.Hash))
-                        {
-                            // add transfers except from and to are same
-                            if (!from.Equals(output.ScriptHash))
-                            {
-                                _transfersSent.Add(new UserSystemAssetTransferKey(from, output.AssetId, block.Timestamp, index),
-                                    new UserSystemAssetTransfer()
-                                    {
-                                        UserScriptHash = output.ScriptHash,
-                                        BlockIndex = block.Index,
-                                        TxHash = tx.Hash,
-                                        Amount = output.Value
-                                    });
-                                _transfersReceived.Add(new UserSystemAssetTransferKey(output.ScriptHash, output.AssetId, block.Timestamp, index),
-                                    new UserSystemAssetTransfer
-                                    {
-                                        UserScriptHash = from,
-                                        BlockIndex = block.Index,
-                                        TxHash = tx.Hash,
-                                        Amount = output.Value
-                                    });
-                                index++;
-                            }
-                            // deduct corresponding asset value
-                            if (dic.TryGetValue(output.AssetId, out Fixed8 remain))
-                            {
-                                remain -= output.Value;
-                                if (remain <= Fixed8.Zero)
-                                    dic.Remove(output.AssetId);
-                                else
-                                    dic[output.AssetId] = remain;
-                            }
-                        }
-                    }
-
-                    // handle the remainings in the dic
-                    foreach (var pair in dic)
-                    {
-                        if (pair.Value > Fixed8.Zero)
-                        {
-                            _transfersSent.Add(new UserSystemAssetTransferKey(from, pair.Key, block.Timestamp, index),
-                                new UserSystemAssetTransfer()
-                                {
-                                    UserScriptHash = UInt160.Zero,
-                                    BlockIndex = block.Index,
-                                    TxHash = tx.Hash,
-                                    Amount = pair.Value
-                                });
-                            _transfersReceived.Add(new UserSystemAssetTransferKey(UInt160.Zero, pair.Key, block.Timestamp, index),
+                            _transfersSent.Add(new UserSystemAssetTransferKey(prevOut.ScriptHash, prevOut.AssetId, block.Timestamp, tx.Hash, (ushort)i),
                                 new UserSystemAssetTransfer
                                 {
-                                    UserScriptHash = from,
                                     BlockIndex = block.Index,
-                                    TxHash = tx.Hash,
-                                    Amount = pair.Value
+                                    Amount = prevOut.Value
                                 });
-                            index++;
+                        }
+                    }
+
+                    // treat each output as a "received"
+                    for (int i = 0; i < tx.Outputs.Length; i++)
+                    {
+                        var output = tx.Outputs[i];
+                        if (output.AssetId.Equals(Blockchain.GoverningToken.Hash) || output.AssetId.Equals(Blockchain.UtilityToken.Hash))
+                        {
+                            _transfersReceived.Add(new UserSystemAssetTransferKey(output.ScriptHash, output.AssetId, block.Timestamp, tx.Hash, (ushort)i),
+                                new UserSystemAssetTransfer
+                                {
+                                    BlockIndex = block.Index,
+                                    Amount = output.Value
+                                });
                         }
                     }
                 }
@@ -578,7 +526,8 @@ namespace Neo.Plugins
             JArray transfers = new JArray();
             JObject group = new JObject();
             group["asset_hash"] = assetId.ToString();
-            group["asset"] = assetId == Blockchain.GoverningToken.Hash ? "NEO" : assetId == Blockchain.UtilityToken.Hash ? "GAS" : "";
+            group["asset"] = assetId == Blockchain.GoverningToken.Hash ? "NEO" : assetId == Blockchain.UtilityToken.Hash ? "GAS" : throw new NotSupportedException();
+
             int resultCount = 0;
             foreach (var pair in transferPairs)
             {
@@ -586,8 +535,7 @@ namespace Neo.Plugins
                 JObject transfer = new JObject();
                 transfer["block_index"] = pair.Value.BlockIndex;
                 transfer["timestamp"] = pair.Key.Timestamp;
-                transfer["txid"] = pair.Value.TxHash.ToString();
-                transfer["transfer_address"] = pair.Value.UserScriptHash.ToString();
+                transfer["txid"] = pair.Key.TxId.ToString();
                 transfer["amount"] = pair.Value.Amount.ToString();
                 sum += pair.Value.Amount;
                 transfers.Add(transfer);
