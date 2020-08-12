@@ -13,14 +13,14 @@ namespace Neo.Plugins
         private JObject ListPlugins(JArray _params)
         {
             return new JArray(Neo.Plugins.Plugin.Plugins
-                .OrderBy(u => u.Name)
+                .OrderBy(u => u.Name).Where(u => !(u is ILogPlugin))
                 .Select(u => new JObject
                 {
                     ["name"] = u.Name,
                     ["version"] = u.Version.ToString(),
                     ["interfaces"] = new JArray(u.GetType().GetInterfaces()
                         .Select(p => p.Name)
-                        .Where(p => p.EndsWith("Plugin"))
+                        .Where(p => p.EndsWith("Plugin") || p.EndsWith("Provider"))
                         .Select(p => (JObject)p))
                 }));
         }
