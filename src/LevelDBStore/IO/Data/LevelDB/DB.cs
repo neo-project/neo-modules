@@ -78,6 +78,12 @@ namespace Neo.IO.Data.LevelDB
             NativeHelper.CheckError(error);
         }
 
+        public static void Repair(string name, Options options)
+        {
+            Native.leveldb_repair_db(options.handle, Path.GetFullPath(name), out IntPtr error);
+            NativeHelper.CheckError(error);
+        }
+
         public void Write(WriteOptions options, WriteBatch write_batch)
         {
             // There's a bug in .Net Core.
