@@ -1205,51 +1205,151 @@
     },
     "Response": {
       "jsonrpc": "2.0",
-      "id": 1,
+      "id": "1",
       "result": {
-        "txid": "0x183cd84359cd9f8b956afcd02403ec07361c1dba55f0800241b4ef2b28e88bbb",
+        "txid": "0xe36f62923deb64376e5e982e19b60afc65faca8d9e8eb71ac12f7298ce32ef7b",
         "trigger": "Application",
         "vmstate": "HALT",
-        "gasconsumed": "9007810",
-        "stack": [],
+        "gasconsumed": "5814860",
+        "stack": [
+          {
+            "type": "Array",
+            "value": [
+              {
+                "type": "Integer",
+                "value": "1"
+              },
+              {
+                "type": "Integer",
+                "value": "1223"
+              },
+              {
+                "type": "ByteString",
+                "value": "dGVzdHFxd2FzZGFz"
+              },
+              {
+                "type": "Buffer",
+                "value": "CAwiNQw="
+              },
+              {
+                "type": "Array",
+                "value": [
+                  {
+                    "type": "ByteString",
+                    "value": "YWE="
+                  },
+                  {
+                    "type": "ByteString",
+                    "value": "YmI="
+                  },
+                  {
+                    "type": "ByteString",
+                    "value": "Y2Mw"
+                  }
+                ]
+              },
+              {
+                "type": "Map",
+                "value": [
+                  {
+                    "key": {
+                      "type": "Integer",
+                      "value": "2"
+                    },
+                    "value": {
+                      "type": "Integer",
+                      "value": "12"
+                    }
+                  },
+                  {
+                    "key": {
+                      "type": "Integer",
+                      "value": "0"
+                    },
+                    "value": {
+                      "type": "Integer",
+                      "value": "24"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ],
         "notifications": [
           {
-            "contract": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
-            "eventname": "Transfer",
+            "contract": "0xbfe215933f29b29dacf0e8383722a62974ac8aa6",
+            "eventname": "event_name",
             "state": {
               "type": "Array",
               "value": [
                 {
-                  "type": "Any"
-                },
-                {
-                  "type": "ByteArray",
-                  "value": "eU9We10tADBFvus3caGe5hjcaNE="
-                },
-                {
-                  "type": "Integer",
-                  "value": "6321697534537"
-                }
-              ]
-            }
-          },
-          {
-            "contract": "0x9bde8f209c88dd0e7ca3bf0af0f476cdd8207789",
-            "eventname": "Transfer",
-            "state": {
-              "type": "Array",
-              "value": [
-                {
-                  "type": "ByteArray",
-                  "value": "eU9We10tADBFvus3caGe5hjcaNE="
-                },
-                {
-                  "type": "ByteArray",
-                  "value": "eU9We10tADBFvus3caGe5hjcaNE="
-                },
-                {
-                  "type": "Integer",
-                  "value": "99999961"
+                  "type": "Array",
+                  "value": [
+                    {
+                      "type": "Array",
+                      "value": [
+                        {
+                          "type": "Integer",
+                          "value": "1"
+                        },
+                        {
+                          "type": "Integer",
+                          "value": "1223"
+                        },
+                        {
+                          "type": "ByteString",
+                          "value": "dGVzdHFxd2FzZGFz"
+                        },
+                        {
+                          "type": "Buffer",
+                          "value": "CAwiNQw="
+                        },
+                        {
+                          "type": "Array",
+                          "value": [
+                            {
+                              "type": "ByteString",
+                              "value": "YWE="
+                            },
+                            {
+                              "type": "ByteString",
+                              "value": "YmI="
+                            },
+                            {
+                              "type": "ByteString",
+                              "value": "Y2Mw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "Map",
+                          "value": [
+                            {
+                              "key": {
+                                "type": "Integer",
+                                "value": "2"
+                              },
+                              "value": {
+                                "type": "Integer",
+                                "value": "12"
+                              }
+                            },
+                            {
+                              "key": {
+                                "type": "Integer",
+                                "value": "0"
+                              },
+                              "value": {
+                                "type": "Integer",
+                                "value": "24"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }

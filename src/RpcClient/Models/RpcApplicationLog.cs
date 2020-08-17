@@ -1,6 +1,7 @@
 using Neo.IO.Json;
 using Neo.SmartContract;
 using Neo.VM;
+using Neo.VM.Types;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,7 +17,7 @@ namespace Neo.Network.RPC.Models
 
         public long GasConsumed { get; set; }
 
-        public List<ContractParameter> Stack { get; set; }
+        public List<StackItem> Stack { get; set; }
 
         public List<RpcNotifyEventArgs> Notifications { get; set; }
 
@@ -39,7 +40,7 @@ namespace Neo.Network.RPC.Models
             log.Trigger = json["trigger"].TryGetEnum<TriggerType>();
             log.VMState = json["vmstate"].TryGetEnum<VMState>();
             log.GasConsumed = long.Parse(json["gasconsumed"].AsString());
-            log.Stack = ((JArray)json["stack"]).Select(p => ContractParameter.FromJson(p)).ToList();
+            log.Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToList();
             log.Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson(p)).ToList();
             return log;
         }
@@ -51,7 +52,7 @@ namespace Neo.Network.RPC.Models
 
         public string EventName { get; set; }
 
-        public ContractParameter State { get; set; }
+        public StackItem State { get; set; }
 
         public JObject ToJson()
         {
@@ -68,7 +69,7 @@ namespace Neo.Network.RPC.Models
             {
                 Contract = UInt160.Parse(json["contract"].AsString()),
                 EventName = json["eventname"].AsString(),
-                State = ContractParameter.FromJson(json["state"])
+                State = Utility.StackItemFromJson(json["state"])
             };
         }
     }
