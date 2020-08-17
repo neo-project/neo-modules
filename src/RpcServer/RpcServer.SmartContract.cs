@@ -84,9 +84,9 @@ namespace Neo.Plugins
         {
             var ret = new Signers(_params.Select(u => new Signer()
             {
-                Account = TryScriptHash(u["account"].AsString()),
+                Account = StringToScriptHash(u["account"].AsString()),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"]?.AsString()),
-                AllowedContracts = ((JArray)u["allowedcontracts"])?.Select(p => TryScriptHash(p.AsString())).ToArray(),
+                AllowedContracts = ((JArray)u["allowedcontracts"])?.Select(p => StringToScriptHash(p.AsString())).ToArray(),
                 AllowedGroups = ((JArray)u["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
             }).ToArray());
 
@@ -100,10 +100,10 @@ namespace Neo.Plugins
         [RpcMethod]
         private JObject InvokeFunction(JArray _params)
         {
-            UInt160 script_hash = TryScriptHash(_params[0].AsString());
+            UInt160 script_hash = StringToScriptHash(_params[0].AsString());
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
-            UInt160 sender = _params.Count >= 4 ? TryScriptHash(_params[3].AsString()) : null;
+            UInt160 sender = _params.Count >= 4 ? StringToScriptHash(_params[3].AsString()) : null;
             Signers signers = _params.Count >= 5 ? SignersFromJson((JArray)_params[4]) : null;
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
@@ -117,7 +117,7 @@ namespace Neo.Plugins
         private JObject InvokeScript(JArray _params)
         {
             byte[] script = _params[0].AsString().HexToBytes();
-            UInt160 sender = _params.Count >= 2 ? TryScriptHash(_params[1].AsString()) : null;
+            UInt160 sender = _params.Count >= 2 ? StringToScriptHash(_params[1].AsString()) : null;
             Signers signers = _params.Count >= 3 ? SignersFromJson((JArray)_params[2]) : null;
             return GetInvokeResult(script, sender, signers);
         }
@@ -130,7 +130,7 @@ namespace Neo.Plugins
             UInt160 script_hash;
             try
             {
-                script_hash = TryScriptHash(address);
+                script_hash = StringToScriptHash(address);
             }
             catch
             {
