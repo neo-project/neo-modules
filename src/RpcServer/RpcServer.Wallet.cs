@@ -313,7 +313,7 @@ namespace Neo.Plugins
         }
 
         internal static UInt160 AddressToScriptHash(string address)
-        {            
+        {
             if (UInt160.TryParse(address, out var scriptHash))
             {
                 return scriptHash;
