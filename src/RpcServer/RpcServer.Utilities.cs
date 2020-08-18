@@ -33,7 +33,7 @@ namespace Neo.Plugins
             UInt160 scriptHash;
             try
             {
-                scriptHash = StringToScriptHash(address);
+                scriptHash = AddressToScriptHash(address);
             }
             catch
             {
