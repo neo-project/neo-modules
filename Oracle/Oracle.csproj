@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Version>3.0.0-preview2</Version>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>Neo.Plugins</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Akka.TestKit" Version="1.4.5" />
+    <PackageReference Include="Akka.TestKit.Xunit2" Version="1.4.5" />
+    <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\neo\src\neo\neo.csproj" />
+    <ProjectReference Include="..\src\RpcServer\RpcServer.csproj" />
+  </ItemGroup>
+  
+</Project>

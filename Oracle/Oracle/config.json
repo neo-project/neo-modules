@@ -1,0 +1,6 @@
+{
+  "PluginConfiguration": {
+    "nodes": [ "127.0.0.1" ],
+    "wallet":  "test.json"
+  }
+}
