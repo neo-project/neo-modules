@@ -1,4 +1,4 @@
-namespace Oracle.Protocol
+namespace Neo.Plugins
 {
     interface IOracleProtocol
     {

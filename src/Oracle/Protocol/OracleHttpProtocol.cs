@@ -1,4 +1,3 @@
-using Neo;
 using System;
 using System.Linq;
 using System.Net.Http;
@@ -7,7 +6,7 @@ using System.Threading.Tasks;
 using JArray = Newtonsoft.Json.Linq.JArray;
 using JObject = Newtonsoft.Json.Linq.JObject;
 
-namespace Oracle.Protocol
+namespace Neo.Plugins
 {
     internal class OracleHttpProtocol : IOracleProtocol
     {
@@ -17,7 +16,7 @@ namespace Oracle.Protocol
 
         public byte[] Request(ulong requestId, string url, string filter)
         {
-            Utility.Log(nameof(OracleHttpProtocol), LogLevel.Debug, $"Downloading HTTPS request: url={url}");
+            Utility.Log(nameof(OracleHttpProtocol), LogLevel.Debug, $"Request: {url}");
 
             Uri.TryCreate(url, UriKind.Absolute, out var uri);
             using var handler = new HttpClientHandler

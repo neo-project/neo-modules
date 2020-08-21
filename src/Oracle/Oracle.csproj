@@ -13,8 +13,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\neo\src\neo\neo.csproj" />
-    <ProjectReference Include="..\src\RpcServer\RpcServer.csproj" />
+    <None Update="Oracle\config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\neo\src\neo\neo.csproj" />
+    <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
   </ItemGroup>
   
 </Project>
