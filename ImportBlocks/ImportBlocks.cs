@@ -107,6 +107,7 @@ namespace Neo.Plugins
                 }
             }
         }
+
         private void WriteBlocks(uint start, uint count, string path, bool writeStart)
         {
             uint end = start + count - 1;
