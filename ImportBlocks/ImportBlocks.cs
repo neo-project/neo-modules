@@ -23,29 +23,89 @@ namespace Neo.Plugins
             uint start, count;
             string path;
             if (args.Length < 2) return false;
-            if (!string.Equals(args[1], "block", StringComparison.OrdinalIgnoreCase)
-                && !string.Equals(args[1], "blocks", StringComparison.OrdinalIgnoreCase))
-                return false;
-            if (args.Length >= 3 && uint.TryParse(args[2], out start))
+            if (string.Equals(args[1], "root", StringComparison.OrdinalIgnoreCase))
             {
-                if (Blockchain.Singleton.Height < start) return true;
-                count = args.Length >= 4 ? uint.Parse(args[3]) : uint.MaxValue;
-                count = Math.Min(count, Blockchain.Singleton.Height - start + 1);
-                path = $"chain.{start}.acc";
-                writeStart = true;
+                if (args.Length >= 3 && uint.TryParse(args[2], out start))
+                {
+                    if (Blockchain.Singleton.StateHeight < start) return true;
+                    if (start < ProtocolSettings.Default.StateRootEnableIndex)
+                        start = ProtocolSettings.Default.StateRootEnableIndex;
+                    count = args.Length >= 4 ? uint.Parse(args[3]) : uint.MaxValue;
+                    count = (uint)Math.Min(count, Blockchain.Singleton.StateHeight - start + 1);
+                }
+                else
+                {
+                    start = ProtocolSettings.Default.StateRootEnableIndex;
+                    count = (uint)Blockchain.Singleton.StateHeight - start + 1;
+                }
+                if (count <= 0)
+                {
+                    Console.WriteLine("nothing to export.");
+                    return true;
+                }
+                path = $"root.{start}.acc";
+                WriteStateRoots(start, count, path);
+            }
+            else if (string.Equals(args[1], "block", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(args[1], "blocks", StringComparison.OrdinalIgnoreCase))
+            {
+                if (args.Length >= 3 && uint.TryParse(args[2], out start))
+                {
+                    if (Blockchain.Singleton.Height < start) return true;
+                    count = args.Length >= 4 ? uint.Parse(args[3]) : uint.MaxValue;
+                    count = Math.Min(count, Blockchain.Singleton.Height - start + 1);
+                    path = $"chain.{start}.acc";
+                    writeStart = true;
+                }
+                else
+                {
+                    start = 0;
+                    count = Blockchain.Singleton.Height - start + 1;
+                    path = args.Length >= 3 ? args[2] : "chain.acc";
+                    writeStart = false;
+                }
+
+                WriteBlocks(start, count, path, writeStart);
             }
             else
             {
-                start = 0;
-                count = Blockchain.Singleton.Height - start + 1;
-                path = args.Length >= 3 ? args[2] : "chain.acc";
-                writeStart = false;
+                return false;
             }
-
-            WriteBlocks(start, count, path, writeStart);
 
             Console.WriteLine();
             return true;
+        }
+
+        private void WriteStateRoots(uint start, uint count, string path)
+        {
+            uint end = start + count - 1;
+            using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.WriteThrough))
+            {
+                if (fs.Length > 0)
+                {
+                    byte[] buffer = new byte[sizeof(uint)];
+                    fs.Seek(sizeof(uint), SeekOrigin.Begin);
+                    fs.Read(buffer, 0, buffer.Length);
+                    start += BitConverter.ToUInt32(buffer, 0);
+                    fs.Seek(sizeof(uint), SeekOrigin.Begin);
+                }
+                else
+                {
+                    fs.Write(BitConverter.GetBytes(start), 0, sizeof(uint));
+                }
+                if (start <= end)
+                    fs.Write(BitConverter.GetBytes(count), 0, sizeof(uint));
+                fs.Seek(0, SeekOrigin.End);
+                for (uint i = start; i <= end; i++)
+                {
+                    StateRootState state = Blockchain.Singleton.Store.GetStateRoots().TryGet(i);
+                    byte[] array = state.StateRoot.ToArray();
+                    fs.Write(BitConverter.GetBytes(array.Length), 0, sizeof(int));
+                    fs.Write(array, 0, array.Length);
+                    Console.SetCursorPosition(0, Console.CursorTop);
+                    Console.Write($"[root:{i}/{end}]");
+                }
+            }
         }
 
         private void WriteBlocks(uint start, uint count, string path, bool writeStart)
@@ -87,7 +147,7 @@ namespace Neo.Plugins
                     fs.Write(BitConverter.GetBytes(array.Length), 0, sizeof(int));
                     fs.Write(array, 0, array.Length);
                     Console.SetCursorPosition(0, Console.CursorTop);
-                    Console.Write($"[{i}/{end}]");
+                    Console.Write($"[block:{i}/{end}]");
                 }
             }
         }
@@ -98,6 +158,7 @@ namespace Neo.Plugins
             if (!string.Equals(args[1], Name, StringComparison.OrdinalIgnoreCase))
                 return false;
             Console.Write($"{Name} Commands:\n" + "\texport block[s] <index>\n");
+            Console.Write($"\texport root <index>\n");
             return true;
         }
 

@@ -8,7 +8,6 @@ namespace Neo.Plugins
     {
         public uint BlockIndex;
         public Fixed8 Amount;
-
         public override int Size => base.Size + sizeof(uint) + Amount.Size;
 
         public override void Serialize(BinaryWriter writer)
