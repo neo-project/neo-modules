@@ -39,7 +39,7 @@ namespace Neo.Plugins
             decimal maxGasInvoke = 10,
             decimal maxFee = (decimal)0.1,
             string[] disabledMethods = null,
-            int maxConcurrentConnections = 40)
+            int maxConcurrentConnections = 100)
         {
             this.BindAddress = bindAddress ?? IPAddress.Loopback;
             this.Port = port;
@@ -66,7 +66,7 @@ namespace Neo.Plugins
             this.MaxGasInvoke = (long)BigDecimal.Parse(section.GetValue("MaxGasInvoke", "10"), NativeContract.GAS.Decimals).Value;
             this.MaxFee = (long)BigDecimal.Parse(section.GetValue("MaxFee", "0.1"), NativeContract.GAS.Decimals).Value;
             this.DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray();
-            this.MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", 40);
+            this.MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", 100);
         }
 
         public void UpdateSettings(RpcServerSettings settings)

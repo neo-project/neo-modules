@@ -9,7 +9,7 @@
     "RpcPass": "",
     "MaxGasInvoke": 10,
     "MaxFee": 0.1,
-    "MaxConcurrentConnections": 40,
+    "MaxConcurrentConnections": 100,
     "DisabledMethods": [ "openwallet" ]
   }
 }
