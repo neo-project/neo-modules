@@ -63,7 +63,7 @@ namespace Neo.Plugins
 
         private JObject GetInvokeResult(byte[] script, Signers signers = null)
         {
-            using ApplicationEngine engine = ApplicationEngine.Run(script, signers, gas: settings.MaxGasInvoke);
+            using ApplicationEngine engine = ApplicationEngine.Run(script, container: signers, gas: settings.MaxGasInvoke);
             JObject json = new JObject();
             json["script"] = script.ToHexString();
             json["state"] = engine.State;
