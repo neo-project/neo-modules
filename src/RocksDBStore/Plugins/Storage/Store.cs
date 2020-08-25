@@ -84,6 +84,8 @@ namespace Neo.Plugins.Storage
 
         public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] keyOrPrefix, SeekDirection direction = SeekDirection.Forward)
         {
+            if (keyOrPrefix == null) keyOrPrefix = Array.Empty<byte>();
+
             using var it = db.NewIterator(GetFamily(table), Options.ReadDefault);
             if (direction == SeekDirection.Forward)
                 for (it.Seek(keyOrPrefix); it.Valid(); it.Next())
@@ -95,22 +97,22 @@ namespace Neo.Plugins.Storage
 
         public byte[] TryGet(byte table, byte[] key)
         {
-            return db.Get(key, GetFamily(table), Options.ReadDefault);
+            return db.Get(key ?? Array.Empty<byte>(), GetFamily(table), Options.ReadDefault);
         }
 
         public void Delete(byte table, byte[] key)
         {
-            db.Remove(key, GetFamily(table), Options.WriteDefault);
+            db.Remove(key ?? Array.Empty<byte>(), GetFamily(table), Options.WriteDefault);
         }
 
         public void Put(byte table, byte[] key, byte[] value)
         {
-            db.Put(key, value, GetFamily(table), Options.WriteDefault);
+            db.Put(key ?? Array.Empty<byte>(), value, GetFamily(table), Options.WriteDefault);
         }
 
         public void PutSync(byte table, byte[] key, byte[] value)
         {
-            db.Put(key, value, GetFamily(table), Options.WriteDefaultSync);
+            db.Put(key ?? Array.Empty<byte>(), value, GetFamily(table), Options.WriteDefaultSync);
         }
     }
 }
