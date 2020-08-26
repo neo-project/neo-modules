@@ -79,7 +79,7 @@ namespace Neo.Plugins
         }
 
         [ConsoleCommand("start oracle", Category = "Oracle", Description = "Start oracle service")]
-        private void OnStart(String password)
+        private void OnStart(string password)
         {
             wallet.Unlock(password);
 
