@@ -14,6 +14,7 @@ using Neo.Wallets.NEP6;
 using System;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 
 namespace Neo.Network.RPC.Tests
 {
@@ -41,74 +42,69 @@ namespace Neo.Network.RPC.Tests
 
         public static Mock<RpcClient> MockRpcClient(UInt160 sender, byte[] script)
         {
-            throw new NotImplementedException();
-            // var mockRpc = new Mock<RpcClient>(MockBehavior.Strict, "http://seed1.neo.org:10331", null, null);
+            var mockRpc = new Mock<RpcClient>(MockBehavior.Strict, "http://seed1.neo.org:10331", null, null);
 
-            // // MockHeight
-            // mockRpc.Setup(p => p.RpcSend("getblockcount")).Returns(100).Verifiable();
+            // MockHeight
+            mockRpc.Setup(p => p.RpcSendAsync("getblockcount")).Returns(Task.FromResult((JObject)100)).Verifiable();
 
-            // // MockGasBalance
-            // byte[] balanceScript = NativeContract.GAS.Hash.MakeScript("balanceOf", sender);
-            // var balanceResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("10000000000000000") };
+            // MockGasBalance
+            byte[] balanceScript = NativeContract.GAS.Hash.MakeScript("balanceOf", sender);
+            var balanceResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("10000000000000000") };
 
-            // MockInvokeScript(mockRpc, balanceScript, balanceResult);
+            MockInvokeScript(mockRpc, balanceScript, balanceResult);
 
-            // // MockFeePerByte
-            // byte[] policyScript = NativeContract.Policy.Hash.MakeScript("getFeePerByte");
-            // var policyResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("1000") };
+            // MockFeePerByte
+            byte[] policyScript = NativeContract.Policy.Hash.MakeScript("getFeePerByte");
+            var policyResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("1000") };
 
-            // MockInvokeScript(mockRpc, policyScript, policyResult);
+            MockInvokeScript(mockRpc, policyScript, policyResult);
 
-            // // MockGasConsumed
-            // var result = new ContractParameter();
-            // MockInvokeScript(mockRpc, script, result);
+            // MockGasConsumed
+            var result = new ContractParameter();
+            MockInvokeScript(mockRpc, script, result);
 
-            // return mockRpc;
+            return mockRpc;
         }
 
         public static Mock<RpcClient> MockMultiSig(UInt160 multiHash, byte[] script)
         {
-                        throw new NotImplementedException();
+            var mockRpc = new Mock<RpcClient>(MockBehavior.Strict, "http://seed1.neo.org:10331", null, null);
 
-            // var mockRpc = new Mock<RpcClient>(MockBehavior.Strict, "http://seed1.neo.org:10331", null, null);
+            // MockHeight
+            mockRpc.Setup(p => p.RpcSendAsync("getblockcount")).Returns(Task.FromResult((JObject)100)).Verifiable();
 
-            // // MockHeight
-            // mockRpc.Setup(p => p.RpcSend("getblockcount")).Returns(100).Verifiable();
+            // MockGasBalance
+            byte[] balanceScript = NativeContract.GAS.Hash.MakeScript("balanceOf", multiHash);
+            var balanceResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("10000000000000000") };
 
-            // // MockGasBalance
-            // byte[] balanceScript = NativeContract.GAS.Hash.MakeScript("balanceOf", multiHash);
-            // var balanceResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("10000000000000000") };
+            MockInvokeScript(mockRpc, balanceScript, balanceResult);
 
-            // MockInvokeScript(mockRpc, balanceScript, balanceResult);
+            // MockFeePerByte
+            byte[] policyScript = NativeContract.Policy.Hash.MakeScript("getFeePerByte");
+            var policyResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("1000") };
 
-            // // MockFeePerByte
-            // byte[] policyScript = NativeContract.Policy.Hash.MakeScript("getFeePerByte");
-            // var policyResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("1000") };
+            MockInvokeScript(mockRpc, policyScript, policyResult);
 
-            // MockInvokeScript(mockRpc, policyScript, policyResult);
+            // MockGasConsumed
+            var result = new ContractParameter();
+            MockInvokeScript(mockRpc, script, result);
 
-            // // MockGasConsumed
-            // var result = new ContractParameter();
-            // MockInvokeScript(mockRpc, script, result);
-
-            // return mockRpc;
+            return mockRpc;
         }
 
         public static void MockInvokeScript(Mock<RpcClient> mockClient, byte[] script, params ContractParameter[] parameters)
         {
-                        throw new NotImplementedException();
+            var result = new RpcInvokeResult()
+            {
+                Stack = parameters.Select(p => p.ToStackItem()).ToArray(),
+                GasConsumed = "100",
+                Script = script.ToHexString(),
+                State = VMState.HALT
+            };
 
-            // var result = new RpcInvokeResult()
-            // {
-            //     Stack = parameters.Select(p => p.ToStackItem()).ToArray(),
-            //     GasConsumed = "100",
-            //     Script = script.ToHexString(),
-            //     State = VMState.HALT
-            // };
-
-            // mockClient.Setup(p => p.RpcSend("invokescript", It.Is<JObject[]>(j => j[0].AsString() == script.ToHexString())))
-            //     .Returns(result.ToJson())
-            //     .Verifiable();
+            mockClient.Setup(p => p.RpcSendAsync("invokescript", It.Is<JObject[]>(j => j[0].AsString() == script.ToHexString())))
+                .Returns(Task.FromResult(result.ToJson()))
+                .Verifiable();
         }
 
         // [TestMethod]

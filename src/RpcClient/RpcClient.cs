@@ -80,7 +80,7 @@ namespace Neo.Network.RPC
             return response;
         }
 
-        public async Task<JObject> RpcSendAsync(string method, params JObject[] paraArgs)
+        public virtual async Task<JObject> RpcSendAsync(string method, params JObject[] paraArgs)
         {
             var request = new RpcRequest
             {
