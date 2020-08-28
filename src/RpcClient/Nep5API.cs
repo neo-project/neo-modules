@@ -112,20 +112,17 @@ namespace Neo.Network.RPC
         /// <param name="to">to account script hash</param>
         /// <param name="amount">transfer amount</param>
         /// <returns></returns>
-        public Transaction CreateTransferTx(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount)
+        public async Task<Transaction> CreateTransferTx(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount)
         {
-            throw new NotImplementedException();
-            // var sender = Contract.CreateSignatureRedeemScript(fromKey.PublicKey).ToScriptHash();
-            // Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
+            var sender = Contract.CreateSignatureRedeemScript(fromKey.PublicKey).ToScriptHash();
+            Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
-            // byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
-            // Transaction tx = new TransactionManager(rpcClient)
-            //     .MakeTransaction(script, signers)
-            //     .AddSignature(fromKey)
-            //     .Sign()
-            //     .Tx;
+            byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
+            var tx = await rpcClient.MakeTransaction(script, signers)
+                .AddSignature(fromKey)
+                .SignAsync().ConfigureAwait(false);
 
-            // return tx;
+            return tx;
         }
 
         /// <summary>
@@ -138,29 +135,20 @@ namespace Neo.Network.RPC
         /// <param name="to">to account</param>
         /// <param name="amount">transfer amount</param>
         /// <returns></returns>
-        public Transaction CreateTransferTx(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] fromKeys, UInt160 to, BigInteger amount)
+        public async Task<Transaction> CreateTransferTx(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] fromKeys, UInt160 to, BigInteger amount)
         {
-            throw new NotImplementedException();
+            if (m > fromKeys.Length)
+                throw new ArgumentException($"Need at least {m} KeyPairs for signing!");
+            var sender = Contract.CreateMultiSigContract(m, pubKeys).ScriptHash;
+            Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
-            // if (m > fromKeys.Length)
-            //     throw new ArgumentException($"Need at least {m} KeyPairs for signing!");
-            // var sender = Contract.CreateMultiSigContract(m, pubKeys).ScriptHash;
-            // Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
+            byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
 
-            // byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
-            // var tm = new TransactionManager(rpcClient);
-            // Transaction tx = new TransactionManager(rpcClient)
-            //     .MakeTransaction(script, signers)
-            //     .AddMultiSig(fromKeys, m, pubKeys)
-            //     .Sign()
-            //     .Tx;
+            Transaction tx = await rpcClient.MakeTransaction(script, signers)
+                .AddMultiSig(fromKeys, m, pubKeys)
+                .SignAsync().ConfigureAwait(false);
 
-
-            // var tx = await rpcClient.MakeTransaction(script, signers)
-            //     .AddMultiSig(fromKeys, m, pubKeys)
-            //     .SignAsync();
-
-            // return tx;
+            return tx;
         }
     }
 }

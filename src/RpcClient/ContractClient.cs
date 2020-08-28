@@ -45,26 +45,23 @@ namespace Neo.Network.RPC
         /// <param name="manifest">contract manifest</param>
         /// <param name="key">sender KeyPair</param>
         /// <returns></returns>
-        public Transaction CreateDeployContractTx(byte[] contractScript, ContractManifest manifest, KeyPair key)
+        public async Task<Transaction> CreateDeployContractTx(byte[] contractScript, ContractManifest manifest, KeyPair key)
         {
-            throw new NotImplementedException();
+            byte[] script;
+            using (ScriptBuilder sb = new ScriptBuilder())
+            {
+                sb.EmitSysCall(ApplicationEngine.System_Contract_Create, contractScript, manifest.ToString());
+                script = sb.ToArray();
+            }
+            UInt160 sender = Contract.CreateSignatureRedeemScript(key.PublicKey).ToScriptHash();
+            Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
-            // byte[] script;
-            // using (ScriptBuilder sb = new ScriptBuilder())
-            // {
-            //     sb.EmitSysCall(ApplicationEngine.System_Contract_Create, contractScript, manifest.ToString());
-            //     script = sb.ToArray();
-            // }
-            // UInt160 sender = Contract.CreateSignatureRedeemScript(key.PublicKey).ToScriptHash();
-            // Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
+            Transaction tx = await rpcClient
+                .MakeTransaction(script, signers)
+                .AddSignature(key)
+                .SignAsync().ConfigureAwait(false);
 
-            // Transaction tx = new TransactionManager(rpcClient)
-            //     .MakeTransaction(script, signers)
-            //     .AddSignature(key)
-            //     .Sign()
-            //     .Tx;
-
-            // return tx;
+            return tx;
         }
     }
 }

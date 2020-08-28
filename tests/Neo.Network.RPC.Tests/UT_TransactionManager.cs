@@ -21,7 +21,7 @@ namespace Neo.Network.RPC.Tests
     [TestClass]
     public class UT_TransactionManager
     {
-        TransactionManager txManager;
+        // TransactionManager txManager;
         Mock<RpcClient> rpcClientMock;
         Mock<RpcClient> multiSigMock;
         KeyPair keyPair1;

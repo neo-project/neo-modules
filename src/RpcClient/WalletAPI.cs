@@ -118,7 +118,7 @@ namespace Neo.Network.RPC
         {
             UInt160 toHash = Contract.CreateSignatureRedeemScript(keyPair.PublicKey).ToScriptHash();
             BigInteger balance = await nep5API.BalanceOf(NativeContract.NEO.Hash, toHash).ConfigureAwait(false);
-            Transaction transaction = nep5API.CreateTransferTx(NativeContract.NEO.Hash, keyPair, toHash, balance);
+            Transaction transaction = await nep5API.CreateTransferTx(NativeContract.NEO.Hash, keyPair, toHash, balance).ConfigureAwait(false);
             await rpcClient.SendRawTransaction(transaction).ConfigureAwait(false);
             return transaction;
         }
@@ -153,7 +153,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<Transaction> Transfer(UInt160 scriptHash, KeyPair from, UInt160 to, BigInteger amountInteger)
         {
-            Transaction transaction = nep5API.CreateTransferTx(scriptHash, from, to, amountInteger);
+            Transaction transaction = await nep5API.CreateTransferTx(scriptHash, from, to, amountInteger).ConfigureAwait(false);
             await rpcClient.SendRawTransaction(transaction).ConfigureAwait(false);
             return transaction;
         }
@@ -170,7 +170,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<Transaction> Transfer(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] keys, UInt160 to, BigInteger amountInteger)
         {
-            Transaction transaction = nep5API.CreateTransferTx(scriptHash, m, pubKeys, keys, to, amountInteger);
+            Transaction transaction = await nep5API.CreateTransferTx(scriptHash, m, pubKeys, keys, to, amountInteger).ConfigureAwait(false);
             await rpcClient.SendRawTransaction(transaction).ConfigureAwait(false);
             return transaction;
         }

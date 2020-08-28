@@ -16,6 +16,11 @@ namespace Neo.Network.RPC
 {
     public static class Utility
     {
+        public static MakeTransactionContext MakeTransaction(this RpcClient rpcClient, byte[] script, Signer[] signers = null, TransactionAttribute[] attributes = null)
+        {
+            return new MakeTransactionContext(rpcClient, script, signers, attributes);
+        }
+
         private static (BigInteger numerator, BigInteger denominator) Fraction(decimal d)
         {
             int[] bits = decimal.GetBits(d);
