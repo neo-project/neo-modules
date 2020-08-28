@@ -123,8 +123,8 @@ namespace Neo.Network.RPC
         public async Task<RpcBlock> GetBlock(string hashOrIndex)
         {
             var result = int.TryParse(hashOrIndex, out int index)
-                ? await RpcSendAsync("getblock", index).ConfigureAwait(false)
-                : await RpcSendAsync("getblock", hashOrIndex).ConfigureAwait(false);
+                ? await RpcSendAsync("getblock", index, true).ConfigureAwait(false)
+                : await RpcSendAsync("getblock", hashOrIndex, true).ConfigureAwait(false);
 
             return RpcBlock.FromJson(result);
         }
@@ -164,8 +164,8 @@ namespace Neo.Network.RPC
         public async Task<RpcBlockHeader> GetBlockHeader(string hashOrIndex)
         {
             var result = int.TryParse(hashOrIndex, out int index)
-                ? await RpcSendAsync("getblockheader", index).ConfigureAwait(false)
-                : await RpcSendAsync("getblockheader", hashOrIndex).ConfigureAwait(false);
+                ? await RpcSendAsync("getblockheader", index, true).ConfigureAwait(false)
+                : await RpcSendAsync("getblockheader", hashOrIndex, true).ConfigureAwait(false);
 
             return RpcBlockHeader.FromJson(result);
         }
