@@ -8,6 +8,7 @@ using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Neo.Network.RPC
 {
@@ -55,10 +56,10 @@ namespace Neo.Network.RPC
         /// <param name="script">Transaction Script</param>
         /// <param name="attributes">Transaction Attributes</param>
         /// <returns></returns>
-        public TransactionManager MakeTransaction(byte[] script, Signer[] signers = null, TransactionAttribute[] attributes = null)
+        public async Task<TransactionManager> MakeTransaction(byte[] script, Signer[] signers = null, TransactionAttribute[] attributes = null)
         {
             var random = new Random();
-            uint height = rpcClient.GetBlockCount() - 1;
+            uint height = await rpcClient.GetBlockCount() - 1;
             Tx = new Transaction
             {
                 Version = 0,
@@ -69,7 +70,7 @@ namespace Neo.Network.RPC
                 Attributes = attributes ?? Array.Empty<TransactionAttribute>(),
             };
 
-            RpcInvokeResult result = rpcClient.InvokeScript(script, signers);
+            RpcInvokeResult result = await rpcClient.InvokeScript(script, signers).ConfigureAwait(false);
             Tx.SystemFee = long.Parse(result.GasConsumed);
             context = new ContractParametersContext(Tx);
             signStore = new List<SignItem>();
@@ -81,7 +82,7 @@ namespace Neo.Network.RPC
         /// Calculate NetworkFee
         /// </summary>
         /// <returns></returns>
-        private long CalculateNetworkFee()
+        private async Task<long> CalculateNetworkFee()
         {
             long networkFee = 0;
             UInt160[] hashes = Tx.GetScriptHashesForVerifying(null);
@@ -96,7 +97,8 @@ namespace Neo.Network.RPC
                 {
                     try
                     {
-                        witness_script = rpcClient.GetContractState(hash.ToString())?.Script;
+                        var contractState = await rpcClient.GetContractState(hash.ToString()).ConfigureAwait(false);
+                        witness_script = contractState?.Script;
                     }
                     catch { }
                 }
@@ -104,7 +106,7 @@ namespace Neo.Network.RPC
                 if (witness_script is null) continue;
                 networkFee += Wallet.CalculateNetworkFee(witness_script, ref size);
             }
-            networkFee += size * policyAPI.GetFeePerByte();
+            networkFee += size * (await policyAPI.GetFeePerByte().ConfigureAwait(false));
             return networkFee;
         }
 
@@ -194,11 +196,11 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Verify Witness count and add witnesses
         /// </summary>
-        public TransactionManager Sign()
+        public async Task<TransactionManager> Sign()
         {
             // Calculate NetworkFee
-            Tx.NetworkFee = CalculateNetworkFee();
-            var gasBalance = nep5API.BalanceOf(NativeContract.GAS.Hash, Tx.Sender);
+            Tx.NetworkFee = await CalculateNetworkFee().ConfigureAwait(false);
+            var gasBalance = await nep5API.BalanceOf(NativeContract.GAS.Hash, Tx.Sender).ConfigureAwait(false);
             if (gasBalance < Tx.SystemFee + Tx.NetworkFee)
                 throw new InvalidOperationException($"Insufficient GAS in address: {Tx.Sender.ToAddress()}");
 

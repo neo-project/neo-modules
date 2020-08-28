@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Neo.SmartContract;
@@ -24,13 +25,13 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
-        public void TestInvoke()
+        public async Task TestInvoke()
         {
             byte[] testScript = NativeContract.GAS.Hash.MakeScript("balanceOf", UInt160.Zero);
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.ByteArray, Value = "00e057eb481b".HexToBytes() });
 
             ContractClient contractClient = new ContractClient(rpcClientMock.Object);
-            var result = contractClient.TestInvoke(NativeContract.GAS.Hash, "balanceOf", UInt160.Zero);
+            var result = await contractClient.TestInvoke(NativeContract.GAS.Hash, "balanceOf", UInt160.Zero);
 
             Assert.AreEqual(30000000000000L, (long)result.Stack[0].GetInteger());
         }

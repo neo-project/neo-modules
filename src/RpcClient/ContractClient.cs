@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
@@ -30,7 +32,7 @@ namespace Neo.Network.RPC
         /// <param name="operation">contract operation</param>
         /// <param name="args">operation arguments</param>
         /// <returns></returns>
-        public RpcInvokeResult TestInvoke(UInt160 scriptHash, string operation, params object[] args)
+        public Task<RpcInvokeResult> TestInvoke(UInt160 scriptHash, string operation, params object[] args)
         {
             byte[] script = scriptHash.MakeScript(operation, args);
             return rpcClient.InvokeScript(script);
@@ -45,22 +47,24 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public Transaction CreateDeployContractTx(byte[] contractScript, ContractManifest manifest, KeyPair key)
         {
-            byte[] script;
-            using (ScriptBuilder sb = new ScriptBuilder())
-            {
-                sb.EmitSysCall(ApplicationEngine.System_Contract_Create, contractScript, manifest.ToString());
-                script = sb.ToArray();
-            }
-            UInt160 sender = Contract.CreateSignatureRedeemScript(key.PublicKey).ToScriptHash();
-            Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
+            throw new NotImplementedException();
 
-            Transaction tx = new TransactionManager(rpcClient)
-                .MakeTransaction(script, signers)
-                .AddSignature(key)
-                .Sign()
-                .Tx;
+            // byte[] script;
+            // using (ScriptBuilder sb = new ScriptBuilder())
+            // {
+            //     sb.EmitSysCall(ApplicationEngine.System_Contract_Create, contractScript, manifest.ToString());
+            //     script = sb.ToArray();
+            // }
+            // UInt160 sender = Contract.CreateSignatureRedeemScript(key.PublicKey).ToScriptHash();
+            // Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
-            return tx;
+            // Transaction tx = new TransactionManager(rpcClient)
+            //     .MakeTransaction(script, signers)
+            //     .AddSignature(key)
+            //     .Sign()
+            //     .Tx;
+
+            // return tx;
         }
     }
 }
