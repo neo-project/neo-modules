@@ -87,12 +87,13 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<RpcNep5TokenInfo> GetTokenInfo(UInt160 scriptHash)
         {
-            byte[] script = Concat(scriptHash.MakeScript("name"),
+            byte[] script = Concat(
+                scriptHash.MakeScript("name"),
                 scriptHash.MakeScript("symbol"),
                 scriptHash.MakeScript("decimals"),
                 scriptHash.MakeScript("totalSupply"));
 
-            var result = await TestInvoke(scriptHash, "totalSupply").ConfigureAwait(false);
+            var result = await rpcClient.InvokeScript(script).ConfigureAwait(false);
             var stack = result.Stack;
 
             return new RpcNep5TokenInfo

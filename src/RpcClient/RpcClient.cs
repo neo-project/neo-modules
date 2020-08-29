@@ -143,7 +143,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public async Task<string> GetBlockHash(int index)
         {
-            var result = await RpcSendAsync("getblockhash").ConfigureAwait(false);
+            var result = await RpcSendAsync("getblockhash", index).ConfigureAwait(false);
             return result.AsString();
         }
 
