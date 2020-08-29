@@ -84,7 +84,7 @@ namespace Neo.Network.RPC.Tests
 
             var json = new JObject();
             json["hash"] = UInt256.Zero.ToString();
-            rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JObject>())).Returns(Task.FromResult(json));
+            rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JObject>())).ReturnsAsync(json);
 
             var tranaction = await walletAPI.ClaimGas(keyPair1.Export());
             Assert.AreEqual(testScript.ToHexString(), tranaction.Script.ToHexString());
@@ -101,7 +101,7 @@ namespace Neo.Network.RPC.Tests
 
             var json = new JObject();
             json["hash"] = UInt256.Zero.ToString();
-            rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JObject>())).Returns(Task.FromResult(json));
+            rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JObject>())).ReturnsAsync(json);
 
             var tranaction = await walletAPI.Transfer(NativeContract.GAS.Hash.ToString(), keyPair1.Export(), UInt160.Zero.ToAddress(), 100);
             Assert.AreEqual(testScript.ToHexString(), tranaction.Script.ToHexString());
@@ -123,7 +123,7 @@ namespace Neo.Network.RPC.Tests
 
             var json = new JObject();
             json["hash"] = UInt256.Zero.ToString();
-            rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JObject>())).Returns(Task.FromResult(json));
+            rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JObject>())).ReturnsAsync(json);
 
             var tranaction = await walletAPI.Transfer(NativeContract.GAS.Hash, 1, new[] { keyPair1.PublicKey }, new[] { keyPair1 }, UInt160.Zero, NativeContract.GAS.Factor * 100);
             Assert.AreEqual(testScript.ToHexString(), tranaction.Script.ToHexString());
@@ -134,7 +134,7 @@ namespace Neo.Network.RPC.Tests
         {
             Transaction transaction = TestUtils.GetTransaction();
             rpcClientMock.Setup(p => p.RpcSendAsync("getrawtransaction", It.Is<JObject[]>(j => j[0].AsString() == transaction.Hash.ToString())))
-                .Returns(Task.FromResult(new RpcTransaction { Transaction = transaction, VMState = VMState.HALT, BlockHash = UInt256.Zero, BlockTime = 100, Confirmations = 1 }.ToJson()));
+                .ReturnsAsync(new RpcTransaction { Transaction = transaction, VMState = VMState.HALT, BlockHash = UInt256.Zero, BlockTime = 100, Confirmations = 1 }.ToJson());
 
             var tx = await walletAPI.WaitTransaction(transaction);
             Assert.AreEqual(VMState.HALT, tx.VMState);
