@@ -31,7 +31,7 @@ namespace Neo.Network.RPC
         private readonly List<SignItem> signStore = new List<SignItem>();
         
         // task to manage fluent async operations 
-        private Task task = Task.FromResult(0);
+        private Task fluentOperationsTask = Task.FromResult(0);
 
         /// <summary>
         /// The Transaction managed by this class
@@ -94,7 +94,7 @@ namespace Neo.Network.RPC
         public TransactionManager AddSignature(KeyPair key)
         {
             var contract = Contract.CreateSignatureContract(key.PublicKey);
-            QueueWork(() => { AddSignItem(contract, key); } );
+            AddSignItem(contract, key);
             return this;
         }
 
@@ -107,7 +107,7 @@ namespace Neo.Network.RPC
         public TransactionManager AddMultiSig(KeyPair key, int m, params ECPoint[] publicKeys)
         {
             Contract contract = Contract.CreateMultiSigContract(m, publicKeys);
-            QueueWork(() => { AddSignItem(contract, key); } );
+            AddSignItem(contract, key);
             return this;
         }
 
@@ -122,8 +122,7 @@ namespace Neo.Network.RPC
             Contract contract = Contract.CreateMultiSigContract(m, publicKeys);
             for (int i = 0; i < keys.Length; i++)
             {
-                KeyPair key = keys[i];
-                QueueWork(() => { AddSignItem(contract, key); } );
+                AddSignItem(contract, keys[i]);
             }
             return this;
         }
@@ -161,7 +160,7 @@ namespace Neo.Network.RPC
         public async Task<Transaction> SignAsync()
         {
             // wait for all queued work to complete
-            await task;
+            await fluentOperationsTask;
 
             // Calculate NetworkFee
             transaction.NetworkFee = await CalculateNetworkFee().ConfigureAwait(false);
@@ -232,25 +231,27 @@ namespace Neo.Network.RPC
 
         private void AddSignItem(Contract contract, KeyPair key)
         {
-            if (!transaction.GetScriptHashesForVerifying(null).Contains(contract.ScriptHash))
-            {
-                throw new Exception($"Add SignItem error: Mismatch ScriptHash ({contract.ScriptHash.ToString()})");
-            }
+            QueueWork(() => {
+                if (!transaction.GetScriptHashesForVerifying(null).Contains(contract.ScriptHash))
+                {
+                    throw new Exception($"Add SignItem error: Mismatch ScriptHash ({contract.ScriptHash.ToString()})");
+                }
 
-            SignItem item = signStore.FirstOrDefault(p => p.Contract.ScriptHash == contract.ScriptHash);
-            if (item is null)
-            {
-                signStore.Add(new SignItem { Contract = contract, KeyPairs = new HashSet<KeyPair> { key } });
-            }
-            else if (!item.KeyPairs.Contains(key))
-            {
-                item.KeyPairs.Add(key);
-            }
+                SignItem item = signStore.FirstOrDefault(p => p.Contract.ScriptHash == contract.ScriptHash);
+                if (item is null)
+                {
+                    signStore.Add(new SignItem { Contract = contract, KeyPairs = new HashSet<KeyPair> { key } });
+                }
+                else if (!item.KeyPairs.Contains(key))
+                {
+                    item.KeyPairs.Add(key);
+                }
+             });
         }
 
         private void QueueWork(Func<Task, Task> action)
         {
-            task = task.ContinueWith(action, TaskContinuationOptions.OnlyOnRanToCompletion);
+            fluentOperationsTask = fluentOperationsTask.ContinueWith(action, TaskContinuationOptions.OnlyOnRanToCompletion);
         }
 
         private void QueueWork(Action action)
