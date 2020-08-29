@@ -165,6 +165,7 @@ namespace Neo.Network.RPC.Tests
             await ThrowsAsync<Exception>(async () => await txManager.AddSignature(keyPair2).SignAsync());
         }
 
+        // https://docs.microsoft.com/en-us/archive/msdn-magazine/2014/november/async-programming-unit-testing-asynchronous-code#testing-exceptions
         static async Task<TException> ThrowsAsync<TException>(Func<Task> action, bool allowDerivedTypes = true)
             where TException : Exception
         {
