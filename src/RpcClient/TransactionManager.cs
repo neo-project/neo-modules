@@ -29,7 +29,7 @@ namespace Neo.Network.RPC
         /// This container stores the keys for sign the transaction
         /// </summary>
         private readonly List<SignItem> signStore = new List<SignItem>();
-        
+
         // task to manage fluent async operations 
         private Task fluentOperationsTask = Task.FromResult(0);
 
@@ -71,19 +71,19 @@ namespace Neo.Network.RPC
             transaction.Signers = signers ?? Array.Empty<Signer>();
             transaction.Attributes = attributes ?? Array.Empty<TransactionAttribute>();
 
-            QueueWork(async t => 
+            QueueWork(async t =>
             {
                 uint height = await rpcClient.GetBlockCount().ConfigureAwait(false) - 1;
                 transaction.ValidUntilBlock = height + Transaction.MaxValidUntilBlockIncrement;
             });
 
-            QueueWork(async t => 
+            QueueWork(async t =>
             {
                 RpcInvokeResult result = await rpcClient.InvokeScript(script, signers).ConfigureAwait(false);
                 transaction.SystemFee = long.Parse(result.GasConsumed);
             });
-           
-           return this;
+
+            return this;
         }
 
         /// <summary>
@@ -134,7 +134,8 @@ namespace Neo.Network.RPC
         /// <param name="parameters">The witness invocation parameters</param>
         public TransactionManager AddWitness(Contract contract, params object[] parameters)
         {
-            QueueWork(() => {
+            QueueWork(() =>
+            {
                 if (!context.Add(contract, parameters))
                 {
                     throw new Exception("AddWitness failed!");
@@ -199,7 +200,7 @@ namespace Neo.Network.RPC
         {
             long networkFee = 0;
             UInt160[] hashes = transaction.GetScriptHashesForVerifying(null);
-            int size = Transaction.HeaderSize 
+            int size = Transaction.HeaderSize
                 + transaction.Signers.GetVarSize()
                 + transaction.Attributes.GetVarSize()
                 + transaction.Script.GetVarSize()
@@ -231,7 +232,8 @@ namespace Neo.Network.RPC
 
         private void AddSignItem(Contract contract, KeyPair key)
         {
-            QueueWork(() => {
+            QueueWork(() =>
+            {
                 if (!transaction.GetScriptHashesForVerifying(null).Contains(contract.ScriptHash))
                 {
                     throw new Exception($"Add SignItem error: Mismatch ScriptHash ({contract.ScriptHash.ToString()})");
@@ -246,7 +248,7 @@ namespace Neo.Network.RPC
                 {
                     item.KeyPairs.Add(key);
                 }
-             });
+            });
         }
 
         private void QueueWork(Func<Task, Task> action)
@@ -256,7 +258,8 @@ namespace Neo.Network.RPC
 
         private void QueueWork(Action action)
         {
-            QueueWork(_ => {
+            QueueWork(_ =>
+            {
                 action();
                 return Task.FromResult(0);
             });
