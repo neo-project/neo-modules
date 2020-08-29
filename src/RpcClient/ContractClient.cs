@@ -56,7 +56,7 @@ namespace Neo.Network.RPC
             UInt160 sender = Contract.CreateSignatureRedeemScript(key.PublicKey).ToScriptHash();
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
-            Transaction tx = await rpcClient
+            Transaction tx = await new TransactionManager(rpcClient)
                 .MakeTransaction(script, signers)
                 .AddSignature(key)
                 .SignAsync().ConfigureAwait(false);

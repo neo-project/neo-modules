@@ -67,7 +67,7 @@ namespace Neo.Network.RPC
             if (disposedValue) throw new ObjectDisposedException(nameof(RpcClient));
 
             var requestJson = request.ToJson().ToString();
-            using var result = await httpClient.PostAsync(baseAddress, new StringContent(requestJson, Encoding.UTF8)).ConfigureAwait(false);
+             using var result = await httpClient.PostAsync(baseAddress, new StringContent(requestJson, Encoding.UTF8)).ConfigureAwait(false);
             var content = await result.Content.ReadAsStringAsync();
             var response = RpcResponse.FromJson(JObject.Parse(content));
             response.RawResponse = content;
