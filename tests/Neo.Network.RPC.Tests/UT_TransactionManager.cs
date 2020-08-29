@@ -21,7 +21,7 @@ namespace Neo.Network.RPC.Tests
     [TestClass]
     public class UT_TransactionManager
     {
-        // TransactionManager txManager;
+        TransactionManager txManager;
         Mock<RpcClient> rpcClientMock;
         Mock<RpcClient> multiSigMock;
         KeyPair keyPair1;
@@ -107,116 +107,116 @@ namespace Neo.Network.RPC.Tests
                 .Verifiable();
         }
 
-        // [TestMethod]
-        // public void TestMakeTransaction()
-        // {
-        //     txManager = new TransactionManager(rpcClientMock.Object);
+        [TestMethod]
+        public void TestMakeTransaction()
+        {
+            txManager = new TransactionManager(rpcClientMock.Object);
 
-        //     Signer[] signers = new Signer[1]
-        //     {
-        //         new Signer
-        //         {
-        //             Account = sender,
-        //             Scopes= WitnessScope.Global
-        //         }
-        //     };
+            Signer[] signers = new Signer[1]
+            {
+                new Signer
+                {
+                    Account = sender,
+                    Scopes= WitnessScope.Global
+                }
+            };
 
-        //     byte[] script = new byte[1];
-        //     txManager.MakeTransaction(script, signers);
+            byte[] script = new byte[1];
+            txManager.MakeTransaction(script, signers);
 
-        //     var tx = txManager.Tx;
-        //     Assert.AreEqual(WitnessScope.Global, tx.Signers[0].Scopes);
-        // }
+            var tx = txManager.Tx;
+            Assert.AreEqual(WitnessScope.Global, tx.Signers[0].Scopes);
+        }
 
-        // [TestMethod]
-        // public void TestSign()
-        // {
-        //     txManager = new TransactionManager(rpcClientMock.Object);
+        [TestMethod]
+        public async Task TestSign()
+        {
+            txManager = new TransactionManager(rpcClientMock.Object);
 
-        //     Signer[] signers = new Signer[1]
-        //     {
-        //         new Signer
-        //         {
-        //             Account  =  sender,
-        //             Scopes = WitnessScope.Global
-        //         }
-        //     };
+            Signer[] signers = new Signer[1]
+            {
+                new Signer
+                {
+                    Account  =  sender,
+                    Scopes = WitnessScope.Global
+                }
+            };
 
-        //     byte[] script = new byte[1];
-        //     txManager.MakeTransaction(script, signers)
-        //         .AddSignature(keyPair1)
-        //         .Sign();
+            byte[] script = new byte[1];
+            await txManager.MakeTransaction(script, signers)
+                .AddSignature(keyPair1)
+                .SignAsync();
 
-        //     // get signature from Witnesses
-        //     var tx = txManager.Tx;
-        //     byte[] signature = tx.Witnesses[0].InvocationScript.Skip(2).ToArray();
+            // get signature from Witnesses
+            var tx = txManager.Tx;
+            byte[] signature = tx.Witnesses[0].InvocationScript.Skip(2).ToArray();
 
-        //     Assert.IsTrue(Crypto.VerifySignature(tx.GetHashData(), signature, keyPair1.PublicKey));
-        //     // verify network fee and system fee
-        //     long networkFee = tx.Size * (long)1000 + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHNULL] + ApplicationEngine.ECDsaVerifyPrice * 1;
-        //     Assert.AreEqual(networkFee, tx.NetworkFee);
-        //     Assert.AreEqual(100, tx.SystemFee);
+            Assert.IsTrue(Crypto.VerifySignature(tx.GetHashData(), signature, keyPair1.PublicKey));
+            // verify network fee and system fee
+            long networkFee = tx.Size * (long)1000 + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHNULL] + ApplicationEngine.ECDsaVerifyPrice * 1;
+            Assert.AreEqual(networkFee, tx.NetworkFee);
+            Assert.AreEqual(100, tx.SystemFee);
 
-        //     // duplicate sign should not add new witness
-        //     txManager.AddSignature(keyPair1).Sign();
-        //     Assert.AreEqual(1, txManager.Tx.Witnesses.Length);
+            // duplicate sign should not add new witness
+            await txManager.AddSignature(keyPair1).SignAsync();
+            Assert.AreEqual(1, txManager.Tx.Witnesses.Length);
 
-        //     // throw exception when the KeyPair is wrong
-        //     Assert.ThrowsException<Exception>(() => txManager.AddSignature(keyPair2).Sign());
-        // }
+            // throw exception when the KeyPair is wrong
+            await AssertEx.ThrowsAsync<Exception>(async () => await txManager.AddSignature(keyPair2).SignAsync());
+        }
 
-        // [TestMethod]
-        // public void TestSignMulti()
-        // {
-        //     txManager = new TransactionManager(multiSigMock.Object);
+        [TestMethod]
+        public async Task TestSignMulti()
+        {
+            txManager = new TransactionManager(multiSigMock.Object);
 
-        //     // Cosigner needs multi signature
-        //     Signer[] signers = new Signer[1]
-        //     {
-        //         new Signer
-        //         {
-        //             Account = multiHash,
-        //             Scopes = WitnessScope.Global
-        //         }
-        //     };
+            // Cosigner needs multi signature
+            Signer[] signers = new Signer[1]
+            {
+                new Signer
+                {
+                    Account = multiHash,
+                    Scopes = WitnessScope.Global
+                }
+            };
 
-        //     byte[] script = new byte[1];
-        //     txManager.MakeTransaction(script, signers)
-        //         .AddMultiSig(keyPair1, 2, keyPair1.PublicKey, keyPair2.PublicKey)
-        //         .AddMultiSig(keyPair2, 2, keyPair1.PublicKey, keyPair2.PublicKey)
-        //         .Sign();
-        // }
+            byte[] script = new byte[1];
+            await txManager.MakeTransaction(script, signers)
+                .AddMultiSig(keyPair1, 2, keyPair1.PublicKey, keyPair2.PublicKey)
+                .AddMultiSig(keyPair2, 2, keyPair1.PublicKey, keyPair2.PublicKey)
+                .SignAsync();
+        }
 
-        // [TestMethod]
-        // public void TestAddWitness()
-        // {
-        //     txManager = new TransactionManager(rpcClientMock.Object);
+        [TestMethod]
+        public async Task TestAddWitness()
+        {
+            txManager = new TransactionManager(rpcClientMock.Object);
 
-        //     // Cosigner as contract scripthash
-        //     Signer[] signers = new Signer[2]
-        //     {
-        //         new Signer
-        //         {
-        //             Account = sender,
-        //             Scopes = WitnessScope.Global
-        //         },
-        //         new Signer
-        //         {
-        //             Account = UInt160.Zero,
-        //             Scopes = WitnessScope.Global
-        //         }
-        //     };
+            // Cosigner as contract scripthash
+            Signer[] signers = new Signer[2]
+            {
+                new Signer
+                {
+                    Account = sender,
+                    Scopes = WitnessScope.Global
+                },
+                new Signer
+                {
+                    Account = UInt160.Zero,
+                    Scopes = WitnessScope.Global
+                }
+            };
 
-        //     byte[] script = new byte[1];
-        //     txManager.MakeTransaction(script, signers);
-        //     txManager.AddWitness(UInt160.Zero);
-        //     txManager.AddSignature(keyPair1);
-        //     txManager.Sign();
+            byte[] script = new byte[1];
+            txManager.MakeTransaction(script, signers);
+            txManager.AddWitness(UInt160.Zero);
+            txManager.AddSignature(keyPair1);
+            await txManager.SignAsync();
 
-        //     var tx = txManager.Tx;
-        //     Assert.AreEqual(2, tx.Witnesses.Length);
-        //     Assert.AreEqual(41, tx.Witnesses[0].VerificationScript.Length);
-        //     Assert.AreEqual(66, tx.Witnesses[0].InvocationScript.Length);
-        // }
+            var tx = txManager.Tx;
+            Assert.AreEqual(2, tx.Witnesses.Length);
+            Assert.AreEqual(41, tx.Witnesses[0].VerificationScript.Length);
+            Assert.AreEqual(66, tx.Witnesses[0].InvocationScript.Length);
+        }
     }
 }

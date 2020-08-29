@@ -100,12 +100,12 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
-        public void TestTransfer()
+        public async Task TestTransfer()
         {
             byte[] testScript = NativeContract.GAS.Hash.MakeScript("transfer", sender, UInt160.Zero, new BigInteger(1_00000000));
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter());
 
-            var result = nep5API.CreateTransferTx(NativeContract.GAS.Hash, keyPair1, UInt160.Zero, new BigInteger(1_00000000));
+            var result = await nep5API.CreateTransferTx(NativeContract.GAS.Hash, keyPair1, UInt160.Zero, new BigInteger(1_00000000));
             Assert.IsNotNull(result);
         }
     }

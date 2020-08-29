@@ -37,7 +37,7 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
-        public void TestDeployContract()
+        public async Task TestDeployContract()
         {
             byte[] script;
             var manifest = new ContractManifest()
@@ -65,7 +65,7 @@ namespace Neo.Network.RPC.Tests
             UT_TransactionManager.MockInvokeScript(rpcClientMock, script, new ContractParameter());
 
             ContractClient contractClient = new ContractClient(rpcClientMock.Object);
-            var result = contractClient.CreateDeployContractTx(new byte[1], manifest, keyPair1);
+            var result = await contractClient.CreateDeployContractTx(new byte[1], manifest, keyPair1);
 
             Assert.IsNotNull(result);
         }
