@@ -67,13 +67,13 @@ namespace Neo.Network.RPC
 
             context = new ContractParametersContext(Tx);
 
-            QueueWork(async t =>
+            QueueWork(async _ =>
             {
                 uint height = await rpcClient.GetBlockCount().ConfigureAwait(false) - 1;
                 Tx.ValidUntilBlock = height + Transaction.MaxValidUntilBlockIncrement;
             });
 
-            QueueWork(async t =>
+            QueueWork(async _ =>
             {
                 RpcInvokeResult result = await rpcClient.InvokeScript(script, signers).ConfigureAwait(false);
                 Tx.SystemFee = long.Parse(result.GasConsumed);
