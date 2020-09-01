@@ -43,13 +43,13 @@ namespace SimplePolicy.UnitTests
 
             ClaimTransaction claimTxZero1 = GetClaimTransaction(0);
             claimTxZero1.Size.Should().Be(7 + 21); // 7 + 21 (random script)
-            claimTxZero1.Hash.ToString().Should().Be("0x60037520be0fd903703c2b67973296f22cac8932db07a2723addf79478aea75f");
+            claimTxZero1.Hash.ToString().Should().Be("0x048f7be45b65917ed6a27e622b44b496eb6d114ce2fe77e56bc1e5b8d0bb886d");
             ClaimTransaction claimTxZero2 = GetClaimTransaction(0);
             claimTxZero2.Size.Should().Be(7 + 21); // 7 + 21 (random script)
-            claimTxZero2.Hash.ToString().Should().Be("0xb29426673b3ef5c226bd35d53c2cb2242e09c06f0efe9c0d5be2034f41cb85ba");
+            claimTxZero2.Hash.ToString().Should().Be("0xc84886a3bde0f48289dc10de0b6524c4f7e24d4a9cce12c385d5fefa6149bd38");
             ClaimTransaction claimTxZero3 = GetClaimTransaction(0);
             claimTxZero3.Size.Should().Be(7 + 21); // 7 + 21 (random script)
-            claimTxZero3.Hash.ToString().Should().Be("0x01027faead9a0538048db7ac5657172f6e2240bff3f7d902e490bb1bd75c2df7");
+            claimTxZero3.Hash.ToString().Should().Be("0x72229b7b5a31448598d1c85558ddcba9b522a234cf94b42d7b8c295a954e87cb");
 
             //ClaimTransaction claimTxTwo = GetClaimTransaction(2);
             //claimTxTwo.Size.Should().Be(75 + 21); // 2*34 + 7 + 21
@@ -137,9 +137,9 @@ namespace SimplePolicy.UnitTests
             // 0x60037520be0fd903703c2b67973296f22cac8932db07a2723addf79478aea75f
             // 0xb29426673b3ef5c226bd35d53c2cb2242e09c06f0efe9c0d5be2034f41cb85ba
             vx = filteredTxList.Where(tx => tx.Hash.ToString() == "0x01027faead9a0538048db7ac5657172f6e2240bff3f7d902e490bb1bd75c2df7");
-            vx.Count().Should().Be(1);
+            vx.Count().Should().Be(0);
             vx = filteredTxList.Where(tx => tx.Hash.ToString() == "0x60037520be0fd903703c2b67973296f22cac8932db07a2723addf79478aea75f");
-            vx.Count().Should().Be(1);
+            vx.Count().Should().Be(0);
             vx = filteredTxList.Where(tx => tx.Hash.ToString() == "0xb29426673b3ef5c226bd35d53c2cb2242e09c06f0efe9c0d5be2034f41cb85ba");
             vx.Count().Should().Be(0);
 
