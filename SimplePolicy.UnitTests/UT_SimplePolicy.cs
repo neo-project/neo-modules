@@ -200,7 +200,7 @@ namespace SimplePolicy.UnitTests
             */
 
             IEnumerable<Transaction> filteredTxList = uut.FilterForBlock(txList);
-            filteredTxList.Count().Should().Be(20);
+            filteredTxList.Count().Should().Be(30);
 
             // will select top 20
             // part A: 18 transactions with ratio >= 0.000025
@@ -235,8 +235,8 @@ namespace SimplePolicy.UnitTests
             txList.Where(tx => (tx.NetworkFee / tx.Size) >= new Fixed8(2500)).Count().Should().Be(18); // they also exist in main list
             txList.Where(tx => (tx.NetworkFee / tx.Size) < new Fixed8(2500)).Count().Should().Be(30 - 18); // 12 not selected transactions in part A
             // part B
-            filteredTxList.Where(tx => (tx.NetworkFee / tx.Size) < new Fixed8(2500)).Count().Should().Be(2); // only two enter in part B
-            filteredTxList.Where(tx => (tx.NetworkFee / tx.Size) == new Fixed8(2000)).Count().Should().Be(2); // only two enter in part B with ratio 0.00002
+            filteredTxList.Where(tx => (tx.NetworkFee / tx.Size) < new Fixed8(2500)).Count().Should().Be(12); // only two enter in part B
+            filteredTxList.Where(tx => (tx.NetworkFee / tx.Size) == new Fixed8(2000)).Count().Should().Be(3); // only two enter in part B with ratio 0.00002
             txList.Where(tx => (tx.NetworkFee / tx.Size) == new Fixed8(2000)).Count().Should().Be(3); // 3 in tie (ratio 0.00002)
             txList.Where(tx => (tx.NetworkFee / tx.Size) == new Fixed8(2000) && (tx.NetworkFee > new Fixed8(20000))).Count().Should().Be(2); // only 2 survive (fee > 0.0002)
         }
@@ -264,9 +264,9 @@ namespace SimplePolicy.UnitTests
             txList.Count.Should().Be(24); // 20 free + 4 claims
 
             IEnumerable<Transaction> filteredTxList = uut.FilterForBlock(txList);
-            filteredTxList.Count().Should().Be(20);
+            filteredTxList.Count().Should().Be(24);
 
-            filteredTxList.Where(tx => tx.Type == TransactionType.ClaimTransaction).Count().Should().Be(2); // 2 claims will be selected
+            filteredTxList.Where(tx => tx.Type == TransactionType.ClaimTransaction).Count().Should().Be(4); // 4 claims will be selected
         }
 
         [TestMethod]
