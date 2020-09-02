@@ -1,5 +1,5 @@
 using Neo.Cryptography.ECC;
-using Neo.IO;
+using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
@@ -16,6 +16,23 @@ namespace Neo.Network.RPC
     /// </summary>
     public class TransactionManager
     {
+        private class DummyWallet : Wallet
+        {
+            public DummyWallet() : base("") { }
+            public override string Name => "";
+            public override Version Version => new Version();
+
+            public override bool ChangePassword(string oldPassword, string newPassword) => false;
+            public override bool Contains(UInt160 scriptHash) => false;
+            public override WalletAccount CreateAccount(byte[] privateKey) => null;
+            public override WalletAccount CreateAccount(Contract contract, KeyPair key = null) => null;
+            public override WalletAccount CreateAccount(UInt160 scriptHash) => null;
+            public override bool DeleteAccount(UInt160 scriptHash) => false;
+            public override WalletAccount GetAccount(UInt160 scriptHash) => null;
+            public override IEnumerable<WalletAccount> GetAccounts() => Array.Empty<WalletAccount>();
+            public override bool VerifyPassword(string password) => false;
+        }
+
         private readonly RpcClient rpcClient;
         private readonly PolicyAPI policyAPI;
         private readonly Nep5API nep5API;
@@ -75,37 +92,6 @@ namespace Neo.Network.RPC
             signStore = new List<SignItem>();
 
             return this;
-        }
-
-        /// <summary>
-        /// Calculate NetworkFee
-        /// </summary>
-        /// <returns></returns>
-        private long CalculateNetworkFee()
-        {
-            long networkFee = 0;
-            UInt160[] hashes = Tx.GetScriptHashesForVerifying(null);
-            int size = Transaction.HeaderSize + Tx.Signers.GetVarSize() + Tx.Attributes.GetVarSize() + Tx.Script.GetVarSize() + IO.Helper.GetVarSize(hashes.Length);
-            foreach (UInt160 hash in hashes)
-            {
-                byte[] witness_script = null;
-
-                // calculate NetworkFee
-                witness_script = signStore.FirstOrDefault(p => p.Contract.ScriptHash == hash)?.Contract?.Script;
-                if (witness_script is null || witness_script.Length == 0)
-                {
-                    try
-                    {
-                        witness_script = rpcClient.GetContractState(hash.ToString())?.Script;
-                    }
-                    catch { }
-                }
-
-                if (witness_script is null) continue;
-                networkFee += Wallet.CalculateNetworkFee(witness_script, ref size);
-            }
-            networkFee += size * policyAPI.GetFeePerByte();
-            return networkFee;
         }
 
         /// <summary>
@@ -197,7 +183,8 @@ namespace Neo.Network.RPC
         public TransactionManager Sign()
         {
             // Calculate NetworkFee
-            Tx.NetworkFee = CalculateNetworkFee();
+            Tx.NetworkFee = new DummyWallet().CalculateNetworkFee(Blockchain.Singleton.GetSnapshot(), Tx);
+
             var gasBalance = nep5API.BalanceOf(NativeContract.GAS.Hash, Tx.Sender);
             if (gasBalance < Tx.SystemFee + Tx.NetworkFee)
                 throw new InvalidOperationException($"Insufficient GAS in address: {Tx.Sender.ToAddress()}");
