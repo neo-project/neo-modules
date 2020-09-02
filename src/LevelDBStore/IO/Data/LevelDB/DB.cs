@@ -60,7 +60,7 @@ namespace Neo.IO.Data.LevelDB
                     Native.leveldb_free(error);
                     return false;
                 }
-                return true;
+                return value != IntPtr.Zero;
             }
             finally
             {
