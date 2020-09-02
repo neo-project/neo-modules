@@ -50,6 +50,24 @@ namespace Neo.IO.Data.LevelDB
             }
         }
 
+        public bool Contains(ReadOptions options, byte[] key)
+        {
+            IntPtr value = Native.leveldb_get(handle, options.handle, key, (UIntPtr)key.Length, out UIntPtr length, out IntPtr error);
+            try
+            {
+                if (error != IntPtr.Zero)
+                {
+                    Native.leveldb_free(error);
+                    return false;
+                }
+                return true;
+            }
+            finally
+            {
+                if (value != IntPtr.Zero) Native.leveldb_free(value);
+            }
+        }
+
         public Snapshot GetSnapshot()
         {
             return new Snapshot(handle);

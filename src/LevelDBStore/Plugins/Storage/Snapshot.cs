@@ -49,7 +49,7 @@ namespace Neo.Plugins.Storage
 
         public bool Contains(byte table, byte[] key)
         {
-            return db.Get(options, LHelper.CreateKey(table, key)) != null;
+            return db.Contains(options, LHelper.CreateKey(table, key));
         }
 
         public byte[] TryGet(byte table, byte[] key)
