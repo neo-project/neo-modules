@@ -49,7 +49,7 @@ namespace Neo.IO.Data.LevelDB
 
         public bool Contains(ReadOptions options, byte[] key)
         {
-            IntPtr value = Native.leveldb_get(handle, options.handle, key, (UIntPtr)key.Length, out UIntPtr length, out IntPtr error);
+            IntPtr value = Native.leveldb_get(handle, options.handle, key, (UIntPtr)key.Length, out _, out IntPtr error);
             NativeHelper.CheckError(error);
 
             if (value != IntPtr.Zero)
