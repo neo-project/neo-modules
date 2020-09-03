@@ -1,6 +1,7 @@
 using Neo.IO.Json;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
+using System;
 
 namespace Neo.Plugins
 {
