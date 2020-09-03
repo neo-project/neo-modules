@@ -174,7 +174,7 @@ namespace Neo.Plugins
         [RpcMethod]
         private JObject GetTransactionHeight(JArray _params)
         {
-            UInt256 hash = _params[0].ToScriptHash();
+            UInt256 hash = UInt256.Parse(_params[0].AsString());
             uint? height = Blockchain.Singleton.View.Transactions.TryGet(hash)?.BlockIndex;
             if (height.HasValue) return height.Value;
             throw new RpcException(-100, "Unknown transaction");
