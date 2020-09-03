@@ -159,9 +159,9 @@ namespace Neo.Network.RPC
         {
             return new Signer
             {
-                Account = UInt160.Parse(json["account"].AsString()),
+                Account = json["account"].ToScriptHash(),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), json["scopes"].AsString()),
-                AllowedContracts = ((JArray)json["allowedContracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray(),
+                AllowedContracts = ((JArray)json["allowedContracts"])?.Select(p => p.ToScriptHash()).ToArray(),
                 AllowedGroups = ((JArray)json["allowedGroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
             };
         }

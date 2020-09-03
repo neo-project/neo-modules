@@ -69,7 +69,7 @@ namespace Neo.Network.RPC.Models
         {
             RpcNep5Transfer transfer = new RpcNep5Transfer();
             transfer.TimestampMS = (ulong)json["timestamp"].AsNumber();
-            transfer.AssetHash = UInt160.Parse(json["assethash"].AsString());
+            transfer.AssetHash = json["assethash"].ToScriptHash();
             transfer.UserScriptHash = json["transferaddress"].ToScriptHash();
             transfer.Amount = BigInteger.Parse(json["amount"].AsString());
             transfer.BlockIndex = (uint)json["blockindex"].AsNumber();

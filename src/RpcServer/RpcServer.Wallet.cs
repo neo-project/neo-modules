@@ -61,7 +61,7 @@ namespace Neo.Plugins
         private JObject GetWalletBalance(JArray _params)
         {
             CheckWallet();
-            UInt160 asset_id = UInt160.Parse(_params[0].AsString());
+            UInt160 asset_id = _params[0].ToScriptHash();
             JObject json = new JObject();
             json["balance"] = wallet.GetAvailable(asset_id).Value.ToString();
             return json;
@@ -215,7 +215,7 @@ namespace Neo.Plugins
             TransferOutput[] outputs = new TransferOutput[to.Count];
             for (int i = 0; i < to.Count; i++)
             {
-                UInt160 asset_id = UInt160.Parse(to[i]["asset"].AsString());
+                UInt160 asset_id = to[i]["asset"].ToScriptHash();
                 AssetDescriptor descriptor = new AssetDescriptor(asset_id);
                 outputs[i] = new TransferOutput
                 {
@@ -250,7 +250,7 @@ namespace Neo.Plugins
         private JObject SendToAddress(JArray _params)
         {
             CheckWallet();
-            UInt160 assetId = UInt160.Parse(_params[0].AsString());
+            UInt160 assetId = _params[0].ToScriptHash();
             UInt160 scriptHash = _params[1].ToScriptHash();
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
             BigDecimal amount = BigDecimal.Parse(_params[2].AsString(), descriptor.Decimals);

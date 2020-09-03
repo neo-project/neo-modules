@@ -52,7 +52,7 @@ namespace Neo.Network.RPC.Models
         {
             RpcNep5Balance balance = new RpcNep5Balance
             {
-                AssetHash = UInt160.Parse(json["assethash"].AsString()),
+                AssetHash = json["assethash"].ToScriptHash(),
                 Amount = BigInteger.Parse(json["amount"].AsString()),
                 LastUpdatedBlock = (uint)json["lastupdatedblock"].AsNumber()
             };
