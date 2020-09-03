@@ -27,7 +27,7 @@ namespace Neo.Network.RPC.Models
             {
                 Asset = UInt160.Parse(json["asset"].AsString()),
                 Value = json["value"].AsString(),
-                ScriptHash = json["address"].AsString().ToScriptHash(),
+                ScriptHash = json["address"].ToScriptHash(),
             };
         }
     }

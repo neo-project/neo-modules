@@ -25,7 +25,7 @@ namespace Neo.Network.RPC.Models
             RpcNep5Balances nep5Balance = new RpcNep5Balances
             {
                 Balances = ((JArray)json["balance"]).Select(p => RpcNep5Balance.FromJson(p)).ToList(),
-                UserScriptHash = json["address"].AsString().ToScriptHash()
+                UserScriptHash = json["address"].ToScriptHash()
             };
             return nep5Balance;
         }

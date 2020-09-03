@@ -128,7 +128,7 @@ namespace Neo.Plugins
             UInt160 script_hash;
             try
             {
-                script_hash = address.ToScriptHash();
+                script_hash = _params[0].ToScriptHash();
             }
             catch
             {

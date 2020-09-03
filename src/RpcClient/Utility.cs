@@ -2,6 +2,7 @@ using Neo.Cryptography.ECC;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
 using Neo.VM.Types;
 using Neo.Wallets;
 using System;
@@ -25,6 +26,19 @@ namespace Neo.Network.RPC
                                               (uint)bits[0]);
             BigInteger denominator = BigInteger.Pow(10, (bits[3] >> 16) & 0xff);
             return (numerator, denominator);
+        }
+
+        public static UInt160 ToScriptHash(this JObject value)
+        {
+            var addressOrScriptHash = value.AsString();
+
+            foreach (var native in NativeContract.Contracts)
+            {
+                if (addressOrScriptHash == native.Name) return native.Hash;
+            }
+
+            return addressOrScriptHash.Length < 40 ?
+                addressOrScriptHash.ToScriptHash() : UInt160.Parse(addressOrScriptHash);
         }
 
         /// <summary>
@@ -114,7 +128,7 @@ namespace Neo.Network.RPC
             block.MerkleRoot = UInt256.Parse(json["merkleroot"].AsString());
             block.Timestamp = (ulong)json["time"].AsNumber();
             block.Index = (uint)json["index"].AsNumber();
-            block.NextConsensus = json["nextconsensus"].AsString().ToScriptHash();
+            block.NextConsensus = json["nextconsensus"].ToScriptHash();
             block.Witness = ((JArray)json["witnesses"]).Select(p => WitnessFromJson(p)).FirstOrDefault();
         }
 

@@ -243,17 +243,11 @@ namespace Neo.Plugins
             }
         }
 
-        private UInt160 GetScriptHashFromParam(string addressOrScriptHash)
-        {
-            return addressOrScriptHash.Length < 40 ?
-                addressOrScriptHash.ToScriptHash() : UInt160.Parse(addressOrScriptHash);
-        }
-
         [RpcMethod]
         public JObject GetNep5Transfers(JArray _params)
         {
             if (!_shouldTrackHistory) throw new RpcException(-32601, "Method not found");
-            UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
+            UInt160 userScriptHash = _params[0].ToScriptHash();
             // If start time not present, default to 1 week of history.
             ulong startTime = _params.Count > 1 ? (ulong)_params[1].AsNumber() :
                 (DateTime.UtcNow - TimeSpan.FromDays(7)).ToTimestampMS();
@@ -275,7 +269,7 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject GetNep5Balances(JArray _params)
         {
-            UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
+            UInt160 userScriptHash = _params[0].ToScriptHash();
 
             JObject json = new JObject();
             JArray balances = new JArray();

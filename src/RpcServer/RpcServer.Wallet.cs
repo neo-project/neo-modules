@@ -42,7 +42,7 @@ namespace Neo.Plugins
         private JObject DumpPrivKey(JArray _params)
         {
             CheckWallet();
-            UInt160 scriptHash = _params[0].AsString().ToScriptHash();
+            UInt160 scriptHash = _params[0].ToScriptHash();
             WalletAccount account = wallet.GetAccount(scriptHash);
             return account.GetKey().Export();
         }
@@ -163,9 +163,9 @@ namespace Neo.Plugins
         private JObject SendFrom(JArray _params)
         {
             CheckWallet();
-            UInt160 assetId = UInt160.Parse(_params[0].AsString());
-            UInt160 from = _params[1].AsString().ToScriptHash();
-            UInt160 to = _params[2].AsString().ToScriptHash();
+            UInt160 assetId = _params[0].ToScriptHash();
+            UInt160 from = _params[1].ToScriptHash();
+            UInt160 to = _params[2].ToScriptHash();
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
             BigDecimal amount = BigDecimal.Parse(_params[3].AsString(), descriptor.Decimals);
             if (amount.Sign <= 0)
@@ -206,7 +206,7 @@ namespace Neo.Plugins
             UInt160 from = null;
             if (_params[0] is JString)
             {
-                from = _params[0].AsString().ToScriptHash();
+                from = _params[0].ToScriptHash();
                 to_start = 1;
             }
             JArray to = (JArray)_params[to_start];
@@ -221,7 +221,7 @@ namespace Neo.Plugins
                 {
                     AssetId = asset_id,
                     Value = BigDecimal.Parse(to[i]["value"].AsString(), descriptor.Decimals),
-                    ScriptHash = to[i]["address"].AsString().ToScriptHash()
+                    ScriptHash = to[i]["address"].ToScriptHash()
                 };
                 if (outputs[i].Value.Sign <= 0)
                     throw new RpcException(-32602, "Invalid params");
@@ -251,7 +251,7 @@ namespace Neo.Plugins
         {
             CheckWallet();
             UInt160 assetId = UInt160.Parse(_params[0].AsString());
-            UInt160 scriptHash = _params[1].AsString().ToScriptHash();
+            UInt160 scriptHash = _params[1].ToScriptHash();
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
             BigDecimal amount = BigDecimal.Parse(_params[2].AsString(), descriptor.Decimals);
             if (amount.Sign <= 0)
