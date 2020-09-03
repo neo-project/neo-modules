@@ -12,7 +12,7 @@ namespace Neo.Plugins
 
             foreach (var native in NativeContract.Contracts)
             {
-                if (addressOrScriptHash == native.Name) return native.Hash;
+                if (addressOrScriptHash.Equals(native.Name, StringComparison.InvariantCultureIgnoreCase)) return native.Hash;
             }
 
             return addressOrScriptHash.Length < 40 ?
