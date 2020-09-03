@@ -13,7 +13,9 @@ namespace Neo.Plugins
 
             foreach (var native in NativeContract.Contracts)
             {
-                if (addressOrScriptHash.Equals(native.Name, StringComparison.InvariantCultureIgnoreCase)) return native.Hash;
+                if (addressOrScriptHash.Equals(native.Name, StringComparison.InvariantCultureIgnoreCase) ||
+                    addressOrScriptHash == native.Id.ToString())
+                    return native.Hash;
             }
 
             return addressOrScriptHash.Length < 40 ?
