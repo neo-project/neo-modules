@@ -35,16 +35,15 @@ namespace Neo.IO.Data.LevelDB
         public byte[] Get(ReadOptions options, byte[] key)
         {
             IntPtr value = Native.leveldb_get(handle, options.handle, key, (UIntPtr)key.Length, out UIntPtr length, out IntPtr error);
-            NativeHelper.CheckError(error);
-
-            if (value != IntPtr.Zero)
+            try
             {
-                var ret = value.ToByteArray(length);
-                Native.leveldb_free(value);
-                return ret;
+                NativeHelper.CheckError(error);
+                return value.ToByteArray(length);
             }
-
-            return null;
+            finally
+            {
+                if (value != IntPtr.Zero) Native.leveldb_free(value);
+            }
         }
 
         public bool Contains(ReadOptions options, byte[] key)
