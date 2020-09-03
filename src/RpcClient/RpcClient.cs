@@ -228,6 +228,17 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
+        /// Calculate network fee
+        /// </summary>
+        /// <param name="tx">Transaction</param>
+        /// <returns>NetworkFee</returns>
+        public long CalculateNetworkFee(Transaction tx)
+        {
+            var json = RpcSend("calculatenetworkfee", Convert.ToBase64String(tx.ToArray()));
+            return (long)json["networkfee"].AsNumber();
+        }
+
+        /// <summary>
         /// Returns the stored value, according to the contract script hash (or Id) and the stored key.
         /// </summary>
         public string GetStorage(string scriptHashOrId, string key)

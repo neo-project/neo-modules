@@ -1,5 +1,4 @@
 using Neo.Cryptography.ECC;
-using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
@@ -16,23 +15,6 @@ namespace Neo.Network.RPC
     /// </summary>
     public class TransactionManager
     {
-        private class DummyWallet : Wallet
-        {
-            public DummyWallet() : base("") { }
-            public override string Name => "";
-            public override Version Version => new Version();
-
-            public override bool ChangePassword(string oldPassword, string newPassword) => false;
-            public override bool Contains(UInt160 scriptHash) => false;
-            public override WalletAccount CreateAccount(byte[] privateKey) => null;
-            public override WalletAccount CreateAccount(Contract contract, KeyPair key = null) => null;
-            public override WalletAccount CreateAccount(UInt160 scriptHash) => null;
-            public override bool DeleteAccount(UInt160 scriptHash) => false;
-            public override WalletAccount GetAccount(UInt160 scriptHash) => null;
-            public override IEnumerable<WalletAccount> GetAccounts() => Array.Empty<WalletAccount>();
-            public override bool VerifyPassword(string password) => false;
-        }
-
         private readonly RpcClient rpcClient;
         private readonly PolicyAPI policyAPI;
         private readonly Nep5API nep5API;
@@ -183,7 +165,8 @@ namespace Neo.Network.RPC
         public TransactionManager Sign()
         {
             // Calculate NetworkFee
-            Tx.NetworkFee = new DummyWallet().CalculateNetworkFee(Blockchain.Singleton.GetSnapshot(), Tx);
+            Tx.Witnesses = Array.Empty<Witness>();
+            Tx.NetworkFee = rpcClient.CalculateNetworkFee(Tx);
 
             var gasBalance = nep5API.BalanceOf(NativeContract.GAS.Hash, Tx.Sender);
             if (gasBalance < Tx.SystemFee + Tx.NetworkFee)
