@@ -8,10 +8,10 @@ using JObject = Newtonsoft.Json.Linq.JObject;
 
 namespace Neo.Plugins
 {
-    internal class OracleHttpProtocol : IOracleProtocol
+    public class OracleHttpProtocol : IOracleProtocol
     {
         public const int Timeout = 5000;
-        public bool AllowPrivateHost { get; internal set; } = false;
+        public bool AllowPrivateHost { get; set; } = false;
         public readonly string[] AllowedFormats = new string[] { "application/json" };
 
         public byte[] Request(ulong requestId, string url, string filter)
@@ -38,10 +38,11 @@ namespace Neo.Plugins
             if (!result.Wait(Timeout)) throw new InvalidOperationException("Timeout");
             if (!result.Result.IsSuccessStatusCode) throw new InvalidOperationException("Response error");
             if (!AllowedFormats.Contains(result.Result.Content.Headers.ContentType.MediaType)) throw new InvalidOperationException("ContentType it's not allowed");
-            
+
             var taskRet = result.Result.Content.ReadAsStringAsync();
             if (!taskRet.Wait(Timeout)) throw new InvalidOperationException("Timeout");
             var data = Filter(taskRet.Result, filter);
+            Console.WriteLine("filter value: " + data);
             return Utility.StrictUTF8.GetBytes(data);
         }
 
@@ -51,7 +52,7 @@ namespace Neo.Plugins
                 return input;
 
             JObject beforeObject = JObject.Parse(input);
-            JArray afterObjects = new JArray(beforeObject.SelectTokens(filterArgs).ToArray()); // TODO 
+            JArray afterObjects = new JArray(beforeObject.SelectTokens(filterArgs).ToArray());
             return afterObjects.ToString();
         }
 

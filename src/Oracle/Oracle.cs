@@ -35,7 +35,6 @@ namespace Neo.Plugins
         private NEP6Wallet Wallet;
         private string[] Nodes;
         private ConcurrentDictionary<ulong, OracleTask> PendingQueue;
-        private HashSet<ulong> ProcessingRequest;
         private CancellationTokenSource CancelSource;
         private TimeSpan MaxTaskTimeout;
         private TimeSpan HttpTimeout;
@@ -47,7 +46,6 @@ namespace Neo.Plugins
         public Oracle()
         {
             PendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
-            ProcessingRequest = new HashSet<ulong>();
 
             RpcServerPlugin.RegisterMethods(this);
 
@@ -69,7 +67,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        public void SubmitOracleReponseTxSignData(JArray _params)
+        public JObject SubmitOracleReponseTxSignData(JArray _params)
         {
             var data = _params[0].ToString().HexToBytes();
             if (data.Length != 105) throw new RpcException(-100, "The length of data should be  105");
@@ -83,6 +81,7 @@ namespace Neo.Plugins
 
             var snapshot = Blockchain.Singleton.GetSnapshot();
             AddResponseTxSign(snapshot, requestId, txSign, oraclePub);
+            return new JObject();
         }
 
         [ConsoleCommand("start oracle", Category = "Oracle", Description = "Start oracle service")]
@@ -108,23 +107,23 @@ namespace Neo.Plugins
                 while (CancelSource?.IsCancellationRequested == false)
                 {
                     snapshot = Blockchain.Singleton.GetSnapshot();
-                    var enumerator = NativeContract.Oracle.GetRequests(snapshot).GetEnumerator();
+                    var enumrable = NativeContract.Oracle.GetRequests(snapshot);
+                    IEnumerator<(ulong RequestId, OracleRequest Request)> enumerator = NativeContract.Oracle.GetRequests(snapshot).GetEnumerator();
                     while (enumerator.MoveNext() && !CancelSource.IsCancellationRequested)
                     {
-                        if (ProcessingRequest.Contains(enumerator.Current.Item1)) continue;
-                        ProcessingRequest.Add(enumerator.Current.Item1);
+                        if (PendingQueue.TryGetValue(enumerator.Current.RequestId, out OracleTask task) && task.Tx != null)
+                            continue;
 
                         try
                         {
-                            ProcessRequest(snapshot, enumerator.Current.Item1, enumerator.Current.Item2);
+                            ProcessRequest(snapshot, enumerator.Current.RequestId, enumerator.Current.Request);
                         }
                         catch (Exception e)
                         {
                             Log(e, LogLevel.Error);
                         }
                     }
-
-                    Thread.Sleep(2000);
+                    Thread.Sleep(500);
                 }
             }).Start();
         }
@@ -180,17 +179,17 @@ namespace Neo.Plugins
                     try
                     {
                         var data = Https.Request(requestId, request.Url, request.Filter);
-                        response = new OracleResponse() { Id = requestId, Success = true, Result = data };
+                        response = new OracleResponse() { Id = requestId, Code = OracleResponseCode.Success, Result = data };
                     }
                     catch (Exception e)
                     {
                         Log($"Request error {e.Message}");
-                        response = new OracleResponse() { Id = requestId, Success = false, Result = Array.Empty<byte>() };
+                        response = new OracleResponse() { Id = requestId, Code = OracleResponseCode.Error, Result = Array.Empty<byte>() };
                     }
                     break;
                 default:
                     Log($"{uri.Scheme.ToLowerInvariant()} is not supported");
-                    response = new OracleResponse() { Id = requestId, Success = false, Result = Array.Empty<byte>() };
+                    response = new OracleResponse() { Id = requestId, Code = OracleResponseCode.Forbidden, Result = Array.Empty<byte>() };
                     break;
             }
 
@@ -269,7 +268,6 @@ namespace Neo.Plugins
             if (engine.State != VMState.HALT) return null;
             tx.SystemFee = engine.GasConsumed;
 
-
             // Calculate network fee
 
             engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone()); 
@@ -278,7 +276,8 @@ namespace Neo.Plugins
             if (engine.Execute() != VMState.HALT) return null;
             tx.NetworkFee += engine.GasConsumed;
 
-            // base size for transaction: includes const_header + signers + attributes + script + hashes
+            // Base size for transaction: includes const_header + signers + attributes + script + hashes
+
             int size = Transaction.HeaderSize + tx.Signers.GetVarSize() + tx.Attributes.GetVarSize() + tx.Script.GetVarSize() + IO.Helper.GetVarSize(hashes.Length);
             size += witnessDict[NativeContract.Oracle.Hash].Size;
             int size_inv = 66 * m;
@@ -336,9 +335,9 @@ namespace Neo.Plugins
                 }
                 task.Tx.Witnesses[idx].InvocationScript = sb.ToArray();
 
+                Console.WriteLine($"Send response tx: responseTx={task.Tx.Hash}");
                 Log($"Send response tx: responseTx={task.Tx.Hash}");
 
-                PendingQueue.TryRemove(requestId, out _);
                 System.Blockchain.Tell(task.Tx);
             }
         }
@@ -354,8 +353,6 @@ namespace Neo.Plugins
             }
             foreach (ulong requestId in outofdates)
                 PendingQueue.TryRemove(requestId, out _);
-
-            ProcessingRequest.RemoveWhere(requestId => NativeContract.Oracle.GetRequest(Blockchain.Singleton.GetSnapshot(), requestId) is null);
         }
 
         public static void Log(string message, LogLevel level = LogLevel.Info)
