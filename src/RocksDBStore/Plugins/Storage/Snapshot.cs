@@ -1,6 +1,7 @@
 using Neo.IO.Caching;
 using Neo.Persistence;
 using RocksDbSharp;
+using System;
 using System.Collections.Generic;
 
 namespace Neo.Plugins.Storage
@@ -32,16 +33,18 @@ namespace Neo.Plugins.Storage
 
         public void Delete(byte table, byte[] key)
         {
-            batch.Delete(key, store.GetFamily(table));
+            batch.Delete(key ?? Array.Empty<byte>(), store.GetFamily(table));
         }
 
         public void Put(byte table, byte[] key, byte[] value)
         {
-            batch.Put(key, value, store.GetFamily(table));
+            batch.Put(key ?? Array.Empty<byte>(), value, store.GetFamily(table));
         }
 
         public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] keyOrPrefix, SeekDirection direction)
         {
+            if (keyOrPrefix == null) keyOrPrefix = Array.Empty<byte>();
+
             using var it = db.NewIterator(store.GetFamily(table), options);
 
             if (direction == SeekDirection.Forward)
@@ -54,7 +57,7 @@ namespace Neo.Plugins.Storage
 
         public byte[] TryGet(byte table, byte[] key)
         {
-            return db.Get(key, store.GetFamily(table), options);
+            return db.Get(key ?? Array.Empty<byte>(), store.GetFamily(table), options);
         }
 
         public void Dispose()
