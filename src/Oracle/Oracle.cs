@@ -70,7 +70,7 @@ namespace Neo.Plugins
         public JObject SubmitOracleReponseTxSignData(JArray _params)
         {
             var data = _params[0].ToString().HexToBytes();
-            if (data.Length != 105) throw new RpcException(-100, "The length of data should be  105");
+            if (data.Length != 105) throw new RpcException(-100, "The length of data should be 105");
 
             ECPoint oraclePub = ECPoint.Parse(data.Take(33).ToArray().ToHexString(), ECCurve.Secp256r1);
             ulong requestId = BitConverter.ToUInt64(data.Skip(33).Take(8).ToArray());
