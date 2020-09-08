@@ -31,7 +31,7 @@ namespace Neo.Network.RPC.Tests
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.ByteArray, Value = "00e057eb481b".HexToBytes() });
 
             ContractClient contractClient = new ContractClient(rpcClientMock.Object);
-            var result = await contractClient.TestInvoke(NativeContract.GAS.Hash, "balanceOf", UInt160.Zero);
+            var result = await contractClient.TestInvokeAsync(NativeContract.GAS.Hash, "balanceOf", UInt160.Zero);
 
             Assert.AreEqual(30000000000000L, (long)result.Stack[0].GetInteger());
         }
@@ -65,7 +65,7 @@ namespace Neo.Network.RPC.Tests
             UT_TransactionManager.MockInvokeScript(rpcClientMock, script, new ContractParameter());
 
             ContractClient contractClient = new ContractClient(rpcClientMock.Object);
-            var result = await contractClient.CreateDeployContractTx(new byte[1], manifest, keyPair1);
+            var result = await contractClient.CreateDeployContractTxAsync(new byte[1], manifest, keyPair1);
 
             Assert.IsNotNull(result);
         }

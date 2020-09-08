@@ -69,13 +69,13 @@ namespace Neo.Network.RPC
 
             QueueWork(async _ =>
             {
-                uint height = await rpcClient.GetBlockCount().ConfigureAwait(false) - 1;
+                uint height = await rpcClient.GetBlockCountAsync().ConfigureAwait(false) - 1;
                 Tx.ValidUntilBlock = height + Transaction.MaxValidUntilBlockIncrement;
             });
 
             QueueWork(async _ =>
             {
-                RpcInvokeResult result = await rpcClient.InvokeScript(script, signers).ConfigureAwait(false);
+                RpcInvokeResult result = await rpcClient.InvokeScriptAsync(script, signers).ConfigureAwait(false);
                 Tx.SystemFee = long.Parse(result.GasConsumed);
             });
 
@@ -161,7 +161,7 @@ namespace Neo.Network.RPC
 
             // Calculate NetworkFee
             Tx.NetworkFee = await CalculateNetworkFee().ConfigureAwait(false);
-            var gasBalance = await new Nep5API(rpcClient).BalanceOf(NativeContract.GAS.Hash, Tx.Sender).ConfigureAwait(false);
+            var gasBalance = await new Nep5API(rpcClient).BalanceOfAsync(NativeContract.GAS.Hash, Tx.Sender).ConfigureAwait(false);
             if (gasBalance < Tx.SystemFee + Tx.NetworkFee)
                 throw new InvalidOperationException($"Insufficient GAS in address: {Tx.Sender.ToAddress()}");
 
@@ -212,7 +212,7 @@ namespace Neo.Network.RPC
                 {
                     try
                     {
-                        var contractState = await rpcClient.GetContractState(hash.ToString()).ConfigureAwait(false);
+                        var contractState = await rpcClient.GetContractStateAsync(hash.ToString()).ConfigureAwait(false);
                         witness_script = contractState?.Script;
                     }
                     catch { }
@@ -222,7 +222,7 @@ namespace Neo.Network.RPC
                 networkFee += Wallet.CalculateNetworkFee(witness_script, ref size);
             }
 
-            networkFee += size * (await new PolicyAPI(rpcClient).GetFeePerByte().ConfigureAwait(false));
+            networkFee += size * (await new PolicyAPI(rpcClient).GetFeePerByteAsync().ConfigureAwait(false));
             return networkFee;
         }
 

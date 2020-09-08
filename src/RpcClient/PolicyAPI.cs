@@ -22,9 +22,9 @@ namespace Neo.Network.RPC
         /// Get Max Transactions Count Per Block
         /// </summary>
         /// <returns></returns>
-        public async Task<uint> GetMaxTransactionsPerBlock()
+        public async Task<uint> GetMaxTransactionsPerBlockAsync()
         {
-            var result = await TestInvoke(scriptHash, "getMaxTransactionsPerBlock").ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, "getMaxTransactionsPerBlock").ConfigureAwait(false);
             return (uint)result.Stack.Single().GetInteger();
         }
 
@@ -32,9 +32,9 @@ namespace Neo.Network.RPC
         /// Get Max Block Size
         /// </summary>
         /// <returns></returns>
-        public async Task<uint> GetMaxBlockSize()
+        public async Task<uint> GetMaxBlockSizeAsync()
         {
-            var result = await TestInvoke(scriptHash, "getMaxBlockSize").ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, "getMaxBlockSize").ConfigureAwait(false);
             return (uint)result.Stack.Single().GetInteger();
         }
 
@@ -42,9 +42,9 @@ namespace Neo.Network.RPC
         /// Get Network Fee Per Byte
         /// </summary>
         /// <returns></returns>
-        public async Task<long> GetFeePerByte()
+        public async Task<long> GetFeePerByteAsync()
         {
-            var result = await TestInvoke(scriptHash, "getFeePerByte").ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, "getFeePerByte").ConfigureAwait(false);
             return (long)result.Stack.Single().GetInteger();
         }
 
@@ -52,9 +52,9 @@ namespace Neo.Network.RPC
         /// Get Ploicy Blocked Accounts
         /// </summary>
         /// <returns></returns>
-        public async Task<UInt160[]> GetBlockedAccounts()
+        public async Task<UInt160[]> GetBlockedAccountsAsync()
         {
-            var result = await TestInvoke(scriptHash, "getBlockedAccounts").ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, "getBlockedAccounts").ConfigureAwait(false);
             var array = (VM.Types.Array)result.Stack.Single();
             return array.Select(p => new UInt160(p.GetSpan().ToArray())).ToArray();
         }

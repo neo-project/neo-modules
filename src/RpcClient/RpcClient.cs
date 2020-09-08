@@ -99,7 +99,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns the hash of the tallest block in the main chain.
         /// </summary>
-        public async Task<string> GetBestBlockHash()
+        public async Task<string> GetBestBlockHashAsync()
         {
             var result = await RpcSendAsync("getbestblockhash").ConfigureAwait(false);
             return result.AsString();
@@ -109,7 +109,7 @@ namespace Neo.Network.RPC
         /// Returns the hash of the tallest block in the main chain.
         /// The serialized information of the block is returned, represented by a hexadecimal string.
         /// </summary>
-        public async Task<string> GetBlockHex(string hashOrIndex)
+        public async Task<string> GetBlockHexAsync(string hashOrIndex)
         {
             var result = int.TryParse(hashOrIndex, out int index)
                 ? await RpcSendAsync("getblock", index).ConfigureAwait(false)
@@ -120,7 +120,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns the hash of the tallest block in the main chain.
         /// </summary>
-        public async Task<RpcBlock> GetBlock(string hashOrIndex)
+        public async Task<RpcBlock> GetBlockAsync(string hashOrIndex)
         {
             var result = int.TryParse(hashOrIndex, out int index)
                 ? await RpcSendAsync("getblock", index, true).ConfigureAwait(false)
@@ -132,7 +132,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Gets the number of blocks in the main chain.
         /// </summary>
-        public async Task<uint> GetBlockCount()
+        public async Task<uint> GetBlockCountAsync()
         {
             var result = await RpcSendAsync("getblockcount").ConfigureAwait(false);
             return (uint)result.AsNumber();
@@ -141,7 +141,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns the hash value of the corresponding block, based on the specified index.
         /// </summary>
-        public async Task<string> GetBlockHash(int index)
+        public async Task<string> GetBlockHashAsync(int index)
         {
             var result = await RpcSendAsync("getblockhash", index).ConfigureAwait(false);
             return result.AsString();
@@ -150,7 +150,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns the corresponding block header information according to the specified script hash.
         /// </summary>
-        public async Task<string> GetBlockHeaderHex(string hashOrIndex)
+        public async Task<string> GetBlockHeaderHexAsync(string hashOrIndex)
         {
             var result = int.TryParse(hashOrIndex, out int index)
                 ? await RpcSendAsync("getblockheader", index).ConfigureAwait(false)
@@ -161,7 +161,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns the corresponding block header information according to the specified script hash.
         /// </summary>
-        public async Task<RpcBlockHeader> GetBlockHeader(string hashOrIndex)
+        public async Task<RpcBlockHeader> GetBlockHeaderAsync(string hashOrIndex)
         {
             var result = int.TryParse(hashOrIndex, out int index)
                 ? await RpcSendAsync("getblockheader", index, true).ConfigureAwait(false)
@@ -173,7 +173,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Queries contract information, according to the contract script hash.
         /// </summary>
-        public async Task<ContractState> GetContractState(string hash)
+        public async Task<ContractState> GetContractStateAsync(string hash)
         {
             var result = await RpcSendAsync("getcontractstate", hash).ConfigureAwait(false);
             return ContractStateFromJson(result);
@@ -192,7 +192,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Obtains the list of unconfirmed transactions in memory.
         /// </summary>
-        public async Task<string[]> GetRawMempool()
+        public async Task<string[]> GetRawMempoolAsync()
         {
             var result = await RpcSendAsync("getrawmempool").ConfigureAwait(false);
             return ((JArray)result).Select(p => p.AsString()).ToArray();
@@ -202,7 +202,7 @@ namespace Neo.Network.RPC
         /// Obtains the list of unconfirmed transactions in memory.
         /// shouldGetUnverified = true
         /// </summary>
-        public async Task<RpcRawMemPool> GetRawMempoolBoth()
+        public async Task<RpcRawMemPool> GetRawMempoolBothAsync()
         {
             var result = await RpcSendAsync("getrawmempool", true).ConfigureAwait(false);
             return RpcRawMemPool.FromJson(result);
@@ -211,7 +211,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns the corresponding transaction information, based on the specified hash value.
         /// </summary>
-        public async Task<string> GetRawTransactionHex(string txHash)
+        public async Task<string> GetRawTransactionHexAsync(string txHash)
         {
             var result = await RpcSendAsync("getrawtransaction", txHash).ConfigureAwait(false);
             return result.AsString();
@@ -221,7 +221,7 @@ namespace Neo.Network.RPC
         /// Returns the corresponding transaction information, based on the specified hash value.
         /// verbose = true
         /// </summary>
-        public async Task<RpcTransaction> GetRawTransaction(string txHash)
+        public async Task<RpcTransaction> GetRawTransactionAsync(string txHash)
         {
             var result = await RpcSendAsync("getrawtransaction", txHash, true).ConfigureAwait(false);
             return RpcTransaction.FromJson(result);
@@ -230,7 +230,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns the stored value, according to the contract script hash (or Id) and the stored key.
         /// </summary>
-        public async Task<string> GetStorage(string scriptHashOrId, string key)
+        public async Task<string> GetStorageAsync(string scriptHashOrId, string key)
         {
             var result = int.TryParse(scriptHashOrId, out int id)
                 ? await RpcSendAsync("getstorage", id, key).ConfigureAwait(false)
@@ -241,7 +241,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns the block index in which the transaction is found.
         /// </summary>
-        public async Task<uint> GetTransactionHeight(string txHash)
+        public async Task<uint> GetTransactionHeightAsync(string txHash)
         {
             var result = await RpcSendAsync("gettransactionheight", txHash).ConfigureAwait(false);
             return uint.Parse(result.AsString());
@@ -250,7 +250,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns the current NEO consensus nodes information and voting status.
         /// </summary>
-        public async Task<RpcValidator[]> GetValidators()
+        public async Task<RpcValidator[]> GetValidatorsAsync()
         {
             var result = await RpcSendAsync("getvalidators").ConfigureAwait(false);
             return ((JArray)result).Select(p => RpcValidator.FromJson(p)).ToArray();
@@ -263,7 +263,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Gets the current number of connections for the node.
         /// </summary>
-        public async Task<int> GetConnectionCount()
+        public async Task<int> GetConnectionCountAsync()
         {
             var result = await RpcSendAsync("getconnectioncount").ConfigureAwait(false);
             return (int)result.AsNumber();
@@ -272,7 +272,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Gets the list of nodes that the node is currently connected/disconnected from.
         /// </summary>
-        public async Task<RpcPeers> GetPeers()
+        public async Task<RpcPeers> GetPeersAsync()
         {
             var result = await RpcSendAsync("getpeers").ConfigureAwait(false);
             return RpcPeers.FromJson(result);
@@ -281,7 +281,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns the version information about the queried node.
         /// </summary>
-        public async Task<RpcVersion> GetVersion()
+        public async Task<RpcVersion> GetVersionAsync()
         {
             var result = await RpcSendAsync("getversion").ConfigureAwait(false);
             return RpcVersion.FromJson(result);
@@ -290,7 +290,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Broadcasts a serialized transaction over the NEO network.
         /// </summary>
-        public async Task<UInt256> SendRawTransaction(byte[] rawTransaction)
+        public async Task<UInt256> SendRawTransactionAsync(byte[] rawTransaction)
         {
             var result = await RpcSendAsync("sendrawtransaction", rawTransaction.ToHexString()).ConfigureAwait(false);
             return UInt256.Parse(result["hash"].AsString());
@@ -299,15 +299,15 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Broadcasts a transaction over the NEO network.
         /// </summary>
-        public Task<UInt256> SendRawTransaction(Transaction transaction)
+        public Task<UInt256> SendRawTransactionAsync(Transaction transaction)
         {
-            return SendRawTransaction(transaction.ToArray());
+            return SendRawTransactionAsync(transaction.ToArray());
         }
 
         /// <summary>
         /// Broadcasts a serialized block over the NEO network.
         /// </summary>
-        public async Task<UInt256> SubmitBlock(byte[] block)
+        public async Task<UInt256> SubmitBlockAsync(byte[] block)
         {
             var result = await RpcSendAsync("submitblock", block.ToHexString()).ConfigureAwait(false);
             return UInt256.Parse(result["hash"].AsString());
@@ -321,7 +321,7 @@ namespace Neo.Network.RPC
         /// Returns the result after calling a smart contract at scripthash with the given operation and parameters.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
-        public async Task<RpcInvokeResult> InvokeFunction(string scriptHash, string operation, RpcStack[] stacks, params Signer[] signer)
+        public async Task<RpcInvokeResult> InvokeFunctionAsync(string scriptHash, string operation, RpcStack[] stacks, params Signer[] signer)
         {
             List<JObject> parameters = new List<JObject> { scriptHash, operation, stacks.Select(p => p.ToJson()).ToArray() };
             if (signer.Length > 0)
@@ -336,7 +336,7 @@ namespace Neo.Network.RPC
         /// Returns the result after passing a script through the VM.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
-        public async Task<RpcInvokeResult> InvokeScript(byte[] script, params Signer[] signers)
+        public async Task<RpcInvokeResult> InvokeScriptAsync(byte[] script, params Signer[] signers)
         {
             List<JObject> parameters = new List<JObject> { script.ToHexString() };
             if (signers.Length > 0)
@@ -347,7 +347,7 @@ namespace Neo.Network.RPC
             return RpcInvokeResult.FromJson(result);
         }
 
-        public async Task<RpcUnclaimedGas> GetUnclaimedGas(string address)
+        public async Task<RpcUnclaimedGas> GetUnclaimedGasAsync(string address)
         {
             var result = await RpcSendAsync("getunclaimedgas", address).ConfigureAwait(false);
             return RpcUnclaimedGas.FromJson(result);
@@ -360,7 +360,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns a list of plugins loaded by the node.
         /// </summary>
-        public async Task<RpcPlugin[]> ListPlugins()
+        public async Task<RpcPlugin[]> ListPluginsAsync()
         {
             var result = await RpcSendAsync("listplugins").ConfigureAwait(false);
             return ((JArray)result).Select(p => RpcPlugin.FromJson(p)).ToArray();
@@ -369,7 +369,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Verifies that the address is a correct NEO address.
         /// </summary>
-        public async Task<RpcValidateAddressResult> ValidateAddress(string address)
+        public async Task<RpcValidateAddressResult> ValidateAddressAsync(string address)
         {
             var result = await RpcSendAsync("validateaddress", address).ConfigureAwait(false);
             return RpcValidateAddressResult.FromJson(result);
@@ -382,7 +382,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Close the wallet opened by RPC.
         /// </summary>
-        public async Task<bool> CloseWallet()
+        public async Task<bool> CloseWalletAsync()
         {
             var result = await RpcSendAsync("closewallet").ConfigureAwait(false);
             return result.AsBoolean();
@@ -391,7 +391,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Exports the private key of the specified address.
         /// </summary>
-        public async Task<string> DumpPrivKey(string address)
+        public async Task<string> DumpPrivKeyAsync(string address)
         {
             var result = await RpcSendAsync("dumpprivkey", address).ConfigureAwait(false);
             return result.AsString();
@@ -400,7 +400,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Creates a new account in the wallet opened by RPC.
         /// </summary>
-        public async Task<string> GetNewAddress()
+        public async Task<string> GetNewAddressAsync()
         {
             var result = await RpcSendAsync("getnewaddress").ConfigureAwait(false);
             return result.AsString();
@@ -411,9 +411,9 @@ namespace Neo.Network.RPC
         /// This method applies to assets that conform to NEP-5 standards.
         /// </summary>
         /// <returns>new address as string</returns>
-        public async Task<BigDecimal> GetWalletBalance(string assetId)
+        public async Task<BigDecimal> GetWalletBalanceAsync(string assetId)
         {
-            byte decimals = await (new Nep5API(this).Decimals(UInt160.Parse(assetId)));
+            byte decimals = await (new Nep5API(this).DecimalsAsync(UInt160.Parse(assetId)));
             var result = await RpcSendAsync("getwalletbalance", assetId).ConfigureAwait(false);
             BigInteger balance = BigInteger.Parse(result["balance"].AsString());
             return new BigDecimal(balance, decimals);
@@ -422,7 +422,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Gets the amount of unclaimed GAS in the wallet.
         /// </summary>
-        public async Task<BigInteger> GetWalletUnclaimedGas()
+        public async Task<BigInteger> GetWalletUnclaimedGasAsync()
         {
             var result = await RpcSendAsync("getwalletunclaimedgas").ConfigureAwait(false);
             return BigInteger.Parse(result.AsString());
@@ -431,7 +431,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Imports the private key to the wallet.
         /// </summary>
-        public async Task<RpcAccount> ImportPrivKey(string wif)
+        public async Task<RpcAccount> ImportPrivKeyAsync(string wif)
         {
             var result = await RpcSendAsync("importprivkey", wif).ConfigureAwait(false);
             return RpcAccount.FromJson(result);
@@ -440,7 +440,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Lists all the accounts in the current wallet.
         /// </summary>
-        public async Task<List<RpcAccount>> ListAddress()
+        public async Task<List<RpcAccount>> ListAddressAsync()
         {
             var result = await RpcSendAsync("listaddress").ConfigureAwait(false);
             return ((JArray)result).Select(p => RpcAccount.FromJson(p)).ToList();
@@ -450,7 +450,7 @@ namespace Neo.Network.RPC
         /// Open wallet file in the provider's machine.
         /// By default, this method is disabled by RpcServer config.json.
         /// </summary>
-        public async Task<bool> OpenWallet(string path, string password)
+        public async Task<bool> OpenWalletAsync(string path, string password)
         {
             var result = await RpcSendAsync("openwallet", path, password).ConfigureAwait(false);
             return result.AsBoolean();
@@ -460,7 +460,7 @@ namespace Neo.Network.RPC
         /// Transfer from the specified address to the destination address.
         /// </summary>
         /// <returns>This function returns Signed Transaction JSON if successful, ContractParametersContext JSON if signing failed.</returns>
-        public async Task<JObject> SendFrom(string assetId, string fromAddress, string toAddress, string amount)
+        public async Task<JObject> SendFromAsync(string assetId, string fromAddress, string toAddress, string amount)
         {
             return await RpcSendAsync("sendfrom", assetId, fromAddress, toAddress, amount).ConfigureAwait(false);
         }
@@ -469,7 +469,7 @@ namespace Neo.Network.RPC
         /// Bulk transfer order, and you can specify a sender address.
         /// </summary>
         /// <returns>This function returns Signed Transaction JSON if successful, ContractParametersContext JSON if signing failed.</returns>
-        public async Task<JObject> SendMany(string fromAddress, IEnumerable<RpcTransferOut> outputs)
+        public async Task<JObject> SendManyAsync(string fromAddress, IEnumerable<RpcTransferOut> outputs)
         {
             var parameters = new List<JObject>();
             if (!string.IsNullOrEmpty(fromAddress))
@@ -485,7 +485,7 @@ namespace Neo.Network.RPC
         /// Transfer asset from the wallet to the destination address.
         /// </summary>
         /// <returns>This function returns Signed Transaction JSON if successful, ContractParametersContext JSON if signing failed.</returns>
-        public async Task<JObject> SendToAddress(string assetId, string address, string amount)
+        public async Task<JObject> SendToAddressAsync(string assetId, string address, string amount)
         {
             return await RpcSendAsync("sendtoaddress", assetId, address, amount).ConfigureAwait(false);
         }
@@ -498,7 +498,7 @@ namespace Neo.Network.RPC
         /// Returns the contract log based on the specified txHash. The complete contract logs are stored under the ApplicationLogs directory.
         /// This method is provided by the plugin ApplicationLogs.
         /// </summary>
-        public async Task<RpcApplicationLog> GetApplicationLog(string txHash)
+        public async Task<RpcApplicationLog> GetApplicationLogAsync(string txHash)
         {
             var result = await RpcSendAsync("getapplicationlog", txHash).ConfigureAwait(false);
             return RpcApplicationLog.FromJson(result);
@@ -511,7 +511,7 @@ namespace Neo.Network.RPC
         /// <param name="address">The address to query the transaction information.</param>
         /// <param name="startTimestamp">The start block Timestamp, default to seven days before UtcNow</param>
         /// <param name="endTimestamp">The end block Timestamp, default to UtcNow</param>
-        public async Task<RpcNep5Transfers> GetNep5Transfers(string address, ulong? startTimestamp = default, ulong? endTimestamp = default)
+        public async Task<RpcNep5Transfers> GetNep5TransfersAsync(string address, ulong? startTimestamp = default, ulong? endTimestamp = default)
         {
             startTimestamp ??= 0;
             endTimestamp ??= DateTime.UtcNow.ToTimestampMS();
@@ -523,7 +523,7 @@ namespace Neo.Network.RPC
         /// Returns the balance of all NEP-5 assets in the specified address.
         /// This method is provided by the plugin RpcNep5Tracker.
         /// </summary>
-        public async Task<RpcNep5Balances> GetNep5Balances(string address)
+        public async Task<RpcNep5Balances> GetNep5BalancesAsync(string address)
         {
             var result = await RpcSendAsync("getnep5balances", address).ConfigureAwait(false);
             return RpcNep5Balances.FromJson(result);

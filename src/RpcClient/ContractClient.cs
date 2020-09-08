@@ -32,10 +32,10 @@ namespace Neo.Network.RPC
         /// <param name="operation">contract operation</param>
         /// <param name="args">operation arguments</param>
         /// <returns></returns>
-        public Task<RpcInvokeResult> TestInvoke(UInt160 scriptHash, string operation, params object[] args)
+        public Task<RpcInvokeResult> TestInvokeAsync(UInt160 scriptHash, string operation, params object[] args)
         {
             byte[] script = scriptHash.MakeScript(operation, args);
-            return rpcClient.InvokeScript(script);
+            return rpcClient.InvokeScriptAsync(script);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace Neo.Network.RPC
         /// <param name="manifest">contract manifest</param>
         /// <param name="key">sender KeyPair</param>
         /// <returns></returns>
-        public async Task<Transaction> CreateDeployContractTx(byte[] contractScript, ContractManifest manifest, KeyPair key)
+        public async Task<Transaction> CreateDeployContractTxAsync(byte[] contractScript, ContractManifest manifest, KeyPair key)
         {
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
