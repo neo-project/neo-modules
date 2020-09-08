@@ -106,7 +106,7 @@ namespace Neo.Plugins
             {
                 while (CancelSource?.IsCancellationRequested == false)
                 {
-                    snapshot = Blockchain.Singleton.GetSnapshot();
+                    var snapshot = Blockchain.Singleton.GetSnapshot();
                     var enumrable = NativeContract.Oracle.GetRequests(snapshot);
                     IEnumerator<(ulong RequestId, OracleRequest Request)> enumerator = NativeContract.Oracle.GetRequests(snapshot).GetEnumerator();
                     while (enumerator.MoveNext() && !CancelSource.IsCancellationRequested)
@@ -318,15 +318,15 @@ namespace Neo.Plugins
             }
 
             ECPoint[] nodes = NativeContract.Oracle.GetOracleNodes(snapshot);
-            if (task.Signs.Count >= nodes.Length / 3 && task.Tx != null)
+            int m = nodes.Length - (nodes.Length - 1) / 3;
+            if (task.Signs.Count >= m && task.Tx != null)
             {
-                var contract = Contract.CreateMultiSigContract(nodes.Length - (nodes.Length - 1) / 3, nodes);
-                var count = nodes.Length - (nodes.Length - 1) / 3;
+                var contract = Contract.CreateMultiSigContract(m, nodes);
                 ScriptBuilder sb = new ScriptBuilder();
                 foreach (var pair in task.Signs)
                 {
                     sb.EmitPush(pair.Value);
-                    if (--count == 0) break;
+                    if (--m == 0) break;
                 }
                 var idx = 0;
                 if (task.Tx.GetScriptHashesForVerifying(snapshot)[0] == NativeContract.Oracle.Hash)
@@ -335,7 +335,6 @@ namespace Neo.Plugins
                 }
                 task.Tx.Witnesses[idx].InvocationScript = sb.ToArray();
 
-                Console.WriteLine($"Send response tx: responseTx={task.Tx.Hash}");
                 Log($"Send response tx: responseTx={task.Tx.Hash}");
 
                 System.Blockchain.Tell(task.Tx);
