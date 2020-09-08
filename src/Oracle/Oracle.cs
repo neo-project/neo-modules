@@ -88,11 +88,9 @@ namespace Neo.Plugins
         private void OnStart(string password)
         {
             Wallet.Unlock(password);
-
             var snapshot = Blockchain.Singleton.GetSnapshot();
             var oracles = NativeContract.Oracle.GetOracleNodes(snapshot)
                 .Select(u => Contract.CreateSignatureRedeemScript(u).ToScriptHash());
-
             var accounts = Wallet?.GetAccounts()
                 .Where(u => u.HasKey && !u.Lock && oracles.Contains(u.ScriptHash))
                 .Select(u => (u.Contract, u.GetKey()))
@@ -101,7 +99,6 @@ namespace Neo.Plugins
             if (accounts.Length == 0) throw new ArgumentException("The wallet doesn't have any oracle accounts");
 
             Interlocked.Exchange(ref CancelSource, new CancellationTokenSource())?.Cancel();
-
             new Task(() =>
             {
                 while (CancelSource?.IsCancellationRequested == false)
@@ -113,7 +110,6 @@ namespace Neo.Plugins
                     {
                         if (PendingQueue.TryGetValue(enumerator.Current.RequestId, out OracleTask task) && task.Tx != null)
                             continue;
-
                         try
                         {
                             ProcessRequest(snapshot, enumerator.Current.RequestId, enumerator.Current.Request);
@@ -328,11 +324,7 @@ namespace Neo.Plugins
                     sb.EmitPush(pair.Value);
                     if (--m == 0) break;
                 }
-                var idx = 0;
-                if (task.Tx.GetScriptHashesForVerifying(snapshot)[0] == NativeContract.Oracle.Hash)
-                {
-                    idx = 1;
-                }
+                var idx = task.Tx.GetScriptHashesForVerifying(snapshot)[0] == contract.ScriptHash ? 0 : 1;
                 task.Tx.Witnesses[idx].InvocationScript = sb.ToArray();
 
                 Log($"Send response tx: responseTx={task.Tx.Hash}");
