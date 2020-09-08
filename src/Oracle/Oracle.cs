@@ -270,7 +270,7 @@ namespace Neo.Plugins
 
             // Calculate network fee
 
-            engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone()); 
+            engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
             engine.LoadScript(NativeContract.Oracle.Script, CallFlags.None, 0);
             engine.LoadScript(witnessDict[NativeContract.Oracle.Hash].InvocationScript, CallFlags.None);
             if (engine.Execute() != VMState.HALT) return null;
@@ -359,7 +359,7 @@ namespace Neo.Plugins
         {
             Utility.Log(nameof(Oracle), level, message);
         }
-        
+
         internal class OracleTask
         {
             public ulong Id;
