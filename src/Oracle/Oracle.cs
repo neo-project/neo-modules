@@ -34,10 +34,9 @@ namespace Neo.Plugins
     {
         private NEP6Wallet Wallet;
         private string[] Nodes;
+        private TimeSpan MaxTaskTimeout;
         private ConcurrentDictionary<ulong, OracleTask> PendingQueue;
         private CancellationTokenSource CancelSource;
-        private TimeSpan MaxTaskTimeout;
-        private TimeSpan HttpTimeout;
 
         private static readonly OracleHttpProtocol Https = new OracleHttpProtocol();
 
@@ -53,16 +52,16 @@ namespace Neo.Plugins
             timer.Enabled = true;
             timer.Interval = 1000 * 60 * 3;
             timer.Start();
-            timer.Elapsed += new ElapsedEventHandler(CleanOutOfDateTask);
+            timer.Elapsed += new ElapsedEventHandler(OnTimer);
         }
 
         protected override void Configure()
         {
             var config = GetConfiguration();
+            Wallet = new NEP6Wallet(Combine(PluginsDirectory, nameof(Oracle), config.GetSection("Wallet").Value));
             Nodes = config.GetSection("Nodes").GetChildren().Select(p => p.Get<string>()).ToArray();
             MaxTaskTimeout = TimeSpan.FromSeconds(uint.Parse(config.GetSection("MaxTaskTimeout").Value));
-            HttpTimeout = TimeSpan.FromSeconds(uint.Parse(config.GetSection("HttpTimeout").Value));
-            Wallet = new NEP6Wallet(Combine(PluginsDirectory, nameof(Oracle), config.GetSection("Wallet").Value));
+            Https.Timeout = int.Parse(config.GetSection("HttpTimeout").Value);
             Https.AllowPrivateHost = bool.Parse(config.GetSection("AllowPrivateHost").Value);
         }
 
@@ -88,9 +87,9 @@ namespace Neo.Plugins
         private void OnStart(string password)
         {
             Wallet.Unlock(password);
+
             var snapshot = Blockchain.Singleton.GetSnapshot();
-            var oracles = NativeContract.Oracle.GetOracleNodes(snapshot)
-                .Select(u => Contract.CreateSignatureRedeemScript(u).ToScriptHash());
+            var oracles = NativeContract.Oracle.GetOracleNodes(snapshot).Select(u => Contract.CreateSignatureRedeemScript(u).ToScriptHash());
             var accounts = Wallet?.GetAccounts()
                 .Where(u => u.HasKey && !u.Lock && oracles.Contains(u.ScriptHash))
                 .Select(u => (u.Contract, u.GetKey()))
@@ -103,8 +102,7 @@ namespace Neo.Plugins
             {
                 while (CancelSource?.IsCancellationRequested == false)
                 {
-                    var snapshot = Blockchain.Singleton.GetSnapshot();
-                    var enumrable = NativeContract.Oracle.GetRequests(snapshot);
+                    StoreView snapshot = Blockchain.Singleton.GetSnapshot();
                     IEnumerator<(ulong RequestId, OracleRequest Request)> enumerator = NativeContract.Oracle.GetRequests(snapshot).GetEnumerator();
                     while (enumerator.MoveNext() && !CancelSource.IsCancellationRequested)
                     {
@@ -156,7 +154,7 @@ namespace Neo.Plugins
                     }
                     catch (Exception e)
                     {
-                        Log($"Failed to send the response signature to {node}", LogLevel.Warning);
+                        Log($"Failed to send the response signature to {node}, as {e.Message}", LogLevel.Warning);
                     }
                 }).Start();
             }
@@ -197,7 +195,7 @@ namespace Neo.Plugins
             foreach (var account in Wallet.GetAccounts())
             {
                 var oraclePub = account.GetKey().PublicKey;
-                if (!account.HasKey || account.Lock || !oraclePublicKeys.ToList().Contains(oraclePub)) continue;
+                if (!account.HasKey || account.Lock || !oraclePublicKeys.Contains(oraclePub)) continue;
 
                 var txSign = responseTx.Sign(account.GetKey());
                 AddResponseTxSign(snapshot, requestId, txSign, oraclePub, responseTx);
@@ -333,16 +331,13 @@ namespace Neo.Plugins
             }
         }
 
-        public void CleanOutOfDateTask(object source, ElapsedEventArgs e)
+        public void OnTimer(object source, ElapsedEventArgs e)
         {
-            List<ulong> outofdates = new List<ulong>();
-            foreach (var outOfDateTask in PendingQueue)
-            {
-                if (TimeProvider.Current.UtcNow - outOfDateTask.Value.Timestamp <= MaxTaskTimeout)
-                    break;
-                outofdates.Add(outOfDateTask.Key);
-            }
-            foreach (ulong requestId in outofdates)
+            List<ulong> outOfDate = new List<ulong>();
+            foreach (var task in PendingQueue)
+                if (TimeProvider.Current.UtcNow - task.Value.Timestamp > MaxTaskTimeout)
+                    outOfDate.Add(task.Key);
+            foreach (ulong requestId in outOfDate)
                 PendingQueue.TryRemove(requestId, out _);
         }
 

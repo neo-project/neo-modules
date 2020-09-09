@@ -10,7 +10,7 @@ namespace Neo.Plugins
 {
     public class OracleHttpProtocol : IOracleProtocol
     {
-        public const int Timeout = 5000;
+        public int Timeout { get; set; } = 5000;
         public bool AllowPrivateHost { get; set; } = false;
         public readonly string[] AllowedFormats = new string[] { "application/json" };
 
@@ -42,7 +42,6 @@ namespace Neo.Plugins
             var taskRet = result.Result.Content.ReadAsStringAsync();
             if (!taskRet.Wait(Timeout)) throw new InvalidOperationException("Timeout");
             var data = Filter(taskRet.Result, filter);
-            Console.WriteLine("filter value: " + data);
             return Utility.StrictUTF8.GetBytes(data);
         }
 
@@ -59,9 +58,8 @@ namespace Neo.Plugins
         internal static bool IsInternal(IPHostEntry entry)
         {
             foreach (var ip in entry.AddressList)
-            {
-                if (IsInternal(ip)) return true;
-            }
+                if (IsInternal(ip))
+                    return true;
 
             return false;
         }
