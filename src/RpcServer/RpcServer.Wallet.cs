@@ -42,7 +42,7 @@ namespace Neo.Plugins
         private JObject DumpPrivKey(JArray _params)
         {
             CheckWallet();
-            UInt160 scriptHash = _params[0].AsString().ToScriptHash();
+            UInt160 scriptHash = AddressToScriptHash(_params[0].AsString());
             WalletAccount account = wallet.GetAccount(scriptHash);
             return account.GetKey().Export();
         }
@@ -138,16 +138,24 @@ namespace Neo.Plugins
             return true;
         }
 
-        private void ProcessInvokeWithWallet(JObject result, Signers signers = null)
+        private void ProcessInvokeWithWallet(JObject result, UInt160 sender = null, Signers signers = null)
         {
             Transaction tx = null;
             if (wallet != null && signers != null)
             {
-                UInt160[] accounts = wallet.GetAccounts().Where(p => !p.Lock && !p.WatchOnly).Select(p => p.ScriptHash).ToArray();
-                Signer[] witnessCosigners = signers.GetSigners().Where(p => accounts.Contains(p.Account)).ToArray();
-                if (witnessCosigners.Count() > 0)
+                Signer[] witnessSigners = signers.GetSigners().ToArray();
+                UInt160[] signersAccounts = signers.GetScriptHashesForVerifying(null);
+                if (sender != null)
                 {
-                    tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes(), null, witnessCosigners);
+                    if (!signersAccounts.Contains(sender))
+                        witnessSigners = witnessSigners.Prepend(new Signer() { Account = sender, Scopes = WitnessScope.CalledByEntry }).ToArray();
+                    else if (signersAccounts[0] != sender)
+                        throw new RpcException(-32602, "The sender must be the first element of signers.");
+                }
+
+                if (witnessSigners.Count() > 0)
+                {
+                    tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes(), sender, witnessSigners);
                     ContractParametersContext context = new ContractParametersContext(tx);
                     wallet.Sign(context);
                     if (context.Completed)
@@ -164,12 +172,14 @@ namespace Neo.Plugins
         {
             CheckWallet();
             UInt160 assetId = UInt160.Parse(_params[0].AsString());
-            UInt160 from = _params[1].AsString().ToScriptHash();
-            UInt160 to = _params[2].AsString().ToScriptHash();
+            UInt160 from = AddressToScriptHash(_params[1].AsString());
+            UInt160 to = AddressToScriptHash(_params[2].AsString());
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
             BigDecimal amount = BigDecimal.Parse(_params[3].AsString(), descriptor.Decimals);
             if (amount.Sign <= 0)
                 throw new RpcException(-32602, "Invalid params");
+            Signer[] signers = _params.Count >= 5 ? ((JArray)_params[4]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString()), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
+
             Transaction tx = wallet.MakeTransaction(new[]
             {
                 new TransferOutput
@@ -178,7 +188,7 @@ namespace Neo.Plugins
                     Value = amount,
                     ScriptHash = to
                 }
-            }, from);
+            }, from, signers);
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
@@ -206,12 +216,14 @@ namespace Neo.Plugins
             UInt160 from = null;
             if (_params[0] is JString)
             {
-                from = _params[0].AsString().ToScriptHash();
+                from = AddressToScriptHash(_params[0].AsString());
                 to_start = 1;
             }
             JArray to = (JArray)_params[to_start];
             if (to.Count == 0)
                 throw new RpcException(-32602, "Invalid params");
+            Signer[] signers = _params.Count >= to_start + 2 ? ((JArray)_params[to_start + 1]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString()), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
+
             TransferOutput[] outputs = new TransferOutput[to.Count];
             for (int i = 0; i < to.Count; i++)
             {
@@ -221,12 +233,12 @@ namespace Neo.Plugins
                 {
                     AssetId = asset_id,
                     Value = BigDecimal.Parse(to[i]["value"].AsString(), descriptor.Decimals),
-                    ScriptHash = to[i]["address"].AsString().ToScriptHash()
+                    ScriptHash = AddressToScriptHash(to[i]["address"].AsString())
                 };
                 if (outputs[i].Value.Sign <= 0)
                     throw new RpcException(-32602, "Invalid params");
             }
-            Transaction tx = wallet.MakeTransaction(outputs, from);
+            Transaction tx = wallet.MakeTransaction(outputs, from, signers);
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
@@ -251,7 +263,7 @@ namespace Neo.Plugins
         {
             CheckWallet();
             UInt160 assetId = UInt160.Parse(_params[0].AsString());
-            UInt160 scriptHash = _params[1].AsString().ToScriptHash();
+            UInt160 to = AddressToScriptHash(_params[1].AsString());
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
             BigDecimal amount = BigDecimal.Parse(_params[2].AsString(), descriptor.Decimals);
             if (amount.Sign <= 0)
@@ -262,7 +274,7 @@ namespace Neo.Plugins
                 {
                     AssetId = assetId,
                     Value = amount,
-                    ScriptHash = scriptHash
+                    ScriptHash = to
                 }
             });
             if (tx == null)
@@ -298,6 +310,16 @@ namespace Neo.Plugins
             {
                 return context.ToJson();
             }
+        }
+
+        internal static UInt160 AddressToScriptHash(string address)
+        {
+            if (UInt160.TryParse(address, out var scriptHash))
+            {
+                return scriptHash;
+            }
+
+            return address.ToScriptHash();
         }
     }
 }
