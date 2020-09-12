@@ -43,6 +43,19 @@ namespace Neo.Network.RPC
                 addressOrScriptHash.ToScriptHash() : UInt160.Parse(addressOrScriptHash);
         }
 
+        public static string AsScriptHash(this string addressOrScriptHash)
+        {
+            foreach (var native in NativeContract.Contracts)
+            {
+                if (addressOrScriptHash.Equals(native.Name, StringComparison.InvariantCultureIgnoreCase) ||
+                    addressOrScriptHash == native.Id.ToString())
+                    return native.Hash.ToString();
+            }
+
+            return addressOrScriptHash.Length < 40 ?
+                addressOrScriptHash : UInt160.Parse(addressOrScriptHash).ToString();
+        }
+
         /// <summary>
         /// Parse WIF or private key hex string to KeyPair
         /// </summary>
