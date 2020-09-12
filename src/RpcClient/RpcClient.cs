@@ -256,6 +256,14 @@ namespace Neo.Network.RPC
             return ((JArray)RpcSend("getvalidators")).Select(p => RpcValidator.FromJson(p)).ToArray();
         }
 
+        /// <summary>
+        /// Returns the current NEO committee members.
+        /// </summary>
+        public string[] GetCommittee()
+        {
+            return ((JArray)RpcSend("getcommittee")).Select(p => p.AsString()).ToArray();
+        }
+
         #endregion Blockchain
 
         #region Node
