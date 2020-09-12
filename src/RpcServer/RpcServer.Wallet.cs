@@ -42,7 +42,7 @@ namespace Neo.Plugins
         private JObject DumpPrivKey(JArray _params)
         {
             CheckWallet();
-            UInt160 scriptHash = _params[0].ToScriptHash();
+            UInt160 scriptHash = _params[0].AsString().ToScriptHash();
             WalletAccount account = wallet.GetAccount(scriptHash);
             return account.GetKey().Export();
         }
@@ -61,7 +61,7 @@ namespace Neo.Plugins
         private JObject GetWalletBalance(JArray _params)
         {
             CheckWallet();
-            UInt160 asset_id = _params[0].ToScriptHash();
+            UInt160 asset_id = UInt160.Parse(_params[0].AsString());
             JObject json = new JObject();
             json["balance"] = wallet.GetAvailable(asset_id).Value.ToString();
             return json;
@@ -163,9 +163,9 @@ namespace Neo.Plugins
         private JObject SendFrom(JArray _params)
         {
             CheckWallet();
-            UInt160 assetId = _params[0].ToScriptHash();
-            UInt160 from = _params[1].ToScriptHash();
-            UInt160 to = _params[2].ToScriptHash();
+            UInt160 assetId = UInt160.Parse(_params[0].AsString());
+            UInt160 from = _params[1].AsString().ToScriptHash();
+            UInt160 to = _params[2].AsString().ToScriptHash();
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
             BigDecimal amount = BigDecimal.Parse(_params[3].AsString(), descriptor.Decimals);
             if (amount.Sign <= 0)
@@ -206,7 +206,7 @@ namespace Neo.Plugins
             UInt160 from = null;
             if (_params[0] is JString)
             {
-                from = _params[0].ToScriptHash();
+                from = _params[0].AsString().ToScriptHash();
                 to_start = 1;
             }
             JArray to = (JArray)_params[to_start];
@@ -215,13 +215,13 @@ namespace Neo.Plugins
             TransferOutput[] outputs = new TransferOutput[to.Count];
             for (int i = 0; i < to.Count; i++)
             {
-                UInt160 asset_id = to[i]["asset"].ToScriptHash();
+                UInt160 asset_id = UInt160.Parse(to[i]["asset"].AsString());
                 AssetDescriptor descriptor = new AssetDescriptor(asset_id);
                 outputs[i] = new TransferOutput
                 {
                     AssetId = asset_id,
                     Value = BigDecimal.Parse(to[i]["value"].AsString(), descriptor.Decimals),
-                    ScriptHash = to[i]["address"].ToScriptHash()
+                    ScriptHash = to[i]["address"].AsString().ToScriptHash()
                 };
                 if (outputs[i].Value.Sign <= 0)
                     throw new RpcException(-32602, "Invalid params");
@@ -250,8 +250,8 @@ namespace Neo.Plugins
         private JObject SendToAddress(JArray _params)
         {
             CheckWallet();
-            UInt160 assetId = _params[0].ToScriptHash();
-            UInt160 scriptHash = _params[1].ToScriptHash();
+            UInt160 assetId = UInt160.Parse(_params[0].AsString());
+            UInt160 scriptHash = _params[1].AsString().ToScriptHash();
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
             BigDecimal amount = BigDecimal.Parse(_params[2].AsString(), descriptor.Decimals);
             if (amount.Sign <= 0)

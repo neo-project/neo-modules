@@ -84,9 +84,9 @@ namespace Neo.Plugins
         {
             var ret = new Signers(_params.Select(u => new Signer()
             {
-                Account = u["account"].ToScriptHash(),
+                Account = UInt160.Parse(u["account"].AsString()),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"]?.AsString()),
-                AllowedContracts = ((JArray)u["allowedcontracts"])?.Select(p => p.ToScriptHash()).ToArray(),
+                AllowedContracts = ((JArray)u["allowedcontracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray(),
                 AllowedGroups = ((JArray)u["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
             }).ToArray());
 
@@ -100,7 +100,7 @@ namespace Neo.Plugins
         [RpcMethod]
         private JObject InvokeFunction(JArray _params)
         {
-            UInt160 script_hash = _params[0].ToScriptHash();
+            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
             Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3]) : null;
@@ -128,7 +128,7 @@ namespace Neo.Plugins
             UInt160 script_hash;
             try
             {
-                script_hash = _params[0].ToScriptHash();
+                script_hash = address.ToScriptHash();
             }
             catch
             {
