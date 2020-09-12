@@ -234,7 +234,7 @@ namespace Neo.Plugins
                 JObject transfer = new JObject();
                 transfer["timestamp"] = key.TimestampMS;
                 transfer["assethash"] = key.AssetScriptHash.ToString();
-                transfer["transferaddress"] = value.UserScriptHash.ToAddress();
+                transfer["transferaddress"] = value.UserScriptHash == UInt160.Zero ? null : value.UserScriptHash.ToAddress();
                 transfer["amount"] = value.Amount.ToString();
                 transfer["blockindex"] = value.BlockIndex;
                 transfer["transfernotifyindex"] = key.BlockXferNotificationIndex;

@@ -194,5 +194,12 @@ namespace Neo.Plugins
                 return validator;
             }).ToArray();
         }
+
+        [RpcMethod]
+        private JObject GetCommittee(JArray _params)
+        {
+            using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
+            return new JArray(NativeContract.NEO.GetCommittee(snapshot).Select(p => (JObject)p.ToString()));
+        }
     }
 }
