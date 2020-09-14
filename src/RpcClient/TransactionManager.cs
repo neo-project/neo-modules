@@ -165,8 +165,13 @@ namespace Neo.Network.RPC
         public TransactionManager Sign()
         {
             // Calculate NetworkFee
-            Tx.Witnesses = Array.Empty<Witness>();
+            Tx.Witnesses = Tx.GetScriptHashesForVerifying(null).Select(u => new Witness()
+            {
+                InvocationScript = Array.Empty<byte>(),
+                VerificationScript = GetVerificationScript(u)
+            }).ToArray();
             Tx.NetworkFee = rpcClient.CalculateNetworkFee(Tx);
+            Tx.Witnesses = null;
 
             var gasBalance = nep5API.BalanceOf(NativeContract.GAS.Hash, Tx.Sender);
             if (gasBalance < Tx.SystemFee + Tx.NetworkFee)
@@ -190,6 +195,16 @@ namespace Neo.Network.RPC
             }
             Tx.Witnesses = context.GetWitnesses();
             return this;
+        }
+
+        private byte[] GetVerificationScript(UInt160 hash)
+        {
+            foreach (var item in signStore)
+            {
+                if (item.Contract.ScriptHash == hash) return item.Contract.Script;
+            }
+
+            return Array.Empty<byte>();
         }
     }
 }
