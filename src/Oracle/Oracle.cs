@@ -131,7 +131,7 @@ namespace Neo.Plugins
         public void SendResponseSignature(ulong requestId, byte[] txSign, KeyPair keyPair)
         {
             var message = keyPair.PublicKey.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
-            var sign = Crypto.Sign(message, keyPair.PrivateKey, keyPair.PublicKey.ToArray());
+            var sign = Crypto.Sign(message, keyPair.PrivateKey, keyPair.PublicKey.EncodePoint(false)[1..]);
 
             foreach (var node in Nodes)
             {
@@ -256,15 +256,9 @@ namespace Neo.Plugins
             tx.Witnesses[0] = witnessDict[hashes[0]];
             tx.Witnesses[1] = witnessDict[hashes[1]];
 
-            // Calcualte system fee
-
-            var engine = ApplicationEngine.Run(tx.Script, snapshot, tx);
-            if (engine.State != VMState.HALT) return null;
-            tx.SystemFee = engine.GasConsumed;
-
             // Calculate network fee
 
-            engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
+            var engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
             engine.LoadScript(NativeContract.Oracle.Script, CallFlags.None, 0);
             engine.LoadScript(witnessDict[NativeContract.Oracle.Hash].InvocationScript, CallFlags.None);
             if (engine.Execute() != VMState.HALT) return null;
@@ -285,6 +279,11 @@ namespace Neo.Plugins
             networkFee += ApplicationEngine.OpCodePrices[OpCode.PUSHNULL] + ApplicationEngine.ECDsaVerifyPrice * n;
             tx.NetworkFee += networkFee;
             tx.NetworkFee += size * NativeContract.Policy.GetFeePerByte(snapshot);
+
+            // Calcualte system fee
+            var request = NativeContract.Oracle.GetRequest(snapshot, response.Id);
+            tx.SystemFee = request.GasForResponse - tx.NetworkFee;
+
             return tx;
         }
 
