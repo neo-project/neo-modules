@@ -256,6 +256,14 @@ namespace Neo.Network.RPC
             return ((JArray)result).Select(p => RpcValidator.FromJson(p)).ToArray();
         }
 
+        /// <summary>
+        /// Returns the current NEO committee members.
+        /// </summary>
+        public string[] GetCommittee()
+        {
+            return ((JArray)RpcSend("getcommittee")).Select(p => p.AsString()).ToArray();
+        }
+
         #endregion Blockchain
 
         #region Node
@@ -323,7 +331,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public async Task<RpcInvokeResult> InvokeFunctionAsync(string scriptHash, string operation, RpcStack[] stacks, params Signer[] signer)
         {
-            List<JObject> parameters = new List<JObject> { scriptHash, operation, stacks.Select(p => p.ToJson()).ToArray() };
+            List<JObject> parameters = new List<JObject> { scriptHash.AsScriptHash(), operation, stacks.Select(p => p.ToJson()).ToArray() };
             if (signer.Length > 0)
             {
                 parameters.Add(signer.Select(p => (JObject)p.ToJson()).ToArray());
@@ -349,7 +357,7 @@ namespace Neo.Network.RPC
 
         public async Task<RpcUnclaimedGas> GetUnclaimedGasAsync(string address)
         {
-            var result = await RpcSendAsync("getunclaimedgas", address).ConfigureAwait(false);
+            var result = await RpcSendAsync("getunclaimedgas", address.AsScriptHash()).ConfigureAwait(false);
             return RpcUnclaimedGas.FromJson(result);
         }
 
@@ -413,7 +421,7 @@ namespace Neo.Network.RPC
         /// <returns>new address as string</returns>
         public async Task<BigDecimal> GetWalletBalanceAsync(string assetId)
         {
-            byte decimals = await (new Nep5API(this).DecimalsAsync(UInt160.Parse(assetId)));
+            byte decimals = await new Nep5API(this).DecimalsAsync(UInt160.Parse(assetId.AsScriptHash())).ConfigureAwait(false);
             var result = await RpcSendAsync("getwalletbalance", assetId).ConfigureAwait(false);
             BigInteger balance = BigInteger.Parse(result["balance"].AsString());
             return new BigDecimal(balance, decimals);
@@ -462,7 +470,8 @@ namespace Neo.Network.RPC
         /// <returns>This function returns Signed Transaction JSON if successful, ContractParametersContext JSON if signing failed.</returns>
         public async Task<JObject> SendFromAsync(string assetId, string fromAddress, string toAddress, string amount)
         {
-            return await RpcSendAsync("sendfrom", assetId, fromAddress, toAddress, amount).ConfigureAwait(false);
+            return await RpcSendAsync("sendfrom", assetId.AsScriptHash(), fromAddress.AsScriptHash(),
+                                      toAddress.AsScriptHash(), amount).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -474,7 +483,7 @@ namespace Neo.Network.RPC
             var parameters = new List<JObject>();
             if (!string.IsNullOrEmpty(fromAddress))
             {
-                parameters.Add(fromAddress);
+                parameters.Add(fromAddress.AsScriptHash());
             }
             parameters.Add(outputs.Select(p => p.ToJson()).ToArray());
 
@@ -487,7 +496,8 @@ namespace Neo.Network.RPC
         /// <returns>This function returns Signed Transaction JSON if successful, ContractParametersContext JSON if signing failed.</returns>
         public async Task<JObject> SendToAddressAsync(string assetId, string address, string amount)
         {
-            return await RpcSendAsync("sendtoaddress", assetId, address, amount).ConfigureAwait(false);
+            return await RpcSendAsync("sendtoaddress", assetId.AsScriptHash(), address.AsScriptHash(), amount)
+                .ConfigureAwait(false);
         }
 
         #endregion Wallet
@@ -515,7 +525,8 @@ namespace Neo.Network.RPC
         {
             startTimestamp ??= 0;
             endTimestamp ??= DateTime.UtcNow.ToTimestampMS();
-            var result = await RpcSendAsync("getnep5transfers", address, startTimestamp, endTimestamp).ConfigureAwait(false);
+            var result = await RpcSendAsync("getnep5transfers", address.AsScriptHash(), startTimestamp, endTimestamp)
+                .ConfigureAwait(false);
             return RpcNep5Transfers.FromJson(result);
         }
 
@@ -525,7 +536,8 @@ namespace Neo.Network.RPC
         /// </summary>
         public async Task<RpcNep5Balances> GetNep5BalancesAsync(string address)
         {
-            var result = await RpcSendAsync("getnep5balances", address).ConfigureAwait(false);
+            var result = await RpcSendAsync("getnep5balances", address.AsScriptHash())
+                .ConfigureAwait(false);
             return RpcNep5Balances.FromJson(result);
         }
 

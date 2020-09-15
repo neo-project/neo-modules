@@ -12,7 +12,7 @@ namespace Neo.Plugins
         [RpcMethod]
         private JObject ListPlugins(JArray _params)
         {
-            return new JArray(Neo.Plugins.Plugin.Plugins
+            return new JArray(Plugin.Plugins
                 .OrderBy(u => u.Name)
                 .Select(u => new JObject
                 {
@@ -33,7 +33,7 @@ namespace Neo.Plugins
             UInt160 scriptHash;
             try
             {
-                scriptHash = address.ToScriptHash();
+                scriptHash = AddressToScriptHash(address);
             }
             catch
             {
