@@ -259,9 +259,10 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns the current NEO committee members.
         /// </summary>
-        public string[] GetCommittee()
+        public async Task<string[]> GetCommitteeAsync()
         {
-            return ((JArray)RpcSend("getcommittee")).Select(p => p.AsString()).ToArray();
+            var result = await RpcSendAsync("getcommittee").ConfigureAwait(false);
+            return ((JArray)result).Select(p => p.AsString()).ToArray();
         }
 
         #endregion Blockchain
