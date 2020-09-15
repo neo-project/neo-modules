@@ -337,7 +337,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public RpcInvokeResult InvokeFunction(string scriptHash, string operation, RpcStack[] stacks, params Signer[] signer)
         {
-            List<JObject> parameters = new List<JObject> { scriptHash, operation, stacks.Select(p => p.ToJson()).ToArray() };
+            List<JObject> parameters = new List<JObject> { scriptHash.AsScriptHash(), operation, stacks.Select(p => p.ToJson()).ToArray() };
             if (signer.Length > 0)
             {
                 parameters.Add(signer.Select(p => (JObject)p.ToJson()).ToArray());
@@ -361,7 +361,7 @@ namespace Neo.Network.RPC
 
         public RpcUnclaimedGas GetUnclaimedGas(string address)
         {
-            return RpcUnclaimedGas.FromJson(RpcSend("getunclaimedgas", address));
+            return RpcUnclaimedGas.FromJson(RpcSend("getunclaimedgas", address.AsScriptHash()));
         }
 
         #endregion SmartContract
@@ -419,7 +419,7 @@ namespace Neo.Network.RPC
         /// <returns>new address as string</returns>
         public BigDecimal GetWalletBalance(string assetId)
         {
-            byte decimals = new Nep5API(this).Decimals(UInt160.Parse(assetId));
+            byte decimals = new Nep5API(this).Decimals(UInt160.Parse(assetId.AsScriptHash()));
             BigInteger balance = BigInteger.Parse(RpcSend("getwalletbalance", assetId)["balance"].AsString());
             return new BigDecimal(balance, decimals);
         }
@@ -463,7 +463,7 @@ namespace Neo.Network.RPC
         /// <returns>This function returns Signed Transaction JSON if successful, ContractParametersContext JSON if signing failed.</returns>
         public JObject SendFrom(string assetId, string fromAddress, string toAddress, string amount)
         {
-            return RpcSend("sendfrom", assetId, fromAddress, toAddress, amount);
+            return RpcSend("sendfrom", assetId.AsScriptHash(), fromAddress.AsScriptHash(), toAddress.AsScriptHash(), amount);
         }
 
         /// <summary>
@@ -475,7 +475,7 @@ namespace Neo.Network.RPC
             var parameters = new List<JObject>();
             if (!string.IsNullOrEmpty(fromAddress))
             {
-                parameters.Add(fromAddress);
+                parameters.Add(fromAddress.AsScriptHash());
             }
             parameters.Add(outputs.Select(p => p.ToJson()).ToArray());
 
@@ -488,7 +488,7 @@ namespace Neo.Network.RPC
         /// <returns>This function returns Signed Transaction JSON if successful, ContractParametersContext JSON if signing failed.</returns>
         public JObject SendToAddress(string assetId, string address, string amount)
         {
-            return RpcSend("sendtoaddress", assetId, address, amount);
+            return RpcSend("sendtoaddress", assetId.AsScriptHash(), address.AsScriptHash(), amount);
         }
 
         #endregion Wallet
@@ -515,7 +515,7 @@ namespace Neo.Network.RPC
         {
             startTimestamp ??= 0;
             endTimestamp ??= DateTime.UtcNow.ToTimestampMS();
-            return RpcNep5Transfers.FromJson(RpcSend("getnep5transfers", address, startTimestamp, endTimestamp));
+            return RpcNep5Transfers.FromJson(RpcSend("getnep5transfers", address.AsScriptHash(), startTimestamp, endTimestamp));
         }
 
         /// <summary>
@@ -524,7 +524,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public RpcNep5Balances GetNep5Balances(string address)
         {
-            return RpcNep5Balances.FromJson(RpcSend("getnep5balances", address));
+            return RpcNep5Balances.FromJson(RpcSend("getnep5balances", address.AsScriptHash()));
         }
 
         #endregion Plugins

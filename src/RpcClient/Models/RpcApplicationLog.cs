@@ -67,7 +67,7 @@ namespace Neo.Network.RPC.Models
         {
             return new RpcNotifyEventArgs
             {
-                Contract = UInt160.Parse(json["contract"].AsString()),
+                Contract = json["contract"].ToScriptHash(),
                 EventName = json["eventname"].AsString(),
                 State = Utility.StackItemFromJson(json["state"])
             };
