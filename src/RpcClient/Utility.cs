@@ -2,6 +2,7 @@ using Neo.Cryptography.ECC;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
 using Neo.VM.Types;
 using Neo.Wallets;
 using System;
@@ -25,6 +26,27 @@ namespace Neo.Network.RPC
                                               (uint)bits[0]);
             BigInteger denominator = BigInteger.Pow(10, (bits[3] >> 16) & 0xff);
             return (numerator, denominator);
+        }
+
+        public static UInt160 ToScriptHash(this JObject value)
+        {
+            var addressOrScriptHash = value.AsString();
+
+            return addressOrScriptHash.Length < 40 ?
+                addressOrScriptHash.ToScriptHash() : UInt160.Parse(addressOrScriptHash);
+        }
+
+        public static string AsScriptHash(this string addressOrScriptHash)
+        {
+            foreach (var native in NativeContract.Contracts)
+            {
+                if (addressOrScriptHash.Equals(native.Name, StringComparison.InvariantCultureIgnoreCase) ||
+                    addressOrScriptHash == native.Id.ToString())
+                    return native.Hash.ToString();
+            }
+
+            return addressOrScriptHash.Length < 40 ?
+                addressOrScriptHash : UInt160.Parse(addressOrScriptHash).ToString();
         }
 
         /// <summary>
@@ -114,7 +136,7 @@ namespace Neo.Network.RPC
             block.MerkleRoot = UInt256.Parse(json["merkleroot"].AsString());
             block.Timestamp = (ulong)json["time"].AsNumber();
             block.Index = (uint)json["index"].AsNumber();
-            block.NextConsensus = json["nextconsensus"].AsString().ToScriptHash();
+            block.NextConsensus = json["nextconsensus"].ToScriptHash();
             block.Witness = ((JArray)json["witnesses"]).Select(p => WitnessFromJson(p)).FirstOrDefault();
         }
 
@@ -145,9 +167,9 @@ namespace Neo.Network.RPC
         {
             return new Signer
             {
-                Account = UInt160.Parse(json["account"].AsString()),
+                Account = json["account"].ToScriptHash(),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), json["scopes"].AsString()),
-                AllowedContracts = ((JArray)json["allowedContracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray(),
+                AllowedContracts = ((JArray)json["allowedContracts"])?.Select(p => p.ToScriptHash()).ToArray(),
                 AllowedGroups = ((JArray)json["allowedGroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
             };
         }
