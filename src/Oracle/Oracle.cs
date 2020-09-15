@@ -281,6 +281,7 @@ namespace Neo.Plugins
             tx.NetworkFee += size * NativeContract.Policy.GetFeePerByte(snapshot);
 
             // Calcualte system fee
+
             var request = NativeContract.Oracle.GetRequest(snapshot, response.Id);
             tx.SystemFee = request.GasForResponse - tx.NetworkFee;
 
