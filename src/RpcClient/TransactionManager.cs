@@ -160,7 +160,14 @@ namespace Neo.Network.RPC
             await fluentOperationsTask;
 
             // Calculate NetworkFee
-            Tx.NetworkFee = await CalculateNetworkFee().ConfigureAwait(false);
+            Tx.Witnesses = Tx.GetScriptHashesForVerifying(null).Select(u => new Witness()
+            {
+                InvocationScript = Array.Empty<byte>(),
+                VerificationScript = GetVerificationScript(u)
+            }).ToArray();
+            Tx.NetworkFee = await rpcClient.CalculateNetworkFeeAsync(Tx).ConfigureAwait(false);
+            Tx.Witnesses = null;
+
             var gasBalance = await new Nep5API(rpcClient).BalanceOfAsync(NativeContract.GAS.Hash, Tx.Sender).ConfigureAwait(false);
             if (gasBalance < Tx.SystemFee + Tx.NetworkFee)
                 throw new InvalidOperationException($"Insufficient GAS in address: {Tx.Sender.ToAddress()}");
@@ -186,44 +193,6 @@ namespace Neo.Network.RPC
             }
             Tx.Witnesses = context.GetWitnesses();
             return Tx;
-        }
-
-        /// <summary>
-        /// Calculate NetworkFee
-        /// </summary>
-        /// <returns></returns>
-        private async Task<long> CalculateNetworkFee()
-        {
-            long networkFee = 0;
-            UInt160[] hashes = Tx.GetScriptHashesForVerifying(null);
-            int size = Transaction.HeaderSize
-                + Tx.Signers.GetVarSize()
-                + Tx.Attributes.GetVarSize()
-                + Tx.Script.GetVarSize()
-                + IO.Helper.GetVarSize(hashes.Length);
-
-            foreach (UInt160 hash in hashes)
-            {
-                byte[] witness_script = null;
-
-                // calculate NetworkFee
-                witness_script = signStore.FirstOrDefault(p => p.Contract.ScriptHash == hash)?.Contract?.Script;
-                if (witness_script is null || witness_script.Length == 0)
-                {
-                    try
-                    {
-                        var contractState = await rpcClient.GetContractStateAsync(hash.ToString()).ConfigureAwait(false);
-                        witness_script = contractState?.Script;
-                    }
-                    catch { }
-                }
-
-                if (witness_script is null) continue;
-                networkFee += Wallet.CalculateNetworkFee(witness_script, ref size);
-            }
-
-            networkFee += size * (await new PolicyAPI(rpcClient).GetFeePerByteAsync().ConfigureAwait(false));
-            return networkFee;
         }
 
         private void AddSignItem(Contract contract, KeyPair key)
@@ -259,6 +228,16 @@ namespace Neo.Network.RPC
                 action();
                 return Task.FromResult(0);
             });
+        }
+
+        private byte[] GetVerificationScript(UInt160 hash)
+        {
+            foreach (var item in signStore)
+            {
+                if (item.Contract.ScriptHash == hash) return item.Contract.Script;
+            }
+
+            return Array.Empty<byte>();
         }
     }
 }

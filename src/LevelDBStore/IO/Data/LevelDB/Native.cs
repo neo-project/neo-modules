@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Neo.IO.Data.LevelDB
@@ -238,6 +239,7 @@ namespace Neo.IO.Data.LevelDB
 
     internal static class NativeHelper
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CheckError(IntPtr error)
         {
             if (error != IntPtr.Zero)

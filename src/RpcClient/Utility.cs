@@ -177,7 +177,7 @@ namespace Neo.Network.RPC
         public static ConsensusData ConsensusDataFromJson(JObject json)
         {
             ConsensusData block = new ConsensusData();
-            block.PrimaryIndex = (uint)json["primary"].AsNumber();
+            block.PrimaryIndex = (byte)json["primary"].AsNumber();
             block.Nonce = ulong.Parse(json["nonce"].AsString(), NumberStyles.HexNumber);
             return block;
         }

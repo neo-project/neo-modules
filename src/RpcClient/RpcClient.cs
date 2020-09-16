@@ -228,6 +228,18 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
+        /// Calculate network fee
+        /// </summary>
+        /// <param name="tx">Transaction</param>
+        /// <returns>NetworkFee</returns>
+        public async Task<long> CalculateNetworkFeeAsync(Transaction tx)
+        {
+            var json = await RpcSendAsync("calculatenetworkfee", Convert.ToBase64String(tx.ToArray()))
+                .ConfigureAwait(false);
+            return (long)json["networkfee"].AsNumber();
+        }
+
+        /// <summary>
         /// Returns the stored value, according to the contract script hash (or Id) and the stored key.
         /// </summary>
         public async Task<string> GetStorageAsync(string scriptHashOrId, string key)

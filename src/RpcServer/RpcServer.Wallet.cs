@@ -5,7 +5,6 @@ using Akka.Actor;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Ledger;
-using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
@@ -14,6 +13,7 @@ using Neo.Wallets;
 using Neo.Wallets.NEP6;
 using Neo.Wallets.SQLite;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -23,6 +23,23 @@ namespace Neo.Plugins
 {
     partial class RpcServer
     {
+        private class DummyWallet : Wallet
+        {
+            public DummyWallet() : base("") { }
+            public override string Name => "";
+            public override Version Version => new Version();
+
+            public override bool ChangePassword(string oldPassword, string newPassword) => false;
+            public override bool Contains(UInt160 scriptHash) => false;
+            public override WalletAccount CreateAccount(byte[] privateKey) => null;
+            public override WalletAccount CreateAccount(Contract contract, KeyPair key = null) => null;
+            public override WalletAccount CreateAccount(UInt160 scriptHash) => null;
+            public override bool DeleteAccount(UInt160 scriptHash) => false;
+            public override WalletAccount GetAccount(UInt160 scriptHash) => null;
+            public override IEnumerable<WalletAccount> GetAccounts() => Array.Empty<WalletAccount>();
+            public override bool VerifyPassword(string password) => false;
+        }
+
         private Wallet wallet;
 
         private void CheckWallet()
@@ -95,6 +112,16 @@ namespace Neo.Plugins
                 ["label"] = account.Label,
                 ["watchonly"] = account.WatchOnly
             };
+        }
+
+        [RpcMethod]
+        private JObject CalculateNetworkFee(JArray _params)
+        {
+            byte[] tx = Convert.FromBase64String(_params[0].AsString());
+
+            JObject account = new JObject();
+            account["networkfee"] = (wallet ?? new DummyWallet()).CalculateNetworkFee(Blockchain.Singleton.GetSnapshot(), tx.AsSerializable<Transaction>());
+            return account;
         }
 
         [RpcMethod]
