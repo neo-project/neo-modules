@@ -1,6 +1,5 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Persistence;
-using System;
 
 namespace Neo.Plugins.Storage.Tests
 {
@@ -57,9 +56,11 @@ namespace Neo.Plugins.Storage.Tests
                 store.Put(0, new byte[] { 0x01, 0x02 }, new byte[] { 0x03, 0x04 });
                 ret = store.TryGet(0, new byte[] { 0x01, 0x02 });
                 CollectionAssert.AreEqual(new byte[] { 0x03, 0x04 }, ret);
+                Assert.IsTrue(store.Contains(0, new byte[] { 0x01, 0x02 }));
 
                 ret = store.TryGet(1, new byte[] { 0x01, 0x02 });
                 Assert.IsNull(ret);
+                Assert.IsFalse(store.Contains(1, new byte[] { 0x01, 0x02 }));
 
                 store.Delete(0, new byte[] { 0x01, 0x02 });
 

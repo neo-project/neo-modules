@@ -181,10 +181,10 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject GetValidators(JArray _params)
+        private JObject GetNextBlockValidators(JArray _params)
         {
             using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
-            var validators = NativeContract.NEO.GetValidators(snapshot);
+            var validators = NativeContract.NEO.GetNextBlockValidators(snapshot);
             return NativeContract.NEO.GetCandidates(snapshot).Select(p =>
             {
                 JObject validator = new JObject();

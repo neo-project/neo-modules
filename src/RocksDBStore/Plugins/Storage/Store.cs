@@ -103,6 +103,11 @@ namespace Neo.Plugins.Storage
                     yield return (it.Key(), it.Value());
         }
 
+        public bool Contains(byte table, byte[] key)
+        {
+            return db.Get(key ?? Array.Empty<byte>(), GetFamily(table), Options.ReadDefault) != null;
+        }
+
         public byte[] TryGet(byte table, byte[] key)
         {
             return db.Get(key ?? Array.Empty<byte>(), GetFamily(table), Options.ReadDefault);

@@ -71,6 +71,11 @@ namespace Neo.Plugins.Storage
             db.Put(WriteOptions.SyncWrite, LHelper.CreateKey(table, key), value);
         }
 
+        public bool Contains(byte table, byte[] key)
+        {
+            return db.Contains(ReadOptions.Default, LHelper.CreateKey(table, key));
+        }
+
         public byte[] TryGet(byte table, byte[] key)
         {
             return db.Get(ReadOptions.Default, LHelper.CreateKey(table, key));
