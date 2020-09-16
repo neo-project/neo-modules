@@ -1,8 +1,8 @@
 {
   "PluginConfiguration": {
-    "Nodes": [ "http://127.0.0.1:8080" ],
-    "Wallet": "test.json",
-    "MaxTaskTimeout": 432000,
+    "Nodes": [],
+    "Wallet": "",
+    "MaxTaskTimeout": 432000000,
     "HttpTimeout": 5000,
     "AllowPrivateHost":  false
   }

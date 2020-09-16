@@ -60,7 +60,7 @@ namespace Neo.Plugins
             var config = GetConfiguration();
             Wallet = new NEP6Wallet(Combine(PluginsDirectory, nameof(Oracle), config.GetSection("Wallet").Value));
             Nodes = config.GetSection("Nodes").GetChildren().Select(p => p.Get<string>()).ToArray();
-            MaxTaskTimeout = TimeSpan.FromSeconds(uint.Parse(config.GetSection("MaxTaskTimeout").Value));
+            MaxTaskTimeout = TimeSpan.FromMilliseconds(double.Parse(config.GetSection("MaxTaskTimeout").Value));
             Https.Timeout = int.Parse(config.GetSection("HttpTimeout").Value);
             Https.AllowPrivateHost = bool.Parse(config.GetSection("AllowPrivateHost").Value);
         }
@@ -264,12 +264,6 @@ namespace Neo.Plugins
             if (engine.Execute() != VMState.HALT) return null;
             tx.NetworkFee += engine.GasConsumed;
 
-            // Base size for transaction: includes const_header + signers + attributes + script + hashes
-
-            int size = Transaction.HeaderSize + tx.Signers.GetVarSize() + tx.Attributes.GetVarSize() + tx.Script.GetVarSize() + IO.Helper.GetVarSize(hashes.Length);
-            size += witnessDict[NativeContract.Oracle.Hash].Size;
-            int size_inv = 66 * m;
-            size += IO.Helper.GetVarSize(size_inv) + size_inv + oracleSignContract.Script.GetVarSize();
             var networkFee = ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] * m;
             using (ScriptBuilder sb = new ScriptBuilder())
                 networkFee += ApplicationEngine.OpCodePrices[(OpCode)sb.EmitPush(m).ToArray()[0]];
@@ -278,11 +272,25 @@ namespace Neo.Plugins
                 networkFee += ApplicationEngine.OpCodePrices[(OpCode)sb.EmitPush(n).ToArray()[0]];
             networkFee += ApplicationEngine.OpCodePrices[OpCode.PUSHNULL] + ApplicationEngine.ECDsaVerifyPrice * n;
             tx.NetworkFee += networkFee;
+
+            // Base size for transaction: includes const_header + signers + script + hashes + witnesses, except attributes
+
+            int size_inv = 66 * m;
+            int size = Transaction.HeaderSize + tx.Signers.GetVarSize() + tx.Script.GetVarSize()
+                + IO.Helper.GetVarSize(hashes.Length) + witnessDict[NativeContract.Oracle.Hash].Size
+                + IO.Helper.GetVarSize(size_inv) + size_inv + oracleSignContract.Script.GetVarSize();
+
+            var request = NativeContract.Oracle.GetRequest(snapshot, response.Id);
+            if (tx.NetworkFee + (size + tx.Attributes.GetVarSize()) * NativeContract.Policy.GetFeePerByte(snapshot) > request.GasForResponse)
+            {
+                response.Code = OracleResponseCode.Error;
+                response.Result = Array.Empty<byte>();
+            }
+            size += tx.Attributes.GetVarSize();
             tx.NetworkFee += size * NativeContract.Policy.GetFeePerByte(snapshot);
 
             // Calcualte system fee
 
-            var request = NativeContract.Oracle.GetRequest(snapshot, response.Id);
             tx.SystemFee = request.GasForResponse - tx.NetworkFee;
 
             return tx;
