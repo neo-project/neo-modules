@@ -89,13 +89,7 @@ namespace Neo.Plugins
             Wallet.Unlock(password);
 
             var snapshot = Blockchain.Singleton.GetSnapshot();
-            var oracles = NativeContract.Oracle.GetOracleNodes(snapshot).Select(u => Contract.CreateSignatureRedeemScript(u).ToScriptHash());
-            var accounts = Wallet?.GetAccounts()
-                .Where(u => u.HasKey && !u.Lock && oracles.Contains(u.ScriptHash))
-                .Select(u => (u.Contract, u.GetKey()))
-                .ToArray();
-
-            if (accounts.Length == 0) throw new ArgumentException("The wallet doesn't have any oracle accounts");
+            CheckOracleAccount(snapshot);
 
             Interlocked.Exchange(ref CancelSource, new CancellationTokenSource())?.Cancel();
             new Task(() =>
@@ -103,23 +97,29 @@ namespace Neo.Plugins
                 while (CancelSource?.IsCancellationRequested == false)
                 {
                     StoreView snapshot = Blockchain.Singleton.GetSnapshot();
+                    CheckOracleAccount(snapshot);
                     IEnumerator<(ulong RequestId, OracleRequest Request)> enumerator = NativeContract.Oracle.GetRequests(snapshot).GetEnumerator();
                     while (enumerator.MoveNext() && !CancelSource.IsCancellationRequested)
                     {
                         if (PendingQueue.TryGetValue(enumerator.Current.RequestId, out OracleTask task) && task.Tx != null)
                             continue;
-                        try
-                        {
-                            ProcessRequest(snapshot, enumerator.Current.RequestId, enumerator.Current.Request);
-                        }
-                        catch (Exception e)
-                        {
-                            Log(e, LogLevel.Error);
-                        }
+                        ProcessRequest(snapshot, enumerator.Current.RequestId, enumerator.Current.Request);
                     }
                     Thread.Sleep(500);
                 }
             }).Start();
+        }
+
+        private void CheckOracleAccount(StoreView snapshot)
+        {
+            var oraclePubs = NativeContract.Oracle.GetOracleNodes(snapshot);
+            if (oraclePubs.Length == 0) throw new ArgumentException("The oracle service is unavailable");
+            var oracles = oraclePubs.Select(u => Contract.CreateSignatureRedeemScript(u).ToScriptHash());
+            var accounts = Wallet?.GetAccounts()
+                .Where(u => u.HasKey && !u.Lock && oracles.Contains(u.ScriptHash))
+                .Select(u => (u.Contract, u.GetKey()))
+                .ToArray();
+            if (accounts.Length == 0) throw new ArgumentException("The wallet doesn't have any oracle accounts");
         }
 
         [ConsoleCommand("stop oracle", Category = "Oracle", Description = "Stop oracle service")]
