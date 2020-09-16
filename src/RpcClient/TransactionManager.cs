@@ -20,7 +20,7 @@ namespace Neo.Network.RPC
         private class SignItem { public Contract Contract; public HashSet<KeyPair> KeyPairs; }
 
         private readonly RpcClient rpcClient;
-        
+
         /// <summary>
         /// protocol settings Magic value to use for hashing transactions.
         /// defaults to ProtocolSettings.Default.Magic if unspecified
