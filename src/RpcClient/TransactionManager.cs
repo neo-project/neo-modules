@@ -20,6 +20,12 @@ namespace Neo.Network.RPC
         private class SignItem { public Contract Contract; public HashSet<KeyPair> KeyPairs; }
 
         private readonly RpcClient rpcClient;
+        
+        /// <summary>
+        /// protocol settings Magic value to use for hashing transactions.
+        /// defaults to ProtocolSettings.Default.Magic if unspecified
+        /// </summary>
+        private readonly uint magic;
 
         /// <summary>
         /// The Transaction context to manage the witnesses
@@ -43,9 +49,10 @@ namespace Neo.Network.RPC
         /// TransactionManager Constructor
         /// </summary>
         /// <param name="rpc">the RPC client to call NEO RPC API</param>
-        public TransactionManager(RpcClient rpcClient)
+        public TransactionManager(RpcClient rpcClient, uint? magic = null)
         {
             this.rpcClient = rpcClient;
+            this.magic = magic ?? ProtocolSettings.Default.Magic;
         }
 
         /// <summary>
@@ -178,7 +185,7 @@ namespace Neo.Network.RPC
                 SignItem item = signStore[i];
                 foreach (var key in item.KeyPairs)
                 {
-                    byte[] signature = Tx.Sign(key);
+                    byte[] signature = Tx.Sign(key, magic);
                     if (!context.AddSignature(item.Contract, key.PublicKey, signature))
                     {
                         throw new Exception("AddSignature failed!");
