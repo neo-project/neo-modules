@@ -37,6 +37,7 @@ namespace Neo.Plugins
         private TimeSpan MaxTaskTimeout;
         private ConcurrentDictionary<ulong, OracleTask> PendingQueue;
         private CancellationTokenSource CancelSource;
+        private int Counter;
 
         private static readonly OracleHttpProtocol Https = new OracleHttpProtocol();
 
@@ -66,17 +67,17 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        public JObject SubmitOracleReponseTxSignData(JArray _params)
+        public JObject SubmitOracleResponse(JArray _params)
         {
-            var data = _params[0].ToString().HexToBytes();
-            if (data.Length != 105) throw new RpcException(-100, "The length of data should be 105");
+            var data = _params[0].AsString().HexToBytes();
+            if (data.Length != 169) throw new RpcException(-100, "The length of data should be 105");
 
             ECPoint oraclePub = ECPoint.Parse(data.Take(33).ToArray().ToHexString(), ECCurve.Secp256r1);
             ulong requestId = BitConverter.ToUInt64(data.Skip(33).Take(8).ToArray());
-            byte[] txSign = data.Skip(41).Take(32).ToArray();
-            byte[] msgSign = data.Skip(73).Take(32).ToArray();
+            byte[] txSign = data.Skip(41).Take(64).ToArray();
+            byte[] msgSign = data.Skip(105).Take(64).ToArray();
 
-            if (Crypto.VerifySignature(data.Take(73).ToArray(), msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
+            if (!Crypto.VerifySignature(data.Take(105).ToArray(), msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
 
             var snapshot = Blockchain.Singleton.GetSnapshot();
             AddResponseTxSign(snapshot, requestId, txSign, oraclePub);
@@ -132,6 +133,7 @@ namespace Neo.Plugins
         {
             var message = keyPair.PublicKey.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
             var sign = Crypto.Sign(message, keyPair.PrivateKey, keyPair.PublicKey.EncodePoint(false)[1..]);
+            var content = "{ \"id\": " + (++Counter) + ", \"jsonrpc\": \"2.0\",  \"method\": \"submitoracleresponse\",  \"params\":[\"" + message.Concat(sign).ToArray().ToHexString() + "\"] }";
 
             foreach (var node in Nodes)
             {
@@ -145,7 +147,7 @@ namespace Neo.Plugins
                         request.ContentType = "application/json";
                         using (StreamWriter dataStream = new StreamWriter(request.GetRequestStream()))
                         {
-                            dataStream.Write("[{\"data\":\"" + message.Concat(sign).ToArray().ToHexString() + "\"}]");
+                            dataStream.Write(content);
                             dataStream.Close();
                         }
                         HttpWebResponse response = (HttpWebResponse)request.GetResponse();
@@ -201,7 +203,7 @@ namespace Neo.Plugins
                 AddResponseTxSign(snapshot, requestId, txSign, oraclePub, responseTx);
                 SendResponseSignature(requestId, txSign, account.GetKey());
 
-                Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign}");
+                Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()}");
             }
         }
 
