@@ -64,7 +64,7 @@ namespace Neo.Plugins
             if (!(transactions is IReadOnlyList<Transaction> tx_list))
                 tx_list = transactions.ToArray();
 
-            if (Blockchain.Singleton.GetSnapshot().Height < ProtocolSettings.Default.FreeGasChangeHeight)
+            if (Blockchain.Singleton.Height < ProtocolSettings.Default.FreeGasChangeHeight)
             {
                 Transaction[] free = tx_list.Where(p => p.IsLowPriority)
                 .OrderByDescending(p => p.NetworkFee / p.Size)
