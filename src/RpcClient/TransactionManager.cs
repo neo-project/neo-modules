@@ -1,5 +1,4 @@
 using Neo.Cryptography.ECC;
-using Neo.IO;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
@@ -75,37 +74,6 @@ namespace Neo.Network.RPC
             signStore = new List<SignItem>();
 
             return this;
-        }
-
-        /// <summary>
-        /// Calculate NetworkFee
-        /// </summary>
-        /// <returns></returns>
-        private long CalculateNetworkFee()
-        {
-            long networkFee = 0;
-            UInt160[] hashes = Tx.GetScriptHashesForVerifying(null);
-            int size = Transaction.HeaderSize + Tx.Signers.GetVarSize() + Tx.Attributes.GetVarSize() + Tx.Script.GetVarSize() + IO.Helper.GetVarSize(hashes.Length);
-            foreach (UInt160 hash in hashes)
-            {
-                byte[] witness_script = null;
-
-                // calculate NetworkFee
-                witness_script = signStore.FirstOrDefault(p => p.Contract.ScriptHash == hash)?.Contract?.Script;
-                if (witness_script is null || witness_script.Length == 0)
-                {
-                    try
-                    {
-                        witness_script = rpcClient.GetContractState(hash.ToString())?.Script;
-                    }
-                    catch { }
-                }
-
-                if (witness_script is null) continue;
-                networkFee += Wallet.CalculateNetworkFee(witness_script, ref size);
-            }
-            networkFee += size * policyAPI.GetFeePerByte();
-            return networkFee;
         }
 
         /// <summary>
@@ -197,7 +165,14 @@ namespace Neo.Network.RPC
         public TransactionManager Sign()
         {
             // Calculate NetworkFee
-            Tx.NetworkFee = CalculateNetworkFee();
+            Tx.Witnesses = Tx.GetScriptHashesForVerifying(null).Select(u => new Witness()
+            {
+                InvocationScript = Array.Empty<byte>(),
+                VerificationScript = GetVerificationScript(u)
+            }).ToArray();
+            Tx.NetworkFee = rpcClient.CalculateNetworkFee(Tx);
+            Tx.Witnesses = null;
+
             var gasBalance = nep5API.BalanceOf(NativeContract.GAS.Hash, Tx.Sender);
             if (gasBalance < Tx.SystemFee + Tx.NetworkFee)
                 throw new InvalidOperationException($"Insufficient GAS in address: {Tx.Sender.ToAddress()}");
@@ -220,6 +195,16 @@ namespace Neo.Network.RPC
             }
             Tx.Witnesses = context.GetWitnesses();
             return this;
+        }
+
+        private byte[] GetVerificationScript(UInt160 hash)
+        {
+            foreach (var item in signStore)
+            {
+                if (item.Contract.ScriptHash == hash) return item.Contract.Script;
+            }
+
+            return Array.Empty<byte>();
         }
     }
 }

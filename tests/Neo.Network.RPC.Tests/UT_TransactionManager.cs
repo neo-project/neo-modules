@@ -46,6 +46,13 @@ namespace Neo.Network.RPC.Tests
             // MockHeight
             mockRpc.Setup(p => p.RpcSend("getblockcount")).Returns(100).Verifiable();
 
+            // calculatenetworkfee
+            var networkfee = new JObject();
+            networkfee["networkfee"] = 100000000;
+            mockRpc.Setup(p => p.RpcSend("calculatenetworkfee", It.Is<JObject[]>(u => true)))
+                .Returns(networkfee)
+                .Verifiable();
+
             // MockGasBalance
             byte[] balanceScript = NativeContract.GAS.Hash.MakeScript("balanceOf", sender);
             var balanceResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("10000000000000000") };
@@ -71,6 +78,13 @@ namespace Neo.Network.RPC.Tests
 
             // MockHeight
             mockRpc.Setup(p => p.RpcSend("getblockcount")).Returns(100).Verifiable();
+
+            // calculatenetworkfee
+            var networkfee = new JObject();
+            networkfee["networkfee"] = 100000000;
+            mockRpc.Setup(p => p.RpcSend("calculatenetworkfee", It.Is<JObject[]>(u => true)))
+                .Returns(networkfee)
+                .Verifiable();
 
             // MockGasBalance
             byte[] balanceScript = NativeContract.GAS.Hash.MakeScript("balanceOf", multiHash);
@@ -152,8 +166,7 @@ namespace Neo.Network.RPC.Tests
 
             Assert.IsTrue(Crypto.VerifySignature(tx.GetHashData(), signature, keyPair1.PublicKey));
             // verify network fee and system fee
-            long networkFee = tx.Size * (long)1000 + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] + ApplicationEngine.OpCodePrices[OpCode.PUSHNULL] + ApplicationEngine.ECDsaVerifyPrice * 1;
-            Assert.AreEqual(networkFee, tx.NetworkFee);
+            Assert.AreEqual(100000000/*Mock*/, tx.NetworkFee);
             Assert.AreEqual(100, tx.SystemFee);
 
             // duplicate sign should not add new witness

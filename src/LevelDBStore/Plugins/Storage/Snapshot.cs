@@ -47,6 +47,11 @@ namespace Neo.Plugins.Storage
             batch.Put(LHelper.CreateKey(table, key), value);
         }
 
+        public bool Contains(byte table, byte[] key)
+        {
+            return db.Contains(options, LHelper.CreateKey(table, key));
+        }
+
         public byte[] TryGet(byte table, byte[] key)
         {
             return db.Get(options, LHelper.CreateKey(table, key));
