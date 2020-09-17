@@ -47,7 +47,7 @@ namespace Neo.Plugins
 
         private string Filter(string input, string filterArgs)
         {
-            if (filterArgs is null || filterArgs.Length == 0)
+            if (string.IsNullOrEmpty(filterArgs))
                 return input;
 
             JObject beforeObject = JObject.Parse(input);
