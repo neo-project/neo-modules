@@ -145,13 +145,13 @@ namespace Neo.Plugins
                         HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                         request.Method = "POST";
                         request.ContentType = "application/json";
-                        request.ContentLength = 1024;
                         using (StreamWriter dataStream = new StreamWriter(request.GetRequestStream()))
                         {
                             dataStream.Write(content);
                             dataStream.Close();
                         }
                         HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                        response.ContentLength = 1024;
                         StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.GetEncoding("UTF-8"));
                         var retString = reader.ReadToEnd();
                     }
