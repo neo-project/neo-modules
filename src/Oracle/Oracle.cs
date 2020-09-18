@@ -151,7 +151,7 @@ namespace Neo.Plugins
                             dataStream.Close();
                         }
                         HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                        response.ContentLength = 1024;
+                        if (response.ContentLength > ushort.MaxValue) throw new ArgumentOutOfRangeException("The response it's bigger than allowed");
                         StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.GetEncoding("UTF-8"));
                         var retString = reader.ReadToEnd();
                     }
