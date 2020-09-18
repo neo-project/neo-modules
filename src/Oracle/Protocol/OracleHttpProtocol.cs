@@ -40,7 +40,7 @@ namespace Neo.Plugins
             if (!AllowedFormats.Contains(result.Result.Content.Headers.ContentType.MediaType)) throw new InvalidOperationException("ContentType it's not allowed");
 
             var taskRet = result.Result.Content.ReadAsStringAsync();
-            if (!taskRet.Wait(Timeout)) throw new InvalidOperationException("Timeout");
+            if (!taskRet.Wait(Timeout / 2)) throw new InvalidOperationException("Timeout");
             var data = Filter(taskRet.Result, filter);
             return Utility.StrictUTF8.GetBytes(data);
         }
@@ -51,7 +51,7 @@ namespace Neo.Plugins
                 return input;
 
             JObject beforeObject = JObject.Parse(input);
-            JArray afterObjects = new JArray(beforeObject.SelectTokens(filterArgs).ToArray());
+            JArray afterObjects = new JArray(beforeObject.SelectTokens(filterArgs, true).ToArray());
             return afterObjects.ToString();
         }
 

@@ -79,7 +79,7 @@ namespace Neo.Plugins
 
             if (!Crypto.VerifySignature(data.Take(105).ToArray(), msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
 
-            var snapshot = Blockchain.Singleton.GetSnapshot();
+            using var snapshot = Blockchain.Singleton.GetSnapshot();
             AddResponseTxSign(snapshot, requestId, txSign, oraclePub);
             return new JObject();
         }
@@ -89,7 +89,7 @@ namespace Neo.Plugins
         {
             Wallet.Unlock(password);
 
-            var snapshot = Blockchain.Singleton.GetSnapshot();
+            using var snapshot = Blockchain.Singleton.GetSnapshot();
             CheckOracleAccount(snapshot);
 
             Interlocked.Exchange(ref CancelSource, new CancellationTokenSource())?.Cancel();
@@ -97,7 +97,7 @@ namespace Neo.Plugins
             {
                 while (CancelSource?.IsCancellationRequested == false)
                 {
-                    StoreView snapshot = Blockchain.Singleton.GetSnapshot();
+                    using var snapshot = Blockchain.Singleton.GetSnapshot();
                     CheckOracleAccount(snapshot);
                     IEnumerator<(ulong RequestId, OracleRequest Request)> enumerator = NativeContract.Oracle.GetRequests(snapshot).GetEnumerator();
                     while (enumerator.MoveNext() && !CancelSource.IsCancellationRequested)
@@ -120,7 +120,7 @@ namespace Neo.Plugins
                 .Where(u => u.HasKey && !u.Lock && oracles.Contains(u.ScriptHash))
                 .Select(u => (u.Contract, u.GetKey()))
                 .ToArray();
-            if (accounts.Length == 0) throw new ArgumentException("The wallet doesn't have any oracle accounts");
+            if (accounts == null || accounts.Length == 0) throw new ArgumentException("The wallet doesn't have any oracle accounts");
         }
 
         [ConsoleCommand("stop oracle", Category = "Oracle", Description = "Stop oracle service")]
@@ -145,6 +145,7 @@ namespace Neo.Plugins
                         HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                         request.Method = "POST";
                         request.ContentType = "application/json";
+                        request.ContentLength = 1024;
                         using (StreamWriter dataStream = new StreamWriter(request.GetRequestStream()))
                         {
                             dataStream.Write(content);
