@@ -119,12 +119,12 @@ namespace Neo.Network.RPC
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
             byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
-            var tx = await new TransactionManager(rpcClient)
-                .MakeTransaction(script, signers)
+
+            TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient, magic);
+            TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
+            return await manager
                 .AddSignature(fromKey)
                 .SignAsync().ConfigureAwait(false);
-
-            return tx;
         }
 
         /// <summary>
@@ -146,12 +146,11 @@ namespace Neo.Network.RPC
 
             byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
 
-            Transaction tx = await new TransactionManager(rpcClient)
-                .MakeTransaction(script, signers)
+            TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient, magic);
+            TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
+            return await manager
                 .AddMultiSig(fromKeys, m, pubKeys)
                 .SignAsync().ConfigureAwait(false);
-
-            return tx;
         }
     }
 }

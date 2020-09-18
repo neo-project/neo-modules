@@ -122,10 +122,8 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
-        public void TestMakeTransaction()
+        public async Task TestMakeTransaction()
         {
-            txManager = new TransactionManager(rpcClientMock.Object);
-
             Signer[] signers = new Signer[1]
             {
                 new Signer
@@ -136,7 +134,7 @@ namespace Neo.Network.RPC.Tests
             };
 
             byte[] script = new byte[1];
-            txManager.MakeTransaction(script, signers);
+            txManager = await TransactionManager.MakeTransactionAsync(rpcClientMock.Object, script, signers);
 
             var tx = txManager.Tx;
             Assert.AreEqual(WitnessScope.Global, tx.Signers[0].Scopes);
@@ -145,8 +143,6 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public async Task TestSign()
         {
-            txManager = new TransactionManager(rpcClientMock.Object);
-
             Signer[] signers = new Signer[1]
             {
                 new Signer
@@ -157,7 +153,8 @@ namespace Neo.Network.RPC.Tests
             };
 
             byte[] script = new byte[1];
-            await txManager.MakeTransaction(script, signers)
+            txManager = await TransactionManager.MakeTransactionAsync(rpcClientMock.Object, script, signers);
+            await txManager
                 .AddSignature(keyPair1)
                 .SignAsync();
 
@@ -205,8 +202,6 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public async Task TestSignMulti()
         {
-            txManager = new TransactionManager(multiSigMock.Object);
-
             // Cosigner needs multi signature
             Signer[] signers = new Signer[1]
             {
@@ -218,7 +213,8 @@ namespace Neo.Network.RPC.Tests
             };
 
             byte[] script = new byte[1];
-            await txManager.MakeTransaction(script, signers)
+            txManager = await TransactionManager.MakeTransactionAsync(multiSigMock.Object, script, signers);
+            await txManager
                 .AddMultiSig(keyPair1, 2, keyPair1.PublicKey, keyPair2.PublicKey)
                 .AddMultiSig(keyPair2, 2, keyPair1.PublicKey, keyPair2.PublicKey)
                 .SignAsync();
@@ -227,8 +223,6 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public async Task TestAddWitness()
         {
-            txManager = new TransactionManager(rpcClientMock.Object);
-
             // Cosigner as contract scripthash
             Signer[] signers = new Signer[2]
             {
@@ -245,7 +239,7 @@ namespace Neo.Network.RPC.Tests
             };
 
             byte[] script = new byte[1];
-            txManager.MakeTransaction(script, signers);
+            txManager = await TransactionManager.MakeTransactionAsync(rpcClientMock.Object, script, signers);
             txManager.AddWitness(UInt160.Zero);
             txManager.AddSignature(keyPair1);
             await txManager.SignAsync();
