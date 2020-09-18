@@ -120,7 +120,7 @@ namespace Neo.Plugins
                 .Where(u => u.HasKey && !u.Lock && oracles.Contains(u.ScriptHash))
                 .Select(u => (u.Contract, u.GetKey()))
                 .ToArray();
-            if (accounts == null || accounts.Length == 0) throw new ArgumentException("The wallet doesn't have any oracle accounts");
+            if (accounts is null || accounts.Length == 0) throw new ArgumentException("The wallet doesn't have any oracle accounts");
         }
 
         [ConsoleCommand("stop oracle", Category = "Oracle", Description = "Stop oracle service")]
