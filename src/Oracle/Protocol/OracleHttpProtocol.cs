@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -34,13 +35,14 @@ namespace Neo.Plugins
             client.DefaultRequestHeaders.Add("Accept", string.Join(",", AllowedFormats));
 
             Task<HttpResponseMessage> result = client.GetAsync(uri);
-
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             if (!result.Wait(Timeout)) throw new InvalidOperationException("Timeout");
             if (!result.Result.IsSuccessStatusCode) throw new InvalidOperationException("Response error");
             if (!AllowedFormats.Contains(result.Result.Content.Headers.ContentType.MediaType)) throw new InvalidOperationException("ContentType it's not allowed");
-
+            sw.Stop();
             var taskRet = result.Result.Content.ReadAsStringAsync();
-            if (!taskRet.Wait(Timeout / 2)) throw new InvalidOperationException("Timeout");
+            if (!taskRet.Wait(Timeout - (int)sw.ElapsedMilliseconds)) throw new InvalidOperationException("Timeout");
             var data = Filter(taskRet.Result, filter);
             return Utility.StrictUTF8.GetBytes(data);
         }
