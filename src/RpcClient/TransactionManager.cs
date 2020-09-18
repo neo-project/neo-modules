@@ -49,6 +49,10 @@ namespace Neo.Network.RPC
         /// TransactionManager Constructor
         /// </summary>
         /// <param name="rpc">the RPC client to call NEO RPC API</param>
+        /// <param name="magic">
+        /// the network Magic value to use when signing transactions. 
+        /// Defaults to ProtocolSettings.Default.Magic if not specified.
+        /// </param>
         public TransactionManager(RpcClient rpcClient, uint? magic = null)
         {
             this.rpcClient = rpcClient;
