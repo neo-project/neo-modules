@@ -19,13 +19,9 @@ namespace Neo.Plugins
         {
             Utility.Log(nameof(OracleHttpProtocol), LogLevel.Debug, $"Request: {url}");
 
-            Uri.TryCreate(url, UriKind.Absolute, out var uri);
-            if (!AllowPrivateHost && IsInternal(Dns.GetHostEntry(uri.Host)))
-            {
-                // Don't allow private host in order to prevent SSRF
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) throw new InvalidOperationException("UrlError");
+            if (!AllowPrivateHost && IsInternal(Dns.GetHostEntry(uri.Host))) throw new InvalidOperationException("Access to private host is not allowed");
 
-                throw new InvalidOperationException("PolicyError");
-            }
             using var handler = new HttpClientHandler
             {
                 // TODO: Accept all certificates
