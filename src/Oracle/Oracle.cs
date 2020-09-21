@@ -30,7 +30,7 @@ using static System.IO.Path;
 
 namespace Neo.Plugins
 {
-    public class Oracle : Plugin
+    public class Oracle : Plugin, IPersistencePlugin
     {
         private NEP6Wallet Wallet;
         private string[] Nodes;
@@ -90,37 +90,49 @@ namespace Neo.Plugins
             Wallet.Unlock(password);
 
             using var snapshot = Blockchain.Singleton.GetSnapshot();
-            CheckOracleAccount(snapshot);
+            if(CheckOracleAvaiblable(snapshot, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
+            if(CheckOracleAccount(oracles)) throw new ArgumentException("There is no oracle account in wallet");
 
             Interlocked.Exchange(ref CancelSource, new CancellationTokenSource())?.Cancel();
             new Task(() =>
             {
                 while (CancelSource?.IsCancellationRequested == false)
                 {
-                    using var snapshot = Blockchain.Singleton.GetSnapshot();
-                    CheckOracleAccount(snapshot);
-                    IEnumerator<(ulong RequestId, OracleRequest Request)> enumerator = NativeContract.Oracle.GetRequests(snapshot).GetEnumerator();
-                    while (enumerator.MoveNext() && !CancelSource.IsCancellationRequested)
+                    using (var snapshot = Blockchain.Singleton.GetSnapshot())
                     {
-                        if (PendingQueue.TryGetValue(enumerator.Current.RequestId, out OracleTask task) && task.Tx != null)
-                            continue;
-                        ProcessRequest(snapshot, enumerator.Current.RequestId, enumerator.Current.Request);
+                        IEnumerator<(ulong RequestId, OracleRequest Request)> enumerator = NativeContract.Oracle.GetRequests(snapshot).GetEnumerator();
+                        while (enumerator.MoveNext() && !CancelSource.IsCancellationRequested)
+                        {
+                            if (PendingQueue.TryGetValue(enumerator.Current.RequestId, out OracleTask task) && task.Tx != null)
+                                continue;
+                            ProcessRequest(snapshot, enumerator.Current.RequestId, enumerator.Current.Request);
+                        }
                     }
                     Thread.Sleep(500);
                 }
             }).Start();
         }
 
-        private void CheckOracleAccount(StoreView snapshot)
+        void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
-            var oraclePubs = NativeContract.Oracle.GetOracleNodes(snapshot);
-            if (oraclePubs.Length == 0) throw new ArgumentException("The oracle service is unavailable");
-            var oracles = oraclePubs.Select(u => Contract.CreateSignatureRedeemScript(u).ToScriptHash());
+            if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles) || !CheckOracleAccount(oracles))
+                OnStop();
+        }
+
+        private bool CheckOracleAvaiblable(StoreView snapshot, out ECPoint[] oracles)
+        {
+            oracles = NativeContract.Oracle.GetOracleNodes(snapshot);
+            return oracles.Length > 0;
+        }
+
+        private bool CheckOracleAccount(ECPoint[] oracles)
+        {
+            var oracleScriptHashes = oracles.Select(u => Contract.CreateSignatureRedeemScript(u).ToScriptHash());
             var accounts = Wallet?.GetAccounts()
-                .Where(u => u.HasKey && !u.Lock && oracles.Contains(u.ScriptHash))
+                .Where(u => u.HasKey && !u.Lock && oracleScriptHashes.Contains(u.ScriptHash))
                 .Select(u => (u.Contract, u.GetKey()))
                 .ToArray();
-            if (accounts is null || accounts.Length == 0) throw new ArgumentException("The wallet doesn't have any oracle accounts");
+            return accounts != null && accounts.Length > 0;
         }
 
         [ConsoleCommand("stop oracle", Category = "Oracle", Description = "Stop oracle service")]
