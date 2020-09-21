@@ -69,15 +69,13 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject SubmitOracleResponse(JArray _params)
         {
-            var data = _params[0].AsString().HexToBytes();
-            if (data.Length != 169) throw new RpcException(-100, "The length of data should be 169");
+            ECPoint oraclePub = ECPoint.Parse(_params[0].AsString(), ECCurve.Secp256r1);
+            ulong requestId = (ulong)_params[1].AsNumber();
+            byte[] txSign = _params[2].AsString().HexToBytes();
+            byte[] msgSign = _params[3].AsString().HexToBytes();
 
-            ECPoint oraclePub = ECPoint.Parse(data.Take(33).ToArray().ToHexString(), ECCurve.Secp256r1);
-            ulong requestId = BitConverter.ToUInt64(data.Skip(33).Take(8).ToArray());
-            byte[] txSign = data.Skip(41).Take(64).ToArray();
-            byte[] msgSign = data.Skip(105).Take(64).ToArray();
-
-            if (!Crypto.VerifySignature(data.Take(105).ToArray(), msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
+            var data = oraclePub.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
+            if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
 
             using var snapshot = Blockchain.Singleton.GetSnapshot();
             AddResponseTxSign(snapshot, requestId, txSign, oraclePub);
@@ -145,7 +143,8 @@ namespace Neo.Plugins
         {
             var message = keyPair.PublicKey.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
             var sign = Crypto.Sign(message, keyPair.PrivateKey, keyPair.PublicKey.EncodePoint(false)[1..]);
-            var content = "{ \"id\": " + (++Counter) + ", \"jsonrpc\": \"2.0\",  \"method\": \"submitoracleresponse\",  \"params\":[\"" + message.Concat(sign).ToArray().ToHexString() + "\"] }";
+            var param = "\"" + keyPair.PublicKey.ToArray().ToHexString() + "\", " + requestId + ", \"" + txSign.ToHexString() + "\",\"" + sign.ToHexString() + "\"";
+            var content = "{ \"id\": " + (++Counter) + ", \"jsonrpc\": \"2.0\",  \"method\": \"submitoracleresponse\",  \"params\":[" + param + "] }";
 
             foreach (var node in Nodes)
             {
