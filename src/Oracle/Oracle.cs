@@ -90,8 +90,8 @@ namespace Neo.Plugins
             Wallet.Unlock(password);
 
             using var snapshot = Blockchain.Singleton.GetSnapshot();
-            if(CheckOracleAvaiblable(snapshot, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
-            if(CheckOracleAccount(oracles)) throw new ArgumentException("There is no oracle account in wallet");
+            if (CheckOracleAvaiblable(snapshot, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
+            if (CheckOracleAccount(oracles)) throw new ArgumentException("There is no oracle account in wallet");
 
             Interlocked.Exchange(ref CancelSource, new CancellationTokenSource())?.Cancel();
             new Task(() =>
