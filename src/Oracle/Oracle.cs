@@ -365,8 +365,7 @@ namespace Neo.Plugins
 
         public static void Log(string message, LogLevel level = LogLevel.Info)
         {
-            Console.WriteLine(message);
-            //Utility.Log(nameof(Oracle), level, message);
+            Utility.Log(nameof(Oracle), level, message);
         }
 
         internal class OracleTask
