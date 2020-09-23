@@ -38,7 +38,7 @@ namespace Neo.Plugins
             if (!AllowedFormats.Contains(result.Result.Content.Headers.ContentType.MediaType)) throw new InvalidOperationException("ContentType it's not allowed");
             sw.Stop();
             var taskRet = result.Result.Content.ReadAsStringAsync();
-            if (Timeout > sw.ElapsedMilliseconds || !taskRet.Wait(Timeout - (int)sw.ElapsedMilliseconds)) throw new InvalidOperationException("Timeout");
+            if (Timeout <= sw.ElapsedMilliseconds || !taskRet.Wait(Timeout - (int)sw.ElapsedMilliseconds)) throw new InvalidOperationException("Timeout");
             var data = Filter(taskRet.Result, filter);
             return Utility.StrictUTF8.GetBytes(data);
         }
