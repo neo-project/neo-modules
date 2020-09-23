@@ -88,8 +88,8 @@ namespace Neo.Plugins
             Wallet.Unlock(password);
 
             using var snapshot = Blockchain.Singleton.GetSnapshot();
-            if (CheckOracleAvaiblable(snapshot, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
-            if (CheckOracleAccount(oracles)) throw new ArgumentException("There is no oracle account in wallet");
+            if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
+            if (!CheckOracleAccount(oracles)) throw new ArgumentException("There is no oracle account in wallet");
 
             Interlocked.Exchange(ref CancelSource, new CancellationTokenSource())?.Cancel();
             new Task(() =>
@@ -317,14 +317,14 @@ namespace Neo.Plugins
             {
                 Id = requestId,
                 Request = NativeContract.Oracle.GetRequest(snapshot, requestId),
-                Signs = new SortedDictionary<ECPoint, byte[]>(),
+                Signs = new ConcurrentDictionary<ECPoint, byte[]>(),
             });
             task.Signs.TryAdd(oraclePub, sign);
             if (respnoseTx != null)
             {
                 task.Tx = respnoseTx;
                 var data = task.Tx.GetHashData();
-                task.Signs.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.Signs.Remove(p.Key));
+                task.Signs.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.Signs.Remove(p.Key, out _));
             }
             else if (task.Tx != null)
             {
@@ -365,7 +365,8 @@ namespace Neo.Plugins
 
         public static void Log(string message, LogLevel level = LogLevel.Info)
         {
-            Utility.Log(nameof(Oracle), level, message);
+            Console.WriteLine(message);
+            //Utility.Log(nameof(Oracle), level, message);
         }
 
         internal class OracleTask
@@ -373,7 +374,7 @@ namespace Neo.Plugins
             public ulong Id;
             public OracleRequest Request;
             public Transaction Tx;
-            public SortedDictionary<ECPoint, byte[]> Signs;
+            public ConcurrentDictionary<ECPoint, byte[]> Signs;
             public readonly DateTime Timestamp = TimeProvider.Current.UtcNow;
         }
     }
