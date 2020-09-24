@@ -100,11 +100,8 @@ namespace Neo.Plugins
                     {
                         IEnumerator<(ulong RequestId, OracleRequest Request)> enumerator = NativeContract.Oracle.GetRequests(snapshot).GetEnumerator();
                         while (enumerator.MoveNext() && !CancelSource.IsCancellationRequested)
-                        {
-                            if (PendingQueue.TryGetValue(enumerator.Current.RequestId, out OracleTask task) && task.Tx != null)
-                                continue;
-                            ProcessRequest(snapshot, enumerator.Current.RequestId, enumerator.Current.Request);
-                        }
+                            if (!PendingQueue.TryGetValue(enumerator.Current.RequestId, out OracleTask task) || task.Tx is null)
+                                ProcessRequest(snapshot, enumerator.Current.RequestId, enumerator.Current.Request);
                     }
                     Thread.Sleep(500);
                 }
