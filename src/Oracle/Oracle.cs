@@ -12,6 +12,7 @@ using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
+using Neo.SmartContract.Native.Designate;
 using Neo.SmartContract.Native.Oracle;
 using Neo.VM;
 using Neo.Wallets;
@@ -116,7 +117,7 @@ namespace Neo.Plugins
 
         private bool CheckOracleAvaiblable(StoreView snapshot, out ECPoint[] oracles)
         {
-            oracles = NativeContract.Oracle.GetOracleNodes(snapshot);
+            oracles = NativeContract.Designate.GetDesignatedByRole(snapshot, Role.Oracle);
             return oracles.Length > 0;
         }
 
@@ -202,7 +203,7 @@ namespace Neo.Plugins
 
             Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
 
-            ECPoint[] oraclePublicKeys = NativeContract.Oracle.GetOracleNodes(snapshot);
+            ECPoint[] oraclePublicKeys = NativeContract.Designate.GetDesignatedByRole(snapshot, Role.Oracle);
             foreach (var account in Wallet.GetAccounts())
             {
                 var oraclePub = account.GetKey().PublicKey;
@@ -218,7 +219,7 @@ namespace Neo.Plugins
 
         private Transaction CreateResponseTx(StoreView snapshot, OracleResponse response)
         {
-            var oracleNodes = NativeContract.Oracle.GetOracleNodes(snapshot);
+            var oracleNodes = NativeContract.Designate.GetDesignatedByRole(snapshot, Role.Oracle);
             var request = NativeContract.Oracle.GetRequest(snapshot, response.Id);
             var requestTx = snapshot.Transactions.TryGet(request.OriginalTxid);
             var m = oracleNodes.Length - (oracleNodes.Length - 1) / 3;
@@ -331,7 +332,7 @@ namespace Neo.Plugins
                     throw new RpcException(-100, "Invalid response transaction sign");
             }
 
-            ECPoint[] nodes = NativeContract.Oracle.GetOracleNodes(snapshot);
+            ECPoint[] nodes = NativeContract.Designate.GetDesignatedByRole(snapshot, Role.Oracle);
             int m = nodes.Length - (nodes.Length - 1) / 3;
             if (task.Signs.Count >= m && task.Tx != null)
             {
