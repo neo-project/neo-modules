@@ -219,6 +219,8 @@ namespace Neo.Plugins
         private Transaction CreateResponseTx(StoreView snapshot, OracleResponse response)
         {
             var oracleNodes = NativeContract.Oracle.GetOracleNodes(snapshot);
+            var request = NativeContract.Oracle.GetRequest(snapshot, response.Id);
+            var requestTx = snapshot.Transactions.TryGet(request.OriginalTxid);
             var m = oracleNodes.Length - (oracleNodes.Length - 1) / 3;
             var n = oracleNodes.Length;
             var oracleSignContract = Contract.CreateMultiSigContract(m, oracleNodes);
@@ -226,7 +228,7 @@ namespace Neo.Plugins
             var tx = new Transaction()
             {
                 Version = 0,
-                ValidUntilBlock = snapshot.Height + Transaction.MaxValidUntilBlockIncrement,
+                ValidUntilBlock = requestTx.BlockIndex + Transaction.MaxValidUntilBlockIncrement,
                 Attributes = new TransactionAttribute[] {
                     response
                 },
@@ -259,7 +261,7 @@ namespace Neo.Plugins
             };
             witnessDict[NativeContract.Oracle.Hash] = new Witness
             {
-                InvocationScript = new ScriptBuilder().EmitPush(0).Emit(OpCode.PACK).EmitPush("verify").ToArray(),
+                InvocationScript = Array.Empty<byte>(),
                 VerificationScript = NativeContract.Oracle.Script,
             };
 
@@ -271,7 +273,7 @@ namespace Neo.Plugins
 
             var engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
             engine.LoadScript(NativeContract.Oracle.Script, CallFlags.None, 0);
-            engine.LoadScript(witnessDict[NativeContract.Oracle.Hash].InvocationScript, CallFlags.None);
+            engine.LoadScript(new ScriptBuilder().EmitPush(0).Emit(OpCode.PACK).EmitPush("verify").ToArray(), CallFlags.None);
             if (engine.Execute() != VMState.HALT) return null;
             tx.NetworkFee += engine.GasConsumed;
 
@@ -291,7 +293,6 @@ namespace Neo.Plugins
                 + IO.Helper.GetVarSize(hashes.Length) + witnessDict[NativeContract.Oracle.Hash].Size
                 + IO.Helper.GetVarSize(size_inv) + size_inv + oracleSignContract.Script.GetVarSize();
 
-            var request = NativeContract.Oracle.GetRequest(snapshot, response.Id);
             if (tx.NetworkFee + (size + tx.Attributes.GetVarSize()) * NativeContract.Policy.GetFeePerByte(snapshot) > request.GasForResponse)
             {
                 response.Code = OracleResponseCode.Error;
@@ -308,7 +309,7 @@ namespace Neo.Plugins
         }
 
 
-        public void AddResponseTxSign(StoreView snapshot, ulong requestId, byte[] sign, ECPoint oraclePub, Transaction respnoseTx = null)
+        public void AddResponseTxSign(StoreView snapshot, ulong requestId, byte[] sign, ECPoint oraclePub, Transaction responseTx = null)
         {
             var task = PendingQueue.GetOrAdd(requestId, new OracleTask
             {
@@ -317,9 +318,9 @@ namespace Neo.Plugins
                 Signs = new ConcurrentDictionary<ECPoint, byte[]>(),
             });
             task.Signs.TryAdd(oraclePub, sign);
-            if (respnoseTx != null)
+            if (responseTx != null)
             {
-                task.Tx = respnoseTx;
+                task.Tx = responseTx;
                 var data = task.Tx.GetHashData();
                 task.Signs.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.Signs.Remove(p.Key, out _));
             }
