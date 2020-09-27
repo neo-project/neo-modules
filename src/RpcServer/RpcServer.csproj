@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.ResponseCompression" Version="2.2.0" />
-    <PackageReference Include="Neo" Version="3.0.0-CI01025" />
+    <PackageReference Include="Neo" Version="3.0.0-CI01036" />
   </ItemGroup>
 
 </Project>
