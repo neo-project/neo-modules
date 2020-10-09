@@ -286,11 +286,9 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public void TestInvokeScript()
         {
-            //var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.InvokeScript).ToLower());
-            //var result = rpc.InvokeScript(test.Request.Params[0].AsString().HexToBytes());
-            //Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
-            byte[] script = "10c30c046e616d650c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0673796d626f6c0c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0b746f74616c537570706c790c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52".HexToBytes();
-            Console.WriteLine(Convert.ToBase64String(script));
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.InvokeScript).ToLower());
+            var result = rpc.InvokeScript(Convert.FromBase64String(test.Request.Params[0].AsString()));
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
         [TestMethod]
