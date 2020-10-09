@@ -61,7 +61,7 @@ namespace Neo.Plugins
             }
         }
 
-        private JObject GetInvokeResult(byte[] script, UInt160 sender = null, Signers signers = null)
+        private JObject GetInvokeResult(byte[] script, Signers signers = null)
         {
             using ApplicationEngine engine = ApplicationEngine.Run(script, container: signers, gas: settings.MaxGasInvoke);
             JObject json = new JObject();
@@ -76,7 +76,7 @@ namespace Neo.Plugins
             {
                 json["stack"] = "error: recursive reference";
             }
-            ProcessInvokeWithWallet(json, sender, signers);
+            ProcessInvokeWithWallet(json, signers);
             return json;
         }
 
@@ -103,23 +103,22 @@ namespace Neo.Plugins
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
-            UInt160 sender = _params.Count >= 4 ? AddressToScriptHash(_params[3].AsString()) : null;
-            Signers signers = _params.Count >= 5 ? SignersFromJson((JArray)_params[4]) : null;
+            Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[4]) : null;
+            
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
                 script = sb.EmitAppCall(script_hash, operation, args).ToArray();
             }
-            return GetInvokeResult(script, sender, signers);
+            return GetInvokeResult(script, signers);
         }
 
         [RpcMethod]
         private JObject InvokeScript(JArray _params)
         {
             byte[] script = _params[0].AsString().HexToBytes();
-            UInt160 sender = _params.Count >= 2 ? AddressToScriptHash(_params[1].AsString()) : null;
-            Signers signers = _params.Count >= 3 ? SignersFromJson((JArray)_params[2]) : null;
-            return GetInvokeResult(script, sender, signers);
+            Signers signers = _params.Count > 1 ? SignersFromJson((JArray)_params[1]) : null;
+            return GetInvokeResult(script, signers);
         }
 
         [RpcMethod]
