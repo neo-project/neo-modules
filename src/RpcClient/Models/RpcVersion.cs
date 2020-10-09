@@ -29,7 +29,7 @@ namespace Neo.Network.RPC.Models
         public static RpcVersion FromJson(JObject json)
         {
             RpcVersion version = new RpcVersion();
-            version.Magic = (uint)json["useragent"].AsNumber();
+            version.Magic = (uint)json["magic"].AsNumber();
             version.TcpPort = (int)json["tcpport"].AsNumber();
             version.WsPort = (int)json["wsport"].AsNumber();
             version.Nonce = (uint)json["nonce"].AsNumber();
