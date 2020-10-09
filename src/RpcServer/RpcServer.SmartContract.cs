@@ -104,7 +104,7 @@ namespace Neo.Plugins
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
             Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3]) : null;
-            
+
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
