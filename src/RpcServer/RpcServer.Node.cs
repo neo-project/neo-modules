@@ -15,13 +15,13 @@ namespace Neo.Plugins
     partial class RpcServer
     {
         [RpcMethod]
-        private JObject GetConnectionCount(JArray _params)
+        public virtual JObject GetConnectionCount(JArray _params)
         {
             return LocalNode.Singleton.ConnectedCount;
         }
 
         [RpcMethod]
-        private JObject GetPeers(JArray _params)
+        public virtual JObject GetPeers(JArray _params)
         {
             JObject json = new JObject();
             json["unconnected"] = new JArray(LocalNode.Singleton.GetUnconnectedPeers().Select(p =>
@@ -57,7 +57,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject GetVersion(JArray _params)
+        public virtual JObject GetVersion(JArray _params)
         {
             JObject json = new JObject();
             json["tcpport"] = LocalNode.Singleton.ListenerTcpPort;
@@ -68,7 +68,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject SendRawTransaction(JArray _params)
+        public virtual JObject SendRawTransaction(JArray _params)
         {
             Transaction tx = _params[0].AsString().HexToBytes().AsSerializable<Transaction>();
             RelayResult reason = system.Blockchain.Ask<RelayResult>(tx).Result;
@@ -76,7 +76,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject SubmitBlock(JArray _params)
+        public virtual JObject SubmitBlock(JArray _params)
         {
             Block block = _params[0].AsString().HexToBytes().AsSerializable<Block>();
             RelayResult reason = system.Blockchain.Ask<RelayResult>(block).Result;

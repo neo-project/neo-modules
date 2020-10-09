@@ -19,7 +19,7 @@ namespace Neo.Plugins
 {
     partial class RpcServer
     {
-        private class Signers : IVerifiable
+        protected class Signers : IVerifiable
         {
             private readonly Signer[] _signers;
             public Witness[] Witnesses { get; set; }
@@ -98,7 +98,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject InvokeFunction(JArray _params)
+        public virtual JObject InvokeFunction(JArray _params)
         {
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
@@ -114,7 +114,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject InvokeScript(JArray _params)
+        public virtual JObject InvokeScript(JArray _params)
         {
             byte[] script = _params[0].AsString().HexToBytes();
             UInt160 sender = _params.Count >= 2 ? AddressToScriptHash(_params[1].AsString()) : null;
@@ -123,7 +123,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject GetUnclaimedGas(JArray _params)
+        public virtual JObject GetUnclaimedGas(JArray _params)
         {
             string address = _params[0].AsString();
             JObject json = new JObject();
