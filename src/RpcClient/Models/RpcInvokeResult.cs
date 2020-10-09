@@ -18,12 +18,15 @@ namespace Neo.Network.RPC.Models
 
         public string Tx { get; set; }
 
+        public string Exception { get; set; }
+
         public JObject ToJson()
         {
             JObject json = new JObject();
             json["script"] = Script;
             json["state"] = State;
             json["gasconsumed"] = GasConsumed;
+            json["exception"] = Exception;
             try
             {
                 json["stack"] = new JArray(Stack.Select(p => p.ToJson()));
@@ -43,6 +46,7 @@ namespace Neo.Network.RPC.Models
             invokeScriptResult.Script = json["script"].AsString();
             invokeScriptResult.State = json["state"].TryGetEnum<VM.VMState>();
             invokeScriptResult.GasConsumed = json["gasconsumed"].AsString();
+            invokeScriptResult.Exception = json["exception"].AsString();
             try
             {
                 invokeScriptResult.Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToArray();
