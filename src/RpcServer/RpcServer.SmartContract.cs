@@ -65,7 +65,7 @@ namespace Neo.Plugins
         {
             using ApplicationEngine engine = ApplicationEngine.Run(script, container: signers, gas: settings.MaxGasInvoke);
             JObject json = new JObject();
-            json["script"] = script.ToHexString();
+            json["script"] = Convert.ToBase64String(script);
             json["state"] = engine.State;
             json["gasconsumed"] = engine.GasConsumed.ToString();
             try
@@ -116,7 +116,7 @@ namespace Neo.Plugins
         [RpcMethod]
         private JObject InvokeScript(JArray _params)
         {
-            byte[] script = _params[0].AsString().HexToBytes();
+            byte[] script = Convert.FromBase64String(_params[0].AsString());
             UInt160 sender = _params.Count >= 2 ? AddressToScriptHash(_params[1].AsString()) : null;
             Signers signers = _params.Count >= 3 ? SignersFromJson((JArray)_params[2]) : null;
             return GetInvokeResult(script, sender, signers);
