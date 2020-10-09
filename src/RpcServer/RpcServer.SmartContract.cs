@@ -103,7 +103,7 @@ namespace Neo.Plugins
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
-            Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[4]) : null;
+            Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3]) : null;
             
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
@@ -117,7 +117,7 @@ namespace Neo.Plugins
         private JObject InvokeScript(JArray _params)
         {
             byte[] script = _params[0].AsString().HexToBytes();
-            Signers signers = _params.Count > 1 ? SignersFromJson((JArray)_params[1]) : null;
+            Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1]) : null;
             return GetInvokeResult(script, signers);
         }
 
