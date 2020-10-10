@@ -23,7 +23,7 @@ namespace Neo.Plugins
 {
     partial class RpcServer
     {
-        protected class DummyWallet : Wallet
+        private class DummyWallet : Wallet
         {
             public DummyWallet() : base("") { }
             public override string Name => "";
