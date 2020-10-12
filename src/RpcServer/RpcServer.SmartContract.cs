@@ -19,7 +19,7 @@ namespace Neo.Plugins
 {
     partial class RpcServer
     {
-        protected class Signers : IVerifiable
+        private class Signers : IVerifiable
         {
             private readonly Signer[] _signers;
             public Witness[] Witnesses { get; set; }
