@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 
 namespace Neo.Network.RPC
 {
-
     /// <summary>
     /// This class helps to create transaction with RPC API.
     /// </summary>
