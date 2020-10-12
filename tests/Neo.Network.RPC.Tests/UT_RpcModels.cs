@@ -123,7 +123,7 @@ namespace Neo.Network.RPC.Tests
         [TestMethod()]
         public void TestRpcValidator()
         {
-            JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.GetValidators).ToLower()).Response.Result;
+            JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.GetNextBlockValidators).ToLower()).Response.Result;
             var item = ((JArray)json).Select(p => RpcValidator.FromJson(p));
             Assert.AreEqual(json.ToString(), ((JArray)item.Select(p => p.ToJson()).ToArray()).ToString());
         }
