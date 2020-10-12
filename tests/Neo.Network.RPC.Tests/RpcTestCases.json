@@ -587,10 +587,10 @@
     }
   },
   {
-    "Name": "getvalidators",
+    "Name": "getnextblockvalidators",
     "Request": {
       "jsonrpc": "2.0",
-      "method": "getvalidators",
+      "method": "getnextblockvalidators",
       "params": [],
       "id": 1
     },
