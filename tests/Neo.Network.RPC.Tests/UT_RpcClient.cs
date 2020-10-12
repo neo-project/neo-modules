@@ -214,10 +214,10 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
-        public async Task TestGetValidators()
+        public async Task TestGetNextBlockValidators()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetValidatorsAsync).ToLower());
-            var result = await rpc.GetValidatorsAsync();
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNextBlockValidatorsAsync).ToLower());
+            var result = await rpc.GetNextBlockValidatorsAsync();
             Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => p.ToJson()).ToArray()).ToString());
         }
 
