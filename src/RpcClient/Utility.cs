@@ -205,6 +205,8 @@ namespace Neo.Network.RPC
             StackItemType type = json["type"].TryGetEnum<StackItemType>();
             switch (type)
             {
+                case StackItemType.Any:
+                    return StackItem.Null;
                 case StackItemType.Boolean:
                     return new Boolean(json["value"].AsBoolean());
                 case StackItemType.Buffer:
