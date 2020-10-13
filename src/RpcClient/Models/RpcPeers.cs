@@ -22,10 +22,12 @@ namespace Neo.Network.RPC.Models
 
         public static RpcPeers FromJson(JObject json)
         {
-            RpcPeers result = new RpcPeers();
-            result.Unconnected = ((JArray)json["unconnected"]).Select(p => RpcPeer.FromJson(p)).ToArray();
-            result.Bad = ((JArray)json["bad"]).Select(p => RpcPeer.FromJson(p)).ToArray();
-            result.Connected = ((JArray)json["connected"]).Select(p => RpcPeer.FromJson(p)).ToArray();
+            RpcPeers result = new RpcPeers
+            {
+                Unconnected = ((JArray)json["unconnected"]).Select(p => RpcPeer.FromJson(p)).ToArray(),
+                Bad = ((JArray)json["bad"]).Select(p => RpcPeer.FromJson(p)).ToArray(),
+                Connected = ((JArray)json["connected"]).Select(p => RpcPeer.FromJson(p)).ToArray()
+            };
             return result;
         }
     }
@@ -46,9 +48,11 @@ namespace Neo.Network.RPC.Models
 
         public static RpcPeer FromJson(JObject json)
         {
-            RpcPeer peer = new RpcPeer();
-            peer.Address = json["address"].AsString();
-            peer.Port = int.Parse(json["port"].AsString());
+            RpcPeer peer = new RpcPeer
+            {
+                Address = json["address"].AsString(),
+                Port = int.Parse(json["port"].AsString())
+            };
             return peer;
         }
     }

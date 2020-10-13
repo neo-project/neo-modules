@@ -16,7 +16,6 @@ namespace Neo.Network.RPC
     public class TransactionManager
     {
         private readonly RpcClient rpcClient;
-        private readonly PolicyAPI policyAPI;
         private readonly Nep5API nep5API;
 
         private class SignItem { public Contract Contract; public HashSet<KeyPair> KeyPairs; }
@@ -44,7 +43,6 @@ namespace Neo.Network.RPC
         public TransactionManager(RpcClient rpc)
         {
             rpcClient = rpc;
-            policyAPI = new PolicyAPI(rpc);
             nep5API = new Nep5API(rpc);
         }
 
@@ -120,7 +118,7 @@ namespace Neo.Network.RPC
         {
             if (!Tx.GetScriptHashesForVerifying(null).Contains(contract.ScriptHash))
             {
-                throw new Exception($"Add SignItem error: Mismatch ScriptHash ({contract.ScriptHash.ToString()})");
+                throw new Exception($"Add SignItem error: Mismatch ScriptHash ({contract.ScriptHash})");
             }
 
             SignItem item = signStore.FirstOrDefault(p => p.Contract.ScriptHash == contract.ScriptHash);
