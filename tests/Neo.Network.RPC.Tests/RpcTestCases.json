@@ -1374,7 +1374,7 @@
           {
             "timestamp": 1579250114541,
             "assethash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
-            "transferaddress": "NVVwFw6XyhtRCFQ8SpUTMdPyYt4Vd9A1XQ",
+            "transferaddress": null,
             "amount": "1000000000",
             "blockindex": 603,
             "transfernotifyindex": 0,
