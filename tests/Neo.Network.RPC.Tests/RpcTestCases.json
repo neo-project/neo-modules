@@ -1359,7 +1359,7 @@
     }
   },
   {
-    "Name": "getnep5transfers_without_null_transferaddress",
+    "Name": "getnep5transfers",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getnep5transfers",
