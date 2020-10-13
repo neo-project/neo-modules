@@ -260,11 +260,11 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Returns the current NEO consensus nodes information and voting status.
+        /// Returns the next NEO consensus nodes information and voting status.
         /// </summary>
-        public RpcValidator[] GetValidators()
+        public RpcValidator[] GetNextBlockValidators()
         {
-            return ((JArray)RpcSend("getvalidators")).Select(p => RpcValidator.FromJson(p)).ToArray();
+            return ((JArray)RpcSend("getnextblockvalidators")).Select(p => RpcValidator.FromJson(p)).ToArray();
         }
 
         /// <summary>
