@@ -30,7 +30,7 @@ namespace Neo.Network.RPC.Models
         {
             RpcVersion version = new RpcVersion
             {
-                Magic = (uint)json["magic"].AsNumber();
+                Magic = (uint)json["magic"].AsNumber(),
                 TcpPort = (int)json["tcpport"].AsNumber(),
                 WsPort = (int)json["wsport"].AsNumber(),
                 Nonce = (uint)json["nonce"].AsNumber(),

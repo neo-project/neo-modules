@@ -97,9 +97,18 @@ namespace Neo.Network.RPC
 
         public static string GetRpcName()
         {
-            var stackTrace = new System.Diagnostics.StackTrace(true);
-            var method = stackTrace.GetFrame(1).GetMethod();
-            return new Regex("(.*)(Hex|Both|Sync)").Replace(method.Name, "$1").ToLower();
+            var methodName = "";
+            for (int i = 1; i < 5; i++)
+            {
+                var method = new System.Diagnostics.StackTrace(true).GetFrame(i).GetMethod();
+                if (method.IsPublic && !method.IsGenericMethod)
+                {
+                    methodName = method.Name;
+                    break;
+                }
+            }
+            var rpcName = new Regex("(.*?)(Hex|Both)?(Async)?").Replace(methodName, "$1").ToLower();
+            return rpcName;
         }
 
         #region Blockchain
