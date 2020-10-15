@@ -182,7 +182,15 @@ namespace Neo.Plugins
 
                 if (witnessSigners.Count() > 0)
                 {
-                    tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes(), sender, witnessSigners);
+                    try
+                    {
+                        tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes(), sender, witnessSigners);
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        result["exception"] = GetExceptionMessage(e);
+                        return;
+                    }
                     ContractParametersContext context = new ContractParametersContext(tx);
                     wallet.Sign(context);
                     if (context.Completed)

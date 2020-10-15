@@ -77,7 +77,10 @@ namespace Neo.Plugins
             {
                 json["stack"] = "error: recursive reference";
             }
-            ProcessInvokeWithWallet(json, sender, signers);
+            if (engine.State == VMState.HALT)
+            {
+                ProcessInvokeWithWallet(json, sender, signers);
+            }
             return json;
         }
 
