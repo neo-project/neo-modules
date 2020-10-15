@@ -40,7 +40,7 @@ namespace Neo.Plugins
             public override bool VerifyPassword(string password) => false;
         }
 
-        private Wallet wallet;
+        protected Wallet wallet;
 
         private void CheckWallet()
         {
@@ -49,14 +49,14 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject CloseWallet(JArray _params)
+        protected virtual JObject CloseWallet(JArray _params)
         {
             wallet = null;
             return true;
         }
 
         [RpcMethod]
-        private JObject DumpPrivKey(JArray _params)
+        protected virtual JObject DumpPrivKey(JArray _params)
         {
             CheckWallet();
             UInt160 scriptHash = AddressToScriptHash(_params[0].AsString());
@@ -65,7 +65,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject GetNewAddress(JArray _params)
+        protected virtual JObject GetNewAddress(JArray _params)
         {
             CheckWallet();
             WalletAccount account = wallet.CreateAccount();
@@ -75,7 +75,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject GetWalletBalance(JArray _params)
+        protected virtual JObject GetWalletBalance(JArray _params)
         {
             CheckWallet();
             UInt160 asset_id = UInt160.Parse(_params[0].AsString());
@@ -85,7 +85,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject GetWalletUnclaimedGas(JArray _params)
+        protected virtual JObject GetWalletUnclaimedGas(JArray _params)
         {
             CheckWallet();
             BigInteger gas = BigInteger.Zero;
@@ -98,7 +98,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject ImportPrivKey(JArray _params)
+        protected virtual JObject ImportPrivKey(JArray _params)
         {
             CheckWallet();
             string privkey = _params[0].AsString();
@@ -115,7 +115,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject CalculateNetworkFee(JArray _params)
+        protected virtual JObject CalculateNetworkFee(JArray _params)
         {
             byte[] tx = Convert.FromBase64String(_params[0].AsString());
 
@@ -125,7 +125,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject ListAddress(JArray _params)
+        protected virtual JObject ListAddress(JArray _params)
         {
             CheckWallet();
             return wallet.GetAccounts().Select(p =>
@@ -140,7 +140,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject OpenWallet(JArray _params)
+        protected virtual JObject OpenWallet(JArray _params)
         {
             string path = _params[0].AsString();
             string password = _params[1].AsString();
@@ -187,7 +187,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject SendFrom(JArray _params)
+        protected virtual JObject SendFrom(JArray _params)
         {
             CheckWallet();
             UInt160 assetId = UInt160.Parse(_params[0].AsString());
@@ -228,7 +228,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject SendMany(JArray _params)
+        protected virtual JObject SendMany(JArray _params)
         {
             CheckWallet();
             int to_start = 0;
@@ -278,7 +278,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject SendToAddress(JArray _params)
+        protected virtual JObject SendToAddress(JArray _params)
         {
             CheckWallet();
             UInt160 assetId = UInt160.Parse(_params[0].AsString());

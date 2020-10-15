@@ -1,12 +1,13 @@
 using Neo.Cryptography.ECC;
+using Neo.IO;
 using Neo.Network.P2P.Payloads;
-using Neo.Network.RPC.Models;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Neo.Network.RPC
 {
@@ -15,65 +16,56 @@ namespace Neo.Network.RPC
     /// </summary>
     public class TransactionManager
     {
-        private readonly RpcClient rpcClient;
-        private readonly PolicyAPI policyAPI;
-        private readonly Nep5API nep5API;
-
         private class SignItem { public Contract Contract; public HashSet<KeyPair> KeyPairs; }
+
+        private readonly RpcClient rpcClient;
+
+        /// <summary>
+        /// protocol settings Magic value to use for hashing transactions.
+        /// </summary>
+        private readonly uint magic;
 
         /// <summary>
         /// The Transaction context to manage the witnesses
         /// </summary>
-        private ContractParametersContext context;
+        private readonly ContractParametersContext context;
 
         /// <summary>
         /// This container stores the keys for sign the transaction
         /// </summary>
-        private List<SignItem> signStore;
+        private readonly List<SignItem> signStore = new List<SignItem>();
 
         /// <summary>
-        /// The Transaction managed by this class
+        /// The Transaction managed by this instance
         /// </summary>
-        public Transaction Tx { get; private set; }
+        private readonly Transaction tx;
+
+        public Transaction Tx => tx;
 
         /// <summary>
         /// TransactionManager Constructor
         /// </summary>
-        /// <param name="rpc">the RPC client to call NEO RPC API</param>
-        /// <param name="sender">the account script hash of sender</param>
-        public TransactionManager(RpcClient rpc)
+        /// <param name="tx">the transaction to manage. Typically buildt</param>
+        /// <param name="rpcClient">the RPC client to call NEO RPC API</param>
+        /// <param name="magic">
+        /// the network Magic value to use when signing transactions. 
+        /// Defaults to ProtocolSettings.Default.Magic if not specified.
+        /// </param>
+        public TransactionManager(Transaction tx, RpcClient rpcClient, uint magic)
         {
-            rpcClient = rpc;
-            policyAPI = new PolicyAPI(rpc);
-            nep5API = new Nep5API(rpc);
+            this.tx = tx;
+            this.context = new ContractParametersContext(tx);
+            this.rpcClient = rpcClient;
+            this.magic = magic;
         }
 
         /// <summary>
-        /// Create an unsigned Transaction object with given parameters.
+        /// Helper function for one-off TransactionManager creation
         /// </summary>
-        /// <param name="script">Transaction Script</param>
-        /// <param name="attributes">Transaction Attributes</param>
-        /// <returns></returns>
-        public TransactionManager MakeTransaction(byte[] script, Signer[] signers = null, TransactionAttribute[] attributes = null)
+        public static Task<TransactionManager> MakeTransactionAsync(RpcClient rpcClient, byte[] script, Signer[] signers = null, TransactionAttribute[] attributes = null, uint? magic = null)
         {
-            var random = new Random();
-            uint height = rpcClient.GetBlockCount() - 1;
-            Tx = new Transaction
-            {
-                Version = 0,
-                Nonce = (uint)random.Next(),
-                Script = script,
-                Signers = signers,
-                ValidUntilBlock = height + Transaction.MaxValidUntilBlockIncrement,
-                Attributes = attributes ?? Array.Empty<TransactionAttribute>(),
-            };
-
-            RpcInvokeResult result = rpcClient.InvokeScript(script, signers);
-            Tx.SystemFee = long.Parse(result.GasConsumed);
-            context = new ContractParametersContext(Tx);
-            signStore = new List<SignItem>();
-
-            return this;
+            var factory = new TransactionManagerFactory(rpcClient, magic);
+            return factory.MakeTransactionAsync(script, signers, attributes);
         }
 
         /// <summary>
@@ -109,9 +101,10 @@ namespace Neo.Network.RPC
         /// <param name="publicKeys">The Public Keys construct the multiple signature contract</param>
         public TransactionManager AddMultiSig(KeyPair[] keys, int m, params ECPoint[] publicKeys)
         {
-            foreach (var key in keys)
+            Contract contract = Contract.CreateMultiSigContract(m, publicKeys);
+            for (int i = 0; i < keys.Length; i++)
             {
-                AddMultiSig(key, m, publicKeys);
+                AddSignItem(contract, keys[i]);
             }
             return this;
         }
@@ -162,7 +155,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Verify Witness count and add witnesses
         /// </summary>
-        public TransactionManager Sign()
+        public async Task<Transaction> SignAsync()
         {
             // Calculate NetworkFee
             Tx.Witnesses = Tx.GetScriptHashesForVerifying(null).Select(u => new Witness()
@@ -170,23 +163,25 @@ namespace Neo.Network.RPC
                 InvocationScript = Array.Empty<byte>(),
                 VerificationScript = GetVerificationScript(u)
             }).ToArray();
-            Tx.NetworkFee = rpcClient.CalculateNetworkFee(Tx);
+            Tx.NetworkFee = await rpcClient.CalculateNetworkFeeAsync(Tx).ConfigureAwait(false);
             Tx.Witnesses = null;
 
-            var gasBalance = nep5API.BalanceOf(NativeContract.GAS.Hash, Tx.Sender);
+            var gasBalance = await new Nep5API(rpcClient).BalanceOfAsync(NativeContract.GAS.Hash, Tx.Sender).ConfigureAwait(false);
             if (gasBalance < Tx.SystemFee + Tx.NetworkFee)
                 throw new InvalidOperationException($"Insufficient GAS in address: {Tx.Sender.ToAddress()}");
 
             // Sign with signStore
-            foreach (var item in signStore)
-                foreach (var key in item.KeyPairs)
+            for (int i = 0; i < signStore.Count; i++)
+            {
+                foreach (var key in signStore[i].KeyPairs)
                 {
-                    byte[] signature = Tx.Sign(key);
-                    if (!context.AddSignature(item.Contract, key.PublicKey, signature))
+                    byte[] signature = Tx.Sign(key, magic);
+                    if (!context.AddSignature(signStore[i].Contract, key.PublicKey, signature))
                     {
                         throw new Exception("AddSignature failed!");
                     }
                 }
+            }
 
             // Verify witness count
             if (!context.Completed)
@@ -194,7 +189,7 @@ namespace Neo.Network.RPC
                 throw new Exception($"Please add signature or witness first!");
             }
             Tx.Witnesses = context.GetWitnesses();
-            return this;
+            return Tx;
         }
 
         private byte[] GetVerificationScript(UInt160 hash)
