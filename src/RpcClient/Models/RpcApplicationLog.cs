@@ -35,7 +35,7 @@ namespace Neo.Network.RPC.Models
 
         public static RpcApplicationLog FromJson(JObject json)
         {
-            RpcApplicationLog log = new RpcApplicationLog
+            return new RpcApplicationLog
             {
                 TxId = json["txid"] is null ? null : UInt256.Parse(json["txid"].AsString()),
                 Trigger = json["trigger"].TryGetEnum<TriggerType>(),
@@ -44,7 +44,6 @@ namespace Neo.Network.RPC.Models
                 Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToList(),
                 Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson(p)).ToList()
             };
-            return log;
         }
     }
 
