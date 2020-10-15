@@ -1406,7 +1406,7 @@
     }
   },
   {
-    "Name": "getnep5transfers_with_null_transferaddress",
+    "Name": "getnep5transfersasync_with_null_transferaddress",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getnep5transfers",
