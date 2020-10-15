@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace Neo.Plugins
 {
-    public sealed partial class RpcServer : IDisposable
+    public partial class RpcServer : IDisposable
     {
         private readonly Dictionary<string, Func<JArray, JObject>> methods = new Dictionary<string, Func<JArray, JObject>>();
 
