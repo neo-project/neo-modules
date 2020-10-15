@@ -21,13 +21,12 @@ namespace Neo.Network.RPC.Models
 
         public static RpcBlock FromJson(JObject json)
         {
-            RpcBlock block = new RpcBlock
+            return new RpcBlock
             {
                 Block = Utility.BlockFromJson(json),
                 Confirmations = (uint)json["confirmations"].AsNumber(),
                 NextBlockHash = json["nextblockhash"] is null ? null : UInt256.Parse(json["nextblockhash"].AsString())
             };
-            return block;
         }
     }
 }
