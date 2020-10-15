@@ -7,6 +7,7 @@ using Neo.Wallets;
 using System;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using static Neo.Helper;
 
 namespace Neo.Network.RPC
@@ -28,9 +29,10 @@ namespace Neo.Network.RPC
         /// <param name="scriptHash">contract script hash</param>
         /// <param name="account">account script hash</param>
         /// <returns></returns>
-        public BigInteger BalanceOf(UInt160 scriptHash, UInt160 account)
+        public async Task<BigInteger> BalanceOfAsync(UInt160 scriptHash, UInt160 account)
         {
-            BigInteger balance = TestInvoke(scriptHash, "balanceOf", account).Stack.Single().GetInteger();
+            var result = await TestInvokeAsync(scriptHash, "balanceOf", account).ConfigureAwait(false);
+            BigInteger balance = result.Stack.Single().GetInteger();
             return balance;
         }
 
@@ -39,9 +41,10 @@ namespace Neo.Network.RPC
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <returns></returns>
-        public string Name(UInt160 scriptHash)
+        public async Task<string> NameAsync(UInt160 scriptHash)
         {
-            return TestInvoke(scriptHash, "name").Stack.Single().GetString();
+            var result = await TestInvokeAsync(scriptHash, "name").ConfigureAwait(false);
+            return result.Stack.Single().GetString();
         }
 
         /// <summary>
@@ -49,9 +52,10 @@ namespace Neo.Network.RPC
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <returns></returns>
-        public string Symbol(UInt160 scriptHash)
+        public async Task<string> SymbolAsync(UInt160 scriptHash)
         {
-            return TestInvoke(scriptHash, "symbol").Stack.Single().GetString();
+            var result = await TestInvokeAsync(scriptHash, "symbol").ConfigureAwait(false);
+            return result.Stack.Single().GetString();
         }
 
         /// <summary>
@@ -59,9 +63,10 @@ namespace Neo.Network.RPC
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <returns></returns>
-        public byte Decimals(UInt160 scriptHash)
+        public async Task<byte> DecimalsAsync(UInt160 scriptHash)
         {
-            return (byte)TestInvoke(scriptHash, "decimals").Stack.Single().GetInteger();
+            var result = await TestInvokeAsync(scriptHash, "decimals").ConfigureAwait(false);
+            return (byte)result.Stack.Single().GetInteger();
         }
 
         /// <summary>
@@ -69,9 +74,10 @@ namespace Neo.Network.RPC
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <returns></returns>
-        public BigInteger TotalSupply(UInt160 scriptHash)
+        public async Task<BigInteger> TotalSupplyAsync(UInt160 scriptHash)
         {
-            return TestInvoke(scriptHash, "totalSupply").Stack.Single().GetInteger();
+            var result = await TestInvokeAsync(scriptHash, "totalSupply").ConfigureAwait(false);
+            return result.Stack.Single().GetInteger();
         }
 
         /// <summary>
@@ -79,21 +85,23 @@ namespace Neo.Network.RPC
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <returns></returns>
-        public RpcNep5TokenInfo GetTokenInfo(UInt160 scriptHash)
+        public async Task<RpcNep5TokenInfo> GetTokenInfoAsync(UInt160 scriptHash)
         {
-            byte[] script = Concat(scriptHash.MakeScript("name"),
+            byte[] script = Concat(
+                scriptHash.MakeScript("name"),
                 scriptHash.MakeScript("symbol"),
                 scriptHash.MakeScript("decimals"),
                 scriptHash.MakeScript("totalSupply"));
 
-            var result = rpcClient.InvokeScript(script).Stack;
+            var result = await rpcClient.InvokeScriptAsync(script).ConfigureAwait(false);
+            var stack = result.Stack;
 
             return new RpcNep5TokenInfo
             {
-                Name = result[0].GetString(),
-                Symbol = result[1].GetString(),
-                Decimals = (byte)result[2].GetInteger(),
-                TotalSupply = result[3].GetInteger()
+                Name = stack[0].GetString(),
+                Symbol = stack[1].GetString(),
+                Decimals = (byte)stack[2].GetInteger(),
+                TotalSupply = stack[3].GetInteger()
             };
         }
 
@@ -105,19 +113,18 @@ namespace Neo.Network.RPC
         /// <param name="to">to account script hash</param>
         /// <param name="amount">transfer amount</param>
         /// <returns></returns>
-        public Transaction CreateTransferTx(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount)
+        public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount)
         {
             var sender = Contract.CreateSignatureRedeemScript(fromKey.PublicKey).ToScriptHash();
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
             byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
-            Transaction tx = new TransactionManager(rpcClient)
-                .MakeTransaction(script, signers)
-                .AddSignature(fromKey)
-                .Sign()
-                .Tx;
 
-            return tx;
+            TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient, magic);
+            TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
+            return await manager
+                .AddSignature(fromKey)
+                .SignAsync().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -130,7 +137,7 @@ namespace Neo.Network.RPC
         /// <param name="to">to account</param>
         /// <param name="amount">transfer amount</param>
         /// <returns></returns>
-        public Transaction CreateTransferTx(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] fromKeys, UInt160 to, BigInteger amount)
+        public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] fromKeys, UInt160 to, BigInteger amount)
         {
             if (m > fromKeys.Length)
                 throw new ArgumentException($"Need at least {m} KeyPairs for signing!");
@@ -138,13 +145,12 @@ namespace Neo.Network.RPC
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
             byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
-            Transaction tx = new TransactionManager(rpcClient)
-                .MakeTransaction(script, signers)
-                .AddMultiSig(fromKeys, m, pubKeys)
-                .Sign()
-                .Tx;
 
-            return tx;
+            TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient, magic);
+            TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
+            return await manager
+                .AddMultiSig(fromKeys, m, pubKeys)
+                .SignAsync().ConfigureAwait(false);
         }
     }
 }
