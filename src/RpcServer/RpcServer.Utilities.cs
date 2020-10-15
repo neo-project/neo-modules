@@ -2,7 +2,6 @@
 #pragma warning disable IDE0060
 
 using Neo.IO.Json;
-using Neo.Wallets;
 using System.Linq;
 
 namespace Neo.Plugins
@@ -10,7 +9,7 @@ namespace Neo.Plugins
     partial class RpcServer
     {
         [RpcMethod]
-        private JObject ListPlugins(JArray _params)
+        protected virtual JObject ListPlugins(JArray _params)
         {
             return new JArray(Plugin.Plugins
                 .OrderBy(u => u.Name)
@@ -26,7 +25,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        private JObject ValidateAddress(JArray _params)
+        protected virtual JObject ValidateAddress(JArray _params)
         {
             string address = _params[0].AsString();
             JObject json = new JObject();
