@@ -4,6 +4,8 @@ namespace Neo.Network.RPC.Models
 {
     public class RpcVersion
     {
+        public uint Magic { get; set; }
+
         public int TcpPort { get; set; }
 
         public int WsPort { get; set; }
@@ -12,9 +14,11 @@ namespace Neo.Network.RPC.Models
 
         public string UserAgent { get; set; }
 
+
         public JObject ToJson()
         {
             JObject json = new JObject();
+            json["magic"] = Magic;
             json["tcpport"] = TcpPort;
             json["wsport"] = WsPort;
             json["nonce"] = Nonce;
@@ -25,6 +29,7 @@ namespace Neo.Network.RPC.Models
         public static RpcVersion FromJson(JObject json)
         {
             RpcVersion version = new RpcVersion();
+            version.Magic = (uint)json["magic"].AsNumber();
             version.TcpPort = (int)json["tcpport"].AsNumber();
             version.WsPort = (int)json["wsport"].AsNumber();
             version.Nonce = (uint)json["nonce"].AsNumber();
