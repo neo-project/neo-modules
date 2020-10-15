@@ -26,7 +26,7 @@ namespace Neo.Network.RPC.Models
             json["script"] = Script;
             json["state"] = State;
             json["gasconsumed"] = GasConsumed;
-            if (Exception != null)
+            if (string.IsNullOrEmpty(Exception))
                 json["exception"] = Exception;
             try
             {
