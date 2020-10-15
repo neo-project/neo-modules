@@ -1,6 +1,6 @@
 [
   {
-    "Name": "sendrawtransactionerror",
+    "Name": "sendrawtransactionasyncerror",
     "Request": {
       "jsonrpc": "2.0",
       "method": "sendrawtransaction",
@@ -18,7 +18,7 @@
     }
   },
   {
-    "Name": "getbestblockhash",
+    "Name": "getbestblockhashasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getbestblockhash",
@@ -32,7 +32,7 @@
     }
   },
   {
-    "Name": "getblockhex",
+    "Name": "getblockhexasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblock",
@@ -46,7 +46,7 @@
     }
   },
   {
-    "Name": "getblockhex",
+    "Name": "getblockhexasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblock",
@@ -60,7 +60,7 @@
     }
   },
   {
-    "Name": "getblock",
+    "Name": "getblockasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblock",
@@ -121,7 +121,7 @@
     }
   },
   {
-    "Name": "getblock",
+    "Name": "getblockasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblock",
@@ -182,7 +182,7 @@
     }
   },
   {
-    "Name": "getblockcount",
+    "Name": "getblockcountasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblockcount",
@@ -196,7 +196,7 @@
     }
   },
   {
-    "Name": "getblockhash",
+    "Name": "getblockhashasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblockhash",
@@ -210,7 +210,7 @@
     }
   },
   {
-    "Name": "getblockheaderhex",
+    "Name": "getblockheaderhexasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblockheader",
@@ -224,7 +224,7 @@
     }
   },
   {
-    "Name": "getblockheaderhex",
+    "Name": "getblockheaderhexasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblockheader",
@@ -238,7 +238,7 @@
     }
   },
   {
-    "Name": "getblockheader",
+    "Name": "getblockheaderasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblockheader",
@@ -269,7 +269,7 @@
     }
   },
   {
-    "Name": "getblockheader",
+    "Name": "getblockheaderasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblockheader",
@@ -300,7 +300,7 @@
     }
   },
   {
-    "Name": "getblocksysfee",
+    "Name": "getblocksysfeeasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblocksysfee",
@@ -314,7 +314,7 @@
     }
   },
   {
-    "Name": "getcontractstate",
+    "Name": "getcontractstateasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getcontractstate",
@@ -458,7 +458,7 @@
     }
   },
   {
-    "Name": "getrawmempool",
+    "Name": "getrawmempoolasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getrawmempool",
@@ -472,7 +472,7 @@
     }
   },
   {
-    "Name": "getrawmempoolboth",
+    "Name": "getrawmempoolbothasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getrawmempool",
@@ -490,7 +490,7 @@
     }
   },
   {
-    "Name": "getrawtransactionhex",
+    "Name": "getrawtransactionhexasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getrawtransaction",
@@ -504,7 +504,7 @@
     }
   },
   {
-    "Name": "getrawtransaction",
+    "Name": "getrawtransactionasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getrawtransaction",
@@ -545,7 +545,7 @@
     }
   },
   {
-    "Name": "getstorage",
+    "Name": "getstorageasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getstorage",
@@ -559,7 +559,7 @@
     }
   },
   {
-    "Name": "getstorage",
+    "Name": "getstorageasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getstorage",
@@ -573,7 +573,7 @@
     }
   },
   {
-    "Name": "gettransactionheight",
+    "Name": "gettransactionheightasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "gettransactionheight",
@@ -587,7 +587,7 @@
     }
   },
   {
-    "Name": "getnextblockvalidators",
+    "Name": "getnextblockvalidatorsasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getnextblockvalidators",
@@ -609,7 +609,7 @@
 
 
   {
-    "Name": "getconnectioncount",
+    "Name": "getconnectioncountasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getconnectioncount",
@@ -623,7 +623,7 @@
     }
   },
   {
-    "Name": "getpeers",
+    "Name": "getpeersasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getpeers",
@@ -655,7 +655,7 @@
     }
   },
   {
-    "Name": "getversion",
+    "Name": "getversionasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getversion",
@@ -666,6 +666,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
+        "magic":  0,
         "tcpport": 20333,
         "wsport": 20334,
         "nonce": 592651621,
@@ -674,7 +675,7 @@
     }
   },
   {
-    "Name": "sendrawtransaction",
+    "Name": "sendrawtransactionasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "sendrawtransaction",
@@ -690,7 +691,7 @@
     }
   },
   {
-    "Name": "submitblock",
+    "Name": "submitblockasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "submitblock",
@@ -708,7 +709,7 @@
 
 
   {
-    "Name": "invokefunction",
+    "Name": "invokefunctionasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "invokefunction",
@@ -742,7 +743,7 @@
     }
   },
   {
-    "Name": "invokescript",
+    "Name": "invokescriptasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "invokescript",
@@ -822,7 +823,7 @@
   },
 
   {
-    "Name": "getunclaimedgas",
+    "Name": "getunclaimedgasasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getunclaimedgas",
@@ -840,7 +841,7 @@
   },
 
   {
-    "Name": "listplugins",
+    "Name": "listpluginsasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "listplugins",
@@ -881,7 +882,7 @@
     }
   },
   {
-    "Name": "validateaddress",
+    "Name": "validateaddressasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "validateaddress",
@@ -900,7 +901,7 @@
 
 
   {
-    "Name": "closewallet",
+    "Name": "closewalletasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "closewallet",
@@ -914,7 +915,7 @@
     }
   },
   {
-    "Name": "dumpprivkey",
+    "Name": "dumpprivkeyasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "dumpprivkey",
@@ -928,7 +929,7 @@
     }
   },
   {
-    "Name": "invokescript",
+    "Name": "invokescriptasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "invokescript",
@@ -953,7 +954,7 @@
     }
   },
   {
-    "Name": "getnewaddress",
+    "Name": "getnewaddressasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getnewaddress",
@@ -967,7 +968,7 @@
     }
   },
   {
-    "Name": "getwalletbalance",
+    "Name": "getwalletbalanceasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getwalletbalance",
@@ -983,7 +984,7 @@
     }
   },
   {
-    "Name": "getwalletunclaimedgas",
+    "Name": "getwalletunclaimedgasasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getwalletunclaimedgas",
@@ -997,7 +998,7 @@
     }
   },
   {
-    "Name": "importprivkey",
+    "Name": "importprivkeyasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "importprivkey",
@@ -1016,7 +1017,7 @@
     }
   },
   {
-    "Name": "listaddress",
+    "Name": "listaddressasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "listaddress",
@@ -1043,7 +1044,7 @@
     }
   },
   {
-    "Name": "openwallet",
+    "Name": "openwalletasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "openwallet",
@@ -1057,7 +1058,7 @@
     }
   },
   {
-    "Name": "sendfrom",
+    "Name": "sendfromasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "sendfrom",
@@ -1094,7 +1095,7 @@
     }
   },
   {
-    "Name": "sendmany",
+    "Name": "sendmanyasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "sendmany",
@@ -1153,7 +1154,7 @@
     }
   },
   {
-    "Name": "sendtoaddress",
+    "Name": "sendtoaddressasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "sendtoaddress",
@@ -1196,7 +1197,7 @@
 
 
   {
-    "Name": "getapplicationlog",
+    "Name": "getapplicationlogasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getapplicationlog",
@@ -1359,7 +1360,7 @@
     }
   },
   {
-    "Name": "getnep5transfers",
+    "Name": "getnep5transfersasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getnep5transfers",
@@ -1406,7 +1407,7 @@
     }
   },
   {
-    "Name": "getnep5balances",
+    "Name": "getnep5balancesasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getnep5balances",
