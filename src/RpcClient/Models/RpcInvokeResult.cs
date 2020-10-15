@@ -71,12 +71,11 @@ namespace Neo.Network.RPC.Models
 
         public static RpcStack FromJson(JObject json)
         {
-            RpcStack stackJson = new RpcStack
+            return new RpcStack
             {
                 Type = json["type"].AsString(),
                 Value = json["value"].AsString()
             };
-            return stackJson;
         }
     }
 }

@@ -142,7 +142,7 @@ namespace Neo.Network.RPC
 
         public static Transaction TransactionFromJson(JObject json)
         {
-            Transaction tx = new Transaction
+            return new Transaction
             {
                 Version = byte.Parse(json["version"].AsString()),
                 Nonce = uint.Parse(json["nonce"].AsString()),
@@ -154,7 +154,6 @@ namespace Neo.Network.RPC
                 Script = Convert.FromBase64String(json["script"].AsString()),
                 Witnesses = ((JArray)json["witnesses"]).Select(p => WitnessFromJson(p)).ToArray()
             };
-            return tx;
         }
 
         public static Header HeaderFromJson(JObject json)
@@ -178,12 +177,11 @@ namespace Neo.Network.RPC
 
         public static ConsensusData ConsensusDataFromJson(JObject json)
         {
-            ConsensusData block = new ConsensusData
+            return new ConsensusData
             {
                 PrimaryIndex = (byte)json["primary"].AsNumber(),
                 Nonce = ulong.Parse(json["nonce"].AsString(), NumberStyles.HexNumber)
             };
-            return block;
         }
 
         public static TransactionAttribute TransactionAttributeFromJson(JObject json)
@@ -198,12 +196,11 @@ namespace Neo.Network.RPC
 
         public static Witness WitnessFromJson(JObject json)
         {
-            Witness witness = new Witness
+            return new Witness
             {
                 InvocationScript = Convert.FromBase64String(json["invocation"].AsString()),
                 VerificationScript = Convert.FromBase64String(json["verification"].AsString())
             };
-            return witness;
         }
 
         public static StackItem StackItemFromJson(JObject json)

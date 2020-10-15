@@ -14,7 +14,7 @@ public class RpcContractState
 
     public static RpcContractState FromJson(JObject json)
     {
-        RpcContractState state = new RpcContractState
+        return new RpcContractState
         {
             ContractState = new ContractState
             {
@@ -23,6 +23,5 @@ public class RpcContractState
                 Manifest = ContractManifest.FromJson(json["manifest"])
             }
         };
-        return state;
     }
 }

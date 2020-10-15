@@ -18,12 +18,11 @@ namespace Neo.Network.RPC.Models
 
         public static RpcValidateAddressResult FromJson(JObject json)
         {
-            RpcValidateAddressResult validateAddress = new RpcValidateAddressResult
+            return new RpcValidateAddressResult
             {
                 Address = json["address"].AsString(),
                 IsValid = json["isvalid"].AsBoolean()
             };
-            return validateAddress;
         }
     }
 }
