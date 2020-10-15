@@ -68,7 +68,7 @@ namespace Neo.Plugins
             json["script"] = script.ToHexString();
             json["state"] = engine.State;
             json["gasconsumed"] = engine.GasConsumed.ToString();
-            json["exception"] = engine.FaultException?.Message;
+            json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
                 json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
@@ -143,6 +143,18 @@ namespace Neo.Plugins
             json["unclaimed"] = NativeContract.NEO.UnclaimedGas(snapshot, script_hash, snapshot.Height + 1).ToString();
             json["address"] = script_hash.ToAddress();
             return json;
+        }
+
+        static string GetExceptionMessage(Exception exception)
+        {
+            if (exception == null) return null;
+
+            if (exception.InnerException != null)
+            {
+                return exception.InnerException.Message;
+            }
+
+            return exception.Message;
         }
     }
 }
