@@ -32,7 +32,7 @@ namespace Neo.Plugins
             UInt160 scriptHash;
             try
             {
-                scriptHash = AddressToScriptHash(address);
+                scriptHash = address.ToScriptHash();
             }
             catch
             {
