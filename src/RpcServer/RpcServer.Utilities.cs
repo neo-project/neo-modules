@@ -2,7 +2,6 @@
 #pragma warning disable IDE0060
 
 using Neo.IO.Json;
-using Neo.Wallets;
 using System.Linq;
 
 namespace Neo.Plugins
