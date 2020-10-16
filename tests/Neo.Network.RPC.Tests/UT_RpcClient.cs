@@ -283,7 +283,7 @@ namespace Neo.Network.RPC.Tests
         public async Task TestInvokeScript()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.InvokeScriptAsync).ToLower());
-            var result = await rpc.InvokeScriptAsync(test.Request.Params[0].AsString().HexToBytes());
+            var result = await rpc.InvokeScriptAsync(Convert.FromBase64String(test.Request.Params[0].AsString()));
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
