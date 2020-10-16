@@ -44,7 +44,7 @@ namespace Neo.Network.RPC.Tests
                   ItExpr.Is<HttpRequestMessage>(p => p.Content.ReadAsStringAsync().Result == request.ToJson().ToString()),
                   ItExpr.IsAny<CancellationToken>()
                )
-               // prepare the expected response of the mocked http call
+               // prepare the expected response of the mocked http call 
                .ReturnsAsync(new HttpResponseMessage()
                {
                    StatusCode = HttpStatusCode.OK,
@@ -424,8 +424,10 @@ namespace Neo.Network.RPC.Tests
         public async Task GetNep5TransfersTest()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep5TransfersAsync).ToLower());
-            var result = await rpc.GetNep5TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(),
-                (ulong)test.Request.Params[2].AsNumber());
+            var result = await rpc.GetNep5TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(), (ulong)test.Request.Params[2].AsNumber());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.GetNep5TransfersAsync).ToLower() + "_with_null_transferaddress"));
+            result = await rpc.GetNep5TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(), (ulong)test.Request.Params[2].AsNumber());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 

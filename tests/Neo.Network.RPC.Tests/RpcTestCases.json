@@ -1407,6 +1407,53 @@
     }
   },
   {
+    "Name": "getnep5transfersasync_with_null_transferaddress",
+    "Request": {
+      "jsonrpc": "2.0",
+      "method": "getnep5transfers",
+      "params": [ "Ncb7jVsYWBt1q5T5k3ZTP8bn5eK4DuanLd", 0, 1868595301000 ],
+      "id": 1
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "sent": [
+          {
+            "timestamp": 1579250114541,
+            "assethash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
+            "transferaddress": null,
+            "amount": "1000000000",
+            "blockindex": 603,
+            "transfernotifyindex": 0,
+            "txhash": "0x5e177b8d1dc33e9103c0cfd42f6dbf4efbe43029e2d6a18ea5ba0cb8437056b3"
+          },
+          {
+            "timestamp": 1579406581635,
+            "assethash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
+            "transferaddress": "Ncb7jVsYWBt1q5T5k3ZTP8bn5eK4DuanLd",
+            "amount": "1000000000",
+            "blockindex": 1525,
+            "transfernotifyindex": 0,
+            "txhash": "0xc9c618b48972b240e0058d97b8d79b807ad51015418c84012765298526aeb77d"
+          }
+        ],
+        "received": [
+          {
+            "timestamp": 1579250114541,
+            "assethash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
+            "transferaddress": null,
+            "amount": "1000000000",
+            "blockindex": 603,
+            "transfernotifyindex": 0,
+            "txhash": "0x5e177b8d1dc33e9103c0cfd42f6dbf4efbe43029e2d6a18ea5ba0cb8437056b3"
+          }
+        ],
+        "address": "Ncb7jVsYWBt1q5T5k3ZTP8bn5eK4DuanLd"
+      }
+    }
+  },
+  {
     "Name": "getnep5balancesasync",
     "Request": {
       "jsonrpc": "2.0",
