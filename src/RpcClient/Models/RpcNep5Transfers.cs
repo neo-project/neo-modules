@@ -57,7 +57,7 @@ namespace Neo.Network.RPC.Models
             JObject json = new JObject();
             json["timestamp"] = TimestampMS;
             json["assethash"] = AssetHash.ToString();
-            json["transferaddress"] = UserScriptHash.ToAddress();
+            json["transferaddress"] = UserScriptHash?.ToAddress();
             json["amount"] = Amount.ToString();
             json["blockindex"] = BlockIndex;
             json["transfernotifyindex"] = TransferNotifyIndex;
@@ -71,7 +71,7 @@ namespace Neo.Network.RPC.Models
             {
                 TimestampMS = (ulong)json["timestamp"].AsNumber(),
                 AssetHash = json["assethash"].ToScriptHash(),
-                UserScriptHash = json["transferaddress"].ToScriptHash(),
+                UserScriptHash = json["transferaddress"]?.ToScriptHash(),
                 Amount = BigInteger.Parse(json["amount"].AsString()),
                 BlockIndex = (uint)json["blockindex"].AsNumber(),
                 TransferNotifyIndex = (ushort)json["transfernotifyindex"].AsNumber(),
