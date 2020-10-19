@@ -10,7 +10,6 @@ using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
-using Neo.Wallets.NEP6;
 using System;
 using System.Linq;
 using System.Numerics;
@@ -112,11 +111,11 @@ namespace Neo.Network.RPC.Tests
             {
                 Stack = parameters.Select(p => p.ToStackItem()).ToArray(),
                 GasConsumed = "100",
-                Script = script.ToHexString(),
+                Script = Convert.ToBase64String(script),
                 State = VMState.HALT
             };
 
-            mockClient.Setup(p => p.RpcSendAsync("invokescript", It.Is<JObject[]>(j => j[0].AsString() == script.ToHexString())))
+            mockClient.Setup(p => p.RpcSendAsync("invokescript", It.Is<JObject[]>(j => j[0].AsString() == Convert.ToBase64String(script))))
                 .ReturnsAsync(result.ToJson())
                 .Verifiable();
         }

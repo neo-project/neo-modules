@@ -174,7 +174,7 @@ namespace Neo.Plugins
                 UInt160 sender = signers.Size > 0 ? signers.GetSigners()[0].Account : null;
                 if (witnessSigners.Count() > 0)
                 {
-                    tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes(), sender, witnessSigners);
+                    tx = wallet.MakeTransaction(Convert.FromBase64String(result["script"].AsString()), sender, witnessSigners);
                     ContractParametersContext context = new ContractParametersContext(tx);
                     wallet.Sign(context);
                     if (context.Completed)

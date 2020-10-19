@@ -65,7 +65,7 @@ namespace Neo.Plugins
         {
             using ApplicationEngine engine = ApplicationEngine.Run(script, container: signers, gas: settings.MaxGasInvoke);
             JObject json = new JObject();
-            json["script"] = script.ToHexString();
+            json["script"] = Convert.ToBase64String(script);
             json["state"] = engine.State;
             json["gasconsumed"] = engine.GasConsumed.ToString();
             try
