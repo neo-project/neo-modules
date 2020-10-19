@@ -23,7 +23,7 @@ namespace Neo.Plugins
         {
             private readonly Signer[] _signers;
             public Witness[] Witnesses { get; set; }
-            public int Size { get; }
+            public int Size => _signers.Length;
 
             public Signers(Signer[] signers)
             {
