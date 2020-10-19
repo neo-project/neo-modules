@@ -186,7 +186,7 @@ namespace Neo.Plugins
                     {
                         tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes(), sender, witnessSigners);
                     }
-                    catch (InvalidOperationException e)
+                    catch (Exception e)
                     {
                         result["exception"] = GetExceptionMessage(e);
                         return;
