@@ -48,7 +48,7 @@ namespace Neo.Network.RPC.Models
             invokeScriptResult.State = json["state"].TryGetEnum<VM.VMState>();
             invokeScriptResult.GasConsumed = json["gasconsumed"].AsString();
             if (json.ContainsProperty("exception"))
-                invokeScriptResult.Exception = json["exception"].AsString();
+                invokeScriptResult.Exception = json["exception"]?.AsString();
             try
             {
                 invokeScriptResult.Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToArray();
