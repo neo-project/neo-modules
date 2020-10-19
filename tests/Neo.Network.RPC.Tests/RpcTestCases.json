@@ -747,14 +747,14 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "invokescript",
-      "params": [ "10c30c046e616d650c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0673796d626f6c0c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0b746f74616c537570706c790c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52" ],
+      "params": [ "EMMMBG5hbWUMFDt9NxHG8Mz5sdypA9G/odiW8SOMQWJ9W1IQwwwGc3ltYm9sDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtSEMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtSEMMMC3RvdGFsU3VwcGx5DBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS" ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "script": "10c30c046e616d650c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0673796d626f6c0c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0b746f74616c537570706c790c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52",
+        "script": "EMMMBG5hbWUMFDt9NxHG8Mz5sdypA9G/odiW8SOMQWJ9W1IQwwwGc3ltYm9sDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtSEMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtSEMMMC3RvdGFsU3VwcGx5DBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS",
         "state": "HALT",
         "gasconsumed": "5061560",
         "stack": [
@@ -933,14 +933,14 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "invokescript",
-      "params": [ "10c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52" ],
+      "params": [ "EMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS" ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "script": "10c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52",
+        "script": "EMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS",
         "state": "HALT",
         "gasconsumed": "5061560",
         "stack": [

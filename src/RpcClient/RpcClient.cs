@@ -375,7 +375,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public async Task<RpcInvokeResult> InvokeScriptAsync(byte[] script, params Signer[] signers)
         {
-            List<JObject> parameters = new List<JObject> { script.ToHexString() };
+            List<JObject> parameters = new List<JObject> { Convert.ToBase64String(script) };
             if (signers.Length > 0)
             {
                 parameters.Add(signers.Select(p => p.ToJson()).ToArray());
