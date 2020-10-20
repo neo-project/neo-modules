@@ -23,7 +23,7 @@ namespace Neo.Plugins
         {
             private readonly Signer[] _signers;
             public Witness[] Witnesses { get; set; }
-            public int Size { get; }
+            public int Size => _signers.Length;
 
             public Signers(Signer[] signers)
             {
@@ -68,6 +68,7 @@ namespace Neo.Plugins
             json["script"] = Convert.ToBase64String(script);
             json["state"] = engine.State;
             json["gasconsumed"] = engine.GasConsumed.ToString();
+            json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
                 json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
@@ -76,7 +77,10 @@ namespace Neo.Plugins
             {
                 json["stack"] = "error: recursive reference";
             }
-            ProcessInvokeWithWallet(json, signers);
+            if (engine.State != VMState.FAULT)
+            {
+                ProcessInvokeWithWallet(json, signers);
+            }
             return json;
         }
 
@@ -141,6 +145,18 @@ namespace Neo.Plugins
             json["unclaimed"] = NativeContract.NEO.UnclaimedGas(snapshot, script_hash, snapshot.Height + 1).ToString();
             json["address"] = script_hash.ToAddress();
             return json;
+        }
+
+        static string GetExceptionMessage(Exception exception)
+        {
+            if (exception == null) return null;
+
+            if (exception.InnerException != null)
+            {
+                return exception.InnerException.Message;
+            }
+
+            return exception.Message;
         }
     }
 }
