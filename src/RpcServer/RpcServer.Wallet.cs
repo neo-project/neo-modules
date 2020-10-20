@@ -165,21 +165,13 @@ namespace Neo.Plugins
             return true;
         }
 
-        private void ProcessInvokeWithWallet(JObject result, UInt160 sender = null, Signers signers = null)
+        private void ProcessInvokeWithWallet(JObject result, Signers signers = null)
         {
             Transaction tx = null;
             if (wallet != null && signers != null)
             {
                 Signer[] witnessSigners = signers.GetSigners().ToArray();
-                UInt160[] signersAccounts = signers.GetScriptHashesForVerifying(null);
-                if (sender != null)
-                {
-                    if (!signersAccounts.Contains(sender))
-                        witnessSigners = witnessSigners.Prepend(new Signer() { Account = sender, Scopes = WitnessScope.CalledByEntry }).ToArray();
-                    else if (signersAccounts[0] != sender)
-                        throw new RpcException(-32602, "The sender must be the first element of signers.");
-                }
-
+                UInt160 sender = signers.Size > 0 ? signers.GetSigners()[0].Account : null;
                 if (witnessSigners.Count() > 0)
                 {
                     try
