@@ -35,14 +35,15 @@ namespace Neo.Network.RPC.Models
 
         public static RpcApplicationLog FromJson(JObject json)
         {
-            RpcApplicationLog log = new RpcApplicationLog();
-            log.TxId = json["txid"] is null ? null : UInt256.Parse(json["txid"].AsString());
-            log.Trigger = json["trigger"].TryGetEnum<TriggerType>();
-            log.VMState = json["vmstate"].TryGetEnum<VMState>();
-            log.GasConsumed = long.Parse(json["gasconsumed"].AsString());
-            log.Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToList();
-            log.Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson(p)).ToList();
-            return log;
+            return new RpcApplicationLog
+            {
+                TxId = json["txid"] is null ? null : UInt256.Parse(json["txid"].AsString()),
+                Trigger = json["trigger"].TryGetEnum<TriggerType>(),
+                VMState = json["vmstate"].TryGetEnum<VMState>(),
+                GasConsumed = long.Parse(json["gasconsumed"].AsString()),
+                Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToList(),
+                Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson(p)).ToList()
+            };
         }
     }
 

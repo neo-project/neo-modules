@@ -113,7 +113,7 @@ namespace Neo.Network.RPC
         {
             if (!Tx.GetScriptHashesForVerifying(null).Contains(contract.ScriptHash))
             {
-                throw new Exception($"Add SignItem error: Mismatch ScriptHash ({contract.ScriptHash.ToString()})");
+                throw new Exception($"Add SignItem error: Mismatch ScriptHash ({contract.ScriptHash})");
             }
 
             SignItem item = signStore.FirstOrDefault(p => p.Contract.ScriptHash == contract.ScriptHash);

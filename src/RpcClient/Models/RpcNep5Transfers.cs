@@ -67,15 +67,16 @@ namespace Neo.Network.RPC.Models
 
         public static RpcNep5Transfer FromJson(JObject json)
         {
-            RpcNep5Transfer transfer = new RpcNep5Transfer();
-            transfer.TimestampMS = (ulong)json["timestamp"].AsNumber();
-            transfer.AssetHash = json["assethash"].ToScriptHash();
-            transfer.UserScriptHash = json["transferaddress"]?.ToScriptHash();
-            transfer.Amount = BigInteger.Parse(json["amount"].AsString());
-            transfer.BlockIndex = (uint)json["blockindex"].AsNumber();
-            transfer.TransferNotifyIndex = (ushort)json["transfernotifyindex"].AsNumber();
-            transfer.TxHash = UInt256.Parse(json["txhash"].AsString());
-            return transfer;
+            return new RpcNep5Transfer
+            {
+                TimestampMS = (ulong)json["timestamp"].AsNumber(),
+                AssetHash = json["assethash"].ToScriptHash(),
+                UserScriptHash = json["transferaddress"]?.ToScriptHash(),
+                Amount = BigInteger.Parse(json["amount"].AsString()),
+                BlockIndex = (uint)json["blockindex"].AsNumber(),
+                TransferNotifyIndex = (ushort)json["transfernotifyindex"].AsNumber(),
+                TxHash = UInt256.Parse(json["txhash"].AsString())
+            };
         }
     }
 }

@@ -19,10 +19,11 @@ namespace Neo.Network.RPC.Models
 
         public static RpcUnclaimedGas FromJson(JObject json)
         {
-            RpcUnclaimedGas gas = new RpcUnclaimedGas();
-            gas.Unclaimed = BigInteger.Parse(json["unclaimed"].AsString());
-            gas.Address = json["address"].AsString();
-            return gas;
+            return new RpcUnclaimedGas
+            {
+                Unclaimed = BigInteger.Parse(json["unclaimed"].AsString()),
+                Address = json["address"].AsString()
+            };
         }
     }
 }
