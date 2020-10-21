@@ -43,10 +43,12 @@ namespace Neo.Network.RPC.Models
 
         public static RpcInvokeResult FromJson(JObject json)
         {
-            RpcInvokeResult invokeScriptResult = new RpcInvokeResult();
-            invokeScriptResult.Script = json["script"].AsString();
-            invokeScriptResult.State = json["state"].TryGetEnum<VM.VMState>();
-            invokeScriptResult.GasConsumed = json["gasconsumed"].AsString();
+            RpcInvokeResult invokeScriptResult = new RpcInvokeResult
+            {
+                Script = json["script"].AsString(),
+                State = json["state"].TryGetEnum<VM.VMState>(),
+                GasConsumed = json["gasconsumed"].AsString()
+            };
             if (json.ContainsProperty("exception"))
                 invokeScriptResult.Exception = json["exception"]?.AsString();
             try
@@ -75,10 +77,11 @@ namespace Neo.Network.RPC.Models
 
         public static RpcStack FromJson(JObject json)
         {
-            RpcStack stackJson = new RpcStack();
-            stackJson.Type = json["type"].AsString();
-            stackJson.Value = json["value"].AsString();
-            return stackJson;
+            return new RpcStack
+            {
+                Type = json["type"].AsString(),
+                Value = json["value"].AsString()
+            };
         }
     }
 }
