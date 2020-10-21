@@ -79,7 +79,7 @@ namespace Neo.Plugins
             }
             if (engine.State != VMState.FAULT)
             {
-                ProcessInvokeWithWallet(json, null, signers);
+                ProcessInvokeWithWallet(json, signers: signers);
             }
             return json;
         }
