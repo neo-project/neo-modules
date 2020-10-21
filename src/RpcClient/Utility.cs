@@ -239,7 +239,7 @@ namespace Neo.Network.RPC
                 case StackItemType.InteropInterface:
                     return new InteropInterface(new object()); // See https://github.com/neo-project/neo/blob/master/src/neo/VM/Helper.cs#L194
             }
-            return null;
+            return json["value"] is null ? StackItem.Null : json["value"].AsString();
         }
     }
 }
