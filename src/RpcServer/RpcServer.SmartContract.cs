@@ -23,7 +23,7 @@ namespace Neo.Plugins
         {
             private readonly Signer[] _signers;
             public Witness[] Witnesses { get; set; }
-            public int Size { get; }
+            public int Size => _signers.Length;
 
             public Signers(Signer[] signers)
             {
@@ -61,13 +61,14 @@ namespace Neo.Plugins
             }
         }
 
-        private JObject GetInvokeResult(byte[] script, UInt160 sender = null, Signers signers = null)
+        private JObject GetInvokeResult(byte[] script, Signers signers = null)
         {
             using ApplicationEngine engine = ApplicationEngine.Run(script, container: signers, gas: settings.MaxGasInvoke);
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(script);
             json["state"] = engine.State;
             json["gasconsumed"] = engine.GasConsumed.ToString();
+            json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
                 json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
@@ -76,7 +77,10 @@ namespace Neo.Plugins
             {
                 json["stack"] = "error: recursive reference";
             }
-            ProcessInvokeWithWallet(json, sender, signers);
+            if (engine.State != VMState.FAULT)
+            {
+                ProcessInvokeWithWallet(json, signers);
+            }
             return json;
         }
 
@@ -103,23 +107,22 @@ namespace Neo.Plugins
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
-            UInt160 sender = _params.Count >= 4 ? AddressToScriptHash(_params[3].AsString()) : null;
-            Signers signers = _params.Count >= 5 ? SignersFromJson((JArray)_params[4]) : null;
+            Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3]) : null;
+
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
                 script = sb.EmitAppCall(script_hash, operation, args).ToArray();
             }
-            return GetInvokeResult(script, sender, signers);
+            return GetInvokeResult(script, signers);
         }
 
         [RpcMethod]
         protected virtual JObject InvokeScript(JArray _params)
         {
-            byte[] script = Convert.FromBase64String(_params[0].AsString());
-            UInt160 sender = _params.Count >= 2 ? AddressToScriptHash(_params[1].AsString()) : null;
-            Signers signers = _params.Count >= 3 ? SignersFromJson((JArray)_params[2]) : null;
-            return GetInvokeResult(script, sender, signers);
+            byte[] script = _params[0].AsString().HexToBytes();
+            Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1]) : null;
+            return GetInvokeResult(script, signers);
         }
 
         [RpcMethod]
@@ -142,6 +145,18 @@ namespace Neo.Plugins
             json["unclaimed"] = NativeContract.NEO.UnclaimedGas(snapshot, script_hash, snapshot.Height + 1).ToString();
             json["address"] = script_hash.ToAddress();
             return json;
+        }
+
+        static string GetExceptionMessage(Exception exception)
+        {
+            if (exception == null) return null;
+
+            if (exception.InnerException != null)
+            {
+                return exception.InnerException.Message;
+            }
+
+            return exception.Message;
         }
     }
 }

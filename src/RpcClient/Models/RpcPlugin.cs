@@ -22,11 +22,12 @@ namespace Neo.Network.RPC.Models
 
         public static RpcPlugin FromJson(JObject json)
         {
-            RpcPlugin plugin = new RpcPlugin();
-            plugin.Name = json["name"].AsString();
-            plugin.Version = json["version"].AsString();
-            plugin.Interfaces = ((JArray)json["interfaces"]).Select(p => p.AsString()).ToArray();
-            return plugin;
+            return new RpcPlugin
+            {
+                Name = json["name"].AsString(),
+                Version = json["version"].AsString(),
+                Interfaces = ((JArray)json["interfaces"]).Select(p => p.AsString()).ToArray()
+            };
         }
     }
 }
