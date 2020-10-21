@@ -747,14 +747,14 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "invokescript",
-      "params": [ "10c30c046e616d650c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0673796d626f6c0c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0b746f74616c537570706c790c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52" ],
+      "params": [ "EMMMBG5hbWUMFDt9NxHG8Mz5sdypA9G/odiW8SOMQWJ9W1IQwwwGc3ltYm9sDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtSEMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtSEMMMC3RvdGFsU3VwcGx5DBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS" ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "script": "10c30c046e616d650c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0673796d626f6c0c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0b746f74616c537570706c790c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52",
+        "script": "EMMMBG5hbWUMFDt9NxHG8Mz5sdypA9G/odiW8SOMQWJ9W1IQwwwGc3ltYm9sDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtSEMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtSEMMMC3RvdGFsU3VwcGx5DBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS",
         "state": "HALT",
         "gasconsumed": "5061560",
         "stack": [
@@ -933,14 +933,14 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "invokescript",
-      "params": [ "10c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52" ],
+      "params": [ "EMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS" ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "script": "10c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52",
+        "script": "EMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS",
         "state": "HALT",
         "gasconsumed": "5061560",
         "stack": [
@@ -1217,6 +1217,9 @@
             "type": "Array",
             "value": [
               {
+                "type": "Any"
+              },
+              {
                 "type": "Integer",
                 "value": "1"
               },
@@ -1403,6 +1406,53 @@
           }
         ],
         "address": "NVVwFw6XyhtRCFQ8SpUTMdPyYt4Vd9A1XQ"
+      }
+    }
+  },
+  {
+    "Name": "getnep5transfersasync_with_null_transferaddress",
+    "Request": {
+      "jsonrpc": "2.0",
+      "method": "getnep5transfers",
+      "params": [ "Ncb7jVsYWBt1q5T5k3ZTP8bn5eK4DuanLd", 0, 1868595301000 ],
+      "id": 1
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "sent": [
+          {
+            "timestamp": 1579250114541,
+            "assethash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
+            "transferaddress": null,
+            "amount": "1000000000",
+            "blockindex": 603,
+            "transfernotifyindex": 0,
+            "txhash": "0x5e177b8d1dc33e9103c0cfd42f6dbf4efbe43029e2d6a18ea5ba0cb8437056b3"
+          },
+          {
+            "timestamp": 1579406581635,
+            "assethash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
+            "transferaddress": "Ncb7jVsYWBt1q5T5k3ZTP8bn5eK4DuanLd",
+            "amount": "1000000000",
+            "blockindex": 1525,
+            "transfernotifyindex": 0,
+            "txhash": "0xc9c618b48972b240e0058d97b8d79b807ad51015418c84012765298526aeb77d"
+          }
+        ],
+        "received": [
+          {
+            "timestamp": 1579250114541,
+            "assethash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
+            "transferaddress": null,
+            "amount": "1000000000",
+            "blockindex": 603,
+            "transfernotifyindex": 0,
+            "txhash": "0x5e177b8d1dc33e9103c0cfd42f6dbf4efbe43029e2d6a18ea5ba0cb8437056b3"
+          }
+        ],
+        "address": "Ncb7jVsYWBt1q5T5k3ZTP8bn5eK4DuanLd"
       }
     }
   },
