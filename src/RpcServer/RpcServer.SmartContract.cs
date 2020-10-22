@@ -84,6 +84,59 @@ namespace Neo.Plugins
             return json;
         }
 
+        private JObject GetVerificationResult(UInt160 scriptHash, Signers signers = null)
+        {
+            var snapshot = Blockchain.Singleton.GetSnapshot();
+            var contract = snapshot.Contracts.TryGet(scriptHash);
+            var engine = ApplicationEngine.Create(TriggerType.Verification, new Transaction(), snapshot);
+            var context = engine.LoadScript(contract.Script, CallFlags.None, contract.Manifest.Abi.GetMethod("verify").Offset);
+
+            JObject json = new JObject();
+            json["script"] = Convert.ToBase64String(contract.Script);
+            json["state"] = engine.Execute();
+            json["gasconsumed"] = engine.GasConsumed.ToString();
+            json["exception"] = GetExceptionMessage(engine.FaultException);
+            try
+            {
+                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
+            }
+            catch (InvalidOperationException)
+            {
+                json["stack"] = "error: recursive reference";
+            }
+            if (engine.State != VMState.FAULT)
+            {
+                ProcessInvokeWithWallet(json, signers);
+            }
+            return json;
+        }
+
+        private JObject GetVerificationResult(byte[] script, Signers signers = null)
+        {
+            var snapshot = Blockchain.Singleton.GetSnapshot();
+            var engine = ApplicationEngine.Create(TriggerType.Verification, new Transaction(), snapshot);
+            var context = engine.LoadScript(script);
+
+            JObject json = new JObject();
+            json["script"] = Convert.ToBase64String(script);
+            json["state"] = engine.Execute();
+            json["gasconsumed"] = engine.GasConsumed.ToString();
+            json["exception"] = GetExceptionMessage(engine.FaultException);
+            try
+            {
+                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
+            }
+            catch (InvalidOperationException)
+            {
+                json["stack"] = "error: recursive reference";
+            }
+            if (engine.State != VMState.FAULT)
+            {
+                ProcessInvokeWithWallet(json, signers);
+            }
+            return json;
+        }
+
         private static Signers SignersFromJson(JArray _params)
         {
             var ret = new Signers(_params.Select(u => new Signer()
@@ -109,12 +162,17 @@ namespace Neo.Plugins
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
             Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3]) : null;
 
-            byte[] script;
-            using (ScriptBuilder sb = new ScriptBuilder())
+            byte[] script = new byte[0];
+            if (operation == "Verify")
             {
-                script = sb.EmitAppCall(script_hash, operation, args).ToArray();
+                return GetVerificationResult(script_hash, signers);
             }
-            return GetInvokeResult(script, signers);
+            else
+            {
+                using ScriptBuilder sb = new ScriptBuilder();
+                script = sb.EmitAppCall(script_hash, operation, args).ToArray();
+                return GetInvokeResult(script, signers);
+            }
         }
 
         [RpcMethod]
@@ -122,7 +180,15 @@ namespace Neo.Plugins
         {
             byte[] script = _params[0].AsString().HexToBytes();
             Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1]) : null;
-            return GetInvokeResult(script, signers);
+            var isVefificationTrigger = _params.Count >= 3 ? _params[2].AsBoolean() : false;
+            if (isVefificationTrigger)
+            {
+                return GetVerificationResult(script, signers);
+            }
+            else
+            {
+                return GetInvokeResult(script, signers);
+            }
         }
 
         [RpcMethod]
