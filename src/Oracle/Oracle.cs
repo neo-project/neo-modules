@@ -393,7 +393,7 @@ namespace Neo.Plugins
                     outOfDate.Add(task.Key);
                 }
             }
-                
+
             foreach (ulong requestId in outOfDate)
                 PendingQueue.TryRemove(requestId, out _);
         }
