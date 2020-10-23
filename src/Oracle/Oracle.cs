@@ -361,7 +361,7 @@ namespace Neo.Plugins
             {
                 var contract = Contract.CreateMultiSigContract(m, nodes);
                 ScriptBuilder sb = new ScriptBuilder();
-                foreach (var pair in Signs)
+                foreach (var pair in Signs.OrderBy(p => p.Key))
                 {
                     sb.EmitPush(pair.Value);
                     if (--m == 0) break;
