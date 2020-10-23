@@ -347,7 +347,7 @@ namespace Neo.Plugins
                 task.BackupSigns.TryAdd(oraclePub, backupSign);
             else
                 throw new RpcException(-100, "Invalid response transaction sign");
-            
+
             if (!CheckTxSign(snapshot, task.Tx, task.Signs))
                 CheckTxSign(snapshot, task.BackupTx, task.BackupSigns);
         }
@@ -383,11 +383,15 @@ namespace Neo.Plugins
             {
                 var span = TimeProvider.Current.UtcNow - task.Value.Timestamp;
                 if (span > TimeSpan.FromSeconds(RefreshInterval) && span < TimeSpan.FromSeconds(RefreshInterval * 2))
+                {
                     foreach (var account in Wallet.GetAccounts())
                         if (task.Value.BackupSigns.TryGetValue(account.GetKey().PublicKey, out byte[] sign))
                             SendResponseSignature(task.Key, sign, account.GetKey());
+                }
                 else if (span > MaxTaskTimeout)
+                {
                     outOfDate.Add(task.Key);
+                }
             }
                 
             foreach (ulong requestId in outOfDate)
