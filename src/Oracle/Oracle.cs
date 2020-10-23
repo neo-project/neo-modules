@@ -81,7 +81,7 @@ namespace Neo.Plugins
             if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
 
             using var snapshot = Blockchain.Singleton.GetSnapshot();
-            AddResponseTxSign(snapshot, requestId, txSign, oraclePub);
+            AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
             return new JObject();
         }
 
@@ -214,7 +214,7 @@ namespace Neo.Plugins
 
                 var txSign = responseTx.Sign(account.GetKey());
                 var backTxSign = backupTx.Sign(account.GetKey());
-                AddResponseTxSign(snapshot, requestId, txSign, oraclePub, responseTx, backupTx, backTxSign);
+                AddResponseTxSign(snapshot, requestId, oraclePub, txSign, responseTx, backupTx, backTxSign);
                 SendResponseSignature(requestId, txSign, account.GetKey());
 
                 Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()} BackupSign: {backTxSign.ToHexString()}");
@@ -313,7 +313,7 @@ namespace Neo.Plugins
             return tx;
         }
 
-        public void AddResponseTxSign(StoreView snapshot, ulong requestId, byte[] sign, ECPoint oraclePub, Transaction responseTx = null, Transaction backupTx = null, byte[] backupSign = null)
+        public void AddResponseTxSign(StoreView snapshot, ulong requestId, ECPoint oraclePub, byte[] sign, Transaction responseTx = null, Transaction backupTx = null, byte[] backupSign = null)
         {
             var task = PendingQueue.GetOrAdd(requestId, new OracleTask
             {
