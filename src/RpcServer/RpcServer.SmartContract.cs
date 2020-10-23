@@ -163,7 +163,7 @@ namespace Neo.Plugins
             Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3]) : null;
 
             byte[] script = new byte[0];
-            if (operation == "Verify")
+            if (operation.ToLower() == "verify")
             {
                 return GetVerificationResult(script_hash, signers);
             }
