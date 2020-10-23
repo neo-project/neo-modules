@@ -349,11 +349,11 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "Invalid response transaction sign");
             task.Signs.TryAdd(oraclePub, sign);
 
-            CheckTxSign(snapshot, task.Tx, task.Signs);
-            CheckTxSign(snapshot, task.BackupTx, task.BackupSigns);
+            if (!CheckTxSign(snapshot, task.Tx, task.Signs))
+                CheckTxSign(snapshot, task.BackupTx, task.BackupSigns);
         }
 
-        private void CheckTxSign(StoreView snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> Signs)
+        private bool CheckTxSign(StoreView snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> Signs)
         {
             ECPoint[] nodes = NativeContract.Designate.GetDesignatedByRole(snapshot, Role.Oracle);
             int m = nodes.Length - (nodes.Length - 1) / 3;
@@ -372,7 +372,9 @@ namespace Neo.Plugins
                 Log($"Send response tx: responseTx={tx.Hash}");
 
                 System.Blockchain.Tell(tx);
+                return true;
             }
+            return false;
         }
 
         public void OnTimer(object source, ElapsedEventArgs e)
