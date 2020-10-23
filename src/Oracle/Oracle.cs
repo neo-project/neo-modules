@@ -40,6 +40,8 @@ namespace Neo.Plugins
         private CancellationTokenSource CancelSource;
         private int Counter;
 
+        private const int RefreshInterval = 1000 * 60 * 3;
+
         private static readonly OracleHttpProtocol Https = new OracleHttpProtocol();
 
         public override string Description => "Built-in oracle plugin";
@@ -52,7 +54,7 @@ namespace Neo.Plugins
 
             System.Timers.Timer timer = new System.Timers.Timer();
             timer.Enabled = true;
-            timer.Interval = 1000 * 60 * 3;
+            timer.Interval = RefreshInterval;
             timer.Start();
             timer.Elapsed += new ElapsedEventHandler(OnTimer);
         }
@@ -73,13 +75,14 @@ namespace Neo.Plugins
             ECPoint oraclePub = ECPoint.Parse(_params[0].AsString(), ECCurve.Secp256r1);
             ulong requestId = (ulong)_params[1].AsNumber();
             byte[] txSign = _params[2].AsString().HexToBytes();
-            byte[] msgSign = _params[3].AsString().HexToBytes();
+            byte[] backTxSign = _params[3].AsString().HexToBytes();
+            byte[] msgSign = _params[4].AsString().HexToBytes();
 
             var data = oraclePub.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
             if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
 
             using var snapshot = Blockchain.Singleton.GetSnapshot();
-            AddResponseTxSign(snapshot, requestId, txSign, oraclePub);
+            AddResponseTxSign(snapshot, requestId, txSign, backTxSign, oraclePub);
             return new JObject();
         }
 
@@ -137,11 +140,11 @@ namespace Neo.Plugins
             Interlocked.Exchange(ref CancelSource, null)?.Cancel();
         }
 
-        public void SendResponseSignature(ulong requestId, byte[] txSign, KeyPair keyPair)
+        public void SendResponseSignature(ulong requestId, byte[] txSign, byte[] backupTxSign, KeyPair keyPair)
         {
-            var message = keyPair.PublicKey.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
+            var message = keyPair.PublicKey.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).Concat(backupTxSign).ToArray();
             var sign = Crypto.Sign(message, keyPair.PrivateKey, keyPair.PublicKey.EncodePoint(false)[1..]);
-            var param = "\"" + keyPair.PublicKey.ToArray().ToHexString() + "\", " + requestId + ", \"" + txSign.ToHexString() + "\",\"" + sign.ToHexString() + "\"";
+            var param = "\"" + keyPair.PublicKey.ToArray().ToHexString() + "\", " + requestId + ", \"" + txSign.ToHexString() + "\",\"" + backupTxSign.ToHexString() + "\",\"" + sign.ToHexString() + "\"";
             var content = "{ \"id\": " + (++Counter) + ", \"jsonrpc\": \"2.0\",  \"method\": \"submitoracleresponse\",  \"params\":[" + param + "] }";
 
             foreach (var node in Nodes)
@@ -200,6 +203,7 @@ namespace Neo.Plugins
             }
 
             var responseTx = CreateResponseTx(snapshot, response);
+            var backupTx = CreateResponseTx(snapshot, new OracleResponse() { Code = OracleResponseCode.Error, Id = requestId, Result = Array.Empty<byte>() });
 
             Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
 
@@ -210,10 +214,11 @@ namespace Neo.Plugins
                 if (!account.HasKey || account.Lock || !oraclePublicKeys.Contains(oraclePub)) continue;
 
                 var txSign = responseTx.Sign(account.GetKey());
-                AddResponseTxSign(snapshot, requestId, txSign, oraclePub, responseTx);
-                SendResponseSignature(requestId, txSign, account.GetKey());
+                var backTxSign = backupTx.Sign(account.GetKey());
+                AddResponseTxSign(snapshot, requestId, txSign, backTxSign, oraclePub, responseTx);
+                SendResponseSignature(requestId, txSign, backTxSign, account.GetKey());
 
-                Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()}");
+                Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()} BackupSign: {backTxSign.ToHexString()}");
             }
         }
 
@@ -309,8 +314,7 @@ namespace Neo.Plugins
             return tx;
         }
 
-
-        public void AddResponseTxSign(StoreView snapshot, ulong requestId, byte[] sign, ECPoint oraclePub, Transaction responseTx = null)
+        public void AddResponseTxSign(StoreView snapshot, ulong requestId, byte[] sign, byte[] backupSign, ECPoint oraclePub, Transaction responseTx = null, Transaction backupTx = null)
         {
             var task = PendingQueue.GetOrAdd(requestId, new OracleTask
             {
@@ -318,37 +322,56 @@ namespace Neo.Plugins
                 Request = NativeContract.Oracle.GetRequest(snapshot, requestId),
                 Signs = new ConcurrentDictionary<ECPoint, byte[]>(),
             });
-            task.Signs.TryAdd(oraclePub, sign);
+
             if (responseTx != null)
             {
                 task.Tx = responseTx;
+                task.BackupTx = backupTx;
+                task.BackupSigns = new ConcurrentDictionary<ECPoint, byte[]>();
                 var data = task.Tx.GetHashData();
                 task.Signs.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.Signs.Remove(p.Key, out _));
-            }
-            else if (task.Tx != null)
-            {
-                var data = task.Tx.GetHashData();
-                if (!Crypto.VerifySignature(data, sign, oraclePub))
-                    throw new RpcException(-100, "Invalid response transaction sign");
+                data = task.BackupTx.GetHashData();
+                task.BackupSigns.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.BackupSigns.Remove(p.Key, out _));
             }
 
+            if (task.Tx == null)
+            {
+                task.Signs.TryAdd(oraclePub, sign);
+                task.BackupSigns.TryAdd(oraclePub, backupSign);
+                return;
+            }
+
+            if (!Crypto.VerifySignature(task.BackupTx.GetHashData(), backupSign, oraclePub))
+                throw new RpcException(-100, "Invalid error response transaction sign");
+            task.BackupSigns.TryAdd(oraclePub, backupSign);
+
+            if (!Crypto.VerifySignature(task.Tx.GetHashData(), sign, oraclePub))
+                throw new RpcException(-100, "Invalid response transaction sign");
+            task.Signs.TryAdd(oraclePub, sign);
+
+            CheckTxSign(snapshot, task.Tx, task.Signs);
+            CheckTxSign(snapshot, task.BackupTx, task.BackupSigns);
+        }
+
+        private void CheckTxSign(StoreView snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> Signs)
+        {
             ECPoint[] nodes = NativeContract.Designate.GetDesignatedByRole(snapshot, Role.Oracle);
             int m = nodes.Length - (nodes.Length - 1) / 3;
-            if (task.Signs.Count >= m && task.Tx != null)
+            if (Signs.Count >= m && tx != null)
             {
                 var contract = Contract.CreateMultiSigContract(m, nodes);
                 ScriptBuilder sb = new ScriptBuilder();
-                foreach (var pair in task.Signs)
+                foreach (var pair in Signs)
                 {
                     sb.EmitPush(pair.Value);
                     if (--m == 0) break;
                 }
-                var idx = task.Tx.GetScriptHashesForVerifying(snapshot)[0] == contract.ScriptHash ? 0 : 1;
-                task.Tx.Witnesses[idx].InvocationScript = sb.ToArray();
+                var idx = tx.GetScriptHashesForVerifying(snapshot)[0] == contract.ScriptHash ? 0 : 1;
+                tx.Witnesses[idx].InvocationScript = sb.ToArray();
 
-                Log($"Send response tx: responseTx={task.Tx.Hash}");
+                Log($"Send response tx: responseTx={tx.Hash}");
 
-                System.Blockchain.Tell(task.Tx);
+                System.Blockchain.Tell(tx);
             }
         }
 
@@ -372,7 +395,9 @@ namespace Neo.Plugins
             public ulong Id;
             public OracleRequest Request;
             public Transaction Tx;
+            public Transaction BackupTx;
             public ConcurrentDictionary<ECPoint, byte[]> Signs;
+            public ConcurrentDictionary<ECPoint, byte[]> BackupSigns;
             public readonly DateTime Timestamp = TimeProvider.Current.UtcNow;
         }
     }
