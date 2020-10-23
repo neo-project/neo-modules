@@ -75,14 +75,13 @@ namespace Neo.Plugins
             ECPoint oraclePub = ECPoint.Parse(_params[0].AsString(), ECCurve.Secp256r1);
             ulong requestId = (ulong)_params[1].AsNumber();
             byte[] txSign = _params[2].AsString().HexToBytes();
-            byte[] backTxSign = _params[3].AsString().HexToBytes();
-            byte[] msgSign = _params[4].AsString().HexToBytes();
+            byte[] msgSign = _params[3].AsString().HexToBytes();
 
             var data = oraclePub.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
             if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
 
             using var snapshot = Blockchain.Singleton.GetSnapshot();
-            AddResponseTxSign(snapshot, requestId, txSign, backTxSign, oraclePub);
+            AddResponseTxSign(snapshot, requestId, txSign, oraclePub);
             return new JObject();
         }
 
@@ -140,11 +139,11 @@ namespace Neo.Plugins
             Interlocked.Exchange(ref CancelSource, null)?.Cancel();
         }
 
-        public void SendResponseSignature(ulong requestId, byte[] txSign, byte[] backupTxSign, KeyPair keyPair)
+        public void SendResponseSignature(ulong requestId, byte[] txSign, KeyPair keyPair)
         {
-            var message = keyPair.PublicKey.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).Concat(backupTxSign).ToArray();
+            var message = keyPair.PublicKey.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
             var sign = Crypto.Sign(message, keyPair.PrivateKey, keyPair.PublicKey.EncodePoint(false)[1..]);
-            var param = "\"" + keyPair.PublicKey.ToArray().ToHexString() + "\", " + requestId + ", \"" + txSign.ToHexString() + "\",\"" + backupTxSign.ToHexString() + "\",\"" + sign.ToHexString() + "\"";
+            var param = "\"" + keyPair.PublicKey.ToArray().ToHexString() + "\", " + requestId + ", \"" + txSign.ToHexString() + "\",\"" + sign.ToHexString() + "\"";
             var content = "{ \"id\": " + (++Counter) + ", \"jsonrpc\": \"2.0\",  \"method\": \"submitoracleresponse\",  \"params\":[" + param + "] }";
 
             foreach (var node in Nodes)
@@ -215,8 +214,8 @@ namespace Neo.Plugins
 
                 var txSign = responseTx.Sign(account.GetKey());
                 var backTxSign = backupTx.Sign(account.GetKey());
-                AddResponseTxSign(snapshot, requestId, txSign, backTxSign, oraclePub, responseTx);
-                SendResponseSignature(requestId, txSign, backTxSign, account.GetKey());
+                AddResponseTxSign(snapshot, requestId, txSign, oraclePub, responseTx, backupTx, backTxSign);
+                SendResponseSignature(requestId, txSign, account.GetKey());
 
                 Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()} BackupSign: {backTxSign.ToHexString()}");
             }
@@ -314,24 +313,25 @@ namespace Neo.Plugins
             return tx;
         }
 
-        public void AddResponseTxSign(StoreView snapshot, ulong requestId, byte[] sign, byte[] backupSign, ECPoint oraclePub, Transaction responseTx = null, Transaction backupTx = null)
+        public void AddResponseTxSign(StoreView snapshot, ulong requestId, byte[] sign, ECPoint oraclePub, Transaction responseTx = null, Transaction backupTx = null, byte[] backupSign = null)
         {
             var task = PendingQueue.GetOrAdd(requestId, new OracleTask
             {
                 Id = requestId,
                 Request = NativeContract.Oracle.GetRequest(snapshot, requestId),
                 Signs = new ConcurrentDictionary<ECPoint, byte[]>(),
+                BackupSigns = new ConcurrentDictionary<ECPoint, byte[]>()
             });
 
             if (responseTx != null)
             {
                 task.Tx = responseTx;
                 task.BackupTx = backupTx;
-                task.BackupSigns = new ConcurrentDictionary<ECPoint, byte[]>();
                 var data = task.Tx.GetHashData();
                 task.Signs.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.Signs.Remove(p.Key, out _));
                 data = task.BackupTx.GetHashData();
                 task.BackupSigns.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.BackupSigns.Remove(p.Key, out _));
+                task.BackupSigns.TryAdd(oraclePub, backupSign);
             }
 
             if (task.Tx == null)
@@ -341,14 +341,13 @@ namespace Neo.Plugins
                 return;
             }
 
-            if (!Crypto.VerifySignature(task.BackupTx.GetHashData(), backupSign, oraclePub))
-                throw new RpcException(-100, "Invalid error response transaction sign");
-            task.BackupSigns.TryAdd(oraclePub, backupSign);
-
-            if (!Crypto.VerifySignature(task.Tx.GetHashData(), sign, oraclePub))
+            if (Crypto.VerifySignature(task.Tx.GetHashData(), sign, oraclePub))
+                task.Signs.TryAdd(oraclePub, sign);
+            else if (Crypto.VerifySignature(task.BackupTx.GetHashData(), backupSign, oraclePub))
+                task.BackupSigns.TryAdd(oraclePub, backupSign);
+            else
                 throw new RpcException(-100, "Invalid response transaction sign");
-            task.Signs.TryAdd(oraclePub, sign);
-
+            
             if (!CheckTxSign(snapshot, task.Tx, task.Signs))
                 CheckTxSign(snapshot, task.BackupTx, task.BackupSigns);
         }
@@ -381,8 +380,16 @@ namespace Neo.Plugins
         {
             List<ulong> outOfDate = new List<ulong>();
             foreach (var task in PendingQueue)
-                if (TimeProvider.Current.UtcNow - task.Value.Timestamp > MaxTaskTimeout)
+            {
+                var span = TimeProvider.Current.UtcNow - task.Value.Timestamp;
+                if (span > TimeSpan.FromSeconds(RefreshInterval) && span < TimeSpan.FromSeconds(RefreshInterval * 2))
+                    foreach (var account in Wallet.GetAccounts())
+                        if (task.Value.BackupSigns.TryGetValue(account.GetKey().PublicKey, out byte[] sign))
+                            SendResponseSignature(task.Key, sign, account.GetKey());
+                else if (span > MaxTaskTimeout)
                     outOfDate.Add(task.Key);
+            }
+                
             foreach (ulong requestId in outOfDate)
                 PendingQueue.TryRemove(requestId, out _);
         }
