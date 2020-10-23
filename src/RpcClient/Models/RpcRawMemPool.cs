@@ -23,11 +23,12 @@ namespace Neo.Network.RPC.Models
 
         public static RpcRawMemPool FromJson(JObject json)
         {
-            RpcRawMemPool rawMemPool = new RpcRawMemPool();
-            rawMemPool.Height = uint.Parse(json["height"].AsString());
-            rawMemPool.Verified = ((JArray)json["verified"]).Select(p => UInt256.Parse(p.AsString())).ToList();
-            rawMemPool.UnVerified = ((JArray)json["unverified"]).Select(p => UInt256.Parse(p.AsString())).ToList();
-            return rawMemPool;
+            return new RpcRawMemPool
+            {
+                Height = uint.Parse(json["height"].AsString()),
+                Verified = ((JArray)json["verified"]).Select(p => UInt256.Parse(p.AsString())).ToList(),
+                UnVerified = ((JArray)json["unverified"]).Select(p => UInt256.Parse(p.AsString())).ToList()
+            };
         }
     }
 }

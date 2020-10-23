@@ -22,11 +22,12 @@ namespace Neo.Network.RPC.Models
 
         public static RpcValidator FromJson(JObject json)
         {
-            RpcValidator validator = new RpcValidator();
-            validator.PublicKey = json["publickey"].AsString();
-            validator.Votes = BigInteger.Parse(json["votes"].AsString());
-            validator.Active = json["active"].AsBoolean();
-            return validator;
+            return new RpcValidator
+            {
+                PublicKey = json["publickey"].AsString(),
+                Votes = BigInteger.Parse(json["votes"].AsString()),
+                Active = json["active"].AsBoolean()
+            };
         }
     }
 }
