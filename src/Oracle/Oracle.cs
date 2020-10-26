@@ -5,6 +5,7 @@ using Neo.ConsoleService;
 using Neo.Cryptography;
 using Neo.Cryptography.ECC;
 using Neo.IO;
+using Neo.IO.Caching;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
@@ -39,6 +40,7 @@ namespace Neo.Plugins
         private ConcurrentDictionary<ulong, OracleTask> PendingQueue;
         private CancellationTokenSource CancelSource;
         private int Counter;
+        private HashSetCache<ulong> FinishedCache;
 
         private const int RefreshInterval = 1000 * 60 * 3;
 
@@ -49,6 +51,7 @@ namespace Neo.Plugins
         public Oracle()
         {
             PendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
+            FinishedCache = new HashSetCache<ulong>(1024 * 128);
 
             RpcServerPlugin.RegisterMethods(this);
 
@@ -79,9 +82,14 @@ namespace Neo.Plugins
 
             var data = oraclePub.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
             if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
+            if (FinishedCache.Contains(requestId)) throw new RpcException(-100, "Request has already finished");
 
-            using var snapshot = Blockchain.Singleton.GetSnapshot();
-            AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
+            using (SnapshotView snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                if (NativeContract.Oracle.GetRequest(snapshot, requestId) is null)
+                    throw new RpcException(-100, "Request is not found");
+                AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
+            }
             return new JObject();
         }
 
@@ -90,10 +98,11 @@ namespace Neo.Plugins
         {
             Wallet.Unlock(password);
 
-            using var snapshot = Blockchain.Singleton.GetSnapshot();
-            if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
-            if (!CheckOracleAccount(oracles)) throw new ArgumentException("There is no oracle account in wallet");
-
+            using (var snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
+                if (!CheckOracleAccount(oracles)) throw new ArgumentException("There is no oracle account in wallet");
+            }
             Interlocked.Exchange(ref CancelSource, new CancellationTokenSource())?.Cancel();
             new Task(() =>
             {
@@ -348,8 +357,11 @@ namespace Neo.Plugins
             else
                 throw new RpcException(-100, "Invalid response transaction sign");
 
-            if (!CheckTxSign(snapshot, task.Tx, task.Signs))
-                CheckTxSign(snapshot, task.BackupTx, task.BackupSigns);
+            if (CheckTxSign(snapshot, task.Tx, task.Signs) || CheckTxSign(snapshot, task.BackupTx, task.BackupSigns))
+            {
+                FinishedCache.Add(requestId);
+                PendingQueue.Remove(requestId, out _);
+            }
         }
 
         private bool CheckTxSign(StoreView snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> Signs)
