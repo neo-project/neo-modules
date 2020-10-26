@@ -112,32 +112,6 @@ namespace Neo.Plugins
             return json;
         }
 
-        private JObject GetVerificationResult(byte[] script, Signers signers = null)
-        {
-            var engine = ApplicationEngine.Create(TriggerType.Verification, new Transaction(), Blockchain.Singleton.GetSnapshot(), gas: settings.MaxGasInvoke);
-            engine.LoadScript(script);
-            engine.Execute();
-
-            JObject json = new JObject();
-            json["script"] = Convert.ToBase64String(script);
-            json["state"] = engine.State;
-            json["gasconsumed"] = new BigDecimal(engine.GasConsumed, NativeContract.GAS.Decimals).ToString();
-            json["exception"] = GetExceptionMessage(engine.FaultException);
-            try
-            {
-                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
-            }
-            catch (InvalidOperationException)
-            {
-                json["stack"] = "error: recursive reference";
-            }
-            if (engine.State != VMState.FAULT)
-            {
-                ProcessInvokeWithWallet(json, signers);
-            }
-            return json;
-        }
-
         private static Signers SignersFromJson(JArray _params)
         {
             var ret = new Signers(_params.Select(u => new Signer()
@@ -181,15 +155,7 @@ namespace Neo.Plugins
         {
             byte[] script = _params[0].AsString().HexToBytes();
             Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1]) : null;
-            var isVefificationTrigger = _params.Count >= 3 ? _params[2].AsBoolean() : false;
-            if (isVefificationTrigger)
-            {
-                return GetVerificationResult(script, signers);
-            }
-            else
-            {
-                return GetInvokeResult(script, signers);
-            }
+            return GetInvokeResult(script, signers);
         }
 
         [RpcMethod]
