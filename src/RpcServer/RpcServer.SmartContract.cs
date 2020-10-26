@@ -67,7 +67,7 @@ namespace Neo.Plugins
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(script);
             json["state"] = engine.State;
-            json["gasconsumed"] = engine.GasConsumed.ToString();
+            json["gasconsumed"] = new BigDecimal(engine.GasConsumed, NativeContract.GAS.Decimals).ToString();
             json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
@@ -90,11 +90,12 @@ namespace Neo.Plugins
             var contract = snapshot.Contracts.TryGet(scriptHash);
             var engine = ApplicationEngine.Create(TriggerType.Verification, new Transaction(), snapshot);
             var context = engine.LoadScript(contract.Script, CallFlags.None, contract.Manifest.Abi.GetMethod("verify").Offset);
+            engine.LoadScript(Array.Empty<byte>(), CallFlags.None);
 
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(contract.Script);
             json["state"] = engine.Execute();
-            json["gasconsumed"] = engine.GasConsumed.ToString();
+            json["gasconsumed"] = new BigDecimal(engine.GasConsumed, NativeContract.GAS.Decimals).ToString();
             json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
@@ -113,14 +114,14 @@ namespace Neo.Plugins
 
         private JObject GetVerificationResult(byte[] script, Signers signers = null)
         {
-            var snapshot = Blockchain.Singleton.GetSnapshot();
-            var engine = ApplicationEngine.Create(TriggerType.Verification, new Transaction(), snapshot);
-            var context = engine.LoadScript(script);
+            var engine = ApplicationEngine.Create(TriggerType.Verification, new Transaction(), Blockchain.Singleton.GetSnapshot(), gas: settings.MaxGasInvoke);
+            engine.LoadScript(script);
+            engine.Execute();
 
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(script);
-            json["state"] = engine.Execute();
-            json["gasconsumed"] = engine.GasConsumed.ToString();
+            json["state"] = engine.State;
+            json["gasconsumed"] = new BigDecimal(engine.GasConsumed, NativeContract.GAS.Decimals).ToString();
             json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
