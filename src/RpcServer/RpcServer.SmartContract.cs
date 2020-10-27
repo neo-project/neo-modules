@@ -132,7 +132,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject InvokeFunction(JArray _params)
         {
-            UInt160 script_hash = UInt160.Parse(ToScriptHash(_params[0].AsString()));
+            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
             Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3]) : null;
@@ -148,19 +148,6 @@ namespace Neo.Plugins
                 script = sb.EmitAppCall(script_hash, operation, args).ToArray();
                 return GetInvokeResult(script, signers);
             }
-        }
-
-        public static string ToScriptHash(string addressOrScriptHash)
-        {
-            foreach (var native in NativeContract.Contracts)
-            {
-                if (addressOrScriptHash.Equals(native.Name, StringComparison.InvariantCultureIgnoreCase) ||
-                    addressOrScriptHash == native.Id.ToString())
-                    return native.Hash.ToString();
-            }
-
-            return addressOrScriptHash.Length < 40 ?
-                addressOrScriptHash : UInt160.Parse(addressOrScriptHash).ToString();
         }
 
         [RpcMethod]
