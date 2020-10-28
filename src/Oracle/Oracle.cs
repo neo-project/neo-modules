@@ -112,7 +112,7 @@ namespace Neo.Plugins
                     {
                         IEnumerator<(ulong RequestId, OracleRequest Request)> enumerator = NativeContract.Oracle.GetRequests(snapshot).GetEnumerator();
                         while (enumerator.MoveNext() && !CancelSource.IsCancellationRequested)
-                            if (!PendingQueue.TryGetValue(enumerator.Current.RequestId, out OracleTask task) || task.Tx is null)
+                            if (!FinishedCache.Contains(enumerator.Current.RequestId) && (!PendingQueue.TryGetValue(enumerator.Current.RequestId, out OracleTask task) || task.Tx is null))
                                 ProcessRequest(snapshot, enumerator.Current.RequestId, enumerator.Current.Request);
                     }
                     Thread.Sleep(500);
@@ -209,7 +209,6 @@ namespace Neo.Plugins
                     response = new OracleResponse() { Id = requestId, Code = OracleResponseCode.Forbidden, Result = Array.Empty<byte>() };
                     break;
             }
-
             var responseTx = CreateResponseTx(snapshot, response);
             var backupTx = CreateResponseTx(snapshot, new OracleResponse() { Code = OracleResponseCode.Error, Id = requestId, Result = Array.Empty<byte>() });
 
@@ -276,7 +275,7 @@ namespace Neo.Plugins
             witnessDict[NativeContract.Oracle.Hash] = new Witness
             {
                 InvocationScript = Array.Empty<byte>(),
-                VerificationScript = NativeContract.Oracle.Script,
+                VerificationScript = Array.Empty<byte>(),
             };
 
             UInt160[] hashes = tx.GetScriptHashesForVerifying(snapshot);
@@ -287,7 +286,7 @@ namespace Neo.Plugins
 
             var engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
             engine.LoadScript(NativeContract.Oracle.Script, CallFlags.None, 0);
-            engine.LoadScript(new ScriptBuilder().EmitPush(0).Emit(OpCode.PACK).EmitPush("verify").ToArray(), CallFlags.None);
+            engine.LoadScript(new ScriptBuilder().Emit(OpCode.DEPTH, OpCode.PACK).EmitPush("verify").ToArray(), CallFlags.None);
             if (engine.Execute() != VMState.HALT) return null;
             tx.NetworkFee += engine.GasConsumed;
 
