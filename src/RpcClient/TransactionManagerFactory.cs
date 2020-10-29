@@ -1,5 +1,6 @@
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
+using Neo.SmartContract;
 using System;
 using System.Threading.Tasks;
 
@@ -46,7 +47,7 @@ namespace Neo.Network.RPC
                 Nonce = (uint)new Random().Next(),
                 Script = script,
                 Signers = signers ?? Array.Empty<Signer>(),
-                ValidUntilBlock = blockCount - 1 + Transaction.MaxValidUntilBlockIncrement,
+                ValidUntilBlock = blockCount - 1 + ApplicationEngine.MaxTraceableBlocks,
                 SystemFee = long.Parse(invokeResult.GasConsumed),
                 Attributes = attributes ?? Array.Empty<TransactionAttribute>(),
             };
