@@ -94,9 +94,23 @@ namespace Neo.Plugins
         }
 
         [ConsoleCommand("start oracle", Category = "Oracle", Description = "Start oracle service")]
-        private void OnStart(string password)
+        private void OnStart()
         {
-            Wallet.Unlock(password);
+            string password = Helper.ReadUserInput("password", true);
+            if (password.Length == 0)
+            {
+                Console.WriteLine("Cancelled");
+                return;
+            }
+            try
+            {
+                Wallet.Unlock(password);
+            }
+            catch (System.Security.Cryptography.CryptographicException)
+            {
+                Console.WriteLine($"Failed to open wallet");
+                return;
+            }
 
             using (var snapshot = Blockchain.Singleton.GetSnapshot())
             {
