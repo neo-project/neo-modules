@@ -12,18 +12,13 @@ namespace Neo.Plugins
             ConsoleKeyInfo key;
 
             if (!string.IsNullOrEmpty(prompt))
-            {
                 Console.Write(prompt + ": ");
-            }
 
             var prevForeground = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Yellow;
 
             if (Console.IsInputRedirected)
-            {
-                // neo-gui Console require it
-                sb.Append(Console.ReadLine());
-            }
+                sb.Append(Console.ReadLine()); // neo-gui Console require it
             else
             {
                 do
@@ -34,13 +29,9 @@ namespace Neo.Plugins
                     {
                         sb.Append(key.KeyChar);
                         if (password)
-                        {
                             Console.Write('*');
-                        }
                         else
-                        {
                             Console.Write(key.KeyChar);
-                        }
                     }
                     else if (key.Key == ConsoleKey.Backspace && sb.Length > 0)
                     {
