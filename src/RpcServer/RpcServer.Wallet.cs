@@ -176,7 +176,7 @@ namespace Neo.Plugins
                 {
                     try
                     {
-                        tx = wallet.MakeTransaction(result["script"].AsString().HexToBytes(), sender, witnessSigners);
+                        tx = wallet.MakeTransaction(Convert.FromBase64String(result["script"].AsString()), sender, witnessSigners);
                     }
                     catch (Exception e)
                     {
