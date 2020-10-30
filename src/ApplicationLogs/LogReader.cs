@@ -3,6 +3,7 @@ using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Persistence;
+using Neo.SmartContract;
 using Neo.VM;
 using System;
 using System.Collections.Generic;
@@ -34,11 +35,17 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject GetApplicationLog(JArray _params)
         {
-            UInt256 hash = UInt256.Parse(_params[0].AsString());
-            byte[] value = db.Get(ReadOptions.Default, hash.ToArray());
+            byte[] hash = _params[0].AsString().HexToBytes();
+            byte[] value = db.Get(ReadOptions.Default, hash);
             if (value is null)
-                throw new RpcException(-100, "Unknown transaction");
-            return JObject.Parse(Encoding.UTF8.GetString(value));
+                foreach (var tpye in Enum.GetValues(typeof(TriggerType)))
+                    value = db.Get(ReadOptions.Default, hash.Concat(new byte[] { (byte)tpye }).ToArray());
+            else
+                return JObject.Parse(Encoding.UTF8.GetString(value));
+            if (value is null)
+                throw new RpcException(-100, "Unknown transaction or blockhash");
+            else
+                return JObject.Parse(Encoding.UTF8.GetString(value));
         }
 
         public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
