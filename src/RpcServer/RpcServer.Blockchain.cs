@@ -147,7 +147,7 @@ namespace Neo.Plugins
                 }
                 return json;
             }
-            return tx.ToArray().ToHexString();
+            return Convert.ToBase64String(tx.ToArray().ToHexString().HexToBytes());
         }
 
         [RpcMethod]
