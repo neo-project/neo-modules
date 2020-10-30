@@ -113,7 +113,7 @@ namespace Neo.Plugins
             foreach (var native in NativeContract.Contracts)
             {
                 if (addressOrScriptHash.Equals(native.Name, StringComparison.InvariantCultureIgnoreCase) ||
-                    addressOrScriptHash == native.Id.ToString())
+                    addressOrScriptHash == native.Id.ToString() || addressOrScriptHash.ToLower() == native.Name.ToLower())
                     return native.Hash.ToString();
             }
 
