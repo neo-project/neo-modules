@@ -108,17 +108,17 @@ namespace Neo.Plugins
             return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
         }
 
-        public static string ToScriptHash(string addressOrScriptHash)
+        public static string ToScriptHash(string keyword)
         {
             foreach (var native in NativeContract.Contracts)
             {
-                if (addressOrScriptHash.Equals(native.Name, StringComparison.InvariantCultureIgnoreCase) ||
-                    addressOrScriptHash == native.Id.ToString() || addressOrScriptHash.ToLower() == native.Name.ToLower())
+                if (keyword.Equals(native.Name, StringComparison.InvariantCultureIgnoreCase) ||
+                    keyword == native.Id.ToString() || keyword.ToLower() == native.Name.ToLower())
                     return native.Hash.ToString();
             }
 
-            return addressOrScriptHash.Length < 40 ?
-                addressOrScriptHash : UInt160.Parse(addressOrScriptHash).ToString();
+            return keyword.Length < 40 ?
+                keyword : UInt160.Parse(keyword).ToString();
         }
 
         [RpcMethod]
