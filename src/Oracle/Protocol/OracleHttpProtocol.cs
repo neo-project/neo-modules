@@ -1,5 +1,7 @@
 using System;
+using System.Data;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -33,12 +35,13 @@ namespace Neo.Plugins
             Task<HttpResponseMessage> result = client.GetAsync(uri);
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            if (!result.Wait(Timeout)) throw new InvalidOperationException("Timeout");
+            if (!result.Wait(Timeout)) throw new TimeoutException("Timeout");
+            if (result.Result.StatusCode == HttpStatusCode.NotFound) throw new FileNotFoundException($"{url} is not found");
             if (!result.Result.IsSuccessStatusCode) throw new InvalidOperationException("Response error");
             if (!AllowedFormats.Contains(result.Result.Content.Headers.ContentType.MediaType)) throw new InvalidOperationException("ContentType it's not allowed");
             sw.Stop();
             var taskRet = result.Result.Content.ReadAsStringAsync();
-            if (Timeout <= sw.ElapsedMilliseconds || !taskRet.Wait(Timeout - (int)sw.ElapsedMilliseconds)) throw new InvalidOperationException("Timeout");
+            if (Timeout <= sw.ElapsedMilliseconds || !taskRet.Wait(Timeout - (int)sw.ElapsedMilliseconds)) throw new TimeoutException("Timeout");
             var data = Filter(taskRet.Result, filter);
             return Utility.StrictUTF8.GetBytes(data);
         }

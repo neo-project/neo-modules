@@ -212,6 +212,16 @@ namespace Neo.Plugins
                         var data = Https.Request(requestId, request.Url, request.Filter);
                         response = new OracleResponse() { Id = requestId, Code = OracleResponseCode.Success, Result = data };
                     }
+                    catch (FileNotFoundException notfoundex)
+                    {
+                        Log($"Request error {notfoundex.Message}");
+                        response = new OracleResponse() { Id = requestId, Code = OracleResponseCode.NotFound, Result = Array.Empty<byte>() };
+                    }
+                    catch (TimeoutException timeoutex)
+                    {
+                        Log($"Request error {timeoutex.Message}");
+                        response = new OracleResponse() { Id = requestId, Code = OracleResponseCode.Timeout, Result = Array.Empty<byte>() };
+                    }
                     catch (Exception e)
                     {
                         Log($"Request error {e.Message}");
