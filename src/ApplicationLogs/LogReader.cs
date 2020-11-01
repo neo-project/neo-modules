@@ -36,12 +36,11 @@ namespace Neo.Plugins
         public JObject GetApplicationLog(JArray _params)
         {
             byte[] hash = _params[0].AsString().HexToBytes();
-            byte[] value = db.Get(ReadOptions.Default, hash);
-            if (value is null)
-                foreach (var tpye in Enum.GetValues(typeof(TriggerType)))
-                    value = db.Get(ReadOptions.Default, hash.Concat(new byte[] { (byte)tpye }).ToArray());
-            else
-                return JObject.Parse(Encoding.UTF8.GetString(value));
+            byte[] value = null;
+            Array allKeys = new byte[Enum.GetValues(typeof(TriggerType)).Length + 1];
+            Enum.GetValues(typeof(TriggerType)).CopyTo(allKeys, 1);
+            foreach (var tpye in allKeys)
+                value = db.Get(ReadOptions.Default, hash.Concat(new byte[] { (byte)tpye }).ToArray());
             if (value is null)
                 throw new RpcException(-100, "Unknown transaction or blockhash");
             else
