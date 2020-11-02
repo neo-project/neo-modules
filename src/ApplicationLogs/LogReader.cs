@@ -35,38 +35,35 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject GetApplicationLog(JArray _params)
         {
-            byte[] hash = _params[0].AsString().HexToBytes();
-            byte[] value = null;
-            Array allKeys = new byte[Enum.GetValues(typeof(TriggerType)).Length + 1];
-            Enum.GetValues(typeof(TriggerType)).CopyTo(allKeys, 1);
-            foreach (var tpye in allKeys)
-                value = db.Get(ReadOptions.Default, hash.Concat(new byte[] { (byte)tpye }).ToArray());
+            UInt256 hash = UInt256.Parse(_params[0].AsString());
+            byte[] value = db.Get(ReadOptions.Default, hash.ToArray());
             if (value is null)
-                throw new RpcException(-100, "Unknown transaction or blockhash");
-            else
-                return JObject.Parse(Encoding.UTF8.GetString(value));
+                throw new RpcException(-100, "Unknown transaction/blockhash");
+            return JObject.Parse(Encoding.UTF8.GetString(value));
         }
 
         public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             WriteBatch writeBatch = new WriteBatch();
 
-            foreach (var appExec in applicationExecutedList)
+            //processing log for transactions
+            foreach (var appExec in applicationExecutedList.Where(p => p.Transaction != null))
             {
-                JObject json = new JObject();
-                json["txid"] = appExec.Transaction?.Hash.ToString();
-                json["trigger"] = appExec.Trigger;
-                json["vmstate"] = appExec.VMState;
-                json["gasconsumed"] = appExec.GasConsumed.ToString();
+                var txJson = new JObject();
+                txJson["id"] = appExec.Transaction.Hash.ToString();
+                JObject trigger = new JObject();
+                trigger["trigger"] = appExec.Trigger;
+                trigger["vmstate"] = appExec.VMState;
+                trigger["gasconsumed"] = appExec.GasConsumed.ToString();
                 try
                 {
-                    json["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
+                    trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
                 }
                 catch (InvalidOperationException)
                 {
-                    json["stack"] = "error: recursive reference";
+                    trigger["stack"] = "error: recursive reference";
                 }
-                json["notifications"] = appExec.Notifications.Select(q =>
+                trigger["notifications"] = appExec.Notifications.Select(q =>
                 {
                     JObject notification = new JObject();
                     notification["contract"] = q.ScriptHash.ToString();
@@ -81,9 +78,52 @@ namespace Neo.Plugins
                     }
                     return notification;
                 }).ToArray();
-                writeBatch.Put(appExec.Transaction?.Hash.ToArray() ??
-                    snapshot.PersistingBlock.Hash.ToArray().Concat(new byte[] { (byte)appExec.Trigger }).ToArray(),
-                    Encoding.UTF8.GetBytes(json.ToString()));
+
+                txJson["triggers"] = new List<JObject>() { trigger }.ToArray();
+                writeBatch.Put(appExec.Transaction.Hash.ToArray(), Encoding.UTF8.GetBytes(txJson.ToString()));
+            }
+
+            //processing log for block
+            var blocks = applicationExecutedList.Where(p => p.Transaction == null);
+            if (blocks.Count() > 0)
+            {
+                var blockJson = new JObject();
+                var blockHash = snapshot.PersistingBlock.Hash.ToArray();
+                blockJson["id"] = blockHash.ToString();
+                var triggerList = new List<JObject>();
+                foreach (var appExec in blocks)
+                {
+                    JObject trigger = new JObject();
+                    trigger["trigger"] = appExec.Trigger;
+                    trigger["vmstate"] = appExec.VMState;
+                    trigger["gasconsumed"] = appExec.GasConsumed.ToString();
+                    try
+                    {
+                        trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        trigger["stack"] = "error: recursive reference";
+                    }
+                    trigger["notifications"] = appExec.Notifications.Select(q =>
+                    {
+                        JObject notification = new JObject();
+                        notification["contract"] = q.ScriptHash.ToString();
+                        notification["eventname"] = q.EventName;
+                        try
+                        {
+                            notification["state"] = q.State.ToJson();
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            notification["state"] = "error: recursive reference";
+                        }
+                        return notification;
+                    }).ToArray();
+                    triggerList.Add(trigger);
+                }
+                blockJson["triggers"] = triggerList.ToArray();
+                writeBatch.Put(blockHash, Encoding.UTF8.GetBytes(blockJson.ToString()));
             }
             db.Write(WriteOptions.Default, writeBatch);
         }
