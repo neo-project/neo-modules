@@ -50,20 +50,19 @@ namespace Neo.Plugins
             foreach (var appExec in applicationExecutedList.Where(p => p.Transaction != null))
             {
                 var txJson = new JObject();
-                txJson["id"] = appExec.Transaction.Hash.ToString();
-                JObject trigger = new JObject();
-                trigger["trigger"] = appExec.Trigger;
-                trigger["vmstate"] = appExec.VMState;
-                trigger["gasconsumed"] = appExec.GasConsumed.ToString();
+                txJson["txid"] = appExec.Transaction.Hash.ToString();
+                txJson["trigger"] = appExec.Trigger;
+                txJson["vmstate"] = appExec.VMState;
+                txJson["gasconsumed"] = appExec.GasConsumed.ToString();
                 try
                 {
-                    trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
+                    txJson["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
                 }
                 catch (InvalidOperationException)
                 {
-                    trigger["stack"] = "error: recursive reference";
+                    txJson["stack"] = "error: recursive reference";
                 }
-                trigger["notifications"] = appExec.Notifications.Select(q =>
+                txJson["notifications"] = appExec.Notifications.Select(q =>
                 {
                     JObject notification = new JObject();
                     notification["contract"] = q.ScriptHash.ToString();
@@ -78,8 +77,6 @@ namespace Neo.Plugins
                     }
                     return notification;
                 }).ToArray();
-
-                txJson["triggers"] = new List<JObject>() { trigger }.ToArray();
                 writeBatch.Put(appExec.Transaction.Hash.ToArray(), Encoding.UTF8.GetBytes(txJson.ToString()));
             }
 
@@ -89,8 +86,8 @@ namespace Neo.Plugins
             {
                 var blockJson = new JObject();
                 var blockHash = snapshot.PersistingBlock.Hash.ToArray();
-                blockJson["id"] = blockHash.ToString();
-                var triggerList = new List<JObject>();
+                blockJson["blockhash"] = blockHash.ToString();
+                var executedList = new List<JObject>();
                 foreach (var appExec in blocks)
                 {
                     JObject trigger = new JObject();
@@ -120,9 +117,9 @@ namespace Neo.Plugins
                         }
                         return notification;
                     }).ToArray();
-                    triggerList.Add(trigger);
+                    executedList.Add(trigger);
                 }
-                blockJson["triggers"] = triggerList.ToArray();
+                blockJson["executed"] = executedList.ToArray();
                 writeBatch.Put(blockHash, Encoding.UTF8.GetBytes(blockJson.ToString()));
             }
             db.Write(WriteOptions.Default, writeBatch);
