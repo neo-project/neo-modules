@@ -39,7 +39,25 @@ namespace Neo.Plugins
             byte[] value = db.Get(ReadOptions.Default, hash.ToArray());
             if (value is null)
                 throw new RpcException(-100, "Unknown transaction/blockhash");
-            return JObject.Parse(Encoding.UTF8.GetString(value));
+
+            //Additional optional "trigger" parameter to getapplicationlog for clients to be able to get just one execution result for a block.
+            if (_params.Count >= 2 && Enum.TryParse(_params[1].AsString(), true, out TriggerType trigger))
+            {
+                var raw = JObject.Parse(Encoding.UTF8.GetString(value));
+                var executions = raw["executions"] as JArray;
+                for (int i = 0; i < executions.Count;)
+                {
+                    if (!executions[i]["trigger"].AsString().Equals(trigger.ToString(), StringComparison.OrdinalIgnoreCase))
+                        executions.RemoveAt(i);
+                    else
+                      i++;
+                }
+                return raw;
+            }
+            else
+            {
+                return JObject.Parse(Encoding.UTF8.GetString(value));
+            }
         }
 
         public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
@@ -51,18 +69,19 @@ namespace Neo.Plugins
             {
                 var txJson = new JObject();
                 txJson["txid"] = appExec.Transaction.Hash.ToString();
-                txJson["trigger"] = appExec.Trigger;
-                txJson["vmstate"] = appExec.VMState;
-                txJson["gasconsumed"] = appExec.GasConsumed.ToString();
+                JObject trigger = new JObject();
+                trigger["trigger"] = appExec.Trigger;
+                trigger["vmstate"] = appExec.VMState;
+                trigger["gasconsumed"] = appExec.GasConsumed.ToString();
                 try
                 {
-                    txJson["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
+                    trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
                 }
                 catch (InvalidOperationException)
                 {
-                    txJson["stack"] = "error: recursive reference";
+                    trigger["stack"] = "error: recursive reference";
                 }
-                txJson["notifications"] = appExec.Notifications.Select(q =>
+                trigger["notifications"] = appExec.Notifications.Select(q =>
                 {
                     JObject notification = new JObject();
                     notification["contract"] = q.ScriptHash.ToString();
@@ -77,6 +96,8 @@ namespace Neo.Plugins
                     }
                     return notification;
                 }).ToArray();
+
+                txJson["executions"] = new List<JObject>() { trigger }.ToArray();
                 writeBatch.Put(appExec.Transaction.Hash.ToArray(), Encoding.UTF8.GetBytes(txJson.ToString()));
             }
 
@@ -86,8 +107,8 @@ namespace Neo.Plugins
             {
                 var blockJson = new JObject();
                 var blockHash = snapshot.PersistingBlock.Hash.ToArray();
-                blockJson["blockhash"] = blockHash.ToString();
-                var executedList = new List<JObject>();
+                blockJson["blockhash"] = "0x" + blockHash.Reverse().ToArray().ToHexString();
+                var triggerList = new List<JObject>();
                 foreach (var appExec in blocks)
                 {
                     JObject trigger = new JObject();
@@ -117,9 +138,9 @@ namespace Neo.Plugins
                         }
                         return notification;
                     }).ToArray();
-                    executedList.Add(trigger);
+                    triggerList.Add(trigger);
                 }
-                blockJson["executed"] = executedList.ToArray();
+                blockJson["executions"] = triggerList.ToArray();
                 writeBatch.Put(blockHash, Encoding.UTF8.GetBytes(blockJson.ToString()));
             }
             db.Write(WriteOptions.Default, writeBatch);
