@@ -48,7 +48,7 @@ namespace Neo.Plugins
                     json["nextblockhash"] = hash.ToString();
                 return json;
             }
-            return block.ToArray().ToHexString();
+            return Convert.ToBase64String(block.ToArray());
         }
 
         [RpcMethod]
@@ -97,7 +97,7 @@ namespace Neo.Plugins
                 return json;
             }
 
-            return header.ToArray().ToHexString();
+            return Convert.ToBase64String(header.ToArray());
         }
 
         [RpcMethod]
@@ -147,7 +147,7 @@ namespace Neo.Plugins
                 }
                 return json;
             }
-            return Convert.ToBase64String(tx.ToArray().ToHexString().HexToBytes());
+            return Convert.ToBase64String(tx.ToArray());
         }
 
         [RpcMethod]
