@@ -50,7 +50,7 @@ namespace Neo.Plugins
                     if (!executions[i]["trigger"].AsString().Equals(trigger.ToString(), StringComparison.OrdinalIgnoreCase))
                         executions.RemoveAt(i);
                     else
-                      i++;
+                        i++;
                 }
                 return raw;
             }
