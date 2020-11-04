@@ -380,6 +380,7 @@ namespace Neo.Plugins
                 if (task.Tx == null)
                 {
                     task.Signs.TryAdd(oraclePub, sign);
+                    task.BackupSigns.TryAdd(oraclePub, sign);
                     return;
                 }
 
