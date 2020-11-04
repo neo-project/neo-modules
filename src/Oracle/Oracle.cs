@@ -385,8 +385,8 @@ namespace Neo.Plugins
 
                 if (Crypto.VerifySignature(task.Tx.GetHashData(), sign, oraclePub))
                     task.Signs.TryAdd(oraclePub, sign);
-                else if (Crypto.VerifySignature(task.BackupTx.GetHashData(), backupSign, oraclePub))
-                    task.BackupSigns.TryAdd(oraclePub, backupSign);
+                else if (Crypto.VerifySignature(task.BackupTx.GetHashData(), sign, oraclePub))
+                    task.BackupSigns.TryAdd(oraclePub, sign);
                 else
                     throw new RpcException(-100, "Invalid response transaction sign");
 
