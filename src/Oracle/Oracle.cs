@@ -42,6 +42,8 @@ namespace Neo.Plugins
         private int Counter;
         private HashSetCache<ulong> FinishedCache;
 
+        private static readonly object _lock = new object();
+
         private const int RefreshInterval = 1000 * 60 * 3;
 
         private static readonly OracleHttpProtocol Https = new OracleHttpProtocol();
@@ -249,7 +251,7 @@ namespace Neo.Plugins
                 AddResponseTxSign(snapshot, requestId, oraclePub, txSign, responseTx, backupTx, backTxSign);
                 SendResponseSignature(requestId, txSign, account.GetKey());
 
-                Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()} BackupSign: {backTxSign.ToHexString()}");
+                Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()}");
             }
         }
 
@@ -330,7 +332,12 @@ namespace Neo.Plugins
                 + IO.Helper.GetVarSize(hashes.Length) + witnessDict[NativeContract.Oracle.Hash].Size
                 + IO.Helper.GetVarSize(size_inv) + size_inv + oracleSignContract.Script.GetVarSize();
 
-            if (tx.NetworkFee + (size + tx.Attributes.GetVarSize()) * NativeContract.Policy.GetFeePerByte(snapshot) > request.GasForResponse)
+            if (response.Result.Length > 1024)
+            {
+                response.Code = OracleResponseCode.Error;
+                response.Result = Array.Empty<byte>();
+            }
+            else if (tx.NetworkFee + (size + tx.Attributes.GetVarSize()) * NativeContract.Policy.GetFeePerByte(snapshot) > request.GasForResponse)
             {
                 response.Code = OracleResponseCode.Error;
                 response.Result = Array.Empty<byte>();
@@ -347,43 +354,47 @@ namespace Neo.Plugins
 
         public void AddResponseTxSign(StoreView snapshot, ulong requestId, ECPoint oraclePub, byte[] sign, Transaction responseTx = null, Transaction backupTx = null, byte[] backupSign = null)
         {
-            var task = PendingQueue.GetOrAdd(requestId, new OracleTask
+            lock (_lock)
             {
-                Id = requestId,
-                Request = NativeContract.Oracle.GetRequest(snapshot, requestId),
-                Signs = new ConcurrentDictionary<ECPoint, byte[]>(),
-                BackupSigns = new ConcurrentDictionary<ECPoint, byte[]>()
-            });
+                var task = PendingQueue.GetOrAdd(requestId, new OracleTask
+                {
+                    Id = requestId,
+                    Request = NativeContract.Oracle.GetRequest(snapshot, requestId),
+                    Signs = new ConcurrentDictionary<ECPoint, byte[]>(),
+                    BackupSigns = new ConcurrentDictionary<ECPoint, byte[]>()
+                });
 
-            if (responseTx != null)
-            {
-                task.Tx = responseTx;
-                task.BackupTx = backupTx;
-                var data = task.Tx.GetHashData();
-                task.Signs.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.Signs.Remove(p.Key, out _));
-                data = task.BackupTx.GetHashData();
-                task.BackupSigns.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.BackupSigns.Remove(p.Key, out _));
-                task.BackupSigns.TryAdd(oraclePub, backupSign);
-            }
+                if (responseTx != null)
+                {
+                    task.Tx = responseTx;
+                    var data = task.Tx.GetHashData();
+                    task.Signs.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.Signs.Remove(p.Key, out _));
+                }
+                if (backupTx != null)
+                {
+                    task.BackupTx = backupTx;
+                    var data = task.BackupTx.GetHashData();
+                    task.BackupSigns.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.BackupSigns.Remove(p.Key, out _));
+                    task.BackupSigns.TryAdd(oraclePub, backupSign);
+                }
+                if (task.Tx == null)
+                {
+                    task.Signs.TryAdd(oraclePub, sign);
+                    return;
+                }
 
-            if (task.Tx == null)
-            {
-                task.Signs.TryAdd(oraclePub, sign);
-                task.BackupSigns.TryAdd(oraclePub, backupSign);
-                return;
-            }
+                if (Crypto.VerifySignature(task.Tx.GetHashData(), sign, oraclePub))
+                    task.Signs.TryAdd(oraclePub, sign);
+                else if (Crypto.VerifySignature(task.BackupTx.GetHashData(), backupSign, oraclePub))
+                    task.BackupSigns.TryAdd(oraclePub, backupSign);
+                else
+                    throw new RpcException(-100, "Invalid response transaction sign");
 
-            if (Crypto.VerifySignature(task.Tx.GetHashData(), sign, oraclePub))
-                task.Signs.TryAdd(oraclePub, sign);
-            else if (Crypto.VerifySignature(task.BackupTx.GetHashData(), backupSign, oraclePub))
-                task.BackupSigns.TryAdd(oraclePub, backupSign);
-            else
-                throw new RpcException(-100, "Invalid response transaction sign");
-
-            if (CheckTxSign(snapshot, task.Tx, task.Signs) || CheckTxSign(snapshot, task.BackupTx, task.BackupSigns))
-            {
-                FinishedCache.Add(requestId);
-                PendingQueue.Remove(requestId, out _);
+                if (CheckTxSign(snapshot, task.Tx, task.Signs) || CheckTxSign(snapshot, task.BackupTx, task.BackupSigns))
+                {
+                    FinishedCache.Add(requestId);
+                    PendingQueue.Remove(requestId, out _);
+                }
             }
         }
 
