@@ -1,10 +1,10 @@
 [
   {
-    "Name": "sendrawtransactionerror",
+    "Name": "sendrawtransactionasyncerror",
     "Request": {
       "jsonrpc": "2.0",
       "method": "sendrawtransaction",
-      "params": [ "00b5077e7bb8cef712d3f9b3ec90d36e7bf8d50ac81718a3b000e1f5050000000080778e0600000000e3142000005c0300e40b54020000000c1400000000000000000000000000000000000000000c14b8cef712d3f9b3ec90d36e7bf8d50ac81718a3b013c00c087472616e736665720c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5201420c4077a5ffdc41dce3b06418879a26bac0fcea06af4a833446c90f63a3e80b85d13e07ca9084989e7c7e4535187409058dc7233ba8ee4638593605134e2c2c8f3c9f290c2102f9ec1fd0a98796cf75b586772a4ddd41a0af07a1dbdf86a7238f74fb725035750b410a906ad4" ],
+      "params": [ "0089d9a541587389000000000046e71300000000007b212000011c0357464b777ecf6b5f3ac3893ace1f8b1621f6100325059ecb4878d3a875f91c51ceded330d4575fdee3137eddba5f6485cad334a79bdb67c43273171fbcaf41d684c7d4ad6ee0d99da9707b9d1f0c8e660054180c14e3137eddba5f6485cad334a79bdb67c43273171f0c141c0357464b777ecf6b5f3ac3893ace1f8b1621f613c00c087472616e736665720c14bcaf41d684c7d4ad6ee0d99da9707b9d1f0c8e6641627d5b5201420c40b90107fe5d251a9ef10b22c3bb0d329c0fa8f1d0d1aab8ad430837c069cc2818887c4c387319a55837d72c997f6112698acf80c346c9bb4638d78b0c2623778c290c210222d8515184c7d62ffa99b829aeb4938c4704ecb0dd7e340e842e9df1218263430b4195440d78" ],
       "id": 1
     },
     "Response": {
@@ -18,7 +18,7 @@
     }
   },
   {
-    "Name": "getbestblockhash",
+    "Name": "getbestblockhashasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getbestblockhash",
@@ -32,7 +32,7 @@
     }
   },
   {
-    "Name": "getblockhex",
+    "Name": "getblockhexasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblock",
@@ -46,7 +46,7 @@
     }
   },
   {
-    "Name": "getblockhex",
+    "Name": "getblockhexasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblock",
@@ -60,117 +60,129 @@
     }
   },
   {
-    "Name": "getblock",
+    "Name": "getblockasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblock",
-      "params": [ 0, true ],
+      "params": [ 7, true ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0xe191fe1aea732c3e23f20af8a95e09f95891176f8064a2fce8571d51f80619a8",
-        "size": 170,
+        "hash": "0x78057f73c5755db691e690746dd76a6e370b426f18664cab3721897d72e72209",
+        "size": 470,
         "version": 0,
-        "previousblockhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-        "merkleroot": "0x735b68ca1bab490b8fd6166cba4c2ce76e97bedfe4d2df0c333970fc9862bb2b",
-        "time": 1468595301000,
-        "index": 0,
-        "nextconsensus": "NZs2zXSPuuv9ZF6TDGSWT1RBmE8rfGj7UW",
+        "previousblockhash": "0xaae8867e9086afaf06fd02cc538e88a69b801abd6f9d3ae39ae630e29d5b39e2",
+        "merkleroot": "0xe95761f21c733ad53066786af24ee5d613b32bd5aae538df2d611492ec0cae82",
+        "time": 1594867377561,
+        "index": 7,
+        "nextconsensus": "NikvsLcNP1jWhrFPrfS3n4spEASgdNYTG2",
         "witnesses": [
           {
-            "invocation": "",
-            "verification": "EQ=="
+            "invocation": "DEBs6hZDHUtL7KOJuF1m8/vITM8VeduwegKhBdbqcLKdBzXA1uZZiBl8jM/rhjXBaIGQSFIQuq8Er1Nb5y5/DWUx",
+            "verification": "EQwhAqnqaELMDLOw8jF7B8hQ3j0eKyQ6mO0tVqP/TKZqrzMLEQtBE43vrw=="
           }
         ],
         "consensusdata": {
           "primary": 0,
-          "nonce": "000000007c2bac1d"
+          "nonce": "83603a05111390a7"
         },
         "tx": [
           {
-            "hash": "0x55808e2014b486a607a4617c81a6f5060ec363eff6cfc80210221b2e8a1f1013",
-            "size": 56,
+            "hash": "0x0a76a72fb4958c7f3940410225a5d0f63b50153136cbf3015c38391b92034c5d",
+            "size": 248,
             "version": 0,
-            "nonce": 0,
-            "sender": "NeN4xPMn4kHoj7G8Lciq9oorgLTvqt4qi1",
-            "sysfee": "0",
-            "netfee": "0",
-            "validuntilblock": 0,
+            "nonce": 631973574,
+            "sender": "NikvsLcNP1jWhrFPrfS3n4spEASgdNYTG2",
+            "sysfee": "9007990",
+            "netfee": "1248450",
+            "validuntilblock": 2102405,
+            "signers": [
+              {
+                "account": "0xe19de267a37a71734478f512b3e92c79fc3695fa",
+                "scopes": "CalledByEntry"
+              }
+            ],
             "attributes": [],
-            "script": "QRI+f+g=",
+            "script": "AccyDBQcA1dGS3d+z2tfOsOJOs4fixYh9gwU+pU2/Hks6bMS9XhEc3F6o2fineETwAwIdHJhbnNmZXIMFCUFnstIeNOodfkcUc7e0zDUV1/eQWJ9W1I4",
             "witnesses": [
               {
-                "invocation": "",
-                "verification": "EQ=="
+                "invocation": "DEDZxkskUb1aH1I4EX5ja02xrYX4fCubAmQzBuPpfY7pDEb1n4Dzx+UB+qSdC/CGskGf5BuzJ0MWJJipsHuivKmU",
+                "verification": "EQwhAqnqaELMDLOw8jF7B8hQ3j0eKyQ6mO0tVqP/TKZqrzMLEQtBE43vrw=="
               }
             ]
           }
         ],
-        "confirmations": 2671,
-        "nextblockhash": "0x423173109798b038019b35129417b55cc4b5976ac79978dfab8ea2512d155f69"
+        "confirmations": 695,
+        "nextblockhash": "0xc4b986813396932a47d6823a9987ccee0148c6fca0150102f4b24ce05cfc9c6f"
       }
     }
   },
   {
-    "Name": "getblock",
+    "Name": "getblockasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblock",
-      "params": [ "0xe191fe1aea732c3e23f20af8a95e09f95891176f8064a2fce8571d51f80619a8", true ],
+      "params": [ "0x78057f73c5755db691e690746dd76a6e370b426f18664cab3721897d72e72209", true ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0xe191fe1aea732c3e23f20af8a95e09f95891176f8064a2fce8571d51f80619a8",
-        "size": 170,
+        "hash": "0x78057f73c5755db691e690746dd76a6e370b426f18664cab3721897d72e72209",
+        "size": 470,
         "version": 0,
-        "previousblockhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-        "merkleroot": "0x735b68ca1bab490b8fd6166cba4c2ce76e97bedfe4d2df0c333970fc9862bb2b",
-        "time": 1468595301000,
-        "index": 0,
-        "nextconsensus": "NZs2zXSPuuv9ZF6TDGSWT1RBmE8rfGj7UW",
+        "previousblockhash": "0xaae8867e9086afaf06fd02cc538e88a69b801abd6f9d3ae39ae630e29d5b39e2",
+        "merkleroot": "0xe95761f21c733ad53066786af24ee5d613b32bd5aae538df2d611492ec0cae82",
+        "time": 1594867377561,
+        "index": 7,
+        "nextconsensus": "NikvsLcNP1jWhrFPrfS3n4spEASgdNYTG2",
         "witnesses": [
           {
-            "invocation": "",
-            "verification": "EQ=="
+            "invocation": "DEBs6hZDHUtL7KOJuF1m8/vITM8VeduwegKhBdbqcLKdBzXA1uZZiBl8jM/rhjXBaIGQSFIQuq8Er1Nb5y5/DWUx",
+            "verification": "EQwhAqnqaELMDLOw8jF7B8hQ3j0eKyQ6mO0tVqP/TKZqrzMLEQtBE43vrw=="
           }
         ],
         "consensusdata": {
           "primary": 0,
-          "nonce": "000000007c2bac1d"
+          "nonce": "83603a05111390a7"
         },
         "tx": [
           {
-            "hash": "0x55808e2014b486a607a4617c81a6f5060ec363eff6cfc80210221b2e8a1f1013",
-            "size": 56,
+            "hash": "0x0a76a72fb4958c7f3940410225a5d0f63b50153136cbf3015c38391b92034c5d",
+            "size": 248,
             "version": 0,
-            "nonce": 0,
-            "sender": "NeN4xPMn4kHoj7G8Lciq9oorgLTvqt4qi1",
-            "sysfee": "0",
-            "netfee": "0",
-            "validuntilblock": 0,
+            "nonce": 631973574,
+            "sender": "NikvsLcNP1jWhrFPrfS3n4spEASgdNYTG2",
+            "sysfee": "9007990",
+            "netfee": "1248450",
+            "validuntilblock": 2102405,
+            "signers": [
+              {
+                "account": "0xe19de267a37a71734478f512b3e92c79fc3695fa",
+                "scopes": "CalledByEntry"
+              }
+            ],
             "attributes": [],
-            "script": "QRI+f+g=",
+            "script": "AccyDBQcA1dGS3d+z2tfOsOJOs4fixYh9gwU+pU2/Hks6bMS9XhEc3F6o2fineETwAwIdHJhbnNmZXIMFCUFnstIeNOodfkcUc7e0zDUV1/eQWJ9W1I4",
             "witnesses": [
               {
-                "invocation": "",
-                "verification": "EQ=="
+                "invocation": "DEDZxkskUb1aH1I4EX5ja02xrYX4fCubAmQzBuPpfY7pDEb1n4Dzx+UB+qSdC/CGskGf5BuzJ0MWJJipsHuivKmU",
+                "verification": "EQwhAqnqaELMDLOw8jF7B8hQ3j0eKyQ6mO0tVqP/TKZqrzMLEQtBE43vrw=="
               }
             ]
           }
         ],
-        "confirmations": 2671,
-        "nextblockhash": "0x423173109798b038019b35129417b55cc4b5976ac79978dfab8ea2512d155f69"
+        "confirmations": 695,
+        "nextblockhash": "0xc4b986813396932a47d6823a9987ccee0148c6fca0150102f4b24ce05cfc9c6f"
       }
     }
   },
   {
-    "Name": "getblockcount",
+    "Name": "getblockcountasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblockcount",
@@ -184,7 +196,7 @@
     }
   },
   {
-    "Name": "getblockhash",
+    "Name": "getblockhashasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblockhash",
@@ -198,7 +210,7 @@
     }
   },
   {
-    "Name": "getblockheaderhex",
+    "Name": "getblockheaderhexasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblockheader",
@@ -212,7 +224,7 @@
     }
   },
   {
-    "Name": "getblockheaderhex",
+    "Name": "getblockheaderhexasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblockheader",
@@ -226,7 +238,7 @@
     }
   },
   {
-    "Name": "getblockheader",
+    "Name": "getblockheaderasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblockheader",
@@ -257,7 +269,7 @@
     }
   },
   {
-    "Name": "getblockheader",
+    "Name": "getblockheaderasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblockheader",
@@ -288,7 +300,7 @@
     }
   },
   {
-    "Name": "getblocksysfee",
+    "Name": "getblocksysfeeasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblocksysfee",
@@ -302,7 +314,7 @@
     }
   },
   {
-    "Name": "getcontractstate",
+    "Name": "getcontractstateasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getcontractstate",
@@ -322,6 +334,9 @@
             "storage": true,
             "payable": true
           },
+          "supportedstandards": [
+            "NEP-5"
+          ],
           "abi": {
             "hash": "0x806b7fa0db3b46d6c42e1e1b0a7fd50db9d4a9b0",
             "methods": [
@@ -443,7 +458,7 @@
     }
   },
   {
-    "Name": "getrawmempool",
+    "Name": "getrawmempoolasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getrawmempool",
@@ -457,7 +472,7 @@
     }
   },
   {
-    "Name": "getrawmempoolboth",
+    "Name": "getrawmempoolbothasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getrawmempool",
@@ -475,7 +490,7 @@
     }
   },
   {
-    "Name": "getrawtransactionhex",
+    "Name": "getrawtransactionhexasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getrawtransaction",
@@ -489,25 +504,31 @@
     }
   },
   {
-    "Name": "getrawtransaction",
+    "Name": "getrawtransactionasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getrawtransaction",
-      "params": [ "0x4d47255ff5564aaa73855068c3574f8f28e2bb18c7fb7256e58ae51fab44c9bc", true ],
+      "params": [ "0xc97cc05c790a844f05f582d80952c4ced3894cbe6d96a74f3e5589d741372dd4", true ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0x4d47255ff5564aaa73855068c3574f8f28e2bb18c7fb7256e58ae51fab44c9bc",
-        "size": 250,
+        "hash": "0xc97cc05c790a844f05f582d80952c4ced3894cbe6d96a74f3e5589d741372dd4",
+        "size": 252,
         "version": 0,
         "nonce": 969006668,
-        "sender": "NVVwFw6XyhtRCFQ8SpUTMdPyYt4Vd9A1XQ",
+        "sender": "NikvsLcNP1jWhrFPrfS3n4spEASgdNYTG2",
         "sysfee": "100000000",
         "netfee": "1272390",
         "validuntilblock": 2104625,
+        "signers": [
+          {
+            "account": "0xe19de267a37a71734478f512b3e92c79fc3695fa",
+            "scopes": "CalledByEntry"
+          }
+        ],
         "attributes": [],
         "script": "AwAQpdToAAAADBSZA7DD0pKYj+vl8wagL2VOousWKQwUaSWqVUcSQ5qcYTuhFO+j+sI928oTwAwIdHJhbnNmZXIMFDt9NxHG8Mz5sdypA9G/odiW8SOMQWJ9W1I5",
         "witnesses": [
@@ -524,7 +545,7 @@
     }
   },
   {
-    "Name": "getstorage",
+    "Name": "getstorageasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getstorage",
@@ -538,7 +559,7 @@
     }
   },
   {
-    "Name": "getstorage",
+    "Name": "getstorageasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getstorage",
@@ -552,7 +573,7 @@
     }
   },
   {
-    "Name": "gettransactionheight",
+    "Name": "gettransactionheightasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "gettransactionheight",
@@ -566,10 +587,10 @@
     }
   },
   {
-    "Name": "getvalidators",
+    "Name": "getnextblockvalidatorsasync",
     "Request": {
       "jsonrpc": "2.0",
-      "method": "getvalidators",
+      "method": "getnextblockvalidators",
       "params": [],
       "id": 1
     },
@@ -588,7 +609,7 @@
 
 
   {
-    "Name": "getconnectioncount",
+    "Name": "getconnectioncountasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getconnectioncount",
@@ -602,7 +623,7 @@
     }
   },
   {
-    "Name": "getpeers",
+    "Name": "getpeersasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getpeers",
@@ -634,7 +655,7 @@
     }
   },
   {
-    "Name": "getversion",
+    "Name": "getversionasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getversion",
@@ -645,6 +666,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
+        "magic":  0,
         "tcpport": 20333,
         "wsport": 20334,
         "nonce": 592651621,
@@ -653,11 +675,11 @@
     }
   },
   {
-    "Name": "sendrawtransaction",
+    "Name": "sendrawtransactionasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "sendrawtransaction",
-      "params": [ "00142449186925aa554712439a9c613ba114efa3fac23ddbca00e1f50500000000a65a1300000000001d20200000590200e1f5050c149903b0c3d292988febe5f306a02f654ea2eb16290c146925aa554712439a9c613ba114efa3fac23ddbca13c00c087472616e736665720c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b523901420c4076507ef5922e84aac57f09cb699ecbb10bc3d9c06ef908bed812c35fd2651531de27091f1e6e81566454fcc1c5f129d1051b08704c3fec3f6ed793563cfd30bb290c2103aa052fbcb8e5b33a4eefd662536f8684641f04109f1d5e69cdda6f084890286a0b410a906ad4" ],
+      "params": [ "0089d9a541587389000000000046e71300000000007b212000011c0357464b777ecf6b5f3ac3893ace1f8b1621f6100325059ecb4878d3a875f91c51ceded330d4575fdee3137eddba5f6485cad334a79bdb67c43273171fbcaf41d684c7d4ad6ee0d99da9707b9d1f0c8e660054180c14e3137eddba5f6485cad334a79bdb67c43273171f0c141c0357464b777ecf6b5f3ac3893ace1f8b1621f613c00c087472616e736665720c14bcaf41d684c7d4ad6ee0d99da9707b9d1f0c8e6641627d5b5201420c40b90107fe5d251a9ef10b22c3bb0d329c0fa8f1d0d1aab8ad430837c069cc2818887c4c387319a55837d72c997f6112698acf80c346c9bb4638d78b0c2623778c290c210222d8515184c7d62ffa99b829aeb4938c4704ecb0dd7e340e842e9df1218263430b4195440d78" ],
       "id": 1
     },
     "Response": {
@@ -669,7 +691,7 @@
     }
   },
   {
-    "Name": "submitblock",
+    "Name": "submitblockasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "submitblock",
@@ -687,7 +709,7 @@
 
 
   {
-    "Name": "invokefunction",
+    "Name": "invokefunctionasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "invokefunction",
@@ -721,36 +743,78 @@
     }
   },
   {
-    "Name": "invokescript",
+    "Name": "invokescriptasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "invokescript",
-      "params": [ "10c30c046e616d650c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0673796d626f6c0c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0b746f74616c537570706c790c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52" ],
+      "params": [ "EMMMBG5hbWUMFDt9NxHG8Mz5sdypA9G/odiW8SOMQWJ9W1IQwwwGc3ltYm9sDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtSEMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtSEMMMC3RvdGFsU3VwcGx5DBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS" ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "script": "10c30c046e616d650c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0673796d626f6c0c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0b746f74616c537570706c790c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52",
+        "script": "EMMMBG5hbWUMFDt9NxHG8Mz5sdypA9G/odiW8SOMQWJ9W1IQwwwGc3ltYm9sDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtSEMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtSEMMMC3RvdGFsU3VwcGx5DBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS",
         "state": "HALT",
         "gasconsumed": "5061560",
         "stack": [
           {
-            "type": "ByteArray",
-            "value": "R0FT"
-          },
-          {
-            "type": "ByteArray",
-            "value": "Z2Fz"
-          },
-          {
-            "type": "Integer",
-            "value": "8"
-          },
-          {
-            "type": "Integer",
-            "value": "3001101329992600"
+            "type": "Array",
+            "value": [
+              {
+                "type": "ByteString",
+                "value": "dGVzdA=="
+              },
+              {
+                "type": "InteropInterface"
+              },
+              {
+                "type": "Integer",
+                "value": "1"
+              },
+              {
+                "type": "Buffer",
+                "value": "CAwiNQw="
+              },
+              {
+                "type": "Array",
+                "value": [
+                  {
+                    "type": "ByteString",
+                    "value": "YmI="
+                  },
+                  {
+                    "type": "ByteString",
+                    "value": "Y2Mw"
+                  }
+                ]
+              },
+              {
+                "type": "Map",
+                "value": [
+                  {
+                    "key": {
+                      "type": "Integer",
+                      "value": "2"
+                    },
+                    "value": {
+                      "type": "Integer",
+                      "value": "12"
+                    }
+                  },
+                  {
+                    "key": {
+                      "type": "Integer",
+                      "value": "0"
+                    },
+                    "value": {
+                      "type": "Integer",
+                      "value": "24"
+                    }
+                  }
+                ]
+              }
+            ]
           }
         ],
         "tx": "00769d16556925aa554712439a9c613ba114efa3fac23ddbca00e1f505000000009e021400000000005620200000009910c30c046e616d650c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0673796d626f6c0c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0b746f74616c537570706c790c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5201420c40c848d0fcbf5e6a820508242ea8b7ccbeed3caefeed5db570537279c2154f7cfd8b0d8f477f37f4e6ca912935b732684d57c455dff7aa525ad4ab000931f22208290c2103aa052fbcb8e5b33a4eefd662536f8684641f04109f1d5e69cdda6f084890286a0b410a906ad4"
@@ -759,7 +823,7 @@
   },
 
   {
-    "Name": "getunclaimedgas",
+    "Name": "getunclaimedgasasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getunclaimedgas",
@@ -777,7 +841,7 @@
   },
 
   {
-    "Name": "listplugins",
+    "Name": "listpluginsasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "listplugins",
@@ -818,7 +882,7 @@
     }
   },
   {
-    "Name": "validateaddress",
+    "Name": "validateaddressasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "validateaddress",
@@ -837,7 +901,7 @@
 
 
   {
-    "Name": "closewallet",
+    "Name": "closewalletasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "closewallet",
@@ -851,7 +915,7 @@
     }
   },
   {
-    "Name": "dumpprivkey",
+    "Name": "dumpprivkeyasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "dumpprivkey",
@@ -865,18 +929,18 @@
     }
   },
   {
-    "Name": "invokescript",
+    "Name": "invokescriptasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "invokescript",
-      "params": [ "10c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52" ],
+      "params": [ "EMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS" ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "script": "10c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52",
+        "script": "EMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS",
         "state": "HALT",
         "gasconsumed": "5061560",
         "stack": [
@@ -890,7 +954,7 @@
     }
   },
   {
-    "Name": "getnewaddress",
+    "Name": "getnewaddressasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getnewaddress",
@@ -904,7 +968,7 @@
     }
   },
   {
-    "Name": "getwalletbalance",
+    "Name": "getwalletbalanceasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getwalletbalance",
@@ -920,7 +984,7 @@
     }
   },
   {
-    "Name": "getwalletunclaimedgas",
+    "Name": "getwalletunclaimedgasasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getwalletunclaimedgas",
@@ -934,7 +998,7 @@
     }
   },
   {
-    "Name": "importprivkey",
+    "Name": "importprivkeyasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "importprivkey",
@@ -953,7 +1017,7 @@
     }
   },
   {
-    "Name": "listaddress",
+    "Name": "listaddressasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "listaddress",
@@ -980,7 +1044,7 @@
     }
   },
   {
-    "Name": "openwallet",
+    "Name": "openwalletasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "openwallet",
@@ -994,7 +1058,7 @@
     }
   },
   {
-    "Name": "sendfrom",
+    "Name": "sendfromasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "sendfrom",
@@ -1031,7 +1095,7 @@
     }
   },
   {
-    "Name": "sendmany",
+    "Name": "sendmanyasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "sendmany",
@@ -1090,7 +1154,7 @@
     }
   },
   {
-    "Name": "sendtoaddress",
+    "Name": "sendtoaddressasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "sendtoaddress",
@@ -1133,7 +1197,7 @@
 
 
   {
-    "Name": "getapplicationlog",
+    "Name": "getapplicationlogasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getapplicationlog",
@@ -1142,51 +1206,154 @@
     },
     "Response": {
       "jsonrpc": "2.0",
-      "id": 1,
+      "id": "1",
       "result": {
-        "txid": "0x183cd84359cd9f8b956afcd02403ec07361c1dba55f0800241b4ef2b28e88bbb",
+        "txid": "0xe36f62923deb64376e5e982e19b60afc65faca8d9e8eb71ac12f7298ce32ef7b",
         "trigger": "Application",
         "vmstate": "HALT",
-        "gasconsumed": "9007810",
-        "stack": [],
+        "gasconsumed": "5814860",
+        "stack": [
+          {
+            "type": "Array",
+            "value": [
+              {
+                "type": "Any"
+              },
+              {
+                "type": "Integer",
+                "value": "1"
+              },
+              {
+                "type": "Integer",
+                "value": "1223"
+              },
+              {
+                "type": "ByteString",
+                "value": "dGVzdHFxd2FzZGFz"
+              },
+              {
+                "type": "Buffer",
+                "value": "CAwiNQw="
+              },
+              {
+                "type": "Array",
+                "value": [
+                  {
+                    "type": "ByteString",
+                    "value": "YWE="
+                  },
+                  {
+                    "type": "ByteString",
+                    "value": "YmI="
+                  },
+                  {
+                    "type": "ByteString",
+                    "value": "Y2Mw"
+                  }
+                ]
+              },
+              {
+                "type": "Map",
+                "value": [
+                  {
+                    "key": {
+                      "type": "Integer",
+                      "value": "2"
+                    },
+                    "value": {
+                      "type": "Integer",
+                      "value": "12"
+                    }
+                  },
+                  {
+                    "key": {
+                      "type": "Integer",
+                      "value": "0"
+                    },
+                    "value": {
+                      "type": "Integer",
+                      "value": "24"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ],
         "notifications": [
           {
-            "contract": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
-            "eventname": "Transfer",
+            "contract": "0xbfe215933f29b29dacf0e8383722a62974ac8aa6",
+            "eventname": "event_name",
             "state": {
               "type": "Array",
               "value": [
                 {
-                  "type": "Any"
-                },
-                {
-                  "type": "ByteArray",
-                  "value": "eU9We10tADBFvus3caGe5hjcaNE="
-                },
-                {
-                  "type": "Integer",
-                  "value": "6321697534537"
-                }
-              ]
-            }
-          },
-          {
-            "contract": "0x9bde8f209c88dd0e7ca3bf0af0f476cdd8207789",
-            "eventname": "Transfer",
-            "state": {
-              "type": "Array",
-              "value": [
-                {
-                  "type": "ByteArray",
-                  "value": "eU9We10tADBFvus3caGe5hjcaNE="
-                },
-                {
-                  "type": "ByteArray",
-                  "value": "eU9We10tADBFvus3caGe5hjcaNE="
-                },
-                {
-                  "type": "Integer",
-                  "value": "99999961"
+                  "type": "Array",
+                  "value": [
+                    {
+                      "type": "Array",
+                      "value": [
+                        {
+                          "type": "Integer",
+                          "value": "1"
+                        },
+                        {
+                          "type": "Integer",
+                          "value": "1223"
+                        },
+                        {
+                          "type": "ByteString",
+                          "value": "dGVzdHFxd2FzZGFz"
+                        },
+                        {
+                          "type": "Buffer",
+                          "value": "CAwiNQw="
+                        },
+                        {
+                          "type": "Array",
+                          "value": [
+                            {
+                              "type": "ByteString",
+                              "value": "YWE="
+                            },
+                            {
+                              "type": "ByteString",
+                              "value": "YmI="
+                            },
+                            {
+                              "type": "ByteString",
+                              "value": "Y2Mw"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "Map",
+                          "value": [
+                            {
+                              "key": {
+                                "type": "Integer",
+                                "value": "2"
+                              },
+                              "value": {
+                                "type": "Integer",
+                                "value": "12"
+                              }
+                            },
+                            {
+                              "key": {
+                                "type": "Integer",
+                                "value": "0"
+                              },
+                              "value": {
+                                "type": "Integer",
+                                "value": "24"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
@@ -1196,7 +1363,7 @@
     }
   },
   {
-    "Name": "getnep5transfers",
+    "Name": "getnep5transfersasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getnep5transfers",
@@ -1243,7 +1410,54 @@
     }
   },
   {
-    "Name": "getnep5balances",
+    "Name": "getnep5transfersasync_with_null_transferaddress",
+    "Request": {
+      "jsonrpc": "2.0",
+      "method": "getnep5transfers",
+      "params": [ "Ncb7jVsYWBt1q5T5k3ZTP8bn5eK4DuanLd", 0, 1868595301000 ],
+      "id": 1
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "sent": [
+          {
+            "timestamp": 1579250114541,
+            "assethash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
+            "transferaddress": null,
+            "amount": "1000000000",
+            "blockindex": 603,
+            "transfernotifyindex": 0,
+            "txhash": "0x5e177b8d1dc33e9103c0cfd42f6dbf4efbe43029e2d6a18ea5ba0cb8437056b3"
+          },
+          {
+            "timestamp": 1579406581635,
+            "assethash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
+            "transferaddress": "Ncb7jVsYWBt1q5T5k3ZTP8bn5eK4DuanLd",
+            "amount": "1000000000",
+            "blockindex": 1525,
+            "transfernotifyindex": 0,
+            "txhash": "0xc9c618b48972b240e0058d97b8d79b807ad51015418c84012765298526aeb77d"
+          }
+        ],
+        "received": [
+          {
+            "timestamp": 1579250114541,
+            "assethash": "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b",
+            "transferaddress": null,
+            "amount": "1000000000",
+            "blockindex": 603,
+            "transfernotifyindex": 0,
+            "txhash": "0x5e177b8d1dc33e9103c0cfd42f6dbf4efbe43029e2d6a18ea5ba0cb8437056b3"
+          }
+        ],
+        "address": "Ncb7jVsYWBt1q5T5k3ZTP8bn5eK4DuanLd"
+      }
+    }
+  },
+  {
+    "Name": "getnep5balancesasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getnep5balances",

@@ -20,8 +20,16 @@ namespace Neo.Plugins.Storage
         public Store(string path)
         {
             var families = new ColumnFamilies();
-            for (int x = 0; x <= byte.MaxValue; x++)
-                families.Add(new ColumnFamilies.Descriptor(x.ToString(), new ColumnFamilyOptions()));
+
+            try
+            {
+                foreach (var family in RocksDb.ListColumnFamilies(Options.Default, Path.GetFullPath(path)))
+                {
+                    families.Add(new ColumnFamilies.Descriptor(family, new ColumnFamilyOptions()));
+                }
+            }
+            catch { }
+
             db = RocksDb.Open(Options.Default, Path.GetFullPath(path), families);
 
             ColumnFamilyHandle defaultFamily = db.GetDefaultColumnFamily();
@@ -82,38 +90,42 @@ namespace Neo.Plugins.Storage
             return new Snapshot(this, db);
         }
 
-        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] prefix, SeekDirection direction = SeekDirection.Forward)
+        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] keyOrPrefix, SeekDirection direction = SeekDirection.Forward)
         {
-            using var it = db.NewIterator(GetFamily(table), Options.ReadDefault);
-            for (it.Seek(prefix); it.Valid();)
-            {
-                yield return (it.Key(), it.Value());
+            if (keyOrPrefix == null) keyOrPrefix = Array.Empty<byte>();
 
-                if (direction == SeekDirection.Forward)
-                    it.Next();
-                else
-                    it.Prev();
-            }
+            using var it = db.NewIterator(GetFamily(table), Options.ReadDefault);
+            if (direction == SeekDirection.Forward)
+                for (it.Seek(keyOrPrefix); it.Valid(); it.Next())
+                    yield return (it.Key(), it.Value());
+            else
+                for (it.SeekForPrev(keyOrPrefix); it.Valid(); it.Prev())
+                    yield return (it.Key(), it.Value());
+        }
+
+        public bool Contains(byte table, byte[] key)
+        {
+            return db.Get(key ?? Array.Empty<byte>(), GetFamily(table), Options.ReadDefault) != null;
         }
 
         public byte[] TryGet(byte table, byte[] key)
         {
-            return db.Get(key, GetFamily(table), Options.ReadDefault);
+            return db.Get(key ?? Array.Empty<byte>(), GetFamily(table), Options.ReadDefault);
         }
 
         public void Delete(byte table, byte[] key)
         {
-            db.Remove(key, GetFamily(table), Options.WriteDefault);
+            db.Remove(key ?? Array.Empty<byte>(), GetFamily(table), Options.WriteDefault);
         }
 
         public void Put(byte table, byte[] key, byte[] value)
         {
-            db.Put(key, value, GetFamily(table), Options.WriteDefault);
+            db.Put(key ?? Array.Empty<byte>(), value, GetFamily(table), Options.WriteDefault);
         }
 
         public void PutSync(byte table, byte[] key, byte[] value)
         {
-            db.Put(key, value, GetFamily(table), Options.WriteDefaultSync);
+            db.Put(key ?? Array.Empty<byte>(), value, GetFamily(table), Options.WriteDefaultSync);
         }
     }
 }

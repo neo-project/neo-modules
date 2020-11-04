@@ -57,6 +57,11 @@ namespace Neo.Plugins
             return TryGetInternal(key) ?? throw new InvalidOperationException();
         }
 
+        protected override bool ContainsInternal(TKey key)
+        {
+            return db.Contains(options, CreateKey(prefix, key));
+        }
+
         protected override TValue TryGetInternal(TKey key)
         {
             return db.Get(options, CreateKey(prefix, key))?.AsSerializable<TValue>();
