@@ -8,6 +8,7 @@ using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
+using Neo.SmartContract.Manifest;
 using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
@@ -84,13 +85,21 @@ namespace Neo.Plugins
             return json;
         }
 
-        private JObject GetVerificationResult(UInt160 scriptHash, Signers signers = null)
+        private JObject GetVerificationResult(UInt160 scriptHash, ContractParameter[] args)
         {
             var snapshot = Blockchain.Singleton.GetSnapshot();
             var contract = snapshot.Contracts.TryGet(scriptHash);
-            var engine = ApplicationEngine.Create(TriggerType.Verification, new Transaction(), snapshot);
+
+            var init = contract.Manifest.Abi.GetMethod("_initialize");
+            using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, new Transaction(), snapshot.Clone());
             var context = engine.LoadScript(contract.Script, CallFlags.None, contract.Manifest.Abi.GetMethod("verify").Offset);
-            engine.LoadScript(Array.Empty<byte>(), CallFlags.None);
+            if (init != null) engine.LoadContext(context.Clone(init.Offset), false);
+            byte[] script;
+            using (ScriptBuilder sb = new ScriptBuilder())
+            {
+                script = sb.EmitAppCall(new UInt160(contract.Script), "verify", args).ToArray();
+            }
+            engine.LoadScript(script, CallFlags.None);
 
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(contract.Script);
@@ -107,7 +116,7 @@ namespace Neo.Plugins
             }
             if (engine.State != VMState.FAULT)
             {
-                ProcessInvokeWithWallet(json, signers);
+                ProcessInvokeWithWallet(json);
             }
             return json;
         }
@@ -137,17 +146,20 @@ namespace Neo.Plugins
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
             Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3]) : null;
 
-            byte[] script = new byte[0];
-            if (operation.ToLower() == "verify")
+            byte[] script;
+            using (ScriptBuilder sb = new ScriptBuilder())
             {
-                return GetVerificationResult(script_hash, signers);
-            }
-            else
-            {
-                using ScriptBuilder sb = new ScriptBuilder();
                 script = sb.EmitAppCall(script_hash, operation, args).ToArray();
-                return GetInvokeResult(script, signers);
             }
+            return GetInvokeResult(script, signers);
+        }
+
+        [RpcMethod]
+        protected virtual JObject InvokeContractVerify(JArray _params)
+        {
+            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
+            ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[1]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
+            return GetVerificationResult(script_hash, args);
         }
 
         [RpcMethod]
