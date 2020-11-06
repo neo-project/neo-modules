@@ -2,6 +2,7 @@ using Neo.SmartContract.Native;
 using Neo.VM;
 using System.Linq;
 using System.Threading.Tasks;
+using Neo.IO.Json;
 
 namespace Neo.Network.RPC
 {
@@ -24,7 +25,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<uint> GetMaxTransactionsPerBlockAsync()
         {
-            var result = await TestInvokeAsync(scriptHash, "getMaxTransactionsPerBlock").ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, RpcClient.GetRpcName()).ConfigureAwait(false);
             return (uint)result.Stack.Single().GetInteger();
         }
 
@@ -34,7 +35,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<uint> GetMaxBlockSizeAsync()
         {
-            var result = await TestInvokeAsync(scriptHash, "getMaxBlockSize").ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, RpcClient.GetRpcName()).ConfigureAwait(false);
             return (uint)result.Stack.Single().GetInteger();
         }
 
@@ -44,7 +45,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<long> GetFeePerByteAsync()
         {
-            var result = await TestInvokeAsync(scriptHash, "getFeePerByte").ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, RpcClient.GetRpcName()).ConfigureAwait(false);
             return (long)result.Stack.Single().GetInteger();
         }
 
@@ -52,11 +53,10 @@ namespace Neo.Network.RPC
         /// Get Ploicy Blocked Accounts
         /// </summary>
         /// <returns></returns>
-        public async Task<UInt160[]> GetBlockedAccountsAsync()
+        public async Task<bool> IsBlockedAsync(UInt160 account)
         {
-            var result = await TestInvokeAsync(scriptHash, "getBlockedAccounts").ConfigureAwait(false);
-            var array = (VM.Types.Array)result.Stack.Single();
-            return array.Select(p => new UInt160(p.GetSpan().ToArray())).ToArray();
+            var result = await TestInvokeAsync(scriptHash, RpcClient.GetRpcName(), new object[] { account }).ConfigureAwait(false);
+            return result.Stack.Single().GetBoolean();
         }
     }
 }

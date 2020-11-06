@@ -95,7 +95,7 @@ namespace Neo.Network.RPC
             return response.Result;
         }
 
-        public static string GetRpcName()
+        internal static string GetRpcName()
         {
             var methodName = "";
             for (int i = 1; i < 5; i++)
