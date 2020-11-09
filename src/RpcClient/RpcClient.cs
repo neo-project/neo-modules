@@ -98,7 +98,7 @@ namespace Neo.Network.RPC
         internal static string GetRpcName()
         {
             var methodName = "";
-            for (int i = 1; i < 5; i++)
+            for (int i = 1; i <= 5; i++)
             {
                 var method = new System.Diagnostics.StackTrace(true).GetFrame(i).GetMethod();
                 if (method.IsPublic && !method.IsGenericMethod)

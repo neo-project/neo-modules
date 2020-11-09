@@ -31,7 +31,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<BigInteger> BalanceOfAsync(UInt160 scriptHash, UInt160 account)
         {
-            var result = await TestInvokeAsync(scriptHash, RpcClient.GetRpcName(), account).ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, "balanceOf", account).ConfigureAwait(false);
             BigInteger balance = result.Stack.Single().GetInteger();
             return balance;
         }
@@ -43,7 +43,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<string> NameAsync(UInt160 scriptHash)
         {
-            var result = await TestInvokeAsync(scriptHash, RpcClient.GetRpcName()).ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, "name").ConfigureAwait(false);
             return result.Stack.Single().GetString();
         }
 
@@ -54,7 +54,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<string> SymbolAsync(UInt160 scriptHash)
         {
-            var result = await TestInvokeAsync(scriptHash, RpcClient.GetRpcName()).ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, "symbol").ConfigureAwait(false);
             return result.Stack.Single().GetString();
         }
 
@@ -65,7 +65,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<byte> DecimalsAsync(UInt160 scriptHash)
         {
-            var result = await TestInvokeAsync(scriptHash, RpcClient.GetRpcName()).ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, "decimals").ConfigureAwait(false);
             return (byte)result.Stack.Single().GetInteger();
         }
 
@@ -76,7 +76,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<BigInteger> TotalSupplyAsync(UInt160 scriptHash)
         {
-            var result = await TestInvokeAsync(scriptHash, RpcClient.GetRpcName()).ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, "totalSupply").ConfigureAwait(false);
             return result.Stack.Single().GetInteger();
         }
 
