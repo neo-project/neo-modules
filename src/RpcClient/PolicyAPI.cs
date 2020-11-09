@@ -25,7 +25,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<uint> GetMaxTransactionsPerBlockAsync()
         {
-            var result = await TestInvokeAsync(scriptHash, RpcClient.GetRpcName()).ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, "getMaxTransactionsPerBlock").ConfigureAwait(false);
             return (uint)result.Stack.Single().GetInteger();
         }
 
@@ -35,7 +35,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<uint> GetMaxBlockSizeAsync()
         {
-            var result = await TestInvokeAsync(scriptHash, RpcClient.GetRpcName()).ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, "getMaxBlockSize").ConfigureAwait(false);
             return (uint)result.Stack.Single().GetInteger();
         }
 
@@ -45,7 +45,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<long> GetFeePerByteAsync()
         {
-            var result = await TestInvokeAsync(scriptHash, RpcClient.GetRpcName()).ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, "getFeePerByte").ConfigureAwait(false);
             return (long)result.Stack.Single().GetInteger();
         }
 
@@ -55,7 +55,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<bool> IsBlockedAsync(UInt160 account)
         {
-            var result = await TestInvokeAsync(scriptHash, RpcClient.GetRpcName(), new object[] { account }).ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, "isBlocked", new object[] { account }).ConfigureAwait(false);
             return result.Stack.Single().GetBoolean();
         }
     }
