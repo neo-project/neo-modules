@@ -57,13 +57,13 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
-        public async Task TestGetBlockedAccounts()
+        public async Task TestIsBlocked()
         {
-            byte[] testScript = NativeContract.Policy.Hash.MakeScript("getBlockedAccounts");
-            UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Array, Value = new[] { new ContractParameter { Type = ContractParameterType.Hash160, Value = UInt160.Zero } } });
+            byte[] testScript = NativeContract.Policy.Hash.MakeScript("isBlocked", UInt160.Zero);
+            UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Boolean, Value = true } );
 
-            var result = await policyAPI.GetBlockedAccountsAsync();
-            Assert.AreEqual(UInt160.Zero, result[0]);
+            var result = await policyAPI.IsBlockedAsync(UInt160.Zero);
+            Assert.AreEqual(true, result);
         }
     }
 }
