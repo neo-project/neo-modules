@@ -2,6 +2,7 @@ using Neo.SmartContract.Native;
 using Neo.VM;
 using System.Linq;
 using System.Threading.Tasks;
+using Neo.IO.Json;
 
 namespace Neo.Network.RPC
 {
@@ -52,11 +53,10 @@ namespace Neo.Network.RPC
         /// Get Ploicy Blocked Accounts
         /// </summary>
         /// <returns></returns>
-        public async Task<UInt160[]> GetBlockedAccountsAsync()
+        public async Task<bool> IsBlockedAsync(UInt160 account)
         {
-            var result = await TestInvokeAsync(scriptHash, "getBlockedAccounts").ConfigureAwait(false);
-            var array = (VM.Types.Array)result.Stack.Single();
-            return array.Select(p => new UInt160(p.GetSpan().ToArray())).ToArray();
+            var result = await TestInvokeAsync(scriptHash, "isBlocked", new object[] { account }).ConfigureAwait(false);
+            return result.Stack.Single().GetBoolean();
         }
     }
 }
