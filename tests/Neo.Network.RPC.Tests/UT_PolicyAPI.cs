@@ -60,8 +60,7 @@ namespace Neo.Network.RPC.Tests
         public async Task TestIsBlocked()
         {
             byte[] testScript = NativeContract.Policy.Hash.MakeScript("isBlocked", UInt160.Zero);
-            UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Boolean, Value = true } );
-
+            UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Boolean, Value = true });
             var result = await policyAPI.IsBlockedAsync(UInt160.Zero);
             Assert.AreEqual(true, result);
         }
