@@ -450,9 +450,9 @@ namespace Neo.Network.RPC
         /// <returns>new address as string</returns>
         public async Task<BigDecimal> GetWalletBalanceAsync(string assetId)
         {
-            byte decimals = await new Nep5API(this).DecimalsAsync(UInt160.Parse(assetId.AsScriptHash())).ConfigureAwait(false);
             var result = await RpcSendAsync(GetRpcName(), assetId).ConfigureAwait(false);
             BigInteger balance = BigInteger.Parse(result["balance"].AsString());
+            byte decimals = await new Nep5API(this).DecimalsAsync(UInt160.Parse(assetId.AsScriptHash())).ConfigureAwait(false);
             return new BigDecimal(balance, decimals);
         }
 
