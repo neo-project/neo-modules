@@ -80,7 +80,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject SubmitBlock(JArray _params)
         {
-            Block block = _params[0].AsString().HexToBytes().AsSerializable<Block>();
+            Block block = Convert.FromBase64String(_params[0].AsString()).AsSerializable<Block>();
             RelayResult reason = system.Blockchain.Ask<RelayResult>(block).Result;
             return GetRelayResult(reason.Result, block.Hash);
         }
