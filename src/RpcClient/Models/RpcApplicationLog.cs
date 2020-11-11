@@ -18,7 +18,7 @@ namespace Neo.Network.RPC.Models
         public JObject ToJson()
         {
             JObject json = new JObject();
-            if(TxId != null)
+            if (TxId != null)
                 json["txid"] = TxId.ToString();
             if (BlockHash != null)
                 json["blockhash"] = BlockHash.ToString();

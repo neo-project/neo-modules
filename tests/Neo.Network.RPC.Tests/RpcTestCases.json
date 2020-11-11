@@ -666,7 +666,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "magic":  0,
+        "magic": 0,
         "tcpport": 20333,
         "wsport": 20334,
         "nonce": 592651621,
