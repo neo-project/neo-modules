@@ -20,6 +20,7 @@ namespace Neo.Network.RPC.Models
             JObject json = new JObject();
             json["txid"] = TxId?.ToString();
             json["blockhash"] = BlockHash?.ToString();
+            json["executions"] = Executions.Select(p => p.ToJson()).ToArray();
             return json;
         }
 
