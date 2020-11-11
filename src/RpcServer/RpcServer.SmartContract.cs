@@ -120,7 +120,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject InvokeScript(JArray _params)
         {
-            byte[] script = _params[0].AsString().HexToBytes();
+            byte[] script = Convert.FromBase64String(_params[0].AsString());
             Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1]) : null;
             return GetInvokeResult(script, signers);
         }
