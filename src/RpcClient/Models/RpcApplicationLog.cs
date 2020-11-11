@@ -18,8 +18,10 @@ namespace Neo.Network.RPC.Models
         public JObject ToJson()
         {
             JObject json = new JObject();
-            json["txid"] = TxId?.ToString();
-            json["blockhash"] = BlockHash?.ToString();
+            if(TxId != null)
+                json["txid"] = TxId.ToString();
+            if (BlockHash != null)
+                json["blockhash"] = BlockHash.ToString();
             json["executions"] = Executions.Select(p => p.ToJson()).ToArray();
             return json;
         }

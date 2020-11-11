@@ -1209,145 +1209,149 @@
       "id": "1",
       "result": {
         "txid": "0xe36f62923deb64376e5e982e19b60afc65faca8d9e8eb71ac12f7298ce32ef7b",
-        "trigger": "Application",
-        "vmstate": "HALT",
-        "gasconsumed": "5814860",
-        "stack": [
+        "executions": [
           {
-            "type": "Array",
-            "value": [
-              {
-                "type": "Any"
-              },
-              {
-                "type": "Integer",
-                "value": "1"
-              },
-              {
-                "type": "Integer",
-                "value": "1223"
-              },
-              {
-                "type": "ByteString",
-                "value": "dGVzdHFxd2FzZGFz"
-              },
-              {
-                "type": "Buffer",
-                "value": "CAwiNQw="
-              },
+            "trigger": "Application",
+            "vmstate": "HALT",
+            "gasconsumed": "5814860",
+            "stack": [
               {
                 "type": "Array",
                 "value": [
                   {
-                    "type": "ByteString",
-                    "value": "YWE="
+                    "type": "Any"
+                  },
+                  {
+                    "type": "Integer",
+                    "value": "1"
+                  },
+                  {
+                    "type": "Integer",
+                    "value": "1223"
                   },
                   {
                     "type": "ByteString",
-                    "value": "YmI="
+                    "value": "dGVzdHFxd2FzZGFz"
                   },
                   {
-                    "type": "ByteString",
-                    "value": "Y2Mw"
-                  }
-                ]
-              },
-              {
-                "type": "Map",
-                "value": [
-                  {
-                    "key": {
-                      "type": "Integer",
-                      "value": "2"
-                    },
-                    "value": {
-                      "type": "Integer",
-                      "value": "12"
-                    }
+                    "type": "Buffer",
+                    "value": "CAwiNQw="
                   },
                   {
-                    "key": {
-                      "type": "Integer",
-                      "value": "0"
-                    },
-                    "value": {
-                      "type": "Integer",
-                      "value": "24"
-                    }
+                    "type": "Array",
+                    "value": [
+                      {
+                        "type": "ByteString",
+                        "value": "YWE="
+                      },
+                      {
+                        "type": "ByteString",
+                        "value": "YmI="
+                      },
+                      {
+                        "type": "ByteString",
+                        "value": "Y2Mw"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "Map",
+                    "value": [
+                      {
+                        "key": {
+                          "type": "Integer",
+                          "value": "2"
+                        },
+                        "value": {
+                          "type": "Integer",
+                          "value": "12"
+                        }
+                      },
+                      {
+                        "key": {
+                          "type": "Integer",
+                          "value": "0"
+                        },
+                        "value": {
+                          "type": "Integer",
+                          "value": "24"
+                        }
+                      }
+                    ]
                   }
                 ]
               }
-            ]
-          }
-        ],
-        "notifications": [
-          {
-            "contract": "0xbfe215933f29b29dacf0e8383722a62974ac8aa6",
-            "eventname": "event_name",
-            "state": {
-              "type": "Array",
-              "value": [
-                {
+            ],
+            "notifications": [
+              {
+                "contract": "0xbfe215933f29b29dacf0e8383722a62974ac8aa6",
+                "eventname": "event_name",
+                "state": {
                   "type": "Array",
                   "value": [
                     {
                       "type": "Array",
                       "value": [
                         {
-                          "type": "Integer",
-                          "value": "1"
-                        },
-                        {
-                          "type": "Integer",
-                          "value": "1223"
-                        },
-                        {
-                          "type": "ByteString",
-                          "value": "dGVzdHFxd2FzZGFz"
-                        },
-                        {
-                          "type": "Buffer",
-                          "value": "CAwiNQw="
-                        },
-                        {
                           "type": "Array",
                           "value": [
                             {
-                              "type": "ByteString",
-                              "value": "YWE="
+                              "type": "Integer",
+                              "value": "1"
+                            },
+                            {
+                              "type": "Integer",
+                              "value": "1223"
                             },
                             {
                               "type": "ByteString",
-                              "value": "YmI="
+                              "value": "dGVzdHFxd2FzZGFz"
                             },
                             {
-                              "type": "ByteString",
-                              "value": "Y2Mw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "Map",
-                          "value": [
-                            {
-                              "key": {
-                                "type": "Integer",
-                                "value": "2"
-                              },
-                              "value": {
-                                "type": "Integer",
-                                "value": "12"
-                              }
+                              "type": "Buffer",
+                              "value": "CAwiNQw="
                             },
                             {
-                              "key": {
-                                "type": "Integer",
-                                "value": "0"
-                              },
-                              "value": {
-                                "type": "Integer",
-                                "value": "24"
-                              }
+                              "type": "Array",
+                              "value": [
+                                {
+                                  "type": "ByteString",
+                                  "value": "YWE="
+                                },
+                                {
+                                  "type": "ByteString",
+                                  "value": "YmI="
+                                },
+                                {
+                                  "type": "ByteString",
+                                  "value": "Y2Mw"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "Map",
+                              "value": [
+                                {
+                                  "key": {
+                                    "type": "Integer",
+                                    "value": "2"
+                                  },
+                                  "value": {
+                                    "type": "Integer",
+                                    "value": "12"
+                                  }
+                                },
+                                {
+                                  "key": {
+                                    "type": "Integer",
+                                    "value": "0"
+                                  },
+                                  "value": {
+                                    "type": "Integer",
+                                    "value": "24"
+                                  }
+                                }
+                              ]
                             }
                           ]
                         }
@@ -1355,8 +1359,8 @@
                     }
                   ]
                 }
-              ]
-            }
+              }
+            ]
           }
         ]
       }
