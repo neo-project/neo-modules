@@ -329,7 +329,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public async Task<UInt256> SendRawTransactionAsync(byte[] rawTransaction)
         {
-            var result = await RpcSendAsync(GetRpcName(), rawTransaction.ToHexString()).ConfigureAwait(false);
+            var result = await RpcSendAsync(GetRpcName(), Convert.ToBase64String(rawTransaction)).ConfigureAwait(false);
             return UInt256.Parse(result["hash"].AsString());
         }
 
@@ -346,7 +346,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public async Task<UInt256> SubmitBlockAsync(byte[] block)
         {
-            var result = await RpcSendAsync(GetRpcName(), block.ToHexString()).ConfigureAwait(false);
+            var result = await RpcSendAsync(GetRpcName(), Convert.ToBase64String(block)).ConfigureAwait(false);
             return UInt256.Parse(result["hash"].AsString());
         }
 
