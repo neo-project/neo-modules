@@ -43,7 +43,7 @@ namespace Neo.Plugins
             //Additional optional "trigger" parameter to getapplicationlog for clients to be able to get just one execution result for a block.
             if (_params.Count >= 2 && Enum.TryParse(_params[1].AsString(), true, out TriggerType trigger))
             {
-                var raw = JObject.Parse(Encoding.UTF8.GetString(value));
+                var raw = JObject.Parse(Utility.StrictUTF8.GetString(value));
                 var executions = raw["executions"] as JArray;
                 for (int i = 0; i < executions.Count;)
                 {
@@ -56,7 +56,7 @@ namespace Neo.Plugins
             }
             else
             {
-                return JObject.Parse(Encoding.UTF8.GetString(value));
+                return JObject.Parse(Utility.StrictUTF8.GetString(value));
             }
         }
 
@@ -98,7 +98,7 @@ namespace Neo.Plugins
                 }).ToArray();
 
                 txJson["executions"] = new List<JObject>() { trigger }.ToArray();
-                writeBatch.Put(appExec.Transaction.Hash.ToArray(), Encoding.UTF8.GetBytes(txJson.ToString()));
+                writeBatch.Put(appExec.Transaction.Hash.ToArray(), Utility.StrictUTF8.GetBytes(txJson.ToString()));
             }
 
             //processing log for block
@@ -141,7 +141,7 @@ namespace Neo.Plugins
                     triggerList.Add(trigger);
                 }
                 blockJson["executions"] = triggerList.ToArray();
-                writeBatch.Put(blockHash, Encoding.UTF8.GetBytes(blockJson.ToString()));
+                writeBatch.Put(blockHash, Utility.StrictUTF8.GetBytes(blockJson.ToString()));
             }
             db.Write(WriteOptions.Default, writeBatch);
         }
