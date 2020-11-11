@@ -107,7 +107,7 @@ namespace Neo.Plugins
             {
                 var blockJson = new JObject();
                 var blockHash = snapshot.PersistingBlock.Hash.ToArray();
-                blockJson["blockhash"] = "0x" + blockHash.Reverse().ToArray().ToHexString();
+                blockJson["blockhash"] = snapshot.PersistingBlock.Hash.ToString();
                 var triggerList = new List<JObject>();
                 foreach (var appExec in blocks)
                 {
