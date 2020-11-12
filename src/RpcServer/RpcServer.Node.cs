@@ -7,6 +7,7 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
+using System;
 using System.Linq;
 using static Neo.Ledger.Blockchain;
 
@@ -71,7 +72,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject SendRawTransaction(JArray _params)
         {
-            Transaction tx = _params[0].AsString().HexToBytes().AsSerializable<Transaction>();
+            Transaction tx = Convert.FromBase64String(_params[0].AsString()).AsSerializable<Transaction>();
             RelayResult reason = system.Blockchain.Ask<RelayResult>(tx).Result;
             return GetRelayResult(reason.Result, tx.Hash);
         }
@@ -79,7 +80,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject SubmitBlock(JArray _params)
         {
-            Block block = _params[0].AsString().HexToBytes().AsSerializable<Block>();
+            Block block = Convert.FromBase64String(_params[0].AsString()).AsSerializable<Block>();
             RelayResult reason = system.Blockchain.Ask<RelayResult>(block).Result;
             return GetRelayResult(reason.Result, block.Hash);
         }
