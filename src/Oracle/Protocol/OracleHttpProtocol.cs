@@ -24,11 +24,7 @@ namespace Neo.Plugins
             if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) throw new InvalidOperationException("UrlError");
             if (!AllowPrivateHost && IsInternal(Dns.GetHostEntry(uri.Host))) throw new InvalidOperationException("Access to private host is not allowed");
 
-            using var handler = new HttpClientHandler
-            {
-                // TODO: Accept all certificates
-                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-            };
+            using var handler = new HttpClientHandler();
             using var client = new HttpClient(handler);
             client.DefaultRequestHeaders.Add("Accept", string.Join(",", AllowedFormats));
 
