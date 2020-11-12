@@ -191,7 +191,8 @@ namespace Neo.Plugins
                         tx = null;
                 }
             }
-            result["tx"] = tx?.ToArray().ToHexString();
+            if (tx != null)
+                result["tx"] = Convert.ToBase64String(tx.ToArray());
         }
 
         [RpcMethod]
