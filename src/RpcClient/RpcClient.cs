@@ -329,7 +329,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public async Task<UInt256> SendRawTransactionAsync(byte[] rawTransaction)
         {
-            var result = await RpcSendAsync(GetRpcName(), rawTransaction.ToHexString()).ConfigureAwait(false);
+            var result = await RpcSendAsync(GetRpcName(), Convert.ToBase64String(rawTransaction)).ConfigureAwait(false);
             return UInt256.Parse(result["hash"].AsString());
         }
 
@@ -346,7 +346,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public async Task<UInt256> SubmitBlockAsync(byte[] block)
         {
-            var result = await RpcSendAsync(GetRpcName(), block.ToHexString()).ConfigureAwait(false);
+            var result = await RpcSendAsync(GetRpcName(), Convert.ToBase64String(block)).ConfigureAwait(false);
             return UInt256.Parse(result["hash"].AsString());
         }
 
@@ -450,9 +450,9 @@ namespace Neo.Network.RPC
         /// <returns>new address as string</returns>
         public async Task<BigDecimal> GetWalletBalanceAsync(string assetId)
         {
-            byte decimals = await new Nep5API(this).DecimalsAsync(UInt160.Parse(assetId.AsScriptHash())).ConfigureAwait(false);
             var result = await RpcSendAsync(GetRpcName(), assetId).ConfigureAwait(false);
             BigInteger balance = BigInteger.Parse(result["balance"].AsString());
+            byte decimals = await new Nep5API(this).DecimalsAsync(UInt160.Parse(assetId.AsScriptHash())).ConfigureAwait(false);
             return new BigDecimal(balance, decimals);
         }
 
