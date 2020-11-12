@@ -77,10 +77,10 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject SubmitOracleResponse(JArray _params)
         {
-            ECPoint oraclePub = ECPoint.Parse(_params[0].AsString(), ECCurve.Secp256r1);
+            ECPoint oraclePub = ECPoint.DecodePoint(Convert.FromBase64String(_params[0].AsString()), ECCurve.Secp256r1);
             ulong requestId = (ulong)_params[1].AsNumber();
-            byte[] txSign = _params[2].AsString().HexToBytes();
-            byte[] msgSign = _params[3].AsString().HexToBytes();
+            byte[] txSign = Convert.FromBase64String(_params[2].AsString());
+            byte[] msgSign = Convert.FromBase64String(_params[3].AsString());
 
             var data = oraclePub.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
             if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
@@ -168,7 +168,7 @@ namespace Neo.Plugins
         {
             var message = keyPair.PublicKey.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
             var sign = Crypto.Sign(message, keyPair.PrivateKey, keyPair.PublicKey.EncodePoint(false)[1..]);
-            var param = "\"" + keyPair.PublicKey.ToArray().ToHexString() + "\", " + requestId + ", \"" + txSign.ToHexString() + "\",\"" + sign.ToHexString() + "\"";
+            var param = "\"" + Convert.ToBase64String(keyPair.PublicKey.ToArray()) + "\", " + requestId + ", \"" + Convert.ToBase64String(txSign) + "\",\"" + Convert.ToBase64String(sign) + "\"";
             var content = "{ \"id\": " + (++Counter) + ", \"jsonrpc\": \"2.0\",  \"method\": \"submitoracleresponse\",  \"params\":[" + param + "] }";
 
             foreach (var node in Nodes)
