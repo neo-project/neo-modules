@@ -40,10 +40,10 @@ namespace Neo.Plugins
             if (value is null)
                 throw new RpcException(-100, "Unknown transaction/blockhash");
 
+            var raw = JObject.Parse(Utility.StrictUTF8.GetString(value));
             //Additional optional "trigger" parameter to getapplicationlog for clients to be able to get just one execution result for a block.
             if (_params.Count >= 2 && Enum.TryParse(_params[1].AsString(), true, out TriggerType trigger))
             {
-                var raw = JObject.Parse(Utility.StrictUTF8.GetString(value));
                 var executions = raw["executions"] as JArray;
                 for (int i = 0; i < executions.Count;)
                 {
@@ -52,12 +52,8 @@ namespace Neo.Plugins
                     else
                         i++;
                 }
-                return raw;
             }
-            else
-            {
-                return JObject.Parse(Utility.StrictUTF8.GetString(value));
-            }
+            return raw;
         }
 
         public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
