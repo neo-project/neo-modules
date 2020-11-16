@@ -3,6 +3,7 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
+using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
 using System;
 using System.Collections.Generic;
@@ -329,7 +330,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public async Task<UInt256> SendRawTransactionAsync(byte[] rawTransaction)
         {
-            var result = await RpcSendAsync(GetRpcName(), rawTransaction.ToHexString()).ConfigureAwait(false);
+            var result = await RpcSendAsync(GetRpcName(), Convert.ToBase64String(rawTransaction)).ConfigureAwait(false);
             return UInt256.Parse(result["hash"].AsString());
         }
 
@@ -346,7 +347,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public async Task<UInt256> SubmitBlockAsync(byte[] block)
         {
-            var result = await RpcSendAsync(GetRpcName(), block.ToHexString()).ConfigureAwait(false);
+            var result = await RpcSendAsync(GetRpcName(), Convert.ToBase64String(block)).ConfigureAwait(false);
             return UInt256.Parse(result["hash"].AsString());
         }
 
@@ -450,9 +451,9 @@ namespace Neo.Network.RPC
         /// <returns>new address as string</returns>
         public async Task<BigDecimal> GetWalletBalanceAsync(string assetId)
         {
-            byte decimals = await new Nep5API(this).DecimalsAsync(UInt160.Parse(assetId.AsScriptHash())).ConfigureAwait(false);
             var result = await RpcSendAsync(GetRpcName(), assetId).ConfigureAwait(false);
             BigInteger balance = BigInteger.Parse(result["balance"].AsString());
+            byte decimals = await new Nep5API(this).DecimalsAsync(UInt160.Parse(assetId.AsScriptHash())).ConfigureAwait(false);
             return new BigDecimal(balance, decimals);
         }
 
@@ -540,6 +541,16 @@ namespace Neo.Network.RPC
         public async Task<RpcApplicationLog> GetApplicationLogAsync(string txHash)
         {
             var result = await RpcSendAsync(GetRpcName(), txHash).ConfigureAwait(false);
+            return RpcApplicationLog.FromJson(result);
+        }
+
+        /// <summary>
+        /// Returns the contract log based on the specified txHash. The complete contract logs are stored under the ApplicationLogs directory.
+        /// This method is provided by the plugin ApplicationLogs.
+        /// </summary>
+        public async Task<RpcApplicationLog> GetApplicationLogAsync(string txHash, TriggerType triggerType)
+        {
+            var result = await RpcSendAsync(GetRpcName(), txHash, triggerType).ConfigureAwait(false);
             return RpcApplicationLog.FromJson(result);
         }
 
