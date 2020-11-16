@@ -7,8 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka.TestKit" Version="1.4.5" />
-    <PackageReference Include="Akka.TestKit.Xunit2" Version="1.4.5" />
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
   </ItemGroup>
 
