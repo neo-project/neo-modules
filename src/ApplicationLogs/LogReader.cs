@@ -68,6 +68,7 @@ namespace Neo.Plugins
                 JObject trigger = new JObject();
                 trigger["trigger"] = appExec.Trigger;
                 trigger["vmstate"] = appExec.VMState;
+                trigger["exception"] = appExec.Exception?.InnerException?.Message ?? appExec.Exception?.Message;
                 trigger["gasconsumed"] = appExec.GasConsumed.ToString();
                 try
                 {
