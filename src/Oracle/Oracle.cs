@@ -144,7 +144,7 @@ namespace Neo.Plugins
 
         private bool CheckOracleAvaiblable(StoreView snapshot, out ECPoint[] oracles)
         {
-            oracles = NativeContract.Designate.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height);
+            oracles = NativeContract.Designate.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
             return oracles.Length > 0;
         }
 
@@ -240,7 +240,7 @@ namespace Neo.Plugins
 
             Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
 
-            ECPoint[] oraclePublicKeys = NativeContract.Designate.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height);
+            ECPoint[] oraclePublicKeys = NativeContract.Designate.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
             foreach (var account in Wallet.GetAccounts())
             {
                 var oraclePub = account.GetKey().PublicKey;
@@ -255,9 +255,9 @@ namespace Neo.Plugins
             }
         }
 
-        private Transaction CreateResponseTx(StoreView snapshot, OracleResponse response)
+        public static Transaction CreateResponseTx(StoreView snapshot, OracleResponse response)
         {
-            var oracleNodes = NativeContract.Designate.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height);
+            var oracleNodes = NativeContract.Designate.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
             var request = NativeContract.Oracle.GetRequest(snapshot, response.Id);
             var requestTx = snapshot.Transactions.TryGet(request.OriginalTxid);
             var m = oracleNodes.Length - (oracleNodes.Length - 1) / 3;
@@ -401,7 +401,7 @@ namespace Neo.Plugins
 
         private bool CheckTxSign(StoreView snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> Signs)
         {
-            ECPoint[] nodes = NativeContract.Designate.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height);
+            ECPoint[] nodes = NativeContract.Designate.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
             int m = nodes.Length - (nodes.Length - 1) / 3;
             if (Signs.Count >= m && tx != null)
             {
