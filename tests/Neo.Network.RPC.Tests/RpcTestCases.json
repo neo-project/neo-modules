@@ -666,7 +666,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "magic":  0,
+        "magic": 0,
         "tcpport": 20333,
         "wsport": 20334,
         "nonce": 592651621,
@@ -1201,162 +1201,156 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "getapplicationlog",
-      "params": [ "0x183cd84359cd9f8b956afcd02403ec07361c1dba55f0800241b4ef2b28e88bbb" ],
+      "params": [ "0x6ea186fe714b8168ede3b78461db8945c06d867da649852352dbe7cbf1ba3724" ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
-      "id": "1",
+      "id": 1,
       "result": {
-        "txid": "0xe36f62923deb64376e5e982e19b60afc65faca8d9e8eb71ac12f7298ce32ef7b",
-        "trigger": "Application",
-        "vmstate": "HALT",
-        "gasconsumed": "5814860",
-        "stack": [
+        "blockhash": "0x6ea186fe714b8168ede3b78461db8945c06d867da649852352dbe7cbf1ba3724",
+        "executions": [
           {
-            "type": "Array",
-            "value": [
+            "trigger": "OnPersist",
+            "vmstate": "HALT",
+            "gasconsumed": "2031260",
+            "stack": [],
+            "notifications": [
               {
-                "type": "Any"
-              },
-              {
-                "type": "Integer",
-                "value": "1"
-              },
-              {
-                "type": "Integer",
-                "value": "1223"
-              },
-              {
-                "type": "ByteString",
-                "value": "dGVzdHFxd2FzZGFz"
-              },
-              {
-                "type": "Buffer",
-                "value": "CAwiNQw="
-              },
-              {
-                "type": "Array",
-                "value": [
-                  {
-                    "type": "ByteString",
-                    "value": "YWE="
-                  },
-                  {
-                    "type": "ByteString",
-                    "value": "YmI="
-                  },
-                  {
-                    "type": "ByteString",
-                    "value": "Y2Mw"
-                  }
-                ]
-              },
-              {
-                "type": "Map",
-                "value": [
-                  {
-                    "key": {
-                      "type": "Integer",
-                      "value": "2"
-                    },
-                    "value": {
-                      "type": "Integer",
-                      "value": "12"
-                    }
-                  },
-                  {
-                    "key": {
-                      "type": "Integer",
-                      "value": "0"
-                    },
-                    "value": {
-                      "type": "Integer",
-                      "value": "24"
-                    }
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        "notifications": [
-          {
-            "contract": "0xbfe215933f29b29dacf0e8383722a62974ac8aa6",
-            "eventname": "event_name",
-            "state": {
-              "type": "Array",
-              "value": [
-                {
+                "contract": "0x668e0c1f9d7b70a99dd9e06eadd4c784d641afbc",
+                "eventname": "Transfer",
+                "state": {
                   "type": "Array",
                   "value": [
                     {
-                      "type": "Array",
-                      "value": [
-                        {
-                          "type": "Integer",
-                          "value": "1"
-                        },
-                        {
-                          "type": "Integer",
-                          "value": "1223"
-                        },
-                        {
-                          "type": "ByteString",
-                          "value": "dGVzdHFxd2FzZGFz"
-                        },
-                        {
-                          "type": "Buffer",
-                          "value": "CAwiNQw="
-                        },
-                        {
-                          "type": "Array",
-                          "value": [
-                            {
-                              "type": "ByteString",
-                              "value": "YWE="
-                            },
-                            {
-                              "type": "ByteString",
-                              "value": "YmI="
-                            },
-                            {
-                              "type": "ByteString",
-                              "value": "Y2Mw"
-                            }
-                          ]
-                        },
-                        {
-                          "type": "Map",
-                          "value": [
-                            {
-                              "key": {
-                                "type": "Integer",
-                                "value": "2"
-                              },
-                              "value": {
-                                "type": "Integer",
-                                "value": "12"
-                              }
-                            },
-                            {
-                              "key": {
-                                "type": "Integer",
-                                "value": "0"
-                              },
-                              "value": {
-                                "type": "Integer",
-                                "value": "24"
-                              }
-                            }
-                          ]
-                        }
-                      ]
+                      "type": "ByteString",
+                      "value": "CqOHtT6Wt5iaYxQxoFbdH0CgQvY="
+                    },
+                    {
+                      "type": "Any"
+                    },
+                    {
+                      "type": "Integer",
+                      "value": "18083410"
                     }
                   ]
                 }
-              ]
-            }
+              },
+              {
+                "contract": "0x668e0c1f9d7b70a99dd9e06eadd4c784d641afbc",
+                "eventname": "Transfer",
+                "state": {
+                  "type": "Array",
+                  "value": [
+                    {
+                      "type": "Any"
+                    },
+                    {
+                      "type": "ByteString",
+                      "value": "z6LDQN4w1uEMToIZiPSxToNRPog="
+                    },
+                    {
+                      "type": "Integer",
+                      "value": "1252390"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "trigger": "PostPersist",
+            "vmstate": "HALT",
+            "gasconsumed": "2031260",
+            "stack": [],
+            "notifications": [
+              {
+                "contract": "0x668e0c1f9d7b70a99dd9e06eadd4c784d641afbc",
+                "eventname": "Transfer",
+                "state": {
+                  "type": "Array",
+                  "value": [
+                    {
+                      "type": "Any"
+                    },
+                    {
+                      "type": "ByteString",
+                      "value": "z6LDQN4w1uEMToIZiPSxToNRPog="
+                    },
+                    {
+                      "type": "Integer",
+                      "value": "50000000"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "Name": "getapplicationlogasync_triggertype",
+    "Request": {
+      "jsonrpc": "2.0",
+      "method": "getapplicationlog",
+      "params": [ "0x6ea186fe714b8168ede3b78461db8945c06d867da649852352dbe7cbf1ba3724", "OnPersist" ],
+      "id": 1
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "blockhash": "0x6ea186fe714b8168ede3b78461db8945c06d867da649852352dbe7cbf1ba3724",
+        "executions": [
+          {
+            "trigger": "OnPersist",
+            "vmstate": "HALT",
+            "gasconsumed": "2031260",
+            "stack": [],
+            "notifications": [
+              {
+                "contract": "0x668e0c1f9d7b70a99dd9e06eadd4c784d641afbc",
+                "eventname": "Transfer",
+                "state": {
+                  "type": "Array",
+                  "value": [
+                    {
+                      "type": "ByteString",
+                      "value": "CqOHtT6Wt5iaYxQxoFbdH0CgQvY="
+                    },
+                    {
+                      "type": "Any"
+                    },
+                    {
+                      "type": "Integer",
+                      "value": "18083410"
+                    }
+                  ]
+                }
+              },
+              {
+                "contract": "0x668e0c1f9d7b70a99dd9e06eadd4c784d641afbc",
+                "eventname": "Transfer",
+                "state": {
+                  "type": "Array",
+                  "value": [
+                    {
+                      "type": "Any"
+                    },
+                    {
+                      "type": "ByteString",
+                      "value": "z6LDQN4w1uEMToIZiPSxToNRPog="
+                    },
+                    {
+                      "type": "Integer",
+                      "value": "1252390"
+                    }
+                  ]
+                }
+              }
+            ]
           }
         ]
       }

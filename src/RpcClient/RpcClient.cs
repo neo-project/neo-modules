@@ -3,6 +3,7 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
+using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
 using System;
 using System.Collections.Generic;
@@ -540,6 +541,16 @@ namespace Neo.Network.RPC
         public async Task<RpcApplicationLog> GetApplicationLogAsync(string txHash)
         {
             var result = await RpcSendAsync(GetRpcName(), txHash).ConfigureAwait(false);
+            return RpcApplicationLog.FromJson(result);
+        }
+
+        /// <summary>
+        /// Returns the contract log based on the specified txHash. The complete contract logs are stored under the ApplicationLogs directory.
+        /// This method is provided by the plugin ApplicationLogs.
+        /// </summary>
+        public async Task<RpcApplicationLog> GetApplicationLogAsync(string txHash, TriggerType triggerType)
+        {
+            var result = await RpcSendAsync(GetRpcName(), txHash, triggerType).ConfigureAwait(false);
             return RpcApplicationLog.FromJson(result);
         }
 
