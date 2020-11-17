@@ -6,6 +6,7 @@ using Neo.IO;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
+using Neo.SmartContract;
 using System;
 using System.Linq;
 using System.Net;
@@ -418,6 +419,14 @@ namespace Neo.Network.RPC.Tests
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetApplicationLogAsync).ToLower());
             var result = await rpc.GetApplicationLogAsync(test.Request.Params[0].AsString());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+        }
+
+        [TestMethod()]
+        public async Task GetApplicationLogTest_TriggerType()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.GetApplicationLogAsync) + "_triggertype").ToLower());
+            var result = await rpc.GetApplicationLogAsync(test.Request.Params[0].AsString(), TriggerType.OnPersist);
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
