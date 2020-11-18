@@ -41,6 +41,7 @@ namespace Neo.Plugins
         private CancellationTokenSource CancelSource;
         private int Counter;
         private HashSetCache<ulong> FinishedCache;
+        private ConsoleServiceBase ConsoleBase;
 
         private static readonly object _lock = new object();
 
@@ -62,6 +63,8 @@ namespace Neo.Plugins
             timer.Interval = RefreshInterval;
             timer.Start();
             timer.Elapsed += new ElapsedEventHandler(OnTimer);
+
+            ConsoleBase = GetService<ConsoleServiceBase>();
         }
 
         protected override void Configure()
@@ -98,7 +101,7 @@ namespace Neo.Plugins
         [ConsoleCommand("start oracle", Category = "Oracle", Description = "Start oracle service")]
         private void OnStart()
         {
-            string password = Helper.ReadUserInput("password", true);
+            string password = ConsoleBase.ReadUserInput("password", true);
             if (password.Length == 0)
             {
                 Console.WriteLine("Cancelled");
