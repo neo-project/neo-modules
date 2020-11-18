@@ -48,7 +48,7 @@ namespace Neo.Plugins
                 return input;
 
             JObject beforeObject = JObject.Parse(input);
-            JArray afterObjects = new JArray(beforeObject.SelectTokens(filterArgs, true).ToArray());
+            JArray afterObjects = new JArray(beforeObject.SelectTokens(filterArgs, true));
             return afterObjects.ToString();
         }
 
