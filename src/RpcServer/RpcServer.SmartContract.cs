@@ -8,7 +8,6 @@ using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
-using Neo.SmartContract.Manifest;
 using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
@@ -91,42 +90,6 @@ namespace Neo.Plugins
             return json;
         }
 
-        private JObject GetVerificationResult(UInt160 scriptHash, ContractParameter[] args)
-        {
-            var snapshot = Blockchain.Singleton.GetSnapshot();
-            var contract = snapshot.Contracts.TryGet(scriptHash);
-
-            var init = contract.Manifest.Abi.GetMethod("_initialize");
-            using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, new Transaction(), snapshot.Clone());
-            var context = engine.LoadScript(contract.Script, CallFlags.None, contract.Manifest.Abi.GetMethod("verify").Offset);
-            if (init != null) engine.LoadContext(context.Clone(init.Offset), false);
-            byte[] script;
-            using (ScriptBuilder sb = new ScriptBuilder())
-            {
-                script = sb.EmitAppCall(new UInt160(contract.Script), "verify", args).ToArray();
-            }
-            engine.LoadScript(script, CallFlags.None);
-
-            JObject json = new JObject();
-            json["script"] = Convert.ToBase64String(contract.Script);
-            json["state"] = engine.Execute();
-            json["gasconsumed"] = new BigDecimal(engine.GasConsumed, NativeContract.GAS.Decimals).ToString();
-            json["exception"] = GetExceptionMessage(engine.FaultException);
-            try
-            {
-                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
-            }
-            catch (InvalidOperationException)
-            {
-                json["stack"] = "error: recursive reference";
-            }
-            if (engine.State != VMState.FAULT)
-            {
-                ProcessInvokeWithWallet(json);
-            }
-            return json;
-        }
-
         private static Signers SignersFromJson(JArray _params)
         {
             var ret = new Signers(_params.Select(u => new Signer()
@@ -158,14 +121,6 @@ namespace Neo.Plugins
                 script = sb.EmitAppCall(script_hash, operation, args).ToArray();
             }
             return GetInvokeResult(script, signers);
-        }
-
-        [RpcMethod]
-        protected virtual JObject InvokeContractVerify(JArray _params)
-        {
-            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
-            ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[1]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
-            return GetVerificationResult(script_hash, args);
         }
 
         [RpcMethod]
