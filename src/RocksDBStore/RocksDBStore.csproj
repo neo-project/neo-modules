@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>Neo.Plugins.RocksDBStore</PackageId>
+    <PackageId>Neo.Plugins.Storage.RocksDBStore</PackageId>
     <RootNamespace>Neo.Plugins.Storage</RootNamespace>
   </PropertyGroup>
 
