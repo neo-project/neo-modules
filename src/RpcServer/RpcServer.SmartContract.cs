@@ -65,9 +65,9 @@ namespace Neo.Plugins
         {
             Transaction tx = signers == null ? null : new Transaction
             {
-                Signers = signers?.GetSigners(),
+                Signers = signers.GetSigners(),
                 Attributes = Array.Empty<TransactionAttribute>(),
-                Witnesses = signers?.Witnesses,
+                Witnesses = signers.Witnesses,
             };
             using ApplicationEngine engine = ApplicationEngine.Run(script, container: tx, gas: settings.MaxGasInvoke);
             JObject json = new JObject();
