@@ -24,7 +24,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Network.RPC.Tests", "te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Plugins.Storage.Tests", "tests\Neo.Plugins.Storage.Tests\Neo.Plugins.Storage.Tests.csproj", "{9E7EA895-302A-4C0C-BA9B-54F9A67AD75C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Oracle", "src\Oracle\Oracle.csproj", "{9ABE9097-94AE-4B63-90DD-C20A0BC4D78E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OracleService", "src\Oracle\OracleService.csproj", "{9ABE9097-94AE-4B63-90DD-C20A0BC4D78E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -32,7 +32,7 @@ using static System.IO.Path;
 
 namespace Neo.Plugins
 {
-    public class Oracle : Plugin, IPersistencePlugin
+    public class OracleService : Plugin, IPersistencePlugin
     {
         private NEP6Wallet Wallet;
         private string[] Nodes;
@@ -51,7 +51,7 @@ namespace Neo.Plugins
 
         public override string Description => "Built-in oracle plugin";
 
-        public Oracle()
+        public OracleService()
         {
             PendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
             FinishedCache = new HashSetCache<ulong>(1024 * 128);
@@ -70,7 +70,7 @@ namespace Neo.Plugins
         protected override void Configure()
         {
             var config = GetConfiguration();
-            Wallet = new NEP6Wallet(Combine(PluginsDirectory, nameof(Oracle), config.GetSection("Wallet").Value));
+            Wallet = new NEP6Wallet(Combine(PluginsDirectory, nameof(OracleService), config.GetSection("Wallet").Value));
             Nodes = config.GetSection("Nodes").GetChildren().Select(p => p.Get<string>()).ToArray();
             MaxTaskTimeout = TimeSpan.FromMilliseconds(double.Parse(config.GetSection("MaxTaskTimeout").Value));
             Https.Timeout = int.Parse(config.GetSection("HttpTimeout").Value);
@@ -450,7 +450,7 @@ namespace Neo.Plugins
 
         public static void Log(string message, LogLevel level = LogLevel.Info)
         {
-            Utility.Log(nameof(Oracle), level, message);
+            Utility.Log(nameof(OracleService), level, message);
         }
 
         internal class OracleTask
