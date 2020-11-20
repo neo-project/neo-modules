@@ -68,6 +68,7 @@ namespace Neo.Plugins
                 JObject trigger = new JObject();
                 trigger["trigger"] = appExec.Trigger;
                 trigger["vmstate"] = appExec.VMState;
+                trigger["exception"] = GetExceptionMessage(appExec.Exception);
                 trigger["gasconsumed"] = appExec.GasConsumed.ToString();
                 try
                 {
@@ -149,6 +150,18 @@ namespace Neo.Plugins
         public bool ShouldThrowExceptionFromCommit(Exception ex)
         {
             return false;
+        }
+
+        string GetExceptionMessage(Exception exception)
+        {
+            if (exception == null) return "Engine faulted.";
+
+            if (exception.InnerException != null)
+            {
+                return GetExceptionMessage(exception.InnerException);
+            }
+
+            return exception.Message;
         }
     }
 }
