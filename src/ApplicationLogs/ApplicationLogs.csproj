@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Neo.Plugins.ApplicationLogs</PackageId>
+    <RootNamespace>Neo.Plugins</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

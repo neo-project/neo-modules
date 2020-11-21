@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Neo.Plugins.RpcServer</PackageId>
+    <RootNamespace>Neo.Plugins</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
