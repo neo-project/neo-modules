@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>3.0.0-preview3</Version>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <PackageId>Neo.Plugins.RpcServer</PackageId>
     <RootNamespace>Neo.Plugins</RootNamespace>
   </PropertyGroup>
 
@@ -15,7 +14,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.ResponseCompression" Version="2.2.0" />
-    <PackageReference Include="Neo" Version="3.0.0-CI01066" />
   </ItemGroup>
 
 </Project>
