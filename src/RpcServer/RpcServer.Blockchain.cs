@@ -103,22 +103,20 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetContractState(JArray _params)
         {
-            UInt160 script_hash = UInt160.Parse(ToScriptHash(_params[0].AsString()));
+            UInt160 script_hash = ToScriptHash(_params[0].AsString());
             ContractState contract = Blockchain.Singleton.View.Contracts.TryGet(script_hash);
             return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
         }
 
-        public static string ToScriptHash(string keyword)
+        private static UInt160 ToScriptHash(string keyword)
         {
             foreach (var native in NativeContract.Contracts)
             {
-                if (keyword.Equals(native.Name, StringComparison.InvariantCultureIgnoreCase) ||
-                    keyword == native.Id.ToString())
-                    return native.Hash.ToString();
+                if (keyword.Equals(native.Name, StringComparison.InvariantCultureIgnoreCase) || keyword == native.Id.ToString())
+                    return native.Hash;
             }
 
-            return keyword.Length < 40 ?
-                keyword : UInt160.Parse(keyword).ToString();
+            return UInt160.Parse(keyword);
         }
 
         [RpcMethod]
