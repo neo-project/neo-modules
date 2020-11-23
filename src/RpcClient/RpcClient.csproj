@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Neo.Network.RPC.RpcClient</PackageId>
-    <RootNamespace>Neo.Network.RPC.RpcClient</RootNamespace>
+    <RootNamespace>Neo.Network.RPC</RootNamespace>
   </PropertyGroup>
 
 </Project>
