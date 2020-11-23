@@ -63,7 +63,7 @@ namespace Neo.Plugins
 
         private JObject GetInvokeResult(byte[] script, Signers signers = null)
         {
-            Transaction tx = new Transaction
+            Transaction tx = signers == null ? null : new Transaction
             {
                 Signers = signers.GetSigners(),
                 Attributes = Array.Empty<TransactionAttribute>(),
