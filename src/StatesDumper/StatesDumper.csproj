@@ -4,6 +4,7 @@
     <Version>3.0.0-preview3</Version>
     <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>Neo.Plugins</RootNamespace>
+    <PackageId>Neo.Plugins.StatesDumper</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,7 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neo" Version="3.0.0-CI01066" />
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
   </ItemGroup>
 

@@ -3,6 +3,7 @@
   <PropertyGroup>
     <Version>3.0.0-preview3</Version>
     <TargetFramework>net5.0</TargetFramework>
+    <PackageId>Neo.Plugins.ApplicationLogs</PackageId>
     <RootNamespace>Neo.Plugins</RootNamespace>
   </PropertyGroup>
 
