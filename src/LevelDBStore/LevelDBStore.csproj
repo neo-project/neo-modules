@@ -1,9 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>3.0.0-preview3</Version>
-    <TargetFramework>net5.0</TargetFramework>
-    <RootNamespace>Neo</RootNamespace>
     <PackageId>Neo.Plugins.Storage.LevelDBStore</PackageId>
     <RootNamespace>Neo.Plugins.Storage</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

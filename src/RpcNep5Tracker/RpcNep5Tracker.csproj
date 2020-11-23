@@ -1,7 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>3.0.0-preview3</Version>
-    <TargetFramework>net5.0</TargetFramework>
     <PackageId>Neo.Plugins.RpcNep5Tracker</PackageId>
     <RootNamespace>Neo.Plugins</RootNamespace>
   </PropertyGroup>

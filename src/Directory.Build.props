@@ -4,7 +4,7 @@
   <PropertyGroup>
     <VersionPrefix>3.0.0</VersionPrefix>
     <VersionSuffix>preview3</VersionSuffix>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>Neo.Plugins</RootNamespace>
     <Authors>The Neo Project</Authors>
     <PackageTags>NEO;Blockchain</PackageTags>
