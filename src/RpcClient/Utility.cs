@@ -58,7 +58,7 @@ namespace Neo.Network.RPC
         public static KeyPair GetKeyPair(string key)
         {
             if (string.IsNullOrEmpty(key)) { throw new ArgumentNullException(nameof(key)); }
-            if (key.StartsWith("0x")) { key = key.Substring(2); }
+            if (key.StartsWith("0x")) { key = key[2..]; }
 
             if (key.Length == 52)
             {
@@ -81,7 +81,7 @@ namespace Neo.Network.RPC
         public static UInt160 GetScriptHash(string account)
         {
             if (string.IsNullOrEmpty(account)) { throw new ArgumentNullException(nameof(account)); }
-            if (account.StartsWith("0x")) { account = account.Substring(2); }
+            if (account.StartsWith("0x")) { account = account[2..]; }
 
             if (account.Length == 34)
             {
@@ -188,10 +188,10 @@ namespace Neo.Network.RPC
         {
             TransactionAttributeType usage = Enum.Parse<TransactionAttributeType>(json["type"].AsString());
 
-            switch (usage)
+            throw usage switch
             {
-                default: throw new FormatException();
-            }
+                _ => new FormatException(),
+            };
         }
 
         public static Witness WitnessFromJson(JObject json)

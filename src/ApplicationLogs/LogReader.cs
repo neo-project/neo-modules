@@ -100,7 +100,7 @@ namespace Neo.Plugins
 
             //processing log for block
             var blocks = applicationExecutedList.Where(p => p.Transaction == null);
-            if (blocks.Count() > 0)
+            if (blocks.Any())
             {
                 var blockJson = new JObject();
                 var blockHash = snapshot.PersistingBlock.Hash.ToArray();

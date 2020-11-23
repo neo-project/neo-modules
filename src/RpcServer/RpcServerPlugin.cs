@@ -1,10 +1,11 @@
+using System;
 using System.Collections.Generic;
 
 namespace Neo.Plugins
 {
     public class RpcServerPlugin : Plugin
     {
-        static List<object> handlers = new List<object>();
+        static readonly List<object> handlers = new List<object>();
         public override string Name => "RpcServer";
         public override string Description => "Enables RPC for the node";
         RpcServer server;
@@ -31,6 +32,7 @@ namespace Neo.Plugins
                 server.Dispose();
                 server = null;
             }
+            GC.SuppressFinalize(this);
         }
 
         protected override void OnPluginsLoaded()

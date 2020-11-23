@@ -1,6 +1,3 @@
-#pragma warning disable IDE0051
-#pragma warning disable IDE0060
-
 using Akka.Actor;
 using Neo.IO;
 using Neo.IO.Json;
