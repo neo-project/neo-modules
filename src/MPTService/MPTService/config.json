@@ -1,0 +1,14 @@
+{
+    "PluginConfiguration": {
+        "Path": "Data_MPT_{0}",
+        "FullState": false,
+        "Validators": [
+            "http://localhost:10332"
+        ],
+        "ValidatorConfiguration": {
+            "StartValidate": false,
+            "Wallet": "",
+            "Password": ""
+        }
+    }
+}
