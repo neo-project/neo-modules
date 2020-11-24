@@ -2,7 +2,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Linq;
 
-namespace Neo.Plugins.MPTService
+namespace Neo.Plugins.StateService
 {
     internal class Settings
     {

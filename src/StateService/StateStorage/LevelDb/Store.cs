@@ -4,11 +4,10 @@ using Neo.Persistence;
 using System.Collections.Generic;
 using LHelper = Neo.IO.Data.LevelDB.Helper;
 
-namespace Neo.Plugins.MPTService.MPTStorage.LevelDB
+namespace Neo.Plugins.StateService.StateStorage.LevelDB
 {
     public class Store : IStore
     {
-        private const byte SYS_Version = 0xf0;
         private readonly DB db;
 
         public Store(string path)

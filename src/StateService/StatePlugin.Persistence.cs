@@ -2,29 +2,29 @@
 using Neo.IO.Caching;
 using static Neo.Ledger.Blockchain;
 using Neo.Persistence;
-using Neo.Plugins.MPTService.MPTStorage;
-using Neo.Plugins.MPTService.Validation;
+using Neo.Plugins.StateService.StateStorage;
+using Neo.Plugins.StateService.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neo.Plugins.MPTService
+namespace Neo.Plugins.StateService
 {
-    public partial class MPTPlugin : Plugin, IPersistencePlugin
+    public partial class StatePlugin : Plugin, IPersistencePlugin
     {
         public void OnPersist(StoreView snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
         {
-            List<MPTStore.Item> changes = new List<MPTStore.Item>();
+            List<StateStore.Item> changes = new List<StateStore.Item>();
             foreach (var item in snapshot.Storages.GetChangeSet().Where(p => p.State != TrackState.None))
             {
-                changes.Add(new MPTStore.Item
+                changes.Add(new StateStore.Item
                 {
                     State = item.State,
                     Key = item.Key,
                     Value = item.Item,
                 });
             }
-            Store.Tell(new MPTStore.StorageChanges
+            Store.Tell(new StateStore.StorageChanges
             {
                 Height = snapshot.PersistingBlock.Index,
                 ChangeSet = changes,

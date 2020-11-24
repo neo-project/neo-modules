@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <None Update="MPTService\config.json">
+    <None Update="StateService\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
@@ -13,10 +13,6 @@
   <ItemGroup>
     <PackageReference Include="Neo" Version="3.0.0-CI01036" />
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\neo\src\neo\neo.csproj" />
   </ItemGroup>
 
   <ItemGroup>

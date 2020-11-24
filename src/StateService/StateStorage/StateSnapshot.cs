@@ -6,9 +6,9 @@ using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using System;
 
-namespace Neo.Plugins.MPTService.MPTStorage
+namespace Neo.Plugins.StateService.StateStorage
 {
-    public class MPTSnapshot : IDisposable
+    public class StateSnapshot : IDisposable
     {
         private readonly ISnapshot snapshot;
         public MetaDataCache<HashIndexState> LocalRootHashIndex;
@@ -19,7 +19,7 @@ namespace Neo.Plugins.MPTService.MPTStorage
         public long StateHeight => ValidatedHashIndex.Get() is null ? -1 : (long)ValidatedHashIndex.Get().Index;
         public UInt256 CurrentLocalRootHash => LocalRootHashIndex.Get().Hash;
 
-        public MPTSnapshot(IStore store)
+        public StateSnapshot(IStore store)
         {
             snapshot = store.GetSnapshot();
             StateRoots = new StoreDataCache<SerializableWrapper<uint>, StateRoot>(snapshot, Prefixs.Roots);

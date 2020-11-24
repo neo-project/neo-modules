@@ -1,5 +1,5 @@
 
-namespace Neo.Plugins.MPTService.MPTStorage
+namespace Neo.Plugins.StateService.StateStorage
 {
     public static class Prefixs
     {

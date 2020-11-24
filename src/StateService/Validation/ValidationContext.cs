@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neo.Plugins.MPTService.Validation
+namespace Neo.Plugins.StateService.Validation
 {
     public class ValidationContext
     {

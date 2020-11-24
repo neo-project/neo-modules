@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using LSnapshot = Neo.IO.Data.LevelDB.Snapshot;
 using LHelper = Neo.IO.Data.LevelDB.Helper;
 
-namespace Neo.Plugins.MPTService.MPTStorage.LevelDB
+namespace Neo.Plugins.StateService.StateStorage.LevelDB
 {
     public class Snapshot : ISnapshot
     {

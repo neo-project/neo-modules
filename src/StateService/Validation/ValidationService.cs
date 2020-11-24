@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neo.Plugins.MPTService.Validation
+namespace Neo.Plugins.StateService.Validation
 {
     public class ValidationService : UntypedActor
     {
@@ -14,10 +14,10 @@ namespace Neo.Plugins.MPTService.Validation
         private class Timer { public uint Index; }
         private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(5);
         private readonly Dictionary<uint, ICancelable> timers = new Dictionary<uint, ICancelable>();
-        private readonly MPTPlugin system;
+        private readonly StatePlugin system;
         private readonly ValidationContext context;
 
-        public ValidationService(MPTPlugin system, Wallet wallet)
+        public ValidationService(StatePlugin system, Wallet wallet)
         {
             this.system = system;
             context = new ValidationContext(wallet);
@@ -120,7 +120,7 @@ namespace Neo.Plugins.MPTService.Validation
             base.PostStop();
         }
 
-        public static Props Props(MPTPlugin system, Wallet wallet)
+        public static Props Props(StatePlugin system, Wallet wallet)
         {
             return Akka.Actor.Props.Create(() => new ValidationService(system, wallet));
         }

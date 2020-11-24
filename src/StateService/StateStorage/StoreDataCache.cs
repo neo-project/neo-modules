@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neo.Plugins.MPTService.MPTStorage
+namespace Neo.Plugins.StateService.StateStorage
 {
     public class StoreDataCache<TKey, TValue> : DataCache<TKey, TValue>
         where TKey : IEquatable<TKey>, ISerializable, new()

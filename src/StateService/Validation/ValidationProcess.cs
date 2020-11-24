@@ -4,7 +4,7 @@ using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
-using Neo.Plugins.MPTService.MPTStorage;
+using Neo.Plugins.StateService.StateStorage;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.SmartContract.Native.Designate;
@@ -12,7 +12,7 @@ using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 
-namespace Neo.Plugins.MPTService.Validation
+namespace Neo.Plugins.StateService.Validation
 {
     public class ValidationProcess
     {
@@ -32,7 +32,7 @@ namespace Neo.Plugins.MPTService.Validation
             get
             {
                 if (root is null)
-                    root = MPTStore.Singleton.StateRoots.TryGet(RootIndex);
+                    root = StateStore.Singleton.StateRoots.TryGet(RootIndex);
                 return root;
             }
         }

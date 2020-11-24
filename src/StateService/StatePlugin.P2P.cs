@@ -4,9 +4,9 @@ using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 
-namespace Neo.Plugins.MPTService
+namespace Neo.Plugins.StateService
 {
-    public partial class MPTPlugin : Plugin, IP2PPlugin
+    public partial class StatePlugin : Plugin, IP2PPlugin
     {
         private readonly HashSetCache<UInt256> knownHashes = new HashSetCache<UInt256>(50000);
         public bool OnP2PMessage(Message message)

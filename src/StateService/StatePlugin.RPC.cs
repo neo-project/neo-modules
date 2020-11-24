@@ -4,23 +4,23 @@ using Neo.IO.Json;
 using Neo.Cryptography.MPT;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
-using Neo.Plugins.MPTService.MPTStorage;
-using Neo.Plugins.MPTService.Validation;
+using Neo.Plugins.StateService.StateStorage;
+using Neo.Plugins.StateService.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace Neo.Plugins.MPTService
+namespace Neo.Plugins.StateService
 {
-    public partial class MPTPlugin
+    public partial class StatePlugin
     {
         [RpcMethod]
         public JObject GetStateRoot(JArray _params)
         {
             uint index = uint.Parse(_params[0].AsString());
-            StateRoot state_root = MPTStore.Singleton.StateRoots.TryGet(index);
+            StateRoot state_root = StateStore.Singleton.StateRoots.TryGet(index);
             if (state_root is null)
                 throw new RpcException(-100, "Unknown root hash");
             else
@@ -33,7 +33,7 @@ namespace Neo.Plugins.MPTService
             UInt256 root_hash = UInt256.Parse(_params[0].AsString());
             if (!Settings.Default.FullState)
             {
-                if (MPTStore.Singleton.CurrentLocalRootHash != root_hash) throw new RpcException(-100, "Unknown root hash");
+                if (StateStore.Singleton.CurrentLocalRootHash != root_hash) throw new RpcException(-100, "Unknown root hash");
             }
             UInt160 script_hash = UInt160.Parse(_params[1].AsString());
             byte[] key = _params[2].AsString().HexToBytes();
@@ -44,7 +44,7 @@ namespace Neo.Plugins.MPTService
                 Id = contract.Id,
                 Key = key,
             };
-            HashSet<byte[]> proof = MPTStore.Singleton.GetProof(root_hash, skey);
+            HashSet<byte[]> proof = StateStore.Singleton.GetProof(root_hash, skey);
             if (proof is null) throw new RpcException(-100, "Unknown value");
 
             using MemoryStream ms = new MemoryStream();

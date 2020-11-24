@@ -1,5 +1,5 @@
 
-namespace Neo.Plugins.MPTService.Validation
+namespace Neo.Plugins.StateService.Validation
 {
     public class Vote
     {

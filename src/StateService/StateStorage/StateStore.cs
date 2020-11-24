@@ -6,20 +6,20 @@ using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
-using Neo.Plugins.MPTService.MPTStorage.LevelDB;
-using Neo.Plugins.MPTService.Validation;
+using Neo.Plugins.StateService.StateStorage.LevelDB;
+using Neo.Plugins.StateService.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-namespace Neo.Plugins.MPTService.MPTStorage
+namespace Neo.Plugins.StateService.StateStorage
 {
-    public class MPTStore : UntypedActor
+    public class StateStore : UntypedActor
     {
         public class Item { public TrackState State; public StorageKey Key; public StorageItem Value; }
         public class StorageChanges { public uint Height; public List<Item> ChangeSet; }
-        private readonly MPTPlugin system;
+        private readonly StatePlugin system;
         private readonly NeoSystem core;
         private readonly IStore store;
         private const int MaxCacheCount = 100;
@@ -32,8 +32,8 @@ namespace Neo.Plugins.MPTService.MPTStorage
         public uint LocalRootIndex => LocalRootHashIndex.Get()?.Index ?? 0;
         public long ValidatedRootIndex => ValidatedHashIndex.Get().Index == uint.MaxValue ? -1 : (long)ValidatedHashIndex.Get().Index;
 
-        private static MPTStore singleton;
-        public static MPTStore Singleton
+        private static StateStore singleton;
+        public static StateStore Singleton
         {
             get
             {
@@ -42,9 +42,9 @@ namespace Neo.Plugins.MPTService.MPTStorage
             }
         }
 
-        public MPTStore(MPTPlugin system, NeoSystem core, string path)
+        public StateStore(StatePlugin system, NeoSystem core, string path)
         {
-            if (singleton != null) throw new InvalidOperationException(nameof(MPTStore));
+            if (singleton != null) throw new InvalidOperationException(nameof(StateStore));
             this.system = system;
             this.core = core;
             this.store = new Store(path);
@@ -56,9 +56,9 @@ namespace Neo.Plugins.MPTService.MPTStorage
             store.Dispose();
         }
 
-        public MPTSnapshot GetSnapshot()
+        public StateSnapshot GetSnapshot()
         {
-            return new MPTSnapshot(store);
+            return new StateSnapshot(store);
         }
 
         public HashSet<byte[]> GetProof(UInt256 root, StorageKey skey)
@@ -124,7 +124,7 @@ namespace Neo.Plugins.MPTService.MPTStorage
 
         private void UpdateLocalStateRoot(uint height, List<Item> change_set)
         {
-            using MPTSnapshot mpt_snapshot = Singleton.GetSnapshot();
+            using StateSnapshot mpt_snapshot = Singleton.GetSnapshot();
             foreach (var item in change_set)
             {
                 switch (item.State)
@@ -160,9 +160,9 @@ namespace Neo.Plugins.MPTService.MPTStorage
             base.PostStop();
         }
 
-        public static Props Props(MPTPlugin system, NeoSystem core, string path)
+        public static Props Props(StatePlugin system, NeoSystem core, string path)
         {
-            return Akka.Actor.Props.Create(() => new MPTStore(system, core, path));
+            return Akka.Actor.Props.Create(() => new StateStore(system, core, path));
         }
     }
 }

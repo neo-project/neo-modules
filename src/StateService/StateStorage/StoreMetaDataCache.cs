@@ -3,7 +3,7 @@ using Neo.IO.Caching;
 using Neo.Persistence;
 using System;
 
-namespace Neo.Plugins.MPTService.MPTStorage
+namespace Neo.Plugins.StateService.StateStorage
 {
     public class StoreMetaDataCache<T> : MetaDataCache<T>
         where T : class, ICloneable<T>, ISerializable, new()

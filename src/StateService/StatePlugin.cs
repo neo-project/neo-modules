@@ -1,29 +1,29 @@
 
 using Akka.Actor;
 using Neo;
-using Neo.Plugins.MPTService.MPTStorage;
-using Neo.Plugins.MPTService.Validation;
+using Neo.Plugins.StateService.StateStorage;
+using Neo.Plugins.StateService.Validation;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
 using System;
 using System.IO;
 
-namespace Neo.Plugins.MPTService
+namespace Neo.Plugins.StateService
 {
-    public partial class MPTPlugin : Plugin
+    public partial class StatePlugin : Plugin
     {
-        public ActorSystem ActorSystem { get; } = ActorSystem.Create(nameof(MPTPlugin));
+        public ActorSystem ActorSystem { get; } = ActorSystem.Create(nameof(StatePlugin));
         public IActorRef Store { get; }
         public IActorRef Validation { get; }
-        public override string Name => "MPTService";
+        public override string Name => "StateService";
         public override string Description => "Enables MPT for the node";
 
         Wallet wallet;
 
-        public MPTPlugin()
+        public StatePlugin()
         {
             RpcServerPlugin.RegisterMethods(this);
-            Store = ActorSystem.ActorOf(MPTStore.Props(this, System, Settings.Default.Path));
+            Store = ActorSystem.ActorOf(StateStore.Props(this, System, Settings.Default.Path));
             if (Settings.Default.StartValidate)
             {
                 OpenWallet(Settings.Default.Wallet, Settings.Default.Password);
