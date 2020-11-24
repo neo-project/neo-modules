@@ -70,7 +70,7 @@ namespace Neo.Plugins
                 trigger["vmstate"] = appExec.VMState;
                 var exceptionMessage = GetExceptionMessage(appExec.Exception);
                 if (exceptionMessage != null)
-                    trigger["exception"] = exceptionMessage;
+                    trigger["exception"] = GetExceptionMessage(appExec.Exception);;
                 trigger["gasconsumed"] = appExec.GasConsumed.ToString();
                 try
                 {
