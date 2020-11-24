@@ -68,7 +68,9 @@ namespace Neo.Plugins
                 JObject trigger = new JObject();
                 trigger["trigger"] = appExec.Trigger;
                 trigger["vmstate"] = appExec.VMState;
-                trigger["exception"] = GetExceptionMessage(appExec.Exception);
+                var exceptionMessage = GetExceptionMessage(appExec.Exception);
+                if (exceptionMessage != null)
+                    trigger["exception"] = exceptionMessage;
                 trigger["gasconsumed"] = appExec.GasConsumed.ToString();
                 try
                 {
@@ -154,7 +156,7 @@ namespace Neo.Plugins
 
         string GetExceptionMessage(Exception exception)
         {
-            if (exception == null) return "Engine faulted.";
+            if (exception == null) return null;
 
             if (exception.InnerException != null)
             {
