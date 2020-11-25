@@ -14,13 +14,14 @@ public class RpcContractState
 
     public static RpcContractState FromJson(JObject json)
     {
-        RpcContractState state = new RpcContractState();
-        state.ContractState = new ContractState
+        return new RpcContractState
         {
-            Id = (int)json["id"].AsNumber(),
-            Script = Convert.FromBase64String(json["script"].AsString()),
-            Manifest = ContractManifest.FromJson(json["manifest"])
+            ContractState = new ContractState
+            {
+                Id = (int)json["id"].AsNumber(),
+                Script = Convert.FromBase64String(json["script"].AsString()),
+                Manifest = ContractManifest.FromJson(json["manifest"])
+            }
         };
-        return state;
     }
 }

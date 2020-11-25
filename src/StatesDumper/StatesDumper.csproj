@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neo" Version="3.0.0-preview3-00" />
+    <PackageReference Include="Neo" Version="3.0.0-CI01066" />
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
   </ItemGroup>
 

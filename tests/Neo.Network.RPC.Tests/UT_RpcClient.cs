@@ -6,6 +6,7 @@ using Neo.IO;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
+using Neo.SmartContract;
 using System;
 using System.Linq;
 using System.Net;
@@ -27,12 +28,8 @@ namespace Neo.Network.RPC.Tests
             handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
 
             // use real http client with mocked handler here
-            var httpClient = new HttpClient(handlerMock.Object)
-            {
-                BaseAddress = new Uri("http://seed1.neo.org:10331"),
-            };
-
-            rpc = new RpcClient(httpClient);
+            var httpClient = new HttpClient(handlerMock.Object);
+            rpc = new RpcClient(httpClient, "http://seed1.neo.org:10331");
             foreach (var test in TestUtils.RpcTestCases)
             {
                 MockResponse(test.Request, test.Response);
@@ -48,7 +45,7 @@ namespace Neo.Network.RPC.Tests
                   ItExpr.Is<HttpRequestMessage>(p => p.Content.ReadAsStringAsync().Result == request.ToJson().ToString()),
                   ItExpr.IsAny<CancellationToken>()
                )
-               // prepare the expected response of the mocked http call
+               // prepare the expected response of the mocked http call 
                .ReturnsAsync(new HttpResponseMessage()
                {
                    StatusCode = HttpStatusCode.OK,
@@ -58,12 +55,12 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
-        public void TestErrorResponse()
+        public async Task TestErrorResponse()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.SendRawTransaction) + "error").ToLower());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.SendRawTransactionAsync) + "error").ToLower());
             try
             {
-                var result = rpc.SendRawTransaction(test.Request.Params[0].AsString().HexToBytes().AsSerializable<Transaction>());
+                var result = await rpc.SendRawTransactionAsync(Convert.FromBase64String(test.Request.Params[0].AsString()).AsSerializable<Transaction>());
             }
             catch (RpcException ex)
             {
@@ -91,137 +88,137 @@ namespace Neo.Network.RPC.Tests
         #region Blockchain
 
         [TestMethod]
-        public void TestGetBestBlockHash()
+        public async Task TestGetBestBlockHash()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBestBlockHash).ToLower());
-            var result = rpc.GetBestBlockHash();
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBestBlockHashAsync).ToLower());
+            var result = await rpc.GetBestBlockHashAsync();
             Assert.AreEqual(test.Response.Result.AsString(), result);
         }
 
         [TestMethod]
-        public void TestGetBlockHex()
+        public async Task TestGetBlockHex()
         {
-            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlockHex).ToLower());
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlockHexAsync).ToLower());
             foreach (var test in tests)
             {
-                var result = rpc.GetBlockHex(test.Request.Params[0].AsString());
+                var result = await rpc.GetBlockHexAsync(test.Request.Params[0].AsString());
                 Assert.AreEqual(test.Response.Result.AsString(), result);
             }
         }
 
         [TestMethod]
-        public void TestGetBlock()
+        public async Task TestGetBlock()
         {
-            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlock).ToLower());
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlockAsync).ToLower());
             foreach (var test in tests)
             {
-                var result = rpc.GetBlock(test.Request.Params[0].AsString());
+                var result = await rpc.GetBlockAsync(test.Request.Params[0].AsString());
                 Assert.AreEqual(test.Response.Result.AsString(), result.ToJson().ToString());
             }
         }
 
         [TestMethod]
-        public void TestGetBlockCount()
+        public async Task TestGetBlockCount()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlockCount).ToLower());
-            var result = rpc.GetBlockCount();
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlockCountAsync).ToLower());
+            var result = await rpc.GetBlockCountAsync();
             Assert.AreEqual(test.Response.Result.AsString(), result.ToString());
         }
 
         [TestMethod]
-        public void TestGetBlockHash()
+        public async Task TestGetBlockHash()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlockHash).ToLower());
-            var result = rpc.GetBlockHash((int)test.Request.Params[0].AsNumber());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlockHashAsync).ToLower());
+            var result = await rpc.GetBlockHashAsync((int)test.Request.Params[0].AsNumber());
             Assert.AreEqual(test.Response.Result.AsString(), result.ToString());
         }
 
         [TestMethod]
-        public void TestGetBlockHeaderHex()
+        public async Task TestGetBlockHeaderHex()
         {
-            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlockHeaderHex).ToLower());
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlockHeaderHexAsync).ToLower());
             foreach (var test in tests)
             {
-                var result = rpc.GetBlockHeaderHex(test.Request.Params[0].AsString());
+                var result = await rpc.GetBlockHeaderHexAsync(test.Request.Params[0].AsString());
                 Assert.AreEqual(test.Response.Result.AsString(), result);
             }
         }
 
         [TestMethod]
-        public void TestGetBlockHeader()
+        public async Task TestGetBlockHeader()
         {
-            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlockHeader).ToLower());
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlockHeaderAsync).ToLower());
             foreach (var test in tests)
             {
-                var result = rpc.GetBlockHeader(test.Request.Params[0].AsString());
+                var result = await rpc.GetBlockHeaderAsync(test.Request.Params[0].AsString());
                 Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
             }
         }
 
         [TestMethod]
-        public void TestGetContractState()
+        public async Task TestGetContractState()
         {
-            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetContractState).ToLower());
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetContractStateAsync).ToLower());
             foreach (var test in tests)
             {
-                var result = rpc.GetContractState(test.Request.Params[0].AsString());
+                var result = await rpc.GetContractStateAsync(test.Request.Params[0].AsString());
                 Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
             }
         }
 
         [TestMethod]
-        public void TestGetRawMempool()
+        public async Task TestGetRawMempool()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawMempool).ToLower());
-            var result = rpc.GetRawMempool();
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawMempoolAsync).ToLower());
+            var result = await rpc.GetRawMempoolAsync();
             Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => (JObject)p).ToArray()).ToString());
         }
 
         [TestMethod]
-        public void TestGetRawMempoolBoth()
+        public async Task TestGetRawMempoolBoth()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawMempoolBoth).ToLower());
-            var result = rpc.GetRawMempoolBoth();
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawMempoolBothAsync).ToLower());
+            var result = await rpc.GetRawMempoolBothAsync();
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
         [TestMethod]
-        public void TestGetRawTransactionHex()
+        public async Task TestGetRawTransactionHex()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawTransactionHex).ToLower());
-            var result = rpc.GetRawTransactionHex(test.Request.Params[0].AsString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawTransactionHexAsync).ToLower());
+            var result = await rpc.GetRawTransactionHexAsync(test.Request.Params[0].AsString());
             Assert.AreEqual(test.Response.Result.AsString(), result);
         }
 
         [TestMethod]
-        public void TestGetRawTransaction()
+        public async Task TestGetRawTransaction()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawTransaction).ToLower());
-            var result = rpc.GetRawTransaction(test.Request.Params[0].AsString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawTransactionAsync).ToLower());
+            var result = await rpc.GetRawTransactionAsync(test.Request.Params[0].AsString());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
         [TestMethod]
-        public void TestGetStorage()
+        public async Task TestGetStorage()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetStorage).ToLower());
-            var result = rpc.GetStorage(test.Request.Params[0].AsString(), test.Request.Params[1].AsString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetStorageAsync).ToLower());
+            var result = await rpc.GetStorageAsync(test.Request.Params[0].AsString(), test.Request.Params[1].AsString());
             Assert.AreEqual(test.Response.Result.AsString(), result);
         }
 
         [TestMethod]
-        public void TestGetTransactionHeight()
+        public async Task TestGetTransactionHeight()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetTransactionHeight).ToLower());
-            var result = rpc.GetTransactionHeight(test.Request.Params[0].AsString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetTransactionHeightAsync).ToLower());
+            var result = await rpc.GetTransactionHeightAsync(test.Request.Params[0].AsString());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
         }
 
         [TestMethod]
-        public void TestGetValidators()
+        public async Task TestGetNextBlockValidators()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetValidators).ToLower());
-            var result = rpc.GetValidators();
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNextBlockValidatorsAsync).ToLower());
+            var result = await rpc.GetNextBlockValidatorsAsync();
             Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => p.ToJson()).ToArray()).ToString());
         }
 
@@ -230,43 +227,42 @@ namespace Neo.Network.RPC.Tests
         #region Node
 
         [TestMethod]
-        public void TestGetConnectionCount()
+        public async Task TestGetConnectionCount()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetConnectionCount).ToLower());
-            var result = rpc.GetConnectionCount();
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetConnectionCountAsync).ToLower());
+            var result = await rpc.GetConnectionCountAsync();
             Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
         }
 
         [TestMethod]
-        public void TestGetPeers()
+        public async Task TestGetPeers()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetPeers).ToLower());
-            var result = rpc.GetPeers();
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetPeersAsync).ToLower());
+            var result = await rpc.GetPeersAsync();
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
         [TestMethod]
-        public void TestGetVersion()
+        public async Task TestGetVersion()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetVersion).ToLower());
-            var result = rpc.GetVersion();
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetVersionAsync).ToLower());
+            var result = await rpc.GetVersionAsync();
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
         [TestMethod]
-        public void TestSendRawTransaction()
+        public async Task TestSendRawTransaction()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendRawTransaction).ToLower());
-            var result = rpc.SendRawTransaction(test.Request.Params[0].AsString().HexToBytes().AsSerializable<Transaction>());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendRawTransactionAsync).ToLower());
+            var result = await rpc.SendRawTransactionAsync(Convert.FromBase64String(test.Request.Params[0].AsString()).AsSerializable<Transaction>());
             Assert.AreEqual(test.Response.Result["hash"].AsString(), result.ToString());
         }
 
         [TestMethod]
-        public void TestSubmitBlock()
+        public async Task TestSubmitBlock()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SubmitBlock).ToLower());
-            var block = TestUtils.GetBlock(2).Hash;
-            var result = rpc.SubmitBlock(test.Request.Params[0].AsString().HexToBytes());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SubmitBlockAsync).ToLower());
+            var result = await rpc.SubmitBlockAsync(Convert.FromBase64String(test.Request.Params[0].AsString()));
             Assert.AreEqual(test.Response.Result["hash"].AsString(), result.ToString());
         }
 
@@ -275,27 +271,29 @@ namespace Neo.Network.RPC.Tests
         #region SmartContract
 
         [TestMethod]
-        public void TestInvokeFunction()
+        public async Task TestInvokeFunction()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.InvokeFunction).ToLower());
-            var result = rpc.InvokeFunction(test.Request.Params[0].AsString(), test.Request.Params[1].AsString(),
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.InvokeFunctionAsync).ToLower());
+            var result = await rpc.InvokeFunctionAsync(test.Request.Params[0].AsString(), test.Request.Params[1].AsString(),
                 ((JArray)test.Request.Params[2]).Select(p => RpcStack.FromJson(p)).ToArray());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+
+            // TODO test verify method
         }
 
         [TestMethod]
-        public void TestInvokeScript()
+        public async Task TestInvokeScript()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.InvokeScript).ToLower());
-            var result = rpc.InvokeScript(test.Request.Params[0].AsString().HexToBytes());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.InvokeScriptAsync).ToLower());
+            var result = await rpc.InvokeScriptAsync(Convert.FromBase64String(test.Request.Params[0].AsString()));
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
         [TestMethod]
-        public void TestGetUnclaimedGas()
+        public async Task TestGetUnclaimedGas()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetUnclaimedGas).ToLower());
-            var result = rpc.GetUnclaimedGas(test.Request.Params[0].AsString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetUnclaimedGasAsync).ToLower());
+            var result = await rpc.GetUnclaimedGasAsync(test.Request.Params[0].AsString());
             Assert.AreEqual(test.Response.Result["unclaimed"].AsString(), result.Unclaimed.ToString());
         }
 
@@ -304,18 +302,18 @@ namespace Neo.Network.RPC.Tests
         #region Utilities
 
         [TestMethod]
-        public void TestListPlugins()
+        public async Task TestListPlugins()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.ListPlugins).ToLower());
-            var result = rpc.ListPlugins();
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.ListPluginsAsync).ToLower());
+            var result = await rpc.ListPluginsAsync();
             Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => p.ToJson()).ToArray()).ToString());
         }
 
         [TestMethod]
-        public void TestValidateAddress()
+        public async Task TestValidateAddress()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.ValidateAddress).ToLower());
-            var result = rpc.ValidateAddress(test.Request.Params[0].AsString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.ValidateAddressAsync).ToLower());
+            var result = await rpc.ValidateAddressAsync(test.Request.Params[0].AsString());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
@@ -324,91 +322,91 @@ namespace Neo.Network.RPC.Tests
         #region Wallet
 
         [TestMethod]
-        public void TestCloseWallet()
+        public async Task TestCloseWallet()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.CloseWallet).ToLower());
-            var result = rpc.CloseWallet();
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.CloseWalletAsync).ToLower());
+            var result = await rpc.CloseWalletAsync();
             Assert.AreEqual(test.Response.Result.AsBoolean(), result);
         }
 
         [TestMethod]
-        public void TestDumpPrivKey()
+        public async Task TestDumpPrivKey()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.DumpPrivKey).ToLower());
-            var result = rpc.DumpPrivKey(test.Request.Params[0].AsString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.DumpPrivKeyAsync).ToLower());
+            var result = await rpc.DumpPrivKeyAsync(test.Request.Params[0].AsString());
             Assert.AreEqual(test.Response.Result.AsString(), result);
         }
 
         [TestMethod]
-        public void TestGetNewAddress()
+        public async Task TestGetNewAddress()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNewAddress).ToLower());
-            var result = rpc.GetNewAddress();
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNewAddressAsync).ToLower());
+            var result = await rpc.GetNewAddressAsync();
             Assert.AreEqual(test.Response.Result.AsString(), result);
         }
 
         [TestMethod]
-        public void TestGetWalletBalance()
+        public async Task TestGetWalletBalance()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetWalletBalance).ToLower());
-            var result = rpc.GetWalletBalance(test.Request.Params[0].AsString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetWalletBalanceAsync).ToLower());
+            var result = await rpc.GetWalletBalanceAsync(test.Request.Params[0].AsString());
             Assert.AreEqual(test.Response.Result["balance"].AsString(), result.Value.ToString());
         }
 
         [TestMethod]
-        public void TestGetWalletUnclaimedGas()
+        public async Task TestGetWalletUnclaimedGas()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetWalletUnclaimedGas).ToLower());
-            var result = rpc.GetWalletUnclaimedGas();
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetWalletUnclaimedGasAsync).ToLower());
+            var result = await rpc.GetWalletUnclaimedGasAsync();
             Assert.AreEqual(test.Response.Result.AsString(), result.ToString());
         }
 
         [TestMethod]
-        public void TestImportPrivKey()
+        public async Task TestImportPrivKey()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.ImportPrivKey).ToLower());
-            var result = rpc.ImportPrivKey(test.Request.Params[0].AsString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.ImportPrivKeyAsync).ToLower());
+            var result = await rpc.ImportPrivKeyAsync(test.Request.Params[0].AsString());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
         [TestMethod]
-        public void TestListAddress()
+        public async Task TestListAddress()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.ListAddress).ToLower());
-            var result = rpc.ListAddress();
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.ListAddressAsync).ToLower());
+            var result = await rpc.ListAddressAsync();
             Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => p.ToJson()).ToArray()).ToString());
         }
 
         [TestMethod]
-        public void TestOpenWallet()
+        public async Task TestOpenWallet()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.OpenWallet).ToLower());
-            var result = rpc.OpenWallet(test.Request.Params[0].AsString(), test.Request.Params[1].AsString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.OpenWalletAsync).ToLower());
+            var result = await rpc.OpenWalletAsync(test.Request.Params[0].AsString(), test.Request.Params[1].AsString());
             Assert.AreEqual(test.Response.Result.AsBoolean(), result);
         }
 
         [TestMethod]
-        public void TestSendFrom()
+        public async Task TestSendFrom()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendFrom).ToLower());
-            var result = rpc.SendFrom(test.Request.Params[0].AsString(), test.Request.Params[1].AsString(),
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendFromAsync).ToLower());
+            var result = await rpc.SendFromAsync(test.Request.Params[0].AsString(), test.Request.Params[1].AsString(),
                 test.Request.Params[2].AsString(), test.Request.Params[3].AsString());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
         }
 
         [TestMethod]
-        public void TestSendMany()
+        public async Task TestSendMany()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendMany).ToLower());
-            var result = rpc.SendMany(test.Request.Params[0].AsString(), ((JArray)test.Request.Params[1]).Select(p => RpcTransferOut.FromJson(p)));
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendManyAsync).ToLower());
+            var result = await rpc.SendManyAsync(test.Request.Params[0].AsString(), ((JArray)test.Request.Params[1]).Select(p => RpcTransferOut.FromJson(p)));
             Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
         }
 
         [TestMethod]
-        public void TestSendToAddress()
+        public async Task TestSendToAddress()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendToAddress).ToLower());
-            var result = rpc.SendToAddress(test.Request.Params[0].AsString(), test.Request.Params[1].AsString(), test.Request.Params[2].AsString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendToAddressAsync).ToLower());
+            var result = await rpc.SendToAddressAsync(test.Request.Params[0].AsString(), test.Request.Params[1].AsString(), test.Request.Params[2].AsString());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
         }
 
@@ -417,27 +415,37 @@ namespace Neo.Network.RPC.Tests
         #region Plugins
 
         [TestMethod()]
-        public void GetApplicationLogTest()
+        public async Task GetApplicationLogTest()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetApplicationLog).ToLower());
-            var result = rpc.GetApplicationLog(test.Request.Params[0].AsString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetApplicationLogAsync).ToLower());
+            var result = await rpc.GetApplicationLogAsync(test.Request.Params[0].AsString());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
         [TestMethod()]
-        public void GetNep5TransfersTest()
+        public async Task GetApplicationLogTest_TriggerType()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep5Transfers).ToLower());
-            var result = rpc.GetNep5Transfers(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(),
-                (ulong)test.Request.Params[2].AsNumber());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.GetApplicationLogAsync) + "_triggertype").ToLower());
+            var result = await rpc.GetApplicationLogAsync(test.Request.Params[0].AsString(), TriggerType.OnPersist);
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
         [TestMethod()]
-        public void GetNep5BalancesTest()
+        public async Task GetNep5TransfersTest()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep5Balances).ToLower());
-            var result = rpc.GetNep5Balances(test.Request.Params[0].AsString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep5TransfersAsync).ToLower());
+            var result = await rpc.GetNep5TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(), (ulong)test.Request.Params[2].AsNumber());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.GetNep5TransfersAsync).ToLower() + "_with_null_transferaddress"));
+            result = await rpc.GetNep5TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(), (ulong)test.Request.Params[2].AsNumber());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+        }
+
+        [TestMethod()]
+        public async Task GetNep5BalancesTest()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep5BalancesAsync).ToLower());
+            var result = await rpc.GetNep5BalancesAsync(test.Request.Params[0].AsString());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 

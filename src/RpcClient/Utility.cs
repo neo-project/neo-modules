@@ -2,6 +2,7 @@ using Neo.Cryptography.ECC;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
 using Neo.VM.Types;
 using Neo.Wallets;
 using System;
@@ -25,6 +26,27 @@ namespace Neo.Network.RPC
                                               (uint)bits[0]);
             BigInteger denominator = BigInteger.Pow(10, (bits[3] >> 16) & 0xff);
             return (numerator, denominator);
+        }
+
+        public static UInt160 ToScriptHash(this JObject value)
+        {
+            var addressOrScriptHash = value.AsString();
+
+            return addressOrScriptHash.Length < 40 ?
+                addressOrScriptHash.ToScriptHash() : UInt160.Parse(addressOrScriptHash);
+        }
+
+        public static string AsScriptHash(this string addressOrScriptHash)
+        {
+            foreach (var native in NativeContract.Contracts)
+            {
+                if (addressOrScriptHash.Equals(native.Name, StringComparison.InvariantCultureIgnoreCase) ||
+                    addressOrScriptHash == native.Id.ToString())
+                    return native.Hash.ToString();
+            }
+
+            return addressOrScriptHash.Length < 40 ?
+                addressOrScriptHash : UInt160.Parse(addressOrScriptHash).ToString();
         }
 
         /// <summary>
@@ -114,23 +136,24 @@ namespace Neo.Network.RPC
             block.MerkleRoot = UInt256.Parse(json["merkleroot"].AsString());
             block.Timestamp = (ulong)json["time"].AsNumber();
             block.Index = (uint)json["index"].AsNumber();
-            block.NextConsensus = json["nextconsensus"].AsString().ToScriptHash();
+            block.NextConsensus = json["nextconsensus"].ToScriptHash();
             block.Witness = ((JArray)json["witnesses"]).Select(p => WitnessFromJson(p)).FirstOrDefault();
         }
 
         public static Transaction TransactionFromJson(JObject json)
         {
-            Transaction tx = new Transaction();
-            tx.Version = byte.Parse(json["version"].AsString());
-            tx.Nonce = uint.Parse(json["nonce"].AsString());
-            tx.Signers = ((JArray)json["signers"]).Select(p => SignerFromJson(p)).ToArray();
-            tx.SystemFee = long.Parse(json["sysfee"].AsString());
-            tx.NetworkFee = long.Parse(json["netfee"].AsString());
-            tx.ValidUntilBlock = uint.Parse(json["validuntilblock"].AsString());
-            tx.Attributes = ((JArray)json["attributes"]).Select(p => TransactionAttributeFromJson(p)).ToArray();
-            tx.Script = Convert.FromBase64String(json["script"].AsString());
-            tx.Witnesses = ((JArray)json["witnesses"]).Select(p => WitnessFromJson(p)).ToArray();
-            return tx;
+            return new Transaction
+            {
+                Version = byte.Parse(json["version"].AsString()),
+                Nonce = uint.Parse(json["nonce"].AsString()),
+                Signers = ((JArray)json["signers"]).Select(p => SignerFromJson(p)).ToArray(),
+                SystemFee = long.Parse(json["sysfee"].AsString()),
+                NetworkFee = long.Parse(json["netfee"].AsString()),
+                ValidUntilBlock = uint.Parse(json["validuntilblock"].AsString()),
+                Attributes = ((JArray)json["attributes"]).Select(p => TransactionAttributeFromJson(p)).ToArray(),
+                Script = Convert.FromBase64String(json["script"].AsString()),
+                Witnesses = ((JArray)json["witnesses"]).Select(p => WitnessFromJson(p)).ToArray()
+            };
         }
 
         public static Header HeaderFromJson(JObject json)
@@ -145,19 +168,20 @@ namespace Neo.Network.RPC
         {
             return new Signer
             {
-                Account = UInt160.Parse(json["account"].AsString()),
+                Account = json["account"].ToScriptHash(),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), json["scopes"].AsString()),
-                AllowedContracts = ((JArray)json["allowedContracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray(),
+                AllowedContracts = ((JArray)json["allowedContracts"])?.Select(p => p.ToScriptHash()).ToArray(),
                 AllowedGroups = ((JArray)json["allowedGroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
             };
         }
 
         public static ConsensusData ConsensusDataFromJson(JObject json)
         {
-            ConsensusData block = new ConsensusData();
-            block.PrimaryIndex = (uint)json["primary"].AsNumber();
-            block.Nonce = ulong.Parse(json["nonce"].AsString(), NumberStyles.HexNumber);
-            return block;
+            return new ConsensusData
+            {
+                PrimaryIndex = (byte)json["primary"].AsNumber(),
+                Nonce = ulong.Parse(json["nonce"].AsString(), NumberStyles.HexNumber)
+            };
         }
 
         public static TransactionAttribute TransactionAttributeFromJson(JObject json)
@@ -172,10 +196,11 @@ namespace Neo.Network.RPC
 
         public static Witness WitnessFromJson(JObject json)
         {
-            Witness witness = new Witness();
-            witness.InvocationScript = Convert.FromBase64String(json["invocation"].AsString());
-            witness.VerificationScript = Convert.FromBase64String(json["verification"].AsString());
-            return witness;
+            return new Witness
+            {
+                InvocationScript = Convert.FromBase64String(json["invocation"].AsString()),
+                VerificationScript = Convert.FromBase64String(json["verification"].AsString())
+            };
         }
 
         public static StackItem StackItemFromJson(JObject json)
@@ -214,7 +239,7 @@ namespace Neo.Network.RPC
                 case StackItemType.InteropInterface:
                     return new InteropInterface(new object()); // See https://github.com/neo-project/neo/blob/master/src/neo/VM/Helper.cs#L194
             }
-            return null;
+            return json["value"] is null ? StackItem.Null : json["value"].AsString();
         }
     }
 }

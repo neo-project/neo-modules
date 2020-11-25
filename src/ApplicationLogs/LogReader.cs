@@ -3,6 +3,7 @@ using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Persistence;
+using Neo.SmartContract;
 using Neo.VM;
 using System;
 using System.Collections.Generic;
@@ -37,30 +38,47 @@ namespace Neo.Plugins
             UInt256 hash = UInt256.Parse(_params[0].AsString());
             byte[] value = db.Get(ReadOptions.Default, hash.ToArray());
             if (value is null)
-                throw new RpcException(-100, "Unknown transaction");
-            return JObject.Parse(Encoding.UTF8.GetString(value));
+                throw new RpcException(-100, "Unknown transaction/blockhash");
+
+            var raw = JObject.Parse(Utility.StrictUTF8.GetString(value));
+            //Additional optional "trigger" parameter to getapplicationlog for clients to be able to get just one execution result for a block.
+            if (_params.Count >= 2 && Enum.TryParse(_params[1].AsString(), true, out TriggerType trigger))
+            {
+                var executions = raw["executions"] as JArray;
+                for (int i = 0; i < executions.Count;)
+                {
+                    if (!executions[i]["trigger"].AsString().Equals(trigger.ToString(), StringComparison.OrdinalIgnoreCase))
+                        executions.RemoveAt(i);
+                    else
+                        i++;
+                }
+            }
+            return raw;
         }
 
         public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             WriteBatch writeBatch = new WriteBatch();
 
-            foreach (var appExec in applicationExecutedList)
+            //processing log for transactions
+            foreach (var appExec in applicationExecutedList.Where(p => p.Transaction != null))
             {
-                JObject json = new JObject();
-                json["txid"] = appExec.Transaction?.Hash.ToString();
-                json["trigger"] = appExec.Trigger;
-                json["vmstate"] = appExec.VMState;
-                json["gasconsumed"] = appExec.GasConsumed.ToString();
+                var txJson = new JObject();
+                txJson["txid"] = appExec.Transaction.Hash.ToString();
+                JObject trigger = new JObject();
+                trigger["trigger"] = appExec.Trigger;
+                trigger["vmstate"] = appExec.VMState;
+                trigger["exception"] = GetExceptionMessage(appExec.Exception);
+                trigger["gasconsumed"] = appExec.GasConsumed.ToString();
                 try
                 {
-                    json["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
+                    trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
                 }
                 catch (InvalidOperationException)
                 {
-                    json["stack"] = "error: recursive reference";
+                    trigger["stack"] = "error: recursive reference";
                 }
-                json["notifications"] = appExec.Notifications.Select(q =>
+                trigger["notifications"] = appExec.Notifications.Select(q =>
                 {
                     JObject notification = new JObject();
                     notification["contract"] = q.ScriptHash.ToString();
@@ -75,7 +93,52 @@ namespace Neo.Plugins
                     }
                     return notification;
                 }).ToArray();
-                writeBatch.Put((appExec.Transaction?.Hash ?? snapshot.PersistingBlock.Hash).ToArray(), Encoding.UTF8.GetBytes(json.ToString()));
+
+                txJson["executions"] = new List<JObject>() { trigger }.ToArray();
+                writeBatch.Put(appExec.Transaction.Hash.ToArray(), Utility.StrictUTF8.GetBytes(txJson.ToString()));
+            }
+
+            //processing log for block
+            var blocks = applicationExecutedList.Where(p => p.Transaction == null);
+            if (blocks.Count() > 0)
+            {
+                var blockJson = new JObject();
+                var blockHash = snapshot.PersistingBlock.Hash.ToArray();
+                blockJson["blockhash"] = snapshot.PersistingBlock.Hash.ToString();
+                var triggerList = new List<JObject>();
+                foreach (var appExec in blocks)
+                {
+                    JObject trigger = new JObject();
+                    trigger["trigger"] = appExec.Trigger;
+                    trigger["vmstate"] = appExec.VMState;
+                    trigger["gasconsumed"] = appExec.GasConsumed.ToString();
+                    try
+                    {
+                        trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        trigger["stack"] = "error: recursive reference";
+                    }
+                    trigger["notifications"] = appExec.Notifications.Select(q =>
+                    {
+                        JObject notification = new JObject();
+                        notification["contract"] = q.ScriptHash.ToString();
+                        notification["eventname"] = q.EventName;
+                        try
+                        {
+                            notification["state"] = q.State.ToJson();
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            notification["state"] = "error: recursive reference";
+                        }
+                        return notification;
+                    }).ToArray();
+                    triggerList.Add(trigger);
+                }
+                blockJson["executions"] = triggerList.ToArray();
+                writeBatch.Put(blockHash, Utility.StrictUTF8.GetBytes(blockJson.ToString()));
             }
             db.Write(WriteOptions.Default, writeBatch);
         }
@@ -87,6 +150,18 @@ namespace Neo.Plugins
         public bool ShouldThrowExceptionFromCommit(Exception ex)
         {
             return false;
+        }
+
+        string GetExceptionMessage(Exception exception)
+        {
+            if (exception == null) return "Engine faulted.";
+
+            if (exception.InnerException != null)
+            {
+                return GetExceptionMessage(exception.InnerException);
+            }
+
+            return exception.Message;
         }
     }
 }

@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neo" Version="3.0.0-preview3-00" />
+    <PackageReference Include="Neo" Version="3.0.0-CI01066" />
     <PackageReference Include="RocksDbNative" Version="6.2.2" />
     <PackageReference Include="RocksDbSharp" Version="6.2.2" />
   </ItemGroup>
