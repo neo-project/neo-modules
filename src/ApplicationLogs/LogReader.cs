@@ -4,6 +4,7 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Persistence;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
 using Neo.VM;
 using System;
 using System.Collections.Generic;
@@ -66,7 +67,7 @@ namespace Neo.Plugins
             trigger["trigger"] = appExec.Trigger;
             trigger["vmstate"] = appExec.VMState;
             trigger["exception"] = GetExceptionMessage(appExec.Exception);
-            trigger["gasconsumed"] = appExec.GasConsumed.ToString();
+            trigger["gasconsumed"] = new BigDecimal(appExec.GasConsumed, NativeContract.GAS.Decimals).ToString();
             try
             {
                 trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
@@ -109,7 +110,7 @@ namespace Neo.Plugins
                     JObject trigger = new JObject();
                     trigger["trigger"] = appExec.Trigger;
                     trigger["vmstate"] = appExec.VMState;
-                    trigger["gasconsumed"] = appExec.GasConsumed.ToString();
+                    trigger["gasconsumed"] = new BigDecimal(appExec.GasConsumed, NativeContract.GAS.Decimals).ToString();
                     try
                     {
                         trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();

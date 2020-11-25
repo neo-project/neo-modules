@@ -731,7 +731,7 @@
       "result": {
         "script": "0c1426ae7c6c9861ec418468c1f0fdc4a7f2963eb89111c00c0962616c616e63654f660c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52",
         "state": "HALT",
-        "gasconsumed": "2007570",
+        "gasconsumed": "0.02007570",
         "stack": [
           {
             "type": "Integer",
@@ -756,7 +756,7 @@
       "result": {
         "script": "EMMMBG5hbWUMFDt9NxHG8Mz5sdypA9G/odiW8SOMQWJ9W1IQwwwGc3ltYm9sDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtSEMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtSEMMMC3RvdGFsU3VwcGx5DBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS",
         "state": "HALT",
-        "gasconsumed": "5061560",
+        "gasconsumed": "0.05061560",
         "stack": [
           {
             "type": "Array",
@@ -942,7 +942,7 @@
       "result": {
         "script": "EMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS",
         "state": "HALT",
-        "gasconsumed": "5061560",
+        "gasconsumed": "0.05061560",
         "stack": [
           {
             "type": "Integer",
@@ -1213,7 +1213,7 @@
           {
             "trigger": "OnPersist",
             "vmstate": "HALT",
-            "gasconsumed": "2031260",
+            "gasconsumed": "0.02031260",
             "stack": [],
             "notifications": [
               {
@@ -1261,7 +1261,7 @@
           {
             "trigger": "PostPersist",
             "vmstate": "HALT",
-            "gasconsumed": "2031260",
+            "gasconsumed": "0.02031260",
             "stack": [],
             "notifications": [
               {
@@ -1307,7 +1307,7 @@
           {
             "trigger": "OnPersist",
             "vmstate": "HALT",
-            "gasconsumed": "2031260",
+            "gasconsumed": "0.02031260",
             "stack": [],
             "notifications": [
               {

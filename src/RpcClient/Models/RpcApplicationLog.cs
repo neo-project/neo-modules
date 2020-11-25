@@ -1,5 +1,6 @@
 using Neo.IO.Json;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.VM.Types;
 using System.Collections.Generic;
@@ -54,7 +55,7 @@ namespace Neo.Network.RPC.Models
             JObject json = new JObject();
             json["trigger"] = Trigger;
             json["vmstate"] = VMState;
-            json["gasconsumed"] = GasConsumed.ToString();
+            json["gasconsumed"] = new BigDecimal(GasConsumed, NativeContract.GAS.Decimals).ToString();
             json["stack"] = Stack.Select(q => q.ToJson()).ToArray();
             json["notifications"] = Notifications.Select(q => q.ToJson()).ToArray();
             return json;
