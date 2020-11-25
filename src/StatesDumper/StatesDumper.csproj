@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Neo.Plugins.StatesDumper</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="StatesDumper\config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Neo.Plugins.Storage.RocksDBStore</PackageId>
+    <RootNamespace>Neo.Plugins.Storage</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="RocksDBStore\config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="RocksDbNative" Version="6.2.2" />
+    <PackageReference Include="RocksDbSharp" Version="6.2.2" />
+  </ItemGroup>
+
+</Project>
