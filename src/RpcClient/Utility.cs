@@ -165,19 +165,9 @@ namespace Neo.Network.RPC
 
         public static JObject TransactionToJson(Transaction tx)
         {
-            JObject json = new JObject();
-            json["hash"] = tx.Hash.ToString();
-            json["size"] = tx.Size;
-            json["version"] = tx.Version;
-            json["nonce"] = tx.Nonce;
-            json["sender"] = tx.Sender.ToAddress();
+            JObject json = tx.ToJson();
             json["sysfee"] = new BigDecimal(tx.SystemFee, NativeContract.GAS.Decimals).ToString();
             json["netfee"] = new BigDecimal(tx.NetworkFee, NativeContract.GAS.Decimals).ToString();
-            json["validuntilblock"] = tx.ValidUntilBlock;
-            json["signers"] = tx.Signers.Select(p => p.ToJson()).ToArray();
-            json["attributes"] = tx.Attributes.Select(p => p.ToJson()).ToArray();
-            json["script"] = Convert.ToBase64String(tx.Script);
-            json["witnesses"] = tx.Witnesses.Select(p => p.ToJson()).ToArray();
             return json;
         }
 
