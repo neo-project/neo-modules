@@ -1,13 +1,10 @@
 using System;
-using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using JArray = Newtonsoft.Json.Linq.JArray;
-using JObject = Newtonsoft.Json.Linq.JObject;
 
 namespace Neo.Plugins
 {
@@ -17,7 +14,7 @@ namespace Neo.Plugins
         public bool AllowPrivateHost { get; set; } = false;
         public readonly string[] AllowedFormats = new string[] { "application/json" };
 
-        public byte[] Request(ulong requestId, string url, string filter)
+        public string Request(string url)
         {
             Utility.Log(nameof(OracleHttpProtocol), LogLevel.Debug, $"Request: {url}");
 
@@ -38,18 +35,7 @@ namespace Neo.Plugins
             sw.Stop();
             var taskRet = result.Result.Content.ReadAsStringAsync();
             if (Timeout <= sw.ElapsedMilliseconds || !taskRet.Wait(Timeout - (int)sw.ElapsedMilliseconds)) throw new TimeoutException("Timeout");
-            var data = Filter(taskRet.Result, filter);
-            return Utility.StrictUTF8.GetBytes(data);
-        }
-
-        private string Filter(string input, string filterArgs)
-        {
-            if (string.IsNullOrEmpty(filterArgs))
-                return input;
-
-            JObject beforeObject = JObject.Parse(input);
-            JArray afterObjects = new JArray(beforeObject.SelectTokens(filterArgs, true));
-            return afterObjects.ToString();
+            return taskRet.Result;
         }
 
         internal static bool IsInternal(IPHostEntry entry)

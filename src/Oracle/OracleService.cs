@@ -29,6 +29,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using static System.IO.Path;
+using NJArray = Newtonsoft.Json.Linq.JArray;
+using NJObject = Newtonsoft.Json.Linq.JObject;
 
 namespace Neo.Plugins
 {
@@ -202,59 +204,65 @@ namespace Neo.Plugins
             }
         }
 
-        public void ProcessRequest(StoreView snapshot, ulong requestId, OracleRequest request)
+        public void ProcessRequest(StoreView snapshot, ulong id, OracleRequest req)
         {
-            Log($"Process oracle request: {requestId}, requestTx={request.OriginalTxid}");
+            Log($"Process oracle request: {req}, txid: {req.OriginalTxid}, url: {req.Url}");
 
-            Uri.TryCreate(request.Url, UriKind.Absolute, out var uri);
-            OracleResponse response;
+            string data = "";
+            OracleResponseCode code = OracleResponseCode.Success;
+            Uri.TryCreate(req.Url, UriKind.Absolute, out var uri);
             switch (uri.Scheme.ToLowerInvariant())
             {
                 case "http":
                 case "https":
                     try
                     {
-                        var data = Https.Request(requestId, request.Url, request.Filter);
-                        response = new OracleResponse() { Id = requestId, Code = OracleResponseCode.Success, Result = data };
+                        data = Https.Request(req.Url);
                     }
                     catch (FileNotFoundException notfoundex)
                     {
                         Log($"Request error {notfoundex.Message}");
-                        response = new OracleResponse() { Id = requestId, Code = OracleResponseCode.NotFound, Result = Array.Empty<byte>() };
+                        code = OracleResponseCode.NotFound;
                     }
                     catch (TimeoutException timeoutex)
                     {
                         Log($"Request error {timeoutex.Message}");
-                        response = new OracleResponse() { Id = requestId, Code = OracleResponseCode.Timeout, Result = Array.Empty<byte>() };
+                        code = OracleResponseCode.Timeout;
                     }
                     catch (Exception e)
                     {
                         Log($"Request error {e.Message}");
-                        response = new OracleResponse() { Id = requestId, Code = OracleResponseCode.Error, Result = Array.Empty<byte>() };
+                        code = OracleResponseCode.Error;
                     }
                     break;
                 default:
                     Log($"{uri.Scheme.ToLowerInvariant()} is not supported");
-                    response = new OracleResponse() { Id = requestId, Code = OracleResponseCode.Forbidden, Result = Array.Empty<byte>() };
+                    code = OracleResponseCode.Forbidden;
                     break;
             }
-            var responseTx = CreateResponseTx(snapshot, response);
-            var backupTx = CreateResponseTx(snapshot, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() });
 
-            Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
-
-            ECPoint[] oraclePublicKeys = NativeContract.Designate.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
-            foreach (var account in Wallet.GetAccounts())
+            foreach(var (requestId, request) in NativeContract.Oracle.GetRequestsByUrl(snapshot, req.Url))
             {
-                var oraclePub = account.GetKey().PublicKey;
-                if (!account.HasKey || account.Lock || !oraclePublicKeys.Contains(oraclePub)) continue;
+                var result = code == OracleResponseCode.Success ? Filter(data, request.Filter) : Array.Empty<byte>();
+                var response = new OracleResponse() { Id = requestId, Code = code, Result = result };
+                var responseTx = CreateResponseTx(snapshot, response);
+                var backupTx = CreateResponseTx(snapshot, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() });
 
-                var txSign = responseTx.Sign(account.GetKey());
-                var backTxSign = backupTx.Sign(account.GetKey());
-                AddResponseTxSign(snapshot, requestId, oraclePub, txSign, responseTx, backupTx, backTxSign);
-                SendResponseSignature(requestId, txSign, account.GetKey());
+                Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
 
-                Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()}");
+                ECPoint[] oraclePublicKeys = NativeContract.Designate.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
+                foreach (var account in Wallet.GetAccounts())
+                {
+                    var oraclePub = account.GetKey().PublicKey;
+                    if (!account.HasKey || account.Lock || !oraclePublicKeys.Contains(oraclePub)) continue;
+
+                    var txSign = responseTx.Sign(account.GetKey());
+                    var backTxSign = backupTx.Sign(account.GetKey());
+                    AddResponseTxSign(snapshot, requestId, oraclePub, txSign, responseTx, backupTx, backTxSign);
+                    SendResponseSignature(requestId, txSign, account.GetKey());
+
+                    Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()}");
+                }
             }
         }
 
@@ -313,9 +321,9 @@ namespace Neo.Plugins
 
             // Calculate network fee
 
+            var oracleContract = snapshot.Contracts.TryGet(NativeContract.Oracle.Hash);
             var engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
-            engine.LoadScript(NativeContract.Oracle.Script, CallFlags.None, 0);
-            engine.LoadScript(new ScriptBuilder().Emit(OpCode.DEPTH, OpCode.PACK).EmitPush("verify").ToArray(), CallFlags.None);
+            engine.LoadContract(oracleContract, "verify", CallFlags.None, true);
             if (engine.Execute() != VMState.HALT) return null;
             tx.NetworkFee += engine.GasConsumed;
 
@@ -400,6 +408,16 @@ namespace Neo.Plugins
                     PendingQueue.Remove(requestId, out _);
                 }
             }
+        }
+
+        private byte[] Filter(string input, string filterArgs)
+        {
+            if (string.IsNullOrEmpty(filterArgs))
+                return Utility.StrictUTF8.GetBytes(input);
+
+            NJObject beforeObject = NJObject.Parse(input);
+            NJArray afterObjects = new NJArray(beforeObject.SelectTokens(filterArgs, true));
+            return Utility.StrictUTF8.GetBytes(afterObjects.ToString());
         }
 
         private bool CheckTxSign(StoreView snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> Signs)
