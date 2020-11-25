@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NeoFsStorageNode\NeoFsStorageNode.csproj" />
+    <ProjectReference Include="..\..\src\FsStorageNode\FsStorageNode.csproj" />
   </ItemGroup>
 
 </Project>

@@ -24,9 +24,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Network.RPC.Tests", "te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Plugins.Storage.Tests", "tests\Neo.Plugins.Storage.Tests\Neo.Plugins.Storage.Tests.csproj", "{9E7EA895-302A-4C0C-BA9B-54F9A67AD75C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NeoFsStorageNode", "NeoFsStorageNode\NeoFsStorageNode.csproj", "{2A16D887-363A-4407-9F4E-25ED965B0FF6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FsStorageNode", "src\FsStorageNode\FsStorageNode.csproj", "{2A16D887-363A-4407-9F4E-25ED965B0FF6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Fs.Tests", "Neo.Fs.Policy.Tests\Neo.Fs.Tests.csproj", "{35ACB651-1015-45A1-BAFA-897090DF440C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NeoFs.Policy.Tests", "tests\NeoFs.Policy.Tests\NeoFs.Policy.Tests.csproj", "{35ACB651-1015-45A1-BAFA-897090DF440C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
