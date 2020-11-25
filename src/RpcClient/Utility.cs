@@ -129,6 +129,23 @@ namespace Neo.Network.RPC
             return block;
         }
 
+        public static JObject BlockToJson(Block block)
+        {
+            JObject json = new JObject();
+            json["hash"] = block.Hash.ToString();
+            json["size"] = block.Size;
+            json["version"] = block.Version;
+            json["previousblockhash"] = block.PrevHash.ToString();
+            json["merkleroot"] = block.MerkleRoot.ToString();
+            json["time"] = block.Timestamp;
+            json["index"] = block.Index;
+            json["nextconsensus"] = block.NextConsensus.ToAddress();
+            json["witnesses"] = new JArray(block.Witness.ToJson());
+            json["consensusdata"] = block.ConsensusData.ToJson();
+            json["tx"] = block.Transactions.Select(p => TransactionToJson(p)).ToArray();
+            return json;
+        }
+
         public static void FromJson(this BlockBase block, JObject json)
         {
             block.Version = (uint)json["version"].AsNumber();
@@ -147,13 +164,31 @@ namespace Neo.Network.RPC
                 Version = byte.Parse(json["version"].AsString()),
                 Nonce = uint.Parse(json["nonce"].AsString()),
                 Signers = ((JArray)json["signers"]).Select(p => SignerFromJson(p)).ToArray(),
-                SystemFee = long.Parse(json["sysfee"].AsString()),
-                NetworkFee = long.Parse(json["netfee"].AsString()),
+                SystemFee = (long)BigDecimal.Parse(json["sysfee"].AsString(), NativeContract.GAS.Decimals).Value,
+                NetworkFee = (long)BigDecimal.Parse(json["netfee"].AsString(), NativeContract.GAS.Decimals).Value,
                 ValidUntilBlock = uint.Parse(json["validuntilblock"].AsString()),
                 Attributes = ((JArray)json["attributes"]).Select(p => TransactionAttributeFromJson(p)).ToArray(),
                 Script = Convert.FromBase64String(json["script"].AsString()),
                 Witnesses = ((JArray)json["witnesses"]).Select(p => WitnessFromJson(p)).ToArray()
             };
+        }
+
+        public static JObject TransactionToJson(Transaction tx)
+        {
+            JObject json = new JObject();
+            json["hash"] = tx.Hash.ToString();
+            json["size"] = tx.Size;
+            json["version"] = tx.Version;
+            json["nonce"] = tx.Nonce;
+            json["sender"] = tx.Sender.ToAddress();
+            json["sysfee"] = new BigDecimal(tx.SystemFee, NativeContract.GAS.Decimals).ToString();
+            json["netfee"] = new BigDecimal(tx.NetworkFee, NativeContract.GAS.Decimals).ToString();
+            json["validuntilblock"] = tx.ValidUntilBlock;
+            json["signers"] = tx.Signers.Select(p => p.ToJson()).ToArray();
+            json["attributes"] = tx.Attributes.Select(p => p.ToJson()).ToArray();
+            json["script"] = Convert.ToBase64String(tx.Script);
+            json["witnesses"] = tx.Witnesses.Select(p => p.ToJson()).ToArray();
+            return json;
         }
 
         public static Header HeaderFromJson(JObject json)
