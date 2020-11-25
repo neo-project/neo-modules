@@ -131,17 +131,7 @@ namespace Neo.Network.RPC
 
         public static JObject BlockToJson(Block block)
         {
-            JObject json = new JObject();
-            json["hash"] = block.Hash.ToString();
-            json["size"] = block.Size;
-            json["version"] = block.Version;
-            json["previousblockhash"] = block.PrevHash.ToString();
-            json["merkleroot"] = block.MerkleRoot.ToString();
-            json["time"] = block.Timestamp;
-            json["index"] = block.Index;
-            json["nextconsensus"] = block.NextConsensus.ToAddress();
-            json["witnesses"] = new JArray(block.Witness.ToJson());
-            json["consensusdata"] = block.ConsensusData.ToJson();
+            JObject json = block.ToJson();
             json["tx"] = block.Transactions.Select(p => TransactionToJson(p)).ToArray();
             return json;
         }
