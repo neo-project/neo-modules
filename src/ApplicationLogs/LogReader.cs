@@ -56,49 +56,47 @@ namespace Neo.Plugins
             return raw;
         }
 
-        public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        public static JObject TxLogToJson(Blockchain.ApplicationExecuted appExec)
         {
-            WriteBatch writeBatch = new WriteBatch();
+            global::System.Diagnostics.Debug.Assert(appExec.Transaction != null);
 
-            //processing log for transactions
-            foreach (var appExec in applicationExecutedList.Where(p => p.Transaction != null))
+            var txJson = new JObject();
+            txJson["txid"] = appExec.Transaction.Hash.ToString();
+            JObject trigger = new JObject();
+            trigger["trigger"] = appExec.Trigger;
+            trigger["vmstate"] = appExec.VMState;
+            trigger["exception"] = GetExceptionMessage(appExec.Exception);
+            trigger["gasconsumed"] = appExec.GasConsumed.ToString();
+            try
             {
-                var txJson = new JObject();
-                txJson["txid"] = appExec.Transaction.Hash.ToString();
-                JObject trigger = new JObject();
-                trigger["trigger"] = appExec.Trigger;
-                trigger["vmstate"] = appExec.VMState;
-                trigger["exception"] = GetExceptionMessage(appExec.Exception);
-                trigger["gasconsumed"] = appExec.GasConsumed.ToString();
+                trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
+            }
+            catch (InvalidOperationException)
+            {
+                trigger["stack"] = "error: recursive reference";
+            }
+            trigger["notifications"] = appExec.Notifications.Select(q =>
+            {
+                JObject notification = new JObject();
+                notification["contract"] = q.ScriptHash.ToString();
+                notification["eventname"] = q.EventName;
                 try
                 {
-                    trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
+                    notification["state"] = q.State.ToJson();
                 }
                 catch (InvalidOperationException)
                 {
-                    trigger["stack"] = "error: recursive reference";
+                    notification["state"] = "error: recursive reference";
                 }
-                trigger["notifications"] = appExec.Notifications.Select(q =>
-                {
-                    JObject notification = new JObject();
-                    notification["contract"] = q.ScriptHash.ToString();
-                    notification["eventname"] = q.EventName;
-                    try
-                    {
-                        notification["state"] = q.State.ToJson();
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        notification["state"] = "error: recursive reference";
-                    }
-                    return notification;
-                }).ToArray();
+                return notification;
+            }).ToArray();
 
-                txJson["executions"] = new List<JObject>() { trigger }.ToArray();
-                writeBatch.Put(appExec.Transaction.Hash.ToArray(), Utility.StrictUTF8.GetBytes(txJson.ToString()));
-            }
+            txJson["executions"] = new List<JObject>() { trigger }.ToArray();
+            return txJson;
+        }
 
-            //processing log for block
+        public static JObject BlockLogToJson(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        {
             var blocks = applicationExecutedList.Where(p => p.Transaction == null);
             if (blocks.Count() > 0)
             {
@@ -138,7 +136,28 @@ namespace Neo.Plugins
                     triggerList.Add(trigger);
                 }
                 blockJson["executions"] = triggerList.ToArray();
-                writeBatch.Put(blockHash, Utility.StrictUTF8.GetBytes(blockJson.ToString()));
+                return blockJson;
+            }
+
+            return null;
+        }
+
+        public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        {
+            WriteBatch writeBatch = new WriteBatch();
+
+            //processing log for transactions
+            foreach (var appExec in applicationExecutedList.Where(p => p.Transaction != null))
+            {
+                var txJson = TxLogToJson(appExec);
+                writeBatch.Put(appExec.Transaction.Hash.ToArray(), Utility.StrictUTF8.GetBytes(txJson.ToString()));
+            }
+
+            //processing log for block
+            var blockJson = BlockLogToJson(snapshot, applicationExecutedList);
+            if (blockJson != null)
+            {
+                writeBatch.Put(snapshot.PersistingBlock.Hash.ToArray(), Utility.StrictUTF8.GetBytes(blockJson.ToString()));
             }
             db.Write(WriteOptions.Default, writeBatch);
         }
@@ -152,7 +171,7 @@ namespace Neo.Plugins
             return false;
         }
 
-        string GetExceptionMessage(Exception exception)
+        static string GetExceptionMessage(Exception exception)
         {
             if (exception == null) return "Engine faulted.";
 

@@ -1,20 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>3.0.0-preview3</Version>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <RootNamespace>Neo.Network.RPC</RootNamespace>
-    <Authors>The Neo Project</Authors>
     <PackageId>Neo.Network.RPC.RpcClient</PackageId>
-    <PackageTags>NEO;Blockchain</PackageTags>
-    <PackageProjectUrl>https://github.com/neo-project/neo-modules</PackageProjectUrl>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/neo-project/neo-modules.git</RepositoryUrl>
+    <RootNamespace>Neo.Network.RPC</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Neo" Version="3.0.0-CI01066" />
-  </ItemGroup>
 
 </Project>

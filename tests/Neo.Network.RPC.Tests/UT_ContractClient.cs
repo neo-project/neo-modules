@@ -55,7 +55,6 @@ namespace Neo.Network.RPC.Tests
                 SupportedStandards = new string[] { "NEP-10" },
                 Extra = null,
             };
-            manifest.Features = ContractFeatures.HasStorage | ContractFeatures.Payable;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
                 sb.EmitSysCall(ApplicationEngine.System_Contract_Create, new byte[1], manifest.ToString());
