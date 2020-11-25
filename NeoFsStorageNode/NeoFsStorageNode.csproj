@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Multiformats.Address" Version="1.1.1" />
+    <PackageReference Include="Sprache" Version="2.3.1" />
+    <PackageReference Include="NeoFS.API" Version="0.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>    <ProjectReference Include="..\src\LevelDBStore\LevelDBStore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\Accounting\Morph\" />
+    <Folder Include="Services\Container\Morph\" />
+    <Folder Include="Services\Id\" />
+  </ItemGroup>
+
+</Project>
