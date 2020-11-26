@@ -41,7 +41,7 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "Unknown block");
             if (verbose)
             {
-                JObject json = block.ToJson();
+                JObject json = Utility.BlockToJson(block);
                 json["confirmations"] = Blockchain.Singleton.Height - block.Index + 1;
                 UInt256 hash = Blockchain.Singleton.GetNextBlockHash(block.Hash);
                 if (hash != null)
@@ -146,7 +146,7 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "Unknown transaction");
             if (verbose)
             {
-                JObject json = tx.ToJson();
+                JObject json = Utility.TransactionToJson(tx);
                 TransactionState txState = Blockchain.Singleton.View.Transactions.TryGet(hash);
                 if (txState != null)
                 {
