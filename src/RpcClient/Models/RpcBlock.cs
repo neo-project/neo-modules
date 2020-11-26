@@ -13,7 +13,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = Block.ToJson();
+            JObject json = Utility.BlockToJson(Block);
             json["confirmations"] = Confirmations;
             json["nextblockhash"] = NextBlockHash?.ToString();
             return json;
