@@ -41,7 +41,7 @@ namespace Neo.Plugins
             if (value is null)
                 throw new RpcException(-100, "Unknown transaction/blockhash");
 
-            var raw = JObject.Parse(Utility.StrictUTF8.GetString(value));
+            var raw = JObject.Parse(Neo.Utility.StrictUTF8.GetString(value));
             //Additional optional "trigger" parameter to getapplicationlog for clients to be able to get just one execution result for a block.
             if (_params.Count >= 2 && Enum.TryParse(_params[1].AsString(), true, out TriggerType trigger))
             {
@@ -151,14 +151,14 @@ namespace Neo.Plugins
             foreach (var appExec in applicationExecutedList.Where(p => p.Transaction != null))
             {
                 var txJson = TxLogToJson(appExec);
-                writeBatch.Put(appExec.Transaction.Hash.ToArray(), Utility.StrictUTF8.GetBytes(txJson.ToString()));
+                writeBatch.Put(appExec.Transaction.Hash.ToArray(), Neo.Utility.StrictUTF8.GetBytes(txJson.ToString()));
             }
 
             //processing log for block
             var blockJson = BlockLogToJson(snapshot, applicationExecutedList);
             if (blockJson != null)
             {
-                writeBatch.Put(snapshot.PersistingBlock.Hash.ToArray(), Utility.StrictUTF8.GetBytes(blockJson.ToString()));
+                writeBatch.Put(snapshot.PersistingBlock.Hash.ToArray(), Neo.Utility.StrictUTF8.GetBytes(blockJson.ToString()));
             }
             db.Write(WriteOptions.Default, writeBatch);
         }
