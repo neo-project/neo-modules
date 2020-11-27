@@ -41,7 +41,7 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "Unknown block");
             if (verbose)
             {
-                JObject json = block.ToJson();
+                JObject json = Utility.BlockToJson(block);
                 json["confirmations"] = Blockchain.Singleton.Height - block.Index + 1;
                 UInt256 hash = Blockchain.Singleton.GetNextBlockHash(block.Hash);
                 if (hash != null)
@@ -103,9 +103,20 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetContractState(JArray _params)
         {
-            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
+            UInt160 script_hash = ToScriptHash(_params[0].AsString());
             ContractState contract = Blockchain.Singleton.View.Contracts.TryGet(script_hash);
             return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
+        }
+
+        private static UInt160 ToScriptHash(string keyword)
+        {
+            foreach (var native in NativeContract.Contracts)
+            {
+                if (keyword.Equals(native.Name, StringComparison.InvariantCultureIgnoreCase) || keyword == native.Id.ToString())
+                    return native.Hash;
+            }
+
+            return UInt160.Parse(keyword);
         }
 
         [RpcMethod]
@@ -135,7 +146,7 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "Unknown transaction");
             if (verbose)
             {
-                JObject json = tx.ToJson();
+                JObject json = Utility.TransactionToJson(tx);
                 TransactionState txState = Blockchain.Singleton.View.Transactions.TryGet(hash);
                 if (txState != null)
                 {
