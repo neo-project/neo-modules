@@ -1,8 +1,10 @@
 using Neo.Cryptography;
 using Neo.IO;
 using Neo.Persistence;
+using Neo.Plugins.StateService.IO;
 using System;
 using System.Collections.Generic;
+using static Neo.Helper;
 
 namespace Neo.Plugins.MPT
 {
@@ -19,40 +21,41 @@ namespace Neo.Plugins.MPT
 
         private bool GetProof(ref MPTNode node, ReadOnlySpan<byte> path, HashSet<byte[]> set)
         {
-            switch (node)
+            switch (node.Type)
             {
-                case LeafNode leafNode:
+                case NodeType.LeafNode:
                     {
                         if (path.IsEmpty)
                         {
-                            set.Add(leafNode.Encode());
+                            set.Add(node.ToArrayWithoutReference());
                             return true;
                         }
                         break;
                     }
-                case HashNode hashNode:
+                case NodeType.Empty:
+                    break;
+                case NodeType.HashNode:
                     {
-                        if (hashNode.IsEmpty) break;
-                        var newNode = Resolve(hashNode);
-                        if (newNode is null) break;
+                        var newNode = cache.Resolve(node.Hash);
+                        if (newNode is null) throw new InvalidOperationException("Internal error, can't resolve hash when mpt getproof");
                         node = newNode;
                         return GetProof(ref node, path, set);
                     }
-                case BranchNode branchNode:
+                case NodeType.BranchNode:
                     {
-                        set.Add(branchNode.Encode());
+                        set.Add(node.ToArrayWithoutReference());
                         if (path.IsEmpty)
                         {
-                            return GetProof(ref branchNode.Children[BranchNode.ChildCount - 1], path, set);
+                            return GetProof(ref node.Children[MPTNode.BranchChildCount - 1], path, set);
                         }
-                        return GetProof(ref branchNode.Children[path[0]], path[1..], set);
+                        return GetProof(ref node.Children[path[0]], path[1..], set);
                     }
-                case ExtensionNode extensionNode:
+                case NodeType.ExtensionNode:
                     {
-                        if (path.StartsWith(extensionNode.Key))
+                        if (path.StartsWith(node.Key))
                         {
-                            set.Add(extensionNode.Encode());
-                            return GetProof(ref extensionNode.Next, path[extensionNode.Key.Length..], set);
+                            set.Add(node.ToArrayWithoutReference());
+                            return GetProof(ref node.Next, path[node.Key.Length..], set);
                         }
                         break;
                     }
@@ -64,9 +67,9 @@ namespace Neo.Plugins.MPT
         {
             using var memoryStore = new MemoryStore();
             foreach (byte[] data in proof)
-                memoryStore.Put(Prefix, Crypto.Hash256(data), data);
+                memoryStore.Put(Prefix, Crypto.Hash256(data), Concat(data, new byte[] { 1 }));
             using ISnapshot snapshot = memoryStore.GetSnapshot();
-            var trie = new MPTTrie<TKey, TValue>(snapshot, root);
+            var trie = new MPTTrie<TKey, TValue>(snapshot, root, false);
             return trie[key];
         }
     }
