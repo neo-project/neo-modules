@@ -13,18 +13,18 @@ using static Neo.Helper;
 namespace Neo.Network.RPC
 {
     /// <summary>
-    /// Call NEP5 methods with RPC API
+    /// Call NEP17 methods with RPC API
     /// </summary>
-    public class Nep5API : ContractClient
+    public class Nep17API : ContractClient
     {
         /// <summary>
-        /// Nep5API Constructor
+        /// Nep17API Constructor
         /// </summary>
         /// <param name="rpcClient">the RPC client to call NEO RPC methods</param>
-        public Nep5API(RpcClient rpcClient) : base(rpcClient) { }
+        public Nep17API(RpcClient rpcClient) : base(rpcClient) { }
 
         /// <summary>
-        /// Get balance of NEP5 token
+        /// Get balance of NEP17 token
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <param name="account">account script hash</param>
@@ -37,7 +37,7 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Get name of NEP5 token
+        /// Get name of NEP17 token
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <returns></returns>
@@ -48,7 +48,7 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Get symbol of NEP5 token
+        /// Get symbol of NEP17 token
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <returns></returns>
@@ -59,7 +59,7 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Get decimals of NEP5 token
+        /// Get decimals of NEP17 token
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <returns></returns>
@@ -70,7 +70,7 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Get total supply of NEP5 token
+        /// Get total supply of NEP17 token
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <returns></returns>
@@ -85,7 +85,7 @@ namespace Neo.Network.RPC
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <returns></returns>
-        public async Task<RpcNep5TokenInfo> GetTokenInfoAsync(UInt160 scriptHash)
+        public async Task<RpcNep17TokenInfo> GetTokenInfoAsync(UInt160 scriptHash)
         {
             byte[] script = Concat(
                 scriptHash.MakeScript("name"),
@@ -96,7 +96,7 @@ namespace Neo.Network.RPC
             var result = await rpcClient.InvokeScriptAsync(script).ConfigureAwait(false);
             var stack = result.Stack;
 
-            return new RpcNep5TokenInfo
+            return new RpcNep17TokenInfo
             {
                 Name = stack[0].GetString(),
                 Symbol = stack[1].GetString(),
@@ -106,7 +106,7 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Create NEP5 token transfer transaction
+        /// Create NEP17 token transfer transaction
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <param name="fromKey">from KeyPair</param>
@@ -128,7 +128,7 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Create NEP5 token transfer transaction from multi-sig account
+        /// Create NEP17 token transfer transaction from multi-sig account
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <param name="m">multi-sig min signature count</param>

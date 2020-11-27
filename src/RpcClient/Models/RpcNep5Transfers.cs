@@ -7,13 +7,13 @@ using System.Numerics;
 
 namespace Neo.Network.RPC.Models
 {
-    public class RpcNep5Transfers
+    public class RpcNep17Transfers
     {
         public UInt160 UserScriptHash { get; set; }
 
-        public List<RpcNep5Transfer> Sent { get; set; }
+        public List<RpcNep17Transfer> Sent { get; set; }
 
-        public List<RpcNep5Transfer> Received { get; set; }
+        public List<RpcNep17Transfer> Received { get; set; }
 
         public JObject ToJson()
         {
@@ -24,19 +24,19 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcNep5Transfers FromJson(JObject json)
+        public static RpcNep17Transfers FromJson(JObject json)
         {
-            RpcNep5Transfers transfers = new RpcNep5Transfers
+            RpcNep17Transfers transfers = new RpcNep17Transfers
             {
-                Sent = ((JArray)json["sent"]).Select(p => RpcNep5Transfer.FromJson(p)).ToList(),
-                Received = ((JArray)json["received"]).Select(p => RpcNep5Transfer.FromJson(p)).ToList(),
+                Sent = ((JArray)json["sent"]).Select(p => RpcNep17Transfer.FromJson(p)).ToList(),
+                Received = ((JArray)json["received"]).Select(p => RpcNep17Transfer.FromJson(p)).ToList(),
                 UserScriptHash = json["address"].ToScriptHash()
             };
             return transfers;
         }
     }
 
-    public class RpcNep5Transfer
+    public class RpcNep17Transfer
     {
         public ulong TimestampMS { get; set; }
 
@@ -65,9 +65,9 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcNep5Transfer FromJson(JObject json)
+        public static RpcNep17Transfer FromJson(JObject json)
         {
-            return new RpcNep5Transfer
+            return new RpcNep17Transfer
             {
                 TimestampMS = (ulong)json["timestamp"].AsNumber(),
                 AssetHash = json["assethash"].ToScriptHash(),
