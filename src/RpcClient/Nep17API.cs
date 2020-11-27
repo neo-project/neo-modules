@@ -88,7 +88,6 @@ namespace Neo.Network.RPC
         public async Task<RpcNep17TokenInfo> GetTokenInfoAsync(UInt160 scriptHash)
         {
             byte[] script = Concat(
-                scriptHash.MakeScript("name"),
                 scriptHash.MakeScript("symbol"),
                 scriptHash.MakeScript("decimals"),
                 scriptHash.MakeScript("totalSupply"));
@@ -98,10 +97,9 @@ namespace Neo.Network.RPC
 
             return new RpcNep17TokenInfo
             {
-                Name = stack[0].GetString(),
-                Symbol = stack[1].GetString(),
-                Decimals = (byte)stack[2].GetInteger(),
-                TotalSupply = stack[3].GetInteger()
+                Symbol = stack[0].GetString(),
+                Decimals = (byte)stack[1].GetInteger(),
+                TotalSupply = stack[2].GetInteger()
             };
         }
 

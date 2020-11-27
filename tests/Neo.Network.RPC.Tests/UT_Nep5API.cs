@@ -38,16 +38,6 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
-        public async Task TestGetName()
-        {
-            byte[] testScript = NativeContract.GAS.Hash.MakeScript("name");
-            UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.String, Value = NativeContract.GAS.Name });
-
-            var result = await nep17API.NameAsync(NativeContract.GAS.Hash);
-            Assert.AreEqual(NativeContract.GAS.Name, result);
-        }
-
-        [TestMethod]
         public async Task TestGetSymbol()
         {
             byte[] testScript = NativeContract.GAS.Hash.MakeScript("symbol");
@@ -81,19 +71,16 @@ namespace Neo.Network.RPC.Tests
         public async Task TestGetTokenInfo()
         {
             UInt160 scriptHash = NativeContract.GAS.Hash;
-            byte[] testScript = scriptHash.MakeScript("name")
-                .Concat(scriptHash.MakeScript("symbol"))
+            byte[] testScript = scriptHash.MakeScript("symbol")
                 .Concat(scriptHash.MakeScript("decimals"))
                 .Concat(scriptHash.MakeScript("totalSupply"))
-                .ToArray(); ;
+                .ToArray();
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript,
-                new ContractParameter { Type = ContractParameterType.String, Value = NativeContract.GAS.Name },
                 new ContractParameter { Type = ContractParameterType.String, Value = NativeContract.GAS.Symbol },
                 new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(NativeContract.GAS.Decimals) },
                 new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1_00000000) });
 
             var result = await nep17API.GetTokenInfoAsync(NativeContract.GAS.Hash);
-            Assert.AreEqual(NativeContract.GAS.Name, result.Name);
             Assert.AreEqual(NativeContract.GAS.Symbol, result.Symbol);
             Assert.AreEqual(8, (int)result.Decimals);
             Assert.AreEqual(1_00000000, (int)result.TotalSupply);
