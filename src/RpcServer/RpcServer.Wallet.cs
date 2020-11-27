@@ -332,7 +332,7 @@ namespace Neo.Plugins
             {
                 tx.Witnesses = context.GetWitnesses();
                 system.Blockchain.Tell(tx);
-                return tx.ToJson();
+                return Utility.TransactionToJson(tx);
             }
             else
             {
