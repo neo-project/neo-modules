@@ -460,10 +460,10 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Gets the amount of unclaimed GAS in the wallet.
         /// </summary>
-        public async Task<BigInteger> GetWalletUnclaimedGasAsync()
+        public async Task<BigDecimal> GetWalletUnclaimedGasAsync()
         {
             var result = await RpcSendAsync(GetRpcName()).ConfigureAwait(false);
-            return BigInteger.Parse(result.AsString());
+            return BigDecimal.Parse(result.AsString(), SmartContract.Native.NativeContract.GAS.Decimals);
         }
 
         /// <summary>

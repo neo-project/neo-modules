@@ -148,7 +148,7 @@ namespace Neo.Plugins
             if (script_hash == null)
                 throw new RpcException(-100, "Invalid address");
             SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
-            json["unclaimed"] = NativeContract.NEO.UnclaimedGas(snapshot, script_hash, snapshot.Height + 1).ToString();
+            json["unclaimed"] = new BigDecimal(NativeContract.NEO.UnclaimedGas(snapshot, script_hash, snapshot.Height + 1), NativeContract.GAS.Decimals).ToString();
             json["address"] = script_hash.ToAddress();
             return json;
         }
