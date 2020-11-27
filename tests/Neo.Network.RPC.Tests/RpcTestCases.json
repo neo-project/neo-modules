@@ -335,7 +335,7 @@
             "payable": true
           },
           "supportedstandards": [
-            "NEP-5"
+            "NEP-17"
           ],
           "abi": {
             "hash": "0x806b7fa0db3b46d6c42e1e1b0a7fd50db9d4a9b0",

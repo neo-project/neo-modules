@@ -192,7 +192,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public async Task<ContractState> GetContractStateAsync(string hash)
         {
-            var result = await RpcSendAsync(GetRpcName(), hash).ConfigureAwait(false);
+            var result = await RpcSendAsync(GetRpcName(), hash).ConfigureAwait(true);
             return ContractStateFromJson(result);
         }
 
@@ -446,7 +446,7 @@ namespace Neo.Network.RPC
 
         /// <summary>
         /// Returns the balance of the corresponding asset in the wallet, based on the specified asset Id.
-        /// This method applies to assets that conform to NEP-5 standards.
+        /// This method applies to assets that conform to NEP-17 standards.
         /// </summary>
         /// <returns>new address as string</returns>
         public async Task<BigDecimal> GetWalletBalanceAsync(string assetId)
@@ -555,7 +555,7 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Returns all the NEP-5 transaction information occurred in the specified address.
+        /// Returns all the NEP-17 transaction information occurred in the specified address.
         /// This method is provided by the plugin RpcNep17Tracker.
         /// </summary>
         /// <param name="address">The address to query the transaction information.</param>
@@ -571,7 +571,7 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Returns the balance of all NEP-5 assets in the specified address.
+        /// Returns the balance of all NEP-17 assets in the specified address.
         /// This method is provided by the plugin RpcNep17Tracker.
         /// </summary>
         public async Task<RpcNep17Balances> GetNep17BalancesAsync(string address)
