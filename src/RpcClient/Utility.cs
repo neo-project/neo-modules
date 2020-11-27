@@ -129,6 +129,13 @@ namespace Neo.Network.RPC
             return block;
         }
 
+        public static JObject BlockToJson(Block block)
+        {
+            JObject json = block.ToJson();
+            json["tx"] = block.Transactions.Select(p => TransactionToJson(p)).ToArray();
+            return json;
+        }
+
         public static void FromJson(this BlockBase block, JObject json)
         {
             block.Version = (uint)json["version"].AsNumber();
@@ -147,13 +154,21 @@ namespace Neo.Network.RPC
                 Version = byte.Parse(json["version"].AsString()),
                 Nonce = uint.Parse(json["nonce"].AsString()),
                 Signers = ((JArray)json["signers"]).Select(p => SignerFromJson(p)).ToArray(),
-                SystemFee = long.Parse(json["sysfee"].AsString()),
-                NetworkFee = long.Parse(json["netfee"].AsString()),
+                SystemFee = (long)BigDecimal.Parse(json["sysfee"].AsString(), NativeContract.GAS.Decimals).Value,
+                NetworkFee = (long)BigDecimal.Parse(json["netfee"].AsString(), NativeContract.GAS.Decimals).Value,
                 ValidUntilBlock = uint.Parse(json["validuntilblock"].AsString()),
                 Attributes = ((JArray)json["attributes"]).Select(p => TransactionAttributeFromJson(p)).ToArray(),
                 Script = Convert.FromBase64String(json["script"].AsString()),
                 Witnesses = ((JArray)json["witnesses"]).Select(p => WitnessFromJson(p)).ToArray()
             };
+        }
+
+        public static JObject TransactionToJson(Transaction tx)
+        {
+            JObject json = tx.ToJson();
+            json["sysfee"] = new BigDecimal(tx.SystemFee, NativeContract.GAS.Decimals).ToString();
+            json["netfee"] = new BigDecimal(tx.NetworkFee, NativeContract.GAS.Decimals).ToString();
+            return json;
         }
 
         public static Header HeaderFromJson(JObject json)

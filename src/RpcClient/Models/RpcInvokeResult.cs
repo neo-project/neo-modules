@@ -1,8 +1,10 @@
 using Neo.IO.Json;
+using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.VM.Types;
 using System;
 using System.Linq;
+using System.Numerics;
 
 namespace Neo.Network.RPC.Models
 {
@@ -25,7 +27,7 @@ namespace Neo.Network.RPC.Models
             JObject json = new JObject();
             json["script"] = Script;
             json["state"] = State;
-            json["gasconsumed"] = GasConsumed;
+            json["gasconsumed"] = GasConsumed.ToString();
             if (!string.IsNullOrEmpty(Exception))
                 json["exception"] = Exception;
             try
