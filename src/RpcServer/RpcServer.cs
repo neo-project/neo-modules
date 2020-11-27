@@ -107,7 +107,7 @@ namespace Neo.Plugins
                     {
                         if (err != SslPolicyErrors.None)
                             return false;
-                        X509Certificate2 authority = chain.ChainElements[chain.ChainElements.Count - 1].Certificate;
+                        X509Certificate2 authority = chain.ChainElements[^1].Certificate;
                         return settings.TrustedAuthorities.Contains(authority.Thumbprint);
                     };
                 });

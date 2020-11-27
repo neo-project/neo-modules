@@ -73,7 +73,7 @@ namespace Neo.Plugins
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(script);
             json["state"] = engine.State;
-            json["gasconsumed"] = engine.GasConsumed.ToString();
+            json["gasconsumed"] = new BigDecimal(engine.GasConsumed, NativeContract.GAS.Decimals).ToString();
             json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
