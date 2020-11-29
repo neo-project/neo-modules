@@ -101,7 +101,7 @@ namespace Neo.Network.RPC
 
             return new RpcNep17TokenInfo
             {
-                Neme = string.Empty,
+                Name = string.Empty,
                 Symbol = stack[0].GetString(),
                 Decimals = (byte)stack[1].GetInteger(),
                 TotalSupply = stack[2].GetInteger()
