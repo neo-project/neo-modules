@@ -4,7 +4,7 @@ namespace Neo.Network.RPC.Models
 {
     public class RpcNep17TokenInfo
     {
-        public string Neme { get; set; }
+        public string Name { get; set; }
 
         public string Symbol { get; set; }
 
