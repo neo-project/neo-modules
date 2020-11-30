@@ -42,7 +42,7 @@ namespace Neo.Plugins
         private ConcurrentDictionary<ulong, OracleTask> PendingQueue;
         private CancellationTokenSource CancelSource;
         private int Counter;
-        private HashSetCache<ulong> FinishedCache;
+        private ConcurrentDictionary<ulong, DateTime> FinishedCache;
         private ConsoleServiceBase ConsoleBase;
 
         private static readonly object _lock = new object();
@@ -56,7 +56,7 @@ namespace Neo.Plugins
         public OracleService()
         {
             PendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
-            FinishedCache = new HashSetCache<ulong>(1024 * 128);
+            FinishedCache = new ConcurrentDictionary<ulong, DateTime>();
 
             RpcServerPlugin.RegisterMethods(this);
 
@@ -89,7 +89,7 @@ namespace Neo.Plugins
 
             var data = oraclePub.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
             if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
-            if (FinishedCache.Contains(requestId)) throw new RpcException(-100, "Request has already finished");
+            if (FinishedCache.ContainsKey(requestId)) throw new RpcException(-100, "Request has already finished");
 
             using (SnapshotView snapshot = Blockchain.Singleton.GetSnapshot())
             {
@@ -133,7 +133,7 @@ namespace Neo.Plugins
                     {
                         IEnumerator<(ulong RequestId, OracleRequest Request)> enumerator = NativeContract.Oracle.GetRequests(snapshot).GetEnumerator();
                         while (enumerator.MoveNext() && !CancelSource.IsCancellationRequested)
-                            if (!FinishedCache.Contains(enumerator.Current.RequestId) && (!PendingQueue.TryGetValue(enumerator.Current.RequestId, out OracleTask task) || task.Tx is null))
+                            if (!FinishedCache.ContainsKey(enumerator.Current.RequestId) && (!PendingQueue.TryGetValue(enumerator.Current.RequestId, out OracleTask task) || task.Tx is null))
                                 ProcessRequest(snapshot, enumerator.Current.RequestId, enumerator.Current.Request);
                     }
                     Thread.Sleep(500);
@@ -404,7 +404,7 @@ namespace Neo.Plugins
 
                 if (CheckTxSign(snapshot, task.Tx, task.Signs) || CheckTxSign(snapshot, task.BackupTx, task.BackupSigns))
                 {
-                    FinishedCache.Add(requestId);
+                    FinishedCache.TryAdd(requestId, new DateTime());
                     PendingQueue.Remove(requestId, out _);
                 }
             }
@@ -461,9 +461,11 @@ namespace Neo.Plugins
                     outOfDate.Add(task.Key);
                 }
             }
-
             foreach (ulong requestId in outOfDate)
                 PendingQueue.TryRemove(requestId, out _);
+            foreach (var key in FinishedCache.Keys)
+                if (FinishedCache[key] - TimeProvider.Current.UtcNow > TimeSpan.FromDays(3))
+                    FinishedCache.TryRemove(key, out _);
         }
 
         public static void Log(string message, LogLevel level = LogLevel.Info)
