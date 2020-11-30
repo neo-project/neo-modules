@@ -464,7 +464,7 @@ namespace Neo.Plugins
             foreach (ulong requestId in outOfDate)
                 PendingQueue.TryRemove(requestId, out _);
             foreach (var key in FinishedCache.Keys)
-                if (FinishedCache[key] - TimeProvider.Current.UtcNow > TimeSpan.FromDays(3))
+                if (TimeProvider.Current.UtcNow - FinishedCache[key] > TimeSpan.FromDays(3))
                     FinishedCache.TryRemove(key, out _);
         }
 
