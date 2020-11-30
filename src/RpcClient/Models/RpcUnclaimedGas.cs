@@ -1,11 +1,11 @@
 using Neo.IO.Json;
-using System.Numerics;
+using Neo.SmartContract.Native;
 
 namespace Neo.Network.RPC.Models
 {
     public class RpcUnclaimedGas
     {
-        public BigInteger Unclaimed { get; set; }
+        public BigDecimal Unclaimed { get; set; }
 
         public string Address { get; set; }
 
@@ -21,7 +21,7 @@ namespace Neo.Network.RPC.Models
         {
             return new RpcUnclaimedGas
             {
-                Unclaimed = BigInteger.Parse(json["unclaimed"].AsString()),
+                Unclaimed = BigDecimal.Parse(json["unclaimed"].AsString(), NativeContract.GAS.Decimals),
                 Address = json["address"].AsString()
             };
         }

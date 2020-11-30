@@ -73,7 +73,7 @@ namespace Neo.Plugins
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(script);
             json["state"] = engine.State;
-            json["gasconsumed"] = engine.GasConsumed.ToString();
+            json["gasconsumed"] = new BigDecimal(engine.GasConsumed, NativeContract.GAS.Decimals).ToString();
             json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
@@ -148,7 +148,7 @@ namespace Neo.Plugins
             if (script_hash == null)
                 throw new RpcException(-100, "Invalid address");
             SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
-            json["unclaimed"] = NativeContract.NEO.UnclaimedGas(snapshot, script_hash, snapshot.Height + 1).ToString();
+            json["unclaimed"] = new BigDecimal(NativeContract.NEO.UnclaimedGas(snapshot, script_hash, snapshot.Height + 1), NativeContract.GAS.Decimals).ToString();
             json["address"] = script_hash.ToAddress();
             return json;
         }
