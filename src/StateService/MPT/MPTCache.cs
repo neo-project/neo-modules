@@ -1,6 +1,5 @@
 using Neo.IO.Caching;
 using Neo.Persistence;
-using Neo.Plugins.StateService.StateStorage;
 
 namespace Neo.Plugins.MPT
 {
