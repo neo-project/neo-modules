@@ -1,3 +1,4 @@
+using Neo;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.SmartContract.Manifest;
@@ -19,6 +20,7 @@ public class RpcContractState
             ContractState = new ContractState
             {
                 Id = (int)json["id"].AsNumber(),
+                Hash = UInt160.Parse(json["hash"].AsString()),
                 Script = Convert.FromBase64String(json["script"].AsString()),
                 Manifest = ContractManifest.FromJson(json["manifest"])
             }
