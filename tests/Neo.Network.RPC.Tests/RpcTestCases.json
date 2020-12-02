@@ -318,109 +318,87 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "getcontractstate",
-      "params": [ "0x806b7fa0db3b46d6c42e1e1b0a7fd50db9d4a9b0" ],
+      "params": [ "0x36a019d836d964c438c573f78badf79b9e7eebdd" ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "id": 0,
-        "hash": "0x806b7fa0db3b46d6c42e1e1b0a7fd50db9d4a9b0",
-        "script": "VgIMFGklqlVHEkOanGE7oRTvo/rCPdvKYAwDKiwKYVcDAiFB6X04oAwBINshmlCaULQlIwAAACEMFGklqlVHEkOanGE7oRTvo/rCPdvKIUH4J+yMQCFB6X04oAwBQNshmlCaULQlKQEAAHgMCWJhbGFuY2VPZpcnDwAAAHkQziE1WgEAAEB4DAhkZWNpbWFsc5cnDAAAACE1sQEAAEB4DAZkZXBsb3mXJwwAAAAhNbQBAABAeAwEbmFtZZcnDAAAACE1OQIAAEB4DAZzeW1ib2yXJwwAAAAhNTsCAABAeAwSc3VwcG9ydGVkU3RhbmRhcmRzlycMAAAAITUfAgAAQHgMC3RvdGFsU3VwcGx5lycMAAAAITUmAgAAQHgMCHRyYW5zZmVylyclAAAAecoTsyUHAAAAEEB5EM55Ec5weRLOcWhpIVM1EgIAAEB4DAdkZXN0cm95lycMAAAAITUzAAAAQHgMB21pZ3JhdGWXJyAAAAB5yhKzJQcAAAAQQHkQznkRznJqIVA1EAAAAEAQQCFBxp8d8BFAVwACIQwUaSWqVUcSQ5qcYTuhFO+j+sI928ohQfgn7IwlBwAAABBAeMonDAAAAHnKJQcAAAAQQHh5IVBBMcYzHRFAVwEBeMoMARTbIbMlPAAAAAwyVGhlIHBhcmFtZXRlciBhY2NvdW50IFNIT1VMRCBiZSAyMC1ieXRlIGFkZHJlc3Nlcy4hRTohQZv2Z854IVBBkl3oMRBwJQcAAABoQCFBm/ZnznghUEGSXegx2yFAGEBXAQF4IUGpxUtBcGgnCQAAAGgSzkARQCFBm/ZnzgwLdG90YWxTdXBwbHkhUEGSXegxRSFBm/ZnziEMFGklqlVHEkOanGE7oRTvo/rCPdvKIQwDKiwKIVNB5j8YhCFBm/ZnzgwLdG90YWxTdXBwbHkhDAMqLAohU0HmPxiEIQshDBRpJapVRxJDmpxhO6EU76P6wj3byiEMAyosCiFTDAhUcmFuc2ZlchTAQZUBb2ERQAwVTmVwNSBOZW8zIFRlbXBsYXRlIDEgQAwDTk5EQBPDShAMBU5FUC010EoRDAVORVAtN9BKEgwGTkVQLTEw0EAhQZv2Z84MC3RvdGFsU3VwcGx5IVBBkl3oMdshQFcCA3oQticHAAAAEEB4IUH4J+yMJQcAAAAQQHnKDAEU2yGzJQcAAAAQQCFBm/ZnznghUEGSXegx2yFwaHq1JwcAAAAQQHh5mlCaULQlBwAAABFAaHqzJxgAAAAhQZv2Z854IVBBL1jF7SMWAAAAIUGb9mfOeGh6nyFTQeY/GIQhQZv2Z855IVBBkl3oMXFpJ0QAAAAMB2lmIHBhc3MhQc/nR5YhQZv2Z855adshep4hU0HmPxiEDBBTdG9yYWdlLnB1dCBwYXNzIUHP50eWIzsAAAAMCWVsc2UgcGFzcyFBz+dHliFBm/Znznl6IVNB5j8YhAwOYW1vdW50IC0+IHBhc3MhQc/nR5YheHl6IVMMCFRyYW5zZmVyFMBBlQFvYRFA",
+        "id": -2,
+        "updatecounter": 0,
+        "hash": "0x36a019d836d964c438c573f78badf79b9e7eebdd",
+        "script": "DANHQVNBa2d4Cw==",
         "manifest": {
+          "name": "GAS",
           "groups": [],
-          "features": {
-            "storage": true,
-            "payable": true
-          },
           "supportedstandards": [
-            "NEP-5"
+            "NEP-17"
           ],
           "abi": {
-            "hash": "0x806b7fa0db3b46d6c42e1e1b0a7fd50db9d4a9b0",
             "methods": [
               {
-                "name": "main",
-                "parameters": [
-                  {
-                    "name": "method",
-                    "type": "String"
-                  },
-                  {
-                    "name": "args",
-                    "type": "Array"
-                  }
-                ],
-                "offset": 0,
-                "returntype": "ByteArray"
-              },
-              {
-                "name": "Destroy",
+                "name": "onPersist",
                 "parameters": [],
-                "offset": 400,
-                "returntype": "Boolean"
+                "offset": 0,
+                "returntype": "Void"
               },
               {
-                "name": "Migrate",
-                "parameters": [
-                  {
-                    "name": "script",
-                    "type": "ByteArray"
-                  },
-                  {
-                    "name": "manifest",
-                    "type": "String"
-                  }
-                ],
-                "offset": 408,
-                "returntype": "Boolean"
+                "name": "totalSupply",
+                "parameters": [],
+                "offset": 0,
+                "returntype": "Integer"
               },
               {
-                "name": "BalanceOf",
+                "name": "balanceOf",
                 "parameters": [
                   {
                     "name": "account",
                     "type": "ByteArray"
                   }
                 ],
-                "offset": 474,
+                "offset": 0,
                 "returntype": "Integer"
               },
               {
-                "name": "Decimals",
-                "parameters": [],
-                "offset": 585,
-                "returntype": "Integer"
-              },
-              {
-                "name": "Deploy",
-                "parameters": [],
-                "offset": 610,
+                "name": "transfer",
+                "parameters": [
+                  {
+                    "name": "from",
+                    "type": "ByteArray"
+                  },
+                  {
+                    "name": "to",
+                    "type": "ByteArray"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "data",
+                    "type": "Any"
+                  }
+                ],
+                "offset": 0,
                 "returntype": "Boolean"
               },
               {
-                "name": "Name",
+                "name": "postPersist",
                 "parameters": [],
-                "offset": 763,
+                "offset": 0,
+                "returntype": "Void"
+              },
+              {
+                "name": "symbol",
+                "parameters": [],
+                "offset": 0,
                 "returntype": "String"
               },
               {
-                "name": "Symbol",
+                "name": "decimals",
                 "parameters": [],
-                "offset": 787,
-                "returntype": "String"
-              },
-              {
-                "name": "SupportedStandards",
-                "parameters": [],
-                "offset": 793,
-                "returntype": "Array"
-              },
-              {
-                "name": "TotalSupply",
-                "parameters": [],
-                "offset": 827,
+                "offset": 0,
                 "returntype": "Integer"
               }
             ],
@@ -429,15 +407,15 @@
                 "name": "Transfer",
                 "parameters": [
                   {
-                    "name": "arg1",
-                    "type": "ByteArray"
+                    "name": "from",
+                    "type": "Hash160"
                   },
                   {
-                    "name": "arg2",
-                    "type": "ByteArray"
+                    "name": "to",
+                    "type": "Hash160"
                   },
                   {
-                    "name": "arg3",
+                    "name": "amount",
                     "type": "Integer"
                   }
                 ]
@@ -451,7 +429,12 @@
             }
           ],
           "trusts": [],
-          "safemethods": [],
+          "safemethods": [
+            "totalSupply",
+            "balanceOf",
+            "symbol",
+            "decimals"
+          ],
           "extra": null
         }
       }
