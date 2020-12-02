@@ -92,16 +92,15 @@ namespace Neo.Network.RPC
                 scriptHash.MakeScript("decimals"),
                 scriptHash.MakeScript("totalSupply"));
 
-            //TODO: Awaiting manifest data structure changes in the neo project, and fixe UT.
-            //var contractState = await rpcClient.GetContractStateAsync(scriptHash.ToString()).ConfigureAwait(false);
-            //var name = contractState.Manifest.Neme;
+            var contractState = await rpcClient.GetContractStateAsync(scriptHash.ToString()).ConfigureAwait(false);
+            var name = contractState.Manifest.Name;
 
             var result = await rpcClient.InvokeScriptAsync(script).ConfigureAwait(false);
             var stack = result.Stack;
 
             return new RpcNep17TokenInfo
             {
-                Name = string.Empty,
+                Name = name,
                 Symbol = stack[0].GetString(),
                 Decimals = (byte)stack[1].GetInteger(),
                 TotalSupply = stack[2].GetInteger()
