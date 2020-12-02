@@ -65,7 +65,7 @@ You can also use `RocksDBStore` in the NEO system by modifying the default stora
 ### RpcServer
 Plugin for hosting a RpcServer on the neo-node, being able to disable specific calls.
 
-### Rpc17Tracker
+### RpcNep17Tracker
 Plugin that enables NEP17 tracking using LevelDB.
 This module works in conjunction with RpcServer, otherwise, just local storage (on leveldb) would be created. 
 
