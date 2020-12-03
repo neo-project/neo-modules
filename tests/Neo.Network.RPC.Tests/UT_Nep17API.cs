@@ -81,11 +81,11 @@ namespace Neo.Network.RPC.Tests
                 new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(NativeContract.GAS.Decimals) },
                 new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1_00000000) });
 
-            var tests = TestUtils.RpcTestCases.Where(p => p.Name == "getcontractstate");
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == "getcontractstateasync");
             foreach (var test in tests)
             {
                 rpcClientMock.Setup(p => p.RpcSendAsync("getcontractstate", It.Is<JObject[]>(u => true)))
-                .ReturnsAsync(test.Request.Params[0])
+                .ReturnsAsync(test.Response.Result)
                 .Verifiable();
 
                 var result = await nep17API.GetTokenInfoAsync(NativeContract.GAS.Hash);
