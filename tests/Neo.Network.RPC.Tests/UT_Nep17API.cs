@@ -94,8 +94,6 @@ namespace Neo.Network.RPC.Tests
                 Assert.AreEqual(1_00000000, (int)result.TotalSupply);
                 Assert.AreEqual("GAS", result.Name);
             }
-
-            
         }
 
         [TestMethod]
