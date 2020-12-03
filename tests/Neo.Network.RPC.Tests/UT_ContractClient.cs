@@ -45,7 +45,6 @@ namespace Neo.Network.RPC.Tests
                 Permissions = new[] { ContractPermission.DefaultPermission },
                 Abi = new ContractAbi()
                 {
-                    Hash = new byte[1].ToScriptHash(),
                     Events = new ContractEventDescriptor[0],
                     Methods = new ContractMethodDescriptor[0]
                 },
