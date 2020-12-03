@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Neo.IO.Json;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
@@ -80,10 +81,21 @@ namespace Neo.Network.RPC.Tests
                 new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(NativeContract.GAS.Decimals) },
                 new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1_00000000) });
 
-            var result = await nep17API.GetTokenInfoAsync(NativeContract.GAS.Hash);
-            Assert.AreEqual(NativeContract.GAS.Symbol, result.Symbol);
-            Assert.AreEqual(8, (int)result.Decimals);
-            Assert.AreEqual(1_00000000, (int)result.TotalSupply);
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == "getcontractstate");
+            foreach (var test in tests)
+            {
+                rpcClientMock.Setup(p => p.RpcSendAsync("getcontractstate", It.Is<JObject[]>(u => true)))
+                .ReturnsAsync(test.Request.Params[0])
+                .Verifiable();
+
+                var result = await nep17API.GetTokenInfoAsync(NativeContract.GAS.Hash);
+                Assert.AreEqual(NativeContract.GAS.Symbol, result.Symbol);
+                Assert.AreEqual(8, (int)result.Decimals);
+                Assert.AreEqual(1_00000000, (int)result.TotalSupply);
+                Assert.AreEqual("GAS", result.Name);
+            }
+
+            
         }
 
         [TestMethod]
