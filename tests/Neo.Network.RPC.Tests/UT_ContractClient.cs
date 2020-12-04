@@ -45,7 +45,6 @@ namespace Neo.Network.RPC.Tests
                 Permissions = new[] { ContractPermission.DefaultPermission },
                 Abi = new ContractAbi()
                 {
-                    Hash = new byte[1].ToScriptHash(),
                     Events = new ContractEventDescriptor[0],
                     Methods = new ContractMethodDescriptor[0]
                 },
@@ -55,7 +54,6 @@ namespace Neo.Network.RPC.Tests
                 SupportedStandards = new string[] { "NEP-10" },
                 Extra = null,
             };
-            manifest.Features = ContractFeatures.HasStorage | ContractFeatures.Payable;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
                 sb.EmitSysCall(ApplicationEngine.System_Contract_Create, new byte[1], manifest.ToString());
