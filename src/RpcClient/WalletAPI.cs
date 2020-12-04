@@ -132,7 +132,7 @@ namespace Neo.Network.RPC
         /// <param name="toAddress">address or account script hash</param>
         /// <param name="amount">token amount</param>
         /// <returns></returns>
-        public async Task<Transaction> TransferAsync(string tokenHash, string fromKey, string toAddress, decimal amount)
+        public async Task<Transaction> TransferAsync(string tokenHash, string fromKey, string toAddress, decimal amount, object data = null)
         {
             UInt160 scriptHash = Utility.GetScriptHash(tokenHash);
             var decimals = await nep17API.DecimalsAsync(scriptHash).ConfigureAwait(false);
@@ -140,7 +140,7 @@ namespace Neo.Network.RPC
             KeyPair from = Utility.GetKeyPair(fromKey);
             UInt160 to = Utility.GetScriptHash(toAddress);
             BigInteger amountInteger = amount.ToBigInteger(decimals);
-            return await TransferAsync(scriptHash, from, to, amountInteger).ConfigureAwait(false);
+            return await TransferAsync(scriptHash, from, to, amountInteger, data).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -151,9 +151,9 @@ namespace Neo.Network.RPC
         /// <param name="to">to account script hash</param>
         /// <param name="amountInteger">transfer amount</param>
         /// <returns></returns>
-        public async Task<Transaction> TransferAsync(UInt160 scriptHash, KeyPair from, UInt160 to, BigInteger amountInteger)
+        public async Task<Transaction> TransferAsync(UInt160 scriptHash, KeyPair from, UInt160 to, BigInteger amountInteger, object data = null)
         {
-            Transaction transaction = await nep17API.CreateTransferTxAsync(scriptHash, from, to, amountInteger).ConfigureAwait(false);
+            Transaction transaction = await nep17API.CreateTransferTxAsync(scriptHash, from, to, amountInteger, data).ConfigureAwait(false);
             await rpcClient.SendRawTransactionAsync(transaction).ConfigureAwait(false);
             return transaction;
         }
@@ -168,9 +168,9 @@ namespace Neo.Network.RPC
         /// <param name="to">to account</param>
         /// <param name="amountInteger">transfer amount</param>
         /// <returns></returns>
-        public async Task<Transaction> TransferAsync(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] keys, UInt160 to, BigInteger amountInteger)
+        public async Task<Transaction> TransferAsync(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] keys, UInt160 to, BigInteger amountInteger, object data = null)
         {
-            Transaction transaction = await nep17API.CreateTransferTxAsync(scriptHash, m, pubKeys, keys, to, amountInteger).ConfigureAwait(false);
+            Transaction transaction = await nep17API.CreateTransferTxAsync(scriptHash, m, pubKeys, keys, to, amountInteger, data).ConfigureAwait(false);
             await rpcClient.SendRawTransactionAsync(transaction).ConfigureAwait(false);
             return transaction;
         }
