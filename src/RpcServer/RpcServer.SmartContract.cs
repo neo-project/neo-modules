@@ -116,7 +116,7 @@ namespace Neo.Plugins
             using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, new Transaction(), snapshot.Clone());
             engine.LoadContract(contract, methodName, CallFlags.None);
 
-            engine.LoadScript(new ScriptBuilder().EmitAppCall(new UInt160(contract.Script), methodName, args).ToArray(), CallFlags.None);
+            engine.LoadScript(new ScriptBuilder().EmitAppCall(scriptHash, methodName, args).ToArray(), CallFlags.AllowCall);
 
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(contract.Script);

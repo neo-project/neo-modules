@@ -16,8 +16,4 @@
     <PackageReference Include="Microsoft.AspNetCore.ResponseCompression" Version="2.2.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Update="Neo" Version="3.0.0-CI01077" />
-  </ItemGroup>
-
 </Project>
