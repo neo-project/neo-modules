@@ -37,17 +37,6 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Get name of NEP17 token
-        /// </summary>
-        /// <param name="scriptHash">contract script hash</param>
-        /// <returns></returns>
-        public async Task<string> NameAsync(UInt160 scriptHash)
-        {
-            var result = await TestInvokeAsync(scriptHash, "name").ConfigureAwait(false);
-            return result.Stack.Single().GetString();
-        }
-
-        /// <summary>
         /// Get symbol of NEP17 token
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
