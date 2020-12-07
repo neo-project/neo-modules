@@ -13,18 +13,18 @@ using static Neo.Helper;
 namespace Neo.Network.RPC
 {
     /// <summary>
-    /// Call NEP5 methods with RPC API
+    /// Call NEP17 methods with RPC API
     /// </summary>
-    public class Nep5API : ContractClient
+    public class Nep17API : ContractClient
     {
         /// <summary>
-        /// Nep5API Constructor
+        /// Nep17API Constructor
         /// </summary>
         /// <param name="rpcClient">the RPC client to call NEO RPC methods</param>
-        public Nep5API(RpcClient rpcClient) : base(rpcClient) { }
+        public Nep17API(RpcClient rpcClient) : base(rpcClient) { }
 
         /// <summary>
-        /// Get balance of NEP5 token
+        /// Get balance of NEP17 token
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <param name="account">account script hash</param>
@@ -37,18 +37,7 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Get name of NEP5 token
-        /// </summary>
-        /// <param name="scriptHash">contract script hash</param>
-        /// <returns></returns>
-        public async Task<string> NameAsync(UInt160 scriptHash)
-        {
-            var result = await TestInvokeAsync(scriptHash, "name").ConfigureAwait(false);
-            return result.Stack.Single().GetString();
-        }
-
-        /// <summary>
-        /// Get symbol of NEP5 token
+        /// Get symbol of NEP17 token
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <returns></returns>
@@ -59,7 +48,7 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Get decimals of NEP5 token
+        /// Get decimals of NEP17 token
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <returns></returns>
@@ -70,7 +59,7 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Get total supply of NEP5 token
+        /// Get total supply of NEP17 token
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <returns></returns>
@@ -85,40 +74,43 @@ namespace Neo.Network.RPC
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <returns></returns>
-        public async Task<RpcNep5TokenInfo> GetTokenInfoAsync(UInt160 scriptHash)
+        public async Task<RpcNep17TokenInfo> GetTokenInfoAsync(UInt160 scriptHash)
         {
             byte[] script = Concat(
-                scriptHash.MakeScript("name"),
                 scriptHash.MakeScript("symbol"),
                 scriptHash.MakeScript("decimals"),
                 scriptHash.MakeScript("totalSupply"));
 
+            var contractState = await rpcClient.GetContractStateAsync(scriptHash.ToString()).ConfigureAwait(false);
+            var name = contractState.Manifest.Name;
+
             var result = await rpcClient.InvokeScriptAsync(script).ConfigureAwait(false);
             var stack = result.Stack;
 
-            return new RpcNep5TokenInfo
+            return new RpcNep17TokenInfo
             {
-                Name = stack[0].GetString(),
-                Symbol = stack[1].GetString(),
-                Decimals = (byte)stack[2].GetInteger(),
-                TotalSupply = stack[3].GetInteger()
+                Name = name,
+                Symbol = stack[0].GetString(),
+                Decimals = (byte)stack[1].GetInteger(),
+                TotalSupply = stack[2].GetInteger()
             };
         }
 
         /// <summary>
-        /// Create NEP5 token transfer transaction
+        /// Create NEP17 token transfer transaction
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <param name="fromKey">from KeyPair</param>
         /// <param name="to">to account script hash</param>
         /// <param name="amount">transfer amount</param>
+        /// <param name="data">onPayment data</param>
         /// <returns></returns>
-        public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount)
+        public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount, object data = null)
         {
             var sender = Contract.CreateSignatureRedeemScript(fromKey.PublicKey).ToScriptHash();
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
-            byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
+            byte[] script = data is null ? scriptHash.MakeScript("transfer", sender, to, amount) : scriptHash.MakeScript("transfer", sender, to, amount, data);
 
             TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient, magic);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
@@ -128,7 +120,7 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Create NEP5 token transfer transaction from multi-sig account
+        /// Create NEP17 token transfer transaction from multi-sig account
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <param name="m">multi-sig min signature count</param>
@@ -136,15 +128,16 @@ namespace Neo.Network.RPC
         /// <param name="fromKeys">sign keys</param>
         /// <param name="to">to account</param>
         /// <param name="amount">transfer amount</param>
+        /// <param name="data">onPayment data</param>
         /// <returns></returns>
-        public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] fromKeys, UInt160 to, BigInteger amount)
+        public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] fromKeys, UInt160 to, BigInteger amount, object data = null)
         {
             if (m > fromKeys.Length)
                 throw new ArgumentException($"Need at least {m} KeyPairs for signing!");
             var sender = Contract.CreateMultiSigContract(m, pubKeys).ScriptHash;
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
-            byte[] script = scriptHash.MakeScript("transfer", sender, to, amount);
+            byte[] script = data is null ? scriptHash.MakeScript("transfer", sender, to, amount) : scriptHash.MakeScript("transfer", sender, to, amount, data);
 
             TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient, magic);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);

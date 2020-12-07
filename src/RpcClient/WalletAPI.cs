@@ -19,7 +19,7 @@ namespace Neo.Network.RPC
     public class WalletAPI
     {
         private readonly RpcClient rpcClient;
-        private readonly Nep5API nep5API;
+        private readonly Nep17API nep17API;
 
         /// <summary>
         /// WalletAPI Constructor
@@ -28,7 +28,7 @@ namespace Neo.Network.RPC
         public WalletAPI(RpcClient rpc)
         {
             rpcClient = rpc;
-            nep5API = new Nep5API(rpc);
+            nep17API = new Nep17API(rpc);
         }
 
         /// <summary>
@@ -52,7 +52,7 @@ namespace Neo.Network.RPC
         {
             UInt160 scriptHash = NativeContract.NEO.Hash;
             var blockCount = await rpcClient.GetBlockCountAsync().ConfigureAwait(false);
-            var result = await nep5API.TestInvokeAsync(scriptHash, "unclaimedGas", account, blockCount - 1).ConfigureAwait(false);
+            var result = await nep17API.TestInvokeAsync(scriptHash, "unclaimedGas", account, blockCount - 1).ConfigureAwait(false);
             BigInteger balance = result.Stack.Single().GetInteger();
             return ((decimal)balance) / (long)NativeContract.GAS.Factor;
         }
@@ -92,7 +92,7 @@ namespace Neo.Network.RPC
         {
             UInt160 scriptHash = Utility.GetScriptHash(tokenHash);
             UInt160 accountHash = Utility.GetScriptHash(account);
-            return nep5API.BalanceOfAsync(scriptHash, accountHash);
+            return nep17API.BalanceOfAsync(scriptHash, accountHash);
         }
 
         /// <summary>
@@ -117,49 +117,49 @@ namespace Neo.Network.RPC
         public async Task<Transaction> ClaimGasAsync(KeyPair keyPair)
         {
             UInt160 toHash = Contract.CreateSignatureRedeemScript(keyPair.PublicKey).ToScriptHash();
-            BigInteger balance = await nep5API.BalanceOfAsync(NativeContract.NEO.Hash, toHash).ConfigureAwait(false);
-            Transaction transaction = await nep5API.CreateTransferTxAsync(NativeContract.NEO.Hash, keyPair, toHash, balance).ConfigureAwait(false);
+            BigInteger balance = await nep17API.BalanceOfAsync(NativeContract.NEO.Hash, toHash).ConfigureAwait(false);
+            Transaction transaction = await nep17API.CreateTransferTxAsync(NativeContract.NEO.Hash, keyPair, toHash, balance).ConfigureAwait(false);
             await rpcClient.SendRawTransactionAsync(transaction).ConfigureAwait(false);
             return transaction;
         }
 
         /// <summary>
-        /// Transfer NEP5 token balance, with common data types
+        /// Transfer NEP17 token balance, with common data types
         /// </summary>
-        /// <param name="tokenHash">nep5 token script hash, Example: scripthash ("0xb0a31817c80ad5f87b6ed390ecb3f9d312f7ceb8")</param>
+        /// <param name="tokenHash">nep17 token script hash, Example: scripthash ("0xb0a31817c80ad5f87b6ed390ecb3f9d312f7ceb8")</param>
         /// <param name="fromKey">wif or private key
         /// Example: WIF ("KyXwTh1hB76RRMquSvnxZrJzQx7h9nQP2PCRL38v6VDb5ip3nf1p"), PrivateKey ("450d6c2a04b5b470339a745427bae6828400cf048400837d73c415063835e005")</param>
         /// <param name="toAddress">address or account script hash</param>
         /// <param name="amount">token amount</param>
         /// <returns></returns>
-        public async Task<Transaction> TransferAsync(string tokenHash, string fromKey, string toAddress, decimal amount)
+        public async Task<Transaction> TransferAsync(string tokenHash, string fromKey, string toAddress, decimal amount, object data = null)
         {
             UInt160 scriptHash = Utility.GetScriptHash(tokenHash);
-            var decimals = await nep5API.DecimalsAsync(scriptHash).ConfigureAwait(false);
+            var decimals = await nep17API.DecimalsAsync(scriptHash).ConfigureAwait(false);
 
             KeyPair from = Utility.GetKeyPair(fromKey);
             UInt160 to = Utility.GetScriptHash(toAddress);
             BigInteger amountInteger = amount.ToBigInteger(decimals);
-            return await TransferAsync(scriptHash, from, to, amountInteger).ConfigureAwait(false);
+            return await TransferAsync(scriptHash, from, to, amountInteger, data).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// Transfer NEP5 token from single-sig account
+        /// Transfer NEP17 token from single-sig account
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <param name="from">from KeyPair</param>
         /// <param name="to">to account script hash</param>
         /// <param name="amountInteger">transfer amount</param>
         /// <returns></returns>
-        public async Task<Transaction> TransferAsync(UInt160 scriptHash, KeyPair from, UInt160 to, BigInteger amountInteger)
+        public async Task<Transaction> TransferAsync(UInt160 scriptHash, KeyPair from, UInt160 to, BigInteger amountInteger, object data = null)
         {
-            Transaction transaction = await nep5API.CreateTransferTxAsync(scriptHash, from, to, amountInteger).ConfigureAwait(false);
+            Transaction transaction = await nep17API.CreateTransferTxAsync(scriptHash, from, to, amountInteger, data).ConfigureAwait(false);
             await rpcClient.SendRawTransactionAsync(transaction).ConfigureAwait(false);
             return transaction;
         }
 
         /// <summary>
-        /// Transfer NEP5 token from multi-sig account
+        /// Transfer NEP17 token from multi-sig account
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
         /// <param name="m">multi-sig min signature count</param>
@@ -168,9 +168,9 @@ namespace Neo.Network.RPC
         /// <param name="to">to account</param>
         /// <param name="amountInteger">transfer amount</param>
         /// <returns></returns>
-        public async Task<Transaction> TransferAsync(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] keys, UInt160 to, BigInteger amountInteger)
+        public async Task<Transaction> TransferAsync(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] keys, UInt160 to, BigInteger amountInteger, object data = null)
         {
-            Transaction transaction = await nep5API.CreateTransferTxAsync(scriptHash, m, pubKeys, keys, to, amountInteger).ConfigureAwait(false);
+            Transaction transaction = await nep17API.CreateTransferTxAsync(scriptHash, m, pubKeys, keys, to, amountInteger, data).ConfigureAwait(false);
             await rpcClient.SendRawTransactionAsync(transaction).ConfigureAwait(false);
             return transaction;
         }

@@ -431,21 +431,21 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod()]
-        public async Task GetNep5TransfersTest()
+        public async Task GetNep17TransfersTest()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep5TransfersAsync).ToLower());
-            var result = await rpc.GetNep5TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(), (ulong)test.Request.Params[2].AsNumber());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep17TransfersAsync).ToLower());
+            var result = await rpc.GetNep17TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(), (ulong)test.Request.Params[2].AsNumber());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
-            test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.GetNep5TransfersAsync).ToLower() + "_with_null_transferaddress"));
-            result = await rpc.GetNep5TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(), (ulong)test.Request.Params[2].AsNumber());
+            test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.GetNep17TransfersAsync).ToLower() + "_with_null_transferaddress"));
+            result = await rpc.GetNep17TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(), (ulong)test.Request.Params[2].AsNumber());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
         [TestMethod()]
-        public async Task GetNep5BalancesTest()
+        public async Task GetNep17BalancesTest()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep5BalancesAsync).ToLower());
-            var result = await rpc.GetNep5BalancesAsync(test.Request.Params[0].AsString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep17BalancesAsync).ToLower());
+            var result = await rpc.GetNep17BalancesAsync(test.Request.Params[0].AsString());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
