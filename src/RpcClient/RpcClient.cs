@@ -447,14 +447,14 @@ namespace Neo.Network.RPC
 
         /// <summary>
         /// Returns the balance of the corresponding asset in the wallet, based on the specified asset Id.
-        /// This method applies to assets that conform to NEP-5 standards.
+        /// This method applies to assets that conform to NEP-17 standards.
         /// </summary>
         /// <returns>new address as string</returns>
         public async Task<BigDecimal> GetWalletBalanceAsync(string assetId)
         {
             var result = await RpcSendAsync(GetRpcName(), assetId).ConfigureAwait(false);
             BigInteger balance = BigInteger.Parse(result["balance"].AsString());
-            byte decimals = await new Nep5API(this).DecimalsAsync(UInt160.Parse(assetId.AsScriptHash())).ConfigureAwait(false);
+            byte decimals = await new Nep17API(this).DecimalsAsync(UInt160.Parse(assetId.AsScriptHash())).ConfigureAwait(false);
             return new BigDecimal(balance, decimals);
         }
 
@@ -556,30 +556,30 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Returns all the NEP-5 transaction information occurred in the specified address.
-        /// This method is provided by the plugin RpcNep5Tracker.
+        /// Returns all the NEP-17 transaction information occurred in the specified address.
+        /// This method is provided by the plugin RpcNep17Tracker.
         /// </summary>
         /// <param name="address">The address to query the transaction information.</param>
         /// <param name="startTimestamp">The start block Timestamp, default to seven days before UtcNow</param>
         /// <param name="endTimestamp">The end block Timestamp, default to UtcNow</param>
-        public async Task<RpcNep5Transfers> GetNep5TransfersAsync(string address, ulong? startTimestamp = default, ulong? endTimestamp = default)
+        public async Task<RpcNep17Transfers> GetNep17TransfersAsync(string address, ulong? startTimestamp = default, ulong? endTimestamp = default)
         {
             startTimestamp ??= 0;
             endTimestamp ??= DateTime.UtcNow.ToTimestampMS();
             var result = await RpcSendAsync(GetRpcName(), address.AsScriptHash(), startTimestamp, endTimestamp)
                 .ConfigureAwait(false);
-            return RpcNep5Transfers.FromJson(result);
+            return RpcNep17Transfers.FromJson(result);
         }
 
         /// <summary>
-        /// Returns the balance of all NEP-5 assets in the specified address.
-        /// This method is provided by the plugin RpcNep5Tracker.
+        /// Returns the balance of all NEP-17 assets in the specified address.
+        /// This method is provided by the plugin RpcNep17Tracker.
         /// </summary>
-        public async Task<RpcNep5Balances> GetNep5BalancesAsync(string address)
+        public async Task<RpcNep17Balances> GetNep17BalancesAsync(string address)
         {
             var result = await RpcSendAsync(GetRpcName(), address.AsScriptHash())
                 .ConfigureAwait(false);
-            return RpcNep5Balances.FromJson(result);
+            return RpcNep17Balances.FromJson(result);
         }
 
         #endregion Plugins

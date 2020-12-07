@@ -4,7 +4,7 @@ using Neo.IO;
 
 namespace Neo.Plugins
 {
-    public class Nep5Balance : ICloneable<Nep5Balance>, ISerializable
+    public class Nep17Balance : ICloneable<Nep17Balance>, ISerializable
     {
         public BigInteger Balance;
         public uint LastUpdatedBlock;
@@ -23,16 +23,16 @@ namespace Neo.Plugins
             LastUpdatedBlock = reader.ReadUInt32();
         }
 
-        Nep5Balance ICloneable<Nep5Balance>.Clone()
+        Nep17Balance ICloneable<Nep17Balance>.Clone()
         {
-            return new Nep5Balance
+            return new Nep17Balance
             {
                 Balance = Balance,
                 LastUpdatedBlock = LastUpdatedBlock
             };
         }
 
-        public void FromReplica(Nep5Balance replica)
+        public void FromReplica(Nep17Balance replica)
         {
             Balance = replica.Balance;
             LastUpdatedBlock = replica.LastUpdatedBlock;
