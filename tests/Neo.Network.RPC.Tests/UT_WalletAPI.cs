@@ -131,6 +131,7 @@ namespace Neo.Network.RPC.Tests
             try
             {
                 tranaction = await walletAPI.TransferAsync(NativeContract.GAS.Hash, 2, new[] { keyPair1.PublicKey }, new[] { keyPair1 }, UInt160.Zero, NativeContract.GAS.Factor * 100);
+                Assert.Fail();
             }
             catch (System.Exception e)
             {

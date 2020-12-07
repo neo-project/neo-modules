@@ -192,7 +192,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public async Task<ContractState> GetContractStateAsync(string hash)
         {
-            var result = await RpcSendAsync(GetRpcName(), hash).ConfigureAwait(true);
+            var result = await RpcSendAsync(GetRpcName(), hash).ConfigureAwait(false);
             return ContractStateFromJson(result);
         }
 
