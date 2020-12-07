@@ -18,24 +18,24 @@ using static System.IO.Path;
 
 namespace Neo.Plugins
 {
-    public class RpcNep5Tracker : Plugin, IPersistencePlugin
+    public class RpcNep17Tracker : Plugin, IPersistencePlugin
     {
-        private const byte Nep5BalancePrefix = 0xf8;
-        private const byte Nep5TransferSentPrefix = 0xf9;
-        private const byte Nep5TransferReceivedPrefix = 0xfa;
+        private const byte Nep17BalancePrefix = 0xf8;
+        private const byte Nep17TransferSentPrefix = 0xf9;
+        private const byte Nep17TransferReceivedPrefix = 0xfa;
         private DB _db;
-        private DataCache<Nep5BalanceKey, Nep5Balance> _balances;
-        private DataCache<Nep5TransferKey, Nep5Transfer> _transfersSent;
-        private DataCache<Nep5TransferKey, Nep5Transfer> _transfersReceived;
+        private DataCache<Nep17BalanceKey, Nep17Balance> _balances;
+        private DataCache<Nep17TransferKey, Nep17Transfer> _transfersSent;
+        private DataCache<Nep17TransferKey, Nep17Transfer> _transfersReceived;
         private WriteBatch _writeBatch;
         private bool _shouldTrackHistory;
         private bool _recordNullAddressHistory;
         private uint _maxResults;
         private Snapshot _levelDbSnapshot;
 
-        public override string Description => "Enquiries NEP-5 balances and transaction history of accounts through RPC";
+        public override string Description => "Enquiries NEP-17 balances and transaction history of accounts through RPC";
 
-        public RpcNep5Tracker()
+        public RpcNep17Tracker()
         {
             RpcServerPlugin.RegisterMethods(this);
         }
@@ -44,7 +44,7 @@ namespace Neo.Plugins
         {
             if (_db == null)
             {
-                var dbPath = GetConfiguration().GetSection("DBPath").Value ?? "Nep5BalanceData";
+                var dbPath = GetConfiguration().GetSection("DBPath").Value ?? "Nep17BalanceData";
                 _db = DB.Open(GetFullPath(dbPath), new Options { CreateIfMissing = true });
             }
             _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
@@ -58,13 +58,13 @@ namespace Neo.Plugins
             _levelDbSnapshot?.Dispose();
             _levelDbSnapshot = _db.GetSnapshot();
             ReadOptions dbOptions = new ReadOptions { FillCache = false, Snapshot = _levelDbSnapshot };
-            _balances = new DbCache<Nep5BalanceKey, Nep5Balance>(_db, dbOptions, _writeBatch, Nep5BalancePrefix);
+            _balances = new DbCache<Nep17BalanceKey, Nep17Balance>(_db, dbOptions, _writeBatch, Nep17BalancePrefix);
             if (_shouldTrackHistory)
             {
                 _transfersSent =
-                    new DbCache<Nep5TransferKey, Nep5Transfer>(_db, dbOptions, _writeBatch, Nep5TransferSentPrefix);
+                    new DbCache<Nep17TransferKey, Nep17Transfer>(_db, dbOptions, _writeBatch, Nep17TransferSentPrefix);
                 _transfersReceived =
-                    new DbCache<Nep5TransferKey, Nep5Transfer>(_db, dbOptions, _writeBatch, Nep5TransferReceivedPrefix);
+                    new DbCache<Nep17TransferKey, Nep17Transfer>(_db, dbOptions, _writeBatch, Nep17TransferReceivedPrefix);
             }
         }
 
@@ -76,8 +76,8 @@ namespace Neo.Plugins
 
             if (_recordNullAddressHistory || from != UInt160.Zero)
             {
-                _transfersSent.Add(new Nep5TransferKey(from, header.Timestamp, scriptHash, transferIndex),
-                    new Nep5Transfer
+                _transfersSent.Add(new Nep17TransferKey(from, header.Timestamp, scriptHash, transferIndex),
+                    new Nep17Transfer
                     {
                         Amount = amount,
                         UserScriptHash = to,
@@ -88,8 +88,8 @@ namespace Neo.Plugins
 
             if (_recordNullAddressHistory || to != UInt160.Zero)
             {
-                _transfersReceived.Add(new Nep5TransferKey(to, header.Timestamp, scriptHash, transferIndex),
-                    new Nep5Transfer
+                _transfersReceived.Add(new Nep17TransferKey(to, header.Timestamp, scriptHash, transferIndex),
+                    new Nep17Transfer
                     {
                         Amount = amount,
                         UserScriptHash = from,
@@ -102,7 +102,7 @@ namespace Neo.Plugins
 
         private void HandleNotification(StoreView snapshot, IVerifiable scriptContainer, UInt160 scriptHash, string eventName,
             VM.Types.Array stateItems,
-            Dictionary<Nep5BalanceKey, Nep5Balance> nep5BalancesChanged, ref ushort transferIndex)
+            Dictionary<Nep17BalanceKey, Nep17Balance> nep17BalancesChanged, ref ushort transferIndex)
         {
             if (stateItems.Count == 0) return;
             if (eventName != "Transfer") return;
@@ -129,15 +129,15 @@ namespace Neo.Plugins
             if (fromBytes != null)
             {
                 from = new UInt160(fromBytes);
-                var fromKey = new Nep5BalanceKey(from, scriptHash);
-                if (!nep5BalancesChanged.ContainsKey(fromKey)) nep5BalancesChanged.Add(fromKey, new Nep5Balance());
+                var fromKey = new Nep17BalanceKey(from, scriptHash);
+                if (!nep17BalancesChanged.ContainsKey(fromKey)) nep17BalancesChanged.Add(fromKey, new Nep17Balance());
             }
 
             if (toBytes != null)
             {
                 to = new UInt160(toBytes);
-                var toKey = new Nep5BalanceKey(to, scriptHash);
-                if (!nep5BalancesChanged.ContainsKey(toKey)) nep5BalancesChanged.Add(toKey, new Nep5Balance());
+                var toKey = new Nep17BalanceKey(to, scriptHash);
+                if (!nep17BalancesChanged.ContainsKey(toKey)) nep17BalancesChanged.Add(toKey, new Nep17Balance());
             }
             if (scriptContainer is Transaction transaction)
             {
@@ -149,7 +149,7 @@ namespace Neo.Plugins
         {
             // Start freshly with a new DBCache for each block.
             ResetBatch();
-            Dictionary<Nep5BalanceKey, Nep5Balance> nep5BalancesChanged = new Dictionary<Nep5BalanceKey, Nep5Balance>();
+            Dictionary<Nep17BalanceKey, Nep17Balance> nep17BalancesChanged = new Dictionary<Nep17BalanceKey, Nep17Balance>();
 
             ushort transferIndex = 0;
             foreach (Blockchain.ApplicationExecuted appExecuted in applicationExecutedList)
@@ -161,18 +161,18 @@ namespace Neo.Plugins
                     if (!(notifyEventArgs?.State is VM.Types.Array stateItems) || stateItems.Count == 0)
                         continue;
                     HandleNotification(snapshot, notifyEventArgs.ScriptContainer, notifyEventArgs.ScriptHash, notifyEventArgs.EventName,
-                        stateItems, nep5BalancesChanged, ref transferIndex);
+                        stateItems, nep17BalancesChanged, ref transferIndex);
                 }
             }
 
-            foreach (var nep5BalancePair in nep5BalancesChanged)
+            foreach (var nep17BalancePair in nep17BalancesChanged)
             {
                 // get guarantee accurate balances by calling balanceOf for keys that changed.
                 byte[] script;
                 using (ScriptBuilder sb = new ScriptBuilder())
                 {
-                    sb.EmitAppCall(nep5BalancePair.Key.AssetScriptHash, "balanceOf",
-                        nep5BalancePair.Key.UserScriptHash.ToArray());
+                    sb.EmitAppCall(nep17BalancePair.Key.AssetScriptHash, "balanceOf",
+                        nep17BalancePair.Key.UserScriptHash.ToArray());
                     script = sb.ToArray();
                 }
 
@@ -180,17 +180,17 @@ namespace Neo.Plugins
                 {
                     if (engine.State.HasFlag(VMState.FAULT)) continue;
                     if (engine.ResultStack.Count <= 0) continue;
-                    nep5BalancePair.Value.Balance = engine.ResultStack.Pop().GetInteger();
+                    nep17BalancePair.Value.Balance = engine.ResultStack.Pop().GetInteger();
                 }
-                nep5BalancePair.Value.LastUpdatedBlock = snapshot.Height;
-                if (nep5BalancePair.Value.Balance == 0)
+                nep17BalancePair.Value.LastUpdatedBlock = snapshot.Height;
+                if (nep17BalancePair.Value.Balance == 0)
                 {
-                    _balances.Delete(nep5BalancePair.Key);
+                    _balances.Delete(nep17BalancePair.Key);
                     continue;
                 }
-                var itemToChange = _balances.GetAndChange(nep5BalancePair.Key, () => nep5BalancePair.Value);
-                if (itemToChange != nep5BalancePair.Value)
-                    itemToChange.FromReplica(nep5BalancePair.Value);
+                var itemToChange = _balances.GetAndChange(nep17BalancePair.Key, () => nep17BalancePair.Value);
+                if (itemToChange != nep17BalancePair.Value)
+                    itemToChange.FromReplica(nep17BalancePair.Value);
             }
         }
 
@@ -223,7 +223,7 @@ namespace Neo.Plugins
                 Array.Reverse(endTimeBytes);
             }
 
-            var transferPairs = _db.FindRange<Nep5TransferKey, Nep5Transfer>(
+            var transferPairs = _db.FindRange<Nep17TransferKey, Nep17Transfer>(
                 prefix.Concat(startTimeBytes).ToArray(),
                 prefix.Concat(endTimeBytes).ToArray());
 
@@ -250,7 +250,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        public JObject GetNep5Transfers(JArray _params)
+        public JObject GetNep17Transfers(JArray _params)
         {
             if (!_shouldTrackHistory) throw new RpcException(-32601, "Method not found");
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
@@ -267,13 +267,13 @@ namespace Neo.Plugins
             JArray transfersReceived = new JArray();
             json["received"] = transfersReceived;
             json["address"] = userScriptHash.ToAddress();
-            AddTransfers(Nep5TransferSentPrefix, userScriptHash, startTime, endTime, transfersSent);
-            AddTransfers(Nep5TransferReceivedPrefix, userScriptHash, startTime, endTime, transfersReceived);
+            AddTransfers(Nep17TransferSentPrefix, userScriptHash, startTime, endTime, transfersSent);
+            AddTransfers(Nep17TransferReceivedPrefix, userScriptHash, startTime, endTime, transfersReceived);
             return json;
         }
 
         [RpcMethod]
-        public JObject GetNep5Balances(JArray _params)
+        public JObject GetNep17Balances(JArray _params)
         {
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
 
@@ -281,7 +281,7 @@ namespace Neo.Plugins
             JArray balances = new JArray();
             json["balance"] = balances;
             json["address"] = userScriptHash.ToAddress();
-            var dbCache = new DbCache<Nep5BalanceKey, Nep5Balance>(_db, null, null, Nep5BalancePrefix);
+            var dbCache = new DbCache<Nep17BalanceKey, Nep17Balance>(_db, null, null, Nep17BalancePrefix);
             byte[] prefix = userScriptHash.ToArray();
             foreach (var (key, value) in dbCache.Find(prefix))
             {
