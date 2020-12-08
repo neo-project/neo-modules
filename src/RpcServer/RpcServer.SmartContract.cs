@@ -107,13 +107,20 @@ namespace Neo.Plugins
             return ret;
         }
 
-        private JObject GetVerificationResult(UInt160 scriptHash, ContractParameter[] args)
+        private JObject GetVerificationResult(UInt160 scriptHash, ContractParameter[] args, Signers signers = null)
         {
             var snapshot = Blockchain.Singleton.GetSnapshot();
             var contract = snapshot.Contracts.TryGet(scriptHash);
             var methodName = "verify";
 
-            using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, new Transaction(), snapshot.Clone());
+            Transaction tx = signers == null ? null : new Transaction
+            {
+                Signers = signers.GetSigners(),
+                Attributes = Array.Empty<TransactionAttribute>(),
+                Witnesses = signers.Witnesses,
+            };
+
+            using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
             engine.LoadContract(contract, methodName, CallFlags.None);
 
             engine.LoadScript(new ScriptBuilder().EmitAppCall(scriptHash, methodName, args).ToArray(), CallFlags.AllowCall);
@@ -143,7 +150,8 @@ namespace Neo.Plugins
         {
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             ContractParameter[] args = _params.Count >= 2 ? ((JArray)_params[1]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
-            return GetVerificationResult(script_hash, args);
+            Signers signers = _params.Count >= 3 ? SignersFromJson((JArray)_params[2]) : null;
+            return GetVerificationResult(script_hash, args, signers);
         }
 
         [RpcMethod]
