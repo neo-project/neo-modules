@@ -127,6 +127,22 @@ namespace Neo.Network.RPC.Tests
 
             var tranaction = await walletAPI.TransferAsync(NativeContract.GAS.Hash, 1, new[] { keyPair1.PublicKey }, new[] { keyPair1 }, UInt160.Zero, NativeContract.GAS.Factor * 100);
             Assert.AreEqual(testScript.ToHexString(), tranaction.Script.ToHexString());
+
+            try
+            {
+                tranaction = await walletAPI.TransferAsync(NativeContract.GAS.Hash, 2, new[] { keyPair1.PublicKey }, new[] { keyPair1 }, UInt160.Zero, NativeContract.GAS.Factor * 100);
+                Assert.Fail();
+            }
+            catch (System.Exception e)
+            {
+                Assert.AreEqual(e.Message, $"Need at least 2 KeyPairs for signing!");
+            }
+
+            testScript = NativeContract.GAS.Hash.MakeScript("transfer", multiSender, UInt160.Zero, NativeContract.GAS.Factor * 100, string.Empty);
+            UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1_10000000) });
+
+            tranaction = await walletAPI.TransferAsync(NativeContract.GAS.Hash, 1, new[] { keyPair1.PublicKey }, new[] { keyPair1 }, UInt160.Zero, NativeContract.GAS.Factor * 100, string.Empty);
+            Assert.AreEqual(testScript.ToHexString(), tranaction.Script.ToHexString());
         }
 
         [TestMethod]
