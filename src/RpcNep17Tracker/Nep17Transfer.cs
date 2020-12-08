@@ -4,7 +4,7 @@ using Neo.IO;
 
 namespace Neo.Plugins
 {
-    public class Nep5Transfer : ICloneable<Nep5Transfer>, ISerializable
+    public class Nep17Transfer : ICloneable<Nep17Transfer>, ISerializable
     {
         public UInt160 UserScriptHash;
         public uint BlockIndex;
@@ -29,9 +29,9 @@ namespace Neo.Plugins
             Amount = new BigInteger(reader.ReadVarBytes(512));
         }
 
-        Nep5Transfer ICloneable<Nep5Transfer>.Clone()
+        Nep17Transfer ICloneable<Nep17Transfer>.Clone()
         {
-            return new Nep5Transfer
+            return new Nep17Transfer
             {
                 UserScriptHash = UserScriptHash,
                 BlockIndex = BlockIndex,
@@ -40,7 +40,7 @@ namespace Neo.Plugins
             };
         }
 
-        void ICloneable<Nep5Transfer>.FromReplica(Nep5Transfer replica)
+        void ICloneable<Nep17Transfer>.FromReplica(Nep17Transfer replica)
         {
             UserScriptHash = replica.UserScriptHash;
             BlockIndex = replica.BlockIndex;

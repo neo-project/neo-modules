@@ -850,7 +850,7 @@
           ]
         },
         {
-          "name": "RpcNep5Tracker",
+          "name": "RpcNep17Tracker",
           "version": "3.0.0.0",
           "interfaces": [
             "IPersistencePlugin"
@@ -1340,10 +1340,10 @@
     }
   },
   {
-    "Name": "getnep5transfersasync",
+    "Name": "getnep17transfersasync",
     "Request": {
       "jsonrpc": "2.0",
-      "method": "getnep5transfers",
+      "method": "getnep17transfers",
       "params": [ "NVVwFw6XyhtRCFQ8SpUTMdPyYt4Vd9A1XQ", 0, 1868595301000 ],
       "id": 1
     },
@@ -1387,10 +1387,10 @@
     }
   },
   {
-    "Name": "getnep5transfersasync_with_null_transferaddress",
+    "Name": "getnep17transfersasync_with_null_transferaddress",
     "Request": {
       "jsonrpc": "2.0",
-      "method": "getnep5transfers",
+      "method": "getnep17transfers",
       "params": [ "Ncb7jVsYWBt1q5T5k3ZTP8bn5eK4DuanLd", 0, 1868595301000 ],
       "id": 1
     },
@@ -1434,10 +1434,10 @@
     }
   },
   {
-    "Name": "getnep5balancesasync",
+    "Name": "getnep17balancesasync",
     "Request": {
       "jsonrpc": "2.0",
-      "method": "getnep5balances",
+      "method": "getnep17balances",
       "params": [ "NVVwFw6XyhtRCFQ8SpUTMdPyYt4Vd9A1XQ" ],
       "id": 1
     },

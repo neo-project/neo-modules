@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <PackageId>Neo.Plugins.RpcNep5Tracker</PackageId>
+    <PackageId>Neo.Plugins.RpcNep17Tracker</PackageId>
     <RootNamespace>Neo.Plugins</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <None Update="RpcNep5Tracker\config.json">
+    <None Update="RpcNep17Tracker\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
