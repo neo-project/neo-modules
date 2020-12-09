@@ -111,6 +111,10 @@ namespace Neo.Plugins
         {
             var snapshot = Blockchain.Singleton.GetSnapshot();
             var contract = snapshot.Contracts.TryGet(scriptHash);
+            if (contract is null)
+            {
+                throw new RpcException(-100, "Unknown contract");
+            }
             var methodName = "verify";
 
             Transaction tx = signers == null ? null : new Transaction
