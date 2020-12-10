@@ -104,8 +104,7 @@ namespace Neo.Plugins
         protected virtual JObject GetContractState(JArray _params)
         {
             UInt160 script_hash = ToScriptHash(_params[0].AsString());
-            var mc = new ManagementContract();
-            var contract = mc.GetContract(Blockchain.Singleton.GetSnapshot(), script_hash);
+            var contract = NativeContract.Management.GetContract(Blockchain.Singleton.GetSnapshot(), script_hash);
             return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
         }
 
@@ -168,8 +167,7 @@ namespace Neo.Plugins
             if (!int.TryParse(_params[0].AsString(), out int id))
             {
                 UInt160 script_hash = UInt160.Parse(_params[0].AsString());
-                var mc = new ManagementContract();
-                var contract = mc.GetContract(Blockchain.Singleton.GetSnapshot(), script_hash);
+                var contract = NativeContract.Management.GetContract(Blockchain.Singleton.GetSnapshot(), script_hash);
                 if (contract == null) return null;
                 id = contract.Id;
             }

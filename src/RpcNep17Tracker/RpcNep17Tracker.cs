@@ -287,8 +287,7 @@ namespace Neo.Plugins
             {
                 JObject balance = new JObject();
 
-                var mc = new ManagementContract();
-                var contract = mc.GetContract(Blockchain.Singleton.GetSnapshot(), key.AssetScriptHash);
+                var contract = NativeContract.Management.GetContract(Blockchain.Singleton.GetSnapshot(), key.AssetScriptHash);
                 if (contract is null)
                     continue;
                 balance["assethash"] = key.AssetScriptHash.ToString();
