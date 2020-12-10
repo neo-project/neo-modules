@@ -318,7 +318,7 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "getcontractstate",
-      "params": [ "0x36a019d836d964c438c573f78badf79b9e7eebdd" ],
+      "params": [ "0xb399c051778cf37a1e4ef88509b2e054d0420a32" ],
       "id": 1
     },
     "Response": {
@@ -326,9 +326,9 @@
       "id": 1,
       "result": {
         "id": -2,
-        "updatecounter": 0,
-        "hash": "0x36a019d836d964c438c573f78badf79b9e7eebdd",
-        "script": "DANHQVNBa2d4Cw==",
+        "updatecounter": 2,
+        "hash": "0xb399c051778cf37a1e4ef88509b2e054d0420a32",
+        "script": "DANHQVNBGvd7Zw==",
         "manifest": {
           "name": "GAS",
           "groups": [],
@@ -338,16 +338,11 @@
           "abi": {
             "methods": [
               {
-                "name": "onPersist",
-                "parameters": [],
-                "offset": 0,
-                "returntype": "Void"
-              },
-              {
                 "name": "totalSupply",
                 "parameters": [],
                 "offset": 0,
-                "returntype": "Integer"
+                "returntype": "Integer",
+                "safe": true
               },
               {
                 "name": "balanceOf",
@@ -358,7 +353,8 @@
                   }
                 ],
                 "offset": 0,
-                "returntype": "Integer"
+                "returntype": "Integer",
+                "safe": true
               },
               {
                 "name": "transfer",
@@ -381,25 +377,22 @@
                   }
                 ],
                 "offset": 0,
-                "returntype": "Boolean"
-              },
-              {
-                "name": "postPersist",
-                "parameters": [],
-                "offset": 0,
-                "returntype": "Void"
+                "returntype": "Boolean",
+                "safe": false
               },
               {
                 "name": "symbol",
                 "parameters": [],
                 "offset": 0,
-                "returntype": "String"
+                "returntype": "String",
+                "safe": true
               },
               {
                 "name": "decimals",
                 "parameters": [],
                 "offset": 0,
-                "returntype": "Integer"
+                "returntype": "Integer",
+                "safe": true
               }
             ],
             "events": [
@@ -429,12 +422,6 @@
             }
           ],
           "trusts": [],
-          "safemethods": [
-            "totalSupply",
-            "balanceOf",
-            "symbol",
-            "decimals"
-          ],
           "extra": null
         }
       }
