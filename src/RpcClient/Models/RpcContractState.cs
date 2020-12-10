@@ -1,6 +1,7 @@
 using Neo;
 using Neo.IO.Json;
 using Neo.Ledger;
+using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
 using System;
 
