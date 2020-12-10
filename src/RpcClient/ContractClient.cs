@@ -52,12 +52,12 @@ namespace Neo.Network.RPC
         /// <param name="manifest">contract manifest</param>
         /// <param name="key">sender KeyPair</param>
         /// <returns></returns>
-        public async Task<Transaction> CreateDeployContractTxAsync(byte[] contractScript, ContractManifest manifest, KeyPair key)
+        public async Task<Transaction> CreateDeployContractTxAsync(byte[] nefFile, ContractManifest manifest, KeyPair key)
         {
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitSysCall(ApplicationEngine.System_Contract_CreateStandardAccount, contractScript, manifest.ToString());
+                sb.EmitSysCall(ApplicationEngine.System_Contract_Call, SmartContract.Native.NativeContract.Management.Hash, "deploy", nefFile, manifest.ToString());
                 script = sb.ToArray();
             }
             UInt160 sender = Contract.CreateSignatureRedeemScript(key.PublicKey).ToScriptHash();
