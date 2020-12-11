@@ -201,6 +201,7 @@ namespace Neo.Network.RPC
             return new ContractState
             {
                 Id = (int)json["id"].AsNumber(),
+                UpdateCounter = (ushort)json["updatecounter"].AsNumber(),
                 Hash = UInt160.Parse(json["hash"].AsString()),
                 Script = Convert.FromBase64String(json["script"].AsString()),
                 Manifest = ContractManifest.FromJson(json["manifest"])
