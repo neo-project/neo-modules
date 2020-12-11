@@ -6,6 +6,7 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using System;
 using System.Collections.Generic;
@@ -103,8 +104,9 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetContractState(JArray _params)
         {
+            using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
             UInt160 script_hash = ToScriptHash(_params[0].AsString());
-            ContractState contract = Blockchain.Singleton.View.Contracts.TryGet(script_hash);
+            ContractState contract = NativeContract.Management.GetContract(snapshot, script_hash);
             return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
         }
 
@@ -166,8 +168,9 @@ namespace Neo.Plugins
         {
             if (!int.TryParse(_params[0].AsString(), out int id))
             {
+                using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
                 UInt160 script_hash = UInt160.Parse(_params[0].AsString());
-                ContractState contract = Blockchain.Singleton.View.Contracts.TryGet(script_hash);
+                ContractState contract = NativeContract.Management.GetContract(snapshot, script_hash);
                 if (contract == null) return null;
                 id = contract.Id;
             }
