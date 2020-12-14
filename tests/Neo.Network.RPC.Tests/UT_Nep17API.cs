@@ -81,6 +81,16 @@ namespace Neo.Network.RPC.Tests
                 new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(NativeContract.GAS.Decimals) },
                 new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1_00000000) });
 
+            scriptHash = NativeContract.NEO.Hash;
+            testScript = scriptHash.MakeScript("symbol")
+                .Concat(scriptHash.MakeScript("decimals"))
+                .Concat(scriptHash.MakeScript("totalSupply"))
+                .ToArray();
+            UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript,
+                new ContractParameter { Type = ContractParameterType.String, Value = NativeContract.NEO.Symbol },
+                new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(NativeContract.NEO.Decimals) },
+                new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1_00000000) });
+
             var tests = TestUtils.RpcTestCases.Where(p => p.Name == "getcontractstateasync");
             foreach (var test in tests)
             {
@@ -88,11 +98,22 @@ namespace Neo.Network.RPC.Tests
                 .ReturnsAsync(test.Response.Result)
                 .Verifiable();
 
-                var result = await nep17API.GetTokenInfoAsync(NativeContract.GAS.Hash);
-                Assert.AreEqual(NativeContract.GAS.Symbol, result.Symbol);
-                Assert.AreEqual(8, (int)result.Decimals);
-                Assert.AreEqual(1_00000000, (int)result.TotalSupply);
-                Assert.AreEqual("GAS", result.Name);
+                if (test.Request.Params[0].AsString() == "0xb399c051778cf37a1e4ef88509b2e054d0420a32")
+                {
+                    var result = await nep17API.GetTokenInfoAsync(NativeContract.GAS.Hash);
+                    Assert.AreEqual(NativeContract.GAS.Symbol, result.Symbol);
+                    Assert.AreEqual(8, (int)result.Decimals);
+                    Assert.AreEqual(1_00000000, (int)result.TotalSupply);
+                    Assert.AreEqual("GAS", result.Name);
+                }
+                else if (test.Request.Params[0].AsString() == "0x74c21a1ca66b7a190bf2a65db83ba6fe550cea64")
+                {
+                    var result = await nep17API.GetTokenInfoAsync(NativeContract.NEO.Hash);
+                    Assert.AreEqual(NativeContract.NEO.Symbol, result.Symbol);
+                    Assert.AreEqual(0, (int)result.Decimals);
+                    Assert.AreEqual(1_00000000, (int)result.TotalSupply);
+                    Assert.AreEqual("NEO", result.Name);
+                }
             }
         }
 
