@@ -57,7 +57,7 @@ namespace Neo.Network.RPC
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitAppCall(NativeContract.Management.Hash, "deploy", contractScript, manifest.ToString());
+                sb.EmitAppCall(NativeContract.Management.Hash, "deploy", nefFile, manifest.ToString());
                 script = sb.ToArray();
             }
             UInt160 sender = Contract.CreateSignatureRedeemScript(key.PublicKey).ToScriptHash();
