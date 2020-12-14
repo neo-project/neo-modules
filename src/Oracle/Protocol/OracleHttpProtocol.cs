@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using NUtility = Neo.Utility;
 
 namespace Neo.Plugins
 {
@@ -16,7 +17,7 @@ namespace Neo.Plugins
 
         public string Request(string url)
         {
-            Utility.Log(nameof(OracleHttpProtocol), LogLevel.Debug, $"Request: {url}");
+            NUtility.Log(nameof(OracleHttpProtocol), LogLevel.Debug, $"Request: {url}");
 
             if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) throw new InvalidOperationException("UrlError");
             if (!AllowPrivateHost && IsInternal(Dns.GetHostEntry(uri.Host))) throw new InvalidOperationException("Access to private host is not allowed");
