@@ -319,14 +319,15 @@
       "jsonrpc": "2.0",
       "id": 1,
       "method": "getcontractstate",
-      "params": [ "0xb399c051778cf37a1e4ef88509b2e054d0420a32" ]
+      "params": [ "0xb399c051778cf37a1e4ef88509b2e054d0420a32" ],
+      "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
         "id": -2,
-        "updatecounter": 0,
+        "updatecounter": 2,
         "hash": "0xb399c051778cf37a1e4ef88509b2e054d0420a32",
         "script": "DANHQVNBGvd7Zw==",
         "manifest": {
