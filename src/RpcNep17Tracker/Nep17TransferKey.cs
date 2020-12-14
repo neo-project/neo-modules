@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Neo.Plugins
 {
-    public class Nep5TransferKey : IComparable<Nep5TransferKey>, IEquatable<Nep5TransferKey>, ISerializable
+    public class Nep17TransferKey : IComparable<Nep17TransferKey>, IEquatable<Nep17TransferKey>, ISerializable
     {
         public readonly UInt160 UserScriptHash;
         public ulong TimestampMS { get; private set; }
@@ -17,11 +17,11 @@ namespace Neo.Plugins
             UInt160.Length +    //AssetScriptHash
             sizeof(ushort);     //BlockXferNotificationIndex
 
-        public Nep5TransferKey() : this(new UInt160(), 0, new UInt160(), 0)
+        public Nep17TransferKey() : this(new UInt160(), 0, new UInt160(), 0)
         {
         }
 
-        public Nep5TransferKey(UInt160 userScriptHash, ulong timestamp, UInt160 assetScriptHash, ushort xferIndex)
+        public Nep17TransferKey(UInt160 userScriptHash, ulong timestamp, UInt160 assetScriptHash, ushort xferIndex)
         {
             if (userScriptHash is null || assetScriptHash is null)
                 throw new ArgumentNullException();
@@ -31,7 +31,7 @@ namespace Neo.Plugins
             BlockXferNotificationIndex = xferIndex;
         }
 
-        public int CompareTo(Nep5TransferKey other)
+        public int CompareTo(Nep17TransferKey other)
         {
             if (other is null) return 1;
             if (ReferenceEquals(this, other)) return 0;
@@ -44,7 +44,7 @@ namespace Neo.Plugins
             return BlockXferNotificationIndex.CompareTo(other.BlockXferNotificationIndex);
         }
 
-        public bool Equals(Nep5TransferKey other)
+        public bool Equals(Nep17TransferKey other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -55,7 +55,7 @@ namespace Neo.Plugins
 
         public override bool Equals(Object other)
         {
-            return other is Nep5TransferKey otherKey && Equals(otherKey);
+            return other is Nep17TransferKey otherKey && Equals(otherKey);
         }
 
         public override int GetHashCode()

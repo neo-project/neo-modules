@@ -45,19 +45,17 @@ namespace Neo.Network.RPC.Tests
                 Permissions = new[] { ContractPermission.DefaultPermission },
                 Abi = new ContractAbi()
                 {
-                    Hash = new byte[1].ToScriptHash(),
                     Events = new ContractEventDescriptor[0],
                     Methods = new ContractMethodDescriptor[0]
                 },
                 Groups = new ContractGroup[0],
-                SafeMethods = WildcardContainer<string>.Create(),
                 Trusts = WildcardContainer<UInt160>.Create(),
                 SupportedStandards = new string[] { "NEP-10" },
                 Extra = null,
             };
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitSysCall(ApplicationEngine.System_Contract_Create, new byte[1], manifest.ToString());
+                sb.EmitAppCall(NativeContract.Management.Hash, "deploy", new byte[1], manifest.ToString());
                 script = sb.ToArray();
             }
 

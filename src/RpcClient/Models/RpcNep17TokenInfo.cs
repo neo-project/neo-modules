@@ -2,7 +2,7 @@ using System.Numerics;
 
 namespace Neo.Network.RPC.Models
 {
-    public class RpcNep5TokenInfo
+    public class RpcNep17TokenInfo
     {
         public string Name { get; set; }
 
