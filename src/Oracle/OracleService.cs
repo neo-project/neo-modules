@@ -5,7 +5,6 @@ using Neo.ConsoleService;
 using Neo.Cryptography;
 using Neo.Cryptography.ECC;
 using Neo.IO;
-using Neo.IO.Caching;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
@@ -31,6 +30,7 @@ using System.Timers;
 using static System.IO.Path;
 using NJArray = Newtonsoft.Json.Linq.JArray;
 using NJObject = Newtonsoft.Json.Linq.JObject;
+using NUtility = Neo.Utility;
 
 namespace Neo.Plugins
 {
@@ -241,7 +241,7 @@ namespace Neo.Plugins
                     break;
             }
 
-            foreach(var (requestId, request) in NativeContract.Oracle.GetRequestsByUrl(snapshot, req.Url))
+            foreach (var (requestId, request) in NativeContract.Oracle.GetRequestsByUrl(snapshot, req.Url))
             {
                 var result = code == OracleResponseCode.Success ? Filter(data, request.Filter) : Array.Empty<byte>();
                 var response = new OracleResponse() { Id = requestId, Code = code, Result = result };
@@ -321,7 +321,7 @@ namespace Neo.Plugins
 
             // Calculate network fee
 
-            var oracleContract = snapshot.Contracts.TryGet(NativeContract.Oracle.Hash);
+            var oracleContract = NativeContract.Management.GetContract(snapshot, NativeContract.Oracle.Hash);
             var engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
             engine.LoadContract(oracleContract, "verify", CallFlags.None, true);
             if (engine.Execute() != VMState.HALT) return null;
@@ -413,11 +413,11 @@ namespace Neo.Plugins
         private byte[] Filter(string input, string filterArgs)
         {
             if (string.IsNullOrEmpty(filterArgs))
-                return Utility.StrictUTF8.GetBytes(input);
+                return NUtility.StrictUTF8.GetBytes(input);
 
             NJObject beforeObject = NJObject.Parse(input);
             NJArray afterObjects = new NJArray(beforeObject.SelectTokens(filterArgs, true));
-            return Utility.StrictUTF8.GetBytes(afterObjects.ToString());
+            return NUtility.StrictUTF8.GetBytes(afterObjects.ToString());
         }
 
         private bool CheckTxSign(StoreView snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> Signs)
@@ -470,7 +470,7 @@ namespace Neo.Plugins
 
         public static void Log(string message, LogLevel level = LogLevel.Info)
         {
-            Utility.Log(nameof(OracleService), level, message);
+            NUtility.Log(nameof(OracleService), level, message);
         }
 
         internal class OracleTask
