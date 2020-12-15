@@ -318,7 +318,7 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "getcontractstate",
-      "params": [ "0xb399c051778cf37a1e4ef88509b2e054d0420a32" ],
+      "params": [ "0xa6a6c15dcdc9b997dac448b6926522d22efeedfb" ],
       "id": 1
     },
     "Response": {
@@ -326,11 +326,11 @@
       "id": 1,
       "result": {
         "id": -2,
-        "updatecounter": 2,
-        "hash": "0xb399c051778cf37a1e4ef88509b2e054d0420a32",
-        "script": "DANHQVNBGvd7Zw==",
+        "updatecounter": 0,
+        "hash": "0xa6a6c15dcdc9b997dac448b6926522d22efeedfb",
+        "script": "DAhHYXNUb2tlbkEa93tn",
         "manifest": {
-          "name": "GAS",
+          "name": "GasToken",
           "groups": [],
           "supportedstandards": [
             "NEP-17"
