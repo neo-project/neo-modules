@@ -1,7 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.IO.Json;
 using Neo.Network.RPC.Models;
-using System;
 using System.Linq;
 
 namespace Neo.Network.RPC.Tests
@@ -45,7 +44,6 @@ namespace Neo.Network.RPC.Tests
         public void TestGetContractState()
         {
             JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.GetContractStateAsync).ToLower()).Response.Result;
-            Console.WriteLine(json);
             var item = RpcContractState.FromJson(json);
             Assert.AreEqual(json.ToString(), item.ToJson().ToString());
         }

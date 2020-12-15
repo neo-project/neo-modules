@@ -25,6 +25,4 @@
     </None>
   </ItemGroup>
 
-  <ProjectExtensions><VisualStudio><UserProperties rpctestcases_1json__JsonSchema="https://json.schemastore.org/ansible-collection-galaxy" /></VisualStudio></ProjectExtensions>
-
 </Project>
