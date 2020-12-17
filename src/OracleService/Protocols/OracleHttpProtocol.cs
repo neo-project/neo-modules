@@ -11,8 +11,8 @@ namespace Neo.Plugins
 {
     public class OracleHttpProtocol : IOracleProtocol
     {
-        public int Timeout { get; set; } = 5000;
-        public bool AllowPrivateHost { get; set; } = false;
+        public static int Timeout { get; set; } = 5000;
+        public static bool AllowPrivateHost { get; set; } = false;
         public static readonly string[] AllowedFormats = new string[] { "application/json" };
 
         public string Request(string url)
