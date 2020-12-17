@@ -4,7 +4,7 @@
     "Wallet": "",
     "MaxTaskTimeout": 432000000,
     "HttpsTimeout": 5000,
-    "HttpsAllowPrivateHost": false,
-    "HttpsAllowedContentTypes": [ "application/json" ]
+    "AllowPrivateHost": false,
+    "AllowedContentTypes": [ "application/json" ]
   }
 }
