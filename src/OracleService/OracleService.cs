@@ -216,11 +216,11 @@ namespace Neo.Plugins
         {
             Log($"Process oracle request: {req}, txid: {req.OriginalTxid}, url: {req.Url}");
 
-            var (Code, Data) = ProcessUrl(req.Url);
+            var code = ProcessUrl(req.Url, out string data);
             foreach (var (requestId, request) in NativeContract.Oracle.GetRequestsByUrl(snapshot, req.Url))
             {
-                var result = Code == OracleResponseCode.Success ? Filter(Data, request.Filter) : Array.Empty<byte>();
-                var response = new OracleResponse() { Id = requestId, Code = Code, Result = result };
+                var result = code == OracleResponseCode.Success ? Filter(data, request.Filter) : Array.Empty<byte>();
+                var response = new OracleResponse() { Id = requestId, Code = code, Result = result };
                 var responseTx = CreateResponseTx(snapshot, response);
                 var backupTx = CreateResponseTx(snapshot, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() });
 
@@ -242,18 +242,18 @@ namespace Neo.Plugins
             }
         }
 
-        private (OracleResponseCode Code, string Data) ProcessUrl(string url)
+        private OracleResponseCode ProcessUrl(string url, out string response)
         {
+            response = "";
             if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-                return (OracleResponseCode.Error, "");
-            string data = "";
+                return OracleResponseCode.Error;
             OracleResponseCode code = OracleResponseCode.Success;
             switch (uri.Scheme.ToLowerInvariant())
             {
                 case "https":
                     try
                     {
-                        data = Https.Request(url);
+                        response = Https.Request(url);
                     }
                     catch (FileNotFoundException notfoundex)
                     {
@@ -276,7 +276,7 @@ namespace Neo.Plugins
                     code = OracleResponseCode.Forbidden;
                     break;
             }
-            return (code, data);
+            return code;
         }
 
         public static Transaction CreateResponseTx(StoreView snapshot, OracleResponse response)
