@@ -118,7 +118,7 @@ namespace Neo.Plugins.MPT
         public byte[] ToArrayWithoutReference()
         {
             using MemoryStream ms = new MemoryStream();
-            using BinaryWriter writer = new BinaryWriter(ms, Utility.StrictUTF8, true);
+            using BinaryWriter writer = new BinaryWriter(ms, Neo.Utility.StrictUTF8, true);
 
             SerializeWithoutReference(writer);
             writer.Flush();
@@ -214,7 +214,7 @@ namespace Neo.Plugins.MPT
         public void FromReplica(MPTNode n)
         {
             using MemoryStream ms = new MemoryStream(n.ToArray());
-            using BinaryReader reader = new BinaryReader(ms, Utility.StrictUTF8, true);
+            using BinaryReader reader = new BinaryReader(ms, Neo.Utility.StrictUTF8, true);
 
             Deserialize(reader);
         }
