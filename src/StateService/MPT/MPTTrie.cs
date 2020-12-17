@@ -9,22 +9,18 @@ namespace Neo.Plugins.MPT
         where TValue : class, ISerializable, new()
     {
         private const byte Prefix = 0xf0;
-
+        private readonly bool full;
         private readonly ISnapshot store;
         private MPTNode root;
-
+        private readonly MPTCache cache;
         public MPTNode Root => root;
 
-        public MPTTrie(ISnapshot store, UInt256 root)
+        public MPTTrie(ISnapshot store, UInt256 root, bool full_state = false)
         {
             this.store = store ?? throw new ArgumentNullException();
-            this.root = root is null ? HashNode.EmptyNode : new HashNode(root);
-        }
-
-        private MPTNode Resolve(HashNode n)
-        {
-            var data = store.TryGet(Prefix, n.Hash.ToArray());
-            return MPTNode.Decode(data);
+            this.cache = new MPTCache(store, Prefix);
+            this.root = root is null ? new MPTNode() : MPTNode.NewHash(root);
+            this.full = full_state;
         }
 
         private static byte[] ToNibbles(ReadOnlySpan<byte> path)
@@ -50,9 +46,9 @@ namespace Neo.Plugins.MPT
             return key;
         }
 
-        private void PutToStore(MPTNode node)
+        public void Commit()
         {
-            store.Put(Prefix, node.Hash.ToArray(), node.Encode());
+            cache.Commit();
         }
     }
 }

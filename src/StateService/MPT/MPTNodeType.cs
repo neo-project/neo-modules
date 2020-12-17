@@ -8,9 +8,8 @@ namespace Neo.Plugins.MPT
         BranchNode = 0x00,
         [ReflectionCache(typeof(ExtensionNode))]
         ExtensionNode = 0x01,
-        [ReflectionCache(typeof(HashNode))]
-        HashNode = 0x02,
-        [ReflectionCache(typeof(LeafNode))]
-        LeafNode = 0x03,
+        LeafNode = 0x02,
+        HashNode = 0x03,
+        Empty = 0x04
     }
 }
