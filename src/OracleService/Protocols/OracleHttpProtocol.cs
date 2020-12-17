@@ -13,7 +13,7 @@ namespace Neo.Plugins
     {
         public static int Timeout { get; set; } = 5000;
         public static bool AllowPrivateHost { get; set; } = false;
-        public static readonly string[] AllowedFormats = new string[] { "application/json" };
+        public static readonly string[] AllowedContentTypes = new string[] { "application/json" };
 
         public string Request(string url)
         {
