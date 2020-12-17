@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using LSnapshot = Neo.IO.Data.LevelDB.Snapshot;
 using LHelper = Neo.IO.Data.LevelDB.Helper;
 
-namespace Neo.Plugins.Storage
+namespace Neo.Plugins.Storage.LevelDB
 {
-    internal class Snapshot : ISnapshot
+    public class Snapshot : ISnapshot
     {
         private readonly DB db;
         private readonly LSnapshot snapshot;
