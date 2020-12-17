@@ -42,6 +42,7 @@ namespace Neo.Plugins
         private int Counter;
         private ConcurrentDictionary<ulong, DateTime> FinishedCache;
         private ConsoleServiceBase ConsoleBase;
+        private System.Timers.Timer Timer;
 
         private static readonly object _lock = new object();
 
@@ -57,12 +58,6 @@ namespace Neo.Plugins
             FinishedCache = new ConcurrentDictionary<ulong, DateTime>();
 
             RpcServerPlugin.RegisterMethods(this);
-
-            System.Timers.Timer timer = new System.Timers.Timer();
-            timer.Enabled = true;
-            timer.Interval = RefreshInterval;
-            timer.Start();
-            timer.Elapsed += new ElapsedEventHandler(OnTimer);
 
             ConsoleBase = GetService<ConsoleServiceBase>();
         }
@@ -137,6 +132,15 @@ namespace Neo.Plugins
                     Thread.Sleep(500);
                 }
             }).Start();
+
+            if (Timer is null)
+            {
+                Timer = new System.Timers.Timer();
+                Timer.Enabled = true;
+                Timer.Interval = RefreshInterval;
+                Timer.Start();
+                Timer.Elapsed += new ElapsedEventHandler(OnTimer);
+            }
         }
 
         void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
@@ -165,6 +169,11 @@ namespace Neo.Plugins
         private void OnStop()
         {
             Interlocked.Exchange(ref CancelSource, null)?.Cancel();
+            if (Timer != null)
+            {
+                Timer.Stop();
+                Timer = null;
+            }
         }
 
         public void SendResponseSignature(ulong requestId, byte[] txSign, KeyPair keyPair)
@@ -325,13 +334,8 @@ namespace Neo.Plugins
             if (engine.Execute() != VMState.HALT) return null;
             tx.NetworkFee += engine.GasConsumed;
 
-            var networkFee = ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] * m;
-            using (ScriptBuilder sb = new ScriptBuilder())
-                networkFee += ApplicationEngine.OpCodePrices[(OpCode)sb.EmitPush(m).ToArray()[0]];
-            networkFee += ApplicationEngine.OpCodePrices[OpCode.PUSHDATA1] * n;
-            using (ScriptBuilder sb = new ScriptBuilder())
-                networkFee += ApplicationEngine.OpCodePrices[(OpCode)sb.EmitPush(n).ToArray()[0]];
-            networkFee += ApplicationEngine.OpCodePrices[OpCode.PUSHNULL] + ApplicationEngine.ECDsaVerifyPrice * n;
+            var executionFactor = NativeContract.Policy.GetExecFeeFactor(snapshot);
+            var networkFee = executionFactor * SmartContract.Helper.MultiSignatureContractCost(m, n);
             tx.NetworkFee += networkFee;
 
             // Base size for transaction: includes const_header + signers + script + hashes + witnesses, except attributes
@@ -418,18 +422,18 @@ namespace Neo.Plugins
             return NUtility.StrictUTF8.GetBytes(afterObjects.ToString());
         }
 
-        private bool CheckTxSign(StoreView snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> Signs)
+        private bool CheckTxSign(StoreView snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
         {
-            ECPoint[] nodes = NativeContract.Designation.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
-            int m = nodes.Length - (nodes.Length - 1) / 3;
-            if (Signs.Count >= m && tx != null)
+            ECPoint[] oraclesNodes = NativeContract.Designation.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
+            int neededThreshold = oraclesNodes.Length - (oraclesNodes.Length - 1) / 3;
+            if (OracleSigns.Count >= neededThreshold && tx != null)
             {
-                var contract = Contract.CreateMultiSigContract(m, nodes);
+                var contract = Contract.CreateMultiSigContract(neededThreshold, oraclesNodes);
                 ScriptBuilder sb = new ScriptBuilder();
-                foreach (var pair in Signs.OrderBy(p => p.Key))
+                foreach (var pair in OracleSigns.OrderBy(p => p.Key))
                 {
                     sb.EmitPush(pair.Value);
-                    if (--m == 0) break;
+                    if (--neededThreshold == 0) break;
                 }
                 var idx = tx.GetScriptHashesForVerifying(snapshot)[0] == contract.ScriptHash ? 0 : 1;
                 tx.Witnesses[idx].InvocationScript = sb.ToArray();
