@@ -220,7 +220,6 @@ namespace Neo.Plugins
             Uri.TryCreate(req.Url, UriKind.Absolute, out var uri);
             switch (uri.Scheme.ToLowerInvariant())
             {
-                case "http":
                 case "https":
                     try
                     {
