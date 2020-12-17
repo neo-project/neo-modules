@@ -521,7 +521,7 @@
                 "name": "vote",
                 "parameters": [
                   {
-                    "name": "from",
+                    "name": "account",
                     "type": "ByteArray"
                   },
                   {

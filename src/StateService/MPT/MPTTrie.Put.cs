@@ -133,8 +133,6 @@ namespace Neo.Plugins.MPT
                 case NodeType.Empty:
                     {
                         MPTNode newNode;
-                        if (hashNode.IsEmpty)
-                        {
                         if (path.IsEmpty)
                         {
                             newNode = val;

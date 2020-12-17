@@ -278,7 +278,6 @@ namespace Neo.Plugins.StateService.Tests
             Assert.IsNotNull(mpt["ac02".HexToBytes()]);
             mpt.Commit();
             snapshot.Commit();
-
             var mpt0 = new MPTTrie<TestKey, TestValue>(store.GetSnapshot(), mpt.Root.Hash);
             Assert.IsNotNull(mpt0["ac02".HexToBytes()]);
         }
