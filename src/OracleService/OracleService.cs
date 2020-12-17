@@ -68,8 +68,9 @@ namespace Neo.Plugins
             Wallet = new NEP6Wallet(Combine(PluginsDirectory, nameof(OracleService), config.GetSection("Wallet").Value));
             Nodes = config.GetSection("Nodes").GetChildren().Select(p => p.Get<string>()).ToArray();
             MaxTaskTimeout = TimeSpan.FromMilliseconds(double.Parse(config.GetSection("MaxTaskTimeout").Value));
-            OracleHttpProtocol.Timeout = int.Parse(config.GetSection("HttpTimeout").Value);
-            OracleHttpProtocol.AllowPrivateHost = bool.Parse(config.GetSection("AllowPrivateHost").Value);
+            OracleHttpProtocol.Timeout = int.Parse(config.GetSection("HttpsTimeout").Value);
+            OracleHttpProtocol.AllowPrivateHost = bool.Parse(config.GetSection("HttpsAllowPrivateHost").Value);
+            OracleHttpProtocol.AllowedContentTypes = config.GetSection("HttpsAllowedContentTypes").GetChildren().Select(p => p.Get<string>()).ToArray();
         }
 
         [RpcMethod]
@@ -143,7 +144,7 @@ namespace Neo.Plugins
             }
         }
 
-        void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles) || !CheckOracleAccount(oracles))
                 OnStop();
@@ -215,15 +216,44 @@ namespace Neo.Plugins
         {
             Log($"Process oracle request: {req}, txid: {req.OriginalTxid}, url: {req.Url}");
 
+            var (Code, Data) = ProcessUrl(req.Url);
+            foreach (var (requestId, request) in NativeContract.Oracle.GetRequestsByUrl(snapshot, req.Url))
+            {
+                var result = Code == OracleResponseCode.Success ? Filter(Data, request.Filter) : Array.Empty<byte>();
+                var response = new OracleResponse() { Id = requestId, Code = Code, Result = result };
+                var responseTx = CreateResponseTx(snapshot, response);
+                var backupTx = CreateResponseTx(snapshot, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() });
+
+                Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
+
+                ECPoint[] oraclePublicKeys = NativeContract.Designation.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
+                foreach (var account in Wallet.GetAccounts())
+                {
+                    var oraclePub = account.GetKey().PublicKey;
+                    if (!account.HasKey || account.Lock || !oraclePublicKeys.Contains(oraclePub)) continue;
+
+                    var txSign = responseTx.Sign(account.GetKey());
+                    var backTxSign = backupTx.Sign(account.GetKey());
+                    AddResponseTxSign(snapshot, requestId, oraclePub, txSign, responseTx, backupTx, backTxSign);
+                    SendResponseSignature(requestId, txSign, account.GetKey());
+
+                    Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()}");
+                }
+            }
+        }
+
+        private (OracleResponseCode Code, string Data) ProcessUrl(string url)
+        {
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+                return (OracleResponseCode.Error, "");
             string data = "";
             OracleResponseCode code = OracleResponseCode.Success;
-            Uri.TryCreate(req.Url, UriKind.Absolute, out var uri);
             switch (uri.Scheme.ToLowerInvariant())
             {
                 case "https":
                     try
                     {
-                        data = Https.Request(req.Url);
+                        data = Https.Request(url);
                     }
                     catch (FileNotFoundException notfoundex)
                     {
@@ -246,30 +276,7 @@ namespace Neo.Plugins
                     code = OracleResponseCode.Forbidden;
                     break;
             }
-
-            foreach (var (requestId, request) in NativeContract.Oracle.GetRequestsByUrl(snapshot, req.Url))
-            {
-                var result = code == OracleResponseCode.Success ? Filter(data, request.Filter) : Array.Empty<byte>();
-                var response = new OracleResponse() { Id = requestId, Code = code, Result = result };
-                var responseTx = CreateResponseTx(snapshot, response);
-                var backupTx = CreateResponseTx(snapshot, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() });
-
-                Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
-
-                ECPoint[] oraclePublicKeys = NativeContract.Designation.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
-                foreach (var account in Wallet.GetAccounts())
-                {
-                    var oraclePub = account.GetKey().PublicKey;
-                    if (!account.HasKey || account.Lock || !oraclePublicKeys.Contains(oraclePub)) continue;
-
-                    var txSign = responseTx.Sign(account.GetKey());
-                    var backTxSign = backupTx.Sign(account.GetKey());
-                    AddResponseTxSign(snapshot, requestId, oraclePub, txSign, responseTx, backupTx, backTxSign);
-                    SendResponseSignature(requestId, txSign, account.GetKey());
-
-                    Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()}");
-                }
-            }
+            return (code, data);
         }
 
         public static Transaction CreateResponseTx(StoreView snapshot, OracleResponse response)

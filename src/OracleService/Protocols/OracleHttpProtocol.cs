@@ -13,7 +13,7 @@ namespace Neo.Plugins
     {
         public static int Timeout { get; set; } = 5000;
         public static bool AllowPrivateHost { get; set; } = false;
-        public static readonly string[] AllowedContentTypes = new string[] { "application/json" };
+        public static string[] AllowedContentTypes = new string[] { "application/json" };
 
         public string Request(string url)
         {
@@ -24,7 +24,7 @@ namespace Neo.Plugins
 
             using var handler = new HttpClientHandler();
             using var client = new HttpClient(handler);
-            client.DefaultRequestHeaders.Add("Accept", string.Join(",", AllowedFormats));
+            client.DefaultRequestHeaders.Add("Accept", string.Join(",", AllowedContentTypes));
 
             Task<HttpResponseMessage> result = client.GetAsync(uri);
             Stopwatch sw = new Stopwatch();
@@ -32,7 +32,7 @@ namespace Neo.Plugins
             if (!result.Wait(Timeout)) throw new TimeoutException("Timeout");
             if (result.Result.StatusCode == HttpStatusCode.NotFound) throw new FileNotFoundException($"{url} is not found");
             if (!result.Result.IsSuccessStatusCode) throw new InvalidOperationException("Response error");
-            if (!AllowedFormats.Contains(result.Result.Content.Headers.ContentType.MediaType)) throw new InvalidOperationException("ContentType it's not allowed");
+            if (!AllowedContentTypes.Contains(result.Result.Content.Headers.ContentType.MediaType)) throw new InvalidOperationException("ContentType it's not allowed");
             sw.Stop();
             var taskRet = result.Result.Content.ReadAsStringAsync();
             if (Timeout <= sw.ElapsedMilliseconds || !taskRet.Wait(Timeout - (int)sw.ElapsedMilliseconds)) throw new TimeoutException("Timeout");
