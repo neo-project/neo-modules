@@ -110,7 +110,7 @@ namespace Neo.Network.RPC
             var sender = Contract.CreateSignatureRedeemScript(fromKey.PublicKey).ToScriptHash();
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
-            byte[] script = data is null ? scriptHash.MakeScript("transfer", sender, to, amount) : scriptHash.MakeScript("transfer", sender, to, amount, data);
+            byte[] script = scriptHash.MakeScript("transfer", sender, to, amount, data);
 
             TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient, magic);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
@@ -137,7 +137,7 @@ namespace Neo.Network.RPC
             var sender = Contract.CreateMultiSigContract(m, pubKeys).ScriptHash;
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
-            byte[] script = data is null ? scriptHash.MakeScript("transfer", sender, to, amount) : scriptHash.MakeScript("transfer", sender, to, amount, data);
+            byte[] script = scriptHash.MakeScript("transfer", sender, to, amount, data);
 
             TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient, magic);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
