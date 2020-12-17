@@ -69,8 +69,8 @@ namespace Neo.Plugins
             Nodes = config.GetSection("Nodes").GetChildren().Select(p => p.Get<string>()).ToArray();
             MaxTaskTimeout = TimeSpan.FromMilliseconds(double.Parse(config.GetSection("MaxTaskTimeout").Value));
             OracleHttpProtocol.Timeout = int.Parse(config.GetSection("HttpsTimeout").Value);
-            OracleHttpProtocol.AllowPrivateHost = bool.Parse(config.GetSection("HttpsAllowPrivateHost").Value);
-            OracleHttpProtocol.AllowedContentTypes = config.GetSection("HttpsAllowedContentTypes").GetChildren().Select(p => p.Get<string>()).ToArray();
+            OracleHttpProtocol.AllowPrivateHost = bool.Parse(config.GetSection("AllowPrivateHost").Value);
+            OracleHttpProtocol.AllowedContentTypes = config.GetSection("AllowedContentTypes").GetChildren().Select(p => p.Get<string>()).ToArray();
         }
 
         [RpcMethod]
