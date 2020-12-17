@@ -294,6 +294,7 @@ namespace Neo.Network.RPC.Tests
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetUnclaimedGasAsync).ToLower());
             var result = await rpc.GetUnclaimedGasAsync(test.Request.Params[0].AsString());
+            Assert.AreEqual(result.ToJson().AsString(), RpcUnclaimedGas.FromJson(result.ToJson()).ToJson().AsString());
             Assert.AreEqual(test.Response.Result["unclaimed"].AsString(), result.Unclaimed.ToString());
         }
 

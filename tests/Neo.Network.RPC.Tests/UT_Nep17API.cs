@@ -98,21 +98,21 @@ namespace Neo.Network.RPC.Tests
                 .ReturnsAsync(test.Response.Result)
                 .Verifiable();
 
-                if (test.Request.Params[0].AsString() == "0xb399c051778cf37a1e4ef88509b2e054d0420a32")
+                if (test.Request.Params[0].AsString() == "0xa6a6c15dcdc9b997dac448b6926522d22efeedfb")
                 {
                     var result = await nep17API.GetTokenInfoAsync(NativeContract.GAS.Hash);
                     Assert.AreEqual(NativeContract.GAS.Symbol, result.Symbol);
                     Assert.AreEqual(8, (int)result.Decimals);
                     Assert.AreEqual(1_00000000, (int)result.TotalSupply);
-                    Assert.AreEqual("GAS", result.Name);
+                    Assert.AreEqual("GasToken", result.Name);
                 }
-                else if (test.Request.Params[0].AsString() == "0x74c21a1ca66b7a190bf2a65db83ba6fe550cea64")
+                else if (test.Request.Params[0].AsString() == "0x0a46e2e37c9987f570b4af253fb77e7eef0f72b6")
                 {
                     var result = await nep17API.GetTokenInfoAsync(NativeContract.NEO.Hash);
                     Assert.AreEqual(NativeContract.NEO.Symbol, result.Symbol);
                     Assert.AreEqual(0, (int)result.Decimals);
                     Assert.AreEqual(1_00000000, (int)result.TotalSupply);
-                    Assert.AreEqual("NEO", result.Name);
+                    Assert.AreEqual("NeoToken", result.Name);
                 }
             }
         }
@@ -120,7 +120,7 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public async Task TestTransfer()
         {
-            byte[] testScript = NativeContract.GAS.Hash.MakeScript("transfer", sender, UInt160.Zero, new BigInteger(1_00000000));
+            byte[] testScript = NativeContract.GAS.Hash.MakeScript("transfer", sender, UInt160.Zero, new BigInteger(1_00000000), null);
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter());
 
             var result = await nep17API.CreateTransferTxAsync(NativeContract.GAS.Hash, keyPair1, UInt160.Zero, new BigInteger(1_00000000));
