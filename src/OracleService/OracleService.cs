@@ -131,7 +131,7 @@ namespace Neo.Plugins
                         IEnumerator<(ulong RequestId, OracleRequest Request)> enumerator = NativeContract.Oracle.GetRequests(snapshot).GetEnumerator();
                         while (enumerator.MoveNext() && !CancelSource.IsCancellationRequested)
                             if (!FinishedCache.ContainsKey(enumerator.Current.RequestId) && (!PendingQueue.TryGetValue(enumerator.Current.RequestId, out OracleTask task) || task.Tx is null))
-                                ProcessRequest(snapshot, enumerator.Current.RequestId, enumerator.Current.Request);
+                                ProcessRequest(snapshot, enumerator.Current.Request);
                     }
                     Thread.Sleep(500);
                 }
@@ -215,7 +215,7 @@ namespace Neo.Plugins
             }
         }
 
-        public void ProcessRequest(StoreView snapshot, ulong id, OracleRequest req)
+        public void ProcessRequest(StoreView snapshot, OracleRequest req)
         {
             Log($"Process oracle request: {req}, txid: {req.OriginalTxid}, url: {req.Url}");
 
