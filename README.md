@@ -50,9 +50,6 @@ The resulting folder structure is going to be like this:
 ### ApplicationLogs
 Add this plugin to your application if need to access the log files. This can be useful to handle notifications, but remember that this also largely increases the space used by the application. `LevelDBStore` and `RpcServer` are also needed for this plugin. You can find more details [here](https://docs.neo.org/docs/en-us/reference/rpc/latest-version/api/getapplicationlog.html).
 
-### SystemLog
-Enable neo-cli Logging with timestamps by showing messages with different levels (shown with different colors) \(useful for debugging\).
-
 ### StatesDumper
 Exports neo-cli status data \(useful for debugging\), such as storage modifications block by block.
 
