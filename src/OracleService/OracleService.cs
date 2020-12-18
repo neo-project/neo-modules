@@ -48,7 +48,10 @@ namespace Neo.Plugins
 
         private const int RefreshInterval = 1000 * 60 * 3;
 
-        private static readonly OracleHttpProtocol Https = new OracleHttpProtocol();
+        private static readonly IReadOnlyDictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>
+        {
+            ["https"] = new OracleHttpProtocol()
+        };
 
         public override string Description => "Built-in oracle plugin";
 
@@ -216,21 +219,7 @@ namespace Neo.Plugins
         {
             Log($"Process oracle request: {req}, txid: {req.OriginalTxid}, url: {req.Url}");
 
-            var code = OracleResponseCode.Error;
-            string data = null;
-            if (Uri.TryCreate(req.Url, UriKind.Absolute, out var uri))
-            {
-                switch (uri.Scheme)
-                {
-                    case "https":
-                        code = Https.Process(uri, out data);
-                        break;
-                    default:
-                        Log($"{uri.Scheme} is not supported");
-                        code = OracleResponseCode.ProtocolNotSupported;
-                        break;
-                }
-            }
+            OracleResponseCode code = ProcessUrl(req.Url, out string data);
 
             foreach (var (requestId, request) in NativeContract.Oracle.GetRequestsByUrl(snapshot, req.Url))
             {
@@ -254,6 +243,23 @@ namespace Neo.Plugins
 
                     Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()}");
                 }
+            }
+        }
+
+        private OracleResponseCode ProcessUrl(string url, out string response)
+        {
+            response = null;
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+                return OracleResponseCode.Error;
+            if (!protocols.TryGetValue(uri.Scheme, out IOracleProtocol protocol))
+                return OracleResponseCode.ProtocolNotSupported;
+            try
+            {
+                return protocol.Process(uri, out response);
+            }
+            catch
+            {
+                return OracleResponseCode.Error;
             }
         }
 
