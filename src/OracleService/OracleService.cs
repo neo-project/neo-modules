@@ -33,15 +33,15 @@ namespace Neo.Plugins
 {
     public class OracleService : Plugin, IPersistencePlugin
     {
-        private NEP6Wallet Wallet;
-        private string[] Nodes;
-        private TimeSpan MaxTaskTimeout;
-        private readonly ConcurrentDictionary<ulong, OracleTask> PendingQueue;
-        private CancellationTokenSource CancelSource;
-        private int Counter;
-        private readonly ConcurrentDictionary<ulong, DateTime> FinishedCache;
-        private readonly ConsoleServiceBase ConsoleBase;
-        private Timer Timer;
+        private NEP6Wallet wallet;
+        private string[] nodes;
+        private TimeSpan maxTaskTimeout;
+        private readonly ConcurrentDictionary<ulong, OracleTask> pendingQueue;
+        private CancellationTokenSource cancelSource;
+        private int counter;
+        private readonly ConcurrentDictionary<ulong, DateTime> finishedCache;
+        private readonly ConsoleServiceBase consoleBase;
+        private Timer timer;
 
         private static readonly object _lock = new object();
 
@@ -56,20 +56,20 @@ namespace Neo.Plugins
 
         public OracleService()
         {
-            PendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
-            FinishedCache = new ConcurrentDictionary<ulong, DateTime>();
+            pendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
+            finishedCache = new ConcurrentDictionary<ulong, DateTime>();
 
             RpcServerPlugin.RegisterMethods(this);
 
-            ConsoleBase = GetService<ConsoleServiceBase>();
+            consoleBase = GetService<ConsoleServiceBase>();
         }
 
         protected override void Configure()
         {
             var config = GetConfiguration();
-            Wallet = new NEP6Wallet(Combine(PluginsDirectory, nameof(OracleService), config.GetSection("Wallet").Value));
-            Nodes = config.GetSection("Nodes").GetChildren().Select(p => p.Get<string>()).ToArray();
-            MaxTaskTimeout = TimeSpan.FromMilliseconds(double.Parse(config.GetSection("MaxTaskTimeout").Value));
+            wallet = new NEP6Wallet(Combine(PluginsDirectory, nameof(OracleService), config.GetSection("Wallet").Value));
+            nodes = config.GetSection("Nodes").GetChildren().Select(p => p.Get<string>()).ToArray();
+            maxTaskTimeout = TimeSpan.FromMilliseconds(double.Parse(config.GetSection("MaxTaskTimeout").Value));
             OracleHttpProtocol.Timeout = int.Parse(config.GetSection("HttpsTimeout").Value);
             OracleHttpProtocol.AllowPrivateHost = bool.Parse(config.GetSection("AllowPrivateHost").Value);
             OracleHttpProtocol.AllowedContentTypes = config.GetSection("AllowedContentTypes").GetChildren().Select(p => p.Get<string>()).ToArray();
@@ -85,7 +85,7 @@ namespace Neo.Plugins
 
             var data = oraclePub.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
             if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
-            if (FinishedCache.ContainsKey(requestId)) throw new RpcException(-100, "Request has already finished");
+            if (finishedCache.ContainsKey(requestId)) throw new RpcException(-100, "Request has already finished");
 
             using (SnapshotView snapshot = Blockchain.Singleton.GetSnapshot())
             {
@@ -99,7 +99,7 @@ namespace Neo.Plugins
         [ConsoleCommand("start oracle", Category = "Oracle", Description = "Start oracle service")]
         private void OnStart()
         {
-            string password = ConsoleBase.ReadUserInput("password", true);
+            string password = consoleBase.ReadUserInput("password", true);
             if (password.Length == 0)
             {
                 Console.WriteLine("Cancelled");
@@ -107,7 +107,7 @@ namespace Neo.Plugins
             }
             try
             {
-                Wallet.Unlock(password);
+                wallet.Unlock(password);
             }
             catch (System.Security.Cryptography.CryptographicException)
             {
@@ -120,23 +120,23 @@ namespace Neo.Plugins
                 if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
                 if (!CheckOracleAccount(oracles)) throw new ArgumentException("There is no oracle account in wallet");
             }
-            Interlocked.Exchange(ref CancelSource, new CancellationTokenSource())?.Cancel();
+            Interlocked.Exchange(ref cancelSource, new CancellationTokenSource())?.Cancel();
             new Task(() =>
             {
-                while (CancelSource?.IsCancellationRequested == false)
+                while (cancelSource?.IsCancellationRequested == false)
                 {
                     using (var snapshot = Blockchain.Singleton.GetSnapshot())
                     {
                         IEnumerator<(ulong RequestId, OracleRequest Request)> enumerator = NativeContract.Oracle.GetRequests(snapshot).GetEnumerator();
-                        while (enumerator.MoveNext() && !CancelSource.IsCancellationRequested)
-                            if (!FinishedCache.ContainsKey(enumerator.Current.RequestId) && (!PendingQueue.TryGetValue(enumerator.Current.RequestId, out OracleTask task) || task.Tx is null))
+                        while (enumerator.MoveNext() && !cancelSource.IsCancellationRequested)
+                            if (!finishedCache.ContainsKey(enumerator.Current.RequestId) && (!pendingQueue.TryGetValue(enumerator.Current.RequestId, out OracleTask task) || task.Tx is null))
                                 ProcessRequest(snapshot, enumerator.Current.Request);
                     }
                     Thread.Sleep(500);
                 }
             }).Start();
 
-            Timer ??= new Timer(OnTimer, null, RefreshInterval, RefreshInterval);
+            timer ??= new Timer(OnTimer, null, RefreshInterval, RefreshInterval);
         }
 
         void IPersistencePlugin.OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
@@ -154,7 +154,7 @@ namespace Neo.Plugins
         private bool CheckOracleAccount(ECPoint[] oracles)
         {
             var oracleScriptHashes = oracles.Select(u => Contract.CreateSignatureRedeemScript(u).ToScriptHash());
-            var accounts = Wallet?.GetAccounts()
+            var accounts = wallet?.GetAccounts()
                 .Where(u => u.HasKey && !u.Lock && oracleScriptHashes.Contains(u.ScriptHash))
                 .Select(u => (u.Contract, u.GetKey()))
                 .ToArray();
@@ -164,11 +164,11 @@ namespace Neo.Plugins
         [ConsoleCommand("stop oracle", Category = "Oracle", Description = "Stop oracle service")]
         private void OnStop()
         {
-            Interlocked.Exchange(ref CancelSource, null)?.Cancel();
-            if (Timer != null)
+            Interlocked.Exchange(ref cancelSource, null)?.Cancel();
+            if (timer != null)
             {
-                Timer.Dispose();
-                Timer = null;
+                timer.Dispose();
+                timer = null;
             }
         }
 
@@ -177,9 +177,9 @@ namespace Neo.Plugins
             var message = keyPair.PublicKey.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
             var sign = Crypto.Sign(message, keyPair.PrivateKey, keyPair.PublicKey.EncodePoint(false)[1..]);
             var param = "\"" + Convert.ToBase64String(keyPair.PublicKey.ToArray()) + "\", " + requestId + ", \"" + Convert.ToBase64String(txSign) + "\",\"" + Convert.ToBase64String(sign) + "\"";
-            var content = "{\"id\":" + (++Counter) + ",\"jsonrpc\":\"2.0\",\"method\":\"submitoracleresponse\",\"params\":[" + param + "]}";
+            var content = "{\"id\":" + (++counter) + ",\"jsonrpc\":\"2.0\",\"method\":\"submitoracleresponse\",\"params\":[" + param + "]}";
 
-            foreach (var node in Nodes)
+            foreach (var node in nodes)
             {
                 new Task(() =>
                 {
@@ -223,7 +223,7 @@ namespace Neo.Plugins
                 Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
 
                 ECPoint[] oraclePublicKeys = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
-                foreach (var account in Wallet.GetAccounts())
+                foreach (var account in wallet.GetAccounts())
                 {
                     var oraclePub = account.GetKey().PublicKey;
                     if (!account.HasKey || account.Lock || !oraclePublicKeys.Contains(oraclePub)) continue;
@@ -351,7 +351,7 @@ namespace Neo.Plugins
         {
             lock (_lock)
             {
-                var task = PendingQueue.GetOrAdd(requestId, new OracleTask
+                var task = pendingQueue.GetOrAdd(requestId, new OracleTask
                 {
                     Id = requestId,
                     Request = NativeContract.Oracle.GetRequest(snapshot, requestId),
@@ -388,8 +388,8 @@ namespace Neo.Plugins
 
                 if (CheckTxSign(snapshot, task.Tx, task.Signs) || CheckTxSign(snapshot, task.BackupTx, task.BackupSigns))
                 {
-                    FinishedCache.TryAdd(requestId, new DateTime());
-                    PendingQueue.Remove(requestId, out _);
+                    finishedCache.TryAdd(requestId, new DateTime());
+                    pendingQueue.Remove(requestId, out _);
                 }
             }
         }
@@ -431,25 +431,25 @@ namespace Neo.Plugins
         private void OnTimer(object state)
         {
             List<ulong> outOfDate = new List<ulong>();
-            foreach (var task in PendingQueue)
+            foreach (var task in pendingQueue)
             {
                 var span = TimeProvider.Current.UtcNow - task.Value.Timestamp;
                 if (span > TimeSpan.FromSeconds(RefreshInterval) && span < TimeSpan.FromSeconds(RefreshInterval * 2))
                 {
-                    foreach (var account in Wallet.GetAccounts())
+                    foreach (var account in wallet.GetAccounts())
                         if (task.Value.BackupSigns.TryGetValue(account.GetKey().PublicKey, out byte[] sign))
                             SendResponseSignature(task.Key, sign, account.GetKey());
                 }
-                else if (span > MaxTaskTimeout)
+                else if (span > maxTaskTimeout)
                 {
                     outOfDate.Add(task.Key);
                 }
             }
             foreach (ulong requestId in outOfDate)
-                PendingQueue.TryRemove(requestId, out _);
-            foreach (var key in FinishedCache.Keys)
-                if (TimeProvider.Current.UtcNow - FinishedCache[key] > TimeSpan.FromDays(3))
-                    FinishedCache.TryRemove(key, out _);
+                pendingQueue.TryRemove(requestId, out _);
+            foreach (var key in finishedCache.Keys)
+                if (TimeProvider.Current.UtcNow - finishedCache[key] > TimeSpan.FromDays(3))
+                    finishedCache.TryRemove(key, out _);
         }
 
         public static void Log(string message, LogLevel level = LogLevel.Info)
