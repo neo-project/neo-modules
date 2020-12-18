@@ -283,16 +283,18 @@ namespace Neo.Plugins
                 Nonce = 0,
                 SystemFee = 0
             };
-            Dictionary<UInt160, Witness> witnessDict = new Dictionary<UInt160, Witness>();
-            witnessDict[oracleSignContract.ScriptHash] = new Witness
+            Dictionary<UInt160, Witness> witnessDict = new Dictionary<UInt160, Witness>
             {
-                InvocationScript = Array.Empty<byte>(),
-                VerificationScript = oracleSignContract.Script,
-            };
-            witnessDict[NativeContract.Oracle.Hash] = new Witness
-            {
-                InvocationScript = Array.Empty<byte>(),
-                VerificationScript = Array.Empty<byte>(),
+                [oracleSignContract.ScriptHash] = new Witness
+                {
+                    InvocationScript = Array.Empty<byte>(),
+                    VerificationScript = oracleSignContract.Script,
+                },
+                [NativeContract.Oracle.Hash] = new Witness
+                {
+                    InvocationScript = Array.Empty<byte>(),
+                    VerificationScript = Array.Empty<byte>(),
+                }
             };
 
             UInt160[] hashes = tx.GetScriptHashesForVerifying(snapshot);
