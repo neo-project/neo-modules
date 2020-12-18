@@ -33,6 +33,8 @@ namespace Neo.Plugins
 {
     public class OracleService : Plugin, IPersistencePlugin
     {
+        private const int RefreshInterval = 1000 * 60 * 3;
+
         private NEP6Wallet wallet;
         private string[] nodes;
         private TimeSpan maxTaskTimeout;
@@ -44,9 +46,6 @@ namespace Neo.Plugins
         private Timer timer;
 
         private static readonly object _lock = new object();
-
-        private const int RefreshInterval = 1000 * 60 * 3;
-
         private static readonly IReadOnlyDictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>
         {
             ["https"] = new OracleHttpProtocol()
