@@ -32,14 +32,14 @@ namespace Neo.Plugins
     {
         private const int RefreshInterval = 1000 * 60 * 3;
 
+        private readonly ConsoleServiceBase consoleBase = GetService<ConsoleServiceBase>();
         private NEP6Wallet wallet;
-        private readonly ConcurrentDictionary<ulong, OracleTask> pendingQueue;
-        private CancellationTokenSource cancelSource;
-        private int counter;
-        private readonly ConcurrentDictionary<ulong, DateTime> finishedCache;
-        private readonly ConsoleServiceBase consoleBase;
+        private readonly ConcurrentDictionary<ulong, OracleTask> pendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
+        private readonly ConcurrentDictionary<ulong, DateTime> finishedCache = new ConcurrentDictionary<ulong, DateTime>();
         private Timer timer;
+        private CancellationTokenSource cancelSource;
         private readonly object _lock = new object();
+        private int counter;
 
         private static readonly IReadOnlyDictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>
         {
@@ -50,12 +50,7 @@ namespace Neo.Plugins
 
         public OracleService()
         {
-            pendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
-            finishedCache = new ConcurrentDictionary<ulong, DateTime>();
-
             RpcServerPlugin.RegisterMethods(this);
-
-            consoleBase = GetService<ConsoleServiceBase>();
         }
 
         protected override void Configure()
