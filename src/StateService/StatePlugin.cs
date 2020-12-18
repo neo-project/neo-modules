@@ -25,9 +25,9 @@ namespace Neo.Plugins.StateService
         public override void Dispose()
         {
             base.Dispose();
-            eStoped(Store);
+            System.EnsureStoped(Store);
             ActorSystem.Dispose();
-            WhenTerminated.Wait();
+            ActorSystem.WhenTerminated.Wait();
         }
     }
 }
