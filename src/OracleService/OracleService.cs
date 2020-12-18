@@ -453,7 +453,7 @@ namespace Neo.Plugins
             Utility.Log(nameof(OracleService), level, message);
         }
 
-        internal class OracleTask
+        class OracleTask
         {
             public ulong Id;
             public OracleRequest Request;
