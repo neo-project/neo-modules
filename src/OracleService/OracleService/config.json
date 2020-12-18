@@ -3,8 +3,10 @@
     "Nodes": [],
     "Wallet": "",
     "MaxTaskTimeout": 432000000,
-    "HttpsTimeout": 5000,
     "AllowPrivateHost": false,
-    "AllowedContentTypes": [ "application/json" ]
+    "AllowedContentTypes": [ "application/json" ],
+    "Https": {
+      "Timeout": 5000
+    }
   }
 }

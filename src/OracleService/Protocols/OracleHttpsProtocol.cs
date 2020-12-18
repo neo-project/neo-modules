@@ -11,31 +11,27 @@ namespace Neo.Plugins
 {
     public class OracleHttpsProtocol : IOracleProtocol
     {
-        public static int Timeout { get; set; } = 5000;
-        public static bool AllowPrivateHost { get; set; } = false;
-        public static string[] AllowedContentTypes = new string[] { "application/json" };
-
         public OracleResponseCode Process(Uri uri, out string response)
         {
             NUtility.Log(nameof(OracleHttpsProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
 
             response = null;
-            if (!AllowPrivateHost && IsInternal(Dns.GetHostEntry(uri.Host))) return OracleResponseCode.Forbidden;
+            if (!Settings.Default.AllowPrivateHost && IsInternal(Dns.GetHostEntry(uri.Host))) return OracleResponseCode.Forbidden;
 
             using var handler = new HttpClientHandler();
             using var client = new HttpClient(handler);
-            client.DefaultRequestHeaders.Add("Accept", string.Join(",", AllowedContentTypes));
+            client.DefaultRequestHeaders.Add("Accept", string.Join(",", Settings.Default.AllowedContentTypes));
 
             Task<HttpResponseMessage> result = client.GetAsync(uri);
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            if (!result.Wait(Timeout)) return OracleResponseCode.Timeout;
+            if (!result.Wait(Settings.Default.Https.Timeout)) return OracleResponseCode.Timeout;
             if (result.Result.StatusCode == HttpStatusCode.NotFound) return OracleResponseCode.NotFound;
             if (!result.Result.IsSuccessStatusCode) return OracleResponseCode.Error;
-            if (!AllowedContentTypes.Contains(result.Result.Content.Headers.ContentType.MediaType)) return OracleResponseCode.ProtocolNotSupported;
+            if (!Settings.Default.AllowedContentTypes.Contains(result.Result.Content.Headers.ContentType.MediaType)) return OracleResponseCode.ProtocolNotSupported;
             sw.Stop();
             var taskRet = result.Result.Content.ReadAsStringAsync();
-            if (Timeout <= sw.ElapsedMilliseconds || !taskRet.Wait(Timeout - (int)sw.ElapsedMilliseconds)) return OracleResponseCode.Timeout;
+            if (Settings.Default.Https.Timeout <= sw.ElapsedMilliseconds || !taskRet.Wait(Settings.Default.Https.Timeout - (int)sw.ElapsedMilliseconds)) return OracleResponseCode.Timeout;
             response = taskRet.Result;
             return OracleResponseCode.Success;
         }

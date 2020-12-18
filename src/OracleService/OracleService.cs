@@ -1,6 +1,5 @@
 using Akka.Actor;
 using Akka.Util.Internal;
-using Microsoft.Extensions.Configuration;
 using Neo.ConsoleService;
 using Neo.Cryptography;
 using Neo.Cryptography.ECC;
@@ -24,7 +23,6 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.IO.Path;
 using NJArray = Newtonsoft.Json.Linq.JArray;
 using NJObject = Newtonsoft.Json.Linq.JObject;
 using NUtility = Neo.Utility;
@@ -36,8 +34,6 @@ namespace Neo.Plugins
         private const int RefreshInterval = 1000 * 60 * 3;
 
         private NEP6Wallet wallet;
-        private string[] nodes;
-        private TimeSpan maxTaskTimeout;
         private readonly ConcurrentDictionary<ulong, OracleTask> pendingQueue;
         private CancellationTokenSource cancelSource;
         private int counter;
@@ -65,13 +61,7 @@ namespace Neo.Plugins
 
         protected override void Configure()
         {
-            var config = GetConfiguration();
-            wallet = new NEP6Wallet(Combine(PluginsDirectory, nameof(OracleService), config.GetSection("Wallet").Value));
-            nodes = config.GetSection("Nodes").GetChildren().Select(p => p.Get<string>()).ToArray();
-            maxTaskTimeout = TimeSpan.FromMilliseconds(double.Parse(config.GetSection("MaxTaskTimeout").Value));
-            OracleHttpsProtocol.Timeout = int.Parse(config.GetSection("HttpsTimeout").Value);
-            OracleHttpsProtocol.AllowPrivateHost = bool.Parse(config.GetSection("AllowPrivateHost").Value);
-            OracleHttpsProtocol.AllowedContentTypes = config.GetSection("AllowedContentTypes").GetChildren().Select(p => p.Get<string>()).ToArray();
+            Settings.Load(GetConfiguration());
         }
 
         [RpcMethod]
@@ -104,6 +94,8 @@ namespace Neo.Plugins
                 Console.WriteLine("Cancelled");
                 return;
             }
+
+            wallet = new NEP6Wallet(Settings.Default.Wallet);
             try
             {
                 wallet.Unlock(password);
@@ -178,7 +170,7 @@ namespace Neo.Plugins
             var param = "\"" + Convert.ToBase64String(keyPair.PublicKey.ToArray()) + "\", " + requestId + ", \"" + Convert.ToBase64String(txSign) + "\",\"" + Convert.ToBase64String(sign) + "\"";
             var content = "{\"id\":" + (++counter) + ",\"jsonrpc\":\"2.0\",\"method\":\"submitoracleresponse\",\"params\":[" + param + "]}";
 
-            foreach (var node in nodes)
+            foreach (var node in Settings.Default.Nodes)
             {
                 new Task(() =>
                 {
@@ -439,7 +431,7 @@ namespace Neo.Plugins
                         if (task.Value.BackupSigns.TryGetValue(account.GetKey().PublicKey, out byte[] sign))
                             SendResponseSignature(task.Key, sign, account.GetKey());
                 }
-                else if (span > maxTaskTimeout)
+                else if (span > Settings.Default.MaxTaskTimeout)
                 {
                     outOfDate.Add(task.Key);
                 }
