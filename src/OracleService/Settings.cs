@@ -6,11 +6,11 @@ namespace Neo.Plugins
 {
     class HttpsSettings
     {
-        public int Timeout { get; }
+        public TimeSpan Timeout { get; }
 
         public HttpsSettings(IConfigurationSection section)
         {
-            Timeout = section.GetValue("Timeout", 5000);
+            Timeout = TimeSpan.FromMilliseconds(section.GetValue("Timeout", 5000));
         }
     }
 
