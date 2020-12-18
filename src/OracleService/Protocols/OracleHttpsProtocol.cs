@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using NUtility = Neo.Utility;
 
 namespace Neo.Plugins
 {
@@ -13,7 +12,7 @@ namespace Neo.Plugins
     {
         public OracleResponseCode Process(Uri uri, out string response)
         {
-            NUtility.Log(nameof(OracleHttpsProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
+            Utility.Log(nameof(OracleHttpsProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
 
             response = null;
             if (!Settings.Default.AllowPrivateHost && Dns.GetHostEntry(uri.Host).IsInternal()) return OracleResponseCode.Forbidden;

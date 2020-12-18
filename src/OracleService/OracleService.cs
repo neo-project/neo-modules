@@ -25,7 +25,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using NJArray = Newtonsoft.Json.Linq.JArray;
 using NJObject = Newtonsoft.Json.Linq.JObject;
-using NUtility = Neo.Utility;
 
 namespace Neo.Plugins
 {
@@ -390,11 +389,11 @@ namespace Neo.Plugins
         private byte[] Filter(string input, string filterArgs)
         {
             if (string.IsNullOrEmpty(filterArgs))
-                return NUtility.StrictUTF8.GetBytes(input);
+                return Utility.StrictUTF8.GetBytes(input);
 
             NJObject beforeObject = NJObject.Parse(input);
             NJArray afterObjects = new NJArray(beforeObject.SelectTokens(filterArgs, true));
-            return NUtility.StrictUTF8.GetBytes(afterObjects.ToString());
+            return Utility.StrictUTF8.GetBytes(afterObjects.ToString());
         }
 
         private bool CheckTxSign(StoreView snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
@@ -447,7 +446,7 @@ namespace Neo.Plugins
 
         public static void Log(string message, LogLevel level = LogLevel.Info)
         {
-            NUtility.Log(nameof(OracleService), level, message);
+            Utility.Log(nameof(OracleService), level, message);
         }
 
         internal class OracleTask

@@ -1,14 +1,11 @@
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract.Native;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Neo.Plugins
 {
-    public static class Utility
+    static class Utility
     {
         public static JObject BlockToJson(Block block)
         {
