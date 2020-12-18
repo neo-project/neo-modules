@@ -433,7 +433,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "method": "getcontractstate",
-      "params": [ "0x74c21a1ca66b7a190bf2a65db83ba6fe550cea64" ]
+      "params": [ "0x0a46e2e37c9987f570b4af253fb77e7eef0f72b6" ]
     },
     "Response": {
       "jsonrpc": "2.0",
@@ -441,10 +441,10 @@
       "result": {
         "id": -1,
         "updatecounter": 0,
-        "hash": "0x74c21a1ca66b7a190bf2a65db83ba6fe550cea64",
-        "script": "DANORU9BGvd7Zw==",
+        "hash": "0x0a46e2e37c9987f570b4af253fb77e7eef0f72b6",
+        "script": "DAhOZW9Ub2tlbkEa93tn",
         "manifest": {
-          "name": "NEO",
+          "name": "NeoToken",
           "groups": [],
           "supportedstandards": [
             "NEP-17"
