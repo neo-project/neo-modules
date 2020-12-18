@@ -44,8 +44,8 @@ namespace Neo.Plugins
         private readonly ConcurrentDictionary<ulong, DateTime> finishedCache;
         private readonly ConsoleServiceBase consoleBase;
         private Timer timer;
+        private readonly object _lock = new object();
 
-        private static readonly object _lock = new object();
         private static readonly IReadOnlyDictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>
         {
             ["https"] = new OracleHttpProtocol()
