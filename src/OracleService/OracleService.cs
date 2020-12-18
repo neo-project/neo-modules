@@ -244,39 +244,36 @@ namespace Neo.Plugins
 
         private OracleResponseCode ProcessUrl(string url, out string response)
         {
-            response = "";
+            response = null;
             if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
                 return OracleResponseCode.Error;
-            OracleResponseCode code = OracleResponseCode.Success;
-            switch (uri.Scheme.ToLowerInvariant())
+            switch (uri.Scheme)
             {
                 case "https":
                     try
                     {
                         response = Https.Request(url);
+                        return OracleResponseCode.Success;
                     }
                     catch (FileNotFoundException notfoundex)
                     {
                         Log($"Request error {notfoundex.Message}");
-                        code = OracleResponseCode.NotFound;
+                        return OracleResponseCode.NotFound;
                     }
                     catch (TimeoutException timeoutex)
                     {
                         Log($"Request error {timeoutex.Message}");
-                        code = OracleResponseCode.Timeout;
+                        return OracleResponseCode.Timeout;
                     }
                     catch (Exception e)
                     {
                         Log($"Request error {e.Message}");
-                        code = OracleResponseCode.Error;
+                        return OracleResponseCode.Error;
                     }
-                    break;
                 default:
-                    Log($"{uri.Scheme.ToLowerInvariant()} is not supported");
-                    code = OracleResponseCode.Forbidden;
-                    break;
+                    Log($"{uri.Scheme} is not supported");
+                    return OracleResponseCode.Forbidden;
             }
-            return code;
         }
 
         public static Transaction CreateResponseTx(StoreView snapshot, OracleResponse response)
