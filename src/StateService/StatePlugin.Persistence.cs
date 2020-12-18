@@ -1,4 +1,4 @@
-﻿using Akka.Actor;
+using Akka.Actor;
 using Neo.IO.Caching;
 using static Neo.Ledger.Blockchain;
 using Neo.Persistence;
