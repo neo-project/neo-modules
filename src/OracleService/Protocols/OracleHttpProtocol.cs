@@ -1,6 +1,6 @@
+using Neo.Network.P2P.Payloads;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -15,12 +15,12 @@ namespace Neo.Plugins
         public static bool AllowPrivateHost { get; set; } = false;
         public static string[] AllowedContentTypes = new string[] { "application/json" };
 
-        public string Request(string url)
+        public OracleResponseCode Process(Uri uri, out string response)
         {
-            NUtility.Log(nameof(OracleHttpProtocol), LogLevel.Debug, $"Request: {url}");
+            NUtility.Log(nameof(OracleHttpProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
 
-            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) throw new InvalidOperationException("UrlError");
-            if (!AllowPrivateHost && IsInternal(Dns.GetHostEntry(uri.Host))) throw new InvalidOperationException("Access to private host is not allowed");
+            response = null;
+            if (!AllowPrivateHost && IsInternal(Dns.GetHostEntry(uri.Host))) return OracleResponseCode.Forbidden;
 
             using var handler = new HttpClientHandler();
             using var client = new HttpClient(handler);
@@ -29,14 +29,15 @@ namespace Neo.Plugins
             Task<HttpResponseMessage> result = client.GetAsync(uri);
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            if (!result.Wait(Timeout)) throw new TimeoutException("Timeout");
-            if (result.Result.StatusCode == HttpStatusCode.NotFound) throw new FileNotFoundException($"{url} is not found");
-            if (!result.Result.IsSuccessStatusCode) throw new InvalidOperationException("Response error");
-            if (!AllowedContentTypes.Contains(result.Result.Content.Headers.ContentType.MediaType)) throw new InvalidOperationException("ContentType it's not allowed");
+            if (!result.Wait(Timeout)) return OracleResponseCode.Timeout;
+            if (result.Result.StatusCode == HttpStatusCode.NotFound) return OracleResponseCode.NotFound;
+            if (!result.Result.IsSuccessStatusCode) return OracleResponseCode.Error;
+            if (!AllowedContentTypes.Contains(result.Result.Content.Headers.ContentType.MediaType)) return OracleResponseCode.ProtocolNotSupported;
             sw.Stop();
             var taskRet = result.Result.Content.ReadAsStringAsync();
-            if (Timeout <= sw.ElapsedMilliseconds || !taskRet.Wait(Timeout - (int)sw.ElapsedMilliseconds)) throw new TimeoutException("Timeout");
-            return taskRet.Result;
+            if (Timeout <= sw.ElapsedMilliseconds || !taskRet.Wait(Timeout - (int)sw.ElapsedMilliseconds)) return OracleResponseCode.Timeout;
+            response = taskRet.Result;
+            return OracleResponseCode.Success;
         }
 
         internal static bool IsInternal(IPHostEntry entry)

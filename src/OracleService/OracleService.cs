@@ -216,7 +216,22 @@ namespace Neo.Plugins
         {
             Log($"Process oracle request: {req}, txid: {req.OriginalTxid}, url: {req.Url}");
 
-            var code = ProcessUrl(req.Url, out string data);
+            var code = OracleResponseCode.Error;
+            string data = null;
+            if (Uri.TryCreate(req.Url, UriKind.Absolute, out var uri))
+            {
+                switch (uri.Scheme)
+                {
+                    case "https":
+                        code = Https.Process(uri, out data);
+                        break;
+                    default:
+                        Log($"{uri.Scheme} is not supported");
+                        code = OracleResponseCode.ProtocolNotSupported;
+                        break;
+                }
+            }
+
             foreach (var (requestId, request) in NativeContract.Oracle.GetRequestsByUrl(snapshot, req.Url))
             {
                 var result = code == OracleResponseCode.Success ? Filter(data, request.Filter) : Array.Empty<byte>();
@@ -239,40 +254,6 @@ namespace Neo.Plugins
 
                     Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()}");
                 }
-            }
-        }
-
-        private OracleResponseCode ProcessUrl(string url, out string response)
-        {
-            response = null;
-            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-                return OracleResponseCode.Error;
-            switch (uri.Scheme)
-            {
-                case "https":
-                    try
-                    {
-                        response = Https.Request(url);
-                        return OracleResponseCode.Success;
-                    }
-                    catch (FileNotFoundException notfoundex)
-                    {
-                        Log($"Request error {notfoundex.Message}");
-                        return OracleResponseCode.NotFound;
-                    }
-                    catch (TimeoutException timeoutex)
-                    {
-                        Log($"Request error {timeoutex.Message}");
-                        return OracleResponseCode.Timeout;
-                    }
-                    catch (Exception e)
-                    {
-                        Log($"Request error {e.Message}");
-                        return OracleResponseCode.Error;
-                    }
-                default:
-                    Log($"{uri.Scheme} is not supported");
-                    return OracleResponseCode.ProtocolNotSupported;
             }
         }
 

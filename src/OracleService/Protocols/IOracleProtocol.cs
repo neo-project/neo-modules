@@ -1,7 +1,10 @@
+using Neo.Network.P2P.Payloads;
+using System;
+
 namespace Neo.Plugins
 {
     interface IOracleProtocol
     {
-        string Request(string url);
+        OracleResponseCode Process(Uri uri, out string response);
     }
 }
