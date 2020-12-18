@@ -24,7 +24,6 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using static System.IO.Path;
 using NJArray = Newtonsoft.Json.Linq.JArray;
 using NJObject = Newtonsoft.Json.Linq.JObject;
@@ -42,7 +41,7 @@ namespace Neo.Plugins
         private int Counter;
         private readonly ConcurrentDictionary<ulong, DateTime> FinishedCache;
         private readonly ConsoleServiceBase ConsoleBase;
-        private System.Timers.Timer Timer;
+        private Timer Timer;
 
         private static readonly object _lock = new object();
 
@@ -137,14 +136,7 @@ namespace Neo.Plugins
                 }
             }).Start();
 
-            if (Timer is null)
-            {
-                Timer = new System.Timers.Timer();
-                Timer.Enabled = true;
-                Timer.Interval = RefreshInterval;
-                Timer.Start();
-                Timer.Elapsed += new ElapsedEventHandler(OnTimer);
-            }
+            Timer ??= new Timer(OnTimer, null, RefreshInterval, RefreshInterval);
         }
 
         void IPersistencePlugin.OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
@@ -175,7 +167,7 @@ namespace Neo.Plugins
             Interlocked.Exchange(ref CancelSource, null)?.Cancel();
             if (Timer != null)
             {
-                Timer.Stop();
+                Timer.Dispose();
                 Timer = null;
             }
         }
@@ -436,7 +428,7 @@ namespace Neo.Plugins
             return false;
         }
 
-        public void OnTimer(object source, ElapsedEventArgs e)
+        private void OnTimer(object state)
         {
             List<ulong> outOfDate = new List<ulong>();
             foreach (var task in PendingQueue)
