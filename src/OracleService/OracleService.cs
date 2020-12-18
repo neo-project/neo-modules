@@ -37,11 +37,11 @@ namespace Neo.Plugins
         private NEP6Wallet Wallet;
         private string[] Nodes;
         private TimeSpan MaxTaskTimeout;
-        private ConcurrentDictionary<ulong, OracleTask> PendingQueue;
+        private readonly ConcurrentDictionary<ulong, OracleTask> PendingQueue;
         private CancellationTokenSource CancelSource;
         private int Counter;
-        private ConcurrentDictionary<ulong, DateTime> FinishedCache;
-        private ConsoleServiceBase ConsoleBase;
+        private readonly ConcurrentDictionary<ulong, DateTime> FinishedCache;
+        private readonly ConsoleServiceBase ConsoleBase;
         private System.Timers.Timer Timer;
 
         private static readonly object _lock = new object();
