@@ -9,7 +9,7 @@ using NUtility = Neo.Utility;
 
 namespace Neo.Plugins
 {
-    public class OracleHttpProtocol : IOracleProtocol
+    public class OracleHttpsProtocol : IOracleProtocol
     {
         public static int Timeout { get; set; } = 5000;
         public static bool AllowPrivateHost { get; set; } = false;
@@ -17,7 +17,7 @@ namespace Neo.Plugins
 
         public OracleResponseCode Process(Uri uri, out string response)
         {
-            NUtility.Log(nameof(OracleHttpProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
+            NUtility.Log(nameof(OracleHttpsProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
 
             response = null;
             if (!AllowPrivateHost && IsInternal(Dns.GetHostEntry(uri.Host))) return OracleResponseCode.Forbidden;

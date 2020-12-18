@@ -48,7 +48,7 @@ namespace Neo.Plugins
 
         private static readonly IReadOnlyDictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>
         {
-            ["https"] = new OracleHttpProtocol()
+            ["https"] = new OracleHttpsProtocol()
         };
 
         public override string Description => "Built-in oracle plugin";
@@ -69,9 +69,9 @@ namespace Neo.Plugins
             wallet = new NEP6Wallet(Combine(PluginsDirectory, nameof(OracleService), config.GetSection("Wallet").Value));
             nodes = config.GetSection("Nodes").GetChildren().Select(p => p.Get<string>()).ToArray();
             maxTaskTimeout = TimeSpan.FromMilliseconds(double.Parse(config.GetSection("MaxTaskTimeout").Value));
-            OracleHttpProtocol.Timeout = int.Parse(config.GetSection("HttpsTimeout").Value);
-            OracleHttpProtocol.AllowPrivateHost = bool.Parse(config.GetSection("AllowPrivateHost").Value);
-            OracleHttpProtocol.AllowedContentTypes = config.GetSection("AllowedContentTypes").GetChildren().Select(p => p.Get<string>()).ToArray();
+            OracleHttpsProtocol.Timeout = int.Parse(config.GetSection("HttpsTimeout").Value);
+            OracleHttpsProtocol.AllowPrivateHost = bool.Parse(config.GetSection("AllowPrivateHost").Value);
+            OracleHttpsProtocol.AllowedContentTypes = config.GetSection("AllowedContentTypes").GetChildren().Select(p => p.Get<string>()).ToArray();
         }
 
         [RpcMethod]
