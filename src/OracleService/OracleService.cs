@@ -61,6 +61,8 @@ namespace Neo.Plugins
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
+            foreach (var p in protocols)
+                p.Value.Configure();
         }
 
         [RpcMethod]
@@ -160,6 +162,8 @@ namespace Neo.Plugins
                 timer.Dispose();
                 timer = null;
             }
+            foreach (var p in protocols)
+                p.Value.Dispose();
         }
 
         public void SendResponseSignature(ulong requestId, byte[] txSign, KeyPair keyPair)
