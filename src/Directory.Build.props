@@ -3,7 +3,7 @@
   
   <PropertyGroup>
     <VersionPrefix>3.0.0</VersionPrefix>
-    <VersionSuffix>preview3</VersionSuffix>
+    <VersionSuffix>preview4</VersionSuffix>
     <TargetFramework>netstandard2.1</TargetFramework>
     <RootNamespace>Neo.Plugins</RootNamespace>
     <Authors>The Neo Project</Authors>
@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neo" Version="3.0.0-CI01116" />
+    <PackageReference Include="Neo" Version="3.0.0-CI01119" />
   </ItemGroup>
 
 </Project>
