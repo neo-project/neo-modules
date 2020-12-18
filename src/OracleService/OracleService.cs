@@ -152,7 +152,7 @@ namespace Neo.Plugins
 
         private bool CheckOracleAvaiblable(StoreView snapshot, out ECPoint[] oracles)
         {
-            oracles = NativeContract.Designation.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
+            oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
             return oracles.Length > 0;
         }
 
@@ -226,7 +226,7 @@ namespace Neo.Plugins
 
                 Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
 
-                ECPoint[] oraclePublicKeys = NativeContract.Designation.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
+                ECPoint[] oraclePublicKeys = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
                 foreach (var account in Wallet.GetAccounts())
                 {
                     var oraclePub = account.GetKey().PublicKey;
@@ -272,13 +272,13 @@ namespace Neo.Plugins
                     }
                 default:
                     Log($"{uri.Scheme} is not supported");
-                    return OracleResponseCode.Forbidden;
+                    return OracleResponseCode.ProtocolNotSupported;
             }
         }
 
         public static Transaction CreateResponseTx(StoreView snapshot, OracleResponse response)
         {
-            var oracleNodes = NativeContract.Designation.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
+            var oracleNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
             var request = NativeContract.Oracle.GetRequest(snapshot, response.Id);
             var requestTx = snapshot.Transactions.TryGet(request.OriginalTxid);
             var m = oracleNodes.Length - (oracleNodes.Length - 1) / 3;
@@ -331,7 +331,7 @@ namespace Neo.Plugins
 
             // Calculate network fee
 
-            var oracleContract = NativeContract.Management.GetContract(snapshot, NativeContract.Oracle.Hash);
+            var oracleContract = NativeContract.ContractManagement.GetContract(snapshot, NativeContract.Oracle.Hash);
             var engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
             engine.LoadContract(oracleContract, "verify", CallFlags.None, true);
             if (engine.Execute() != VMState.HALT) return null;
@@ -427,7 +427,7 @@ namespace Neo.Plugins
 
         private bool CheckTxSign(StoreView snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
         {
-            ECPoint[] oraclesNodes = NativeContract.Designation.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
+            ECPoint[] oraclesNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
             int neededThreshold = oraclesNodes.Length - (oraclesNodes.Length - 1) / 3;
             if (OracleSigns.Count >= neededThreshold && tx != null)
             {
