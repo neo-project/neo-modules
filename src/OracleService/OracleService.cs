@@ -34,8 +34,8 @@ namespace Neo.Plugins
 
         private readonly ConsoleServiceBase consoleBase = GetService<ConsoleServiceBase>();
         private NEP6Wallet wallet;
-        private readonly ConcurrentDictionary<ulong, OracleTask> pendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
-        private readonly ConcurrentDictionary<ulong, DateTime> finishedCache = new ConcurrentDictionary<ulong, DateTime>();
+        private readonly Dictionary<ulong, OracleTask> pendingQueue = new Dictionary<ulong, OracleTask>();
+        private readonly Dictionary<ulong, DateTime> finishedCache = new Dictionary<ulong, DateTime>();
         private Timer timer;
         private CancellationTokenSource cancelSource;
         private readonly object _lock = new object();
@@ -342,14 +342,17 @@ namespace Neo.Plugins
         {
             lock (_lock)
             {
-                var task = pendingQueue.GetOrAdd(requestId, new OracleTask
+                if (!pendingQueue.ContainsKey(requestId))
                 {
-                    Id = requestId,
-                    Request = NativeContract.Oracle.GetRequest(snapshot, requestId),
-                    Signs = new ConcurrentDictionary<ECPoint, byte[]>(),
-                    BackupSigns = new ConcurrentDictionary<ECPoint, byte[]>()
-                });
-
+                    pendingQueue.TryAdd(requestId, new OracleTask
+                    {
+                        Id = requestId,
+                        Request = NativeContract.Oracle.GetRequest(snapshot, requestId),
+                        Signs = new ConcurrentDictionary<ECPoint, byte[]>(),
+                        BackupSigns = new ConcurrentDictionary<ECPoint, byte[]>()
+                    });
+                }
+                var task = pendingQueue[requestId];
                 if (responseTx != null)
                 {
                     task.Tx = responseTx;
@@ -437,10 +440,10 @@ namespace Neo.Plugins
                 }
             }
             foreach (ulong requestId in outOfDate)
-                pendingQueue.TryRemove(requestId, out _);
+                pendingQueue.Remove(requestId, out _);
             foreach (var key in finishedCache.Keys)
                 if (TimeProvider.Current.UtcNow - finishedCache[key] > TimeSpan.FromDays(3))
-                    finishedCache.TryRemove(key, out _);
+                    finishedCache.Remove(key, out _);
         }
 
         public static void Log(string message, LogLevel level = LogLevel.Info)
