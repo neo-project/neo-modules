@@ -26,7 +26,7 @@ namespace Neo.Plugins.StateService.Network
         {
             get
             {
-                if (_hash == null)
+                if (_hash is null)
                 {
                     _hash = new UInt256(Crypto.Hash256(this.GetHashData()));
                 }
