@@ -439,11 +439,14 @@ namespace Neo.Plugins
                     outOfDate.Add(task.Key);
                 }
             }
-            foreach (ulong requestId in outOfDate)
-                pendingQueue.Remove(requestId, out _);
-            foreach (var key in finishedCache.Keys)
-                if (TimeProvider.Current.UtcNow - finishedCache[key] > TimeSpan.FromDays(3))
-                    finishedCache.Remove(key, out _);
+            lock (_lock)
+            {
+                foreach (ulong requestId in outOfDate)
+                    pendingQueue.Remove(requestId, out _);
+                foreach (var key in finishedCache.Keys)
+                    if (TimeProvider.Current.UtcNow - finishedCache[key] > TimeSpan.FromDays(3))
+                        finishedCache.Remove(key, out _);
+            }
         }
 
         public static void Log(string message, LogLevel level = LogLevel.Info)
