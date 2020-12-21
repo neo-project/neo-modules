@@ -34,7 +34,7 @@ namespace Neo.Plugins.StateService
             }
         }
 
-        public T GetValueOrDefault<T>(IConfigurationSection section, T defaultValue, Func<string, T> selector)
+        private T GetValueOrDefault<T>(IConfigurationSection section, T defaultValue, Func<string, T> selector)
         {
             if (section.Value == null) return defaultValue;
             return selector(section.Value);

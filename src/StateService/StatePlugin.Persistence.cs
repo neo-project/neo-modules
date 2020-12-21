@@ -11,7 +11,7 @@ namespace Neo.Plugins.StateService
 {
     public partial class StatePlugin : Plugin, IPersistencePlugin
     {
-        public void OnPersist(StoreView snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(StoreView snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
         {
             List<StateStore.Item> changes = new List<StateStore.Item>();
             foreach (var item in snapshot.Storages.GetChangeSet().Where(p => p.State != TrackState.None))
@@ -30,8 +30,8 @@ namespace Neo.Plugins.StateService
             });
         }
 
-        public bool ShouldThrowExceptionFromCommit(Exception ex) => false;
+        bool IPersistencePlugin.ShouldThrowExceptionFromCommit(Exception ex) => false;
 
-        public void OnCommit(StoreView snapshot) { }
+        void IPersistencePlugin.OnCommit(StoreView snapshot) { }
     }
 }

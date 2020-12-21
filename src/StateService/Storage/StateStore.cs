@@ -104,41 +104,51 @@ namespace Neo.Plugins.StateService.StateStorage
                 cache.Add(state_root.Index, state_root);
                 return;
             }
-            using var mpt_snapshot = Singleton.GetSnapshot();
-            StateRoot local_root = mpt_snapshot.StateRoots.GetAndChange(state_root.Index);
+            using var state_snapshot = Singleton.GetSnapshot();
+            StateRoot local_root = state_snapshot.StateRoots.GetAndChange(state_root.Index);
             if (local_root is null || local_root.Witness != null) return;
             using var snapshot = Blockchain.Singleton.GetSnapshot();
             if (!state_root.Verify(snapshot)) return;
             if (local_root.RootHash != state_root.RootHash) return;
             local_root.Witness = state_root.Witness;
-            HashIndexState validated = mpt_snapshot.ValidatedHashIndex.GetAndChange();
+            HashIndexState validated = state_snapshot.ValidatedHashIndex.GetAndChange();
             validated.Index = state_root.Index;
             validated.Hash = state_root.RootHash;
-            mpt_snapshot.Commit();
+            state_snapshot.Commit();
             //Tell validation service
             //Relay
         }
 
         private void UpdateLocalStateRoot(uint height, List<Item> change_set)
         {
-            using StateSnapshot mpt_snapshot = Singleton.GetSnapshot();
+            using StateSnapshot state_snapshot = Singleton.GetSnapshot();
             foreach (var item in change_set)
             {
                 switch (item.State)
                 {
                     case TrackState.Added:
-                        mpt_snapshot.Trie.Put(item.Key, item.Value);
+                        state_snapshot.Trie.Put(item.Key, item.Value);
                         break;
                     case TrackState.Changed:
-                        mpt_snapshot.Trie.Put(item.Key, item.Value);
+                        state_snapshot.Trie.Put(item.Key, item.Value);
                         break;
                     case TrackState.Deleted:
-                        mpt_snapshot.Trie.Delete(item.Key);
+                        state_snapshot.Trie.Delete(item.Key);
                         break;
                 }
             }
-            mpt_snapshot.UpdateStateRoot(height);
-            mpt_snapshot.Commit();
+            UInt256 root_hash = state_snapshot.Trie.Root.Hash;
+            StateRoot state_root = new StateRoot
+            {
+                Index = height,
+                RootHash = root_hash,
+                Witness = null,
+            };
+            HashIndexState current_root = state_snapshot.LocalRootHashIndex.GetAndChange();
+            current_root.Index = height;
+            current_root.Hash = root_hash;
+            state_snapshot.StateRoots.Add(height, state_root);
+            state_snapshot.Commit();
             CheckValidatedStateRoot(height);
         }
 

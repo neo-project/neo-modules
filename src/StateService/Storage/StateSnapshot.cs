@@ -37,21 +37,6 @@ namespace Neo.Plugins.StateService.StateStorage
             snapshot.Commit();
         }
 
-        public void UpdateStateRoot(uint height)
-        {
-            UInt256 root_hash = Trie.Root.Hash;
-            StateRoot state_root = new StateRoot
-            {
-                Index = height,
-                RootHash = root_hash,
-                Witness = null,
-            };
-            HashIndexState current_root = LocalRootHashIndex.GetAndChange();
-            current_root.Index = height;
-            current_root.Hash = root_hash;
-            StateRoots.Add(height, state_root);
-        }
-
         public void Dispose()
         {
             snapshot.Dispose();
