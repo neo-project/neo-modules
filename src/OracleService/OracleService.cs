@@ -271,7 +271,7 @@ namespace Neo.Plugins
                     new Signer()
                     {
                         Account = NativeContract.Oracle.Hash,
-                        AllowedContracts = new UInt160[] { },
+                        AllowedContracts = Array.Empty<UInt160>(),
                         Scopes = WitnessScope.None
                     },
                     new Signer()
@@ -388,7 +388,7 @@ namespace Neo.Plugins
             }
         }
 
-        private byte[] Filter(string input, string filterArgs)
+        private static byte[] Filter(string input, string filterArgs)
         {
             if (string.IsNullOrEmpty(filterArgs))
                 return Utility.StrictUTF8.GetBytes(input);
@@ -398,7 +398,7 @@ namespace Neo.Plugins
             return Utility.StrictUTF8.GetBytes(afterObjects.ToString());
         }
 
-        private bool CheckTxSign(StoreView snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
+        private static bool CheckTxSign(StoreView snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
         {
             ECPoint[] oraclesNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
             int neededThreshold = oraclesNodes.Length - (oraclesNodes.Length - 1) / 3;
