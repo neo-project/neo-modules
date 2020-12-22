@@ -106,7 +106,7 @@ namespace Neo.Plugins
         {
             using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
             UInt160 script_hash = ToScriptHash(_params[0].AsString());
-            ContractState contract = NativeContract.Management.GetContract(snapshot, script_hash);
+            ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, script_hash);
             return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
         }
 
@@ -170,7 +170,7 @@ namespace Neo.Plugins
             {
                 using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
                 UInt160 script_hash = UInt160.Parse(_params[0].AsString());
-                ContractState contract = NativeContract.Management.GetContract(snapshot, script_hash);
+                ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, script_hash);
                 if (contract == null) return null;
                 id = contract.Id;
             }
