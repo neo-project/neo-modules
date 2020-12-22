@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Neo.Plugins
@@ -24,29 +25,35 @@ namespace Neo.Plugins
             client.Dispose();
         }
 
-        public OracleResponseCode Process(Uri uri, out string response)
+        public async Task<(OracleResponseCode, string)> ProcessAsync(Uri uri, CancellationToken cancellation)
         {
             Utility.Log(nameof(OracleHttpsProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
 
-            response = null;
-            if (!Settings.Default.AllowPrivateHost && Dns.GetHostEntry(uri.Host).IsInternal()) return OracleResponseCode.Forbidden;
+            if (!Settings.Default.AllowPrivateHost)
+            {
+                IPHostEntry entry = await Dns.GetHostEntryAsync(uri.Host);
+                if (entry.IsInternal())
+                    return (OracleResponseCode.Forbidden, null);
+            }
 
-            Task<HttpResponseMessage> result = client.GetAsync(uri, HttpCompletionOption.ResponseContentRead);
+            HttpResponseMessage message;
             try
             {
-                result.Wait();
+                message = await client.GetAsync(uri, HttpCompletionOption.ResponseContentRead, cancellation);
             }
-            catch (AggregateException)
+            catch
             {
-                return OracleResponseCode.Timeout;
+                return (OracleResponseCode.Timeout, null);
             }
-            HttpResponseMessage message = result.Result;
-            if (message.StatusCode == HttpStatusCode.NotFound) return OracleResponseCode.NotFound;
-            if (message.StatusCode == HttpStatusCode.Forbidden) return OracleResponseCode.Forbidden;
-            if (!message.IsSuccessStatusCode) return OracleResponseCode.Error;
-            if (!Settings.Default.AllowedContentTypes.Contains(message.Content.Headers.ContentType.MediaType)) return OracleResponseCode.ProtocolNotSupported;
-            response = message.Content.ReadAsStringAsync().Result;
-            return OracleResponseCode.Success;
+            if (message.StatusCode == HttpStatusCode.NotFound)
+                return (OracleResponseCode.NotFound, null);
+            if (message.StatusCode == HttpStatusCode.Forbidden)
+                return (OracleResponseCode.Forbidden, null);
+            if (!message.IsSuccessStatusCode)
+                return (OracleResponseCode.Error, null);
+            if (!Settings.Default.AllowedContentTypes.Contains(message.Content.Headers.ContentType.MediaType))
+                return (OracleResponseCode.ProtocolNotSupported, null);
+            return (OracleResponseCode.Success, await message.Content.ReadAsStringAsync(cancellation));
         }
     }
 }

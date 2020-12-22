@@ -36,7 +36,8 @@ namespace Neo.Plugins
         private readonly ConcurrentDictionary<ulong, OracleTask> pendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
         private readonly ConcurrentDictionary<ulong, DateTime> finishedCache = new ConcurrentDictionary<ulong, DateTime>();
         private Timer timer;
-        private CancellationTokenSource cancelSource;
+        private readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
+        private bool stoped = false;
         private int counter;
 
         private static readonly IReadOnlyDictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>
@@ -105,25 +106,10 @@ namespace Neo.Plugins
                 if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
                 if (!CheckOracleAccount(oracles)) throw new ArgumentException("There is no oracle account in wallet");
             }
-            Interlocked.Exchange(ref cancelSource, new CancellationTokenSource())?.Cancel();
-            new Task(() =>
-            {
-                while (cancelSource?.IsCancellationRequested == false)
-                {
-                    using (var snapshot = Blockchain.Singleton.GetSnapshot())
-                    {
-                        foreach (var (id, request) in NativeContract.Oracle.GetRequests(snapshot))
-                        {
-                            if (cancelSource.IsCancellationRequested) break;
-                            if (!finishedCache.ContainsKey(id) && (!pendingQueue.TryGetValue(id, out OracleTask task) || task.Tx is null))
-                                ProcessRequest(snapshot, request);
-                        }
-                    }
-                    Thread.Sleep(500);
-                }
-            }).Start();
 
             timer ??= new Timer(OnTimer, null, RefreshInterval, RefreshInterval);
+
+            ProcessRequestsAsync();
         }
 
         void IPersistencePlugin.OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
@@ -132,7 +118,7 @@ namespace Neo.Plugins
                 OnStop();
         }
 
-        private bool CheckOracleAvaiblable(StoreView snapshot, out ECPoint[] oracles)
+        private static bool CheckOracleAvaiblable(StoreView snapshot, out ECPoint[] oracles)
         {
             oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
             return oracles.Length > 0;
@@ -151,7 +137,9 @@ namespace Neo.Plugins
         [ConsoleCommand("stop oracle", Category = "Oracle", Description = "Stop oracle service")]
         private void OnStop()
         {
-            Interlocked.Exchange(ref cancelSource, null)?.Cancel();
+            cancelSource.Cancel();
+            while (!stoped)
+                Thread.Sleep(100);
             if (timer != null)
             {
                 timer.Dispose();
@@ -161,46 +149,44 @@ namespace Neo.Plugins
                 p.Value.Dispose();
         }
 
-        public void SendResponseSignature(ulong requestId, byte[] txSign, KeyPair keyPair)
+        private static async Task SendContentAsync(string url, string content)
+        {
+            try
+            {
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                request.Method = "POST";
+                request.ContentType = "application/json";
+                using (StreamWriter dataStream = new StreamWriter(await request.GetRequestStreamAsync()))
+                {
+                    await dataStream.WriteAsync(content);
+                }
+                HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync();
+                if (response.ContentLength > ushort.MaxValue) throw new Exception("The response it's bigger than allowed");
+                StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+                await reader.ReadToEndAsync();
+            }
+            catch (Exception e)
+            {
+                Log($"Failed to send the response signature to {url}, as {e.Message}", LogLevel.Warning);
+            }
+        }
+
+        private async Task SendResponseSignatureAsync(ulong requestId, byte[] txSign, KeyPair keyPair)
         {
             var message = keyPair.PublicKey.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
             var sign = Crypto.Sign(message, keyPair.PrivateKey, keyPair.PublicKey.EncodePoint(false)[1..]);
             var param = "\"" + Convert.ToBase64String(keyPair.PublicKey.ToArray()) + "\", " + requestId + ", \"" + Convert.ToBase64String(txSign) + "\",\"" + Convert.ToBase64String(sign) + "\"";
             var content = "{\"id\":" + Interlocked.Increment(ref counter) + ",\"jsonrpc\":\"2.0\",\"method\":\"submitoracleresponse\",\"params\":[" + param + "]}";
 
-            foreach (var node in Settings.Default.Nodes)
-            {
-                new Task(() =>
-                {
-                    try
-                    {
-                        var url = new Uri(node);
-                        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                        request.Method = "POST";
-                        request.ContentType = "application/json";
-                        using (StreamWriter dataStream = new StreamWriter(request.GetRequestStream()))
-                        {
-                            dataStream.Write(content);
-                            dataStream.Close();
-                        }
-                        HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                        if (response.ContentLength > ushort.MaxValue) throw new ArgumentOutOfRangeException("The response it's bigger than allowed");
-                        StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.GetEncoding("UTF-8"));
-                        var retString = reader.ReadToEnd();
-                    }
-                    catch (Exception e)
-                    {
-                        Log($"Failed to send the response signature to {node}, as {e.Message}", LogLevel.Warning);
-                    }
-                }).Start();
-            }
+            var tasks = Settings.Default.Nodes.Select(p => SendContentAsync(p, content));
+            await Task.WhenAll(tasks);
         }
 
-        public void ProcessRequest(StoreView snapshot, OracleRequest req)
+        private async Task ProcessRequestAsync(StoreView snapshot, OracleRequest req)
         {
             Log($"Process oracle request: {req}, txid: {req.OriginalTxid}, url: {req.Url}");
 
-            OracleResponseCode code = ProcessUrl(req.Url, out string data);
+            (OracleResponseCode code, string data) = await ProcessUrlAsync(req.Url);
 
             foreach (var (requestId, request) in NativeContract.Oracle.GetRequestsByUrl(snapshot, req.Url))
             {
@@ -211,6 +197,7 @@ namespace Neo.Plugins
 
                 Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
 
+                List<Task> tasks = new List<Task>();
                 ECPoint[] oraclePublicKeys = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
                 foreach (var account in wallet.GetAccounts())
                 {
@@ -220,27 +207,46 @@ namespace Neo.Plugins
                     var txSign = responseTx.Sign(account.GetKey());
                     var backTxSign = backupTx.Sign(account.GetKey());
                     AddResponseTxSign(snapshot, requestId, oraclePub, txSign, responseTx, backupTx, backTxSign);
-                    SendResponseSignature(requestId, txSign, account.GetKey());
+                    tasks.Add(SendResponseSignatureAsync(requestId, txSign, account.GetKey()));
 
                     Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()}");
                 }
+                await Task.WhenAll(tasks);
             }
         }
 
-        private OracleResponseCode ProcessUrl(string url, out string response)
+        private async void ProcessRequestsAsync()
         {
-            response = null;
+            while (!cancelSource.IsCancellationRequested)
+            {
+                using (var snapshot = Blockchain.Singleton.GetSnapshot())
+                {
+                    foreach (var (id, request) in NativeContract.Oracle.GetRequests(snapshot))
+                    {
+                        if (cancelSource.IsCancellationRequested) break;
+                        if (!finishedCache.ContainsKey(id) && (!pendingQueue.TryGetValue(id, out OracleTask task) || task.Tx is null))
+                            await ProcessRequestAsync(snapshot, request);
+                    }
+                }
+                if (cancelSource.IsCancellationRequested) break;
+                await Task.Delay(500);
+            }
+            stoped = true;
+        }
+
+        private async Task<(OracleResponseCode, string)> ProcessUrlAsync(string url)
+        {
             if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
-                return OracleResponseCode.Error;
+                return (OracleResponseCode.Error, null);
             if (!protocols.TryGetValue(uri.Scheme, out IOracleProtocol protocol))
-                return OracleResponseCode.ProtocolNotSupported;
+                return (OracleResponseCode.ProtocolNotSupported, null);
             try
             {
-                return protocol.Process(uri, out response);
+                return await protocol.ProcessAsync(uri, cancelSource.Token);
             }
             catch
             {
-                return OracleResponseCode.Error;
+                return (OracleResponseCode.Error, null);
             }
         }
 
@@ -416,7 +422,7 @@ namespace Neo.Plugins
             return false;
         }
 
-        private void OnTimer(object state)
+        private async void OnTimer(object state)
         {
             List<ulong> outOfDate = new List<ulong>();
             foreach (var task in pendingQueue)
@@ -424,9 +430,11 @@ namespace Neo.Plugins
                 var span = TimeProvider.Current.UtcNow - task.Value.Timestamp;
                 if (span > TimeSpan.FromSeconds(RefreshInterval) && span < TimeSpan.FromSeconds(RefreshInterval * 2))
                 {
+                    List<Task> tasks = new List<Task>();
                     foreach (var account in wallet.GetAccounts())
                         if (task.Value.BackupSigns.TryGetValue(account.GetKey().PublicKey, out byte[] sign))
-                            SendResponseSignature(task.Key, sign, account.GetKey());
+                            tasks.Add(SendResponseSignatureAsync(task.Key, sign, account.GetKey()));
+                    await Task.WhenAll(tasks);
                 }
                 else if (span > Settings.Default.MaxTaskTimeout)
                 {

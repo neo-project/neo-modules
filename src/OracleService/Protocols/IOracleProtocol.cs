@@ -1,11 +1,13 @@
 using Neo.Network.P2P.Payloads;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Neo.Plugins
 {
     interface IOracleProtocol : IDisposable
     {
         void Configure();
-        OracleResponseCode Process(Uri uri, out string response);
+        Task<(OracleResponseCode, string)> ProcessAsync(Uri uri, CancellationToken cancellation);
     }
 }
