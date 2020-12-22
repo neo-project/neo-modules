@@ -107,7 +107,7 @@ namespace Neo.Plugins
                 if (!CheckOracleAccount(oracles)) throw new ArgumentException("There is no oracle account in wallet");
             }
 
-            timer ??= new Timer(OnTimer, null, RefreshInterval, RefreshInterval);
+            timer ??= new Timer(OnTimer, null, RefreshInterval, Timeout.Infinite);
 
             ProcessRequestsAsync();
         }
@@ -446,6 +446,9 @@ namespace Neo.Plugins
             foreach (var key in finishedCache.Keys)
                 if (TimeProvider.Current.UtcNow - finishedCache[key] > TimeSpan.FromDays(3))
                     finishedCache.TryRemove(key, out _);
+
+            if (!cancelSource.IsCancellationRequested)
+                timer.Change(RefreshInterval, Timeout.Infinite);
         }
 
         public static void Log(string message, LogLevel level = LogLevel.Info)
