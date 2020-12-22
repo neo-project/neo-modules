@@ -106,7 +106,7 @@ namespace Neo.Plugins
             using (var snapshot = Blockchain.Singleton.GetSnapshot())
             {
                 if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
-                if (!CheckOracleAccount(oracles)) throw new ArgumentException("There is no oracle account in wallet");
+                if (!CheckOracleAccount(wallet, oracles)) throw new ArgumentException("There is no oracle account in wallet");
             }
 
             started = true;
@@ -118,7 +118,7 @@ namespace Neo.Plugins
 
         void IPersistencePlugin.OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
-            if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles) || !CheckOracleAccount(oracles))
+            if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles) || !CheckOracleAccount(wallet, oracles))
                 OnStop();
         }
 
@@ -128,14 +128,11 @@ namespace Neo.Plugins
             return oracles.Length > 0;
         }
 
-        private bool CheckOracleAccount(ECPoint[] oracles)
+        private static bool CheckOracleAccount(Wallet wallet, ECPoint[] oracles)
         {
-            var oracleScriptHashes = oracles.Select(u => Contract.CreateSignatureRedeemScript(u).ToScriptHash());
-            var accounts = wallet?.GetAccounts()
-                .Where(u => u.HasKey && !u.Lock && oracleScriptHashes.Contains(u.ScriptHash))
-                .Select(u => (u.Contract, u.GetKey()))
-                .ToArray();
-            return accounts != null && accounts.Length > 0;
+            return oracles
+                .Select(p => wallet.GetAccount(p))
+                .Any(p => p is not null && p.HasKey && !p.Lock);
         }
 
         [ConsoleCommand("stop oracle", Category = "Oracle", Description = "Stop oracle service")]
