@@ -1112,24 +1112,26 @@
     "Name": "invokescriptasync",
     "Request": {
       "jsonrpc": "2.0",
+      "id": 1,
       "method": "invokescript",
-      "params": [ "EMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS" ],
-      "id": 1
+      "params": [
+        "HxDDDAhkZWNpbWFscwwU\u002B\u002B3\u002BLtIiZZK2SMTal7nJzV3BpqZB7vQM2w=="
+      ]
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "script": "EMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS",
+        "script": "HxDDDAhkZWNpbWFscwwU++3+LtIiZZK2SMTal7nJzV3BpqZB7vQM2w==",
         "state": "HALT",
-        "gasconsumed": "0.0506156",
+        "gasconsumed": "0.0099918",
+        "exception": null,
         "stack": [
           {
             "type": "Integer",
             "value": "8"
           }
-        ],
-        "tx": "00769d16556925aa554712439a9c613ba114efa3fac23ddbca00e1f505000000009e021400000000005620200000009910c30c046e616d650c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0673796d626f6c0c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c08646563696d616c730c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5210c30c0b746f74616c537570706c790c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b5201420c40c848d0fcbf5e6a820508242ea8b7ccbeed3caefeed5db570537279c2154f7cfd8b0d8f477f37f4e6ca912935b732684d57c455dff7aa525ad4ab000931f22208290c2103aa052fbcb8e5b33a4eefd662536f8684641f04109f1d5e69cdda6f084890286a0b410a906ad4"
+        ]
       }
     }
   },
@@ -1152,7 +1154,7 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "getwalletbalance",
-      "params": [ "0x8c23f196d8a1bfd103a9dcb1f9ccf0c611377d3b" ],
+      "params": [ "0xa6a6c15dcdc9b997dac448b6926522d22efeedfb" ],
       "id": 1
     },
     "Response": {
