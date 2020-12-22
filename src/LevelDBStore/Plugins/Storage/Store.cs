@@ -7,9 +7,9 @@ using System.Reflection;
 using System.Text;
 using LHelper = Neo.IO.Data.LevelDB.Helper;
 
-namespace Neo.Plugins.Storage.LevelDB
+namespace Neo.Plugins.Storage
 {
-    public class Store : IStore
+    internal class Store : IStore
     {
         private const byte SYS_Version = 0xf0;
         private readonly DB db;
