@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
@@ -6,6 +5,7 @@ using Neo.SmartContract.Manifest;
 using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
+using System.Threading.Tasks;
 
 namespace Neo.Network.RPC
 {
@@ -57,7 +57,7 @@ namespace Neo.Network.RPC
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitAppCall(NativeContract.Management.Hash, "deploy", nefFile, manifest.ToString());
+                sb.EmitAppCall(NativeContract.ContractManagement.Hash, "deploy", nefFile, manifest.ToString());
                 script = sb.ToArray();
             }
             UInt160 sender = Contract.CreateSignatureRedeemScript(key.PublicKey).ToScriptHash();

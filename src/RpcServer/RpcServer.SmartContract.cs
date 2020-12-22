@@ -110,7 +110,7 @@ namespace Neo.Plugins
         private JObject GetVerificationResult(UInt160 scriptHash, ContractParameter[] args, Signers signers = null)
         {
             var snapshot = Blockchain.Singleton.GetSnapshot();
-            var contract = NativeContract.Management.GetContract(snapshot, scriptHash);
+            var contract = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
             if (contract is null)
             {
                 throw new RpcException(-100, "Unknown contract");
