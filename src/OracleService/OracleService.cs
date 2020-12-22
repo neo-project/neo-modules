@@ -37,6 +37,7 @@ namespace Neo.Plugins
         private readonly ConcurrentDictionary<ulong, DateTime> finishedCache = new ConcurrentDictionary<ulong, DateTime>();
         private Timer timer;
         private readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
+        private bool started = false;
         private bool stoped = false;
         private int counter;
 
@@ -83,6 +84,8 @@ namespace Neo.Plugins
         [ConsoleCommand("start oracle", Category = "Oracle", Description = "Start oracle service")]
         private void OnStart()
         {
+            if (started) return;
+            started = true;
             string password = GetService<ConsoleServiceBase>().ReadUserInput("password", true);
             if (password.Length == 0)
             {
