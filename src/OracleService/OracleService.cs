@@ -69,27 +69,6 @@ namespace Neo.Plugins
                 p.Value.Dispose();
         }
 
-        [RpcMethod]
-        public JObject SubmitOracleResponse(JArray _params)
-        {
-            ECPoint oraclePub = ECPoint.DecodePoint(Convert.FromBase64String(_params[0].AsString()), ECCurve.Secp256r1);
-            ulong requestId = (ulong)_params[1].AsNumber();
-            byte[] txSign = Convert.FromBase64String(_params[2].AsString());
-            byte[] msgSign = Convert.FromBase64String(_params[3].AsString());
-
-            var data = oraclePub.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
-            if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
-            if (finishedCache.ContainsKey(requestId)) throw new RpcException(-100, "Request has already finished");
-
-            using (SnapshotView snapshot = Blockchain.Singleton.GetSnapshot())
-            {
-                if (NativeContract.Oracle.GetRequest(snapshot, requestId) is null)
-                    throw new RpcException(-100, "Request is not found");
-                AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
-            }
-            return new JObject();
-        }
-
         [ConsoleCommand("start oracle", Category = "Oracle", Description = "Start oracle service")]
         private void OnStart()
         {
@@ -125,25 +104,6 @@ namespace Neo.Plugins
             ProcessRequestsAsync();
         }
 
-        void IPersistencePlugin.OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
-        {
-            if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles) || !CheckOracleAccount(wallet, oracles))
-                OnStop();
-        }
-
-        private static bool CheckOracleAvaiblable(StoreView snapshot, out ECPoint[] oracles)
-        {
-            oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
-            return oracles.Length > 0;
-        }
-
-        private static bool CheckOracleAccount(Wallet wallet, ECPoint[] oracles)
-        {
-            return oracles
-                .Select(p => wallet.GetAccount(p))
-                .Any(p => p is not null && p.HasKey && !p.Lock);
-        }
-
         [ConsoleCommand("stop oracle", Category = "Oracle", Description = "Stop oracle service")]
         private void OnStop()
         {
@@ -153,6 +113,62 @@ namespace Neo.Plugins
                 timer.Dispose();
                 timer = null;
             }
+        }
+
+        void IPersistencePlugin.OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        {
+            if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles) || !CheckOracleAccount(wallet, oracles))
+                OnStop();
+        }
+
+        private async void OnTimer(object state)
+        {
+            List<ulong> outOfDate = new List<ulong>();
+            foreach (var task in pendingQueue)
+            {
+                var span = TimeProvider.Current.UtcNow - task.Value.Timestamp;
+                if (span > TimeSpan.FromSeconds(RefreshInterval) && span < TimeSpan.FromSeconds(RefreshInterval * 2))
+                {
+                    List<Task> tasks = new List<Task>();
+                    foreach (var account in wallet.GetAccounts())
+                        if (task.Value.BackupSigns.TryGetValue(account.GetKey().PublicKey, out byte[] sign))
+                            tasks.Add(SendResponseSignatureAsync(task.Key, sign, account.GetKey()));
+                    await Task.WhenAll(tasks);
+                }
+                else if (span > Settings.Default.MaxTaskTimeout)
+                {
+                    outOfDate.Add(task.Key);
+                }
+            }
+            foreach (ulong requestId in outOfDate)
+                pendingQueue.TryRemove(requestId, out _);
+            foreach (var key in finishedCache.Keys)
+                if (TimeProvider.Current.UtcNow - finishedCache[key] > TimeSpan.FromDays(3))
+                    finishedCache.TryRemove(key, out _);
+
+            if (!cancelSource.IsCancellationRequested)
+                timer?.Change(RefreshInterval, Timeout.Infinite);
+        }
+
+        [RpcMethod]
+        public JObject SubmitOracleResponse(JArray _params)
+        {
+            ECPoint oraclePub = ECPoint.DecodePoint(Convert.FromBase64String(_params[0].AsString()), ECCurve.Secp256r1);
+            ulong requestId = (ulong)_params[1].AsNumber();
+            byte[] txSign = Convert.FromBase64String(_params[2].AsString());
+            byte[] msgSign = Convert.FromBase64String(_params[3].AsString());
+
+            var data = oraclePub.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
+            if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
+            if (finishedCache.ContainsKey(requestId)) throw new RpcException(-100, "Request has already finished");
+
+            using (SnapshotView snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                if (NativeContract.Oracle.GetRequest(snapshot, requestId) is null)
+                    throw new RpcException(-100, "Request is not found");
+                AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
+            }
+            return new JObject();
         }
 
         private static async Task SendContentAsync(string url, string content)
@@ -428,33 +444,17 @@ namespace Neo.Plugins
             return false;
         }
 
-        private async void OnTimer(object state)
+        private static bool CheckOracleAvaiblable(StoreView snapshot, out ECPoint[] oracles)
         {
-            List<ulong> outOfDate = new List<ulong>();
-            foreach (var task in pendingQueue)
-            {
-                var span = TimeProvider.Current.UtcNow - task.Value.Timestamp;
-                if (span > TimeSpan.FromSeconds(RefreshInterval) && span < TimeSpan.FromSeconds(RefreshInterval * 2))
-                {
-                    List<Task> tasks = new List<Task>();
-                    foreach (var account in wallet.GetAccounts())
-                        if (task.Value.BackupSigns.TryGetValue(account.GetKey().PublicKey, out byte[] sign))
-                            tasks.Add(SendResponseSignatureAsync(task.Key, sign, account.GetKey()));
-                    await Task.WhenAll(tasks);
-                }
-                else if (span > Settings.Default.MaxTaskTimeout)
-                {
-                    outOfDate.Add(task.Key);
-                }
-            }
-            foreach (ulong requestId in outOfDate)
-                pendingQueue.TryRemove(requestId, out _);
-            foreach (var key in finishedCache.Keys)
-                if (TimeProvider.Current.UtcNow - finishedCache[key] > TimeSpan.FromDays(3))
-                    finishedCache.TryRemove(key, out _);
+            oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
+            return oracles.Length > 0;
+        }
 
-            if (!cancelSource.IsCancellationRequested)
-                timer?.Change(RefreshInterval, Timeout.Infinite);
+        private static bool CheckOracleAccount(Wallet wallet, ECPoint[] oracles)
+        {
+            return oracles
+                .Select(p => wallet.GetAccount(p))
+                .Any(p => p is not null && p.HasKey && !p.Lock);
         }
 
         private static void Log(string message, LogLevel level = LogLevel.Info)
