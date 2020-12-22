@@ -5,7 +5,6 @@ using Neo.Ledger;
 using Neo.Persistence;
 using Neo.Plugins.MPT;
 using Neo.Plugins.StateService.Network;
-using Neo.Plugins.Storage.LevelDB;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -44,7 +43,7 @@ namespace Neo.Plugins.StateService.StateStorage
             if (singleton != null) throw new InvalidOperationException(nameof(StateStore));
             this.system = system;
             this.core = core;
-            this.store = new Store(path);
+            this.store = core.LoadStore(path);
             singleton = this;
         }
 
