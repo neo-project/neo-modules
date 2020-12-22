@@ -32,7 +32,6 @@ namespace Neo.Plugins
     {
         private const int RefreshInterval = 1000 * 60 * 3;
 
-        private readonly ConsoleServiceBase consoleBase = GetService<ConsoleServiceBase>();
         private NEP6Wallet wallet;
         private readonly ConcurrentDictionary<ulong, OracleTask> pendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
         private readonly ConcurrentDictionary<ulong, DateTime> finishedCache = new ConcurrentDictionary<ulong, DateTime>();
@@ -83,7 +82,7 @@ namespace Neo.Plugins
         [ConsoleCommand("start oracle", Category = "Oracle", Description = "Start oracle service")]
         private void OnStart()
         {
-            string password = consoleBase.ReadUserInput("password", true);
+            string password = GetService<ConsoleServiceBase>().ReadUserInput("password", true);
             if (password.Length == 0)
             {
                 Console.WriteLine("Cancelled");
@@ -113,11 +112,11 @@ namespace Neo.Plugins
                 {
                     using (var snapshot = Blockchain.Singleton.GetSnapshot())
                     {
-                        IEnumerator<(ulong RequestId, OracleRequest Request)> enumerator = NativeContract.Oracle.GetRequests(snapshot).GetEnumerator();
-                        while (enumerator.MoveNext() && !cancelSource.IsCancellationRequested)
+                        foreach (var (id, request) in NativeContract.Oracle.GetRequests(snapshot))
                         {
-                            if (!finishedCache.ContainsKey(enumerator.Current.RequestId) && (!pendingQueue.TryGetValue(enumerator.Current.RequestId, out OracleTask task) || task.Tx is null))
-                                ProcessRequest(snapshot, enumerator.Current.Request);
+                            if (cancelSource.IsCancellationRequested) break;
+                            if (!finishedCache.ContainsKey(id) && (!pendingQueue.TryGetValue(id, out OracleTask task) || task.Tx is null))
+                                ProcessRequest(snapshot, request);
                         }
                     }
                     Thread.Sleep(500);
