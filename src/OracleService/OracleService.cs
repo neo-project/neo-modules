@@ -60,6 +60,15 @@ namespace Neo.Plugins
                 p.Value.Configure();
         }
 
+        public override void Dispose()
+        {
+            OnStop();
+            while (!stoped)
+                Thread.Sleep(100);
+            foreach (var p in protocols)
+                p.Value.Dispose();
+        }
+
         [RpcMethod]
         public JObject SubmitOracleResponse(JArray _params)
         {
@@ -111,7 +120,7 @@ namespace Neo.Plugins
 
             started = true;
 
-            timer ??= new Timer(OnTimer, null, RefreshInterval, Timeout.Infinite);
+            timer = new Timer(OnTimer, null, RefreshInterval, Timeout.Infinite);
 
             ProcessRequestsAsync();
         }
@@ -139,15 +148,11 @@ namespace Neo.Plugins
         private void OnStop()
         {
             cancelSource.Cancel();
-            while (!stoped)
-                Thread.Sleep(100);
             if (timer != null)
             {
                 timer.Dispose();
                 timer = null;
             }
-            foreach (var p in protocols)
-                p.Value.Dispose();
         }
 
         private static async Task SendContentAsync(string url, string content)
@@ -449,7 +454,7 @@ namespace Neo.Plugins
                     finishedCache.TryRemove(key, out _);
 
             if (!cancelSource.IsCancellationRequested)
-                timer.Change(RefreshInterval, Timeout.Infinite);
+                timer?.Change(RefreshInterval, Timeout.Infinite);
         }
 
         private static void Log(string message, LogLevel level = LogLevel.Info)
