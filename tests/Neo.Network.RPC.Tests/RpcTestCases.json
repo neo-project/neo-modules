@@ -1113,14 +1113,14 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "invokescript",
-      "params": [ "EMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS" ],
+      "params": [ "HxDDDAhkZWNpbWFscwwUO303EcbwzPmx3KkD0b+h2JbxI4xB7vQM2w==" ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "script": "EMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS",
+        "script": "HxDDDAhkZWNpbWFscwwUO303EcbwzPmx3KkD0b+h2JbxI4xB7vQM2w==",
         "state": "HALT",
         "gasconsumed": "0.0506156",
         "stack": [
