@@ -287,7 +287,7 @@ namespace Neo.Plugins
             foreach (var (key, value) in dbCache.Find(prefix))
             {
                 JObject balance = new JObject();
-                if (NativeContract.Management.GetContract(snapshot, key.AssetScriptHash) is null)
+                if (NativeContract.ContractManagement.GetContract(snapshot, key.AssetScriptHash) is null)
                     continue;
                 balance["assethash"] = key.AssetScriptHash.ToString();
                 balance["amount"] = value.Balance.ToString();

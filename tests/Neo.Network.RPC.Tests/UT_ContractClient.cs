@@ -55,7 +55,7 @@ namespace Neo.Network.RPC.Tests
             };
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitAppCall(NativeContract.Management.Hash, "deploy", new byte[1], manifest.ToString());
+                sb.EmitAppCall(NativeContract.ContractManagement.Hash, "deploy", new byte[1], manifest.ToString());
                 script = sb.ToArray();
             }
 
