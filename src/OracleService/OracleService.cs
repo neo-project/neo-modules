@@ -85,13 +85,13 @@ namespace Neo.Plugins
         private void OnStart()
         {
             if (started) return;
-            started = true;
             string password = GetService<ConsoleServiceBase>().ReadUserInput("password", true);
             if (password.Length == 0)
             {
                 Console.WriteLine("Cancelled");
                 return;
             }
+            started = true;
 
             wallet = new NEP6Wallet(Settings.Default.Wallet);
             try
