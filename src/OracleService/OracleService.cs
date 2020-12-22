@@ -277,8 +277,8 @@ namespace Neo.Plugins
             var oracleNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
             var request = NativeContract.Oracle.GetRequest(snapshot, response.Id);
             var requestTx = snapshot.Transactions.TryGet(request.OriginalTxid);
-            var m = oracleNodes.Length - (oracleNodes.Length - 1) / 3;
             var n = oracleNodes.Length;
+            var m = n - (n - 1) / 3;
             var oracleSignContract = Contract.CreateMultiSigContract(m, oracleNodes);
 
             var tx = new Transaction()
