@@ -6,11 +6,11 @@ using System.Numerics;
 
 namespace Neo.Network.RPC.Models
 {
-    public class RpcNep5Balances
+    public class RpcNep17Balances
     {
         public UInt160 UserScriptHash { get; set; }
 
-        public List<RpcNep5Balance> Balances { get; set; }
+        public List<RpcNep17Balance> Balances { get; set; }
 
         public JObject ToJson()
         {
@@ -20,18 +20,18 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcNep5Balances FromJson(JObject json)
+        public static RpcNep17Balances FromJson(JObject json)
         {
-            RpcNep5Balances nep5Balance = new RpcNep5Balances
+            RpcNep17Balances nep17Balance = new RpcNep17Balances
             {
-                Balances = ((JArray)json["balance"]).Select(p => RpcNep5Balance.FromJson(p)).ToList(),
+                Balances = ((JArray)json["balance"]).Select(p => RpcNep17Balance.FromJson(p)).ToList(),
                 UserScriptHash = json["address"].ToScriptHash()
             };
-            return nep5Balance;
+            return nep17Balance;
         }
     }
 
-    public class RpcNep5Balance
+    public class RpcNep17Balance
     {
         public UInt160 AssetHash { get; set; }
 
@@ -48,9 +48,9 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcNep5Balance FromJson(JObject json)
+        public static RpcNep17Balance FromJson(JObject json)
         {
-            RpcNep5Balance balance = new RpcNep5Balance
+            RpcNep17Balance balance = new RpcNep17Balance
             {
                 AssetHash = json["assethash"].ToScriptHash(),
                 Amount = BigInteger.Parse(json["amount"].AsString()),

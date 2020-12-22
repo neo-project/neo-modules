@@ -94,7 +94,7 @@ namespace Neo.Plugins
                 {
                     gas += NativeContract.NEO.UnclaimedGas(snapshot, account, snapshot.Height + 1);
                 }
-            return gas.ToString();
+            return new BigDecimal(gas, NativeContract.GAS.Decimals).ToString();
         }
 
         [RpcMethod]
@@ -332,7 +332,7 @@ namespace Neo.Plugins
             {
                 tx.Witnesses = context.GetWitnesses();
                 system.Blockchain.Tell(tx);
-                return tx.ToJson();
+                return Utility.TransactionToJson(tx);
             }
             else
             {

@@ -18,7 +18,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = Transaction.ToJson();
+            JObject json = Utility.TransactionToJson(Transaction);
             if (Confirmations != null)
             {
                 json["blockhash"] = BlockHash.ToString();
