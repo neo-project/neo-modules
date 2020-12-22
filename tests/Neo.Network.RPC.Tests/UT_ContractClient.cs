@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Neo.SmartContract;
@@ -6,6 +5,7 @@ using Neo.SmartContract.Manifest;
 using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
+using System.Threading.Tasks;
 
 namespace Neo.Network.RPC.Tests
 {
@@ -55,7 +55,7 @@ namespace Neo.Network.RPC.Tests
             };
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitAppCall(NativeContract.Management.Hash, "deploy", new byte[1], manifest.ToString());
+                sb.EmitAppCall(NativeContract.ContractManagement.Hash, "deploy", new byte[1], manifest.ToString());
                 script = sb.ToArray();
             }
 
