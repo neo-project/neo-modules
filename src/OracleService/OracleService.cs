@@ -34,11 +34,10 @@ namespace Neo.Plugins
 
         private readonly ConsoleServiceBase consoleBase = GetService<ConsoleServiceBase>();
         private NEP6Wallet wallet;
-        private readonly Dictionary<ulong, OracleTask> pendingQueue = new Dictionary<ulong, OracleTask>();
-        private readonly Dictionary<ulong, DateTime> finishedCache = new Dictionary<ulong, DateTime>();
+        private readonly ConcurrentDictionary<ulong, OracleTask> pendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
+        private readonly ConcurrentDictionary<ulong, DateTime> finishedCache = new ConcurrentDictionary<ulong, DateTime>();
         private Timer timer;
         private CancellationTokenSource cancelSource;
-        private readonly object _lock = new object();
         private int counter;
 
         private static readonly IReadOnlyDictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>
@@ -116,8 +115,10 @@ namespace Neo.Plugins
                     {
                         IEnumerator<(ulong RequestId, OracleRequest Request)> enumerator = NativeContract.Oracle.GetRequests(snapshot).GetEnumerator();
                         while (enumerator.MoveNext() && !cancelSource.IsCancellationRequested)
+                        {
                             if (!finishedCache.ContainsKey(enumerator.Current.RequestId) && (!pendingQueue.TryGetValue(enumerator.Current.RequestId, out OracleTask task) || task.Tx is null))
                                 ProcessRequest(snapshot, enumerator.Current.Request);
+                        }
                     }
                     Thread.Sleep(500);
                 }
@@ -340,51 +341,45 @@ namespace Neo.Plugins
 
         public void AddResponseTxSign(StoreView snapshot, ulong requestId, ECPoint oraclePub, byte[] sign, Transaction responseTx = null, Transaction backupTx = null, byte[] backupSign = null)
         {
-            lock (_lock)
+            var task = pendingQueue.GetOrAdd(requestId, new OracleTask
             {
-                if (!pendingQueue.ContainsKey(requestId))
-                {
-                    pendingQueue.TryAdd(requestId, new OracleTask
-                    {
-                        Id = requestId,
-                        Request = NativeContract.Oracle.GetRequest(snapshot, requestId),
-                        Signs = new ConcurrentDictionary<ECPoint, byte[]>(),
-                        BackupSigns = new ConcurrentDictionary<ECPoint, byte[]>()
-                    });
-                }
-                var task = pendingQueue[requestId];
-                if (responseTx != null)
-                {
-                    task.Tx = responseTx;
-                    var data = task.Tx.GetHashData();
-                    task.Signs.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.Signs.Remove(p.Key, out _));
-                }
-                if (backupTx != null)
-                {
-                    task.BackupTx = backupTx;
-                    var data = task.BackupTx.GetHashData();
-                    task.BackupSigns.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.BackupSigns.Remove(p.Key, out _));
-                    task.BackupSigns.TryAdd(oraclePub, backupSign);
-                }
-                if (task.Tx == null)
-                {
-                    task.Signs.TryAdd(oraclePub, sign);
-                    task.BackupSigns.TryAdd(oraclePub, sign);
-                    return;
-                }
+                Id = requestId,
+                Request = NativeContract.Oracle.GetRequest(snapshot, requestId),
+                Signs = new ConcurrentDictionary<ECPoint, byte[]>(),
+                BackupSigns = new ConcurrentDictionary<ECPoint, byte[]>()
+            });
 
-                if (Crypto.VerifySignature(task.Tx.GetHashData(), sign, oraclePub))
-                    task.Signs.TryAdd(oraclePub, sign);
-                else if (Crypto.VerifySignature(task.BackupTx.GetHashData(), sign, oraclePub))
-                    task.BackupSigns.TryAdd(oraclePub, sign);
-                else
-                    throw new RpcException(-100, "Invalid response transaction sign");
+            if (responseTx != null)
+            {
+                task.Tx = responseTx;
+                var data = task.Tx.GetHashData();
+                task.Signs.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.Signs.Remove(p.Key, out _));
+            }
+            if (backupTx != null)
+            {
+                task.BackupTx = backupTx;
+                var data = task.BackupTx.GetHashData();
+                task.BackupSigns.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.BackupSigns.Remove(p.Key, out _));
+                task.BackupSigns.TryAdd(oraclePub, backupSign);
+            }
+            if (task.Tx == null)
+            {
+                task.Signs.TryAdd(oraclePub, sign);
+                task.BackupSigns.TryAdd(oraclePub, sign);
+                return;
+            }
 
-                if (CheckTxSign(snapshot, task.Tx, task.Signs) || CheckTxSign(snapshot, task.BackupTx, task.BackupSigns))
-                {
-                    finishedCache.TryAdd(requestId, new DateTime());
-                    pendingQueue.Remove(requestId, out _);
-                }
+            if (Crypto.VerifySignature(task.Tx.GetHashData(), sign, oraclePub))
+                task.Signs.TryAdd(oraclePub, sign);
+            else if (Crypto.VerifySignature(task.BackupTx.GetHashData(), sign, oraclePub))
+                task.BackupSigns.TryAdd(oraclePub, sign);
+            else
+                throw new RpcException(-100, "Invalid response transaction sign");
+
+            if (CheckTxSign(snapshot, task.Tx, task.Signs) || CheckTxSign(snapshot, task.BackupTx, task.BackupSigns))
+            {
+                finishedCache.TryAdd(requestId, new DateTime());
+                pendingQueue.TryRemove(requestId, out _);
             }
         }
 
@@ -439,14 +434,11 @@ namespace Neo.Plugins
                     outOfDate.Add(task.Key);
                 }
             }
-            lock (_lock)
-            {
-                foreach (ulong requestId in outOfDate)
-                    pendingQueue.Remove(requestId, out _);
-                foreach (var key in finishedCache.Keys)
-                    if (TimeProvider.Current.UtcNow - finishedCache[key] > TimeSpan.FromDays(3))
-                        finishedCache.Remove(key, out _);
-            }
+            foreach (ulong requestId in outOfDate)
+                pendingQueue.TryRemove(requestId, out _);
+            foreach (var key in finishedCache.Keys)
+                if (TimeProvider.Current.UtcNow - finishedCache[key] > TimeSpan.FromDays(3))
+                    finishedCache.TryRemove(key, out _);
         }
 
         public static void Log(string message, LogLevel level = LogLevel.Info)
