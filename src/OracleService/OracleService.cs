@@ -341,7 +341,7 @@ namespace Neo.Plugins
 
         public void AddResponseTxSign(StoreView snapshot, ulong requestId, ECPoint oraclePub, byte[] sign, Transaction responseTx = null, Transaction backupTx = null, byte[] backupSign = null)
         {
-            var task = pendingQueue.GetOrAdd(requestId, new OracleTask
+            var task = pendingQueue.GetOrAdd(requestId, _ => new OracleTask
             {
                 Id = requestId,
                 Request = NativeContract.Oracle.GetRequest(snapshot, requestId),
