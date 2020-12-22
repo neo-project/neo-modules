@@ -5,12 +5,12 @@
     <RootNamespace>Neo.Plugins</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
-    <ProjectReference Include="..\LevelDBStore\LevelDBStore.csproj" />
-    <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
-    <ProjectReference Include="..\RpcClient\RpcClient.csproj" />
-  </ItemGroup>
   
+  <ItemGroup>
+    <None Update="StateService\config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
