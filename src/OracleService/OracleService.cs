@@ -250,7 +250,7 @@ namespace Neo.Plugins
             }
         }
 
-        public static Transaction CreateResponseTx(StoreView snapshot, OracleResponse response)
+        private static Transaction CreateResponseTx(StoreView snapshot, OracleResponse response)
         {
             var oracleNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
             var request = NativeContract.Oracle.GetRequest(snapshot, response.Id);
@@ -344,7 +344,7 @@ namespace Neo.Plugins
             return tx;
         }
 
-        public void AddResponseTxSign(StoreView snapshot, ulong requestId, ECPoint oraclePub, byte[] sign, Transaction responseTx = null, Transaction backupTx = null, byte[] backupSign = null)
+        private void AddResponseTxSign(StoreView snapshot, ulong requestId, ECPoint oraclePub, byte[] sign, Transaction responseTx = null, Transaction backupTx = null, byte[] backupSign = null)
         {
             var task = pendingQueue.GetOrAdd(requestId, _ => new OracleTask
             {
@@ -451,7 +451,7 @@ namespace Neo.Plugins
                 timer.Change(RefreshInterval, Timeout.Infinite);
         }
 
-        public static void Log(string message, LogLevel level = LogLevel.Info)
+        private static void Log(string message, LogLevel level = LogLevel.Info)
         {
             Utility.Log(nameof(OracleService), level, message);
         }
