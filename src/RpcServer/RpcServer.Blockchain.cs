@@ -112,12 +112,9 @@ namespace Neo.Plugins
 
         private static UInt160 ToScriptHash(SnapshotView snapshot, string keyword)
         {
-            foreach (var native in NativeContract.Contracts)
-            {
-                if (keyword.Equals(native.Name, StringComparison.InvariantCultureIgnoreCase) || keyword == native.Id.ToString())
-                    return native.Hash;
-            }
-            return NativeContract.ContractManagement.ListContracts(snapshot).FirstOrDefault(p => p.Manifest.Name.Equals(keyword, StringComparison.InvariantCultureIgnoreCase))?.Hash ?? UInt160.Parse(keyword);
+            return NativeContract.Contracts.FirstOrDefault(p => keyword.Equals(p.Name, StringComparison.InvariantCultureIgnoreCase) || keyword == p.Id.ToString())?.Hash ??
+                   NativeContract.ContractManagement.ListContracts(snapshot).FirstOrDefault(p => p.Manifest.Name.Equals(keyword, StringComparison.InvariantCultureIgnoreCase))?.Hash ??
+                   UInt160.Parse(keyword);
         }
 
         [RpcMethod]
