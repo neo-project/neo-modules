@@ -25,14 +25,7 @@ jobs:
         ./dotnet-format . --check -v diagnostic
     - name: Publish
       run: |
-        dotnet publish /src/ApplicationLogs/ApplicationLogs.csproj -c Release -o /src/ApplicationLogs/app
-        dotnet publish /src/LevelDBStore/LevelDBStore.csproj -c Release -o /src/LevelDBStore/app
-        dotnet publish /src/RocksDBStore/RocksDBStore.csproj -c Release -o /src/RocksDBStore/app
-        dotnet publish /src/RpcClient/RpcClient.csproj -c Release -o /src/RpcClient/app
-        dotnet publish /src/RpcNep17Tracker/RpcNep17Tracker.csproj -c Release -o /src/RpcNep17Tracker/app
-        dotnet publish /src/RpcServer/RpcServer.csproj -c Release -o /src/RpcServer/app
-        dotnet publish /src/StatesDumper/StatesDumper.csproj -c Release -o /src/StatesDumper/app
-        dotnet publish /src/StateService/StateService.csproj -c Release -o /src/StateService/app
+        dotnet publish neo-modules.sln
     - name: Test
       run: |
         sudo apt-get --assume-yes install libleveldb-dev libsnappy-dev libc6-dev
