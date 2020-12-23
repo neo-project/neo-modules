@@ -118,7 +118,7 @@ namespace Neo.Plugins
                     return native.Hash;
             }
             var contract = NativeContract.ContractManagement.ListContracts(snapshot).FirstOrDefault(p => p.Manifest.Name.Equals(keyword, StringComparison.InvariantCultureIgnoreCase));
-            return contract == null ? UInt160.Parse(keyword) : contract.Hash;
+            return contract?.Hash ?? UInt160.Parse(keyword);
         }
 
         [RpcMethod]
