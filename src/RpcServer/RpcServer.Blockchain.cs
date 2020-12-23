@@ -113,7 +113,7 @@ namespace Neo.Plugins
         private static UInt160 ToScriptHash(SnapshotView snapshot, string keyword)
         {
             return NativeContract.Contracts.FirstOrDefault(p => keyword.Equals(p.Name, StringComparison.InvariantCultureIgnoreCase) || keyword == p.Id.ToString())?.Hash ??
-                   NativeContract.ContractManagement.ListContracts(snapshot).FirstOrDefault(p => p.Manifest.Name.Equals(keyword, StringComparison.InvariantCultureIgnoreCase))?.Hash ??
+                   NativeContract.ContractManagement.ListContracts(snapshot).FirstOrDefault(p => keyword.Equals(p.Manifest.Name, StringComparison.InvariantCultureIgnoreCase) || keyword == p.Id.ToString())?.Hash ??
                    UInt160.Parse(keyword);
         }
 
