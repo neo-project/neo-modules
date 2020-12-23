@@ -105,19 +105,23 @@ namespace Neo.Plugins
         protected virtual JObject GetContractState(JArray _params)
         {
             using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
-            UInt160 script_hash = ToScriptHash(_params[0].AsString());
+            UInt160 script_hash = ToScriptHash(snapshot, _params[0].AsString());
             ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, script_hash);
             return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
         }
 
-        private static UInt160 ToScriptHash(string keyword)
+        private static UInt160 ToScriptHash(SnapshotView snapshot, string keyword)
         {
             foreach (var native in NativeContract.Contracts)
             {
                 if (keyword.Equals(native.Name, StringComparison.InvariantCultureIgnoreCase) || keyword == native.Id.ToString())
                     return native.Hash;
             }
-
+            var contract = NativeContract.ContractManagement.ListContracts(snapshot).FirstOrDefault(p => p.Manifest.Name.Equals(keyword, StringComparison.InvariantCultureIgnoreCase));
+            if (contract != null)
+            {
+                return contract.Hash;
+            }
             return UInt160.Parse(keyword);
         }
 
