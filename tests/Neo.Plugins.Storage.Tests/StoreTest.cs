@@ -6,6 +6,9 @@ namespace Neo.Plugins.Storage.Tests
     [TestClass]
     public class StoreTest
     {
+        private const string path_leveldb = "Data_LevelDB_{0}";
+        private const string path_rocksdb = "Data_RocksDB_{0}";
+
         [TestMethod]
         public void TestLevelDb()
         {
@@ -13,14 +16,14 @@ namespace Neo.Plugins.Storage.Tests
             {
                 // Test all with the same store
 
-                TestStorage(plugin.GetStore());
+                TestStorage(plugin.GetStore(path_leveldb));
 
                 // Test with different storages
 
-                TestPersistenceWrite(plugin.GetStore());
-                TestPersistenceRead(plugin.GetStore(), true);
-                TestPersistenceDelete(plugin.GetStore());
-                TestPersistenceRead(plugin.GetStore(), false);
+                TestPersistenceWrite(plugin.GetStore(path_leveldb));
+                TestPersistenceRead(plugin.GetStore(path_leveldb), true);
+                TestPersistenceDelete(plugin.GetStore(path_leveldb));
+                TestPersistenceRead(plugin.GetStore(path_leveldb), false);
             }
         }
 
@@ -31,14 +34,14 @@ namespace Neo.Plugins.Storage.Tests
             {
                 // Test all with the same store
 
-                TestStorage(plugin.GetStore());
+                TestStorage(plugin.GetStore(path_rocksdb));
 
                 // Test with different storages
 
-                TestPersistenceWrite(plugin.GetStore());
-                TestPersistenceRead(plugin.GetStore(), true);
-                TestPersistenceDelete(plugin.GetStore());
-                TestPersistenceRead(plugin.GetStore(), false);
+                TestPersistenceWrite(plugin.GetStore(path_rocksdb));
+                TestPersistenceRead(plugin.GetStore(path_rocksdb), true);
+                TestPersistenceDelete(plugin.GetStore(path_rocksdb));
+                TestPersistenceRead(plugin.GetStore(path_rocksdb), false);
             }
         }
 

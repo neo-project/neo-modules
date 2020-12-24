@@ -7,17 +7,11 @@ namespace Neo.Plugins.Storage
 {
     public class LevelDBStore : Plugin, IStorageProvider
     {
-        private string path;
-
         public override string Description => "Uses LevelDB to store the blockchain data";
 
-        protected override void Configure()
+        public IStore GetStore(string path)
         {
-            path = string.Format(GetConfiguration().GetSection("Path").Value ?? "Data_LevelDB_{0}", ProtocolSettings.Default.Magic.ToString("X8"));
-        }
-
-        public IStore GetStore()
-        {
+            path = string.Format(path, ProtocolSettings.Default.Magic.ToString("X8"));
             if (Environment.CommandLine.Split(' ').Any(p => p == "/repair" || p == "--repair"))
                 DB.Repair(path, Options.Default);
             return new Store(path);

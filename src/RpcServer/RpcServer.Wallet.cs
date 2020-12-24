@@ -94,7 +94,7 @@ namespace Neo.Plugins
                 {
                     gas += NativeContract.NEO.UnclaimedGas(snapshot, account, snapshot.Height + 1);
                 }
-            return gas.ToString();
+            return new BigDecimal(gas, NativeContract.GAS.Decimals).ToString();
         }
 
         [RpcMethod]
@@ -191,7 +191,8 @@ namespace Neo.Plugins
                         tx = null;
                 }
             }
-            result["tx"] = tx?.ToArray().ToHexString();
+            if (tx != null)
+                result["tx"] = Convert.ToBase64String(tx.ToArray());
         }
 
         [RpcMethod]
@@ -331,7 +332,7 @@ namespace Neo.Plugins
             {
                 tx.Witnesses = context.GetWitnesses();
                 system.Blockchain.Tell(tx);
-                return tx.ToJson();
+                return Utility.TransactionToJson(tx);
             }
             else
             {

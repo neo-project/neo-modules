@@ -164,7 +164,7 @@ namespace Neo.Network.RPC.Tests
             Assert.IsTrue(Crypto.VerifySignature(tx.GetHashData(), signature, keyPair1.PublicKey));
             // verify network fee and system fee
             Assert.AreEqual(100000000/*Mock*/, tx.NetworkFee);
-            Assert.AreEqual(100, tx.SystemFee);
+            Assert.AreEqual(10000000000, tx.SystemFee);
 
             // duplicate sign should not add new witness
             await txManager.AddSignature(keyPair1).SignAsync();

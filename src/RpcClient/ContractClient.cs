@@ -1,11 +1,11 @@
-using System;
-using System.Threading.Tasks;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
+using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
+using System.Threading.Tasks;
 
 namespace Neo.Network.RPC
 {
@@ -52,12 +52,12 @@ namespace Neo.Network.RPC
         /// <param name="manifest">contract manifest</param>
         /// <param name="key">sender KeyPair</param>
         /// <returns></returns>
-        public async Task<Transaction> CreateDeployContractTxAsync(byte[] contractScript, ContractManifest manifest, KeyPair key)
+        public async Task<Transaction> CreateDeployContractTxAsync(byte[] nefFile, ContractManifest manifest, KeyPair key)
         {
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitSysCall(ApplicationEngine.System_Contract_Create, contractScript, manifest.ToString());
+                sb.EmitAppCall(NativeContract.ContractManagement.Hash, "deploy", nefFile, manifest.ToString());
                 script = sb.ToArray();
             }
             UInt160 sender = Contract.CreateSignatureRedeemScript(key.PublicKey).ToScriptHash();

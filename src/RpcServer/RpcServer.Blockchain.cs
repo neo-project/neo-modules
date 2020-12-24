@@ -6,6 +6,7 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using System;
 using System.Collections.Generic;
@@ -41,7 +42,7 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "Unknown block");
             if (verbose)
             {
-                JObject json = block.ToJson();
+                JObject json = Utility.BlockToJson(block);
                 json["confirmations"] = Blockchain.Singleton.Height - block.Index + 1;
                 UInt256 hash = Blockchain.Singleton.GetNextBlockHash(block.Hash);
                 if (hash != null)
@@ -103,9 +104,21 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetContractState(JArray _params)
         {
-            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
-            ContractState contract = Blockchain.Singleton.View.Contracts.TryGet(script_hash);
+            using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
+            UInt160 script_hash = ToScriptHash(_params[0].AsString());
+            ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, script_hash);
             return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
+        }
+
+        private static UInt160 ToScriptHash(string keyword)
+        {
+            foreach (var native in NativeContract.Contracts)
+            {
+                if (keyword.Equals(native.Name, StringComparison.InvariantCultureIgnoreCase) || keyword == native.Id.ToString())
+                    return native.Hash;
+            }
+
+            return UInt160.Parse(keyword);
         }
 
         [RpcMethod]
@@ -135,7 +148,7 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "Unknown transaction");
             if (verbose)
             {
-                JObject json = tx.ToJson();
+                JObject json = Utility.TransactionToJson(tx);
                 TransactionState txState = Blockchain.Singleton.View.Transactions.TryGet(hash);
                 if (txState != null)
                 {
@@ -155,8 +168,9 @@ namespace Neo.Plugins
         {
             if (!int.TryParse(_params[0].AsString(), out int id))
             {
+                using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
                 UInt160 script_hash = UInt160.Parse(_params[0].AsString());
-                ContractState contract = Blockchain.Singleton.View.Contracts.TryGet(script_hash);
+                ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, script_hash);
                 if (contract == null) return null;
                 id = contract.Id;
             }

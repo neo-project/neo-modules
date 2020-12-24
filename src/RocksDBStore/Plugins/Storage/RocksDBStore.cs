@@ -7,17 +7,13 @@ namespace Neo.Plugins.Storage
         public override string Description => "Uses RocksDBStore to store the blockchain data";
 
         /// <summary>
-        /// Configure
-        /// </summary>
-        protected override void Configure()
-        {
-            Settings.Load(GetConfiguration());
-        }
-
-        /// <summary>
         /// Get store
         /// </summary>
         /// <returns>RocksDbStore</returns>
-        public IStore GetStore() => new Store(Settings.Default.Path);
+        public IStore GetStore(string path)
+        {
+            path = string.Format(path, ProtocolSettings.Default.Magic.ToString("X8"));
+            return new Store(path);
+        }
     }
 }

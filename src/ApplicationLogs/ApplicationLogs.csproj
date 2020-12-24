@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Version>3.0.0-preview3</Version>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <PackageId>Neo.Plugins.ApplicationLogs</PackageId>
     <RootNamespace>Neo.Plugins</RootNamespace>
   </PropertyGroup>
 

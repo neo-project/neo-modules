@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Neo.SmartContract;
@@ -6,6 +5,7 @@ using Neo.SmartContract.Manifest;
 using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
+using System.Threading.Tasks;
 
 namespace Neo.Network.RPC.Tests
 {
@@ -45,20 +45,17 @@ namespace Neo.Network.RPC.Tests
                 Permissions = new[] { ContractPermission.DefaultPermission },
                 Abi = new ContractAbi()
                 {
-                    Hash = new byte[1].ToScriptHash(),
                     Events = new ContractEventDescriptor[0],
                     Methods = new ContractMethodDescriptor[0]
                 },
                 Groups = new ContractGroup[0],
-                SafeMethods = WildcardContainer<string>.Create(),
                 Trusts = WildcardContainer<UInt160>.Create(),
                 SupportedStandards = new string[] { "NEP-10" },
                 Extra = null,
             };
-            manifest.Features = ContractFeatures.HasStorage | ContractFeatures.Payable;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitSysCall(ApplicationEngine.System_Contract_Create, new byte[1], manifest.ToString());
+                sb.EmitAppCall(NativeContract.ContractManagement.Hash, "deploy", new byte[1], manifest.ToString());
                 script = sb.ToArray();
             }
 

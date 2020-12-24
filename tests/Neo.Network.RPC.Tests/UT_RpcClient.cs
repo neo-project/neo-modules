@@ -6,6 +6,7 @@ using Neo.IO;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
+using Neo.SmartContract;
 using System;
 using System.Linq;
 using System.Net;
@@ -59,7 +60,7 @@ namespace Neo.Network.RPC.Tests
             var test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.SendRawTransactionAsync) + "error").ToLower());
             try
             {
-                var result = await rpc.SendRawTransactionAsync(test.Request.Params[0].AsString().HexToBytes().AsSerializable<Transaction>());
+                var result = await rpc.SendRawTransactionAsync(Convert.FromBase64String(test.Request.Params[0].AsString()).AsSerializable<Transaction>());
             }
             catch (RpcException ex)
             {
@@ -253,7 +254,7 @@ namespace Neo.Network.RPC.Tests
         public async Task TestSendRawTransaction()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendRawTransactionAsync).ToLower());
-            var result = await rpc.SendRawTransactionAsync(test.Request.Params[0].AsString().HexToBytes().AsSerializable<Transaction>());
+            var result = await rpc.SendRawTransactionAsync(Convert.FromBase64String(test.Request.Params[0].AsString()).AsSerializable<Transaction>());
             Assert.AreEqual(test.Response.Result["hash"].AsString(), result.ToString());
         }
 
@@ -261,8 +262,7 @@ namespace Neo.Network.RPC.Tests
         public async Task TestSubmitBlock()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SubmitBlockAsync).ToLower());
-            var block = TestUtils.GetBlock(2).Hash;
-            var result = await rpc.SubmitBlockAsync(test.Request.Params[0].AsString().HexToBytes());
+            var result = await rpc.SubmitBlockAsync(Convert.FromBase64String(test.Request.Params[0].AsString()));
             Assert.AreEqual(test.Response.Result["hash"].AsString(), result.ToString());
         }
 
@@ -294,6 +294,7 @@ namespace Neo.Network.RPC.Tests
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetUnclaimedGasAsync).ToLower());
             var result = await rpc.GetUnclaimedGasAsync(test.Request.Params[0].AsString());
+            Assert.AreEqual(result.ToJson().AsString(), RpcUnclaimedGas.FromJson(result.ToJson()).ToJson().AsString());
             Assert.AreEqual(test.Response.Result["unclaimed"].AsString(), result.Unclaimed.ToString());
         }
 
@@ -423,21 +424,29 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod()]
-        public async Task GetNep5TransfersTest()
+        public async Task GetApplicationLogTest_TriggerType()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep5TransfersAsync).ToLower());
-            var result = await rpc.GetNep5TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(), (ulong)test.Request.Params[2].AsNumber());
-            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
-            test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.GetNep5TransfersAsync).ToLower() + "_with_null_transferaddress"));
-            result = await rpc.GetNep5TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(), (ulong)test.Request.Params[2].AsNumber());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.GetApplicationLogAsync) + "_triggertype").ToLower());
+            var result = await rpc.GetApplicationLogAsync(test.Request.Params[0].AsString(), TriggerType.OnPersist);
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
         [TestMethod()]
-        public async Task GetNep5BalancesTest()
+        public async Task GetNep17TransfersTest()
         {
-            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep5BalancesAsync).ToLower());
-            var result = await rpc.GetNep5BalancesAsync(test.Request.Params[0].AsString());
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep17TransfersAsync).ToLower());
+            var result = await rpc.GetNep17TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(), (ulong)test.Request.Params[2].AsNumber());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.GetNep17TransfersAsync).ToLower() + "_with_null_transferaddress"));
+            result = await rpc.GetNep17TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(), (ulong)test.Request.Params[2].AsNumber());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+        }
+
+        [TestMethod()]
+        public async Task GetNep17BalancesTest()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep17BalancesAsync).ToLower());
+            var result = await rpc.GetNep17BalancesAsync(test.Request.Params[0].AsString());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 

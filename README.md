@@ -50,9 +50,6 @@ The resulting folder structure is going to be like this:
 ### ApplicationLogs
 Add this plugin to your application if need to access the log files. This can be useful to handle notifications, but remember that this also largely increases the space used by the application. `LevelDBStore` and `RpcServer` are also needed for this plugin. You can find more details [here](https://docs.neo.org/docs/en-us/reference/rpc/latest-version/api/getapplicationlog.html).
 
-### SystemLog
-Enable neo-cli Logging with timestamps by showing messages with different levels (shown with different colors) \(useful for debugging\).
-
 ### StatesDumper
 Exports neo-cli status data \(useful for debugging\), such as storage modifications block by block.
 
@@ -65,12 +62,12 @@ You can also use `RocksDBStore` in the NEO system by modifying the default stora
 ### RpcServer
 Plugin for hosting a RpcServer on the neo-node, being able to disable specific calls.
 
-### RpcNep5Tracker
-Plugin that enables NEP5 tracking using LevelDB.
+### RpcNep17Tracker
+Plugin that enables NEP17 tracking using LevelDB.
 This module works in conjunction with RpcServer, otherwise, just local storage (on leveldb) would be created. 
 
 ## C# SDK
 
 ### RpcClient
 The RpcClient Project is an individual SDK that is used to interact with NEO blockchain through NEO RPC methods for development using. The main functions include RPC calling, Transaction making, Contract deployment & calling, and Asset transfering.
-It needs a NEO node with the `RpcServer` plugin as a provider. And the provider needs more plugins like `RpcNep5Tracker` and `ApplicationLogs` if you want to call RPC methods supplied by the plugins.
+It needs a NEO node with the `RpcServer` plugin as a provider. And the provider needs more plugins like `RpcNep17Tracker` and `ApplicationLogs` if you want to call RPC methods supplied by the plugins.

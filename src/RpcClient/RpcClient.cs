@@ -3,6 +3,7 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
+using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
 using System;
 using System.Collections.Generic;
@@ -200,6 +201,8 @@ namespace Neo.Network.RPC
             return new ContractState
             {
                 Id = (int)json["id"].AsNumber(),
+                UpdateCounter = (ushort)json["updatecounter"].AsNumber(),
+                Hash = UInt160.Parse(json["hash"].AsString()),
                 Script = Convert.FromBase64String(json["script"].AsString()),
                 Manifest = ContractManifest.FromJson(json["manifest"])
             };
@@ -329,7 +332,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public async Task<UInt256> SendRawTransactionAsync(byte[] rawTransaction)
         {
-            var result = await RpcSendAsync(GetRpcName(), rawTransaction.ToHexString()).ConfigureAwait(false);
+            var result = await RpcSendAsync(GetRpcName(), Convert.ToBase64String(rawTransaction)).ConfigureAwait(false);
             return UInt256.Parse(result["hash"].AsString());
         }
 
@@ -346,7 +349,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public async Task<UInt256> SubmitBlockAsync(byte[] block)
         {
-            var result = await RpcSendAsync(GetRpcName(), block.ToHexString()).ConfigureAwait(false);
+            var result = await RpcSendAsync(GetRpcName(), Convert.ToBase64String(block)).ConfigureAwait(false);
             return UInt256.Parse(result["hash"].AsString());
         }
 
@@ -445,24 +448,24 @@ namespace Neo.Network.RPC
 
         /// <summary>
         /// Returns the balance of the corresponding asset in the wallet, based on the specified asset Id.
-        /// This method applies to assets that conform to NEP-5 standards.
+        /// This method applies to assets that conform to NEP-17 standards.
         /// </summary>
         /// <returns>new address as string</returns>
         public async Task<BigDecimal> GetWalletBalanceAsync(string assetId)
         {
-            byte decimals = await new Nep5API(this).DecimalsAsync(UInt160.Parse(assetId.AsScriptHash())).ConfigureAwait(false);
             var result = await RpcSendAsync(GetRpcName(), assetId).ConfigureAwait(false);
             BigInteger balance = BigInteger.Parse(result["balance"].AsString());
+            byte decimals = await new Nep17API(this).DecimalsAsync(UInt160.Parse(assetId.AsScriptHash())).ConfigureAwait(false);
             return new BigDecimal(balance, decimals);
         }
 
         /// <summary>
         /// Gets the amount of unclaimed GAS in the wallet.
         /// </summary>
-        public async Task<BigInteger> GetWalletUnclaimedGasAsync()
+        public async Task<BigDecimal> GetWalletUnclaimedGasAsync()
         {
             var result = await RpcSendAsync(GetRpcName()).ConfigureAwait(false);
-            return BigInteger.Parse(result.AsString());
+            return BigDecimal.Parse(result.AsString(), SmartContract.Native.NativeContract.GAS.Decimals);
         }
 
         /// <summary>
@@ -544,30 +547,40 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Returns all the NEP-5 transaction information occurred in the specified address.
-        /// This method is provided by the plugin RpcNep5Tracker.
+        /// Returns the contract log based on the specified txHash. The complete contract logs are stored under the ApplicationLogs directory.
+        /// This method is provided by the plugin ApplicationLogs.
+        /// </summary>
+        public async Task<RpcApplicationLog> GetApplicationLogAsync(string txHash, TriggerType triggerType)
+        {
+            var result = await RpcSendAsync(GetRpcName(), txHash, triggerType).ConfigureAwait(false);
+            return RpcApplicationLog.FromJson(result);
+        }
+
+        /// <summary>
+        /// Returns all the NEP-17 transaction information occurred in the specified address.
+        /// This method is provided by the plugin RpcNep17Tracker.
         /// </summary>
         /// <param name="address">The address to query the transaction information.</param>
         /// <param name="startTimestamp">The start block Timestamp, default to seven days before UtcNow</param>
         /// <param name="endTimestamp">The end block Timestamp, default to UtcNow</param>
-        public async Task<RpcNep5Transfers> GetNep5TransfersAsync(string address, ulong? startTimestamp = default, ulong? endTimestamp = default)
+        public async Task<RpcNep17Transfers> GetNep17TransfersAsync(string address, ulong? startTimestamp = default, ulong? endTimestamp = default)
         {
             startTimestamp ??= 0;
             endTimestamp ??= DateTime.UtcNow.ToTimestampMS();
             var result = await RpcSendAsync(GetRpcName(), address.AsScriptHash(), startTimestamp, endTimestamp)
                 .ConfigureAwait(false);
-            return RpcNep5Transfers.FromJson(result);
+            return RpcNep17Transfers.FromJson(result);
         }
 
         /// <summary>
-        /// Returns the balance of all NEP-5 assets in the specified address.
-        /// This method is provided by the plugin RpcNep5Tracker.
+        /// Returns the balance of all NEP-17 assets in the specified address.
+        /// This method is provided by the plugin RpcNep17Tracker.
         /// </summary>
-        public async Task<RpcNep5Balances> GetNep5BalancesAsync(string address)
+        public async Task<RpcNep17Balances> GetNep17BalancesAsync(string address)
         {
             var result = await RpcSendAsync(GetRpcName(), address.AsScriptHash())
                 .ConfigureAwait(false);
-            return RpcNep5Balances.FromJson(result);
+            return RpcNep17Balances.FromJson(result);
         }
 
         #endregion Plugins

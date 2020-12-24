@@ -4,18 +4,18 @@ using Neo.IO;
 
 namespace Neo.Plugins
 {
-    public class Nep5BalanceKey : IComparable<Nep5BalanceKey>, IEquatable<Nep5BalanceKey>, ISerializable
+    public class Nep17BalanceKey : IComparable<Nep17BalanceKey>, IEquatable<Nep17BalanceKey>, ISerializable
     {
         public readonly UInt160 UserScriptHash;
         public readonly UInt160 AssetScriptHash;
 
         public int Size => 20 + 20;
 
-        public Nep5BalanceKey() : this(new UInt160(), new UInt160())
+        public Nep17BalanceKey() : this(new UInt160(), new UInt160())
         {
         }
 
-        public Nep5BalanceKey(UInt160 userScriptHash, UInt160 assetScriptHash)
+        public Nep17BalanceKey(UInt160 userScriptHash, UInt160 assetScriptHash)
         {
             if (userScriptHash == null || assetScriptHash == null)
                 throw new ArgumentNullException();
@@ -23,7 +23,7 @@ namespace Neo.Plugins
             AssetScriptHash = assetScriptHash;
         }
 
-        public int CompareTo(Nep5BalanceKey other)
+        public int CompareTo(Nep17BalanceKey other)
         {
             if (other is null) return 1;
             if (ReferenceEquals(this, other)) return 0;
@@ -32,7 +32,7 @@ namespace Neo.Plugins
             return AssetScriptHash.CompareTo(other.AssetScriptHash);
         }
 
-        public bool Equals(Nep5BalanceKey other)
+        public bool Equals(Nep17BalanceKey other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -41,7 +41,7 @@ namespace Neo.Plugins
 
         public override bool Equals(Object other)
         {
-            return other is Nep5BalanceKey otherKey && Equals(otherKey);
+            return other is Nep17BalanceKey otherKey && Equals(otherKey);
         }
 
         public override int GetHashCode()
