@@ -170,7 +170,7 @@ namespace Neo.Plugins
                 using StreamReader reader = new StreamReader(context.Request.Body);
                 try
                 {
-                    request = JObject.Parse(reader.ReadToEnd());
+                    request = JObject.Parse(await reader.ReadToEndAsync());
                 }
                 catch (FormatException) { }
             }
