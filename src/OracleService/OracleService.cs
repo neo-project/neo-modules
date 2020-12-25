@@ -38,7 +38,7 @@ namespace Neo.Plugins
         private Timer timer;
         private readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
         private bool started = false;
-        private bool stoped = false;
+        private bool stopped = false;
         private int counter;
 
         private static readonly IReadOnlyDictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>
@@ -63,7 +63,7 @@ namespace Neo.Plugins
         public override void Dispose()
         {
             OnStop();
-            while (!stoped)
+            while (!stopped)
                 Thread.Sleep(100);
             foreach (var p in protocols)
                 p.Value.Dispose();
@@ -158,14 +158,17 @@ namespace Neo.Plugins
             byte[] txSign = Convert.FromBase64String(_params[2].AsString());
             byte[] msgSign = Convert.FromBase64String(_params[3].AsString());
 
-            var data = oraclePub.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
-            if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
             if (finishedCache.ContainsKey(requestId)) throw new RpcException(-100, "Request has already finished");
 
             using (SnapshotView snapshot = Blockchain.Singleton.GetSnapshot())
             {
+                var oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
+                if (!oracles.Any(p => p.Equals(oraclePub))) throw new RpcException(-100, $"{oraclePub} isn't an oracle node");
                 if (NativeContract.Oracle.GetRequest(snapshot, requestId) is null)
                     throw new RpcException(-100, "Request is not found");
+                var data = oraclePub.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
+                if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
+
                 AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
             }
             return new JObject();
@@ -182,10 +185,10 @@ namespace Neo.Plugins
                 {
                     await dataStream.WriteAsync(content);
                 }
-                HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync();
+                HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync().WithTimeout(5000);
                 if (response.ContentLength > ushort.MaxValue) throw new Exception("The response it's bigger than allowed");
                 StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-                await reader.ReadToEndAsync();
+                await reader.ReadToEndAsync().WithTimeout(5000);
             }
             catch (Exception e)
             {
@@ -253,7 +256,7 @@ namespace Neo.Plugins
                 if (cancelSource.IsCancellationRequested) break;
                 await Task.Delay(500);
             }
-            stoped = true;
+            stopped = true;
         }
 
         private async Task<(OracleResponseCode, string)> ProcessUrlAsync(string url)
@@ -452,6 +455,7 @@ namespace Neo.Plugins
 
         private static bool CheckOracleAccount(Wallet wallet, ECPoint[] oracles)
         {
+            if (wallet is null) return false;
             return oracles
                 .Select(p => wallet.GetAccount(p))
                 .Any(p => p is not null && p.HasKey && !p.Lock);
