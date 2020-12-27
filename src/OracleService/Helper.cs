@@ -1,20 +1,10 @@
 using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
 
 namespace Neo.Plugins
 {
     static class Helper
     {
-        public static Task<T> WithTimeout<T>(this Task<T> task, int duration)
-        {
-            return Task.Factory.StartNew(() =>
-            {
-                if (task.Wait(duration)) return task.Result;
-                return default(T);
-            });
-        }
-
         public static bool IsInternal(this IPHostEntry entry)
         {
             return entry.AddressList.Any(p => IsInternal(p));

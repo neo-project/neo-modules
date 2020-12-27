@@ -181,14 +181,15 @@ namespace Neo.Plugins
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                 request.Method = "POST";
                 request.ContentType = "application/json";
+                request.Timeout = 5000;
                 using (StreamWriter dataStream = new StreamWriter(await request.GetRequestStreamAsync()))
                 {
                     await dataStream.WriteAsync(content);
                 }
-                HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync().WithTimeout(5000);
+                HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync();
                 if (response.ContentLength > ushort.MaxValue) throw new Exception("The response it's bigger than allowed");
                 StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-                await reader.ReadToEndAsync().WithTimeout(5000);
+                await reader.ReadToEndAsync();
             }
             catch (Exception e)
             {
