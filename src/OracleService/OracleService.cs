@@ -117,6 +117,7 @@ namespace Neo.Plugins
 
         void IPersistencePlugin.OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
+            if (stopped || !started) return;
             if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles) || !CheckOracleAccount(wallet, oracles))
                 OnStop();
         }
@@ -153,6 +154,7 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject SubmitOracleResponse(JArray _params)
         {
+            if (stopped || !started) throw new InvalidOperationException();
             ECPoint oraclePub = ECPoint.DecodePoint(Convert.FromBase64String(_params[0].AsString()), ECCurve.Secp256r1);
             ulong requestId = (ulong)_params[1].AsNumber();
             byte[] txSign = Convert.FromBase64String(_params[2].AsString());
