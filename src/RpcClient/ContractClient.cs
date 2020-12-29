@@ -42,7 +42,6 @@ namespace Neo.Network.RPC
         public Task<RpcInvokeResult> TestInvokeAsync(UInt160 scriptHash, string operation, params object[] args)
         {
             byte[] script = scriptHash.MakeScript(operation, true, args);
-            var base64 = System.Convert.ToBase64String(script);
             return rpcClient.InvokeScriptAsync(script);
         }
 
