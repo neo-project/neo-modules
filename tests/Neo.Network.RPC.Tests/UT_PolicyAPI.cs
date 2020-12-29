@@ -29,7 +29,7 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public async Task TestGetMaxTransactionsPerBlock()
         {
-            byte[] testScript = NativeContract.Policy.Hash.MakeScript("getMaxTransactionsPerBlock");
+            byte[] testScript = NativeContract.Policy.Hash.MakeScript("getMaxTransactionsPerBlock", true);
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(512) });
 
             var result = await policyAPI.GetMaxTransactionsPerBlockAsync();
@@ -39,7 +39,7 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public async Task TestGetMaxBlockSize()
         {
-            byte[] testScript = NativeContract.Policy.Hash.MakeScript("getMaxBlockSize");
+            byte[] testScript = NativeContract.Policy.Hash.MakeScript("getMaxBlockSize", true);
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1024u * 256u) });
 
             var result = await policyAPI.GetMaxBlockSizeAsync();
@@ -49,7 +49,7 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public async Task TestGetFeePerByte()
         {
-            byte[] testScript = NativeContract.Policy.Hash.MakeScript("getFeePerByte");
+            byte[] testScript = NativeContract.Policy.Hash.MakeScript("getFeePerByte", true);
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1000) });
 
             var result = await policyAPI.GetFeePerByteAsync();
@@ -59,7 +59,7 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public async Task TestIsBlocked()
         {
-            byte[] testScript = NativeContract.Policy.Hash.MakeScript("isBlocked", UInt160.Zero);
+            byte[] testScript = NativeContract.Policy.Hash.MakeScript("isBlocked", true, UInt160.Zero);
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Boolean, Value = true });
             var result = await policyAPI.IsBlockedAsync(UInt160.Zero);
             Assert.AreEqual(true, result);
