@@ -197,14 +197,29 @@ namespace Neo.Plugins
         {
             using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
             var validators = NativeContract.NEO.GetNextBlockValidators(snapshot);
-            return NativeContract.NEO.GetCandidates(snapshot).Select(p =>
+            var candidates = NativeContract.NEO.GetCandidates(snapshot);
+            if (candidates.Length > 0)
             {
-                JObject validator = new JObject();
-                validator["publickey"] = p.PublicKey.ToString();
-                validator["votes"] = p.Votes.ToString();
-                validator["active"] = validators.Contains(p.PublicKey);
-                return validator;
-            }).ToArray();
+                return candidates.Select(p =>
+                {
+                    JObject validator = new JObject();
+                    validator["publickey"] = p.PublicKey.ToString();
+                    validator["votes"] = p.Votes.ToString();
+                    validator["active"] = validators.Contains(p.PublicKey);
+                    return validator;
+                }).ToArray();
+            }
+            else
+            {
+                return validators.Select(p =>
+                {
+                    JObject validator = new JObject();
+                    validator["publickey"] = p.ToString();
+                    validator["votes"] = 0;
+                    validator["active"] = true;
+                    return validator;
+                }).ToArray();
+            }
         }
 
         [RpcMethod]
