@@ -1150,10 +1150,15 @@
       "id": 1,
       "result": {
         "script": "EBEfDAhkZWNpbWFscwwU++3+LtIiZZK2SMTal7nJzV3BpqZBYn1bUg==",
-        "state": "FAULT",
-        "gasconsumed": "0.0000057",
-        "exception": "The given key '1381727586' was not present in the dictionary.",
-        "stack": []
+        "state": "HALT",
+        "gasconsumed": "0.0099918",
+        "exception": null,
+        "stack": [
+          {
+            "type": "Integer",
+            "value": "8"
+          }
+        ]
       }
     }
   },
