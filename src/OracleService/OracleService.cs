@@ -276,7 +276,7 @@ namespace Neo.Plugins
             }
         }
 
-        private static Transaction CreateResponseTx(StoreView snapshot, OracleResponse response)
+        public static Transaction CreateResponseTx(StoreView snapshot, OracleResponse response)
         {
             var oracleNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
             var request = NativeContract.Oracle.GetRequest(snapshot, response.Id);
