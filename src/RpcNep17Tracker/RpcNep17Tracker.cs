@@ -170,7 +170,7 @@ namespace Neo.Plugins
                 byte[] script;
                 using (ScriptBuilder sb = new ScriptBuilder())
                 {
-                    sb.EmitAppCall(nep17BalancePair.Key.AssetScriptHash, "balanceOf",
+                    sb.EmitDynamicCall(nep17BalancePair.Key.AssetScriptHash, "balanceOf", true,
                         nep17BalancePair.Key.UserScriptHash.ToArray());
                     script = sb.ToArray();
                 }
