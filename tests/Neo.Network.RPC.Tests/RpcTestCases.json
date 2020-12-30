@@ -1136,6 +1136,33 @@
     }
   },
   {
+    "Name": "invokescriptasync",
+    "Request": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "invokescript",
+      "params": [
+        "EBEfDAhkZWNpbWFscwwU++3+LtIiZZK2SMTal7nJzV3BpqZBYn1bUg=="
+      ]
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "script": "EBEfDAhkZWNpbWFscwwU++3+LtIiZZK2SMTal7nJzV3BpqZBYn1bUg==",
+        "state": "HALT",
+        "gasconsumed": "0.0099918",
+        "exception": null,
+        "stack": [
+          {
+            "type": "Integer",
+            "value": "8"
+          }
+        ]
+      }
+    }
+  },
+  {
     "Name": "getnewaddressasync",
     "Request": {
       "jsonrpc": "2.0",
