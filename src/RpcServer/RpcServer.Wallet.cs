@@ -355,9 +355,9 @@ namespace Neo.Plugins
             tx.Witnesses = context.Completed ? context.GetWitnesses() : null;
 
             using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
-            engine.LoadContract(contract, methodName, CallFlags.None);
+            engine.LoadContract(contract, methodName, CallFlags.None, true, 0);
 
-            engine.LoadScript(new ScriptBuilder().EmitAppCall(scriptHash, methodName, args).ToArray(), CallFlags.AllowCall);
+            engine.LoadScript(new ScriptBuilder().EmitDynamicCall(scriptHash, methodName, true, args).ToArray());
 
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(contract.Script);
