@@ -41,7 +41,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public Task<RpcInvokeResult> TestInvokeAsync(UInt160 scriptHash, string operation, params object[] args)
         {
-            byte[] script = scriptHash.MakeScript(operation, args);
+            byte[] script = scriptHash.MakeScript(operation, true, args);
             return rpcClient.InvokeScriptAsync(script);
         }
 
@@ -57,7 +57,7 @@ namespace Neo.Network.RPC
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitAppCall(NativeContract.ContractManagement.Hash, "deploy", nefFile, manifest.ToString());
+                sb.EmitDynamicCall(NativeContract.ContractManagement.Hash, "deploy", true, nefFile, manifest.ToString());
                 script = sb.ToArray();
             }
             UInt160 sender = Contract.CreateSignatureRedeemScript(key.PublicKey).ToScriptHash();
