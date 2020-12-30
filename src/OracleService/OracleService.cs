@@ -218,7 +218,18 @@ namespace Neo.Plugins
 
             foreach (var (requestId, request) in NativeContract.Oracle.GetRequestsByUrl(snapshot, req.Url))
             {
-                var result = code == OracleResponseCode.Success ? Filter(data, request.Filter) : Array.Empty<byte>();
+                var result = Array.Empty<byte>();
+                if (code == OracleResponseCode.Success)
+                {
+                    try
+                    {
+                        result = Filter(data, request.Filter);
+                    }
+                    catch
+                    {
+                        code = OracleResponseCode.Error;
+                    }
+                }
                 var response = new OracleResponse() { Id = requestId, Code = code, Result = result };
                 var responseTx = CreateResponseTx(snapshot, response);
                 var backupTx = CreateResponseTx(snapshot, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() });
@@ -422,7 +433,7 @@ namespace Neo.Plugins
                 return Utility.StrictUTF8.GetBytes(input);
 
             NJObject beforeObject = NJObject.Parse(input);
-            NJArray afterObjects = new NJArray(beforeObject.SelectTokens(filterArgs, true));
+            NJArray afterObjects = new NJArray(beforeObject.SelectTokens(filterArgs));
             return Utility.StrictUTF8.GetBytes(afterObjects.ToString());
         }
 
