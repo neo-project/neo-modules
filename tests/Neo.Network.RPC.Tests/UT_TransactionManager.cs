@@ -54,13 +54,13 @@ namespace Neo.Network.RPC.Tests
                 .Verifiable();
 
             // MockGasBalance
-            byte[] balanceScript = NativeContract.GAS.Hash.MakeScript("balanceOf", sender);
+            byte[] balanceScript = NativeContract.GAS.Hash.MakeScript("balanceOf", true, sender);
             var balanceResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("10000000000000000") };
 
             MockInvokeScript(mockRpc, balanceScript, balanceResult);
 
             // MockFeePerByte
-            byte[] policyScript = NativeContract.Policy.Hash.MakeScript("getFeePerByte");
+            byte[] policyScript = NativeContract.Policy.Hash.MakeScript("getFeePerByte", true);
             var policyResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("1000") };
 
             MockInvokeScript(mockRpc, policyScript, policyResult);
@@ -87,13 +87,13 @@ namespace Neo.Network.RPC.Tests
                 .Verifiable();
 
             // MockGasBalance
-            byte[] balanceScript = NativeContract.GAS.Hash.MakeScript("balanceOf", multiHash);
+            byte[] balanceScript = NativeContract.GAS.Hash.MakeScript("balanceOf", true, multiHash);
             var balanceResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("10000000000000000") };
 
             MockInvokeScript(mockRpc, balanceScript, balanceResult);
 
             // MockFeePerByte
-            byte[] policyScript = NativeContract.Policy.Hash.MakeScript("getFeePerByte");
+            byte[] policyScript = NativeContract.Policy.Hash.MakeScript("getFeePerByte", true);
             var policyResult = new ContractParameter() { Type = ContractParameterType.Integer, Value = BigInteger.Parse("1000") };
 
             MockInvokeScript(mockRpc, policyScript, policyResult);
