@@ -216,6 +216,7 @@ namespace Neo.Plugins
 
             (OracleResponseCode code, string data) = await ProcessUrlAsync(req.Url);
 
+            var oracleNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
             foreach (var (requestId, request) in NativeContract.Oracle.GetRequestsByUrl(snapshot, req.Url))
             {
                 var result = Array.Empty<byte>();
@@ -231,8 +232,8 @@ namespace Neo.Plugins
                     }
                 }
                 var response = new OracleResponse() { Id = requestId, Code = code, Result = result };
-                var responseTx = CreateResponseTx(snapshot, response);
-                var backupTx = CreateResponseTx(snapshot, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() });
+                var responseTx = CreateResponseTx(snapshot, request, response, oracleNodes);
+                var backupTx = CreateResponseTx(snapshot, request, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() }, oracleNodes);
 
                 Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
 
@@ -289,10 +290,8 @@ namespace Neo.Plugins
             }
         }
 
-        public static Transaction CreateResponseTx(StoreView snapshot, OracleResponse response)
+        public static Transaction CreateResponseTx(StoreView snapshot, OracleRequest request, OracleResponse response, ECPoint[] oracleNodes)
         {
-            var oracleNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
-            var request = NativeContract.Oracle.GetRequest(snapshot, response.Id);
             var requestTx = snapshot.Transactions.TryGet(request.OriginalTxid);
             var n = oracleNodes.Length;
             var m = n - (n - 1) / 3;
@@ -348,7 +347,8 @@ namespace Neo.Plugins
 
             var oracleContract = NativeContract.ContractManagement.GetContract(snapshot, NativeContract.Oracle.Hash);
             var engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
-            engine.LoadContract(oracleContract, "verify", CallFlags.None, true);
+            engine.LoadContract(oracleContract, "verify", CallFlags.None, true, 0);
+            engine.Push("verify");
             if (engine.Execute() != VMState.HALT) return null;
             tx.NetworkFee += engine.GasConsumed;
 
