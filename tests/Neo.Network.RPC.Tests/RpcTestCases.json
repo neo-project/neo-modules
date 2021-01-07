@@ -314,11 +314,11 @@
     }
   },
   {
-    "Name": "getblocksysfeeasync",
+    "Name": "getcommitteeasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getcommittee",
-      "params": [ "neotoken" ],
+      "params": [],
       "id": 1
     },
     "Response": {

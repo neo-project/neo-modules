@@ -162,7 +162,7 @@ namespace Neo.Network.RPC.Tests
             foreach (var test in tests)
             {
                 var result = await rpc.GetCommitteeAsync();
-                Assert.AreEqual(test.Response.Result.ToString(), result);
+                Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => (JObject)p).ToArray()).ToString());
             }
         }
 
