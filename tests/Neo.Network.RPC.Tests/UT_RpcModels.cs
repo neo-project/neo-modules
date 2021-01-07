@@ -60,6 +60,12 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod()]
+        public void TestRpcMethodToken()
+        {
+            RpcMethodToken.FromJson(JObject.Parse("{\"hash\": \"0x0e1b9bfaa44e60311f6f3c96cfcd6d12c2fc3add\", \"method\":\"test\",\"paramcount\":\"1\",\"hasreturnvalue\":\"true\",\"callflags\":\"All\"}"));
+        }
+
+        [TestMethod()]
         public void TestRpcNep17Balances()
         {
             JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.GetNep17BalancesAsync).ToLower()).Response.Result;
