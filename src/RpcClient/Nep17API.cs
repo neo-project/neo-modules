@@ -76,14 +76,32 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<RpcNep17TokenInfo> GetTokenInfoAsync(UInt160 scriptHash)
         {
+            var contractState = await rpcClient.GetContractStateAsync(scriptHash.ToString()).ConfigureAwait(false);
             byte[] script = Concat(
                 scriptHash.MakeScript("symbol", true),
                 scriptHash.MakeScript("decimals", true),
                 scriptHash.MakeScript("totalSupply", true));
-
-            var contractState = await rpcClient.GetContractStateAsync(scriptHash.ToString()).ConfigureAwait(false);
             var name = contractState.Manifest.Name;
+            var result = await rpcClient.InvokeScriptAsync(script).ConfigureAwait(false);
+            var stack = result.Stack;
 
+            return new RpcNep17TokenInfo
+            {
+                Name = name,
+                Symbol = stack[0].GetString(),
+                Decimals = (byte)stack[1].GetInteger(),
+                TotalSupply = stack[2].GetInteger()
+            };
+        }
+
+        public async Task<RpcNep17TokenInfo> GetTokenInfoAsync(string contractName)
+        {
+            var contractState = await rpcClient.GetContractStateAsync(contractName).ConfigureAwait(false);
+            byte[] script = Concat(
+                contractState.Hash.MakeScript("symbol", true),
+                contractState.Hash.MakeScript("decimals", true),
+                contractState.Hash.MakeScript("totalSupply", true));
+            var name = contractState.Manifest.Name;
             var result = await rpcClient.InvokeScriptAsync(script).ConfigureAwait(false);
             var stack = result.Stack;
 
@@ -109,7 +127,6 @@ namespace Neo.Network.RPC
         {
             var sender = Contract.CreateSignatureRedeemScript(fromKey.PublicKey).ToScriptHash();
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
-
             byte[] script = scriptHash.MakeScript("transfer", true, sender, to, amount, data);
 
             TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient, magic);
@@ -136,7 +153,6 @@ namespace Neo.Network.RPC
                 throw new ArgumentException($"Need at least {m} KeyPairs for signing!");
             var sender = Contract.CreateMultiSigContract(m, pubKeys).ScriptHash;
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
-
             byte[] script = scriptHash.MakeScript("transfer", true, sender, to, amount, data);
 
             TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient, magic);
