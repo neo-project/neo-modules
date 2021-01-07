@@ -10,13 +10,6 @@ namespace Neo.Network.RPC.Models
 {
     class RpcNefFile
     {
-        public NefFile NefFile { get; set; }
-
-        public JObject ToJson()
-        {
-            return NefFile.ToJson();
-        }
-
         public static NefFile FromJson(JObject json)
         {
             return new NefFile

@@ -10,13 +10,6 @@ namespace Neo.Network.RPC.Models
 {
     class RpcMethodToken
     {
-        public MethodToken MethodToken { get; set; }
-
-        public JObject ToJson()
-        {
-            return MethodToken.ToJson();
-        }
-
         public static MethodToken FromJson(JObject json)
         {
             return new MethodToken
