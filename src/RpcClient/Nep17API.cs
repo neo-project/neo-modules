@@ -76,12 +76,32 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<RpcNep17TokenInfo> GetTokenInfoAsync(UInt160 scriptHash)
         {
+            var contractState = await rpcClient.GetContractStateAsync(scriptHash.ToString()).ConfigureAwait(false);
             byte[] script = Concat(
                 scriptHash.MakeScript("symbol", true),
                 scriptHash.MakeScript("decimals", true),
                 scriptHash.MakeScript("totalSupply", true));
+            var name = contractState.Manifest.Name;
 
-            var contractState = await rpcClient.GetContractStateAsync(scriptHash.ToString()).ConfigureAwait(false);
+            var result = await rpcClient.InvokeScriptAsync(script).ConfigureAwait(false);
+            var stack = result.Stack;
+
+            return new RpcNep17TokenInfo
+            {
+                Name = name,
+                Symbol = stack[0].GetString(),
+                Decimals = (byte)stack[1].GetInteger(),
+                TotalSupply = stack[2].GetInteger()
+            };
+        }
+
+        public async Task<RpcNep17TokenInfo> GetTokenInfoAsync(string contractName)
+        {
+            var contractState = await rpcClient.GetContractStateAsync(contractName).ConfigureAwait(false);
+            byte[] script = Concat(
+                contractState.Hash.MakeScript("symbol", true),
+                contractState.Hash.MakeScript("decimals", true),
+                contractState.Hash.MakeScript("totalSupply", true));
             var name = contractState.Manifest.Name;
 
             var result = await rpcClient.InvokeScriptAsync(script).ConfigureAwait(false);
