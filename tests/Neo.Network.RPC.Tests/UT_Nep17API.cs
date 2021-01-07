@@ -108,10 +108,22 @@ namespace Neo.Network.RPC.Tests
                     Assert.AreEqual(8, (int)result.Decimals);
                     Assert.AreEqual(1_00000000, (int)result.TotalSupply);
                     Assert.AreEqual("GasToken", result.Name);
+
+                    result = await nep17API.GetTokenInfoAsync(gasToken);
+                    Assert.AreEqual(NativeContract.GAS.Symbol, result.Symbol);
+                    Assert.AreEqual(8, (int)result.Decimals);
+                    Assert.AreEqual(1_00000000, (int)result.TotalSupply);
+                    Assert.AreEqual("GasToken", result.Name);
                 }
                 else if (test.Request.Params[0].AsString() == neoToken || test.Request.Params[0].AsString().Equals(NativeContract.NEO.Name, System.StringComparison.OrdinalIgnoreCase))
                 {
                     var result = await nep17API.GetTokenInfoAsync(NativeContract.NEO.Name.ToLower());
+                    Assert.AreEqual(NativeContract.NEO.Symbol, result.Symbol);
+                    Assert.AreEqual(0, (int)result.Decimals);
+                    Assert.AreEqual(1_00000000, (int)result.TotalSupply);
+                    Assert.AreEqual("NeoToken", result.Name);
+
+                    result = await nep17API.GetTokenInfoAsync(neoToken);
                     Assert.AreEqual(NativeContract.NEO.Symbol, result.Symbol);
                     Assert.AreEqual(0, (int)result.Decimals);
                     Assert.AreEqual(1_00000000, (int)result.TotalSupply);
