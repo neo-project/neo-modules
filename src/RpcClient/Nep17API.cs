@@ -84,7 +84,7 @@ namespace Neo.Network.RPC
             var name = contractState.Manifest.Name;
             var result = await rpcClient.InvokeScriptAsync(script).ConfigureAwait(false);
             var stack = result.Stack;
-            
+
             return new RpcNep17TokenInfo
             {
                 Name = name,
