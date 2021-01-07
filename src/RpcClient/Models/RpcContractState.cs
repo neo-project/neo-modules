@@ -1,4 +1,5 @@
 using Neo;
+using Neo.IO;
 using Neo.IO.Json;
 using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
@@ -22,7 +23,7 @@ public class RpcContractState
                 Id = (int)json["id"].AsNumber(),
                 UpdateCounter = (ushort)json["updatecounter"].AsNumber(),
                 Hash = UInt160.Parse(json["hash"].AsString()),
-                Script = Convert.FromBase64String(json["script"].AsString()),
+                Nef = Convert.FromBase64String(json["script"].AsString()).AsSerializable<NefFile>(),
                 Manifest = ContractManifest.FromJson(json["manifest"])
             }
         };
