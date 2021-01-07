@@ -46,6 +46,9 @@ namespace Neo.Network.RPC.Tests
             JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.GetContractStateAsync).ToLower()).Response.Result;
             var item = RpcContractState.FromJson(json);
             Assert.AreEqual(json.ToString(), item.ToJson().ToString());
+
+            var nef = RpcNefFile.FromJson(json["nef"]);
+            Assert.AreEqual(json["nef"].ToString(), nef.ToJson().ToString());
         }
 
         [TestMethod()]

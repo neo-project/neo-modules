@@ -314,6 +314,22 @@
     }
   },
   {
+    "Name": "getblocksysfeeasync",
+    "Request": {
+      "jsonrpc": "2.0",
+      "method": "getcommittee",
+      "params": [ "neotoken" ],
+      "id": 1
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": [
+        "02ced432397ddc44edba031c0bc3b933f28fdd9677792d7b20e6c036ddaaacf1e2"
+      ]
+    }
+  },
+  {
     "Name": "getcontractstateasync",
     "Request": {
       "jsonrpc": "2.0",
