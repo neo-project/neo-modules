@@ -314,11 +314,27 @@
     }
   },
   {
+    "Name": "getcommitteeasync",
+    "Request": {
+      "jsonrpc": "2.0",
+      "method": "getcommittee",
+      "params": [],
+      "id": 1
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": [
+        "02ced432397ddc44edba031c0bc3b933f28fdd9677792d7b20e6c036ddaaacf1e2"
+      ]
+    }
+  },
+  {
     "Name": "getcontractstateasync",
     "Request": {
       "jsonrpc": "2.0",
       "method": "getcontractstate",
-      "params": [ "0xa6a6c15dcdc9b997dac448b6926522d22efeedfb" ],
+      "params": [ "gastoken" ],
       "id": 1
     },
     "Response": {
@@ -327,8 +343,15 @@
       "result": {
         "id": -2,
         "updatecounter": 0,
-        "hash": "0xa6a6c15dcdc9b997dac448b6926522d22efeedfb",
-        "script": "DAhHYXNUb2tlbkEa93tn",
+        "hash": "0x149a7f61eb3b4763b9655836ec7e75ddafdd1717",
+        "nef": {
+          "magic": 860243278,
+          "compiler": "ScriptBuilder",
+          "version": "3.0",
+          "tokens": [],
+          "script": "DAhHYXNUb2tlbkEa93tn",
+          "checksum": 4072842264
+        },
         "manifest": {
           "name": "GasToken",
           "groups": [],
@@ -349,7 +372,7 @@
                 "parameters": [
                   {
                     "name": "account",
-                    "type": "ByteArray"
+                    "type": "Hash160"
                   }
                 ],
                 "offset": 0,
@@ -361,11 +384,132 @@
                 "parameters": [
                   {
                     "name": "from",
-                    "type": "ByteArray"
+                    "type": "Hash160"
                   },
                   {
                     "name": "to",
-                    "type": "ByteArray"
+                    "type": "Hash160"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "data",
+                    "type": "Any"
+                  }
+                ],
+                "offset": 0,
+                "returntype": "Boolean",
+                "safe": false
+              },
+              {
+                "name": "symbol",
+                "parameters": [],
+                "offset": 0,
+                "returntype": "String",
+                "safe": true
+              },
+              {
+                "name": "decimals",
+                "parameters": [],
+                "offset": 0,
+                "returntype": "Integer",
+                "safe": true
+              }
+            ],
+            "events": [
+              {
+                "name": "Transfer",
+                "parameters": [
+                  {
+                    "name": "from",
+                    "type": "Hash160"
+                  },
+                  {
+                    "name": "to",
+                    "type": "Hash160"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "Integer"
+                  }
+                ]
+              }
+            ]
+          },
+          "permissions": [
+            {
+              "contract": "*",
+              "methods": "*"
+            }
+          ],
+          "trusts": [],
+          "extra": null
+        }
+      }
+    }
+  },
+  {
+    "Name": "getcontractstateasync",
+    "Request": {
+      "jsonrpc": "2.0",
+      "method": "getcontractstate",
+      "params": [ "0x149a7f61eb3b4763b9655836ec7e75ddafdd1717" ],
+      "id": 1
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "id": -2,
+        "updatecounter": 0,
+        "hash": "0x149a7f61eb3b4763b9655836ec7e75ddafdd1717",
+        "nef": {
+          "magic": 860243278,
+          "compiler": "ScriptBuilder",
+          "version": "3.0",
+          "tokens": [],
+          "script": "DAhHYXNUb2tlbkEa93tn",
+          "checksum": 4072842264
+        },
+        "manifest": {
+          "name": "GasToken",
+          "groups": [],
+          "supportedstandards": [
+            "NEP-17"
+          ],
+          "abi": {
+            "methods": [
+              {
+                "name": "totalSupply",
+                "parameters": [],
+                "offset": 0,
+                "returntype": "Integer",
+                "safe": true
+              },
+              {
+                "name": "balanceOf",
+                "parameters": [
+                  {
+                    "name": "account",
+                    "type": "Hash160"
+                  }
+                ],
+                "offset": 0,
+                "returntype": "Integer",
+                "safe": true
+              },
+              {
+                "name": "transfer",
+                "parameters": [
+                  {
+                    "name": "from",
+                    "type": "Hash160"
+                  },
+                  {
+                    "name": "to",
+                    "type": "Hash160"
                   },
                   {
                     "name": "amount",
@@ -433,7 +577,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "method": "getcontractstate",
-      "params": [ "0x0a46e2e37c9987f570b4af253fb77e7eef0f72b6" ]
+      "params": [ "neotoken" ]
     },
     "Response": {
       "jsonrpc": "2.0",
@@ -441,8 +585,15 @@
       "result": {
         "id": -1,
         "updatecounter": 0,
-        "hash": "0x0a46e2e37c9987f570b4af253fb77e7eef0f72b6",
-        "script": "DAhOZW9Ub2tlbkEa93tn",
+        "hash": "0x0e1b9bfaa44e60311f6f3c96cfcd6d12c2fc3add",
+        "nef": {
+          "magic": 860243278,
+          "compiler": "ScriptBuilder",
+          "version": "3.0",
+          "tokens": [],
+          "script": "DAhOZW9Ub2tlbkEa93tn",
+          "checksum": 1698415525
+        },
         "manifest": {
           "name": "NeoToken",
           "groups": [],
@@ -482,7 +633,7 @@
                 "parameters": [
                   {
                     "name": "account",
-                    "type": "ByteArray"
+                    "type": "Hash160"
                   },
                   {
                     "name": "end",
@@ -522,7 +673,7 @@
                 "parameters": [
                   {
                     "name": "account",
-                    "type": "ByteArray"
+                    "type": "Hash160"
                   },
                   {
                     "name": "voteTo",
@@ -559,7 +710,7 @@
                 "parameters": [
                   {
                     "name": "account",
-                    "type": "ByteArray"
+                    "type": "Hash160"
                   }
                 ],
                 "offset": 0,
@@ -571,11 +722,228 @@
                 "parameters": [
                   {
                     "name": "from",
-                    "type": "ByteArray"
+                    "type": "Hash160"
                   },
                   {
                     "name": "to",
+                    "type": "Hash160"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "Integer"
+                  },
+                  {
+                    "name": "data",
+                    "type": "Any"
+                  }
+                ],
+                "offset": 0,
+                "returntype": "Boolean",
+                "safe": false
+              },
+              {
+                "name": "symbol",
+                "parameters": [],
+                "offset": 0,
+                "returntype": "String",
+                "safe": true
+              },
+              {
+                "name": "decimals",
+                "parameters": [],
+                "offset": 0,
+                "returntype": "Integer",
+                "safe": true
+              }
+            ],
+            "events": [
+              {
+                "name": "Transfer",
+                "parameters": [
+                  {
+                    "name": "from",
+                    "type": "Hash160"
+                  },
+                  {
+                    "name": "to",
+                    "type": "Hash160"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "Integer"
+                  }
+                ]
+              }
+            ]
+          },
+          "permissions": [
+            {
+              "contract": "*",
+              "methods": "*"
+            }
+          ],
+          "trusts": [],
+          "extra": null
+        }
+      }
+    }
+  },
+  {
+    "Name": "getcontractstateasync",
+    "Request": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "getcontractstate",
+      "params": [ "0x0e1b9bfaa44e60311f6f3c96cfcd6d12c2fc3add" ]
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": {
+        "id": -1,
+        "updatecounter": 0,
+        "hash": "0x0e1b9bfaa44e60311f6f3c96cfcd6d12c2fc3add",
+        "nef": {
+          "magic": 860243278,
+          "compiler": "ScriptBuilder",
+          "version": "3.0",
+          "tokens": [],
+          "script": "DAhOZW9Ub2tlbkEa93tn",
+          "checksum": 1698415525
+        },
+        "manifest": {
+          "name": "NeoToken",
+          "groups": [],
+          "supportedstandards": [
+            "NEP-17"
+          ],
+          "abi": {
+            "methods": [
+              {
+                "name": "totalSupply",
+                "parameters": [],
+                "offset": 0,
+                "returntype": "Integer",
+                "safe": true
+              },
+              {
+                "name": "setGasPerBlock",
+                "parameters": [
+                  {
+                    "name": "gasPerBlock",
+                    "type": "Integer"
+                  }
+                ],
+                "offset": 0,
+                "returntype": "Boolean",
+                "safe": false
+              },
+              {
+                "name": "getGasPerBlock",
+                "parameters": [],
+                "offset": 0,
+                "returntype": "Integer",
+                "safe": true
+              },
+              {
+                "name": "unclaimedGas",
+                "parameters": [
+                  {
+                    "name": "account",
+                    "type": "Hash160"
+                  },
+                  {
+                    "name": "end",
+                    "type": "Integer"
+                  }
+                ],
+                "offset": 0,
+                "returntype": "Integer",
+                "safe": true
+              },
+              {
+                "name": "registerCandidate",
+                "parameters": [
+                  {
+                    "name": "pubkey",
                     "type": "ByteArray"
+                  }
+                ],
+                "offset": 0,
+                "returntype": "Boolean",
+                "safe": false
+              },
+              {
+                "name": "unregisterCandidate",
+                "parameters": [
+                  {
+                    "name": "pubkey",
+                    "type": "ByteArray"
+                  }
+                ],
+                "offset": 0,
+                "returntype": "Boolean",
+                "safe": false
+              },
+              {
+                "name": "vote",
+                "parameters": [
+                  {
+                    "name": "account",
+                    "type": "Hash160"
+                  },
+                  {
+                    "name": "voteTo",
+                    "type": "ByteArray"
+                  }
+                ],
+                "offset": 0,
+                "returntype": "Boolean",
+                "safe": false
+              },
+              {
+                "name": "getCandidates",
+                "parameters": [],
+                "offset": 0,
+                "returntype": "Array",
+                "safe": true
+              },
+              {
+                "name": "getCommittee",
+                "parameters": [],
+                "offset": 0,
+                "returntype": "Array",
+                "safe": true
+              },
+              {
+                "name": "getNextBlockValidators",
+                "parameters": [],
+                "offset": 0,
+                "returntype": "Array",
+                "safe": true
+              },
+              {
+                "name": "balanceOf",
+                "parameters": [
+                  {
+                    "name": "account",
+                    "type": "Hash160"
+                  }
+                ],
+                "offset": 0,
+                "returntype": "Integer",
+                "safe": true
+              },
+              {
+                "name": "transfer",
+                "parameters": [
+                  {
+                    "name": "from",
+                    "type": "Hash160"
+                  },
+                  {
+                    "name": "to",
+                    "type": "Hash160"
                   },
                   {
                     "name": "amount",

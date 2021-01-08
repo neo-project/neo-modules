@@ -97,18 +97,33 @@ namespace Neo.Network.RPC.Tests
                 rpcClientMock.Setup(p => p.RpcSendAsync("getcontractstate", It.Is<JObject[]>(u => true)))
                 .ReturnsAsync(test.Response.Result)
                 .Verifiable();
-
-                if (test.Request.Params[0].AsString() == "0xa6a6c15dcdc9b997dac448b6926522d22efeedfb")
+                var gasToken = "0x149a7f61eb3b4763b9655836ec7e75ddafdd1717";
+                Assert.AreEqual(NativeContract.GAS.Hash.ToString(), gasToken);
+                var neoToken = "0x0e1b9bfaa44e60311f6f3c96cfcd6d12c2fc3add";
+                Assert.AreEqual(NativeContract.NEO.Hash.ToString(), neoToken);
+                if (test.Request.Params[0].AsString() == gasToken || test.Request.Params[0].AsString().Equals(NativeContract.GAS.Name, System.StringComparison.OrdinalIgnoreCase))
                 {
-                    var result = await nep17API.GetTokenInfoAsync(NativeContract.GAS.Hash);
+                    var result = await nep17API.GetTokenInfoAsync(NativeContract.GAS.Name.ToLower());
+                    Assert.AreEqual(NativeContract.GAS.Symbol, result.Symbol);
+                    Assert.AreEqual(8, (int)result.Decimals);
+                    Assert.AreEqual(1_00000000, (int)result.TotalSupply);
+                    Assert.AreEqual("GasToken", result.Name);
+
+                    result = await nep17API.GetTokenInfoAsync(NativeContract.GAS.Hash);
                     Assert.AreEqual(NativeContract.GAS.Symbol, result.Symbol);
                     Assert.AreEqual(8, (int)result.Decimals);
                     Assert.AreEqual(1_00000000, (int)result.TotalSupply);
                     Assert.AreEqual("GasToken", result.Name);
                 }
-                else if (test.Request.Params[0].AsString() == "0x0a46e2e37c9987f570b4af253fb77e7eef0f72b6")
+                else if (test.Request.Params[0].AsString() == neoToken || test.Request.Params[0].AsString().Equals(NativeContract.NEO.Name, System.StringComparison.OrdinalIgnoreCase))
                 {
-                    var result = await nep17API.GetTokenInfoAsync(NativeContract.NEO.Hash);
+                    var result = await nep17API.GetTokenInfoAsync(NativeContract.NEO.Name.ToLower());
+                    Assert.AreEqual(NativeContract.NEO.Symbol, result.Symbol);
+                    Assert.AreEqual(0, (int)result.Decimals);
+                    Assert.AreEqual(1_00000000, (int)result.TotalSupply);
+                    Assert.AreEqual("NeoToken", result.Name);
+
+                    result = await nep17API.GetTokenInfoAsync(NativeContract.NEO.Hash);
                     Assert.AreEqual(NativeContract.NEO.Symbol, result.Symbol);
                     Assert.AreEqual(0, (int)result.Decimals);
                     Assert.AreEqual(1_00000000, (int)result.TotalSupply);
