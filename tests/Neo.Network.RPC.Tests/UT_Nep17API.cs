@@ -97,10 +97,10 @@ namespace Neo.Network.RPC.Tests
                 rpcClientMock.Setup(p => p.RpcSendAsync("getcontractstate", It.Is<JObject[]>(u => true)))
                 .ReturnsAsync(test.Response.Result)
                 .Verifiable();
-                var gasToken = "0x149a7f61eb3b4763b9655836ec7e75ddafdd1717";
-                Assert.AreEqual(NativeContract.GAS.Hash.ToString(), gasToken);
-                var neoToken = "0x0e1b9bfaa44e60311f6f3c96cfcd6d12c2fc3add";
-                Assert.AreEqual(NativeContract.NEO.Hash.ToString(), neoToken);
+                var gasToken = "0x9ac04cf223f646de5f7faccafe34e30e5d4382a2";
+                Assert.AreEqual(gasToken, NativeContract.GAS.Hash.ToString());
+                var neoToken = "0x4961bf0ab79370b23dc45cde29f568d0e0fa6e93";
+                Assert.AreEqual(neoToken, NativeContract.NEO.Hash.ToString());
                 if (test.Request.Params[0].AsString() == gasToken || test.Request.Params[0].AsString().Equals(NativeContract.GAS.Name, System.StringComparison.OrdinalIgnoreCase))
                 {
                     var result = await nep17API.GetTokenInfoAsync(NativeContract.GAS.Name.ToLower());
