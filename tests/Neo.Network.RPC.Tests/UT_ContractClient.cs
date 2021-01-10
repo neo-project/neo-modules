@@ -27,7 +27,7 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public async Task TestInvoke()
         {
-            byte[] testScript = NativeContract.GAS.Hash.MakeScript("balanceOf", true, UInt160.Zero);
+            byte[] testScript = NativeContract.GAS.Hash.MakeScript("balanceOf", UInt160.Zero);
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.ByteArray, Value = "00e057eb481b".HexToBytes() });
 
             ContractClient contractClient = new ContractClient(rpcClientMock.Object);

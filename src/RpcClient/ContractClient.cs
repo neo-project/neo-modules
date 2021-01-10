@@ -41,7 +41,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public Task<RpcInvokeResult> TestInvokeAsync(UInt160 scriptHash, string operation, params object[] args)
         {
-            byte[] script = scriptHash.MakeScript(operation, true, args);
+            byte[] script = scriptHash.MakeScript(operation, args);
             return rpcClient.InvokeScriptAsync(script);
         }
 
