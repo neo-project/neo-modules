@@ -4,12 +4,11 @@ using Neo.IO.Caching;
 using Neo.Ledger;
 using Neo.Persistence;
 using Neo.Plugins.MPT;
-using Neo.Plugins.StateService.Network;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Neo.Plugins.StateService.StateStorage
+namespace Neo.Plugins.StateService.Storage
 {
     public class StateStore : UntypedActor
     {
@@ -115,7 +114,6 @@ namespace Neo.Plugins.StateService.StateStorage
             validated.Hash = state_root.RootHash;
             state_snapshot.Commit();
             //Tell validation service
-            //Relay
         }
 
         private void UpdateLocalStateRoot(uint height, List<Item> change_set)

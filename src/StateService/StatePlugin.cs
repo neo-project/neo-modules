@@ -1,6 +1,6 @@
 
 using Akka.Actor;
-using Neo.Plugins.StateService.StateStorage;
+using Neo.Plugins.StateService.Storage;
 using Neo.Wallets;
 
 namespace Neo.Plugins.StateService

@@ -3,10 +3,9 @@ using Neo.IO.Caching;
 using Neo.Ledger;
 using Neo.Persistence;
 using Neo.Plugins.MPT;
-using Neo.Plugins.StateService.Network;
 using System;
 
-namespace Neo.Plugins.StateService.StateStorage
+namespace Neo.Plugins.StateService.Storage
 {
     public class StateSnapshot : IDisposable
     {
