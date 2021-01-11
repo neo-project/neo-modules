@@ -1,5 +1,4 @@
 using Neo.IO;
-using Neo.IO.Caching;
 using System;
 using System.IO;
 
@@ -39,9 +38,10 @@ namespace Neo.Consensus
         public static ConsensusMessage DeserializeFrom(byte[] data)
         {
             ConsensusMessageType type = (ConsensusMessageType)data[0];
-            ISerializable message = ReflectionCache<ConsensusMessageType>.CreateSerializable(type, data);
-            if (message is null) throw new FormatException();
-            return (ConsensusMessage)message;
+            Type t = typeof(ConsensusMessage);
+            t = t.Assembly.GetType($"{t.Namespace}.{type}", false);
+            if (t is null) throw new FormatException();
+            return (ConsensusMessage)data.AsSerializable(t);
         }
 
         public virtual void Serialize(BinaryWriter writer)
