@@ -21,7 +21,7 @@ namespace Neo.Consensus
 
         void IConsensusProvider.Start(Wallet wallet)
         {
-            consensus = System.ActorSystem.ActorOf(ConsensusService.Props(System.LocalNode, System.TaskManager, System.Blockchain, System.LoadStore("ConsensusState"), wallet));
+            consensus = System.ActorSystem.ActorOf(ConsensusService.Props(System.LocalNode, System.TaskManager, System.Blockchain, System.LoadStore(Settings.Default.RecoveryLogs), wallet));
         }
 
         bool IP2PPlugin.OnP2PMessage(Message message)
