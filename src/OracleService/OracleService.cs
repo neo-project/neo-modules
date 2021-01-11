@@ -143,9 +143,9 @@ namespace Neo.Plugins
             }
             foreach (ulong requestId in outOfDate)
                 pendingQueue.TryRemove(requestId, out _);
-            foreach (var key in finishedCache.Keys)
-                if (TimeProvider.Current.UtcNow - finishedCache[key] > TimeSpan.FromDays(3))
-                    finishedCache.TryRemove(key, out _);
+            foreach (var keyValue in finishedCache)
+                if (TimeProvider.Current.UtcNow - keyValue.Value > TimeSpan.FromDays(3))
+                    finishedCache.TryRemove(keyValue.Key, out _);
 
             if (!cancelSource.IsCancellationRequested)
                 timer?.Change(RefreshInterval, Timeout.Infinite);
