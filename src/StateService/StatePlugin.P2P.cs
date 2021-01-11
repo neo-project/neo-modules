@@ -8,7 +8,7 @@ namespace Neo.Plugins.StateService
 {
     public partial class StatePlugin : Plugin, IP2PPlugin
     {
-        public const string StatePayloadCategory = "StateService";
+        internal const string StatePayloadCategory = "StateService";
 
         void IP2PPlugin.OnVerifiedInventory(IInventory inventory)
         {
