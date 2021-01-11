@@ -115,7 +115,7 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(Block block, StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (stopped || !started) return;
             if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles) || !CheckOracleAccount(wallet, oracles))
