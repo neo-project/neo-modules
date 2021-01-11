@@ -341,16 +341,16 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "id": -2,
+        "id": -3,
         "updatecounter": 0,
-        "hash": "0x149a7f61eb3b4763b9655836ec7e75ddafdd1717",
+        "hash": "0x9ac04cf223f646de5f7faccafe34e30e5d4382a2",
         "nef": {
           "magic": 860243278,
           "compiler": "ScriptBuilder",
           "version": "3.0",
           "tokens": [],
-          "script": "DAhHYXNUb2tlbkEa93tn",
-          "checksum": 4072842264
+          "script": "AP1BGvd7Zw==",
+          "checksum": 571607263
         },
         "manifest": {
           "name": "GasToken",
@@ -462,16 +462,16 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "id": -2,
+        "id": -3,
         "updatecounter": 0,
-        "hash": "0x149a7f61eb3b4763b9655836ec7e75ddafdd1717",
+        "hash": "0x9ac04cf223f646de5f7faccafe34e30e5d4382a2",
         "nef": {
           "magic": 860243278,
           "compiler": "ScriptBuilder",
           "version": "3.0",
           "tokens": [],
-          "script": "DAhHYXNUb2tlbkEa93tn",
-          "checksum": 4072842264
+          "script": "AP1BGvd7Zw==",
+          "checksum": 571607263
         },
         "manifest": {
           "name": "GasToken",
@@ -583,16 +583,16 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "id": -1,
+        "id": -2,
         "updatecounter": 0,
-        "hash": "0x0e1b9bfaa44e60311f6f3c96cfcd6d12c2fc3add",
+        "hash": "0x4961bf0ab79370b23dc45cde29f568d0e0fa6e93",
         "nef": {
           "magic": 860243278,
           "compiler": "ScriptBuilder",
           "version": "3.0",
           "tokens": [],
-          "script": "DAhOZW9Ub2tlbkEa93tn",
-          "checksum": 1698415525
+          "script": "AP5BGvd7Zw==",
+          "checksum": 4259551467
         },
         "manifest": {
           "name": "NeoToken",
@@ -800,16 +800,16 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "id": -1,
+        "id": -2,
         "updatecounter": 0,
-        "hash": "0x0e1b9bfaa44e60311f6f3c96cfcd6d12c2fc3add",
+        "hash": "0x4961bf0ab79370b23dc45cde29f568d0e0fa6e93",
         "nef": {
           "magic": 860243278,
           "compiler": "ScriptBuilder",
           "version": "3.0",
           "tokens": [],
-          "script": "DAhOZW9Ub2tlbkEa93tn",
-          "checksum": 1698415525
+          "script": "AP5BGvd7Zw==",
+          "checksum": 4259551467
         },
         "manifest": {
           "name": "NeoToken",
@@ -1483,7 +1483,7 @@
       "id": 1,
       "method": "invokescript",
       "params": [
-        "HxDDDAhkZWNpbWFscwwU\u002B\u002B3\u002BLtIiZZK2SMTal7nJzV3BpqZB7vQM2w=="
+        "EMAfDAhkZWNpbWFscwwU++3+LtIiZZK2SMTal7nJzV3BpqZBYn1bUg=="
       ]
     },
     "Response": {
