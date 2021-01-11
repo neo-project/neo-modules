@@ -156,6 +156,17 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
+        public async Task TestGetCommittee()
+        {
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetCommitteeAsync).ToLower());
+            foreach (var test in tests)
+            {
+                var result = await rpc.GetCommitteeAsync();
+                Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => (JObject)p).ToArray()).ToString());
+            }
+        }
+
+        [TestMethod]
         public async Task TestGetContractState()
         {
             var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetContractStateAsync).ToLower());
