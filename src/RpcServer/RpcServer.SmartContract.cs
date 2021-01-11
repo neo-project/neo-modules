@@ -118,7 +118,7 @@ namespace Neo.Plugins
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                script = sb.EmitDynamicCall(script_hash, operation, true, args).ToArray();
+                script = sb.EmitDynamicCall(script_hash, operation, args).ToArray();
             }
             return GetInvokeResult(script, signers);
         }
