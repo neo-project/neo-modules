@@ -9,11 +9,6 @@ namespace Neo.Consensus
     {
         private IActorRef consensus;
 
-        public DBFTPlugin()
-        {
-            AddService(this);
-        }
-
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
