@@ -548,7 +548,7 @@ namespace Neo.Consensus
             {
                 if (context.Transactions != null)
                 {
-                    Sender.Ask<Blockchain.FillCompleted>(new Blockchain.FillMemoryPool
+                    blockchain.Ask<Blockchain.FillCompleted>(new Blockchain.FillMemoryPool
                     {
                         Transactions = context.Transactions.Values
                     }).Wait();
