@@ -363,18 +363,19 @@ namespace Neo.Plugins
                 + IO.Helper.GetVarSize(hashes.Length) + witnessDict[NativeContract.Oracle.Hash].Size
                 + IO.Helper.GetVarSize(size_inv) + size_inv + oracleSignContract.Script.GetVarSize();
 
+            var feePerByte = NativeContract.Policy.GetFeePerByte(snapshot);
             if (response.Result.Length > OracleResponse.MaxResultSize)
             {
                 response.Code = OracleResponseCode.ResponseTooLarge;
                 response.Result = Array.Empty<byte>();
             }
-            else if (tx.NetworkFee + (size + tx.Attributes.GetVarSize()) * NativeContract.Policy.GetFeePerByte(snapshot) > request.GasForResponse)
+            else if (tx.NetworkFee + (size + tx.Attributes.GetVarSize()) * feePerByte > request.GasForResponse)
             {
                 response.Code = OracleResponseCode.InsufficientFunds;
                 response.Result = Array.Empty<byte>();
             }
             size += tx.Attributes.GetVarSize();
-            tx.NetworkFee += size * NativeContract.Policy.GetFeePerByte(snapshot);
+            tx.NetworkFee += size * feePerByte;
 
             // Calcualte system fee
 

@@ -44,17 +44,19 @@ namespace Neo.Plugins.Tests
             ECPoint[] oracleNodes = new ECPoint[] { ECCurve.Secp256r1.G };
             var tx = OracleService.CreateResponseTx(snapshot, request, response, oracleNodes);
 
-            Assert.AreEqual(tx.NetworkFee, 2217850);
-            Assert.AreEqual(tx.SystemFee, 97782150);
+            Assert.AreEqual(167, tx.Size);
+            Assert.AreEqual(2216640, tx.NetworkFee);
+            Assert.AreEqual(97783360, tx.SystemFee);
 
             // case (2) The size of attribute exceed the maximum limit
 
             request.GasForResponse = 0_10000000;
             response.Result = new byte[10250];
             tx = OracleService.CreateResponseTx(snapshot, request, response, oracleNodes);
-            Assert.AreEqual(response.Code, OracleResponseCode.InsufficientFunds);
-            Assert.AreEqual(tx.NetworkFee, 2216850);
-            Assert.AreEqual(tx.SystemFee, 7783150);
+            Assert.AreEqual(166, tx.Size);
+            Assert.AreEqual(OracleResponseCode.InsufficientFunds, response.Code);
+            Assert.AreEqual(2215640, tx.NetworkFee);
+            Assert.AreEqual(7784360, tx.SystemFee);
         }
     }
 }
