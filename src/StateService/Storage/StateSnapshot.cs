@@ -15,8 +15,9 @@ namespace Neo.Plugins.StateService.Storage
         public DataCache<SerializableWrapper<uint>, StateRoot> StateRoots;
         public MPTTrie<StorageKey, StorageItem> Trie;
 
-        public long StateHeight => ValidatedHashIndex.Get() is null ? -1 : (long)ValidatedHashIndex.Get().Index;
+        public long ValidatedRootIndex => ValidatedHashIndex.Get() is null ? -1 : ValidatedHashIndex.Get().Index;
         public UInt256 CurrentLocalRootHash => LocalRootHashIndex.Get().Hash;
+        public uint LocalRootIndex => LocalRootHashIndex.Get().Index;
 
         public StateSnapshot(IStore store)
         {

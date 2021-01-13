@@ -42,7 +42,7 @@ namespace Neo.Plugins.StateService.Storage
             }
             set
             {
-                if (value.Length != 1) throw new ArgumentException();
+                if (value is null || value.Length != 1) throw new ArgumentException();
                 Witness = value[0];
             }
         }
@@ -51,8 +51,7 @@ namespace Neo.Plugins.StateService.Storage
             sizeof(byte) +      //Version
             sizeof(uint) +      //Index
             UInt256.Length +    //RootHash
-            1 +                 //Witness array count
-            Witness.Size;       //Witness
+            (Witness is null ? 1 : 1 + Witness.Size); //Witness
 
         public StateRoot Clone()
         {

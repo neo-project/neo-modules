@@ -19,13 +19,10 @@ namespace Neo.Plugins.StateService.Storage
         private readonly IStore store;
         private const int MaxCacheCount = 100;
         private readonly Dictionary<uint, StateRoot> cache = new Dictionary<uint, StateRoot>();
-        public MetaDataCache<HashIndexState> LocalRootHashIndex => new StoreMetaDataCache<HashIndexState>(store, Prefixs.LocalRootIndex);
-        public MetaDataCache<HashIndexState> ValidatedHashIndex => new StoreMetaDataCache<HashIndexState>(store, Prefixs.ValidatedRootIndex);
-        public DataCache<SerializableWrapper<uint>, StateRoot> StateRoots => new StoreDataCache<SerializableWrapper<uint>, StateRoot>(store, Prefixs.Roots);
-
-        public UInt256 CurrentLocalRootHash => LocalRootHashIndex.Get()?.Hash;
-        public uint LocalRootIndex => LocalRootHashIndex.Get()?.Index ?? 0;
-        public long ValidatedRootIndex => ValidatedHashIndex.Get().Index == uint.MaxValue ? -1 : (long)ValidatedHashIndex.Get().Index;
+        private StateSnapshot currentSnapshot;
+        public UInt256 CurrentLocalRootHash => currentSnapshot.CurrentLocalRootHash;
+        public uint LocalRootIndex => currentSnapshot.LocalRootIndex;
+        public long ValidatedRootIndex => currentSnapshot.ValidatedRootIndex;
 
         private static StateStore singleton;
         public static StateStore Singleton
@@ -44,6 +41,7 @@ namespace Neo.Plugins.StateService.Storage
             this.core = core;
             this.store = core.LoadStore(path);
             singleton = this;
+            UpdateCurrentSnapshot();
         }
 
         public void Dispose()
@@ -61,21 +59,6 @@ namespace Neo.Plugins.StateService.Storage
             using ISnapshot snapshot = store.GetSnapshot();
             var trie = new MPTTrie<StorageKey, StorageItem>(snapshot, root);
             return trie.GetProof(skey);
-        }
-
-        public MetaDataCache<HashIndexState> GetLocalRootHashIndex()
-        {
-            return new StoreMetaDataCache<HashIndexState>(store, Prefixs.LocalRootIndex);
-        }
-
-        public MetaDataCache<HashIndexState> GetValidatedHashIndex()
-        {
-            return new StoreMetaDataCache<HashIndexState>(store, Prefixs.ValidatedRootIndex);
-        }
-
-        public DataCache<SerializableWrapper<uint>, StateRoot> GetStateRoots()
-        {
-            return new StoreDataCache<SerializableWrapper<uint>, StateRoot>(store, Prefixs.Roots);
         }
 
         protected override void OnReceive(object message)
@@ -113,6 +96,7 @@ namespace Neo.Plugins.StateService.Storage
             validated.Index = state_root.Index;
             validated.Hash = state_root.RootHash;
             state_snapshot.Commit();
+            UpdateCurrentSnapshot();
             //Tell validation service
             return true;
         }
@@ -147,6 +131,7 @@ namespace Neo.Plugins.StateService.Storage
             current_root.Hash = root_hash;
             state_snapshot.StateRoots.Add(height, state_root);
             state_snapshot.Commit();
+            UpdateCurrentSnapshot();
             CheckValidatedStateRoot(height);
         }
 
@@ -157,6 +142,11 @@ namespace Neo.Plugins.StateService.Storage
                 cache.Remove(index);
                 OnNewStateRoot(state_root);
             }
+        }
+
+        private void UpdateCurrentSnapshot()
+        {
+            Interlocked.Exchange(ref currentSnapshot, GetSnapshot())?.Dispose();
         }
 
         protected override void PostStop()
