@@ -25,7 +25,21 @@ namespace Neo.Network.RPC.Models
                 Hash = UInt160.Parse(json["hash"].AsString()),
                 Id = (int)json["id"].AsNumber(),
                 Manifest = ContractManifest.FromJson(json["manifest"]),
-                ActiveBlockIndex = (uint)json["activeblockindex"].AsNumber()
+                ActiveBlockIndex = (uint)(json["activeblockindex"]?.AsNumber() ?? 0)
+            };
+        }
+
+        public JObject ToJson()
+        {
+            return new JObject
+            {
+                ["name"] = Name,
+                ["script"] = Convert.ToBase64String(Script),
+                ["nef"] = Nef.ToJson(),
+                ["hash"] = Hash.ToString(),
+                ["id"] = Id,
+                ["manifest"] = Manifest.ToJson(),
+                ["activeBlockIndex"] = ActiveBlockIndex
             };
         }
     }
