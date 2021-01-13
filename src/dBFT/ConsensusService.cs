@@ -65,16 +65,10 @@ namespace Neo.Consensus
             if (verify)
             {
                 VerifyResult result = tx.Verify(context.Snapshot, context.VerificationContext);
-                if (result == VerifyResult.PolicyFail)
+                if (result != VerifyResult.Succeed)
                 {
-                    Log($"reject tx: {tx.Hash}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
-                    RequestChangeView(ChangeViewReason.TxRejectedByPolicy);
-                    return false;
-                }
-                else if (result != VerifyResult.Succeed)
-                {
-                    Log($"Invalid transaction: {tx.Hash}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
-                    RequestChangeView(ChangeViewReason.TxInvalid);
+                    Log($"Rejected tx: {tx.Hash}, {result}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
+                    RequestChangeView(result == VerifyResult.PolicyFail ? ChangeViewReason.TxRejectedByPolicy : ChangeViewReason.TxInvalid);
                     return false;
                 }
             }
@@ -94,14 +88,14 @@ namespace Neo.Consensus
                 // Check maximum block size via Native Contract policy
                 if (context.GetExpectedBlockSize() > NativeContract.Policy.GetMaxBlockSize(context.Snapshot))
                 {
-                    Log($"rejected block: {context.Block.Index} The size exceed the policy", LogLevel.Warning);
+                    Log($"Rejected block: {context.Block.Index} The size exceed the policy", LogLevel.Warning);
                     RequestChangeView(ChangeViewReason.BlockRejectedByPolicy);
                     return false;
                 }
                 // Check maximum block system fee via Native Contract policy
                 if (context.GetExpectedBlockSystemFee() > NativeContract.Policy.GetMaxBlockSystemFee(context.Snapshot))
                 {
-                    Log($"rejected block: {context.Block.Index} The system fee exceed the policy", LogLevel.Warning);
+                    Log($"Rejected block: {context.Block.Index} The system fee exceed the policy", LogLevel.Warning);
                     RequestChangeView(ChangeViewReason.BlockRejectedByPolicy);
                     return false;
                 }
@@ -110,7 +104,7 @@ namespace Neo.Consensus
                 // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
                 ExtendTimerByFactor(2);
 
-                Log($"send prepare response");
+                Log($"Sending {nameof(PrepareResponse)}");
                 localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareResponse() });
                 CheckPreparations();
             }
@@ -136,7 +130,7 @@ namespace Neo.Consensus
                 block_received_index = context.Block.Index;
                 block_received_time = TimeProvider.Current.UtcNow;
                 Block block = context.CreateBlock();
-                Log($"relay block: height={block.Index} hash={block.Hash} tx={block.Transactions.Length}");
+                Log($"Sending {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length}");
                 blockchain.Tell(block);
             }
         }
@@ -165,7 +159,7 @@ namespace Neo.Consensus
             if (context.PreparationPayloads.Count(p => p != null) >= context.M && context.TransactionHashes.All(p => context.Transactions.ContainsKey(p)))
             {
                 ExtensiblePayload payload = context.MakeCommit();
-                Log($"send commit");
+                Log($"Sending {nameof(Commit)}");
                 context.Save();
                 localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
                 // Set timer, so we will resend the commit in case of a networking issue
@@ -178,8 +172,8 @@ namespace Neo.Consensus
         {
             context.Reset(viewNumber);
             if (viewNumber > 0)
-                Log($"changeview: view={viewNumber} primary={context.Validators[context.GetPrimaryIndex((byte)(viewNumber - 1u))]}", LogLevel.Warning);
-            Log($"initialize: height={context.Block.Index} view={viewNumber} index={context.MyIndex} role={(context.IsPrimary ? "Primary" : context.WatchOnly ? "WatchOnly" : "Backup")}");
+                Log($"View changed: view={viewNumber} primary={context.Validators[context.GetPrimaryIndex((byte)(viewNumber - 1u))]}", LogLevel.Warning);
+            Log($"Initialize: height={context.Block.Index} view={viewNumber} index={context.MyIndex} role={(context.IsPrimary ? "Primary" : context.WatchOnly ? "WatchOnly" : "Backup")}");
             if (context.WatchOnly) return;
             if (context.IsPrimary)
             {
@@ -207,7 +201,7 @@ namespace Neo.Consensus
             }
         }
 
-        private void Log(string message, LogLevel level = LogLevel.Info)
+        private static void Log(string message, LogLevel level = LogLevel.Info)
         {
             Utility.Log(nameof(ConsensusService), level, message);
         }
@@ -234,7 +228,7 @@ namespace Neo.Consensus
             if (existingCommitPayload != null)
             {
                 if (existingCommitPayload.Hash != payload.Hash)
-                    Log($"{nameof(OnCommitReceived)}: different commit from validator! height={commit.BlockIndex} index={commit.ValidatorIndex} view={commit.ViewNumber} existingView={context.GetMessage(existingCommitPayload).ViewNumber}", LogLevel.Warning);
+                    Log($"Rejected {nameof(Commit)}: height={commit.BlockIndex} index={commit.ValidatorIndex} view={commit.ViewNumber} existingView={context.GetMessage(existingCommitPayload).ViewNumber}", LogLevel.Warning);
                 return;
             }
 
@@ -258,9 +252,11 @@ namespace Neo.Consensus
                 }
                 return;
             }
-            // Receiving commit from another view
-            Log($"{nameof(OnCommitReceived)}: record commit for different view={commit.ViewNumber} index={commit.ValidatorIndex} height={commit.BlockIndex}");
-            existingCommitPayload = payload;
+            else
+            {
+                // Receiving commit from another view
+                existingCommitPayload = payload;
+            }
         }
 
         // this function increases existing timer (never decreases) with a value proportional to `maxDelayInBlockTimes`*`Blockchain.MillisecondsPerBlock`
@@ -291,7 +287,7 @@ namespace Neo.Consensus
             {
                 if (context.Block.Index < message.BlockIndex)
                 {
-                    Log($"chain sync: expected={message.BlockIndex} current={context.Block.Index - 1} nodes={LocalNode.Singleton.ConnectedCount}", LogLevel.Warning);
+                    Log($"Chain is behind: expected={message.BlockIndex} current={context.Block.Index - 1} nodes={LocalNode.Singleton.ConnectedCount}", LogLevel.Warning);
                 }
                 return;
             }
@@ -323,7 +319,7 @@ namespace Neo.Consensus
 
         private void OnPersistCompleted(Block block)
         {
-            Log($"persist block: height={block.Index} hash={block.Hash} tx={block.Transactions.Length}");
+            Log($"Persisted {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length}");
             knownHashes.Clear();
             InitializeConsensus(0);
         }
@@ -375,11 +371,7 @@ namespace Neo.Consensus
             }
             finally
             {
-                Log($"{nameof(OnRecoveryMessageReceived)}: finished (valid/total) " +
-                    $"ChgView: {validChangeViews}/{totalChangeViews} " +
-                    $"PrepReq: {validPrepReq}/{totalPrepReq} " +
-                    $"PrepResp: {validPrepResponses}/{totalPrepResponses} " +
-                    $"Commits: {validCommits}/{totalCommits}");
+                Log($"Recovery finished: (valid/total) ChgView: {validChangeViews}/{totalChangeViews} PrepReq: {validPrepReq}/{totalPrepReq} PrepResp: {validPrepResponses}/{totalPrepResponses} Commits: {validCommits}/{totalCommits}");
                 isRecovering = false;
             }
         }
@@ -394,7 +386,7 @@ namespace Neo.Consensus
             // additional recovery message response.
             if (!knownHashes.Add(payload.Hash)) return;
 
-            Log($"On{message.GetType().Name}Received: height={message.BlockIndex} index={message.ValidatorIndex} view={message.ViewNumber}");
+            Log($"{nameof(OnRecoveryRequestReceived)}: height={message.BlockIndex} index={message.ValidatorIndex} view={message.ViewNumber}");
             if (context.WatchOnly) return;
             if (!context.CommitSent)
             {
@@ -411,7 +403,6 @@ namespace Neo.Consensus
 
                 if (!shouldSendRecovery) return;
             }
-            Log($"send recovery: view={context.ViewNumber}");
             localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeRecoveryMessage() });
         }
 
@@ -537,7 +528,10 @@ namespace Neo.Consensus
         private void RequestRecovery()
         {
             if (context.Block.Index == Blockchain.Singleton.HeaderHeight + 1)
+            {
+                Log($"Sending {nameof(RecoveryRequest)}: height={context.Block.Index} view={context.ViewNumber} nc={context.CountCommitted} nf={context.CountFailed}");
                 localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeRecoveryRequest() });
+            }
         }
 
         private void OnStart()
@@ -569,7 +563,6 @@ namespace Neo.Consensus
         {
             if (context.WatchOnly || context.BlockSent) return;
             if (timer.Height != context.Block.Index || timer.ViewNumber != context.ViewNumber) return;
-            Log($"timeout: height={timer.Height} view={timer.ViewNumber}");
             if (context.IsPrimary && !context.RequestSentOrReceived)
             {
                 SendPrepareRequest();
@@ -579,7 +572,7 @@ namespace Neo.Consensus
                 if (context.CommitSent)
                 {
                     // Re-send commit periodically by sending recover message in case of a network issue.
-                    Log($"send recovery to resend commit");
+                    Log($"Sending {nameof(RecoveryMessage)} to resend {nameof(Commit)}");
                     localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeRecoveryMessage() });
                     ChangeTimer(TimeSpan.FromMilliseconds(Blockchain.MillisecondsPerBlock << 1));
                 }
@@ -631,13 +624,14 @@ namespace Neo.Consensus
             ChangeTimer(TimeSpan.FromMilliseconds(Blockchain.MillisecondsPerBlock << (expectedView + 1)));
             if ((context.CountCommitted + context.CountFailed) > context.F)
             {
-                Log($"skip requesting change view: height={context.Block.Index} view={context.ViewNumber} nv={expectedView} nc={context.CountCommitted} nf={context.CountFailed} reason={reason}");
                 RequestRecovery();
-                return;
             }
-            Log($"request change view: height={context.Block.Index} view={context.ViewNumber} nv={expectedView} nc={context.CountCommitted} nf={context.CountFailed} reason={reason}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeChangeView(reason) });
-            CheckExpectedView(expectedView);
+            else
+            {
+                Log($"Sending {nameof(ChangeView)}: height={context.Block.Index} view={context.ViewNumber} nv={expectedView} nc={context.CountCommitted} nf={context.CountFailed} reason={reason}");
+                localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeChangeView(reason) });
+                CheckExpectedView(expectedView);
+            }
         }
 
         private bool ReverifyAndProcessPayload(ExtensiblePayload payload)
@@ -649,7 +643,7 @@ namespace Neo.Consensus
 
         private void SendPrepareRequest()
         {
-            Log($"send prepare request: height={context.Block.Index} view={context.ViewNumber}");
+            Log($"Sending {nameof(PrepareRequest)}: height={context.Block.Index} view={context.ViewNumber}");
             localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest() });
 
             if (context.Validators.Length == 1)
