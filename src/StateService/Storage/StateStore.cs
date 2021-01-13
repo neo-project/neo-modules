@@ -2,6 +2,7 @@ using Akka.Actor;
 using Neo.IO;
 using Neo.IO.Caching;
 using Neo.Ledger;
+using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.Plugins.MPT;
 using System;
@@ -41,6 +42,7 @@ namespace Neo.Plugins.StateService.Storage
             this.core = core;
             this.store = core.LoadStore(path);
             singleton = this;
+            core.ActorSystem.EventStream.Subscribe(Self, typeof(Blockchain.RelayResult));
             UpdateCurrentSnapshot();
         }
 
@@ -65,15 +67,32 @@ namespace Neo.Plugins.StateService.Storage
         {
             switch (message)
             {
-                case StateRoot state_root:
-                    Sender.Tell(OnNewStateRoot(state_root));
-                    break;
                 case StorageChanges changes:
                     UpdateLocalStateRoot(changes.Height, changes.ChangeSet);
+                    break;
+                case Blockchain.RelayResult rr:
+                    if (rr.Result == VerifyResult.Succeed && rr.Inventory is ExtensiblePayload payload && payload.Category == StatePlugin.StatePayloadCategory)
+                        OnStatePayload(payload);
                     break;
                 default:
                     break;
             }
+        }
+
+        private void OnStatePayload(ExtensiblePayload payload)
+        {
+            StateRoot state_root = null;
+            try
+            {
+                state_root = payload.Data?.AsSerializable<StateRoot>();
+            }
+            catch (Exception ex)
+            {
+                Utility.Log(nameof(StateStore), LogLevel.Warning, " invalid state root " + ex.Message);
+                return;
+            }
+            if (state_root != null)
+                OnNewStateRoot(state_root);
         }
 
         private bool OnNewStateRoot(StateRoot state_root)

@@ -7,6 +7,7 @@ namespace Neo.Plugins.StateService
 {
     public partial class StatePlugin : Plugin
     {
+        public const string StatePayloadCategory = "StateService";
         public ActorSystem ActorSystem { get; } = ActorSystem.Create(nameof(StatePlugin));
         public IActorRef Store { get; }
         public override string Name => "StateService";
