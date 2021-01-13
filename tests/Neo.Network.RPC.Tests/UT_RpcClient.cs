@@ -184,7 +184,7 @@ namespace Neo.Network.RPC.Tests
             foreach (var test in tests)
             {
                 var result = await rpc.GetNativeContractsAsync();
-                Assert.AreEqual(test.Response.Result.ToString(), (JArray)result.Select(p => p.ToJson()).ToArray().ToString());
+                Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => p.ToJson()).ToArray()).ToString());
             }
         }
 
