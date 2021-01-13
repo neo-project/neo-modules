@@ -1,11 +1,15 @@
-
 using Akka.Actor;
+using Neo.IO.Caching;
+using Neo.Network.P2P.Payloads;
+using Neo.Persistence;
 using Neo.Plugins.StateService.Storage;
-using Neo.Wallets;
+using System.Collections.Generic;
+using System.Linq;
+using static Neo.Ledger.Blockchain;
 
 namespace Neo.Plugins.StateService
 {
-    public partial class StatePlugin : Plugin
+    public class StatePlugin : Plugin, IPersistencePlugin
     {
         public const string StatePayloadCategory = "StateService";
         public ActorSystem ActorSystem { get; } = ActorSystem.Create(nameof(StatePlugin));
@@ -29,6 +33,25 @@ namespace Neo.Plugins.StateService
             System.EnsureStoped(Store);
             ActorSystem.Dispose();
             ActorSystem.WhenTerminated.Wait();
+        }
+
+        void IPersistencePlugin.OnPersist(Block block, StoreView snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
+        {
+            List<StateStore.Item> changes = new List<StateStore.Item>();
+            foreach (var item in snapshot.Storages.GetChangeSet().Where(p => p.State != TrackState.None))
+            {
+                changes.Add(new StateStore.Item
+                {
+                    State = item.State,
+                    Key = item.Key,
+                    Value = item.Item,
+                });
+            }
+            Store.Tell(new StateStore.StorageChanges
+            {
+                Height = block.Index,
+                ChangeSet = changes,
+            });
         }
     }
 }
