@@ -12,42 +12,38 @@ namespace Neo.Plugins.StateService
     public class StatePlugin : Plugin, IPersistencePlugin
     {
         public const string StatePayloadCategory = "StateService";
-        public IActorRef Store { get; }
         public override string Name => "StateService";
         public override string Description => "Enables MPT for the node";
 
-        public StatePlugin()
-        {
-            Store = System.ActorSystem.ActorOf(StateStore.Props(System, Settings.Default.Path));
-        }
+        private IActorRef store;
 
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
         }
 
+        protected override void OnPluginsLoaded()
+        {
+            store = System.ActorSystem.ActorOf(StateStore.Props(System, Settings.Default.Path));
+        }
+
         public override void Dispose()
         {
             base.Dispose();
-            System.EnsureStoped(Store);
+            System.EnsureStoped(store);
         }
 
         void IPersistencePlugin.OnPersist(Block block, StoreView snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
         {
-            List<StateStore.Item> changes = new List<StateStore.Item>();
-            foreach (var item in snapshot.Storages.GetChangeSet().Where(p => p.State != TrackState.None))
-            {
-                changes.Add(new StateStore.Item
-                {
-                    State = item.State,
-                    Key = item.Key,
-                    Value = item.Item,
-                });
-            }
-            Store.Tell(new StateStore.StorageChanges
+            store.Tell(new StateStore.StorageChanges
             {
                 Height = block.Index,
-                ChangeSet = changes,
+                ChangeSet = snapshot.Storages.GetChangeSet().Where(p => p.State != TrackState.None).Select(p => new StateStore.Item
+                {
+                    State = p.State,
+                    Key = p.Key,
+                    Value = p.Item,
+                }).ToList()
             });
         }
     }
