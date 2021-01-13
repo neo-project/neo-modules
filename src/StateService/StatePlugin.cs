@@ -12,14 +12,13 @@ namespace Neo.Plugins.StateService
     public class StatePlugin : Plugin, IPersistencePlugin
     {
         public const string StatePayloadCategory = "StateService";
-        public ActorSystem ActorSystem { get; } = ActorSystem.Create(nameof(StatePlugin));
         public IActorRef Store { get; }
         public override string Name => "StateService";
         public override string Description => "Enables MPT for the node";
 
         public StatePlugin()
         {
-            Store = ActorSystem.ActorOf(StateStore.Props(this, System, Settings.Default.Path));
+            Store = System.ActorSystem.ActorOf(StateStore.Props(System, Settings.Default.Path));
         }
 
         protected override void Configure()
@@ -31,8 +30,6 @@ namespace Neo.Plugins.StateService
         {
             base.Dispose();
             System.EnsureStoped(Store);
-            ActorSystem.Dispose();
-            ActorSystem.WhenTerminated.Wait();
         }
 
         void IPersistencePlugin.OnPersist(Block block, StoreView snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)

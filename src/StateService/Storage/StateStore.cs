@@ -15,7 +15,6 @@ namespace Neo.Plugins.StateService.Storage
     {
         public class Item { public TrackState State; public StorageKey Key; public StorageItem Value; }
         public class StorageChanges { public uint Height; public List<Item> ChangeSet; }
-        private readonly StatePlugin system;
         private readonly NeoSystem core;
         private readonly IStore store;
         private const int MaxCacheCount = 100;
@@ -35,10 +34,9 @@ namespace Neo.Plugins.StateService.Storage
             }
         }
 
-        public StateStore(StatePlugin system, NeoSystem core, string path)
+        public StateStore(NeoSystem core, string path)
         {
             if (singleton != null) throw new InvalidOperationException(nameof(StateStore));
-            this.system = system;
             this.core = core;
             this.store = core.LoadStore(path);
             singleton = this;
@@ -173,9 +171,9 @@ namespace Neo.Plugins.StateService.Storage
             base.PostStop();
         }
 
-        public static Props Props(StatePlugin system, NeoSystem core, string path)
+        public static Props Props(NeoSystem core, string path)
         {
-            return Akka.Actor.Props.Create(() => new StateStore(system, core, path));
+            return Akka.Actor.Props.Create(() => new StateStore(core, path));
         }
     }
 }
