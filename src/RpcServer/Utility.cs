@@ -35,7 +35,7 @@ namespace Neo.Plugins
                 ["hash"] = contract.Hash.ToString(),
                 ["id"] = contract.Id,
                 ["manifest"] = contract.Manifest.ToJson(),
-                ["activeBlockIndex"] = contract.ActiveBlockIndex
+                ["activeblockindex"] = contract.ActiveBlockIndex
             };
         }
     }
