@@ -8,6 +8,7 @@ namespace Neo.Consensus
 {
     public class DBFTPlugin : Plugin, IConsensusProvider, IP2PPlugin
     {
+        private IWalletProvider walletProvider;
         private IActorRef consensus;
         private bool started = false;
 
@@ -16,10 +17,23 @@ namespace Neo.Consensus
             Settings.Load(GetConfiguration());
         }
 
+        protected override void OnPluginsLoaded()
+        {
+            walletProvider = GetService<IWalletProvider>();
+            if (Settings.Default.AutoStart)
+                walletProvider.WalletOpened += WalletProvider_WalletOpened;
+        }
+
+        private void WalletProvider_WalletOpened(object sender, Wallet wallet)
+        {
+            walletProvider.WalletOpened -= WalletProvider_WalletOpened;
+            Start(wallet);
+        }
+
         [ConsoleCommand("start consensus", Category = "Consensus", Description = "Start consensus service (dBFT)")]
         private void OnStart()
         {
-            Start(GetService<IWalletProvider>().GetWallet());
+            Start(walletProvider.GetWallet());
         }
 
         public void Start(Wallet wallet)
