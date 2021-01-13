@@ -24,5 +24,19 @@ namespace Neo.Plugins
             json["netfee"] = new BigDecimal(tx.NetworkFee, NativeContract.GAS.Decimals).ToString();
             return json;
         }
+
+        public static JObject NativeContractToJson(this NativeContract contract)
+        {
+            return new JObject
+            {
+                ["name"] = contract.Name,
+                ["script"] = Convert.ToBase64String(contract.Script),
+                ["nef"] = contract.Nef.ToJson(),
+                ["hash"] = contract.Hash.ToString(),
+                ["id"] = contract.Id,
+                ["manifest"] = contract.Manifest.ToJson(),
+                ["activeBlockIndex"] = contract.ActiveBlockIndex
+            };
+        }
     }
 }

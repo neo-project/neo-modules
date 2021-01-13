@@ -209,6 +209,15 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
+        /// Get all native contracts.
+        /// </summary>
+        public async Task<RpcNativeContract[]> GetNativeContractsAsync()
+        {
+            var result = await RpcSendAsync(GetRpcName()).ConfigureAwait(false);
+            return ((JArray)result).Select(p => RpcNativeContract.FromJson(p)).ToArray();
+        }
+
+        /// <summary>
         /// Obtains the list of unconfirmed transactions in memory.
         /// </summary>
         public async Task<string[]> GetRawMempoolAsync()
