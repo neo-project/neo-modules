@@ -1146,7 +1146,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeBlockIndex": 0
+          "activeblockindex": 0
         },
         {
           "name": "NeoToken",
@@ -1352,7 +1352,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeBlockIndex": 0
+          "activeblockindex": 0
         },
         {
           "name": "GasToken",
@@ -1462,7 +1462,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeBlockIndex": 0
+          "activeblockindex": 0
         },
         {
           "name": "PolicyContract",
@@ -1645,7 +1645,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeBlockIndex": 0
+          "activeblockindex": 0
         },
         {
           "name": "RoleManagement",
@@ -1710,7 +1710,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeBlockIndex": 0
+          "activeblockindex": 0
         },
         {
           "name": "OracleContract",
@@ -1820,7 +1820,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeBlockIndex": 0
+          "activeblockindex": 0
         },
         {
           "name": "NameService",
@@ -2115,7 +2115,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeBlockIndex": 0
+          "activeblockindex": 0
         }
       ]
     }
