@@ -39,7 +39,7 @@ namespace Neo.Network.RPC.Models
                 ["hash"] = Hash.ToString(),
                 ["id"] = Id,
                 ["manifest"] = Manifest.ToJson(),
-                ["activeBlockIndex"] = ActiveBlockIndex
+                ["activeblockindex"] = ActiveBlockIndex
             };
         }
     }
