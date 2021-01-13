@@ -46,6 +46,9 @@ namespace Neo.Network.RPC.Tests
             JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.GetContractStateAsync).ToLower()).Response.Result;
             var item = RpcContractState.FromJson(json);
             Assert.AreEqual(json.ToString(), item.ToJson().ToString());
+
+            var nef = RpcNefFile.FromJson(json["nef"]);
+            Assert.AreEqual(json["nef"].ToString(), nef.ToJson().ToString());
         }
 
         [TestMethod()]
@@ -54,6 +57,12 @@ namespace Neo.Network.RPC.Tests
             JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.InvokeFunctionAsync).ToLower()).Response.Result;
             var item = RpcInvokeResult.FromJson(json);
             Assert.AreEqual(json.ToString(), item.ToJson().ToString());
+        }
+
+        [TestMethod()]
+        public void TestRpcMethodToken()
+        {
+            RpcMethodToken.FromJson(JObject.Parse("{\"hash\": \"0x0e1b9bfaa44e60311f6f3c96cfcd6d12c2fc3add\", \"method\":\"test\",\"paramcount\":\"1\",\"hasreturnvalue\":\"true\",\"callflags\":\"All\"}"));
         }
 
         [TestMethod()]
