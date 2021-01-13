@@ -38,12 +38,7 @@ namespace Neo.Plugins.StateService
             store.Tell(new StateStore.StorageChanges
             {
                 Height = block.Index,
-                ChangeSet = snapshot.Storages.GetChangeSet().Where(p => p.State != TrackState.None).Select(p => new StateStore.Item
-                {
-                    State = p.State,
-                    Key = p.Key,
-                    Value = p.Item,
-                }).ToList()
+                ChangeSet = snapshot.Storages.GetChangeSet().Where(p => p.State != TrackState.None).ToList()
             });
         }
     }

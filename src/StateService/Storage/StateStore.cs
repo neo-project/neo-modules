@@ -8,13 +8,14 @@ using Neo.Plugins.MPT;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Item = Neo.IO.Caching.DataCache<Neo.Ledger.StorageKey, Neo.Ledger.StorageItem>.Trackable;
 
 namespace Neo.Plugins.StateService.Storage
 {
-    public class StateStore : UntypedActor
+    class StateStore : UntypedActor
     {
-        public class Item { public TrackState State; public StorageKey Key; public StorageItem Value; }
         public class StorageChanges { public uint Height; public List<Item> ChangeSet; }
+
         private readonly NeoSystem core;
         private readonly IStore store;
         private const int MaxCacheCount = 100;
@@ -126,10 +127,10 @@ namespace Neo.Plugins.StateService.Storage
                 switch (item.State)
                 {
                     case TrackState.Added:
-                        state_snapshot.Trie.Put(item.Key, item.Value);
+                        state_snapshot.Trie.Put(item.Key, item.Item);
                         break;
                     case TrackState.Changed:
-                        state_snapshot.Trie.Put(item.Key, item.Value);
+                        state_snapshot.Trie.Put(item.Key, item.Item);
                         break;
                     case TrackState.Deleted:
                         state_snapshot.Trie.Delete(item.Key);
