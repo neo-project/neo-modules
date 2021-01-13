@@ -83,7 +83,7 @@ namespace Neo.Plugins.StateService.Storage
             switch (message)
             {
                 case StateRoot state_root:
-                    OnNewStateRoot(state_root);
+                    Sender.Tell(OnNewStateRoot(state_root));
                     break;
                 case StorageChanges changes:
                     UpdateLocalStateRoot(changes.Height, changes.ChangeSet);
@@ -93,27 +93,28 @@ namespace Neo.Plugins.StateService.Storage
             }
         }
 
-        private void OnNewStateRoot(StateRoot state_root)
+        private bool OnNewStateRoot(StateRoot state_root)
         {
-            if (state_root?.Witness is null) return;
-            if (state_root.Index <= ValidatedRootIndex) return;
+            if (state_root?.Witness is null) return false;
+            if (state_root.Index <= ValidatedRootIndex) return false;
             if (LocalRootIndex < state_root.Index && state_root.Index < LocalRootIndex + MaxCacheCount)
             {
                 cache.Add(state_root.Index, state_root);
-                return;
+                return true;
             }
             using var state_snapshot = Singleton.GetSnapshot();
             StateRoot local_root = state_snapshot.StateRoots.GetAndChange(state_root.Index);
-            if (local_root is null || local_root.Witness != null) return;
+            if (local_root is null || local_root.Witness != null) return false;
             using var snapshot = Blockchain.Singleton.GetSnapshot();
-            if (!state_root.Verify(snapshot)) return;
-            if (local_root.RootHash != state_root.RootHash) return;
+            if (!state_root.Verify(snapshot)) return false;
+            if (local_root.RootHash != state_root.RootHash) return false;
             local_root.Witness = state_root.Witness;
             HashIndexState validated = state_snapshot.ValidatedHashIndex.GetAndChange();
             validated.Index = state_root.Index;
             validated.Hash = state_root.RootHash;
             state_snapshot.Commit();
             //Tell validation service
+            return true;
         }
 
         private void UpdateLocalStateRoot(uint height, List<Item> change_set)
