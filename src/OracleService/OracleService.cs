@@ -297,11 +297,10 @@ namespace Neo.Plugins
             var m = n - (n - 1) / 3;
             var oracleSignContract = Contract.CreateMultiSigContract(m, oracleNodes);
 
-            Random rand = new Random();
             var tx = new Transaction()
             {
                 Version = 0,
-                Nonce = (uint)rand.Next(),
+                Nonce = BitConverter.ToUInt32(Crypto.Hash160(response.ToArray())),
                 ValidUntilBlock = requestTx.BlockIndex + Transaction.MaxValidUntilBlockIncrement,
                 Signers = new[]
                 {
