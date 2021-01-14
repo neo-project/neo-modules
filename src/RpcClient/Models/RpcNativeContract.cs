@@ -6,9 +6,9 @@ namespace Neo.Network.RPC.Models
 {
     public class RpcNativeContract
     {
-        public NefFile Nef { get; set; }
-        public UInt160 Hash { get; set; }
         public int Id { get; set; }
+        public UInt160 Hash { get; set; }
+        public NefFile Nef { get; set; }
         public ContractManifest Manifest { get; set; }
         public uint ActiveBlockIndex { get; set; }
 
