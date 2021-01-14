@@ -241,7 +241,7 @@ namespace Neo.Plugins
                 ECPoint[] oraclePublicKeys = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
                 foreach (var account in wallet.GetAccounts())
                 {
-                    var oraclePub = account.GetKey().PublicKey;
+                    var oraclePub = account.GetKey()?.PublicKey;
                     if (!account.HasKey || account.Lock || !oraclePublicKeys.Contains(oraclePub)) continue;
 
                     var txSign = responseTx.Sign(account.GetKey());
