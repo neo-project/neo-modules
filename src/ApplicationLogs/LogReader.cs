@@ -165,14 +165,7 @@ namespace Neo.Plugins
 
         static string GetExceptionMessage(Exception exception)
         {
-            if (exception == null) return null;
-
-            if (exception.InnerException != null)
-            {
-                return GetExceptionMessage(exception.InnerException);
-            }
-
-            return exception.Message;
+            return exception?.GetBaseException().Message;
         }
     }
 }
