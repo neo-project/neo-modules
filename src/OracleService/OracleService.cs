@@ -430,7 +430,7 @@ namespace Neo.Plugins
 
             NJObject beforeObject = NJObject.Parse(input);
             NJArray afterObjects = new NJArray(beforeObject.SelectTokens(filterArgs));
-            return Utility.StrictUTF8.GetBytes(afterObjects.ToString());
+            return Utility.StrictUTF8.GetBytes(afterObjects.ToString(Newtonsoft.Json.Formatting.None));
         }
 
         private static bool CheckTxSign(StoreView snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
