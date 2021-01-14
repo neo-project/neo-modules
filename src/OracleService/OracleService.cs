@@ -300,7 +300,7 @@ namespace Neo.Plugins
             var tx = new Transaction()
             {
                 Version = 0,
-                Nonce = BitConverter.ToUInt32(Crypto.Hash160(response.ToArray())),
+                Nonce = unchecked((uint)response.Id),
                 ValidUntilBlock = requestTx.BlockIndex + Transaction.MaxValidUntilBlockIncrement,
                 Signers = new[]
                 {
