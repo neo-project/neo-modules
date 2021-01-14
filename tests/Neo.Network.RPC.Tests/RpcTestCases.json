@@ -1006,6 +1006,1107 @@
     }
   },
   {
+    "Name": "getnativecontractsasync",
+    "Request": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "getnativecontracts",
+      "params": []
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": [
+        {
+          "id": -1,
+          "hash": "0xbee421fdbb3e791265d2104cb34934f53fcc0e45",
+          "nef": {
+            "magic": 860243278,
+            "compiler": "ScriptBuilder",
+            "version": "3.0",
+            "tokens": [],
+            "script": "D0Ea93tn",
+            "checksum": 4234537066
+          },
+          "manifest": {
+            "name": "ContractManagement",
+            "groups": [],
+            "supportedstandards": [],
+            "abi": {
+              "methods": [
+                {
+                  "name": "getMinimumDeploymentFee",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                },
+                {
+                  "name": "setMinimumDeploymentFee",
+                  "parameters": [
+                    {
+                      "name": "value",
+                      "type": "Integer"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Void",
+                  "safe": false
+                },
+                {
+                  "name": "getContract",
+                  "parameters": [
+                    {
+                      "name": "hash",
+                      "type": "Hash160"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Array",
+                  "safe": true
+                },
+                {
+                  "name": "deploy",
+                  "parameters": [
+                    {
+                      "name": "nefFile",
+                      "type": "ByteArray"
+                    },
+                    {
+                      "name": "manifest",
+                      "type": "ByteArray"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Array",
+                  "safe": false
+                },
+                {
+                  "name": "update",
+                  "parameters": [
+                    {
+                      "name": "nefFile",
+                      "type": "ByteArray"
+                    },
+                    {
+                      "name": "manifest",
+                      "type": "ByteArray"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Void",
+                  "safe": false
+                },
+                {
+                  "name": "destroy",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Void",
+                  "safe": false
+                }
+              ],
+              "events": [
+                {
+                  "name": "Deploy",
+                  "parameters": [
+                    {
+                      "name": "Hash",
+                      "type": "Hash160"
+                    }
+                  ]
+                },
+                {
+                  "name": "Update",
+                  "parameters": [
+                    {
+                      "name": "Hash",
+                      "type": "Hash160"
+                    }
+                  ]
+                },
+                {
+                  "name": "Destroy",
+                  "parameters": [
+                    {
+                      "name": "Hash",
+                      "type": "Hash160"
+                    }
+                  ]
+                }
+              ]
+            },
+            "permissions": [
+              {
+                "contract": "*",
+                "methods": "*"
+              }
+            ],
+            "trusts": [],
+            "extra": null
+          },
+          "activeblockindex": 0
+        },
+        {
+          "id": -2,
+          "hash": "0x4961bf0ab79370b23dc45cde29f568d0e0fa6e93",
+          "nef": {
+            "magic": 860243278,
+            "compiler": "ScriptBuilder",
+            "version": "3.0",
+            "tokens": [],
+            "script": "AP5BGvd7Zw==",
+            "checksum": 4259551467
+          },
+          "manifest": {
+            "name": "NeoToken",
+            "groups": [],
+            "supportedstandards": [
+              "NEP-17"
+            ],
+            "abi": {
+              "methods": [
+                {
+                  "name": "totalSupply",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                },
+                {
+                  "name": "setGasPerBlock",
+                  "parameters": [
+                    {
+                      "name": "gasPerBlock",
+                      "type": "Integer"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": false
+                },
+                {
+                  "name": "getGasPerBlock",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                },
+                {
+                  "name": "unclaimedGas",
+                  "parameters": [
+                    {
+                      "name": "account",
+                      "type": "Hash160"
+                    },
+                    {
+                      "name": "end",
+                      "type": "Integer"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                },
+                {
+                  "name": "registerCandidate",
+                  "parameters": [
+                    {
+                      "name": "pubkey",
+                      "type": "ByteArray"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": false
+                },
+                {
+                  "name": "unregisterCandidate",
+                  "parameters": [
+                    {
+                      "name": "pubkey",
+                      "type": "ByteArray"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": false
+                },
+                {
+                  "name": "vote",
+                  "parameters": [
+                    {
+                      "name": "account",
+                      "type": "Hash160"
+                    },
+                    {
+                      "name": "voteTo",
+                      "type": "ByteArray"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": false
+                },
+                {
+                  "name": "getCandidates",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Array",
+                  "safe": true
+                },
+                {
+                  "name": "getCommittee",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Array",
+                  "safe": true
+                },
+                {
+                  "name": "getNextBlockValidators",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Array",
+                  "safe": true
+                },
+                {
+                  "name": "balanceOf",
+                  "parameters": [
+                    {
+                      "name": "account",
+                      "type": "Hash160"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                },
+                {
+                  "name": "transfer",
+                  "parameters": [
+                    {
+                      "name": "from",
+                      "type": "Hash160"
+                    },
+                    {
+                      "name": "to",
+                      "type": "Hash160"
+                    },
+                    {
+                      "name": "amount",
+                      "type": "Integer"
+                    },
+                    {
+                      "name": "data",
+                      "type": "Any"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": false
+                },
+                {
+                  "name": "symbol",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "String",
+                  "safe": true
+                },
+                {
+                  "name": "decimals",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                }
+              ],
+              "events": [
+                {
+                  "name": "Transfer",
+                  "parameters": [
+                    {
+                      "name": "from",
+                      "type": "Hash160"
+                    },
+                    {
+                      "name": "to",
+                      "type": "Hash160"
+                    },
+                    {
+                      "name": "amount",
+                      "type": "Integer"
+                    }
+                  ]
+                }
+              ]
+            },
+            "permissions": [
+              {
+                "contract": "*",
+                "methods": "*"
+              }
+            ],
+            "trusts": [],
+            "extra": null
+          },
+          "activeblockindex": 0
+        },
+        {
+          "id": -3,
+          "hash": "0x9ac04cf223f646de5f7faccafe34e30e5d4382a2",
+          "nef": {
+            "magic": 860243278,
+            "compiler": "ScriptBuilder",
+            "version": "3.0",
+            "tokens": [],
+            "script": "AP1BGvd7Zw==",
+            "checksum": 571607263
+          },
+          "manifest": {
+            "name": "GasToken",
+            "groups": [],
+            "supportedstandards": [
+              "NEP-17"
+            ],
+            "abi": {
+              "methods": [
+                {
+                  "name": "totalSupply",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                },
+                {
+                  "name": "balanceOf",
+                  "parameters": [
+                    {
+                      "name": "account",
+                      "type": "Hash160"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                },
+                {
+                  "name": "transfer",
+                  "parameters": [
+                    {
+                      "name": "from",
+                      "type": "Hash160"
+                    },
+                    {
+                      "name": "to",
+                      "type": "Hash160"
+                    },
+                    {
+                      "name": "amount",
+                      "type": "Integer"
+                    },
+                    {
+                      "name": "data",
+                      "type": "Any"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": false
+                },
+                {
+                  "name": "symbol",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "String",
+                  "safe": true
+                },
+                {
+                  "name": "decimals",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                }
+              ],
+              "events": [
+                {
+                  "name": "Transfer",
+                  "parameters": [
+                    {
+                      "name": "from",
+                      "type": "Hash160"
+                    },
+                    {
+                      "name": "to",
+                      "type": "Hash160"
+                    },
+                    {
+                      "name": "amount",
+                      "type": "Integer"
+                    }
+                  ]
+                }
+              ]
+            },
+            "permissions": [
+              {
+                "contract": "*",
+                "methods": "*"
+              }
+            ],
+            "trusts": [],
+            "extra": null
+          },
+          "activeblockindex": 0
+        },
+        {
+          "id": -4,
+          "hash": "0xc939a4af1c762e5edca36d4b61c06ba82c4c6ff5",
+          "nef": {
+            "magic": 860243278,
+            "compiler": "ScriptBuilder",
+            "version": "3.0",
+            "tokens": [],
+            "script": "APxBGvd7Zw==",
+            "checksum": 1792437732
+          },
+          "manifest": {
+            "name": "PolicyContract",
+            "groups": [],
+            "supportedstandards": [],
+            "abi": {
+              "methods": [
+                {
+                  "name": "getMaxTransactionsPerBlock",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                },
+                {
+                  "name": "getMaxBlockSize",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                },
+                {
+                  "name": "getMaxBlockSystemFee",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                },
+                {
+                  "name": "getFeePerByte",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                },
+                {
+                  "name": "getExecFeeFactor",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                },
+                {
+                  "name": "getStoragePrice",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                },
+                {
+                  "name": "isBlocked",
+                  "parameters": [
+                    {
+                      "name": "account",
+                      "type": "Hash160"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": true
+                },
+                {
+                  "name": "setMaxBlockSize",
+                  "parameters": [
+                    {
+                      "name": "value",
+                      "type": "Integer"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": false
+                },
+                {
+                  "name": "setMaxTransactionsPerBlock",
+                  "parameters": [
+                    {
+                      "name": "value",
+                      "type": "Integer"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": false
+                },
+                {
+                  "name": "setMaxBlockSystemFee",
+                  "parameters": [
+                    {
+                      "name": "value",
+                      "type": "Integer"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": false
+                },
+                {
+                  "name": "setFeePerByte",
+                  "parameters": [
+                    {
+                      "name": "value",
+                      "type": "Integer"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": false
+                },
+                {
+                  "name": "setExecFeeFactor",
+                  "parameters": [
+                    {
+                      "name": "value",
+                      "type": "Integer"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": false
+                },
+                {
+                  "name": "setStoragePrice",
+                  "parameters": [
+                    {
+                      "name": "value",
+                      "type": "Integer"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": false
+                },
+                {
+                  "name": "blockAccount",
+                  "parameters": [
+                    {
+                      "name": "account",
+                      "type": "Hash160"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": false
+                },
+                {
+                  "name": "unblockAccount",
+                  "parameters": [
+                    {
+                      "name": "account",
+                      "type": "Hash160"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": false
+                }
+              ],
+              "events": []
+            },
+            "permissions": [
+              {
+                "contract": "*",
+                "methods": "*"
+              }
+            ],
+            "trusts": [],
+            "extra": null
+          },
+          "activeblockindex": 0
+        },
+        {
+          "id": -5,
+          "hash": "0xf4bbd95569e8dda2cb84eb609a1488ddd0d9fa91",
+          "nef": {
+            "magic": 860243278,
+            "compiler": "ScriptBuilder",
+            "version": "3.0",
+            "tokens": [],
+            "script": "APtBGvd7Zw==",
+            "checksum": 1875564659
+          },
+          "manifest": {
+            "name": "RoleManagement",
+            "groups": [],
+            "supportedstandards": [],
+            "abi": {
+              "methods": [
+                {
+                  "name": "getDesignatedByRole",
+                  "parameters": [
+                    {
+                      "name": "role",
+                      "type": "Integer"
+                    },
+                    {
+                      "name": "index",
+                      "type": "Integer"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Array",
+                  "safe": true
+                },
+                {
+                  "name": "designateAsRole",
+                  "parameters": [
+                    {
+                      "name": "role",
+                      "type": "Integer"
+                    },
+                    {
+                      "name": "nodes",
+                      "type": "Array"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Void",
+                  "safe": false
+                }
+              ],
+              "events": []
+            },
+            "permissions": [
+              {
+                "contract": "*",
+                "methods": "*"
+              }
+            ],
+            "trusts": [],
+            "extra": null
+          },
+          "activeblockindex": 0
+        },
+        {
+          "id": -6,
+          "hash": "0x8cd3889136056b3304ec59f6d424b8767710ed79",
+          "nef": {
+            "magic": 860243278,
+            "compiler": "ScriptBuilder",
+            "version": "3.0",
+            "tokens": [],
+            "script": "APpBGvd7Zw==",
+            "checksum": 3970697217
+          },
+          "manifest": {
+            "name": "OracleContract",
+            "groups": [],
+            "supportedstandards": [],
+            "abi": {
+              "methods": [
+                {
+                  "name": "finish",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Void",
+                  "safe": false
+                },
+                {
+                  "name": "request",
+                  "parameters": [
+                    {
+                      "name": "url",
+                      "type": "String"
+                    },
+                    {
+                      "name": "filter",
+                      "type": "String"
+                    },
+                    {
+                      "name": "callback",
+                      "type": "String"
+                    },
+                    {
+                      "name": "userData",
+                      "type": "Any"
+                    },
+                    {
+                      "name": "gasForResponse",
+                      "type": "Integer"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Void",
+                  "safe": false
+                },
+                {
+                  "name": "verify",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": true
+                }
+              ],
+              "events": [
+                {
+                  "name": "OracleRequest",
+                  "parameters": [
+                    {
+                      "name": "Id",
+                      "type": "Integer"
+                    },
+                    {
+                      "name": "RequestContract",
+                      "type": "Hash160"
+                    },
+                    {
+                      "name": "Url",
+                      "type": "String"
+                    },
+                    {
+                      "name": "Filter",
+                      "type": "String"
+                    }
+                  ]
+                },
+                {
+                  "name": "OracleResponse",
+                  "parameters": [
+                    {
+                      "name": "Id",
+                      "type": "Integer"
+                    },
+                    {
+                      "name": "OriginalTx",
+                      "type": "Hash256"
+                    }
+                  ]
+                }
+              ]
+            },
+            "permissions": [
+              {
+                "contract": "*",
+                "methods": "*"
+              }
+            ],
+            "trusts": [],
+            "extra": null
+          },
+          "activeblockindex": 0
+        },
+        {
+          "id": -7,
+          "hash": "0xa92fbe5bf164170a624474841485b20b45a26047",
+          "nef": {
+            "magic": 860243278,
+            "compiler": "ScriptBuilder",
+            "version": "3.0",
+            "tokens": [],
+            "script": "APlBGvd7Zw==",
+            "checksum": 2817451339
+          },
+          "manifest": {
+            "name": "NameService",
+            "groups": [],
+            "supportedstandards": [],
+            "abi": {
+              "methods": [
+                {
+                  "name": "addRoot",
+                  "parameters": [
+                    {
+                      "name": "root",
+                      "type": "String"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Void",
+                  "safe": false
+                },
+                {
+                  "name": "setPrice",
+                  "parameters": [
+                    {
+                      "name": "price",
+                      "type": "Integer"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Void",
+                  "safe": false
+                },
+                {
+                  "name": "getPrice",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                },
+                {
+                  "name": "isAvailable",
+                  "parameters": [
+                    {
+                      "name": "name",
+                      "type": "String"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": true
+                },
+                {
+                  "name": "register",
+                  "parameters": [
+                    {
+                      "name": "name",
+                      "type": "String"
+                    },
+                    {
+                      "name": "owner",
+                      "type": "Hash160"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": false
+                },
+                {
+                  "name": "renew",
+                  "parameters": [
+                    {
+                      "name": "name",
+                      "type": "String"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": false
+                },
+                {
+                  "name": "setAdmin",
+                  "parameters": [
+                    {
+                      "name": "name",
+                      "type": "String"
+                    },
+                    {
+                      "name": "admin",
+                      "type": "Hash160"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Void",
+                  "safe": false
+                },
+                {
+                  "name": "setRecord",
+                  "parameters": [
+                    {
+                      "name": "name",
+                      "type": "String"
+                    },
+                    {
+                      "name": "type",
+                      "type": "Integer"
+                    },
+                    {
+                      "name": "data",
+                      "type": "String"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Void",
+                  "safe": false
+                },
+                {
+                  "name": "getRecord",
+                  "parameters": [
+                    {
+                      "name": "name",
+                      "type": "String"
+                    },
+                    {
+                      "name": "type",
+                      "type": "Integer"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "String",
+                  "safe": true
+                },
+                {
+                  "name": "deleteRecord",
+                  "parameters": [
+                    {
+                      "name": "name",
+                      "type": "String"
+                    },
+                    {
+                      "name": "type",
+                      "type": "Integer"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Void",
+                  "safe": false
+                },
+                {
+                  "name": "resolve",
+                  "parameters": [
+                    {
+                      "name": "name",
+                      "type": "String"
+                    },
+                    {
+                      "name": "type",
+                      "type": "Integer"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "String",
+                  "safe": true
+                },
+                {
+                  "name": "totalSupply",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                },
+                {
+                  "name": "ownerOf",
+                  "parameters": [
+                    {
+                      "name": "tokenId",
+                      "type": "ByteArray"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Hash160",
+                  "safe": true
+                },
+                {
+                  "name": "properties",
+                  "parameters": [
+                    {
+                      "name": "tokenId",
+                      "type": "ByteArray"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Any",
+                  "safe": true
+                },
+                {
+                  "name": "balanceOf",
+                  "parameters": [
+                    {
+                      "name": "owner",
+                      "type": "Hash160"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                },
+                {
+                  "name": "tokensOf",
+                  "parameters": [
+                    {
+                      "name": "owner",
+                      "type": "Hash160"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Any",
+                  "safe": true
+                },
+                {
+                  "name": "transfer",
+                  "parameters": [
+                    {
+                      "name": "to",
+                      "type": "Hash160"
+                    },
+                    {
+                      "name": "tokenId",
+                      "type": "ByteArray"
+                    }
+                  ],
+                  "offset": 0,
+                  "returntype": "Boolean",
+                  "safe": false
+                },
+                {
+                  "name": "symbol",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "String",
+                  "safe": true
+                },
+                {
+                  "name": "decimals",
+                  "parameters": [],
+                  "offset": 0,
+                  "returntype": "Integer",
+                  "safe": true
+                }
+              ],
+              "events": [
+                {
+                  "name": "Transfer",
+                  "parameters": [
+                    {
+                      "name": "from",
+                      "type": "Hash160"
+                    },
+                    {
+                      "name": "to",
+                      "type": "Hash160"
+                    },
+                    {
+                      "name": "amount",
+                      "type": "Integer"
+                    },
+                    {
+                      "name": "tokenId",
+                      "type": "ByteArray"
+                    }
+                  ]
+                }
+              ]
+            },
+            "permissions": [
+              {
+                "contract": "*",
+                "methods": "*"
+              }
+            ],
+            "trusts": [],
+            "extra": null
+          },
+          "activeblockindex": 0
+        }
+      ]
+    }
+  },
+  {
     "Name": "getrawmempoolasync",
     "Request": {
       "jsonrpc": "2.0",
