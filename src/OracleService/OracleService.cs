@@ -56,8 +56,8 @@ namespace Neo.Plugins
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
-            foreach (var p in protocols)
-                p.Value.Configure();
+            foreach (var (_, p) in protocols)
+                p.Configure();
         }
 
         public override void Dispose()
@@ -125,20 +125,20 @@ namespace Neo.Plugins
         private async void OnTimer(object state)
         {
             List<ulong> outOfDate = new List<ulong>();
-            foreach (var task in pendingQueue)
+            foreach (var (id, task) in pendingQueue)
             {
-                var span = TimeProvider.Current.UtcNow - task.Value.Timestamp;
+                var span = TimeProvider.Current.UtcNow - task.Timestamp;
                 if (span > TimeSpan.FromSeconds(RefreshInterval) && span < TimeSpan.FromSeconds(RefreshInterval * 2))
                 {
                     List<Task> tasks = new List<Task>();
                     foreach (var account in wallet.GetAccounts())
-                        if (task.Value.BackupSigns.TryGetValue(account.GetKey().PublicKey, out byte[] sign))
-                            tasks.Add(SendResponseSignatureAsync(task.Key, sign, account.GetKey()));
+                        if (task.BackupSigns.TryGetValue(account.GetKey().PublicKey, out byte[] sign))
+                            tasks.Add(SendResponseSignatureAsync(id, sign, account.GetKey()));
                     await Task.WhenAll(tasks);
                 }
                 else if (span > Settings.Default.MaxTaskTimeout)
                 {
-                    outOfDate.Add(task.Key);
+                    outOfDate.Add(id);
                 }
             }
             foreach (ulong requestId in outOfDate)
@@ -168,7 +168,7 @@ namespace Neo.Plugins
                 if (!oracles.Any(p => p.Equals(oraclePub))) throw new RpcException(-100, $"{oraclePub} isn't an oracle node");
                 if (NativeContract.Oracle.GetRequest(snapshot, requestId) is null)
                     throw new RpcException(-100, "Request is not found");
-                var data = oraclePub.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
+                var data = Neo.Helper.Concat(oraclePub.ToArray(), BitConverter.GetBytes(requestId), txSign);
                 if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
 
                 AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
@@ -201,7 +201,7 @@ namespace Neo.Plugins
 
         private async Task SendResponseSignatureAsync(ulong requestId, byte[] txSign, KeyPair keyPair)
         {
-            var message = keyPair.PublicKey.ToArray().Concat(BitConverter.GetBytes(requestId)).Concat(txSign).ToArray();
+            var message = Neo.Helper.Concat(keyPair.PublicKey.ToArray(), BitConverter.GetBytes(requestId), txSign);
             var sign = Crypto.Sign(message, keyPair.PrivateKey, keyPair.PublicKey.EncodePoint(false)[1..]);
             var param = "\"" + Convert.ToBase64String(keyPair.PublicKey.ToArray()) + "\", " + requestId + ", \"" + Convert.ToBase64String(txSign) + "\",\"" + Convert.ToBase64String(sign) + "\"";
             var content = "{\"id\":" + Interlocked.Increment(ref counter) + ",\"jsonrpc\":\"2.0\",\"method\":\"submitoracleresponse\",\"params\":[" + param + "]}";
@@ -300,30 +300,24 @@ namespace Neo.Plugins
             var tx = new Transaction()
             {
                 Version = 0,
+                Nonce = 0,
                 ValidUntilBlock = requestTx.BlockIndex + Transaction.MaxValidUntilBlockIncrement,
-                Attributes = new TransactionAttribute[] {
-                    response
-                },
-                Signers = new Signer[]
+                Signers = new[]
                 {
-                    new Signer()
+                    new Signer
                     {
                         Account = NativeContract.Oracle.Hash,
-                        AllowedContracts = Array.Empty<UInt160>(),
                         Scopes = WitnessScope.None
                     },
-                    new Signer()
+                    new Signer
                     {
                         Account = oracleSignContract.ScriptHash,
-                        AllowedContracts = new UInt160[] { NativeContract.Oracle.Hash },
                         Scopes = WitnessScope.None
-                    },
+                    }
                 },
-                Witnesses = new Witness[2],
+                Attributes = new[] { response },
                 Script = OracleResponse.FixedScript,
-                NetworkFee = 0,
-                Nonce = 0,
-                SystemFee = 0
+                Witnesses = new Witness[2]
             };
             Dictionary<UInt160, Witness> witnessDict = new Dictionary<UInt160, Witness>
             {
@@ -446,9 +440,9 @@ namespace Neo.Plugins
             {
                 var contract = Contract.CreateMultiSigContract(neededThreshold, oraclesNodes);
                 ScriptBuilder sb = new ScriptBuilder();
-                foreach (var pair in OracleSigns.OrderBy(p => p.Key))
+                foreach (var (_, sign) in OracleSigns.OrderBy(p => p.Key))
                 {
-                    sb.EmitPush(pair.Value);
+                    sb.EmitPush(sign);
                     if (--neededThreshold == 0) break;
                 }
                 var idx = tx.GetScriptHashesForVerifying(snapshot)[0] == contract.ScriptHash ? 0 : 1;
