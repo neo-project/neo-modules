@@ -422,7 +422,7 @@ namespace Neo.Plugins
             }
         }
 
-        private static byte[] Filter(string input, string filterArgs)
+        public static byte[] Filter(string input, string filterArgs)
         {
             if (string.IsNullOrEmpty(filterArgs))
                 return Utility.StrictUTF8.GetBytes(input);
