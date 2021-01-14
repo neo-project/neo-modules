@@ -21,9 +21,9 @@ namespace Neo.Plugins.StateService.Storage
         private const int MaxCacheCount = 100;
         private readonly Dictionary<uint, StateRoot> cache = new Dictionary<uint, StateRoot>();
         private StateSnapshot currentSnapshot;
-        public UInt256 CurrentLocalRootHash => currentSnapshot.CurrentLocalRootHash;
-        public uint LocalRootIndex => currentSnapshot.LocalRootIndex;
-        public long ValidatedRootIndex => currentSnapshot.ValidatedRootIndex;
+        public UInt256 CurrentLocalRootHash => currentSnapshot.CurrentLocalRootHash();
+        public uint LocalRootIndex => currentSnapshot.CurrentLocalRootIndex();
+        public uint ValidatedRootIndex => currentSnapshot.CurrentValidatedRootIndex();
 
         private static StateStore singleton;
         public static StateStore Singleton
@@ -104,15 +104,12 @@ namespace Neo.Plugins.StateService.Storage
                 return true;
             }
             using var state_snapshot = Singleton.GetSnapshot();
-            StateRoot local_root = state_snapshot.StateRoots.GetAndChange(state_root.Index);
+            StateRoot local_root = state_snapshot.GetStateRoot(state_root.Index);
             if (local_root is null || local_root.Witness != null) return false;
             using var snapshot = Blockchain.Singleton.GetSnapshot();
             if (!state_root.Verify(snapshot)) return false;
             if (local_root.RootHash != state_root.RootHash) return false;
-            local_root.Witness = state_root.Witness;
-            HashIndexState validated = state_snapshot.ValidatedHashIndex.GetAndChange();
-            validated.Index = state_root.Index;
-            validated.Hash = state_root.RootHash;
+            state_snapshot.AddValidatedStateRoot(state_root);
             state_snapshot.Commit();
             UpdateCurrentSnapshot();
             //Tell validation service
@@ -144,10 +141,7 @@ namespace Neo.Plugins.StateService.Storage
                 RootHash = root_hash,
                 Witness = null,
             };
-            HashIndexState current_root = state_snapshot.LocalRootHashIndex.GetAndChange();
-            current_root.Index = height;
-            current_root.Hash = root_hash;
-            state_snapshot.StateRoots.Add(height, state_root);
+            state_snapshot.AddLocalStateRoot(state_root);
             state_snapshot.Commit();
             UpdateCurrentSnapshot();
             CheckValidatedStateRoot(height);
