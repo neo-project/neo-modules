@@ -12,6 +12,8 @@ namespace Neo.Consensus
         private IActorRef consensus;
         private bool started = false;
 
+        public override string Description => "Consensus plugin with dBFT algorithm.";
+
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
