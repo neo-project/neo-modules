@@ -1,10 +1,7 @@
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract.Native;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Neo.Plugins
 {
@@ -29,11 +26,9 @@ namespace Neo.Plugins
         {
             return new JObject
             {
-                ["name"] = contract.Name,
-                ["script"] = Convert.ToBase64String(contract.Script),
-                ["nef"] = contract.Nef.ToJson(),
-                ["hash"] = contract.Hash.ToString(),
                 ["id"] = contract.Id,
+                ["hash"] = contract.Hash.ToString(),
+                ["nef"] = contract.Nef.ToJson(),
                 ["manifest"] = contract.Manifest.ToJson(),
                 ["activeblockindex"] = contract.ActiveBlockIndex
             };

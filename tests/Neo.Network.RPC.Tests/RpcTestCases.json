@@ -1018,8 +1018,8 @@
       "id": 1,
       "result": [
         {
-          "name": "ContractManagement",
-          "script": "D0Ea93tn",
+          "id": -1,
+          "hash": "0xbee421fdbb3e791265d2104cb34934f53fcc0e45",
           "nef": {
             "magic": 860243278,
             "compiler": "ScriptBuilder",
@@ -1028,8 +1028,6 @@
             "script": "D0Ea93tn",
             "checksum": 4234537066
           },
-          "hash": "0xbee421fdbb3e791265d2104cb34934f53fcc0e45",
-          "id": -1,
           "manifest": {
             "name": "ContractManagement",
             "groups": [],
@@ -1149,8 +1147,8 @@
           "activeblockindex": 0
         },
         {
-          "name": "NeoToken",
-          "script": "AP5BGvd7Zw==",
+          "id": -2,
+          "hash": "0x4961bf0ab79370b23dc45cde29f568d0e0fa6e93",
           "nef": {
             "magic": 860243278,
             "compiler": "ScriptBuilder",
@@ -1159,8 +1157,6 @@
             "script": "AP5BGvd7Zw==",
             "checksum": 4259551467
           },
-          "hash": "0x4961bf0ab79370b23dc45cde29f568d0e0fa6e93",
-          "id": -2,
           "manifest": {
             "name": "NeoToken",
             "groups": [],
@@ -1355,8 +1351,8 @@
           "activeblockindex": 0
         },
         {
-          "name": "GasToken",
-          "script": "AP1BGvd7Zw==",
+          "id": -3,
+          "hash": "0x9ac04cf223f646de5f7faccafe34e30e5d4382a2",
           "nef": {
             "magic": 860243278,
             "compiler": "ScriptBuilder",
@@ -1365,8 +1361,6 @@
             "script": "AP1BGvd7Zw==",
             "checksum": 571607263
           },
-          "hash": "0x9ac04cf223f646de5f7faccafe34e30e5d4382a2",
-          "id": -3,
           "manifest": {
             "name": "GasToken",
             "groups": [],
@@ -1465,8 +1459,8 @@
           "activeblockindex": 0
         },
         {
-          "name": "PolicyContract",
-          "script": "APxBGvd7Zw==",
+          "id": -4,
+          "hash": "0xc939a4af1c762e5edca36d4b61c06ba82c4c6ff5",
           "nef": {
             "magic": 860243278,
             "compiler": "ScriptBuilder",
@@ -1475,8 +1469,6 @@
             "script": "APxBGvd7Zw==",
             "checksum": 1792437732
           },
-          "hash": "0xc939a4af1c762e5edca36d4b61c06ba82c4c6ff5",
-          "id": -4,
           "manifest": {
             "name": "PolicyContract",
             "groups": [],
@@ -1648,8 +1640,8 @@
           "activeblockindex": 0
         },
         {
-          "name": "RoleManagement",
-          "script": "APtBGvd7Zw==",
+          "id": -5,
+          "hash": "0xf4bbd95569e8dda2cb84eb609a1488ddd0d9fa91",
           "nef": {
             "magic": 860243278,
             "compiler": "ScriptBuilder",
@@ -1658,8 +1650,6 @@
             "script": "APtBGvd7Zw==",
             "checksum": 1875564659
           },
-          "hash": "0xf4bbd95569e8dda2cb84eb609a1488ddd0d9fa91",
-          "id": -5,
           "manifest": {
             "name": "RoleManagement",
             "groups": [],
@@ -1713,8 +1703,8 @@
           "activeblockindex": 0
         },
         {
-          "name": "OracleContract",
-          "script": "APpBGvd7Zw==",
+          "id": -6,
+          "hash": "0x8cd3889136056b3304ec59f6d424b8767710ed79",
           "nef": {
             "magic": 860243278,
             "compiler": "ScriptBuilder",
@@ -1723,8 +1713,6 @@
             "script": "APpBGvd7Zw==",
             "checksum": 3970697217
           },
-          "hash": "0x8cd3889136056b3304ec59f6d424b8767710ed79",
-          "id": -6,
           "manifest": {
             "name": "OracleContract",
             "groups": [],
@@ -1823,8 +1811,8 @@
           "activeblockindex": 0
         },
         {
-          "name": "NameService",
-          "script": "APlBGvd7Zw==",
+          "id": -7,
+          "hash": "0xa92fbe5bf164170a624474841485b20b45a26047",
           "nef": {
             "magic": 860243278,
             "compiler": "ScriptBuilder",
@@ -1833,8 +1821,6 @@
             "script": "APlBGvd7Zw==",
             "checksum": 2817451339
           },
-          "hash": "0xa92fbe5bf164170a624474841485b20b45a26047",
-          "id": -7,
           "manifest": {
             "name": "NameService",
             "groups": [],
