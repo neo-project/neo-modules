@@ -206,8 +206,7 @@ namespace Neo.Plugins
 
         static string GetExceptionMessage(Exception exception)
         {
-            if (exception == null) return null;
-            return exception.GetBaseException().Message;
+            return exception?.GetBaseException().Message;
         }
     }
 }
