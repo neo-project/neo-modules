@@ -14,8 +14,6 @@ namespace Neo.Plugins.StateService.Storage
 {
     class StateStore : UntypedActor
     {
-        public class StorageChanges { public uint Height; public List<Item> ChangeSet; }
-
         private readonly NeoSystem core;
         private readonly IStore store;
         private const int MaxCacheCount = 100;
@@ -66,9 +64,6 @@ namespace Neo.Plugins.StateService.Storage
         {
             switch (message)
             {
-                case StorageChanges changes:
-                    UpdateLocalStateRoot(changes.Height, changes.ChangeSet);
-                    break;
                 case Blockchain.RelayResult rr:
                     if (rr.Result == VerifyResult.Succeed && rr.Inventory is ExtensiblePayload payload && payload.Category == StatePlugin.StatePayloadCategory)
                         OnStatePayload(payload);
@@ -116,7 +111,7 @@ namespace Neo.Plugins.StateService.Storage
             return true;
         }
 
-        private void UpdateLocalStateRoot(uint height, List<Item> change_set)
+        public void UpdateLocalStateRoot(uint height, List<Item> change_set)
         {
             using StateSnapshot state_snapshot = Singleton.GetSnapshot();
             foreach (var item in change_set)

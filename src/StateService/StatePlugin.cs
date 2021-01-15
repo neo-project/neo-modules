@@ -35,11 +35,7 @@ namespace Neo.Plugins.StateService
 
         void IPersistencePlugin.OnPersist(Block block, StoreView snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
         {
-            store.Tell(new StateStore.StorageChanges
-            {
-                Height = block.Index,
-                ChangeSet = snapshot.Storages.GetChangeSet().Where(p => p.State != TrackState.None).ToList()
-            });
+            StateStore.Singleton.UpdateLocalStateRoot(block.Index, snapshot.Storages.GetChangeSet().Where(p => p.State != TrackState.None).ToList());
         }
     }
 }
