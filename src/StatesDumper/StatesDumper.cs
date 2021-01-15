@@ -3,6 +3,7 @@ using Neo.IO;
 using Neo.IO.Caching;
 using Neo.IO.Json;
 using Neo.Ledger;
+using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using System;
 using System.Collections.Generic;
@@ -49,7 +50,7 @@ namespace Neo.Plugins
                 : Blockchain.Singleton.View.Storages.Find());
         }
 
-        public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(Block block, StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
                 OnPersistStorage(snapshot);
@@ -96,7 +97,7 @@ namespace Neo.Plugins
             }
         }
 
-        public void OnCommit(StoreView snapshot)
+        void IPersistencePlugin.OnCommit(Block block, StoreView snapshot)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
                 OnCommitStorage(snapshot);
@@ -119,7 +120,7 @@ namespace Neo.Plugins
             }
         }
 
-        public bool ShouldThrowExceptionFromCommit(Exception ex)
+        bool IPersistencePlugin.ShouldThrowExceptionFromCommit(Exception ex)
         {
             Console.WriteLine($"Error writing States with StatesDumper.{Environment.NewLine}{ex}");
             return true;

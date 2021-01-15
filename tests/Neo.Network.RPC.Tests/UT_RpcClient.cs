@@ -178,6 +178,17 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
+        public async Task TestGetNativeContracts()
+        {
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetNativeContractsAsync).ToLower());
+            foreach (var test in tests)
+            {
+                var result = await rpc.GetNativeContractsAsync();
+                Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => p.ToJson()).ToArray()).ToString());
+            }
+        }
+
+        [TestMethod]
         public async Task TestGetRawMempool()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawMempoolAsync).ToLower());

@@ -9,6 +9,7 @@ using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
+using Neo.VM;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
 using Neo.Wallets.SQLite;
@@ -322,6 +323,54 @@ namespace Neo.Plugins
             if (tx.NetworkFee > settings.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
+        }
+
+        [RpcMethod]
+        protected virtual JObject InvokeContractVerify(JArray _params)
+        {
+            CheckWallet();
+            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
+            ContractParameter[] args = _params.Count >= 2 ? ((JArray)_params[1]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
+            Signers signers = _params.Count >= 3 ? SignersFromJson((JArray)_params[2]) : null;
+            return GetVerificationResult(script_hash, args, signers);
+        }
+
+        private JObject GetVerificationResult(UInt160 scriptHash, ContractParameter[] args, Signers signers = null)
+        {
+            var snapshot = Blockchain.Singleton.GetSnapshot();
+            var contract = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
+            if (contract is null)
+            {
+                throw new RpcException(-100, "Unknown contract");
+            }
+            var methodName = "verify";
+
+            Transaction tx = signers == null ? null : new Transaction
+            {
+                Signers = signers.GetSigners(),
+                Attributes = Array.Empty<TransactionAttribute>()
+            };
+            ContractParametersContext context = new ContractParametersContext(tx);
+            wallet.Sign(context);
+            tx.Witnesses = context.Completed ? context.GetWitnesses() : null;
+
+            using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
+            engine.LoadScript(new ScriptBuilder().EmitDynamicCall(scriptHash, methodName, args).ToArray(), (ushort)args.Length, 1);
+
+            JObject json = new JObject();
+            json["script"] = Convert.ToBase64String(contract.Script);
+            json["state"] = engine.Execute();
+            json["gasconsumed"] = new BigDecimal(engine.GasConsumed, NativeContract.GAS.Decimals).ToString();
+            json["exception"] = GetExceptionMessage(engine.FaultException);
+            try
+            {
+                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
+            }
+            catch (InvalidOperationException)
+            {
+                json["stack"] = "error: recursive reference";
+            }
+            return json;
         }
 
         private JObject SignAndRelay(Transaction tx)

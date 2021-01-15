@@ -144,7 +144,7 @@ namespace Neo.Plugins
             }
         }
 
-        public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(Block block, StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             // Start freshly with a new DBCache for each block.
             ResetBatch();
@@ -192,7 +192,7 @@ namespace Neo.Plugins
             }
         }
 
-        public void OnCommit(StoreView snapshot)
+        void IPersistencePlugin.OnCommit(Block block, StoreView snapshot)
         {
             _balances.Commit();
             if (_shouldTrackHistory)
@@ -204,7 +204,7 @@ namespace Neo.Plugins
             _db.Write(WriteOptions.Default, _writeBatch);
         }
 
-        public bool ShouldThrowExceptionFromCommit(Exception ex)
+        bool IPersistencePlugin.ShouldThrowExceptionFromCommit(Exception ex)
         {
             return true;
         }

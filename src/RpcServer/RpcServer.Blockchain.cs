@@ -228,5 +228,11 @@ namespace Neo.Plugins
             using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
             return new JArray(NativeContract.NEO.GetCommittee(snapshot).Select(p => (JObject)p.ToString()));
         }
+
+        [RpcMethod]
+        protected virtual JObject GetNativeContracts(JArray _params)
+        {
+            return new JArray(NativeContract.Contracts.Select(p => p.NativeContractToJson()));
+        }
     }
 }

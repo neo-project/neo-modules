@@ -107,57 +107,6 @@ namespace Neo.Plugins
             return ret;
         }
 
-        private JObject GetVerificationResult(UInt160 scriptHash, ContractParameter[] args, Signers signers = null)
-        {
-            var snapshot = Blockchain.Singleton.GetSnapshot();
-            var contract = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
-            if (contract is null)
-            {
-                throw new RpcException(-100, "Unknown contract");
-            }
-            var methodName = "verify";
-
-            Transaction tx = signers == null ? null : new Transaction
-            {
-                Signers = signers.GetSigners(),
-                Attributes = Array.Empty<TransactionAttribute>(),
-                Witnesses = signers.Witnesses,
-            };
-
-            using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
-            engine.LoadContract(contract, methodName, CallFlags.None, true, 0);
-
-            engine.LoadScript(new ScriptBuilder().EmitDynamicCall(scriptHash, methodName, args).ToArray());
-
-            JObject json = new JObject();
-            json["script"] = Convert.ToBase64String(contract.Script);
-            json["state"] = engine.Execute();
-            json["gasconsumed"] = new BigDecimal(engine.GasConsumed, NativeContract.GAS.Decimals).ToString();
-            json["exception"] = GetExceptionMessage(engine.FaultException);
-            try
-            {
-                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
-            }
-            catch (InvalidOperationException)
-            {
-                json["stack"] = "error: recursive reference";
-            }
-            if (engine.State != VMState.FAULT)
-            {
-                ProcessInvokeWithWallet(json);
-            }
-            return json;
-        }
-
-        [RpcMethod]
-        protected virtual JObject InvokeContractVerify(JArray _params)
-        {
-            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
-            ContractParameter[] args = _params.Count >= 2 ? ((JArray)_params[1]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
-            Signers signers = _params.Count >= 3 ? SignersFromJson((JArray)_params[2]) : null;
-            return GetVerificationResult(script_hash, args, signers);
-        }
-
         [RpcMethod]
         protected virtual JObject InvokeFunction(JArray _params)
         {
@@ -206,14 +155,7 @@ namespace Neo.Plugins
 
         static string GetExceptionMessage(Exception exception)
         {
-            if (exception == null) return null;
-
-            if (exception.InnerException != null)
-            {
-                return exception.InnerException.Message;
-            }
-
-            return exception.Message;
+            return exception?.GetBaseException().Message;
         }
     }
 }
