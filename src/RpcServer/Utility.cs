@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Neo.Plugins
 {
-    public static class Utility
+    static class Utility
     {
         public static JObject BlockToJson(Block block)
         {
