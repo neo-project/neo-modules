@@ -1,8 +1,6 @@
-using System;
-using System.Collections.Generic;
 using Neo.IO;
-using Neo.IO.Caching;
 using Neo.Persistence;
+using System.Collections.Generic;
 
 namespace Neo.Plugins.MPT
 {
@@ -60,8 +58,9 @@ namespace Neo.Plugins.MPT
                 };
                 return;
             }
-            cache[np.Hash].Node.Reference++;
-            cache[np.Hash].State = TrackState.Changed;
+            var entry = cache[np.Hash];
+            entry.Node.Reference++;
+            entry.State = TrackState.Changed;
         }
 
         public void DeleteNode(UInt256 hash)
@@ -70,8 +69,9 @@ namespace Neo.Plugins.MPT
             if (n is null) return;
             if (1 < n.Reference)
             {
-                cache[hash].Node.Reference--;
-                cache[hash].State = TrackState.Changed;
+                var entry = cache[hash];
+                entry.Node.Reference--;
+                entry.State = TrackState.Changed;
                 return;
             }
             cache[hash] = new Trackable
