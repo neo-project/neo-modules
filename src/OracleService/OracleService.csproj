@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Neo.Plugins.OracleService</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="OracleService\config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+  
+</Project>
