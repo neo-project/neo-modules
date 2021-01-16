@@ -13,6 +13,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Neo.Plugins;
 
 namespace Neo.Network.RPC.Tests
 {
@@ -45,7 +46,7 @@ namespace Neo.Network.RPC.Tests
                   ItExpr.Is<HttpRequestMessage>(p => p.Content.ReadAsStringAsync().Result == request.ToJson().ToString()),
                   ItExpr.IsAny<CancellationToken>()
                )
-               // prepare the expected response of the mocked http call 
+               // prepare the expected response of the mocked http call
                .ReturnsAsync(new HttpResponseMessage()
                {
                    StatusCode = HttpStatusCode.OK,
@@ -76,6 +77,13 @@ namespace Neo.Network.RPC.Tests
             var client = new RpcClient("http://www.xxx.yyy");
             Action action = () => client.Dispose();
             action.Should().NotThrow<Exception>();
+        }
+
+        [TestMethod]
+        public void TestRpcServerSettingsConstructorForFormatException()
+        {
+            Action act = () => new RpcServerSettings(maxGasInvoke: 123456m);
+            act.Should().NotThrow<FormatException>();
         }
 
         [TestMethod]

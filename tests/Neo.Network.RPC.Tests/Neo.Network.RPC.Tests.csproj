@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\RpcClient\RpcClient.csproj" />
+    <ProjectReference Include="..\..\src\RpcServer\RpcServer.csproj" />
   </ItemGroup>
 
   <ItemGroup>

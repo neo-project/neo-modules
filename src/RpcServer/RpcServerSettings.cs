@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Neo.SmartContract.Native;
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 
@@ -47,8 +48,8 @@ namespace Neo.Plugins
             this.TrustedAuthorities = trustedAuthorities ?? Array.Empty<string>();
             this.RpcUser = rpcUser;
             this.RpcPass = rpcPass;
-            this.MaxGasInvoke = (long)BigDecimal.Parse(maxGasInvoke.ToString(), NativeContract.GAS.Decimals).Value;
-            this.MaxFee = (long)BigDecimal.Parse(maxFee.ToString(), NativeContract.GAS.Decimals).Value;
+            this.MaxGasInvoke = (long)BigDecimal.Parse(maxGasInvoke.ToString(CultureInfo.InvariantCulture), NativeContract.GAS.Decimals).Value;
+            this.MaxFee = (long)BigDecimal.Parse(maxFee.ToString(CultureInfo.InvariantCulture), NativeContract.GAS.Decimals).Value;
             this.DisabledMethods = disabledMethods ?? Array.Empty<string>();
             this.MaxConcurrentConnections = maxConcurrentConnections;
         }
