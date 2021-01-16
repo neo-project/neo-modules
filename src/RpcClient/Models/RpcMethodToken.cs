@@ -1,10 +1,6 @@
 using Neo.IO.Json;
 using Neo.SmartContract;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Neo.Network.RPC.Models
 {
