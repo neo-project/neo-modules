@@ -45,7 +45,7 @@ namespace Neo.Network.RPC.Tests
                   ItExpr.Is<HttpRequestMessage>(p => p.Content.ReadAsStringAsync().Result == request.ToJson().ToString()),
                   ItExpr.IsAny<CancellationToken>()
                )
-               // prepare the expected response of the mocked http call 
+               // prepare the expected response of the mocked http call
                .ReturnsAsync(new HttpResponseMessage()
                {
                    StatusCode = HttpStatusCode.OK,

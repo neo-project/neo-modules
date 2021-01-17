@@ -28,6 +28,7 @@ jobs:
         sudo apt-get --assume-yes install libleveldb-dev libsnappy-dev libc6-dev
         find tests -name *.csproj | xargs -I % dotnet add % package coverlet.msbuild
         dotnet test tests/Neo.Network.RPC.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/
+        dotnet test tests/Neo.Plugins.RpcServer.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov /p:MergeWith=${GITHUB_WORKSPACE}/coverage/coverage.json /p:CoverletOutputFormat=lcov
         dotnet test tests/Neo.Plugins.Storage.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov /p:MergeWith=${GITHUB_WORKSPACE}/coverage/coverage.json /p:CoverletOutputFormat=lcov
         dotnet test tests/Neo.Plugins.StateService.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov /p:MergeWith=${GITHUB_WORKSPACE}/coverage/coverage.json /p:CoverletOutputFormat=lcov
         dotnet test tests/Neo.Plugins.OracleService.Tests /p:CollectCoverage=true /p:CoverletOutput=${GITHUB_WORKSPACE}/coverage/lcov /p:MergeWith=${GITHUB_WORKSPACE}/coverage/coverage.json /p:CoverletOutputFormat=lcov
