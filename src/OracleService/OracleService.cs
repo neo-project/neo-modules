@@ -341,7 +341,7 @@ namespace Neo.Plugins
 
             var oracleContract = NativeContract.ContractManagement.GetContract(snapshot, NativeContract.Oracle.Hash);
             var engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
-            engine.LoadContract(oracleContract, "verify", CallFlags.None, true, 0);
+            engine.LoadContract(oracleContract, "verify", CallFlags.None, true);
             engine.Push("verify");
             if (engine.Execute() != VMState.HALT) return null;
             tx.NetworkFee += engine.GasConsumed;
