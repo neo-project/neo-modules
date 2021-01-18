@@ -18,4 +18,8 @@
     <PackageReference Include="Neo" Version="3.0.0-CI01159" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\neo\neo\src\neo\neo.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -5,6 +5,7 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.SmartContract.Native;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -97,15 +98,15 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnCommit(Block block, StoreView snapshot)
+        void IPersistencePlugin.OnCommit(Block block, SnapshotCache snapshot)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
                 OnCommitStorage(snapshot);
         }
 
-        public void OnCommitStorage(StoreView snapshot)
+        public void OnCommitStorage(SnapshotCache snapshot)
         {
-            uint blockIndex = snapshot.Height;
+            uint blockIndex = NativeContract.Ledger.CurrentIndex(snapshot);
             if (bs_cache.Count > 0)
             {
                 if ((blockIndex % Settings.Default.BlockCacheSize == 0) || (Settings.Default.HeightToStartRealTimeSyncing != -1 && blockIndex >= Settings.Default.HeightToStartRealTimeSyncing))

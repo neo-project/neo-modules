@@ -27,16 +27,17 @@ namespace Neo.Plugins
         {
             JObject key = _params[0];
             bool verbose = _params.Count >= 2 && _params[1].AsBoolean();
+            using var snapshot = Blockchain.Singleton.GetSnapshot();
             Block block;
             if (key is JNumber)
             {
                 uint index = uint.Parse(key.AsString());
-                block = Blockchain.Singleton.GetBlock(index);
+                block = NativeContract.Ledger.GetBlock(snapshot, index);
             }
             else
             {
                 UInt256 hash = UInt256.Parse(key.AsString());
-                block = Blockchain.Singleton.View.GetBlock(hash);
+                block = NativeContract.Ledger.GetBlock(snapshot, hash);
             }
             if (block == null)
                 throw new RpcException(-100, "Unknown block");
@@ -62,9 +63,10 @@ namespace Neo.Plugins
         protected virtual JObject GetBlockHash(JArray _params)
         {
             uint height = uint.Parse(_params[0].AsString());
+            using var snapshot = Blockchain.Singleton.GetSnapshot();
             if (height <= Blockchain.Singleton.Height)
             {
-                return Blockchain.Singleton.GetBlockHash(height).ToString();
+                return NativeContract.Ledger.GetBlockHash(snapshot, height).ToString();
             }
             throw new RpcException(-100, "Invalid Height");
         }
@@ -74,16 +76,17 @@ namespace Neo.Plugins
         {
             JObject key = _params[0];
             bool verbose = _params.Count >= 2 && _params[1].AsBoolean();
+            using var snapshot = Blockchain.Singleton.GetSnapshot();
             Header header;
             if (key is JNumber)
             {
                 uint height = uint.Parse(key.AsString());
-                header = Blockchain.Singleton.GetHeader(height);
+                header = NativeContract.Ledger.GetHeader(snapshot, height);
             }
             else
             {
                 UInt256 hash = UInt256.Parse(key.AsString());
-                header = Blockchain.Singleton.View.GetHeader(hash);
+                header = NativeContract.Ledger.GetHeader(snapshot, hash);
             }
             if (header == null)
                 throw new RpcException(-100, "Unknown block");
@@ -104,7 +107,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetContractState(JArray _params)
         {
-            using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
+            using var snapshot = Blockchain.Singleton.GetSnapshot();
             UInt160 script_hash = ToScriptHash(_params[0].AsString());
             ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, script_hash);
             return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
@@ -143,7 +146,8 @@ namespace Neo.Plugins
         {
             UInt256 hash = UInt256.Parse(_params[0].AsString());
             bool verbose = _params.Count >= 2 && _params[1].AsBoolean();
-            Transaction tx = Blockchain.Singleton.GetTransaction(hash);
+            using var snapshot = Blockchain.Singleton.GetSnapshot();
+            Transaction tx = NativeContract.Ledger.GetTransaction(snapshot, hash);
             if (tx == null)
                 throw new RpcException(-100, "Unknown transaction");
             if (verbose)
@@ -152,7 +156,7 @@ namespace Neo.Plugins
                 TransactionState txState = Blockchain.Singleton.View.Transactions.TryGet(hash);
                 if (txState != null)
                 {
-                    Header header = Blockchain.Singleton.GetHeader(txState.BlockIndex);
+                    Header header = NativeContract.Ledger.GetHeader(snapshot, txState.BlockIndex);
                     json["blockhash"] = header.Hash.ToString();
                     json["confirmations"] = Blockchain.Singleton.Height - header.Index + 1;
                     json["blocktime"] = header.Timestamp;
@@ -168,7 +172,7 @@ namespace Neo.Plugins
         {
             if (!int.TryParse(_params[0].AsString(), out int id))
             {
-                using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
+                using var snapshot = Blockchain.Singleton.GetSnapshot();
                 UInt160 script_hash = UInt160.Parse(_params[0].AsString());
                 ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, script_hash);
                 if (contract == null) return null;
@@ -195,7 +199,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetNextBlockValidators(JArray _params)
         {
-            using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
+            using var snapshot = Blockchain.Singleton.GetSnapshot();
             var validators = NativeContract.NEO.GetNextBlockValidators(snapshot);
             var candidates = NativeContract.NEO.GetCandidates(snapshot);
             if (candidates.Length > 0)
@@ -225,7 +229,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetCommittee(JArray _params)
         {
-            using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
+            using var snapshot = Blockchain.Singleton.GetSnapshot();
             return new JArray(NativeContract.NEO.GetCommittee(snapshot).Select(p => (JObject)p.ToString()));
         }
 

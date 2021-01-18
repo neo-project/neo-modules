@@ -273,7 +273,7 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject GetNep17Balances(JArray _params)
         {
-            using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
+            using SnapshotCache snapshot = Blockchain.Singleton.GetSnapshot();
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
 
             JObject json = new JObject();
