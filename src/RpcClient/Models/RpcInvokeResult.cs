@@ -1,10 +1,8 @@
 using Neo.IO.Json;
-using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.VM.Types;
 using System;
 using System.Linq;
-using System.Numerics;
 
 namespace Neo.Network.RPC.Models
 {
