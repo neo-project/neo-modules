@@ -5,6 +5,7 @@ using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.Plugins.MPT;
+using Neo.Plugins.StateService.Validation;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -15,6 +16,7 @@ namespace Neo.Plugins.StateService.Storage
     class StateStore : UntypedActor
     {
         private readonly NeoSystem core;
+        private readonly StatePlugin system;
         private readonly IStore store;
         private const int MaxCacheCount = 100;
         private readonly Dictionary<uint, StateRoot> cache = new Dictionary<uint, StateRoot>();
@@ -33,10 +35,11 @@ namespace Neo.Plugins.StateService.Storage
             }
         }
 
-        public StateStore(NeoSystem core, string path)
+        public StateStore(NeoSystem core, StatePlugin system, string path)
         {
             if (singleton != null) throw new InvalidOperationException(nameof(StateStore));
             this.core = core;
+            this.system = system;
             this.store = core.LoadStore(path);
             singleton = this;
             core.ActorSystem.EventStream.Subscribe(Self, typeof(Blockchain.RelayResult));
@@ -107,7 +110,7 @@ namespace Neo.Plugins.StateService.Storage
             state_snapshot.AddValidatedStateRoot(state_root);
             state_snapshot.Commit();
             UpdateCurrentSnapshot();
-            //Tell validation service
+            system.Validator.Tell(new ValidationService.ValidatedRootPersisted { Index = state_root.Index });
             return true;
         }
 
@@ -161,9 +164,9 @@ namespace Neo.Plugins.StateService.Storage
             base.PostStop();
         }
 
-        public static Props Props(NeoSystem core, string path)
+        public static Props Props(NeoSystem core, StatePlugin system, string path)
         {
-            return Akka.Actor.Props.Create(() => new StateStore(core, path));
+            return Akka.Actor.Props.Create(() => new StateStore(core, system, path));
         }
     }
 }
