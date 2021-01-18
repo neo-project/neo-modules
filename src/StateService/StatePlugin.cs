@@ -25,6 +25,7 @@ namespace Neo.Plugins.StateService
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
+            RpcServerPlugin.RegisterMethods(this);
         }
 
         protected override void OnPluginsLoaded()
