@@ -17,7 +17,6 @@ namespace Neo.Plugins
     class Settings
     {
         public string[] Nodes { get; }
-        public string Wallet { get; }
         public TimeSpan MaxTaskTimeout { get; }
         public bool AllowPrivateHost { get; }
         public string[] AllowedContentTypes { get; }
@@ -28,7 +27,6 @@ namespace Neo.Plugins
         private Settings(IConfigurationSection section)
         {
             Nodes = section.GetSection("Nodes").GetChildren().Select(p => p.Get<string>()).ToArray();
-            Wallet = section.GetValue<string>("Wallet");
             MaxTaskTimeout = TimeSpan.FromMilliseconds(section.GetValue("MaxTaskTimeout", 432000000));
             AllowPrivateHost = section.GetValue("AllowPrivateHost", false);
             AllowedContentTypes = section.GetSection("AllowedContentTypes").GetChildren().Select(p => p.Get<string>()).ToArray();
