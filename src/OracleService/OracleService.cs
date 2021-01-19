@@ -14,7 +14,6 @@ using Neo.SmartContract.Manifest;
 using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
-using Neo.Wallets.NEP6;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -75,9 +74,7 @@ namespace Neo.Plugins
         {
             if (started) return;
 
-            var walletProvider = GetService<IWalletProvider>();
-
-            wallet = walletProvider.GetWallet();
+            wallet = GetService<IWalletProvider>().GetWallet();
 
             if (wallet is null)
             {
