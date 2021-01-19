@@ -58,12 +58,9 @@ namespace Neo.Plugins.StateService.Validation
 
         public ExtensiblePayload CheckVotes(uint index)
         {
-            if (Processes.TryGetValue(index, out ValidationProcess p))
+            if (Processes.TryGetValue(index, out ValidationProcess p) && p.CheckSignatures())
             {
-                if (p.CheckSignatures())
-                {
-                    return p.Message;
-                }
+                return p.Message;
             }
             return null;
         }
