@@ -1,10 +1,11 @@
 using System.IO;
 using System.Numerics;
 using Neo.IO;
+using Neo.SmartContract;
 
 namespace Neo.Plugins
 {
-    public class Nep17Balance : ISerializable
+    public class Nep17Balance : StorageItem, ISerializable
     {
         public BigInteger Balance;
         public uint LastUpdatedBlock;

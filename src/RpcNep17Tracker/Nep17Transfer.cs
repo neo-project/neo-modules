@@ -1,10 +1,11 @@
 using System.IO;
 using System.Numerics;
 using Neo.IO;
+using Neo.SmartContract;
 
 namespace Neo.Plugins
 {
-    public class Nep17Transfer :  ISerializable
+    public class Nep17Transfer : StorageItem, ISerializable
     {
         public UInt160 UserScriptHash;
         public uint BlockIndex;

@@ -1,10 +1,11 @@
 using System;
 using System.IO;
 using Neo.IO;
+using Neo.SmartContract;
 
 namespace Neo.Plugins
 {
-    public class Nep17BalanceKey : IComparable<Nep17BalanceKey>, IEquatable<Nep17BalanceKey>, ISerializable
+    public class Nep17BalanceKey : StorageKey, IComparable<Nep17BalanceKey>, IEquatable<Nep17BalanceKey>, ISerializable
     {
         public readonly UInt160 UserScriptHash;
         public readonly UInt160 AssetScriptHash;

@@ -274,7 +274,7 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject GetNep17Balances(JArray _params)
         {
-            using SnapshotCache snapshot = Blockchain.Singleton.GetSnapshot();
+            using var snapshot = Blockchain.Singleton.GetSnapshot();
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
 
             JObject json = new JObject();
@@ -286,11 +286,11 @@ namespace Neo.Plugins
             foreach (var (key, value) in dbCache.Find(prefix))
             {
                 JObject balance = new JObject();
-                if (NativeContract.ContractManagement.GetContract(snapshot, key.AssetScriptHash) is null)
+                if (NativeContract.ContractManagement.GetContract(snapshot, (key as Nep17BalanceKey).AssetScriptHash) is null)
                     continue;
-                balance["assethash"] = key.AssetScriptHash.ToString();
-                balance["amount"] = value.Balance.ToString();
-                balance["lastupdatedblock"] = value.LastUpdatedBlock;
+                balance["assethash"] = (key as Nep17BalanceKey).AssetScriptHash.ToString();
+                balance["amount"] = (value as Nep17Balance).Balance.ToString();
+                balance["lastupdatedblock"] = (value as Nep17Balance).LastUpdatedBlock;
                 balances.Add(balance);
             }
             return json;

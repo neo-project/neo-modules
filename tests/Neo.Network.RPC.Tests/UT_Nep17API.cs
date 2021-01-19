@@ -97,9 +97,9 @@ namespace Neo.Network.RPC.Tests
                 rpcClientMock.Setup(p => p.RpcSendAsync("getcontractstate", It.Is<JObject[]>(u => true)))
                 .ReturnsAsync(test.Response.Result)
                 .Verifiable();
-                var gasToken = "0x9ac04cf223f646de5f7faccafe34e30e5d4382a2";
+                var gasToken = "0xc939a4af1c762e5edca36d4b61c06ba82c4c6ff5";
                 Assert.AreEqual(gasToken, NativeContract.GAS.Hash.ToString());
-                var neoToken = "0x4961bf0ab79370b23dc45cde29f568d0e0fa6e93";
+                var neoToken = "0x9ac04cf223f646de5f7faccafe34e30e5d4382a2";
                 Assert.AreEqual(neoToken, NativeContract.NEO.Hash.ToString());
                 if (test.Request.Params[0].AsString() == gasToken || test.Request.Params[0].AsString().Equals(NativeContract.GAS.Name, System.StringComparison.OrdinalIgnoreCase))
                 {

@@ -1,10 +1,11 @@
 using Neo.IO;
+using Neo.SmartContract;
 using System;
 using System.IO;
 
 namespace Neo.Plugins
 {
-    public class Nep17TransferKey : IComparable<Nep17TransferKey>, IEquatable<Nep17TransferKey>, ISerializable
+    public class Nep17TransferKey : StorageKey, IComparable<Nep17TransferKey>, IEquatable<Nep17TransferKey>, ISerializable
     {
         public readonly UInt160 UserScriptHash;
         public ulong TimestampMS { get; private set; }

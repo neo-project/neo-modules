@@ -36,7 +36,7 @@ namespace Neo.Plugins.MPT
             {
                 return t.Node?.Clone();
             }
-            var n = store.TryGet(prefix, hash.ToArray())?.AsSerializable<MPTNode>();
+            var n = store.TryGet(hash.ToArray())?.AsSerializable<MPTNode>();
             cache.Add(hash, new Trackable
             {
                 Node = n,
@@ -89,10 +89,10 @@ namespace Neo.Plugins.MPT
                 {
                     case TrackState.Added:
                     case TrackState.Changed:
-                        store.Put(prefix, item.Key.ToArray(), item.Value.Node.ToArray());
+                        store.Put(item.Key.ToArray(), item.Value.Node.ToArray());
                         break;
                     case TrackState.Deleted:
-                        store.Delete(prefix, item.Key.ToArray());
+                        store.Delete(item.Key.ToArray());
                         break;
                 }
             }

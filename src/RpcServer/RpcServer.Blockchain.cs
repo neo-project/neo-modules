@@ -107,7 +107,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetContractState(JArray _params)
         {
-            using var snapshot = Blockchain.Singleton.GetSnapshot();
+            var snapshot = Blockchain.Singleton.GetSnapshot().CreateSnapshot();
             UInt160 script_hash = ToScriptHash(_params[0].AsString());
             ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, script_hash);
             return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");

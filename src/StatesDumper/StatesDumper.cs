@@ -99,10 +99,10 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnCommit(Block block, SnapshotCache snapshot)
+        void IPersistencePlugin.OnCommit(Block block, DataCache snapshot)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
-                OnCommitStorage(snapshot);
+                OnCommitStorage(snapshot as SnapshotCache);
         }
 
         public void OnCommitStorage(SnapshotCache snapshot)
