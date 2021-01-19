@@ -31,21 +31,21 @@ namespace Neo.Plugins.Storage
             db.Write(batch, Options.WriteDefault);
         }
 
-        public void Delete(byte table, byte[] key)
+        public void Delete(byte[] key)
         {
-            batch.Delete(key ?? Array.Empty<byte>(), store.GetFamily(table));
+            batch.Delete(key ?? Array.Empty<byte>());
         }
 
-        public void Put(byte table, byte[] key, byte[] value)
+        public void Put(byte[] key, byte[] value)
         {
-            batch.Put(key ?? Array.Empty<byte>(), value, store.GetFamily(table));
+            batch.Put(key ?? Array.Empty<byte>(), value);
         }
 
-        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] keyOrPrefix, SeekDirection direction)
+        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte[] keyOrPrefix, SeekDirection direction)
         {
             if (keyOrPrefix == null) keyOrPrefix = Array.Empty<byte>();
 
-            using var it = db.NewIterator(store.GetFamily(table), options);
+            using var it = db.NewIterator(readOptions: options);
 
             if (direction == SeekDirection.Forward)
                 for (it.Seek(keyOrPrefix); it.Valid(); it.Next())
@@ -55,14 +55,14 @@ namespace Neo.Plugins.Storage
                     yield return (it.Key(), it.Value());
         }
 
-        public bool Contains(byte table, byte[] key)
+        public bool Contains(byte[] key)
         {
-            return db.Get(key ?? Array.Empty<byte>(), store.GetFamily(table), options) != null;
+            return db.Get(key ?? Array.Empty<byte>(), readOptions: options) != null;
         }
 
-        public byte[] TryGet(byte table, byte[] key)
+        public byte[] TryGet(byte[] key)
         {
-            return db.Get(key ?? Array.Empty<byte>(), store.GetFamily(table), options);
+            return db.Get(key ?? Array.Empty<byte>(), readOptions: options);
         }
 
         public void Dispose()

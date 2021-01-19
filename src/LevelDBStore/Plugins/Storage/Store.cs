@@ -41,9 +41,9 @@ namespace Neo.Plugins.Storage
             db.Write(WriteOptions.Default, batch);
         }
 
-        public void Delete(byte table, byte[] key)
+        public void Delete(byte[] key)
         {
-            db.Delete(WriteOptions.Default, LHelper.CreateKey(table, key));
+            db.Delete(WriteOptions.Default, key);
         }
 
         public void Dispose()
@@ -51,9 +51,9 @@ namespace Neo.Plugins.Storage
             db.Dispose();
         }
 
-        public IEnumerable<(byte[], byte[])> Seek(byte table, byte[] prefix, SeekDirection direction = SeekDirection.Forward)
+        public IEnumerable<(byte[], byte[])> Seek(byte[] prefix, SeekDirection direction = SeekDirection.Forward)
         {
-            return db.Seek(ReadOptions.Default, table, prefix, direction, (k, v) => (k[1..], v));
+            return db.Seek(ReadOptions.Default, prefix, direction, (k, v) => (k[1..], v));
         }
 
         public ISnapshot GetSnapshot()
@@ -61,24 +61,24 @@ namespace Neo.Plugins.Storage
             return new Snapshot(db);
         }
 
-        public void Put(byte table, byte[] key, byte[] value)
+        public void Put(byte[] key, byte[] value)
         {
-            db.Put(WriteOptions.Default, LHelper.CreateKey(table, key), value);
+            db.Put(WriteOptions.Default, key, value);
         }
 
-        public void PutSync(byte table, byte[] key, byte[] value)
+        public void PutSync(byte[] key, byte[] value)
         {
-            db.Put(WriteOptions.SyncWrite, LHelper.CreateKey(table, key), value);
+            db.Put(WriteOptions.SyncWrite, key, value);
         }
 
-        public bool Contains(byte table, byte[] key)
+        public bool Contains(byte[] key)
         {
-            return db.Contains(ReadOptions.Default, LHelper.CreateKey(table, key));
+            return db.Contains(ReadOptions.Default, key);
         }
 
-        public byte[] TryGet(byte table, byte[] key)
+        public byte[] TryGet(byte[] key)
         {
-            return db.Get(ReadOptions.Default, LHelper.CreateKey(table, key));
+            return db.Get(ReadOptions.Default, key);
         }
     }
 }

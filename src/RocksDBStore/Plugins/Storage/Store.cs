@@ -90,11 +90,11 @@ namespace Neo.Plugins.Storage
             return new Snapshot(this, db);
         }
 
-        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] keyOrPrefix, SeekDirection direction = SeekDirection.Forward)
+        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte[] keyOrPrefix, SeekDirection direction = SeekDirection.Forward)
         {
             if (keyOrPrefix == null) keyOrPrefix = Array.Empty<byte>();
 
-            using var it = db.NewIterator(GetFamily(table), Options.ReadDefault);
+            using var it = db.NewIterator(readOptions: Options.ReadDefault);
             if (direction == SeekDirection.Forward)
                 for (it.Seek(keyOrPrefix); it.Valid(); it.Next())
                     yield return (it.Key(), it.Value());
@@ -103,29 +103,29 @@ namespace Neo.Plugins.Storage
                     yield return (it.Key(), it.Value());
         }
 
-        public bool Contains(byte table, byte[] key)
+        public bool Contains(byte[] key)
         {
-            return db.Get(key ?? Array.Empty<byte>(), GetFamily(table), Options.ReadDefault) != null;
+            return db.Get(key ?? Array.Empty<byte>(), readOptions: Options.ReadDefault) != null;
         }
 
-        public byte[] TryGet(byte table, byte[] key)
+        public byte[] TryGet(byte[] key)
         {
-            return db.Get(key ?? Array.Empty<byte>(), GetFamily(table), Options.ReadDefault);
+            return db.Get(key ?? Array.Empty<byte>(), readOptions: Options.ReadDefault);
         }
 
-        public void Delete(byte table, byte[] key)
+        public void Delete(byte[] key)
         {
-            db.Remove(key ?? Array.Empty<byte>(), GetFamily(table), Options.WriteDefault);
+            db.Remove(key ?? Array.Empty<byte>(), writeOptions: Options.WriteDefault);
         }
 
-        public void Put(byte table, byte[] key, byte[] value)
+        public void Put(byte[] key, byte[] value)
         {
-            db.Put(key ?? Array.Empty<byte>(), value, GetFamily(table), Options.WriteDefault);
+            db.Put(key ?? Array.Empty<byte>(), value, writeOptions: Options.WriteDefault);
         }
 
-        public void PutSync(byte table, byte[] key, byte[] value)
+        public void PutSync(byte[] key, byte[] value)
         {
-            db.Put(key ?? Array.Empty<byte>(), value, GetFamily(table), Options.WriteDefaultSync);
+            db.Put(key ?? Array.Empty<byte>(), value, writeOptions: Options.WriteDefaultSync);
         }
     }
 }
