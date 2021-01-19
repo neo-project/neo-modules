@@ -11,7 +11,7 @@ namespace Neo.Plugins.StateService.Validation
     {
         const int MaxCachedValidationProcess = 10;
         private readonly Wallet wallet;
-        private readonly ConcurrentDictionary<uint, ValidationProcess> Processes = new ConcurrentDictionary<uint, ValidationProcess>();
+        private readonly ConcurrentDictionary<uint, ValidationProcess> processes = new ConcurrentDictionary<uint, ValidationProcess>();
 
         public ValidationContext(Wallet wallet)
         {
@@ -20,13 +20,13 @@ namespace Neo.Plugins.StateService.Validation
 
         public ValidationProcess NewProcess(uint index)
         {
-            if (MaxCachedValidationProcess <= Processes.Count)
+            if (MaxCachedValidationProcess <= processes.Count)
             {
-                var indexes = Processes.Keys.OrderBy(i => i).ToArray();
+                var indexes = processes.Keys.OrderBy(i => i).ToArray();
                 while (MaxCachedValidationProcess <= indexes.Length)
                 {
-                    Processes[indexes[0]].Timer.CancelIfNotNull();
-                    if (Processes.TryRemove(indexes[0], out var value))
+                    processes[indexes[0]].Timer.CancelIfNotNull();
+                    if (processes.TryRemove(indexes[0], out var value))
                     {
                         indexes = indexes[..1];
                     }
@@ -34,9 +34,9 @@ namespace Neo.Plugins.StateService.Validation
             }
             var p = new ValidationProcess(wallet, index);
             if (!p.IsValidator) return null;
-            if (Processes.TryAdd(index, p))
+            if (processes.TryAdd(index, p))
             {
-                Utility.Log(nameof(ValidationService), LogLevel.Info, $"new validate process, height={index}, index={p.MyIndex}, ongoing={Processes.Count}");
+                Utility.Log(nameof(ValidationService), LogLevel.Info, $"new validate process, height={index}, index={p.MyIndex}, ongoing={processes.Count}");
                 return p;
             }
             return null;
@@ -44,7 +44,7 @@ namespace Neo.Plugins.StateService.Validation
 
         public Vote CreateVote(uint index)
         {
-            if (Processes.TryGetValue(index, out ValidationProcess p))
+            if (processes.TryGetValue(index, out ValidationProcess p))
             {
                 return p.CreateVote();
             }
@@ -53,7 +53,7 @@ namespace Neo.Plugins.StateService.Validation
 
         public bool OnVote(Vote vote)
         {
-            if (Processes.TryGetValue(vote.RootIndex, out ValidationProcess p))
+            if (processes.TryGetValue(vote.RootIndex, out ValidationProcess p))
             {
                 return p.AddSignature(vote.ValidatorIndex, vote.Signature);
             }
@@ -62,7 +62,7 @@ namespace Neo.Plugins.StateService.Validation
 
         public ExtensiblePayload CheckVotes(uint index)
         {
-            if (Processes.TryGetValue(index, out ValidationProcess p) && p.CheckSignatures())
+            if (processes.TryGetValue(index, out ValidationProcess p) && p.CheckSignatures())
             {
                 return p.Message;
             }
@@ -71,9 +71,9 @@ namespace Neo.Plugins.StateService.Validation
 
         public void StopProcess(uint index)
         {
-            Processes.Where(i => i.Key <= index).ForEach(i =>
+            processes.Where(i => i.Key <= index).ForEach(i =>
             {
-                if (Processes.TryRemove(i.Key, out var value))
+                if (processes.TryRemove(i.Key, out var value))
                 {
                     value.Timer.CancelIfNotNull();
                 }
