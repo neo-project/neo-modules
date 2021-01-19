@@ -1,7 +1,6 @@
 {
   "PluginConfiguration": {
     "Nodes": [],
-    "Wallet": "",
     "MaxTaskTimeout": 432000000,
     "AllowPrivateHost": false,
     "AllowedContentTypes": [ "application/json" ],
