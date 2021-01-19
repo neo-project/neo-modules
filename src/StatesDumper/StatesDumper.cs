@@ -51,15 +51,15 @@ namespace Neo.Plugins
                 : Blockchain.Singleton.View.Storages.Find());
         }
 
-        void IPersistencePlugin.OnPersist(Block block, StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
                 OnPersistStorage(snapshot);
         }
 
-        private void OnPersistStorage(StoreView snapshot)
+        private void OnPersistStorage(DataCache snapshot)
         {
-            uint blockIndex = snapshot.Height;
+            uint blockIndex = NativeContract.Ledger.CurrentIndex(snapshot);
             if (blockIndex >= Settings.Default.HeightToBegin)
             {
                 JArray array = new JArray();

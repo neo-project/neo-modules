@@ -53,30 +53,30 @@ namespace Neo.Plugins.Storage.Tests
         {
             using (store)
             {
-                var ret = store.TryGet(0, new byte[] { 0x01, 0x02 });
+                var ret = store.TryGet(new byte[] { 0x01, 0x02 });
                 Assert.IsNull(ret);
 
-                store.Put(0, new byte[] { 0x01, 0x02 }, new byte[] { 0x03, 0x04 });
-                ret = store.TryGet(0, new byte[] { 0x01, 0x02 });
+                store.Put(new byte[] { 0x01, 0x02 }, new byte[] { 0x03, 0x04 });
+                ret = store.TryGet(new byte[] { 0x01, 0x02 });
                 CollectionAssert.AreEqual(new byte[] { 0x03, 0x04 }, ret);
-                Assert.IsTrue(store.Contains(0, new byte[] { 0x01, 0x02 }));
+                Assert.IsTrue(store.Contains(new byte[] { 0x01, 0x02 }));
 
-                ret = store.TryGet(1, new byte[] { 0x01, 0x02 });
+                ret = store.TryGet(new byte[] { 0x01, 0x02 });
                 Assert.IsNull(ret);
-                Assert.IsFalse(store.Contains(1, new byte[] { 0x01, 0x02 }));
+                Assert.IsFalse(store.Contains(new byte[] { 0x01, 0x02 }));
 
-                store.Delete(0, new byte[] { 0x01, 0x02 });
+                store.Delete(new byte[] { 0x01, 0x02 });
 
-                ret = store.TryGet(0, new byte[] { 0x01, 0x02 });
+                ret = store.TryGet(new byte[] { 0x01, 0x02 });
                 Assert.IsNull(ret);
 
                 // Test seek
 
-                store.Put(1, new byte[] { 0x00, 0x00, 0x00 }, new byte[] { 0x00 });
-                store.Put(1, new byte[] { 0x00, 0x00, 0x01 }, new byte[] { 0x01 });
-                store.Put(1, new byte[] { 0x00, 0x00, 0x02 }, new byte[] { 0x02 });
-                store.Put(1, new byte[] { 0x00, 0x00, 0x03 }, new byte[] { 0x03 });
-                store.Put(1, new byte[] { 0x00, 0x00, 0x04 }, new byte[] { 0x04 });
+                store.Put(new byte[] { 0x00, 0x00, 0x00 }, new byte[] { 0x00 });
+                store.Put(new byte[] { 0x00, 0x00, 0x01 }, new byte[] { 0x01 });
+                store.Put(new byte[] { 0x00, 0x00, 0x02 }, new byte[] { 0x02 });
+                store.Put(new byte[] { 0x00, 0x00, 0x03 }, new byte[] { 0x03 });
+                store.Put(new byte[] { 0x00, 0x00, 0x04 }, new byte[] { 0x04 });
 
                 // Seek Forward
 
@@ -100,9 +100,9 @@ namespace Neo.Plugins.Storage.Tests
 
                 // Seek Backward
 
-                store.Put(2, new byte[] { 0x00, 0x00, 0x00 }, new byte[] { 0x00 });
-                store.Put(2, new byte[] { 0x00, 0x00, 0x01 }, new byte[] { 0x01 });
-                store.Put(2, new byte[] { 0x00, 0x01, 0x02 }, new byte[] { 0x02 });
+                store.Put(new byte[] { 0x00, 0x00, 0x00 }, new byte[] { 0x00 });
+                store.Put(new byte[] { 0x00, 0x00, 0x01 }, new byte[] { 0x01 });
+                store.Put(new byte[] { 0x00, 0x01, 0x02 }, new byte[] { 0x02 });
 
                 enumerator = store.Seek(2, new byte[] { 0x00, 0x00, 0x03 }, IO.Caching.SeekDirection.Backward).GetEnumerator();
                 Assert.IsTrue(enumerator.MoveNext());
@@ -122,7 +122,7 @@ namespace Neo.Plugins.Storage.Tests
         {
             using (store)
             {
-                store.Put(byte.MaxValue, new byte[] { 0x01, 0x02, 0x03 }, new byte[] { 0x04, 0x05, 0x06 });
+                store.Put(new byte[] { 0x01, 0x02, 0x03 }, new byte[] { 0x04, 0x05, 0x06 });
             }
         }
 
@@ -134,7 +134,7 @@ namespace Neo.Plugins.Storage.Tests
         {
             using (store)
             {
-                store.Delete(byte.MaxValue, new byte[] { 0x01, 0x02, 0x03 });
+                store.Delete(new byte[] { 0x01, 0x02, 0x03 });
             }
         }
 
@@ -147,7 +147,7 @@ namespace Neo.Plugins.Storage.Tests
         {
             using (store)
             {
-                var ret = store.TryGet(byte.MaxValue, new byte[] { 0x01, 0x02, 0x03 });
+                var ret = store.TryGet(new byte[] { 0x01, 0x02, 0x03 });
 
                 if (shouldExist) CollectionAssert.AreEqual(new byte[] { 0x04, 0x05, 0x06 }, ret);
                 else Assert.IsNull(ret);

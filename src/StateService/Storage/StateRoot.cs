@@ -13,7 +13,7 @@ using System.IO;
 
 namespace Neo.Plugins.StateService.Storage
 {
-    public class StateRoot : ICloneable<StateRoot>, IVerifiable, ISerializable
+    public class StateRoot : IVerifiable, ISerializable
     {
         public byte Version;
         public uint Index;
@@ -105,12 +105,12 @@ namespace Neo.Plugins.StateService.Storage
             writer.Write(RootHash);
         }
 
-        public bool Verify(StoreView snapshot)
+        public bool Verify(DataCache snapshot)
         {
             return this.VerifyWitnesses(snapshot, 1_00000000);
         }
 
-        public UInt160[] GetScriptHashesForVerifying(StoreView snapshot)
+        public UInt160[] GetScriptHashesForVerifying(DataCache snapshot)
         {
             ECPoint[] validators = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.StateValidator, Index);
             if (validators.Length < 1) throw new InvalidOperationException("No script hash for state root verifying");

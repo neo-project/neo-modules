@@ -8,7 +8,7 @@ namespace Neo.Plugins
 {
     public class DbCache<TKey, TValue> : DataCache<TKey, TValue>
         where TKey : IEquatable<TKey>, ISerializable, new()
-        where TValue : class, ICloneable<TValue>, ISerializable, new()
+        where TValue : class, ISerializable, new()
     {
         private readonly DB db;
         private readonly ReadOptions options;

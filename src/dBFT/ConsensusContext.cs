@@ -43,7 +43,7 @@ namespace Neo.Consensus
         /// </summary>
         public TransactionVerificationContext VerificationContext = new TransactionVerificationContext();
 
-        public SnapshotView Snapshot { get; private set; }
+        public SnapshotCache snapshot { get; private set; }
         private KeyPair keyPair;
         private int _witnessSize;
         private readonly Wallet wallet;
@@ -69,7 +69,7 @@ namespace Neo.Consensus
         {
             get
             {
-                if (Snapshot.Height == 0) return false;
+                if (NativeContract.Ledger.CurrentIndex(snapshot) == 0) return false;
                 TrimmedBlock currentBlock = Snapshot.Blocks[Snapshot.CurrentBlockHash];
                 TrimmedBlock previousBlock = Snapshot.Blocks[currentBlock.PrevHash];
                 return currentBlock.NextConsensus != previousBlock.NextConsensus;
@@ -448,9 +448,9 @@ namespace Neo.Consensus
                 Block = new Block
                 {
                     PrevHash = Snapshot.CurrentBlockHash,
-                    Index = Snapshot.Height + 1,
+                    Index = NativeContract.Ledger.CurrentIndex(snapshot) + 1,
                     NextConsensus = Blockchain.GetConsensusAddress(
-                        NativeContract.NEO.ShouldRefreshCommittee(Snapshot.Height + 1) ?
+                        NativeContract.NEO.ShouldRefreshCommittee(NativeContract.Ledger.CurrentIndex(snapshot) + 1) ?
                         NativeContract.NEO.ComputeNextBlockValidators(Snapshot) :
                         NativeContract.NEO.GetNextBlockValidators(Snapshot))
                 };
@@ -485,7 +485,7 @@ namespace Neo.Consensus
                         if (previous_last_seen_message != null && previous_last_seen_message.TryGetValue(validator, out var value))
                             LastSeenMessage[validator] = value;
                         else
-                            LastSeenMessage[validator] = Snapshot.Height;
+                            LastSeenMessage[validator] = NativeContract.Ledger.CurrentIndex(snapshot);
                     }
                 }
                 keyPair = null;

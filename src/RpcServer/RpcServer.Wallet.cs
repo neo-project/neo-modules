@@ -354,7 +354,7 @@ namespace Neo.Plugins
             wallet.Sign(context);
             tx.Witnesses = context.Completed ? context.GetWitnesses() : null;
 
-            using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
+            using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, Blockchain.Singleton.GetSnapshot());
             engine.LoadScript(new ScriptBuilder().EmitDynamicCall(scriptHash, methodName, args).ToArray(), rvcount: 1);
 
             JObject json = new JObject();

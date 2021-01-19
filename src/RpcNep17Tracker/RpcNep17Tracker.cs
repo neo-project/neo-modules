@@ -67,7 +67,7 @@ namespace Neo.Plugins
             }
         }
 
-        private void RecordTransferHistory(StoreView snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
+        private void RecordTransferHistory(DataCache snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
         {
             if (!_shouldTrackHistory) return;
 
@@ -80,7 +80,7 @@ namespace Neo.Plugins
                     {
                         Amount = amount,
                         UserScriptHash = to,
-                        BlockIndex = snapshot.Height,
+                        BlockIndex = NativeContract.Ledger.CurrentIndex(snapshot),
                         TxHash = txHash
                     });
             }
@@ -92,14 +92,14 @@ namespace Neo.Plugins
                     {
                         Amount = amount,
                         UserScriptHash = from,
-                        BlockIndex = snapshot.Height,
+                        BlockIndex = NativeContract.Ledger.CurrentIndex(snapshot),
                         TxHash = txHash
                     });
             }
             transferIndex++;
         }
 
-        private void HandleNotification(StoreView snapshot, IVerifiable scriptContainer, UInt160 scriptHash, string eventName,
+        private void HandleNotification(DataCache snapshot, IVerifiable scriptContainer, UInt160 scriptHash, string eventName,
             VM.Types.Array stateItems,
             Dictionary<Nep17BalanceKey, Nep17Balance> nep17BalancesChanged, ref ushort transferIndex)
         {
@@ -144,7 +144,7 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnPersist(Block block, StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             // Start freshly with a new DBCache for each block.
             ResetBatch();
@@ -180,7 +180,7 @@ namespace Neo.Plugins
                     if (engine.ResultStack.Count <= 0) continue;
                     nep17BalancePair.Value.Balance = engine.ResultStack.Pop().GetInteger();
                 }
-                nep17BalancePair.Value.LastUpdatedBlock = snapshot.Height;
+                nep17BalancePair.Value.LastUpdatedBlock = NativeContract.Ledger.CurrentIndex(snapshot);
                 if (nep17BalancePair.Value.Balance == 0)
                 {
                     _balances.Delete(nep17BalancePair.Key);
@@ -192,7 +192,7 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnCommit(Block block, StoreView snapshot)
+        void IPersistencePlugin.OnCommit(Block block, DataCache snapshot)
         {
             _balances.Commit();
             if (_shouldTrackHistory)

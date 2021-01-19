@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Neo.Plugins.MPT
 {
-    public partial class MPTNode : ICloneable<MPTNode>, ISerializable
+    public partial class MPTNode : ISerializable
     {
         public const int BranchChildCount = 17;
         public MPTNode[] Children;

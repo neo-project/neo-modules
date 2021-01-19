@@ -115,7 +115,7 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnPersist(Block block, StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        public void OnPersist(Block block, SnapshotCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (stopped || !started) return;
             if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles) || !CheckOracleAccount(wallet, oracles))
@@ -162,17 +162,15 @@ namespace Neo.Plugins
 
             if (finishedCache.ContainsKey(requestId)) throw new RpcException(-100, "Request has already finished");
 
-            using (SnapshotView snapshot = Blockchain.Singleton.GetSnapshot())
-            {
-                var oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
-                if (!oracles.Any(p => p.Equals(oraclePub))) throw new RpcException(-100, $"{oraclePub} isn't an oracle node");
-                if (NativeContract.Oracle.GetRequest(snapshot, requestId) is null)
-                    throw new RpcException(-100, "Request is not found");
-                var data = Neo.Helper.Concat(oraclePub.ToArray(), BitConverter.GetBytes(requestId), txSign);
-                if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
+            using var snapshot = Blockchain.Singleton.GetSnapshot();
+            var oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, NativeContract.Ledger.CurrentIndex(snapshot) + 1);
+            if (!oracles.Any(p => p.Equals(oraclePub))) throw new RpcException(-100, $"{oraclePub} isn't an oracle node");
+            if (NativeContract.Oracle.GetRequest(snapshot, requestId) is null)
+                throw new RpcException(-100, "Request is not found");
+            var data = Neo.Helper.Concat(oraclePub.ToArray(), BitConverter.GetBytes(requestId), txSign);
+            if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
 
-                AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
-            }
+            AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
             return new JObject();
         }
 
@@ -210,13 +208,13 @@ namespace Neo.Plugins
             await Task.WhenAll(tasks);
         }
 
-        private async Task ProcessRequestAsync(StoreView snapshot, OracleRequest req)
+        private async Task ProcessRequestAsync(DataCache snapshot, OracleRequest req)
         {
             Log($"Process oracle request: {req}, txid: {req.OriginalTxid}, url: {req.Url}");
 
             (OracleResponseCode code, string data) = await ProcessUrlAsync(req.Url);
 
-            var oracleNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
+            var oracleNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, NativeContract.Ledger.CurrentIndex(snapshot) + 1);
             foreach (var (requestId, request) in NativeContract.Oracle.GetRequestsByUrl(snapshot, req.Url))
             {
                 var result = Array.Empty<byte>();
@@ -238,7 +236,7 @@ namespace Neo.Plugins
                 Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
 
                 List<Task> tasks = new List<Task>();
-                ECPoint[] oraclePublicKeys = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
+                ECPoint[] oraclePublicKeys = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, NativeContract.Ledger.CurrentIndex(snapshot) + 1);
                 foreach (var account in wallet.GetAccounts())
                 {
                     var oraclePub = account.GetKey()?.PublicKey;
@@ -290,7 +288,7 @@ namespace Neo.Plugins
             }
         }
 
-        public static Transaction CreateResponseTx(StoreView snapshot, OracleRequest request, OracleResponse response, ECPoint[] oracleNodes)
+        public static Transaction CreateResponseTx(DataCache snapshot, OracleRequest request, OracleResponse response, ECPoint[] oracleNodes)
         {
             var requestTx = snapshot.Transactions.TryGet(request.OriginalTxid);
             var n = oracleNodes.Length;
@@ -340,8 +338,8 @@ namespace Neo.Plugins
             // Calculate network fee
 
             var oracleContract = NativeContract.ContractManagement.GetContract(snapshot, NativeContract.Oracle.Hash);
-            var engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
-            engine.LoadContract(oracleContract, "verify", CallFlags.None, true);
+            var engine = ApplicationEngine.Create(TriggerType.Verification, tx, Blockchain.Singleton.GetSnapshot());
+            engine.LoadContract(oracleContract, oracleContract.Manifest.Abi.GetMethod("verify", 0), CallFlags.None);
             engine.Push("verify");
             if (engine.Execute() != VMState.HALT) return null;
             tx.NetworkFee += engine.GasConsumed;
@@ -378,7 +376,7 @@ namespace Neo.Plugins
             return tx;
         }
 
-        private void AddResponseTxSign(StoreView snapshot, ulong requestId, ECPoint oraclePub, byte[] sign, Transaction responseTx = null, Transaction backupTx = null, byte[] backupSign = null)
+        private void AddResponseTxSign(DataCache snapshot, ulong requestId, ECPoint oraclePub, byte[] sign, Transaction responseTx = null, Transaction backupTx = null, byte[] backupSign = null)
         {
             var task = pendingQueue.GetOrAdd(requestId, _ => new OracleTask
             {
@@ -432,9 +430,9 @@ namespace Neo.Plugins
             return Utility.StrictUTF8.GetBytes(afterObjects.ToString(Newtonsoft.Json.Formatting.None));
         }
 
-        private static bool CheckTxSign(StoreView snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
+        private static bool CheckTxSign(DataCache snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
         {
-            ECPoint[] oraclesNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
+            ECPoint[] oraclesNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, NativeContract.Ledger.CurrentIndex(snapshot) + 1);
             int neededThreshold = oraclesNodes.Length - (oraclesNodes.Length - 1) / 3;
             if (OracleSigns.Count >= neededThreshold && tx != null)
             {
@@ -456,9 +454,9 @@ namespace Neo.Plugins
             return false;
         }
 
-        private static bool CheckOracleAvaiblable(StoreView snapshot, out ECPoint[] oracles)
+        private static bool CheckOracleAvaiblable(DataCache snapshot, out ECPoint[] oracles)
         {
-            oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, snapshot.Height + 1);
+            oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, NativeContract.Ledger.CurrentIndex(snapshot) + 1);
             return oracles.Length > 0;
         }
 

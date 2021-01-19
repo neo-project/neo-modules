@@ -45,7 +45,7 @@ namespace Neo.Plugins
             {
                 JObject json = Utility.BlockToJson(block);
                 json["confirmations"] = Blockchain.Singleton.Height - block.Index + 1;
-                UInt256 hash = Blockchain.Singleton.GetNextBlockHash(block.Hash);
+                UInt256 hash = NativeContract.Ledger.GetBlockHash(snapshot, block.Index + 1);
                 if (hash != null)
                     json["nextblockhash"] = hash.ToString();
                 return json;
@@ -95,7 +95,7 @@ namespace Neo.Plugins
             {
                 JObject json = header.ToJson();
                 json["confirmations"] = Blockchain.Singleton.Height - header.Index + 1;
-                UInt256 hash = Blockchain.Singleton.GetNextBlockHash(header.Hash);
+                UInt256 hash = NativeContract.Ledger.GetBlockHash(snapshot, header.Index + 1);
                 if (hash != null)
                     json["nextblockhash"] = hash.ToString();
                 return json;
