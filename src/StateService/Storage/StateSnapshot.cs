@@ -22,18 +22,18 @@ namespace Neo.Plugins.StateService.Storage
 
         public StateRoot GetStateRoot(uint index)
         {
-            return snapshot.TryGet(Prefixs.StateRoot, BitConverter.GetBytes(index))?.AsSerializable<StateRoot>();
+            return snapshot.TryGet(BitConverter.GetBytes(index))?.AsSerializable<StateRoot>();
         }
 
         public void AddLocalStateRoot(StateRoot state_root)
         {
-            snapshot.Put(Prefixs.StateRoot, BitConverter.GetBytes(state_root.Index), state_root.ToArray());
-            snapshot.Put(Prefixs.CurrentLocalRootIndex, Array.Empty<byte>(), BitConverter.GetBytes(state_root.Index));
+            snapshot.Put(BitConverter.GetBytes(state_root.Index), state_root.ToArray());
+            snapshot.Put(Array.Empty<byte>(), BitConverter.GetBytes(state_root.Index));
         }
 
         public uint CurrentLocalRootIndex()
         {
-            var bytes = snapshot.TryGet(Prefixs.CurrentLocalRootIndex, Array.Empty<byte>());
+            var bytes = snapshot.TryGet(Array.Empty<byte>());
             if (bytes is null) return uint.MaxValue;
             return BitConverter.ToUInt32(bytes);
         }
@@ -49,13 +49,13 @@ namespace Neo.Plugins.StateService.Storage
         {
             if (state_root?.Witness is null)
                 throw new ArgumentException(nameof(state_root) + " missing witness in invalidated state root");
-            snapshot.Put(Prefixs.StateRoot, BitConverter.GetBytes(state_root.Index), state_root.ToArray());
-            snapshot.Put(Prefixs.CurrentValidatedRootIndex, Array.Empty<byte>(), BitConverter.GetBytes(state_root.Index));
+            snapshot.Put(BitConverter.GetBytes(state_root.Index), state_root.ToArray());
+            snapshot.Put(Array.Empty<byte>(), BitConverter.GetBytes(state_root.Index));
         }
 
         public uint CurrentValidatedRootIndex()
         {
-            var bytes = snapshot.TryGet(Prefixs.CurrentValidatedRootIndex, Array.Empty<byte>());
+            var bytes = snapshot.TryGet(Array.Empty<byte>());
             if (bytes is null) return uint.MaxValue;
             return BitConverter.ToUInt32(bytes);
         }

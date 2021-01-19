@@ -47,8 +47,8 @@ namespace Neo.Plugins
         private void OnDumpStorage(UInt160 key = null)
         {
             Dump(key != null
-                ? Blockchain.Singleton.View.Storages.Find(key.ToArray())
-                : Blockchain.Singleton.View.Storages.Find());
+                ? Blockchain.Singleton.View.Find(key.ToArray())
+                : Blockchain.Singleton.View.Find());
         }
 
         void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
@@ -64,7 +64,7 @@ namespace Neo.Plugins
             {
                 JArray array = new JArray();
 
-                foreach (DataCache<StorageKey, StorageItem>.Trackable trackable in snapshot.Storages.GetChangeSet())
+                foreach (DataCache<StorageKey, StorageItem>.Trackable trackable in snapshot.GetChangeSet())
                 {
                     JObject state = new JObject();
 

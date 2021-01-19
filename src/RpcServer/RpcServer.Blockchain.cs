@@ -182,7 +182,7 @@ namespace Neo.Plugins
                 id = contract.Id;
             }
             byte[] key = _params[1].AsString().HexToBytes();
-            StorageItem item = Blockchain.Singleton.View.Storages.TryGet(new StorageKey
+            StorageItem item = Blockchain.Singleton.View.TryGet(new StorageKey
             {
                 Id = id,
                 Key = key
@@ -194,7 +194,8 @@ namespace Neo.Plugins
         protected virtual JObject GetTransactionHeight(JArray _params)
         {
             UInt256 hash = UInt256.Parse(_params[0].AsString());
-            uint? height = Blockchain.Singleton.View.Transactions.TryGet(hash)?.BlockIndex;
+            using var snapshot = Blockchain.Singleton.GetSnapshot();
+            uint? height = NativeContract.Ledger.CurrentIndex(snapshot) - NativeContract.Ledger.GetTransaction(snapshot, hash).ValidUntilBlock;
             if (height.HasValue) return height.Value;
             throw new RpcException(-100, "Unknown transaction");
         }
