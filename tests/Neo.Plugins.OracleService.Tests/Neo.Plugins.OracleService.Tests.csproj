@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>OracleService.Tests</PackageId>
+    <RootNamespace>Neo.Plugins</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Akka.TestKit" Version="1.4.12" />
+    <PackageReference Include="Akka.TestKit.Xunit2" Version="1.4.12" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OracleService\OracleService.csproj" />
+  </ItemGroup>
+
+</Project>
