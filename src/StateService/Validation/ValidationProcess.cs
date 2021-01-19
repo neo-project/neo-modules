@@ -25,7 +25,8 @@ namespace Neo.Plugins.StateService.Validation
         private uint rootIndex;
         private ECPoint[] validators;
         private int M => validators.Length - (validators.Length - 1) / 3;
-        private Dictionary<int, byte[]> signatures = new Dictionary<int, byte[]>();
+        private readonly Dictionary<int, byte[]> signatures = new Dictionary<int, byte[]>();
+
         public bool IsValidator => myIndex >= 0;
         public int MyIndex => myIndex;
         public ICancelable Timer;

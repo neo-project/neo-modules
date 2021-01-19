@@ -4,6 +4,7 @@ using Neo.Network.RPC;
 using Neo.Plugins.StateService.Storage;
 using Neo.Wallets;
 using System;
+using System.Threading.Tasks;
 
 namespace Neo.Plugins.StateService.Validation
 {
@@ -30,23 +31,25 @@ namespace Neo.Plugins.StateService.Validation
             }, ActorRefs.NoSender);
         }
 
-        private async void SendVote(uint index)
+        private void SendVote(uint index)
         {
             var vote = context.CreateVote(index);
             if (vote is null) return;
             Utility.Log(nameof(ValidationService), LogLevel.Info, $"relay vote");
-            foreach (var url in Settings.Default.Validators)
+            Parallel.ForEach(Settings.Default.Validators, (url, state, i) =>
             {
                 try
                 {
                     var client = new RpcClient(url);
-                    await client?.RpcSendAsync("votestateroot", vote.RootIndex, vote.ValidatorIndex, vote.Signature.ToHexString());
+                    client?.RpcSendAsync("votestateroot", vote.RootIndex, vote.ValidatorIndex, vote.Signature.ToHexString())
+                        .GetAwaiter().GetResult();
                 }
                 catch (Exception e)
                 {
                     Utility.Log(nameof(ValidationService), LogLevel.Warning, $"Failed to send vote, validator={url}, error={e.Message}");
                 }
-            }
+
+            });
             CheckVotes(index);
         }
 
