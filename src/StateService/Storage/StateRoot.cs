@@ -114,7 +114,7 @@ namespace Neo.Plugins.StateService.Storage
         {
             ECPoint[] validators = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.StateValidator, Index);
             if (validators.Length < 1) throw new InvalidOperationException("No script hash for state root verifying");
-            return new UInt160[] { Blockchain.GetConsensusAddress(validators) };
+            return new UInt160[] { Contract.GetBFTAddress(validators) };
         }
 
         public JObject ToJson()

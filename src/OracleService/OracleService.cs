@@ -290,7 +290,7 @@ namespace Neo.Plugins
 
         public static Transaction CreateResponseTx(DataCache snapshot, OracleRequest request, OracleResponse response, ECPoint[] oracleNodes)
         {
-            var requestTx = snapshot.Transactions.TryGet(request.OriginalTxid);
+            var requestTx = NativeContract.Ledger.GetTransaction(snapshot, request.OriginalTxid);
             var n = oracleNodes.Length;
             var m = n - (n - 1) / 3;
             var oracleSignContract = Contract.CreateMultiSigContract(m, oracleNodes);
@@ -299,7 +299,7 @@ namespace Neo.Plugins
             {
                 Version = 0,
                 Nonce = unchecked((uint)response.Id),
-                ValidUntilBlock = requestTx.BlockIndex + Transaction.MaxValidUntilBlockIncrement,
+                ValidUntilBlock = NativeContract.Ledger.CurrentIndex(snapshot) - requestTx.ValidUntilBlock + Transaction.MaxValidUntilBlockIncrement,
                 Signers = new[]
                 {
                     new Signer

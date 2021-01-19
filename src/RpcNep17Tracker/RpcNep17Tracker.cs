@@ -23,9 +23,9 @@ namespace Neo.Plugins
         private const byte Nep17TransferSentPrefix = 0xf9;
         private const byte Nep17TransferReceivedPrefix = 0xfa;
         private DB _db;
-        private DataCache<Nep17BalanceKey, Nep17Balance> _balances;
-        private DataCache<Nep17TransferKey, Nep17Transfer> _transfersSent;
-        private DataCache<Nep17TransferKey, Nep17Transfer> _transfersReceived;
+        private DataCache _balances;
+        private DataCache _transfersSent;
+        private DataCache _transfersReceived;
         private WriteBatch _writeBatch;
         private bool _shouldTrackHistory;
         private bool _recordNullAddressHistory;
@@ -57,13 +57,13 @@ namespace Neo.Plugins
             _levelDbSnapshot?.Dispose();
             _levelDbSnapshot = _db.GetSnapshot();
             ReadOptions dbOptions = new ReadOptions { FillCache = false, Snapshot = _levelDbSnapshot };
-            _balances = new DbCache<Nep17BalanceKey, Nep17Balance>(_db, dbOptions, _writeBatch, Nep17BalancePrefix);
+            _balances = new DbCache(_db, dbOptions, _writeBatch, Nep17BalancePrefix);
             if (_shouldTrackHistory)
             {
                 _transfersSent =
-                    new DbCache<Nep17TransferKey, Nep17Transfer>(_db, dbOptions, _writeBatch, Nep17TransferSentPrefix);
+                    new DbCache(_db, dbOptions, _writeBatch, Nep17TransferSentPrefix);
                 _transfersReceived =
-                    new DbCache<Nep17TransferKey, Nep17Transfer>(_db, dbOptions, _writeBatch, Nep17TransferReceivedPrefix);
+                    new DbCache(_db, dbOptions, _writeBatch, Nep17TransferReceivedPrefix);
             }
         }
 
@@ -71,7 +71,8 @@ namespace Neo.Plugins
         {
             if (!_shouldTrackHistory) return;
 
-            Header header = snapshot.GetHeader(snapshot.CurrentBlockHash);
+            var currentBlockHash = NativeContract.Ledger.GetBlockHash(snapshot, NativeContract.Ledger.CurrentIndex(snapshot));
+            var header = NativeContract.Ledger.GetHeader(snapshot, currentBlockHash);
 
             if (_recordNullAddressHistory || from != UInt160.Zero)
             {
@@ -144,7 +145,7 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(Block block, SnapshotCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             // Start freshly with a new DBCache for each block.
             ResetBatch();
@@ -280,7 +281,7 @@ namespace Neo.Plugins
             JArray balances = new JArray();
             json["balance"] = balances;
             json["address"] = userScriptHash.ToAddress();
-            var dbCache = new DbCache<Nep17BalanceKey, Nep17Balance>(_db, null, null, Nep17BalancePrefix);
+            var dbCache = new DbCache(_db, null, null, Nep17BalancePrefix);
             byte[] prefix = userScriptHash.ToArray();
             foreach (var (key, value) in dbCache.Find(prefix))
             {

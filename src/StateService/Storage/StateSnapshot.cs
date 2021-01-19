@@ -4,6 +4,7 @@ using Neo.IO.Caching;
 using Neo.Ledger;
 using Neo.Persistence;
 using Neo.Plugins.MPT;
+using Neo.SmartContract;
 using System;
 using System.Text;
 

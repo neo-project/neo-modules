@@ -1,14 +1,14 @@
 using Neo.IO;
 using Neo.IO.Caching;
 using Neo.IO.Data.LevelDB;
+using Neo.Persistence;
+using Neo.SmartContract;
 using System;
 using System.Collections.Generic;
 
 namespace Neo.Plugins
 {
-    public class DbCache<TKey, TValue> : DataCache<TKey, TValue>
-        where TKey : IEquatable<TKey>, ISerializable, new()
-        where TValue : class, ISerializable, new()
+    public class DbCache : DataCache
     {
         private readonly DB db;
         private readonly ReadOptions options;
@@ -23,7 +23,7 @@ namespace Neo.Plugins
             this.prefix = prefix;
         }
 
-        protected override void AddInternal(TKey key, TValue value)
+        protected override void AddInternal(StorageKey key, StorageItem value)
         {
             batch?.Put(CreateKey(prefix, key), value.ToArray());
         }
@@ -42,32 +42,32 @@ namespace Neo.Plugins
             return CreateKey(prefix, key.ToArray());
         }
 
-        protected override void DeleteInternal(TKey key)
+        protected override void DeleteInternal(StorageKey key)
         {
             batch?.Delete(CreateKey(prefix, key));
         }
 
-        protected override IEnumerable<(TKey, TValue)> SeekInternal(byte[] key_prefix, SeekDirection direction)
+        protected override IEnumerable<(StorageKey, StorageItem)> SeekInternal(byte[] key_prefix, SeekDirection direction)
         {
-            return db.Seek(options, prefix, key_prefix, direction, (k, v) => (k.AsSerializable<TKey>(1), v.AsSerializable<TValue>()));
+            return db.Seek(options, key_prefix, direction, (k, v) => (k.AsSerializable<StorageKey>(1), v.AsSerializable<StorageItem>()));
         }
 
-        protected override TValue GetInternal(TKey key)
+        protected override StorageItem GetInternal(StorageKey key)
         {
             return TryGetInternal(key) ?? throw new InvalidOperationException();
         }
 
-        protected override bool ContainsInternal(TKey key)
+        protected override bool ContainsInternal(StorageKey key)
         {
             return db.Contains(options, CreateKey(prefix, key));
         }
 
-        protected override TValue TryGetInternal(TKey key)
+        protected override StorageItem TryGetInternal(StorageKey key)
         {
-            return db.Get(options, CreateKey(prefix, key))?.AsSerializable<TValue>();
+            return db.Get(options, CreateKey(prefix, key))?.AsSerializable<StorageItem>();
         }
 
-        protected override void UpdateInternal(TKey key, TValue value)
+        protected override void UpdateInternal(StorageKey key, StorageItem value)
         {
             batch?.Put(CreateKey(prefix, key), value.ToArray());
         }

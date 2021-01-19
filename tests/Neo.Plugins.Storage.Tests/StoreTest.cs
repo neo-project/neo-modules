@@ -80,7 +80,7 @@ namespace Neo.Plugins.Storage.Tests
 
                 // Seek Forward
 
-                var enumerator = store.Seek(1, new byte[] { 0x00, 0x00, 0x02 }, IO.Caching.SeekDirection.Forward).GetEnumerator();
+                var enumerator = store.Seek(new byte[] { 0x00, 0x00, 0x02 }, SeekDirection.Forward).GetEnumerator();
                 Assert.IsTrue(enumerator.MoveNext());
                 CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x02 }, enumerator.Current.Key);
                 CollectionAssert.AreEqual(new byte[] { 0x02 }, enumerator.Current.Value);
@@ -90,7 +90,7 @@ namespace Neo.Plugins.Storage.Tests
 
                 // Seek Backward
 
-                enumerator = store.Seek(1, new byte[] { 0x00, 0x00, 0x02 }, IO.Caching.SeekDirection.Backward).GetEnumerator();
+                enumerator = store.Seek(new byte[] { 0x00, 0x00, 0x02 }, SeekDirection.Backward).GetEnumerator();
                 Assert.IsTrue(enumerator.MoveNext());
                 CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x02 }, enumerator.Current.Key);
                 CollectionAssert.AreEqual(new byte[] { 0x02 }, enumerator.Current.Value);
@@ -104,7 +104,7 @@ namespace Neo.Plugins.Storage.Tests
                 store.Put(new byte[] { 0x00, 0x00, 0x01 }, new byte[] { 0x01 });
                 store.Put(new byte[] { 0x00, 0x01, 0x02 }, new byte[] { 0x02 });
 
-                enumerator = store.Seek(2, new byte[] { 0x00, 0x00, 0x03 }, IO.Caching.SeekDirection.Backward).GetEnumerator();
+                enumerator = store.Seek(new byte[] { 0x00, 0x00, 0x03 }, SeekDirection.Backward).GetEnumerator();
                 Assert.IsTrue(enumerator.MoveNext());
                 CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x01 }, enumerator.Current.Key);
                 CollectionAssert.AreEqual(new byte[] { 0x01 }, enumerator.Current.Value);

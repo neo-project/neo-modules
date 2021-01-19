@@ -5,6 +5,7 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using System;
 using System.Collections.Generic;
@@ -51,7 +52,7 @@ namespace Neo.Plugins
                 : Blockchain.Singleton.View.Find());
         }
 
-        void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(Block block, SnapshotCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
                 OnPersistStorage(snapshot);
@@ -64,7 +65,7 @@ namespace Neo.Plugins
             {
                 JArray array = new JArray();
 
-                foreach (DataCache<StorageKey, StorageItem>.Trackable trackable in snapshot.GetChangeSet())
+                foreach (DataCache.Trackable trackable in snapshot.GetChangeSet())
                 {
                     JObject state = new JObject();
 
