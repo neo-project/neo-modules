@@ -10,6 +10,7 @@ using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
+using Neo.SmartContract.Manifest;
 using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
@@ -333,7 +334,8 @@ namespace Neo.Plugins
 
             var oracleContract = NativeContract.ContractManagement.GetContract(snapshot, NativeContract.Oracle.Hash);
             var engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
-            engine.LoadContract(oracleContract, "verify", CallFlags.None, true);
+            ContractMethodDescriptor md = oracleContract.Manifest.Abi.GetMethod("verify", -1);
+            engine.LoadContract(oracleContract, md, CallFlags.None);
             engine.Push("verify");
             if (engine.Execute() != VMState.HALT) return null;
             tx.NetworkFee += engine.GasConsumed;
