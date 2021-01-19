@@ -43,7 +43,7 @@ namespace Neo.Consensus
         /// </summary>
         public TransactionVerificationContext VerificationContext = new TransactionVerificationContext();
 
-        public SnapshotCache snapshot { get; private set; }
+        public SnapshotCache Snapshot { get; private set; }
         private KeyPair keyPair;
         private int _witnessSize;
         private readonly Wallet wallet;
@@ -55,7 +55,7 @@ namespace Neo.Consensus
         public bool IsPrimary => MyIndex == Block.ConsensusData.PrimaryIndex;
         public bool IsBackup => MyIndex >= 0 && MyIndex != Block.ConsensusData.PrimaryIndex;
         public bool WatchOnly => MyIndex < 0;
-        public Header PrevHeader => Snapshot.GetHeader(Block.PrevHash);
+        public Header PrevHeader => NativeContract.Ledger.GetHeader(Snapshot, Block.PrevHash);
         public int CountCommitted => CommitPayloads.Count(p => p != null);
         public int CountFailed
         {
@@ -69,9 +69,10 @@ namespace Neo.Consensus
         {
             get
             {
-                if (NativeContract.Ledger.CurrentIndex(snapshot) == 0) return false;
-                TrimmedBlock currentBlock = Snapshot.Blocks[Snapshot.CurrentBlockHash];
-                TrimmedBlock previousBlock = Snapshot.Blocks[currentBlock.PrevHash];
+                if (NativeContract.Ledger.CurrentIndex(Snapshot) == 0) return false;
+                var currentBlockHash = NativeContract.Ledger.GetBlockHash(Snapshot, NativeContract.Ledger.CurrentIndex(Snapshot));
+                var currentBlock = NativeContract.Ledger.GetBlock(Snapshot, currentBlockHash);
+                var previousBlock = NativeContract.Ledger.GetBlock(Snapshot, currentBlock.PrevHash);
                 return currentBlock.NextConsensus != previousBlock.NextConsensus;
             }
         }
@@ -235,7 +236,7 @@ namespace Neo.Consensus
 
         public bool Load()
         {
-            byte[] data = store.TryGet(ConsensusStatePrefix, null);
+            byte[] data = store.TryGet(null);
             if (data is null || data.Length == 0) return false;
             using (MemoryStream ms = new MemoryStream(data, false))
             using (BinaryReader reader = new BinaryReader(ms))
@@ -447,12 +448,9 @@ namespace Neo.Consensus
                 Snapshot = Blockchain.Singleton.GetSnapshot();
                 Block = new Block
                 {
-                    PrevHash = Snapshot.CurrentBlockHash,
-                    Index = NativeContract.Ledger.CurrentIndex(snapshot) + 1,
-                    NextConsensus = Blockchain.GetConsensusAddress(
-                        NativeContract.NEO.ShouldRefreshCommittee(NativeContract.Ledger.CurrentIndex(snapshot) + 1) ?
-                        NativeContract.NEO.ComputeNextBlockValidators(Snapshot) :
-                        NativeContract.NEO.GetNextBlockValidators(Snapshot))
+                    PrevHash = NativeContract.Ledger.GetBlockHash(Snapshot, NativeContract.Ledger.CurrentIndex(Snapshot)),
+                    Index = NativeContract.Ledger.CurrentIndex(Snapshot) + 1,
+                    NextConsensus = Contract.GetBFTAddress(NativeContract.NEO.GetNextBlockValidators(Snapshot))
                 };
                 var pv = Validators;
                 Validators = NativeContract.NEO.GetNextBlockValidators(Snapshot);
@@ -485,7 +483,7 @@ namespace Neo.Consensus
                         if (previous_last_seen_message != null && previous_last_seen_message.TryGetValue(validator, out var value))
                             LastSeenMessage[validator] = value;
                         else
-                            LastSeenMessage[validator] = NativeContract.Ledger.CurrentIndex(snapshot);
+                            LastSeenMessage[validator] = NativeContract.Ledger.CurrentIndex(Snapshot);
                     }
                 }
                 keyPair = null;
@@ -522,7 +520,7 @@ namespace Neo.Consensus
 
         public void Save()
         {
-            store.PutSync(ConsensusStatePrefix, null, this.ToArray());
+            store.PutSync(null, this.ToArray());
         }
 
         public void Serialize(BinaryWriter writer)

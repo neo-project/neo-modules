@@ -153,14 +153,17 @@ namespace Neo.Plugins
             if (verbose)
             {
                 JObject json = Utility.TransactionToJson(tx);
-                TransactionState txState = Blockchain.Singleton.View.Transactions.TryGet(hash);
+                TransactionState txState = new TransactionState()
+                {
+                    Transaction = tx,
+                    BlockIndex = NativeContract.Ledger.CurrentIndex(snapshot) - tx.ValidUntilBlock
+                };
                 if (txState != null)
                 {
                     Header header = NativeContract.Ledger.GetHeader(snapshot, txState.BlockIndex);
                     json["blockhash"] = header.Hash.ToString();
                     json["confirmations"] = Blockchain.Singleton.Height - header.Index + 1;
                     json["blocktime"] = header.Timestamp;
-                    json["vmstate"] = txState.VMState;
                 }
                 return json;
             }

@@ -417,7 +417,8 @@ namespace Neo.Consensus
                 Log($"Timestamp incorrect: {message.Timestamp}", LogLevel.Warning);
                 return;
             }
-            if (message.TransactionHashes.Any(p => context.Snapshot.ContainsTransaction(p)))
+            using var snapshot = Blockchain.Singleton.GetSnapshot();
+            if (message.TransactionHashes.Any(p => NativeContract.Ledger.GetTransaction(snapshot, p) != null))
             {
                 Log($"Invalid request: transaction already exists", LogLevel.Warning);
                 return;
@@ -527,7 +528,8 @@ namespace Neo.Consensus
 
         private void RequestRecovery()
         {
-            if (context.Block.Index == Blockchain.Singleton.HeaderHeight + 1)
+            using var snapshot = Blockchain.Singleton.GetSnapshot();
+            if (context.Block.Index == NativeContract.Ledger.CurrentIndex(snapshot) + 1)
             {
                 Log($"Sending {nameof(RecoveryRequest)}: height={context.Block.Index} view={context.ViewNumber} nc={context.CountCommitted} nf={context.CountFailed}");
                 localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeRecoveryRequest() });
