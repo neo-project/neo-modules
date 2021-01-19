@@ -25,9 +25,9 @@ namespace Neo.Plugins.StateService.Validation
                 var indexes = processes.Keys.OrderBy(i => i).ToArray();
                 while (MaxCachedValidationProcess <= indexes.Length)
                 {
-                    processes[indexes[0]].Timer.CancelIfNotNull();
                     if (processes.TryRemove(indexes[0], out var value))
                     {
+                        value.Timer.CancelIfNotNull();
                         indexes = indexes[..1];
                     }
                 }
