@@ -48,7 +48,6 @@ namespace Neo.Plugins.StateService.Validation
                 {
                     Utility.Log(nameof(ValidationService), LogLevel.Warning, $"Failed to send vote, validator={url}, error={e.Message}");
                 }
-
             });
             CheckVotes(index);
         }
