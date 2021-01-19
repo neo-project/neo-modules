@@ -1,0 +1,68 @@
+{
+  "PluginConfiguration": {
+    "Path": "./FSStorage/",
+    "URLs": [ "http://localhost:10332" ],
+    "WalletPath": "./FSStorage/wallet.json",
+    "Password": "123456",
+    "contracts": {
+      "netmap": "0x80aed80f782d6ac09d717b162123396620f0f382",
+      "neofs": "0xe08ea24eaaff10b2ec9bacbc19bddcdc6c5435ac",
+      "neofsId": "0x1ebf077d101512986beab0c0e9d394e1a8df6094",
+      "balance": "0xfd5aa5078afdd2f0634636b217f82cb5e7e13258",
+      "container": "0xa4aa1d4c91f94ddd65b02edf47aab39ba921dd8f",
+      "alphabet": [
+        "0x871a9d53c8f9201049a3cdf4bac3a296c6cb5504",
+        "0x33ff3908b4531d21f019dcbd98d7a2f93d26201e",
+        "0x731fe0381503ea97a9514b7b28a680aa5fd799d9",
+        "0xf4070d49cb0e6fb7b398e35890cad77d3cf35f91",
+        "0x33fb2917c512c48c913ec59b595fed7260f4eec6",
+        "0x30bfe76fca440aa2cce216fc38af0e290b8898a1",
+        "0x408f9eedb5c8fa5ec8dc128d0af96d607ddbd84b"
+      ]
+    },
+    "vote": [ "" ],
+    "workers": {
+      "netmap": "10",
+      "neofs": "10",
+      "balance": "10",
+      "container": "10",
+      "alphabet": "10"
+    },
+    "timers": {
+      "epoch": 300000,
+      "emit": 600000
+    },
+    "emit": {
+      "mint": {
+        "cache_size": 100,
+        "threshold": 100,
+        "value": 2
+      },
+      "storage": {
+        "amount": 100000000
+      }
+    },
+    "netmap_cleaner": {
+      "enabled": true,
+      "threshold": 2
+    },
+    "isSender": false,
+    "audit": {
+      "timeout": {
+        "get": 1,
+        "head": 2,
+        "rangehash": 1
+      },
+      "pdp": {
+        "pairs_pool_size": 100,
+        "max_sleep_interval": 10
+      },
+      "por": {
+        "pool_size": 100
+      },
+      "task": {
+        "queue_capacity": 100
+      }
+    }
+  }
+}
