@@ -76,13 +76,14 @@ namespace Neo.Plugins
             if (started) return;
 
             var walletProvider = GetService<IWalletProvider>();
-            if (walletProvider is null)
+
+            wallet = walletProvider.GetWallet();
+
+            if (wallet is null)
             {
                 Console.WriteLine("Please open wallet first!");
                 return;
             }
-
-            wallet = walletProvider.GetWallet();
 
             using (var snapshot = Blockchain.Singleton.GetSnapshot())
             {
