@@ -2,8 +2,7 @@ using Akka.Actor;
 using Akka.Util.Internal;
 using Neo.Network.P2P.Payloads;
 using Neo.Wallets;
-using System.Collections.Generic;
-using System.Diagnostics;
+using System.Collections.Concurrent;
 using System.Linq;
 
 namespace Neo.Plugins.StateService.Validation
@@ -12,7 +11,7 @@ namespace Neo.Plugins.StateService.Validation
     {
         const int MaxCachedValidationProcess = 10;
         private readonly Wallet wallet;
-        private readonly Dictionary<uint, ValidationProcess> Processes = new Dictionary<uint, ValidationProcess>();
+        private readonly ConcurrentDictionary<uint, ValidationProcess> Processes = new ConcurrentDictionary<uint, ValidationProcess>();
 
         public ValidationContext(Wallet wallet)
         {
@@ -27,15 +26,20 @@ namespace Neo.Plugins.StateService.Validation
                 while (MaxCachedValidationProcess <= indexes.Length)
                 {
                     Processes[indexes[0]].Timer.CancelIfNotNull();
-                    Processes.Remove(indexes[0]);
-                    indexes = indexes[..1];
+                    if (Processes.TryRemove(indexes[0], out var value))
+                    {
+                        indexes = indexes[..1];
+                    }
                 }
             }
             var p = new ValidationProcess(wallet, index);
             if (!p.IsValidator) return null;
-            Processes.Add(index, p);
-            Utility.Log(nameof(ValidationService), LogLevel.Info, $"new validate process, height={index}, index={p.MyIndex}, ongoing={Processes.Count}");
-            return p;
+            if (Processes.TryAdd(index, p))
+            {
+                Utility.Log(nameof(ValidationService), LogLevel.Info, $"new validate process, height={index}, index={p.MyIndex}, ongoing={Processes.Count}");
+                return p;
+            }
+            return null;
         }
 
         public Vote CreateVote(uint index)
@@ -69,8 +73,10 @@ namespace Neo.Plugins.StateService.Validation
         {
             Processes.Where(i => i.Key <= index).ForEach(i =>
             {
-                i.Value.Timer.CancelIfNotNull();
-                Processes.Remove(i.Key);
+                if (Processes.TryRemove(i.Key, out var value))
+                {
+                    value.Timer.CancelIfNotNull();
+                }
             });
         }
     }

@@ -4,8 +4,6 @@ using Neo.Network.RPC;
 using Neo.Plugins.StateService.Storage;
 using Neo.Wallets;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Neo.Plugins.StateService.Validation
 {
