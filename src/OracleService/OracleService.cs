@@ -32,7 +32,8 @@ namespace Neo.Plugins
     {
         private const int RefreshInterval = 1000 * 60 * 3;
 
-        private NEP6Wallet wallet;
+        private Wallet wallet;
+        private IWalletProvider walletProvider;
         private readonly ConcurrentDictionary<ulong, OracleTask> pendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
         private readonly ConcurrentDictionary<ulong, DateTime> finishedCache = new ConcurrentDictionary<ulong, DateTime>();
         private Timer timer;
@@ -73,23 +74,15 @@ namespace Neo.Plugins
         private void OnStart()
         {
             if (started) return;
-            string password = GetService<ConsoleServiceBase>().ReadUserInput("password", true);
-            if (password.Length == 0)
+
+            walletProvider = GetService<IWalletProvider>();
+            if (walletProvider is null)
             {
-                Console.WriteLine("Cancelled");
+                Console.WriteLine("Please open wallet first!");
                 return;
             }
 
-            wallet = new NEP6Wallet(Settings.Default.Wallet);
-            try
-            {
-                wallet.Unlock(password);
-            }
-            catch (System.Security.Cryptography.CryptographicException)
-            {
-                Console.WriteLine($"Failed to open wallet");
-                return;
-            }
+            wallet = walletProvider.GetWallet();
 
             using (var snapshot = Blockchain.Singleton.GetSnapshot())
             {
