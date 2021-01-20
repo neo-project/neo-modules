@@ -4,6 +4,7 @@ using Neo.Network.P2P.Payloads;
 using Neo.Ledger;
 using Neo.SmartContract.Native;
 using Neo.Cryptography.ECC;
+using Neo.SmartContract;
 
 namespace Neo.Plugins.Tests
 {
@@ -56,6 +57,9 @@ namespace Neo.Plugins.Tests
             Assert.AreEqual(@"[{""Name"":""Elbow Grease"",""Price"":99.95}]", Utility.StrictUTF8.GetString(OracleService.Filter(json, "Manufacturers[1].Products[0]")));
         }
 
+        const byte Prefix_Transaction = 11;
+        const byte Prefix_CurrentBlock = 12;
+
         [TestMethod]
         public void TestCreateOracleResponseTx()
         {
@@ -74,12 +78,12 @@ namespace Neo.Plugins.Tests
                 Filter = "",
                 CallbackContract = UInt160.Zero,
                 CallbackMethod = "callback",
-                UserData = new byte[0] { }
+                UserData = System.Array.Empty<byte>()
             };
-            snapshot.Transactions.Add(request.OriginalTxid, new TransactionState()
+            snapshot.Add(NativeContract.Ledger.CreateStorageKey(Prefix_Transaction, request.OriginalTxid), new StorageItem(new TransactionState()
             {
                 BlockIndex = 1
-            });
+            }));
             OracleResponse response = new OracleResponse() { Id = 1, Code = OracleResponseCode.Success, Result = new byte[] { 0x00 } };
             ECPoint[] oracleNodes = new ECPoint[] { ECCurve.Secp256r1.G };
             var tx = OracleService.CreateResponseTx(snapshot, request, response, oracleNodes);

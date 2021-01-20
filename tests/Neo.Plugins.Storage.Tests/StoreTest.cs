@@ -49,7 +49,6 @@ namespace Neo.Plugins.Storage.Tests
         {
             using (store)
             {
-
                 var key1 = new byte[] { 0x01, 0x02 };
                 var value1 = new byte[] { 0x03, 0x04 };
 

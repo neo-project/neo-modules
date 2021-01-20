@@ -66,6 +66,6 @@ namespace Neo.IO.Data.LevelDB
             return buffer;
         }
 
-        public static byte[] CreateKey(byte key) => new byte[] { key };
+        public static byte[] CreateKey(byte key) => CreateKey(new byte[] { key });
     }
 }
