@@ -58,13 +58,13 @@ namespace Neo.Plugins.StateService
         [ConsoleCommand("start validate", Category = "StateService", Description = "Start as a state validator if wallet is open")]
         private void OnStartValidate()
         {
-            var wallet_provider = GetService<IWalletProvider>();
-            if (wallet_provider is null)
+            var wallet = GetService<IWalletProvider>().GetWallet();
+            if (wallet is null)
             {
                 Console.WriteLine("Please open wallet first!");
                 return;
             }
-            Validator = System.ActorSystem.ActorOf(ValidationService.Props(System, wallet_provider.GetWallet()));
+            Validator = System.ActorSystem.ActorOf(ValidationService.Props(System, wallet));
         }
     }
 }
