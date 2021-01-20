@@ -110,7 +110,7 @@ namespace Neo.Plugins.StateService.Storage
             state_snapshot.AddValidatedStateRoot(state_root);
             state_snapshot.Commit();
             UpdateCurrentSnapshot();
-            system.Verifier.Tell(new VerificationService.ValidatedRootPersisted { Index = state_root.Index });
+            system.Verifier?.Tell(new VerificationService.ValidatedRootPersisted { Index = state_root.Index });
             return true;
         }
 
