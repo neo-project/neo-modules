@@ -4,6 +4,8 @@ using Neo.Network.RPC;
 using Neo.Plugins.StateService.Storage;
 using Neo.Wallets;
 using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Neo.Plugins.StateService.Verification
@@ -15,28 +17,22 @@ namespace Neo.Plugins.StateService.Verification
         private class Timer { public uint Index; }
         private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(5);
         private readonly NeoSystem core;
-        private readonly VerificationContext context;
+        private const int MaxCachedVerificationProcessCount = 10;
+        private readonly Wallet wallet;
+        private readonly ConcurrentDictionary<uint, VerificationContext> contexts = new ConcurrentDictionary<uint, VerificationContext>();
 
         public VerificationService(NeoSystem core, Wallet wallet)
         {
             this.core = core;
-            context = new VerificationContext(wallet);
+            this.wallet = wallet;
         }
 
-        private ICancelable NewTimer(uint index)
+        private void SendVote(VerificationContext context)
         {
-            return Context.System.Scheduler.ScheduleTellOnceCancelable(Timeout, Self, new Timer
-            {
-                Index = index,
-            }, ActorRefs.NoSender);
-        }
-
-        private void SendVote(uint index)
-        {
-            var vote = context.CreateVote(index);
+            var vote = context.CreateVote();
             if (vote is null) return;
             Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay vote");
-            Parallel.ForEach(Settings.Default.VerifierUris, (url, state, i) =>
+            Parallel.ForEach(Settings.Default.VerifierUrls, (url, state, i) =>
             {
                 try
                 {
@@ -49,43 +45,72 @@ namespace Neo.Plugins.StateService.Verification
                     Utility.Log(nameof(VerificationService), LogLevel.Warning, $"Failed to send vote, validator={url}, error={e.Message}");
                 }
             });
-            CheckVotes(index);
+            CheckVotes(context);
         }
 
-        private void OnVoteStateRoot(Vote v)
+        private void OnVoteStateRoot(Vote vote)
         {
-            if (context.OnVote(v))
-                CheckVotes(v.RootIndex);
+            if (contexts.TryGetValue(vote.RootIndex, out VerificationContext context) && context.AddSignature(vote.ValidatorIndex, vote.Signature))
+            {
+                CheckVotes(context);
+            }
         }
 
-        private void CheckVotes(uint index)
+        private void CheckVotes(VerificationContext context)
         {
-            var message = context.CheckVotes(index);
-            if (message is null) return;
-            var state_root = message.Data.AsSerializable<StateRoot>();
-            Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay state root, height={state_root.Index}, root={state_root.RootHash}");
-            core.Blockchain.Tell(message);
+            if (context.CheckSignatures())
+            {
+                if (context.Message is null) return;
+                var state_root = context.Message.Data.AsSerializable<StateRoot>();
+                Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay state root, height={state_root.Index}, root={state_root.RootHash}");
+                core.Blockchain.Tell(context.Message);
+            }
         }
 
         private void OnBlockPersisted(uint index)
         {
-            var p = context.NewProcess(index);
-            if (p != null)
+            if (MaxCachedVerificationProcessCount <= contexts.Count)
             {
-                p.Timer = NewTimer(index);
-                SendVote(index);
+                var indexes = contexts.Keys.OrderBy(i => i).ToArray();
+                while (MaxCachedVerificationProcessCount <= indexes.Length)
+                {
+                    if (contexts.TryRemove(indexes[0], out var value))
+                    {
+                        value.Timer.CancelIfNotNull();
+                        indexes = indexes[..1];
+                    }
+                }
+            }
+            var p = new VerificationContext(wallet, index);
+            if (p.IsValidator && contexts.TryAdd(index, p))
+            {
+                p.Timer = Context.System.Scheduler.ScheduleTellOnceCancelable(Timeout, Self, new Timer
+                {
+                    Index = index,
+                }, ActorRefs.NoSender);
+                Utility.Log(nameof(VerificationContext), LogLevel.Info, $"new validate process, height={index}, index={p.MyIndex}, ongoing={contexts.Count}");
+                SendVote(p);
             }
         }
 
         private void OnValidatedRootPersisted(uint index)
         {
             Utility.Log(nameof(VerificationService), LogLevel.Info, $"persisted state root, height={index}");
-            context.StopProcess(index);
+            foreach (var i in contexts.Where(i => i.Key <= index))
+            {
+                if (contexts.TryRemove(i.Key, out var value))
+                {
+                    value.Timer.CancelIfNotNull();
+                }
+            }
         }
 
         private void OnTimer(uint index)
         {
-            SendVote(index);
+            if (contexts.TryGetValue(index, out VerificationContext context))
+            {
+                SendVote(context);
+            }
         }
 
         protected override void OnReceive(object message)
