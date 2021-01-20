@@ -64,6 +64,32 @@ namespace Neo.Plugins.StateService
             Console.WriteLine($"LocalRootIndex: {StateStore.Singleton.LocalRootIndex}, ValidatedRootIndex: {StateStore.Singleton.ValidatedRootIndex}");
         }
 
+        [ConsoleCommand("get proof", Category = "StateService", Description = "Get proof of key and contract hash")]
+        private void OnGetProof(UInt256 root_hash, UInt160 script_hash, string key)
+        {
+            try
+            {
+                Console.WriteLine(GetProof(root_hash, script_hash, Convert.FromBase64String(key)));
+            }
+            catch (RpcException e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+
+        [ConsoleCommand("verify proof", Category = "StateService", Description = "Verify proof, return value if successed")]
+        private void OnVerifyProof(UInt256 root_hash, string proof)
+        {
+            try
+            {
+                Console.WriteLine(VerifyProof(root_hash, Convert.FromBase64String(proof)));
+            }
+            catch (RpcException e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+
         [RpcMethod]
         public JObject GetStateRoot(JArray _params)
         {
@@ -76,16 +102,12 @@ namespace Neo.Plugins.StateService
                 return state_root.ToJson();
         }
 
-        [RpcMethod]
-        public JObject GetProof(JArray _params)
+        private string GetProof(UInt256 root_hash, UInt160 script_hash, byte[] key)
         {
-            UInt256 root_hash = UInt256.Parse(_params[0].AsString());
-            if (!Settings.Default.FullState)
+            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
             {
-                if (StateStore.Singleton.CurrentLocalRootHash != root_hash) throw new RpcException(-100, "Old state not supported");
+                throw new RpcException(-100, "Old state not supported");
             }
-            UInt160 script_hash = UInt160.Parse(_params[1].AsString());
-            byte[] key = Convert.FromBase64String(_params[2].AsString());
             using var snapshot = Singleton.GetSnapshot();
             var contract = NativeContract.ContractManagement.GetContract(snapshot, script_hash);
             if (contract is null) throw new RpcException(-100, "Unknown contract");
@@ -108,7 +130,36 @@ namespace Neo.Plugins.StateService
             }
             writer.Flush();
 
-            return ms.ToArray().ToHexString();
+            return Convert.ToBase64String(ms.ToArray());
+        }
+
+        [RpcMethod]
+        public JObject GetProof(JArray _params)
+        {
+            UInt256 root_hash = UInt256.Parse(_params[0].AsString());
+            UInt160 script_hash = UInt160.Parse(_params[1].AsString());
+            byte[] key = Convert.FromBase64String(_params[2].AsString());
+            return GetProof(root_hash, script_hash, key);
+        }
+
+        private string VerifyProof(UInt256 root_hash, byte[] proof)
+        {
+            var proofs = new HashSet<byte[]>();
+
+            using MemoryStream ms = new MemoryStream(proof, false);
+            using BinaryReader reader = new BinaryReader(ms, Encoding.UTF8);
+
+            var key = reader.ReadVarBytes(MPTNode.MaxKeyLength);
+            var count = reader.ReadVarInt();
+            for (ulong i = 0; i < count; i++)
+            {
+                proofs.Add(reader.ReadVarBytes());
+            }
+
+            var skey = key.AsSerializable<StorageKey>();
+            var sitem = MPTTrie<StorageKey, StorageItem>.VerifyProof(root_hash, skey, proofs);
+            if (sitem is null) throw new RpcException(-100, "Verification failed");
+            return Convert.ToBase64String(sitem.Value);
         }
 
         [RpcMethod]
@@ -116,22 +167,7 @@ namespace Neo.Plugins.StateService
         {
             UInt256 root_hash = UInt256.Parse(_params[0].AsString());
             byte[] proof_bytes = Convert.FromBase64String(_params[1].AsString());
-            var proof = new HashSet<byte[]>();
-
-            using MemoryStream ms = new MemoryStream(proof_bytes, false);
-            using BinaryReader reader = new BinaryReader(ms, Encoding.UTF8);
-
-            var key = reader.ReadVarBytes(MPTNode.MaxKeyLength);
-            var count = reader.ReadVarInt();
-            for (ulong i = 0; i < count; i++)
-            {
-                proof.Add(reader.ReadVarBytes());
-            }
-
-            var skey = key.AsSerializable<StorageKey>();
-            var sitem = MPTTrie<StorageKey, StorageItem>.VerifyProof(root_hash, skey, proof);
-            if (sitem is null) throw new RpcException(-100, "Verification failed");
-            return sitem.Value.ToHexString();
+            return VerifyProof(root_hash, proof_bytes);
         }
     }
 }
