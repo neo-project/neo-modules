@@ -23,9 +23,9 @@ namespace Neo.Network.RPC
     public class RpcClient : IDisposable
     {
         private readonly HttpClient httpClient;
-        private readonly string baseAddress;
+        private readonly Uri baseAddress;
 
-        public RpcClient(string url, string rpcUser = default, string rpcPass = default)
+        public RpcClient(Uri url, string rpcUser = default, string rpcPass = default)
         {
             httpClient = new HttpClient();
             baseAddress = url;
@@ -36,7 +36,7 @@ namespace Neo.Network.RPC
             }
         }
 
-        public RpcClient(HttpClient client, string url)
+        public RpcClient(HttpClient client, Uri url)
         {
             httpClient = client;
             baseAddress = url;
