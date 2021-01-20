@@ -12,37 +12,33 @@ namespace Neo.Plugins.Storage.Tests
         [TestMethod]
         public void TestLevelDb()
         {
-            using (var plugin = new Neo.Plugins.Storage.LevelDBStore())
-            {
-                // Test all with the same store
+            using var plugin = new LevelDBStore();
+            // Test all with the same store
 
-                TestStorage(plugin.GetStore(path_leveldb));
+            TestStorage(plugin.GetStore(path_leveldb));
 
-                // Test with different storages
+            // Test with different storages
 
-                TestPersistenceWrite(plugin.GetStore(path_leveldb));
-                TestPersistenceRead(plugin.GetStore(path_leveldb), true);
-                TestPersistenceDelete(plugin.GetStore(path_leveldb));
-                TestPersistenceRead(plugin.GetStore(path_leveldb), false);
-            }
+            TestPersistenceWrite(plugin.GetStore(path_leveldb));
+            TestPersistenceRead(plugin.GetStore(path_leveldb), true);
+            TestPersistenceDelete(plugin.GetStore(path_leveldb));
+            TestPersistenceRead(plugin.GetStore(path_leveldb), false);
         }
 
         [TestMethod]
         public void TestRocksDb()
         {
-            using (var plugin = new Neo.Plugins.Storage.RocksDBStore())
-            {
-                // Test all with the same store
+            using var plugin = new RocksDBStore();
+            // Test all with the same store
 
-                TestStorage(plugin.GetStore(path_rocksdb));
+            TestStorage(plugin.GetStore(path_rocksdb));
 
-                // Test with different storages
+            // Test with different storages
 
-                TestPersistenceWrite(plugin.GetStore(path_rocksdb));
-                TestPersistenceRead(plugin.GetStore(path_rocksdb), true);
-                TestPersistenceDelete(plugin.GetStore(path_rocksdb));
-                TestPersistenceRead(plugin.GetStore(path_rocksdb), false);
-            }
+            TestPersistenceWrite(plugin.GetStore(path_rocksdb));
+            TestPersistenceRead(plugin.GetStore(path_rocksdb), true);
+            TestPersistenceDelete(plugin.GetStore(path_rocksdb));
+            TestPersistenceRead(plugin.GetStore(path_rocksdb), false);
         }
 
         /// <summary>
@@ -53,22 +49,28 @@ namespace Neo.Plugins.Storage.Tests
         {
             using (store)
             {
-                var ret = store.TryGet(new byte[] { 0x01, 0x02 });
+
+                var key1 = new byte[] { 0x01, 0x02 };
+                var value1 = new byte[] { 0x03, 0x04 };
+
+                store.Delete(key1);
+                var ret = store.TryGet(key1);
                 Assert.IsNull(ret);
 
-                store.Put(new byte[] { 0x01, 0x02 }, new byte[] { 0x03, 0x04 });
-                ret = store.TryGet(new byte[] { 0x01, 0x02 });
-                CollectionAssert.AreEqual(new byte[] { 0x03, 0x04 }, ret);
-                Assert.IsTrue(store.Contains(new byte[] { 0x01, 0x02 }));
+                store.Put(key1, value1);
+                ret = store.TryGet(key1);
+                CollectionAssert.AreEqual(value1, ret);
+                Assert.IsTrue(store.Contains(key1));
 
-                ret = store.TryGet(new byte[] { 0x01, 0x02 });
+                ret = store.TryGet(value1);
                 Assert.IsNull(ret);
-                Assert.IsFalse(store.Contains(new byte[] { 0x01, 0x02 }));
+                Assert.IsTrue(store.Contains(key1));
 
-                store.Delete(new byte[] { 0x01, 0x02 });
+                store.Delete(key1);
 
-                ret = store.TryGet(new byte[] { 0x01, 0x02 });
+                ret = store.TryGet(key1);
                 Assert.IsNull(ret);
+                Assert.IsFalse(store.Contains(key1));
 
                 // Test seek
 

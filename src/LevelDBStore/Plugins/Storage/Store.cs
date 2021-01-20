@@ -43,7 +43,7 @@ namespace Neo.Plugins.Storage
 
         public void Delete(byte[] key)
         {
-            db.Delete(WriteOptions.Default, key);
+            db.Delete(WriteOptions.Default, LHelper.CreateKey(key));
         }
 
         public void Dispose()
@@ -63,22 +63,22 @@ namespace Neo.Plugins.Storage
 
         public void Put(byte[] key, byte[] value)
         {
-            db.Put(WriteOptions.Default, key, value);
+            db.Put(WriteOptions.Default, LHelper.CreateKey(key), value);
         }
 
         public void PutSync(byte[] key, byte[] value)
         {
-            db.Put(WriteOptions.SyncWrite, key, value);
+            db.Put(WriteOptions.SyncWrite, LHelper.CreateKey(key), value);
         }
 
         public bool Contains(byte[] key)
         {
-            return db.Contains(ReadOptions.Default, key);
+            return db.Contains(ReadOptions.Default, LHelper.CreateKey(key));
         }
 
         public byte[] TryGet(byte[] key)
         {
-            return db.Get(ReadOptions.Default, key);
+            return db.Get(ReadOptions.Default, LHelper.CreateKey( key));
         }
     }
 }
