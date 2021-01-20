@@ -58,6 +58,11 @@ namespace Neo.Plugins.StateService
         [ConsoleCommand("start verifying state", Category = "StateService", Description = "Start as a state verifier if wallet is open")]
         private void OnStartVerifyingState()
         {
+            if (Verifier != null)
+            {
+                Console.WriteLine("Already started!");
+                return;
+            }
             var wallet = GetService<IWalletProvider>().GetWallet();
             if (wallet is null)
             {
