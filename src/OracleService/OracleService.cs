@@ -10,10 +10,10 @@ using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
+using Neo.SmartContract.Manifest;
 using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
-using Neo.Wallets.NEP6;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -32,7 +32,7 @@ namespace Neo.Plugins
     {
         private const int RefreshInterval = 1000 * 60 * 3;
 
-        private NEP6Wallet wallet;
+        private Wallet wallet;
         private readonly ConcurrentDictionary<ulong, OracleTask> pendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
         private readonly ConcurrentDictionary<ulong, DateTime> finishedCache = new ConcurrentDictionary<ulong, DateTime>();
         private Timer timer;
@@ -73,21 +73,12 @@ namespace Neo.Plugins
         private void OnStart()
         {
             if (started) return;
-            string password = GetService<ConsoleServiceBase>().ReadUserInput("password", true);
-            if (password.Length == 0)
-            {
-                Console.WriteLine("Cancelled");
-                return;
-            }
 
-            wallet = new NEP6Wallet(Settings.Default.Wallet);
-            try
+            wallet = GetService<IWalletProvider>().GetWallet();
+
+            if (wallet is null)
             {
-                wallet.Unlock(password);
-            }
-            catch (System.Security.Cryptography.CryptographicException)
-            {
-                Console.WriteLine($"Failed to open wallet");
+                Console.WriteLine("Please open wallet first!");
                 return;
             }
 
@@ -341,7 +332,8 @@ namespace Neo.Plugins
 
             var oracleContract = NativeContract.ContractManagement.GetContract(snapshot, NativeContract.Oracle.Hash);
             var engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
-            engine.LoadContract(oracleContract, "verify", CallFlags.None, true);
+            ContractMethodDescriptor md = oracleContract.Manifest.Abi.GetMethod("verify", -1);
+            engine.LoadContract(oracleContract, md, CallFlags.None);
             engine.Push("verify");
             if (engine.Execute() != VMState.HALT) return null;
             tx.NetworkFee += engine.GasConsumed;
