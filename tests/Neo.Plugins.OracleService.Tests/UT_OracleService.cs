@@ -57,8 +57,6 @@ namespace Neo.Plugins.Tests
             Assert.AreEqual(@"[{""Name"":""Elbow Grease"",""Price"":99.95}]", Utility.StrictUTF8.GetString(OracleService.Filter(json, "Manufacturers[1].Products[0]")));
         }
 
-        const byte Prefix_Transaction = 11;
-
         [TestMethod]
         public void TestCreateOracleResponseTx()
         {
@@ -79,10 +77,16 @@ namespace Neo.Plugins.Tests
                 CallbackMethod = "callback",
                 UserData = System.Array.Empty<byte>()
             };
+            byte Prefix_Transaction = 11;
             snapshot.Add(NativeContract.Ledger.CreateStorageKey(Prefix_Transaction, request.OriginalTxid), new StorageItem(new TransactionState()
             {
-                BlockIndex = 1
+                BlockIndex = 1,
+                Transaction = new Transaction()
+                {
+                    ValidUntilBlock = 1
+                }
             }));
+            var a = snapshot.TryGet(NativeContract.Ledger.CreateStorageKey(Prefix_Transaction, request.OriginalTxid));
             OracleResponse response = new OracleResponse() { Id = 1, Code = OracleResponseCode.Success, Result = new byte[] { 0x00 } };
             ECPoint[] oracleNodes = new ECPoint[] { ECCurve.Secp256r1.G };
             var tx = OracleService.CreateResponseTx(snapshot, request, response, oracleNodes);

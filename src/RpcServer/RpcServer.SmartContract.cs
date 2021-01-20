@@ -45,7 +45,7 @@ namespace Neo.Plugins
                 throw new NotImplementedException();
             }
 
-            public UInt160[] GetScriptHashesForVerifying(SnapshotCache snapshot)
+            public UInt160[] GetScriptHashesForVerifying(DataCache snapshot)
             {
                 return _signers.Select(p => p.Account).ToArray();
             }
@@ -56,11 +56,6 @@ namespace Neo.Plugins
             }
 
             public void SerializeUnsigned(BinaryWriter writer)
-            {
-                throw new NotImplementedException();
-            }
-
-            public UInt160[] GetScriptHashesForVerifying(DataCache snapshot)
             {
                 throw new NotImplementedException();
             }
