@@ -16,7 +16,7 @@ namespace Neo.Plugins.Storage
 
         public Store(string path)
         {
-            this.db = DB.Open(path, new Options { CreateIfMissing = true, FilterPolicy = Native.leveldb_filterpolicy_create_bloom(15) });
+            db = DB.Open(path, new Options { CreateIfMissing = true, FilterPolicy = Native.leveldb_filterpolicy_create_bloom(15) });
             byte[] value = db.Get(ReadOptions.Default, new byte[] { SYS_Version });
             if (value != null && Version.TryParse(Encoding.ASCII.GetString(value), out Version version) && version >= Version.Parse("3.0.0"))
                 return;
@@ -28,12 +28,10 @@ namespace Neo.Plugins.Storage
                 // Clean all entries only if the version are different
 
                 ReadOptions options = new ReadOptions { FillCache = false };
-                using (Iterator it = db.NewIterator(options))
+                using Iterator it = db.NewIterator(options);
+                for (it.SeekToFirst(); it.Valid(); it.Next())
                 {
-                    for (it.SeekToFirst(); it.Valid(); it.Next())
-                    {
-                        batch.Delete(it.Key());
-                    }
+                    batch.Delete(it.Key());
                 }
             }
 
@@ -53,7 +51,7 @@ namespace Neo.Plugins.Storage
 
         public IEnumerable<(byte[], byte[])> Seek(byte[] prefix, SeekDirection direction = SeekDirection.Forward)
         {
-            return db.Seek(ReadOptions.Default, prefix, direction, (k, v) => (k[1..], v));
+            return db.Seek(ReadOptions.Default, prefix, direction, (k, v) => (k, v));
         }
 
         public ISnapshot GetSnapshot()

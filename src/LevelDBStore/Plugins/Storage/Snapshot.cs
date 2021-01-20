@@ -39,7 +39,7 @@ namespace Neo.Plugins.Storage
 
         public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte[] prefix, SeekDirection direction = SeekDirection.Forward)
         {
-            return db.Seek(options, prefix, direction, (k, v) => (k[1..], v));
+            return db.Seek(options, prefix, direction, (k, v) => (k, v));
         }
 
         public void Put(byte[] key, byte[] value)

@@ -100,7 +100,11 @@ namespace Neo.Plugins.Storage.Tests
                 CollectionAssert.AreEqual(new byte[] { 0x01 }, enumerator.Current.Value);
 
                 // Seek Backward
-
+                store.Delete(new byte[] { 0x00, 0x00, 0x00 });
+                store.Delete(new byte[] { 0x00, 0x00, 0x01 });
+                store.Delete(new byte[] { 0x00, 0x00, 0x02 });
+                store.Delete(new byte[] { 0x00, 0x00, 0x03 });
+                store.Delete(new byte[] { 0x00, 0x00, 0x04 });
                 store.Put(new byte[] { 0x00, 0x00, 0x00 }, new byte[] { 0x00 });
                 store.Put(new byte[] { 0x00, 0x00, 0x01 }, new byte[] { 0x01 });
                 store.Put(new byte[] { 0x00, 0x01, 0x02 }, new byte[] { 0x02 });
