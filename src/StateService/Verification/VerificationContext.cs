@@ -5,20 +5,20 @@ using Neo.Wallets;
 using System.Collections.Concurrent;
 using System.Linq;
 
-namespace Neo.Plugins.StateService.Validation
+namespace Neo.Plugins.StateService.Verification
 {
-    public class ValidationContext
+    public class VerificationContext
     {
         const int MaxCachedValidationProcess = 10;
         private readonly Wallet wallet;
-        private readonly ConcurrentDictionary<uint, ValidationProcess> processes = new ConcurrentDictionary<uint, ValidationProcess>();
+        private readonly ConcurrentDictionary<uint, VerificationProcess> processes = new ConcurrentDictionary<uint, VerificationProcess>();
 
-        public ValidationContext(Wallet wallet)
+        public VerificationContext(Wallet wallet)
         {
             this.wallet = wallet;
         }
 
-        public ValidationProcess NewProcess(uint index)
+        public VerificationProcess NewProcess(uint index)
         {
             if (MaxCachedValidationProcess <= processes.Count)
             {
@@ -32,11 +32,11 @@ namespace Neo.Plugins.StateService.Validation
                     }
                 }
             }
-            var p = new ValidationProcess(wallet, index);
+            var p = new VerificationProcess(wallet, index);
             if (!p.IsValidator) return null;
             if (processes.TryAdd(index, p))
             {
-                Utility.Log(nameof(ValidationService), LogLevel.Info, $"new validate process, height={index}, index={p.MyIndex}, ongoing={processes.Count}");
+                Utility.Log(nameof(VerificationContext), LogLevel.Info, $"new validate process, height={index}, index={p.MyIndex}, ongoing={processes.Count}");
                 return p;
             }
             return null;
@@ -44,7 +44,7 @@ namespace Neo.Plugins.StateService.Validation
 
         public Vote CreateVote(uint index)
         {
-            if (processes.TryGetValue(index, out ValidationProcess p))
+            if (processes.TryGetValue(index, out VerificationProcess p))
             {
                 return p.CreateVote();
             }
@@ -53,7 +53,7 @@ namespace Neo.Plugins.StateService.Validation
 
         public bool OnVote(Vote vote)
         {
-            if (processes.TryGetValue(vote.RootIndex, out ValidationProcess p))
+            if (processes.TryGetValue(vote.RootIndex, out VerificationProcess p))
             {
                 return p.AddSignature(vote.ValidatorIndex, vote.Signature);
             }
@@ -62,7 +62,7 @@ namespace Neo.Plugins.StateService.Validation
 
         public ExtensiblePayload CheckVotes(uint index)
         {
-            if (processes.TryGetValue(index, out ValidationProcess p) && p.CheckSignatures())
+            if (processes.TryGetValue(index, out VerificationProcess p) && p.CheckSignatures())
             {
                 return p.Message;
             }

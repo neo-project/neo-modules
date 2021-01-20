@@ -1,5 +1,5 @@
 
-namespace Neo.Plugins.StateService.Validation
+namespace Neo.Plugins.StateService.Verification
 {
     public class Vote
     {

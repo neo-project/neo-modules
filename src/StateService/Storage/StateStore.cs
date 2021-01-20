@@ -5,7 +5,7 @@ using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.Plugins.MPT;
-using Neo.Plugins.StateService.Validation;
+using Neo.Plugins.StateService.Verification;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -110,7 +110,7 @@ namespace Neo.Plugins.StateService.Storage
             state_snapshot.AddValidatedStateRoot(state_root);
             state_snapshot.Commit();
             UpdateCurrentSnapshot();
-            system.Validator.Tell(new ValidationService.ValidatedRootPersisted { Index = state_root.Index });
+            system.Verifier.Tell(new VerificationService.ValidatedRootPersisted { Index = state_root.Index });
             return true;
         }
 

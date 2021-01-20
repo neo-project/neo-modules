@@ -13,9 +13,9 @@ using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 
-namespace Neo.Plugins.StateService.Validation
+namespace Neo.Plugins.StateService.Verification
 {
-    public class ValidationProcess
+    public class VerificationProcess
     {
         private StateRoot root;
         private ExtensiblePayload payload;
@@ -44,9 +44,9 @@ namespace Neo.Plugins.StateService.Validation
         }
         public ExtensiblePayload Message => payload;
 
-        public ValidationProcess() { }
+        public VerificationProcess() { }
 
-        public ValidationProcess(Wallet wallet, uint index)
+        public VerificationProcess(Wallet wallet, uint index)
         {
             this.wallet = wallet;
             Initialize(index);
@@ -85,12 +85,12 @@ namespace Neo.Plugins.StateService.Validation
             if (M <= signatures.Count) return false;
             if (index < 0 || validators.Length <= index) return false;
             if (signatures.ContainsKey(index)) return false;
-            Utility.Log(nameof(ValidationService), LogLevel.Info, $"vote received, index={index}");
+            Utility.Log(nameof(VerificationProcess), LogLevel.Info, $"vote received, index={index}");
             ECPoint validator = validators[index];
             byte[] hash_data = StateRoot?.GetHashData();
             if (hash_data is null || !Crypto.VerifySignature(hash_data, sig, validator))
             {
-                Utility.Log(nameof(ValidationService), LogLevel.Info, "incorrect vote, invalid signature");
+                Utility.Log(nameof(VerificationProcess), LogLevel.Info, "incorrect vote, invalid signature");
                 return false;
             }
             signatures.Add(index, sig);

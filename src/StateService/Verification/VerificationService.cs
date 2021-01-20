@@ -6,21 +6,21 @@ using Neo.Wallets;
 using System;
 using System.Threading.Tasks;
 
-namespace Neo.Plugins.StateService.Validation
+namespace Neo.Plugins.StateService.Verification
 {
-    public class ValidationService : UntypedActor
+    public class VerificationService : UntypedActor
     {
         public class ValidatedRootPersisted { public uint Index; }
         public class BlockPersisted { public uint Index; }
         private class Timer { public uint Index; }
         private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(5);
         private readonly NeoSystem core;
-        private readonly ValidationContext context;
+        private readonly VerificationContext context;
 
-        public ValidationService(NeoSystem core, Wallet wallet)
+        public VerificationService(NeoSystem core, Wallet wallet)
         {
             this.core = core;
-            context = new ValidationContext(wallet);
+            context = new VerificationContext(wallet);
         }
 
         private ICancelable NewTimer(uint index)
@@ -35,8 +35,8 @@ namespace Neo.Plugins.StateService.Validation
         {
             var vote = context.CreateVote(index);
             if (vote is null) return;
-            Utility.Log(nameof(ValidationService), LogLevel.Info, $"relay vote");
-            Parallel.ForEach(Settings.Default.Validators, (url, state, i) =>
+            Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay vote");
+            Parallel.ForEach(Settings.Default.VerifierUris, (url, state, i) =>
             {
                 try
                 {
@@ -46,7 +46,7 @@ namespace Neo.Plugins.StateService.Validation
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(nameof(ValidationService), LogLevel.Warning, $"Failed to send vote, validator={url}, error={e.Message}");
+                    Utility.Log(nameof(VerificationService), LogLevel.Warning, $"Failed to send vote, validator={url}, error={e.Message}");
                 }
             });
             CheckVotes(index);
@@ -63,7 +63,7 @@ namespace Neo.Plugins.StateService.Validation
             var message = context.CheckVotes(index);
             if (message is null) return;
             var state_root = message.Data.AsSerializable<StateRoot>();
-            Utility.Log(nameof(ValidationService), LogLevel.Info, $"relay state root, height={state_root.Index}, root={state_root.RootHash}");
+            Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay state root, height={state_root.Index}, root={state_root.RootHash}");
             core.Blockchain.Tell(message);
         }
 
@@ -79,7 +79,7 @@ namespace Neo.Plugins.StateService.Validation
 
         private void OnValidatedRootPersisted(uint index)
         {
-            Utility.Log(nameof(ValidationService), LogLevel.Info, $"persisted state root, height={index}");
+            Utility.Log(nameof(VerificationService), LogLevel.Info, $"persisted state root, height={index}");
             context.StopProcess(index);
         }
 
@@ -116,7 +116,7 @@ namespace Neo.Plugins.StateService.Validation
 
         public static Props Props(NeoSystem core, Wallet wallet)
         {
-            return Akka.Actor.Props.Create(() => new ValidationService(core, wallet));
+            return Akka.Actor.Props.Create(() => new VerificationService(core, wallet));
         }
     }
 }

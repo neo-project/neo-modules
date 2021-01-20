@@ -7,7 +7,7 @@ namespace Neo.Plugins.StateService
     {
         public string Path { get; }
         public bool FullState { get; }
-        public string[] Validators { get; }
+        public string[] VerifierUris { get; }
 
         public static Settings Default { get; private set; }
 
@@ -15,7 +15,7 @@ namespace Neo.Plugins.StateService
         {
             Path = string.Format(section.GetValue("Path", "Data_MPT_{0}"), ProtocolSettings.Default.Magic.ToString("X8"));
             FullState = section.GetValue("FullState", false);
-            Validators = section.GetSection("Validators").GetChildren().Select(p => p.Get<string>()).ToArray();
+            VerifierUris = section.GetSection("VerifierUris").GetChildren().Select(p => p.Get<string>()).ToArray();
         }
 
         public static void Load(IConfigurationSection section)

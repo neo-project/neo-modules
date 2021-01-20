@@ -5,7 +5,7 @@ using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.Plugins.StateService.Storage;
-using Neo.Plugins.StateService.Validation;
+using Neo.Plugins.StateService.Verification;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +20,7 @@ namespace Neo.Plugins.StateService
         public override string Description => "Enables MPT for the node";
 
         internal IActorRef Store;
-        internal IActorRef Validator;
+        internal IActorRef Verifier;
 
         protected override void Configure()
         {
@@ -37,7 +37,7 @@ namespace Neo.Plugins.StateService
         {
             base.Dispose();
             System.EnsureStoped(Store);
-            if (Validator != null) System.EnsureStoped(Validator);
+            if (Verifier != null) System.EnsureStoped(Verifier);
         }
 
         void IPersistencePlugin.OnPersist(Block block, StoreView snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
@@ -51,12 +51,12 @@ namespace Neo.Plugins.StateService
             uint height = uint.Parse(_params[0].AsString());
             int validator_index = int.Parse(_params[1].AsString());
             byte[] sig = Convert.FromBase64String(_params[2].AsString());
-            Validator?.Tell(new Vote(height, validator_index, sig));
+            Verifier?.Tell(new Vote(height, validator_index, sig));
             return true;
         }
 
-        [ConsoleCommand("start validate", Category = "StateService", Description = "Start as a state validator if wallet is open")]
-        private void OnStartValidate()
+        [ConsoleCommand("start verifying state", Category = "StateService", Description = "Start as a state verifier if wallet is open")]
+        private void OnStartVerifyingState()
         {
             var wallet = GetService<IWalletProvider>().GetWallet();
             if (wallet is null)
@@ -64,7 +64,7 @@ namespace Neo.Plugins.StateService
                 Console.WriteLine("Please open wallet first!");
                 return;
             }
-            Validator = System.ActorSystem.ActorOf(ValidationService.Props(System, wallet));
+            Verifier = System.ActorSystem.ActorOf(VerificationService.Props(System, wallet));
         }
     }
 }
