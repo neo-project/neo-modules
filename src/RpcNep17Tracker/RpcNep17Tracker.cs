@@ -71,8 +71,8 @@ namespace Neo.Plugins
         {
             if (!_shouldTrackHistory) return;
 
-            var currentBlockHash = NativeContract.Ledger.GetBlockHash(snapshot, NativeContract.Ledger.CurrentIndex(snapshot));
-            var header = NativeContract.Ledger.GetHeader(snapshot, currentBlockHash);
+            var currentBlockIndex = NativeContract.Ledger.CurrentIndex(snapshot);
+            var header = NativeContract.Ledger.GetHeader(snapshot, NativeContract.Ledger.GetBlockHash(snapshot, currentBlockIndex));
 
             if (_recordNullAddressHistory || from != UInt160.Zero)
             {
@@ -81,7 +81,7 @@ namespace Neo.Plugins
                     {
                         Amount = amount,
                         UserScriptHash = to,
-                        BlockIndex = NativeContract.Ledger.CurrentIndex(snapshot),
+                        BlockIndex = currentBlockIndex,
                         TxHash = txHash
                     });
             }
@@ -93,7 +93,7 @@ namespace Neo.Plugins
                     {
                         Amount = amount,
                         UserScriptHash = from,
-                        BlockIndex = NativeContract.Ledger.CurrentIndex(snapshot),
+                        BlockIndex = currentBlockIndex,
                         TxHash = txHash
                     });
             }
