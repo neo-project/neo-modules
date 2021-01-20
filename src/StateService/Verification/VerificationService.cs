@@ -15,7 +15,7 @@ namespace Neo.Plugins.StateService.Verification
         public class ValidatedRootPersisted { public uint Index; }
         public class BlockPersisted { public uint Index; }
         private class Timer { public uint Index; }
-        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(7);
         private readonly NeoSystem core;
         private const int MaxCachedVerificationProcessCount = 10;
         private readonly Wallet wallet;
@@ -42,23 +42,14 @@ namespace Neo.Plugins.StateService.Verification
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(nameof(VerificationService), LogLevel.Warning, $"Failed to send vote, validator={url}, error={e.Message}");
+                    Utility.Log(nameof(VerificationService), LogLevel.Warning, $"Failed to send vote, verifier={url}, error={e.Message}");
                 }
             });
-            CheckVotes(context);
         }
 
         private void OnVoteStateRoot(Vote vote)
         {
-            if (contexts.TryGetValue(vote.RootIndex, out VerificationContext context) && context.AddSignature(vote.ValidatorIndex, vote.Signature))
-            {
-                CheckVotes(context);
-            }
-        }
-
-        private void CheckVotes(VerificationContext context)
-        {
-            if (context.CheckSignatures())
+            if (contexts.TryGetValue(vote.RootIndex, out VerificationContext context) && context.AddSignature(vote.ValidatorIndex, vote.Signature) && context.CheckSignatures())
             {
                 if (context.Message is null) return;
                 var state_root = context.Message.Data.AsSerializable<StateRoot>();
@@ -84,7 +75,7 @@ namespace Neo.Plugins.StateService.Verification
             var p = new VerificationContext(wallet, index);
             if (p.IsValidator && contexts.TryAdd(index, p))
             {
-                p.Timer = Context.System.Scheduler.ScheduleTellOnceCancelable(Timeout, Self, new Timer
+                p.Timer = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(Timeout, Timeout, Self, new Timer
                 {
                     Index = index,
                 }, ActorRefs.NoSender);

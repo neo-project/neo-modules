@@ -44,8 +44,6 @@ namespace Neo.Plugins.StateService.Verification
         }
         public ExtensiblePayload Message => payload;
 
-        public VerificationContext() { }
-
         public VerificationContext(Wallet wallet, uint index)
         {
             this.wallet = wallet;
