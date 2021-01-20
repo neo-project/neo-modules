@@ -120,7 +120,7 @@ namespace Neo.Plugins.StateService
             if (proof is null) throw new RpcException(-100, "Unknown value");
 
             using MemoryStream ms = new MemoryStream();
-            using BinaryWriter writer = new BinaryWriter(ms, Encoding.UTF8);
+            using BinaryWriter writer = new BinaryWriter(ms, Utility.StrictUTF8);
 
             writer.WriteVarBytes(skey.ToArray());
             writer.WriteVarInt(proof.Count);
@@ -147,7 +147,7 @@ namespace Neo.Plugins.StateService
             var proofs = new HashSet<byte[]>();
 
             using MemoryStream ms = new MemoryStream(proof, false);
-            using BinaryReader reader = new BinaryReader(ms, Encoding.UTF8);
+            using BinaryReader reader = new BinaryReader(ms, Utility.StrictUTF8);
 
             var key = reader.ReadVarBytes(MPTNode.MaxKeyLength);
             var count = reader.ReadVarInt();
