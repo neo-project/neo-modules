@@ -145,7 +145,7 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnPersist(Block block, SnapshotCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void OnPersist(Block block, SnapshotCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             // Start freshly with a new DBCache for each block.
             ResetBatch();

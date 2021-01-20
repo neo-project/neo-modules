@@ -52,7 +52,7 @@ namespace Neo.Plugins
                 : Blockchain.Singleton.View.Find());
         }
 
-        void IPersistencePlugin.OnPersist(Block block, SnapshotCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void OnPersist(Block block, SnapshotCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
                 OnPersistStorage(snapshot);

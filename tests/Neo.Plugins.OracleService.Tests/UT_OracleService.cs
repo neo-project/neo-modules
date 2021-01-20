@@ -58,7 +58,6 @@ namespace Neo.Plugins.Tests
         }
 
         const byte Prefix_Transaction = 11;
-        const byte Prefix_CurrentBlock = 12;
 
         [TestMethod]
         public void TestCreateOracleResponseTx()

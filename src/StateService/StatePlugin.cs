@@ -33,7 +33,7 @@ namespace Neo.Plugins.StateService
             System.EnsureStoped(store);
         }
 
-        void IPersistencePlugin.OnPersist(Block block, SnapshotCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
+        void OnPersist(Block block, SnapshotCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
         {
             StateStore.Singleton.UpdateLocalStateRoot(block.Index, snapshot.GetChangeSet().Where(p => p.State != TrackState.None).ToList());
         }
