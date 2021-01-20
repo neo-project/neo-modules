@@ -29,7 +29,7 @@ namespace Neo.Plugins.Storage
 
         public void Delete(byte[] key)
         {
-            batch.Delete(LHelper.CreateKey(key));
+            batch.Delete(key);
         }
 
         public void Dispose()
@@ -44,17 +44,17 @@ namespace Neo.Plugins.Storage
 
         public void Put(byte[] key, byte[] value)
         {
-            batch.Put(LHelper.CreateKey(key), value);
+            batch.Put(key, value);
         }
 
         public bool Contains(byte[] key)
         {
-            return db.Contains(options, LHelper.CreateKey(key));
+            return db.Contains(options, key);
         }
 
         public byte[] TryGet(byte[] key)
         {
-            return db.Get(options, LHelper.CreateKey(key));
+            return db.Get(options, key);
         }
     }
 }

@@ -11,10 +11,9 @@ namespace Neo.IO.Data.LevelDB
         public static IEnumerable<T> Seek<T>(this DB db, ReadOptions options, byte[] prefix, SeekDirection direction, Func<byte[], byte[], T> resultSelector)
         {
             using Iterator it = db.NewIterator(options);
-            byte[] target = CreateKey(prefix);
             if (direction == SeekDirection.Forward)
             {
-                for (it.Seek(target); it.Valid(); it.Next())
+                for (it.Seek(prefix); it.Valid(); it.Next())
                 {
                     var key = it.Key();
                     if (key.Length < 1) break;
@@ -25,10 +24,10 @@ namespace Neo.IO.Data.LevelDB
             {
                 // SeekForPrev
 
-                it.Seek(target);
+                it.Seek(prefix);
                 if (!it.Valid())
                     it.SeekToLast();
-                else if (it.Key().AsSpan().SequenceCompareTo(target) > 0)
+                else if (it.Key().AsSpan().SequenceCompareTo(prefix) > 0)
                     it.Prev();
 
                 for (; it.Valid(); it.Prev())
@@ -58,15 +57,5 @@ namespace Neo.IO.Data.LevelDB
             Marshal.Copy(data, buffer, 0, (int)length);
             return buffer;
         }
-
-        public static byte[] CreateKey(byte[] key = null)
-        {
-            if (key is null || key.Length == 0) return Array.Empty<byte>();
-            byte[] buffer = new byte[1 + key.Length];
-            Buffer.BlockCopy(key, 0, buffer, 1, key.Length);
-            return buffer;
-        }
-
-        public static byte[] CreateKey(byte key) => CreateKey(new byte[] { key });
     }
 }

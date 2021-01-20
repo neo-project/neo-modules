@@ -17,7 +17,7 @@ namespace Neo.Plugins.Storage
         public Store(string path)
         {
             this.db = DB.Open(path, new Options { CreateIfMissing = true, FilterPolicy = Native.leveldb_filterpolicy_create_bloom(15) });
-            byte[] value = db.Get(ReadOptions.Default, LHelper.CreateKey(SYS_Version));
+            byte[] value = db.Get(ReadOptions.Default, new byte[] { SYS_Version });
             if (value != null && Version.TryParse(Encoding.ASCII.GetString(value), out Version version) && version >= Version.Parse("3.0.0"))
                 return;
 
@@ -37,13 +37,13 @@ namespace Neo.Plugins.Storage
                 }
             }
 
-            db.Put(WriteOptions.Default, LHelper.CreateKey(SYS_Version), Encoding.ASCII.GetBytes(Assembly.GetExecutingAssembly().GetName().Version.ToString()));
+            db.Put(WriteOptions.Default, new byte[] { SYS_Version }, Encoding.ASCII.GetBytes(Assembly.GetExecutingAssembly().GetName().Version.ToString()));
             db.Write(WriteOptions.Default, batch);
         }
 
         public void Delete(byte[] key)
         {
-            db.Delete(WriteOptions.Default, LHelper.CreateKey(key));
+            db.Delete(WriteOptions.Default, key);
         }
 
         public void Dispose()
@@ -63,22 +63,22 @@ namespace Neo.Plugins.Storage
 
         public void Put(byte[] key, byte[] value)
         {
-            db.Put(WriteOptions.Default, LHelper.CreateKey(key), value);
+            db.Put(WriteOptions.Default, key, value);
         }
 
         public void PutSync(byte[] key, byte[] value)
         {
-            db.Put(WriteOptions.SyncWrite, LHelper.CreateKey(key), value);
+            db.Put(WriteOptions.SyncWrite, key, value);
         }
 
         public bool Contains(byte[] key)
         {
-            return db.Contains(ReadOptions.Default, LHelper.CreateKey(key));
+            return db.Contains(ReadOptions.Default, key);
         }
 
         public byte[] TryGet(byte[] key)
         {
-            return db.Get(ReadOptions.Default, LHelper.CreateKey( key));
+            return db.Get(ReadOptions.Default, key);
         }
     }
 }
