@@ -50,7 +50,7 @@ namespace Neo.Plugins.StateService
         {
             uint height = uint.Parse(_params[0].AsString());
             int validator_index = int.Parse(_params[1].AsString());
-            byte[] sig = _params[2].AsString().HexToBytes();
+            byte[] sig = Convert.FromBase64String(_params[2].AsString());
             Validator?.Tell(new Vote(height, validator_index, sig));
             return true;
         }

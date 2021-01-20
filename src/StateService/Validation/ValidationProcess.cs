@@ -88,7 +88,7 @@ namespace Neo.Plugins.StateService.Validation
             Utility.Log(nameof(ValidationService), LogLevel.Info, $"vote received, index={index}");
             ECPoint validator = validators[index];
             byte[] hash_data = StateRoot?.GetHashData();
-            if (hash_data != null && !Crypto.VerifySignature(hash_data, sig, validator))
+            if (hash_data is null || !Crypto.VerifySignature(hash_data, sig, validator))
             {
                 Utility.Log(nameof(ValidationService), LogLevel.Info, "incorrect vote, invalid signature");
                 return false;
