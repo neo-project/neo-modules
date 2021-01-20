@@ -9,7 +9,7 @@ namespace Neo.Plugins.StateService.Verification
 {
     public class VerificationContext
     {
-        const int MaxCachedValidationProcess = 10;
+        private const int MaxCachedVerificationProcessCount = 10;
         private readonly Wallet wallet;
         private readonly ConcurrentDictionary<uint, VerificationProcess> processes = new ConcurrentDictionary<uint, VerificationProcess>();
 
@@ -20,10 +20,10 @@ namespace Neo.Plugins.StateService.Verification
 
         public VerificationProcess NewProcess(uint index)
         {
-            if (MaxCachedValidationProcess <= processes.Count)
+            if (MaxCachedVerificationProcessCount <= processes.Count)
             {
                 var indexes = processes.Keys.OrderBy(i => i).ToArray();
-                while (MaxCachedValidationProcess <= indexes.Length)
+                while (MaxCachedVerificationProcessCount <= indexes.Length)
                 {
                     if (processes.TryRemove(indexes[0], out var value))
                     {

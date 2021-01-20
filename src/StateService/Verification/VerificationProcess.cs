@@ -23,8 +23,8 @@ namespace Neo.Plugins.StateService.Verification
         private KeyPair keyPair;
         private int myIndex;
         private uint rootIndex;
-        private ECPoint[] validators;
-        private int M => validators.Length - (validators.Length - 1) / 3;
+        private ECPoint[] verifiers;
+        private int M => verifiers.Length - (verifiers.Length - 1) / 3;
         private readonly Dictionary<int, byte[]> signatures = new Dictionary<int, byte[]>();
 
         public bool IsValidator => myIndex >= 0;
@@ -58,10 +58,10 @@ namespace Neo.Plugins.StateService.Verification
             root = null;
             rootIndex = index;
             using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
-            validators = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.StateValidator, index);
-            for (int i = 0; i < validators.Length; i++)
+            verifiers = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.StateValidator, index);
+            for (int i = 0; i < verifiers.Length; i++)
             {
-                WalletAccount account = wallet?.GetAccount(validators[i]);
+                WalletAccount account = wallet?.GetAccount(verifiers[i]);
                 if (account?.HasKey != true) continue;
                 myIndex = i;
                 keyPair = account.GetKey();
@@ -83,10 +83,10 @@ namespace Neo.Plugins.StateService.Verification
         public bool AddSignature(int index, byte[] sig)
         {
             if (M <= signatures.Count) return false;
-            if (index < 0 || validators.Length <= index) return false;
+            if (index < 0 || verifiers.Length <= index) return false;
             if (signatures.ContainsKey(index)) return false;
             Utility.Log(nameof(VerificationProcess), LogLevel.Info, $"vote received, index={index}");
-            ECPoint validator = validators[index];
+            ECPoint validator = verifiers[index];
             byte[] hash_data = StateRoot?.GetHashData();
             if (hash_data is null || !Crypto.VerifySignature(hash_data, sig, validator))
             {
@@ -99,13 +99,13 @@ namespace Neo.Plugins.StateService.Verification
 
         private void CreateStateRoot()
         {
-            Contract contract = Contract.CreateMultiSigContract(M, validators);
+            Contract contract = Contract.CreateMultiSigContract(M, verifiers);
             ContractParametersContext sc = new ContractParametersContext(StateRoot);
-            for (int i = 0, j = 0; i < validators.Length && j < M; i++)
+            for (int i = 0, j = 0; i < verifiers.Length && j < M; i++)
             {
                 bool ok = signatures.TryGetValue(i, out byte[] sig);
                 if (!ok) continue;
-                sc.AddSignature(contract, validators[i], sig);
+                sc.AddSignature(contract, verifiers[i], sig);
                 j++;
             }
             StateRoot.Witness = sc.GetWitnesses()[0];
