@@ -142,6 +142,7 @@ namespace Neo.Plugins.StateService.Storage
             state_snapshot.AddLocalStateRoot(state_root);
             state_snapshot.Commit();
             UpdateCurrentSnapshot();
+            system.Verifier?.Tell(new VerificationService.BlockPersisted { Index = height });
             CheckValidatedStateRoot(height);
         }
 

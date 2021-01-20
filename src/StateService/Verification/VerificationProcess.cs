@@ -97,7 +97,7 @@ namespace Neo.Plugins.StateService.Verification
             return true;
         }
 
-        private void CreateStateRoot()
+        private void CreateExtensiblePayload()
         {
             Contract contract = Contract.CreateMultiSigContract(M, verifiers);
             ContractParametersContext sc = new ContractParametersContext(StateRoot);
@@ -109,10 +109,7 @@ namespace Neo.Plugins.StateService.Verification
                 j++;
             }
             StateRoot.Witness = sc.GetWitnesses()[0];
-        }
 
-        private void CreateExtensiblePayload()
-        {
             payload = new ExtensiblePayload
             {
                 Category = StatePlugin.StatePayloadCategory,
@@ -121,7 +118,6 @@ namespace Neo.Plugins.StateService.Verification
                 Sender = keyPair.PublicKeyHash,
                 Data = StateRoot.ToArray(),
             };
-            ContractParametersContext sc;
             try
             {
                 sc = new ContractParametersContext(payload);
@@ -139,7 +135,6 @@ namespace Neo.Plugins.StateService.Verification
             if (StateRoot is null) return false;
             if (signatures.Count < M) return false;
             if (StateRoot.Witness != null) return true;
-            CreateStateRoot();
             CreateExtensiblePayload();
             return true;
         }
