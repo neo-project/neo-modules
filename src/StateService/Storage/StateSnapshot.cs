@@ -72,6 +72,7 @@ namespace Neo.Plugins.StateService.Storage
 
         public void Commit()
         {
+            Trie.Commit();
             snapshot.Commit();
         }
 
