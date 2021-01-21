@@ -1,8 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Plugins.MPT;
 using Neo.IO;
-using Neo.IO.Caching;
 using Neo.Persistence;
+using Neo.Plugins.MPT;
 using Neo.Plugins.StateService.IO;
 using System;
 using System.Collections.Generic;
@@ -102,7 +101,7 @@ namespace Neo.Plugins.StateService.Tests
 
         public void Delete(byte[] key)
         {
-            store.Remove(StoreKey( key));
+            store.Remove(StoreKey(key));
         }
 
         public void Commit() { throw new NotImplementedException(); }
