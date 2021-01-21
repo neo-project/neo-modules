@@ -2,6 +2,7 @@
   <PropertyGroup>
     <PackageId>Neo.Plugins.RpcNep17Tracker</PackageId>
     <RootNamespace>Neo.Plugins</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <None Update="RpcNep17Tracker\config.json">
