@@ -3,9 +3,9 @@ namespace Neo.Plugins.StateService.Verification
 {
     public class Vote
     {
-        public int ValidatorIndex;
-        public uint RootIndex;
-        public byte[] Signature;
+        public readonly int ValidatorIndex;
+        public readonly uint RootIndex;
+        public readonly byte[] Signature;
 
         public Vote(uint index, int validator, byte[] signature)
         {
