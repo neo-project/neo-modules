@@ -5,7 +5,7 @@ using System.IO;
 
 namespace Neo.Plugins.MPT
 {
-    public partial class MPTNode : ICloneable<MPTNode>, ISerializable
+    partial class MPTNode
     {
         public const int MaxValueLength = 3 + ApplicationEngine.MaxStorageValueSize + sizeof(bool);
         public byte[] Value;
