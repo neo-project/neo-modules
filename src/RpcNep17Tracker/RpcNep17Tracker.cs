@@ -55,13 +55,12 @@ namespace Neo.Plugins
             _levelDbSnapshot = _db.GetSnapshot();
         }
 
-        private static unsafe byte[] Key(byte prefix, ISerializable key)
+        private static byte[] Key(byte prefix, ISerializable key)
         {
             byte[] buffer = new byte[key.Size + 1];
-            fixed (byte* p = buffer)
+            using (MemoryStream ms = new MemoryStream(buffer, true))
+            using (BinaryWriter writer = new BinaryWriter(ms))
             {
-                using UnmanagedMemoryStream ms = new UnmanagedMemoryStream(p, buffer.Length);
-                using BinaryWriter writer = new BinaryWriter(ms);
                 writer.Write(prefix);
                 key.Serialize(writer);
             }

@@ -31,13 +31,12 @@ namespace Neo.Plugins.MPT
             this.prefix = prefix;
         }
 
-        private unsafe byte[] Key(UInt256 hash)
+        private byte[] Key(UInt256 hash)
         {
             byte[] buffer = new byte[UInt256.Length + 1];
-            fixed (byte* p = buffer)
+            using (MemoryStream ms = new MemoryStream(buffer, true))
+            using (BinaryWriter writer = new BinaryWriter(ms))
             {
-                using UnmanagedMemoryStream ms = new UnmanagedMemoryStream(p, buffer.Length);
-                using BinaryWriter writer = new BinaryWriter(ms);
                 writer.Write(prefix);
                 hash.Serialize(writer);
             }
