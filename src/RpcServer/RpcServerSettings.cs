@@ -47,17 +47,10 @@ namespace Neo.Plugins
             this.TrustedAuthorities = trustedAuthorities ?? Array.Empty<string>();
             this.RpcUser = rpcUser;
             this.RpcPass = rpcPass;
-            this.MaxGasInvoke = ToBigDecimalGas(maxGasInvoke);
-            this.MaxFee = ToBigDecimalGas(maxFee);
+            this.MaxGasInvoke = (long)new BigDecimal(maxGasInvoke, NativeContract.GAS.Decimals).Value;
+            this.MaxFee = (long)new BigDecimal(maxFee, NativeContract.GAS.Decimals).Value;
             this.DisabledMethods = disabledMethods ?? Array.Empty<string>();
             this.MaxConcurrentConnections = maxConcurrentConnections;
-        }
-
-        private static long ToBigDecimalGas(decimal maxGasInvoke)
-        {
-            var dec = new BigDecimal(maxGasInvoke);
-            dec.ChangeDecimals(NativeContract.GAS.Decimals);
-            return (long)dec.Value;
         }
 
         public RpcServerSettings(IConfigurationSection section)
@@ -69,8 +62,8 @@ namespace Neo.Plugins
             this.TrustedAuthorities = section.GetSection("TrustedAuthorities").GetChildren().Select(p => p.Get<string>()).ToArray();
             this.RpcUser = section.GetSection("RpcUser").Value;
             this.RpcPass = section.GetSection("RpcPass").Value;
-            this.MaxGasInvoke = ToBigDecimalGas(section.GetValue<decimal>("MaxGasInvoke", 10M));
-            this.MaxFee = ToBigDecimalGas(section.GetValue<decimal>("MaxFee", 0.1M));
+            this.MaxGasInvoke = (long)new BigDecimal(section.GetValue<decimal>("MaxGasInvoke", 10M), NativeContract.GAS.Decimals).Value;
+            this.MaxFee = (long)new BigDecimal(section.GetValue<decimal>("MaxFee", 0.1M), NativeContract.GAS.Decimals).Value;
             this.DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray();
             this.MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", 40);
         }

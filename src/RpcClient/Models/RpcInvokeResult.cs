@@ -12,7 +12,7 @@ namespace Neo.Network.RPC.Models
 
         public VM.VMState State { get; set; }
 
-        public string GasConsumed { get; set; }
+        public long GasConsumed { get; set; }
 
         public StackItem[] Stack { get; set; }
 
@@ -25,7 +25,7 @@ namespace Neo.Network.RPC.Models
             JObject json = new JObject();
             json["script"] = Script;
             json["state"] = State;
-            json["gasconsumed"] = GasConsumed.ToString();
+            json["gasconsumed"] = GasConsumed;
             if (!string.IsNullOrEmpty(Exception))
                 json["exception"] = Exception;
             try
@@ -46,8 +46,8 @@ namespace Neo.Network.RPC.Models
             RpcInvokeResult invokeScriptResult = new RpcInvokeResult
             {
                 Script = json["script"].AsString(),
-                State = json["state"].TryGetEnum<VM.VMState>(),
-                GasConsumed = json["gasconsumed"].AsString()
+                State = json["state"].TryGetEnum<VMState>(),
+                GasConsumed = (long)json["gasconsumed"].AsNumber()
             };
             if (json.ContainsProperty("exception"))
                 invokeScriptResult.Exception = json["exception"]?.AsString();
