@@ -17,6 +17,7 @@ namespace Neo.Plugins.StateService.Verification
 {
     public class VerificationContext
     {
+        private const uint MaxValidUntilBlockIncrement = 100;
         private StateRoot root;
         private ExtensiblePayload payload;
         private readonly Wallet wallet;
@@ -50,7 +51,7 @@ namespace Neo.Plugins.StateService.Verification
             Initialize(index);
         }
 
-        public void Initialize(uint index)
+        private void Initialize(uint index)
         {
             myIndex = -1;
             root = null;
@@ -112,7 +113,7 @@ namespace Neo.Plugins.StateService.Verification
             {
                 Category = StatePlugin.StatePayloadCategory,
                 ValidBlockStart = StateRoot.Index,
-                ValidBlockEnd = uint.MaxValue,
+                ValidBlockEnd = StateRoot.Index + MaxValidUntilBlockIncrement,
                 Sender = keyPair.PublicKeyHash,
                 Data = StateRoot.ToArray(),
             };
