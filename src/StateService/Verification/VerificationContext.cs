@@ -21,10 +21,10 @@ namespace Neo.Plugins.StateService.Verification
         private StateRoot root;
         private ExtensiblePayload payload;
         private readonly Wallet wallet;
-        private KeyPair keyPair;
-        private int myIndex;
-        private uint rootIndex;
-        private ECPoint[] verifiers;
+        private readonly KeyPair keyPair;
+        private readonly int myIndex;
+        private readonly uint rootIndex;
+        private readonly ECPoint[] verifiers;
         private int M => verifiers.Length - (verifiers.Length - 1) / 3;
         private readonly Dictionary<int, byte[]> signatures = new Dictionary<int, byte[]>();
 
@@ -48,11 +48,6 @@ namespace Neo.Plugins.StateService.Verification
         public VerificationContext(Wallet wallet, uint index)
         {
             this.wallet = wallet;
-            Initialize(index);
-        }
-
-        private void Initialize(uint index)
-        {
             myIndex = -1;
             root = null;
             rootIndex = index;
@@ -102,8 +97,7 @@ namespace Neo.Plugins.StateService.Verification
             ContractParametersContext sc = new ContractParametersContext(StateRoot);
             for (int i = 0, j = 0; i < verifiers.Length && j < M; i++)
             {
-                bool ok = signatures.TryGetValue(i, out byte[] sig);
-                if (!ok) continue;
+                if (!signatures.TryGetValue(i, out byte[] sig)) continue;
                 sc.AddSignature(contract, verifiers[i], sig);
                 j++;
             }
