@@ -1,6 +1,5 @@
 using Akka.Actor;
 using Neo.ConsoleService;
-using Neo.IO.Caching;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -40,9 +39,9 @@ namespace Neo.Plugins.StateService
             if (Verifier != null) System.EnsureStoped(Verifier);
         }
 
-        void IPersistencePlugin.OnPersist(Block block, StoreView snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
         {
-            StateStore.Singleton.UpdateLocalStateRoot(block.Index, snapshot.Storages.GetChangeSet().Where(p => p.State != TrackState.None).ToList());
+            StateStore.Singleton.UpdateLocalStateRoot(block.Index, snapshot.GetChangeSet().Where(p => p.State != TrackState.None).ToList());
         }
 
         [RpcMethod]

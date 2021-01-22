@@ -51,7 +51,7 @@ namespace Neo.Plugins.StateService.Verification
             myIndex = -1;
             root = null;
             rootIndex = index;
-            using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
+            using SnapshotCache snapshot = Blockchain.Singleton.GetSnapshot();
             verifiers = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.StateValidator, index);
             for (int i = 0; i < verifiers.Length; i++)
             {

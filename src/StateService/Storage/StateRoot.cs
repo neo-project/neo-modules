@@ -2,7 +2,6 @@ using Neo.Cryptography;
 using Neo.Cryptography.ECC;
 using Neo.IO;
 using Neo.IO.Json;
-using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -13,7 +12,7 @@ using System.IO;
 
 namespace Neo.Plugins.StateService.Storage
 {
-    public class StateRoot : ICloneable<StateRoot>, IVerifiable, ISerializable
+    public class StateRoot : IVerifiable, ISerializable
     {
         public byte Version;
         public uint Index;
@@ -53,25 +52,6 @@ namespace Neo.Plugins.StateService.Storage
             UInt256.Length +    //RootHash
             (Witness is null ? 1 : 1 + Witness.Size); //Witness
 
-        public StateRoot Clone()
-        {
-            return new StateRoot
-            {
-                Version = Version,
-                Index = Index,
-                RootHash = RootHash,
-                Witness = Witness,
-            };
-        }
-
-        public void FromReplica(StateRoot replica)
-        {
-            Version = replica.Version;
-            Index = replica.Index;
-            RootHash = replica.RootHash;
-            Witness = replica.Witness;
-        }
-
         public void Deserialize(BinaryReader reader)
         {
             this.DeserializeUnsigned(reader);
@@ -105,16 +85,16 @@ namespace Neo.Plugins.StateService.Storage
             writer.Write(RootHash);
         }
 
-        public bool Verify(StoreView snapshot)
+        public bool Verify(DataCache snapshot)
         {
             return this.VerifyWitnesses(snapshot, 1_00000000);
         }
 
-        public UInt160[] GetScriptHashesForVerifying(StoreView snapshot)
+        public UInt160[] GetScriptHashesForVerifying(DataCache snapshot)
         {
             ECPoint[] validators = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.StateValidator, Index);
             if (validators.Length < 1) throw new InvalidOperationException("No script hash for state root verifying");
-            return new UInt160[] { Blockchain.GetConsensusAddress(validators) };
+            return new UInt160[] { Contract.GetBFTAddress(validators) };
         }
 
         public JObject ToJson()

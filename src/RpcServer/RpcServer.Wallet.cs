@@ -6,7 +6,6 @@ using Neo.IO;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
-using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
@@ -90,11 +89,12 @@ namespace Neo.Plugins
         {
             CheckWallet();
             BigInteger gas = BigInteger.Zero;
-            using (SnapshotView snapshot = Blockchain.Singleton.GetSnapshot())
+            using (var snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
                 foreach (UInt160 account in wallet.GetAccounts().Select(p => p.ScriptHash))
-                {
-                    gas += NativeContract.NEO.UnclaimedGas(snapshot, account, snapshot.Height + 1);
-                }
+                    gas += NativeContract.NEO.UnclaimedGas(snapshot, account, height);
+            }
             return new BigDecimal(gas, NativeContract.GAS.Decimals).ToString();
         }
 
@@ -354,7 +354,7 @@ namespace Neo.Plugins
             wallet.Sign(context);
             tx.Witnesses = context.Completed ? context.GetWitnesses() : null;
 
-            using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
+            using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.CreateSnapshot());
             engine.LoadScript(new ScriptBuilder().EmitDynamicCall(scriptHash, methodName, args).ToArray(), rvcount: 1);
 
             JObject json = new JObject();

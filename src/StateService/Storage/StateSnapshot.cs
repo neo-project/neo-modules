@@ -1,11 +1,8 @@
-using Neo;
 using Neo.IO;
-using Neo.IO.Caching;
-using Neo.Ledger;
 using Neo.Persistence;
 using Neo.Plugins.MPT;
+using Neo.SmartContract;
 using System;
-using System.Text;
 
 namespace Neo.Plugins.StateService.Storage
 {
@@ -22,18 +19,18 @@ namespace Neo.Plugins.StateService.Storage
 
         public StateRoot GetStateRoot(uint index)
         {
-            return snapshot.TryGet(Prefixs.StateRoot, BitConverter.GetBytes(index))?.AsSerializable<StateRoot>();
+            return snapshot.TryGet(Keys.StateRoot(index))?.AsSerializable<StateRoot>();
         }
 
         public void AddLocalStateRoot(StateRoot state_root)
         {
-            snapshot.Put(Prefixs.StateRoot, BitConverter.GetBytes(state_root.Index), state_root.ToArray());
-            snapshot.Put(Prefixs.CurrentLocalRootIndex, Array.Empty<byte>(), BitConverter.GetBytes(state_root.Index));
+            snapshot.Put(Keys.StateRoot(state_root.Index), state_root.ToArray());
+            snapshot.Put(Keys.CurrentLocalRootIndex, BitConverter.GetBytes(state_root.Index));
         }
 
         public uint CurrentLocalRootIndex()
         {
-            var bytes = snapshot.TryGet(Prefixs.CurrentLocalRootIndex, Array.Empty<byte>());
+            var bytes = snapshot.TryGet(Keys.CurrentLocalRootIndex);
             if (bytes is null) return uint.MaxValue;
             return BitConverter.ToUInt32(bytes);
         }
@@ -49,13 +46,13 @@ namespace Neo.Plugins.StateService.Storage
         {
             if (state_root?.Witness is null)
                 throw new ArgumentException(nameof(state_root) + " missing witness in invalidated state root");
-            snapshot.Put(Prefixs.StateRoot, BitConverter.GetBytes(state_root.Index), state_root.ToArray());
-            snapshot.Put(Prefixs.CurrentValidatedRootIndex, Array.Empty<byte>(), BitConverter.GetBytes(state_root.Index));
+            snapshot.Put(Keys.StateRoot(state_root.Index), state_root.ToArray());
+            snapshot.Put(Keys.CurrentValidatedRootIndex, BitConverter.GetBytes(state_root.Index));
         }
 
         public uint CurrentValidatedRootIndex()
         {
-            var bytes = snapshot.TryGet(Prefixs.CurrentValidatedRootIndex, Array.Empty<byte>());
+            var bytes = snapshot.TryGet(Keys.CurrentValidatedRootIndex);
             if (bytes is null) return uint.MaxValue;
             return BitConverter.ToUInt32(bytes);
         }
