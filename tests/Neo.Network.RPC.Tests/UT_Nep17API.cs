@@ -92,16 +92,14 @@ namespace Neo.Network.RPC.Tests
                 new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1_00000000) });
 
             var tests = TestUtils.RpcTestCases.Where(p => p.Name == "getcontractstateasync");
+            var haveGasTokenUT = false;
+            var haveNeoTokenUT = false;
             foreach (var test in tests)
             {
                 rpcClientMock.Setup(p => p.RpcSendAsync("getcontractstate", It.Is<JObject[]>(u => true)))
                 .ReturnsAsync(test.Response.Result)
                 .Verifiable();
-                var gasToken = "0x9ac04cf223f646de5f7faccafe34e30e5d4382a2";
-                Assert.AreEqual(gasToken, NativeContract.GAS.Hash.ToString());
-                var neoToken = "0x4961bf0ab79370b23dc45cde29f568d0e0fa6e93";
-                Assert.AreEqual(neoToken, NativeContract.NEO.Hash.ToString());
-                if (test.Request.Params[0].AsString() == gasToken || test.Request.Params[0].AsString().Equals(NativeContract.GAS.Name, System.StringComparison.OrdinalIgnoreCase))
+                if (test.Request.Params[0].AsString() == NativeContract.GAS.Hash.ToString() || test.Request.Params[0].AsString().Equals(NativeContract.GAS.Name, System.StringComparison.OrdinalIgnoreCase))
                 {
                     var result = await nep17API.GetTokenInfoAsync(NativeContract.GAS.Name.ToLower());
                     Assert.AreEqual(NativeContract.GAS.Symbol, result.Symbol);
@@ -114,8 +112,9 @@ namespace Neo.Network.RPC.Tests
                     Assert.AreEqual(8, (int)result.Decimals);
                     Assert.AreEqual(1_00000000, (int)result.TotalSupply);
                     Assert.AreEqual("GasToken", result.Name);
+                    haveGasTokenUT = true;
                 }
-                else if (test.Request.Params[0].AsString() == neoToken || test.Request.Params[0].AsString().Equals(NativeContract.NEO.Name, System.StringComparison.OrdinalIgnoreCase))
+                else if (test.Request.Params[0].AsString() == NativeContract.NEO.Hash.ToString() || test.Request.Params[0].AsString().Equals(NativeContract.NEO.Name, System.StringComparison.OrdinalIgnoreCase))
                 {
                     var result = await nep17API.GetTokenInfoAsync(NativeContract.NEO.Name.ToLower());
                     Assert.AreEqual(NativeContract.NEO.Symbol, result.Symbol);
@@ -128,8 +127,10 @@ namespace Neo.Network.RPC.Tests
                     Assert.AreEqual(0, (int)result.Decimals);
                     Assert.AreEqual(1_00000000, (int)result.TotalSupply);
                     Assert.AreEqual("NeoToken", result.Name);
+                    haveNeoTokenUT = true;
                 }
             }
+            Assert.IsTrue(haveGasTokenUT && haveNeoTokenUT); //Update RpcTestCases.json
         }
 
         [TestMethod]

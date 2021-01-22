@@ -1,8 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Plugins.MPT;
 using Neo.IO;
-using Neo.IO.Caching;
 using Neo.Persistence;
+using Neo.Plugins.MPT;
 using Neo.Plugins.StateService.IO;
 using System;
 using System.Collections.Generic;
@@ -90,30 +89,30 @@ namespace Neo.Plugins.StateService.Tests
     {
         public Dictionary<byte[], byte[]> store = new Dictionary<byte[], byte[]>(ByteArrayEqualityComparer.Default);
 
-        private byte[] StoreKey(byte prefix, byte[] key)
+        private byte[] StoreKey(byte[] key)
         {
-            return Concat(new byte[] { prefix }, key);
+            return Concat(key);
         }
 
-        public void Put(byte prefix, byte[] key, byte[] value)
+        public void Put(byte[] key, byte[] value)
         {
-            store[StoreKey(prefix, key)] = value;
+            store[key] = value;
         }
 
-        public void Delete(byte prefix, byte[] key)
+        public void Delete(byte[] key)
         {
-            store.Remove(StoreKey(prefix, key));
+            store.Remove(StoreKey(key));
         }
 
         public void Commit() { throw new NotImplementedException(); }
 
-        public bool Contains(byte prefix, byte[] key) { throw new System.NotImplementedException(); }
+        public bool Contains(byte[] key) { throw new System.NotImplementedException(); }
 
-        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] key, SeekDirection direction) { throw new System.NotImplementedException(); }
+        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte[] key, SeekDirection direction) { throw new System.NotImplementedException(); }
 
-        public byte[] TryGet(byte prefix, byte[] key)
+        public byte[] TryGet(byte[] key)
         {
-            var result = store.TryGetValue(StoreKey(prefix, key), out byte[] value);
+            var result = store.TryGetValue(StoreKey(key), out byte[] value);
             if (result) return value;
             return null;
         }
@@ -131,7 +130,7 @@ namespace Neo.Plugins.StateService.Tests
 
         private void PutToStore(IStore store, MPTNode node)
         {
-            store.Put(0xf0, node.Hash.ToArray(), node.ToArray());
+            store.Put(Concat(new byte[] { 0xf0 }, node.Hash.ToArray()), node.ToArray());
         }
 
         [TestInitialize]

@@ -1,10 +1,10 @@
+using Neo.IO;
 using System.IO;
 using System.Numerics;
-using Neo.IO;
 
 namespace Neo.Plugins
 {
-    public class Nep17Transfer : ICloneable<Nep17Transfer>, ISerializable
+    public class Nep17Transfer : ISerializable
     {
         public UInt160 UserScriptHash;
         public uint BlockIndex;
@@ -27,25 +27,6 @@ namespace Neo.Plugins
             BlockIndex = reader.ReadUInt32();
             TxHash = reader.ReadSerializable<UInt256>();
             Amount = new BigInteger(reader.ReadVarBytes(512));
-        }
-
-        Nep17Transfer ICloneable<Nep17Transfer>.Clone()
-        {
-            return new Nep17Transfer
-            {
-                UserScriptHash = UserScriptHash,
-                BlockIndex = BlockIndex,
-                TxHash = TxHash,
-                Amount = Amount
-            };
-        }
-
-        void ICloneable<Nep17Transfer>.FromReplica(Nep17Transfer replica)
-        {
-            UserScriptHash = replica.UserScriptHash;
-            BlockIndex = replica.BlockIndex;
-            TxHash = replica.TxHash;
-            Amount = replica.Amount;
         }
     }
 }
