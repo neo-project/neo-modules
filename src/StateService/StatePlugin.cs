@@ -13,7 +13,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using static Neo.Ledger.Blockchain;
 
 namespace Neo.Plugins.StateService
@@ -42,9 +41,9 @@ namespace Neo.Plugins.StateService
             System.EnsureStoped(store);
         }
 
-        void IPersistencePlugin.OnPersist(Block block, StoreView snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
         {
-            StateStore.Singleton.UpdateLocalStateRoot(block.Index, snapshot.Storages.GetChangeSet().Where(p => p.State != TrackState.None).ToList());
+            StateStore.Singleton.UpdateLocalStateRoot(block.Index, snapshot.GetChangeSet().Where(p => p.State != TrackState.None).ToList());
         }
 
         [ConsoleCommand("state root", Category = "StateService", Description = "Get state root by index")]

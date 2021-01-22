@@ -1,14 +1,13 @@
 using Akka.Actor;
 using Neo.IO;
-using Neo.IO.Caching;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.Plugins.MPT;
+using Neo.SmartContract;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using Item = Neo.IO.Caching.DataCache<Neo.Ledger.StorageKey, Neo.Ledger.StorageItem>.Trackable;
 
 namespace Neo.Plugins.StateService.Storage
 {
@@ -111,7 +110,7 @@ namespace Neo.Plugins.StateService.Storage
             return true;
         }
 
-        public void UpdateLocalStateRoot(uint height, List<Item> change_set)
+        public void UpdateLocalStateRoot(uint height, List<DataCache.Trackable> change_set)
         {
             using StateSnapshot state_snapshot = Singleton.GetSnapshot();
             foreach (var item in change_set)
