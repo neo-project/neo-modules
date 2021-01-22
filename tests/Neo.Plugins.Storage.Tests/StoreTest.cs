@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Persistence;
+using System.IO;
 
 namespace Neo.Plugins.Storage.Tests
 {
@@ -12,7 +13,8 @@ namespace Neo.Plugins.Storage.Tests
         [TestMethod]
         public void TestLevelDb()
         {
-            using var plugin = new Neo.Plugins.Storage.LevelDBStore();
+            using var plugin = new LevelDBStore();
+            TestPersistenceDelete(plugin.GetStore(path_leveldb));
             // Test all with the same store
 
             TestStorage(plugin.GetStore(path_leveldb));
@@ -28,7 +30,8 @@ namespace Neo.Plugins.Storage.Tests
         [TestMethod]
         public void TestRocksDb()
         {
-            using var plugin = new Neo.Plugins.Storage.RocksDBStore();
+            using var plugin = new RocksDBStore();
+            TestPersistenceDelete(plugin.GetStore(path_rocksdb));
             // Test all with the same store
 
             TestStorage(plugin.GetStore(path_rocksdb));
