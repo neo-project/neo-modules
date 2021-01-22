@@ -130,7 +130,7 @@ namespace Neo.Plugins.StateService.Tests
 
         private void PutToStore(IStore store, MPTNode node)
         {
-            store.Put(Concat(new byte[] {  0xf0 }, node.Hash.ToArray()), node.ToArray());
+            store.Put(Concat(new byte[] { 0xf0 }, node.Hash.ToArray()), node.ToArray());
         }
 
         [TestInitialize]
