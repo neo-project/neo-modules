@@ -1,6 +1,7 @@
 using Neo.IO;
 using Neo.Persistence;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Neo.Plugins.MPT
 {
@@ -30,13 +31,25 @@ namespace Neo.Plugins.MPT
             this.prefix = prefix;
         }
 
+        private byte[] Key(UInt256 hash)
+        {
+            byte[] buffer = new byte[UInt256.Length + 1];
+            using (MemoryStream ms = new MemoryStream(buffer, true))
+            using (BinaryWriter writer = new BinaryWriter(ms))
+            {
+                writer.Write(prefix);
+                hash.Serialize(writer);
+            }
+            return buffer;
+        }
+
         public MPTNode Resolve(UInt256 hash)
         {
             if (cache.TryGetValue(hash, out Trackable t))
             {
                 return t.Node?.Clone();
             }
-            var n = store.TryGet(prefix, hash.ToArray())?.AsSerializable<MPTNode>();
+            var n = store.TryGet(Key(hash))?.AsSerializable<MPTNode>();
             cache.Add(hash, new Trackable
             {
                 Node = n,
@@ -89,10 +102,10 @@ namespace Neo.Plugins.MPT
                 {
                     case TrackState.Added:
                     case TrackState.Changed:
-                        store.Put(prefix, item.Key.ToArray(), item.Value.Node.ToArray());
+                        store.Put(Key(item.Key), item.Value.Node.ToArray());
                         break;
                     case TrackState.Deleted:
-                        store.Delete(prefix, item.Key.ToArray());
+                        store.Delete(Key(item.Key));
                         break;
                 }
             }

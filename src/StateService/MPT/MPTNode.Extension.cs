@@ -5,7 +5,7 @@ using System.IO;
 
 namespace Neo.Plugins.MPT
 {
-    public partial class MPTNode : ICloneable<MPTNode>, ISerializable
+    partial class MPTNode
     {
         public const int MaxKeyLength = (ApplicationEngine.MaxStorageKeySize + sizeof(int)) * 2;
         public byte[] Key;

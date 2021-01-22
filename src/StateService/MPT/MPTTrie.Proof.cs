@@ -63,11 +63,19 @@ namespace Neo.Plugins.MPT
             return false;
         }
 
+        private static byte[] Key(byte[] hash)
+        {
+            byte[] buffer = new byte[hash.Length + 1];
+            buffer[0] = Prefix;
+            Buffer.BlockCopy(hash, 0, buffer, 1, hash.Length);
+            return buffer;
+        }
+
         public static TValue VerifyProof(UInt256 root, TKey key, HashSet<byte[]> proof)
         {
             using var memoryStore = new MemoryStore();
             foreach (byte[] data in proof)
-                memoryStore.Put(Prefix, Crypto.Hash256(data), Concat(data, new byte[] { 1 }));
+                memoryStore.Put(Key(Crypto.Hash256(data)), Concat(data, new byte[] { 1 }));
             using ISnapshot snapshot = memoryStore.GetSnapshot();
             var trie = new MPTTrie<TKey, TValue>(snapshot, root, false);
             return trie[key];
