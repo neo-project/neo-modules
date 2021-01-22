@@ -110,7 +110,7 @@ namespace Neo.Network.RPC.Tests
             var result = new RpcInvokeResult()
             {
                 Stack = parameters.Select(p => p.ToStackItem()).ToArray(),
-                GasConsumed = "100",
+                GasConsumed = 100,
                 Script = Convert.ToBase64String(script),
                 State = VMState.HALT
             };
