@@ -25,7 +25,7 @@ namespace Neo.Plugins.Storage
 
         public IEnumerable<(byte[], byte[])> Seek(byte[] prefix, SeekDirection direction = SeekDirection.Forward)
         {
-            return db.Seek(ReadOptions.Default, prefix, direction, (k, v) => (k[1..], v));
+            return db.Seek(ReadOptions.Default, prefix, direction, (k, v) => (k, v));
         }
 
         public ISnapshot GetSnapshot()
