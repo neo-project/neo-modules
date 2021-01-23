@@ -367,29 +367,29 @@
                     "type": "Hash160"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Integer",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "decimals",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "Integer",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "symbol",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "String",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "totalSupply",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "Integer",
+                "offset": 0,
                 "safe": true
               },
               {
@@ -412,8 +412,8 @@
                     "type": "Any"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Boolean",
+                "offset": 0,
                 "safe": false
               }
             ],
@@ -487,29 +487,29 @@
                     "type": "Hash160"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Integer",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "decimals",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "Integer",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "symbol",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "String",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "totalSupply",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "Integer",
+                "offset": 0,
                 "safe": true
               },
               {
@@ -532,8 +532,8 @@
                     "type": "Any"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Boolean",
+                "offset": 0,
                 "safe": false
               }
             ],
@@ -607,43 +607,43 @@
                     "type": "Hash160"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Integer",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "decimals",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "Integer",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "getCandidates",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "Array",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "getCommittee",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "Array",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "getGasPerBlock",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "Integer",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "getNextBlockValidators",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "Array",
+                "offset": 0,
                 "safe": true
               },
               {
@@ -654,8 +654,8 @@
                     "type": "ByteArray"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Boolean",
+                "offset": 0,
                 "safe": false
               },
               {
@@ -666,22 +666,22 @@
                     "type": "Integer"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Boolean",
+                "offset": 0,
                 "safe": false
               },
               {
                 "name": "symbol",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "String",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "totalSupply",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "Integer",
+                "offset": 0,
                 "safe": true
               },
               {
@@ -704,8 +704,8 @@
                     "type": "Any"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Boolean",
+                "offset": 0,
                 "safe": false
               },
               {
@@ -720,8 +720,8 @@
                     "type": "Integer"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Integer",
+                "offset": 0,
                 "safe": true
               },
               {
@@ -732,8 +732,8 @@
                     "type": "ByteArray"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Boolean",
+                "offset": 0,
                 "safe": false
               },
               {
@@ -748,8 +748,8 @@
                     "type": "ByteArray"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Boolean",
+                "offset": 0,
                 "safe": false
               }
             ],
@@ -823,43 +823,43 @@
                     "type": "Hash160"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Integer",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "decimals",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "Integer",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "getCandidates",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "Array",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "getCommittee",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "Array",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "getGasPerBlock",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "Integer",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "getNextBlockValidators",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "Array",
+                "offset": 0,
                 "safe": true
               },
               {
@@ -870,8 +870,8 @@
                     "type": "ByteArray"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Boolean",
+                "offset": 0,
                 "safe": false
               },
               {
@@ -882,22 +882,22 @@
                     "type": "Integer"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Boolean",
+                "offset": 0,
                 "safe": false
               },
               {
                 "name": "symbol",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "String",
+                "offset": 0,
                 "safe": true
               },
               {
                 "name": "totalSupply",
                 "parameters": [],
-                "offset": 0,
                 "returntype": "Integer",
+                "offset": 0,
                 "safe": true
               },
               {
@@ -920,8 +920,8 @@
                     "type": "Any"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Boolean",
+                "offset": 0,
                 "safe": false
               },
               {
@@ -936,8 +936,8 @@
                     "type": "Integer"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Integer",
+                "offset": 0,
                 "safe": true
               },
               {
@@ -948,8 +948,8 @@
                     "type": "ByteArray"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Boolean",
+                "offset": 0,
                 "safe": false
               },
               {
@@ -964,8 +964,8 @@
                     "type": "ByteArray"
                   }
                 ],
-                "offset": 0,
                 "returntype": "Boolean",
+                "offset": 0,
                 "safe": false
               }
             ],
@@ -1041,8 +1041,8 @@
                       "type": "ByteArray"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Array",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -1061,15 +1061,15 @@
                       "type": "Any"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Array",
+                  "offset": 0,
                   "safe": false
                 },
                 {
                   "name": "destroy",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Void",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -1080,15 +1080,15 @@
                       "type": "Hash160"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Array",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "getMinimumDeploymentFee",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -1099,8 +1099,8 @@
                       "type": "Integer"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Void",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -1115,8 +1115,8 @@
                       "type": "ByteArray"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Void",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -1135,8 +1135,8 @@
                       "type": "Any"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Void",
+                  "offset": 0,
                   "safe": false
                 }
               ],
@@ -1200,15 +1200,15 @@
                 {
                   "name": "currentHash",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Hash256",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "currentIndex",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -1219,8 +1219,8 @@
                       "type": "ByteArray"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Array",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -1231,8 +1231,8 @@
                       "type": "Hash256"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Array",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -1247,8 +1247,8 @@
                       "type": "Integer"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Array",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -1259,8 +1259,8 @@
                       "type": "Hash256"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 }
               ],
@@ -1303,43 +1303,43 @@
                       "type": "Hash160"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "decimals",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "getCandidates",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Array",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "getCommittee",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Array",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "getGasPerBlock",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "getNextBlockValidators",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Array",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -1350,8 +1350,8 @@
                       "type": "ByteArray"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -1362,22 +1362,22 @@
                       "type": "Integer"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": false
                 },
                 {
                   "name": "symbol",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "String",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "totalSupply",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -1400,8 +1400,8 @@
                       "type": "Any"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -1416,8 +1416,8 @@
                       "type": "Integer"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -1428,8 +1428,8 @@
                       "type": "ByteArray"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -1444,8 +1444,8 @@
                       "type": "ByteArray"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": false
                 }
               ],
@@ -1506,29 +1506,29 @@
                       "type": "Hash160"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "decimals",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "symbol",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "String",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "totalSupply",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -1551,8 +1551,8 @@
                       "type": "Any"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": false
                 }
               ],
@@ -1611,50 +1611,50 @@
                       "type": "Hash160"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": false
                 },
                 {
                   "name": "getExecFeeFactor",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "getFeePerByte",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "getMaxBlockSize",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "getMaxBlockSystemFee",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "getMaxTransactionsPerBlock",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "getStoragePrice",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -1665,8 +1665,8 @@
                       "type": "Hash160"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -1677,8 +1677,8 @@
                       "type": "Integer"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -1689,8 +1689,8 @@
                       "type": "Integer"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -1701,8 +1701,8 @@
                       "type": "Integer"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -1713,8 +1713,8 @@
                       "type": "Integer"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -1725,8 +1725,8 @@
                       "type": "Integer"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -1737,8 +1737,8 @@
                       "type": "Integer"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -1749,8 +1749,8 @@
                       "type": "Hash160"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": false
                 }
               ],
@@ -1795,8 +1795,8 @@
                       "type": "Array"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Void",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -1811,8 +1811,8 @@
                       "type": "Integer"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Array",
+                  "offset": 0,
                   "safe": true
                 }
               ],
@@ -1848,8 +1848,8 @@
                 {
                   "name": "finish",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Void",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -1876,15 +1876,15 @@
                       "type": "Integer"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Void",
+                  "offset": 0,
                   "safe": false
                 },
                 {
                   "name": "verify",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": true
                 }
               ],
@@ -1960,8 +1960,8 @@
                       "type": "String"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Void",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -1972,15 +1972,15 @@
                       "type": "Hash160"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "decimals",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -1995,15 +1995,15 @@
                       "type": "Integer"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Void",
+                  "offset": 0,
                   "safe": false
                 },
                 {
                   "name": "getPrice",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -2018,8 +2018,8 @@
                       "type": "Integer"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "String",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -2030,8 +2030,8 @@
                       "type": "String"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -2042,8 +2042,8 @@
                       "type": "ByteArray"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Hash160",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -2054,8 +2054,8 @@
                       "type": "ByteArray"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Map",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -2070,8 +2070,8 @@
                       "type": "Hash160"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -2082,8 +2082,8 @@
                       "type": "String"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -2098,8 +2098,8 @@
                       "type": "Integer"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "String",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -2114,8 +2114,8 @@
                       "type": "Hash160"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Void",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -2126,8 +2126,8 @@
                       "type": "Integer"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Void",
+                  "offset": 0,
                   "safe": false
                 },
                 {
@@ -2146,15 +2146,15 @@
                       "type": "String"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Void",
+                  "offset": 0,
                   "safe": false
                 },
                 {
                   "name": "symbol",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "String",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -2165,15 +2165,15 @@
                       "type": "Hash160"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Any",
+                  "offset": 0,
                   "safe": true
                 },
                 {
                   "name": "totalSupply",
                   "parameters": [],
-                  "offset": 0,
                   "returntype": "Integer",
+                  "offset": 0,
                   "safe": true
                 },
                 {
@@ -2188,8 +2188,8 @@
                       "type": "ByteArray"
                     }
                   ],
-                  "offset": 0,
                   "returntype": "Boolean",
+                  "offset": 0,
                   "safe": false
                 }
               ],
