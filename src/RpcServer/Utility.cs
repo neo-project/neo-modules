@@ -2,6 +2,7 @@ using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract.Native;
 using System.Linq;
+using System.Numerics;
 
 namespace Neo.Plugins
 {
@@ -17,8 +18,8 @@ namespace Neo.Plugins
         public static JObject TransactionToJson(Transaction tx)
         {
             JObject json = tx.ToJson();
-            json["sysfee"] = new BigDecimal(tx.SystemFee, NativeContract.GAS.Decimals).ToString();
-            json["netfee"] = new BigDecimal(tx.NetworkFee, NativeContract.GAS.Decimals).ToString();
+            json["sysfee"] = new BigDecimal(new BigInteger(tx.SystemFee), NativeContract.GAS.Decimals).ToString();
+            json["netfee"] = new BigDecimal(new BigInteger(tx.NetworkFee), NativeContract.GAS.Decimals).ToString();
             return json;
         }
 
