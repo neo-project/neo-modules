@@ -1,8 +1,10 @@
 using Neo.IO.Json;
+using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.VM.Types;
 using System;
 using System.Linq;
+using System.Numerics;
 
 namespace Neo.Network.RPC.Models
 {
@@ -12,7 +14,7 @@ namespace Neo.Network.RPC.Models
 
         public VM.VMState State { get; set; }
 
-        public string GasConsumed { get; set; }
+        public long GasConsumed { get; set; }
 
         public StackItem[] Stack { get; set; }
 
@@ -25,7 +27,7 @@ namespace Neo.Network.RPC.Models
             JObject json = new JObject();
             json["script"] = Script;
             json["state"] = State;
-            json["gasconsumed"] = GasConsumed.ToString();
+            json["gasconsumed"] = new BigDecimal(new BigInteger(GasConsumed), NativeContract.GAS.Decimals).ToString();
             if (!string.IsNullOrEmpty(Exception))
                 json["exception"] = Exception;
             try
@@ -46,8 +48,8 @@ namespace Neo.Network.RPC.Models
             RpcInvokeResult invokeScriptResult = new RpcInvokeResult
             {
                 Script = json["script"].AsString(),
-                State = json["state"].TryGetEnum<VM.VMState>(),
-                GasConsumed = json["gasconsumed"].AsString()
+                State = json["state"].TryGetEnum<VMState>(),
+                GasConsumed = (long)BigDecimal.Parse(json["gasconsumed"].AsString(), NativeContract.GAS.Decimals).Value,
             };
             if (json.ContainsProperty("exception"))
                 invokeScriptResult.Exception = json["exception"]?.AsString();
