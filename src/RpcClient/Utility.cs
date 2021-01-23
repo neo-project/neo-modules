@@ -166,8 +166,8 @@ namespace Neo.Network.RPC
         public static JObject TransactionToJson(Transaction tx)
         {
             JObject json = tx.ToJson();
-            json["sysfee"] = new BigDecimal(tx.SystemFee, NativeContract.GAS.Decimals).ToString();
-            json["netfee"] = new BigDecimal(tx.NetworkFee, NativeContract.GAS.Decimals).ToString();
+            json["sysfee"] = new BigDecimal(new BigInteger(tx.SystemFee), NativeContract.GAS.Decimals).ToString();
+            json["netfee"] = new BigDecimal(new BigInteger(tx.NetworkFee), NativeContract.GAS.Decimals).ToString();
             return json;
         }
 

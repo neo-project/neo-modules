@@ -14,6 +14,7 @@ using Neo.Wallets;
 using System;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 
 namespace Neo.Plugins
 {
@@ -73,7 +74,7 @@ namespace Neo.Plugins
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(script);
             json["state"] = engine.State;
-            json["gasconsumed"] = new BigDecimal(engine.GasConsumed, NativeContract.GAS.Decimals).ToString();
+            json["gasconsumed"] = new BigDecimal(new BigInteger(engine.GasConsumed), NativeContract.GAS.Decimals).ToString();
             json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {

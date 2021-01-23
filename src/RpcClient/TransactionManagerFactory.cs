@@ -1,8 +1,6 @@
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
-using Neo.SmartContract.Native;
 using System;
-using System.Globalization;
 using System.Threading.Tasks;
 
 namespace Neo.Network.RPC
@@ -49,7 +47,7 @@ namespace Neo.Network.RPC
                 Script = script,
                 Signers = signers ?? Array.Empty<Signer>(),
                 ValidUntilBlock = blockCount - 1 + Transaction.MaxValidUntilBlockIncrement,
-                SystemFee = (long)BigDecimal.Parse(invokeResult.GasConsumed.ToString(CultureInfo.InvariantCulture), NativeContract.GAS.Decimals).Value,
+                SystemFee = invokeResult.GasConsumed,
                 Attributes = attributes ?? Array.Empty<TransactionAttribute>(),
             };
 
