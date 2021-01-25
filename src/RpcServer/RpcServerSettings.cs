@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Neo.SmartContract.Native;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Net;
 
@@ -48,8 +47,8 @@ namespace Neo.Plugins
             this.TrustedAuthorities = trustedAuthorities ?? Array.Empty<string>();
             this.RpcUser = rpcUser;
             this.RpcPass = rpcPass;
-            this.MaxGasInvoke = (long)BigDecimal.Parse(maxGasInvoke.ToString(CultureInfo.InvariantCulture), NativeContract.GAS.Decimals).Value;
-            this.MaxFee = (long)BigDecimal.Parse(maxFee.ToString(CultureInfo.InvariantCulture), NativeContract.GAS.Decimals).Value;
+            this.MaxGasInvoke = (long)new BigDecimal(maxGasInvoke, NativeContract.GAS.Decimals).Value;
+            this.MaxFee = (long)new BigDecimal(maxFee, NativeContract.GAS.Decimals).Value;
             this.DisabledMethods = disabledMethods ?? Array.Empty<string>();
             this.MaxConcurrentConnections = maxConcurrentConnections;
         }
@@ -63,8 +62,8 @@ namespace Neo.Plugins
             this.TrustedAuthorities = section.GetSection("TrustedAuthorities").GetChildren().Select(p => p.Get<string>()).ToArray();
             this.RpcUser = section.GetSection("RpcUser").Value;
             this.RpcPass = section.GetSection("RpcPass").Value;
-            this.MaxGasInvoke = (long)BigDecimal.Parse(section.GetValue("MaxGasInvoke", "10"), NativeContract.GAS.Decimals).Value;
-            this.MaxFee = (long)BigDecimal.Parse(section.GetValue("MaxFee", "0.1"), NativeContract.GAS.Decimals).Value;
+            this.MaxGasInvoke = (long)new BigDecimal(section.GetValue<decimal>("MaxGasInvoke", 10M), NativeContract.GAS.Decimals).Value;
+            this.MaxFee = (long)new BigDecimal(section.GetValue<decimal>("MaxFee", 0.1M), NativeContract.GAS.Decimals).Value;
             this.DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray();
             this.MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", 40);
         }

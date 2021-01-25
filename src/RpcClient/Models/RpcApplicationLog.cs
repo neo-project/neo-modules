@@ -6,6 +6,7 @@ using Neo.VM.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 namespace Neo.Network.RPC.Models
 {
@@ -56,7 +57,7 @@ namespace Neo.Network.RPC.Models
             JObject json = new JObject();
             json["trigger"] = Trigger;
             json["vmstate"] = VMState;
-            json["gasconsumed"] = new BigDecimal(GasConsumed, NativeContract.GAS.Decimals).ToString();
+            json["gasconsumed"] = new BigDecimal(new BigInteger(GasConsumed), NativeContract.GAS.Decimals).ToString();
             json["stack"] = Stack.Select(q => q.ToJson()).ToArray();
             json["notifications"] = Notifications.Select(q => q.ToJson()).ToArray();
             return json;

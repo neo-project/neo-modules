@@ -1,4 +1,3 @@
-using Neo.Cryptography;
 using Neo.Cryptography.ECC;
 using Neo.IO;
 using Neo.Ledger;
@@ -22,7 +21,7 @@ namespace Neo.Consensus
         /// <summary>
         /// Key for saving consensus state.
         /// </summary>
-        private const byte ConsensusStatePrefix = 0xf4;
+        private static readonly byte[] ConsensusStateKey = { 0xf4 };
 
         public Block Block;
         public byte ViewNumber;
@@ -43,7 +42,7 @@ namespace Neo.Consensus
         /// </summary>
         public TransactionVerificationContext VerificationContext = new TransactionVerificationContext();
 
-        public SnapshotView Snapshot { get; private set; }
+        public SnapshotCache Snapshot { get; private set; }
         private KeyPair keyPair;
         private int _witnessSize;
         private readonly Wallet wallet;
@@ -55,7 +54,7 @@ namespace Neo.Consensus
         public bool IsPrimary => MyIndex == Block.ConsensusData.PrimaryIndex;
         public bool IsBackup => MyIndex >= 0 && MyIndex != Block.ConsensusData.PrimaryIndex;
         public bool WatchOnly => MyIndex < 0;
-        public Header PrevHeader => Snapshot.GetHeader(Block.PrevHash);
+        public Header PrevHeader => NativeContract.Ledger.GetHeader(Snapshot, Block.PrevHash);
         public int CountCommitted => CommitPayloads.Count(p => p != null);
         public int CountFailed
         {
@@ -69,9 +68,10 @@ namespace Neo.Consensus
         {
             get
             {
-                if (Snapshot.Height == 0) return false;
-                TrimmedBlock currentBlock = Snapshot.Blocks[Snapshot.CurrentBlockHash];
-                TrimmedBlock previousBlock = Snapshot.Blocks[currentBlock.PrevHash];
+                if (NativeContract.Ledger.CurrentIndex(Snapshot) == 0) return false;
+                UInt256 hash = NativeContract.Ledger.CurrentHash(Snapshot);
+                TrimmedBlock currentBlock = NativeContract.Ledger.GetTrimmedBlock(Snapshot, hash);
+                TrimmedBlock previousBlock = NativeContract.Ledger.GetTrimmedBlock(Snapshot, currentBlock.PrevHash);
                 return currentBlock.NextConsensus != previousBlock.NextConsensus;
             }
         }
@@ -235,7 +235,7 @@ namespace Neo.Consensus
 
         public bool Load()
         {
-            byte[] data = store.TryGet(ConsensusStatePrefix, null);
+            byte[] data = store.TryGet(ConsensusStateKey);
             if (data is null || data.Length == 0) return false;
             using (MemoryStream ms = new MemoryStream(data, false))
             using (BinaryReader reader = new BinaryReader(ms))
@@ -445,12 +445,13 @@ namespace Neo.Consensus
             {
                 Snapshot?.Dispose();
                 Snapshot = Blockchain.Singleton.GetSnapshot();
+                uint height = NativeContract.Ledger.CurrentIndex(Snapshot);
                 Block = new Block
                 {
-                    PrevHash = Snapshot.CurrentBlockHash,
-                    Index = Snapshot.Height + 1,
-                    NextConsensus = Blockchain.GetConsensusAddress(
-                        NativeContract.NEO.ShouldRefreshCommittee(Snapshot.Height + 1) ?
+                    PrevHash = NativeContract.Ledger.CurrentHash(Snapshot),
+                    Index = height + 1,
+                    NextConsensus = Contract.GetBFTAddress(
+                        NativeContract.NEO.ShouldRefreshCommittee(height + 1) ?
                         NativeContract.NEO.ComputeNextBlockValidators(Snapshot) :
                         NativeContract.NEO.GetNextBlockValidators(Snapshot))
                 };
@@ -485,7 +486,7 @@ namespace Neo.Consensus
                         if (previous_last_seen_message != null && previous_last_seen_message.TryGetValue(validator, out var value))
                             LastSeenMessage[validator] = value;
                         else
-                            LastSeenMessage[validator] = Snapshot.Height;
+                            LastSeenMessage[validator] = height;
                     }
                 }
                 keyPair = null;
@@ -522,7 +523,7 @@ namespace Neo.Consensus
 
         public void Save()
         {
-            store.PutSync(ConsensusStatePrefix, null, this.ToArray());
+            store.PutSync(ConsensusStateKey, this.ToArray());
         }
 
         public void Serialize(BinaryWriter writer)

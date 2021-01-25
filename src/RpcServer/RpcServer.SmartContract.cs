@@ -14,6 +14,7 @@ using Neo.Wallets;
 using System;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 
 namespace Neo.Plugins
 {
@@ -45,7 +46,7 @@ namespace Neo.Plugins
                 throw new NotImplementedException();
             }
 
-            public UInt160[] GetScriptHashesForVerifying(StoreView snapshot)
+            public UInt160[] GetScriptHashesForVerifying(DataCache snapshot)
             {
                 return _signers.Select(p => p.Account).ToArray();
             }
@@ -73,7 +74,7 @@ namespace Neo.Plugins
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(script);
             json["state"] = engine.State;
-            json["gasconsumed"] = new BigDecimal(engine.GasConsumed, NativeContract.GAS.Decimals).ToString();
+            json["gasconsumed"] = new BigDecimal(new BigInteger(engine.GasConsumed), NativeContract.GAS.Decimals).ToString();
             json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
@@ -147,8 +148,8 @@ namespace Neo.Plugins
             }
             if (script_hash == null)
                 throw new RpcException(-100, "Invalid address");
-            SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
-            json["unclaimed"] = new BigDecimal(NativeContract.NEO.UnclaimedGas(snapshot, script_hash, snapshot.Height + 1), NativeContract.GAS.Decimals).ToString();
+            using var snapshot = Blockchain.Singleton.GetSnapshot();
+            json["unclaimed"] = new BigDecimal(NativeContract.NEO.UnclaimedGas(snapshot, script_hash, NativeContract.Ledger.CurrentIndex(snapshot) + 1), NativeContract.GAS.Decimals).ToString();
             json["address"] = script_hash.ToAddress();
             return json;
         }

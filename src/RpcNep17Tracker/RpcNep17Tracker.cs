@@ -1,5 +1,4 @@
 using Neo.IO;
-using Neo.IO.Caching;
 using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Ledger;
@@ -11,6 +10,7 @@ using Neo.VM;
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 using static System.IO.Path;
@@ -23,9 +23,6 @@ namespace Neo.Plugins
         private const byte Nep17TransferSentPrefix = 0xf9;
         private const byte Nep17TransferReceivedPrefix = 0xfa;
         private DB _db;
-        private DataCache<Nep17BalanceKey, Nep17Balance> _balances;
-        private DataCache<Nep17TransferKey, Nep17Transfer> _transfersSent;
-        private DataCache<Nep17TransferKey, Nep17Transfer> _transfersReceived;
         private WriteBatch _writeBatch;
         private bool _shouldTrackHistory;
         private bool _recordNullAddressHistory;
@@ -56,50 +53,67 @@ namespace Neo.Plugins
             _writeBatch = new WriteBatch();
             _levelDbSnapshot?.Dispose();
             _levelDbSnapshot = _db.GetSnapshot();
-            ReadOptions dbOptions = new ReadOptions { FillCache = false, Snapshot = _levelDbSnapshot };
-            _balances = new DbCache<Nep17BalanceKey, Nep17Balance>(_db, dbOptions, _writeBatch, Nep17BalancePrefix);
-            if (_shouldTrackHistory)
-            {
-                _transfersSent =
-                    new DbCache<Nep17TransferKey, Nep17Transfer>(_db, dbOptions, _writeBatch, Nep17TransferSentPrefix);
-                _transfersReceived =
-                    new DbCache<Nep17TransferKey, Nep17Transfer>(_db, dbOptions, _writeBatch, Nep17TransferReceivedPrefix);
-            }
         }
 
-        private void RecordTransferHistory(StoreView snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
+        private static byte[] Key(byte prefix, ISerializable key)
+        {
+            byte[] buffer = new byte[key.Size + 1];
+            using (MemoryStream ms = new MemoryStream(buffer, true))
+            using (BinaryWriter writer = new BinaryWriter(ms))
+            {
+                writer.Write(prefix);
+                key.Serialize(writer);
+            }
+            return buffer;
+        }
+
+        private void Put(byte prefix, ISerializable key, ISerializable value)
+        {
+            _writeBatch.Put(Key(prefix, key), value.ToArray());
+        }
+
+        private void Delete(byte prefix, ISerializable key)
+        {
+            _writeBatch.Delete(Key(prefix, key));
+        }
+
+        private void RecordTransferHistory(DataCache snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
         {
             if (!_shouldTrackHistory) return;
 
-            Header header = snapshot.GetHeader(snapshot.CurrentBlockHash);
+            UInt256 hash = NativeContract.Ledger.CurrentHash(snapshot);
+            uint height = NativeContract.Ledger.CurrentIndex(snapshot);
+            TrimmedBlock block = NativeContract.Ledger.GetTrimmedBlock(snapshot, hash);
 
             if (_recordNullAddressHistory || from != UInt160.Zero)
             {
-                _transfersSent.Add(new Nep17TransferKey(from, header.Timestamp, scriptHash, transferIndex),
+                Put(Nep17TransferSentPrefix,
+                    new Nep17TransferKey(from, block.Timestamp, scriptHash, transferIndex),
                     new Nep17Transfer
                     {
                         Amount = amount,
                         UserScriptHash = to,
-                        BlockIndex = snapshot.Height,
+                        BlockIndex = height,
                         TxHash = txHash
                     });
             }
 
             if (_recordNullAddressHistory || to != UInt160.Zero)
             {
-                _transfersReceived.Add(new Nep17TransferKey(to, header.Timestamp, scriptHash, transferIndex),
+                Put(Nep17TransferReceivedPrefix,
+                    new Nep17TransferKey(to, block.Timestamp, scriptHash, transferIndex),
                     new Nep17Transfer
                     {
                         Amount = amount,
                         UserScriptHash = from,
-                        BlockIndex = snapshot.Height,
+                        BlockIndex = height,
                         TxHash = txHash
                     });
             }
             transferIndex++;
         }
 
-        private void HandleNotification(StoreView snapshot, IVerifiable scriptContainer, UInt160 scriptHash, string eventName,
+        private void HandleNotification(DataCache snapshot, IVerifiable scriptContainer, UInt160 scriptHash, string eventName,
             VM.Types.Array stateItems,
             Dictionary<Nep17BalanceKey, Nep17Balance> nep17BalancesChanged, ref ushort transferIndex)
         {
@@ -144,7 +158,7 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnPersist(Block block, StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             // Start freshly with a new DBCache for each block.
             ResetBatch();
@@ -180,27 +194,18 @@ namespace Neo.Plugins
                     if (engine.ResultStack.Count <= 0) continue;
                     nep17BalancePair.Value.Balance = engine.ResultStack.Pop().GetInteger();
                 }
-                nep17BalancePair.Value.LastUpdatedBlock = snapshot.Height;
+                nep17BalancePair.Value.LastUpdatedBlock = block.Index;
                 if (nep17BalancePair.Value.Balance == 0)
                 {
-                    _balances.Delete(nep17BalancePair.Key);
+                    Delete(Nep17BalancePrefix, nep17BalancePair.Key);
                     continue;
                 }
-                var itemToChange = _balances.GetAndChange(nep17BalancePair.Key, () => nep17BalancePair.Value);
-                if (itemToChange != nep17BalancePair.Value)
-                    itemToChange.FromReplica(nep17BalancePair.Value);
+                Put(Nep17BalancePrefix, nep17BalancePair.Key, nep17BalancePair.Value);
             }
         }
 
-        void IPersistencePlugin.OnCommit(Block block, StoreView snapshot)
+        void IPersistencePlugin.OnCommit(Block block, DataCache snapshot)
         {
-            _balances.Commit();
-            if (_shouldTrackHistory)
-            {
-                _transfersSent.Commit();
-                _transfersReceived.Commit();
-            }
-
             _db.Write(WriteOptions.Default, _writeBatch);
         }
 
@@ -273,25 +278,34 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject GetNep17Balances(JArray _params)
         {
-            using SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
+            using var snapshot = Blockchain.Singleton.GetSnapshot();
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
 
             JObject json = new JObject();
             JArray balances = new JArray();
             json["balance"] = balances;
             json["address"] = userScriptHash.ToAddress();
-            var dbCache = new DbCache<Nep17BalanceKey, Nep17Balance>(_db, null, null, Nep17BalancePrefix);
-            byte[] prefix = userScriptHash.ToArray();
-            foreach (var (key, value) in dbCache.Find(prefix))
+
+            using (Iterator it = _db.NewIterator(ReadOptions.Default))
             {
-                JObject balance = new JObject();
-                if (NativeContract.ContractManagement.GetContract(snapshot, key.AssetScriptHash) is null)
-                    continue;
-                balance["assethash"] = key.AssetScriptHash.ToString();
-                balance["amount"] = value.Balance.ToString();
-                balance["lastupdatedblock"] = value.LastUpdatedBlock;
-                balances.Add(balance);
+                byte[] prefix = Key(Nep17BalancePrefix, userScriptHash);
+                for (it.Seek(prefix); it.Valid(); it.Next())
+                {
+                    ReadOnlySpan<byte> key_bytes = it.Key();
+                    if (!key_bytes.StartsWith(prefix)) break;
+                    Nep17BalanceKey key = key_bytes[1..].AsSerializable<Nep17BalanceKey>();
+                    if (NativeContract.ContractManagement.GetContract(snapshot, key.AssetScriptHash) is null)
+                        continue;
+                    Nep17Balance value = it.Value().AsSerializable<Nep17Balance>();
+                    balances.Add(new JObject
+                    {
+                        ["assethash"] = key.AssetScriptHash.ToString(),
+                        ["amount"] = value.Balance.ToString(),
+                        ["lastupdatedblock"] = value.LastUpdatedBlock
+                    });
+                }
             }
+
             return json;
         }
     }
