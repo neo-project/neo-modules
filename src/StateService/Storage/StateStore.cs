@@ -21,8 +21,8 @@ namespace Neo.Plugins.StateService.Storage
         private readonly Dictionary<uint, StateRoot> cache = new Dictionary<uint, StateRoot>();
         private StateSnapshot currentSnapshot;
         public UInt256 CurrentLocalRootHash => currentSnapshot.CurrentLocalRootHash();
-        public uint LocalRootIndex => currentSnapshot.CurrentLocalRootIndex();
-        public uint ValidatedRootIndex => currentSnapshot.CurrentValidatedRootIndex();
+        public uint? LocalRootIndex => currentSnapshot.CurrentLocalRootIndex();
+        public uint? ValidatedRootIndex => currentSnapshot.CurrentValidatedRootIndex();
 
         private static StateStore singleton;
         public static StateStore Singleton
@@ -94,7 +94,8 @@ namespace Neo.Plugins.StateService.Storage
         private bool OnNewStateRoot(StateRoot state_root)
         {
             if (state_root?.Witness is null) return false;
-            if (state_root.Index <= ValidatedRootIndex) return false;
+            if (ValidatedRootIndex != null && state_root.Index <= ValidatedRootIndex) return false;
+            if (LocalRootIndex is null) throw new InvalidOperationException(nameof(StateStore) + " could not get local root index");
             if (LocalRootIndex < state_root.Index && state_root.Index < LocalRootIndex + MaxCacheCount)
             {
                 cache.Add(state_root.Index, state_root);
