@@ -108,7 +108,7 @@ namespace Neo.Plugins.StateService.Verification
                 Category = StatePlugin.StatePayloadCategory,
                 ValidBlockStart = StateRoot.Index,
                 ValidBlockEnd = StateRoot.Index + MaxValidUntilBlockIncrement,
-                Sender = keyPair.PublicKeyHash,
+                Sender = Contract.CreateSignatureRedeemScript(verifiers[MyIndex]).ToScriptHash(),
                 Data = StateRoot.ToArray(),
             };
             try
