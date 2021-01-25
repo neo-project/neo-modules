@@ -49,7 +49,15 @@ namespace Neo.Plugins.StateService.Verification
 
         private void OnVoteStateRoot(Vote vote)
         {
-            if (contexts.TryGetValue(vote.RootIndex, out VerificationContext context) && context.AddSignature(vote.ValidatorIndex, vote.Signature) && context.CheckSignatures())
+            if (contexts.TryGetValue(vote.RootIndex, out VerificationContext context) && context.AddSignature(vote.ValidatorIndex, vote.Signature))
+            {
+                CheckVotes(context);
+            }
+        }
+
+        private void CheckVotes(VerificationContext context)
+        {
+            if (context.CheckSignatures())
             {
                 if (context.Message is null) return;
                 var state_root = context.Message.Data.AsSerializable<StateRoot>();
@@ -81,6 +89,7 @@ namespace Neo.Plugins.StateService.Verification
                 }, ActorRefs.NoSender);
                 Utility.Log(nameof(VerificationContext), LogLevel.Info, $"new validate process, height={index}, index={p.MyIndex}, ongoing={contexts.Count}");
                 SendVote(p);
+                CheckVotes(p);
             }
         }
 
