@@ -1,14 +1,17 @@
 using NeoFS.API.v2.Acl;
+using NeoFS.API.v2.Client;
+using NeoFS.API.v2.Client.ObjectParams;
 using NeoFS.API.v2.Refs;
 using NeoFS.API.v2.Session;
 using V2Object = NeoFS.API.v2.Object.Object;
 using Neo.FSNode.Network.Cache;
 using Neo.FSNode.Services.Object.Util;
 using System;
+using System.Threading;
 
 namespace Neo.FSNode.Services.Object.Head.HeaderSource
 {
-    public class RemoteHeaderSource : IHeaderSource
+    public class RemoteHeaderSource
     {
         public KeyStorage KeyStorage;
         public ClientCache ClientCache;
@@ -25,7 +28,9 @@ namespace Neo.FSNode.Services.Object.Head.HeaderSource
             var client = ClientCache.GetClient(key, addr);
             if (client is null)
                 throw new InvalidOperationException(nameof(Range) + $" could not create SDK client {addr}");
-            var header = client.GetObjectHeader(address, false, new NeoFS.API.v2.Client.CallOptions
+            var source = new CancellationTokenSource();
+            source.CancelAfter(TimeSpan.FromMinutes(1));
+            var header = client.GetObjectHeader(source.Token, new ObjectHeaderParams { Address = address, Short = false }, new CallOptions
             {
                 Ttl = 1,
                 Session = SessionToken,

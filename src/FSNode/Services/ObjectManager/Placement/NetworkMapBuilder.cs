@@ -6,18 +6,18 @@ using System.Collections.Generic;
 
 namespace Neo.FSNode.Services.ObjectManager.Placement
 {
-    public class NetmapBuilder : IBuilder
+    public class NetworkMapBuilder : IBuilder
     {
         private readonly INetmapSource netmapSource;
 
-        public NetmapBuilder(INetmapSource source)
+        public NetworkMapBuilder(INetmapSource source)
         {
             netmapSource = source;
         }
 
-        public NetmapBuilder(NetMap netMap)
+        public NetworkMapBuilder(NetMap netMap)
         {
-            netmapSource = new NetmapSource(netMap);
+            netmapSource = new NetworkMapSource(netMap);
         }
 
         public virtual List<List<Node>> BuildPlacement(Address address, PlacementPolicy policy)
@@ -35,21 +35,6 @@ namespace Neo.FSNode.Services.ObjectManager.Placement
             if (ns is null)
                 throw new InvalidOperationException(nameof(BuildObjectPlacement) + " could not get placement vectors for object");
             return ns;
-        }
-    }
-
-    public class NetmapSource : INetmapSource
-    {
-        private readonly NetMap netmap;
-
-        public NetmapSource(NetMap netmap)
-        {
-            this.netmap = netmap;
-        }
-
-        public NetMap GetNetMap(ulong diff)
-        {
-            return netmap;
         }
     }
 }

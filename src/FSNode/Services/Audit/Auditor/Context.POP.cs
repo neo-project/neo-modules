@@ -113,7 +113,7 @@ namespace Neo.FSNode.Services.Audit.Auditor
             {
                 return table;
             }
-            var nn = NetmapBuilder.BuildObjectPlacement(AuditTask.Netmap, AuditTask.ContainerNodes, oid);
+            var nn = NetworkMapBuilder.BuildObjectPlacement(AuditTask.Netmap, AuditTask.ContainerNodes, oid);
             if (nn is null) return null;
             placementCache[oid.ToBase58String()] = nn;
             return nn;

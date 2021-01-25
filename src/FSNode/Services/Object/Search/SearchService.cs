@@ -36,9 +36,9 @@ namespace Neo.FSNode.Services.Object.Search
             var container = containerSource.Get(prm.CID);
             if (container is null)
                 throw new InvalidOperationException(nameof(SearchService) + " could not get container");
-            var builder = new NetmapBuilder(new NetmapSource(nm));
+            var builder = new NetworkMapBuilder(new NetworkMapSource(nm));
             if (prm.Local)
-                builder = new LocalPlacementBuilder(new NetmapSource(nm), localAddressSource);
+                builder = new LocalPlacementBuilder(new NetworkMapSource(nm), localAddressSource);
             var traverser = new Traverser
             {
                 Builder = builder,

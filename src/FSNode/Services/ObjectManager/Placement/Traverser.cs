@@ -3,6 +3,7 @@ using NeoFS.API.v2.Refs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using V2Container = NeoFS.API.v2.Container.Container;
 
 namespace Neo.FSNode.Services.ObjectManager.Placement
 {
@@ -94,7 +95,28 @@ namespace Neo.FSNode.Services.ObjectManager.Placement
             }
             return true;
         }
+
+        public Traverser WithContainer(V2Container container)
+        {
+            if (Address is null)
+                Address = new Address();
+            Address.ContainerId = container.CalCulateAndGetID;
+            Policy = container.PlacementPolicy;
+            return this;
+        }
+
+        public Traverser WithObjectID(ObjectID oid)
+        {
+            if (Address is null)
+                Address = new Address();
+            Address.ObjectId = oid;
+            return this;
+        }
+
+        public Traverser WithBuilder(IBuilder builder)
+        {
+            Builder = builder;
+            return this;
+        }
     }
-
-
 }

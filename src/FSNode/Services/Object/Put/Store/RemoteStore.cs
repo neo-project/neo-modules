@@ -4,6 +4,7 @@ using V2Object = NeoFS.API.v2.Object.Object;
 using Neo.FSNode.Network.Cache;
 using Neo.FSNode.Services.Object.Util;
 using System;
+using System.Threading;
 
 namespace Neo.FSNode.Services.Object.Put.Store
 {
@@ -24,7 +25,9 @@ namespace Neo.FSNode.Services.Object.Put.Store
             var client = ClientCache.GetClient(key, addr);
             if (client is null)
                 throw new InvalidOperationException(nameof(Range) + $" could not create SDK client {addr}");
-            var oid = client.PutObject(obj, new NeoFS.API.v2.Client.CallOptions
+            var source = new CancellationTokenSource();
+            source.CancelAfter(TimeSpan.FromMinutes(1));
+            var oid = client.PutObject(source.Token, new NeoFS.API.v2.Client.ObjectParams.PutObjectParams { Object = obj }, new NeoFS.API.v2.Client.CallOptions
             {
                 Ttl = 1,
                 Session = SessionToken,

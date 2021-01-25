@@ -6,8 +6,9 @@ namespace Neo.FSNode.Services.Object.Head
 {
     public class HeadPrm : CommonPrm
     {
-        public bool Short;
         public Address Address;
+        public bool Short;
+        public bool Raw;
 
         public static HeadPrm FromRequest(HeadRequest request)
         {
@@ -15,6 +16,7 @@ namespace Neo.FSNode.Services.Object.Head
             {
                 Short = request.Body.MainOnly,
                 Address = request.Body.Address,
+                Raw = request.Body.Raw,
             };
             prm.WithCommonPrm(CommonPrm.FromRequest(request));
             return prm;

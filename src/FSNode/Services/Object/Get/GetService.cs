@@ -1,25 +1,63 @@
 using NeoFS.API.v2.Object;
-using V2Object = NeoFS.API.v2.Object.Object;
-using Neo.FSNode.Services.Object.Range;
+using Neo.FSNode.LocalObjectStorage.LocalStore;
+using Neo.FSNode.Network.Cache;
+using Neo.FSNode.Services.Object.Util;
+using System.Collections.Generic;
+using Neo.FSNode.Services.Object.Get.Writer;
+using V2Range = NeoFS.API.v2.Object.Range;
 
 namespace Neo.FSNode.Services.Object.Get
 {
     public class GetService
     {
-        private RangeService rangeService;
+        public Storage LocalStorage;
+        public ClientCache ClientCache;
+        public ITraverserGenerator TraverserGenerator;
 
-        public V2Object Get(GetPrm prm)
+        public void Get(GetPrm prm)
         {
-            var obj = new V2Object();
-            var range_prm = new RangePrm
+            Get(prm, null, false);
+        }
+
+        public void Head(HeadPrm prm)
+        {
+            Get(prm, null, true);
+        }
+
+        public void GetRange(RangePrm prm)
+        {
+            Get(prm, prm.Range, false);
+        }
+
+        public GetRangeHashResponse GetRangeHash(RangeHashPrm prm)
+        {
+            var hashes = new List<byte[]>();
+            foreach (var range in prm.Ranges)
             {
-                Address = prm.Address,
-                Full = true,
+                var writer = new RangeHashWriter(prm.HashType);
+                var range_prm = new RangePrm
+                {
+                    Range = range,
+                    Raw = prm.Raw,
+                    ChunkWriter = writer,
+                };
+                range_prm.WithCommonPrm(prm);
+                Get(range_prm, range, false);
+                hashes.Add(writer.GetHash());
+            }
+            return Responser.GetRangeHashResponse(hashes);
+        }
+
+        internal void Get(GetCommonPrm prm, V2Range range, bool head_only)
+        {
+            var executor = new Executor
+            {
+                Prm = prm,
+                Range = range,
+                HeadOnly = head_only,
+                GetService = this,
             };
-            var result = rangeService.Range(range_prm);
-            obj.Header = result.Header.Header;
-            obj.Payload = result.Chunk;
-            return obj;
+            executor.Execute();
         }
     }
 }
