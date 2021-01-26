@@ -174,14 +174,14 @@ namespace Neo.Plugins
                 if (contract is null) throw new RpcException(-100, "Unknown contract");
                 id = contract.Id;
             }
-            byte[] key = _params[1].AsString().HexToBytes();
+            byte[] key = Convert.FromBase64String(_params[1].AsString());
             StorageItem item = snapshot.TryGet(new StorageKey
             {
                 Id = id,
                 Key = key
             });
             if (item is null) throw new RpcException(-100, "Unknown storage");
-            return item.Value.ToHexString();
+            return Convert.ToBase64String(item.Value);
         }
 
         [RpcMethod]
