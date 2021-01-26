@@ -75,7 +75,7 @@ namespace Neo.Plugins.StateService
             }
             Verifier = System.ActorSystem.ActorOf(VerificationService.Props(System, wallet));
         }
-        
+
         [ConsoleCommand("state root", Category = "StateService", Description = "Get state root by index")]
         private void OnGetStateRoot(uint index)
         {
