@@ -18,4 +18,5 @@
     <ProjectReference Include="..\RpcClient\RpcClient.csproj" />
     <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
   </ItemGroup>
+  
 </Project>
