@@ -80,7 +80,7 @@ namespace Neo.Plugins
             CheckWallet();
             UInt160 asset_id = UInt160.Parse(_params[0].AsString());
             JObject json = new JObject();
-            json["balance"] = wallet.GetAvailable(asset_id).Value.ToString();
+            json["balance"] = wallet.GetAvailable(asset_id).ToString();
             return json;
         }
 
@@ -121,8 +121,7 @@ namespace Neo.Plugins
             byte[] tx = Convert.FromBase64String(_params[0].AsString());
 
             JObject account = new JObject();
-            long networkfee = (wallet ?? new DummyWallet()).CalculateNetworkFee(Blockchain.Singleton.GetSnapshot(), tx.AsSerializable<Transaction>());
-            account["networkfee"] = new BigDecimal(new BigInteger(networkfee), NativeContract.GAS.Decimals).ToString();
+            account["networkfee"] = (wallet ?? new DummyWallet()).CalculateNetworkFee(Blockchain.Singleton.GetSnapshot(), tx.AsSerializable<Transaction>());
             return account;
         }
 
