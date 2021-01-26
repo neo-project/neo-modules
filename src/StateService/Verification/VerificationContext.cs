@@ -30,6 +30,7 @@ namespace Neo.Plugins.StateService.Verification
 
         public bool IsValidator => myIndex >= 0;
         public int MyIndex => myIndex;
+        public ECPoint[] Verifiers => verifiers;
         public ICancelable Timer;
         public StateRoot StateRoot
         {

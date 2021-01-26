@@ -16,6 +16,7 @@ namespace Neo.Plugins.StateService.Verification
         public class BlockPersisted { public uint Index; }
         private class Timer { public uint Index; }
         private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(7);
+        private static readonly TimeSpan Delay = TimeSpan.FromSeconds(3);
         private readonly NeoSystem core;
         private const int MaxCachedVerificationProcessCount = 10;
         private readonly Wallet wallet;
@@ -31,6 +32,7 @@ namespace Neo.Plugins.StateService.Verification
         {
             var vote = context.CreateVote();
             if (vote is null) return;
+            if (context.Verifiers.Length == 1) CheckVotes(context);
             Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay vote");
             Parallel.ForEach(Settings.Default.VerifierUrls, (url, state, i) =>
             {
@@ -83,13 +85,11 @@ namespace Neo.Plugins.StateService.Verification
             var p = new VerificationContext(wallet, index);
             if (p.IsValidator && contexts.TryAdd(index, p))
             {
-                p.Timer = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(Timeout, Timeout, Self, new Timer
+                p.Timer = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(Delay, Timeout, Self, new Timer
                 {
                     Index = index,
                 }, ActorRefs.NoSender);
                 Utility.Log(nameof(VerificationContext), LogLevel.Info, $"new validate process, height={index}, index={p.MyIndex}, ongoing={contexts.Count}");
-                SendVote(p);
-                CheckVotes(p);
             }
         }
 
