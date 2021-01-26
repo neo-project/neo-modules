@@ -5,12 +5,15 @@ using Neo.FSNode.Services.Audit.Auditor;
 using Neo.FSNode.Services.ObjectManager.Placement;
 using Neo.Wallets;
 using NeoFS.API.v2.Client;
+using NeoFS.API.v2.Client.ObjectParams;
 using NeoFS.API.v2.Netmap;
 using NeoFS.API.v2.Refs;
 using NeoFS.API.v2.StorageGroup;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using V2Range = NeoFS.API.v2.Object.Range;
 
 namespace Neo.Plugins.Innerring.Processors
 {
@@ -30,7 +33,7 @@ namespace Neo.Plugins.Innerring.Processors
             List<List<Node>> nodes;
             try
             {
-                nodes = NetmapBuilder.BuildObjectPlacement(task.Netmap, task.ContainerNodes, id);
+                nodes = NetworkMapBuilder.BuildObjectPlacement(task.Netmap, task.ContainerNodes, id);
             }
             catch (Exception e)
             {
@@ -66,7 +69,9 @@ namespace Neo.Plugins.Innerring.Processors
                 NeoFS.API.v2.Object.Object obj;
                 try
                 {
-                    obj = cli.GetObject(sgAddress).Result;
+                    var source = new CancellationTokenSource();
+                    source.CancelAfter(TimeSpan.FromMinutes(1));
+                    obj = cli.GetObject(source.Token, new GetObjectParams { Address = sgAddress, Raw = false }).Result;
                 }
                 catch (Exception e)
                 {
@@ -125,7 +130,9 @@ namespace Neo.Plugins.Innerring.Processors
             NeoFS.API.v2.Object.Object head;
             try
             {
-                head = client.GetObjectHeader(objAddress, raw);
+                var source = new CancellationTokenSource();
+                source.CancelAfter(TimeSpan.FromMinutes(1));
+                head = client.GetObjectHeader(source.Token, new ObjectHeaderParams { Address = objAddress, Raw = raw });
             }
             catch (Exception e)
             {
@@ -162,7 +169,9 @@ namespace Neo.Plugins.Innerring.Processors
             List<byte[]> result;
             try
             {
-                result = cli.GetObjectPayloadRangeHash(objAddress, new NeoFS.API.v2.Object.Range[] { rng }, null, ChecksumType.Tz);
+                var source = new CancellationTokenSource();
+                source.CancelAfter(TimeSpan.FromMinutes(1));
+                result = cli.GetObjectPayloadRangeHash(source.Token, new RangeChecksumParams { Address = objAddress, Ranges = new List<V2Range> { rng }, Type = ChecksumType.Tz, Salt = null });
             }
             catch (Exception e)
             {

@@ -68,14 +68,14 @@ namespace Neo.FSNode.Services.Object.Get
                 exception = ex;
                 switch (ex)
                 {
-                    case ObjectAlreadyRemovedException:
+                    case ObjectAlreadyRemovedException _:
                         status = Status.INHUMED;
                         break;
                     case SplitInfoException e:
                         MergeSplitInfo(e.SplitInfo);
                         status = Status.VIRTUAL;
                         break;
-                    case RangeOutOfBoundsException:
+                    case RangeOutOfBoundsException _:
                         status = Status.OutOfRange;
                         break;
                     default:
@@ -435,7 +435,7 @@ namespace Neo.FSNode.Services.Object.Get
             {
                 switch (e)
                 {
-                    case ObjectAlreadyRemovedException:
+                    case ObjectAlreadyRemovedException _:
                         status = Status.INHUMED;
                         exception = e;
                         break;

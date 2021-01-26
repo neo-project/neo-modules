@@ -90,65 +90,61 @@ namespace Neo.FSNode.Services.Object
                 throw new RpcException(new Status(StatusCode.PermissionDenied, e.Message));
             }
             if (!request.VerifyRequest()) throw new RpcException(new Status(StatusCode.Unauthenticated, "verify header failed"));
-            return Task.Run(() =>
+            return Task.Factory.StartNew(() =>
             {
                 var prm = GetPrm.FromRequest(request);
                 getService.Get(prm);
-            }, context);
+            }, context.CancellationToken);
         }
 
         public override async Task<PutResponse> Put(IAsyncStreamReader<PutRequest> requestStream, ServerCallContext context)
         {
-            return Task.Run(() => 
+            var init_received = false;
+            IObjectTarget target = null;
+            while (await requestStream.MoveNext())
             {
-                var init_received = false;
-                IObjectTarget target = null;
-                while (await requestStream.MoveNext())
+                var request = requestStream.Current;
+                if (!init_received)
                 {
-                    var request = requestStream.Current;
-                    if (!init_received)
+                    if (request.Body.ObjectPartCase != PutRequest.Types.Body.ObjectPartOneofCase.Init)
+                        throw new RpcException(new Status(StatusCode.DataLoss, " missing init"));
+                    var init = request.Body.Init;
+                    if (!init.VerifyRequest()) throw new RpcException(new Status(StatusCode.Unauthenticated, " verify header failed"));
+                    var put_init_prm = PutInitPrm.FromRequest(request);
+                    try
                     {
-                        if (request.Body.ObjectPartCase != PutRequest.Types.Body.ObjectPartOneofCase.Init)
-                            throw new RpcException(new Status(StatusCode.DataLoss, " missing init"));
-                        var init = request.Body.Init;
-                        if (!init.VerifyRequest()) throw new RpcException(new Status(StatusCode.Unauthenticated, " verify header failed"));
-                        var put_init_prm = PutInitPrm.FromRequest(request);
-                        try
-                        {
-                            target = putService.Init(put_init_prm);
-                        }
-                        catch (Exception e)
-                        {
-                            throw new RpcException(new Status(StatusCode.FailedPrecondition, e.Message));
-                        }
+                        target = putService.Init(put_init_prm);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new RpcException(new Status(StatusCode.FailedPrecondition, e.Message));
+                    }
 
-                    }
-                    else
-                    {
-                        if (request.Body.ObjectPartCase != PutRequest.Types.Body.ObjectPartOneofCase.Chunk)
-                            throw new RpcException(new Status(StatusCode.DataLoss, " missing chunk"));
-                        if (target is null) throw new RpcException(new Status(StatusCode.DataLoss, "init missing"));
-                        target.WriteChunk(request.Body.Chunk.ToByteArray());
-                    }
                 }
-                try
+                else
                 {
-                    var result = target.Close();
-                    var resp = new PutResponse
-                    {
-                        Body = new PutResponse.Types.Body
-                        {
-                            ObjectId = result.Self,
-                        }
-                    };
-                    return resp;
+                    if (request.Body.ObjectPartCase != PutRequest.Types.Body.ObjectPartOneofCase.Chunk)
+                        throw new RpcException(new Status(StatusCode.DataLoss, " missing chunk"));
+                    if (target is null) throw new RpcException(new Status(StatusCode.DataLoss, "init missing"));
+                    target.WriteChunk(request.Body.Chunk.ToByteArray());
                 }
-                catch (Exception e)
+            }
+            try
+            {
+                var result = target.Close();
+                var resp = new PutResponse
                 {
-                    throw new RpcException(new Status(StatusCode.InvalidArgument, e.Message));
-                }
-            }, context);
-            
+                    Body = new PutResponse.Types.Body
+                    {
+                        ObjectId = result.Self,
+                    }
+                };
+                return resp;
+            }
+            catch (Exception e)
+            {
+                throw new RpcException(new Status(StatusCode.InvalidArgument, e.Message));
+            }
         }
 
         public override Task<DeleteResponse> Delete(DeleteRequest request, ServerCallContext context)
@@ -176,7 +172,7 @@ namespace Neo.FSNode.Services.Object
                 };
                 resp.SignResponse(key);
                 return resp;
-            }, context);
+            }, context.CancellationToken);
         }
 
         public override Task<HeadResponse> Head(HeadRequest request, ServerCallContext context)
@@ -202,7 +198,7 @@ namespace Neo.FSNode.Services.Object
                 getService.Head(head_prm);
                 var writer = (SimpleObjectWriter)head_prm.HeaderWriter;
                 return Responser.HeadResponse(head_prm.Short, writer.Obj);
-            }, context);
+            }, context.CancellationToken);
         }
 
 
@@ -225,7 +221,7 @@ namespace Neo.FSNode.Services.Object
             {
                 var head_prm = RangePrm.FromRequest(request);
                 getService.GetRange(head_prm);
-            }, context);
+            }, context.CancellationToken);
         }
 
         public override Task<GetRangeHashResponse> GetRangeHash(GetRangeHashRequest request, ServerCallContext context)
@@ -247,7 +243,7 @@ namespace Neo.FSNode.Services.Object
             {
                 var prm = RangeHashPrm.FromRequest(request);
                 return getService.GetRangeHash(prm);
-            }, context);
+            }, context.CancellationToken);
         }
 
         public override Task Search(SearchRequest request, IServerStreamWriter<SearchResponse> responseStream, ServerCallContext context)
@@ -276,7 +272,7 @@ namespace Neo.FSNode.Services.Object
                 resp.Body.IdList.AddRange(oids);
                 resp.SignResponse(key);
                 responseStream.WriteAsync(resp);
-            }, context);
+            }, context.CancellationToken);
         }
     }
 }
