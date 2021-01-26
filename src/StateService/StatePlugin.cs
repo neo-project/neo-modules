@@ -95,7 +95,7 @@ namespace Neo.Plugins.StateService
             using var snapshot = StateStore.Singleton.GetSnapshot();
             StateRoot state_root = snapshot.GetStateRoot(index);
             if (state_root is null)
-                throw new RpcException(-100, "Unknown state root hash");
+                throw new RpcException(-100, "Unknown state root");
             else
                 return state_root.ToJson();
         }
@@ -166,6 +166,15 @@ namespace Neo.Plugins.StateService
             UInt256 root_hash = UInt256.Parse(_params[0].AsString());
             byte[] proof_bytes = Convert.FromBase64String(_params[1].AsString());
             return VerifyProof(root_hash, proof_bytes);
+        }
+
+        [RpcMethod]
+        public JObject GetStateHeight(JArray _params)
+        {
+            var json = new JObject();
+            json["localrootindex"] = StateStore.Singleton.LocalRootIndex;
+            json["validatedrootindex"] = StateStore.Singleton.ValidatedRootIndex;
+            return json;
         }
     }
 }
