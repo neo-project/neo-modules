@@ -121,7 +121,8 @@ namespace Neo.Plugins
             byte[] tx = Convert.FromBase64String(_params[0].AsString());
 
             JObject account = new JObject();
-            account["networkfee"] = (wallet ?? new DummyWallet()).CalculateNetworkFee(Blockchain.Singleton.GetSnapshot(), tx.AsSerializable<Transaction>());
+            long networkfee = (wallet ?? new DummyWallet()).CalculateNetworkFee(Blockchain.Singleton.GetSnapshot(), tx.AsSerializable<Transaction>());
+            account["networkfee"] = new BigDecimal(new BigInteger(networkfee), NativeContract.GAS.Decimals).ToString();
             return account;
         }
 
