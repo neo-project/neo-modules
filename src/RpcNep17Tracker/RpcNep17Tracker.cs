@@ -205,7 +205,9 @@ namespace Neo.Plugins
                 {
                     if (engine.State.HasFlag(VMState.FAULT)) continue;
                     if (engine.ResultStack.Count <= 0) continue;
-                    nep17BalancePair.Value.Balance = new BigDecimal(engine.ResultStack.Pop().GetInteger(), (byte)engine.ResultStack.Pop().GetInteger());
+                    var value = engine.ResultStack.Pop().GetInteger();
+                    var decimals = (byte)engine.ResultStack.Pop().GetInteger();
+                    nep17BalancePair.Value.Balance = new BigDecimal(value, decimals);
                 }
                 nep17BalancePair.Value.LastUpdatedBlock = block.Index;
                 if (nep17BalancePair.Value.Balance.Value == 0)
