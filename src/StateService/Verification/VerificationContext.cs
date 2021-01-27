@@ -54,9 +54,10 @@ namespace Neo.Plugins.StateService.Verification
             rootIndex = index;
             using SnapshotCache snapshot = Blockchain.Singleton.GetSnapshot();
             verifiers = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.StateValidator, index);
+            if (wallet is null) return;
             for (int i = 0; i < verifiers.Length; i++)
             {
-                WalletAccount account = wallet?.GetAccount(verifiers[i]);
+                WalletAccount account = wallet.GetAccount(verifiers[i]);
                 if (account?.HasKey != true) continue;
                 myIndex = i;
                 keyPair = account.GetKey();
