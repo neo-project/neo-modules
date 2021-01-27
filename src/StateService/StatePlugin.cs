@@ -52,14 +52,16 @@ namespace Neo.Plugins.StateService
         [RpcMethod]
         public JObject VoteStateRoot(JArray _params)
         {
+            if (_params.Count < 3) throw new RpcException(-100, "Invalid params");
             uint height = uint.Parse(_params[0].AsString());
             int validator_index = int.Parse(_params[1].AsString());
             byte[] sig = Convert.FromBase64String(_params[2].AsString());
-            Verifier?.Tell(new Vote(height, validator_index, sig));
+            if (Verifier is null) throw new RpcException(-100, "Verifier not started");
+            Verifier.Tell(new Vote(height, validator_index, sig));
             return true;
         }
 
-        [ConsoleCommand("start verifying state", Category = "StateService", Description = "Start as a state verifier if wallet is open")]
+        [ConsoleCommand("start states", Category = "StateService", Description = "Start as a state verifier if wallet is open")]
         private void OnStartVerifyingState()
         {
             if (Verifier != null)
