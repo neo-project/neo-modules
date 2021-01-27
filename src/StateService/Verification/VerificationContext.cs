@@ -81,7 +81,7 @@ namespace Neo.Plugins.StateService.Verification
             if (M <= signatures.Count) return false;
             if (index < 0 || verifiers.Length <= index) return false;
             if (signatures.ContainsKey(index)) return false;
-            Utility.Log(nameof(VerificationContext), LogLevel.Info, $"vote received, index={index}");
+            Utility.Log(nameof(VerificationContext), LogLevel.Info, $"vote received, validator_index={index}, root_index={rootIndex}");
             ECPoint validator = verifiers[index];
             byte[] hash_data = StateRoot?.GetHashData();
             if (hash_data is null || !Crypto.VerifySignature(hash_data, sig, validator))
