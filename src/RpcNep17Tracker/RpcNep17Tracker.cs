@@ -12,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using static System.IO.Path;
 
 namespace Neo.Plugins
@@ -77,7 +76,7 @@ namespace Neo.Plugins
             _writeBatch.Delete(Key(prefix, key));
         }
 
-        private void RecordTransferHistory(DataCache snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
+        private void RecordTransferHistory(DataCache snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigDecimal amount, UInt256 txHash, ref ushort transferIndex)
         {
             if (!_shouldTrackHistory) return;
 
@@ -154,7 +153,20 @@ namespace Neo.Plugins
             }
             if (scriptContainer is Transaction transaction)
             {
-                RecordTransferHistory(snapshot, scriptHash, from, to, amountItem.GetInteger(), transaction.Hash, ref transferIndex);
+                byte[] script;
+                using (ScriptBuilder sb = new ScriptBuilder())
+                {
+                    sb.EmitDynamicCall(scriptHash, "decimals");
+                    script = sb.ToArray();
+                }
+                byte decimals;
+                using (ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, gas: 100000000))
+                {
+                    if (engine.State.HasFlag(VMState.FAULT)) return;
+                    if (engine.ResultStack.Count <= 0) return;
+                    decimals = (byte)engine.ResultStack.Pop().GetInteger();
+                }
+                RecordTransferHistory(snapshot, scriptHash, from, to, new BigDecimal(amountItem.GetInteger(), decimals), transaction.Hash, ref transferIndex);
             }
         }
 
