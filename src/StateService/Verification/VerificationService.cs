@@ -39,7 +39,7 @@ namespace Neo.Plugins.StateService.Verification
                 try
                 {
                     var client = new RpcClient(url);
-                    client?.RpcSendAsync("votestateroot", vote.RootIndex, vote.ValidatorIndex, vote.Signature.ToHexString())
+                    client.RpcSendAsync("votestateroot", vote.RootIndex, vote.ValidatorIndex, vote.Signature.ToHexString())
                         .GetAwaiter().GetResult();
                 }
                 catch (Exception e)
