@@ -66,6 +66,9 @@ namespace Neo.Plugins.StateService.Storage
         {
             switch (message)
             {
+                case StateRoot state_root:
+                    OnNewStateRoot(state_root);
+                    break;
                 case Blockchain.RelayResult rr:
                     if (rr.Result == VerifyResult.Succeed && rr.Inventory is ExtensiblePayload payload && payload.Category == StatePlugin.StatePayloadCategory)
                         OnStatePayload(payload);
@@ -151,7 +154,7 @@ namespace Neo.Plugins.StateService.Storage
             if (cache.TryGetValue(index, out StateRoot state_root))
             {
                 cache.Remove(index);
-                OnNewStateRoot(state_root);
+                Self.Tell(state_root);
             }
         }
 
