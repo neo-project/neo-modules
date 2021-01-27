@@ -1,4 +1,5 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28729.10
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -24,13 +25,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Network.RPC.Tests", "te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Plugins.Storage.Tests", "tests\Neo.Plugins.Storage.Tests\Neo.Plugins.Storage.Tests.csproj", "{9E7EA895-302A-4C0C-BA9B-54F9A67AD75C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StateService", "src\StateService\StateService.csproj", "{A0F4A66F-6F87-4B99-B8BE-A779BC002F47}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StateService", "src\StateService\StateService.csproj", "{A0F4A66F-6F87-4B99-B8BE-A779BC002F47}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neo.Plugins.StateService.Tests", "tests\Neo.Plugins.StateService.Tests\Neo.Plugins.StateService.Tests.csproj", "{149822EC-4E0C-425F-A032-4196B615BFEB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Plugins.StateService.Tests", "tests\Neo.Plugins.StateService.Tests\Neo.Plugins.StateService.Tests.csproj", "{149822EC-4E0C-425F-A032-4196B615BFEB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FSNode", "src\FSNode\FSNode.csproj", "{F2B36979-71AF-4E1E-8D5A-2A8430B378FA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FSNode", "src\FSNode\FSNode.csproj", "{F2B36979-71AF-4E1E-8D5A-2A8430B378FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neo.Plugins.FSNode.Tests", "tests\Neo.Plugins.FSNode.Tests\Neo.Plugins.FSNode.Tests.csproj", "{F3868DE8-9AE7-48FF-B0F0-C719B6D7F09A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Plugins.FSNode.Tests", "tests\Neo.Plugins.FSNode.Tests\Neo.Plugins.FSNode.Tests.csproj", "{F3868DE8-9AE7-48FF-B0F0-C719B6D7F09A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neo", "..\..\3.0\master\neo\src\neo\neo.csproj", "{EF0724DB-B3FB-4B1D-964E-F7E8D5F773CC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -90,6 +93,10 @@ Global
 		{F3868DE8-9AE7-48FF-B0F0-C719B6D7F09A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F3868DE8-9AE7-48FF-B0F0-C719B6D7F09A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F3868DE8-9AE7-48FF-B0F0-C719B6D7F09A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF0724DB-B3FB-4B1D-964E-F7E8D5F773CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF0724DB-B3FB-4B1D-964E-F7E8D5F773CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF0724DB-B3FB-4B1D-964E-F7E8D5F773CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF0724DB-B3FB-4B1D-964E-F7E8D5F773CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

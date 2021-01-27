@@ -10,27 +10,14 @@ namespace Neo.Plugins.FSStorage.innerring.invoke
         private const string DeleteContainerMethod = "delete";
         private const string ListContainersMethod = "list";
 
-        public class ContainerParams
+        public static bool RegisterContainer(IClient client, ECPoint key, byte[] container, byte[] signature)
         {
-            public ECPoint Key;
-            public byte[] Container;
-            public byte[] Signature;
+            return client.InvokeFunction(ContainerContractHash, PutContainerMethod, 5 * ExtraFee, container, signature, key.EncodePoint(true));
         }
 
-        public class RemoveContainerParams
+        public static bool RemoveContainer(IClient client, byte[] containerID, byte[] signature)
         {
-            public byte[] ContainerID;
-            public byte[] Signature;
-        }
-
-        public static bool RegisterContainer(IClient client, ContainerParams p)
-        {
-            return client.InvokeFunction(ContainerContractHash, PutContainerMethod, 5 * ExtraFee, p.Container, p.Signature, p.Key.EncodePoint(true));
-        }
-
-        public static bool RemoveContainer(IClient client, RemoveContainerParams p)
-        {
-            return client.InvokeFunction(ContainerContractHash, DeleteContainerMethod, ExtraFee, p.ContainerID, p.Signature);
+            return client.InvokeFunction(ContainerContractHash, DeleteContainerMethod, ExtraFee, containerID, signature);
         }
     }
 }

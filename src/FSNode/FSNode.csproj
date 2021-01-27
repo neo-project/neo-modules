@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <PackageId>Neo.Plugins.FSNode</PackageId>
@@ -20,6 +20,7 @@
   </ItemGroup>
   
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\3.0\master\neo\src\neo\neo.csproj" />
     <ProjectReference Include="..\LevelDBStore\LevelDBStore.csproj" />
     <ProjectReference Include="..\RpcClient\RpcClient.csproj" />
     <ProjectReference Include="..\RpcServer\RpcServer.csproj" />

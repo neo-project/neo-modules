@@ -171,12 +171,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
                 List<byte> coment = new List<byte>();
                 coment.AddRange(System.Text.Encoding.UTF8.GetBytes(TxLogPrefix));
                 coment.AddRange(depositeEvent.Id);
-                ContractInvoker.Mint(Client, new MintBurnParams()
-                {
-                    ScriptHash = depositeEvent.To.ToArray(),
-                    Amount = Convert.ToBalancePrecision(depositeEvent.Amount),
-                    Comment = coment.ToArray()
-                });
+                ContractInvoker.Mint(Client, depositeEvent.To.ToArray(), Convert.ToBalancePrecision(depositeEvent.Amount), coment.ToArray());
             }
             catch (Exception e)
             {
@@ -235,14 +230,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
             {
                 ulong curEpoch = EpochCounter();
                 //invoke
-                ContractInvoker.LockAsset(Client, new LockParams()
-                {
-                    ID = withdrawEvent.Id,
-                    UserAccount = withdrawEvent.UserAccount,
-                    LockAccount = lockeAccount,
-                    Amount = Convert.ToBalancePrecision(withdrawEvent.Amount),
-                    Until = curEpoch + LockAccountLifetime
-                });
+                ContractInvoker.LockAsset(Client, withdrawEvent.Id, withdrawEvent.UserAccount, lockeAccount,Convert.ToBalancePrecision(withdrawEvent.Amount), curEpoch + LockAccountLifetime);
             }
             catch (Exception e)
             {
@@ -264,12 +252,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
                 coment.AddRange(System.Text.Encoding.UTF8.GetBytes(TxLogPrefix));
                 coment.AddRange(chequeEvent.Id);
 
-                ContractInvoker.Burn(Client, new MintBurnParams()
-                {
-                    ScriptHash = chequeEvent.LockAccount.ToArray(),
-                    Amount = Convert.ToBalancePrecision(chequeEvent.Amount),
-                    Comment = coment.ToArray()
-                });
+                ContractInvoker.Burn(Client, chequeEvent.LockAccount.ToArray(), Convert.ToBalancePrecision(chequeEvent.Amount), coment.ToArray());
             }
             catch (Exception e)
             {
@@ -287,12 +270,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
             //invoke
             try
             {
-                ContractInvoker.SetConfig(Client, new SetConfigArgs()
-                {
-                    Id = configEvent.Id,
-                    Key = configEvent.Key,
-                    Value = configEvent.Value
-                });
+                ContractInvoker.SetConfig(Client, configEvent.Id, configEvent.Key, configEvent.Value);
             }
             catch (Exception e)
             {

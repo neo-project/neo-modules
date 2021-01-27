@@ -17,19 +17,6 @@ namespace Neo.Plugins.FSStorage.innerring.invoke
         private const string UpdateInnerRingMethod = "updateInnerRing";
         private const string GetNetmapSnapshotMethod = "netmap";
 
-        public class UpdatePeerArgs
-        {
-            public ECPoint Key;
-            public int Status;
-        }
-
-        public class SetConfigArgs
-        {
-            public byte[] Id;
-            public byte[] Key;
-            public byte[] Value;
-        }
-
         public static long GetEpoch(IClient client)
         {
             InvokeResult result = client.InvokeLocalFunction(NetMapContractHash, GetEpochMethod);
@@ -46,14 +33,14 @@ namespace Neo.Plugins.FSStorage.innerring.invoke
             return client.InvokeFunction(NetMapContractHash, ApprovePeerMethod, FeeOneGas, peer);
         }
 
-        public static bool UpdatePeerState(IClient client, UpdatePeerArgs p)
+        public static bool UpdatePeerState(IClient client, ECPoint key, int status)
         {
-            return client.InvokeFunction(NetMapContractHash, UpdatePeerStateMethod, ExtraFee, p.Status, p.Key.ToArray());
+            return client.InvokeFunction(NetMapContractHash, UpdatePeerStateMethod, ExtraFee, status, key.ToArray());
         }
 
-        public static bool SetConfig(IClient client, SetConfigArgs p)
+        public static bool SetConfig(IClient client, byte[] Id, byte[] key, byte[] value)
         {
-            return client.InvokeFunction(NetMapContractHash, SetConfigMethod, ExtraFee, p.Id, p.Key, p.Value);
+            return client.InvokeFunction(NetMapContractHash, SetConfigMethod, ExtraFee, Id, key, value);
         }
 
         public static bool UpdateInnerRing(IClient client, ECPoint[] p)

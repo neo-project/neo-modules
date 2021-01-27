@@ -165,11 +165,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
             Neo.Utility.Log(Name, LogLevel.Info, string.Format("vote to remove node from netmap,{0}",s));
             try
             {
-                ContractInvoker.UpdatePeerState(Client, new ContractInvoker.UpdatePeerArgs()
-                {
-                    Key = key,
-                    Status = (int)NeoFS.API.v2.Netmap.NodeInfo.Types.State.Offline
-                });
+                ContractInvoker.UpdatePeerState(Client, key, (int)NeoFS.API.v2.Netmap.NodeInfo.Types.State.Offline);
             }
             catch (Exception e)
             {
@@ -266,11 +262,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
             NetmapSnapshot.Flag(updateStateEvent.PublicKey.ToString());
             try
             {
-                ContractInvoker.UpdatePeerState(Client, new ContractInvoker.UpdatePeerArgs()
-                {
-                    Key = updateStateEvent.PublicKey,
-                    Status = (int)updateStateEvent.Status
-                });
+                ContractInvoker.UpdatePeerState(Client, updateStateEvent.PublicKey, (int)updateStateEvent.Status);
             }
             catch (Exception e)
             {

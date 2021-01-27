@@ -7,7 +7,7 @@ namespace Neo.Plugins.FSStorage.morph.invoke
 {
     public partial class MorphContractInvoker
     {
-        private static UInt160 AuditContractHash => Settings.Default.BalanceContractHash;
+        private static UInt160 AuditContractHash => Settings.Default.AuditContractHash;
         private const string PutResultMethod = "put";
         private const string GetResultMethod = "get";
         private const string ListResultsMethod = "list";

@@ -14,48 +14,24 @@ namespace Neo.Plugins.FSStorage.innerring.invoke
 
         private const long ExtraFee = 1_5000_0000;
 
-        public class TransferXParams
+        public static bool TransferBalanceX(IClient client, byte[] sender, byte[] receiver, long amount, byte[] comment)
         {
-            public byte[] Sender;
-            public byte[] Receiver;
-            public long Amount;
-            public byte[] Comment;
+            return client.InvokeFunction(BalanceContractHash, TransferXMethod, ExtraFee, sender, receiver, amount, comment);
         }
 
-        public class LockParams
+        public static bool Mint(IClient client, byte[] scriptHash, long amount, byte[] comment)
         {
-            public byte[] ID;
-            public UInt160 UserAccount;
-            public UInt160 LockAccount;
-            public long Amount;
-            public ulong Until;
+            return client.InvokeFunction(BalanceContractHash, MintMethod, ExtraFee, scriptHash, amount, comment);
         }
 
-        public class MintBurnParams
+        public static bool Burn(IClient client, byte[] scriptHash, long amount, byte[] comment)
         {
-            public byte[] ScriptHash;
-            public long Amount;
-            public byte[] Comment;
+            return client.InvokeFunction(BalanceContractHash, BurnMethod, ExtraFee, scriptHash, amount, comment);
         }
 
-        public static bool TransferBalanceX(IClient client, TransferXParams p)
+        public static bool LockAsset(IClient client, byte[] ID, UInt160 userAccount, UInt160 lockAccount, long amount, ulong until)
         {
-            return client.InvokeFunction(BalanceContractHash, TransferXMethod, ExtraFee, p.Sender, p.Receiver, p.Amount, p.Comment);
-        }
-
-        public static bool Mint(IClient client, MintBurnParams p)
-        {
-            return client.InvokeFunction(BalanceContractHash, MintMethod, ExtraFee, p.ScriptHash, p.Amount, p.Comment);
-        }
-
-        public static bool Burn(IClient client, MintBurnParams p)
-        {
-            return client.InvokeFunction(BalanceContractHash, BurnMethod, ExtraFee, p.ScriptHash, p.Amount, p.Comment);
-        }
-
-        public static bool LockAsset(IClient client, LockParams p)
-        {
-            return client.InvokeFunction(BalanceContractHash, LockMethod, ExtraFee, p.ID, p.UserAccount, p.LockAccount, p.Amount, (int)p.Until);
+            return client.InvokeFunction(BalanceContractHash, LockMethod, ExtraFee, ID, userAccount, lockAccount, amount, (int)until);
         }
 
         public static uint BalancePrecision(IClient client)

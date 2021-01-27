@@ -1,0 +1,17 @@
+hasstorage: true
+ispayable: false
+events:
+  - name: containerPut
+    parameters:
+      - name: container
+        type: ByteArray
+      - name: signature
+        type: ByteArray
+      - name: publicKey
+        type: ByteArray
+  - name: containerDelete
+    parameters:
+      - name: containerID
+        type: ByteArray
+      - name: signature
+        type: ByteArray

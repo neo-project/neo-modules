@@ -80,13 +80,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
             //invoke
             try
             {
-                ContractInvoker.CashOutCheque(Client, new ChequeParams()
-                {
-                    Id = lockEvent.Id,
-                    Amount = Convert.ToFixed8(lockEvent.Amount),
-                    UserAccount = lockEvent.UserAccount,
-                    LockAccount = lockEvent.LockAccount
-                });
+                ContractInvoker.CashOutCheque(Client, lockEvent.Id, Convert.ToFixed8(lockEvent.Amount), lockEvent.UserAccount, lockEvent.LockAccount);
             }
             catch (Exception e)
             {

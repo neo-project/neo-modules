@@ -7,7 +7,6 @@ using NeoFS.API.v2.Container;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using static Neo.Plugins.FSStorage.innerring.invoke.ContractInvoker;
 using static Neo.Plugins.FSStorage.MorphEvent;
 using static Neo.Plugins.util.WorkerPool;
 
@@ -107,12 +106,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
             //invoke
             try
             {
-                ContractInvoker.RegisterContainer(Client, new ContainerParams()
-                {
-                    Key = putEvent.PublicKey,
-                    Container = putEvent.RawContainer,
-                    Signature = putEvent.Signature
-                });
+                ContractInvoker.RegisterContainer(Client, putEvent.PublicKey, putEvent.RawContainer, putEvent.Signature);
             }
             catch (Exception e)
             {
@@ -130,11 +124,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
             //invoke
             try
             {
-                ContractInvoker.RemoveContainer(Client, new RemoveContainerParams()
-                {
-                    ContainerID = deleteEvent.ContainerID,
-                    Signature = deleteEvent.Signature
-                });
+                ContractInvoker.RemoveContainer(Client, deleteEvent.ContainerID, deleteEvent.Signature);
             }
             catch (Exception e)
             {
@@ -147,7 +137,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
             return ActiveState.IsActive();
         }
 
-        public void CheckFormat(NeoFS.API.v2.Container.Container container)
+        public void CheckFormat(Container container)
         {
             if (container.PlacementPolicy is null) throw new Exception("placement policy is nil");
             if (container.OwnerId.Value.Length != 25) throw new Exception("incorrect owner identifier");

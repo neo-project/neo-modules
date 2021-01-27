@@ -71,25 +71,18 @@ namespace Neo.Plugins.FSStorage
 
         public void RegisterHandler(HandlerInfo p)
         {
-            Dictionary<string, string> pairs = new Dictionary<string, string>();
-            pairs.Add("script hash LE", p.ScriptHashWithType.ScriptHashValue.ToString());
-            pairs.Add("event type", p.ScriptHashWithType.Type);
-            Neo.Utility.Log(name, LogLevel.Info, pairs.ParseToString());
 
             var handler = p.Handler;
             if (handler is null)
             {
-                Neo.Utility.Log(name, LogLevel.Warning, string.Format("ignore nil event handler:{0}", pairs.ParseToString()));
                 return;
             }
             if (started)
             {
-                Neo.Utility.Log(name, LogLevel.Warning, string.Format("listener has been already started, ignore handler:{0}", pairs.ParseToString()));
                 return;
             }
             if (!parsers.TryGetValue(p.ScriptHashWithType, out _))
             {
-                Neo.Utility.Log(name, LogLevel.Warning, string.Format("ignore handler of event w/o parser:{0}", pairs.ParseToString()));
                 return;
             }
             if (handlers.TryGetValue(p.ScriptHashWithType, out var value))
@@ -100,29 +93,21 @@ namespace Neo.Plugins.FSStorage
             {
                 handlers.Add(p.ScriptHashWithType, new List<Action<IContractEvent>>() { p.Handler });
             }
-            Neo.Utility.Log(name, LogLevel.Info, string.Format("registered new event handler:{0}", pairs.ParseToString()));
         }
 
         public void SetParser(ParserInfo p)
         {
-            Dictionary<string, string> pairs = new Dictionary<string, string>();
-            pairs.Add("script hash LE", p.ScriptHashWithType.ScriptHashValue.ToString());
-            pairs.Add("event type", p.ScriptHashWithType.Type);
-            Neo.Utility.Log(name, LogLevel.Info, pairs.ParseToString());
 
             if (p.Parser is null)
             {
-                Neo.Utility.Log(name, LogLevel.Warning, string.Format("ignore nil event parser:{0}", pairs.ParseToString()));
                 return;
             }
             if (started)
             {
-                Neo.Utility.Log(name, LogLevel.Warning, string.Format("listener has been already started, ignore parser:{0}", pairs.ParseToString()));
                 return;
             }
             if (!parsers.TryGetValue(p.ScriptHashWithType, out _))
                 parsers.Add(p.ScriptHashWithType, p.Parser);
-            Neo.Utility.Log(name, LogLevel.Info, string.Format("registered new event parser:{0}", pairs.ParseToString()));
         }
 
         protected override void OnReceive(object message)

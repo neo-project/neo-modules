@@ -18,26 +18,18 @@ namespace Neo.Plugins.FSStorage.innerring.invoke
         private const long FeeHalfGas = 50_000_000;
         private const long FeeOneGas = FeeHalfGas * 2;
 
-        public class ChequeParams
-        {
-            public byte[] Id;
-            public long Amount;
-            public UInt160 UserAccount;
-            public UInt160 LockAccount;
-        }
-
         public static bool IsInnerRing(IClient client, ECPoint p)
         {
             InvokeResult result = client.InvokeLocalFunction(FsContractHash, CheckIsInnerRingMethod, p.EncodePoint(true));
             return result.ResultStack[0].GetBoolean();
         }
 
-        public static bool CashOutCheque(IClient client, ChequeParams p)
+        public static bool CashOutCheque(IClient client, byte[] Id, long amount, UInt160 userAccount, UInt160 lockAccount)
         {
-            return client.InvokeFunction(FsContractHash, ChequeMethod, ExtraFee, p.Id, p.UserAccount, p.Amount, p.LockAccount);
+            return client.InvokeFunction(FsContractHash, ChequeMethod, ExtraFee, Id, userAccount, amount, lockAccount);
         }
 
-        public static int InnerRingIndex(IClient client, ECPoint p,out int size)
+        public static int InnerRingIndex(IClient client, ECPoint p, out int size)
         {
             InvokeResult result = client.InvokeLocalFunction(FsContractHash, InnerRingListMethod);
             var irNodes = (Array)result.ResultStack[0];

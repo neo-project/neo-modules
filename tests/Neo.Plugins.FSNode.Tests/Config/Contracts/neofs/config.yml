@@ -1,0 +1,57 @@
+hasstorage: true
+ispayable: false
+events:
+  - name: Deposit
+    parameters:
+      - name: from
+        type: Hash160
+      - name: amount
+        type: Integer
+      - name: receiver
+        type: Hash160
+      - name: txHash
+        type: Hash256
+  - name: Withdraw
+    parameters:
+      - name: user
+        type: ByteArray
+      - name: amount
+        type: Integer
+      - name: txHash
+        type: Hash256
+  - name: Cheque
+    parameters:
+      - name: id
+        type: ByteArray
+      - name: user
+        type: ByteArray
+      - name: amount
+        type: Integer
+      - name: lockAccount
+        type: ByteArray
+  - name: Bind
+    parameters:
+      - name: user
+        type: ByteArray
+      - name: keys
+        type: Array
+  - name: Unbind
+    parameters:
+      - name: user
+        type: ByteArray
+      - name: keys
+        type: Array
+  - name: InnerRingUpdate
+    parameters:
+      - name: id
+        type: ByteArray
+      - name: innerRingList
+        type: Array
+  - name: SetConfig
+    parameters:
+      - name: id
+        type: ByteArray
+      - name: key
+        type: ByteArray
+      - name: value
+        type: ByteArray

@@ -1,0 +1,48 @@
+hasstorage: true
+ispayable: false
+name: "NeoFS Balance"
+supportedstandards: ["NEP-17"]
+safemethods: ["balanceOf", "decimals", "symbol", "totalSupply"]
+events:
+  - name: Lock
+    parameters:
+      - name: txID
+        type: ByteArray
+      - name: from
+        type: Hash160
+      - name: to
+        type: Hash160
+      - name: amount
+        type: Integer
+      - name: until
+        type: Integer
+  - name: Transfer
+    parameters:
+      - name: from
+        type: Hash160
+      - name: to
+        type: Hash160
+      - name: amount
+        type: Integer
+  - name: TransferX
+    parameters:
+      - name: from
+        type: Hash160
+      - name: to
+        type: Hash160
+      - name: amount
+        type: Integer
+      - name: details
+        type: ByteArray
+  - name: Mint
+    parameters:
+      - name: from
+        type: Hash160
+      - name: amount
+        type: Integer
+  - name: Burn
+    parameters:
+      - name: to
+        type: Hash160
+      - name: amount
+        type: Integer

@@ -15,6 +15,7 @@ namespace Neo.Plugins.FSStorage
         public UInt160 BalanceContractHash;
         public UInt160 ContainerContractHash;
         public UInt160[] AlphabetContractHash;
+        public UInt160 AuditContractHash;
         public UInt160 FsIdContractHash;
         public ECPoint[] validators;
 
@@ -57,6 +58,7 @@ namespace Neo.Plugins.FSStorage
             this.FsIdContractHash = UInt160.Parse(contracts.GetSection("neofsId").Value);
             this.BalanceContractHash = UInt160.Parse(contracts.GetSection("balance").Value);
             this.ContainerContractHash = UInt160.Parse(contracts.GetSection("container").Value);
+            this.AuditContractHash = UInt160.Parse(contracts.GetSection("audit").Value);
             this.AlphabetContractHash = contracts.GetSection("alphabet").GetChildren().Select(p => UInt160.Parse(p.Get<string>())).ToArray();
             Contracts.Add(NetmapContractHash);
             Contracts.Add(FsContractHash);

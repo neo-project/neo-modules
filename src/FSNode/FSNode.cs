@@ -13,11 +13,15 @@ using static Neo.Plugins.FSStorage.innerring.InnerRingService;
 
 namespace Neo.Plugins.FSStorage
 {
+    /// <summary>
+    /// The entrance of the Fs program.
+    /// Built-in an innering service to process notification events related to FS when the block is persisted.
+    /// </summary>
     public class FSNode : Plugin, IPersistencePlugin
     {
+        public override string Name => "FSNode";
+        public override string Description => "Uses FSNode to provide distributed file storage service";
         public IActorRef innering;
-        public override string Name => "FSStorage";
-        public override string Description => "Uses FSStorage to provide distributed file storage service";
 
         public FSNode()
         {

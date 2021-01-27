@@ -108,7 +108,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
                 }
                 catch (Exception e)
                 {
-                    Neo.Utility.Log(Name, LogLevel.Warning, string.Format("can't convert node public key to address,{0}",e.Message));
+                    Neo.Utility.Log(Name, LogLevel.Warning, string.Format("can't convert node public key to address,{0}", e.Message));
                     continue;
                 }
                 try
