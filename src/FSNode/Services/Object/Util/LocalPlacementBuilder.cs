@@ -4,14 +4,15 @@ using Neo.FSNode.Network;
 using static Neo.FSNode.Network.Address;
 using Neo.FSNode.Services.ObjectManager.Placement;
 using System.Collections.Generic;
+using Neo.FSNode.Core.Netmap;
 
 namespace Neo.FSNode.Services.Object.Util
 {
-    public class LocalPlacementBuilder : NetmapBuilder
+    public class LocalPlacementBuilder : NetworkMapBuilder
     {
         private readonly ILocalAddressSource localAddressSource;
 
-        public LocalPlacementBuilder(NetmapSource netmap_source, ILocalAddressSource address_source)
+        public LocalPlacementBuilder(INetmapSource netmap_source, ILocalAddressSource address_source)
         : base(netmap_source)
         {
             localAddressSource = address_source;

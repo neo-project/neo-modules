@@ -2,6 +2,7 @@ using Akka.Actor;
 using Google.Protobuf;
 using Neo.Plugins.FSStorage.morph.invoke;
 using Neo.Plugins.Innerring.Processors;
+using NeoFS.API.v2.Client.ObjectParams;
 using NeoFS.API.v2.Container;
 using NeoFS.API.v2.Netmap;
 using NeoFS.API.v2.Object;
@@ -13,6 +14,8 @@ using static Neo.Plugins.FSStorage.MorphEvent;
 using static Neo.Plugins.util.WorkerPool;
 using Neo.FSNode.Services.Audit;
 using static Neo.FSNode.Services.Audit.Manager;
+using System.Threading;
+using Org.BouncyCastle.Utilities;
 
 namespace Neo.Plugins.FSStorage.innerring.processors
 {
@@ -222,7 +225,9 @@ namespace Neo.Plugins.FSStorage.innerring.processors
                 searchFilters.AddTypeFilter(MatchType.StringEqual, ObjectType.StorageGroup);
                 try
                 {
-                    List<ObjectID> result = cli.SearchObject(cid, searchFilters.Filters).Result;
+                    var source = new CancellationTokenSource();
+                    source.CancelAfter(TimeSpan.FromMinutes(1));
+                    List<ObjectID> result = cli.SearchObject(source.Token, new SearchObjectParams { ContainerID = cid, Filters = searchFilters }).Result;
                     sg.AddRange(result);
                     break;
                 }

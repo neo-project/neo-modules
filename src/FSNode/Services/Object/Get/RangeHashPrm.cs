@@ -5,14 +5,12 @@ using Neo.FSNode.Services.Object.Util;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neo.FSNode.Services.Object.RangeHash
+namespace Neo.FSNode.Services.Object.Get
 {
-    public class RangeHashPrm : CommonPrm
+    public class RangeHashPrm : GetCommonPrm
     {
-        public Address Address;
         public ChecksumType HashType;
         public List<V2Range> Ranges;
-        public byte[] Salt;
 
         public static RangeHashPrm FromRequest(GetRangeHashRequest request)
         {
@@ -25,6 +23,5 @@ namespace Neo.FSNode.Services.Object.RangeHash
             prm.WithCommonPrm(CommonPrm.FromRequest(request));
             return prm;
         }
-
     }
 }

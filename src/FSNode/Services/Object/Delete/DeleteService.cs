@@ -11,7 +11,6 @@ namespace Neo.FSNode.Services.Object.Delete
     {
         private readonly OwnerID selfId;
         private readonly IRelationHeader relationHeader;
-        private readonly HeadService headService;
         private readonly PutService putService;
 
         public bool Delete(DeletePrm prm)
@@ -40,49 +39,49 @@ namespace Neo.FSNode.Services.Object.Delete
         private List<Address> GetRelations(DeletePrm prm)
         {
             var res = new List<Address>();
-            var linking = relationHeader.HeadRelation(prm.Address, prm);
-            if (linking != null)
-            {
-                var cid = prm.Address.ContainerId;
-                var prev = prm.Address.ObjectId;
-                while (prev != prm.Address.ObjectId)
-                {
-                    var address = new Address
-                    {
-                        ObjectId = prev,
-                        ContainerId = cid,
-                    };
-                    var head_prm = new HeadPrm();
-                    head_prm.WithCommonPrm(prm);
-                    head_prm.Address = address;
-                    var head_result = headService.Head(head_prm);
-                    var oid = head_result.Header.ObjectId;
-                    prev = head_result.Header.Parent().ObjectId;
-                    if (head_result.RightChild != null)
-                    {
-                        oid = head_result.RightChild.ObjectId;
-                        prev = head_result.RightChild.Parent().ObjectId;
-                    }
-                    address.ObjectId = oid;
-                    res.Add(address);
-                }
-            }
-            else
-            {
-                var child_list = linking.Header.Split.Children;
-                foreach (var oid in child_list)
-                    res.Add(new Address
-                    {
-                        ContainerId = prm.Address.ContainerId,
-                        ObjectId = oid,
-                    });
-                res.Add(new Address
-                {
-                    ContainerId = prm.Address.ContainerId,
-                    ObjectId = linking.ObjectId,
-                });
-            }
-            res.Add(prm.Address);
+            // var linking = relationHeader.HeadRelation(prm.Address, prm);
+            // if (linking != null)
+            // {
+            //     var cid = prm.Address.ContainerId;
+            //     var prev = prm.Address.ObjectId;
+            //     while (prev != prm.Address.ObjectId)
+            //     {
+            //         var address = new Address
+            //         {
+            //             ObjectId = prev,
+            //             ContainerId = cid,
+            //         };
+            //         var head_prm = new HeadPrm();
+            //         head_prm.WithCommonPrm(prm);
+            //         head_prm.Address = address;
+            //         var head_result = headService.Head(head_prm);
+            //         var oid = head_result.Header.ObjectId;
+            //         prev = head_result.Header.Parent().ObjectId;
+            //         if (head_result.RightChild != null)
+            //         {
+            //             oid = head_result.RightChild.ObjectId;
+            //             prev = head_result.RightChild.Parent().ObjectId;
+            //         }
+            //         address.ObjectId = oid;
+            //         res.Add(address);
+            //     }
+            // }
+            // else
+            // {
+            //     var child_list = linking.Header.Split.Children;
+            //     foreach (var oid in child_list)
+            //         res.Add(new Address
+            //         {
+            //             ContainerId = prm.Address.ContainerId,
+            //             ObjectId = oid,
+            //         });
+            //     res.Add(new Address
+            //     {
+            //         ContainerId = prm.Address.ContainerId,
+            //         ObjectId = linking.ObjectId,
+            //     });
+            // }
+            // res.Add(prm.Address);
             return res;
         }
     }

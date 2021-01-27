@@ -1,16 +1,19 @@
 using NeoFS.API.v2.Acl;
 using NeoFS.API.v2.Session;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using NeoFS.API.v2.Client;
+using System.Security.Cryptography;
+using System.Threading;
 
 namespace Neo.FSNode.Services.Object.Util
 {
     public class CommonPrm
     {
+        public CancellationToken Context;
         public bool Local;
         public SessionToken SessionToken;
         public BearerToken BearerToken;
+        public ECDsa Key;
+        public CallOptions CallOptions;
 
         public static CommonPrm FromRequest(IRequest request)
         {
@@ -23,11 +26,14 @@ namespace Neo.FSNode.Services.Object.Util
             };
         }
 
-        public void WithCommonPrm(CommonPrm cprm)
+        public void WithCommonPrm(CommonPrm other)
         {
-            Local = cprm.Local;
-            SessionToken = cprm.SessionToken;
-            BearerToken = cprm.BearerToken;
+            Context = other.Context;
+            Local = other.Local;
+            SessionToken = other.SessionToken;
+            BearerToken = other.BearerToken;
+            Key = other.Key;
+            CallOptions = other.CallOptions;
         }
     }
 }

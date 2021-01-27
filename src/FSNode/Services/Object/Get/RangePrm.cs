@@ -2,13 +2,12 @@ using NeoFS.API.v2.Object;
 using V2Range = NeoFS.API.v2.Object.Range;
 using NeoFS.API.v2.Refs;
 using Neo.FSNode.Services.Object.Util;
+using Neo.FSNode.Services.Object.Get.Writer;
 
-namespace Neo.FSNode.Services.Object.Range
+namespace Neo.FSNode.Services.Object.Get
 {
-    public class RangePrm : CommonPrm
+    public class RangePrm : GetCommonPrm
     {
-        public bool Full;
-        public Address Address;
         public V2Range Range;
 
         public static RangePrm FromRequest(GetRangeRequest request)
