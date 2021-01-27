@@ -20,7 +20,9 @@ namespace Neo.Plugins
 
         void ISerializable.Deserialize(BinaryReader reader)
         {
-            Balance = new BigDecimal(new BigInteger(reader.ReadVarBytes(512)), reader.ReadByte());
+            var value = new BigInteger(reader.ReadVarBytes(512));
+            var decimals = reader.ReadByte();
+            Balance = new BigDecimal(value, decimals);
             LastUpdatedBlock = reader.ReadUInt32();
         }
     }

@@ -27,7 +27,9 @@ namespace Neo.Plugins
             UserScriptHash = reader.ReadSerializable<UInt160>();
             BlockIndex = reader.ReadUInt32();
             TxHash = reader.ReadSerializable<UInt256>();
-            Amount = new BigDecimal(new BigInteger(reader.ReadVarBytes(512)), reader.ReadByte());
+            var value = new BigInteger(reader.ReadVarBytes(512));
+            var decimals = reader.ReadByte();
+            Amount = new BigDecimal(value, decimals);
         }
     }
 }
