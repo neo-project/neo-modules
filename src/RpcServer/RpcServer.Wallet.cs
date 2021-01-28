@@ -190,14 +190,13 @@ namespace Neo.Plugins
             if (context.Completed)
             {
                 tx.Witnesses = context.GetWitnesses();
+                if (tx is not null)
+                    result["tx"] = Convert.ToBase64String(tx.ToArray());
             }
             else
             {
                 result["pendingsignature"] = context.ToJson();
-                tx = null;
             }
-            if (tx is not null)
-                result["tx"] = Convert.ToBase64String(tx.ToArray());
         }
 
         [RpcMethod]
