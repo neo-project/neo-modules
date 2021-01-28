@@ -28,6 +28,7 @@ namespace Neo.Plugins.StateService.Verification
         private int M => verifiers.Length - (verifiers.Length - 1) / 3;
         private readonly Dictionary<int, byte[]> signatures = new Dictionary<int, byte[]>();
 
+        public int Retries;
         public bool IsValidator => myIndex >= 0;
         public int MyIndex => myIndex;
         public ECPoint[] Verifiers => verifiers;
@@ -49,6 +50,7 @@ namespace Neo.Plugins.StateService.Verification
         public VerificationContext(Wallet wallet, uint index)
         {
             this.wallet = wallet;
+            Retries = 0;
             myIndex = -1;
             root = null;
             rootIndex = index;
@@ -81,7 +83,7 @@ namespace Neo.Plugins.StateService.Verification
             if (M <= signatures.Count) return false;
             if (index < 0 || verifiers.Length <= index) return false;
             if (signatures.ContainsKey(index)) return false;
-            Utility.Log(nameof(VerificationContext), LogLevel.Info, $"vote received, validator_index={index}, root_index={rootIndex}");
+            Utility.Log(nameof(VerificationContext), LogLevel.Info, $"vote received, height={rootIndex}, index={index}");
             ECPoint validator = verifiers[index];
             byte[] hash_data = StateRoot?.GetHashData();
             if (hash_data is null || !Crypto.VerifySignature(hash_data, sig, validator))

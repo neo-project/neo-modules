@@ -15,8 +15,8 @@ namespace Neo.Plugins.StateService.Verification
         public class ValidatedRootPersisted { public uint Index; }
         public class BlockPersisted { public uint Index; }
         private class Timer { public uint Index; }
-        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(7);
-        private static readonly TimeSpan Delay = TimeSpan.FromSeconds(3);
+        private static readonly uint TimeoutMilliseconds = ProtocolSettings.Default.MillisecondsPerBlock;
+        private static readonly uint DelayMilliseconds = 3000;
         private readonly NeoSystem core;
         private const int MaxCachedVerificationProcessCount = 10;
         private readonly Wallet wallet;
@@ -33,7 +33,7 @@ namespace Neo.Plugins.StateService.Verification
             var vote = context.CreateVote();
             if (vote is null) return;
             if (context.Verifiers.Length == 1) CheckVotes(context);
-            Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay vote");
+            Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay vote, height={vote.RootIndex}, retry={context.Retries}");
             Parallel.ForEach(Settings.Default.VerifierUrls, (url, state, i) =>
             {
                 try
@@ -85,7 +85,7 @@ namespace Neo.Plugins.StateService.Verification
             var p = new VerificationContext(wallet, index);
             if (p.IsValidator && contexts.TryAdd(index, p))
             {
-                p.Timer = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(Delay, Timeout, Self, new Timer
+                p.Timer = Context.System.Scheduler.ScheduleTellOnceCancelable(TimeSpan.FromMilliseconds(DelayMilliseconds), Self, new Timer
                 {
                     Index = index,
                 }, ActorRefs.NoSender);
@@ -110,6 +110,12 @@ namespace Neo.Plugins.StateService.Verification
             if (contexts.TryGetValue(index, out VerificationContext context))
             {
                 SendVote(context);
+                context.Timer.CancelIfNotNull();
+                context.Timer = Context.System.Scheduler.ScheduleTellOnceCancelable(TimeSpan.FromMilliseconds(TimeoutMilliseconds << context.Retries), Self, new Timer
+                {
+                    Index = index,
+                }, ActorRefs.NoSender);
+                context.Retries++;
             }
         }
 
