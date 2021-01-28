@@ -80,7 +80,7 @@ namespace Neo.Plugins
             CheckWallet();
             UInt160 asset_id = UInt160.Parse(_params[0].AsString());
             JObject json = new JObject();
-            json["balance"] = wallet.GetAvailable(asset_id).Value.ToString();
+            json["balance"] = wallet.GetAvailable(asset_id).ToString();
             return json;
         }
 
