@@ -32,7 +32,6 @@ namespace Neo.Plugins.StateService.Verification
         {
             var vote = context.CreateVote();
             if (vote is null) return;
-            if (context.Verifiers.Length == 1) CheckVotes(context);
             Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay vote, height={vote.RootIndex}, retry={context.Retries}");
             Parallel.ForEach(Settings.Default.VerifierUrls, (url, state, i) =>
             {
@@ -110,6 +109,7 @@ namespace Neo.Plugins.StateService.Verification
             if (contexts.TryGetValue(index, out VerificationContext context))
             {
                 SendVote(context);
+                CheckVotes(context);
                 context.Timer.CancelIfNotNull();
                 context.Timer = Context.System.Scheduler.ScheduleTellOnceCancelable(TimeSpan.FromMilliseconds(TimeoutMilliseconds << context.Retries), Self, new Timer
                 {
