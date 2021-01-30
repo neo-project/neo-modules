@@ -1,4 +1,5 @@
 using Akka.Actor;
+using Akka.Util.Internal;
 using Neo.IO;
 using Neo.Network.RPC;
 using Neo.Plugins.StateService.Storage;
@@ -6,6 +7,7 @@ using Neo.Wallets;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Neo.Plugins.StateService.Verification
@@ -33,18 +35,25 @@ namespace Neo.Plugins.StateService.Verification
             var vote = context.CreateVote();
             if (vote is null) return;
             Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay vote, height={vote.RootIndex}, retry={context.Retries}");
-            Parallel.ForEach(Settings.Default.VerifierUrls, (url, state, i) =>
+            Settings.Default.VerifierUrls.ForEach(url =>
             {
-                try
+                Task.Run(() =>
                 {
-                    var client = new RpcClient(url);
-                    client.RpcSendAsync("votestateroot", vote.RootIndex, vote.ValidatorIndex, Convert.ToBase64String(vote.Signature))
-                        .GetAwaiter().GetResult();
-                }
-                catch (Exception e)
-                {
-                    Utility.Log(nameof(VerificationService), LogLevel.Warning, $"Failed to send vote, verifier={url}, error={e.Message}");
-                }
+                    try
+                    {
+                        var http = new HttpClient
+                        {
+                            Timeout = TimeSpan.FromMilliseconds(TimeoutMilliseconds),
+                        };
+                        var client = new RpcClient(url);
+                        client.RpcSendAsync("votestateroot", vote.RootIndex, vote.ValidatorIndex, Convert.ToBase64String(vote.Signature))
+                            .GetAwaiter().GetResult();
+                    }
+                    catch (Exception e)
+                    {
+                        Utility.Log(nameof(VerificationService), LogLevel.Warning, $"Failed to send vote, verifier={url}, error={e.Message}");
+                    }
+                });
             });
         }
 
