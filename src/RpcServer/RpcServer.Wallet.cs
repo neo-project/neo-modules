@@ -169,32 +169,33 @@ namespace Neo.Plugins
 
         private void ProcessInvokeWithWallet(JObject result, Signers signers = null)
         {
-            Transaction tx = null;
-            if (wallet != null && signers != null)
+            if (wallet == null || signers == null) return;
+
+            Signer[] witnessSigners = signers.GetSigners().ToArray();
+            UInt160 sender = signers.Size > 0 ? signers.GetSigners()[0].Account : null;
+            if (witnessSigners.Length <= 0) return;
+
+            Transaction tx;
+            try
             {
-                Signer[] witnessSigners = signers.GetSigners().ToArray();
-                UInt160 sender = signers.Size > 0 ? signers.GetSigners()[0].Account : null;
-                if (witnessSigners.Count() > 0)
-                {
-                    try
-                    {
-                        tx = wallet.MakeTransaction(Convert.FromBase64String(result["script"].AsString()), sender, witnessSigners);
-                    }
-                    catch (Exception e)
-                    {
-                        result["exception"] = GetExceptionMessage(e);
-                        return;
-                    }
-                    ContractParametersContext context = new ContractParametersContext(tx);
-                    wallet.Sign(context);
-                    if (context.Completed)
-                        tx.Witnesses = context.GetWitnesses();
-                    else
-                        tx = null;
-                }
+                tx = wallet.MakeTransaction(Convert.FromBase64String(result["script"].AsString()), sender, witnessSigners);
             }
-            if (tx != null)
+            catch (Exception e)
+            {
+                result["exception"] = GetExceptionMessage(e);
+                return;
+            }
+            ContractParametersContext context = new ContractParametersContext(tx);
+            wallet.Sign(context);
+            if (context.Completed)
+            {
+                tx.Witnesses = context.GetWitnesses();
                 result["tx"] = Convert.ToBase64String(tx.ToArray());
+            }
+            else
+            {
+                result["pendingsignature"] = context.ToJson();
+            }
         }
 
         [RpcMethod]
