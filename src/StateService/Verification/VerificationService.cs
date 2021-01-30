@@ -41,11 +41,11 @@ namespace Neo.Plugins.StateService.Verification
                 {
                     try
                     {
-                        var http = new HttpClient
+                        var http_client = new HttpClient
                         {
                             Timeout = TimeSpan.FromMilliseconds(TimeoutMilliseconds),
                         };
-                        var client = new RpcClient(url);
+                        var client = new RpcClient(http_client, url);
                         client.RpcSendAsync("votestateroot", vote.RootIndex, vote.ValidatorIndex, Convert.ToBase64String(vote.Signature))
                             .GetAwaiter().GetResult();
                     }
