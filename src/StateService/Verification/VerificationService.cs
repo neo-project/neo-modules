@@ -70,8 +70,7 @@ namespace Neo.Plugins.StateService.Verification
             if (context.CheckSignatures())
             {
                 if (context.Message is null) return;
-                var state_root = context.Message.Data.AsSerializable<StateRoot>();
-                Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay state root, height={state_root.Index}, root={state_root.RootHash}");
+                Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay state root, height={context.StateRoot.Index}, root={context.StateRoot.RootHash}");
                 core.Blockchain.Tell(context.Message);
             }
         }

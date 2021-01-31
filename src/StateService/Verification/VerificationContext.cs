@@ -95,8 +95,11 @@ namespace Neo.Plugins.StateService.Verification
             return true;
         }
 
-        private void CreateExtensiblePayload()
+        public bool CheckSignatures()
         {
+            if (StateRoot is null) return false;
+            if (signatures.Count < M) return false;
+            if (StateRoot.Witness != null) return true;
             Contract contract = Contract.CreateMultiSigContract(M, verifiers);
             ContractParametersContext sc = new ContractParametersContext(StateRoot);
             for (int i = 0, j = 0; i < verifiers.Length && j < M; i++)
@@ -115,24 +118,9 @@ namespace Neo.Plugins.StateService.Verification
                 Sender = Contract.CreateSignatureRedeemScript(verifiers[MyIndex]).ToScriptHash(),
                 Data = StateRoot.ToArray(),
             };
-            try
-            {
-                sc = new ContractParametersContext(payload);
-                wallet.Sign(sc);
-            }
-            catch (InvalidOperationException)
-            {
-                return;
-            }
+            sc = new ContractParametersContext(payload);
+            wallet.Sign(sc);
             payload.Witness = sc.GetWitnesses()[0];
-        }
-
-        public bool CheckSignatures()
-        {
-            if (StateRoot is null) return false;
-            if (signatures.Count < M) return false;
-            if (StateRoot.Witness != null) return true;
-            CreateExtensiblePayload();
             return true;
         }
     }
