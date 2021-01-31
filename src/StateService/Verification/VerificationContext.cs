@@ -10,8 +10,7 @@ using Neo.Plugins.StateService.Storage;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
-using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace Neo.Plugins.StateService.Verification
 {
@@ -26,7 +25,7 @@ namespace Neo.Plugins.StateService.Verification
         private readonly uint rootIndex;
         private readonly ECPoint[] verifiers;
         private int M => verifiers.Length - (verifiers.Length - 1) / 3;
-        private readonly Dictionary<int, byte[]> signatures = new Dictionary<int, byte[]>();
+        private readonly ConcurrentDictionary<int, byte[]> signatures = new ConcurrentDictionary<int, byte[]>();
 
         public int Retries;
         public bool IsValidator => myIndex >= 0;
@@ -91,8 +90,7 @@ namespace Neo.Plugins.StateService.Verification
                 Utility.Log(nameof(VerificationContext), LogLevel.Info, "incorrect vote, invalid signature");
                 return false;
             }
-            signatures.Add(index, sig);
-            return true;
+            return signatures.TryAdd(index, sig);
         }
 
         public bool CheckSignatures()
