@@ -18,7 +18,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetBestBlockHash(JArray _params)
         {
-            return Blockchain.Singleton.CurrentBlockHash.ToString();
+            return NativeContract.Ledger.CurrentHash(Blockchain.Singleton.View).ToString();
         }
 
         [RpcMethod]
@@ -55,7 +55,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetBlockCount(JArray _params)
         {
-            return Blockchain.Singleton.Height + 1;
+            return NativeContract.Ledger.CurrentIndex(Blockchain.Singleton.View) + 1;
         }
 
         [RpcMethod]
@@ -131,7 +131,7 @@ namespace Neo.Plugins
                 return new JArray(Blockchain.Singleton.MemPool.GetVerifiedTransactions().Select(p => (JObject)p.Hash.ToString()));
 
             JObject json = new JObject();
-            json["height"] = Blockchain.Singleton.Height;
+            json["height"] = NativeContract.Ledger.CurrentIndex(Blockchain.Singleton.View);
             Blockchain.Singleton.MemPool.GetVerifiedAndUnverifiedTransactions(
                 out IEnumerable<Transaction> verifiedTransactions,
                 out IEnumerable<Transaction> unverifiedTransactions);
