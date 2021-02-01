@@ -6,9 +6,9 @@ using Neo.IO;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
-using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
+using Neo.VM;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
 using Neo.Wallets.SQLite;
@@ -80,7 +80,7 @@ namespace Neo.Plugins
             CheckWallet();
             UInt160 asset_id = UInt160.Parse(_params[0].AsString());
             JObject json = new JObject();
-            json["balance"] = wallet.GetAvailable(asset_id).Value.ToString();
+            json["balance"] = wallet.GetAvailable(asset_id).ToString();
             return json;
         }
 
@@ -89,11 +89,12 @@ namespace Neo.Plugins
         {
             CheckWallet();
             BigInteger gas = BigInteger.Zero;
-            using (SnapshotView snapshot = Blockchain.Singleton.GetSnapshot())
+            using (var snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
                 foreach (UInt160 account in wallet.GetAccounts().Select(p => p.ScriptHash))
-                {
-                    gas += NativeContract.NEO.UnclaimedGas(snapshot, account, snapshot.Height + 1);
-                }
+                    gas += NativeContract.NEO.UnclaimedGas(snapshot, account, height);
+            }
             return new BigDecimal(gas, NativeContract.GAS.Decimals).ToString();
         }
 
@@ -120,7 +121,8 @@ namespace Neo.Plugins
             byte[] tx = Convert.FromBase64String(_params[0].AsString());
 
             JObject account = new JObject();
-            account["networkfee"] = (wallet ?? new DummyWallet()).CalculateNetworkFee(Blockchain.Singleton.GetSnapshot(), tx.AsSerializable<Transaction>());
+            long networkfee = (wallet ?? new DummyWallet()).CalculateNetworkFee(Blockchain.Singleton.GetSnapshot(), tx.AsSerializable<Transaction>());
+            account["networkfee"] = new BigDecimal(new BigInteger(networkfee), NativeContract.GAS.Decimals).ToString();
             return account;
         }
 
@@ -167,32 +169,33 @@ namespace Neo.Plugins
 
         private void ProcessInvokeWithWallet(JObject result, Signers signers = null)
         {
-            Transaction tx = null;
-            if (wallet != null && signers != null)
+            if (wallet == null || signers == null) return;
+
+            Signer[] witnessSigners = signers.GetSigners().ToArray();
+            UInt160 sender = signers.Size > 0 ? signers.GetSigners()[0].Account : null;
+            if (witnessSigners.Length <= 0) return;
+
+            Transaction tx;
+            try
             {
-                Signer[] witnessSigners = signers.GetSigners().ToArray();
-                UInt160 sender = signers.Size > 0 ? signers.GetSigners()[0].Account : null;
-                if (witnessSigners.Count() > 0)
-                {
-                    try
-                    {
-                        tx = wallet.MakeTransaction(Convert.FromBase64String(result["script"].AsString()), sender, witnessSigners);
-                    }
-                    catch (Exception e)
-                    {
-                        result["exception"] = GetExceptionMessage(e);
-                        return;
-                    }
-                    ContractParametersContext context = new ContractParametersContext(tx);
-                    wallet.Sign(context);
-                    if (context.Completed)
-                        tx.Witnesses = context.GetWitnesses();
-                    else
-                        tx = null;
-                }
+                tx = wallet.MakeTransaction(Convert.FromBase64String(result["script"].AsString()), sender, witnessSigners);
             }
-            if (tx != null)
+            catch (Exception e)
+            {
+                result["exception"] = GetExceptionMessage(e);
+                return;
+            }
+            ContractParametersContext context = new ContractParametersContext(tx);
+            wallet.Sign(context);
+            if (context.Completed)
+            {
+                tx.Witnesses = context.GetWitnesses();
                 result["tx"] = Convert.ToBase64String(tx.ToArray());
+            }
+            else
+            {
+                result["pendingsignature"] = context.ToJson();
+            }
         }
 
         [RpcMethod]
@@ -322,6 +325,54 @@ namespace Neo.Plugins
             if (tx.NetworkFee > settings.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
             return SignAndRelay(tx);
+        }
+
+        [RpcMethod]
+        protected virtual JObject InvokeContractVerify(JArray _params)
+        {
+            CheckWallet();
+            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
+            ContractParameter[] args = _params.Count >= 2 ? ((JArray)_params[1]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
+            Signers signers = _params.Count >= 3 ? SignersFromJson((JArray)_params[2]) : null;
+            return GetVerificationResult(script_hash, args, signers);
+        }
+
+        private JObject GetVerificationResult(UInt160 scriptHash, ContractParameter[] args, Signers signers = null)
+        {
+            var snapshot = Blockchain.Singleton.GetSnapshot();
+            var contract = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
+            if (contract is null)
+            {
+                throw new RpcException(-100, "Unknown contract");
+            }
+            var methodName = "verify";
+
+            Transaction tx = signers == null ? null : new Transaction
+            {
+                Signers = signers.GetSigners(),
+                Attributes = Array.Empty<TransactionAttribute>()
+            };
+            ContractParametersContext context = new ContractParametersContext(tx);
+            wallet.Sign(context);
+            tx.Witnesses = context.Completed ? context.GetWitnesses() : null;
+
+            using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.CreateSnapshot());
+            engine.LoadScript(new ScriptBuilder().EmitDynamicCall(scriptHash, methodName, args).ToArray(), rvcount: 1);
+
+            JObject json = new JObject();
+            json["script"] = Convert.ToBase64String(contract.Script);
+            json["state"] = engine.Execute();
+            json["gasconsumed"] = new BigDecimal(new BigInteger(engine.GasConsumed), NativeContract.GAS.Decimals).ToString();
+            json["exception"] = GetExceptionMessage(engine.FaultException);
+            try
+            {
+                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
+            }
+            catch (InvalidOperationException)
+            {
+                json["stack"] = "error: recursive reference";
+            }
+            return json;
         }
 
         private JObject SignAndRelay(Transaction tx)

@@ -1,9 +1,7 @@
-using Neo.IO.Caching;
 using Neo.IO.Data.LevelDB;
 using Neo.Persistence;
 using System.Collections.Generic;
 using LSnapshot = Neo.IO.Data.LevelDB.Snapshot;
-using LHelper = Neo.IO.Data.LevelDB.Helper;
 
 namespace Neo.Plugins.Storage
 {
@@ -27,9 +25,9 @@ namespace Neo.Plugins.Storage
             db.Write(WriteOptions.Default, batch);
         }
 
-        public void Delete(byte table, byte[] key)
+        public void Delete(byte[] key)
         {
-            batch.Delete(LHelper.CreateKey(table, key));
+            batch.Delete(key);
         }
 
         public void Dispose()
@@ -37,24 +35,24 @@ namespace Neo.Plugins.Storage
             snapshot.Dispose();
         }
 
-        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte table, byte[] prefix, SeekDirection direction = SeekDirection.Forward)
+        public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte[] prefix, SeekDirection direction = SeekDirection.Forward)
         {
-            return db.Seek(options, table, prefix, direction, (k, v) => (k[1..], v));
+            return db.Seek(options, prefix, direction, (k, v) => (k, v));
         }
 
-        public void Put(byte table, byte[] key, byte[] value)
+        public void Put(byte[] key, byte[] value)
         {
-            batch.Put(LHelper.CreateKey(table, key), value);
+            batch.Put(key, value);
         }
 
-        public bool Contains(byte table, byte[] key)
+        public bool Contains(byte[] key)
         {
-            return db.Contains(options, LHelper.CreateKey(table, key));
+            return db.Contains(options, key);
         }
 
-        public byte[] TryGet(byte table, byte[] key)
+        public byte[] TryGet(byte[] key)
         {
-            return db.Get(options, LHelper.CreateKey(table, key));
+            return db.Get(options, key);
         }
     }
 }

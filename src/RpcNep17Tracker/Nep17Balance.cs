@@ -1,41 +1,29 @@
+using Neo.IO;
 using System.IO;
 using System.Numerics;
-using Neo.IO;
 
 namespace Neo.Plugins
 {
-    public class Nep17Balance : ICloneable<Nep17Balance>, ISerializable
+    public class Nep17Balance : ISerializable
     {
-        public BigInteger Balance;
+        public BigDecimal Balance;
         public uint LastUpdatedBlock;
 
-        int ISerializable.Size => Balance.ToByteArray().GetVarSize() + sizeof(uint);
+        int ISerializable.Size => Balance.Value.ToByteArray().GetVarSize() + sizeof(byte) + sizeof(uint);
 
         void ISerializable.Serialize(BinaryWriter writer)
         {
-            writer.WriteVarBytes(Balance.ToByteArray());
+            writer.WriteVarBytes(Balance.Value.ToByteArray());
+            writer.Write(Balance.Decimals);
             writer.Write(LastUpdatedBlock);
         }
 
         void ISerializable.Deserialize(BinaryReader reader)
         {
-            Balance = new BigInteger(reader.ReadVarBytes(512));
+            var value = new BigInteger(reader.ReadVarBytes(512));
+            var decimals = reader.ReadByte();
+            Balance = new BigDecimal(value, decimals);
             LastUpdatedBlock = reader.ReadUInt32();
-        }
-
-        Nep17Balance ICloneable<Nep17Balance>.Clone()
-        {
-            return new Nep17Balance
-            {
-                Balance = Balance,
-                LastUpdatedBlock = LastUpdatedBlock
-            };
-        }
-
-        public void FromReplica(Nep17Balance replica)
-        {
-            Balance = replica.Balance;
-            LastUpdatedBlock = replica.LastUpdatedBlock;
         }
     }
 }

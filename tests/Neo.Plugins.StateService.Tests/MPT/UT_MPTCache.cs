@@ -3,7 +3,6 @@ using Neo.Plugins.MPT;
 using Neo.IO;
 using Neo.Persistence;
 using System.Text;
-
 namespace Neo.Plugins.StateService.Tests
 {
 
@@ -17,7 +16,7 @@ namespace Neo.Plugins.StateService.Tests
         {
             var n = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
             var store = new MemoryStore();
-            store.Put(Prefix, n.Hash.ToArray(), n.ToArray());
+            store.Put(n.Hash.ToKey(), n.ToArray());
             var snapshot = store.GetSnapshot();
             var cache = new MPTCache(snapshot, Prefix);
             var resolved = cache.Resolve(n.Hash);
@@ -32,8 +31,8 @@ namespace Neo.Plugins.StateService.Tests
             var b = MPTNode.NewBranch();
             b.Children[1] = l;
             var store = new MemoryStore();
-            store.Put(Prefix, b.Hash.ToArray(), b.ToArray());
-            store.Put(Prefix, l.Hash.ToArray(), l.ToArray());
+            store.Put(b.Hash.ToKey(), b.ToArray());
+            store.Put(l.Hash.ToKey(), l.ToArray());
             var snapshot = store.GetSnapshot();
             var cache = new MPTCache(snapshot, Prefix);
             var resolved_b = cache.Resolve(b.Hash);
@@ -48,7 +47,7 @@ namespace Neo.Plugins.StateService.Tests
         {
             var e = MPTNode.NewExtension(new byte[] { 0x01 }, new MPTNode());
             var store = new MemoryStore();
-            store.Put(Prefix, e.Hash.ToArray(), e.ToArray());
+            store.Put(e.Hash.ToKey(), e.ToArray());
             var snapshot = store.GetSnapshot();
             var cache = new MPTCache(snapshot, Prefix);
             var re = cache.Resolve(e.Hash);
@@ -63,7 +62,7 @@ namespace Neo.Plugins.StateService.Tests
             var l = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
             var b = MPTNode.NewBranch();
             var store = new MemoryStore();
-            store.Put(Prefix, b.Hash.ToArray(), b.ToArray());
+            store.Put(b.Hash.ToKey(), b.ToArray());
             var snapshot = store.GetSnapshot();
             var cache = new MPTCache(snapshot, Prefix);
             var resolved_b = cache.Resolve(b.Hash);
@@ -87,7 +86,7 @@ namespace Neo.Plugins.StateService.Tests
         {
             var e = MPTNode.NewExtension(new byte[] { 0x01 }, new MPTNode());
             var store = new MemoryStore();
-            store.Put(Prefix, e.Hash.ToArray(), e.ToArray());
+            store.Put(e.Hash.ToKey(), e.ToArray());
             var snapshot = store.GetSnapshot();
             var cache = new MPTCache(snapshot, Prefix);
             var re = cache.Resolve(e.Hash);
@@ -107,7 +106,7 @@ namespace Neo.Plugins.StateService.Tests
         {
             var l = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
             var store = new MemoryStore();
-            store.Put(Prefix, l.Hash.ToArray(), l.ToArray());
+            store.Put(l.Hash.ToKey(), l.ToArray());
             var snapshot = store.GetSnapshot();
             var cache = new MPTCache(snapshot, Prefix);
             var rl = cache.Resolve(l.Hash);

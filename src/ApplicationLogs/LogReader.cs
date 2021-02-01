@@ -2,6 +2,7 @@ using Neo.IO;
 using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Ledger;
+using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
@@ -9,7 +10,7 @@ using Neo.VM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Numerics;
 using static System.IO.Path;
 
 namespace Neo.Plugins
@@ -67,7 +68,7 @@ namespace Neo.Plugins
             trigger["trigger"] = appExec.Trigger;
             trigger["vmstate"] = appExec.VMState;
             trigger["exception"] = GetExceptionMessage(appExec.Exception);
-            trigger["gasconsumed"] = new BigDecimal(appExec.GasConsumed, NativeContract.GAS.Decimals).ToString();
+            trigger["gasconsumed"] = new BigDecimal(new BigInteger(appExec.GasConsumed), NativeContract.GAS.Decimals).ToString();
             try
             {
                 trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
@@ -96,21 +97,21 @@ namespace Neo.Plugins
             return txJson;
         }
 
-        public static JObject BlockLogToJson(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        public static JObject BlockLogToJson(Block block, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
-            var blocks = applicationExecutedList.Where(p => p.Transaction == null);
-            if (blocks.Count() > 0)
+            var blocks = applicationExecutedList.Where(p => p.Transaction is null).ToArray();
+            if (blocks.Length > 0)
             {
                 var blockJson = new JObject();
-                var blockHash = snapshot.PersistingBlock.Hash.ToArray();
-                blockJson["blockhash"] = snapshot.PersistingBlock.Hash.ToString();
+                var blockHash = block.Hash.ToArray();
+                blockJson["blockhash"] = block.Hash.ToString();
                 var triggerList = new List<JObject>();
                 foreach (var appExec in blocks)
                 {
                     JObject trigger = new JObject();
                     trigger["trigger"] = appExec.Trigger;
                     trigger["vmstate"] = appExec.VMState;
-                    trigger["gasconsumed"] = new BigDecimal(appExec.GasConsumed, NativeContract.GAS.Decimals).ToString();
+                    trigger["gasconsumed"] = new BigDecimal(new BigInteger(appExec.GasConsumed), NativeContract.GAS.Decimals).ToString();
                     try
                     {
                         trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
@@ -143,7 +144,7 @@ namespace Neo.Plugins
             return null;
         }
 
-        public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             WriteBatch writeBatch = new WriteBatch();
 
@@ -155,33 +156,17 @@ namespace Neo.Plugins
             }
 
             //processing log for block
-            var blockJson = BlockLogToJson(snapshot, applicationExecutedList);
+            var blockJson = BlockLogToJson(block, applicationExecutedList);
             if (blockJson != null)
             {
-                writeBatch.Put(snapshot.PersistingBlock.Hash.ToArray(), Neo.Utility.StrictUTF8.GetBytes(blockJson.ToString()));
+                writeBatch.Put(block.Hash.ToArray(), Neo.Utility.StrictUTF8.GetBytes(blockJson.ToString()));
             }
             db.Write(WriteOptions.Default, writeBatch);
         }
 
-        public void OnCommit(StoreView snapshot)
-        {
-        }
-
-        public bool ShouldThrowExceptionFromCommit(Exception ex)
-        {
-            return false;
-        }
-
         static string GetExceptionMessage(Exception exception)
         {
-            if (exception == null) return null;
-
-            if (exception.InnerException != null)
-            {
-                return GetExceptionMessage(exception.InnerException);
-            }
-
-            return exception.Message;
+            return exception?.GetBaseException().Message;
         }
     }
 }

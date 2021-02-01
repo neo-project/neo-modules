@@ -203,9 +203,18 @@ namespace Neo.Network.RPC
                 Id = (int)json["id"].AsNumber(),
                 UpdateCounter = (ushort)json["updatecounter"].AsNumber(),
                 Hash = UInt160.Parse(json["hash"].AsString()),
-                Script = Convert.FromBase64String(json["script"].AsString()),
+                Nef = RpcNefFile.FromJson(json["nef"]),
                 Manifest = ContractManifest.FromJson(json["manifest"])
             };
+        }
+
+        /// <summary>
+        /// Get all native contracts.
+        /// </summary>
+        public async Task<RpcNativeContract[]> GetNativeContractsAsync()
+        {
+            var result = await RpcSendAsync(GetRpcName()).ConfigureAwait(false);
+            return ((JArray)result).Select(p => RpcNativeContract.FromJson(p)).ToArray();
         }
 
         /// <summary>

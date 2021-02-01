@@ -1,6 +1,5 @@
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
-using Neo.SmartContract.Native;
 using System;
 using System.Threading.Tasks;
 
@@ -21,7 +20,7 @@ namespace Neo.Network.RPC
         /// </summary>
         /// <param name="rpcClient">the RPC client to call NEO RPC API</param>
         /// <param name="magic">
-        /// the network Magic value to use when signing transactions. 
+        /// the network Magic value to use when signing transactions.
         /// Defaults to ProtocolSettings.Default.Magic if not specified.
         /// </param>
         public TransactionManagerFactory(RpcClient rpcClient, uint? magic = null)
@@ -48,7 +47,7 @@ namespace Neo.Network.RPC
                 Script = script,
                 Signers = signers ?? Array.Empty<Signer>(),
                 ValidUntilBlock = blockCount - 1 + Transaction.MaxValidUntilBlockIncrement,
-                SystemFee = (long)BigDecimal.Parse(invokeResult.GasConsumed.ToString(), NativeContract.GAS.Decimals).Value,
+                SystemFee = invokeResult.GasConsumed,
                 Attributes = attributes ?? Array.Empty<TransactionAttribute>(),
             };
 

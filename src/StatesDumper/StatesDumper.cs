@@ -1,9 +1,10 @@
 using Neo.ConsoleService;
 using Neo.IO;
-using Neo.IO.Caching;
 using Neo.IO.Json;
 using Neo.Ledger;
+using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.SmartContract.Native;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -45,24 +46,24 @@ namespace Neo.Plugins
         private void OnDumpStorage(UInt160 key = null)
         {
             Dump(key != null
-                ? Blockchain.Singleton.View.Storages.Find(key.ToArray())
-                : Blockchain.Singleton.View.Storages.Find());
+                ? Blockchain.Singleton.View.Find(key.ToArray())
+                : Blockchain.Singleton.View.Find());
         }
 
-        public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
                 OnPersistStorage(snapshot);
         }
 
-        private void OnPersistStorage(StoreView snapshot)
+        private void OnPersistStorage(DataCache snapshot)
         {
-            uint blockIndex = snapshot.Height;
+            uint blockIndex = NativeContract.Ledger.CurrentIndex(snapshot);
             if (blockIndex >= Settings.Default.HeightToBegin)
             {
                 JArray array = new JArray();
 
-                foreach (DataCache<StorageKey, StorageItem>.Trackable trackable in snapshot.Storages.GetChangeSet())
+                foreach (var trackable in snapshot.GetChangeSet())
                 {
                     JObject state = new JObject();
 
@@ -96,15 +97,15 @@ namespace Neo.Plugins
             }
         }
 
-        public void OnCommit(StoreView snapshot)
+        void IPersistencePlugin.OnCommit(Block block, DataCache snapshot)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
                 OnCommitStorage(snapshot);
         }
 
-        public void OnCommitStorage(StoreView snapshot)
+        public void OnCommitStorage(DataCache snapshot)
         {
-            uint blockIndex = snapshot.Height;
+            uint blockIndex = NativeContract.Ledger.CurrentIndex(snapshot);
             if (bs_cache.Count > 0)
             {
                 if ((blockIndex % Settings.Default.BlockCacheSize == 0) || (Settings.Default.HeightToStartRealTimeSyncing != -1 && blockIndex >= Settings.Default.HeightToStartRealTimeSyncing))
@@ -119,7 +120,7 @@ namespace Neo.Plugins
             }
         }
 
-        public bool ShouldThrowExceptionFromCommit(Exception ex)
+        bool IPersistencePlugin.ShouldThrowExceptionFromCommit(Exception ex)
         {
             Console.WriteLine($"Error writing States with StatesDumper.{Environment.NewLine}{ex}");
             return true;
