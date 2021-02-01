@@ -78,15 +78,13 @@ namespace Neo.Plugins.StateService.Verification
         {
             if (MaxCachedVerificationProcessCount <= contexts.Count)
             {
-                ReadOnlySpan<uint> indexes = contexts.Keys.OrderBy(i => i).ToArray();
-                while (MaxCachedVerificationProcessCount <= indexes.Length)
+                contexts.Keys.OrderBy(p => p).Take(contexts.Count - MaxCachedVerificationProcessCount + 1).ForEach(p =>
                 {
-                    if (contexts.TryRemove(indexes[0], out var value))
+                    if (contexts.TryRemove(p, out var value))
                     {
                         value.Timer.CancelIfNotNull();
-                        indexes = indexes[1..];
                     }
-                }
+                });
             }
             var p = new VerificationContext(wallet, index);
             if (p.IsValidator && contexts.TryAdd(index, p))
