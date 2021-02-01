@@ -30,7 +30,7 @@ namespace Neo.Plugins.Storage.Tests
         [TestMethod]
         public void TestRocksDb()
         {
-            using var plugin = new RocksDBStore();
+            using var plugin = new RocksDBStorageProvider();
             TestPersistenceDelete(plugin.GetStore(path_rocksdb));
             // Test all with the same store
 
