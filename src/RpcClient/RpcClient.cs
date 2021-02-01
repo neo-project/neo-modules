@@ -5,6 +5,7 @@ using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
+using Neo.SmartContract.Native;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -264,7 +265,7 @@ namespace Neo.Network.RPC
         {
             var json = await RpcSendAsync(GetRpcName(), Convert.ToBase64String(tx.ToArray()))
                 .ConfigureAwait(false);
-            return (long)json["networkfee"].AsNumber();
+            return (long)BigDecimal.Parse(json["networkfee"].AsString(), NativeContract.GAS.Decimals).Value;
         }
 
         /// <summary>
