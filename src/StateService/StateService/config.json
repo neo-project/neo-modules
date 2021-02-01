@@ -2,11 +2,7 @@
   "PluginConfiguration": {
     "Path": "Data_MPT_{0}",
     "FullState": false,
-    "VerifierUrls": [
-      "http://state1.ngd.network:10332",
-      "http://state2.ngd.network:10332",
-      "http://state3.ngd.network:10332",
-      "http://state4.ngd.network:10332"
-    ]
+    "VerifierUrls": []
   }
 }
+
