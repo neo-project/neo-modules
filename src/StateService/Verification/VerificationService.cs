@@ -2,7 +2,6 @@ using Akka.Actor;
 using Akka.Util.Internal;
 using Neo.IO;
 using Neo.Network.RPC;
-using Neo.Plugins.StateService.Storage;
 using Neo.Wallets;
 using System;
 using System.Collections.Concurrent;
@@ -79,14 +78,13 @@ namespace Neo.Plugins.StateService.Verification
         {
             if (MaxCachedVerificationProcessCount <= contexts.Count)
             {
-                var indexes = contexts.Keys.OrderBy(i => i).ToList();
-                while (MaxCachedVerificationProcessCount <= indexes.Count)
+                ReadOnlySpan<uint> indexes = contexts.Keys.OrderBy(i => i).ToArray();
+                while (MaxCachedVerificationProcessCount <= indexes.Length)
                 {
-                    var i = indexes.First();
-                    if (contexts.TryRemove(i, out var value))
+                    if (contexts.TryRemove(indexes[0], out var value))
                     {
                         value.Timer.CancelIfNotNull();
-                        indexes.Remove(i);
+                        indexes = indexes[1..];
                     }
                 }
             }
