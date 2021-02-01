@@ -48,7 +48,7 @@ namespace Neo.Network.RPC.Tests
 
             // calculatenetworkfee
             var networkfee = new JObject();
-            networkfee["networkfee"] = 100000000;
+            networkfee["networkfee"] = 1;
             mockRpc.Setup(p => p.RpcSendAsync("calculatenetworkfee", It.Is<JObject[]>(u => true)))
                 .ReturnsAsync(networkfee)
                 .Verifiable();
@@ -81,7 +81,7 @@ namespace Neo.Network.RPC.Tests
 
             // calculatenetworkfee
             var networkfee = new JObject();
-            networkfee["networkfee"] = 100000000;
+            networkfee["networkfee"] = 1;
             mockRpc.Setup(p => p.RpcSendAsync("calculatenetworkfee", It.Is<JObject[]>(u => true)))
                 .ReturnsAsync(networkfee)
                 .Verifiable();
