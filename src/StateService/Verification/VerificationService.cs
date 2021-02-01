@@ -79,13 +79,14 @@ namespace Neo.Plugins.StateService.Verification
         {
             if (MaxCachedVerificationProcessCount <= contexts.Count)
             {
-                var indexes = contexts.Keys.OrderBy(i => i).ToArray();
-                while (MaxCachedVerificationProcessCount <= indexes.Length)
+                var indexes = contexts.Keys.OrderBy(i => i).ToList();
+                while (MaxCachedVerificationProcessCount <= indexes.Count)
                 {
-                    if (contexts.TryRemove(indexes[0], out var value))
+                    var i = indexes.First();
+                    if (contexts.TryRemove(i, out var value))
                     {
                         value.Timer.CancelIfNotNull();
-                        indexes = indexes[..1];
+                        indexes.Remove(i);
                     }
                 }
             }
