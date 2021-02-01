@@ -10,7 +10,7 @@ using Neo.SmartContract.Native;
 using System;
 using System.IO;
 
-namespace Neo.Plugins.StateService.Storage
+namespace Neo.Plugins.StateService.Network
 {
     public class StateRoot : IVerifiable, ISerializable
     {

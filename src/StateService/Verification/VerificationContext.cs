@@ -6,10 +6,12 @@ using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.Plugins.StateService.Network;
 using Neo.Plugins.StateService.Storage;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
+using System;
 using System.Collections.Concurrent;
 
 namespace Neo.Plugins.StateService.Verification
@@ -30,6 +32,7 @@ namespace Neo.Plugins.StateService.Verification
         public int Retries;
         public bool IsValidator => myIndex >= 0;
         public int MyIndex => myIndex;
+        public uint RootIndex => rootIndex;
         public ECPoint[] Verifiers => verifiers;
         public ICancelable Timer;
         public StateRoot StateRoot
@@ -66,7 +69,7 @@ namespace Neo.Plugins.StateService.Verification
             }
         }
 
-        public Vote CreateVote()
+        public ExtensiblePayload CreateVoteMessage()
         {
             if (StateRoot is null) return null;
             if (!signatures.TryGetValue(myIndex, out byte[] sig))
@@ -74,7 +77,21 @@ namespace Neo.Plugins.StateService.Verification
                 sig = StateRoot.Sign(keyPair);
                 signatures[myIndex] = sig;
             }
-            return new Vote(rootIndex, myIndex, sig);
+            var vote = new Vote(rootIndex, myIndex, sig);
+
+            var payload = new ExtensiblePayload
+            {
+                Category = StatePlugin.StatePayloadCategory,
+                ValidBlockStart = StateRoot.Index,
+                ValidBlockEnd = StateRoot.Index + VerificationService.MaxCachedVerificationProcessCount,
+                Sender = Contract.CreateSignatureRedeemScript(verifiers[MyIndex]).ToScriptHash(),
+                Data = StateMessage.CreateVoteMessage(vote).ToArray(),
+            };
+
+            var sc = new ContractParametersContext(payload);
+            wallet.Sign(sc);
+            payload.Witness = sc.GetWitnesses()[0];
+            return payload;
         }
 
         public bool AddSignature(int index, byte[] sig)
@@ -114,7 +131,7 @@ namespace Neo.Plugins.StateService.Verification
                 ValidBlockStart = StateRoot.Index,
                 ValidBlockEnd = StateRoot.Index + MaxValidUntilBlockIncrement,
                 Sender = Contract.CreateSignatureRedeemScript(verifiers[MyIndex]).ToScriptHash(),
-                Data = StateRoot.ToArray(),
+                Data = StateMessage.CreateStateRootMessage(StateRoot).ToArray(),
             };
             sc = new ContractParametersContext(payload);
             wallet.Sign(sc);

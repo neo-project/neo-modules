@@ -1,8 +1,12 @@
 {
   "PluginConfiguration": {
     "Path": "Data_MPT_{0}",
+<<<<<<< HEAD
     "FullState": false,
     "VerifierUrls": []
+=======
+    "FullState": false
+>>>>>>> 8e1d218... p2p
   }
 }
 
