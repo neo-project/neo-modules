@@ -297,7 +297,7 @@ namespace Neo.Consensus
         /// <summary>
         /// Return the expected block size
         /// </summary>
-        internal int GetExpectedBlockSize()
+        public int GetExpectedBlockSize()
         {
             return GetExpectedBlockSizeWithoutTransactions(Transactions.Count) + // Base size
                 Transactions.Values.Sum(u => u.Size);   // Sum Txs
@@ -306,7 +306,7 @@ namespace Neo.Consensus
         /// <summary>
         /// Return the expected block system fee
         /// </summary>
-        internal long GetExpectedBlockSystemFee()
+        public long GetExpectedBlockSystemFee()
         {
             return Transactions.Values.Sum(u => u.SystemFee);  // Sum Txs
         }
