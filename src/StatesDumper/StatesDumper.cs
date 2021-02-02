@@ -31,8 +31,8 @@ namespace Neo.Plugins
             JArray array = new JArray(states.Select(p =>
             {
                 JObject state = new JObject();
-                state["key"] = p.Key.ToArray().ToHexString();
-                state["value"] = p.Value.ToArray().ToHexString();
+                state["key"] = Convert.ToBase64String(p.Key.ToArray());
+                state["value"] = Convert.ToBase64String(p.Value.ToArray());
                 return state;
             }));
             File.WriteAllText(path, array.ToString());
@@ -72,18 +72,18 @@ namespace Neo.Plugins
 
                         case TrackState.Added:
                             state["state"] = "Added";
-                            state["key"] = trackable.Key.ToArray().ToHexString();
-                            state["value"] = trackable.Item.ToArray().ToHexString();
+                            state["key"] = Convert.ToBase64String(trackable.Key.ToArray());
+                            state["value"] = Convert.ToBase64String(trackable.Item.ToArray());
                             // Here we have a new trackable.Key and trackable.Item
                             break;
                         case TrackState.Changed:
                             state["state"] = "Changed";
-                            state["key"] = trackable.Key.ToArray().ToHexString();
-                            state["value"] = trackable.Item.ToArray().ToHexString();
+                            state["key"] = Convert.ToBase64String(trackable.Key.ToArray());
+                            state["value"] = Convert.ToBase64String(trackable.Item.ToArray());
                             break;
                         case TrackState.Deleted:
                             state["state"] = "Deleted";
-                            state["key"] = trackable.Key.ToArray().ToHexString();
+                            state["key"] = Convert.ToBase64String(trackable.Key.ToArray());
                             break;
                     }
                     array.Add(state);
@@ -112,7 +112,7 @@ namespace Neo.Plugins
                 {
                     string dirPath = "./Storage";
                     Directory.CreateDirectory(dirPath);
-                    string path = $"{HandlePaths(dirPath, blockIndex)}/dump-block-{blockIndex.ToString()}.json";
+                    string path = $"{HandlePaths(dirPath, blockIndex)}/dump-block-{blockIndex}.json";
 
                     File.WriteAllText(path, bs_cache.ToString());
                     bs_cache.Clear();
