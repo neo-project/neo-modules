@@ -22,7 +22,7 @@ namespace Neo.Plugins.Storage
 
         public ISnapshot GetSnapshot()
         {
-            return new Snapshot(this, db);
+            return new Snapshot(db);
         }
 
         public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte[] keyOrPrefix, SeekDirection direction = SeekDirection.Forward)

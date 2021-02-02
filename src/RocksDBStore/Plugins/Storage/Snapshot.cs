@@ -7,15 +7,13 @@ namespace Neo.Plugins.Storage
 {
     internal class Snapshot : ISnapshot
     {
-        private readonly Store store;
         private readonly RocksDb db;
         private readonly RocksDbSharp.Snapshot snapshot;
         private readonly WriteBatch batch;
         private readonly ReadOptions options;
 
-        public Snapshot(Store store, RocksDb db)
+        public Snapshot(RocksDb db)
         {
-            this.store = store;
             this.db = db;
             this.snapshot = db.CreateSnapshot();
             this.batch = new WriteBatch();
