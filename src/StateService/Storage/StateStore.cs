@@ -4,6 +4,7 @@ using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.Plugins.MPT;
+using Neo.Plugins.StateService.Verification;
 using Neo.SmartContract;
 using System;
 using System.Collections.Generic;
@@ -14,13 +15,14 @@ namespace Neo.Plugins.StateService.Storage
     class StateStore : UntypedActor
     {
         private readonly NeoSystem core;
+        private readonly StatePlugin system;
         private readonly IStore store;
         private const int MaxCacheCount = 100;
         private readonly Dictionary<uint, StateRoot> cache = new Dictionary<uint, StateRoot>();
         private StateSnapshot currentSnapshot;
         public UInt256 CurrentLocalRootHash => currentSnapshot.CurrentLocalRootHash();
-        public uint LocalRootIndex => currentSnapshot.CurrentLocalRootIndex();
-        public uint ValidatedRootIndex => currentSnapshot.CurrentValidatedRootIndex();
+        public uint? LocalRootIndex => currentSnapshot.CurrentLocalRootIndex();
+        public uint? ValidatedRootIndex => currentSnapshot.CurrentValidatedRootIndex();
 
         private static StateStore singleton;
         public static StateStore Singleton
@@ -32,10 +34,11 @@ namespace Neo.Plugins.StateService.Storage
             }
         }
 
-        public StateStore(NeoSystem core, string path)
+        public StateStore(NeoSystem core, StatePlugin system, string path)
         {
             if (singleton != null) throw new InvalidOperationException(nameof(StateStore));
             this.core = core;
+            this.system = system;
             this.store = core.LoadStore(path);
             singleton = this;
             core.ActorSystem.EventStream.Subscribe(Self, typeof(Blockchain.RelayResult));
@@ -63,6 +66,9 @@ namespace Neo.Plugins.StateService.Storage
         {
             switch (message)
             {
+                case StateRoot state_root:
+                    OnNewStateRoot(state_root);
+                    break;
                 case Blockchain.RelayResult rr:
                     if (rr.Result == VerifyResult.Succeed && rr.Inventory is ExtensiblePayload payload && payload.Category == StatePlugin.StatePayloadCategory)
                         OnStatePayload(payload);
@@ -91,7 +97,8 @@ namespace Neo.Plugins.StateService.Storage
         private bool OnNewStateRoot(StateRoot state_root)
         {
             if (state_root?.Witness is null) return false;
-            if (state_root.Index <= ValidatedRootIndex) return false;
+            if (ValidatedRootIndex != null && state_root.Index <= ValidatedRootIndex) return false;
+            if (LocalRootIndex is null) throw new InvalidOperationException(nameof(StateStore) + " could not get local root index");
             if (LocalRootIndex < state_root.Index && state_root.Index < LocalRootIndex + MaxCacheCount)
             {
                 cache.Add(state_root.Index, state_root);
@@ -106,7 +113,7 @@ namespace Neo.Plugins.StateService.Storage
             state_snapshot.AddValidatedStateRoot(state_root);
             state_snapshot.Commit();
             UpdateCurrentSnapshot();
-            //Tell validation service
+            system.Verifier?.Tell(new VerificationService.ValidatedRootPersisted { Index = state_root.Index });
             return true;
         }
 
@@ -138,6 +145,7 @@ namespace Neo.Plugins.StateService.Storage
             state_snapshot.AddLocalStateRoot(state_root);
             state_snapshot.Commit();
             UpdateCurrentSnapshot();
+            system.Verifier?.Tell(new VerificationService.BlockPersisted { Index = height });
             CheckValidatedStateRoot(height);
         }
 
@@ -146,7 +154,7 @@ namespace Neo.Plugins.StateService.Storage
             if (cache.TryGetValue(index, out StateRoot state_root))
             {
                 cache.Remove(index);
-                OnNewStateRoot(state_root);
+                Self.Tell(state_root);
             }
         }
 
@@ -160,9 +168,9 @@ namespace Neo.Plugins.StateService.Storage
             base.PostStop();
         }
 
-        public static Props Props(NeoSystem core, string path)
+        public static Props Props(NeoSystem core, StatePlugin system, string path)
         {
-            return Akka.Actor.Props.Create(() => new StateStore(core, path));
+            return Akka.Actor.Props.Create(() => new StateStore(core, system, path));
         }
     }
 }

@@ -168,7 +168,7 @@ namespace Neo.Plugins
             return new JObject();
         }
 
-        private static async Task SendContentAsync(string url, string content)
+        private static async Task SendContentAsync(Uri url, string content)
         {
             try
             {
