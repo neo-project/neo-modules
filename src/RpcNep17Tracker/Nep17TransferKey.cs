@@ -74,10 +74,8 @@ namespace Neo.Plugins
         public void Serialize(BinaryWriter writer)
         {
             writer.Write(UserScriptHash);
-            if (BitConverter.IsLittleEndian)
-                writer.Write(BinaryPrimitives.ReverseEndianness(TimestampMS));
-            else
-                writer.Write(TimestampMS);
+            if (BitConverter.IsLittleEndian) writer.Write(BinaryPrimitives.ReverseEndianness(TimestampMS));
+            else writer.Write(TimestampMS);
             writer.Write(AssetScriptHash);
             writer.Write(BlockXferNotificationIndex);
         }
