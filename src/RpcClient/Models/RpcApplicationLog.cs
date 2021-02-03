@@ -1,9 +1,7 @@
 using Neo.IO.Json;
 using Neo.SmartContract;
-using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.VM.Types;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -69,7 +67,7 @@ namespace Neo.Network.RPC.Models
             {
                 Trigger = json["trigger"].TryGetEnum<TriggerType>(),
                 VMState = json["vmstate"].TryGetEnum<VMState>(),
-                GasConsumed = (long)BigInteger.Parse(json["gasconsumed"].AsString()),
+                GasConsumed = (long)json["gasconsumed"].AsNumber(),
                 Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToList(),
                 Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson(p)).ToList()
             };

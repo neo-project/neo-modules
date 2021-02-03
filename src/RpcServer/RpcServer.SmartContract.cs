@@ -14,7 +14,6 @@ using Neo.Wallets;
 using System;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 
 namespace Neo.Plugins
 {

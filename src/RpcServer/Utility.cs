@@ -2,7 +2,6 @@ using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract.Native;
 using System.Linq;
-using System.Numerics;
 
 namespace Neo.Plugins
 {
