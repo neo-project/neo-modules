@@ -185,7 +185,6 @@ namespace Neo.Plugins
                 byte[] script;
                 using (ScriptBuilder sb = new ScriptBuilder())
                 {
-                    sb.EmitDynamicCall(nep17BalancePair.Key.AssetScriptHash, "decimals");
                     sb.EmitDynamicCall(nep17BalancePair.Key.AssetScriptHash, "balanceOf", nep17BalancePair.Key.UserScriptHash.ToArray());
                     script = sb.ToArray();
                 }
@@ -194,12 +193,10 @@ namespace Neo.Plugins
                 {
                     if (engine.State.HasFlag(VMState.FAULT)) continue;
                     if (engine.ResultStack.Count <= 0) continue;
-                    var value = engine.ResultStack.Pop().GetInteger();
-                    var decimals = (byte)engine.ResultStack.Pop().GetInteger();
-                    nep17BalancePair.Value.Balance = new BigDecimal(value, decimals);
+                    nep17BalancePair.Value.Balance = engine.ResultStack.Pop().GetInteger();
                 }
                 nep17BalancePair.Value.LastUpdatedBlock = block.Index;
-                if (nep17BalancePair.Value.Balance.Value == 0)
+                if (nep17BalancePair.Value.Balance.IsZero)
                 {
                     Delete(Nep17BalancePrefix, nep17BalancePair.Key);
                     continue;
@@ -308,7 +305,7 @@ namespace Neo.Plugins
                     balances.Add(new JObject
                     {
                         ["assethash"] = key.AssetScriptHash.ToString(),
-                        ["amount"] = value.Balance.Value.ToString(),
+                        ["amount"] = value.Balance.ToString(),
                         ["lastupdatedblock"] = value.LastUpdatedBlock
                     });
                 }
