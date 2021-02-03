@@ -57,7 +57,7 @@ namespace Neo.Network.RPC.Models
             JObject json = new JObject();
             json["trigger"] = Trigger;
             json["vmstate"] = VMState;
-            json["gasconsumed"] = new BigInteger(GasConsumed).ToString();
+            json["gasconsumed"] = GasConsumed.ToString();
             json["stack"] = Stack.Select(q => q.ToJson()).ToArray();
             json["notifications"] = Notifications.Select(q => q.ToJson()).ToArray();
             return json;
