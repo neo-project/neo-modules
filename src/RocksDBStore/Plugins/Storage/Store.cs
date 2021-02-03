@@ -22,7 +22,7 @@ namespace Neo.Plugins.Storage
 
         public ISnapshot GetSnapshot()
         {
-            return new Snapshot(this, db);
+            return new Snapshot(db);
         }
 
         public IEnumerable<(byte[] Key, byte[] Value)> Seek(byte[] keyOrPrefix, SeekDirection direction = SeekDirection.Forward)
@@ -40,7 +40,7 @@ namespace Neo.Plugins.Storage
 
         public bool Contains(byte[] key)
         {
-            return db.Get(key) != null;
+            return db.Get(key, Array.Empty<byte>(), 0, 0) >= 0;
         }
 
         public byte[] TryGet(byte[] key)
