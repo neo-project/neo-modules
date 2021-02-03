@@ -55,7 +55,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetBlockHeaderCount(JArray _params)
         {
-            return Blockchain.Singleton.HeaderCache.Last?.Index + 1 ?? NativeContract.Ledger.CurrentIndex(Blockchain.Singleton.View) + 1;
+            return (Blockchain.Singleton.HeaderCache.Last?.Index ?? NativeContract.Ledger.CurrentIndex(Blockchain.Singleton.View)) + 1;
         }
 
         [RpcMethod]
