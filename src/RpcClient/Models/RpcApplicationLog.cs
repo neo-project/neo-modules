@@ -67,7 +67,7 @@ namespace Neo.Network.RPC.Models
             {
                 Trigger = json["trigger"].TryGetEnum<TriggerType>(),
                 VMState = json["vmstate"].TryGetEnum<VMState>(),
-                GasConsumed = (long)json["gasconsumed"].AsNumber(),
+                GasConsumed = long.Parse(json["gasconsumed"].AsString()),
                 Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToList(),
                 Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson(p)).ToList()
             };
