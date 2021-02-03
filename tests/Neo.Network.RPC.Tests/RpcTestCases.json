@@ -2622,7 +2622,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "unclaimed": "7358.700074",
+        "unclaimed": "735870007400",
         "address": "NPvKVTGZapmFWABLsyvfreuqn73jCjJtN1"
       }
     }
@@ -2811,7 +2811,7 @@
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
-      "result": "7358.700074"
+      "result": "735870007400"
     }
   },
   {
