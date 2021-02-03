@@ -48,7 +48,7 @@ namespace Neo.Network.RPC.Models
             {
                 Script = json["script"].AsString(),
                 State = json["state"].TryGetEnum<VMState>(),
-                GasConsumed = (long)json["gasconsumed"].AsNumber(),
+                GasConsumed = long.Parse(json["gasconsumed"].AsString()),
             };
             if (json.ContainsProperty("exception"))
                 invokeScriptResult.Exception = json["exception"]?.AsString();

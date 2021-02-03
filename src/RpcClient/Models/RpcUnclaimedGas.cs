@@ -21,7 +21,7 @@ namespace Neo.Network.RPC.Models
         {
             return new RpcUnclaimedGas
             {
-                Unclaimed = (BigInteger)json["unclaimed"].AsNumber(),
+                Unclaimed = BigInteger.Parse(json["unclaimed"].AsString()),
                 Address = json["address"].AsString()
             };
         }
