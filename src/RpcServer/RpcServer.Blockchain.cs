@@ -51,7 +51,13 @@ namespace Neo.Plugins
             }
             return Convert.ToBase64String(block.ToArray());
         }
-
+        
+        [RpcMethod]
+        protected virtual JObject GetBlockHeaderCount(JArray _params)
+        {
+            return Blockchain.Singleton.HeaderCache.Last?.Index + 1 ?? NativeContract.Ledger.CurrentIndex(Blockchain.Singleton.View) + 1;
+        }
+        
         [RpcMethod]
         protected virtual JObject GetBlockCount(JArray _params)
         {
