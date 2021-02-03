@@ -26,7 +26,7 @@ namespace Neo.Network.RPC.Models
             JObject json = new JObject();
             json["script"] = Script;
             json["state"] = State;
-            json["gasconsumed"] = new BigInteger(GasConsumed).ToString();
+            json["gasconsumed"] = GasConsumed.ToString();
             if (!string.IsNullOrEmpty(Exception))
                 json["exception"] = Exception;
             try
