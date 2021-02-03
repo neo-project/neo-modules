@@ -80,7 +80,7 @@ namespace Neo.Plugins
             CheckWallet();
             UInt160 asset_id = UInt160.Parse(_params[0].AsString());
             JObject json = new JObject();
-            json["balance"] = wallet.GetAvailable(asset_id).ToString();
+            json["balance"] = wallet.GetAvailable(asset_id).Value.ToString();
             return json;
         }
 
@@ -95,7 +95,7 @@ namespace Neo.Plugins
                 foreach (UInt160 account in wallet.GetAccounts().Select(p => p.ScriptHash))
                     gas += NativeContract.NEO.UnclaimedGas(snapshot, account, height);
             }
-            return new BigDecimal(gas, NativeContract.GAS.Decimals).ToString();
+            return gas.ToString();
         }
 
         [RpcMethod]
@@ -122,7 +122,7 @@ namespace Neo.Plugins
 
             JObject account = new JObject();
             long networkfee = (wallet ?? new DummyWallet()).CalculateNetworkFee(Blockchain.Singleton.GetSnapshot(), tx.AsSerializable<Transaction>());
-            account["networkfee"] = new BigDecimal(new BigInteger(networkfee), NativeContract.GAS.Decimals).ToString();
+            account["networkfee"] = networkfee.ToString();
             return account;
         }
 
@@ -362,7 +362,7 @@ namespace Neo.Plugins
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(contract.Script);
             json["state"] = engine.Execute();
-            json["gasconsumed"] = new BigDecimal(new BigInteger(engine.GasConsumed), NativeContract.GAS.Decimals).ToString();
+            json["gasconsumed"] = engine.GasConsumed.ToString();
             json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
