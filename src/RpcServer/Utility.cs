@@ -18,8 +18,8 @@ namespace Neo.Plugins
         public static JObject TransactionToJson(Transaction tx)
         {
             JObject json = tx.ToJson();
-            json["sysfee"] = new BigDecimal(new BigInteger(tx.SystemFee), NativeContract.GAS.Decimals).ToString();
-            json["netfee"] = new BigDecimal(new BigInteger(tx.NetworkFee), NativeContract.GAS.Decimals).ToString();
+            json["sysfee"] = new BigInteger(tx.SystemFee).ToString();
+            json["netfee"] = new BigInteger(tx.NetworkFee).ToString();
             return json;
         }
 

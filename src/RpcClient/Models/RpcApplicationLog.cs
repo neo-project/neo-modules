@@ -57,7 +57,7 @@ namespace Neo.Network.RPC.Models
             JObject json = new JObject();
             json["trigger"] = Trigger;
             json["vmstate"] = VMState;
-            json["gasconsumed"] = new BigDecimal(new BigInteger(GasConsumed), NativeContract.GAS.Decimals).ToString();
+            json["gasconsumed"] = new BigInteger(GasConsumed).ToString();
             json["stack"] = Stack.Select(q => q.ToJson()).ToArray();
             json["notifications"] = Notifications.Select(q => q.ToJson()).ToArray();
             return json;
@@ -69,7 +69,7 @@ namespace Neo.Network.RPC.Models
             {
                 Trigger = json["trigger"].TryGetEnum<TriggerType>(),
                 VMState = json["vmstate"].TryGetEnum<VMState>(),
-                GasConsumed = (long)BigDecimal.Parse(json["gasconsumed"].AsString(), NativeContract.GAS.Decimals).Value,
+                GasConsumed = (long)BigInteger.Parse(json["gasconsumed"].AsString()),
                 Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToList(),
                 Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson(p)).ToList()
             };
