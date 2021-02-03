@@ -154,8 +154,8 @@ namespace Neo.Network.RPC
                 Version = byte.Parse(json["version"].AsString()),
                 Nonce = uint.Parse(json["nonce"].AsString()),
                 Signers = ((JArray)json["signers"]).Select(p => SignerFromJson(p)).ToArray(),
-                SystemFee = (long)BigDecimal.Parse(json["sysfee"].AsString(), NativeContract.GAS.Decimals).Value,
-                NetworkFee = (long)BigDecimal.Parse(json["netfee"].AsString(), NativeContract.GAS.Decimals).Value,
+                SystemFee = long.Parse(json["sysfee"].AsString()),
+                NetworkFee = long.Parse(json["netfee"].AsString()),
                 ValidUntilBlock = uint.Parse(json["validuntilblock"].AsString()),
                 Attributes = ((JArray)json["attributes"]).Select(p => TransactionAttributeFromJson(p)).ToArray(),
                 Script = Convert.FromBase64String(json["script"].AsString()),
@@ -166,8 +166,8 @@ namespace Neo.Network.RPC
         public static JObject TransactionToJson(Transaction tx)
         {
             JObject json = tx.ToJson();
-            json["sysfee"] = new BigDecimal(new BigInteger(tx.SystemFee), NativeContract.GAS.Decimals).ToString();
-            json["netfee"] = new BigDecimal(new BigInteger(tx.NetworkFee), NativeContract.GAS.Decimals).ToString();
+            json["sysfee"] = tx.SystemFee.ToString();
+            json["netfee"] = tx.NetworkFee.ToString();
             return json;
         }
 

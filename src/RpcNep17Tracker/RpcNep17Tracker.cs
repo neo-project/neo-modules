@@ -13,6 +13,7 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using static System.IO.Path;
 
 namespace Neo.Plugins
@@ -77,7 +78,7 @@ namespace Neo.Plugins
             _writeBatch.Delete(Key(prefix, key));
         }
 
-        private void RecordTransferHistory(DataCache snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigDecimal amount, UInt256 txHash, ref ushort transferIndex)
+        private void RecordTransferHistory(DataCache snapshot, UInt160 scriptHash, UInt160 from, UInt160 to, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
         {
             if (!_shouldTrackHistory) return;
 
@@ -154,20 +155,7 @@ namespace Neo.Plugins
             }
             if (scriptContainer is Transaction transaction)
             {
-                byte[] script;
-                using (ScriptBuilder sb = new ScriptBuilder())
-                {
-                    sb.EmitDynamicCall(scriptHash, "decimals");
-                    script = sb.ToArray();
-                }
-                byte decimals;
-                using (ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, gas: 100000000))
-                {
-                    if (engine.State.HasFlag(VMState.FAULT)) return;
-                    if (engine.ResultStack.Count <= 0) return;
-                    decimals = (byte)engine.ResultStack.Pop().GetInteger();
-                }
-                RecordTransferHistory(snapshot, scriptHash, from, to, new BigDecimal(amountItem.GetInteger(), decimals), transaction.Hash, ref transferIndex);
+                RecordTransferHistory(snapshot, scriptHash, from, to, amountItem.GetInteger(), transaction.Hash, ref transferIndex);
             }
         }
 
@@ -197,7 +185,6 @@ namespace Neo.Plugins
                 byte[] script;
                 using (ScriptBuilder sb = new ScriptBuilder())
                 {
-                    sb.EmitDynamicCall(nep17BalancePair.Key.AssetScriptHash, "decimals");
                     sb.EmitDynamicCall(nep17BalancePair.Key.AssetScriptHash, "balanceOf", nep17BalancePair.Key.UserScriptHash.ToArray());
                     script = sb.ToArray();
                 }
@@ -206,12 +193,10 @@ namespace Neo.Plugins
                 {
                     if (engine.State.HasFlag(VMState.FAULT)) continue;
                     if (engine.ResultStack.Count <= 0) continue;
-                    var value = engine.ResultStack.Pop().GetInteger();
-                    var decimals = (byte)engine.ResultStack.Pop().GetInteger();
-                    nep17BalancePair.Value.Balance = new BigDecimal(value, decimals);
+                    nep17BalancePair.Value.Balance = engine.ResultStack.Pop().GetInteger();
                 }
                 nep17BalancePair.Value.LastUpdatedBlock = block.Index;
-                if (nep17BalancePair.Value.Balance.Value == 0)
+                if (nep17BalancePair.Value.Balance.IsZero)
                 {
                     Delete(Nep17BalancePrefix, nep17BalancePair.Key);
                     continue;
