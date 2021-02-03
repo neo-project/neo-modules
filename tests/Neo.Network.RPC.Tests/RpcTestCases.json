@@ -182,6 +182,20 @@
     }
   },
   {
+    "Name": "getblockheadercountasync",
+    "Request": {
+      "jsonrpc": "2.0",
+      "method": "getblockheadercount",
+      "params": [],
+      "id": 1
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": 3825
+    }
+  },
+  {
     "Name": "getblockcountasync",
     "Request": {
       "jsonrpc": "2.0",
