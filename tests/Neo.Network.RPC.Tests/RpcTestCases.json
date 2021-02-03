@@ -96,8 +96,8 @@
             "version": 0,
             "nonce": 631973574,
             "sender": "NikvsLcNP1jWhrFPrfS3n4spEASgdNYTG2",
-            "sysfee": "0.0900799",
-            "netfee": "0.0124845",
+            "sysfee": "9007990",
+            "netfee": "1248450",
             "validuntilblock": 2102405,
             "signers": [
               {
@@ -157,8 +157,8 @@
             "version": 0,
             "nonce": 631973574,
             "sender": "NikvsLcNP1jWhrFPrfS3n4spEASgdNYTG2",
-            "sysfee": "0.0900799",
-            "netfee": "0.0124845",
+            "sysfee": "9007990",
+            "netfee": "1248450",
             "validuntilblock": 2102405,
             "signers": [
               {
@@ -179,6 +179,20 @@
         "confirmations": 695,
         "nextblockhash": "0xc4b986813396932a47d6823a9987ccee0148c6fca0150102f4b24ce05cfc9c6f"
       }
+    }
+  },
+  {
+    "Name": "getblockheadercountasync",
+    "Request": {
+      "jsonrpc": "2.0",
+      "method": "getblockheadercount",
+      "params": [],
+      "id": 1
+    },
+    "Response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": 3825
     }
   },
   {
@@ -2294,8 +2308,8 @@
         "version": 0,
         "nonce": 969006668,
         "sender": "NikvsLcNP1jWhrFPrfS3n4spEASgdNYTG2",
-        "sysfee": "1",
-        "netfee": "0.0127239",
+        "sysfee": "100000000",
+        "netfee": "1272390",
         "validuntilblock": 2104625,
         "signers": [
           {
@@ -2505,7 +2519,7 @@
       "result": {
         "script": "0c1426ae7c6c9861ec418468c1f0fdc4a7f2963eb89111c00c0962616c616e63654f660c143b7d3711c6f0ccf9b1dca903d1bfa1d896f1238c41627d5b52",
         "state": "HALT",
-        "gasconsumed": "0.0200757",
+        "gasconsumed": "2007570",
         "stack": [
           {
             "type": "Integer",
@@ -2530,7 +2544,7 @@
       "result": {
         "script": "EMMMBG5hbWUMFDt9NxHG8Mz5sdypA9G/odiW8SOMQWJ9W1IQwwwGc3ltYm9sDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtSEMMMCGRlY2ltYWxzDBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtSEMMMC3RvdGFsU3VwcGx5DBQ7fTcRxvDM+bHcqQPRv6HYlvEjjEFifVtS",
         "state": "HALT",
-        "gasconsumed": "0.0506156",
+        "gasconsumed": "5061560",
         "stack": [
           {
             "type": "Array",
@@ -2608,7 +2622,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "unclaimed": "7358.700074",
+        "unclaimed": "735870007400",
         "address": "NPvKVTGZapmFWABLsyvfreuqn73jCjJtN1"
       }
     }
@@ -2718,7 +2732,7 @@
       "result": {
         "script": "HxDDDAhkZWNpbWFscwwU++3+LtIiZZK2SMTal7nJzV3BpqZB7vQM2w==",
         "state": "HALT",
-        "gasconsumed": "0.0099918",
+        "gasconsumed": "999180",
         "exception": null,
         "stack": [
           {
@@ -2745,7 +2759,7 @@
       "result": {
         "script": "EBEfDAhkZWNpbWFscwwU++3+LtIiZZK2SMTal7nJzV3BpqZBYn1bUg==",
         "state": "HALT",
-        "gasconsumed": "0.0099918",
+        "gasconsumed": "999180",
         "exception": null,
         "stack": [
           {
@@ -2797,7 +2811,7 @@
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
-      "result": "7358.700074"
+      "result": "735870007400"
     }
   },
   {
@@ -2877,8 +2891,8 @@
         "version": 0,
         "nonce": 1553700339,
         "sender": "NVVwFw6XyhtRCFQ8SpUTMdPyYt4Vd9A1XQ",
-        "sysfee": "1",
-        "netfee": "0.0127239",
+        "sysfee": "100000000",
+        "netfee": "1272390",
         "validuntilblock": 2105487,
         "attributes": [],
         "cosigners": [
@@ -2928,8 +2942,8 @@
         "version": 0,
         "nonce": 34429660,
         "sender": "NUMK37TV9yYKbJr1Gufh74nZiM623eBLqX",
-        "sysfee": "1",
-        "netfee": "0.0248378",
+        "sysfee": "100000000",
+        "netfee": "2483780",
         "validuntilblock": 2105494,
         "attributes": [],
         "cosigners": [
@@ -2973,8 +2987,8 @@
         "version": 0,
         "nonce": 330056065,
         "sender": "NUMK37TV9yYKbJr1Gufh74nZiM623eBLqX",
-        "sysfee": "1",
-        "netfee": "0.0238178",
+        "sysfee": "100000000",
+        "netfee": "2381780",
         "validuntilblock": 2105500,
         "attributes": [],
         "cosigners": [
@@ -3016,7 +3030,7 @@
           {
             "trigger": "OnPersist",
             "vmstate": "HALT",
-            "gasconsumed": "0.0203126",
+            "gasconsumed": "2031260",
             "stack": [],
             "notifications": [
               {
@@ -3064,7 +3078,7 @@
           {
             "trigger": "PostPersist",
             "vmstate": "HALT",
-            "gasconsumed": "0.0203126",
+            "gasconsumed": "2031260",
             "stack": [],
             "notifications": [
               {
@@ -3110,7 +3124,7 @@
           {
             "trigger": "OnPersist",
             "vmstate": "HALT",
-            "gasconsumed": "0.0203126",
+            "gasconsumed": "2031260",
             "stack": [],
             "notifications": [
               {

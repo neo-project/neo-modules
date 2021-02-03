@@ -1,0 +1,158 @@
+using Akka.Actor;
+using Akka.Util.Internal;
+using Neo.IO;
+using Neo.Network.RPC;
+using Neo.Wallets;
+using System;
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+namespace Neo.Plugins.StateService.Verification
+{
+    public class VerificationService : UntypedActor
+    {
+        public class ValidatedRootPersisted { public uint Index; }
+        public class BlockPersisted { public uint Index; }
+        private class Timer { public uint Index; }
+        private static readonly uint TimeoutMilliseconds = ProtocolSettings.Default.MillisecondsPerBlock;
+        private static readonly uint DelayMilliseconds = 3000;
+        private readonly NeoSystem core;
+        private const int MaxCachedVerificationProcessCount = 10;
+        private readonly Wallet wallet;
+        private readonly ConcurrentDictionary<uint, VerificationContext> contexts = new ConcurrentDictionary<uint, VerificationContext>();
+
+        public VerificationService(NeoSystem core, Wallet wallet)
+        {
+            this.core = core;
+            this.wallet = wallet;
+        }
+
+        private void SendVote(VerificationContext context)
+        {
+            var vote = context.CreateVote();
+            if (vote is null) return;
+            Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay vote, height={vote.RootIndex}, retry={context.Retries}");
+            Settings.Default.VerifierUrls.ForEach(url =>
+            {
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        var http_client = new HttpClient
+                        {
+                            Timeout = TimeSpan.FromMilliseconds(TimeoutMilliseconds),
+                        };
+                        var client = new RpcClient(http_client, url);
+                        client.RpcSendAsync("votestateroot", vote.RootIndex, vote.ValidatorIndex, Convert.ToBase64String(vote.Signature))
+                            .GetAwaiter().GetResult();
+                    }
+                    catch (Exception e)
+                    {
+                        Utility.Log(nameof(VerificationService), LogLevel.Warning, $"Failed to send vote, verifier={url}, error={e.Message}");
+                    }
+                });
+            });
+        }
+
+        private void OnVoteStateRoot(Vote vote)
+        {
+            if (contexts.TryGetValue(vote.RootIndex, out VerificationContext context) && context.AddSignature(vote.ValidatorIndex, vote.Signature))
+            {
+                CheckVotes(context);
+            }
+        }
+
+        private void CheckVotes(VerificationContext context)
+        {
+            if (context.CheckSignatures())
+            {
+                if (context.Message is null) return;
+                Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay state root, height={context.StateRoot.Index}, root={context.StateRoot.RootHash}");
+                core.Blockchain.Tell(context.Message);
+            }
+        }
+
+        private void OnBlockPersisted(uint index)
+        {
+            if (MaxCachedVerificationProcessCount <= contexts.Count)
+            {
+                contexts.Keys.OrderBy(p => p).Take(contexts.Count - MaxCachedVerificationProcessCount + 1).ForEach(p =>
+                {
+                    if (contexts.TryRemove(p, out var value))
+                    {
+                        value.Timer.CancelIfNotNull();
+                    }
+                });
+            }
+            var p = new VerificationContext(wallet, index);
+            if (p.IsValidator && contexts.TryAdd(index, p))
+            {
+                p.Timer = Context.System.Scheduler.ScheduleTellOnceCancelable(TimeSpan.FromMilliseconds(DelayMilliseconds), Self, new Timer
+                {
+                    Index = index,
+                }, ActorRefs.NoSender);
+                Utility.Log(nameof(VerificationContext), LogLevel.Info, $"new validate process, height={index}, index={p.MyIndex}, ongoing={contexts.Count}");
+            }
+        }
+
+        private void OnValidatedRootPersisted(uint index)
+        {
+            Utility.Log(nameof(VerificationService), LogLevel.Info, $"persisted state root, height={index}");
+            foreach (var i in contexts.Where(i => i.Key <= index))
+            {
+                if (contexts.TryRemove(i.Key, out var value))
+                {
+                    value.Timer.CancelIfNotNull();
+                }
+            }
+        }
+
+        private void OnTimer(uint index)
+        {
+            if (contexts.TryGetValue(index, out VerificationContext context))
+            {
+                SendVote(context);
+                CheckVotes(context);
+                context.Timer.CancelIfNotNull();
+                context.Timer = Context.System.Scheduler.ScheduleTellOnceCancelable(TimeSpan.FromMilliseconds(TimeoutMilliseconds << context.Retries), Self, new Timer
+                {
+                    Index = index,
+                }, ActorRefs.NoSender);
+                context.Retries++;
+            }
+        }
+
+        protected override void OnReceive(object message)
+        {
+            switch (message)
+            {
+                case Vote v:
+                    OnVoteStateRoot(v);
+                    break;
+                case BlockPersisted bp:
+                    OnBlockPersisted(bp.Index);
+                    break;
+                case ValidatedRootPersisted root:
+                    OnValidatedRootPersisted(root.Index);
+                    break;
+                case Timer timer:
+                    OnTimer(timer.Index);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        protected override void PostStop()
+        {
+            base.PostStop();
+        }
+
+        public static Props Props(NeoSystem core, Wallet wallet)
+        {
+            return Akka.Actor.Props.Create(() => new VerificationService(core, wallet));
+        }
+    }
+}

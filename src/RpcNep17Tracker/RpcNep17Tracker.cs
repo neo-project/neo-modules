@@ -9,6 +9,7 @@ using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -233,12 +234,16 @@ namespace Neo.Plugins
             JArray parentJArray)
         {
             var prefix = new[] { dbPrefix }.Concat(userScriptHash.ToArray()).ToArray();
-            var startTimeBytes = BitConverter.GetBytes(startTime);
-            var endTimeBytes = BitConverter.GetBytes(endTime);
+            byte[] startTimeBytes, endTimeBytes;
             if (BitConverter.IsLittleEndian)
             {
-                Array.Reverse(startTimeBytes);
-                Array.Reverse(endTimeBytes);
+                startTimeBytes = BitConverter.GetBytes(BinaryPrimitives.ReverseEndianness(startTime));
+                endTimeBytes = BitConverter.GetBytes(BinaryPrimitives.ReverseEndianness(endTime));
+            }
+            else
+            {
+                startTimeBytes = BitConverter.GetBytes(startTime);
+                endTimeBytes = BitConverter.GetBytes(endTime);
             }
 
             var transferPairs = _db.FindRange<Nep17TransferKey, Nep17Transfer>(

@@ -1,5 +1,6 @@
 using Neo.IO;
 using System;
+using System.Buffers.Binary;
 using System.IO;
 
 namespace Neo.Plugins
@@ -73,9 +74,8 @@ namespace Neo.Plugins
         public void Serialize(BinaryWriter writer)
         {
             writer.Write(UserScriptHash);
-            var timestampBytes = BitConverter.GetBytes(TimestampMS);
-            if (BitConverter.IsLittleEndian) Array.Reverse(timestampBytes);
-            writer.Write(timestampBytes);
+            if (BitConverter.IsLittleEndian) writer.Write(BinaryPrimitives.ReverseEndianness(TimestampMS));
+            else writer.Write(TimestampMS);
             writer.Write(AssetScriptHash);
             writer.Write(BlockXferNotificationIndex);
         }
@@ -83,10 +83,8 @@ namespace Neo.Plugins
         public void Deserialize(BinaryReader reader)
         {
             ((ISerializable)UserScriptHash).Deserialize(reader);
-            byte[] timestampBytes = new byte[sizeof(ulong)];
-            reader.Read(timestampBytes, 0, timestampBytes.Length);
-            if (BitConverter.IsLittleEndian) Array.Reverse(timestampBytes);
-            TimestampMS = BitConverter.ToUInt64(timestampBytes, 0);
+            if (BitConverter.IsLittleEndian) TimestampMS = BinaryPrimitives.ReverseEndianness(reader.ReadUInt64());
+            else TimestampMS = reader.ReadUInt64();
             ((ISerializable)AssetScriptHash).Deserialize(reader);
             BlockXferNotificationIndex = reader.ReadUInt16();
         }

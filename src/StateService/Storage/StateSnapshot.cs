@@ -28,18 +28,18 @@ namespace Neo.Plugins.StateService.Storage
             snapshot.Put(Keys.CurrentLocalRootIndex, BitConverter.GetBytes(state_root.Index));
         }
 
-        public uint CurrentLocalRootIndex()
+        public uint? CurrentLocalRootIndex()
         {
             var bytes = snapshot.TryGet(Keys.CurrentLocalRootIndex);
-            if (bytes is null) return uint.MaxValue;
+            if (bytes is null) return null;
             return BitConverter.ToUInt32(bytes);
         }
 
         public UInt256 CurrentLocalRootHash()
         {
             var index = CurrentLocalRootIndex();
-            if (index == uint.MaxValue) return null;
-            return GetStateRoot(index)?.RootHash;
+            if (index is null) return null;
+            return GetStateRoot((uint)index)?.RootHash;
         }
 
         public void AddValidatedStateRoot(StateRoot state_root)
@@ -50,18 +50,18 @@ namespace Neo.Plugins.StateService.Storage
             snapshot.Put(Keys.CurrentValidatedRootIndex, BitConverter.GetBytes(state_root.Index));
         }
 
-        public uint CurrentValidatedRootIndex()
+        public uint? CurrentValidatedRootIndex()
         {
             var bytes = snapshot.TryGet(Keys.CurrentValidatedRootIndex);
-            if (bytes is null) return uint.MaxValue;
+            if (bytes is null) return null;
             return BitConverter.ToUInt32(bytes);
         }
 
         public UInt256 CurrentValidatedRootHash()
         {
             var index = CurrentLocalRootIndex();
-            if (index == uint.MaxValue) return null;
-            var state_root = GetStateRoot(index);
+            if (index is null) return null;
+            var state_root = GetStateRoot((uint)index);
             if (state_root is null || state_root.Witness is null)
                 throw new InvalidOperationException(nameof(CurrentValidatedRootHash) + " could not get validated state root");
             return state_root.RootHash;
@@ -69,6 +69,7 @@ namespace Neo.Plugins.StateService.Storage
 
         public void Commit()
         {
+            Trie.Commit();
             snapshot.Commit();
         }
 
