@@ -68,7 +68,7 @@ namespace Neo.Plugins
             trigger["trigger"] = appExec.Trigger;
             trigger["vmstate"] = appExec.VMState;
             trigger["exception"] = GetExceptionMessage(appExec.Exception);
-            trigger["gasconsumed"] = new BigDecimal(new BigInteger(appExec.GasConsumed), NativeContract.GAS.Decimals).ToString();
+            trigger["gasconsumed"] = new BigInteger(appExec.GasConsumed).ToString();
             try
             {
                 trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
@@ -111,7 +111,7 @@ namespace Neo.Plugins
                     JObject trigger = new JObject();
                     trigger["trigger"] = appExec.Trigger;
                     trigger["vmstate"] = appExec.VMState;
-                    trigger["gasconsumed"] = new BigDecimal(new BigInteger(appExec.GasConsumed), NativeContract.GAS.Decimals).ToString();
+                    trigger["gasconsumed"] = new BigInteger(appExec.GasConsumed).ToString();
                     try
                     {
                         trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();

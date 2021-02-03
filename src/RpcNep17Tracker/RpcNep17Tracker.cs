@@ -253,7 +253,7 @@ namespace Neo.Plugins
                 transfer["timestamp"] = key.TimestampMS;
                 transfer["assethash"] = key.AssetScriptHash.ToString();
                 transfer["transferaddress"] = value.UserScriptHash == UInt160.Zero ? null : value.UserScriptHash.ToAddress();
-                transfer["amount"] = value.Amount.ToString();
+                transfer["amount"] = value.Amount.Value.ToString();
                 transfer["blockindex"] = value.BlockIndex;
                 transfer["transfernotifyindex"] = key.BlockXferNotificationIndex;
                 transfer["txhash"] = value.TxHash.ToString();
@@ -315,7 +315,7 @@ namespace Neo.Plugins
                     balances.Add(new JObject
                     {
                         ["assethash"] = key.AssetScriptHash.ToString(),
-                        ["amount"] = value.Balance.ToString(),
+                        ["amount"] = value.Balance.Value.ToString(),
                         ["lastupdatedblock"] = value.LastUpdatedBlock
                     });
                 }
