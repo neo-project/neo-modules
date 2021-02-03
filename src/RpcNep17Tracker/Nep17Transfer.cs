@@ -9,17 +9,20 @@ namespace Neo.Plugins
         public UInt160 UserScriptHash;
         public uint BlockIndex;
         public UInt256 TxHash;
-        public BigDecimal Amount;
+        public BigInteger Amount;
 
-        int ISerializable.Size => 20 + sizeof(uint) + 32 + Amount.Value.ToByteArray().GetVarSize() + sizeof(byte);
+        int ISerializable.Size =>
+            UInt160.Length +        // UserScriptHash
+            sizeof(uint) +          // BlockIndex
+            UInt256.Length +        // TxHash
+            Amount.GetByteCount();  // Amount
 
         void ISerializable.Serialize(BinaryWriter writer)
         {
             writer.Write(UserScriptHash);
             writer.Write(BlockIndex);
             writer.Write(TxHash);
-            writer.WriteVarBytes(Amount.Value.ToByteArray());
-            writer.Write(Amount.Decimals);
+            writer.WriteVarBytes(Amount.ToByteArray());
         }
 
         void ISerializable.Deserialize(BinaryReader reader)
@@ -27,9 +30,7 @@ namespace Neo.Plugins
             UserScriptHash = reader.ReadSerializable<UInt160>();
             BlockIndex = reader.ReadUInt32();
             TxHash = reader.ReadSerializable<UInt256>();
-            var value = new BigInteger(reader.ReadVarBytes(512));
-            var decimals = reader.ReadByte();
-            Amount = new BigDecimal(value, decimals);
+            Amount = new BigInteger(reader.ReadVarBytes(512));
         }
     }
 }
