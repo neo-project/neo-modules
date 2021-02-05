@@ -89,7 +89,7 @@ namespace Neo.Plugins
             if (_recordNullAddressHistory || from != UInt160.Zero)
             {
                 Put(Nep17TransferSentPrefix,
-                    new Nep17TransferKey(from, block.Timestamp, scriptHash, transferIndex),
+                    new Nep17TransferKey(from, block.Header.Timestamp, scriptHash, transferIndex),
                     new Nep17Transfer
                     {
                         Amount = amount,
@@ -102,7 +102,7 @@ namespace Neo.Plugins
             if (_recordNullAddressHistory || to != UInt160.Zero)
             {
                 Put(Nep17TransferReceivedPrefix,
-                    new Nep17TransferKey(to, block.Timestamp, scriptHash, transferIndex),
+                    new Nep17TransferKey(to, block.Header.Timestamp, scriptHash, transferIndex),
                     new Nep17Transfer
                     {
                         Amount = amount,

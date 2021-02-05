@@ -70,16 +70,16 @@ namespace Neo.Consensus
         internal ExtensiblePayload GetPrepareRequestPayload(ConsensusContext context)
         {
             if (PrepareRequestMessage == null) return null;
-            if (!PreparationMessages.TryGetValue(context.Block.ConsensusData.PrimaryIndex, out PreparationPayloadCompact compact))
+            if (!PreparationMessages.TryGetValue(context.Block.PrimaryIndex, out PreparationPayloadCompact compact))
                 return null;
             return context.CreatePayload(PrepareRequestMessage, compact.InvocationScript);
         }
 
         internal ExtensiblePayload[] GetPrepareResponsePayloads(ConsensusContext context)
         {
-            UInt256 preparationHash = PreparationHash ?? context.PreparationPayloads[context.Block.ConsensusData.PrimaryIndex]?.Hash;
+            UInt256 preparationHash = PreparationHash ?? context.PreparationPayloads[context.Block.PrimaryIndex]?.Hash;
             if (preparationHash is null) return Array.Empty<ExtensiblePayload>();
-            return PreparationMessages.Values.Where(p => p.ValidatorIndex != context.Block.ConsensusData.PrimaryIndex).Select(p => context.CreatePayload(new PrepareResponse
+            return PreparationMessages.Values.Where(p => p.ValidatorIndex != context.Block.PrimaryIndex).Select(p => context.CreatePayload(new PrepareResponse
             {
                 BlockIndex = BlockIndex,
                 ValidatorIndex = p.ValidatorIndex,
