@@ -15,15 +15,17 @@ namespace Neo.Network.RPC.Tests
         {
             return new Block
             {
-                PrevHash = UInt256.Zero,
-                MerkleRoot = UInt256.Zero,
-                NextConsensus = UInt160.Zero,
-                Witness = new Witness
+                Header = new Header
                 {
-                    InvocationScript = new byte[0],
-                    VerificationScript = new byte[0]
+                    PrevHash = UInt256.Zero,
+                    MerkleRoot = UInt256.Zero,
+                    NextConsensus = UInt160.Zero,
+                    Witness = new Witness
+                    {
+                        InvocationScript = new byte[0],
+                        VerificationScript = new byte[0]
+                    }
                 },
-                ConsensusData = new ConsensusData(),
                 Transactions = Enumerable.Range(0, txCount).Select(p => GetTransaction()).ToArray()
             };
         }

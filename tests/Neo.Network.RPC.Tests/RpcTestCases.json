@@ -71,13 +71,14 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0x78057f73c5755db691e690746dd76a6e370b426f18664cab3721897d72e72209",
-        "size": 470,
+        "hash": "0xb9579b028e4cf31a0c3bd9582f9f7fbd40b0e0495604406b8f530c7ebce5bcc8",
+        "size": 462,
         "version": 0,
         "previousblockhash": "0xaae8867e9086afaf06fd02cc538e88a69b801abd6f9d3ae39ae630e29d5b39e2",
         "merkleroot": "0xe95761f21c733ad53066786af24ee5d613b32bd5aae538df2d611492ec0cae82",
         "time": 1594867377561,
         "index": 7,
+        "primary": 1,
         "nextconsensus": "NikvsLcNP1jWhrFPrfS3n4spEASgdNYTG2",
         "witnesses": [
           {
@@ -85,10 +86,6 @@
             "verification": "EQwhAqnqaELMDLOw8jF7B8hQ3j0eKyQ6mO0tVqP/TKZqrzMLEQtBE43vrw=="
           }
         ],
-        "consensusdata": {
-          "primary": 0,
-          "nonce": "83603a05111390a7"
-        },
         "tx": [
           {
             "hash": "0x0a76a72fb4958c7f3940410225a5d0f63b50153136cbf3015c38391b92034c5d",
@@ -106,10 +103,10 @@
               }
             ],
             "attributes": [],
-            "script": "AccyDBQcA1dGS3d+z2tfOsOJOs4fixYh9gwU+pU2/Hks6bMS9XhEc3F6o2fineETwAwIdHJhbnNmZXIMFCUFnstIeNOodfkcUc7e0zDUV1/eQWJ9W1I4",
+            "script": "AccyDBQcA1dGS3d\u002Bz2tfOsOJOs4fixYh9gwU\u002BpU2/Hks6bMS9XhEc3F6o2fineETwAwIdHJhbnNmZXIMFCUFnstIeNOodfkcUc7e0zDUV1/eQWJ9W1I4",
             "witnesses": [
               {
-                "invocation": "DEDZxkskUb1aH1I4EX5ja02xrYX4fCubAmQzBuPpfY7pDEb1n4Dzx+UB+qSdC/CGskGf5BuzJ0MWJJipsHuivKmU",
+                "invocation": "DEDZxkskUb1aH1I4EX5ja02xrYX4fCubAmQzBuPpfY7pDEb1n4Dzx\u002BUB\u002BqSdC/CGskGf5BuzJ0MWJJipsHuivKmU",
                 "verification": "EQwhAqnqaELMDLOw8jF7B8hQ3j0eKyQ6mO0tVqP/TKZqrzMLEQtBE43vrw=="
               }
             ]
@@ -125,20 +122,21 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblock",
-      "params": [ "0x78057f73c5755db691e690746dd76a6e370b426f18664cab3721897d72e72209", true ],
+      "params": [ "0xb9579b028e4cf31a0c3bd9582f9f7fbd40b0e0495604406b8f530c7ebce5bcc8", true ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0x78057f73c5755db691e690746dd76a6e370b426f18664cab3721897d72e72209",
-        "size": 470,
+        "hash": "0xb9579b028e4cf31a0c3bd9582f9f7fbd40b0e0495604406b8f530c7ebce5bcc8",
+        "size": 462,
         "version": 0,
         "previousblockhash": "0xaae8867e9086afaf06fd02cc538e88a69b801abd6f9d3ae39ae630e29d5b39e2",
         "merkleroot": "0xe95761f21c733ad53066786af24ee5d613b32bd5aae538df2d611492ec0cae82",
         "time": 1594867377561,
         "index": 7,
+        "primary": 1,
         "nextconsensus": "NikvsLcNP1jWhrFPrfS3n4spEASgdNYTG2",
         "witnesses": [
           {
@@ -146,10 +144,6 @@
             "verification": "EQwhAqnqaELMDLOw8jF7B8hQ3j0eKyQ6mO0tVqP/TKZqrzMLEQtBE43vrw=="
           }
         ],
-        "consensusdata": {
-          "primary": 0,
-          "nonce": "83603a05111390a7"
-        },
         "tx": [
           {
             "hash": "0x0a76a72fb4958c7f3940410225a5d0f63b50153136cbf3015c38391b92034c5d",
@@ -167,10 +161,10 @@
               }
             ],
             "attributes": [],
-            "script": "AccyDBQcA1dGS3d+z2tfOsOJOs4fixYh9gwU+pU2/Hks6bMS9XhEc3F6o2fineETwAwIdHJhbnNmZXIMFCUFnstIeNOodfkcUc7e0zDUV1/eQWJ9W1I4",
+            "script": "AccyDBQcA1dGS3d\u002Bz2tfOsOJOs4fixYh9gwU\u002BpU2/Hks6bMS9XhEc3F6o2fineETwAwIdHJhbnNmZXIMFCUFnstIeNOodfkcUc7e0zDUV1/eQWJ9W1I4",
             "witnesses": [
               {
-                "invocation": "DEDZxkskUb1aH1I4EX5ja02xrYX4fCubAmQzBuPpfY7pDEb1n4Dzx+UB+qSdC/CGskGf5BuzJ0MWJJipsHuivKmU",
+                "invocation": "DEDZxkskUb1aH1I4EX5ja02xrYX4fCubAmQzBuPpfY7pDEb1n4Dzx\u002BUB\u002BqSdC/CGskGf5BuzJ0MWJJipsHuivKmU",
                 "verification": "EQwhAqnqaELMDLOw8jF7B8hQ3j0eKyQ6mO0tVqP/TKZqrzMLEQtBE43vrw=="
               }
             ]
@@ -263,13 +257,14 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0xe191fe1aea732c3e23f20af8a95e09f95891176f8064a2fce8571d51f80619a8",
+        "hash": "0x656bcb02e4fe8a19dbb15149073a5ae0bd8adc2da8504b67b112b44f68b4c9d7",
         "size": 105,
         "version": 0,
         "previousblockhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
         "merkleroot": "0x735b68ca1bab490b8fd6166cba4c2ce76e97bedfe4d2df0c333970fc9862bb2b",
         "time": 1468595301000,
         "index": 0,
+        "primary": 1,
         "nextconsensus": "NZs2zXSPuuv9ZF6TDGSWT1RBmE8rfGj7UW",
         "witnesses": [
           {
@@ -287,20 +282,21 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "getblockheader",
-      "params": [ "0xe191fe1aea732c3e23f20af8a95e09f95891176f8064a2fce8571d51f80619a8", true ],
+      "params": [ "0x656bcb02e4fe8a19dbb15149073a5ae0bd8adc2da8504b67b112b44f68b4c9d7", true ],
       "id": 1
     },
     "Response": {
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0xe191fe1aea732c3e23f20af8a95e09f95891176f8064a2fce8571d51f80619a8",
+        "hash": "0x656bcb02e4fe8a19dbb15149073a5ae0bd8adc2da8504b67b112b44f68b4c9d7",
         "size": 105,
         "version": 0,
         "previousblockhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
         "merkleroot": "0x735b68ca1bab490b8fd6166cba4c2ce76e97bedfe4d2df0c333970fc9862bb2b",
         "time": 1468595301000,
         "index": 0,
+        "primary": 1,
         "nextconsensus": "NZs2zXSPuuv9ZF6TDGSWT1RBmE8rfGj7UW",
         "witnesses": [
           {
