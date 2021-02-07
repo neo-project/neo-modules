@@ -4,12 +4,6 @@ using System.IO;
 
 namespace Neo.Plugins.StateService.Network
 {
-    public enum MessageType : byte
-    {
-        Vote,
-        StateRoot,
-    }
-
     public class StateMessage : ISerializable
     {
         public MessageType Type;
