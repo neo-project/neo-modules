@@ -337,7 +337,6 @@ namespace Neo.Plugins
             var engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.CreateSnapshot());
             ContractMethodDescriptor md = oracleContract.Manifest.Abi.GetMethod("verify", -1);
             engine.LoadContract(oracleContract, md, CallFlags.None);
-            engine.Push("verify");
             if (engine.Execute() != VMState.HALT) return null;
             tx.NetworkFee += engine.GasConsumed;
 
