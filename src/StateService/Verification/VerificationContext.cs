@@ -122,7 +122,7 @@ namespace Neo.Plugins.StateService.Verification
             return true;
         }
 
-        private ExtensiblePayload CreatePayload(ISerializable payload, uint validBlockEndThreshold)
+        private ExtensiblePayload CreatePayload(StateMessage payload, uint validBlockEndThreshold)
         {
             ExtensiblePayload msg = new ExtensiblePayload
             {
