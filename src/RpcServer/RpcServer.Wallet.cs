@@ -206,7 +206,7 @@ namespace Neo.Plugins
             UInt160 from = AddressToScriptHash(_params[1].AsString());
             UInt160 to = AddressToScriptHash(_params[2].AsString());
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
-            BigDecimal amount = BigDecimal.Parse(_params[3].AsString(), descriptor.Decimals);
+            BigDecimal amount = new BigDecimal(BigInteger.Parse(_params[3].AsString()), descriptor.Decimals);
             if (amount.Sign <= 0)
                 throw new RpcException(-32602, "Invalid params");
             Signer[] signers = _params.Count >= 5 ? ((JArray)_params[4]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString()), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
@@ -263,7 +263,7 @@ namespace Neo.Plugins
                 outputs[i] = new TransferOutput
                 {
                     AssetId = asset_id,
-                    Value = BigDecimal.Parse(to[i]["value"].AsString(), descriptor.Decimals),
+                    Value = new BigDecimal(BigInteger.Parse(to[i]["value"].AsString()), descriptor.Decimals),
                     ScriptHash = AddressToScriptHash(to[i]["address"].AsString())
                 };
                 if (outputs[i].Value.Sign <= 0)
@@ -296,7 +296,7 @@ namespace Neo.Plugins
             UInt160 assetId = UInt160.Parse(_params[0].AsString());
             UInt160 to = AddressToScriptHash(_params[1].AsString());
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
-            BigDecimal amount = BigDecimal.Parse(_params[2].AsString(), descriptor.Decimals);
+            BigDecimal amount = new BigDecimal(BigInteger.Parse(_params[2].AsString()), descriptor.Decimals);
             if (amount.Sign <= 0)
                 throw new RpcException(-32602, "Invalid params");
             Transaction tx = wallet.MakeTransaction(new[]
