@@ -22,9 +22,9 @@ namespace Neo.Plugins.StateService.Network
             Type = (MessageType)reader.ReadByte();
             Payload = Type switch
             {
-                MessageType.StateRoot => Payload = reader.ReadSerializable<StateRoot>(),
-                MessageType.Vote => Payload = reader.ReadSerializable<Vote>(),
-                _ => throw new FormatException(nameof(StateMessage) + " invalid message"),
+                MessageType.StateRoot => reader.ReadSerializable<StateRoot>(),
+                MessageType.Vote => reader.ReadSerializable<Vote>(),
+                _ => throw new FormatException(),
             };
         }
 
