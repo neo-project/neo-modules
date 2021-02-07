@@ -11,7 +11,6 @@ using Neo.Plugins.StateService.Storage;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
-using System;
 using System.Collections.Concurrent;
 
 namespace Neo.Plugins.StateService.Verification
@@ -20,7 +19,8 @@ namespace Neo.Plugins.StateService.Verification
     {
         private const uint MaxValidUntilBlockIncrement = 100;
         private StateRoot root;
-        private ExtensiblePayload payload;
+        private ExtensiblePayload rootPayload;
+        private ExtensiblePayload votePayload;
         private readonly Wallet wallet;
         private readonly KeyPair keyPair;
         private readonly int myIndex;
@@ -47,14 +47,22 @@ namespace Neo.Plugins.StateService.Verification
                 return root;
             }
         }
-        public ExtensiblePayload Message => payload;
+        public ExtensiblePayload StateRootMessage => rootPayload;
+        public ExtensiblePayload VoteMessage
+        {
+            get
+            {
+                if (votePayload is null)
+                    votePayload = CreateVoteMessage();
+                return votePayload;
+            }
+        }
 
         public VerificationContext(Wallet wallet, uint index)
         {
             this.wallet = wallet;
             Retries = 0;
             myIndex = -1;
-            root = null;
             rootIndex = index;
             using SnapshotCache snapshot = Blockchain.Singleton.GetSnapshot();
             verifiers = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.StateValidator, index);
@@ -69,7 +77,7 @@ namespace Neo.Plugins.StateService.Verification
             }
         }
 
-        public ExtensiblePayload CreateVoteMessage()
+        private ExtensiblePayload CreateVoteMessage()
         {
             if (StateRoot is null) return null;
             if (!signatures.TryGetValue(myIndex, out byte[] sig))
@@ -125,7 +133,7 @@ namespace Neo.Plugins.StateService.Verification
             }
             StateRoot.Witness = sc.GetWitnesses()[0];
 
-            payload = new ExtensiblePayload
+            rootPayload = new ExtensiblePayload
             {
                 Category = StatePlugin.StatePayloadCategory,
                 ValidBlockStart = StateRoot.Index,
@@ -133,9 +141,9 @@ namespace Neo.Plugins.StateService.Verification
                 Sender = Contract.CreateSignatureRedeemScript(verifiers[MyIndex]).ToScriptHash(),
                 Data = StateMessage.CreateStateRootMessage(StateRoot).ToArray(),
             };
-            sc = new ContractParametersContext(payload);
+            sc = new ContractParametersContext(rootPayload);
             wallet.Sign(sc);
-            payload.Witness = sc.GetWitnesses()[0];
+            rootPayload.Witness = sc.GetWitnesses()[0];
             return true;
         }
     }

@@ -85,7 +85,7 @@ namespace Neo.Plugins.StateService.Storage
             try
             {
                 var message = payload.Data?.AsSerializable<StateMessage>();
-                if (message.Type != MessageType.StateRoot) return;
+                if (message is null || message.Type != MessageType.StateRoot) return;
                 state_root = (StateRoot)message.Payload;
             }
             catch (Exception e)

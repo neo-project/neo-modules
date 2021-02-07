@@ -32,13 +32,12 @@ namespace Neo.Plugins.StateService.Verification
 
         private void SendVote(VerificationContext context)
         {
-            var vote_message = context.CreateVoteMessage();
-            if (vote_message is null) return;
+            if (context.VoteMessage is null) return;
             Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay vote, height={context.RootIndex}, retry={context.Retries}");
-            core.Blockchain.Tell(vote_message);
+            core.Blockchain.Tell(context.VoteMessage);
         }
 
-        private void OnVoteStateRoot(Vote vote)
+        private void OnStateRootVote(Vote vote)
         {
             if (contexts.TryGetValue(vote.RootIndex, out VerificationContext context) && context.AddSignature(vote.ValidatorIndex, vote.Signature))
             {
@@ -50,9 +49,9 @@ namespace Neo.Plugins.StateService.Verification
         {
             if (context.CheckSignatures())
             {
-                if (context.Message is null) return;
+                if (context.StateRootMessage is null) return;
                 Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay state root, height={context.StateRoot.Index}, root={context.StateRoot.RootHash}");
-                core.Blockchain.Tell(context.Message);
+                core.Blockchain.Tell(context.StateRootMessage);
             }
         }
 
@@ -112,7 +111,7 @@ namespace Neo.Plugins.StateService.Verification
             try
             {
                 var message = payload.Data?.AsSerializable<StateMessage>();
-                if (message.Type != MessageType.Vote) return;
+                if (message is null || message.Type != MessageType.Vote) return;
                 vote = (Vote)message.Payload;
             }
             catch (Exception ex)
@@ -121,7 +120,7 @@ namespace Neo.Plugins.StateService.Verification
                 return;
             }
             if (vote != null)
-                OnVoteStateRoot(vote);
+                OnStateRootVote(vote);
         }
 
         protected override void OnReceive(object message)
@@ -129,7 +128,7 @@ namespace Neo.Plugins.StateService.Verification
             switch (message)
             {
                 case Vote v:
-                    OnVoteStateRoot(v);
+                    OnStateRootVote(v);
                     break;
                 case BlockPersisted bp:
                     OnBlockPersisted(bp.Index);
