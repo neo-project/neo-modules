@@ -20,7 +20,7 @@ namespace Neo.Plugins.StateService.Network
         public void Serialize(BinaryWriter writer)
         {
             writer.Write((byte)Type);
-            Payload.Serialize(writer);
+            writer.Write(Payload);
         }
 
         public void Deserialize(BinaryReader reader)
@@ -28,11 +28,10 @@ namespace Neo.Plugins.StateService.Network
             Type = (MessageType)reader.ReadByte();
             Payload = Type switch
             {
-                MessageType.StateRoot => Payload = new StateRoot(),
-                MessageType.Vote => Payload = new Vote(),
+                MessageType.StateRoot => Payload = reader.ReadSerializable<StateRoot>(),
+                MessageType.Vote => Payload = reader.ReadSerializable<Vote>(),
                 _ => throw new FormatException(nameof(StateMessage) + " invalid message"),
             };
-            Payload.Deserialize(reader);
         }
 
         public static StateMessage CreateStateRootMessage(StateRoot state_root)

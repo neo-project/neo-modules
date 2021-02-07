@@ -32,7 +32,7 @@ namespace Neo.Plugins.StateService.Network
         {
             ValidatorIndex = reader.ReadInt32();
             RootIndex = reader.ReadUInt32();
-            Signature = reader.ReadVarBytes();
+            Signature = reader.ReadVarBytes(64);
         }
     }
 }
