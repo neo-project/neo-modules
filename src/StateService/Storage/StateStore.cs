@@ -81,20 +81,16 @@ namespace Neo.Plugins.StateService.Storage
 
         private void OnStatePayload(ExtensiblePayload payload)
         {
-            StateRoot state_root = null;
             try
             {
                 var message = payload.Data?.AsSerializable<StateMessage>();
                 if (message is null || message.Type != MessageType.StateRoot) return;
-                state_root = (StateRoot)message.Payload;
+                OnNewStateRoot((StateRoot)message.Payload);
             }
             catch (Exception e)
             {
                 Utility.Log(nameof(StateStore), LogLevel.Warning, " invalid state message " + e.Message);
-                return;
             }
-            if (state_root != null)
-                OnNewStateRoot(state_root);
         }
 
         private bool OnNewStateRoot(StateRoot state_root)
