@@ -85,21 +85,7 @@ namespace Neo.Plugins.StateService.Verification
                 sig = StateRoot.Sign(keyPair);
                 signatures[myIndex] = sig;
             }
-            var vote = new Vote(rootIndex, myIndex, sig);
-
-            var payload = new ExtensiblePayload
-            {
-                Category = StatePlugin.StatePayloadCategory,
-                ValidBlockStart = StateRoot.Index,
-                ValidBlockEnd = StateRoot.Index + VerificationService.MaxCachedVerificationProcessCount,
-                Sender = Contract.CreateSignatureRedeemScript(verifiers[MyIndex]).ToScriptHash(),
-                Data = StateMessage.CreateVoteMessage(vote).ToArray(),
-            };
-
-            var sc = new ContractParametersContext(payload);
-            wallet.Sign(sc);
-            payload.Witness = sc.GetWitnesses()[0];
-            return payload;
+            return CreatePayload(StateMessage.CreateVoteMessage(new Vote(rootIndex, myIndex, sig)), VerificationService.MaxCachedVerificationProcessCount);
         }
 
         public bool AddSignature(int index, byte[] sig)
@@ -132,19 +118,24 @@ namespace Neo.Plugins.StateService.Verification
                 j++;
             }
             StateRoot.Witness = sc.GetWitnesses()[0];
+            rootPayload = CreatePayload(StateMessage.CreateStateRootMessage(StateRoot), MaxValidUntilBlockIncrement);
+            return true;
+        }
 
-            rootPayload = new ExtensiblePayload
+        private ExtensiblePayload CreatePayload(ISerializable payload, uint validBlockEndThreshold)
+        {
+            ExtensiblePayload msg = new ExtensiblePayload
             {
                 Category = StatePlugin.StatePayloadCategory,
                 ValidBlockStart = StateRoot.Index,
-                ValidBlockEnd = StateRoot.Index + MaxValidUntilBlockIncrement,
+                ValidBlockEnd = StateRoot.Index + validBlockEndThreshold,
                 Sender = Contract.CreateSignatureRedeemScript(verifiers[MyIndex]).ToScriptHash(),
-                Data = StateMessage.CreateStateRootMessage(StateRoot).ToArray(),
+                Data = payload.ToArray(),
             };
-            sc = new ContractParametersContext(rootPayload);
+            ContractParametersContext sc = new ContractParametersContext(rootPayload);
             wallet.Sign(sc);
-            rootPayload.Witness = sc.GetWitnesses()[0];
-            return true;
+            msg.Witness = sc.GetWitnesses()[0];
+            return msg;
         }
     }
 }
