@@ -118,6 +118,14 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
+        public async Task TestGetBlockHeaderCount()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlockHeaderCountAsync).ToLower());
+            var result = await rpc.GetBlockHeaderCountAsync();
+            Assert.AreEqual(test.Response.Result.AsString(), result.ToString());
+        }
+
+        [TestMethod]
         public async Task TestGetBlockCount()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlockCountAsync).ToLower());

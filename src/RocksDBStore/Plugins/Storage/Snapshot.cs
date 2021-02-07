@@ -7,15 +7,13 @@ namespace Neo.Plugins.Storage
 {
     internal class Snapshot : ISnapshot
     {
-        private readonly Store store;
         private readonly RocksDb db;
         private readonly RocksDbSharp.Snapshot snapshot;
         private readonly WriteBatch batch;
         private readonly ReadOptions options;
 
-        public Snapshot(Store store, RocksDb db)
+        public Snapshot(RocksDb db)
         {
-            this.store = store;
             this.db = db;
             this.snapshot = db.CreateSnapshot();
             this.batch = new WriteBatch();
@@ -56,7 +54,7 @@ namespace Neo.Plugins.Storage
 
         public bool Contains(byte[] key)
         {
-            return db.Get(key, readOptions: options) != null;
+            return db.Get(key, Array.Empty<byte>(), 0, 0, readOptions: options) >= 0;
         }
 
         public byte[] TryGet(byte[] key)

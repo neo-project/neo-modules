@@ -53,6 +53,12 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
+        protected virtual JObject GetBlockHeaderCount(JArray _params)
+        {
+            return (Blockchain.Singleton.HeaderCache.Last?.Index ?? NativeContract.Ledger.CurrentIndex(Blockchain.Singleton.View)) + 1;
+        }
+
+        [RpcMethod]
         protected virtual JObject GetBlockCount(JArray _params)
         {
             return NativeContract.Ledger.CurrentIndex(Blockchain.Singleton.View) + 1;
@@ -158,7 +164,7 @@ namespace Neo.Plugins
                 TrimmedBlock block = NativeContract.Ledger.GetTrimmedBlock(snapshot, NativeContract.Ledger.GetBlockHash(snapshot, state.BlockIndex));
                 json["blockhash"] = block.Hash.ToString();
                 json["confirmations"] = NativeContract.Ledger.CurrentIndex(snapshot) - block.Index + 1;
-                json["blocktime"] = block.Timestamp;
+                json["blocktime"] = block.Header.Timestamp;
             }
             return json;
         }

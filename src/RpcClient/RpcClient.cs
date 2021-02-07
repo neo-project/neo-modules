@@ -147,6 +147,15 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
+        /// Gets the number of block header in the main chain.
+        /// </summary>
+        public async Task<uint> GetBlockHeaderCountAsync()
+        {
+            var result = await RpcSendAsync(GetRpcName()).ConfigureAwait(false);
+            return (uint)result.AsNumber();
+        }
+
+        /// <summary>
         /// Gets the number of blocks in the main chain.
         /// </summary>
         public async Task<uint> GetBlockCountAsync()
