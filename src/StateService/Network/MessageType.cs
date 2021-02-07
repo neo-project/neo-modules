@@ -1,6 +1,6 @@
 namespace Neo.Plugins.StateService.Network
 {
-    public enum MessageType : byte
+    enum MessageType : byte
     {
         Vote,
         StateRoot,

@@ -12,7 +12,7 @@ using System.IO;
 
 namespace Neo.Plugins.StateService.Network
 {
-    public class StateRoot : IVerifiable, ISerializable
+    class StateRoot : StateMessage, IVerifiable
     {
         public byte Version;
         public uint Index;
@@ -41,19 +41,24 @@ namespace Neo.Plugins.StateService.Network
             }
             set
             {
-                if (value is null || value.Length != 1) throw new ArgumentException();
+                if (value is null || value.Length != 1) throw new ArgumentException(null, nameof(value));
                 Witness = value[0];
             }
         }
 
-        public int Size =>
+        public override int Size => base.Size +
             sizeof(byte) +      //Version
             sizeof(uint) +      //Index
             UInt256.Length +    //RootHash
             (Witness is null ? 1 : 1 + Witness.Size); //Witness
 
-        public void Deserialize(BinaryReader reader)
+        public StateRoot() : base(MessageType.StateRoot)
         {
+        }
+
+        public override void Deserialize(BinaryReader reader)
+        {
+            base.Deserialize(reader);
             this.DeserializeUnsigned(reader);
             Witness[] arr = reader.ReadSerializableArray<Witness>();
             if (arr.Length < 1)
@@ -69,8 +74,9 @@ namespace Neo.Plugins.StateService.Network
             RootHash = reader.ReadSerializable<UInt256>();
         }
 
-        public void Serialize(BinaryWriter writer)
+        public override void Serialize(BinaryWriter writer)
         {
+            base.Serialize(writer);
             this.SerializeUnsigned(writer);
             if (Witness is null)
                 writer.WriteVarInt(0);

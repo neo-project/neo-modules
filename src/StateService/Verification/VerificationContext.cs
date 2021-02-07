@@ -15,7 +15,7 @@ using System.Collections.Concurrent;
 
 namespace Neo.Plugins.StateService.Verification
 {
-    public class VerificationContext
+    class VerificationContext
     {
         private const uint MaxValidUntilBlockIncrement = 100;
         private StateRoot root;
@@ -85,7 +85,12 @@ namespace Neo.Plugins.StateService.Verification
                 sig = StateRoot.Sign(keyPair);
                 signatures[myIndex] = sig;
             }
-            return CreatePayload(StateMessage.CreateVoteMessage(new Vote(rootIndex, myIndex, sig)), VerificationService.MaxCachedVerificationProcessCount);
+            return CreatePayload(new Vote
+            {
+                RootIndex = rootIndex,
+                ValidatorIndex = myIndex,
+                Signature = sig
+            }, VerificationService.MaxCachedVerificationProcessCount);
         }
 
         public bool AddSignature(int index, byte[] sig)
@@ -118,7 +123,7 @@ namespace Neo.Plugins.StateService.Verification
                 j++;
             }
             StateRoot.Witness = sc.GetWitnesses()[0];
-            rootPayload = CreatePayload(StateMessage.CreateStateRootMessage(StateRoot), MaxValidUntilBlockIncrement);
+            rootPayload = CreatePayload(StateRoot, MaxValidUntilBlockIncrement);
             return true;
         }
 

@@ -4,46 +4,26 @@ using System.IO;
 
 namespace Neo.Plugins.StateService.Network
 {
-    public class StateMessage : ISerializable
+    abstract class StateMessage : ISerializable
     {
-        public MessageType Type;
-        public ISerializable Payload;
+        public readonly MessageType Type;
 
-        public int Size => sizeof(MessageType) + Payload.Size;
+        public virtual int Size => sizeof(MessageType);
 
-        public void Serialize(BinaryWriter writer)
+        protected StateMessage(MessageType type)
+        {
+            this.Type = type;
+        }
+
+        public virtual void Serialize(BinaryWriter writer)
         {
             writer.Write((byte)Type);
-            writer.Write(Payload);
         }
 
-        public void Deserialize(BinaryReader reader)
+        public virtual void Deserialize(BinaryReader reader)
         {
-            Type = (MessageType)reader.ReadByte();
-            Payload = Type switch
-            {
-                MessageType.StateRoot => reader.ReadSerializable<StateRoot>(),
-                MessageType.Vote => reader.ReadSerializable<Vote>(),
-                _ => throw new FormatException(),
-            };
-        }
-
-        public static StateMessage CreateStateRootMessage(StateRoot state_root)
-        {
-            return new StateMessage
-            {
-                Type = MessageType.StateRoot,
-                Payload = state_root,
-            };
-        }
-
-        public static StateMessage CreateVoteMessage(Vote vote)
-        {
-            return new StateMessage
-            {
-                Type = MessageType.Vote,
-                Payload = vote,
-            };
+            if (Type != (MessageType)reader.ReadByte())
+                throw new FormatException();
         }
     }
 }

@@ -107,16 +107,18 @@ namespace Neo.Plugins.StateService.Verification
 
         private void OnVoteMessage(ExtensiblePayload payload)
         {
+            if (payload.Data.Length == 0) return;
+            if ((MessageType)payload.Data[0] != MessageType.Vote) return;
+            Vote message;
             try
             {
-                var message = payload.Data?.AsSerializable<StateMessage>();
-                if (message is null || message.Type != MessageType.Vote) return;
-                OnStateRootVote((Vote)message.Payload);
+                message = payload.Data.AsSerializable<Vote>();
             }
-            catch (Exception ex)
+            catch (FormatException)
             {
-                Utility.Log(nameof(VerificationService), LogLevel.Warning, " invalid state message " + ex.Message);
+                return;
             }
+            OnStateRootVote(message);
         }
 
         protected override void OnReceive(object message)

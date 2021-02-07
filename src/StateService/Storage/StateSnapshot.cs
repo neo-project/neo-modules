@@ -7,7 +7,7 @@ using System;
 
 namespace Neo.Plugins.StateService.Storage
 {
-    public class StateSnapshot : IDisposable
+    class StateSnapshot : IDisposable
     {
         private readonly ISnapshot snapshot;
         public MPTTrie<StorageKey, StorageItem> Trie;
