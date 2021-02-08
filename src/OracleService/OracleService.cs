@@ -43,7 +43,8 @@ namespace Neo.Plugins
 
         private static readonly IReadOnlyDictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>
         {
-            ["https"] = new OracleHttpsProtocol()
+            ["https"] = new OracleHttpsProtocol(),
+            ["neofs"] = new OracleFsProtocol()
         };
 
         public override string Description => "Built-in oracle plugin";
@@ -86,6 +87,8 @@ namespace Neo.Plugins
             {
                 if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
                 if (!CheckOracleAccount(wallet, oracles)) throw new ArgumentException("There is no oracle account in wallet");
+                foreach (var (_, p) in protocols)
+                    p.AttachWallet(wallet, oracles);
             }
 
             started = true;

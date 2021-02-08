@@ -6,6 +6,9 @@
     "AllowedContentTypes": [ "application/json" ],
     "Https": {
       "Timeout": 5000
+    },
+    "Fs": {
+      "FsNodes": [],
     }
   }
 }

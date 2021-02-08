@@ -1,4 +1,6 @@
+using Neo.Cryptography.ECC;
 using Neo.Network.P2P.Payloads;
+using Neo.Wallets;
 using System;
 using System.Linq;
 using System.Net;
@@ -11,6 +13,10 @@ namespace Neo.Plugins
     class OracleHttpsProtocol : IOracleProtocol
     {
         private readonly HttpClient client = new HttpClient();
+
+        public void AttachWallet(Wallet wallet, ECPoint[] oracles)
+        {
+        }
 
         public void Configure()
         {
