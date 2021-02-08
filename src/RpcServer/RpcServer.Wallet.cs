@@ -264,7 +264,7 @@ namespace Neo.Plugins
                 outputs[i] = new TransferOutput
                 {
                     AssetId = asset_id,
-                    Value = BigDecimal.Parse(to[i]["value"].AsString(), descriptor.Decimals),
+                    Value = new BigDecimal(BigInteger.Parse(to[i]["value"].AsString()), descriptor.Decimals),
                     ScriptHash = AddressToScriptHash(to[i]["address"].AsString())
                 };
                 if (outputs[i].Value.Sign <= 0)
