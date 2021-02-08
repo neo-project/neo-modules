@@ -97,7 +97,7 @@ namespace Neo.Plugins.StateService.Network
             json["version"] = Version;
             json["index"] = Index;
             json["roothash"] = RootHash.ToString();
-            json["witness"] = Witness.ToJson();
+            json["witnesses"] = new JArray(Witness.ToJson());
             return json;
         }
     }
