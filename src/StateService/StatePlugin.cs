@@ -5,6 +5,7 @@ using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.Plugins.MPT;
+using Neo.Plugins.StateService.Network;
 using Neo.Plugins.StateService.Storage;
 using Neo.Plugins.StateService.Verification;
 using Neo.SmartContract;
@@ -47,18 +48,6 @@ namespace Neo.Plugins.StateService
         void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
         {
             StateStore.Singleton.UpdateLocalStateRoot(block.Index, snapshot.GetChangeSet().Where(p => p.State != TrackState.None).Where(p => p.Key.Id != NativeContract.Ledger.Id).ToList());
-        }
-
-        [RpcMethod]
-        public JObject VoteStateRoot(JArray _params)
-        {
-            if (_params.Count < 3) throw new RpcException(-100, "Invalid params");
-            uint height = uint.Parse(_params[0].AsString());
-            int validator_index = int.Parse(_params[1].AsString());
-            byte[] sig = Convert.FromBase64String(_params[2].AsString());
-            if (Verifier is null) throw new RpcException(-100, "Verifier not started");
-            Verifier.Tell(new Vote(height, validator_index, sig));
-            return true;
         }
 
         [ConsoleCommand("start states", Category = "StateService", Description = "Start as a state verifier if wallet is open")]
