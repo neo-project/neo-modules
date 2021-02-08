@@ -417,6 +417,11 @@ namespace Neo.Consensus
                 Log($"Timestamp incorrect: {message.Timestamp}", LogLevel.Warning);
                 return;
             }
+            if (message.TransactionHashes.Length > NativeContract.Policy.GetMaxTransactionsPerBlock(context.Snapshot))
+            {
+                Log($"Invalid request: The number of transactions exceeds the limit", LogLevel.Warning);
+                return;
+            }
             if (message.TransactionHashes.Any(p => NativeContract.Ledger.ContainsTransaction(context.Snapshot, p)))
             {
                 Log($"Invalid request: transaction already exists", LogLevel.Warning);
