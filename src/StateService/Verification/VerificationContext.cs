@@ -12,6 +12,7 @@ using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
 using System.Collections.Concurrent;
+using System.IO;
 
 namespace Neo.Plugins.StateService.Verification
 {
@@ -85,7 +86,7 @@ namespace Neo.Plugins.StateService.Verification
                 sig = StateRoot.Sign(keyPair);
                 signatures[myIndex] = sig;
             }
-            return CreatePayload(new Vote
+            return CreatePayload(MessageType.Vote, new Vote
             {
                 RootIndex = rootIndex,
                 ValidatorIndex = myIndex,
@@ -123,19 +124,28 @@ namespace Neo.Plugins.StateService.Verification
                 j++;
             }
             StateRoot.Witness = sc.GetWitnesses()[0];
-            rootPayload = CreatePayload(StateRoot, MaxValidUntilBlockIncrement);
+            rootPayload = CreatePayload(MessageType.StateRoot, StateRoot, MaxValidUntilBlockIncrement);
             return true;
         }
 
-        private ExtensiblePayload CreatePayload(StateMessage payload, uint validBlockEndThreshold)
+        private ExtensiblePayload CreatePayload(MessageType type, ISerializable payload, uint validBlockEndThreshold)
         {
+            byte[] data;
+            using (MemoryStream ms = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(ms))
+            {
+                writer.Write((byte)type);
+                payload.Serialize(writer);
+                writer.Flush();
+                data = ms.ToArray();
+            }
             ExtensiblePayload msg = new ExtensiblePayload
             {
                 Category = StatePlugin.StatePayloadCategory,
                 ValidBlockStart = StateRoot.Index,
                 ValidBlockEnd = StateRoot.Index + validBlockEndThreshold,
                 Sender = Contract.CreateSignatureRedeemScript(verifiers[MyIndex]).ToScriptHash(),
-                Data = payload.ToArray(),
+                Data = data,
             };
             ContractParametersContext sc = new ContractParametersContext(rootPayload);
             wallet.Sign(sc);

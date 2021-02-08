@@ -12,7 +12,7 @@ using System.IO;
 
 namespace Neo.Plugins.StateService.Network
 {
-    class StateRoot : StateMessage, IVerifiable
+    class StateRoot : IVerifiable
     {
         public byte Version;
         public uint Index;
@@ -20,7 +20,6 @@ namespace Neo.Plugins.StateService.Network
         public Witness Witness;
 
         private UInt256 _hash = null;
-
         public UInt256 Hash
         {
             get
@@ -41,30 +40,23 @@ namespace Neo.Plugins.StateService.Network
             }
             set
             {
-                if (value is null || value.Length != 1) throw new ArgumentException(null, nameof(value));
+                if (value.Length != 1) throw new ArgumentException(null, nameof(value));
                 Witness = value[0];
             }
         }
 
-        public override int Size => base.Size +
+        int ISerializable.Size =>
             sizeof(byte) +      //Version
             sizeof(uint) +      //Index
             UInt256.Length +    //RootHash
-            (Witness is null ? 1 : 1 + Witness.Size); //Witness
+            1 + Witness.Size;   //Witness
 
-        public StateRoot() : base(MessageType.StateRoot)
+        void ISerializable.Deserialize(BinaryReader reader)
         {
-        }
-
-        public override void Deserialize(BinaryReader reader)
-        {
-            base.Deserialize(reader);
-            this.DeserializeUnsigned(reader);
-            Witness[] arr = reader.ReadSerializableArray<Witness>();
-            if (arr.Length < 1)
-                Witness = null;
-            else
-                Witness = arr[0];
+            DeserializeUnsigned(reader);
+            Witness[] witnesses = reader.ReadSerializableArray<Witness>(1);
+            if (witnesses.Length != 1) throw new FormatException();
+            Witness = witnesses[0];
         }
 
         public void DeserializeUnsigned(BinaryReader reader)
@@ -74,14 +66,10 @@ namespace Neo.Plugins.StateService.Network
             RootHash = reader.ReadSerializable<UInt256>();
         }
 
-        public override void Serialize(BinaryWriter writer)
+        void ISerializable.Serialize(BinaryWriter writer)
         {
-            base.Serialize(writer);
-            this.SerializeUnsigned(writer);
-            if (Witness is null)
-                writer.WriteVarInt(0);
-            else
-                writer.Write(new Witness[] { Witness });
+            SerializeUnsigned(writer);
+            writer.Write(new[] { Witness });
         }
 
         public void SerializeUnsigned(BinaryWriter writer)
@@ -109,7 +97,7 @@ namespace Neo.Plugins.StateService.Network
             json["version"] = Version;
             json["index"] = Index;
             json["roothash"] = RootHash.ToString();
-            json["witness"] = Witness?.ToJson();
+            json["witness"] = Witness.ToJson();
             return json;
         }
     }

@@ -112,7 +112,7 @@ namespace Neo.Plugins.StateService.Verification
             Vote message;
             try
             {
-                message = payload.Data.AsSerializable<Vote>();
+                message = payload.Data.AsSerializable<Vote>(1);
             }
             catch (FormatException)
             {

@@ -86,7 +86,7 @@ namespace Neo.Plugins.StateService.Storage
             StateRoot message;
             try
             {
-                message = payload.Data.AsSerializable<StateRoot>();
+                message = payload.Data.AsSerializable<StateRoot>(1);
             }
             catch (FormatException)
             {
