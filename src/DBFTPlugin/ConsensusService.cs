@@ -5,6 +5,7 @@ using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.Plugins;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
@@ -28,6 +29,7 @@ namespace Neo.Consensus
         private DateTime block_received_time;
         private uint block_received_index;
         private bool started = false;
+        private readonly NeoSystem system;
 
         /// <summary>
         /// This will record the information from last scheduled timer
@@ -45,13 +47,14 @@ namespace Neo.Consensus
         /// </summary>
         private bool isRecovering = false;
 
-        public ConsensusService(IActorRef localNode, IActorRef taskManager, IActorRef blockchain, IStore store, Wallet wallet)
-            : this(localNode, taskManager, blockchain, new ConsensusContext(wallet, store))
+        public ConsensusService(NeoSystem system, IActorRef localNode, IActorRef taskManager, IActorRef blockchain, IStore store, Wallet wallet)
+            : this(system, localNode, taskManager, blockchain, new ConsensusContext(wallet, store, system))
         {
         }
 
-        internal ConsensusService(IActorRef localNode, IActorRef taskManager, IActorRef blockchain, ConsensusContext context)
+        internal ConsensusService(NeoSystem system, IActorRef localNode, IActorRef taskManager, IActorRef blockchain, ConsensusContext context)
         {
+            this.system = system;
             this.localNode = localNode;
             this.taskManager = taskManager;
             this.blockchain = blockchain;
@@ -163,7 +166,7 @@ namespace Neo.Consensus
                 context.Save();
                 localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
                 // Set timer, so we will resend the commit in case of a networking issue
-                ChangeTimer(TimeSpan.FromMilliseconds(Blockchain.MillisecondsPerBlock));
+                ChangeTimer(TimeSpan.FromMilliseconds(system.Settings.MillisecondsPerBlock));
                 CheckCommits();
             }
         }
@@ -179,11 +182,11 @@ namespace Neo.Consensus
             {
                 if (isRecovering)
                 {
-                    ChangeTimer(TimeSpan.FromMilliseconds(Blockchain.MillisecondsPerBlock << (viewNumber + 1)));
+                    ChangeTimer(TimeSpan.FromMilliseconds(system.Settings.MillisecondsPerBlock << (viewNumber + 1)));
                 }
                 else
                 {
-                    TimeSpan span = Blockchain.TimePerBlock;
+                    TimeSpan span = system.Settings.TimePerBlock;
                     if (block_received_index + 1 == context.Block.Index)
                     {
                         var diff = TimeProvider.Current.UtcNow - block_received_time;
@@ -197,7 +200,7 @@ namespace Neo.Consensus
             }
             else
             {
-                ChangeTimer(TimeSpan.FromMilliseconds(Blockchain.MillisecondsPerBlock << (viewNumber + 1)));
+                ChangeTimer(TimeSpan.FromMilliseconds(system.Settings.MillisecondsPerBlock << (viewNumber + 1)));
             }
         }
 
@@ -262,7 +265,7 @@ namespace Neo.Consensus
         // this function increases existing timer (never decreases) with a value proportional to `maxDelayInBlockTimes`*`Blockchain.MillisecondsPerBlock`
         private void ExtendTimerByFactor(int maxDelayInBlockTimes)
         {
-            TimeSpan nextDelay = expected_delay - (TimeProvider.Current.UtcNow - clock_started) + TimeSpan.FromMilliseconds(maxDelayInBlockTimes * Blockchain.MillisecondsPerBlock / (double)context.M);
+            TimeSpan nextDelay = expected_delay - (TimeProvider.Current.UtcNow - clock_started) + TimeSpan.FromMilliseconds(maxDelayInBlockTimes * system.Settings.MillisecondsPerBlock / (double)context.M);
             if (!context.WatchOnly && !context.ViewChanging && !context.CommitSent && (nextDelay > TimeSpan.Zero))
                 ChangeTimer(nextDelay);
         }
@@ -287,7 +290,7 @@ namespace Neo.Consensus
             {
                 if (context.Block.Index < message.BlockIndex)
                 {
-                    Log($"Chain is behind: expected={message.BlockIndex} current={context.Block.Index - 1} nodes={LocalNode.Singleton.ConnectedCount}", LogLevel.Warning);
+                    Log($"Chain is behind: expected={message.BlockIndex} current={context.Block.Index - 1} nodes={new LocalNode(system).ConnectedCount}", LogLevel.Warning);
                 }
                 return;
             }
@@ -412,7 +415,7 @@ namespace Neo.Consensus
             if (message.ValidatorIndex != context.Block.PrimaryIndex || message.ViewNumber != context.ViewNumber) return;
             if (message.Version != context.Block.Version || message.PrevHash != context.Block.PrevHash) return;
             Log($"{nameof(OnPrepareRequestReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} tx={message.TransactionHashes.Length}");
-            if (message.Timestamp <= context.PrevHeader.Timestamp || message.Timestamp > TimeProvider.Current.UtcNow.AddMilliseconds(8 * Blockchain.MillisecondsPerBlock).ToTimestampMS())
+            if (message.Timestamp <= context.PrevHeader.Timestamp || message.Timestamp > TimeProvider.Current.UtcNow.AddMilliseconds(8 * system.Settings.MillisecondsPerBlock).ToTimestampMS())
             {
                 Log($"Timestamp incorrect: {message.Timestamp}", LogLevel.Warning);
                 return;
@@ -449,7 +452,7 @@ namespace Neo.Consensus
                 return;
             }
 
-            Dictionary<UInt256, Transaction> mempoolVerified = Blockchain.Singleton.MemPool.GetVerifiedTransactions().ToDictionary(p => p.Hash);
+            Dictionary<UInt256, Transaction> mempoolVerified = system.MemPool.GetVerifiedTransactions().ToDictionary(p => p.Hash);
             List<Transaction> unverified = new List<Transaction>();
             foreach (UInt256 hash in context.TransactionHashes)
             {
@@ -460,7 +463,7 @@ namespace Neo.Consensus
                 }
                 else
                 {
-                    if (Blockchain.Singleton.MemPool.TryGetValue(hash, out tx))
+                    if (system.MemPool.TryGetValue(hash, out tx))
                         unverified.Add(tx);
                 }
             }
@@ -570,7 +573,7 @@ namespace Neo.Consensus
                     // Re-send commit periodically by sending recover message in case of a network issue.
                     Log($"Sending {nameof(RecoveryMessage)} to resend {nameof(Commit)}");
                     localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeRecoveryMessage() });
-                    ChangeTimer(TimeSpan.FromMilliseconds(Blockchain.MillisecondsPerBlock << 1));
+                    ChangeTimer(TimeSpan.FromMilliseconds(system.Settings.MillisecondsPerBlock << 1));
                 }
                 else
                 {
@@ -604,9 +607,9 @@ namespace Neo.Consensus
             base.PostStop();
         }
 
-        public static Props Props(IActorRef localNode, IActorRef taskManager, IActorRef blockchain, IStore store, Wallet wallet)
+        public static Props Props(NeoSystem system, IActorRef localNode, IActorRef taskManager, IActorRef blockchain, IStore store, Wallet wallet)
         {
-            return Akka.Actor.Props.Create(() => new ConsensusService(localNode, taskManager, blockchain, store, wallet));
+            return Akka.Actor.Props.Create(() => new ConsensusService(system, localNode, taskManager, blockchain, store, wallet));
         }
 
         private void RequestChangeView(ChangeViewReason reason)
@@ -617,7 +620,7 @@ namespace Neo.Consensus
             // The latter may happen by nodes in higher views with, at least, `M` proofs
             byte expectedView = context.ViewNumber;
             expectedView++;
-            ChangeTimer(TimeSpan.FromMilliseconds(Blockchain.MillisecondsPerBlock << (expectedView + 1)));
+            ChangeTimer(TimeSpan.FromMilliseconds(system.Settings.MillisecondsPerBlock << (expectedView + 1)));
             if ((context.CountCommitted + context.CountFailed) > context.F)
             {
                 RequestRecovery();
@@ -632,7 +635,8 @@ namespace Neo.Consensus
 
         private bool ReverifyAndProcessPayload(ExtensiblePayload payload)
         {
-            if (!payload.Verify(context.Snapshot)) return false;
+            var extensibleWitnessWhiteList = Blockchain.UpdateExtensibleWitnessWhiteList(system.StoreView);
+            if (!payload.Verify(system.StoreView, extensibleWitnessWhiteList)) return false;
             OnConsensusPayload(payload);
             return true;
         }
@@ -650,7 +654,7 @@ namespace Neo.Consensus
                 foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes))
                     localNode.Tell(Message.Create(MessageCommand.Inv, payload));
             }
-            ChangeTimer(TimeSpan.FromMilliseconds((Blockchain.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? Blockchain.MillisecondsPerBlock : 0)));
+            ChangeTimer(TimeSpan.FromMilliseconds((system.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? system.Settings.MillisecondsPerBlock : 0)));
         }
     }
 }

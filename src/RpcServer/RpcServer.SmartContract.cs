@@ -69,7 +69,7 @@ namespace Neo.Plugins
                 Attributes = Array.Empty<TransactionAttribute>(),
                 Witnesses = signers.Witnesses,
             };
-            using ApplicationEngine engine = ApplicationEngine.Run(script, container: tx, gas: settings.MaxGasInvoke);
+            using ApplicationEngine engine = ApplicationEngine.Run(script, neoSystem.StoreView, container: tx, gas: settings.MaxGasInvoke);
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(script);
             json["state"] = engine.State;
@@ -147,7 +147,7 @@ namespace Neo.Plugins
             }
             if (script_hash == null)
                 throw new RpcException(-100, "Invalid address");
-            using var snapshot = Blockchain.Singleton.GetSnapshot();
+            var snapshot = neoSystem.StoreView;
             json["unclaimed"] = NativeContract.NEO.UnclaimedGas(snapshot, script_hash, NativeContract.Ledger.CurrentIndex(snapshot) + 1).ToString();
             json["address"] = script_hash.ToAddress();
             return json;

@@ -49,6 +49,7 @@ namespace Neo.Consensus
         private readonly Wallet wallet;
         private readonly IStore store;
         private Dictionary<UInt256, ConsensusMessage> cachedMessages;
+        private readonly NeoSystem system;
 
         public int F => (Validators.Length - 1) / 3;
         public int M => Validators.Length - F;
@@ -94,17 +95,18 @@ namespace Neo.Consensus
 
         public int Size => throw new NotImplementedException();
 
-        public ConsensusContext(Wallet wallet, IStore store)
+        public ConsensusContext(Wallet wallet, IStore store, NeoSystem system)
         {
             this.wallet = wallet;
             this.store = store;
+            this.system = system;
         }
 
         public Block CreateBlock()
         {
             EnsureHeader();
             Contract contract = Contract.CreateMultiSigContract(M, Validators);
-            ContractParametersContext sc = new ContractParametersContext(Block.Header);
+            ContractParametersContext sc = new ContractParametersContext(system.StoreView, Block.Header);
             for (int i = 0, j = 0; i < Validators.Length && j < M; i++)
             {
                 if (GetMessage(CommitPayloads[i])?.ViewNumber != ViewNumber) continue;
@@ -284,7 +286,7 @@ namespace Neo.Consensus
             ContractParametersContext sc;
             try
             {
-                sc = new ContractParametersContext(payload);
+                sc = new ContractParametersContext(system.StoreView, payload);
                 wallet.Sign(sc);
             }
             catch (InvalidOperationException)
@@ -370,7 +372,7 @@ namespace Neo.Consensus
 
         public ExtensiblePayload MakePrepareRequest()
         {
-            EnsureMaxBlockLimitation(Blockchain.Singleton.MemPool.GetSortedVerifiedTransactions());
+            EnsureMaxBlockLimitation(system.MemPool.GetSortedVerifiedTransactions());
             Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
 
             return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
@@ -431,7 +433,7 @@ namespace Neo.Consensus
             if (viewNumber == 0)
             {
                 Snapshot?.Dispose();
-                Snapshot = Blockchain.Singleton.GetSnapshot();
+                Snapshot = system.GetSnapshot();
                 uint height = NativeContract.Ledger.CurrentIndex(Snapshot);
                 Block = new Block
                 {

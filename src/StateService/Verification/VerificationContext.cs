@@ -24,6 +24,7 @@ namespace Neo.Plugins.StateService.Verification
         private readonly int myIndex;
         private readonly uint rootIndex;
         private readonly ECPoint[] verifiers;
+        private readonly NeoSystem neoSystem;
         private int M => verifiers.Length - (verifiers.Length - 1) / 3;
         private readonly ConcurrentDictionary<int, byte[]> signatures = new ConcurrentDictionary<int, byte[]>();
 
@@ -46,15 +47,15 @@ namespace Neo.Plugins.StateService.Verification
         }
         public ExtensiblePayload Message => payload;
 
-        public VerificationContext(Wallet wallet, uint index)
+        public VerificationContext(NeoSystem system, Wallet wallet, uint index)
         {
             this.wallet = wallet;
             Retries = 0;
             myIndex = -1;
             root = null;
             rootIndex = index;
-            using SnapshotCache snapshot = Blockchain.Singleton.GetSnapshot();
-            verifiers = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.StateValidator, index);
+            neoSystem = system;
+            verifiers = NativeContract.RoleManagement.GetDesignatedByRole(neoSystem.StoreView, Role.StateValidator, index);
             if (wallet is null) return;
             for (int i = 0; i < verifiers.Length; i++)
             {
@@ -99,7 +100,7 @@ namespace Neo.Plugins.StateService.Verification
             if (signatures.Count < M) return false;
             if (StateRoot.Witness != null) return true;
             Contract contract = Contract.CreateMultiSigContract(M, verifiers);
-            ContractParametersContext sc = new ContractParametersContext(StateRoot);
+            ContractParametersContext sc = new ContractParametersContext(neoSystem.StoreView, StateRoot);
             for (int i = 0, j = 0; i < verifiers.Length && j < M; i++)
             {
                 if (!signatures.TryGetValue(i, out byte[] sig)) continue;
@@ -116,7 +117,7 @@ namespace Neo.Plugins.StateService.Verification
                 Sender = Contract.CreateSignatureRedeemScript(verifiers[MyIndex]).ToScriptHash(),
                 Data = StateRoot.ToArray(),
             };
-            sc = new ContractParametersContext(payload);
+            sc = new ContractParametersContext(neoSystem.StoreView, payload);
             wallet.Sign(sc);
             payload.Witness = sc.GetWitnesses()[0];
             return true;

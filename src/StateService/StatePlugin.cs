@@ -139,7 +139,7 @@ namespace Neo.Plugins.StateService
             {
                 throw new RpcException(-100, "Old state not supported");
             }
-            using var snapshot = Singleton.GetSnapshot();
+            var snapshot = System.StoreView;
             var contract = NativeContract.ContractManagement.GetContract(snapshot, script_hash);
             if (contract is null) throw new RpcException(-100, "Unknown contract");
             StorageKey skey = new StorageKey

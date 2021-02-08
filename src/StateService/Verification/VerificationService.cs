@@ -86,7 +86,7 @@ namespace Neo.Plugins.StateService.Verification
                     }
                 });
             }
-            var p = new VerificationContext(wallet, index);
+            var p = new VerificationContext(core, wallet, index);
             if (p.IsValidator && contexts.TryAdd(index, p))
             {
                 p.Timer = Context.System.Scheduler.ScheduleTellOnceCancelable(TimeSpan.FromMilliseconds(DelayMilliseconds), Self, new Timer

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
 using Neo.IO;
 using Neo.IO.Json;
+using Neo.Network.P2P;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,11 +26,11 @@ namespace Neo.Plugins
 
         private IWebHost host;
         private readonly RpcServerSettings settings;
-        private readonly NeoSystem system;
+        private readonly NeoSystem neoSystem;
 
         public RpcServer(NeoSystem system, RpcServerSettings settings)
         {
-            this.system = system;
+            this.neoSystem = system;
             this.settings = settings;
             RegisterMethods(this);
         }

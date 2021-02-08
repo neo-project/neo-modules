@@ -283,7 +283,6 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject GetNep17Balances(JArray _params)
         {
-            using var snapshot = Blockchain.Singleton.GetSnapshot();
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
 
             JObject json = new JObject();
@@ -299,7 +298,7 @@ namespace Neo.Plugins
                     ReadOnlySpan<byte> key_bytes = it.Key();
                     if (!key_bytes.StartsWith(prefix)) break;
                     Nep17BalanceKey key = key_bytes[1..].AsSerializable<Nep17BalanceKey>();
-                    if (NativeContract.ContractManagement.GetContract(snapshot, key.AssetScriptHash) is null)
+                    if (NativeContract.ContractManagement.GetContract(System.StoreView, key.AssetScriptHash) is null)
                         continue;
                     Nep17Balance value = it.Value().AsSerializable<Nep17Balance>();
                     balances.Add(new JObject

@@ -54,7 +54,7 @@ namespace Neo.Network.RPC
         public TransactionManager(Transaction tx, RpcClient rpcClient, uint magic)
         {
             this.tx = tx;
-            this.context = new ContractParametersContext(tx);
+            this.context = new ContractParametersContext(null, tx);
             this.rpcClient = rpcClient;
             this.magic = magic;
         }

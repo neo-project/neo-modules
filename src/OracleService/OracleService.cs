@@ -81,12 +81,9 @@ namespace Neo.Plugins
                 Console.WriteLine("Please open wallet first!");
                 return;
             }
-
-            using (var snapshot = Blockchain.Singleton.GetSnapshot())
-            {
-                if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
+            
+            if (!CheckOracleAvaiblable(System.StoreView, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
                 if (!CheckOracleAccount(wallet, oracles)) throw new ArgumentException("There is no oracle account in wallet");
-            }
 
             started = true;
 
@@ -153,18 +150,17 @@ namespace Neo.Plugins
 
             if (finishedCache.ContainsKey(requestId)) throw new RpcException(-100, "Request has already finished");
 
-            using (var snapshot = Blockchain.Singleton.GetSnapshot())
-            {
-                uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
-                var oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
-                if (!oracles.Any(p => p.Equals(oraclePub))) throw new RpcException(-100, $"{oraclePub} isn't an oracle node");
-                if (NativeContract.Oracle.GetRequest(snapshot, requestId) is null)
-                    throw new RpcException(-100, "Request is not found");
-                var data = Neo.Helper.Concat(oraclePub.ToArray(), BitConverter.GetBytes(requestId), txSign);
-                if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
+            var snapshot = System.StoreView;
+            uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
+            var oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
+            if (!oracles.Any(p => p.Equals(oraclePub))) throw new RpcException(-100, $"{oraclePub} isn't an oracle node");
+            if (NativeContract.Oracle.GetRequest(snapshot, requestId) is null)
+                throw new RpcException(-100, "Request is not found");
+            var data = Neo.Helper.Concat(oraclePub.ToArray(), BitConverter.GetBytes(requestId), txSign);
+            if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
 
-                AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
-            }
+            AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
+
             return new JObject();
         }
 
@@ -253,15 +249,13 @@ namespace Neo.Plugins
         {
             while (!cancelSource.IsCancellationRequested)
             {
-                using (var snapshot = Blockchain.Singleton.GetSnapshot())
+                foreach (var (id, request) in NativeContract.Oracle.GetRequests(System.StoreView))
                 {
-                    foreach (var (id, request) in NativeContract.Oracle.GetRequests(snapshot))
-                    {
-                        if (cancelSource.IsCancellationRequested) break;
-                        if (!finishedCache.ContainsKey(id) && (!pendingQueue.TryGetValue(id, out OracleTask task) || task.Tx is null))
-                            await ProcessRequestAsync(snapshot, request);
-                    }
+                    if (cancelSource.IsCancellationRequested) break;
+                    if (!finishedCache.ContainsKey(id) && (!pendingQueue.TryGetValue(id, out OracleTask task) || task.Tx is null))
+                        await ProcessRequestAsync(System.StoreView, request);
                 }
+
                 if (cancelSource.IsCancellationRequested) break;
                 await Task.Delay(500);
             }

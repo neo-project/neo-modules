@@ -1,6 +1,5 @@
 using Neo.IO;
 using Neo.IO.Json;
-using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
@@ -14,6 +13,7 @@ using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Neo.SmartContract.Native;
 
 namespace Neo.Network.RPC
 {
@@ -23,12 +23,12 @@ namespace Neo.Network.RPC
     public class RpcClient : IDisposable
     {
         private readonly HttpClient httpClient;
-        private readonly Uri baseAddress;
+        private readonly string baseAddress;
 
         public RpcClient(Uri url, string rpcUser = default, string rpcPass = default)
         {
             httpClient = new HttpClient();
-            baseAddress = url;
+            baseAddress = url.AbsolutePath;
             if (!string.IsNullOrEmpty(rpcUser) && !string.IsNullOrEmpty(rpcPass))
             {
                 string token = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{rpcUser}:{rpcPass}"));
@@ -39,7 +39,7 @@ namespace Neo.Network.RPC
         public RpcClient(HttpClient client, Uri url)
         {
             httpClient = client;
-            baseAddress = url;
+            baseAddress = url.AbsolutePath;
         }
 
         #region IDisposable Support

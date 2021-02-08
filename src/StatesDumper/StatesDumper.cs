@@ -46,8 +46,8 @@ namespace Neo.Plugins
         private void OnDumpStorage(UInt160 key = null)
         {
             Dump(key != null
-                ? Blockchain.Singleton.View.Find(key.ToArray())
-                : Blockchain.Singleton.View.Find());
+                ? System.StoreView.Find(key.ToArray())
+                : System.StoreView.Find());
         }
 
         void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
