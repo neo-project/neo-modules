@@ -18,7 +18,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetBestBlockHash(JArray _params)
         {
-            return NativeContract.Ledger.CurrentHash(neoSystem.StoreView).ToString();
+            return NativeContract.Ledger.CurrentHash(system.StoreView).ToString();
         }
 
         [RpcMethod]
@@ -26,7 +26,7 @@ namespace Neo.Plugins
         {
             JObject key = _params[0];
             bool verbose = _params.Count >= 2 && _params[1].AsBoolean();
-            using var snapshot = neoSystem.GetSnapshot();
+            using var snapshot = system.GetSnapshot();
             Block block;
             if (key is JNumber)
             {
@@ -55,20 +55,20 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetBlockHeaderCount(JArray _params)
         {
-            return (neoSystem.HeaderCache.Last?.Index ?? NativeContract.Ledger.CurrentIndex(neoSystem.StoreView)) + 1;
+            return (system.HeaderCache.Last?.Index ?? NativeContract.Ledger.CurrentIndex(system.StoreView)) + 1;
         }
 
         [RpcMethod]
         protected virtual JObject GetBlockCount(JArray _params)
         {
-            return NativeContract.Ledger.CurrentIndex(neoSystem.StoreView) + 1;
+            return NativeContract.Ledger.CurrentIndex(system.StoreView) + 1;
         }
 
         [RpcMethod]
         protected virtual JObject GetBlockHash(JArray _params)
         {
             uint height = uint.Parse(_params[0].AsString());
-            var snapshot = neoSystem.StoreView;
+            var snapshot = system.StoreView;
             if (height <= NativeContract.Ledger.CurrentIndex(snapshot))
             {
                 return NativeContract.Ledger.GetBlockHash(snapshot, height).ToString();
@@ -81,7 +81,7 @@ namespace Neo.Plugins
         {
             JObject key = _params[0];
             bool verbose = _params.Count >= 2 && _params[1].AsBoolean();
-            var snapshot = neoSystem.StoreView;
+            var snapshot = system.StoreView;
             Header header;
             if (key is JNumber)
             {
@@ -113,7 +113,7 @@ namespace Neo.Plugins
         protected virtual JObject GetContractState(JArray _params)
         {
             UInt160 script_hash = ToScriptHash(_params[0].AsString());
-            ContractState contract = NativeContract.ContractManagement.GetContract(neoSystem.StoreView, script_hash);
+            ContractState contract = NativeContract.ContractManagement.GetContract(system.StoreView, script_hash);
             return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
         }
 
@@ -133,11 +133,11 @@ namespace Neo.Plugins
         {
             bool shouldGetUnverified = _params.Count >= 1 && _params[0].AsBoolean();
             if (!shouldGetUnverified)
-                return new JArray(neoSystem.MemPool.GetVerifiedTransactions().Select(p => (JObject)p.Hash.ToString()));
+                return new JArray(system.MemPool.GetVerifiedTransactions().Select(p => (JObject)p.Hash.ToString()));
 
             JObject json = new JObject();
-            json["height"] = NativeContract.Ledger.CurrentIndex(neoSystem.StoreView);
-            neoSystem.MemPool.GetVerifiedAndUnverifiedTransactions(
+            json["height"] = NativeContract.Ledger.CurrentIndex(system.StoreView);
+            system.MemPool.GetVerifiedAndUnverifiedTransactions(
                 out IEnumerable<Transaction> verifiedTransactions,
                 out IEnumerable<Transaction> unverifiedTransactions);
             json["verified"] = new JArray(verifiedTransactions.Select(p => (JObject)p.Hash.ToString()));
@@ -150,9 +150,9 @@ namespace Neo.Plugins
         {
             UInt256 hash = UInt256.Parse(_params[0].AsString());
             bool verbose = _params.Count >= 2 && _params[1].AsBoolean();
-            if (neoSystem.MemPool.TryGetValue(hash, out Transaction tx) && !verbose)
+            if (system.MemPool.TryGetValue(hash, out Transaction tx) && !verbose)
                 return Convert.ToBase64String(tx.ToArray());
-            var snapshot = neoSystem.StoreView;
+            var snapshot = system.StoreView;
             TransactionState state = NativeContract.Ledger.GetTransactionState(snapshot, hash);
             tx ??= state?.Transaction;
             if (tx is null) throw new RpcException(-100, "Unknown transaction");
@@ -171,7 +171,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetStorage(JArray _params)
         {
-            var snapshot = neoSystem.StoreView;
+            var snapshot = system.StoreView;
             if (!int.TryParse(_params[0].AsString(), out int id))
             {
                 UInt160 hash = UInt160.Parse(_params[0].AsString());
@@ -193,7 +193,7 @@ namespace Neo.Plugins
         protected virtual JObject GetTransactionHeight(JArray _params)
         {
             UInt256 hash = UInt256.Parse(_params[0].AsString());
-            uint? height = NativeContract.Ledger.GetTransactionState(neoSystem.StoreView, hash)?.BlockIndex;
+            uint? height = NativeContract.Ledger.GetTransactionState(system.StoreView, hash)?.BlockIndex;
             if (height.HasValue) return height.Value;
             throw new RpcException(-100, "Unknown transaction");
         }
@@ -201,7 +201,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetNextBlockValidators(JArray _params)
         {
-            var snapshot = neoSystem.StoreView;
+            var snapshot = system.StoreView;
             var validators = NativeContract.NEO.GetNextBlockValidators(snapshot);
             var candidates = NativeContract.NEO.GetCandidates(snapshot);
             if (candidates.Length > 0)
@@ -231,7 +231,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetCommittee(JArray _params)
         {
-            return new JArray(NativeContract.NEO.GetCommittee(neoSystem.StoreView).Select(p => (JObject)p.ToString()));
+            return new JArray(NativeContract.NEO.GetCommittee(system.StoreView).Select(p => (JObject)p.ToString()));
         }
 
         [RpcMethod]

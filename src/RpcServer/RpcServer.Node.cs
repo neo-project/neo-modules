@@ -18,7 +18,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetConnectionCount(JArray _params)
         {
-            LocalNode localNode = neoSystem.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
+            LocalNode localNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             return localNode.ConnectedCount;
         }
 
@@ -26,7 +26,7 @@ namespace Neo.Plugins
         protected virtual JObject GetPeers(JArray _params)
         {
             JObject json = new JObject();
-            LocalNode localNode = neoSystem.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
+            LocalNode localNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             json["unconnected"] = new JArray(localNode.GetUnconnectedPeers().Select(p =>
             {
                 JObject peerJson = new JObject();
@@ -63,7 +63,7 @@ namespace Neo.Plugins
         protected virtual JObject GetVersion(JArray _params)
         {
             JObject json = new JObject();
-            LocalNode localNode = neoSystem.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
+            LocalNode localNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             json["tcpport"] = localNode.ListenerTcpPort;
             json["wsport"] = localNode.ListenerWsPort;
             json["nonce"] = LocalNode.Nonce;
@@ -76,7 +76,7 @@ namespace Neo.Plugins
         protected virtual JObject SendRawTransaction(JArray _params)
         {
             Transaction tx = Convert.FromBase64String(_params[0].AsString()).AsSerializable<Transaction>();
-            RelayResult reason = neoSystem.Blockchain.Ask<RelayResult>(tx).Result;
+            RelayResult reason = system.Blockchain.Ask<RelayResult>(tx).Result;
             return GetRelayResult(reason.Result, tx.Hash);
         }
 
@@ -84,7 +84,7 @@ namespace Neo.Plugins
         protected virtual JObject SubmitBlock(JArray _params)
         {
             Block block = Convert.FromBase64String(_params[0].AsString()).AsSerializable<Block>();
-            RelayResult reason = neoSystem.Blockchain.Ask<RelayResult>(block).Result;
+            RelayResult reason = system.Blockchain.Ask<RelayResult>(block).Result;
             return GetRelayResult(reason.Result, block.Hash);
         }
     }

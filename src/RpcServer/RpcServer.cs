@@ -26,11 +26,11 @@ namespace Neo.Plugins
 
         private IWebHost host;
         private readonly RpcServerSettings settings;
-        private readonly NeoSystem neoSystem;
+        private readonly NeoSystem system;
 
         public RpcServer(NeoSystem system, RpcServerSettings settings)
         {
-            this.neoSystem = system;
+            this.system = system;
             this.settings = settings;
             RegisterMethods(this);
         }

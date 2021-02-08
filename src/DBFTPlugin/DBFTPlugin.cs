@@ -10,7 +10,6 @@ namespace Neo.Consensus
     {
         private IWalletProvider walletProvider;
         private IActorRef consensus;
-        private NeoSystem system;
         private bool started = false;
 
         public override string Description => "Consensus plugin with dBFT algorithm.";
@@ -23,7 +22,6 @@ namespace Neo.Consensus
         protected override void OnPluginsLoaded()
         {
             walletProvider = GetService<IWalletProvider>();
-            system = System;
             if (Settings.Default.AutoStart)
                 walletProvider.WalletOpened += WalletProvider_WalletOpened;
         }

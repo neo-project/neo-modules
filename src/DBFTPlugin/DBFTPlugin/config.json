@@ -2,6 +2,6 @@
   "PluginConfiguration": {
     "RecoveryLogs": "ConsensusState",
     "IgnoreRecoveryLogs": false,
-    "AutoStart": true
+    "AutoStart": false
   }
 }

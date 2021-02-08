@@ -23,12 +23,12 @@ namespace Neo.Network.RPC
     public class RpcClient : IDisposable
     {
         private readonly HttpClient httpClient;
-        private readonly string baseAddress;
+        private readonly Uri baseAddress;
 
         public RpcClient(Uri url, string rpcUser = default, string rpcPass = default)
         {
             httpClient = new HttpClient();
-            baseAddress = url.AbsolutePath;
+            baseAddress = url;
             if (!string.IsNullOrEmpty(rpcUser) && !string.IsNullOrEmpty(rpcPass))
             {
                 string token = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{rpcUser}:{rpcPass}"));
@@ -39,7 +39,7 @@ namespace Neo.Network.RPC
         public RpcClient(HttpClient client, Uri url)
         {
             httpClient = client;
-            baseAddress = url.AbsolutePath;
+            baseAddress = url;
         }
 
         #region IDisposable Support
