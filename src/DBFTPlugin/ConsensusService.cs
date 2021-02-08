@@ -290,7 +290,8 @@ namespace Neo.Consensus
             {
                 if (context.Block.Index < message.BlockIndex)
                 {
-                    Log($"Chain is behind: expected={message.BlockIndex} current={context.Block.Index - 1} nodes={new LocalNode(system).ConnectedCount}", LogLevel.Warning);
+                    LocalNode node = localNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
+                    Log($"Chain is behind: expected={message.BlockIndex} current={context.Block.Index - 1} nodes={node.ConnectedCount}", LogLevel.Warning);
                 }
                 return;
             }
