@@ -82,7 +82,7 @@ namespace Neo.Plugins
                 return;
             }
             if (!CheckOracleAvaiblable(System.StoreView, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
-                if (!CheckOracleAccount(wallet, oracles)) throw new ArgumentException("There is no oracle account in wallet");
+            if (!CheckOracleAccount(wallet, oracles)) throw new ArgumentException("There is no oracle account in wallet");
             started = true;
 
             timer = new Timer(OnTimer, null, RefreshInterval, Timeout.Infinite);
