@@ -245,7 +245,7 @@ namespace Neo.Network.RPC.Tests
 
             var tx = txManager.Tx;
             Assert.AreEqual(2, tx.Witnesses.Length);
-            Assert.AreEqual(41, tx.Witnesses[0].VerificationScript.Length);
+            Assert.AreEqual(40, tx.Witnesses[0].VerificationScript.Length);
             Assert.AreEqual(66, tx.Witnesses[0].InvocationScript.Length);
         }
     }

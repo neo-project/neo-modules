@@ -81,10 +81,8 @@ namespace Neo.Plugins
                 Console.WriteLine("Please open wallet first!");
                 return;
             }
-            
             if (!CheckOracleAvaiblable(System.StoreView, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
                 if (!CheckOracleAccount(wallet, oracles)) throw new ArgumentException("There is no oracle account in wallet");
-
             started = true;
 
             timer = new Timer(OnTimer, null, RefreshInterval, Timeout.Infinite);
@@ -328,10 +326,9 @@ namespace Neo.Plugins
             // Calculate network fee
 
             var oracleContract = NativeContract.ContractManagement.GetContract(snapshot, NativeContract.Oracle.Hash);
-            var engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.CreateSnapshot());
+            var engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.CreateSnapshot(), settings: System.Settings);
             ContractMethodDescriptor md = oracleContract.Manifest.Abi.GetMethod("verify", -1);
             engine.LoadContract(oracleContract, md, CallFlags.None);
-            engine.Push("verify");
             if (engine.Execute() != VMState.HALT) return null;
             tx.NetworkFee += engine.GasConsumed;
 

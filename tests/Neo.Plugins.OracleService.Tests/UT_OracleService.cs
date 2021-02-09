@@ -60,7 +60,7 @@ namespace Neo.Plugins.Tests
         [TestMethod]
         public void TestCreateOracleResponseTx()
         {
-            var snapshot = Blockchain.Singleton.GetSnapshot();
+            var snapshot = TestBlockchain.TheNeoSystem.StoreView;
 
             var executionFactor = NativeContract.Policy.GetExecFeeFactor(snapshot);
             Assert.AreEqual(executionFactor, (uint)30);
@@ -90,19 +90,19 @@ namespace Neo.Plugins.Tests
             ECPoint[] oracleNodes = new ECPoint[] { ECCurve.Secp256r1.G };
             var tx = OracleService.CreateResponseTx(snapshot, request, response, oracleNodes);
 
-            Assert.AreEqual(167, tx.Size);
-            Assert.AreEqual(2216640, tx.NetworkFee);
-            Assert.AreEqual(97783360, tx.SystemFee);
+            Assert.AreEqual(166, tx.Size);
+            Assert.AreEqual(2215610, tx.NetworkFee);
+            Assert.AreEqual(97784390, tx.SystemFee);
 
             // case (2) The size of attribute exceed the maximum limit
 
             request.GasForResponse = 0_10000000;
             response.Result = new byte[10250];
             tx = OracleService.CreateResponseTx(snapshot, request, response, oracleNodes);
-            Assert.AreEqual(166, tx.Size);
+            Assert.AreEqual(165, tx.Size);
             Assert.AreEqual(OracleResponseCode.InsufficientFunds, response.Code);
-            Assert.AreEqual(2215640, tx.NetworkFee);
-            Assert.AreEqual(7784360, tx.SystemFee);
+            Assert.AreEqual(2214610, tx.NetworkFee);
+            Assert.AreEqual(7785390, tx.SystemFee);
         }
     }
 }

@@ -10,11 +10,7 @@ namespace Neo.Plugins
         static TestBlockchain()
         {
             Console.WriteLine("initialize NeoSystem");
-            TheNeoSystem = new NeoSystem();
-
-            // Ensure that blockchain is loaded
-
-            var _ = Blockchain.Singleton;
+            TheNeoSystem = new NeoSystem(ProtocolSettings.Default, null, null);
         }
 
         public static void InitializeMockNeoSystem()
