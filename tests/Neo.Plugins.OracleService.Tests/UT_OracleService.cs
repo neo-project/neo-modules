@@ -1,10 +1,9 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Akka.TestKit.Xunit2;
-using Neo.Network.P2P.Payloads;
-using Neo.Ledger;
-using Neo.SmartContract.Native;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Cryptography.ECC;
+using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
 
 namespace Neo.Plugins.Tests
 {

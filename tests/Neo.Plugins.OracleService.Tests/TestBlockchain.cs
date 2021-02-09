@@ -1,4 +1,3 @@
-using Neo.Ledger;
 using System;
 
 namespace Neo.Plugins
