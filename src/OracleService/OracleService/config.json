@@ -7,8 +7,8 @@
     "Https": {
       "Timeout": 5000
     },
-    "Fs": {
-      "FsNodes": [],
+    "NeoFs": {
+      "Nodes": [],
     }
   }
 }

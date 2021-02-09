@@ -20,7 +20,7 @@ namespace Neo.Plugins
 
         public FsSettings(IConfigurationSection section)
         {
-            FSNodes = section.GetSection("FsNodes").GetChildren().Select(p => p.Get<string>()).ToArray();
+            FSNodes = section.GetSection("Nodes").GetChildren().Select(p => p.Get<string>()).ToArray();
         }
     }
 
@@ -42,7 +42,7 @@ namespace Neo.Plugins
             AllowPrivateHost = section.GetValue("AllowPrivateHost", false);
             AllowedContentTypes = section.GetSection("AllowedContentTypes").GetChildren().Select(p => p.Get<string>()).ToArray();
             Https = new HttpsSettings(section.GetSection("Https"));
-            Fs = new FsSettings(section.GetSection("Fs"));
+            Fs = new FsSettings(section.GetSection("NeoFs"));
         }
 
         public static void Load(IConfigurationSection section)

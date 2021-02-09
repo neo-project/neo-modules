@@ -14,10 +14,6 @@ namespace Neo.Plugins
     {
         private readonly HttpClient client = new HttpClient();
 
-        public void AttachWallet(Wallet wallet, ECPoint[] oracles)
-        {
-        }
-
         public void Configure()
         {
             client.DefaultRequestHeaders.Accept.Clear();

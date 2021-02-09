@@ -21,23 +21,11 @@ namespace Neo.Plugins
     {
         private byte[] privateKey;
         private const string URIScheme = "neofs";
-        private const string ErrInvalidScheme = "invalid URI scheme";
-        private const string ErrMissingObject = "object ID is missing from URI";
-        private const string ErrInvalidContainer = "container ID is invalid";
-        private const string ErrInvalidObject = "object ID is invalid";
-        private const string ErrInvalidRange = "object range is invalid (expected 'Offset|Length'";
-        private const string ErrInvalidCommand = "invalid command";
-
-        private const string RangeSep = "|";
         private const string RangeCmd = "range";
         private const string HeaderCmd = "header";
         private const string HashCmd = "hash";
 
         public void Configure()
-        {
-        }
-
-        public void Dispose()
         {
         }
 
@@ -72,15 +60,11 @@ namespace Neo.Plugins
 
         private byte[] Get(CancellationToken cancellation, byte[] privateKey, Uri uri, string host)
         {
-            if (uri.Scheme != URIScheme) throw new Exception(ErrInvalidScheme);
+            if (uri.Scheme != URIScheme) throw new Exception("invalid URI scheme");
             string[] ps = uri.OriginalString.Substring((uri.Scheme + "://").Length).Split("/");
-            if (ps.Length == 0) throw new Exception(ErrMissingObject);
-            byte[] rawCID = Cryptography.Base58.Decode(uri.Host);
-            if (rawCID.Length != 32) throw new Exception(ErrInvalidContainer);
-            byte[] rawOID = Cryptography.Base58.Decode(ps[0]);
-            if (rawOID.Length != 32) throw new Exception(ErrInvalidObject);
-            ContainerID containerID = ContainerID.FromByteArray(rawCID);
-            ObjectID objectID = ObjectID.FromByteArray(rawOID);
+            if (ps.Length == 0) throw new Exception("object ID is missing from URI");
+            ContainerID containerID = ContainerID.FromBase58String(uri.Host);
+            ObjectID objectID = ObjectID.FromBase58String(ps[0]);
             Address objectAddr = new Address()
             {
                 ContainerId = containerID,
@@ -105,7 +89,7 @@ namespace Neo.Plugins
             }
             else
             {
-                throw new Exception(ErrInvalidCommand);
+                throw new Exception("invalid command");
             }
         }
 
@@ -117,7 +101,7 @@ namespace Neo.Plugins
 
         private byte[] GetRange(CancellationToken cancellation, Client client, Address addr, params string[] ps)
         {
-            if (ps.Length == 0) throw new Exception(ErrInvalidRange);
+            if (ps.Length == 0) throw new Exception("object range is invalid (expected 'Offset|Length'");
             Range range = ParseRange(ps[0]);
             return client.GetObjectPayloadRangeData(cancellation, new RangeDataParams() { Address = addr, Range = range }).Result;
         }
@@ -137,17 +121,21 @@ namespace Neo.Plugins
             }
             Range range = ParseRange(ps[0]);
             List<byte[]> hashes = client.GetObjectPayloadRangeHash(cancellation, new RangeChecksumParams() { Address = addr, Ranges = new List<Range>() { range } });
-            if (hashes.Count == 0) throw new Exception(string.Format("{0}: empty response", ErrInvalidRange));
+            if (hashes.Count == 0) throw new Exception(string.Format("{0}: empty response", "object range is invalid (expected 'Offset|Length'"));
             return hashes[0];
         }
 
         private Range ParseRange(string s)
         {
-            int sepIndex = s.IndexOf(RangeSep);
-            if (sepIndex < 0) throw new Exception(ErrInvalidRange);
+            int sepIndex = s.IndexOf("|");
+            if (sepIndex < 0) throw new Exception("object range is invalid (expected 'Offset|Length'");
             ulong offset = ulong.Parse(s.Substring(0, sepIndex));
             ulong length = ulong.Parse(s.Substring(sepIndex));
             return new Range() { Offset = offset, Length = length };
+        }
+
+        public void Dispose()
+        {
         }
     }
 }

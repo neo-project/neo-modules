@@ -11,6 +11,5 @@ namespace Neo.Plugins
     {
         void Configure();
         Task<(OracleResponseCode, string)> ProcessAsync(Uri uri, CancellationToken cancellation);
-        void AttachWallet(Wallet wallet, ECPoint[] oracles);
     }
 }
