@@ -4,6 +4,7 @@ using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.Plugins.MPT;
+using Neo.Plugins.StateService.Network;
 using Neo.Plugins.StateService.Verification;
 using Neo.SmartContract;
 using System;
@@ -80,18 +81,18 @@ namespace Neo.Plugins.StateService.Storage
 
         private void OnStatePayload(ExtensiblePayload payload)
         {
-            StateRoot state_root = null;
+            if (payload.Data.Length == 0) return;
+            if ((MessageType)payload.Data[0] != MessageType.StateRoot) return;
+            StateRoot message;
             try
             {
-                state_root = payload.Data?.AsSerializable<StateRoot>();
+                message = payload.Data.AsSerializable<StateRoot>(1);
             }
-            catch (Exception ex)
+            catch (FormatException)
             {
-                Utility.Log(nameof(StateStore), LogLevel.Warning, " invalid state root " + ex.Message);
                 return;
             }
-            if (state_root != null)
-                OnNewStateRoot(state_root);
+            OnNewStateRoot(message);
         }
 
         private bool OnNewStateRoot(StateRoot state_root)

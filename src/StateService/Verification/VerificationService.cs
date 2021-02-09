@@ -1,13 +1,13 @@
 using Akka.Actor;
 using Akka.Util.Internal;
 using Neo.IO;
-using Neo.Network.RPC;
+using Neo.Ledger;
+using Neo.Network.P2P.Payloads;
+using Neo.Plugins.StateService.Network;
 using Neo.Wallets;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
 
 namespace Neo.Plugins.StateService.Verification
 {
@@ -15,11 +15,11 @@ namespace Neo.Plugins.StateService.Verification
     {
         public class ValidatedRootPersisted { public uint Index; }
         public class BlockPersisted { public uint Index; }
+        public const int MaxCachedVerificationProcessCount = 10;
         private class Timer { public uint Index; }
         private static readonly uint TimeoutMilliseconds = ProtocolSettings.Default.MillisecondsPerBlock;
         private static readonly uint DelayMilliseconds = 3000;
         private readonly NeoSystem core;
-        private const int MaxCachedVerificationProcessCount = 10;
         private readonly Wallet wallet;
         private readonly ConcurrentDictionary<uint, VerificationContext> contexts = new ConcurrentDictionary<uint, VerificationContext>();
 
@@ -27,36 +27,17 @@ namespace Neo.Plugins.StateService.Verification
         {
             this.core = core;
             this.wallet = wallet;
+            core.ActorSystem.EventStream.Subscribe(Self, typeof(Blockchain.RelayResult));
         }
 
         private void SendVote(VerificationContext context)
         {
-            var vote = context.CreateVote();
-            if (vote is null) return;
-            Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay vote, height={vote.RootIndex}, retry={context.Retries}");
-            Settings.Default.VerifierUrls.ForEach(url =>
-            {
-                Task.Run(() =>
-                {
-                    try
-                    {
-                        var http_client = new HttpClient
-                        {
-                            Timeout = TimeSpan.FromMilliseconds(TimeoutMilliseconds),
-                        };
-                        var client = new RpcClient(http_client, url);
-                        client.RpcSendAsync("votestateroot", vote.RootIndex, vote.ValidatorIndex, Convert.ToBase64String(vote.Signature))
-                            .GetAwaiter().GetResult();
-                    }
-                    catch (Exception e)
-                    {
-                        Utility.Log(nameof(VerificationService), LogLevel.Warning, $"Failed to send vote, verifier={url}, error={e.Message}");
-                    }
-                });
-            });
+            if (context.VoteMessage is null) return;
+            Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay vote, height={context.RootIndex}, retry={context.Retries}");
+            core.Blockchain.Tell(context.VoteMessage);
         }
 
-        private void OnVoteStateRoot(Vote vote)
+        private void OnStateRootVote(Vote vote)
         {
             if (contexts.TryGetValue(vote.RootIndex, out VerificationContext context) && context.AddSignature(vote.ValidatorIndex, vote.Signature))
             {
@@ -68,9 +49,9 @@ namespace Neo.Plugins.StateService.Verification
         {
             if (context.CheckSignatures())
             {
-                if (context.Message is null) return;
+                if (context.StateRootMessage is null) return;
                 Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay state root, height={context.StateRoot.Index}, root={context.StateRoot.RootHash}");
-                core.Blockchain.Tell(context.Message);
+                core.Blockchain.Tell(context.StateRootMessage);
             }
         }
 
@@ -124,12 +105,28 @@ namespace Neo.Plugins.StateService.Verification
             }
         }
 
+        private void OnVoteMessage(ExtensiblePayload payload)
+        {
+            if (payload.Data.Length == 0) return;
+            if ((MessageType)payload.Data[0] != MessageType.Vote) return;
+            Vote message;
+            try
+            {
+                message = payload.Data.AsSerializable<Vote>(1);
+            }
+            catch (FormatException)
+            {
+                return;
+            }
+            OnStateRootVote(message);
+        }
+
         protected override void OnReceive(object message)
         {
             switch (message)
             {
                 case Vote v:
-                    OnVoteStateRoot(v);
+                    OnStateRootVote(v);
                     break;
                 case BlockPersisted bp:
                     OnBlockPersisted(bp.Index);
@@ -139,6 +136,12 @@ namespace Neo.Plugins.StateService.Verification
                     break;
                 case Timer timer:
                     OnTimer(timer.Index);
+                    break;
+                case Blockchain.RelayResult rr:
+                    if (rr.Result == VerifyResult.Succeed && rr.Inventory is ExtensiblePayload payload && payload.Category == StatePlugin.StatePayloadCategory)
+                    {
+                        OnVoteMessage(payload);
+                    }
                     break;
                 default:
                     break;
