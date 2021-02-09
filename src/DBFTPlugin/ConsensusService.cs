@@ -67,7 +67,7 @@ namespace Neo.Consensus
         {
             if (verify)
             {
-                VerifyResult result = tx.Verify(context.Snapshot, context.VerificationContext);
+                VerifyResult result = tx.VerifyStateDependent(system.Settings, context.Snapshot, context.VerificationContext);
                 if (result != VerifyResult.Succeed)
                 {
                     Log($"Rejected tx: {tx.Hash}, {result}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
@@ -636,8 +636,8 @@ namespace Neo.Consensus
 
         private bool ReverifyAndProcessPayload(ExtensiblePayload payload)
         {
-            var extensibleWitnessWhiteList = Blockchain.UpdateExtensibleWitnessWhiteList(system.StoreView);
-            if (!payload.Verify(system.StoreView, extensibleWitnessWhiteList)) return false;
+            var extensibleWitnessWhiteList = Blockchain.UpdateExtensibleWitnessWhiteList(system.Settings, system.StoreView);
+            if (!payload.Verify(system.Settings, system.StoreView, extensibleWitnessWhiteList)) return false;
             OnConsensusPayload(payload);
             return true;
         }

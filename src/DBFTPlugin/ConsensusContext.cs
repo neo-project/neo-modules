@@ -442,13 +442,13 @@ namespace Neo.Consensus
                         PrevHash = NativeContract.Ledger.CurrentHash(Snapshot),
                         Index = height + 1,
                         NextConsensus = Contract.GetBFTAddress(
-                            NativeContract.NEO.ShouldRefreshCommittee(height + 1) ?
-                            NativeContract.NEO.ComputeNextBlockValidators(Snapshot) :
-                            NativeContract.NEO.GetNextBlockValidators(Snapshot))
+                            NeoToken.ShouldRefreshCommittee(height + 1, system.Settings.CommitteeMembersCount) ?
+                            NativeContract.NEO.ComputeNextBlockValidators(Snapshot, system.Settings) :
+                            NativeContract.NEO.GetNextBlockValidators(Snapshot, system.Settings.ValidatorsCount))
                     }
                 };
                 var pv = Validators;
-                Validators = NativeContract.NEO.GetNextBlockValidators(Snapshot);
+                Validators = NativeContract.NEO.GetNextBlockValidators(Snapshot, system.Settings.ValidatorsCount);
                 if (_witnessSize == 0 || (pv != null && pv.Length != Validators.Length))
                 {
                     // Compute the expected size of the witness

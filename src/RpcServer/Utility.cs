@@ -22,7 +22,7 @@ namespace Neo.Plugins
             return json;
         }
 
-        public static JObject NativeContractToJson(this NativeContract contract)
+        public static JObject NativeContractToJson(this NativeContract contract, ProtocolSettings settings)
         {
             return new JObject
             {
@@ -30,7 +30,7 @@ namespace Neo.Plugins
                 ["hash"] = contract.Hash.ToString(),
                 ["nef"] = contract.Nef.ToJson(),
                 ["manifest"] = contract.Manifest.ToJson(),
-                ["activeblockindex"] = contract.ActiveBlockIndex
+                ["activeblockindex"] = settings.GetNativeActivation(contract.Name)
             };
         }
     }

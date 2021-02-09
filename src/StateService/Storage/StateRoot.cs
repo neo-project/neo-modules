@@ -85,9 +85,9 @@ namespace Neo.Plugins.StateService.Storage
             writer.Write(RootHash);
         }
 
-        public bool Verify(DataCache snapshot)
+        public bool Verify(ProtocolSettings settings, DataCache snapshot)
         {
-            return this.VerifyWitnesses(snapshot, 1_00000000);
+            return this.VerifyWitnesses(settings, snapshot, 1_00000000);
         }
 
         public UInt160[] GetScriptHashesForVerifying(DataCache snapshot)

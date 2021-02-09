@@ -202,7 +202,7 @@ namespace Neo.Plugins
         protected virtual JObject GetNextBlockValidators(JArray _params)
         {
             var snapshot = system.StoreView;
-            var validators = NativeContract.NEO.GetNextBlockValidators(snapshot);
+            var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, system.Settings.ValidatorsCount);
             var candidates = NativeContract.NEO.GetCandidates(snapshot);
             if (candidates.Length > 0)
             {
@@ -237,7 +237,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetNativeContracts(JArray _params)
         {
-            return new JArray(NativeContract.Contracts.Select(p => p.NativeContractToJson()));
+            return new JArray(NativeContract.Contracts.Select(p => p.NativeContractToJson(system.Settings)));
         }
     }
 }
