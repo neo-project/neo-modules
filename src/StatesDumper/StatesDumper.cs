@@ -15,12 +15,18 @@ namespace Neo.Plugins
     public class StatesDumper : Plugin, IPersistencePlugin
     {
         private readonly JArray bs_cache = new JArray();
+        private NeoSystem System;
 
         public override string Description => "Exports Neo-CLI status data";
 
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
+        }
+
+        protected override void OnSystemLoaded(NeoSystem system)
+        {
+            System = system;
         }
 
         private static void Dump<TKey, TValue>(IEnumerable<(TKey Key, TValue Value)> states)
@@ -50,7 +56,7 @@ namespace Neo.Plugins
                 : System.StoreView.Find());
         }
 
-        void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
                 OnPersistStorage(snapshot);
@@ -97,7 +103,7 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnCommit(Block block, DataCache snapshot)
+        void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
                 OnCommitStorage(snapshot);

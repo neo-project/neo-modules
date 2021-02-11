@@ -6,11 +6,12 @@ using Neo.Wallets;
 
 namespace Neo.Consensus
 {
-    public class DBFTPlugin : Plugin, IConsensusProvider, IP2PPlugin
+    public class DBFTPlugin : Plugin, IP2PPlugin
     {
         private IWalletProvider walletProvider;
         private IActorRef consensus;
         private bool started = false;
+        private NeoSystem System;
 
         public override string Description => "Consensus plugin with dBFT algorithm.";
 
@@ -19,23 +20,15 @@ namespace Neo.Consensus
             Settings.Load(GetConfiguration());
         }
 
-        protected override void OnPluginsLoaded()
+        protected override void OnSystemLoaded(NeoSystem system)
         {
-            walletProvider = GetService<IWalletProvider>();
-            if (Settings.Default.AutoStart)
-                walletProvider.WalletOpened += WalletProvider_WalletOpened;
-        }
-
-        private void WalletProvider_WalletOpened(object sender, Wallet wallet)
-        {
-            walletProvider.WalletOpened -= WalletProvider_WalletOpened;
-            Start(wallet);
+            System = system;
         }
 
         [ConsoleCommand("start consensus", Category = "Consensus", Description = "Start consensus service (dBFT)")]
         private void OnStart()
         {
-            Start(walletProvider.GetWallet());
+            Start(System.GetService<IWalletProvider>().GetWallet());
         }
 
         public void Start(Wallet wallet)
@@ -46,7 +39,7 @@ namespace Neo.Consensus
             consensus.Tell(new ConsensusService.Start());
         }
 
-        bool IP2PPlugin.OnP2PMessage(Message message)
+        bool IP2PPlugin.OnP2PMessage(NeoSystem system, Message message)
         {
             if (message.Command == MessageCommand.Transaction)
                 consensus?.Tell(message.Payload);

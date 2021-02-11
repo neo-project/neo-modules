@@ -41,7 +41,7 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "Unknown block");
             if (verbose)
             {
-                JObject json = Utility.BlockToJson(block);
+                JObject json = Utility.BlockToJson(block, system.Settings);
                 json["confirmations"] = NativeContract.Ledger.CurrentIndex(snapshot) - block.Index + 1;
                 UInt256 hash = NativeContract.Ledger.GetBlockHash(snapshot, block.Index + 1);
                 if (hash != null)
@@ -97,7 +97,7 @@ namespace Neo.Plugins
 
             if (verbose)
             {
-                JObject json = header.ToJson();
+                JObject json = header.ToJson(system.Settings);
                 json["confirmations"] = NativeContract.Ledger.CurrentIndex(snapshot) - header.Index + 1;
                 UInt256 hash = NativeContract.Ledger.GetBlockHash(snapshot, header.Index + 1);
                 if (hash != null)
@@ -156,7 +156,7 @@ namespace Neo.Plugins
             tx ??= state?.Transaction;
             if (tx is null) throw new RpcException(-100, "Unknown transaction");
             if (!verbose) return Convert.ToBase64String(tx.ToArray());
-            JObject json = Utility.TransactionToJson(tx);
+            JObject json = Utility.TransactionToJson(tx, system.Settings);
             if (state is not null)
             {
                 TrimmedBlock block = NativeContract.Ledger.GetTrimmedBlock(snapshot, NativeContract.Ledger.GetBlockHash(snapshot, state.BlockIndex));

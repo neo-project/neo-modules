@@ -33,9 +33,9 @@ namespace Neo.Plugins
             }
         }
 
-        protected override void OnPluginsLoaded()
+        protected override void OnSystemLoaded(NeoSystem system)
         {
-            this.server = new RpcServer(System, settings);
+            this.server = new RpcServer(system, settings);
 
             foreach (var handler in handlers)
             {

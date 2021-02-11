@@ -168,7 +168,7 @@ namespace Neo.Network.RPC
 
             var gasBalance = await new Nep17API(rpcClient).BalanceOfAsync(NativeContract.GAS.Hash, Tx.Sender).ConfigureAwait(false);
             if (gasBalance < Tx.SystemFee + Tx.NetworkFee)
-                throw new InvalidOperationException($"Insufficient GAS in address: {Tx.Sender.ToAddress()}");
+                throw new InvalidOperationException($"Insufficient GAS in address: {Tx.Sender.ToAddress(ProtocolSettings.Load("protocol").AddressVersion)}");
 
             // Sign with signStore
             for (int i = 0; i < signStore.Count; i++)

@@ -27,14 +27,17 @@ namespace Neo.Plugins.StateService
         internal IActorRef Store;
         internal IActorRef Verifier;
 
+        private NeoSystem System;
+
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
             RpcServerPlugin.RegisterMethods(this);
         }
 
-        protected override void OnPluginsLoaded()
+        protected override void OnSystemLoaded(NeoSystem system)
         {
+            System = system;
             Store = System.ActorSystem.ActorOf(StateStore.Props(System, this, Settings.Default.Path));
         }
 
@@ -45,7 +48,7 @@ namespace Neo.Plugins.StateService
             if (Verifier != null) System.EnsureStoped(Verifier);
         }
 
-        void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
         {
             StateStore.Singleton.UpdateLocalStateRoot(block.Index, snapshot.GetChangeSet().Where(p => p.State != TrackState.None).Where(p => p.Key.Id != NativeContract.Ledger.Id).ToList());
         }
@@ -58,7 +61,7 @@ namespace Neo.Plugins.StateService
                 Console.WriteLine("Already started!");
                 return;
             }
-            var wallet = GetService<IWalletProvider>().GetWallet();
+            var wallet = System.GetService<IWalletProvider>().GetWallet();
             if (wallet is null)
             {
                 Console.WriteLine("Please open wallet first!");

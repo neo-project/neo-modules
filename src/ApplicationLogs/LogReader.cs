@@ -142,7 +142,7 @@ namespace Neo.Plugins
             return null;
         }
 
-        void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             WriteBatch writeBatch = new WriteBatch();
 

@@ -17,6 +17,7 @@ namespace Neo.Network.RPC.Tests
         {
             keyPair = new KeyPair(Wallet.GetPrivateKeyFromWIF("KyXwTh1hB76RRMquSvnxZrJzQx7h9nQP2PCRL38v6VDb5ip3nf1p"));
             scriptHash = Contract.CreateSignatureRedeemScript(keyPair.PublicKey).ToScriptHash();
+
         }
 
         [TestMethod]
@@ -40,7 +41,7 @@ namespace Neo.Network.RPC.Tests
             string nul = null;
             Assert.ThrowsException<ArgumentNullException>(() => Utility.GetScriptHash(nul));
 
-            string addr = scriptHash.ToAddress();
+            string addr = scriptHash.ToAddress(ProtocolSettings.Load("protocol").AddressVersion);
             var result = Utility.GetScriptHash(addr);
             Assert.AreEqual(scriptHash, result);
 

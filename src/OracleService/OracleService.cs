@@ -40,6 +40,7 @@ namespace Neo.Plugins
         private bool started = false;
         private bool stopped = false;
         private int counter;
+        private NeoSystem System;
 
         private static readonly IReadOnlyDictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>
         {
@@ -51,6 +52,11 @@ namespace Neo.Plugins
         public OracleService()
         {
             RpcServerPlugin.RegisterMethods(this);
+        }
+
+        protected override void OnSystemLoaded(NeoSystem system)
+        {
+            System = system;
         }
 
         protected override void Configure()
@@ -74,7 +80,7 @@ namespace Neo.Plugins
         {
             if (started) return;
 
-            wallet = GetService<IWalletProvider>().GetWallet();
+            wallet = System.GetService<IWalletProvider>().GetWallet();
 
             if (wallet is null)
             {
@@ -101,7 +107,7 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (stopped || !started) return;
             if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles) || !CheckOracleAccount(wallet, oracles))
@@ -157,7 +163,7 @@ namespace Neo.Plugins
             var data = Neo.Helper.Concat(oraclePub.ToArray(), BitConverter.GetBytes(requestId), txSign);
             if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
 
-            AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
+            AddResponseTxSign(requestId, oraclePub, txSign);
 
             return new JObject();
         }
@@ -220,8 +226,8 @@ namespace Neo.Plugins
                     }
                 }
                 var response = new OracleResponse() { Id = requestId, Code = code, Result = result };
-                var responseTx = CreateResponseTx(snapshot, request, response, oracleNodes);
-                var backupTx = CreateResponseTx(snapshot, request, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() }, oracleNodes);
+                var responseTx = CreateResponseTx(System, request, response, oracleNodes);
+                var backupTx = CreateResponseTx(System, request, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() }, oracleNodes);
 
                 Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
 
@@ -232,9 +238,9 @@ namespace Neo.Plugins
                     var oraclePub = account.GetKey()?.PublicKey;
                     if (!account.HasKey || account.Lock || !oraclePublicKeys.Contains(oraclePub)) continue;
 
-                    var txSign = responseTx.Sign(account.GetKey());
-                    var backTxSign = backupTx.Sign(account.GetKey());
-                    AddResponseTxSign(snapshot, requestId, oraclePub, txSign, responseTx, backupTx, backTxSign);
+                    var txSign = responseTx.Sign(account.GetKey(), System.Settings.Magic);
+                    var backTxSign = backupTx.Sign(account.GetKey(), System.Settings.Magic);
+                    AddResponseTxSign(requestId, oraclePub, txSign, responseTx, backupTx, backTxSign);
                     tasks.Add(SendResponseSignatureAsync(requestId, txSign, account.GetKey()));
 
                     Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()}");
@@ -276,8 +282,9 @@ namespace Neo.Plugins
             }
         }
 
-        public static Transaction CreateResponseTx(DataCache snapshot, OracleRequest request, OracleResponse response, ECPoint[] oracleNodes)
+        public static Transaction CreateResponseTx(NeoSystem system, OracleRequest request, OracleResponse response, ECPoint[] oracleNodes)
         {
+            var snapshot = system.StoreView;
             var requestTx = NativeContract.Ledger.GetTransactionState(snapshot, request.OriginalTxid);
             var n = oracleNodes.Length;
             var m = n - (n - 1) / 3;
@@ -326,7 +333,7 @@ namespace Neo.Plugins
             // Calculate network fee
 
             var oracleContract = NativeContract.ContractManagement.GetContract(snapshot, NativeContract.Oracle.Hash);
-            var engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.CreateSnapshot(), settings: System.Settings);
+            var engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.CreateSnapshot(), settings: system.Settings);
             ContractMethodDescriptor md = oracleContract.Manifest.Abi.GetMethod("verify", -1);
             engine.LoadContract(oracleContract, md, CallFlags.None);
             if (engine.Execute() != VMState.HALT) return null;
@@ -364,12 +371,12 @@ namespace Neo.Plugins
             return tx;
         }
 
-        private void AddResponseTxSign(DataCache snapshot, ulong requestId, ECPoint oraclePub, byte[] sign, Transaction responseTx = null, Transaction backupTx = null, byte[] backupSign = null)
+        private void AddResponseTxSign(ulong requestId, ECPoint oraclePub, byte[] sign, Transaction responseTx = null, Transaction backupTx = null, byte[] backupSign = null)
         {
             var task = pendingQueue.GetOrAdd(requestId, _ => new OracleTask
             {
                 Id = requestId,
-                Request = NativeContract.Oracle.GetRequest(snapshot, requestId),
+                Request = NativeContract.Oracle.GetRequest(System.StoreView, requestId),
                 Signs = new ConcurrentDictionary<ECPoint, byte[]>(),
                 BackupSigns = new ConcurrentDictionary<ECPoint, byte[]>()
             });
@@ -377,13 +384,13 @@ namespace Neo.Plugins
             if (responseTx != null)
             {
                 task.Tx = responseTx;
-                var data = task.Tx.GetHashData();
+                var data = task.Tx.GetSignData(System.Settings.Magic);
                 task.Signs.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.Signs.Remove(p.Key, out _));
             }
             if (backupTx != null)
             {
                 task.BackupTx = backupTx;
-                var data = task.BackupTx.GetHashData();
+                var data = task.BackupTx.GetSignData(System.Settings.Magic);
                 task.BackupSigns.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.BackupSigns.Remove(p.Key, out _));
                 task.BackupSigns.TryAdd(oraclePub, backupSign);
             }
@@ -394,14 +401,14 @@ namespace Neo.Plugins
                 return;
             }
 
-            if (Crypto.VerifySignature(task.Tx.GetHashData(), sign, oraclePub))
+            if (Crypto.VerifySignature(task.Tx.GetSignData(System.Settings.Magic), sign, oraclePub))
                 task.Signs.TryAdd(oraclePub, sign);
-            else if (Crypto.VerifySignature(task.BackupTx.GetHashData(), sign, oraclePub))
+            else if (Crypto.VerifySignature(task.BackupTx.GetSignData(System.Settings.Magic), sign, oraclePub))
                 task.BackupSigns.TryAdd(oraclePub, sign);
             else
                 throw new RpcException(-100, "Invalid response transaction sign");
 
-            if (CheckTxSign(snapshot, task.Tx, task.Signs) || CheckTxSign(snapshot, task.BackupTx, task.BackupSigns))
+            if (CheckTxSign(System, task.Tx, task.Signs) || CheckTxSign(System, task.BackupTx, task.BackupSigns))
             {
                 finishedCache.TryAdd(requestId, new DateTime());
                 pendingQueue.TryRemove(requestId, out _);
@@ -418,8 +425,9 @@ namespace Neo.Plugins
             return Utility.StrictUTF8.GetBytes(afterObjects.ToString(Newtonsoft.Json.Formatting.None));
         }
 
-        private static bool CheckTxSign(DataCache snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
+        private static bool CheckTxSign(NeoSystem System, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
         {
+            var snapshot = System.StoreView;
             uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
             ECPoint[] oraclesNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
             int neededThreshold = oraclesNodes.Length - (oraclesNodes.Length - 1) / 3;

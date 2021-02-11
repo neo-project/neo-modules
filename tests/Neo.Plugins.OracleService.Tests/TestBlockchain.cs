@@ -9,7 +9,7 @@ namespace Neo.Plugins
         static TestBlockchain()
         {
             Console.WriteLine("initialize NeoSystem");
-            TheNeoSystem = new NeoSystem(ProtocolSettings.Default, null, null);
+            TheNeoSystem = new NeoSystem(ProtocolSettings.Load("protocol.json"), null, null);
         }
 
         public static void InitializeMockNeoSystem()

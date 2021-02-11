@@ -29,12 +29,18 @@ namespace Neo.Plugins
         private bool _recordNullAddressHistory;
         private uint _maxResults;
         private Snapshot _levelDbSnapshot;
+        private NeoSystem System;
 
         public override string Description => "Enquiries NEP-17 balances and transaction history of accounts through RPC";
 
         public RpcNep17Tracker()
         {
             RpcServerPlugin.RegisterMethods(this);
+        }
+
+        protected override void OnSystemLoaded(NeoSystem system)
+        {
+            System = system;
         }
 
         protected override void Configure()
@@ -159,7 +165,7 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             // Start freshly with a new DBCache for each block.
             ResetBatch();
@@ -189,7 +195,7 @@ namespace Neo.Plugins
                     script = sb.ToArray();
                 }
 
-                using (ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, gas: 100000000))
+                using (ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, gas: 100000000, settings: System.Settings))
                 {
                     if (engine.State.HasFlag(VMState.FAULT)) continue;
                     if (engine.ResultStack.Count <= 0) continue;
@@ -205,7 +211,7 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnCommit(Block block, DataCache snapshot)
+        void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
         {
             _db.Write(WriteOptions.Default, _writeBatch);
         }
@@ -242,7 +248,7 @@ namespace Neo.Plugins
                 JObject transfer = new JObject();
                 transfer["timestamp"] = key.TimestampMS;
                 transfer["assethash"] = key.AssetScriptHash.ToString();
-                transfer["transferaddress"] = value.UserScriptHash == UInt160.Zero ? null : value.UserScriptHash.ToAddress();
+                transfer["transferaddress"] = value.UserScriptHash == UInt160.Zero ? null : value.UserScriptHash.ToAddress(System.Settings.AddressVersion);
                 transfer["amount"] = value.Amount.ToString();
                 transfer["blockindex"] = value.BlockIndex;
                 transfer["transfernotifyindex"] = key.BlockXferNotificationIndex;
@@ -254,7 +260,7 @@ namespace Neo.Plugins
         private UInt160 GetScriptHashFromParam(string addressOrScriptHash)
         {
             return addressOrScriptHash.Length < 40 ?
-                addressOrScriptHash.ToScriptHash() : UInt160.Parse(addressOrScriptHash);
+                addressOrScriptHash.ToScriptHash(System.Settings.AddressVersion) : UInt160.Parse(addressOrScriptHash);
         }
 
         [RpcMethod]
@@ -274,7 +280,7 @@ namespace Neo.Plugins
             json["sent"] = transfersSent;
             JArray transfersReceived = new JArray();
             json["received"] = transfersReceived;
-            json["address"] = userScriptHash.ToAddress();
+            json["address"] = userScriptHash.ToAddress(System.Settings.AddressVersion);
             AddTransfers(Nep17TransferSentPrefix, userScriptHash, startTime, endTime, transfersSent);
             AddTransfers(Nep17TransferReceivedPrefix, userScriptHash, startTime, endTime, transfersReceived);
             return json;
@@ -288,7 +294,7 @@ namespace Neo.Plugins
             JObject json = new JObject();
             JArray balances = new JArray();
             json["balance"] = balances;
-            json["address"] = userScriptHash.ToAddress();
+            json["address"] = userScriptHash.ToAddress(System.Settings.AddressVersion);
 
             using (Iterator it = _db.NewIterator(ReadOptions.Default))
             {

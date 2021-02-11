@@ -20,7 +20,7 @@ namespace Neo.Network.RPC.Models
             JObject json = new JObject();
             json["sent"] = Sent.Select(p => p.ToJson()).ToArray();
             json["received"] = Received.Select(p => p.ToJson()).ToArray();
-            json["address"] = UserScriptHash.ToAddress();
+            json["address"] = UserScriptHash.ToAddress(ProtocolSettings.Default.AddressVersion);
             return json;
         }
 
@@ -57,7 +57,7 @@ namespace Neo.Network.RPC.Models
             JObject json = new JObject();
             json["timestamp"] = TimestampMS;
             json["assethash"] = AssetHash.ToString();
-            json["transferaddress"] = UserScriptHash?.ToAddress();
+            json["transferaddress"] = UserScriptHash?.ToAddress(ProtocolSettings.Load("protocol").AddressVersion);
             json["amount"] = Amount.ToString();
             json["blockindex"] = BlockIndex;
             json["transfernotifyindex"] = TransferNotifyIndex;

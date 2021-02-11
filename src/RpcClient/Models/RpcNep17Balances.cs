@@ -16,7 +16,7 @@ namespace Neo.Network.RPC.Models
         {
             JObject json = new JObject();
             json["balance"] = Balances.Select(p => p.ToJson()).ToArray();
-            json["address"] = UserScriptHash.ToAddress();
+            json["address"] = UserScriptHash.ToAddress(ProtocolSettings.Load("protocol").AddressVersion);
             return json;
         }
 

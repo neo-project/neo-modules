@@ -267,7 +267,7 @@ namespace Neo.Consensus
         {
             return CommitPayloads[MyIndex] ?? (CommitPayloads[MyIndex] = MakeSignedPayload(new Commit
             {
-                Signature = EnsureHeader().Sign(keyPair)
+                Signature = EnsureHeader().Sign(keyPair, system.Settings.Magic)
             }));
         }
 

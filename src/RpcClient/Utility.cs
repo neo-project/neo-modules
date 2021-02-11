@@ -32,7 +32,7 @@ namespace Neo.Network.RPC
             var addressOrScriptHash = value.AsString();
 
             return addressOrScriptHash.Length < 40 ?
-                addressOrScriptHash.ToScriptHash() : UInt160.Parse(addressOrScriptHash);
+                addressOrScriptHash.ToScriptHash(ProtocolSettings.Load("protocol.json").AddressVersion) : UInt160.Parse(addressOrScriptHash);
         }
 
         public static string AsScriptHash(this string addressOrScriptHash)
@@ -84,7 +84,7 @@ namespace Neo.Network.RPC
 
             if (account.Length == 34)
             {
-                return Wallets.Helper.ToScriptHash(account);
+                return Wallets.Helper.ToScriptHash(account, ProtocolSettings.Default.AddressVersion);
             }
             else if (account.Length == 40)
             {
@@ -129,7 +129,7 @@ namespace Neo.Network.RPC
 
         public static JObject BlockToJson(Block block)
         {
-            JObject json = block.ToJson();
+            JObject json = block.ToJson(ProtocolSettings.Load("protocol"));
             json["tx"] = block.Transactions.Select(p => TransactionToJson(p)).ToArray();
             return json;
         }
@@ -167,7 +167,7 @@ namespace Neo.Network.RPC
 
         public static JObject TransactionToJson(Transaction tx)
         {
-            JObject json = tx.ToJson();
+            JObject json = tx.ToJson(ProtocolSettings.Default);
             json["sysfee"] = tx.SystemFee.ToString();
             json["netfee"] = tx.NetworkFee.ToString();
             return json;

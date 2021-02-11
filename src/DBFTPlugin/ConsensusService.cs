@@ -242,7 +242,7 @@ namespace Neo.Consensus
             {
                 Log($"{nameof(OnCommitReceived)}: height={commit.BlockIndex} view={commit.ViewNumber} index={commit.ValidatorIndex} nc={context.CountCommitted} nf={context.CountFailed}");
 
-                byte[] hashData = context.EnsureHeader()?.GetHashData();
+                byte[] hashData = context.EnsureHeader()?.GetSignData(system.Settings.Magic);
                 if (hashData == null)
                 {
                     existingCommitPayload = payload;
@@ -439,7 +439,7 @@ namespace Neo.Consensus
                     if (!context.GetMessage<PrepareResponse>(context.PreparationPayloads[i]).PreparationHash.Equals(payload.Hash))
                         context.PreparationPayloads[i] = null;
             context.PreparationPayloads[message.ValidatorIndex] = payload;
-            byte[] hashData = context.EnsureHeader().GetHashData();
+            byte[] hashData = context.EnsureHeader().GetSignData(system.Settings.Magic);
             for (int i = 0; i < context.CommitPayloads.Length; i++)
                 if (context.GetMessage(context.CommitPayloads[i])?.ViewNumber == context.ViewNumber)
                     if (!Crypto.VerifySignature(hashData, context.GetMessage<Commit>(context.CommitPayloads[i]).Signature, context.Validators[i]))
@@ -635,9 +635,7 @@ namespace Neo.Consensus
 
         private bool ReverifyAndProcessPayload(ExtensiblePayload payload)
         {
-            var extensibleWitnessWhiteList = Blockchain.UpdateExtensibleWitnessWhiteList(system.Settings, system.StoreView);
-            if (!payload.Verify(system.Settings, system.StoreView, extensibleWitnessWhiteList)) return false;
-            OnConsensusPayload(payload);
+            blockchain.Tell(new Blockchain.Reverify { Inventories = new IInventory[] { payload } });
             return true;
         }
 

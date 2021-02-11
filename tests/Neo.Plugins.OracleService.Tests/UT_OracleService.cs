@@ -87,7 +87,7 @@ namespace Neo.Plugins.Tests
             }));
             OracleResponse response = new OracleResponse() { Id = 1, Code = OracleResponseCode.Success, Result = new byte[] { 0x00 } };
             ECPoint[] oracleNodes = new ECPoint[] { ECCurve.Secp256r1.G };
-            var tx = OracleService.CreateResponseTx(snapshot, request, response, oracleNodes);
+            var tx = OracleService.CreateResponseTx(TestBlockchain.TheNeoSystem, request, response, oracleNodes);
 
             Assert.AreEqual(166, tx.Size);
             Assert.AreEqual(2215610, tx.NetworkFee);
@@ -97,7 +97,7 @@ namespace Neo.Plugins.Tests
 
             request.GasForResponse = 0_10000000;
             response.Result = new byte[10250];
-            tx = OracleService.CreateResponseTx(snapshot, request, response, oracleNodes);
+            tx = OracleService.CreateResponseTx(TestBlockchain.TheNeoSystem, request, response, oracleNodes);
             Assert.AreEqual(165, tx.Size);
             Assert.AreEqual(OracleResponseCode.InsufficientFunds, response.Code);
             Assert.AreEqual(2214610, tx.NetworkFee);

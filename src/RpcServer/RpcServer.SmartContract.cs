@@ -89,11 +89,11 @@ namespace Neo.Plugins
             return json;
         }
 
-        private static Signers SignersFromJson(JArray _params)
+        private static Signers SignersFromJson(JArray _params, ProtocolSettings settings)
         {
             var ret = new Signers(_params.Select(u => new Signer()
             {
-                Account = AddressToScriptHash(u["account"].AsString()),
+                Account = AddressToScriptHash(u["account"].AsString(), settings.AddressVersion),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"]?.AsString()),
                 AllowedContracts = ((JArray)u["allowedcontracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray(),
                 AllowedGroups = ((JArray)u["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
@@ -112,7 +112,7 @@ namespace Neo.Plugins
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
-            Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3]) : null;
+            Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
 
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
@@ -126,7 +126,7 @@ namespace Neo.Plugins
         protected virtual JObject InvokeScript(JArray _params)
         {
             byte[] script = Convert.FromBase64String(_params[0].AsString());
-            Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1]) : null;
+            Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], system.Settings) : null;
             return GetInvokeResult(script, signers);
         }
 
@@ -138,7 +138,7 @@ namespace Neo.Plugins
             UInt160 script_hash;
             try
             {
-                script_hash = AddressToScriptHash(address);
+                script_hash = AddressToScriptHash(address, system.Settings.AddressVersion);
             }
             catch
             {
@@ -148,7 +148,7 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "Invalid address");
             var snapshot = system.StoreView;
             json["unclaimed"] = NativeContract.NEO.UnclaimedGas(snapshot, script_hash, NativeContract.Ledger.CurrentIndex(snapshot) + 1).ToString();
-            json["address"] = script_hash.ToAddress();
+            json["address"] = script_hash.ToAddress(system.Settings.AddressVersion);
             return json;
         }
 

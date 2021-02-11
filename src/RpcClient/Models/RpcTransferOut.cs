@@ -17,7 +17,7 @@ namespace Neo.Network.RPC.Models
             {
                 ["asset"] = Asset.ToString(),
                 ["value"] = Value,
-                ["address"] = ScriptHash.ToAddress(),
+                ["address"] = ScriptHash.ToAddress(ProtocolSettings.Load("protocol").AddressVersion),
             };
         }
 

@@ -82,7 +82,7 @@ namespace Neo.Plugins.StateService.Verification
             if (StateRoot is null) return null;
             if (!signatures.TryGetValue(myIndex, out byte[] sig))
             {
-                sig = StateRoot.Sign(keyPair);
+                sig = StateRoot.Sign(keyPair, neoSystem.Settings.Magic);
                 signatures[myIndex] = sig;
             }
             return CreatePayload(MessageType.Vote, new Vote
@@ -100,7 +100,7 @@ namespace Neo.Plugins.StateService.Verification
             if (signatures.ContainsKey(index)) return false;
             Utility.Log(nameof(VerificationContext), LogLevel.Info, $"vote received, height={rootIndex}, index={index}");
             ECPoint validator = verifiers[index];
-            byte[] hash_data = StateRoot?.GetHashData();
+            byte[] hash_data = StateRoot?.GetSignData(neoSystem.Settings.Magic);
             if (hash_data is null || !Crypto.VerifySignature(hash_data, sig, validator))
             {
                 Utility.Log(nameof(VerificationContext), LogLevel.Info, "incorrect vote, invalid signature");
