@@ -164,7 +164,7 @@ namespace Neo.Plugins
                 TrimmedBlock block = NativeContract.Ledger.GetTrimmedBlock(snapshot, NativeContract.Ledger.GetBlockHash(snapshot, state.BlockIndex));
                 json["blockhash"] = block.Hash.ToString();
                 json["confirmations"] = NativeContract.Ledger.CurrentIndex(snapshot) - block.Index + 1;
-                json["blocktime"] = block.Timestamp;
+                json["blocktime"] = block.Header.Timestamp;
             }
             return json;
         }

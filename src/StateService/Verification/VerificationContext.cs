@@ -6,19 +6,22 @@ using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.Plugins.StateService.Network;
 using Neo.Plugins.StateService.Storage;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
 using System.Collections.Concurrent;
+using System.IO;
 
 namespace Neo.Plugins.StateService.Verification
 {
-    public class VerificationContext
+    class VerificationContext
     {
         private const uint MaxValidUntilBlockIncrement = 100;
         private StateRoot root;
-        private ExtensiblePayload payload;
+        private ExtensiblePayload rootPayload;
+        private ExtensiblePayload votePayload;
         private readonly Wallet wallet;
         private readonly KeyPair keyPair;
         private readonly int myIndex;
@@ -30,6 +33,7 @@ namespace Neo.Plugins.StateService.Verification
         public int Retries;
         public bool IsValidator => myIndex >= 0;
         public int MyIndex => myIndex;
+        public uint RootIndex => rootIndex;
         public ECPoint[] Verifiers => verifiers;
         public ICancelable Timer;
         public StateRoot StateRoot
@@ -44,14 +48,22 @@ namespace Neo.Plugins.StateService.Verification
                 return root;
             }
         }
-        public ExtensiblePayload Message => payload;
+        public ExtensiblePayload StateRootMessage => rootPayload;
+        public ExtensiblePayload VoteMessage
+        {
+            get
+            {
+                if (votePayload is null)
+                    votePayload = CreateVoteMessage();
+                return votePayload;
+            }
+        }
 
         public VerificationContext(Wallet wallet, uint index)
         {
             this.wallet = wallet;
             Retries = 0;
             myIndex = -1;
-            root = null;
             rootIndex = index;
             using SnapshotCache snapshot = Blockchain.Singleton.GetSnapshot();
             verifiers = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.StateValidator, index);
@@ -66,7 +78,7 @@ namespace Neo.Plugins.StateService.Verification
             }
         }
 
-        public Vote CreateVote()
+        private ExtensiblePayload CreateVoteMessage()
         {
             if (StateRoot is null) return null;
             if (!signatures.TryGetValue(myIndex, out byte[] sig))
@@ -74,7 +86,12 @@ namespace Neo.Plugins.StateService.Verification
                 sig = StateRoot.Sign(keyPair);
                 signatures[myIndex] = sig;
             }
-            return new Vote(rootIndex, myIndex, sig);
+            return CreatePayload(MessageType.Vote, new Vote
+            {
+                RootIndex = rootIndex,
+                ValidatorIndex = myIndex,
+                Signature = sig
+            }, VerificationService.MaxCachedVerificationProcessCount);
         }
 
         public bool AddSignature(int index, byte[] sig)
@@ -107,19 +124,33 @@ namespace Neo.Plugins.StateService.Verification
                 j++;
             }
             StateRoot.Witness = sc.GetWitnesses()[0];
+            rootPayload = CreatePayload(MessageType.StateRoot, StateRoot, MaxValidUntilBlockIncrement);
+            return true;
+        }
 
-            payload = new ExtensiblePayload
+        private ExtensiblePayload CreatePayload(MessageType type, ISerializable payload, uint validBlockEndThreshold)
+        {
+            byte[] data;
+            using (MemoryStream ms = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(ms))
+            {
+                writer.Write((byte)type);
+                payload.Serialize(writer);
+                writer.Flush();
+                data = ms.ToArray();
+            }
+            ExtensiblePayload msg = new ExtensiblePayload
             {
                 Category = StatePlugin.StatePayloadCategory,
                 ValidBlockStart = StateRoot.Index,
-                ValidBlockEnd = StateRoot.Index + MaxValidUntilBlockIncrement,
+                ValidBlockEnd = StateRoot.Index + validBlockEndThreshold,
                 Sender = Contract.CreateSignatureRedeemScript(verifiers[MyIndex]).ToScriptHash(),
-                Data = StateRoot.ToArray(),
+                Data = data,
             };
-            sc = new ContractParametersContext(payload);
+            ContractParametersContext sc = new ContractParametersContext(rootPayload);
             wallet.Sign(sc);
-            payload.Witness = sc.GetWitnesses()[0];
-            return true;
+            msg.Witness = sc.GetWitnesses()[0];
+            return msg;
         }
     }
 }
