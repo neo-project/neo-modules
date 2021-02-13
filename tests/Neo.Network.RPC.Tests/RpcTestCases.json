@@ -353,7 +353,7 @@
       "result": {
         "id": -4,
         "updatecounter": 0,
-        "hash": "0x70e2301955bf1e74cbb31d18c2f96972abadb328",
+        "hash": "0xd2a4cff31913016155e38e474a2c06d08be276cf",
         "nef": {
           "magic": 860243278,
           "compiler": "neo-core-v3.0",
@@ -464,7 +464,7 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "getcontractstate",
-      "params": [ "0x70e2301955bf1e74cbb31d18c2f96972abadb328" ],
+      "params": [ "0xd2a4cff31913016155e38e474a2c06d08be276cf" ],
       "id": 1
     },
     "Response": {
@@ -473,7 +473,7 @@
       "result": {
         "id": -4,
         "updatecounter": 0,
-        "hash": "0x70e2301955bf1e74cbb31d18c2f96972abadb328",
+        "hash": "0xd2a4cff31913016155e38e474a2c06d08be276cf",
         "nef": {
           "magic": 860243278,
           "compiler": "neo-core-v3.0",
@@ -593,7 +593,7 @@
       "result": {
         "id": -3,
         "updatecounter": 0,
-        "hash": "0xf61eebf573ea36593fd43aa150c055ad7906ab83",
+        "hash": "0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5",
         "nef": {
           "magic": 860243278,
           "compiler": "neo-core-v3.0",
@@ -801,7 +801,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "method": "getcontractstate",
-      "params": [ "0xf61eebf573ea36593fd43aa150c055ad7906ab83" ]
+      "params": [ "0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5" ]
     },
     "Response": {
       "jsonrpc": "2.0",
@@ -809,7 +809,7 @@
       "result": {
         "id": -3,
         "updatecounter": 0,
-        "hash": "0xf61eebf573ea36593fd43aa150c055ad7906ab83",
+        "hash": "0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5",
         "nef": {
           "magic": 860243278,
           "compiler": "neo-core-v3.0",
@@ -1289,7 +1289,7 @@
         },
         {
           "id": -3,
-          "hash": "0xf61eebf573ea36593fd43aa150c055ad7906ab83",
+          "hash": "0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5",
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
@@ -1492,7 +1492,7 @@
         },
         {
           "id": -4,
-          "hash": "0x70e2301955bf1e74cbb31d18c2f96972abadb328",
+          "hash": "0xd2a4cff31913016155e38e474a2c06d08be276cf",
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
