@@ -204,7 +204,7 @@ namespace Neo.Plugins
             UInt160 from = AddressToScriptHash(_params[1].AsString(), system.Settings.AddressVersion);
             UInt160 to = AddressToScriptHash(_params[2].AsString(), system.Settings.AddressVersion);
             var snapshot = system.StoreView;
-            AssetDescriptor descriptor = new AssetDescriptor(snapshot,  system.Settings, assetId);
+            AssetDescriptor descriptor = new AssetDescriptor(snapshot, system.Settings, assetId);
             BigDecimal amount = BigDecimal.Parse(_params[3].AsString(), descriptor.Decimals);
             if (amount.Sign <= 0)
                 throw new RpcException(-32602, "Invalid params");

@@ -8,7 +8,6 @@ namespace Neo.Consensus
 {
     public class DBFTPlugin : Plugin, IP2PPlugin
     {
-        private IWalletProvider walletProvider;
         private IActorRef consensus;
         private bool started = false;
         private NeoSystem System;

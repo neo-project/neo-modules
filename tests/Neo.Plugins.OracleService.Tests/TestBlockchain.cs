@@ -1,3 +1,4 @@
+using Neo.Persistence;
 using System;
 
 namespace Neo.Plugins
@@ -9,11 +10,16 @@ namespace Neo.Plugins
         static TestBlockchain()
         {
             Console.WriteLine("initialize NeoSystem");
-            TheNeoSystem = new NeoSystem(ProtocolSettings.Load("protocol.json"), null, null);
+            TheNeoSystem = new NeoSystem(ProtocolSettings.Default, null, null);
         }
 
         public static void InitializeMockNeoSystem()
         {
+        }
+
+        internal static DataCache GetTestSnapshot()
+        {
+            return TheNeoSystem.GetSnapshot().CreateSnapshot();
         }
     }
 }

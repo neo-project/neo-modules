@@ -7,10 +7,13 @@ using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
+using Neo.VM;
 using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -34,6 +37,7 @@ namespace Neo.Network.RPC.Tests
             {
                 MockResponse(test.Request, test.Response);
             }
+            
         }
 
         private void MockResponse(RpcRequest request, RpcResponse response)

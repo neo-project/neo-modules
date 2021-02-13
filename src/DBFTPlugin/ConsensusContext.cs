@@ -149,7 +149,7 @@ namespace Neo.Consensus
                 Block.Header.NextConsensus = null;
             ViewNumber = reader.ReadByte();
             TransactionHashes = reader.ReadSerializableArray<UInt256>();
-            Transaction[] transactions = reader.ReadSerializableArray<Transaction>(Block.MaxTransactionsPerBlock);
+            Transaction[] transactions = reader.ReadSerializableArray<Transaction>((int)system.Settings.MaxTransactionsPerBlock);
             PreparationPayloads = reader.ReadNullableArray<ExtensiblePayload>(ProtocolSettings.Default.ValidatorsCount);
             CommitPayloads = reader.ReadNullableArray<ExtensiblePayload>(ProtocolSettings.Default.ValidatorsCount);
             ChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(ProtocolSettings.Default.ValidatorsCount);
@@ -337,9 +337,7 @@ namespace Neo.Consensus
         /// <param name="txs">Ordered transactions</param>
         internal void EnsureMaxBlockLimitation(IEnumerable<Transaction> txs)
         {
-            uint maxBlockSize = NativeContract.Policy.GetMaxBlockSize(Snapshot);
-            long maxBlockSystemFee = NativeContract.Policy.GetMaxBlockSystemFee(Snapshot);
-            uint maxTransactionsPerBlock = NativeContract.Policy.GetMaxTransactionsPerBlock(Snapshot);
+            uint maxTransactionsPerBlock = system.Settings.MaxTransactionsPerBlock;
 
             // Limit Speaker proposal to the limit `MaxTransactionsPerBlock` or all available transactions of the mempool
             txs = txs.Take((int)maxTransactionsPerBlock);
@@ -347,21 +345,9 @@ namespace Neo.Consensus
             Transactions = new Dictionary<UInt256, Transaction>();
             VerificationContext = new TransactionVerificationContext();
 
-            // Expected block size
-            var blockSize = GetExpectedBlockSizeWithoutTransactions(txs.Count());
-            var blockSystemFee = 0L;
-
             // Iterate transaction until reach the size or maximum system fee
             foreach (Transaction tx in txs)
             {
-                // Check if maximum block size has been already exceeded with the current selected set
-                blockSize += tx.Size;
-                if (blockSize > maxBlockSize) break;
-
-                // Check if maximum block system fee has been already exceeded with the current selected set
-                blockSystemFee += tx.SystemFee;
-                if (blockSystemFee > maxBlockSystemFee) break;
-
                 hashes.Add(tx.Hash);
                 Transactions.Add(tx.Hash, tx);
                 VerificationContext.AddTransaction(tx);
