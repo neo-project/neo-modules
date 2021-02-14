@@ -10,6 +10,7 @@
     "MaxGasInvoke": 20,
     "MaxFee": 0.1,
     "MaxConcurrentConnections": 40,
-    "DisabledMethods": [ "openwallet" ]
+    "DisabledMethods": [ "openwallet" ],
+    "Active": 5195086
   }
 }

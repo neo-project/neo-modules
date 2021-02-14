@@ -10,7 +10,7 @@ namespace Neo.Consensus
     {
         private IActorRef consensus;
         private bool started = false;
-        internal NeoSystem System;
+        internal static NeoSystem System;
 
         public override string Description => "Consensus plugin with dBFT algorithm.";
 
@@ -35,7 +35,7 @@ namespace Neo.Consensus
         {
             if (started) return;
             started = true;
-            consensus = System.ActorSystem.ActorOf(ConsensusService.Props(System, System.LocalNode, System.TaskManager, System.Blockchain, System.LoadStore(Settings.Default.RecoveryLogs), wallet));
+            consensus = System.ActorSystem.ActorOf(ConsensusService.Props(System.LocalNode, System.TaskManager, System.Blockchain, System.LoadStore(Settings.Default.RecoveryLogs), wallet));
             consensus.Tell(new ConsensusService.Start());
         }
 

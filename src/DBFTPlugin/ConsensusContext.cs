@@ -49,7 +49,6 @@ namespace Neo.Consensus
         private readonly Wallet wallet;
         private readonly IStore store;
         private Dictionary<UInt256, ConsensusMessage> cachedMessages;
-        private readonly NeoSystem system;
 
         public int F => (Validators.Length - 1) / 3;
         public int M => Validators.Length - F;
@@ -95,18 +94,17 @@ namespace Neo.Consensus
 
         public int Size => throw new NotImplementedException();
 
-        public ConsensusContext(Wallet wallet, IStore store, NeoSystem system)
+        public ConsensusContext(Wallet wallet, IStore store)
         {
             this.wallet = wallet;
             this.store = store;
-            this.system = system;
         }
 
         public Block CreateBlock()
         {
             EnsureHeader();
             Contract contract = Contract.CreateMultiSigContract(M, Validators);
-            ContractParametersContext sc = new ContractParametersContext(system.StoreView, Block.Header);
+            ContractParametersContext sc = new ContractParametersContext(DBFTPlugin.System.StoreView, Block.Header);
             for (int i = 0, j = 0; i < Validators.Length && j < M; i++)
             {
                 if (GetMessage(CommitPayloads[i])?.ViewNumber != ViewNumber) continue;
@@ -148,12 +146,12 @@ namespace Neo.Consensus
             if (Block.NextConsensus.Equals(UInt160.Zero))
                 Block.Header.NextConsensus = null;
             ViewNumber = reader.ReadByte();
-            TransactionHashes = reader.ReadSerializableArray<UInt256>();
-            Transaction[] transactions = reader.ReadSerializableArray<Transaction>((int)system.Settings.MaxTransactionsPerBlock);
-            PreparationPayloads = reader.ReadNullableArray<ExtensiblePayload>(ProtocolSettings.Default.ValidatorsCount);
-            CommitPayloads = reader.ReadNullableArray<ExtensiblePayload>(ProtocolSettings.Default.ValidatorsCount);
-            ChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(ProtocolSettings.Default.ValidatorsCount);
-            LastChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(ProtocolSettings.Default.ValidatorsCount);
+            TransactionHashes = reader.ReadSerializableArray<UInt256>(ushort.MaxValue);
+            Transaction[] transactions = reader.ReadSerializableArray<Transaction>(ushort.MaxValue  );
+            PreparationPayloads = reader.ReadNullableArray<ExtensiblePayload>(DBFTPlugin.System.Settings.ValidatorsCount);
+            CommitPayloads = reader.ReadNullableArray<ExtensiblePayload>(DBFTPlugin.System.Settings.ValidatorsCount);
+            ChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(DBFTPlugin.System.Settings.ValidatorsCount);
+            LastChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(DBFTPlugin.System.Settings.ValidatorsCount);
             if (TransactionHashes.Length == 0 && !RequestSentOrReceived)
                 TransactionHashes = null;
             Transactions = transactions.Length == 0 && !RequestSentOrReceived ? null : transactions.ToDictionary(p => p.Hash);
@@ -267,7 +265,7 @@ namespace Neo.Consensus
         {
             return CommitPayloads[MyIndex] ?? (CommitPayloads[MyIndex] = MakeSignedPayload(new Commit
             {
-                Signature = EnsureHeader().Sign(keyPair, system.Settings.Magic)
+                Signature = EnsureHeader().Sign(keyPair, DBFTPlugin.System.Settings.Magic)
             }));
         }
 
@@ -286,7 +284,7 @@ namespace Neo.Consensus
             ContractParametersContext sc;
             try
             {
-                sc = new ContractParametersContext(system.StoreView, payload);
+                sc = new ContractParametersContext(DBFTPlugin.System.StoreView, payload);
                 wallet.Sign(sc);
             }
             catch (InvalidOperationException)
@@ -337,7 +335,7 @@ namespace Neo.Consensus
         /// <param name="txs">Ordered transactions</param>
         internal void EnsureMaxBlockLimitation(IEnumerable<Transaction> txs)
         {
-            uint maxTransactionsPerBlock = system.Settings.MaxTransactionsPerBlock;
+            uint maxTransactionsPerBlock = DBFTPlugin.System.Settings.MaxTransactionsPerBlock;
 
             // Limit Speaker proposal to the limit `MaxTransactionsPerBlock` or all available transactions of the mempool
             txs = txs.Take((int)maxTransactionsPerBlock);
@@ -345,9 +343,21 @@ namespace Neo.Consensus
             Transactions = new Dictionary<UInt256, Transaction>();
             VerificationContext = new TransactionVerificationContext();
 
+            // Expected block size
+            var blockSize = GetExpectedBlockSizeWithoutTransactions(txs.Count());
+            var blockSystemFee = 0L;
+
             // Iterate transaction until reach the size or maximum system fee
             foreach (Transaction tx in txs)
             {
+                // Check if maximum block size has been already exceeded with the current selected set
+                blockSize += tx.Size;
+                if (blockSize > Settings.Default.MaxBlockSize) break;
+
+                // Check if maximum block system fee has been already exceeded with the current selected set
+                blockSystemFee += tx.SystemFee;
+                if (blockSystemFee > Settings.Default.MaxBlockSystemFee) break;
+
                 hashes.Add(tx.Hash);
                 Transactions.Add(tx.Hash, tx);
                 VerificationContext.AddTransaction(tx);
@@ -358,7 +368,7 @@ namespace Neo.Consensus
 
         public ExtensiblePayload MakePrepareRequest()
         {
-            EnsureMaxBlockLimitation(system.MemPool.GetSortedVerifiedTransactions());
+            EnsureMaxBlockLimitation(DBFTPlugin.System.MemPool.GetSortedVerifiedTransactions());
             Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
 
             return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
@@ -419,7 +429,7 @@ namespace Neo.Consensus
             if (viewNumber == 0)
             {
                 Snapshot?.Dispose();
-                Snapshot = system.GetSnapshot();
+                Snapshot = DBFTPlugin.System.GetSnapshot();
                 uint height = NativeContract.Ledger.CurrentIndex(Snapshot);
                 Block = new Block
                 {
@@ -428,13 +438,13 @@ namespace Neo.Consensus
                         PrevHash = NativeContract.Ledger.CurrentHash(Snapshot),
                         Index = height + 1,
                         NextConsensus = Contract.GetBFTAddress(
-                            NeoToken.ShouldRefreshCommittee(height + 1, system.Settings.CommitteeMembersCount) ?
-                            NativeContract.NEO.ComputeNextBlockValidators(Snapshot, system.Settings) :
-                            NativeContract.NEO.GetNextBlockValidators(Snapshot, system.Settings.ValidatorsCount))
+                            NeoToken.ShouldRefreshCommittee(height + 1, DBFTPlugin.System.Settings.CommitteeMembersCount) ?
+                            NativeContract.NEO.ComputeNextBlockValidators(Snapshot, DBFTPlugin.System.Settings) :
+                            NativeContract.NEO.GetNextBlockValidators(Snapshot, DBFTPlugin.System.Settings.ValidatorsCount))
                     }
                 };
                 var pv = Validators;
-                Validators = NativeContract.NEO.GetNextBlockValidators(Snapshot, system.Settings.ValidatorsCount);
+                Validators = NativeContract.NEO.GetNextBlockValidators(Snapshot, DBFTPlugin.System.Settings.ValidatorsCount);
                 if (_witnessSize == 0 || (pv != null && pv.Length != Validators.Length))
                 {
                     // Compute the expected size of the witness

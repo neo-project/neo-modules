@@ -27,6 +27,7 @@ namespace Neo.Plugins
         public long MaxGasInvoke { get; private set; }
         public long MaxFee { get; private set; }
         public string[] DisabledMethods { get; private set; }
+        public uint Active { get; }
 
         public RpcServerSettings(IPAddress bindAddress = null,
             ushort port = 10332,
@@ -38,7 +39,8 @@ namespace Neo.Plugins
             decimal maxGasInvoke = 10,
             decimal maxFee = (decimal)0.1,
             string[] disabledMethods = null,
-            int maxConcurrentConnections = 40)
+            int maxConcurrentConnections = 40,
+            uint active = 5195086u)
         {
             this.BindAddress = bindAddress ?? IPAddress.Loopback;
             this.Port = port;
@@ -51,6 +53,7 @@ namespace Neo.Plugins
             this.MaxFee = (long)new BigDecimal(maxFee, NativeContract.GAS.Decimals).Value;
             this.DisabledMethods = disabledMethods ?? Array.Empty<string>();
             this.MaxConcurrentConnections = maxConcurrentConnections;
+            this.Active = active;
         }
 
         public RpcServerSettings(IConfigurationSection section)
@@ -66,6 +69,7 @@ namespace Neo.Plugins
             this.MaxFee = (long)new BigDecimal(section.GetValue<decimal>("MaxFee", 0.1M), NativeContract.GAS.Decimals).Value;
             this.DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray();
             this.MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", 40);
+            this.Active = section.GetValue("Active", 5195086u);
         }
 
         public void UpdateSettings(RpcServerSettings settings)

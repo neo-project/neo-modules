@@ -35,6 +35,7 @@ namespace Neo.Plugins
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
+            if (system.Settings.Magic != settings.Active) return;
             this.server = new RpcServer(system, settings);
 
             foreach (var handler in handlers)

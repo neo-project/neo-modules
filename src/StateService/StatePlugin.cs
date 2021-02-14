@@ -27,7 +27,7 @@ namespace Neo.Plugins.StateService
         internal IActorRef Store;
         internal IActorRef Verifier;
 
-        private NeoSystem System;
+        internal static NeoSystem System;
 
         protected override void Configure()
         {
@@ -37,8 +37,9 @@ namespace Neo.Plugins.StateService
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
+            if (system.Settings.Magic != Settings.Default.Active) return;
             System = system;
-            Store = System.ActorSystem.ActorOf(StateStore.Props(System, this, Settings.Default.Path));
+            Store = System.ActorSystem.ActorOf(StateStore.Props(this, Settings.Default.Path));
         }
 
         public override void Dispose()
@@ -50,6 +51,7 @@ namespace Neo.Plugins.StateService
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
         {
+            if (system.Settings.Magic != Settings.Default.Active) return;
             StateStore.Singleton.UpdateLocalStateRoot(block.Index, snapshot.GetChangeSet().Where(p => p.State != TrackState.None).Where(p => p.Key.Id != NativeContract.Ledger.Id).ToList());
         }
 
@@ -67,7 +69,7 @@ namespace Neo.Plugins.StateService
                 Console.WriteLine("Please open wallet first!");
                 return;
             }
-            Verifier = System.ActorSystem.ActorOf(VerificationService.Props(System, wallet));
+            Verifier = System.ActorSystem.ActorOf(VerificationService.Props(wallet));
         }
 
         [ConsoleCommand("state root", Category = "StateService", Description = "Get state root by index")]

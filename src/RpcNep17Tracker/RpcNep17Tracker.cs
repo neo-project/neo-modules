@@ -28,6 +28,7 @@ namespace Neo.Plugins
         private bool _shouldTrackHistory;
         private bool _recordNullAddressHistory;
         private uint _maxResults;
+        private uint _active;
         private Snapshot _levelDbSnapshot;
         private NeoSystem System;
 
@@ -40,6 +41,7 @@ namespace Neo.Plugins
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
+            if (system.Settings.Magic != _active) return;
             System = system;
         }
 
@@ -53,6 +55,7 @@ namespace Neo.Plugins
             _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
             _recordNullAddressHistory = (GetConfiguration().GetSection("RecordNullAddressHistory").Value ?? false.ToString()) != false.ToString();
             _maxResults = uint.Parse(GetConfiguration().GetSection("MaxResults").Value ?? "1000");
+            _active = uint.Parse(GetConfiguration().GetSection("Active").Value ?? "5195086");
         }
 
         private void ResetBatch()
@@ -167,6 +170,7 @@ namespace Neo.Plugins
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
+            if (system.Settings.Magic != _active) return;
             // Start freshly with a new DBCache for each block.
             ResetBatch();
             Dictionary<Nep17BalanceKey, Nep17Balance> nep17BalancesChanged = new Dictionary<Nep17BalanceKey, Nep17Balance>();
