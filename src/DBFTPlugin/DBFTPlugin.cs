@@ -10,7 +10,7 @@ namespace Neo.Consensus
     {
         private IActorRef consensus;
         private bool started = false;
-        private NeoSystem System;
+        internal static NeoSystem System;
 
         public override string Description => "Consensus plugin with dBFT algorithm.";
 
@@ -21,6 +21,7 @@ namespace Neo.Consensus
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
+            if (system.Settings.Magic != Settings.Default.Active) return;
             System = system;
         }
 
