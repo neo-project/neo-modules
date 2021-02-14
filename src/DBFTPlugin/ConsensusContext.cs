@@ -147,7 +147,7 @@ namespace Neo.Consensus
                 Block.Header.NextConsensus = null;
             ViewNumber = reader.ReadByte();
             TransactionHashes = reader.ReadSerializableArray<UInt256>(ushort.MaxValue);
-            Transaction[] transactions = reader.ReadSerializableArray<Transaction>(ushort.MaxValue  );
+            Transaction[] transactions = reader.ReadSerializableArray<Transaction>(ushort.MaxValue);
             PreparationPayloads = reader.ReadNullableArray<ExtensiblePayload>(DBFTPlugin.System.Settings.ValidatorsCount);
             CommitPayloads = reader.ReadNullableArray<ExtensiblePayload>(DBFTPlugin.System.Settings.ValidatorsCount);
             ChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(DBFTPlugin.System.Settings.ValidatorsCount);
