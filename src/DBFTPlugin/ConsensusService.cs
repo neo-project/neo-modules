@@ -399,6 +399,7 @@ namespace Neo.Consensus
             if (context.RequestSentOrReceived || context.NotAcceptingPayloadsDueToViewChanging) return;
             if (message.ValidatorIndex != context.Block.PrimaryIndex || message.ViewNumber != context.ViewNumber) return;
             if (message.Version != context.Block.Version || message.PrevHash != context.Block.PrevHash) return;
+            if (message.TransactionHashes.Length > system.Settings.MaxTransactionsPerBlock) return;
             Log($"{nameof(OnPrepareRequestReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} tx={message.TransactionHashes.Length}");
             if (message.Timestamp <= context.PrevHeader.Timestamp || message.Timestamp > TimeProvider.Current.UtcNow.AddMilliseconds(8 * system.Settings.MillisecondsPerBlock).ToTimestampMS())
             {
