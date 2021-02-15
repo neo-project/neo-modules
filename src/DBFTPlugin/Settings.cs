@@ -7,7 +7,7 @@ namespace Neo.Consensus
         public string RecoveryLogs { get; }
         public bool IgnoreRecoveryLogs { get; }
         public bool AutoStart { get; }
-        public uint Active { get; }
+        public uint Network { get; }
         public uint MaxBlockSize { get; }
         public long MaxBlockSystemFee { get; }
 
@@ -18,7 +18,7 @@ namespace Neo.Consensus
             RecoveryLogs = section.GetValue("RecoveryLogs", "ConsensusState");
             IgnoreRecoveryLogs = section.GetValue("IgnoreRecoveryLogs", false);
             AutoStart = section.GetValue("AutoStart", false);
-            Active = section.GetValue("Active", 5195086u);
+            Network = section.GetValue("Network", 5195086u);
             MaxBlockSize = section.GetValue("MaxBlockSize", 262144u);
             MaxBlockSystemFee = section.GetValue("MaxBlockSystemFee", 900000000000L);
         }

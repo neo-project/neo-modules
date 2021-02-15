@@ -23,13 +23,13 @@ namespace Neo.Plugins
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
-            string path = string.Format(Settings.Default.Path, Settings.Default.Active.ToString("X8"));
+            string path = string.Format(Settings.Default.Path, Settings.Default.Network.ToString("X8"));
             db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
         }
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            if (system.Settings.Magic != Settings.Default.Active) return;
+            if (system.Settings.Magic != Settings.Default.Network) return;
             RpcServerPlugin.RegisterMethods(this);
         }
 
@@ -145,7 +145,7 @@ namespace Neo.Plugins
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
-            if (system.Settings.Magic != Settings.Default.Active) return;
+            if (system.Settings.Magic != Settings.Default.Network) return;
 
             WriteBatch writeBatch = new WriteBatch();
 
