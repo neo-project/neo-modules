@@ -17,7 +17,6 @@ namespace Neo.Network.RPC.Tests
         {
             keyPair = new KeyPair(Wallet.GetPrivateKeyFromWIF("KyXwTh1hB76RRMquSvnxZrJzQx7h9nQP2PCRL38v6VDb5ip3nf1p"));
             scriptHash = Contract.CreateSignatureRedeemScript(keyPair.PublicKey).ToScriptHash();
-
         }
 
         [TestMethod]
