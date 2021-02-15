@@ -28,6 +28,7 @@ namespace Neo.Consensus
         private DateTime block_received_time;
         private uint block_received_index;
         private bool started = false;
+        private readonly LocalNode node;
 
         /// <summary>
         /// This will record the information from last scheduled timer
@@ -56,6 +57,7 @@ namespace Neo.Consensus
             this.taskManager = taskManager;
             this.blockchain = blockchain;
             this.context = context;
+            node = localNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             Context.System.EventStream.Subscribe(Self, typeof(Blockchain.PersistCompleted));
             Context.System.EventStream.Subscribe(Self, typeof(Blockchain.RelayResult));
         }
@@ -283,7 +285,6 @@ namespace Neo.Consensus
             {
                 if (context.Block.Index < message.BlockIndex)
                 {
-                    LocalNode node = localNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
                     Log($"Chain is behind: expected={message.BlockIndex} current={context.Block.Index - 1} nodes={node.ConnectedCount}", LogLevel.Warning);
                 }
                 return;
