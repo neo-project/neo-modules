@@ -8,6 +8,7 @@ using Neo.Wallets;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using static Neo.Helper;
 
 namespace Neo.Network.RPC.Tests
 {
@@ -72,20 +73,20 @@ namespace Neo.Network.RPC.Tests
         public async Task TestGetTokenInfo()
         {
             UInt160 scriptHash = NativeContract.GAS.Hash;
-            byte[] testScript = scriptHash.MakeScript("symbol")
-                .Concat(scriptHash.MakeScript("decimals"))
-                .Concat(scriptHash.MakeScript("totalSupply"))
-                .ToArray();
+            byte[] testScript = Concat(
+                scriptHash.MakeScript("symbol"),
+                scriptHash.MakeScript("decimals"),
+                scriptHash.MakeScript("totalSupply"));
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript,
                 new ContractParameter { Type = ContractParameterType.String, Value = NativeContract.GAS.Symbol },
                 new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(NativeContract.GAS.Decimals) },
                 new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1_00000000) });
 
             scriptHash = NativeContract.NEO.Hash;
-            testScript = scriptHash.MakeScript("symbol")
-                .Concat(scriptHash.MakeScript("decimals"))
-                .Concat(scriptHash.MakeScript("totalSupply"))
-                .ToArray();
+            testScript = Concat(
+                scriptHash.MakeScript("symbol"),
+                scriptHash.MakeScript("decimals"),
+                scriptHash.MakeScript("totalSupply"));
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript,
                 new ContractParameter { Type = ContractParameterType.String, Value = NativeContract.NEO.Symbol },
                 new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(NativeContract.NEO.Decimals) },
