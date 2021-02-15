@@ -90,8 +90,8 @@ namespace Neo.Plugins.Tests
             var tx = OracleService.CreateResponseTx(snapshot, request, response, oracleNodes, ProtocolSettings.Default);
 
             Assert.AreEqual(166, tx.Size);
-            Assert.AreEqual(2215610, tx.NetworkFee);
-            Assert.AreEqual(97784390, tx.SystemFee);
+            Assert.AreEqual(2198650, tx.NetworkFee);
+            Assert.AreEqual(97801350, tx.SystemFee);
 
             // case (2) The size of attribute exceed the maximum limit
 
@@ -100,8 +100,8 @@ namespace Neo.Plugins.Tests
             tx = OracleService.CreateResponseTx(snapshot, request, response, oracleNodes, ProtocolSettings.Default);
             Assert.AreEqual(165, tx.Size);
             Assert.AreEqual(OracleResponseCode.InsufficientFunds, response.Code);
-            Assert.AreEqual(2214610, tx.NetworkFee);
-            Assert.AreEqual(7785390, tx.SystemFee);
+            Assert.AreEqual(2197650, tx.NetworkFee);
+            Assert.AreEqual(7802350, tx.SystemFee);
         }
     }
 }
