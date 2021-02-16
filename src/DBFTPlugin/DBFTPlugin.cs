@@ -49,6 +49,7 @@ namespace Neo.Consensus
         [ConsoleCommand("start consensus", Category = "Consensus", Description = "Start consensus service (dBFT)")]
         private void OnStart()
         {
+            walletProvider ??= System.GetService<IWalletProvider>();
             Start(walletProvider.GetWallet());
         }
 
