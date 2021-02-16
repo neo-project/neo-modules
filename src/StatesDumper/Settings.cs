@@ -21,7 +21,7 @@ namespace Neo.Plugins
         /// Persisting actions
         /// </summary>
         public PersistActions PersistAction { get; }
-        public uint Active { get; }
+        public uint Network { get; }
 
         public static Settings Default { get; private set; }
 
@@ -32,7 +32,7 @@ namespace Neo.Plugins
             this.HeightToBegin = GetValueOrDefault(section.GetSection("HeightToBegin"), 0u, p => uint.Parse(p));
             this.HeightToStartRealTimeSyncing = GetValueOrDefault(section.GetSection("HeightToStartRealTimeSyncing"), -1, p => int.Parse(p));
             this.PersistAction = GetValueOrDefault(section.GetSection("PersistAction"), PersistActions.StorageChanges, p => (PersistActions)Enum.Parse(typeof(PersistActions), p));
-            this.Active = section.GetValue("Active", 5195086u);
+            this.Network = section.GetValue("Network", 5195086u);
         }
 
         public T GetValueOrDefault<T>(IConfigurationSection section, T defaultValue, Func<string, T> selector)

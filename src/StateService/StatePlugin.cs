@@ -37,9 +37,9 @@ namespace Neo.Plugins.StateService
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            if (system.Settings.Magic != Settings.Default.Active) return;
+            if (system.Settings.Magic != Settings.Default.Network) return;
             System = system;
-            Store = System.ActorSystem.ActorOf(StateStore.Props(this, Settings.Default.Path));
+            Store = System.ActorSystem.ActorOf(StateStore.Props(this, string.Format(Settings.Default.Path, system.Settings.Magic.ToString("X8"))));
         }
 
         public override void Dispose()
@@ -51,7 +51,7 @@ namespace Neo.Plugins.StateService
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
         {
-            if (system.Settings.Magic != Settings.Default.Active) return;
+            if (system.Settings.Magic != Settings.Default.Network) return;
             StateStore.Singleton.UpdateLocalStateRoot(block.Index, snapshot.GetChangeSet().Where(p => p.State != TrackState.None).Where(p => p.Key.Id != NativeContract.Ledger.Id).ToList());
         }
 

@@ -56,7 +56,7 @@ namespace Neo.Plugins
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            if (system.Settings.Magic != Settings.Default.Active) return;
+            if (system.Settings.Magic != Settings.Default.Network) return;
             System = system;
         }
 
@@ -110,7 +110,7 @@ namespace Neo.Plugins
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
-            if (system.Settings.Magic != Settings.Default.Active) return;
+            if (system.Settings.Magic != Settings.Default.Network) return;
             if (stopped || !started) return;
             if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles) || !CheckOracleAccount(wallet, oracles))
                 OnStop();

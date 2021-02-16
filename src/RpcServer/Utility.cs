@@ -30,8 +30,8 @@ namespace Neo.Plugins
                 ["hash"] = contract.Hash.ToString(),
                 ["nef"] = contract.Nef.ToJson(),
                 ["manifest"] = contract.Manifest.ToJson(),
-                ["activeblockindex"] = settings.GetNativeActivation(contract.Name)
-            };
+                ["activeblockindex"] = settings.NativeUpdateHistory[contract.Name][0]
+        };
         }
     }
 }

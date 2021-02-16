@@ -11,6 +11,6 @@
     "MaxFee": 0.1,
     "MaxConcurrentConnections": 40,
     "DisabledMethods": [ "openwallet" ],
-    "Active": 5195086
+    "Network": 5195086
   }
 }

@@ -68,7 +68,7 @@ namespace Neo.Plugins
                 Attributes = Array.Empty<TransactionAttribute>(),
                 Witnesses = signers.Witnesses,
             };
-            using ApplicationEngine engine = ApplicationEngine.Run(script, system.StoreView, container: tx, gas: settings.MaxGasInvoke);
+            using ApplicationEngine engine = ApplicationEngine.Run(script, system.StoreView, container: tx, settings: system.Settings, gas: settings.MaxGasInvoke);
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(script);
             json["state"] = engine.State;
