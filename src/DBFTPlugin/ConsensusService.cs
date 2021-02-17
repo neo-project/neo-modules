@@ -64,11 +64,11 @@ namespace Neo.Consensus
         {
             if (verify)
             {
-                VerifyResult relayResult = tx.Verify(DBFTPlugin.System.Settings, context.Snapshot, context.VerificationContext);
-                if (relayResult != VerifyResult.Succeed)
+                VerifyResult result = tx.Verify(DBFTPlugin.System.Settings, context.Snapshot, context.VerificationContext);
+                if (result != VerifyResult.Succeed)
                 {
-                    Log($"Rejected tx: {tx.Hash}, Reason: {relayResult}, {Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
-                    RequestChangeView(ChangeViewReason.TxInvalid);
+                    Log($"Rejected tx: {tx.Hash}, {result}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
+                    RequestChangeView(result == VerifyResult.PolicyFail ? ChangeViewReason.TxRejectedByPolicy : ChangeViewReason.TxInvalid);
                     return false;
                 }
             }
