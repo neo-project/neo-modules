@@ -70,11 +70,11 @@ namespace Neo.Plugins
 
                 foreach (var trackable in snapshot.GetChangeSet())
                 {
+                    if (Settings.Default.Exclude.Contains(trackable.Key.Id))
+                        continue;
                     JObject state = new JObject();
-
                     switch (trackable.State)
                     {
-
                         case TrackState.Added:
                             state["state"] = "Added";
                             state["key"] = Convert.ToBase64String(trackable.Key.ToArray());

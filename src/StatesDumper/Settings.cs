@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Configuration;
 using Neo.SmartContract.Native;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
