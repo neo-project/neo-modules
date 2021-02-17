@@ -4,6 +4,7 @@
     "BlockCacheSize": 1000,
     "HeightToBegin": 0,
     "HeightToStartRealTimeSyncing": -1,
+    "Exclude": [ -4 ],
     "Network": 5195086
   }
 }

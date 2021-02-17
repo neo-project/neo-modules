@@ -1,5 +1,8 @@
 using Microsoft.Extensions.Configuration;
+using Neo.SmartContract.Native;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Neo.Plugins
 {
@@ -21,6 +24,7 @@ namespace Neo.Plugins
         /// Persisting actions
         /// </summary>
         public PersistActions PersistAction { get; }
+        public IReadOnlyList<int> Exclude { get; }
         public uint Network { get; }
 
         public static Settings Default { get; private set; }
@@ -28,17 +32,14 @@ namespace Neo.Plugins
         private Settings(IConfigurationSection section)
         {
             /// Geting settings for storage changes state dumper
-            this.BlockCacheSize = GetValueOrDefault(section.GetSection("BlockCacheSize"), 1000u, p => uint.Parse(p));
-            this.HeightToBegin = GetValueOrDefault(section.GetSection("HeightToBegin"), 0u, p => uint.Parse(p));
-            this.HeightToStartRealTimeSyncing = GetValueOrDefault(section.GetSection("HeightToStartRealTimeSyncing"), -1, p => int.Parse(p));
-            this.PersistAction = GetValueOrDefault(section.GetSection("PersistAction"), PersistActions.StorageChanges, p => (PersistActions)Enum.Parse(typeof(PersistActions), p));
+            this.BlockCacheSize = section.GetValue("BlockCacheSize", 1000u);
+            this.HeightToBegin = section.GetValue("HeightToBegin", 0u);
+            this.HeightToStartRealTimeSyncing = section.GetValue("HeightToStartRealTimeSyncing", -1);
+            this.PersistAction = section.GetValue("PersistAction", PersistActions.StorageChanges);
+            this.Exclude = section.GetSection("Exclude").Exists()
+                ? section.GetSection("Exclude").GetChildren().Select(p => int.Parse(p.Value)).ToArray()
+                : new[] { NativeContract.Ledger.Id };
             this.Network = section.GetValue("Network", 5195086u);
-        }
-
-        public T GetValueOrDefault<T>(IConfigurationSection section, T defaultValue, Func<string, T> selector)
-        {
-            if (section.Value == null) return defaultValue;
-            return selector(section.Value);
         }
 
         public static void Load(IConfigurationSection section)

@@ -62,11 +62,15 @@ namespace Neo.Consensus
 
         private bool AddTransaction(Transaction tx, bool verify)
         {
-            if (verify && !tx.Verify(DBFTPlugin.System.Settings, context.Snapshot, context.VerificationContext))
+            if (verify)
             {
-                Log($"Rejected tx: {tx.Hash}, {Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
-                RequestChangeView(ChangeViewReason.TxInvalid);
-                return false;
+                VerifyResult relayResult = tx.Verify(DBFTPlugin.System.Settings, context.Snapshot, context.VerificationContext);
+                if (relayResult != VerifyResult.Succeed)
+                {
+                    Log($"Rejected tx: {tx.Hash}, Reason: {relayResult}, {Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
+                    RequestChangeView(ChangeViewReason.TxInvalid);
+                    return false;
+                }
             }
             context.Transactions[tx.Hash] = tx;
             context.VerificationContext.AddTransaction(tx);
