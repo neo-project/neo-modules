@@ -24,11 +24,7 @@ namespace Neo.Consensus
         {
             if (system.Settings.Magic != Settings.Default.Network) return;
             System = system;
-            if (Settings.Default.AutoStart)
-            {
-                System.ServiceAdded -= NeoSystem_ServiceAdded;
-                System.ServiceAdded += NeoSystem_ServiceAdded;
-            }
+            System.ServiceAdded += NeoSystem_ServiceAdded;
         }
 
         private void NeoSystem_ServiceAdded(object sender, object service)
@@ -36,7 +32,11 @@ namespace Neo.Consensus
             if (service is IWalletProvider)
             {
                 walletProvider = service as IWalletProvider;
-                walletProvider.WalletChanged += WalletProvider_WalletChanged;
+                System.ServiceAdded -= NeoSystem_ServiceAdded;
+                if (Settings.Default.AutoStart)
+                {
+                    walletProvider.WalletChanged += WalletProvider_WalletChanged;
+                }
             }
         }
 
@@ -49,7 +49,6 @@ namespace Neo.Consensus
         [ConsoleCommand("start consensus", Category = "Consensus", Description = "Start consensus service (dBFT)")]
         private void OnStart()
         {
-            walletProvider ??= System.GetService<IWalletProvider>();
             Start(walletProvider.GetWallet());
         }
 
