@@ -633,7 +633,7 @@ namespace Neo.Consensus
 
         private bool ReverifyAndProcessPayload(ExtensiblePayload payload)
         {
-            blockchain.Tell(new Blockchain.Reverify { Inventories = new IInventory[] { payload } });
+            blockchain.Ask(new Blockchain.Reverify { Inventories = new IInventory[] { payload } }).Wait();
             return true;
         }
 
