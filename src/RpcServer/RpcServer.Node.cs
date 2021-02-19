@@ -18,7 +18,6 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetConnectionCount(JArray _params)
         {
-            LocalNode localNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             return localNode.ConnectedCount;
         }
 
@@ -26,7 +25,6 @@ namespace Neo.Plugins
         protected virtual JObject GetPeers(JArray _params)
         {
             JObject json = new JObject();
-            LocalNode localNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             json["unconnected"] = new JArray(localNode.GetUnconnectedPeers().Select(p =>
             {
                 JObject peerJson = new JObject();
@@ -63,7 +61,6 @@ namespace Neo.Plugins
         protected virtual JObject GetVersion(JArray _params)
         {
             JObject json = new JObject();
-            LocalNode localNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             json["tcpport"] = localNode.ListenerTcpPort;
             json["wsport"] = localNode.ListenerWsPort;
             json["nonce"] = LocalNode.Nonce;

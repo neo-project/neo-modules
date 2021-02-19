@@ -1,3 +1,4 @@
+using Akka.Actor;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -27,11 +28,13 @@ namespace Neo.Plugins
         private IWebHost host;
         private readonly RpcServerSettings settings;
         private readonly NeoSystem system;
+        private LocalNode localNode;
 
         public RpcServer(NeoSystem system, RpcServerSettings settings)
         {
             this.system = system;
             this.settings = settings;
+            localNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             RegisterMethods(this);
         }
 

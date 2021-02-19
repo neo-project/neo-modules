@@ -217,6 +217,7 @@ namespace Neo.Plugins
 
         void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
         {
+            if (system.Settings.Magic != _network) return;
             _db.Write(WriteOptions.Default, _writeBatch);
         }
 

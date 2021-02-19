@@ -104,6 +104,7 @@ namespace Neo.Plugins
 
         void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
         {
+            if (system.Settings.Magic != Settings.Default.Network) return;
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
                 OnCommitStorage(snapshot);
         }
