@@ -32,6 +32,7 @@ namespace Neo.Plugins
     {
         private const int RefreshInterval = 1000 * 60 * 3;
 
+        private Wallet wallet;
         private readonly ConcurrentDictionary<ulong, OracleTask> pendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
         private readonly ConcurrentDictionary<ulong, DateTime> finishedCache = new ConcurrentDictionary<ulong, DateTime>();
         private Timer timer;
@@ -97,6 +98,8 @@ namespace Neo.Plugins
                 Console.WriteLine("Please open wallet first!");
                 return;
             }
+
+            this.wallet = wallet;
 
             using (var snapshot = Blockchain.Singleton.GetSnapshot())
             {
