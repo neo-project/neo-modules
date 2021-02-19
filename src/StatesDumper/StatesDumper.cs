@@ -4,6 +4,7 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using System;
 using System.Collections.Generic;
@@ -23,17 +24,13 @@ namespace Neo.Plugins
             Settings.Load(GetConfiguration());
         }
 
-        private static void Dump<TKey, TValue>(IEnumerable<(TKey Key, TValue Value)> states)
-            where TKey : ISerializable
-            where TValue : ISerializable
+        private static void Dump(IEnumerable<(StorageKey Key, StorageItem Value)> states)
         {
             const string path = "dump.json";
-            JArray array = new JArray(states.Select(p =>
+            JArray array = new JArray(states.Where(p => !Settings.Default.Exclude.Contains(p.Key.Id)).Select(p => new JObject
             {
-                JObject state = new JObject();
-                state["key"] = Convert.ToBase64String(p.Key.ToArray());
-                state["value"] = Convert.ToBase64String(p.Value.ToArray());
-                return state;
+                ["key"] = Convert.ToBase64String(p.Key.ToArray()),
+                ["value"] = Convert.ToBase64String(p.Value.ToArray())
             }));
             File.WriteAllText(path, array.ToString());
             Console.WriteLine($"States ({array.Count}) have been dumped into file {path}");
@@ -65,11 +62,11 @@ namespace Neo.Plugins
 
                 foreach (var trackable in snapshot.GetChangeSet())
                 {
+                    if (Settings.Default.Exclude.Contains(trackable.Key.Id))
+                        continue;
                     JObject state = new JObject();
-
                     switch (trackable.State)
                     {
-
                         case TrackState.Added:
                             state["state"] = "Added";
                             state["key"] = Convert.ToBase64String(trackable.Key.ToArray());
