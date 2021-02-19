@@ -40,7 +40,7 @@ namespace Neo.Plugins.StateService
         {
             Store = System.ActorSystem.ActorOf(StateStore.Props(System, this, Settings.Default.Path));
             walletProvider = GetService<IWalletProvider>();
-            if (Settings.Default.AutoStart)
+            if (Settings.Default.AutoVerify)
                 walletProvider.WalletOpened += WalletProvider_WalletOpened;
         }
 

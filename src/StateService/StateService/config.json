@@ -2,7 +2,7 @@
   "PluginConfiguration": {
     "Path": "Data_MPT_{0}",
     "FullState": false,
-    "AutoStart": false
+    "AutoVerify": false
   }
 }
 
