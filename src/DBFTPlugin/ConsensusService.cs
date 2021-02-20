@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using static Neo.Ledger.Blockchain;
 
 namespace Neo.Consensus
 {
@@ -633,7 +634,9 @@ namespace Neo.Consensus
 
         private bool ReverifyAndProcessPayload(ExtensiblePayload payload)
         {
-            blockchain.Ask(new Blockchain.Reverify { Inventories = new IInventory[] { payload } }).Wait();
+            RelayResult relayResult = blockchain.Ask<RelayResult>(new Blockchain.Reverify { Inventories = new IInventory[] { payload } }).Result;
+            if (relayResult.Result != VerifyResult.Succeed) return false;
+            OnConsensusPayload(payload);
             return true;
         }
 
