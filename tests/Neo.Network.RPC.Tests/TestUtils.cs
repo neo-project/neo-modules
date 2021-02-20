@@ -10,6 +10,7 @@ namespace Neo.Network.RPC.Tests
     internal static class TestUtils
     {
         public readonly static List<RpcTestCase> RpcTestCases = ((JArray)JObject.Parse(File.ReadAllText("RpcTestCases.json"))).Select(p => RpcTestCase.FromJson(p)).ToList();
+        internal static ProtocolSettings ProtocolSettings = ProtocolSettings.Load("Protocol.json");
 
         public static Block GetBlock(int txCount)
         {

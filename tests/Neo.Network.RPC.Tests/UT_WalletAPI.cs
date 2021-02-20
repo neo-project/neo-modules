@@ -29,7 +29,7 @@ namespace Neo.Network.RPC.Tests
             keyPair1 = new KeyPair(Wallet.GetPrivateKeyFromWIF("KyXwTh1hB76RRMquSvnxZrJzQx7h9nQP2PCRL38v6VDb5ip3nf1p"));
             sender = Contract.CreateSignatureRedeemScript(keyPair1.PublicKey).ToScriptHash();
             multiSender = Contract.CreateMultiSigContract(1, new ECPoint[] { keyPair1.PublicKey }).ScriptHash;
-            address1 = Wallets.Helper.ToAddress(sender, ProtocolSettings.Load("protocol").AddressVersion);
+            address1 = Wallets.Helper.ToAddress(sender, TestUtils.ProtocolSettings.AddressVersion);
             rpcClientMock = UT_TransactionManager.MockRpcClient(sender, new byte[0]);
             walletAPI = new WalletAPI(rpcClientMock.Object);
         }
@@ -104,7 +104,7 @@ namespace Neo.Network.RPC.Tests
             json["hash"] = UInt256.Zero.ToString();
             rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JObject>())).ReturnsAsync(json);
 
-            var tranaction = await walletAPI.TransferAsync(NativeContract.GAS.Hash.ToString(), keyPair1.Export(), UInt160.Zero.ToAddress(ProtocolSettings.Load("protocol").AddressVersion), 100);
+            var tranaction = await walletAPI.TransferAsync(NativeContract.GAS.Hash.ToString(), keyPair1.Export(), UInt160.Zero.ToAddress(TestUtils.ProtocolSettings.AddressVersion), 100);
             Assert.AreEqual(testScript.ToHexString(), tranaction.Script.ToHexString());
         }
 

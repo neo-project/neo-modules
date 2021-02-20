@@ -40,7 +40,7 @@ namespace Neo.Network.RPC.Tests
             string nul = null;
             Assert.ThrowsException<ArgumentNullException>(() => Utility.GetScriptHash(nul));
 
-            string addr = scriptHash.ToAddress(ProtocolSettings.Load("protocol").AddressVersion);
+            string addr = scriptHash.ToAddress(TestUtils.ProtocolSettings.AddressVersion);
             var result = Utility.GetScriptHash(addr);
             Assert.AreEqual(scriptHash, result);
 

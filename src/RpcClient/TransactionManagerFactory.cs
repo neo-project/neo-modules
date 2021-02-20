@@ -26,7 +26,7 @@ namespace Neo.Network.RPC
         public TransactionManagerFactory(RpcClient rpcClient, uint? magic = null)
         {
             this.rpcClient = rpcClient;
-            this.magic = magic ?? ProtocolSettings.Default.Magic;
+            this.magic = magic ?? Utility.ProtocolSettings.Magic;
         }
 
         /// <summary>
