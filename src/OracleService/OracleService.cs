@@ -39,6 +39,7 @@ namespace Neo.Plugins
         private readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
         private bool started = false;
         private bool stopped = false;
+        private IWalletProvider walletProvider;
         private int counter;
 
         private static readonly IReadOnlyDictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>
@@ -60,6 +61,19 @@ namespace Neo.Plugins
                 p.Configure();
         }
 
+        protected override void OnPluginsLoaded()
+        {
+            walletProvider = GetService<IWalletProvider>();
+            if (Settings.Default.AutoStart)
+                walletProvider.WalletOpened += WalletProvider_WalletOpened;
+        }
+
+        private void WalletProvider_WalletOpened(object sender, Wallet wallet)
+        {
+            walletProvider.WalletOpened -= WalletProvider_WalletOpened;
+            Start(wallet);
+        }
+
         public override void Dispose()
         {
             OnStop();
@@ -72,15 +86,20 @@ namespace Neo.Plugins
         [ConsoleCommand("start oracle", Category = "Oracle", Description = "Start oracle service")]
         private void OnStart()
         {
-            if (started) return;
+            Start(walletProvider.GetWallet());
+        }
 
-            wallet = GetService<IWalletProvider>().GetWallet();
+        public void Start(Wallet wallet)
+        {
+            if (started) return;
 
             if (wallet is null)
             {
                 Console.WriteLine("Please open wallet first!");
                 return;
             }
+
+            this.wallet = wallet;
 
             using (var snapshot = Blockchain.Singleton.GetSnapshot())
             {

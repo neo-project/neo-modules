@@ -10,6 +10,7 @@ using Neo.Plugins.StateService.Storage;
 using Neo.Plugins.StateService.Verification;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
+using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,6 +28,8 @@ namespace Neo.Plugins.StateService
         internal IActorRef Store;
         internal IActorRef Verifier;
 
+        private IWalletProvider walletProvider;
+
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
@@ -36,6 +39,15 @@ namespace Neo.Plugins.StateService
         protected override void OnPluginsLoaded()
         {
             Store = System.ActorSystem.ActorOf(StateStore.Props(System, this, Settings.Default.Path));
+            walletProvider = GetService<IWalletProvider>();
+            if (Settings.Default.AutoVerify)
+                walletProvider.WalletOpened += WalletProvider_WalletOpened;
+        }
+
+        private void WalletProvider_WalletOpened(object sender, Wallet wallet)
+        {
+            walletProvider.WalletOpened -= WalletProvider_WalletOpened;
+            Start(wallet);
         }
 
         public override void Dispose()
@@ -53,12 +65,17 @@ namespace Neo.Plugins.StateService
         [ConsoleCommand("start states", Category = "StateService", Description = "Start as a state verifier if wallet is open")]
         private void OnStartVerifyingState()
         {
+            var wallet = GetService<IWalletProvider>().GetWallet();
+            Start(wallet);
+        }
+
+        public void Start(Wallet wallet)
+        {
             if (Verifier != null)
             {
                 Console.WriteLine("Already started!");
                 return;
             }
-            var wallet = GetService<IWalletProvider>().GetWallet();
             if (wallet is null)
             {
                 Console.WriteLine("Please open wallet first!");

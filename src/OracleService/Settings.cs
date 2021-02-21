@@ -21,6 +21,7 @@ namespace Neo.Plugins
         public bool AllowPrivateHost { get; }
         public string[] AllowedContentTypes { get; }
         public HttpsSettings Https { get; }
+        public bool AutoStart { get; }
 
         public static Settings Default { get; private set; }
 
@@ -31,6 +32,7 @@ namespace Neo.Plugins
             AllowPrivateHost = section.GetValue("AllowPrivateHost", false);
             AllowedContentTypes = section.GetSection("AllowedContentTypes").GetChildren().Select(p => p.Get<string>()).ToArray();
             Https = new HttpsSettings(section.GetSection("Https"));
+            AutoStart = section.GetValue("AutoStart", false);
         }
 
         public static void Load(IConfigurationSection section)
