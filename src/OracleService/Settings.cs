@@ -22,6 +22,7 @@ namespace Neo.Plugins
         public string[] AllowedContentTypes { get; }
         public HttpsSettings Https { get; }
         public uint Network { get; }
+        public bool AutoStart { get; }
 
         public static Settings Default { get; private set; }
 
@@ -33,6 +34,7 @@ namespace Neo.Plugins
             AllowedContentTypes = section.GetSection("AllowedContentTypes").GetChildren().Select(p => p.Get<string>()).ToArray();
             Https = new HttpsSettings(section.GetSection("Https"));
             Network = section.GetValue("Network", 5195086u);
+            AutoStart = section.GetValue("AutoStart", false);
         }
 
         public static void Load(IConfigurationSection section)

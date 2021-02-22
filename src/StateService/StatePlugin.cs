@@ -10,6 +10,7 @@ using Neo.Plugins.StateService.Storage;
 using Neo.Plugins.StateService.Verification;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
+using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -28,6 +29,7 @@ namespace Neo.Plugins.StateService
         internal IActorRef Verifier;
 
         internal static NeoSystem System;
+        private IWalletProvider walletProvider;
 
         protected override void Configure()
         {
@@ -40,6 +42,26 @@ namespace Neo.Plugins.StateService
             if (system.Settings.Magic != Settings.Default.Network) return;
             System = system;
             Store = System.ActorSystem.ActorOf(StateStore.Props(this, string.Format(Settings.Default.Path, system.Settings.Magic.ToString("X8"))));
+            System.ServiceAdded += NeoSystem_ServiceAdded;
+        }
+
+        private void NeoSystem_ServiceAdded(object sender, object service)
+        {
+            if (service is IWalletProvider)
+            {
+                walletProvider = service as IWalletProvider;
+                System.ServiceAdded -= NeoSystem_ServiceAdded;
+                if (Settings.Default.AutoVerify)
+                {
+                    walletProvider.WalletChanged += WalletProvider_WalletChanged;
+                }
+            }
+        }
+
+        private void WalletProvider_WalletChanged(object sender, Wallet wallet)
+        {
+            walletProvider.WalletChanged -= WalletProvider_WalletChanged;
+            Start(wallet);
         }
 
         public override void Dispose()
@@ -58,12 +80,16 @@ namespace Neo.Plugins.StateService
         [ConsoleCommand("start states", Category = "StateService", Description = "Start as a state verifier if wallet is open")]
         private void OnStartVerifyingState()
         {
+            Start(walletProvider.GetWallet());
+        }
+
+        public void Start(Wallet wallet)
+        {
             if (Verifier != null)
             {
                 Console.WriteLine("Already started!");
                 return;
             }
-            var wallet = System.GetService<IWalletProvider>().GetWallet();
             if (wallet is null)
             {
                 Console.WriteLine("Please open wallet first!");

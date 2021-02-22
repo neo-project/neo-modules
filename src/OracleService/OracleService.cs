@@ -39,6 +39,7 @@ namespace Neo.Plugins
         private readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
         private bool started = false;
         private bool stopped = false;
+        private IWalletProvider walletProvider;
         private int counter;
         private NeoSystem System;
 
@@ -54,17 +55,37 @@ namespace Neo.Plugins
             RpcServerPlugin.RegisterMethods(this);
         }
 
-        protected override void OnSystemLoaded(NeoSystem system)
-        {
-            if (system.Settings.Magic != Settings.Default.Network) return;
-            System = system;
-        }
-
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
             foreach (var (_, p) in protocols)
                 p.Configure();
+        }
+
+        protected override void OnSystemLoaded(NeoSystem system)
+        {
+            if (system.Settings.Magic != Settings.Default.Network) return;
+            System = system;
+            System.ServiceAdded += NeoSystem_ServiceAdded;
+        }
+
+        private void NeoSystem_ServiceAdded(object sender, object service)
+        {
+            if (service is IWalletProvider)
+            {
+                walletProvider = service as IWalletProvider;
+                System.ServiceAdded -= NeoSystem_ServiceAdded;
+                if (Settings.Default.AutoStart)
+                {
+                    walletProvider.WalletChanged += WalletProvider_WalletChanged;
+                }
+            }
+        }
+
+        private void WalletProvider_WalletChanged(object sender, Wallet wallet)
+        {
+            walletProvider.WalletChanged -= WalletProvider_WalletChanged;
+            Start(wallet);
         }
 
         public override void Dispose()
@@ -79,9 +100,12 @@ namespace Neo.Plugins
         [ConsoleCommand("start oracle", Category = "Oracle", Description = "Start oracle service")]
         private void OnStart()
         {
-            if (started) return;
+            Start(walletProvider.GetWallet());
+        }
 
-            wallet = System.GetService<IWalletProvider>().GetWallet();
+        public void Start(Wallet wallet)
+        {
+            if (started) return;
 
             if (wallet is null)
             {
@@ -90,8 +114,9 @@ namespace Neo.Plugins
             }
             if (!CheckOracleAvaiblable(System.StoreView, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
             if (!CheckOracleAccount(wallet, oracles)) throw new ArgumentException("There is no oracle account in wallet");
-            started = true;
 
+            this.wallet = wallet;
+            started = true;
             timer = new Timer(OnTimer, null, RefreshInterval, Timeout.Infinite);
 
             ProcessRequestsAsync();
