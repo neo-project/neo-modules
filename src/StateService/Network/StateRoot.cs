@@ -15,6 +15,7 @@ namespace Neo.Plugins.StateService.Network
     class StateRoot : IVerifiable
     {
         public const byte CurrentVersion = 0x00;
+        
         public byte Version;
         public uint Index;
         public UInt256 RootHash;
