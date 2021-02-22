@@ -139,6 +139,7 @@ namespace Neo.Plugins.StateService.Storage
             UInt256 root_hash = state_snapshot.Trie.Root.Hash;
             StateRoot state_root = new StateRoot
             {
+                Version = StateRoot.CurrentVersion,
                 Index = height,
                 RootHash = root_hash,
                 Witness = null,

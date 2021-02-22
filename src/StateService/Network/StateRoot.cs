@@ -14,6 +14,7 @@ namespace Neo.Plugins.StateService.Network
 {
     class StateRoot : IVerifiable
     {
+        public const byte CurrentVersion = 0x00;
         public byte Version;
         public uint Index;
         public UInt256 RootHash;
@@ -49,14 +50,18 @@ namespace Neo.Plugins.StateService.Network
             sizeof(byte) +      //Version
             sizeof(uint) +      //Index
             UInt256.Length +    //RootHash
-            1 + Witness.Size;   //Witness
+            (Witness is null ? 1 : 1 + Witness.Size); //Witness
 
         void ISerializable.Deserialize(BinaryReader reader)
         {
             DeserializeUnsigned(reader);
             Witness[] witnesses = reader.ReadSerializableArray<Witness>(1);
-            if (witnesses.Length != 1) throw new FormatException();
-            Witness = witnesses[0];
+            if (witnesses.Length == 0)
+                Witness = null;
+            else if (witnesses.Length == 1)
+                Witness = witnesses[0];
+            else
+                throw new FormatException();
         }
 
         public void DeserializeUnsigned(BinaryReader reader)
@@ -69,7 +74,10 @@ namespace Neo.Plugins.StateService.Network
         void ISerializable.Serialize(BinaryWriter writer)
         {
             SerializeUnsigned(writer);
-            writer.Write(new[] { Witness });
+            if (Witness is null)
+                writer.WriteVarInt(0);
+            else
+                writer.Write(new[] { Witness });
         }
 
         public void SerializeUnsigned(BinaryWriter writer)
@@ -97,7 +105,7 @@ namespace Neo.Plugins.StateService.Network
             json["version"] = Version;
             json["index"] = Index;
             json["roothash"] = RootHash.ToString();
-            json["witnesses"] = new JArray(Witness.ToJson());
+            json["witnesses"] = Witness is null ? new JArray() : new JArray(Witness.ToJson());
             return json;
         }
     }
