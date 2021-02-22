@@ -15,7 +15,7 @@ namespace Neo.Plugins.StateService.Network
     class StateRoot : IVerifiable
     {
         public const byte CurrentVersion = 0x00;
-        
+
         public byte Version;
         public uint Index;
         public UInt256 RootHash;
@@ -57,12 +57,12 @@ namespace Neo.Plugins.StateService.Network
         {
             DeserializeUnsigned(reader);
             Witness[] witnesses = reader.ReadSerializableArray<Witness>(1);
-            if (witnesses.Length == 0)
-                Witness = null;
-            else if (witnesses.Length == 1)
-                Witness = witnesses[0];
-            else
-                throw new FormatException();
+            Witness = witnesses.Length switch
+            {
+                0 => null,
+                1 => witnesses[0],
+                _ => throw new FormatException(),
+            };
         }
 
         public void DeserializeUnsigned(BinaryReader reader)
