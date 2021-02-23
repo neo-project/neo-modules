@@ -362,7 +362,7 @@ namespace Neo.Plugins
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(contract.Script);
             json["state"] = engine.Execute();
-            json["gasconsumed"] = new BigDecimal(engine.GasConsumed * NativeContract.Policy.GetExecFeeFactor(snapshot), NativeContract.GAS.Decimals).ToString();
+            json["gasconsumed"] = engine.GasConsumed * NativeContract.Policy.GetExecFeeFactor(snapshot);
             json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
