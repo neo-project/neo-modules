@@ -24,7 +24,6 @@ namespace Neo.Plugins
         /// </summary>
         public PersistActions PersistAction { get; }
         public IReadOnlyList<int> Exclude { get; }
-        public uint Network { get; }
 
         public static Settings Default { get; private set; }
 
@@ -38,7 +37,6 @@ namespace Neo.Plugins
             this.Exclude = section.GetSection("Exclude").Exists()
                 ? section.GetSection("Exclude").GetChildren().Select(p => int.Parse(p.Value)).ToArray()
                 : new[] { NativeContract.Ledger.Id };
-            this.Network = section.GetValue("Network", 5195086u);
         }
 
         public static void Load(IConfigurationSection section)
