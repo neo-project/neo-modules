@@ -189,7 +189,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns the corresponding block header information according to the specified script hash.
         /// </summary>
-        public async Task<RpcBlockHeader> GetBlockHeaderAsync(string hashOrIndex, ProtocolSettings protocolSettings)
+        public async Task<RpcBlockHeader> GetBlockHeaderAsync(string hashOrIndex)
         {
             var result = int.TryParse(hashOrIndex, out int index)
                 ? await RpcSendAsync(GetRpcName(), index, true).ConfigureAwait(false)
@@ -530,7 +530,7 @@ namespace Neo.Network.RPC
         /// Bulk transfer order, and you can specify a sender address.
         /// </summary>
         /// <returns>This function returns Signed Transaction JSON if successful, ContractParametersContext JSON if signing failed.</returns>
-        public async Task<JObject> SendManyAsync(string fromAddress, IEnumerable<RpcTransferOut> outputs, ProtocolSettings protocolSettings)
+        public async Task<JObject> SendManyAsync(string fromAddress, IEnumerable<RpcTransferOut> outputs)
         {
             var parameters = new List<JObject>();
             if (!string.IsNullOrEmpty(fromAddress))
@@ -570,7 +570,7 @@ namespace Neo.Network.RPC
         /// Returns the contract log based on the specified txHash. The complete contract logs are stored under the ApplicationLogs directory.
         /// This method is provided by the plugin ApplicationLogs.
         /// </summary>
-        public async Task<RpcApplicationLog> GetApplicationLogAsync(string txHash, TriggerType triggerType, ProtocolSettings protocolSettings)
+        public async Task<RpcApplicationLog> GetApplicationLogAsync(string txHash, TriggerType triggerType)
         {
             var result = await RpcSendAsync(GetRpcName(), txHash, triggerType).ConfigureAwait(false);
             return RpcApplicationLog.FromJson(result, protocolSettings);
@@ -596,7 +596,7 @@ namespace Neo.Network.RPC
         /// Returns the balance of all NEP-17 assets in the specified address.
         /// This method is provided by the plugin RpcNep17Tracker.
         /// </summary>
-        public async Task<RpcNep17Balances> GetNep17BalancesAsync(string address, ProtocolSettings protocolSettings)
+        public async Task<RpcNep17Balances> GetNep17BalancesAsync(string address)
         {
             var result = await RpcSendAsync(GetRpcName(), address.AsScriptHash())
                 .ConfigureAwait(false);

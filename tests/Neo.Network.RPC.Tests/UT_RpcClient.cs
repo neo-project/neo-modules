@@ -158,7 +158,7 @@ namespace Neo.Network.RPC.Tests
             var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlockHeaderAsync).ToLower());
             foreach (var test in tests)
             {
-                var result = await rpc.GetBlockHeaderAsync(test.Request.Params[0].AsString(), rpc.protocolSettings);
+                var result = await rpc.GetBlockHeaderAsync(test.Request.Params[0].AsString());
                 Assert.AreEqual(test.Response.Result.ToString(), result.ToJson(rpc.protocolSettings).ToString());
             }
         }
@@ -429,7 +429,7 @@ namespace Neo.Network.RPC.Tests
         public async Task TestSendMany()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendManyAsync).ToLower());
-            var result = await rpc.SendManyAsync(test.Request.Params[0].AsString(), ((JArray)test.Request.Params[1]).Select(p => RpcTransferOut.FromJson(p, rpc.protocolSettings)), rpc.protocolSettings);
+            var result = await rpc.SendManyAsync(test.Request.Params[0].AsString(), ((JArray)test.Request.Params[1]).Select(p => RpcTransferOut.FromJson(p, rpc.protocolSettings)));
             Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
         }
 
@@ -457,7 +457,7 @@ namespace Neo.Network.RPC.Tests
         public async Task GetApplicationLogTest_TriggerType()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.GetApplicationLogAsync) + "_triggertype").ToLower());
-            var result = await rpc.GetApplicationLogAsync(test.Request.Params[0].AsString(), TriggerType.OnPersist, rpc.protocolSettings);
+            var result = await rpc.GetApplicationLogAsync(test.Request.Params[0].AsString(), TriggerType.OnPersist);
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
@@ -476,7 +476,7 @@ namespace Neo.Network.RPC.Tests
         public async Task GetNep17BalancesTest()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep17BalancesAsync).ToLower());
-            var result = await rpc.GetNep17BalancesAsync(test.Request.Params[0].AsString(), rpc.protocolSettings);
+            var result = await rpc.GetNep17BalancesAsync(test.Request.Params[0].AsString());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson(rpc.protocolSettings).ToString());
         }
 

@@ -156,10 +156,10 @@ namespace Neo.Network.RPC.Tests
             };
 
             byte[] script = new byte[1];
-            txManager = await TransactionManager.MakeTransactionAsync(rpcClientMock.Object, script, signers);
+            txManager = await TransactionManager.MakeTransactionAsync(client, script, signers);
             await txManager
                 .AddSignature(keyPair1)
-                .SignAsync(client.protocolSettings);
+                .SignAsync();
 
             // get signature from Witnesses
             var tx = txManager.Tx;
@@ -171,11 +171,11 @@ namespace Neo.Network.RPC.Tests
             Assert.AreEqual(100, tx.SystemFee);
 
             // duplicate sign should not add new witness
-            await txManager.AddSignature(keyPair1).SignAsync(client.protocolSettings);
+            await txManager.AddSignature(keyPair1).SignAsync();
             Assert.AreEqual(1, txManager.Tx.Witnesses.Length);
 
             // throw exception when the KeyPair is wrong
-            await ThrowsAsync<Exception>(async () => await txManager.AddSignature(keyPair2).SignAsync(client.protocolSettings));
+            await ThrowsAsync<Exception>(async () => await txManager.AddSignature(keyPair2).SignAsync());
         }
 
         // https://docs.microsoft.com/en-us/archive/msdn-magazine/2014/november/async-programming-unit-testing-asynchronous-code#testing-exceptions
@@ -220,7 +220,7 @@ namespace Neo.Network.RPC.Tests
             await txManager
                 .AddMultiSig(keyPair1, 2, keyPair1.PublicKey, keyPair2.PublicKey)
                 .AddMultiSig(keyPair2, 2, keyPair1.PublicKey, keyPair2.PublicKey)
-                .SignAsync(multiSigMock.Object.protocolSettings);
+                .SignAsync();
         }
 
         [TestMethod]
@@ -245,7 +245,7 @@ namespace Neo.Network.RPC.Tests
             txManager = await TransactionManager.MakeTransactionAsync(rpcClientMock.Object, script, signers);
             txManager.AddWitness(UInt160.Zero);
             txManager.AddSignature(keyPair1);
-            await txManager.SignAsync(client.protocolSettings);
+            await txManager.SignAsync();
 
             var tx = txManager.Tx;
             Assert.AreEqual(2, tx.Witnesses.Length);
