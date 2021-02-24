@@ -6,13 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="RocksDBStore\config.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="rocksdb" Version="6.15.4.15287" />
   </ItemGroup>
 

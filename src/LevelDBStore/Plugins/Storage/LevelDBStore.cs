@@ -11,15 +11,9 @@ namespace Neo.Plugins.Storage
 
         public IStore GetStore(string path)
         {
-            path = string.Format(path, Settings.Default.Network.ToString("X8"));
             if (Environment.CommandLine.Split(' ').Any(p => p == "/repair" || p == "--repair"))
                 DB.Repair(path, Options.Default);
             return new Store(path);
-        }
-
-        protected override void Configure()
-        {
-            Settings.Load(GetConfiguration());
         }
     }
 }

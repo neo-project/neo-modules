@@ -12,13 +12,7 @@ namespace Neo.Plugins.Storage
         /// <returns>RocksDbStore</returns>
         public IStore GetStore(string path)
         {
-            path = string.Format(path, Settings.Default.Network.ToString("X8"));
             return new Store(path);
-        }
-
-        protected override void Configure()
-        {
-            Settings.Load(GetConfiguration());
         }
     }
 }
