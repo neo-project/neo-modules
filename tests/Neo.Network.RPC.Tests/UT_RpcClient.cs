@@ -29,7 +29,7 @@ namespace Neo.Network.RPC.Tests
 
             // use real http client with mocked handler here
             var httpClient = new HttpClient(handlerMock.Object);
-            rpc = new RpcClient(httpClient, new Uri("http://seed1.neo.org:10331"));
+            rpc = new RpcClient(httpClient, new Uri("http://seed1.neo.org:10331"), null);
             foreach (var test in TestUtils.RpcTestCases)
             {
                 MockResponse(test.Request, test.Response);
@@ -113,7 +113,7 @@ namespace Neo.Network.RPC.Tests
             foreach (var test in tests)
             {
                 var result = await rpc.GetBlockAsync(test.Request.Params[0].AsString());
-                Assert.AreEqual(test.Response.Result.AsString(), result.ToJson().ToString());
+                Assert.AreEqual(test.Response.Result.AsString(), result.ToJson(rpc.protocolSettings).ToString());
             }
         }
 
@@ -158,8 +158,8 @@ namespace Neo.Network.RPC.Tests
             var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetBlockHeaderAsync).ToLower());
             foreach (var test in tests)
             {
-                var result = await rpc.GetBlockHeaderAsync(test.Request.Params[0].AsString());
-                Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+                var result = await rpc.GetBlockHeaderAsync(test.Request.Params[0].AsString(), rpc.protocolSettings);
+                Assert.AreEqual(test.Response.Result.ToString(), result.ToJson(rpc.protocolSettings).ToString());
             }
         }
 
@@ -225,7 +225,7 @@ namespace Neo.Network.RPC.Tests
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawTransactionAsync).ToLower());
             var result = await rpc.GetRawTransactionAsync(test.Request.Params[0].AsString());
-            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson(rpc.protocolSettings).ToString());
         }
 
         [TestMethod]
@@ -429,7 +429,7 @@ namespace Neo.Network.RPC.Tests
         public async Task TestSendMany()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendManyAsync).ToLower());
-            var result = await rpc.SendManyAsync(test.Request.Params[0].AsString(), ((JArray)test.Request.Params[1]).Select(p => RpcTransferOut.FromJson(p)));
+            var result = await rpc.SendManyAsync(test.Request.Params[0].AsString(), ((JArray)test.Request.Params[1]).Select(p => RpcTransferOut.FromJson(p, rpc.protocolSettings)), rpc.protocolSettings);
             Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
         }
 
@@ -457,7 +457,7 @@ namespace Neo.Network.RPC.Tests
         public async Task GetApplicationLogTest_TriggerType()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.GetApplicationLogAsync) + "_triggertype").ToLower());
-            var result = await rpc.GetApplicationLogAsync(test.Request.Params[0].AsString(), TriggerType.OnPersist);
+            var result = await rpc.GetApplicationLogAsync(test.Request.Params[0].AsString(), TriggerType.OnPersist, rpc.protocolSettings);
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
         }
 
@@ -466,18 +466,18 @@ namespace Neo.Network.RPC.Tests
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep17TransfersAsync).ToLower());
             var result = await rpc.GetNep17TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(), (ulong)test.Request.Params[2].AsNumber());
-            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson(rpc.protocolSettings).ToString());
             test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.GetNep17TransfersAsync).ToLower() + "_with_null_transferaddress"));
             result = await rpc.GetNep17TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(), (ulong)test.Request.Params[2].AsNumber());
-            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson(rpc.protocolSettings).ToString());
         }
 
         [TestMethod()]
         public async Task GetNep17BalancesTest()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep17BalancesAsync).ToLower());
-            var result = await rpc.GetNep17BalancesAsync(test.Request.Params[0].AsString());
-            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            var result = await rpc.GetNep17BalancesAsync(test.Request.Params[0].AsString(), rpc.protocolSettings);
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson(rpc.protocolSettings).ToString());
         }
 
         #endregion Plugins

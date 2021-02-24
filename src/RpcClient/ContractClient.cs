@@ -52,7 +52,7 @@ namespace Neo.Network.RPC
         /// <param name="manifest">contract manifest</param>
         /// <param name="key">sender KeyPair</param>
         /// <returns></returns>
-        public async Task<Transaction> CreateDeployContractTxAsync(byte[] nefFile, ContractManifest manifest, KeyPair key)
+        public async Task<Transaction> CreateDeployContractTxAsync(byte[] nefFile, ContractManifest manifest, KeyPair key, ProtocolSettings protocolSettings)
         {
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
@@ -67,7 +67,7 @@ namespace Neo.Network.RPC
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
             return await manager
                 .AddSignature(key)
-                .SignAsync().ConfigureAwait(false);
+                .SignAsync(protocolSettings).ConfigureAwait(false);
         }
     }
 }

@@ -22,6 +22,7 @@ namespace Neo.Network.RPC.Tests
         UInt160 sender;
         WalletAPI walletAPI;
         UInt160 multiSender;
+        RpcClient client;
 
         [TestInitialize]
         public void TestSetup()
@@ -29,8 +30,9 @@ namespace Neo.Network.RPC.Tests
             keyPair1 = new KeyPair(Wallet.GetPrivateKeyFromWIF("KyXwTh1hB76RRMquSvnxZrJzQx7h9nQP2PCRL38v6VDb5ip3nf1p"));
             sender = Contract.CreateSignatureRedeemScript(keyPair1.PublicKey).ToScriptHash();
             multiSender = Contract.CreateMultiSigContract(1, new ECPoint[] { keyPair1.PublicKey }).ScriptHash;
-            address1 = Wallets.Helper.ToAddress(sender, TestUtils.ProtocolSettings.AddressVersion);
             rpcClientMock = UT_TransactionManager.MockRpcClient(sender, new byte[0]);
+            client = rpcClientMock.Object;
+            address1 = Wallets.Helper.ToAddress(sender, client.protocolSettings.AddressVersion);
             walletAPI = new WalletAPI(rpcClientMock.Object);
         }
 
@@ -40,7 +42,7 @@ namespace Neo.Network.RPC.Tests
             byte[] testScript = NativeContract.NEO.Hash.MakeScript("unclaimedGas", sender, 99);
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1_10000000) });
 
-            var balance = await walletAPI.GetUnclaimedGasAsync(address1);
+            var balance = await walletAPI.GetUnclaimedGasAsync(address1, client.protocolSettings);
             Assert.AreEqual(1.1m, balance);
         }
 
@@ -50,7 +52,7 @@ namespace Neo.Network.RPC.Tests
             byte[] testScript = NativeContract.NEO.Hash.MakeScript("balanceOf", sender);
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1_00000000) });
 
-            var balance = await walletAPI.GetNeoBalanceAsync(address1);
+            var balance = await walletAPI.GetNeoBalanceAsync(address1, client.protocolSettings);
             Assert.AreEqual(1_00000000u, balance);
         }
 
@@ -60,7 +62,7 @@ namespace Neo.Network.RPC.Tests
             byte[] testScript = NativeContract.GAS.Hash.MakeScript("balanceOf", sender);
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1_10000000) });
 
-            var balance = await walletAPI.GetGasBalanceAsync(address1);
+            var balance = await walletAPI.GetGasBalanceAsync(address1, client.protocolSettings);
             Assert.AreEqual(1.1m, balance);
         }
 
@@ -70,7 +72,7 @@ namespace Neo.Network.RPC.Tests
             byte[] testScript = UInt160.Zero.MakeScript("balanceOf", sender);
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1_10000000) });
 
-            var balance = await walletAPI.GetTokenBalanceAsync(UInt160.Zero.ToString(), address1);
+            var balance = await walletAPI.GetTokenBalanceAsync(UInt160.Zero.ToString(), address1, client.protocolSettings);
             Assert.AreEqual(1_10000000, balance);
         }
 
@@ -87,7 +89,7 @@ namespace Neo.Network.RPC.Tests
             json["hash"] = UInt256.Zero.ToString();
             rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JObject>())).ReturnsAsync(json);
 
-            var tranaction = await walletAPI.ClaimGasAsync(keyPair1.Export());
+            var tranaction = await walletAPI.ClaimGasAsync(keyPair1.Export(), client.protocolSettings);
             Assert.AreEqual(testScript.ToHexString(), tranaction.Script.ToHexString());
         }
 
@@ -104,7 +106,7 @@ namespace Neo.Network.RPC.Tests
             json["hash"] = UInt256.Zero.ToString();
             rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JObject>())).ReturnsAsync(json);
 
-            var tranaction = await walletAPI.TransferAsync(NativeContract.GAS.Hash.ToString(), keyPair1.Export(), UInt160.Zero.ToAddress(TestUtils.ProtocolSettings.AddressVersion), 100);
+            var tranaction = await walletAPI.TransferAsync(rpcClientMock.Object.protocolSettings, NativeContract.GAS.Hash.ToString(), keyPair1.Export(), UInt160.Zero.ToAddress(client.protocolSettings.AddressVersion), 100);
             Assert.AreEqual(testScript.ToHexString(), tranaction.Script.ToHexString());
         }
 
@@ -126,12 +128,12 @@ namespace Neo.Network.RPC.Tests
             json["hash"] = UInt256.Zero.ToString();
             rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JObject>())).ReturnsAsync(json);
 
-            var tranaction = await walletAPI.TransferAsync(NativeContract.GAS.Hash, 1, new[] { keyPair1.PublicKey }, new[] { keyPair1 }, UInt160.Zero, NativeContract.GAS.Factor * 100);
+            var tranaction = await walletAPI.TransferAsync(client.protocolSettings, NativeContract.GAS.Hash, 1, new[] { keyPair1.PublicKey }, new[] { keyPair1 }, UInt160.Zero, NativeContract.GAS.Factor * 100);
             Assert.AreEqual(testScript.ToHexString(), tranaction.Script.ToHexString());
 
             try
             {
-                tranaction = await walletAPI.TransferAsync(NativeContract.GAS.Hash, 2, new[] { keyPair1.PublicKey }, new[] { keyPair1 }, UInt160.Zero, NativeContract.GAS.Factor * 100);
+                tranaction = await walletAPI.TransferAsync(client.protocolSettings, NativeContract.GAS.Hash, 2, new[] { keyPair1.PublicKey }, new[] { keyPair1 }, UInt160.Zero, NativeContract.GAS.Factor * 100);
                 Assert.Fail();
             }
             catch (System.Exception e)
@@ -142,7 +144,7 @@ namespace Neo.Network.RPC.Tests
             testScript = NativeContract.GAS.Hash.MakeScript("transfer", multiSender, UInt160.Zero, NativeContract.GAS.Factor * 100, string.Empty);
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1_10000000) });
 
-            tranaction = await walletAPI.TransferAsync(NativeContract.GAS.Hash, 1, new[] { keyPair1.PublicKey }, new[] { keyPair1 }, UInt160.Zero, NativeContract.GAS.Factor * 100, string.Empty);
+            tranaction = await walletAPI.TransferAsync(client.protocolSettings, NativeContract.GAS.Hash, 1, new[] { keyPair1.PublicKey }, new[] { keyPair1 }, UInt160.Zero, NativeContract.GAS.Factor * 100, string.Empty);
             Assert.AreEqual(testScript.ToHexString(), tranaction.Script.ToHexString());
         }
 
@@ -151,7 +153,7 @@ namespace Neo.Network.RPC.Tests
         {
             Transaction transaction = TestUtils.GetTransaction();
             rpcClientMock.Setup(p => p.RpcSendAsync("getrawtransaction", It.Is<JObject[]>(j => j[0].AsString() == transaction.Hash.ToString())))
-                .ReturnsAsync(new RpcTransaction { Transaction = transaction, VMState = VMState.HALT, BlockHash = UInt256.Zero, BlockTime = 100, Confirmations = 1 }.ToJson());
+                .ReturnsAsync(new RpcTransaction { Transaction = transaction, VMState = VMState.HALT, BlockHash = UInt256.Zero, BlockTime = 100, Confirmations = 1 }.ToJson(client.protocolSettings));
 
             var tx = await walletAPI.WaitTransactionAsync(transaction);
             Assert.AreEqual(VMState.HALT, tx.VMState);

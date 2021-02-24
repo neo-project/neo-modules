@@ -28,6 +28,7 @@ namespace Neo.Network.RPC.Tests
         KeyPair keyPair2;
         UInt160 sender;
         UInt160 multiHash;
+        RpcClient client;
 
         [TestInitialize]
         public void TestSetup()
@@ -37,12 +38,13 @@ namespace Neo.Network.RPC.Tests
             sender = Contract.CreateSignatureRedeemScript(keyPair1.PublicKey).ToScriptHash();
             multiHash = Contract.CreateMultiSigContract(2, new ECPoint[] { keyPair1.PublicKey, keyPair2.PublicKey }).ScriptHash;
             rpcClientMock = MockRpcClient(sender, new byte[1]);
+            client = rpcClientMock.Object;
             multiSigMock = MockMultiSig(multiHash, new byte[1]);
         }
 
         public static Mock<RpcClient> MockRpcClient(UInt160 sender, byte[] script)
         {
-            var mockRpc = new Mock<RpcClient>(MockBehavior.Strict, new Uri("http://seed1.neo.org:10331"), null, null);
+            var mockRpc = new Mock<RpcClient>(MockBehavior.Strict, new Uri("http://seed1.neo.org:10331"), null, null, null);
 
             // MockHeight
             mockRpc.Setup(p => p.RpcSendAsync("getblockcount")).ReturnsAsync(100).Verifiable();
@@ -75,7 +77,7 @@ namespace Neo.Network.RPC.Tests
 
         public static Mock<RpcClient> MockMultiSig(UInt160 multiHash, byte[] script)
         {
-            var mockRpc = new Mock<RpcClient>(MockBehavior.Strict, new Uri("http://seed1.neo.org:10331"), null, null);
+            var mockRpc = new Mock<RpcClient>(MockBehavior.Strict, new Uri("http://seed1.neo.org:10331"), null, null, null);
 
             // MockHeight
             mockRpc.Setup(p => p.RpcSendAsync("getblockcount")).ReturnsAsync(100).Verifiable();
@@ -157,23 +159,23 @@ namespace Neo.Network.RPC.Tests
             txManager = await TransactionManager.MakeTransactionAsync(rpcClientMock.Object, script, signers);
             await txManager
                 .AddSignature(keyPair1)
-                .SignAsync();
+                .SignAsync(client.protocolSettings);
 
             // get signature from Witnesses
             var tx = txManager.Tx;
             byte[] signature = tx.Witnesses[0].InvocationScript.Skip(2).ToArray();
 
-            Assert.IsTrue(Crypto.VerifySignature(tx.GetSignData(TestUtils.ProtocolSettings.Magic), signature, keyPair1.PublicKey));
+            Assert.IsTrue(Crypto.VerifySignature(tx.GetSignData(client.protocolSettings.Magic), signature, keyPair1.PublicKey));
             // verify network fee and system fee
             Assert.AreEqual(100000000/*Mock*/, tx.NetworkFee);
             Assert.AreEqual(100, tx.SystemFee);
 
             // duplicate sign should not add new witness
-            await txManager.AddSignature(keyPair1).SignAsync();
+            await txManager.AddSignature(keyPair1).SignAsync(client.protocolSettings);
             Assert.AreEqual(1, txManager.Tx.Witnesses.Length);
 
             // throw exception when the KeyPair is wrong
-            await ThrowsAsync<Exception>(async () => await txManager.AddSignature(keyPair2).SignAsync());
+            await ThrowsAsync<Exception>(async () => await txManager.AddSignature(keyPair2).SignAsync(client.protocolSettings));
         }
 
         // https://docs.microsoft.com/en-us/archive/msdn-magazine/2014/november/async-programming-unit-testing-asynchronous-code#testing-exceptions
@@ -218,7 +220,7 @@ namespace Neo.Network.RPC.Tests
             await txManager
                 .AddMultiSig(keyPair1, 2, keyPair1.PublicKey, keyPair2.PublicKey)
                 .AddMultiSig(keyPair2, 2, keyPair1.PublicKey, keyPair2.PublicKey)
-                .SignAsync();
+                .SignAsync(multiSigMock.Object.protocolSettings);
         }
 
         [TestMethod]
@@ -243,7 +245,7 @@ namespace Neo.Network.RPC.Tests
             txManager = await TransactionManager.MakeTransactionAsync(rpcClientMock.Object, script, signers);
             txManager.AddWitness(UInt160.Zero);
             txManager.AddSignature(keyPair1);
-            await txManager.SignAsync();
+            await txManager.SignAsync(client.protocolSettings);
 
             var tx = txManager.Tx;
             Assert.AreEqual(2, tx.Witnesses.Length);

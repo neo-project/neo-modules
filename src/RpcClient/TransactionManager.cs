@@ -155,7 +155,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Verify Witness count and add witnesses
         /// </summary>
-        public async Task<Transaction> SignAsync()
+        public async Task<Transaction> SignAsync(ProtocolSettings protocolSettings)
         {
             // Calculate NetworkFee
             Tx.Witnesses = Tx.GetScriptHashesForVerifying(null).Select(u => new Witness()
@@ -168,7 +168,7 @@ namespace Neo.Network.RPC
 
             var gasBalance = await new Nep17API(rpcClient).BalanceOfAsync(NativeContract.GAS.Hash, Tx.Sender).ConfigureAwait(false);
             if (gasBalance < Tx.SystemFee + Tx.NetworkFee)
-                throw new InvalidOperationException($"Insufficient GAS in address: {Tx.Sender.ToAddress(Utility.ProtocolSettings.AddressVersion)}");
+                throw new InvalidOperationException($"Insufficient GAS in address: {Tx.Sender.ToAddress(protocolSettings.AddressVersion)}");
 
             // Sign with signStore
             for (int i = 0; i < signStore.Count; i++)

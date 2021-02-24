@@ -123,7 +123,7 @@ namespace Neo.Network.RPC
         /// <param name="amount">transfer amount</param>
         /// <param name="data">onPayment data</param>
         /// <returns></returns>
-        public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount, object data = null)
+        public async Task<Transaction> CreateTransferTxAsync(ProtocolSettings protocolSettings, UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount, object data = null)
         {
             var sender = Contract.CreateSignatureRedeemScript(fromKey.PublicKey).ToScriptHash();
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
@@ -133,7 +133,7 @@ namespace Neo.Network.RPC
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
             return await manager
                 .AddSignature(fromKey)
-                .SignAsync().ConfigureAwait(false);
+                .SignAsync(protocolSettings).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace Neo.Network.RPC
         /// <param name="amount">transfer amount</param>
         /// <param name="data">onPayment data</param>
         /// <returns></returns>
-        public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] fromKeys, UInt160 to, BigInteger amount, object data = null)
+        public async Task<Transaction> CreateTransferTxAsync(ProtocolSettings protocolSettings, UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] fromKeys, UInt160 to, BigInteger amount, object data = null)
         {
             if (m > fromKeys.Length)
                 throw new ArgumentException($"Need at least {m} KeyPairs for signing!");
@@ -159,7 +159,7 @@ namespace Neo.Network.RPC
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
             return await manager
                 .AddMultiSig(fromKeys, m, pubKeys)
-                .SignAsync().ConfigureAwait(false);
+                .SignAsync(protocolSettings).ConfigureAwait(false);
         }
     }
 }
