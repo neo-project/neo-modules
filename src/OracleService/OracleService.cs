@@ -181,7 +181,7 @@ namespace Neo.Plugins
 
             if (finishedCache.ContainsKey(requestId)) throw new RpcException(-100, "Request has already finished");
 
-            var snapshot = System.StoreView;
+            using var snapshot = System.GetSnapshot();
             uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
             var oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
             if (!oracles.Any(p => p.Equals(oraclePub))) throw new RpcException(-100, $"{oraclePub} isn't an oracle node");
@@ -453,7 +453,7 @@ namespace Neo.Plugins
 
         private static bool CheckTxSign(NeoSystem System, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
         {
-            var snapshot = System.StoreView;
+            using var snapshot = System.GetSnapshot();
             uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
             ECPoint[] oraclesNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
             int neededThreshold = oraclesNodes.Length - (oraclesNodes.Length - 1) / 3;
