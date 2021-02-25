@@ -31,7 +31,7 @@ namespace Neo.Plugins
 
         public void AttachWallet(Wallet wallet, ECPoint[] oracles)
         {
-            privateKey = oracles.Select(p => wallet.GetAccount(p)).Where(p => p is not null && p.HasKey && !p.Lock).FirstOrDefault(null)?.GetKey().PrivateKey;
+            privateKey = oracles.Select(p => wallet.GetAccount(p)).Where(p => p is not null && p.HasKey && !p.Lock).FirstOrDefault()?.GetKey().PrivateKey;
         }
 
         public async Task<(OracleResponseCode, string)> ProcessAsync(Uri uri, CancellationToken cancellation)
@@ -53,7 +53,7 @@ namespace Neo.Plugins
             }
             catch (Exception e)
             {
-                Utility.Log(nameof(OracleFsProtocol), LogLevel.Debug, $"NeoFS result: error,{e.Message}");
+                Utility.Log(nameof(OracleFsProtocol), LogLevel.Debug, $"NeoFS result: error,{e}");
                 return (OracleResponseCode.Error, null);
             }
         }
@@ -61,16 +61,16 @@ namespace Neo.Plugins
         private byte[] Get(CancellationToken cancellation, byte[] privateKey, Uri uri, string host)
         {
             if (uri.Scheme != URIScheme) throw new Exception("invalid URI scheme");
-            string[] ps = uri.OriginalString.Substring((uri.Scheme + "://").Length).Split("/");
+            string[] ps = uri.PathAndQuery.TrimStart('/').Split("/");
             if (ps.Length == 0) throw new Exception("object ID is missing from URI");
-            ContainerID containerID = ContainerID.FromBase58String(uri.Host);
+            ContainerID containerID = ContainerID.FromBase58String(uri.OriginalString.Substring((URIScheme + "://").Length, uri.Host.Length));
             ObjectID objectID = ObjectID.FromBase58String(ps[0]);
             Address objectAddr = new Address()
             {
                 ContainerId = containerID,
                 ObjectId = objectID
             };
-            Client client = new Client(host, privateKey.LoadPrivateKey());
+            Client client = new Client(privateKey.LoadPrivateKey(), host);
             if (ps.Length == 1)
             {
                 return GetPayload(cancellation, client, objectAddr);
@@ -95,7 +95,7 @@ namespace Neo.Plugins
 
         private byte[] GetPayload(CancellationToken cancellation, Client client, Address addr)
         {
-            Object obj = client.GetObject(cancellation, new GetObjectParams() { Address = addr }).Result;
+            Object obj = client.GetObject(cancellation, new GetObjectParams() { Address = addr }, new CallOptions { Ttl = 2 }).Result;
             return obj.Payload.ToByteArray();
         }
 
@@ -103,12 +103,12 @@ namespace Neo.Plugins
         {
             if (ps.Length == 0) throw new Exception("object range is invalid (expected 'Offset|Length'");
             Range range = ParseRange(ps[0]);
-            return client.GetObjectPayloadRangeData(cancellation, new RangeDataParams() { Address = addr, Range = range }).Result;
+            return client.GetObjectPayloadRangeData(cancellation, new RangeDataParams() { Address = addr, Range = range }, new CallOptions { Ttl = 2 }).Result;
         }
 
         private byte[] GetHeader(CancellationToken cancellation, Client client, Address addr)
         {
-            var obj = client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr });
+            var obj = client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 });
             return obj.ToByteArray();
         }
 
@@ -116,11 +116,11 @@ namespace Neo.Plugins
         {
             if (ps.Length == 0 || ps[0] == "")
             {
-                Object obj = client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr });
+                Object obj = client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 });
                 return obj.Header.PayloadHash.Sum.ToByteArray();
             }
             Range range = ParseRange(ps[0]);
-            List<byte[]> hashes = client.GetObjectPayloadRangeHash(cancellation, new RangeChecksumParams() { Address = addr, Ranges = new List<Range>() { range } });
+            List<byte[]> hashes = client.GetObjectPayloadRangeHash(cancellation, new RangeChecksumParams() { Address = addr, Ranges = new List<Range>() { range } }, new CallOptions { Ttl = 2 });
             if (hashes.Count == 0) throw new Exception(string.Format("{0}: empty response", "object range is invalid (expected 'Offset|Length'"));
             return hashes[0];
         }
