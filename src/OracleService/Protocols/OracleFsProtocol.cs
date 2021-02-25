@@ -49,7 +49,7 @@ namespace Neo.Plugins
             {
                 byte[] res = Get(cancellation, privateKey, uri, Settings.Default.Fs.FSNodes[index]);
                 Utility.Log(nameof(OracleFsProtocol), LogLevel.Debug, $"NeoFS result: {res.ToHexString()}");
-                return (OracleResponseCode.Success, res.ToHexString());
+                return (OracleResponseCode.Success, Convert.ToBase64String(res));
             }
             catch (Exception e)
             {
