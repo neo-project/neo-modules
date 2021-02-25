@@ -1,6 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Persistence;
-using System.IO;
+using System.Linq;
 
 namespace Neo.Plugins.Storage.Tests
 {
@@ -84,23 +84,21 @@ namespace Neo.Plugins.Storage.Tests
 
                 // Seek Forward
 
-                var enumerator = store.Seek(new byte[] { 0x00, 0x00, 0x02 }, SeekDirection.Forward).GetEnumerator();
-                Assert.IsTrue(enumerator.MoveNext());
-                CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x02 }, enumerator.Current.Key);
-                CollectionAssert.AreEqual(new byte[] { 0x02 }, enumerator.Current.Value);
-                Assert.IsTrue(enumerator.MoveNext());
-                CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x03 }, enumerator.Current.Key);
-                CollectionAssert.AreEqual(new byte[] { 0x03 }, enumerator.Current.Value);
+                var entries = store.Seek(new byte[] { 0x00, 0x00, 0x02 }, SeekDirection.Forward).ToArray();
+                Assert.AreEqual(3, entries.Length);
+                CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x02 }, entries[0].Key);
+                CollectionAssert.AreEqual(new byte[] { 0x02 }, entries[0].Value);
+                CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x03 }, entries[1].Key);
+                CollectionAssert.AreEqual(new byte[] { 0x03 }, entries[1].Value);
 
                 // Seek Backward
 
-                enumerator = store.Seek(new byte[] { 0x00, 0x00, 0x02 }, SeekDirection.Backward).GetEnumerator();
-                Assert.IsTrue(enumerator.MoveNext());
-                CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x02 }, enumerator.Current.Key);
-                CollectionAssert.AreEqual(new byte[] { 0x02 }, enumerator.Current.Value);
-                Assert.IsTrue(enumerator.MoveNext());
-                CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x01 }, enumerator.Current.Key);
-                CollectionAssert.AreEqual(new byte[] { 0x01 }, enumerator.Current.Value);
+                entries = store.Seek(new byte[] { 0x00, 0x00, 0x02 }, SeekDirection.Backward).ToArray();
+                Assert.AreEqual(3, entries.Length);
+                CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x02 }, entries[0].Key);
+                CollectionAssert.AreEqual(new byte[] { 0x02 }, entries[0].Value);
+                CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x01 }, entries[1].Key);
+                CollectionAssert.AreEqual(new byte[] { 0x01 }, entries[1].Value);
 
                 // Seek Backward
                 store.Delete(new byte[] { 0x00, 0x00, 0x00 });
@@ -112,13 +110,12 @@ namespace Neo.Plugins.Storage.Tests
                 store.Put(new byte[] { 0x00, 0x00, 0x01 }, new byte[] { 0x01 });
                 store.Put(new byte[] { 0x00, 0x01, 0x02 }, new byte[] { 0x02 });
 
-                enumerator = store.Seek(new byte[] { 0x00, 0x00, 0x03 }, SeekDirection.Backward).GetEnumerator();
-                Assert.IsTrue(enumerator.MoveNext());
-                CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x01 }, enumerator.Current.Key);
-                CollectionAssert.AreEqual(new byte[] { 0x01 }, enumerator.Current.Value);
-                Assert.IsTrue(enumerator.MoveNext());
-                CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x00 }, enumerator.Current.Key);
-                CollectionAssert.AreEqual(new byte[] { 0x00 }, enumerator.Current.Value);
+                entries = store.Seek(new byte[] { 0x00, 0x00, 0x03 }, SeekDirection.Backward).ToArray();
+                Assert.AreEqual(2, entries.Length);
+                CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x01 }, entries[0].Key);
+                CollectionAssert.AreEqual(new byte[] { 0x01 }, entries[0].Value);
+                CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x00 }, entries[1].Key);
+                CollectionAssert.AreEqual(new byte[] { 0x00 }, entries[1].Value);
             }
         }
 

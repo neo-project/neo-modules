@@ -115,7 +115,8 @@ namespace Neo.Network.RPC.Tests
                 State = VMState.HALT
             };
 
-            mockClient.Setup(p => p.RpcSendAsync("invokescript", It.Is<JObject[]>(j => j[0].AsString() == Convert.ToBase64String(script))))
+            mockClient.Setup(p => p.RpcSendAsync("invokescript", It.Is<JObject[]>(j =>
+                Convert.FromBase64String(j[0].AsString()).SequenceEqual(script))))
                 .ReturnsAsync(result.ToJson())
                 .Verifiable();
         }

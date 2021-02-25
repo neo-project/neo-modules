@@ -33,6 +33,8 @@ namespace Neo.Plugins
         public HttpsSettings Https { get; }
         public FsSettings Fs { get; }
 
+        public bool AutoStart { get; }
+
         public static Settings Default { get; private set; }
 
         private Settings(IConfigurationSection section)
@@ -42,7 +44,11 @@ namespace Neo.Plugins
             AllowPrivateHost = section.GetValue("AllowPrivateHost", false);
             AllowedContentTypes = section.GetSection("AllowedContentTypes").GetChildren().Select(p => p.Get<string>()).ToArray();
             Https = new HttpsSettings(section.GetSection("Https"));
+<<<<<<< HEAD
             Fs = new FsSettings(section.GetSection("NeoFs"));
+=======
+            AutoStart = section.GetValue("AutoStart", false);
+>>>>>>> upstream/master
         }
 
         public static void Load(IConfigurationSection section)
