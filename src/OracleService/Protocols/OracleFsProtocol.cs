@@ -1,19 +1,19 @@
 using Google.Protobuf;
+using Neo.Cryptography.ECC;
 using Neo.Network.P2P.Payloads;
+using Neo.Wallets;
 using NeoFS.API.v2.Client;
 using NeoFS.API.v2.Client.ObjectParams;
-using NeoFS.API.v2.Refs;
 using NeoFS.API.v2.Cryptography;
+using NeoFS.API.v2.Refs;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Range = NeoFS.API.v2.Object.Range;
-using System.Collections.Generic;
 using Object = NeoFS.API.v2.Object.Object;
-using Neo.Wallets;
-using Neo.Cryptography.ECC;
+using Range = NeoFS.API.v2.Object.Range;
 
 namespace Neo.Plugins
 {
@@ -129,8 +129,8 @@ namespace Neo.Plugins
         {
             int sepIndex = s.IndexOf("|");
             if (sepIndex < 0) throw new Exception("object range is invalid (expected 'Offset|Length'");
-            ulong offset = ulong.Parse(s.Substring(0, sepIndex));
-            ulong length = ulong.Parse(s.Substring(sepIndex));
+            ulong offset = ulong.Parse(s[..sepIndex]);
+            ulong length = ulong.Parse(s[sepIndex..]);
             return new Range() { Offset = offset, Length = length };
         }
 
