@@ -108,7 +108,7 @@ namespace Neo.Plugins
                 if (!CheckOracleAccount(wallet, oracles)) throw new ArgumentException("There is no oracle account in wallet");
                 foreach (var (_, p) in protocols)
                 {
-                    if (p is OracleFsProtocol) ((OracleFsProtocol)p).AttachWallet(wallet, oracles);
+                    if (p is OracleFsProtocol protocol) protocol.AttachWallet(wallet, oracles);
                 }
             }
 

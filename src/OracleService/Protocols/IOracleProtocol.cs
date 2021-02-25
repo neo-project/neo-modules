@@ -1,6 +1,4 @@
-using Neo.Cryptography.ECC;
 using Neo.Network.P2P.Payloads;
-using Neo.Wallets;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
