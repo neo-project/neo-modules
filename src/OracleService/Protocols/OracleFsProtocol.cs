@@ -44,7 +44,8 @@ namespace Neo.Plugins
                 if (entry.IsInternal())
                     return (OracleResponseCode.Forbidden, null);
             }
-            int index = uri.LocalPath.GetHashCode() % Settings.Default.Fs.FSNodes.Length;
+            Random random = new Random();
+            int index = random.Next() % Settings.Default.Fs.FSNodes.Length;
             try
             {
                 byte[] res = Get(cancellation, privateKey, uri, Settings.Default.Fs.FSNodes[index]);
