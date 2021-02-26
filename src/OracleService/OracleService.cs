@@ -181,17 +181,18 @@ namespace Neo.Plugins
 
             if (finishedCache.ContainsKey(requestId)) throw new RpcException(-100, "Request has already finished");
 
-            using var snapshot = System.GetSnapshot();
-            uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
-            var oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
-            if (!oracles.Any(p => p.Equals(oraclePub))) throw new RpcException(-100, $"{oraclePub} isn't an oracle node");
-            if (NativeContract.Oracle.GetRequest(snapshot, requestId) is null)
-                throw new RpcException(-100, "Request is not found");
-            var data = Neo.Helper.Concat(oraclePub.ToArray(), BitConverter.GetBytes(requestId), txSign);
-            if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
+            using (var snapshot = System.GetSnapshot())
+            {
+                uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
+                var oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
+                if (!oracles.Any(p => p.Equals(oraclePub))) throw new RpcException(-100, $"{oraclePub} isn't an oracle node");
+                if (NativeContract.Oracle.GetRequest(snapshot, requestId) is null)
+                    throw new RpcException(-100, "Request is not found");
+                var data = Neo.Helper.Concat(oraclePub.ToArray(), BitConverter.GetBytes(requestId), txSign);
+                if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
 
-            AddResponseTxSign(requestId, oraclePub, txSign);
-
+                AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
+            }
             return new JObject();
         }
 
@@ -253,8 +254,8 @@ namespace Neo.Plugins
                     }
                 }
                 var response = new OracleResponse() { Id = requestId, Code = code, Result = result };
-                var responseTx = CreateResponseTx(System.StoreView, request, response, oracleNodes, System.Settings);
-                var backupTx = CreateResponseTx(System.StoreView, request, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() }, oracleNodes, System.Settings);
+                var responseTx = CreateResponseTx(snapshot, request, response, oracleNodes, System.Settings);
+                var backupTx = CreateResponseTx(snapshot, request, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() }, oracleNodes, System.Settings);
 
                 Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
 
@@ -267,7 +268,7 @@ namespace Neo.Plugins
 
                     var txSign = responseTx.Sign(account.GetKey(), System.Settings.Magic);
                     var backTxSign = backupTx.Sign(account.GetKey(), System.Settings.Magic);
-                    AddResponseTxSign(requestId, oraclePub, txSign, responseTx, backupTx, backTxSign);
+                    AddResponseTxSign(snapshot, requestId, oraclePub, txSign, responseTx, backupTx, backTxSign);
                     tasks.Add(SendResponseSignatureAsync(requestId, txSign, account.GetKey()));
 
                     Log($"Send oracle sign data: Oracle node: {oraclePub} RequestTx: {request.OriginalTxid} Sign: {txSign.ToHexString()}");
@@ -280,13 +281,15 @@ namespace Neo.Plugins
         {
             while (!cancelSource.IsCancellationRequested)
             {
-                foreach (var (id, request) in NativeContract.Oracle.GetRequests(System.StoreView))
+                using (var snapshot = System.GetSnapshot())
                 {
-                    if (cancelSource.IsCancellationRequested) break;
-                    if (!finishedCache.ContainsKey(id) && (!pendingQueue.TryGetValue(id, out OracleTask task) || task.Tx is null))
-                        await ProcessRequestAsync(System.StoreView, request);
+                    foreach (var (id, request) in NativeContract.Oracle.GetRequests(System.StoreView))
+                    {
+                        if (cancelSource.IsCancellationRequested) break;
+                        if (!finishedCache.ContainsKey(id) && (!pendingQueue.TryGetValue(id, out OracleTask task) || task.Tx is null))
+                            await ProcessRequestAsync(System.StoreView, request);
+                    }
                 }
-
                 if (cancelSource.IsCancellationRequested) break;
                 await Task.Delay(500);
             }
@@ -397,12 +400,12 @@ namespace Neo.Plugins
             return tx;
         }
 
-        private void AddResponseTxSign(ulong requestId, ECPoint oraclePub, byte[] sign, Transaction responseTx = null, Transaction backupTx = null, byte[] backupSign = null)
+        private void AddResponseTxSign(DataCache snapshot, ulong requestId, ECPoint oraclePub, byte[] sign, Transaction responseTx = null, Transaction backupTx = null, byte[] backupSign = null)
         {
             var task = pendingQueue.GetOrAdd(requestId, _ => new OracleTask
             {
                 Id = requestId,
-                Request = NativeContract.Oracle.GetRequest(System.StoreView, requestId),
+                Request = NativeContract.Oracle.GetRequest(snapshot, requestId),
                 Signs = new ConcurrentDictionary<ECPoint, byte[]>(),
                 BackupSigns = new ConcurrentDictionary<ECPoint, byte[]>()
             });
@@ -434,7 +437,7 @@ namespace Neo.Plugins
             else
                 throw new RpcException(-100, "Invalid response transaction sign");
 
-            if (CheckTxSign(System, task.Tx, task.Signs) || CheckTxSign(System, task.BackupTx, task.BackupSigns))
+            if (CheckTxSign(snapshot, task.Tx, task.Signs) || CheckTxSign(snapshot, task.BackupTx, task.BackupSigns))
             {
                 finishedCache.TryAdd(requestId, new DateTime());
                 pendingQueue.TryRemove(requestId, out _);
@@ -451,9 +454,8 @@ namespace Neo.Plugins
             return Utility.StrictUTF8.GetBytes(afterObjects.ToString(Newtonsoft.Json.Formatting.None));
         }
 
-        private static bool CheckTxSign(NeoSystem System, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
+        private bool CheckTxSign(DataCache snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
         {
-            using var snapshot = System.GetSnapshot();
             uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
             ECPoint[] oraclesNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
             int neededThreshold = oraclesNodes.Length - (oraclesNodes.Length - 1) / 3;
