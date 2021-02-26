@@ -283,11 +283,11 @@ namespace Neo.Plugins
             {
                 using (var snapshot = System.GetSnapshot())
                 {
-                    foreach (var (id, request) in NativeContract.Oracle.GetRequests(System.StoreView))
+                    foreach (var (id, request) in NativeContract.Oracle.GetRequests(snapshot))
                     {
                         if (cancelSource.IsCancellationRequested) break;
                         if (!finishedCache.ContainsKey(id) && (!pendingQueue.TryGetValue(id, out OracleTask task) || task.Tx is null))
-                            await ProcessRequestAsync(System.StoreView, request);
+                            await ProcessRequestAsync(snapshot, request);
                     }
                 }
                 if (cancelSource.IsCancellationRequested) break;
