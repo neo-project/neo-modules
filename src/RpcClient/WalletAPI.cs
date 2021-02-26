@@ -195,7 +195,7 @@ namespace Neo.Network.RPC
                     rpcTx = await rpcClient.GetRawTransactionAsync(transaction.Hash.ToString()).ConfigureAwait(false);
                     if (rpcTx == null || rpcTx.Confirmations == null)
                     {
-                        await Task.Delay(10);
+                        await Task.Delay((int)rpcClient.protocolSettings.MillisecondsPerBlock / 2);
                     }
                 }
                 catch (Exception) { }
