@@ -170,7 +170,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetStorage(JArray _params)
         {
-            var snapshot = system.StoreView;
+            using var snapshot = system.GetSnapshot();
             if (!int.TryParse(_params[0].AsString(), out int id))
             {
                 UInt160 hash = UInt160.Parse(_params[0].AsString());
@@ -200,7 +200,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetNextBlockValidators(JArray _params)
         {
-            var snapshot = system.StoreView;
+            using var snapshot = system.GetSnapshot();
             var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, system.Settings.ValidatorsCount);
             var candidates = NativeContract.NEO.GetCandidates(snapshot);
             if (candidates.Length > 0)
