@@ -34,14 +34,14 @@ namespace Neo.Network.RPC
                 string token = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{rpcUser}:{rpcPass}"));
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", token);
             }
-            this.protocolSettings = protocolSettings ?? ProtocolSettings.Load("protocol.json");
+            this.protocolSettings = protocolSettings ?? ProtocolSettings.Default;
         }
 
         public RpcClient(HttpClient client, Uri url, ProtocolSettings protocolSettings = null)
         {
             httpClient = client;
             baseAddress = url;
-            this.protocolSettings = protocolSettings ?? ProtocolSettings.Load("protocol.json");
+            this.protocolSettings = protocolSettings ?? ProtocolSettings.Default;
         }
 
         #region IDisposable Support
