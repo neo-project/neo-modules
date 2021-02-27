@@ -15,21 +15,14 @@ namespace Neo.Network.RPC
     public class ContractClient
     {
         protected readonly RpcClient rpcClient;
-        protected readonly uint? magic;
-
 
         /// <summary>
         /// ContractClient Constructor
         /// </summary>
         /// <param name="rpc">the RPC client to call NEO RPC methods</param>
-        /// <param name="magic">
-        /// the network Magic value to use when signing transactions. 
-        /// Defaults to ProtocolSettings.Default.Magic if not specified.
-        /// </param>
-        public ContractClient(RpcClient rpc, uint? magic = null)
+        public ContractClient(RpcClient rpc)
         {
             rpcClient = rpc;
-            this.magic = magic;
         }
 
         /// <summary>
@@ -63,7 +56,7 @@ namespace Neo.Network.RPC
             UInt160 sender = Contract.CreateSignatureRedeemScript(key.PublicKey).ToScriptHash();
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
 
-            TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient, magic);
+            TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
             return await manager
                 .AddSignature(key)
