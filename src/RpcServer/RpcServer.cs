@@ -26,11 +26,11 @@ namespace Neo.Plugins
         private readonly Dictionary<string, Func<JArray, JObject>> methods = new Dictionary<string, Func<JArray, JObject>>();
 
         private IWebHost host;
-        private readonly RpcServerSettings settings;
+        private RpcServerSettings settings;
         private readonly NeoSystem system;
-        private LocalNode localNode;
+        private readonly LocalNode localNode;
 
-        public RpcServer(NeoSystem system, RpcServerSettings settings)
+        internal RpcServer(NeoSystem system, RpcServerSettings settings)
         {
             this.system = system;
             this.settings = settings;
@@ -138,6 +138,11 @@ namespace Neo.Plugins
             .Build();
 
             host.Start();
+        }
+
+        internal void UpdateSettings(RpcServerSettings settings)
+        {
+            this.settings = settings;
         }
 
         private async Task ProcessAsync(HttpContext context)

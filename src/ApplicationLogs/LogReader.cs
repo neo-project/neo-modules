@@ -30,7 +30,7 @@ namespace Neo.Plugins
         protected override void OnSystemLoaded(NeoSystem system)
         {
             if (system.Settings.Magic != Settings.Default.Network) return;
-            RpcServerPlugin.RegisterMethods(this);
+            RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
         }
 
         [RpcMethod]

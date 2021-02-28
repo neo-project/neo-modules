@@ -34,15 +34,11 @@ namespace Neo.Plugins
 
         public override string Description => "Enquiries NEP-17 balances and transaction history of accounts through RPC";
 
-        public RpcNep17Tracker()
-        {
-            RpcServerPlugin.RegisterMethods(this);
-        }
-
         protected override void OnSystemLoaded(NeoSystem system)
         {
             if (system.Settings.Magic != _network) return;
             System = system;
+            RpcServerPlugin.RegisterMethods(this, _network);
         }
 
         protected override void Configure()

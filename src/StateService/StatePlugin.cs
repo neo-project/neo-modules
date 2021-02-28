@@ -34,7 +34,6 @@ namespace Neo.Plugins.StateService
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
-            RpcServerPlugin.RegisterMethods(this);
         }
 
         protected override void OnSystemLoaded(NeoSystem system)
@@ -43,6 +42,7 @@ namespace Neo.Plugins.StateService
             System = system;
             Store = System.ActorSystem.ActorOf(StateStore.Props(this, string.Format(Settings.Default.Path, system.Settings.Magic.ToString("X8"))));
             System.ServiceAdded += NeoSystem_ServiceAdded;
+            RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
         }
 
         private void NeoSystem_ServiceAdded(object sender, object service)
