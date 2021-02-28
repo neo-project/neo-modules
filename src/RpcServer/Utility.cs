@@ -30,7 +30,7 @@ namespace Neo.Plugins
                 ["hash"] = contract.Hash.ToString(),
                 ["nef"] = contract.Nef.ToJson(),
                 ["manifest"] = contract.Manifest.ToJson(),
-                ["activeblockindex"] = settings.NativeUpdateHistory[contract.Name][0]
+                ["updatehistory"] = settings.NativeUpdateHistory[contract.Name].Select(p => (JObject)p).ToArray()
             };
         }
     }
