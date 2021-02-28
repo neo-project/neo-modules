@@ -89,10 +89,12 @@ namespace Neo.Plugins
         {
             CheckWallet();
             BigInteger gas = BigInteger.Zero;
-            var snapshot = system.StoreView;
-            uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
-            foreach (UInt160 account in wallet.GetAccounts().Select(p => p.ScriptHash))
-                gas += NativeContract.NEO.UnclaimedGas(snapshot, account, height);
+            using (var snapshot = system.GetSnapshot())
+            {
+                uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
+                foreach (UInt160 account in wallet.GetAccounts().Select(p => p.ScriptHash))
+                    gas += NativeContract.NEO.UnclaimedGas(snapshot, account, height);
+            }
             return gas.ToString();
         }
 
@@ -203,7 +205,7 @@ namespace Neo.Plugins
             UInt160 assetId = UInt160.Parse(_params[0].AsString());
             UInt160 from = AddressToScriptHash(_params[1].AsString(), system.Settings.AddressVersion);
             UInt160 to = AddressToScriptHash(_params[2].AsString(), system.Settings.AddressVersion);
-            var snapshot = system.StoreView;
+            using var snapshot = system.GetSnapshot();
             AssetDescriptor descriptor = new AssetDescriptor(snapshot, system.Settings, assetId);
             BigDecimal amount = BigDecimal.Parse(_params[3].AsString(), descriptor.Decimals);
             if (amount.Sign <= 0)
@@ -255,7 +257,7 @@ namespace Neo.Plugins
             Signer[] signers = _params.Count >= to_start + 2 ? ((JArray)_params[to_start + 1]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
 
             TransferOutput[] outputs = new TransferOutput[to.Count];
-            var snapshot = system.StoreView;
+            using var snapshot = system.GetSnapshot();
             for (int i = 0; i < to.Count; i++)
             {
                 UInt160 asset_id = UInt160.Parse(to[i]["asset"].AsString());
@@ -295,7 +297,7 @@ namespace Neo.Plugins
             CheckWallet();
             UInt160 assetId = UInt160.Parse(_params[0].AsString());
             UInt160 to = AddressToScriptHash(_params[1].AsString(), system.Settings.AddressVersion);
-            var snapshot = system.StoreView;
+            using var snapshot = system.GetSnapshot();
             AssetDescriptor descriptor = new AssetDescriptor(snapshot, system.Settings, assetId);
             BigDecimal amount = BigDecimal.Parse(_params[2].AsString(), descriptor.Decimals);
             if (amount.Sign <= 0)
@@ -340,7 +342,7 @@ namespace Neo.Plugins
 
         private JObject GetVerificationResult(UInt160 scriptHash, ContractParameter[] args, Signers signers = null)
         {
-            var snapshot = system.StoreView;
+            using var snapshot = system.GetSnapshot();
             var contract = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
             if (contract is null)
             {
