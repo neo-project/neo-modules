@@ -25,7 +25,7 @@ namespace Neo.Plugins
     {
         private class DummyWallet : Wallet
         {
-            public DummyWallet() : base(null, null) { }
+            public DummyWallet(ProtocolSettings settings) : base(null, settings) { }
             public override string Name => "";
             public override Version Version => new Version();
 
@@ -121,7 +121,7 @@ namespace Neo.Plugins
             byte[] tx = Convert.FromBase64String(_params[0].AsString());
 
             JObject account = new JObject();
-            long networkfee = (wallet ?? new DummyWallet()).CalculateNetworkFee(system.StoreView, tx.AsSerializable<Transaction>());
+            long networkfee = (wallet ?? new DummyWallet(system.Settings)).CalculateNetworkFee(system.StoreView, tx.AsSerializable<Transaction>());
             account["networkfee"] = networkfee.ToString();
             return account;
         }
