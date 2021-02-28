@@ -9,7 +9,7 @@ namespace Neo.Plugins
         public override string Description => "Enables RPC for the node";
 
         private Settings settings;
-        private readonly Dictionary<uint, RpcServer> servers = new Dictionary<uint, RpcServer>();
+        private static readonly Dictionary<uint, RpcServer> servers = new Dictionary<uint, RpcServer>();
         private static readonly Dictionary<uint, List<object>> handlers = new Dictionary<uint, List<object>>();
 
         protected override void Configure()
@@ -47,6 +47,11 @@ namespace Neo.Plugins
 
         public static void RegisterMethods(object handler, uint network)
         {
+            if (servers.TryGetValue(network, out RpcServer server))
+            {
+                server.RegisterMethods(handler);
+                return;
+            }
             if (!handlers.TryGetValue(network, out var list))
             {
                 list = new List<object>();
