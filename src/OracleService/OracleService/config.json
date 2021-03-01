@@ -9,7 +9,8 @@
       "Timeout": 5000
     },
     "NeoFs": {
-      "Nodes": [],
-    }
+      "Nodes": []
+    },
+    "AutoStart": false
   }
 }

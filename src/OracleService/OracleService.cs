@@ -113,17 +113,7 @@ namespace Neo.Plugins
             if (!CheckOracleAccount(wallet, oracles)) throw new ArgumentException("There is no oracle account in wallet");
 
             this.wallet = wallet;
-
-            using (var snapshot = Blockchain.Singleton.GetSnapshot())
-            {
-                if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
-                if (!CheckOracleAccount(wallet, oracles)) throw new ArgumentException("There is no oracle account in wallet");
-                foreach (var (_, p) in protocols)
-                {
-                    if (p is OracleFsProtocol protocol) protocol.AttachWallet(wallet, oracles);
-                }
-            }
-
+            foreach (var (_, p) in protocols) if (p is OracleFsProtocol protocol) protocol.AttachWallet(wallet, oracles);
             started = true;
             timer = new Timer(OnTimer, null, RefreshInterval, Timeout.Infinite);
 
