@@ -45,7 +45,7 @@ namespace Neo.Plugins
         {
             if (_db == null)
             {
-                var dbPath = GetConfiguration().GetSection("DBPath").Value ?? "Nep17BalanceData";
+                var dbPath = string.Format(GetConfiguration().GetSection("DBPath").Value ?? "Nep17BalanceData", System.Settings.Magic.ToString("X8"));
                 _db = DB.Open(GetFullPath(dbPath), new Options { CreateIfMissing = true });
             }
             _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
