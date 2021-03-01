@@ -1,6 +1,6 @@
 {
   "PluginConfiguration": {
-    "Path": "Data_MPT_{0}",
+    "Path": "Data_MPT",
     "FullState": false,
     "Network": 5195086,
     "AutoVerify": false

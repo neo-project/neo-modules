@@ -13,7 +13,7 @@ namespace Neo.Plugins.StateService
 
         private Settings(IConfigurationSection section)
         {
-            Path = section.GetValue("Path", "Data_MPT_{0}");
+            Path = section.GetValue("Path", "Data_MPT");
             FullState = section.GetValue("FullState", false);
             Network = section.GetValue("Network", 5195086u);
             AutoVerify = section.GetValue("AutoVerify", false);

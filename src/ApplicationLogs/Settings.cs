@@ -11,7 +11,7 @@ namespace Neo.Plugins
 
         private Settings(IConfigurationSection section)
         {
-            this.Path = section.GetValue("Path", "ApplicationLogs_{0}");
+            this.Path = section.GetValue("Path", "ApplicationLogs");
             this.Network = section.GetValue("Network", 5195086u);
         }
 
