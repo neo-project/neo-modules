@@ -18,7 +18,7 @@ namespace Neo.Consensus
             void ISerializable.Deserialize(BinaryReader reader)
             {
                 ValidatorIndex = reader.ReadByte();
-                if (ValidatorIndex >= ProtocolSettings.Default.ValidatorsCount)
+                if (ValidatorIndex >= DBFTPlugin.System.Settings.ValidatorsCount)
                     throw new FormatException();
                 InvocationScript = reader.ReadVarBytes(1024);
             }

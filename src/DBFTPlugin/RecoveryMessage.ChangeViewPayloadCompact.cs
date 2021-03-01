@@ -22,7 +22,7 @@ namespace Neo.Consensus
             void ISerializable.Deserialize(BinaryReader reader)
             {
                 ValidatorIndex = reader.ReadByte();
-                if (ValidatorIndex >= ProtocolSettings.Default.ValidatorsCount)
+                if (ValidatorIndex >= DBFTPlugin.System.Settings.ValidatorsCount)
                     throw new FormatException();
                 OriginalViewNumber = reader.ReadByte();
                 Timestamp = reader.ReadUInt64();

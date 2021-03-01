@@ -10,23 +10,12 @@ namespace Neo.Network.RPC
         private readonly RpcClient rpcClient;
 
         /// <summary>
-        /// protocol settings Magic value to use for hashing transactions.
-        /// defaults to ProtocolSettings.Default.Magic if unspecified
-        /// </summary>
-        private readonly uint magic;
-
-        /// <summary>
         /// TransactionManagerFactory Constructor
         /// </summary>
         /// <param name="rpcClient">the RPC client to call NEO RPC API</param>
-        /// <param name="magic">
-        /// the network Magic value to use when signing transactions.
-        /// Defaults to ProtocolSettings.Default.Magic if not specified.
-        /// </param>
-        public TransactionManagerFactory(RpcClient rpcClient, uint? magic = null)
+        public TransactionManagerFactory(RpcClient rpcClient)
         {
             this.rpcClient = rpcClient;
-            this.magic = magic ?? ProtocolSettings.Default.Magic;
         }
 
         /// <summary>
@@ -51,7 +40,7 @@ namespace Neo.Network.RPC
                 Attributes = attributes ?? Array.Empty<TransactionAttribute>(),
             };
 
-            return new TransactionManager(tx, rpcClient, magic);
+            return new TransactionManager(tx, rpcClient);
         }
     }
 }

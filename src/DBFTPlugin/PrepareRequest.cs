@@ -1,5 +1,4 @@
 using Neo.IO;
-using Neo.Network.P2P.Payloads;
 using System;
 using System.IO;
 using System.Linq;
@@ -30,7 +29,7 @@ namespace Neo.Consensus
             Version = reader.ReadUInt32();
             PrevHash = reader.ReadSerializable<UInt256>();
             Timestamp = reader.ReadUInt64();
-            TransactionHashes = reader.ReadSerializableArray<UInt256>(Block.MaxTransactionsPerBlock);
+            TransactionHashes = reader.ReadSerializableArray<UInt256>(ushort.MaxValue);
             if (TransactionHashes.Distinct().Count() != TransactionHashes.Length)
                 throw new FormatException();
         }

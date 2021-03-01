@@ -14,6 +14,8 @@ namespace Neo.Plugins.StateService.Network
 {
     class StateRoot : IVerifiable
     {
+        public const byte CurrentVersion = 0x00;
+
         public byte Version;
         public uint Index;
         public UInt256 RootHash;
@@ -26,7 +28,7 @@ namespace Neo.Plugins.StateService.Network
             {
                 if (_hash is null)
                 {
-                    _hash = new UInt256(Crypto.Hash256(this.GetHashData()));
+                    _hash = new UInt256(Crypto.Hash256(this.GetSignData(StatePlugin.System.Settings.Magic)));
                 }
                 return _hash;
             }
@@ -49,14 +51,18 @@ namespace Neo.Plugins.StateService.Network
             sizeof(byte) +      //Version
             sizeof(uint) +      //Index
             UInt256.Length +    //RootHash
-            1 + Witness.Size;   //Witness
+            (Witness is null ? 1 : 1 + Witness.Size); //Witness
 
         void ISerializable.Deserialize(BinaryReader reader)
         {
             DeserializeUnsigned(reader);
             Witness[] witnesses = reader.ReadSerializableArray<Witness>(1);
-            if (witnesses.Length != 1) throw new FormatException();
-            Witness = witnesses[0];
+            Witness = witnesses.Length switch
+            {
+                0 => null,
+                1 => witnesses[0],
+                _ => throw new FormatException(),
+            };
         }
 
         public void DeserializeUnsigned(BinaryReader reader)
@@ -69,7 +75,10 @@ namespace Neo.Plugins.StateService.Network
         void ISerializable.Serialize(BinaryWriter writer)
         {
             SerializeUnsigned(writer);
-            writer.Write(new[] { Witness });
+            if (Witness is null)
+                writer.WriteVarInt(0);
+            else
+                writer.Write(new[] { Witness });
         }
 
         public void SerializeUnsigned(BinaryWriter writer)
@@ -79,9 +88,9 @@ namespace Neo.Plugins.StateService.Network
             writer.Write(RootHash);
         }
 
-        public bool Verify(DataCache snapshot)
+        public bool Verify(ProtocolSettings settings, DataCache snapshot)
         {
-            return this.VerifyWitnesses(snapshot, 1_00000000);
+            return this.VerifyWitnesses(settings, snapshot, 1_00000000);
         }
 
         public UInt160[] GetScriptHashesForVerifying(DataCache snapshot)
@@ -97,7 +106,7 @@ namespace Neo.Plugins.StateService.Network
             json["version"] = Version;
             json["index"] = Index;
             json["roothash"] = RootHash.ToString();
-            json["witnesses"] = new JArray(Witness.ToJson());
+            json["witnesses"] = Witness is null ? new JArray() : new JArray(Witness.ToJson());
             return json;
         }
     }

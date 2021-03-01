@@ -1,3 +1,4 @@
+using Akka.Actor;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
 using Neo.IO;
 using Neo.IO.Json;
+using Neo.Network.P2P;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,13 +26,15 @@ namespace Neo.Plugins
         private readonly Dictionary<string, Func<JArray, JObject>> methods = new Dictionary<string, Func<JArray, JObject>>();
 
         private IWebHost host;
-        private readonly RpcServerSettings settings;
+        private RpcServerSettings settings;
         private readonly NeoSystem system;
+        private readonly LocalNode localNode;
 
-        public RpcServer(NeoSystem system, RpcServerSettings settings)
+        internal RpcServer(NeoSystem system, RpcServerSettings settings)
         {
             this.system = system;
             this.settings = settings;
+            localNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             RegisterMethods(this);
         }
 
@@ -134,6 +138,11 @@ namespace Neo.Plugins
             .Build();
 
             host.Start();
+        }
+
+        internal void UpdateSettings(RpcServerSettings settings)
+        {
+            this.settings = settings;
         }
 
         private async Task ProcessAsync(HttpContext context)
