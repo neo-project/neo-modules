@@ -28,7 +28,7 @@ namespace Neo.Plugins.StateService.Network
             {
                 if (_hash is null)
                 {
-                    _hash = new UInt256(Crypto.Hash256(this.GetSignData(StatePlugin.System.Settings.Magic)));
+                    _hash = this.CalculateHash();
                 }
                 return _hash;
             }
