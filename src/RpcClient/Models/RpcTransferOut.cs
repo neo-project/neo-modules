@@ -11,23 +11,23 @@ namespace Neo.Network.RPC.Models
 
         public string Value { get; set; }
 
-        public JObject ToJson()
+        public JObject ToJson(ProtocolSettings protocolSettings)
         {
             return new JObject
             {
                 ["asset"] = Asset.ToString(),
                 ["value"] = Value,
-                ["address"] = ScriptHash.ToAddress(),
+                ["address"] = ScriptHash.ToAddress(protocolSettings.AddressVersion),
             };
         }
 
-        public static RpcTransferOut FromJson(JObject json)
+        public static RpcTransferOut FromJson(JObject json, ProtocolSettings protocolSettings)
         {
             return new RpcTransferOut
             {
-                Asset = json["asset"].ToScriptHash(),
+                Asset = json["asset"].ToScriptHash(protocolSettings),
                 Value = json["value"].AsString(),
-                ScriptHash = json["address"].ToScriptHash(),
+                ScriptHash = json["address"].ToScriptHash(protocolSettings),
             };
         }
     }

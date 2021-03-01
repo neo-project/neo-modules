@@ -21,11 +21,6 @@ namespace Neo.Network.RPC
         private readonly RpcClient rpcClient;
 
         /// <summary>
-        /// protocol settings Magic value to use for hashing transactions.
-        /// </summary>
-        private readonly uint magic;
-
-        /// <summary>
         /// The Transaction context to manage the witnesses
         /// </summary>
         private readonly ContractParametersContext context;
@@ -47,24 +42,19 @@ namespace Neo.Network.RPC
         /// </summary>
         /// <param name="tx">the transaction to manage. Typically buildt</param>
         /// <param name="rpcClient">the RPC client to call NEO RPC API</param>
-        /// <param name="magic">
-        /// the network Magic value to use when signing transactions. 
-        /// Defaults to ProtocolSettings.Default.Magic if not specified.
-        /// </param>
-        public TransactionManager(Transaction tx, RpcClient rpcClient, uint magic)
+        public TransactionManager(Transaction tx, RpcClient rpcClient)
         {
             this.tx = tx;
-            this.context = new ContractParametersContext(tx);
+            this.context = new ContractParametersContext(null, tx);
             this.rpcClient = rpcClient;
-            this.magic = magic;
         }
 
         /// <summary>
         /// Helper function for one-off TransactionManager creation
         /// </summary>
-        public static Task<TransactionManager> MakeTransactionAsync(RpcClient rpcClient, byte[] script, Signer[] signers = null, TransactionAttribute[] attributes = null, uint? magic = null)
+        public static Task<TransactionManager> MakeTransactionAsync(RpcClient rpcClient, byte[] script, Signer[] signers = null, TransactionAttribute[] attributes = null)
         {
-            var factory = new TransactionManagerFactory(rpcClient, magic);
+            var factory = new TransactionManagerFactory(rpcClient);
             return factory.MakeTransactionAsync(script, signers, attributes);
         }
 
@@ -168,14 +158,14 @@ namespace Neo.Network.RPC
 
             var gasBalance = await new Nep17API(rpcClient).BalanceOfAsync(NativeContract.GAS.Hash, Tx.Sender).ConfigureAwait(false);
             if (gasBalance < Tx.SystemFee + Tx.NetworkFee)
-                throw new InvalidOperationException($"Insufficient GAS in address: {Tx.Sender.ToAddress()}");
+                throw new InvalidOperationException($"Insufficient GAS in address: {Tx.Sender.ToAddress(rpcClient.protocolSettings.AddressVersion)}");
 
             // Sign with signStore
             for (int i = 0; i < signStore.Count; i++)
             {
                 foreach (var key in signStore[i].KeyPairs)
                 {
-                    byte[] signature = Tx.Sign(key, magic);
+                    byte[] signature = Tx.Sign(key, rpcClient.protocolSettings.Magic);
                     if (!context.AddSignature(signStore[i].Contract, key.PublicKey, signature))
                     {
                         throw new Exception("AddSignature failed!");

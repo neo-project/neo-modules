@@ -28,7 +28,7 @@ namespace Neo.Plugins.StateService.Network
             {
                 if (_hash is null)
                 {
-                    _hash = new UInt256(Crypto.Hash256(this.GetHashData()));
+                    _hash = new UInt256(Crypto.Hash256(this.GetSignData(StatePlugin.System.Settings.Magic)));
                 }
                 return _hash;
             }
@@ -88,9 +88,9 @@ namespace Neo.Plugins.StateService.Network
             writer.Write(RootHash);
         }
 
-        public bool Verify(DataCache snapshot)
+        public bool Verify(ProtocolSettings settings, DataCache snapshot)
         {
-            return this.VerifyWitnesses(snapshot, 1_00000000);
+            return this.VerifyWitnesses(settings, snapshot, 1_00000000);
         }
 
         public UInt160[] GetScriptHashesForVerifying(DataCache snapshot)

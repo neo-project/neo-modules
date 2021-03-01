@@ -15,21 +15,22 @@ namespace Neo.Plugins
 {
     public class LogReader : Plugin, IPersistencePlugin
     {
-        private readonly DB db;
+        private DB db;
 
         public override string Name => "ApplicationLogs";
-
         public override string Description => "Synchronizes the smart contract log with the NativeContract log (Notify)";
-
-        public LogReader()
-        {
-            db = DB.Open(GetFullPath(Settings.Default.Path), new Options { CreateIfMissing = true });
-            RpcServerPlugin.RegisterMethods(this);
-        }
 
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
+            string path = string.Format(Settings.Default.Path, Settings.Default.Network.ToString("X8"));
+            db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
+        }
+
+        protected override void OnSystemLoaded(NeoSystem system)
+        {
+            if (system.Settings.Magic != Settings.Default.Network) return;
+            RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
         }
 
         [RpcMethod]
@@ -142,8 +143,10 @@ namespace Neo.Plugins
             return null;
         }
 
-        void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
+            if (system.Settings.Magic != Settings.Default.Network) return;
+
             WriteBatch writeBatch = new WriteBatch();
 
             //processing log for transactions
