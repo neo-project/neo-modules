@@ -17,7 +17,7 @@ using Range = NeoFS.API.v2.Object.Range;
 
 namespace Neo.Plugins
 {
-    class OracleFsProtocol : IOracleProtocol
+    class OracleNeoFSProtocol : IOracleProtocol
     {
         private byte[] privateKey;
         private const string URIScheme = "neofs";
@@ -36,7 +36,7 @@ namespace Neo.Plugins
 
         public async Task<(OracleResponseCode, string)> ProcessAsync(Uri uri, CancellationToken cancellation)
         {
-            Utility.Log(nameof(OracleFsProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
+            Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
 
             if (!Settings.Default.AllowPrivateHost)
             {
@@ -49,12 +49,12 @@ namespace Neo.Plugins
             try
             {
                 byte[] res = Get(cancellation, privateKey, uri, Settings.Default.Fs.FSNodes[index]);
-                Utility.Log(nameof(OracleFsProtocol), LogLevel.Debug, $"NeoFS result: {res.ToHexString()}");
+                Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"NeoFS result: {res.ToHexString()}");
                 return (OracleResponseCode.Success, Convert.ToBase64String(res));
             }
             catch (Exception e)
             {
-                Utility.Log(nameof(OracleFsProtocol), LogLevel.Debug, $"NeoFS result: error,{e}");
+                Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"NeoFS result: error,{e}");
                 return (OracleResponseCode.Error, null);
             }
         }
