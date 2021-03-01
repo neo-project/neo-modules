@@ -144,7 +144,7 @@ namespace Neo.Plugins.StateService.Verification
                 Sender = Contract.CreateSignatureRedeemScript(verifiers[MyIndex]).ToScriptHash(),
                 Data = data,
             };
-            ContractParametersContext sc = new ContractParametersContext(StatePlugin.System.StoreView, rootPayload);
+            ContractParametersContext sc = new ContractParametersContext(StatePlugin.System.StoreView, msg);
             wallet.Sign(sc);
             msg.Witness = sc.GetWitnesses()[0];
             return msg;
