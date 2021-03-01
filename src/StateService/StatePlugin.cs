@@ -80,7 +80,7 @@ namespace Neo.Plugins.StateService
         [ConsoleCommand("start states", Category = "StateService", Description = "Start as a state verifier if wallet is open")]
         private void OnStartVerifyingState()
         {
-            if (System.Settings.Magic != Settings.Default.Network) return;
+            if (System.Settings.Magic != Settings.Default.Network) throw new InvalidOperationException("Network not match");
             Start(walletProvider.GetWallet());
         }
 
@@ -102,7 +102,7 @@ namespace Neo.Plugins.StateService
         [ConsoleCommand("state root", Category = "StateService", Description = "Get state root by index")]
         private void OnGetStateRoot(uint index)
         {
-            if (System.Settings.Magic != Settings.Default.Network) return;
+            if (System.Settings.Magic != Settings.Default.Network) throw new InvalidOperationException("Network not match");
             using var snapshot = StateStore.Singleton.GetSnapshot();
             StateRoot state_root = snapshot.GetStateRoot(index);
             if (state_root is null)
@@ -114,14 +114,14 @@ namespace Neo.Plugins.StateService
         [ConsoleCommand("state height", Category = "StateService", Description = "Get current state root index")]
         private void OnGetStateHeight()
         {
-            if (System.Settings.Magic != Settings.Default.Network) return;
+            if (System.Settings.Magic != Settings.Default.Network) throw new InvalidOperationException("Network not match");
             Console.WriteLine($"LocalRootIndex: {StateStore.Singleton.LocalRootIndex}, ValidatedRootIndex: {StateStore.Singleton.ValidatedRootIndex}");
         }
 
         [ConsoleCommand("get proof", Category = "StateService", Description = "Get proof of key and contract hash")]
         private void OnGetProof(UInt256 root_hash, UInt160 script_hash, string key)
         {
-            if (System.Settings.Magic != Settings.Default.Network) return;
+            if (System.Settings.Magic != Settings.Default.Network) throw new InvalidOperationException("Network not match");
             try
             {
                 Console.WriteLine(GetProof(root_hash, script_hash, Convert.FromBase64String(key)));
