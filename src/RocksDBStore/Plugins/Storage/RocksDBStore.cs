@@ -12,7 +12,6 @@ namespace Neo.Plugins.Storage
         /// <returns>RocksDbStore</returns>
         public IStore GetStore(string path)
         {
-            path = string.Format(path, ProtocolSettings.Default.Magic.ToString("X8"));
             return new Store(path);
         }
     }

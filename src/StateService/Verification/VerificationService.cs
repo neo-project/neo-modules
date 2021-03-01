@@ -17,24 +17,22 @@ namespace Neo.Plugins.StateService.Verification
         public class BlockPersisted { public uint Index; }
         public const int MaxCachedVerificationProcessCount = 10;
         private class Timer { public uint Index; }
-        private static readonly uint TimeoutMilliseconds = ProtocolSettings.Default.MillisecondsPerBlock;
+        private static readonly uint TimeoutMilliseconds = StatePlugin.System.Settings.MillisecondsPerBlock;
         private static readonly uint DelayMilliseconds = 3000;
-        private readonly NeoSystem core;
         private readonly Wallet wallet;
         private readonly ConcurrentDictionary<uint, VerificationContext> contexts = new ConcurrentDictionary<uint, VerificationContext>();
 
-        public VerificationService(NeoSystem core, Wallet wallet)
+        public VerificationService(Wallet wallet)
         {
-            this.core = core;
             this.wallet = wallet;
-            core.ActorSystem.EventStream.Subscribe(Self, typeof(Blockchain.RelayResult));
+            StatePlugin.System.ActorSystem.EventStream.Subscribe(Self, typeof(Blockchain.RelayResult));
         }
 
         private void SendVote(VerificationContext context)
         {
             if (context.VoteMessage is null) return;
             Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay vote, height={context.RootIndex}, retry={context.Retries}");
-            core.Blockchain.Tell(context.VoteMessage);
+            StatePlugin.System.Blockchain.Tell(context.VoteMessage);
         }
 
         private void OnStateRootVote(Vote vote)
@@ -51,7 +49,7 @@ namespace Neo.Plugins.StateService.Verification
             {
                 if (context.StateRootMessage is null) return;
                 Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay state root, height={context.StateRoot.Index}, root={context.StateRoot.RootHash}");
-                core.Blockchain.Tell(context.StateRootMessage);
+                StatePlugin.System.Blockchain.Tell(context.StateRootMessage);
             }
         }
 
@@ -153,9 +151,9 @@ namespace Neo.Plugins.StateService.Verification
             base.PostStop();
         }
 
-        public static Props Props(NeoSystem core, Wallet wallet)
+        public static Props Props(Wallet wallet)
         {
-            return Akka.Actor.Props.Create(() => new VerificationService(core, wallet));
+            return Akka.Actor.Props.Create(() => new VerificationService(wallet));
         }
     }
 }

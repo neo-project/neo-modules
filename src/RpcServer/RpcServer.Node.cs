@@ -18,14 +18,14 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetConnectionCount(JArray _params)
         {
-            return LocalNode.Singleton.ConnectedCount;
+            return localNode.ConnectedCount;
         }
 
         [RpcMethod]
         protected virtual JObject GetPeers(JArray _params)
         {
             JObject json = new JObject();
-            json["unconnected"] = new JArray(LocalNode.Singleton.GetUnconnectedPeers().Select(p =>
+            json["unconnected"] = new JArray(localNode.GetUnconnectedPeers().Select(p =>
             {
                 JObject peerJson = new JObject();
                 peerJson["address"] = p.Address.ToString();
@@ -33,7 +33,7 @@ namespace Neo.Plugins
                 return peerJson;
             }));
             json["bad"] = new JArray(); //badpeers has been removed
-            json["connected"] = new JArray(LocalNode.Singleton.GetRemoteNodes().Select(p =>
+            json["connected"] = new JArray(localNode.GetRemoteNodes().Select(p =>
             {
                 JObject peerJson = new JObject();
                 peerJson["address"] = p.Remote.Address.ToString();
@@ -61,11 +61,11 @@ namespace Neo.Plugins
         protected virtual JObject GetVersion(JArray _params)
         {
             JObject json = new JObject();
-            json["tcpport"] = LocalNode.Singleton.ListenerTcpPort;
-            json["wsport"] = LocalNode.Singleton.ListenerWsPort;
+            json["tcpport"] = localNode.ListenerTcpPort;
+            json["wsport"] = localNode.ListenerWsPort;
             json["nonce"] = LocalNode.Nonce;
             json["useragent"] = LocalNode.UserAgent;
-            json["magic"] = ProtocolSettings.Default.Magic;
+            json["magic"] = system.Settings.Magic;
             return json;
         }
 

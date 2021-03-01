@@ -15,7 +15,6 @@ namespace Neo.Plugins.StateService.Storage
 {
     class StateStore : UntypedActor
     {
-        private readonly NeoSystem core;
         private readonly StatePlugin system;
         private readonly IStore store;
         private const int MaxCacheCount = 100;
@@ -35,14 +34,13 @@ namespace Neo.Plugins.StateService.Storage
             }
         }
 
-        public StateStore(NeoSystem core, StatePlugin system, string path)
+        public StateStore(StatePlugin system, string path)
         {
             if (singleton != null) throw new InvalidOperationException(nameof(StateStore));
-            this.core = core;
             this.system = system;
-            this.store = core.LoadStore(path);
+            this.store = StatePlugin.System.LoadStore(path);
             singleton = this;
-            core.ActorSystem.EventStream.Subscribe(Self, typeof(Blockchain.RelayResult));
+            StatePlugin.System.ActorSystem.EventStream.Subscribe(Self, typeof(Blockchain.RelayResult));
             UpdateCurrentSnapshot();
         }
 
@@ -108,8 +106,7 @@ namespace Neo.Plugins.StateService.Storage
             using var state_snapshot = Singleton.GetSnapshot();
             StateRoot local_root = state_snapshot.GetStateRoot(state_root.Index);
             if (local_root is null || local_root.Witness != null) return false;
-            using var snapshot = Blockchain.Singleton.GetSnapshot();
-            if (!state_root.Verify(snapshot)) return false;
+            if (!state_root.Verify(StatePlugin.System.Settings, StatePlugin.System.StoreView)) return false;
             if (local_root.RootHash != state_root.RootHash) return false;
             state_snapshot.AddValidatedStateRoot(state_root);
             state_snapshot.Commit();
@@ -139,6 +136,7 @@ namespace Neo.Plugins.StateService.Storage
             UInt256 root_hash = state_snapshot.Trie.Root.Hash;
             StateRoot state_root = new StateRoot
             {
+                Version = StateRoot.CurrentVersion,
                 Index = height,
                 RootHash = root_hash,
                 Witness = null,
@@ -169,9 +167,9 @@ namespace Neo.Plugins.StateService.Storage
             base.PostStop();
         }
 
-        public static Props Props(NeoSystem core, StatePlugin system, string path)
+        public static Props Props(StatePlugin system, string path)
         {
-            return Akka.Actor.Props.Create(() => new StateStore(core, system, path));
+            return Akka.Actor.Props.Create(() => new StateStore(system, path));
         }
     }
 }

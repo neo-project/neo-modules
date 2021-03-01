@@ -26,6 +26,7 @@ namespace Neo.Plugins
 
     class Settings
     {
+        public uint Network { get; }
         public Uri[] Nodes { get; }
         public TimeSpan MaxTaskTimeout { get; }
         public bool AllowPrivateHost { get; }
@@ -39,6 +40,7 @@ namespace Neo.Plugins
 
         private Settings(IConfigurationSection section)
         {
+            Network = section.GetValue("Network", 5195086u);
             Nodes = section.GetSection("Nodes").GetChildren().Select(p => new Uri(p.Get<string>(), UriKind.Absolute)).ToArray();
             MaxTaskTimeout = TimeSpan.FromMilliseconds(section.GetValue("MaxTaskTimeout", 432000000));
             AllowPrivateHost = section.GetValue("AllowPrivateHost", false);

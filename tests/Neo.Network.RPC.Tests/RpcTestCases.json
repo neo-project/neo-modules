@@ -71,7 +71,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0xb9579b028e4cf31a0c3bd9582f9f7fbd40b0e0495604406b8f530c7ebce5bcc8",
+        "hash": "0x10fa4a0cb88346a00501a926cb9cbd6bf0cbd858319756c0bffcfb06e8901b92",
         "size": 462,
         "version": 0,
         "previousblockhash": "0xaae8867e9086afaf06fd02cc538e88a69b801abd6f9d3ae39ae630e29d5b39e2",
@@ -88,7 +88,7 @@
         ],
         "tx": [
           {
-            "hash": "0x0a76a72fb4958c7f3940410225a5d0f63b50153136cbf3015c38391b92034c5d",
+            "hash": "0x83d44d71d59f854bc29f4e3932bf68703545807d05fb5429504d70cfc8d05071",
             "size": 248,
             "version": 0,
             "nonce": 631973574,
@@ -129,7 +129,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0xb9579b028e4cf31a0c3bd9582f9f7fbd40b0e0495604406b8f530c7ebce5bcc8",
+        "hash": "0x10fa4a0cb88346a00501a926cb9cbd6bf0cbd858319756c0bffcfb06e8901b92",
         "size": 462,
         "version": 0,
         "previousblockhash": "0xaae8867e9086afaf06fd02cc538e88a69b801abd6f9d3ae39ae630e29d5b39e2",
@@ -146,7 +146,7 @@
         ],
         "tx": [
           {
-            "hash": "0x0a76a72fb4958c7f3940410225a5d0f63b50153136cbf3015c38391b92034c5d",
+            "hash": "0x83d44d71d59f854bc29f4e3932bf68703545807d05fb5429504d70cfc8d05071",
             "size": 248,
             "version": 0,
             "nonce": 631973574,
@@ -257,7 +257,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0x656bcb02e4fe8a19dbb15149073a5ae0bd8adc2da8504b67b112b44f68b4c9d7",
+        "hash": "0x3508ada998654b2c3391462a5bfab10eff8ff7dfdb0875eccddd20c019ff9330",
         "size": 105,
         "version": 0,
         "previousblockhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -289,7 +289,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0x656bcb02e4fe8a19dbb15149073a5ae0bd8adc2da8504b67b112b44f68b4c9d7",
+        "hash": "0x3508ada998654b2c3391462a5bfab10eff8ff7dfdb0875eccddd20c019ff9330",
         "size": 105,
         "version": 0,
         "previousblockhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -2299,7 +2299,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0xc97cc05c790a844f05f582d80952c4ced3894cbe6d96a74f3e5589d741372dd4",
+        "hash": "0x99eaba3e230702d428ce6bfb4a2dceba6d4cd441f9ca1b7bfe2a418926ae40ab",
         "size": 252,
         "version": 0,
         "nonce": 969006668,
@@ -2314,11 +2314,11 @@
           }
         ],
         "attributes": [],
-        "script": "AwAQpdToAAAADBSZA7DD0pKYj+vl8wagL2VOousWKQwUaSWqVUcSQ5qcYTuhFO+j+sI928oTwAwIdHJhbnNmZXIMFDt9NxHG8Mz5sdypA9G/odiW8SOMQWJ9W1I5",
+        "script": "AwAQpdToAAAADBSZA7DD0pKYj\u002Bvl8wagL2VOousWKQwUaSWqVUcSQ5qcYTuhFO\u002Bj\u002BsI928oTwAwIdHJhbnNmZXIMFDt9NxHG8Mz5sdypA9G/odiW8SOMQWJ9W1I5",
         "witnesses": [
           {
-            "invocation": "DEAfhbQNf6EhZKodTRiwbKRw8siVctxbkBqxZn+uu1h89TZFS5igkBitrHI3bF58XRZFNRVbdjVkNHqke2mqAbPM",
-            "verification": "DCEDqgUvvLjlszpO79ZiU2+GhGQfBBCfHV5pzdpvCEiQKGoLQQqQatQ="
+            "invocation": "DEAfhbQNf6EhZKodTRiwbKRw8siVctxbkBqxZn\u002Buu1h89TZFS5igkBitrHI3bF58XRZFNRVbdjVkNHqke2mqAbPM",
+            "verification": "DCEDqgUvvLjlszpO79ZiU2\u002BGhGQfBBCfHV5pzdpvCEiQKGoLQQqQatQ="
           }
         ],
         "blockhash": "0xc1ed259e394c9cd93c1e0eb1e0f144c0d10da64861a24c0084f0d98270b698f1",
@@ -2746,7 +2746,7 @@
       "id": 1,
       "method": "invokescript",
       "params": [
-        "EBEfDAhkZWNpbWFscwwU++3+LtIiZZK2SMTal7nJzV3BpqZBYn1bUg=="
+        "wh8MCGRlY2ltYWxzDBTPduKL0AYsSkeO41VhARMZ88+k0kFifVtS"
       ]
     },
     "Response": {
@@ -2785,7 +2785,7 @@
     "Request": {
       "jsonrpc": "2.0",
       "method": "getwalletbalance",
-      "params": [ "0xa6a6c15dcdc9b997dac448b6926522d22efeedfb" ],
+      "params": [ "0xd2a4cff31913016155e38e474a2c06d08be276cf" ],
       "id": 1
     },
     "Response": {

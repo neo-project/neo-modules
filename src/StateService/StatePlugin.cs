@@ -28,25 +28,39 @@ namespace Neo.Plugins.StateService
         internal IActorRef Store;
         internal IActorRef Verifier;
 
+        internal static NeoSystem System;
         private IWalletProvider walletProvider;
 
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
-            RpcServerPlugin.RegisterMethods(this);
         }
 
-        protected override void OnPluginsLoaded()
+        protected override void OnSystemLoaded(NeoSystem system)
         {
-            Store = System.ActorSystem.ActorOf(StateStore.Props(System, this, Settings.Default.Path));
-            walletProvider = GetService<IWalletProvider>();
-            if (Settings.Default.AutoVerify)
-                walletProvider.WalletOpened += WalletProvider_WalletOpened;
+            if (system.Settings.Magic != Settings.Default.Network) return;
+            System = system;
+            Store = System.ActorSystem.ActorOf(StateStore.Props(this, string.Format(Settings.Default.Path, system.Settings.Magic.ToString("X8"))));
+            System.ServiceAdded += NeoSystem_ServiceAdded;
+            RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
         }
 
-        private void WalletProvider_WalletOpened(object sender, Wallet wallet)
+        private void NeoSystem_ServiceAdded(object sender, object service)
         {
-            walletProvider.WalletOpened -= WalletProvider_WalletOpened;
+            if (service is IWalletProvider)
+            {
+                walletProvider = service as IWalletProvider;
+                System.ServiceAdded -= NeoSystem_ServiceAdded;
+                if (Settings.Default.AutoVerify)
+                {
+                    walletProvider.WalletChanged += WalletProvider_WalletChanged;
+                }
+            }
+        }
+
+        private void WalletProvider_WalletChanged(object sender, Wallet wallet)
+        {
+            walletProvider.WalletChanged -= WalletProvider_WalletChanged;
             Start(wallet);
         }
 
@@ -57,16 +71,16 @@ namespace Neo.Plugins.StateService
             if (Verifier != null) System.EnsureStoped(Verifier);
         }
 
-        void IPersistencePlugin.OnPersist(Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
+        void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
         {
+            if (system.Settings.Magic != Settings.Default.Network) return;
             StateStore.Singleton.UpdateLocalStateRoot(block.Index, snapshot.GetChangeSet().Where(p => p.State != TrackState.None).Where(p => p.Key.Id != NativeContract.Ledger.Id).ToList());
         }
 
         [ConsoleCommand("start states", Category = "StateService", Description = "Start as a state verifier if wallet is open")]
         private void OnStartVerifyingState()
         {
-            var wallet = GetService<IWalletProvider>().GetWallet();
-            Start(wallet);
+            Start(walletProvider.GetWallet());
         }
 
         public void Start(Wallet wallet)
@@ -81,7 +95,7 @@ namespace Neo.Plugins.StateService
                 Console.WriteLine("Please open wallet first!");
                 return;
             }
-            Verifier = System.ActorSystem.ActorOf(VerificationService.Props(System, wallet));
+            Verifier = System.ActorSystem.ActorOf(VerificationService.Props(wallet));
         }
 
         [ConsoleCommand("state root", Category = "StateService", Description = "Get state root by index")]
@@ -145,7 +159,7 @@ namespace Neo.Plugins.StateService
             {
                 throw new RpcException(-100, "Old state not supported");
             }
-            using var snapshot = Singleton.GetSnapshot();
+            var snapshot = System.StoreView;
             var contract = NativeContract.ContractManagement.GetContract(snapshot, script_hash);
             if (contract is null) throw new RpcException(-100, "Unknown contract");
             StorageKey skey = new StorageKey

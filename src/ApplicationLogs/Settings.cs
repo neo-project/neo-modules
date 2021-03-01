@@ -5,12 +5,14 @@ namespace Neo.Plugins
     internal class Settings
     {
         public string Path { get; }
+        public uint Network { get; }
 
         public static Settings Default { get; private set; }
 
         private Settings(IConfigurationSection section)
         {
-            this.Path = string.Format(section.GetSection("Path").Value, ProtocolSettings.Default.Magic.ToString("X8"));
+            this.Path = section.GetValue("Path", "ApplicationLogs_{0}");
+            this.Network = section.GetValue("Network", 5195086u);
         }
 
         public static void Load(IConfigurationSection section)
