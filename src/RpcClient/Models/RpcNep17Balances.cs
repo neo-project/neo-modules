@@ -12,20 +12,20 @@ namespace Neo.Network.RPC.Models
 
         public List<RpcNep17Balance> Balances { get; set; }
 
-        public JObject ToJson()
+        public JObject ToJson(ProtocolSettings protocolSettings)
         {
             JObject json = new JObject();
             json["balance"] = Balances.Select(p => p.ToJson()).ToArray();
-            json["address"] = UserScriptHash.ToAddress();
+            json["address"] = UserScriptHash.ToAddress(protocolSettings.AddressVersion);
             return json;
         }
 
-        public static RpcNep17Balances FromJson(JObject json)
+        public static RpcNep17Balances FromJson(JObject json, ProtocolSettings protocolSettings)
         {
             RpcNep17Balances nep17Balance = new RpcNep17Balances
             {
-                Balances = ((JArray)json["balance"]).Select(p => RpcNep17Balance.FromJson(p)).ToList(),
-                UserScriptHash = json["address"].ToScriptHash()
+                Balances = ((JArray)json["balance"]).Select(p => RpcNep17Balance.FromJson(p, protocolSettings)).ToList(),
+                UserScriptHash = json["address"].ToScriptHash(protocolSettings)
             };
             return nep17Balance;
         }
@@ -48,11 +48,11 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcNep17Balance FromJson(JObject json)
+        public static RpcNep17Balance FromJson(JObject json, ProtocolSettings protocolSettings)
         {
             RpcNep17Balance balance = new RpcNep17Balance
             {
-                AssetHash = json["assethash"].ToScriptHash(),
+                AssetHash = json["assethash"].ToScriptHash(protocolSettings),
                 Amount = BigInteger.Parse(json["amount"].AsString()),
                 LastUpdatedBlock = (uint)json["lastupdatedblock"].AsNumber()
             };

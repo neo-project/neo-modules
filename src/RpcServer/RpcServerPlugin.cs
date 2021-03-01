@@ -1,54 +1,63 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Neo.Plugins
 {
     public class RpcServerPlugin : Plugin
     {
-        static List<object> handlers = new List<object>();
         public override string Name => "RpcServer";
         public override string Description => "Enables RPC for the node";
-        RpcServer server;
-        RpcServerSettings settings;
+
+        private Settings settings;
+        private static readonly Dictionary<uint, RpcServer> servers = new Dictionary<uint, RpcServer>();
+        private static readonly Dictionary<uint, List<object>> handlers = new Dictionary<uint, List<object>>();
 
         protected override void Configure()
         {
-            var loadedSettings = new RpcServerSettings(GetConfiguration());
-            if (this.settings == null)
-            {
-                this.settings = loadedSettings;
-            }
-            else
-            {
-                this.settings.UpdateSettings(loadedSettings);
-            }
+            settings = new Settings(GetConfiguration());
+            foreach (RpcServerSettings s in settings.Servers)
+                if (servers.TryGetValue(s.Network, out RpcServer server))
+                    server.UpdateSettings(s);
         }
 
         public override void Dispose()
         {
-            base.Dispose();
-            if (server != null)
-            {
+            foreach (var (_, server) in servers)
                 server.Dispose();
-                server = null;
-            }
+            base.Dispose();
         }
 
-        protected override void OnPluginsLoaded()
+        protected override void OnSystemLoaded(NeoSystem system)
         {
-            this.server = new RpcServer(System, settings);
+            RpcServerSettings s = settings.Servers.FirstOrDefault(p => p.Network == system.Settings.Magic);
+            if (s is null) return;
 
-            foreach (var handler in handlers)
+            RpcServer server = new RpcServer(system, s);
+
+            if (handlers.Remove(s.Network, out var list))
             {
-                this.server.RegisterMethods(handler);
+                foreach (var handler in list)
+                {
+                    server.RegisterMethods(handler);
+                }
             }
-            handlers.Clear();
 
             server.StartRpcServer();
         }
 
-        public static void RegisterMethods(object handler)
+        public static void RegisterMethods(object handler, uint network)
         {
-            handlers.Add(handler);
+            if (servers.TryGetValue(network, out RpcServer server))
+            {
+                server.RegisterMethods(handler);
+                return;
+            }
+            if (!handlers.TryGetValue(network, out var list))
+            {
+                list = new List<object>();
+                handlers.Add(network, list);
+            }
+            list.Add(handler);
         }
     }
 }

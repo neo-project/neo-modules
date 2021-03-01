@@ -1,10 +1,9 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Akka.TestKit.Xunit2;
-using Neo.Network.P2P.Payloads;
-using Neo.Ledger;
-using Neo.SmartContract.Native;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Cryptography.ECC;
+using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
 
 namespace Neo.Plugins.Tests
 {
@@ -60,7 +59,7 @@ namespace Neo.Plugins.Tests
         [TestMethod]
         public void TestCreateOracleResponseTx()
         {
-            var snapshot = Blockchain.Singleton.GetSnapshot();
+            var snapshot = TestBlockchain.GetTestSnapshot();
 
             var executionFactor = NativeContract.Policy.GetExecFeeFactor(snapshot);
             Assert.AreEqual(executionFactor, (uint)30);
@@ -88,21 +87,21 @@ namespace Neo.Plugins.Tests
             }));
             OracleResponse response = new OracleResponse() { Id = 1, Code = OracleResponseCode.Success, Result = new byte[] { 0x00 } };
             ECPoint[] oracleNodes = new ECPoint[] { ECCurve.Secp256r1.G };
-            var tx = OracleService.CreateResponseTx(snapshot, request, response, oracleNodes);
+            var tx = OracleService.CreateResponseTx(snapshot, request, response, oracleNodes, ProtocolSettings.Default);
 
-            Assert.AreEqual(167, tx.Size);
-            Assert.AreEqual(2216640, tx.NetworkFee);
-            Assert.AreEqual(97783360, tx.SystemFee);
+            Assert.AreEqual(166, tx.Size);
+            Assert.AreEqual(2198650, tx.NetworkFee);
+            Assert.AreEqual(97801350, tx.SystemFee);
 
             // case (2) The size of attribute exceed the maximum limit
 
             request.GasForResponse = 0_10000000;
             response.Result = new byte[10250];
-            tx = OracleService.CreateResponseTx(snapshot, request, response, oracleNodes);
-            Assert.AreEqual(166, tx.Size);
+            tx = OracleService.CreateResponseTx(snapshot, request, response, oracleNodes, ProtocolSettings.Default);
+            Assert.AreEqual(165, tx.Size);
             Assert.AreEqual(OracleResponseCode.InsufficientFunds, response.Code);
-            Assert.AreEqual(2215640, tx.NetworkFee);
-            Assert.AreEqual(7784360, tx.SystemFee);
+            Assert.AreEqual(2197650, tx.NetworkFee);
+            Assert.AreEqual(7802350, tx.SystemFee);
         }
     }
 }

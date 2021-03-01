@@ -7,22 +7,22 @@ namespace Neo.Plugins
 {
     static class Utility
     {
-        public static JObject BlockToJson(Block block)
+        public static JObject BlockToJson(Block block, ProtocolSettings settings)
         {
-            JObject json = block.ToJson();
-            json["tx"] = block.Transactions.Select(p => TransactionToJson(p)).ToArray();
+            JObject json = block.ToJson(settings);
+            json["tx"] = block.Transactions.Select(p => TransactionToJson(p, settings)).ToArray();
             return json;
         }
 
-        public static JObject TransactionToJson(Transaction tx)
+        public static JObject TransactionToJson(Transaction tx, ProtocolSettings settings)
         {
-            JObject json = tx.ToJson();
+            JObject json = tx.ToJson(settings);
             json["sysfee"] = tx.SystemFee.ToString();
             json["netfee"] = tx.NetworkFee.ToString();
             return json;
         }
 
-        public static JObject NativeContractToJson(this NativeContract contract)
+        public static JObject NativeContractToJson(this NativeContract contract, ProtocolSettings settings)
         {
             return new JObject
             {
@@ -30,7 +30,7 @@ namespace Neo.Plugins
                 ["hash"] = contract.Hash.ToString(),
                 ["nef"] = contract.Nef.ToJson(),
                 ["manifest"] = contract.Manifest.ToJson(),
-                ["activeblockindex"] = contract.ActiveBlockIndex
+                ["updatehistory"] = settings.NativeUpdateHistory[contract.Name].Select(p => (JObject)p).ToArray()
             };
         }
     }

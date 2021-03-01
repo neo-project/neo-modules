@@ -4,7 +4,6 @@ using Neo.VM;
 using Neo.VM.Types;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 
 namespace Neo.Network.RPC.Models
 {
@@ -27,13 +26,13 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcApplicationLog FromJson(JObject json)
+        public static RpcApplicationLog FromJson(JObject json, ProtocolSettings protocolSettings)
         {
             return new RpcApplicationLog
             {
                 TxId = json["txid"] is null ? null : UInt256.Parse(json["txid"].AsString()),
                 BlockHash = json["blockhash"] is null ? null : UInt256.Parse(json["blockhash"].AsString()),
-                Executions = ((JArray)json["executions"]).Select(p => Execution.FromJson(p)).ToList(),
+                Executions = ((JArray)json["executions"]).Select(p => Execution.FromJson(p, protocolSettings)).ToList(),
             };
         }
     }
@@ -61,7 +60,7 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static Execution FromJson(JObject json)
+        public static Execution FromJson(JObject json, ProtocolSettings protocolSettings)
         {
             return new Execution
             {
@@ -69,7 +68,7 @@ namespace Neo.Network.RPC.Models
                 VMState = json["vmstate"].TryGetEnum<VMState>(),
                 GasConsumed = long.Parse(json["gasconsumed"].AsString()),
                 Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToList(),
-                Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson(p)).ToList()
+                Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson(p, protocolSettings)).ToList()
             };
         }
     }
@@ -91,11 +90,11 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcNotifyEventArgs FromJson(JObject json)
+        public static RpcNotifyEventArgs FromJson(JObject json, ProtocolSettings protocolSettings)
         {
             return new RpcNotifyEventArgs
             {
-                Contract = json["contract"].ToScriptHash(),
+                Contract = json["contract"].ToScriptHash(protocolSettings),
                 EventName = json["eventname"].AsString(),
                 State = Utility.StackItemFromJson(json["state"])
             };

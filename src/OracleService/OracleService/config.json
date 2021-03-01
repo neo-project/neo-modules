@@ -1,11 +1,13 @@
 {
   "PluginConfiguration": {
+    "Network": 5195086,
     "Nodes": [],
     "MaxTaskTimeout": 432000000,
     "AllowPrivateHost": false,
     "AllowedContentTypes": [ "application/json" ],
     "Https": {
       "Timeout": 5000
-    }
+    },
+    "AutoStart": false
   }
 }

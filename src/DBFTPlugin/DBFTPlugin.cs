@@ -6,11 +6,12 @@ using Neo.Wallets;
 
 namespace Neo.Consensus
 {
-    public class DBFTPlugin : Plugin, IConsensusProvider, IP2PPlugin
+    public class DBFTPlugin : Plugin, IP2PPlugin
     {
         private IWalletProvider walletProvider;
         private IActorRef consensus;
         private bool started = false;
+        internal static NeoSystem System;
 
         public override string Description => "Consensus plugin with dBFT algorithm.";
 
@@ -19,16 +20,29 @@ namespace Neo.Consensus
             Settings.Load(GetConfiguration());
         }
 
-        protected override void OnPluginsLoaded()
+        protected override void OnSystemLoaded(NeoSystem system)
         {
-            walletProvider = GetService<IWalletProvider>();
-            if (Settings.Default.AutoStart)
-                walletProvider.WalletOpened += WalletProvider_WalletOpened;
+            if (system.Settings.Magic != Settings.Default.Network) return;
+            System = system;
+            System.ServiceAdded += NeoSystem_ServiceAdded;
         }
 
-        private void WalletProvider_WalletOpened(object sender, Wallet wallet)
+        private void NeoSystem_ServiceAdded(object sender, object service)
         {
-            walletProvider.WalletOpened -= WalletProvider_WalletOpened;
+            if (service is IWalletProvider)
+            {
+                walletProvider = service as IWalletProvider;
+                System.ServiceAdded -= NeoSystem_ServiceAdded;
+                if (Settings.Default.AutoStart)
+                {
+                    walletProvider.WalletChanged += WalletProvider_WalletChanged;
+                }
+            }
+        }
+
+        private void WalletProvider_WalletChanged(object sender, Wallet wallet)
+        {
+            walletProvider.WalletChanged -= WalletProvider_WalletChanged;
             Start(wallet);
         }
 
@@ -46,7 +60,7 @@ namespace Neo.Consensus
             consensus.Tell(new ConsensusService.Start());
         }
 
-        bool IP2PPlugin.OnP2PMessage(Message message)
+        bool IP2PPlugin.OnP2PMessage(NeoSystem system, Message message)
         {
             if (message.Command == MessageCommand.Transaction)
                 consensus?.Tell(message.Payload);

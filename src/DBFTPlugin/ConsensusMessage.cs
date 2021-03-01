@@ -30,7 +30,7 @@ namespace Neo.Consensus
                 throw new FormatException();
             BlockIndex = reader.ReadUInt32();
             ValidatorIndex = reader.ReadByte();
-            if (ValidatorIndex >= ProtocolSettings.Default.ValidatorsCount)
+            if (ValidatorIndex >= DBFTPlugin.System.Settings.ValidatorsCount)
                 throw new FormatException();
             ViewNumber = reader.ReadByte();
         }

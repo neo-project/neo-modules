@@ -10,24 +10,25 @@ using Neo.SmartContract.Native;
 using System;
 using System.IO;
 
-namespace Neo.Plugins.StateService.Storage
+namespace Neo.Plugins.StateService.Network
 {
-    public class StateRoot : IVerifiable, ISerializable
+    class StateRoot : IVerifiable
     {
+        public const byte CurrentVersion = 0x00;
+
         public byte Version;
         public uint Index;
         public UInt256 RootHash;
         public Witness Witness;
 
         private UInt256 _hash = null;
-
         public UInt256 Hash
         {
             get
             {
                 if (_hash is null)
                 {
-                    _hash = new UInt256(Crypto.Hash256(this.GetHashData()));
+                    _hash = new UInt256(Crypto.Hash256(this.GetSignData(StatePlugin.System.Settings.Magic)));
                 }
                 return _hash;
             }
@@ -41,25 +42,27 @@ namespace Neo.Plugins.StateService.Storage
             }
             set
             {
-                if (value is null || value.Length != 1) throw new ArgumentException();
+                if (value.Length != 1) throw new ArgumentException(null, nameof(value));
                 Witness = value[0];
             }
         }
 
-        public int Size =>
+        int ISerializable.Size =>
             sizeof(byte) +      //Version
             sizeof(uint) +      //Index
             UInt256.Length +    //RootHash
             (Witness is null ? 1 : 1 + Witness.Size); //Witness
 
-        public void Deserialize(BinaryReader reader)
+        void ISerializable.Deserialize(BinaryReader reader)
         {
-            this.DeserializeUnsigned(reader);
-            Witness[] arr = reader.ReadSerializableArray<Witness>();
-            if (arr.Length < 1)
-                Witness = null;
-            else
-                Witness = arr[0];
+            DeserializeUnsigned(reader);
+            Witness[] witnesses = reader.ReadSerializableArray<Witness>(1);
+            Witness = witnesses.Length switch
+            {
+                0 => null,
+                1 => witnesses[0],
+                _ => throw new FormatException(),
+            };
         }
 
         public void DeserializeUnsigned(BinaryReader reader)
@@ -69,13 +72,13 @@ namespace Neo.Plugins.StateService.Storage
             RootHash = reader.ReadSerializable<UInt256>();
         }
 
-        public void Serialize(BinaryWriter writer)
+        void ISerializable.Serialize(BinaryWriter writer)
         {
-            this.SerializeUnsigned(writer);
+            SerializeUnsigned(writer);
             if (Witness is null)
                 writer.WriteVarInt(0);
             else
-                writer.Write(new Witness[] { Witness });
+                writer.Write(new[] { Witness });
         }
 
         public void SerializeUnsigned(BinaryWriter writer)
@@ -85,9 +88,9 @@ namespace Neo.Plugins.StateService.Storage
             writer.Write(RootHash);
         }
 
-        public bool Verify(DataCache snapshot)
+        public bool Verify(ProtocolSettings settings, DataCache snapshot)
         {
-            return this.VerifyWitnesses(snapshot, 1_00000000);
+            return this.VerifyWitnesses(settings, snapshot, 1_00000000);
         }
 
         public UInt160[] GetScriptHashesForVerifying(DataCache snapshot)
@@ -103,7 +106,7 @@ namespace Neo.Plugins.StateService.Storage
             json["version"] = Version;
             json["index"] = Index;
             json["roothash"] = RootHash.ToString();
-            json["witness"] = Witness?.ToJson();
+            json["witnesses"] = Witness is null ? new JArray() : new JArray(Witness.ToJson());
             return json;
         }
     }
