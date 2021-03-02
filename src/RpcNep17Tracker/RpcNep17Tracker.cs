@@ -25,6 +25,7 @@ namespace Neo.Plugins
         private const byte Nep17TransferReceivedPrefix = 0xfa;
         private DB _db;
         private WriteBatch _writeBatch;
+        private string _dbPath;
         private bool _shouldTrackHistory;
         private bool _recordNullAddressHistory;
         private uint _maxResults;
@@ -38,16 +39,14 @@ namespace Neo.Plugins
         {
             if (system.Settings.Magic != _network) return;
             System = system;
+            string path = string.Format(_dbPath, system.Settings.Magic.ToString("x8"));
+            _db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
             RpcServerPlugin.RegisterMethods(this, _network);
         }
 
         protected override void Configure()
         {
-            if (_db == null)
-            {
-                var dbPath = string.Format(GetConfiguration().GetSection("DBPath").Value ?? "Nep17BalanceData", System.Settings.Magic.ToString("X8"));
-                _db = DB.Open(GetFullPath(dbPath), new Options { CreateIfMissing = true });
-            }
+            _dbPath = GetConfiguration().GetSection("DBPath").Value ?? "Nep17BalanceData";
             _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
             _recordNullAddressHistory = (GetConfiguration().GetSection("RecordNullAddressHistory").Value ?? false.ToString()) != false.ToString();
             _maxResults = uint.Parse(GetConfiguration().GetSection("MaxResults").Value ?? "1000");
