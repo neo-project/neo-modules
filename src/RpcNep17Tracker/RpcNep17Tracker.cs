@@ -39,7 +39,7 @@ namespace Neo.Plugins
         {
             if (system.Settings.Magic != _network) return;
             System = system;
-            string path = string.Format(_dbPath, system.Settings.Magic.ToString("x8"));
+            string path = string.Format(_dbPath, system.Settings.Magic.ToString("X8"));
             _db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
             RpcServerPlugin.RegisterMethods(this, _network);
         }
