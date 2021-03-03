@@ -33,7 +33,6 @@ namespace Neo.Plugins
         public string[] AllowedContentTypes { get; }
         public HttpsSettings Https { get; }
         public NeoFSSettings NeoFS { get; }
-
         public bool AutoStart { get; }
 
         public static Settings Default { get; private set; }
