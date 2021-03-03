@@ -46,7 +46,7 @@ namespace Neo.Plugins
             }
             try
             {
-                byte[] res = Get(cancellation, privateKey, uri, Settings.Default.Fs.FSNode);
+                byte[] res = Get(cancellation, privateKey, uri, Settings.Default.NeoFS.EndPoint);
                 Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"NeoFS result: {res.ToHexString()}");
                 return (OracleResponseCode.Success, Convert.ToBase64String(res));
             }

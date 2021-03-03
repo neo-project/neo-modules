@@ -8,8 +8,8 @@
     "Https": {
       "Timeout": 5000
     },
-    "NeoFs": {
-      "Node": ""
+    "NeoFS": {
+      "EndPoint": "127.0.0.1:8080"
     },
     "AutoStart": false
   }
