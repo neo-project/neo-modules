@@ -5,6 +5,7 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
+using Neo.Wallets;
 using System.Linq;
 
 namespace Neo.Plugins.MultiSigInbox
@@ -13,13 +14,15 @@ namespace Neo.Plugins.MultiSigInbox
     {
         private readonly NeoSystem _system;
         private readonly DB _db;
+        private readonly Wallet _wallet;
         private bool started = false;
         public class Start { }
 
-        public MultiSigInboxService(NeoSystem system, DB db)
+        public MultiSigInboxService(NeoSystem system, DB db, Wallet wallet)
            : this(system)
         {
             this._db = db;
+            this._wallet = wallet;
         }
 
         internal MultiSigInboxService(NeoSystem system)
@@ -75,7 +78,19 @@ namespace Neo.Plugins.MultiSigInbox
 
                 foreach (var entry in oldContext.ScriptHashes)
                 {
-                    // TODO: Merge
+                    var contract = _wallet.GetAccount(entry)?.Contract;
+                    if (contract == null) continue;
+
+                    var newSignatures = newContext.GetSignatures(entry);
+                    if (newSignatures == null) continue;
+
+                    var oldSignatures = oldContext.GetSignatures(entry)?.ToDictionary(u => (u.pubKey, u.signature));
+                    foreach (var sig in newSignatures)
+                    {
+                        if (oldSignatures?.ContainsKey(sig.pubKey) == true) continue;
+
+                        oldContext.AddSignature(contract, sig.pubKey, sig.signature);
+                    }
                 }
 
                 _db.Put(WriteOptions.Default, MultiSigInboxPlugin.TxPrefix.Concat(oldContext.Verifiable.Hash.ToArray()).ToArray(), oldContext.ToJson().ToByteArray(false));
@@ -106,9 +121,9 @@ namespace Neo.Plugins.MultiSigInbox
             base.PostStop();
         }
 
-        public static Props Props(NeoSystem system, DB db)
+        public static Props Props(NeoSystem system, DB db, Wallet wallet)
         {
-            return Akka.Actor.Props.Create(() => new MultiSigInboxService(system, db));
+            return Akka.Actor.Props.Create(() => new MultiSigInboxService(system, db, wallet));
         }
     }
 }

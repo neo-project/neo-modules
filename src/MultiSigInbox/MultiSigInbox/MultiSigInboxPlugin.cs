@@ -71,7 +71,7 @@ namespace Neo.Plugins.MultiSigInbox
             if (started) return;
             started = true;
             _wallet = wallet;
-            service = System.ActorSystem.ActorOf(MultiSigInboxService.Props(System.LocalNode, System.Blockchain, System.LoadStore(Settings.Default.Path), _db));
+            service = System.ActorSystem.ActorOf(MultiSigInboxService.Props(System, _db, wallet));
             service.Tell(new MultiSigInboxService.Start());
         }
 
@@ -150,7 +150,6 @@ namespace Neo.Plugins.MultiSigInbox
                                 break;
                             }
                         }
-
                     }
                 }
             }
