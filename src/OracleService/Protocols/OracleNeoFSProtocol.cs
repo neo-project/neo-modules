@@ -19,7 +19,7 @@ namespace Neo.Plugins
 {
     class OracleNeoFSProtocol : IOracleProtocol
     {
-        private byte[] privateKey;
+        private readonly byte[] privateKey;
         private const string URIScheme = "neofs";
         private const string RangeCmd = "range";
         private const string HeaderCmd = "header";
@@ -46,7 +46,7 @@ namespace Neo.Plugins
             }
             try
             {
-                byte[] res = Get(cancellation, privateKey, uri, Settings.Default.NeoFS.EndPoint);
+                byte[] res = Get(privateKey, uri, Settings.Default.NeoFS.EndPoint, cancellation);
                 Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"NeoFS result: {res.ToHexString()}");
                 return (OracleResponseCode.Success, Convert.ToBase64String(res));
             }
@@ -57,9 +57,8 @@ namespace Neo.Plugins
             }
         }
 
-        private byte[] Get(CancellationToken cancellation, byte[] privateKey, Uri uri, string host)
+        private byte[] Get(byte[] privateKey, Uri uri, string host, CancellationToken cancellation)
         {
-            if (uri.Scheme != URIScheme) throw new Exception("invalid URI scheme");
             string[] ps = uri.PathAndQuery.TrimStart('/').Split("/");
             if (ps.Length == 0) throw new Exception("object ID is missing from URI");
             ContainerID containerID = ContainerID.FromBase58String(uri.OriginalString.Substring((URIScheme + "://").Length, uri.Host.Length));
@@ -72,15 +71,15 @@ namespace Neo.Plugins
             Client client = new Client(privateKey.LoadPrivateKey(), host, 120000);
             if (ps.Length == 1)
             {
-                return GetPayload(cancellation, client, objectAddr);
+                return GetPayload(client, objectAddr, cancellation);
             }
             else if (ps[1] == RangeCmd)
             {
-                return GetPayload(cancellation, client, objectAddr);
+                return GetPayload(client, objectAddr, cancellation);
             }
             else if (ps[1] == HeaderCmd)
             {
-                return GetPayload(cancellation, client, objectAddr);
+                return GetPayload(client, objectAddr, cancellation);
             }
             else if (ps[1] == HashCmd)
             {
@@ -92,7 +91,7 @@ namespace Neo.Plugins
             }
         }
 
-        private byte[] GetPayload(CancellationToken cancellation, Client client, Address addr)
+        private static byte[] GetPayload(Client client, Address addr, CancellationToken cancellation)
         {
             Object obj = client.GetObject(cancellation, new GetObjectParams() { Address = addr }, new CallOptions { Ttl = 2 }).Result;
             return obj.Payload.ToByteArray();
