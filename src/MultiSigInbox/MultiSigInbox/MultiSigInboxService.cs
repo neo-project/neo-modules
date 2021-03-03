@@ -74,6 +74,7 @@ namespace Neo.Plugins.MultiSigInbox
             if (tx != null)
             {
                 // merge context
+                var somethingAdded = false;
                 var oldContext = ContractParametersContext.FromJson(JObject.Parse(tx), snapshot);
 
                 foreach (var entry in oldContext.ScriptHashes)
@@ -89,11 +90,17 @@ namespace Neo.Plugins.MultiSigInbox
                     {
                         if (oldSignatures?.ContainsKey(sig.pubKey) == true) continue;
 
-                        oldContext.AddSignature(contract, sig.pubKey, sig.signature);
+                        if (oldContext.AddSignature(contract, sig.pubKey, sig.signature))
+                        {
+                            somethingAdded = true;
+                        }
                     }
                 }
 
-                _db.Put(WriteOptions.Default, MultiSigInboxPlugin.TxPrefix.Concat(oldContext.Verifiable.Hash.ToArray()).ToArray(), oldContext.ToJson().ToByteArray(false));
+                if (somethingAdded)
+                {
+                    _db.Put(WriteOptions.Default, MultiSigInboxPlugin.TxPrefix.Concat(oldContext.Verifiable.Hash.ToArray()).ToArray(), oldContext.ToJson().ToByteArray(false));
+                }
             }
             else
             {
