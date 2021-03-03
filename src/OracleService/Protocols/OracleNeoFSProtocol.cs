@@ -44,11 +44,9 @@ namespace Neo.Plugins
                 if (entry.IsInternal())
                     return (OracleResponseCode.Forbidden, null);
             }
-            Random random = new Random();
-            int index = random.Next() % Settings.Default.Fs.FSNodes.Length;
             try
             {
-                byte[] res = Get(cancellation, privateKey, uri, Settings.Default.Fs.FSNodes[index]);
+                byte[] res = Get(cancellation, privateKey, uri, Settings.Default.Fs.FSNode);
                 Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"NeoFS result: {res.ToHexString()}");
                 return (OracleResponseCode.Success, Convert.ToBase64String(res));
             }
@@ -71,7 +69,7 @@ namespace Neo.Plugins
                 ContainerId = containerID,
                 ObjectId = objectID
             };
-            Client client = new Client(privateKey.LoadPrivateKey(), host);
+            Client client = new Client(privateKey.LoadPrivateKey(), host, 120000);
             if (ps.Length == 1)
             {
                 return GetPayload(cancellation, client, objectAddr);

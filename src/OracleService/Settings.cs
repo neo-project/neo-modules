@@ -16,11 +16,11 @@ namespace Neo.Plugins
 
     class FsSettings
     {
-        public string[] FSNodes { get; }
+        public string FSNode { get; }
 
         public FsSettings(IConfigurationSection section)
         {
-            FSNodes = section.GetSection("Nodes").GetChildren().Select(p => p.Get<string>()).ToArray();
+            FSNode = section.GetValue("Node", "127.0.0.1:8080");
         }
     }
 
