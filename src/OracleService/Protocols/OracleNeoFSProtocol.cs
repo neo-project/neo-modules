@@ -29,7 +29,7 @@ namespace Neo.Plugins
         {
         }
 
-        public void AttachWallet(Wallet wallet, ECPoint[] oracles)
+        public OracleNeoFSProtocol(Wallet wallet, ECPoint[] oracles)
         {
             privateKey = oracles.Select(p => wallet.GetAccount(p)).Where(p => p is not null && p.HasKey && !p.Lock).FirstOrDefault()?.GetKey().PrivateKey;
         }

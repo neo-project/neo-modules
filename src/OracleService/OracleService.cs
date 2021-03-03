@@ -43,11 +43,7 @@ namespace Neo.Plugins
         private int counter;
         private NeoSystem System;
 
-        private static readonly IReadOnlyDictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>
-        {
-            ["https"] = new OracleHttpsProtocol(),
-            ["neofs"] = new OracleNeoFSProtocol()
-        };
+        private readonly Dictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>();
 
         public override string Description => "Built-in oracle plugin";
 
@@ -113,7 +109,8 @@ namespace Neo.Plugins
             if (!CheckOracleAccount(wallet, oracles)) throw new ArgumentException("There is no oracle account in wallet");
 
             this.wallet = wallet;
-            foreach (var (_, p) in protocols) if (p is OracleNeoFSProtocol protocol) protocol.AttachWallet(wallet, oracles);
+            protocols["https"] = new OracleHttpsProtocol();
+            protocols["neofs"] = new OracleNeoFSProtocol(wallet, oracles);
             started = true;
             timer = new Timer(OnTimer, null, RefreshInterval, Timeout.Infinite);
 
