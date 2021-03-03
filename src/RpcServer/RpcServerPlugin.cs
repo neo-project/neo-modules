@@ -43,6 +43,7 @@ namespace Neo.Plugins
             }
 
             server.StartRpcServer();
+            servers.TryAdd(s.Network, server);
         }
 
         public static void RegisterMethods(object handler, uint network)

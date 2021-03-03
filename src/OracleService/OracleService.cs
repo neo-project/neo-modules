@@ -127,6 +127,7 @@ namespace Neo.Plugins
                 timer.Dispose();
                 timer = null;
             }
+            stopped = true;
         }
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
