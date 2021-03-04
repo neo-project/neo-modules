@@ -48,7 +48,7 @@ namespace Neo.Plugins
             }
             try
             {
-                byte[] res = Get(uri, Settings.Default.NeoFS.EndPoint, cancellation);
+                byte[] res = await GetAsync(uri, Settings.Default.NeoFS.EndPoint, cancellation);
                 Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"NeoFS result: {res.ToHexString()}");
                 return (OracleResponseCode.Success, Convert.ToBase64String(res));
             }
@@ -59,7 +59,7 @@ namespace Neo.Plugins
             }
         }
 
-        private byte[] Get(Uri uri, string host, CancellationToken cancellation)
+        private async Task<byte[]> GetAsync(Uri uri, string host, CancellationToken cancellation)
         {
             string[] ps = uri.AbsolutePath.Split("/");
             if (ps.Length < 2) throw new FormatException("Invalid neofs url");
@@ -74,27 +74,27 @@ namespace Neo.Plugins
             var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
             tokenSource.CancelAfter(Settings.Default.NeoFS.Timeout);
             if (ps.Length == 2)
-                return GetPayload(client, objectAddr, tokenSource.Token);
+                return await GetPayloadAsync(client, objectAddr, tokenSource.Token);
             return ps[2] switch
             {
-                "range" => GetRange(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
+                "range" => await GetRangeAsync(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
                 "header" => GetHeader(client, objectAddr, tokenSource.Token),
                 "hash" => GetHash(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
                 _ => throw new Exception("invalid command")
             };
         }
 
-        private static byte[] GetPayload(Client client, Address addr, CancellationToken cancellation)
+        private static async Task<byte[]> GetPayloadAsync(Client client, Address addr, CancellationToken cancellation)
         {
-            Object obj = client.GetObject(cancellation, new GetObjectParams() { Address = addr }, new CallOptions { Ttl = 2 }).Result;
+            Object obj = await client.GetObject(cancellation, new GetObjectParams() { Address = addr }, new CallOptions { Ttl = 2 });
             return obj.Payload.ToByteArray();
         }
 
-        private static byte[] GetRange(Client client, Address addr, string[] ps, CancellationToken cancellation)
+        private static Task<byte[]> GetRangeAsync(Client client, Address addr, string[] ps, CancellationToken cancellation)
         {
             if (ps.Length == 0) throw new Exception("object range is invalid (expected 'Offset|Length'");
             Range range = ParseRange(ps[0]);
-            return client.GetObjectPayloadRangeData(cancellation, new RangeDataParams() { Address = addr, Range = range }, new CallOptions { Ttl = 2 }).Result;
+            return client.GetObjectPayloadRangeData(cancellation, new RangeDataParams() { Address = addr, Range = range }, new CallOptions { Ttl = 2 });
         }
 
         private static byte[] GetHeader(Client client, Address addr, CancellationToken cancellation)
