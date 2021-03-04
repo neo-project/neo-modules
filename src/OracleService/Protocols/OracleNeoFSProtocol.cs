@@ -60,7 +60,7 @@ namespace Neo.Plugins
         private byte[] Get(byte[] privateKey, Uri uri, string host, CancellationToken cancellation)
         {
             string[] ps = uri.AbsolutePath.Split("/");
-            if (ps.Length == 0) throw new Exception("object ID is missing from URI");
+            if (ps.Length < 2) throw new FormatException("Invalid neofs url");
             ContainerID containerID = ContainerID.FromBase58String(ps[0]);
             ObjectID objectID = ObjectID.FromBase58String(ps[1]);
             Address objectAddr = new Address()
