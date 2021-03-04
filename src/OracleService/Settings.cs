@@ -17,10 +17,12 @@ namespace Neo.Plugins
     class NeoFSSettings
     {
         public string EndPoint { get; }
+        public TimeSpan Timeout { get; }
 
         public NeoFSSettings(IConfigurationSection section)
         {
             EndPoint = section.GetValue("EndPoint", "127.0.0.1:8080");
+            Timeout = TimeSpan.FromMilliseconds(section.GetValue("Timeout", 15000));
         }
     }
 

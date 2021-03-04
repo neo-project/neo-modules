@@ -93,7 +93,9 @@ namespace Neo.Plugins
 
         private static byte[] GetPayload(CancellationToken cancellation, Client client, Address addr)
         {
-            Object obj = client.GetObject(cancellation, new GetObjectParams() { Address = addr }, new CallOptions { Ttl = 2 }).Result;
+            var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
+            tokenSource.CancelAfter(Settings.Default.NeoFS.Timeout);
+            Object obj = client.GetObject(tokenSource.Token, new GetObjectParams() { Address = addr }, new CallOptions { Ttl = 2 }).Result;
             return obj.Payload.ToByteArray();
         }
 

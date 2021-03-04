@@ -9,8 +9,10 @@
       "Timeout": 5000
     },
     "NeoFS": {
+      "Timeout": 15000,
       "EndPoint": "127.0.0.1:8080"
     },
     "AutoStart": false
   }
 }
+
