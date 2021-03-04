@@ -93,9 +93,7 @@ namespace Neo.Plugins
 
         private static byte[] GetPayload(CancellationToken cancellation, Client client, Address addr)
         {
-            var source = new CancellationTokenSource();
-            source.CancelAfter(TimeSpan.FromSeconds(10));
-            Object obj = client.GetObject(source.Token, new GetObjectParams() { Address = addr }, new CallOptions { Ttl = 2 }).Result;
+            Object obj = client.GetObject(cancellation, new GetObjectParams() { Address = addr }, new CallOptions { Ttl = 2 }).Result;
             return obj.Payload.ToByteArray();
         }
 
