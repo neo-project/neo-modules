@@ -52,38 +52,38 @@ namespace Neo.Plugins
             }
             catch (Exception e)
             {
-                Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"NeoFS result: error,{e}");
+                Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"NeoFS result: error,{e.Message}");
                 return (OracleResponseCode.Error, null);
             }
         }
 
         private byte[] Get(byte[] privateKey, Uri uri, string host, CancellationToken cancellation)
         {
-            string[] ps = uri.PathAndQuery.TrimStart('/').Split("/");
+            string[] ps = uri.AbsolutePath.Split("/");
             if (ps.Length == 0) throw new Exception("object ID is missing from URI");
-            ContainerID containerID = ContainerID.FromBase58String(uri.OriginalString.Substring((URIScheme + "://").Length, uri.Host.Length));
-            ObjectID objectID = ObjectID.FromBase58String(ps[0]);
+            ContainerID containerID = ContainerID.FromBase58String(ps[0]);
+            ObjectID objectID = ObjectID.FromBase58String(ps[1]);
             Address objectAddr = new Address()
             {
                 ContainerId = containerID,
                 ObjectId = objectID
             };
             Client client = new Client(privateKey.LoadPrivateKey(), host, 120000);
-            if (ps.Length == 1)
+            if (ps.Length == 2)
             {
-                return GetPayload(client, objectAddr, cancellation);
+                return GetPayload(cancellation, client, objectAddr);
             }
-            else if (ps[1] == RangeCmd)
+            else if (ps[2] == RangeCmd)
             {
-                return GetPayload(client, objectAddr, cancellation);
+                return GetRange(cancellation, client, objectAddr, ps.Skip(3).ToArray());
             }
-            else if (ps[1] == HeaderCmd)
+            else if (ps[2] == HeaderCmd)
             {
-                return GetPayload(client, objectAddr, cancellation);
+                return GetHeader(cancellation, client, objectAddr);
             }
-            else if (ps[1] == HashCmd)
+            else if (ps[2] == HashCmd)
             {
-                return GetHash(cancellation, client, objectAddr, ps.Skip(2).ToArray());
+                return GetHash(cancellation, client, objectAddr, ps.Skip(3).ToArray());
             }
             else
             {
@@ -91,9 +91,11 @@ namespace Neo.Plugins
             }
         }
 
-        private static byte[] GetPayload(Client client, Address addr, CancellationToken cancellation)
+        private static byte[] GetPayload(CancellationToken cancellation, Client client, Address addr)
         {
-            Object obj = client.GetObject(cancellation, new GetObjectParams() { Address = addr }, new CallOptions { Ttl = 2 }).Result;
+            var source = new CancellationTokenSource();
+            source.CancelAfter(TimeSpan.FromSeconds(10));
+            Object obj = client.GetObject(source.Token, new GetObjectParams() { Address = addr }, new CallOptions { Ttl = 2 }).Result;
             return obj.Payload.ToByteArray();
         }
 

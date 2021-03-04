@@ -36,8 +36,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBFTPlugin", "src\DBFTPlugi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Plugins.RpcServer.Tests", "tests\Neo.Plugins.RpcServer.Tests\Neo.Plugins.RpcServer.Tests.csproj", "{0DDAF738-0FD3-40A7-A433-C514BCDDF542}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "api", "..\..\Neo3AMA\preview5\neofs-api-csharp\src\api\api.csproj", "{4A43955F-AFD9-4610-A179-8D0771124993}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -104,10 +102,6 @@ Global
 		{0DDAF738-0FD3-40A7-A433-C514BCDDF542}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0DDAF738-0FD3-40A7-A433-C514BCDDF542}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0DDAF738-0FD3-40A7-A433-C514BCDDF542}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4A43955F-AFD9-4610-A179-8D0771124993}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4A43955F-AFD9-4610-A179-8D0771124993}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4A43955F-AFD9-4610-A179-8D0771124993}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4A43955F-AFD9-4610-A179-8D0771124993}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
