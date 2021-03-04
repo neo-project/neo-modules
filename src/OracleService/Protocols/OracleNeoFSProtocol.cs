@@ -20,10 +20,6 @@ namespace Neo.Plugins
     class OracleNeoFSProtocol : IOracleProtocol
     {
         private readonly byte[] privateKey;
-        private const string URIScheme = "neofs";
-        private const string RangeCmd = "range";
-        private const string HeaderCmd = "header";
-        private const string HashCmd = "hash";
 
         public void Configure()
         {
@@ -57,41 +53,30 @@ namespace Neo.Plugins
             }
         }
 
-        private byte[] Get(byte[] privateKey, Uri uri, string host, CancellationToken cancellation)
+        private static byte[] Get(byte[] privateKey, Uri uri, string host, CancellationToken cancellation)
         {
             string[] ps = uri.AbsolutePath.Split("/");
             if (ps.Length < 2) throw new FormatException("Invalid neofs url");
             ContainerID containerID = ContainerID.FromBase58String(ps[0]);
             ObjectID objectID = ObjectID.FromBase58String(ps[1]);
-            Address objectAddr = new Address()
+            Address objectAddr = new()
             {
                 ContainerId = containerID,
                 ObjectId = objectID
             };
-            Client client = new Client(privateKey.LoadPrivateKey(), host, 120000);
+            Client client = new(privateKey.LoadPrivateKey(), host, 120000);
             if (ps.Length == 2)
+                return GetPayload(client, objectAddr, cancellation);
+            return ps[2] switch
             {
-                return GetPayload(cancellation, client, objectAddr);
-            }
-            else if (ps[2] == RangeCmd)
-            {
-                return GetRange(cancellation, client, objectAddr, ps.Skip(3).ToArray());
-            }
-            else if (ps[2] == HeaderCmd)
-            {
-                return GetHeader(cancellation, client, objectAddr);
-            }
-            else if (ps[2] == HashCmd)
-            {
-                return GetHash(cancellation, client, objectAddr, ps.Skip(3).ToArray());
-            }
-            else
-            {
-                throw new Exception("invalid command");
-            }
+                "range" => GetRange(client, objectAddr, ps.Skip(3).ToArray(), cancellation),
+                "header" => GetHeader(client, objectAddr, cancellation),
+                "hash" => GetHash(client, objectAddr, ps.Skip(3).ToArray(), cancellation),
+                _ => throw new Exception("invalid command")
+            };
         }
 
-        private static byte[] GetPayload(CancellationToken cancellation, Client client, Address addr)
+        private static byte[] GetPayload(Client client, Address addr, CancellationToken cancellation)
         {
             var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
             tokenSource.CancelAfter(Settings.Default.NeoFS.Timeout);
@@ -99,20 +84,20 @@ namespace Neo.Plugins
             return obj.Payload.ToByteArray();
         }
 
-        private byte[] GetRange(CancellationToken cancellation, Client client, Address addr, params string[] ps)
+        private static byte[] GetRange(Client client, Address addr, string[] ps, CancellationToken cancellation)
         {
             if (ps.Length == 0) throw new Exception("object range is invalid (expected 'Offset|Length'");
             Range range = ParseRange(ps[0]);
             return client.GetObjectPayloadRangeData(cancellation, new RangeDataParams() { Address = addr, Range = range }, new CallOptions { Ttl = 2 }).Result;
         }
 
-        private byte[] GetHeader(CancellationToken cancellation, Client client, Address addr)
+        private static byte[] GetHeader(Client client, Address addr, CancellationToken cancellation)
         {
             var obj = client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 });
             return obj.ToByteArray();
         }
 
-        private byte[] GetHash(CancellationToken cancellation, Client client, Address addr, params string[] ps)
+        private static byte[] GetHash(Client client, Address addr, string[] ps, CancellationToken cancellation)
         {
             if (ps.Length == 0 || ps[0] == "")
             {
@@ -125,7 +110,7 @@ namespace Neo.Plugins
             return hashes[0];
         }
 
-        private Range ParseRange(string s)
+        private static Range ParseRange(string s)
         {
             int sepIndex = s.IndexOf("|");
             if (sepIndex < 0) throw new Exception("object range is invalid (expected 'Offset|Length'");
