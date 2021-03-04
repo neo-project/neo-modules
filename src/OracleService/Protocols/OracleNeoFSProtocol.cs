@@ -65,22 +65,22 @@ namespace Neo.Plugins
                 ObjectId = objectID
             };
             Client client = new(privateKey.LoadPrivateKey(), host, 120000);
+            var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
+            tokenSource.CancelAfter(Settings.Default.NeoFS.Timeout);
             if (ps.Length == 2)
-                return GetPayload(client, objectAddr, cancellation);
+                return GetPayload(client, objectAddr, tokenSource.Token);
             return ps[2] switch
             {
-                "range" => GetRange(client, objectAddr, ps.Skip(3).ToArray(), cancellation),
-                "header" => GetHeader(client, objectAddr, cancellation),
-                "hash" => GetHash(client, objectAddr, ps.Skip(3).ToArray(), cancellation),
+                "range" => GetRange(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
+                "header" => GetHeader(client, objectAddr, tokenSource.Token),
+                "hash" => GetHash(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
                 _ => throw new Exception("invalid command")
             };
         }
 
         private static byte[] GetPayload(Client client, Address addr, CancellationToken cancellation)
         {
-            var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
-            tokenSource.CancelAfter(Settings.Default.NeoFS.Timeout);
-            Object obj = client.GetObject(tokenSource.Token, new GetObjectParams() { Address = addr }, new CallOptions { Ttl = 2 }).Result;
+            Object obj = client.GetObject(cancellation, new GetObjectParams() { Address = addr }, new CallOptions { Ttl = 2 }).Result;
             return obj.Payload.ToByteArray();
         }
 
