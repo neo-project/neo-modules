@@ -19,15 +19,21 @@ namespace Neo.Plugins
 {
     class OracleNeoFSProtocol : IOracleProtocol
     {
-        private readonly byte[] privateKey;
+        private readonly System.Security.Cryptography.ECDsa privateKey;
+
+        public OracleNeoFSProtocol(Wallet wallet, ECPoint[] oracles)
+        {
+            byte[] key = oracles.Select(p => wallet.GetAccount(p)).Where(p => p is not null && p.HasKey && !p.Lock).FirstOrDefault().GetKey().PrivateKey;
+            privateKey = key.LoadPrivateKey();
+        }
 
         public void Configure()
         {
         }
 
-        public OracleNeoFSProtocol(Wallet wallet, ECPoint[] oracles)
+        public void Dispose()
         {
-            privateKey = oracles.Select(p => wallet.GetAccount(p)).Where(p => p is not null && p.HasKey && !p.Lock).FirstOrDefault()?.GetKey().PrivateKey;
+            privateKey.Dispose();
         }
 
         public async Task<(OracleResponseCode, string)> ProcessAsync(Uri uri, CancellationToken cancellation)
@@ -42,7 +48,7 @@ namespace Neo.Plugins
             }
             try
             {
-                byte[] res = Get(privateKey, uri, Settings.Default.NeoFS.EndPoint, cancellation);
+                byte[] res = Get(uri, Settings.Default.NeoFS.EndPoint, cancellation);
                 Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"NeoFS result: {res.ToHexString()}");
                 return (OracleResponseCode.Success, Convert.ToBase64String(res));
             }
@@ -53,7 +59,7 @@ namespace Neo.Plugins
             }
         }
 
-        private static byte[] Get(byte[] privateKey, Uri uri, string host, CancellationToken cancellation)
+        private byte[] Get(Uri uri, string host, CancellationToken cancellation)
         {
             string[] ps = uri.AbsolutePath.Split("/");
             if (ps.Length < 2) throw new FormatException("Invalid neofs url");
@@ -64,7 +70,7 @@ namespace Neo.Plugins
                 ContainerId = containerID,
                 ObjectId = objectID
             };
-            Client client = new(privateKey.LoadPrivateKey(), host, 120000);
+            Client client = new(privateKey, host, 120000);
             var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
             tokenSource.CancelAfter(Settings.Default.NeoFS.Timeout);
             if (ps.Length == 2)
@@ -117,10 +123,6 @@ namespace Neo.Plugins
             ulong offset = ulong.Parse(s[..sepIndex]);
             ulong length = ulong.Parse(s[sepIndex..]);
             return new Range() { Offset = offset, Length = length };
-        }
-
-        public void Dispose()
-        {
         }
     }
 }
