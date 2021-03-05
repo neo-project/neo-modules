@@ -41,7 +41,8 @@ namespace Neo.Plugins
 
             if (method == "cron_send")
             {
-                return Send(parameters);
+                var res = Send(parameters);
+                return res;
             }
 
             if (method == "cron_send_1xN")

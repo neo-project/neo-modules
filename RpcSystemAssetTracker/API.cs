@@ -398,7 +398,7 @@ namespace Neo.Plugins
                 case RelayResultReason.Succeed:
                     return true;
                 case RelayResultReason.AlreadyExists:
-                    throw new RpcException(-501, "Block or transaction already exists and cannot be sent repeatedly.");
+                    throw new RpcException(-501, "You have input(s) on the current block, try transfer again on the next");
                 case RelayResultReason.OutOfMemory:
                     throw new RpcException(-502, "The memory pool is full and no more transactions can be sent.");
                 case RelayResultReason.UnableToVerify:

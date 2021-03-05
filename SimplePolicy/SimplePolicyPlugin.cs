@@ -6,12 +6,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Http;
+using Neo.IO.Json;
+using Neo.Wallets;
 
 [assembly: InternalsVisibleTo("SimplePolicy.UnitTests")]
 
 namespace Neo.Plugins
 {
-    public class SimplePolicyPlugin : Plugin, ILogPlugin, IPolicyPlugin
+    public class SimplePolicyPlugin : Plugin, ILogPlugin, IPolicyPlugin, IRpcPlugin
     {
         private static readonly string log_dictionary = Path.Combine(AppContext.BaseDirectory, "Logs");
 
@@ -115,5 +118,31 @@ namespace Neo.Plugins
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool InHigherLowPriorityList(Transaction tx) => Settings.Default.HighPriorityTxType.Contains(tx.Type);
+
+        public void PreProcess(HttpContext context, string method, JArray _params)
+        {
+            
+        }
+
+        public JObject OnProcess(HttpContext context, string method, JArray _params)
+        {
+            if (method == "сheckSimplePolicyStatus")
+            {
+                var address = _params[0].AsString();
+                bool isBlocked = Settings.Default.BlockedAccounts.List.Contains(address.ToScriptHash());
+                var result = new JArray();
+                var json = new JObject();
+                json["blocked"] = isBlocked;
+                result.Add(json);
+                return result;
+            }
+
+            return null;
+        }
+
+        public void PostProcess(HttpContext context, string method, JArray _params, JObject result)
+        {
+            
+        }
     }
 }
