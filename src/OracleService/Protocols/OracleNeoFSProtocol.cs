@@ -14,6 +14,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Object = Neo.FileSystem.API.Object.Object;
 using Range = Neo.FileSystem.API.Object.Range;
+using System.Web;
 
 namespace Neo.Plugins
 {
@@ -118,10 +119,11 @@ namespace Neo.Plugins
 
         private static Range ParseRange(string s)
         {
-            int sepIndex = s.IndexOf("|");
+            string url = HttpUtility.UrlDecode(s);
+            int sepIndex = url.IndexOf("|");
             if (sepIndex < 0) throw new Exception("object range is invalid (expected 'Offset|Length'");
-            ulong offset = ulong.Parse(s[..sepIndex]);
-            ulong length = ulong.Parse(s[sepIndex..]);
+            ulong offset = ulong.Parse(url[..sepIndex]);
+            ulong length = ulong.Parse(url[(sepIndex+1)..]);
             return new Range() { Offset = offset, Length = length };
         }
     }
