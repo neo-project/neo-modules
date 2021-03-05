@@ -11,9 +11,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using Object = Neo.FileSystem.API.Object.Object;
 using Range = Neo.FileSystem.API.Object.Range;
-using System.Web;
 
 namespace Neo.Plugins
 {
@@ -93,7 +93,7 @@ namespace Neo.Plugins
         private static async Task<byte[]> GetHeaderAsync(Client client, Address addr, CancellationToken cancellation)
         {
             var obj = await client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 });
-            return obj.ToByteArray();
+            return Utility.StrictUTF8.GetBytes(obj.ToString());
         }
 
         private static async Task<byte[]> GetHashAsync(Client client, Address addr, string[] ps, CancellationToken cancellation)
