@@ -40,13 +40,6 @@ namespace Neo.Plugins
         public async Task<(OracleResponseCode, string)> ProcessAsync(Uri uri, CancellationToken cancellation)
         {
             Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
-
-            if (!Settings.Default.AllowPrivateHost)
-            {
-                IPHostEntry entry = await Dns.GetHostEntryAsync(uri.Host);
-                if (entry.IsInternal())
-                    return (OracleResponseCode.Forbidden, null);
-            }
             try
             {
                 byte[] res = await GetAsync(uri, Settings.Default.NeoFS.EndPoint, cancellation);
