@@ -2,18 +2,18 @@ using Google.Protobuf;
 using Neo.Cryptography.ECC;
 using Neo.Network.P2P.Payloads;
 using Neo.Wallets;
-using NeoFS.API.v2.Client;
-using NeoFS.API.v2.Client.ObjectParams;
-using NeoFS.API.v2.Cryptography;
-using NeoFS.API.v2.Refs;
+using Neo.FileSystem.API.Client;
+using Neo.FileSystem.API.Client.ObjectParams;
+using Neo.FileSystem.API.Cryptography;
+using Neo.FileSystem.API.Refs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Object = NeoFS.API.v2.Object.Object;
-using Range = NeoFS.API.v2.Object.Range;
+using Object = Neo.FileSystem.API.Object.Object;
+using Range = Neo.FileSystem.API.Object.Range;
 
 namespace Neo.Plugins
 {
@@ -70,7 +70,7 @@ namespace Neo.Plugins
                 ContainerId = containerID,
                 ObjectId = objectID
             };
-            Client client = new(privateKey, host, 120000);
+            Client client = new(privateKey, host);
             var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
             tokenSource.CancelAfter(Settings.Default.NeoFS.Timeout);
             if (ps.Length == 2)
@@ -78,8 +78,8 @@ namespace Neo.Plugins
             return ps[2] switch
             {
                 "range" => await GetRangeAsync(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
-                "header" => GetHeader(client, objectAddr, tokenSource.Token),
-                "hash" => GetHash(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
+                "header" => await GetHeaderAsync(client, objectAddr, tokenSource.Token),
+                "hash" => await GetHashAsync(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
                 _ => throw new Exception("invalid command")
             };
         }
@@ -97,21 +97,21 @@ namespace Neo.Plugins
             return client.GetObjectPayloadRangeData(cancellation, new RangeDataParams() { Address = addr, Range = range }, new CallOptions { Ttl = 2 });
         }
 
-        private static byte[] GetHeader(Client client, Address addr, CancellationToken cancellation)
+        private static async Task<byte[]> GetHeaderAsync(Client client, Address addr, CancellationToken cancellation)
         {
-            var obj = client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 });
+            var obj = await client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 });
             return obj.ToByteArray();
         }
 
-        private static byte[] GetHash(Client client, Address addr, string[] ps, CancellationToken cancellation)
+        private static async Task<byte[]> GetHashAsync(Client client, Address addr, string[] ps, CancellationToken cancellation)
         {
             if (ps.Length == 0 || ps[0] == "")
             {
-                Object obj = client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 });
-                return obj.Header.PayloadHash.Sum.ToByteArray();
+                Object obj = await client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 });
+                return obj.PayloadChecksum.Sum.ToByteArray();
             }
             Range range = ParseRange(ps[0]);
-            List<byte[]> hashes = client.GetObjectPayloadRangeHash(cancellation, new RangeChecksumParams() { Address = addr, Ranges = new List<Range>() { range } }, new CallOptions { Ttl = 2 });
+            List<byte[]> hashes = await client.GetObjectPayloadRangeHash(cancellation, new RangeChecksumParams() { Address = addr, Ranges = new List<Range>() { range }, Type = ChecksumType.Sha256 }, new CallOptions { Ttl = 2 });
             if (hashes.Count == 0) throw new Exception(string.Format("{0}: empty response", "object range is invalid (expected 'Offset|Length'"));
             return hashes[0];
         }
