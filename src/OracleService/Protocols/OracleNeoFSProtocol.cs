@@ -85,7 +85,7 @@ namespace Neo.Plugins
 
         private static Task<byte[]> GetRangeAsync(Client client, Address addr, string[] ps, CancellationToken cancellation)
         {
-            if (ps.Length == 0) throw new Exception("object range is invalid (expected 'Offset|Length'");
+            if (ps.Length == 0) throw new FormatException("missing object range (expected 'Offset|Length')");
             Range range = ParseRange(ps[0]);
             return client.GetObjectPayloadRangeData(cancellation, new RangeDataParams() { Address = addr, Range = range }, new CallOptions { Ttl = 2 });
         }
@@ -104,8 +104,8 @@ namespace Neo.Plugins
                 return obj.PayloadChecksum.Sum.ToByteArray();
             }
             Range range = ParseRange(ps[0]);
-            List<byte[]> hashes = await client.GetObjectPayloadRangeHash(cancellation, new RangeChecksumParams() { Address = addr, Ranges = new List<Range>() { range }, Type = ChecksumType.Sha256 }, new CallOptions { Ttl = 2 });
-            if (hashes.Count == 0) throw new Exception(string.Format("{0}: empty response", "object range is invalid (expected 'Offset|Length')"));
+            List<byte[]> hashes = await client.GetObjectPayloadRangeHash(cancellation, new RangeChecksumParams() { Address = addr, Ranges = new List<Range>() { range }, Type = ChecksumType.Sha256, Salt = Array.Empty<byte>() }, new CallOptions { Ttl = 2 });
+            if (hashes.Count == 0) throw new Exception("empty response, object range is invalid (expected 'Offset|Length')");
             return hashes[0];
         }
 
@@ -113,7 +113,7 @@ namespace Neo.Plugins
         {
             string url = HttpUtility.UrlDecode(s);
             int sepIndex = url.IndexOf("|");
-            if (sepIndex < 0) throw new Exception("object range is invalid (expected 'Offset|Length'");
+            if (sepIndex < 0) throw new Exception("object range is invalid (expected 'Offset|Length')");
             ulong offset = ulong.Parse(url[..sepIndex]);
             ulong length = ulong.Parse(url[(sepIndex + 1)..]);
             return new Range() { Offset = offset, Length = length };
