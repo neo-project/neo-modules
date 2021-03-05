@@ -9,7 +9,6 @@ using Neo.FileSystem.API.Refs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Object = Neo.FileSystem.API.Object.Object;
@@ -106,7 +105,7 @@ namespace Neo.Plugins
             }
             Range range = ParseRange(ps[0]);
             List<byte[]> hashes = await client.GetObjectPayloadRangeHash(cancellation, new RangeChecksumParams() { Address = addr, Ranges = new List<Range>() { range }, Type = ChecksumType.Sha256 }, new CallOptions { Ttl = 2 });
-            if (hashes.Count == 0) throw new Exception(string.Format("{0}: empty response", "object range is invalid (expected 'Offset|Length'"));
+            if (hashes.Count == 0) throw new Exception(string.Format("{0}: empty response", "object range is invalid (expected 'Offset|Length')"));
             return hashes[0];
         }
 
@@ -116,7 +115,7 @@ namespace Neo.Plugins
             int sepIndex = url.IndexOf("|");
             if (sepIndex < 0) throw new Exception("object range is invalid (expected 'Offset|Length'");
             ulong offset = ulong.Parse(url[..sepIndex]);
-            ulong length = ulong.Parse(url[(sepIndex+1)..]);
+            ulong length = ulong.Parse(url[(sepIndex + 1)..]);
             return new Range() { Offset = offset, Length = length };
         }
     }
