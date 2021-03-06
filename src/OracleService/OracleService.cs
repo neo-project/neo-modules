@@ -108,8 +108,16 @@ namespace Neo.Plugins
                 Console.WriteLine("Please open wallet first!");
                 return;
             }
-            if (!CheckOracleAvaiblable(System.StoreView, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
-            if (!CheckOracleAccount(wallet, oracles)) throw new ArgumentException("There is no oracle account in wallet");
+            if (!CheckOracleAvaiblable(System.StoreView, out ECPoint[] oracles))
+            {
+                Console.WriteLine("The oracle service is unavailable");
+                return;
+            }
+            if (!CheckOracleAccount(wallet, oracles))
+            {
+                Console.WriteLine("There is no oracle account in wallet");
+                return;
+            }
 
             this.wallet = wallet;
             started = true;
