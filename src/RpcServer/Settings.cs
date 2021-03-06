@@ -46,19 +46,19 @@ namespace Neo.Plugins
         };
 
         public static RpcServerSettings Load(IConfigurationSection section) => new RpcServerSettings
-            {
-                Network = section.GetValue("Network", Default.Network),
-                BindAddress = IPAddress.Parse(section.GetSection("BindAddress").Value),
-                Port = ushort.Parse(section.GetSection("Port").Value),
-                SslCert = section.GetSection("SslCert").Value,
-                SslCertPassword = section.GetSection("SslCertPassword").Value,
-                TrustedAuthorities = section.GetSection("TrustedAuthorities").GetChildren().Select(p => p.Get<string>()).ToArray(),
-                RpcUser = section.GetSection("RpcUser").Value,
-                RpcPass = section.GetSection("RpcPass").Value,
-                MaxGasInvoke = (long)new BigDecimal(section.GetValue<decimal>("MaxGasInvoke", Default.MaxGasInvoke), NativeContract.GAS.Decimals).Value,
-                MaxFee = (long)new BigDecimal(section.GetValue<decimal>("MaxFee", Default.MaxFee), NativeContract.GAS.Decimals).Value,
-                DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray(),
-                MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", Default.MaxConcurrentConnections),
-            };
+        {
+            Network = section.GetValue("Network", Default.Network),
+            BindAddress = IPAddress.Parse(section.GetSection("BindAddress").Value),
+            Port = ushort.Parse(section.GetSection("Port").Value),
+            SslCert = section.GetSection("SslCert").Value,
+            SslCertPassword = section.GetSection("SslCertPassword").Value,
+            TrustedAuthorities = section.GetSection("TrustedAuthorities").GetChildren().Select(p => p.Get<string>()).ToArray(),
+            RpcUser = section.GetSection("RpcUser").Value,
+            RpcPass = section.GetSection("RpcPass").Value,
+            MaxGasInvoke = (long)new BigDecimal(section.GetValue<decimal>("MaxGasInvoke", Default.MaxGasInvoke), NativeContract.GAS.Decimals).Value,
+            MaxFee = (long)new BigDecimal(section.GetValue<decimal>("MaxFee", Default.MaxFee), NativeContract.GAS.Decimals).Value,
+            DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray(),
+            MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", Default.MaxConcurrentConnections),
+        };
     }
 }
