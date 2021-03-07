@@ -4,6 +4,7 @@ using Neo.IO;
 using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
+using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
@@ -111,8 +112,26 @@ namespace Neo.Plugins.MultiSigInbox
             }
         }
 
+        [ConsoleCommand("inbox send", Category = "MultiSigInbox", Description = "Send transaction")]
+        private void OnInboxSend(string transaction)
+        {
+            ContractParametersContext context = ContractParametersContext.FromJson(JObject.Parse(transaction), System.StoreView);
+
+            var tx = _db.Get(ReadOptions.Default, TxPrefix.Concat(context.Verifiable.Hash.ToArray()).ToArray());
+            if (tx != null)
+            {
+                Console.WriteLine("Transaction already sent");
+                return;
+            }
+
+            _db.Put(WriteOptions.Default, TxPrefix.Concat(context.Verifiable.ToArray()).ToArray(), Utility.StrictUTF8.GetBytes(transaction));
+
+            using var snapshot = System.GetSnapshot();
+            RelayContext(snapshot, context);
+        }
+
         [ConsoleCommand("inbox sign", Category = "MultiSigInbox", Description = "Sign transaction")]
-        private void OnInboxSign(UInt256 txHash, bool relay = false)
+        private void OnInboxSign(UInt256 txHash)
         {
             var tx = _db.Get(ReadOptions.Default, TxPrefix.Concat(txHash.ToArray()).ToArray());
             if (tx != null)
@@ -121,41 +140,44 @@ namespace Neo.Plugins.MultiSigInbox
                 var context = ContractParametersContext.FromJson(JObject.Parse(tx), snapshot);
 
                 Console.WriteLine(tx.AsSerializable<Transaction>().ToJson(System.Settings).ToString(true));
-
-                if (relay)
-                {
-                    if (context.Completed)
-                    {
-                        Log($"Send tx: hash={context.Verifiable.Hash}");
-                        System.Blockchain.Tell(context.Verifiable);
-                    }
-                    else
-                    {
-                        foreach (var wallet in _wallet.GetAccounts())
-                        {
-                            var msg = new ExtensiblePayload()
-                            {
-                                Category = "MultiSigInbox",
-                                Data = tx,
-                                ValidBlockStart = 0,
-                                ValidBlockEnd = NativeContract.Ledger.CurrentIndex(snapshot) + 1_000,
-                                Sender = wallet.ScriptHash
-                            };
-
-                            var sign = new ContractParametersContext(snapshot, msg);
-                            if (_wallet.Sign(sign))
-                            {
-                                msg.Witness = sign.GetWitnesses()[0];
-                                System.Blockchain.Tell(sign.Verifiable);
-                                break;
-                            }
-                        }
-                    }
-                }
+                RelayContext(snapshot, context);
             }
             else
             {
                 Console.WriteLine("Transaction was not found");
+            }
+        }
+
+        private void RelayContext(SnapshotCache snapshot, ContractParametersContext context)
+        {
+            if (context.Completed)
+            {
+                Log($"Send tx: hash={context.Verifiable.Hash}");
+                System.Blockchain.Tell(context.Verifiable);
+            }
+            else
+            {
+                var tx = _db.Get(ReadOptions.Default, TxPrefix.Concat(context.Verifiable.Hash.ToArray()).ToArray());
+
+                foreach (var wallet in _wallet.GetAccounts())
+                {
+                    var msg = new ExtensiblePayload()
+                    {
+                        Category = "MultiSigInbox",
+                        Data = tx,
+                        ValidBlockStart = 0,
+                        ValidBlockEnd = NativeContract.Ledger.CurrentIndex(snapshot) + 1_000,
+                        Sender = wallet.ScriptHash
+                    };
+
+                    var sign = new ContractParametersContext(snapshot, msg);
+                    if (_wallet.Sign(sign))
+                    {
+                        msg.Witness = sign.GetWitnesses()[0];
+                        System.Blockchain.Tell(sign.Verifiable);
+                        break;
+                    }
+                }
             }
         }
     }

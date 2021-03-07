@@ -85,12 +85,12 @@ namespace Neo.Plugins.MultiSigInbox
                     var newSignatures = newContext.GetSignatures(entry);
                     if (newSignatures == null) continue;
 
-                    var oldSignatures = oldContext.GetSignatures(entry)?.ToDictionary(u => (u.pubKey, u.signature));
+                    var oldSignatures = oldContext.GetSignatures(entry)?.ToDictionary(u => u.Key, u => u.Value);
                     foreach (var sig in newSignatures)
                     {
-                        if (oldSignatures?.ContainsKey(sig.pubKey) == true) continue;
+                        if (oldSignatures?.ContainsKey(sig.Key) == true) continue;
 
-                        if (oldContext.AddSignature(contract, sig.pubKey, sig.signature))
+                        if (oldContext.AddSignature(contract, sig.Key, sig.Value))
                         {
                             somethingAdded = true;
                         }
