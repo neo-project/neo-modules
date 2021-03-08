@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Neo.SmartContract.Native;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -12,39 +13,52 @@ namespace Neo.Plugins
 
         public Settings(IConfigurationSection section)
         {
-            Servers = section.GetSection(nameof(Servers)).GetChildren().Select(p => new RpcServerSettings(p)).ToArray();
+            Servers = section.GetSection(nameof(Servers)).GetChildren().Select(p => RpcServerSettings.Load(p)).ToArray();
         }
     }
 
-    class RpcServerSettings
+    public record RpcServerSettings
     {
-        public uint Network { get; }
-        public IPAddress BindAddress { get; }
-        public ushort Port { get; }
-        public string SslCert { get; }
-        public string SslCertPassword { get; }
-        public string[] TrustedAuthorities { get; }
-        public int MaxConcurrentConnections { get; }
-        public string RpcUser { get; }
-        public string RpcPass { get; }
-        public long MaxGasInvoke { get; }
-        public long MaxFee { get; }
-        public string[] DisabledMethods { get; }
+        public uint Network { get; init; }
+        public IPAddress BindAddress { get; init; }
+        public ushort Port { get; init; }
+        public string SslCert { get; init; }
+        public string SslCertPassword { get; init; }
+        public string[] TrustedAuthorities { get; init; }
+        public int MaxConcurrentConnections { get; init; }
+        public string RpcUser { get; init; }
+        public string RpcPass { get; init; }
+        public long MaxGasInvoke { get; init; }
+        public long MaxFee { get; init; }
+        public string[] DisabledMethods { get; init; }
 
-        public RpcServerSettings(IConfigurationSection section)
+        public static RpcServerSettings Default { get; } = new RpcServerSettings
         {
-            this.Network = section.GetValue("Network", 5195086u);
-            this.BindAddress = IPAddress.Parse(section.GetSection("BindAddress").Value);
-            this.Port = ushort.Parse(section.GetSection("Port").Value);
-            this.SslCert = section.GetSection("SslCert").Value;
-            this.SslCertPassword = section.GetSection("SslCertPassword").Value;
-            this.TrustedAuthorities = section.GetSection("TrustedAuthorities").GetChildren().Select(p => p.Get<string>()).ToArray();
-            this.RpcUser = section.GetSection("RpcUser").Value;
-            this.RpcPass = section.GetSection("RpcPass").Value;
-            this.MaxGasInvoke = (long)new BigDecimal(section.GetValue<decimal>("MaxGasInvoke", 10M), NativeContract.GAS.Decimals).Value;
-            this.MaxFee = (long)new BigDecimal(section.GetValue<decimal>("MaxFee", 0.1M), NativeContract.GAS.Decimals).Value;
-            this.DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray();
-            this.MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", 40);
-        }
+            Network = 5195086u,
+            BindAddress = IPAddress.None,
+            SslCert = string.Empty,
+            SslCertPassword = string.Empty,
+            MaxGasInvoke = (long)new BigDecimal(10M, NativeContract.GAS.Decimals).Value,
+            MaxFee = (long)new BigDecimal(0.1M, NativeContract.GAS.Decimals).Value,
+            TrustedAuthorities = Array.Empty<string>(),
+            DisabledMethods = Array.Empty<string>(),
+            MaxConcurrentConnections = 40,
+        };
+
+        public static RpcServerSettings Load(IConfigurationSection section) => new RpcServerSettings
+        {
+            Network = section.GetValue("Network", Default.Network),
+            BindAddress = IPAddress.Parse(section.GetSection("BindAddress").Value),
+            Port = ushort.Parse(section.GetSection("Port").Value),
+            SslCert = section.GetSection("SslCert").Value,
+            SslCertPassword = section.GetSection("SslCertPassword").Value,
+            TrustedAuthorities = section.GetSection("TrustedAuthorities").GetChildren().Select(p => p.Get<string>()).ToArray(),
+            RpcUser = section.GetSection("RpcUser").Value,
+            RpcPass = section.GetSection("RpcPass").Value,
+            MaxGasInvoke = (long)new BigDecimal(section.GetValue<decimal>("MaxGasInvoke", Default.MaxGasInvoke), NativeContract.GAS.Decimals).Value,
+            MaxFee = (long)new BigDecimal(section.GetValue<decimal>("MaxFee", Default.MaxFee), NativeContract.GAS.Decimals).Value,
+            DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray(),
+            MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", Default.MaxConcurrentConnections),
+        };
     }
 }
