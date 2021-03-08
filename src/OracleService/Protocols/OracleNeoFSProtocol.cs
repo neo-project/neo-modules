@@ -1,11 +1,10 @@
-using Google.Protobuf;
 using Neo.Cryptography.ECC;
-using Neo.Network.P2P.Payloads;
-using Neo.Wallets;
 using Neo.FileSystem.API.Client;
 using Neo.FileSystem.API.Client.ObjectParams;
 using Neo.FileSystem.API.Cryptography;
 using Neo.FileSystem.API.Refs;
+using Neo.Network.P2P.Payloads;
+using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,7 +51,7 @@ namespace Neo.Plugins
             }
         }
 
-        private async Task<byte[]> GetAsync(Uri uri, string host, CancellationToken cancellation)
+        private Task<byte[]> GetAsync(Uri uri, string host, CancellationToken cancellation)
         {
             string[] ps = uri.AbsolutePath.Split("/");
             if (ps.Length < 2) throw new FormatException("Invalid neofs url");
@@ -67,12 +66,12 @@ namespace Neo.Plugins
             var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
             tokenSource.CancelAfter(Settings.Default.NeoFS.Timeout);
             if (ps.Length == 2)
-                return await GetPayloadAsync(client, objectAddr, tokenSource.Token);
+                return GetPayloadAsync(client, objectAddr, tokenSource.Token);
             return ps[2] switch
             {
-                "range" => await GetRangeAsync(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
-                "header" => await GetHeaderAsync(client, objectAddr, tokenSource.Token),
-                "hash" => await GetHashAsync(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
+                "range" => GetRangeAsync(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
+                "header" => GetHeaderAsync(client, objectAddr, tokenSource.Token),
+                "hash" => GetHashAsync(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
                 _ => throw new Exception("invalid command")
             };
         }
