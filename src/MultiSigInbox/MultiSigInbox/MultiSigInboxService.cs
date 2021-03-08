@@ -43,15 +43,25 @@ namespace Neo.Plugins.MultiSigInbox
                 if (!started) return;
                 switch (message)
                 {
-                    case Blockchain.RelayResult rr:
-                        if (rr.Result == VerifyResult.Succeed)
+                    case Blockchain.PersistCompleted p:
                         {
-                            if (rr.Inventory is ExtensiblePayload payload && payload.Category == "MultiSigInbox")
-                                OnExtensiblePayload(payload);
-                            else if (rr.Inventory is Transaction tx)
-                                OnVerifiedTransaction(tx);
+                            foreach (var tx in p.Block.Transactions)
+                            {
+                                _db.Delete(WriteOptions.Default, MultiSigInboxPlugin.TxPrefix.Concat(tx.Hash.ToArray()).ToArray());
+                            }
+                            break;
                         }
-                        break;
+                    case Blockchain.RelayResult rr:
+                        {
+                            if (rr.Result == VerifyResult.Succeed)
+                            {
+                                if (rr.Inventory is ExtensiblePayload payload && payload.Category == "MultiSigInbox")
+                                    OnExtensiblePayload(payload);
+                                else if (rr.Inventory is Transaction tx)
+                                    OnVerifiedTransaction(tx);
+                            }
+                            break;
+                        }
                 }
             }
         }
