@@ -43,10 +43,7 @@ namespace Neo.Plugins
         private int counter;
         private NeoSystem System;
 
-        private static readonly IReadOnlyDictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>
-        {
-            ["https"] = new OracleHttpsProtocol()
-        };
+        private readonly Dictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>();
 
         public override string Description => "Built-in oracle plugin";
 
@@ -120,6 +117,8 @@ namespace Neo.Plugins
             }
 
             this.wallet = wallet;
+            protocols["https"] = new OracleHttpsProtocol();
+            protocols["neofs"] = new OracleNeoFSProtocol(wallet, oracles);
             started = true;
             timer = new Timer(OnTimer, null, RefreshInterval, Timeout.Infinite);
 

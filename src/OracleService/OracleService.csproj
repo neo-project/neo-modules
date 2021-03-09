@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
+    <PackageReference Include="NeoFS.API" Version="0.0.24" />
   </ItemGroup>
 
   <ItemGroup>
