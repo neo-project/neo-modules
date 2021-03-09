@@ -1,7 +1,6 @@
 using Akka.Actor;
 using Neo.ConsoleService;
 using Neo.IO;
-using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -27,11 +26,17 @@ namespace Neo.Plugins.MultiSigInbox
         private IActorRef service;
         private bool started = false;
         private NeoSystem System;
-        private DB _db;
+        private IStore store;
 
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            store?.Dispose();
         }
 
         protected override void OnSystemLoaded(NeoSystem system)
@@ -39,7 +44,7 @@ namespace Neo.Plugins.MultiSigInbox
             System = system;
             System.ServiceAdded += NeoSystem_ServiceAdded;
             string path = string.Format(Settings.Default.Path, system.Settings.Magic.ToString("X8"));
-            _db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
+            store = system.LoadStore(GetFullPath(path));
         }
 
         private void NeoSystem_ServiceAdded(object sender, object service)
@@ -72,7 +77,7 @@ namespace Neo.Plugins.MultiSigInbox
             if (started) return;
             started = true;
             _wallet = wallet;
-            service = System.ActorSystem.ActorOf(MultiSigInboxService.Props(System, _db, wallet));
+            service = System.ActorSystem.ActorOf(MultiSigInboxService.Props(System, store, wallet));
             service.Tell(new MultiSigInboxService.Start());
         }
 
@@ -82,15 +87,15 @@ namespace Neo.Plugins.MultiSigInbox
             var first = true;
             using var snapshot = System.GetSnapshot();
 
-            foreach (var entry in _db.Seek(ReadOptions.Default, TxPrefix, Persistence.SeekDirection.Forward, (k, v) => ContractParametersContext.FromJson(JObject.Parse(v), snapshot)))
+            foreach (var (k, v) in store.Seek(TxPrefix, SeekDirection.Forward))
             {
+                ContractParametersContext context = ContractParametersContext.FromJson(JObject.Parse(v), snapshot);
                 if (first)
                 {
                     first = false;
                     Console.WriteLine($"Transaction hashes");
                 }
-
-                Console.WriteLine($"{entry.Verifiable.Hash}");
+                Console.WriteLine($"{context.Verifiable.Hash}");
             }
             if (first)
             {
@@ -101,7 +106,7 @@ namespace Neo.Plugins.MultiSigInbox
         [ConsoleCommand("inbox read", Category = "MultiSigInbox", Description = "Read transaction")]
         private void OnInboxRead(UInt256 txHash)
         {
-            var json = _db.Get(ReadOptions.Default, TxPrefix.Concat(txHash.ToArray()).ToArray());
+            var json = store.TryGet(TxPrefix.Concat(txHash.ToArray()).ToArray());
             if (json != null)
             {
                 Console.WriteLine(Utility.StrictUTF8.GetString(json));
@@ -117,14 +122,14 @@ namespace Neo.Plugins.MultiSigInbox
         {
             ContractParametersContext context = ContractParametersContext.FromJson(JObject.Parse(transaction), System.StoreView);
 
-            var tx = _db.Get(ReadOptions.Default, TxPrefix.Concat(context.Verifiable.Hash.ToArray()).ToArray());
+            var tx = store.TryGet(TxPrefix.Concat(context.Verifiable.Hash.ToArray()).ToArray());
             if (tx != null)
             {
                 Console.WriteLine("Transaction already sent");
                 return;
             }
 
-            _db.Put(WriteOptions.Default, TxPrefix.Concat(context.Verifiable.ToArray()).ToArray(), Utility.StrictUTF8.GetBytes(transaction));
+            store.Put(TxPrefix.Concat(context.Verifiable.ToArray()).ToArray(), Utility.StrictUTF8.GetBytes(transaction));
 
             using var snapshot = System.GetSnapshot();
             RelayContext(snapshot, context);
@@ -133,7 +138,7 @@ namespace Neo.Plugins.MultiSigInbox
         [ConsoleCommand("inbox sign", Category = "MultiSigInbox", Description = "Sign transaction")]
         private void OnInboxSign(UInt256 txHash)
         {
-            var tx = _db.Get(ReadOptions.Default, TxPrefix.Concat(txHash.ToArray()).ToArray());
+            var tx = store.TryGet(TxPrefix.Concat(txHash.ToArray()).ToArray());
             if (tx != null)
             {
                 using var snapshot = System.GetSnapshot();
@@ -157,7 +162,7 @@ namespace Neo.Plugins.MultiSigInbox
             }
             else
             {
-                var tx = _db.Get(ReadOptions.Default, TxPrefix.Concat(context.Verifiable.Hash.ToArray()).ToArray());
+                var tx = store.TryGet(TxPrefix.Concat(context.Verifiable.Hash.ToArray()).ToArray());
 
                 foreach (var wallet in _wallet.GetAccounts())
                 {

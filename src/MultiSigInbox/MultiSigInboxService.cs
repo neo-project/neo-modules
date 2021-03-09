@@ -1,9 +1,9 @@
 using Akka.Actor;
 using Neo.IO;
-using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
+using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.Wallets;
 using System.Linq;
@@ -13,15 +13,15 @@ namespace Neo.Plugins.MultiSigInbox
     class MultiSigInboxService : UntypedActor
     {
         private readonly NeoSystem _system;
-        private readonly DB _db;
+        private readonly IStore store;
         private readonly Wallet _wallet;
         private bool started = false;
         public class Start { }
 
-        public MultiSigInboxService(NeoSystem system, DB db, Wallet wallet)
+        public MultiSigInboxService(NeoSystem system, IStore store, Wallet wallet)
            : this(system)
         {
-            this._db = db;
+            this.store = store;
             this._wallet = wallet;
         }
 
@@ -47,7 +47,7 @@ namespace Neo.Plugins.MultiSigInbox
                         {
                             foreach (var tx in p.Block.Transactions)
                             {
-                                _db.Delete(WriteOptions.Default, MultiSigInboxPlugin.TxPrefix.Concat(tx.Hash.ToArray()).ToArray());
+                                store.Delete(MultiSigInboxPlugin.TxPrefix.Concat(tx.Hash.ToArray()).ToArray());
                             }
                             break;
                         }
@@ -69,7 +69,7 @@ namespace Neo.Plugins.MultiSigInbox
         private void OnVerifiedTransaction(Transaction tx)
         {
             // Remove tx from inbox
-            _db.Delete(WriteOptions.Default, MultiSigInboxPlugin.TxPrefix.Concat(tx.Hash.ToArray()).ToArray());
+            store.Delete(MultiSigInboxPlugin.TxPrefix.Concat(tx.Hash.ToArray()).ToArray());
         }
 
         private void OnExtensiblePayload(ExtensiblePayload payload)
@@ -80,7 +80,7 @@ namespace Neo.Plugins.MultiSigInbox
             var newContext = ContractParametersContext.FromJson(JObject.Parse(payload.Data), snapshot);
             if (newContext.Completed) return;
 
-            var tx = _db.Get(ReadOptions.Default, MultiSigInboxPlugin.TxPrefix.Concat(newContext.Verifiable.Hash.ToArray()).ToArray());
+            var tx = store.TryGet(MultiSigInboxPlugin.TxPrefix.Concat(newContext.Verifiable.Hash.ToArray()).ToArray());
             if (tx != null)
             {
                 // merge context
@@ -109,13 +109,13 @@ namespace Neo.Plugins.MultiSigInbox
 
                 if (somethingAdded)
                 {
-                    _db.Put(WriteOptions.Default, MultiSigInboxPlugin.TxPrefix.Concat(oldContext.Verifiable.Hash.ToArray()).ToArray(), oldContext.ToJson().ToByteArray(false));
+                    store.Put(MultiSigInboxPlugin.TxPrefix.Concat(oldContext.Verifiable.Hash.ToArray()).ToArray(), oldContext.ToJson().ToByteArray(false));
                 }
             }
             else
             {
                 // new context
-                _db.Put(WriteOptions.Default, MultiSigInboxPlugin.TxPrefix.Concat(newContext.Verifiable.Hash.ToArray()).ToArray(), newContext.ToJson().ToByteArray(false));
+                store.Put(MultiSigInboxPlugin.TxPrefix.Concat(newContext.Verifiable.Hash.ToArray()).ToArray(), newContext.ToJson().ToByteArray(false));
             }
         }
 
@@ -138,9 +138,9 @@ namespace Neo.Plugins.MultiSigInbox
             base.PostStop();
         }
 
-        public static Props Props(NeoSystem system, DB db, Wallet wallet)
+        public static Props Props(NeoSystem system, IStore store, Wallet wallet)
         {
-            return Akka.Actor.Props.Create(() => new MultiSigInboxService(system, db, wallet));
+            return Akka.Actor.Props.Create(() => new MultiSigInboxService(system, store, wallet));
         }
     }
 }
