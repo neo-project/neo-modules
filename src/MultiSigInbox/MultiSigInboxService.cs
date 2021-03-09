@@ -55,7 +55,7 @@ namespace Neo.Plugins.MultiSigInbox
                         {
                             if (rr.Result == VerifyResult.Succeed)
                             {
-                                if (rr.Inventory is ExtensiblePayload payload && payload.Category == "MultiSigInbox")
+                                if (rr.Inventory is ExtensiblePayload payload && payload.Category == MultiSigInboxPlugin.MutiSigPayloadCategory)
                                     OnExtensiblePayload(payload);
                                 else if (rr.Inventory is Transaction tx)
                                     OnVerifiedTransaction(tx);

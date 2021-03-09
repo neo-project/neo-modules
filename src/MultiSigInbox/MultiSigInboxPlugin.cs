@@ -15,7 +15,7 @@ namespace Neo.Plugins.MultiSigInbox
 {
     public class MultiSigInboxPlugin : Plugin, IP2PPlugin
     {
-        public const string StatePayloadCategory = "MultiSignatureInbox";
+        public const string MutiSigPayloadCategory = "MultiSigInbox";
         public override string Name => "MultiSigInbox";
         public override string Description => "Enables MultiSigInbox for the node";
 
@@ -169,7 +169,7 @@ namespace Neo.Plugins.MultiSigInbox
                 {
                     var msg = new ExtensiblePayload()
                     {
-                        Category = "MultiSigInbox",
+                        Category = MutiSigPayloadCategory,
                         Data = tx,
                         ValidBlockStart = 0,
                         ValidBlockEnd = NativeContract.Ledger.CurrentIndex(snapshot) + 1_000,
