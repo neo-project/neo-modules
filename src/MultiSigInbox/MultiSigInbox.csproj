@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\LevelDBStore\LevelDBStore.csproj" />
+    <ProjectReference Include="..\LevelDBStore\LevelDBStore.csproj" />
   </ItemGroup>
 
   <ItemGroup>

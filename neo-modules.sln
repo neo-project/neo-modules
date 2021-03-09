@@ -36,7 +36,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBFTPlugin", "src\DBFTPlugi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Plugins.RpcServer.Tests", "tests\Neo.Plugins.RpcServer.Tests\Neo.Plugins.RpcServer.Tests.csproj", "{0DDAF738-0FD3-40A7-A433-C514BCDDF542}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiSigInbox", "src\MultiSigInbox\MultiSigInbox\MultiSigInbox.csproj", "{56452BCF-38ED-46AB-84B0-83EC234DE6D4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiSigInbox", "src\MultiSigInbox\MultiSigInbox.csproj", "{56452BCF-38ED-46AB-84B0-83EC234DE6D4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
