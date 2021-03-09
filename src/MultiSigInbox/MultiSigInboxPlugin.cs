@@ -41,6 +41,7 @@ namespace Neo.Plugins.MultiSigInbox
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
+            if (system.Settings.Magic != Settings.Default.Network) return;
             System = system;
             System.ServiceAdded += NeoSystem_ServiceAdded;
             string path = string.Format(Settings.Default.Path, system.Settings.Magic.ToString("X8"));

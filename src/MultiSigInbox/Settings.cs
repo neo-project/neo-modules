@@ -4,6 +4,7 @@ namespace Neo.Plugins.MultiSigInbox
 {
     internal class Settings
     {
+        public uint Network { get; }
         public string Path { get; }
         public bool AutoStart { get; }
 
@@ -11,6 +12,7 @@ namespace Neo.Plugins.MultiSigInbox
 
         private Settings(IConfigurationSection section)
         {
+            Network = section.GetValue("Network", 5195086u);
             Path = section.GetValue("Path", "Data_MultiSigInbox_{0}");
             AutoStart = section.GetValue("AutoStart", false);
         }
