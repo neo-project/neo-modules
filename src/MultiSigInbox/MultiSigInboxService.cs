@@ -109,7 +109,17 @@ namespace Neo.Plugins.MultiSigInbox
 
                 if (somethingAdded)
                 {
-                    store.Put(MultiSigInboxPlugin.TxPrefix.Concat(oldContext.Verifiable.Hash.ToArray()).ToArray(), oldContext.ToJson().ToByteArray(false));
+                    if (oldContext.Completed)
+                    {
+                        oldContext.Verifiable.Witnesses = oldContext.GetWitnesses();
+                        _system.Blockchain.Tell(oldContext.Verifiable);
+
+                        store.Delete(MultiSigInboxPlugin.TxPrefix.Concat(oldContext.Verifiable.Hash.ToArray()).ToArray());
+                    }
+                    else
+                    {
+                        store.Put(MultiSigInboxPlugin.TxPrefix.Concat(oldContext.Verifiable.Hash.ToArray()).ToArray(), oldContext.ToJson().ToByteArray(false));
+                    }
                 }
             }
             else
