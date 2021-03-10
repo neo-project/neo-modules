@@ -11,8 +11,6 @@ namespace Neo.Consensus
         public uint MaxBlockSize { get; }
         public long MaxBlockSystemFee { get; }
 
-        public static Settings Default { get; private set; }
-
         public Settings(IConfigurationSection section)
         {
             RecoveryLogs = section.GetValue("RecoveryLogs", "ConsensusState");
@@ -21,11 +19,6 @@ namespace Neo.Consensus
             Network = section.GetValue("Network", 5195086u);
             MaxBlockSize = section.GetValue("MaxBlockSize", 262144u);
             MaxBlockSystemFee = section.GetValue("MaxBlockSystemFee", 900000000000L);
-        }
-
-        public static void Load(IConfigurationSection section)
-        {
-            Default = new Settings(section);
         }
     }
 }

@@ -12,17 +12,18 @@ namespace Neo.Consensus
         private IActorRef consensus;
         private bool started = false;
         private NeoSystem neoSystem;
+        private Settings settings;
 
         public override string Description => "Consensus plugin with dBFT algorithm.";
 
         protected override void Configure()
         {
-            Settings.Load(GetConfiguration());
+            settings = new Settings(GetConfiguration());
         }
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            if (system.Settings.Magic != Settings.Default.Network) return;
+            if (system.Settings.Magic != settings.Network) return;
             neoSystem = system;
             neoSystem.ServiceAdded += NeoSystem_ServiceAdded;
         }
@@ -33,7 +34,7 @@ namespace Neo.Consensus
             {
                 walletProvider = service as IWalletProvider;
                 neoSystem.ServiceAdded -= NeoSystem_ServiceAdded;
-                if (Settings.Default.AutoStart)
+                if (settings.AutoStart)
                 {
                     walletProvider.WalletChanged += WalletProvider_WalletChanged;
                 }
@@ -56,7 +57,7 @@ namespace Neo.Consensus
         {
             if (started) return;
             started = true;
-            consensus = neoSystem.ActorSystem.ActorOf(ConsensusService.Props(neoSystem, Settings.Default, wallet));
+            consensus = neoSystem.ActorSystem.ActorOf(ConsensusService.Props(neoSystem, settings, wallet));
             consensus.Tell(new ConsensusService.Start());
         }
 
