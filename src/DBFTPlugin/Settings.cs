@@ -2,7 +2,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Neo.Consensus
 {
-    class Settings
+    public class Settings
     {
         public string RecoveryLogs { get; }
         public bool IgnoreRecoveryLogs { get; }
@@ -13,7 +13,7 @@ namespace Neo.Consensus
 
         public static Settings Default { get; private set; }
 
-        private Settings(IConfigurationSection section)
+        public Settings(IConfigurationSection section)
         {
             RecoveryLogs = section.GetValue("RecoveryLogs", "ConsensusState");
             IgnoreRecoveryLogs = section.GetValue("IgnoreRecoveryLogs", false);

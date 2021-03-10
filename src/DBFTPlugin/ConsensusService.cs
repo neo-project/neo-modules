@@ -45,17 +45,21 @@ namespace Neo.Consensus
         /// This variable is only true during OnRecoveryMessageReceived
         /// </summary>
         private bool isRecovering = false;
+        private Settings dbftSettings;
+        internal static NeoSystem System;
 
-        public ConsensusService(IActorRef localNode, IActorRef taskManager, IActorRef blockchain, IStore store, Wallet wallet)
-            : this(localNode, taskManager, blockchain, new ConsensusContext(wallet, store))
+        public ConsensusService(NeoSystem neoSystem, Settings settings, Wallet wallet)
+            : this(neoSystem, settings, new ConsensusContext(neoSystem, settings, wallet))
         {
         }
 
-        internal ConsensusService(IActorRef localNode, IActorRef taskManager, IActorRef blockchain, ConsensusContext context)
+        internal ConsensusService(NeoSystem neoSystem, Settings settings, ConsensusContext context)
         {
-            this.localNode = localNode;
-            this.taskManager = taskManager;
-            this.blockchain = blockchain;
+            System = neoSystem;
+            localNode = System.LocalNode;
+            taskManager = System.TaskManager;
+            blockchain = System.Blockchain;
+            dbftSettings = settings;
             this.context = context;
             Context.System.EventStream.Subscribe(Self, typeof(Blockchain.PersistCompleted));
             Context.System.EventStream.Subscribe(Self, typeof(Blockchain.RelayResult));
@@ -65,7 +69,7 @@ namespace Neo.Consensus
         {
             if (verify)
             {
-                VerifyResult result = tx.Verify(DBFTPlugin.System.Settings, context.Snapshot, context.VerificationContext);
+                VerifyResult result = tx.Verify(System.Settings, context.Snapshot, context.VerificationContext);
                 if (result != VerifyResult.Succeed)
                 {
                     Log($"Rejected tx: {tx.Hash}, {result}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
@@ -87,14 +91,14 @@ namespace Neo.Consensus
                 if (context.IsPrimary || context.WatchOnly) return true;
 
                 // Check maximum block size via Native Contract policy
-                if (context.GetExpectedBlockSize() > Settings.Default.MaxBlockSize)
+                if (context.GetExpectedBlockSize() > dbftSettings.MaxBlockSize)
                 {
                     Log($"Rejected block: {context.Block.Index} The size exceed the policy", LogLevel.Warning);
                     RequestChangeView(ChangeViewReason.BlockRejectedByPolicy);
                     return false;
                 }
                 // Check maximum block system fee via Native Contract policy
-                if (context.GetExpectedBlockSystemFee() > Settings.Default.MaxBlockSystemFee)
+                if (context.GetExpectedBlockSystemFee() > dbftSettings.MaxBlockSystemFee)
                 {
                     Log($"Rejected block: {context.Block.Index} The system fee exceed the policy", LogLevel.Warning);
                     RequestChangeView(ChangeViewReason.BlockRejectedByPolicy);
@@ -164,7 +168,7 @@ namespace Neo.Consensus
                 context.Save();
                 localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
                 // Set timer, so we will resend the commit in case of a networking issue
-                ChangeTimer(TimeSpan.FromMilliseconds(DBFTPlugin.System.Settings.MillisecondsPerBlock));
+                ChangeTimer(TimeSpan.FromMilliseconds(System.Settings.MillisecondsPerBlock));
                 CheckCommits();
             }
         }
@@ -180,11 +184,11 @@ namespace Neo.Consensus
             {
                 if (isRecovering)
                 {
-                    ChangeTimer(TimeSpan.FromMilliseconds(DBFTPlugin.System.Settings.MillisecondsPerBlock << (viewNumber + 1)));
+                    ChangeTimer(TimeSpan.FromMilliseconds(System.Settings.MillisecondsPerBlock << (viewNumber + 1)));
                 }
                 else
                 {
-                    TimeSpan span = DBFTPlugin.System.Settings.TimePerBlock;
+                    TimeSpan span = System.Settings.TimePerBlock;
                     if (block_received_index + 1 == context.Block.Index)
                     {
                         var diff = TimeProvider.Current.UtcNow - block_received_time;
@@ -198,7 +202,7 @@ namespace Neo.Consensus
             }
             else
             {
-                ChangeTimer(TimeSpan.FromMilliseconds(DBFTPlugin.System.Settings.MillisecondsPerBlock << (viewNumber + 1)));
+                ChangeTimer(TimeSpan.FromMilliseconds(System.Settings.MillisecondsPerBlock << (viewNumber + 1)));
             }
         }
 
@@ -241,7 +245,7 @@ namespace Neo.Consensus
             {
                 Log($"{nameof(OnCommitReceived)}: height={commit.BlockIndex} view={commit.ViewNumber} index={commit.ValidatorIndex} nc={context.CountCommitted} nf={context.CountFailed}");
 
-                byte[] hashData = context.EnsureHeader()?.GetSignData(DBFTPlugin.System.Settings.Magic);
+                byte[] hashData = context.EnsureHeader()?.GetSignData(System.Settings.Magic);
                 if (hashData == null)
                 {
                     existingCommitPayload = payload;
@@ -263,7 +267,7 @@ namespace Neo.Consensus
         // this function increases existing timer (never decreases) with a value proportional to `maxDelayInBlockTimes`*`Blockchain.MillisecondsPerBlock`
         private void ExtendTimerByFactor(int maxDelayInBlockTimes)
         {
-            TimeSpan nextDelay = expected_delay - (TimeProvider.Current.UtcNow - clock_started) + TimeSpan.FromMilliseconds(maxDelayInBlockTimes * DBFTPlugin.System.Settings.MillisecondsPerBlock / (double)context.M);
+            TimeSpan nextDelay = expected_delay - (TimeProvider.Current.UtcNow - clock_started) + TimeSpan.FromMilliseconds(maxDelayInBlockTimes * System.Settings.MillisecondsPerBlock / (double)context.M);
             if (!context.WatchOnly && !context.ViewChanging && !context.CommitSent && (nextDelay > TimeSpan.Zero))
                 ChangeTimer(nextDelay);
         }
@@ -412,9 +416,9 @@ namespace Neo.Consensus
             if (context.RequestSentOrReceived || context.NotAcceptingPayloadsDueToViewChanging) return;
             if (message.ValidatorIndex != context.Block.PrimaryIndex || message.ViewNumber != context.ViewNumber) return;
             if (message.Version != context.Block.Version || message.PrevHash != context.Block.PrevHash) return;
-            if (message.TransactionHashes.Length > DBFTPlugin.System.Settings.MaxTransactionsPerBlock) return;
+            if (message.TransactionHashes.Length > System.Settings.MaxTransactionsPerBlock) return;
             Log($"{nameof(OnPrepareRequestReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} tx={message.TransactionHashes.Length}");
-            if (message.Timestamp <= context.PrevHeader.Timestamp || message.Timestamp > TimeProvider.Current.UtcNow.AddMilliseconds(8 * DBFTPlugin.System.Settings.MillisecondsPerBlock).ToTimestampMS())
+            if (message.Timestamp <= context.PrevHeader.Timestamp || message.Timestamp > TimeProvider.Current.UtcNow.AddMilliseconds(8 * System.Settings.MillisecondsPerBlock).ToTimestampMS())
             {
                 Log($"Timestamp incorrect: {message.Timestamp}", LogLevel.Warning);
                 return;
@@ -438,7 +442,7 @@ namespace Neo.Consensus
                     if (!context.GetMessage<PrepareResponse>(context.PreparationPayloads[i]).PreparationHash.Equals(payload.Hash))
                         context.PreparationPayloads[i] = null;
             context.PreparationPayloads[message.ValidatorIndex] = payload;
-            byte[] hashData = context.EnsureHeader().GetSignData(DBFTPlugin.System.Settings.Magic);
+            byte[] hashData = context.EnsureHeader().GetSignData(System.Settings.Magic);
             for (int i = 0; i < context.CommitPayloads.Length; i++)
                 if (context.GetMessage(context.CommitPayloads[i])?.ViewNumber == context.ViewNumber)
                     if (!Crypto.VerifySignature(hashData, context.GetMessage<Commit>(context.CommitPayloads[i]).Signature, context.Validators[i]))
@@ -451,7 +455,7 @@ namespace Neo.Consensus
                 return;
             }
 
-            Dictionary<UInt256, Transaction> mempoolVerified = DBFTPlugin.System.MemPool.GetVerifiedTransactions().ToDictionary(p => p.Hash);
+            Dictionary<UInt256, Transaction> mempoolVerified = System.MemPool.GetVerifiedTransactions().ToDictionary(p => p.Hash);
             List<Transaction> unverified = new List<Transaction>();
             foreach (UInt256 hash in context.TransactionHashes)
             {
@@ -462,7 +466,7 @@ namespace Neo.Consensus
                 }
                 else
                 {
-                    if (DBFTPlugin.System.MemPool.TryGetValue(hash, out tx))
+                    if (System.MemPool.TryGetValue(hash, out tx))
                         unverified.Add(tx);
                 }
             }
@@ -536,7 +540,7 @@ namespace Neo.Consensus
         {
             Log("OnStart");
             started = true;
-            if (!Settings.Default.IgnoreRecoveryLogs && context.Load())
+            if (!dbftSettings.IgnoreRecoveryLogs && context.Load())
             {
                 if (context.Transactions != null)
                 {
@@ -572,7 +576,7 @@ namespace Neo.Consensus
                     // Re-send commit periodically by sending recover message in case of a network issue.
                     Log($"Sending {nameof(RecoveryMessage)} to resend {nameof(Commit)}");
                     localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeRecoveryMessage() });
-                    ChangeTimer(TimeSpan.FromMilliseconds(DBFTPlugin.System.Settings.MillisecondsPerBlock << 1));
+                    ChangeTimer(TimeSpan.FromMilliseconds(System.Settings.MillisecondsPerBlock << 1));
                 }
                 else
                 {
@@ -606,9 +610,9 @@ namespace Neo.Consensus
             base.PostStop();
         }
 
-        public static Props Props(IActorRef localNode, IActorRef taskManager, IActorRef blockchain, IStore store, Wallet wallet)
+        public static Props Props(NeoSystem neoSystem, Settings dbftSettings, Wallet wallet)
         {
-            return Akka.Actor.Props.Create(() => new ConsensusService(localNode, taskManager, blockchain, store, wallet));
+            return Akka.Actor.Props.Create(() => new ConsensusService(neoSystem, dbftSettings, wallet));
         }
 
         private void RequestChangeView(ChangeViewReason reason)
@@ -619,7 +623,7 @@ namespace Neo.Consensus
             // The latter may happen by nodes in higher views with, at least, `M` proofs
             byte expectedView = context.ViewNumber;
             expectedView++;
-            ChangeTimer(TimeSpan.FromMilliseconds(DBFTPlugin.System.Settings.MillisecondsPerBlock << (expectedView + 1)));
+            ChangeTimer(TimeSpan.FromMilliseconds(System.Settings.MillisecondsPerBlock << (expectedView + 1)));
             if ((context.CountCommitted + context.CountFailed) > context.F)
             {
                 RequestRecovery();
@@ -653,7 +657,7 @@ namespace Neo.Consensus
                 foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes))
                     localNode.Tell(Message.Create(MessageCommand.Inv, payload));
             }
-            ChangeTimer(TimeSpan.FromMilliseconds((DBFTPlugin.System.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? DBFTPlugin.System.Settings.MillisecondsPerBlock : 0)));
+            ChangeTimer(TimeSpan.FromMilliseconds((System.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? System.Settings.MillisecondsPerBlock : 0)));
         }
     }
 }
