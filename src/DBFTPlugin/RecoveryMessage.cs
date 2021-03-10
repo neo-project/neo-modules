@@ -34,23 +34,12 @@ namespace Neo.Consensus
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);
-            ChangeViewMessages = new Dictionary<int, ChangeViewPayloadCompact>();
-            ulong count = reader.ReadVarInt(validatorsCount);
-            for (ulong i = 0; i < count; i++)
-            {
-                ChangeViewPayloadCompact payload = new();
-                payload.Deserialize(reader);
-
-                if (payload.ValidatorIndex >= validatorsCount)
-                    throw new FormatException();
-
-                ChangeViewMessages.Add(payload.ValidatorIndex, payload);
-            }
+            ChangeViewMessages = reader.ReadSerializableArray<ChangeViewPayloadCompact>((int)validatorsCount).ToDictionary(p => (int)p.ValidatorIndex);
+            if (ChangeViewMessages.Values.Any(p => p.ValidatorIndex >= validatorsCount))
+                throw new FormatException();
             if (reader.ReadBoolean())
             {
-                PrepareRequestMessage = new PrepareRequest();
-                PrepareRequestMessage.Deserialize(reader);
-
+                PrepareRequestMessage = reader.ReadSerializable<PrepareRequest>();
                 if (PrepareRequestMessage.ValidatorIndex >= validatorsCount)
                     throw new FormatException();
             }
@@ -61,31 +50,12 @@ namespace Neo.Consensus
                     PreparationHash = new UInt256(reader.ReadFixedBytes(preparationHashSize));
             }
 
-            PreparationMessages = new Dictionary<int, PreparationPayloadCompact>();
-            count = reader.ReadVarInt(validatorsCount);
-            for (ulong i = 0; i < count; i++)
-            {
-                PreparationPayloadCompact payload = new();
-                payload.Deserialize(reader);
-
-                if (payload.ValidatorIndex >= validatorsCount)
-                    throw new FormatException();
-
-                PreparationMessages.Add(payload.ValidatorIndex, payload);
-            }
-
-            CommitMessages = new Dictionary<int, CommitPayloadCompact>();
-            count = reader.ReadVarInt(validatorsCount);
-            for (ulong i = 0; i < count; i++)
-            {
-                CommitPayloadCompact payload = new();
-                payload.Deserialize(reader);
-
-                if (payload.ValidatorIndex >= validatorsCount)
-                    throw new FormatException();
-
-                CommitMessages.Add(payload.ValidatorIndex, payload);
-            }
+            PreparationMessages = reader.ReadSerializableArray<PreparationPayloadCompact>((int)validatorsCount).ToDictionary(p => (int)p.ValidatorIndex);
+            if (PreparationMessages.Values.Any(p => p.ValidatorIndex >= validatorsCount))
+                throw new FormatException();
+            CommitMessages = reader.ReadSerializableArray<CommitPayloadCompact>((int)validatorsCount).ToDictionary(p => (int)p.ValidatorIndex);
+            if (CommitMessages.Values.Any(p => p.ValidatorIndex >= validatorsCount))
+                throw new FormatException();
         }
 
         internal ExtensiblePayload[] GetChangeViewPayloads(ConsensusContext context)
