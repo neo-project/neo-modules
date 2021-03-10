@@ -130,7 +130,7 @@ namespace Neo.Plugins.MultiSigInbox
                 return;
             }
 
-            store.Put(TxPrefix.Concat(context.Verifiable.ToArray()).ToArray(), Utility.StrictUTF8.GetBytes(transaction));
+            store.Put(TxPrefix.Concat(context.Verifiable.Hash.ToArray()).ToArray(), Utility.StrictUTF8.GetBytes(transaction));
 
             using var snapshot = System.GetSnapshot();
             RelayContext(snapshot, context);
