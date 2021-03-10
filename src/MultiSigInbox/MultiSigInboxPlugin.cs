@@ -159,6 +159,7 @@ namespace Neo.Plugins.MultiSigInbox
             if (context.Completed)
             {
                 Log($"Send tx: hash={context.Verifiable.Hash}");
+                context.Verifiable.Witnesses = context.GetWitnesses();
                 System.Blockchain.Tell(context.Verifiable);
             }
             else
@@ -177,7 +178,7 @@ namespace Neo.Plugins.MultiSigInbox
                     };
 
                     var sign = new ContractParametersContext(snapshot, msg);
-                    if (_wallet.Sign(sign))
+                    if (_wallet.Sign(sign) && sign.Completed)
                     {
                         msg.Witness = sign.GetWitnesses()[0];
                         System.Blockchain.Tell(sign.Verifiable);
