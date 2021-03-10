@@ -8,6 +8,7 @@ namespace Neo.Consensus
     {
         public class ChangeViewPayloadCompact : ISerializable
         {
+            private readonly byte validatorsCount;
             public byte ValidatorIndex;
             public byte OriginalViewNumber;
             public ulong Timestamp;
@@ -19,17 +20,22 @@ namespace Neo.Consensus
                 sizeof(ulong) +                 //Timestamp
                 InvocationScript.GetVarSize();  //InvocationScript
 
-            void ISerializable.Deserialize(BinaryReader reader)
+            public ChangeViewPayloadCompact(byte validatorsCount)
+            {
+                this.validatorsCount = validatorsCount;
+            }
+
+            public void Deserialize(BinaryReader reader)
             {
                 ValidatorIndex = reader.ReadByte();
-                if (ValidatorIndex >= ConsensusService.System.Settings.ValidatorsCount)
+                if (ValidatorIndex >= validatorsCount)
                     throw new FormatException();
                 OriginalViewNumber = reader.ReadByte();
                 Timestamp = reader.ReadUInt64();
                 InvocationScript = reader.ReadVarBytes(1024);
             }
 
-            void ISerializable.Serialize(BinaryWriter writer)
+            public void Serialize(BinaryWriter writer)
             {
                 writer.Write(ValidatorIndex);
                 writer.Write(OriginalViewNumber);

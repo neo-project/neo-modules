@@ -18,8 +18,8 @@ namespace Neo.Consensus
             + sizeof(ulong)                     //Timestamp
             + TransactionHashes.GetVarSize();   //TransactionHashes
 
-        public PrepareRequest()
-            : base(ConsensusMessageType.PrepareRequest)
+        public PrepareRequest(byte validatorsCount)
+            : base(validatorsCount, ConsensusMessageType.PrepareRequest)
         {
         }
 

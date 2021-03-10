@@ -6,6 +6,7 @@ namespace Neo.Consensus
 {
     public abstract class ConsensusMessage : ISerializable
     {
+        protected readonly byte validatorsCount;
         public readonly ConsensusMessageType Type;
         public uint BlockIndex;
         public byte ValidatorIndex;
@@ -17,8 +18,14 @@ namespace Neo.Consensus
             sizeof(byte) +                  //ValidatorIndex
             sizeof(byte);                   //ViewNumber
 
-        protected ConsensusMessage(ConsensusMessageType type)
+        public ConsensusMessage(byte validatorsCount)
         {
+            this.validatorsCount = validatorsCount;
+        }
+
+        protected ConsensusMessage(byte validatorsCount, ConsensusMessageType type)
+        {
+            this.validatorsCount = validatorsCount;
             if (!Enum.IsDefined(typeof(ConsensusMessageType), type))
                 throw new ArgumentOutOfRangeException(nameof(type));
             this.Type = type;
@@ -30,18 +37,29 @@ namespace Neo.Consensus
                 throw new FormatException();
             BlockIndex = reader.ReadUInt32();
             ValidatorIndex = reader.ReadByte();
-            if (ValidatorIndex >= ConsensusService.System.Settings.ValidatorsCount)
+            if (ValidatorIndex >= validatorsCount)
                 throw new FormatException();
             ViewNumber = reader.ReadByte();
         }
 
-        public static ConsensusMessage DeserializeFrom(byte[] data)
+        public static ConsensusMessage DeserializeFrom(byte[] data, byte validatorsCount)
         {
-            ConsensusMessageType type = (ConsensusMessageType)data[0];
-            Type t = typeof(ConsensusMessage);
-            t = t.Assembly.GetType($"{t.Namespace}.{type}", false);
-            if (t is null) throw new FormatException();
-            return (ConsensusMessage)data.AsSerializable(t);
+            using MemoryStream ms = new(data, false);
+            using BinaryReader reader = new(ms, Utility.StrictUTF8);
+
+            ConsensusMessageType t = (ConsensusMessageType)reader.ReadByte();
+            ConsensusMessage message = t switch
+            {
+                ConsensusMessageType.PrepareRequest => new PrepareRequest(validatorsCount),
+                ConsensusMessageType.PrepareResponse => new PrepareResponse(validatorsCount),
+                ConsensusMessageType.ChangeView => new ChangeView(validatorsCount),
+                ConsensusMessageType.Commit => new Commit(validatorsCount),
+                ConsensusMessageType.RecoveryRequest => new RecoveryRequest(validatorsCount),
+                ConsensusMessageType.RecoveryMessage => new RecoveryMessage(validatorsCount),
+                _ => throw new FormatException(),
+            };
+            message.Deserialize(reader);
+            return message;
         }
 
         public virtual void Serialize(BinaryWriter writer)

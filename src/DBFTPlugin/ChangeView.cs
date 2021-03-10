@@ -25,7 +25,7 @@ namespace Neo.Consensus
             sizeof(ulong) +             // Timestamp
             sizeof(ChangeViewReason);   // Reason
 
-        public ChangeView() : base(ConsensusMessageType.ChangeView) { }
+        public ChangeView(byte validatorsCount) : base(validatorsCount, ConsensusMessageType.ChangeView) { }
 
         public override void Deserialize(BinaryReader reader)
         {

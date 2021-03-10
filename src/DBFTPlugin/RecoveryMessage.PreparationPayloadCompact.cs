@@ -8,6 +8,7 @@ namespace Neo.Consensus
     {
         public class PreparationPayloadCompact : ISerializable
         {
+            private readonly byte validatorsCount;
             public byte ValidatorIndex;
             public byte[] InvocationScript;
 
@@ -15,15 +16,20 @@ namespace Neo.Consensus
                 sizeof(byte) +                  //ValidatorIndex
                 InvocationScript.GetVarSize();  //InvocationScript
 
-            void ISerializable.Deserialize(BinaryReader reader)
+            public PreparationPayloadCompact(byte validatorsCount)
+            {
+                this.validatorsCount = validatorsCount;
+            }
+
+            public void Deserialize(BinaryReader reader)
             {
                 ValidatorIndex = reader.ReadByte();
-                if (ValidatorIndex >= ConsensusService.System.Settings.ValidatorsCount)
+                if (ValidatorIndex >= validatorsCount)
                     throw new FormatException();
                 InvocationScript = reader.ReadVarBytes(1024);
             }
 
-            void ISerializable.Serialize(BinaryWriter writer)
+            public void Serialize(BinaryWriter writer)
             {
                 writer.Write(ValidatorIndex);
                 writer.WriteVarBytes(InvocationScript);

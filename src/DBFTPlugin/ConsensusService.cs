@@ -45,8 +45,8 @@ namespace Neo.Consensus
         /// This variable is only true during OnRecoveryMessageReceived
         /// </summary>
         private bool isRecovering = false;
-        private Settings dbftSettings;
-        internal static NeoSystem System;
+        private readonly Settings dbftSettings;
+        private readonly NeoSystem System;
 
         public ConsensusService(NeoSystem neoSystem, Settings settings, Wallet wallet)
             : this(neoSystem, settings, new ConsensusContext(neoSystem, settings, wallet))

@@ -9,8 +9,8 @@ namespace Neo.Consensus
 
         public override int Size => base.Size + PreparationHash.Size;
 
-        public PrepareResponse()
-            : base(ConsensusMessageType.PrepareResponse)
+        public PrepareResponse(byte validatorsCount)
+            : base(validatorsCount, ConsensusMessageType.PrepareResponse)
         {
         }
 

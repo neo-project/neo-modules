@@ -8,6 +8,7 @@ namespace Neo.Consensus
     {
         public class CommitPayloadCompact : ISerializable
         {
+            private readonly byte validatorsCount;
             public byte ViewNumber;
             public byte ValidatorIndex;
             public byte[] Signature;
@@ -19,17 +20,22 @@ namespace Neo.Consensus
                 Signature.Length +              //Signature
                 InvocationScript.GetVarSize();  //InvocationScript
 
-            void ISerializable.Deserialize(BinaryReader reader)
+            public CommitPayloadCompact(byte validatorsCount)
+            {
+                this.validatorsCount = validatorsCount;
+            }
+
+            public void Deserialize(BinaryReader reader)
             {
                 ViewNumber = reader.ReadByte();
                 ValidatorIndex = reader.ReadByte();
-                if (ValidatorIndex >= ConsensusService.System.Settings.ValidatorsCount)
+                if (ValidatorIndex >= validatorsCount)
                     throw new FormatException();
                 Signature = reader.ReadFixedBytes(64);
                 InvocationScript = reader.ReadVarBytes(1024);
             }
 
-            void ISerializable.Serialize(BinaryWriter writer)
+            public void Serialize(BinaryWriter writer)
             {
                 writer.Write(ViewNumber);
                 writer.Write(ValidatorIndex);
