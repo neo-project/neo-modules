@@ -6,7 +6,6 @@ namespace Neo.Consensus
 {
     public abstract class ConsensusMessage : ISerializable
     {
-        protected readonly byte validatorsCount;
         public readonly ConsensusMessageType Type;
         public uint BlockIndex;
         public byte ValidatorIndex;
@@ -18,14 +17,8 @@ namespace Neo.Consensus
             sizeof(byte) +                  //ValidatorIndex
             sizeof(byte);                   //ViewNumber
 
-        public ConsensusMessage(byte validatorsCount)
+        protected ConsensusMessage(ConsensusMessageType type)
         {
-            this.validatorsCount = validatorsCount;
-        }
-
-        protected ConsensusMessage(byte validatorsCount, ConsensusMessageType type)
-        {
-            this.validatorsCount = validatorsCount;
             if (!Enum.IsDefined(typeof(ConsensusMessageType), type))
                 throw new ArgumentOutOfRangeException(nameof(type));
             this.Type = type;
@@ -37,8 +30,6 @@ namespace Neo.Consensus
                 throw new FormatException();
             BlockIndex = reader.ReadUInt32();
             ValidatorIndex = reader.ReadByte();
-            if (ValidatorIndex >= validatorsCount)
-                throw new FormatException();
             ViewNumber = reader.ReadByte();
         }
 
@@ -50,15 +41,17 @@ namespace Neo.Consensus
             ConsensusMessageType t = (ConsensusMessageType)reader.ReadByte();
             ConsensusMessage message = t switch
             {
-                ConsensusMessageType.PrepareRequest => new PrepareRequest(validatorsCount),
-                ConsensusMessageType.PrepareResponse => new PrepareResponse(validatorsCount),
-                ConsensusMessageType.ChangeView => new ChangeView(validatorsCount),
-                ConsensusMessageType.Commit => new Commit(validatorsCount),
-                ConsensusMessageType.RecoveryRequest => new RecoveryRequest(validatorsCount),
+                ConsensusMessageType.PrepareRequest => new PrepareRequest(),
+                ConsensusMessageType.PrepareResponse => new PrepareResponse(),
+                ConsensusMessageType.ChangeView => new ChangeView(),
+                ConsensusMessageType.Commit => new Commit(),
+                ConsensusMessageType.RecoveryRequest => new RecoveryRequest(),
                 ConsensusMessageType.RecoveryMessage => new RecoveryMessage(validatorsCount),
                 _ => throw new FormatException(),
             };
             message.Deserialize(reader);
+            if (message.ValidatorIndex >= validatorsCount)
+                throw new FormatException();
             return message;
         }
 

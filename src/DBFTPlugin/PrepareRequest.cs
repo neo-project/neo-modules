@@ -18,10 +18,7 @@ namespace Neo.Consensus
             + sizeof(ulong)                     //Timestamp
             + TransactionHashes.GetVarSize();   //TransactionHashes
 
-        public PrepareRequest(byte validatorsCount)
-            : base(validatorsCount, ConsensusMessageType.PrepareRequest)
-        {
-        }
+        public PrepareRequest() : base(ConsensusMessageType.PrepareRequest) { }
 
         public override void Deserialize(BinaryReader reader)
         {

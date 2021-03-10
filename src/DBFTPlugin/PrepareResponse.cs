@@ -9,10 +9,7 @@ namespace Neo.Consensus
 
         public override int Size => base.Size + PreparationHash.Size;
 
-        public PrepareResponse(byte validatorsCount)
-            : base(validatorsCount, ConsensusMessageType.PrepareResponse)
-        {
-        }
+        public PrepareResponse() : base(ConsensusMessageType.PrepareResponse) { }
 
         public override void Deserialize(BinaryReader reader)
         {

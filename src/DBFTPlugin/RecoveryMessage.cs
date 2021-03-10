@@ -17,6 +17,8 @@ namespace Neo.Consensus
         public Dictionary<int, PreparationPayloadCompact> PreparationMessages;
         public Dictionary<int, CommitPayloadCompact> CommitMessages;
 
+        private readonly ulong validatorsCount;
+
         public override int Size => base.Size
             + /* ChangeViewMessages */ ChangeViewMessages?.Values.GetVarSize() ?? 0
             + /* PrepareRequestMessage */ 1 + PrepareRequestMessage?.Size ?? 0
@@ -24,8 +26,9 @@ namespace Neo.Consensus
             + /* PreparationMessages */ PreparationMessages?.Values.GetVarSize() ?? 0
             + /* CommitMessages */ CommitMessages?.Values.GetVarSize() ?? 0;
 
-        public RecoveryMessage(byte validatorsCount) : base(validatorsCount, ConsensusMessageType.RecoveryMessage)
+        public RecoveryMessage(int validatorsCount) : base(ConsensusMessageType.RecoveryMessage)
         {
+            this.validatorsCount = (ulong)validatorsCount;
         }
 
         public override void Deserialize(BinaryReader reader)
@@ -35,14 +38,21 @@ namespace Neo.Consensus
             ulong count = reader.ReadVarInt(validatorsCount);
             for (ulong i = 0; i < count; i++)
             {
-                ChangeViewPayloadCompact payload = new(validatorsCount);
+                ChangeViewPayloadCompact payload = new();
                 payload.Deserialize(reader);
+
+                if (payload.ValidatorIndex >= validatorsCount)
+                    throw new FormatException();
+
                 ChangeViewMessages.Add(payload.ValidatorIndex, payload);
             }
             if (reader.ReadBoolean())
             {
-                PrepareRequestMessage = new PrepareRequest(validatorsCount);
+                PrepareRequestMessage = new PrepareRequest();
                 PrepareRequestMessage.Deserialize(reader);
+
+                if (PrepareRequestMessage.ValidatorIndex >= validatorsCount)
+                    throw new FormatException();
             }
             else
             {
@@ -55,8 +65,12 @@ namespace Neo.Consensus
             count = reader.ReadVarInt(validatorsCount);
             for (ulong i = 0; i < count; i++)
             {
-                PreparationPayloadCompact payload = new(validatorsCount);
+                PreparationPayloadCompact payload = new();
                 payload.Deserialize(reader);
+
+                if (payload.ValidatorIndex >= validatorsCount)
+                    throw new FormatException();
+
                 PreparationMessages.Add(payload.ValidatorIndex, payload);
             }
 
@@ -64,15 +78,19 @@ namespace Neo.Consensus
             count = reader.ReadVarInt(validatorsCount);
             for (ulong i = 0; i < count; i++)
             {
-                CommitPayloadCompact payload = new(validatorsCount);
+                CommitPayloadCompact payload = new();
                 payload.Deserialize(reader);
+
+                if (payload.ValidatorIndex >= validatorsCount)
+                    throw new FormatException();
+
                 CommitMessages.Add(payload.ValidatorIndex, payload);
             }
         }
 
         internal ExtensiblePayload[] GetChangeViewPayloads(ConsensusContext context)
         {
-            return ChangeViewMessages.Values.Select(p => context.CreatePayload(new ChangeView(validatorsCount)
+            return ChangeViewMessages.Values.Select(p => context.CreatePayload(new ChangeView()
             {
                 BlockIndex = BlockIndex,
                 ValidatorIndex = p.ValidatorIndex,
@@ -83,7 +101,7 @@ namespace Neo.Consensus
 
         internal ExtensiblePayload[] GetCommitPayloadsFromRecoveryMessage(ConsensusContext context)
         {
-            return CommitMessages.Values.Select(p => context.CreatePayload(new Commit(validatorsCount)
+            return CommitMessages.Values.Select(p => context.CreatePayload(new Commit()
             {
                 BlockIndex = BlockIndex,
                 ValidatorIndex = p.ValidatorIndex,
@@ -104,7 +122,7 @@ namespace Neo.Consensus
         {
             UInt256 preparationHash = PreparationHash ?? context.PreparationPayloads[context.Block.PrimaryIndex]?.Hash;
             if (preparationHash is null) return Array.Empty<ExtensiblePayload>();
-            return PreparationMessages.Values.Where(p => p.ValidatorIndex != context.Block.PrimaryIndex).Select(p => context.CreatePayload(new PrepareResponse(validatorsCount)
+            return PreparationMessages.Values.Where(p => p.ValidatorIndex != context.Block.PrimaryIndex).Select(p => context.CreatePayload(new PrepareResponse()
             {
                 BlockIndex = BlockIndex,
                 ValidatorIndex = p.ValidatorIndex,

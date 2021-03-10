@@ -14,7 +14,7 @@ namespace Neo.Consensus
         public override int Size => base.Size
             + sizeof(ulong); //Timestamp
 
-        public RecoveryRequest(byte validatorsCount) : base(validatorsCount, ConsensusMessageType.RecoveryRequest) { }
+        public RecoveryRequest() : base(ConsensusMessageType.RecoveryRequest) { }
 
         public override void Deserialize(BinaryReader reader)
         {
