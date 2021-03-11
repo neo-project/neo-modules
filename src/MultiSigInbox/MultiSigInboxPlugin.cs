@@ -144,8 +144,16 @@ namespace Neo.Plugins.MultiSigInbox
             {
                 using var snapshot = System.GetSnapshot();
                 var context = ContractParametersContext.FromJson(JObject.Parse(tx), snapshot);
-
-                Console.WriteLine(tx.AsSerializable<Transaction>().ToJson(System.Settings).ToString(true));
+                if (context.Verifiable.Witnesses is null)
+                {
+                    context.Verifiable.Witnesses ??= Array.Empty<Witness>();
+                    Console.WriteLine((context.Verifiable as Transaction).ToJson(System.Settings).ToString(true));
+                    context.Verifiable.Witnesses = null;
+                }
+                else
+                {
+                    Console.WriteLine((context.Verifiable as Transaction).ToJson(System.Settings).ToString(true));
+                }
                 RelayContext(snapshot, context);
             }
             else
