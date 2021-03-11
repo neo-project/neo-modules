@@ -122,9 +122,8 @@ namespace Neo.Plugins
             VM.Types.Array stateItems,
             Dictionary<Nep17BalanceKey, Nep17Balance> nep17BalancesChanged, ref ushort transferIndex)
         {
-            if (stateItems.Count == 0) return;
             if (eventName != "Transfer") return;
-            if (stateItems.Count < 3) return;
+            if (stateItems.Count != 3) return;
 
             if (!(stateItems[0].IsNull) && !(stateItems[0] is VM.Types.ByteString))
                 return;
