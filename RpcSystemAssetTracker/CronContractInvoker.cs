@@ -10,18 +10,43 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
+using RandomNumberGenerator = System.Security.Cryptography.RandomNumberGenerator;
 
 namespace Neo.Plugins
 {
 
     public partial class RpcSystemAssetTrackerPlugin
-    {        
-      /// <summary>
-      /// Derives an address and keys from given private key 
-      /// </summary>
-      /// <param name="privKey">HEX or WIF private key to derive address from</param>
-      /// <returns>An object with address and its keys in different formats</returns>
-      ///  
+    {
+        private JObject CreateAddress()
+        {
+            var privateKey = new byte[32];
+
+            using (var generator = RandomNumberGenerator.Create())
+            {
+                generator.GetBytes(privateKey);
+            }
+
+            var kp = new KeyPair(privateKey);
+
+            var jaddress = new JObject();
+
+            var address = kp.AsAddress();
+
+            jaddress["wif"] = kp.Export();
+            jaddress["address"] = address;
+            jaddress["privkey"] = kp.PrivateKey.ToHexString();
+            jaddress["pubkey"] = kp.PublicKey.ToString();
+            jaddress["scripthash"] = address.ToScriptHash().ToString();
+
+            return jaddress;
+        }
+
+        /// <summary>
+        /// Derives an address and keys from given private key 
+        /// </summary>
+        /// <param name="privKey">HEX or WIF private key to derive address from</param>
+        /// <returns>An object with address and its keys in different formats</returns>
+        ///  
         private JObject GetAddress(string privKey)
         {
             JObject obj = new JObject();
@@ -54,14 +79,14 @@ namespace Neo.Plugins
             var privateKey = jArray[0].AsString().Split(';').Select(x => x.ToBytePrivateKey()).ToArray();
             var addressTo = jArray[1].AsString();
 
-            var amount = GetDecimal(jArray[2]); 
+            var amount = GetDecimal(jArray[2]);
 
             UInt256 th = (jArray.Count > 3) ? ParseTokenHash(jArray[3].AsString()) : Blockchain.UtilityToken.Hash;
             byte[] bRemarks = (jArray.Count > 4) ? jArray[4].AsString().HexToBytes() : null;
             decimal systemFee = (jArray.Count > 5) ? (decimal)jArray[5].AsNumber() : 0.0m;
 
             obj["txn_hash"] = SendWithKey(privateKey, amount, systemFee, addressTo, th, bRemarks);
-       
+
             return obj;
         }
 
@@ -72,7 +97,7 @@ namespace Neo.Plugins
         /// [0] MANDATORY; HEX or WIF private key, string
         /// [1] MANDATORY; array of objects {"address": string, "amount": decimal}.
         //      At least one item is needed to send successful txn
-        /// [2] OPTIONAL;  system token hash (hex bytes string) or its name (string). Default is CRON 
+        /// [2] OPTIONAL;  asset hash (hex bytes string) or its name (string). Default is CRON 
         /// [3] OPTIONAL;  remarks attribute value. Default is null 
         /// [4] OPTIONAL;  system fee (decimal) . Default is zero 
         /// </param>
@@ -83,7 +108,7 @@ namespace Neo.Plugins
             JObject obj = new JObject();
 
             var privateKey = jArray[0].AsString().Split(';').Select(x => x.ToBytePrivateKey()).ToArray();
-            var arrayTargets = (JArray)jArray[1]; 
+            var arrayTargets = (JArray)jArray[1];
             UInt256 th = (jArray.Count > 2) ? ParseTokenHash(jArray[2].AsString()) : Blockchain.UtilityToken.Hash;
 
             List<TransactionOutput> targets = new List<TransactionOutput>();
@@ -92,8 +117,8 @@ namespace Neo.Plugins
             {
                 JObject jo = arrayTargets[i];
                 var addressesTo = jo["address"].AsString();
-                var amount      = GetDecimal(jo["amount"]);
-                
+                var amount = GetDecimal(jo["amount"]);
+
                 var target = new TransactionOutput()
                 {
                     ScriptHash = addressesTo.ToScriptHash(),
@@ -105,15 +130,15 @@ namespace Neo.Plugins
 
             byte[] bRemarks = (jArray.Count > 3) ? jArray[3].AsString().HexToBytes() : null;
             decimal systemFee = (jArray.Count > 4) ? (decimal)jArray[4].AsNumber() : 0.0m;
-            
+
             KeyPair[] fromKey = privateKey.Select(x => new KeyPair(x)).ToArray();
-            bool b = SendAsset(fromKey, th, targets, bRemarks, systemFee, out string txn_hash );
+            bool b = SendAsset(fromKey, th, targets, bRemarks, systemFee, out string txn_hash);
 
             obj["txn_hash"] = txn_hash;
 
             return obj;
         }
-        
+
 
         private decimal GetDecimal(JObject jObject)
         {
@@ -122,11 +147,11 @@ namespace Neo.Plugins
             catch { d = decimal.Parse(jObject.AsString(), NumberStyles.Any, CultureInfo.InvariantCulture); }
             return d;
         }
-       
+
 
         private UInt256 ParseTokenHash(string v)
         {
-            if(string.IsNullOrWhiteSpace(v))
+            if (string.IsNullOrWhiteSpace(v))
                 return Blockchain.UtilityToken.Hash;
             v = v.Trim();
             var rv = v.ToUpper();
@@ -134,12 +159,12 @@ namespace Neo.Plugins
                 return Blockchain.UtilityToken.Hash;
             if (rv == "CRONIUM")
                 return Blockchain.GoverningToken.Hash;
-             
-             var r = Blockchain.Singleton.Store.GetAssets()?.Find();
-             var asset = r?.FirstOrDefault(x => x.Value.GetName().ToUpper() == rv).Value;
-            
-             if (asset != null)
-                    return asset.AssetId;           
+
+            var r = Blockchain.Singleton.Store.GetAssets()?.Find();
+            var asset = r?.FirstOrDefault(x => x.Value.GetName().ToUpper() == rv).Value;
+
+            if (asset != null)
+                return asset.AssetId;
 
             return UInt256.Parse(v);
         }
@@ -162,14 +187,14 @@ namespace Neo.Plugins
 
 
             KeyPair keyPair = null;
-            if(!string.IsNullOrEmpty(key)) 
-             try { keyPair = new KeyPair(key.ToBytePrivateKey()); } catch { }
+            if (!string.IsNullOrEmpty(key))
+                try { keyPair = new KeyPair(key.ToBytePrivateKey()); } catch { }
 
-            bool b = CallContract(keyPair, script,  parameters, out byte[] txhash);
+            bool b = CallContract(keyPair, script, parameters, out byte[] txhash);
             return b ? txhash.ToHexString() : null;
         }
 
-    
+
         /// <summary>
         /// SC parameter helper function.
         /// Firstly tries to get SC parameter from type/value,
@@ -212,7 +237,7 @@ namespace Neo.Plugins
                 case ContractParameterType.Array:
                     cp.Value = jObj == null ?
                     (new ContractParameter[] { }).ToList() :
-                    ((JArray)jObj).Select(p => ContractParameter.FromJson(p) ).ToList();
+                    ((JArray)jObj).Select(p => ContractParameter.FromJson(p)).ToList();
                     break;
 
                 case ContractParameterType.Boolean:

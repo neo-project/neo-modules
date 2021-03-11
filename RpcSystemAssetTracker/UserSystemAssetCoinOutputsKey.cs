@@ -74,8 +74,8 @@ namespace Neo.Plugins
         public void Deserialize(BinaryReader reader)
         {
             IdToken = reader.ReadByte();
-            ((ISerializable) UserAddress).Deserialize(reader);
-            ((ISerializable) TxHash).Deserialize(reader);
+            ((ISerializable)UserAddress).Deserialize(reader);
+            ((ISerializable)TxHash).Deserialize(reader);
         }
     }
 }
