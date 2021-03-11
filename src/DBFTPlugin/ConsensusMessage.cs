@@ -38,7 +38,7 @@ namespace Neo.Consensus
             using MemoryStream ms = new(data, false);
             using BinaryReader reader = new(ms, Utility.StrictUTF8);
 
-            ConsensusMessageType t = (ConsensusMessageType)reader.ReadByte();
+            ConsensusMessageType t = (ConsensusMessageType)data[0];
             ConsensusMessage message = t switch
             {
                 ConsensusMessageType.PrepareRequest => new PrepareRequest(),
