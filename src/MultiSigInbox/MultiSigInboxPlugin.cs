@@ -182,6 +182,7 @@ namespace Neo.Plugins.MultiSigInbox
                     {
                         msg.Witness = sign.GetWitnesses()[0];
                         System.Blockchain.Tell(sign.Verifiable);
+                        Console.WriteLine($"TXID: {context.Verifiable.Hash}");
                         break;
                     }
                 }
