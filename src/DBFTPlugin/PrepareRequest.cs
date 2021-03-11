@@ -31,6 +31,12 @@ namespace Neo.Consensus
                 throw new FormatException();
         }
 
+        public override bool Verify(ProtocolSettings protocolSettings)
+        {
+            if (!base.Verify(protocolSettings)) return false;
+            return TransactionHashes.Length <= protocolSettings.MaxTransactionsPerBlock;
+        }
+
         public override void Serialize(BinaryWriter writer)
         {
             base.Serialize(writer);

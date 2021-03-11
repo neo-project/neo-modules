@@ -18,7 +18,7 @@ namespace Neo.Consensus
                 sizeof(ulong) +                 //Timestamp
                 InvocationScript.GetVarSize();  //InvocationScript
 
-            public void Deserialize(BinaryReader reader)
+            void ISerializable.Deserialize(BinaryReader reader)
             {
                 ValidatorIndex = reader.ReadByte();
                 OriginalViewNumber = reader.ReadByte();
@@ -26,7 +26,7 @@ namespace Neo.Consensus
                 InvocationScript = reader.ReadVarBytes(1024);
             }
 
-            public void Serialize(BinaryWriter writer)
+            void ISerializable.Serialize(BinaryWriter writer)
             {
                 writer.Write(ValidatorIndex);
                 writer.Write(OriginalViewNumber);

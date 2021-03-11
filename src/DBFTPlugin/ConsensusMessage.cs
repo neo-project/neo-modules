@@ -33,26 +33,18 @@ namespace Neo.Consensus
             ViewNumber = reader.ReadByte();
         }
 
-        public static ConsensusMessage DeserializeFrom(byte[] data, byte validatorsCount)
+        public static ConsensusMessage DeserializeFrom(byte[] data)
         {
-            using MemoryStream ms = new(data, false);
-            using BinaryReader reader = new(ms, Utility.StrictUTF8);
+            ConsensusMessageType type = (ConsensusMessageType)data[0];
+            Type t = typeof(ConsensusMessage);
+            t = t.Assembly.GetType($"{t.Namespace}.{type}", false);
+            if (t is null) throw new FormatException();
+            return (ConsensusMessage)data.AsSerializable(t);
+        }
 
-            ConsensusMessageType t = (ConsensusMessageType)data[0];
-            ConsensusMessage message = t switch
-            {
-                ConsensusMessageType.PrepareRequest => new PrepareRequest(),
-                ConsensusMessageType.PrepareResponse => new PrepareResponse(),
-                ConsensusMessageType.ChangeView => new ChangeView(),
-                ConsensusMessageType.Commit => new Commit(),
-                ConsensusMessageType.RecoveryRequest => new RecoveryRequest(),
-                ConsensusMessageType.RecoveryMessage => new RecoveryMessage(validatorsCount),
-                _ => throw new FormatException(),
-            };
-            message.Deserialize(reader);
-            if (message.ValidatorIndex >= validatorsCount)
-                throw new FormatException();
-            return message;
+        public virtual bool Verify(ProtocolSettings protocolSettings)
+        {
+            return ValidatorIndex < protocolSettings.ValidatorsCount;
         }
 
         public virtual void Serialize(BinaryWriter writer)

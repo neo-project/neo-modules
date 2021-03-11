@@ -14,13 +14,13 @@ namespace Neo.Consensus
                 sizeof(byte) +                  //ValidatorIndex
                 InvocationScript.GetVarSize();  //InvocationScript
 
-            public void Deserialize(BinaryReader reader)
+            void ISerializable.Deserialize(BinaryReader reader)
             {
                 ValidatorIndex = reader.ReadByte();
                 InvocationScript = reader.ReadVarBytes(1024);
             }
 
-            public void Serialize(BinaryWriter writer)
+            void ISerializable.Serialize(BinaryWriter writer)
             {
                 writer.Write(ValidatorIndex);
                 writer.WriteVarBytes(InvocationScript);

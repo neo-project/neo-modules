@@ -19,7 +19,7 @@ namespace Neo.Consensus
                 Signature.Length +              //Signature
                 InvocationScript.GetVarSize();  //InvocationScript
 
-            public void Deserialize(BinaryReader reader)
+            void ISerializable.Deserialize(BinaryReader reader)
             {
                 ViewNumber = reader.ReadByte();
                 ValidatorIndex = reader.ReadByte();
@@ -27,7 +27,7 @@ namespace Neo.Consensus
                 InvocationScript = reader.ReadVarBytes(1024);
             }
 
-            public void Serialize(BinaryWriter writer)
+            void ISerializable.Serialize(BinaryWriter writer)
             {
                 writer.Write(ViewNumber);
                 writer.Write(ValidatorIndex);

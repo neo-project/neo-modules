@@ -183,7 +183,11 @@ namespace Neo.Consensus
         {
             if (payload is null) return null;
             if (!cachedMessages.TryGetValue(payload.Hash, out ConsensusMessage message))
-                cachedMessages.Add(payload.Hash, message = ConsensusMessage.DeserializeFrom(payload.Data, (byte)neoSystem.Settings.ValidatorsCount));
+            {
+                message = ConsensusMessage.DeserializeFrom(payload.Data);
+                if (!message.Verify(neoSystem.Settings)) throw new FormatException();
+                cachedMessages.Add(payload.Hash, message);
+            }
             return message;
         }
 
@@ -407,7 +411,7 @@ namespace Neo.Consensus
                     TransactionHashes = TransactionHashes
                 };
             }
-            return MakeSignedPayload(new RecoveryMessage(neoSystem.Settings.ValidatorsCount)
+            return MakeSignedPayload(new RecoveryMessage
             {
                 ChangeViewMessages = LastChangeViewPayloads.Where(p => p != null).Select(p => GetChangeViewPayloadCompact(p)).Take(M).ToDictionary(p => (int)p.ValidatorIndex),
                 PrepareRequestMessage = prepareRequestMessage,
