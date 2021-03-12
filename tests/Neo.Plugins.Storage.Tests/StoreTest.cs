@@ -7,8 +7,8 @@ namespace Neo.Plugins.Storage.Tests
     [TestClass]
     public class StoreTest
     {
-        private const string path_leveldb = "Data_LevelDB_{0}";
-        private const string path_rocksdb = "Data_RocksDB_{0}";
+        private const string path_leveldb = "Data_LevelDB_UT";
+        private const string path_rocksdb = "Data_RocksDB_UT";
 
         [TestMethod]
         public void TestLevelDb()

@@ -14,6 +14,18 @@ namespace Neo.Plugins
         }
     }
 
+    class NeoFSSettings
+    {
+        public string EndPoint { get; }
+        public TimeSpan Timeout { get; }
+
+        public NeoFSSettings(IConfigurationSection section)
+        {
+            EndPoint = section.GetValue("EndPoint", "127.0.0.1:8080");
+            Timeout = TimeSpan.FromMilliseconds(section.GetValue("Timeout", 15000));
+        }
+    }
+
     class Settings
     {
         public uint Network { get; }
@@ -22,6 +34,7 @@ namespace Neo.Plugins
         public bool AllowPrivateHost { get; }
         public string[] AllowedContentTypes { get; }
         public HttpsSettings Https { get; }
+        public NeoFSSettings NeoFS { get; }
         public bool AutoStart { get; }
 
         public static Settings Default { get; private set; }
@@ -34,6 +47,7 @@ namespace Neo.Plugins
             AllowPrivateHost = section.GetValue("AllowPrivateHost", false);
             AllowedContentTypes = section.GetSection("AllowedContentTypes").GetChildren().Select(p => p.Get<string>()).ToArray();
             Https = new HttpsSettings(section.GetSection("Https"));
+            NeoFS = new NeoFSSettings(section.GetSection("NeoFS"));
             AutoStart = section.GetValue("AutoStart", false);
         }
 

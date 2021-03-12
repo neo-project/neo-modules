@@ -43,10 +43,7 @@ namespace Neo.Plugins
         private int counter;
         private NeoSystem System;
 
-        private static readonly IReadOnlyDictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>
-        {
-            ["https"] = new OracleHttpsProtocol()
-        };
+        private readonly Dictionary<string, IOracleProtocol> protocols = new Dictionary<string, IOracleProtocol>();
 
         public override string Description => "Built-in oracle plugin";
 
@@ -108,10 +105,20 @@ namespace Neo.Plugins
                 Console.WriteLine("Please open wallet first!");
                 return;
             }
-            if (!CheckOracleAvaiblable(System.StoreView, out ECPoint[] oracles)) throw new ArgumentException("The oracle service is unavailable");
-            if (!CheckOracleAccount(wallet, oracles)) throw new ArgumentException("There is no oracle account in wallet");
+            if (!CheckOracleAvaiblable(System.StoreView, out ECPoint[] oracles))
+            {
+                Console.WriteLine("The oracle service is unavailable");
+                return;
+            }
+            if (!CheckOracleAccount(wallet, oracles))
+            {
+                Console.WriteLine("There is no oracle account in wallet");
+                return;
+            }
 
             this.wallet = wallet;
+            protocols["https"] = new OracleHttpsProtocol();
+            protocols["neofs"] = new OracleNeoFSProtocol(wallet, oracles);
             started = true;
             timer = new Timer(OnTimer, null, RefreshInterval, Timeout.Infinite);
 
@@ -127,6 +134,7 @@ namespace Neo.Plugins
                 timer.Dispose();
                 timer = null;
             }
+            stopped = true;
         }
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)

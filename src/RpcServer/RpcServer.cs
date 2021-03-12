@@ -30,7 +30,7 @@ namespace Neo.Plugins
         private readonly NeoSystem system;
         private readonly LocalNode localNode;
 
-        internal RpcServer(NeoSystem system, RpcServerSettings settings)
+        public RpcServer(NeoSystem system, RpcServerSettings settings)
         {
             this.system = system;
             this.settings = settings;
