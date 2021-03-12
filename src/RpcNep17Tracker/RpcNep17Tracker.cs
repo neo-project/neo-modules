@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Threading;
 using static System.IO.Path;
 
 namespace Neo.Plugins
@@ -23,7 +24,16 @@ namespace Neo.Plugins
         private const byte Nep17BalancePrefix = 0xf8;
         private const byte Nep17TransferSentPrefix = 0xf9;
         private const byte Nep17TransferReceivedPrefix = 0xfa;
-        private DB _db;
+        private DB db;
+        private DB _db
+        {
+            get
+            {
+                while (db is null)
+                    Thread.Sleep(10);
+                return db;
+            }
+        }
         private WriteBatch _writeBatch;
         private string _dbPath;
         private bool _shouldTrackHistory;
@@ -40,7 +50,7 @@ namespace Neo.Plugins
             if (system.Settings.Magic != _network) return;
             System = system;
             string path = string.Format(_dbPath, system.Settings.Magic.ToString("X8"));
-            _db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
+            db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
             RpcServerPlugin.RegisterMethods(this, _network);
         }
 
