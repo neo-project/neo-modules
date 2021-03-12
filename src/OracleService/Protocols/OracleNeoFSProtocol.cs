@@ -40,9 +40,9 @@ namespace Neo.Plugins
             Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
             try
             {
-                byte[] res = await GetAsync(uri, Settings.Default.NeoFS.EndPoint, cancellation);
-                Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"NeoFS result: {res.ToHexString()}");
-                return (OracleResponseCode.Success, Convert.ToBase64String(res));
+                string res = await GetAsync(uri, Settings.Default.NeoFS.EndPoint, cancellation);
+                Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"NeoFS result: {res}");
+                return (OracleResponseCode.Success, res);
             }
             catch (Exception e)
             {
@@ -51,7 +51,12 @@ namespace Neo.Plugins
             }
         }
 
-        private Task<byte[]> GetAsync(Uri uri, string host, CancellationToken cancellation)
+        /*
+            GetAsync returns neofs object from the provided url.
+            URI scheme is "neofs:<Container-ID>/<Object-ID>/<Command>/<offset|length>".
+            If Command is not provided, full object is requested.
+        */
+        private Task<string> GetAsync(Uri uri, string host, CancellationToken cancellation)
         {
             string[] ps = uri.AbsolutePath.Split("/");
             if (ps.Length < 2) throw new FormatException("Invalid neofs url");
@@ -76,36 +81,37 @@ namespace Neo.Plugins
             };
         }
 
-        private static async Task<byte[]> GetPayloadAsync(Client client, Address addr, CancellationToken cancellation)
+        private static async Task<string> GetPayloadAsync(Client client, Address addr, CancellationToken cancellation)
         {
             Object obj = await client.GetObject(cancellation, new GetObjectParams() { Address = addr }, new CallOptions { Ttl = 2 });
-            return obj.Payload.ToByteArray();
+            return Convert.ToBase64String(obj.Payload.ToByteArray());
         }
 
-        private static Task<byte[]> GetRangeAsync(Client client, Address addr, string[] ps, CancellationToken cancellation)
+        private static async Task<string> GetRangeAsync(Client client, Address addr, string[] ps, CancellationToken cancellation)
         {
             if (ps.Length == 0) throw new FormatException("missing object range (expected 'Offset|Length')");
             Range range = ParseRange(ps[0]);
-            return client.GetObjectPayloadRangeData(cancellation, new RangeDataParams() { Address = addr, Range = range }, new CallOptions { Ttl = 2 });
+            var res = await client.GetObjectPayloadRangeData(cancellation, new RangeDataParams() { Address = addr, Range = range }, new CallOptions { Ttl = 2 });
+            return Convert.ToBase64String(res);
         }
 
-        private static async Task<byte[]> GetHeaderAsync(Client client, Address addr, CancellationToken cancellation)
+        private static async Task<string> GetHeaderAsync(Client client, Address addr, CancellationToken cancellation)
         {
             var obj = await client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 });
-            return Utility.StrictUTF8.GetBytes(obj.ToString());
+            return obj.ToString();
         }
 
-        private static async Task<byte[]> GetHashAsync(Client client, Address addr, string[] ps, CancellationToken cancellation)
+        private static async Task<string> GetHashAsync(Client client, Address addr, string[] ps, CancellationToken cancellation)
         {
             if (ps.Length == 0 || ps[0] == "")
             {
                 Object obj = await client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 });
-                return obj.PayloadChecksum.Sum.ToByteArray();
+                return Convert.ToBase64String(obj.PayloadChecksum.Sum.ToByteArray());
             }
             Range range = ParseRange(ps[0]);
             List<byte[]> hashes = await client.GetObjectPayloadRangeHash(cancellation, new RangeChecksumParams() { Address = addr, Ranges = new List<Range>() { range }, Type = ChecksumType.Sha256, Salt = Array.Empty<byte>() }, new CallOptions { Ttl = 2 });
             if (hashes.Count == 0) throw new Exception("empty response, object range is invalid (expected 'Offset|Length')");
-            return hashes[0];
+            return Convert.ToBase64String(hashes[0]);
         }
 
         private static Range ParseRange(string s)
