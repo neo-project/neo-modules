@@ -60,7 +60,7 @@ namespace Neo.Consensus
 
         internal ExtensiblePayload[] GetChangeViewPayloads(ConsensusContext context)
         {
-            return ChangeViewMessages.Values.Select(p => context.CreatePayload(new ChangeView()
+            return ChangeViewMessages.Values.Select(p => context.CreatePayload(new ChangeView
             {
                 BlockIndex = BlockIndex,
                 ValidatorIndex = p.ValidatorIndex,
@@ -71,7 +71,7 @@ namespace Neo.Consensus
 
         internal ExtensiblePayload[] GetCommitPayloadsFromRecoveryMessage(ConsensusContext context)
         {
-            return CommitMessages.Values.Select(p => context.CreatePayload(new Commit()
+            return CommitMessages.Values.Select(p => context.CreatePayload(new Commit
             {
                 BlockIndex = BlockIndex,
                 ValidatorIndex = p.ValidatorIndex,
@@ -92,7 +92,7 @@ namespace Neo.Consensus
         {
             UInt256 preparationHash = PreparationHash ?? context.PreparationPayloads[context.Block.PrimaryIndex]?.Hash;
             if (preparationHash is null) return Array.Empty<ExtensiblePayload>();
-            return PreparationMessages.Values.Where(p => p.ValidatorIndex != context.Block.PrimaryIndex).Select(p => context.CreatePayload(new PrepareResponse()
+            return PreparationMessages.Values.Where(p => p.ValidatorIndex != context.Block.PrimaryIndex).Select(p => context.CreatePayload(new PrepareResponse
             {
                 BlockIndex = BlockIndex,
                 ValidatorIndex = p.ValidatorIndex,
