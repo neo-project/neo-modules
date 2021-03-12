@@ -53,10 +53,11 @@ namespace Neo.Consensus
             Start(walletProvider.GetWallet());
         }
 
-        public void Start(Wallet wallet)
+        public void Start(Wallet wallet, Settings settings = null)
         {
             if (started) return;
             started = true;
+            if (settings != null) this.settings = settings;
             consensus = neoSystem.ActorSystem.ActorOf(ConsensusService.Props(neoSystem, settings, wallet));
             consensus.Tell(new ConsensusService.Start());
         }
