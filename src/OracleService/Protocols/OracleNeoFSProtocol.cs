@@ -84,7 +84,7 @@ namespace Neo.Plugins
         private static async Task<string> GetPayloadAsync(Client client, Address addr, CancellationToken cancellation)
         {
             Object obj = await client.GetObject(cancellation, new GetObjectParams() { Address = addr }, new CallOptions { Ttl = 2 });
-            return Convert.ToBase64String(obj.Payload.ToByteArray());
+            return Utility.StrictUTF8.GetString(obj.Payload.ToByteArray());
         }
 
         private static async Task<string> GetRangeAsync(Client client, Address addr, string[] ps, CancellationToken cancellation)
