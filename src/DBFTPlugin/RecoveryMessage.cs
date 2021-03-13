@@ -29,7 +29,7 @@ namespace Neo.Consensus
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);
-            ChangeViewMessages = reader.ReadSerializableArray<ChangeViewPayloadCompact>(ushort.MaxValue).ToDictionary(p => (int)p.ValidatorIndex);
+            ChangeViewMessages = reader.ReadSerializableArray<ChangeViewPayloadCompact>(byte.MaxValue).ToDictionary(p => (int)p.ValidatorIndex);
             if (reader.ReadBoolean())
             {
                 PrepareRequestMessage = reader.ReadSerializable<PrepareRequest>();
@@ -41,8 +41,8 @@ namespace Neo.Consensus
                     PreparationHash = new UInt256(reader.ReadFixedBytes(preparationHashSize));
             }
 
-            PreparationMessages = reader.ReadSerializableArray<PreparationPayloadCompact>(ushort.MaxValue).ToDictionary(p => (int)p.ValidatorIndex);
-            CommitMessages = reader.ReadSerializableArray<CommitPayloadCompact>(ushort.MaxValue).ToDictionary(p => (int)p.ValidatorIndex);
+            PreparationMessages = reader.ReadSerializableArray<PreparationPayloadCompact>(byte.MaxValue).ToDictionary(p => (int)p.ValidatorIndex);
+            CommitMessages = reader.ReadSerializableArray<CommitPayloadCompact>(byte.MaxValue).ToDictionary(p => (int)p.ValidatorIndex);
         }
 
         public override bool Verify(ProtocolSettings protocolSettings)
