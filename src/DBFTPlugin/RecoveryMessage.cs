@@ -24,10 +24,7 @@ namespace Neo.Consensus
             + /* PreparationMessages */ PreparationMessages?.Values.GetVarSize() ?? 0
             + /* CommitMessages */ CommitMessages?.Values.GetVarSize() ?? 0;
 
-        public RecoveryMessage() : base(ConsensusMessageType.RecoveryMessage)
-        {
-
-        }
+        public RecoveryMessage() : base(ConsensusMessageType.RecoveryMessage) { }
 
         public override void Deserialize(BinaryReader reader)
         {
