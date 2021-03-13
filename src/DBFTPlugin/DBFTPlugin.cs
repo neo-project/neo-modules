@@ -58,7 +58,7 @@ namespace Neo.Consensus
             if (started) return;
             started = true;
             if (settings != null) this.settings = settings;
-            consensus = neoSystem.ActorSystem.ActorOf(ConsensusService.Props(neoSystem, settings, wallet));
+            consensus = neoSystem.ActorSystem.ActorOf(ConsensusService.Props(neoSystem, this.settings, wallet));
             consensus.Tell(new ConsensusService.Start());
         }
 
