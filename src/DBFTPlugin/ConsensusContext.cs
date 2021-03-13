@@ -41,7 +41,7 @@ namespace Neo.Consensus
         /// <summary>
         /// Store all verified unsorted transactions' senders' fee currently in the consensus context.
         /// </summary>
-        public TransactionVerificationContext VerificationContext = new TransactionVerificationContext();
+        public TransactionVerificationContext VerificationContext = new();
 
         public SnapshotCache Snapshot { get; private set; }
         private KeyPair keyPair;
@@ -199,7 +199,7 @@ namespace Neo.Consensus
         private ChangeViewPayloadCompact GetChangeViewPayloadCompact(ExtensiblePayload payload)
         {
             ChangeView message = GetMessage<ChangeView>(payload);
-            return new ChangeViewPayloadCompact()
+            return new ChangeViewPayloadCompact
             {
                 ValidatorIndex = message.ValidatorIndex,
                 OriginalViewNumber = message.ViewNumber,
@@ -211,7 +211,7 @@ namespace Neo.Consensus
         private CommitPayloadCompact GetCommitPayloadCompact(ExtensiblePayload payload)
         {
             Commit message = GetMessage<Commit>(payload);
-            return new CommitPayloadCompact()
+            return new CommitPayloadCompact
             {
                 ViewNumber = message.ViewNumber,
                 ValidatorIndex = message.ValidatorIndex,
@@ -222,7 +222,7 @@ namespace Neo.Consensus
 
         private PreparationPayloadCompact GetPreparationPayloadCompact(ExtensiblePayload payload)
         {
-            return new PreparationPayloadCompact()
+            return new PreparationPayloadCompact
             {
                 ValidatorIndex = GetMessage(payload).ValidatorIndex,
                 InvocationScript = payload.Witness.InvocationScript
@@ -262,7 +262,7 @@ namespace Neo.Consensus
 
         public ExtensiblePayload MakeChangeView(ChangeViewReason reason)
         {
-            return ChangeViewPayloads[MyIndex] = MakeSignedPayload(new ChangeView()
+            return ChangeViewPayloads[MyIndex] = MakeSignedPayload(new ChangeView
             {
                 Reason = reason,
                 Timestamp = TimeProvider.Current.UtcNow.ToTimestampMS()
@@ -271,7 +271,7 @@ namespace Neo.Consensus
 
         public ExtensiblePayload MakeCommit()
         {
-            return CommitPayloads[MyIndex] ?? (CommitPayloads[MyIndex] = MakeSignedPayload(new Commit()
+            return CommitPayloads[MyIndex] ?? (CommitPayloads[MyIndex] = MakeSignedPayload(new Commit
             {
                 Signature = EnsureHeader().Sign(keyPair, neoSystem.Settings.Magic)
             }));
@@ -379,7 +379,7 @@ namespace Neo.Consensus
             EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
             Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
 
-            return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest()
+            return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
             {
                 Version = Block.Version,
                 PrevHash = Block.PrevHash,
@@ -390,7 +390,7 @@ namespace Neo.Consensus
 
         public ExtensiblePayload MakeRecoveryRequest()
         {
-            return MakeSignedPayload(new RecoveryRequest()
+            return MakeSignedPayload(new RecoveryRequest
             {
                 Timestamp = TimeProvider.Current.UtcNow.ToTimestampMS()
             });
@@ -401,7 +401,7 @@ namespace Neo.Consensus
             PrepareRequest prepareRequestMessage = null;
             if (TransactionHashes != null)
             {
-                prepareRequestMessage = new PrepareRequest()
+                prepareRequestMessage = new PrepareRequest
                 {
                     Version = Block.Version,
                     PrevHash = Block.PrevHash,
@@ -426,7 +426,7 @@ namespace Neo.Consensus
 
         public ExtensiblePayload MakePrepareResponse()
         {
-            return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareResponse()
+            return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareResponse
             {
                 PreparationHash = PreparationPayloads[Block.PrimaryIndex].Hash
             });
@@ -456,7 +456,7 @@ namespace Neo.Consensus
                 if (_witnessSize == 0 || (pv != null && pv.Length != Validators.Length))
                 {
                     // Compute the expected size of the witness
-                    using (ScriptBuilder sb = new ScriptBuilder())
+                    using (ScriptBuilder sb = new())
                     {
                         for (int x = 0; x < M; x++)
                         {
