@@ -183,11 +183,7 @@ namespace Neo.Consensus
         {
             if (payload is null) return null;
             if (!cachedMessages.TryGetValue(payload.Hash, out ConsensusMessage message))
-            {
-                message = ConsensusMessage.DeserializeFrom(payload.Data);
-                if (!message.Verify(neoSystem.Settings)) throw new FormatException();
-                cachedMessages.Add(payload.Hash, message);
-            }
+                cachedMessages.Add(payload.Hash, message = ConsensusMessage.DeserializeFrom(payload.Data));
             return message;
         }
 

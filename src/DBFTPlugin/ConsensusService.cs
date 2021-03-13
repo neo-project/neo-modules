@@ -4,7 +4,6 @@ using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
-using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
@@ -288,6 +287,7 @@ namespace Neo.Consensus
             {
                 return;
             }
+            if (!message.Verify(neoSystem.Settings)) return;
             if (message.BlockIndex != context.Block.Index)
             {
                 if (context.Block.Index < message.BlockIndex)
