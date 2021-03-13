@@ -110,12 +110,12 @@ namespace Neo.Plugins
             if (ps.Length == 0 || ps[0] == "")
             {
                 Object obj = await client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 });
-                return Convert.ToBase64String(obj.PayloadChecksum.Sum.ToByteArray());
+                return $"\"{new UInt256(obj.PayloadChecksum.Sum.ToByteArray())}\"";
             }
             Range range = ParseRange(ps[0]);
             List<byte[]> hashes = await client.GetObjectPayloadRangeHash(cancellation, new RangeChecksumParams() { Address = addr, Ranges = new List<Range>() { range }, Type = ChecksumType.Sha256, Salt = Array.Empty<byte>() }, new CallOptions { Ttl = 2 });
             if (hashes.Count == 0) throw new Exception("empty response, object range is invalid (expected 'Offset|Length')");
-            return Convert.ToBase64String(hashes[0]);
+            return $"\"{new UInt256(hashes[0])}\"";
         }
 
         private static Range ParseRange(string s)
