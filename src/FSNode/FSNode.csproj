@@ -13,17 +13,20 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka" Version="1.4.13" />
+    <PackageReference Include="Akka" Version="1.4.17" />
     <PackageReference Include="Multiformats.Address" Version="1.1.1" />
     <PackageReference Include="Sprache" Version="2.3.1" />
     <PackageReference Include="NeoFS.API" Version="0.0.15" />
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\3.0\master\neo\src\neo\neo.csproj" />
     <ProjectReference Include="..\LevelDBStore\LevelDBStore.csproj" />
     <ProjectReference Include="..\RpcClient\RpcClient.csproj" />
     <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Update="Neo" Version="3.0.0-preview5" />
   </ItemGroup>
 
 </Project>

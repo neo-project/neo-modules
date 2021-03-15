@@ -8,6 +8,7 @@ namespace Neo.Plugins.FSStorage
     public class Settings
     {
         public static Settings Default { get; private set; }
+        public uint Network;
         public string WalletPath;
         public string Password;
         public UInt160 NetmapContractHash;
@@ -49,6 +50,7 @@ namespace Neo.Plugins.FSStorage
         private Settings(IConfigurationSection section)
         {
             this.Urls = section.GetSection("URLs").GetChildren().Select(p => p.Get<string>()).ToArray();
+            this.Network = section.GetValue("Network", 5195086u);
             this.WalletPath = section.GetSection("WalletPath").Value;
             this.Password = section.GetSection("Password").Value;
 

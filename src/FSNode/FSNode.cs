@@ -23,25 +23,25 @@ namespace Neo.Plugins.FSStorage
         public override string Description => "Uses FSNode to provide distributed file storage service";
         public IActorRef innering;
 
-        public FSNode()
+        protected override void Configure()
         {
+            Settings.Load(GetConfiguration());
+        }
+
+        protected override void OnPluginsLoaded()
+        {
+            base.OnPluginsLoaded();
             if (Settings.Default.IsSender)
             {
                 innering = System.ActorSystem.ActorOf(InnerRingSender.Props());
                 return;
             }
             innering = System.ActorSystem.ActorOf(InnerRingService.Props(Plugin.System));
-            RpcServerPlugin.RegisterMethods(this);
+            RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
             innering.Tell(new Start() { });
         }
 
-        protected override void Configure()
-        {
-            Settings.Load(GetConfiguration());
-        }
-
-        public void OnPersist(StoreView snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
-        {
+        public void OnPersist(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList) {
             foreach (var appExec in applicationExecutedList)
             {
                 Transaction tx = appExec.Transaction;
