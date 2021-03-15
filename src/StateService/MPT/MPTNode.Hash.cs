@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Neo.Plugins.MPT
 {
-    public partial class MPTNode : ICloneable<MPTNode>, ISerializable
+    partial class MPTNode
     {
         public static MPTNode NewHash(UInt256 hash)
         {

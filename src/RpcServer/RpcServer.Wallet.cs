@@ -4,11 +4,11 @@
 using Akka.Actor;
 using Neo.IO;
 using Neo.IO.Json;
-using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
+using Neo.VM;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
 using Neo.Wallets.SQLite;
@@ -25,7 +25,7 @@ namespace Neo.Plugins
     {
         private class DummyWallet : Wallet
         {
-            public DummyWallet() : base("") { }
+            public DummyWallet(ProtocolSettings settings) : base(null, settings) { }
             public override string Name => "";
             public override Version Version => new Version();
 
@@ -59,7 +59,7 @@ namespace Neo.Plugins
         protected virtual JObject DumpPrivKey(JArray _params)
         {
             CheckWallet();
-            UInt160 scriptHash = AddressToScriptHash(_params[0].AsString());
+            UInt160 scriptHash = AddressToScriptHash(_params[0].AsString(), system.Settings.AddressVersion);
             WalletAccount account = wallet.GetAccount(scriptHash);
             return account.GetKey().Export();
         }
@@ -80,7 +80,7 @@ namespace Neo.Plugins
             CheckWallet();
             UInt160 asset_id = UInt160.Parse(_params[0].AsString());
             JObject json = new JObject();
-            json["balance"] = wallet.GetAvailable(asset_id).Value.ToString();
+            json["balance"] = wallet.GetAvailable(system.StoreView, asset_id).Value.ToString();
             return json;
         }
 
@@ -89,12 +89,13 @@ namespace Neo.Plugins
         {
             CheckWallet();
             BigInteger gas = BigInteger.Zero;
-            using (SnapshotView snapshot = Blockchain.Singleton.GetSnapshot())
+            using (var snapshot = system.GetSnapshot())
+            {
+                uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
                 foreach (UInt160 account in wallet.GetAccounts().Select(p => p.ScriptHash))
-                {
-                    gas += NativeContract.NEO.UnclaimedGas(snapshot, account, snapshot.Height + 1);
-                }
-            return new BigDecimal(gas, NativeContract.GAS.Decimals).ToString();
+                    gas += NativeContract.NEO.UnclaimedGas(snapshot, account, height);
+            }
+            return gas.ToString();
         }
 
         [RpcMethod]
@@ -120,7 +121,8 @@ namespace Neo.Plugins
             byte[] tx = Convert.FromBase64String(_params[0].AsString());
 
             JObject account = new JObject();
-            account["networkfee"] = (wallet ?? new DummyWallet()).CalculateNetworkFee(Blockchain.Singleton.GetSnapshot(), tx.AsSerializable<Transaction>());
+            long networkfee = (wallet ?? new DummyWallet(system.Settings)).CalculateNetworkFee(system.StoreView, tx.AsSerializable<Transaction>());
+            account["networkfee"] = networkfee.ToString();
             return account;
         }
 
@@ -149,12 +151,12 @@ namespace Neo.Plugins
             {
                 case ".db3":
                     {
-                        wallet = UserWallet.Open(path, password);
+                        wallet = UserWallet.Open(path, password, system.Settings);
                         break;
                     }
                 case ".json":
                     {
-                        NEP6Wallet nep6wallet = new NEP6Wallet(path);
+                        NEP6Wallet nep6wallet = new NEP6Wallet(path, system.Settings);
                         nep6wallet.Unlock(password);
                         wallet = nep6wallet;
                         break;
@@ -167,32 +169,33 @@ namespace Neo.Plugins
 
         private void ProcessInvokeWithWallet(JObject result, Signers signers = null)
         {
-            Transaction tx = null;
-            if (wallet != null && signers != null)
+            if (wallet == null || signers == null) return;
+
+            Signer[] witnessSigners = signers.GetSigners().ToArray();
+            UInt160 sender = signers.Size > 0 ? signers.GetSigners()[0].Account : null;
+            if (witnessSigners.Length <= 0) return;
+
+            Transaction tx;
+            try
             {
-                Signer[] witnessSigners = signers.GetSigners().ToArray();
-                UInt160 sender = signers.Size > 0 ? signers.GetSigners()[0].Account : null;
-                if (witnessSigners.Count() > 0)
-                {
-                    try
-                    {
-                        tx = wallet.MakeTransaction(Convert.FromBase64String(result["script"].AsString()), sender, witnessSigners);
-                    }
-                    catch (Exception e)
-                    {
-                        result["exception"] = GetExceptionMessage(e);
-                        return;
-                    }
-                    ContractParametersContext context = new ContractParametersContext(tx);
-                    wallet.Sign(context);
-                    if (context.Completed)
-                        tx.Witnesses = context.GetWitnesses();
-                    else
-                        tx = null;
-                }
+                tx = wallet.MakeTransaction(system.StoreView, Convert.FromBase64String(result["script"].AsString()), sender, witnessSigners);
             }
-            if (tx != null)
+            catch (Exception e)
+            {
+                result["exception"] = GetExceptionMessage(e);
+                return;
+            }
+            ContractParametersContext context = new ContractParametersContext(system.StoreView, tx);
+            wallet.Sign(context);
+            if (context.Completed)
+            {
+                tx.Witnesses = context.GetWitnesses();
                 result["tx"] = Convert.ToBase64String(tx.ToArray());
+            }
+            else
+            {
+                result["pendingsignature"] = context.ToJson();
+            }
         }
 
         [RpcMethod]
@@ -200,15 +203,16 @@ namespace Neo.Plugins
         {
             CheckWallet();
             UInt160 assetId = UInt160.Parse(_params[0].AsString());
-            UInt160 from = AddressToScriptHash(_params[1].AsString());
-            UInt160 to = AddressToScriptHash(_params[2].AsString());
-            AssetDescriptor descriptor = new AssetDescriptor(assetId);
+            UInt160 from = AddressToScriptHash(_params[1].AsString(), system.Settings.AddressVersion);
+            UInt160 to = AddressToScriptHash(_params[2].AsString(), system.Settings.AddressVersion);
+            using var snapshot = system.GetSnapshot();
+            AssetDescriptor descriptor = new AssetDescriptor(snapshot, system.Settings, assetId);
             BigDecimal amount = BigDecimal.Parse(_params[3].AsString(), descriptor.Decimals);
             if (amount.Sign <= 0)
                 throw new RpcException(-32602, "Invalid params");
-            Signer[] signers = _params.Count >= 5 ? ((JArray)_params[4]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString()), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
+            Signer[] signers = _params.Count >= 5 ? ((JArray)_params[4]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
 
-            Transaction tx = wallet.MakeTransaction(new[]
+            Transaction tx = wallet.MakeTransaction(snapshot, new[]
             {
                 new TransferOutput
                 {
@@ -220,7 +224,7 @@ namespace Neo.Plugins
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
-            ContractParametersContext transContext = new ContractParametersContext(tx);
+            ContractParametersContext transContext = new ContractParametersContext(snapshot, tx);
             wallet.Sign(transContext);
             if (!transContext.Completed)
                 return transContext.ToJson();
@@ -233,7 +237,7 @@ namespace Neo.Plugins
             }
             if (tx.NetworkFee > settings.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
-            return SignAndRelay(tx);
+            return SignAndRelay(snapshot, tx);
         }
 
         [RpcMethod]
@@ -244,33 +248,34 @@ namespace Neo.Plugins
             UInt160 from = null;
             if (_params[0] is JString)
             {
-                from = AddressToScriptHash(_params[0].AsString());
+                from = AddressToScriptHash(_params[0].AsString(), system.Settings.AddressVersion);
                 to_start = 1;
             }
             JArray to = (JArray)_params[to_start];
             if (to.Count == 0)
                 throw new RpcException(-32602, "Invalid params");
-            Signer[] signers = _params.Count >= to_start + 2 ? ((JArray)_params[to_start + 1]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString()), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
+            Signer[] signers = _params.Count >= to_start + 2 ? ((JArray)_params[to_start + 1]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
 
             TransferOutput[] outputs = new TransferOutput[to.Count];
+            using var snapshot = system.GetSnapshot();
             for (int i = 0; i < to.Count; i++)
             {
                 UInt160 asset_id = UInt160.Parse(to[i]["asset"].AsString());
-                AssetDescriptor descriptor = new AssetDescriptor(asset_id);
+                AssetDescriptor descriptor = new AssetDescriptor(snapshot, system.Settings, asset_id);
                 outputs[i] = new TransferOutput
                 {
                     AssetId = asset_id,
-                    Value = BigDecimal.Parse(to[i]["value"].AsString(), descriptor.Decimals),
-                    ScriptHash = AddressToScriptHash(to[i]["address"].AsString())
+                    Value = new BigDecimal(BigInteger.Parse(to[i]["value"].AsString()), descriptor.Decimals),
+                    ScriptHash = AddressToScriptHash(to[i]["address"].AsString(), system.Settings.AddressVersion)
                 };
                 if (outputs[i].Value.Sign <= 0)
                     throw new RpcException(-32602, "Invalid params");
             }
-            Transaction tx = wallet.MakeTransaction(outputs, from, signers);
+            Transaction tx = wallet.MakeTransaction(snapshot, outputs, from, signers);
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
-            ContractParametersContext transContext = new ContractParametersContext(tx);
+            ContractParametersContext transContext = new ContractParametersContext(snapshot, tx);
             wallet.Sign(transContext);
             if (!transContext.Completed)
                 return transContext.ToJson();
@@ -283,7 +288,7 @@ namespace Neo.Plugins
             }
             if (tx.NetworkFee > settings.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
-            return SignAndRelay(tx);
+            return SignAndRelay(snapshot, tx);
         }
 
         [RpcMethod]
@@ -291,12 +296,13 @@ namespace Neo.Plugins
         {
             CheckWallet();
             UInt160 assetId = UInt160.Parse(_params[0].AsString());
-            UInt160 to = AddressToScriptHash(_params[1].AsString());
-            AssetDescriptor descriptor = new AssetDescriptor(assetId);
+            UInt160 to = AddressToScriptHash(_params[1].AsString(), system.Settings.AddressVersion);
+            using var snapshot = system.GetSnapshot();
+            AssetDescriptor descriptor = new AssetDescriptor(snapshot, system.Settings, assetId);
             BigDecimal amount = BigDecimal.Parse(_params[2].AsString(), descriptor.Decimals);
             if (amount.Sign <= 0)
                 throw new RpcException(-32602, "Invalid params");
-            Transaction tx = wallet.MakeTransaction(new[]
+            Transaction tx = wallet.MakeTransaction(snapshot, new[]
             {
                 new TransferOutput
                 {
@@ -308,7 +314,7 @@ namespace Neo.Plugins
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
-            ContractParametersContext transContext = new ContractParametersContext(tx);
+            ContractParametersContext transContext = new ContractParametersContext(snapshot, tx);
             wallet.Sign(transContext);
             if (!transContext.Completed)
                 return transContext.ToJson();
@@ -321,18 +327,66 @@ namespace Neo.Plugins
             }
             if (tx.NetworkFee > settings.MaxFee)
                 throw new RpcException(-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
-            return SignAndRelay(tx);
+            return SignAndRelay(snapshot, tx);
         }
 
-        private JObject SignAndRelay(Transaction tx)
+        [RpcMethod]
+        protected virtual JObject InvokeContractVerify(JArray _params)
         {
-            ContractParametersContext context = new ContractParametersContext(tx);
+            CheckWallet();
+            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
+            ContractParameter[] args = _params.Count >= 2 ? ((JArray)_params[1]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
+            Signers signers = _params.Count >= 3 ? SignersFromJson((JArray)_params[2], system.Settings) : null;
+            return GetVerificationResult(script_hash, args, signers);
+        }
+
+        private JObject GetVerificationResult(UInt160 scriptHash, ContractParameter[] args, Signers signers = null)
+        {
+            using var snapshot = system.GetSnapshot();
+            var contract = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
+            if (contract is null)
+            {
+                throw new RpcException(-100, "Unknown contract");
+            }
+            var methodName = "verify";
+
+            Transaction tx = signers == null ? null : new Transaction
+            {
+                Signers = signers.GetSigners(),
+                Attributes = Array.Empty<TransactionAttribute>()
+            };
+            ContractParametersContext context = new ContractParametersContext(snapshot, tx);
+            wallet.Sign(context);
+            tx.Witnesses = context.Completed ? context.GetWitnesses() : null;
+
+            using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.CreateSnapshot(), settings: system.Settings);
+            engine.LoadScript(new ScriptBuilder().EmitDynamicCall(scriptHash, methodName, args).ToArray(), rvcount: 1);
+
+            JObject json = new JObject();
+            json["script"] = Convert.ToBase64String(contract.Script);
+            json["state"] = engine.Execute();
+            json["gasconsumed"] = engine.GasConsumed.ToString();
+            json["exception"] = GetExceptionMessage(engine.FaultException);
+            try
+            {
+                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
+            }
+            catch (InvalidOperationException)
+            {
+                json["stack"] = "error: recursive reference";
+            }
+            return json;
+        }
+
+        private JObject SignAndRelay(DataCache snapshot, Transaction tx)
+        {
+            ContractParametersContext context = new ContractParametersContext(snapshot, tx);
             wallet.Sign(context);
             if (context.Completed)
             {
                 tx.Witnesses = context.GetWitnesses();
                 system.Blockchain.Tell(tx);
-                return Utility.TransactionToJson(tx);
+                return Utility.TransactionToJson(tx, system.Settings);
             }
             else
             {
@@ -340,14 +394,14 @@ namespace Neo.Plugins
             }
         }
 
-        internal static UInt160 AddressToScriptHash(string address)
+        internal static UInt160 AddressToScriptHash(string address, byte version)
         {
             if (UInt160.TryParse(address, out var scriptHash))
             {
                 return scriptHash;
             }
 
-            return address.ToScriptHash();
+            return address.ToScriptHash(version);
         }
     }
 }

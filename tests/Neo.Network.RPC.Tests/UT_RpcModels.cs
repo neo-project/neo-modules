@@ -1,13 +1,29 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using Neo.IO.Json;
 using Neo.Network.RPC.Models;
+using System;
 using System.Linq;
+using System.Net.Http;
 
 namespace Neo.Network.RPC.Tests
 {
     [TestClass()]
     public class UT_RpcModels
     {
+        RpcClient rpc;
+        Mock<HttpMessageHandler> handlerMock;
+
+        [TestInitialize]
+        public void TestSetup()
+        {
+            handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
+
+            // use real http client with mocked handler here
+            var httpClient = new HttpClient(handlerMock.Object);
+            rpc = new RpcClient(httpClient, new Uri("http://seed1.neo.org:10331"), null);
+        }
+
         [TestMethod()]
         public void TestRpcAccount()
         {
@@ -20,7 +36,7 @@ namespace Neo.Network.RPC.Tests
         public void TestRpcApplicationLog()
         {
             JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.GetApplicationLogAsync).ToLower()).Response.Result;
-            var item = RpcApplicationLog.FromJson(json);
+            var item = RpcApplicationLog.FromJson(json, rpc.protocolSettings);
             Assert.AreEqual(json.ToString(), item.ToJson().ToString());
         }
 
@@ -28,16 +44,16 @@ namespace Neo.Network.RPC.Tests
         public void TestRpcBlock()
         {
             JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.GetBlockAsync).ToLower()).Response.Result;
-            var item = RpcBlock.FromJson(json);
-            Assert.AreEqual(json.ToString(), item.ToJson().ToString());
+            var item = RpcBlock.FromJson(json, rpc.protocolSettings);
+            Assert.AreEqual(json.ToString(), item.ToJson(rpc.protocolSettings).ToString());
         }
 
         [TestMethod()]
         public void TestRpcBlockHeader()
         {
             JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.GetBlockHeaderAsync).ToLower()).Response.Result;
-            var item = RpcBlockHeader.FromJson(json);
-            Assert.AreEqual(json.ToString(), item.ToJson().ToString());
+            var item = RpcBlockHeader.FromJson(json, rpc.protocolSettings);
+            Assert.AreEqual(json.ToString(), item.ToJson(rpc.protocolSettings).ToString());
         }
 
         [TestMethod()]
@@ -46,6 +62,9 @@ namespace Neo.Network.RPC.Tests
             JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.GetContractStateAsync).ToLower()).Response.Result;
             var item = RpcContractState.FromJson(json);
             Assert.AreEqual(json.ToString(), item.ToJson().ToString());
+
+            var nef = RpcNefFile.FromJson(json["nef"]);
+            Assert.AreEqual(json["nef"].ToString(), nef.ToJson().ToString());
         }
 
         [TestMethod()]
@@ -57,19 +76,25 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod()]
+        public void TestRpcMethodToken()
+        {
+            RpcMethodToken.FromJson(JObject.Parse("{\"hash\": \"0x0e1b9bfaa44e60311f6f3c96cfcd6d12c2fc3add\", \"method\":\"test\",\"paramcount\":\"1\",\"hasreturnvalue\":\"true\",\"callflags\":\"All\"}"));
+        }
+
+        [TestMethod()]
         public void TestRpcNep17Balances()
         {
             JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.GetNep17BalancesAsync).ToLower()).Response.Result;
-            var item = RpcNep17Balances.FromJson(json);
-            Assert.AreEqual(json.ToString(), item.ToJson().ToString());
+            var item = RpcNep17Balances.FromJson(json, rpc.protocolSettings);
+            Assert.AreEqual(json.ToString(), item.ToJson(rpc.protocolSettings).ToString());
         }
 
         [TestMethod()]
         public void TestRpcNep17Transfers()
         {
             JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.GetNep17TransfersAsync).ToLower()).Response.Result;
-            var item = RpcNep17Transfers.FromJson(json);
-            Assert.AreEqual(json.ToString(), item.ToJson().ToString());
+            var item = RpcNep17Transfers.FromJson(json, rpc.protocolSettings);
+            Assert.AreEqual(json.ToString(), item.ToJson(rpc.protocolSettings).ToString());
         }
 
         [TestMethod()]
@@ -100,16 +125,16 @@ namespace Neo.Network.RPC.Tests
         public void TestRpcTransaction()
         {
             JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.GetRawTransactionAsync).ToLower()).Response.Result;
-            var item = RpcTransaction.FromJson(json);
-            Assert.AreEqual(json.ToString(), item.ToJson().ToString());
+            var item = RpcTransaction.FromJson(json, rpc.protocolSettings);
+            Assert.AreEqual(json.ToString(), item.ToJson(rpc.protocolSettings).ToString());
         }
 
         [TestMethod()]
         public void TestRpcTransferOut()
         {
             JObject json = TestUtils.RpcTestCases.Find(p => p.Name == nameof(RpcClient.SendManyAsync).ToLower()).Request.Params[1];
-            var item = ((JArray)json).Select(p => RpcTransferOut.FromJson(p));
-            Assert.AreEqual(json.ToString(), ((JArray)item.Select(p => p.ToJson()).ToArray()).ToString());
+            var item = ((JArray)json).Select(p => RpcTransferOut.FromJson(p, rpc.protocolSettings));
+            Assert.AreEqual(json.ToString(), ((JArray)item.Select(p => p.ToJson(rpc.protocolSettings)).ToArray()).ToString());
         }
 
         [TestMethod()]

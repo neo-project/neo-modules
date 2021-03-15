@@ -17,7 +17,7 @@ namespace Neo.Plugins.StateService.Tests
         private byte[] NodeToArrayAsChild(MPTNode n)
         {
             using var ms = new MemoryStream();
-            using var writer = new BinaryWriter(ms, Utility.StrictUTF8, true);
+            using var writer = new BinaryWriter(ms, Neo.Utility.StrictUTF8, true);
 
             n.SerializeAsChild(writer);
             writer.Flush();

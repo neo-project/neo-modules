@@ -29,7 +29,7 @@ namespace Neo.Network.RPC.Tests
 
             // use real http client with mocked handler here
             var httpClient = new HttpClient(handlerMock.Object);
-            rpc = new RpcClient(httpClient, "http://seed1.neo.org:10331");
+            rpc = new RpcClient(httpClient, new Uri("http://seed1.neo.org:10331"), null);
             foreach (var test in TestUtils.RpcTestCases)
             {
                 MockResponse(test.Request, test.Response);
@@ -45,7 +45,7 @@ namespace Neo.Network.RPC.Tests
                   ItExpr.Is<HttpRequestMessage>(p => p.Content.ReadAsStringAsync().Result == request.ToJson().ToString()),
                   ItExpr.IsAny<CancellationToken>()
                )
-               // prepare the expected response of the mocked http call 
+               // prepare the expected response of the mocked http call
                .ReturnsAsync(new HttpResponseMessage()
                {
                    StatusCode = HttpStatusCode.OK,
@@ -73,7 +73,7 @@ namespace Neo.Network.RPC.Tests
         public void TestConstructorByUrlAndDispose()
         {
             //dummy url for test
-            var client = new RpcClient("http://www.xxx.yyy");
+            var client = new RpcClient(new Uri("http://www.xxx.yyy"));
             Action action = () => client.Dispose();
             action.Should().NotThrow<Exception>();
         }
@@ -81,7 +81,7 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public void TestConstructorWithBasicAuth()
         {
-            var client = new RpcClient("http://www.xxx.yyy", "krain", "123456");
+            var client = new RpcClient(new Uri("http://www.xxx.yyy"), "krain", "123456");
             client.Dispose();
         }
 
@@ -113,8 +113,16 @@ namespace Neo.Network.RPC.Tests
             foreach (var test in tests)
             {
                 var result = await rpc.GetBlockAsync(test.Request.Params[0].AsString());
-                Assert.AreEqual(test.Response.Result.AsString(), result.ToJson().ToString());
+                Assert.AreEqual(test.Response.Result.AsString(), result.ToJson(rpc.protocolSettings).ToString());
             }
+        }
+
+        [TestMethod]
+        public async Task TestGetBlockHeaderCount()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlockHeaderCountAsync).ToLower());
+            var result = await rpc.GetBlockHeaderCountAsync();
+            Assert.AreEqual(test.Response.Result.AsString(), result.ToString());
         }
 
         [TestMethod]
@@ -151,7 +159,18 @@ namespace Neo.Network.RPC.Tests
             foreach (var test in tests)
             {
                 var result = await rpc.GetBlockHeaderAsync(test.Request.Params[0].AsString());
-                Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+                Assert.AreEqual(test.Response.Result.ToString(), result.ToJson(rpc.protocolSettings).ToString());
+            }
+        }
+
+        [TestMethod]
+        public async Task TestGetCommittee()
+        {
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetCommitteeAsync).ToLower());
+            foreach (var test in tests)
+            {
+                var result = await rpc.GetCommitteeAsync();
+                Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => (JObject)p).ToArray()).ToString());
             }
         }
 
@@ -163,6 +182,17 @@ namespace Neo.Network.RPC.Tests
             {
                 var result = await rpc.GetContractStateAsync(test.Request.Params[0].AsString());
                 Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            }
+        }
+
+        [TestMethod]
+        public async Task TestGetNativeContracts()
+        {
+            var tests = TestUtils.RpcTestCases.Where(p => p.Name == nameof(rpc.GetNativeContractsAsync).ToLower());
+            foreach (var test in tests)
+            {
+                var result = await rpc.GetNativeContractsAsync();
+                Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => p.ToJson()).ToArray()).ToString());
             }
         }
 
@@ -195,7 +225,7 @@ namespace Neo.Network.RPC.Tests
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawTransactionAsync).ToLower());
             var result = await rpc.GetRawTransactionAsync(test.Request.Params[0].AsString());
-            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson(rpc.protocolSettings).ToString());
         }
 
         [TestMethod]
@@ -399,7 +429,7 @@ namespace Neo.Network.RPC.Tests
         public async Task TestSendMany()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendManyAsync).ToLower());
-            var result = await rpc.SendManyAsync(test.Request.Params[0].AsString(), ((JArray)test.Request.Params[1]).Select(p => RpcTransferOut.FromJson(p)));
+            var result = await rpc.SendManyAsync(test.Request.Params[0].AsString(), ((JArray)test.Request.Params[1]).Select(p => RpcTransferOut.FromJson(p, rpc.protocolSettings)));
             Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
         }
 
@@ -436,10 +466,10 @@ namespace Neo.Network.RPC.Tests
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep17TransfersAsync).ToLower());
             var result = await rpc.GetNep17TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(), (ulong)test.Request.Params[2].AsNumber());
-            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson(rpc.protocolSettings).ToString());
             test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.GetNep17TransfersAsync).ToLower() + "_with_null_transferaddress"));
             result = await rpc.GetNep17TransfersAsync(test.Request.Params[0].AsString(), (ulong)test.Request.Params[1].AsNumber(), (ulong)test.Request.Params[2].AsNumber());
-            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson(rpc.protocolSettings).ToString());
         }
 
         [TestMethod()]
@@ -447,7 +477,7 @@ namespace Neo.Network.RPC.Tests
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetNep17BalancesAsync).ToLower());
             var result = await rpc.GetNep17BalancesAsync(test.Request.Params[0].AsString());
-            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
+            Assert.AreEqual(test.Response.Result.ToString(), result.ToJson(rpc.protocolSettings).ToString());
         }
 
         #endregion Plugins

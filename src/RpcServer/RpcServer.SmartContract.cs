@@ -4,7 +4,6 @@
 using Neo.Cryptography.ECC;
 using Neo.IO;
 using Neo.IO.Json;
-using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
@@ -45,7 +44,7 @@ namespace Neo.Plugins
                 throw new NotImplementedException();
             }
 
-            public UInt160[] GetScriptHashesForVerifying(StoreView snapshot)
+            public UInt160[] GetScriptHashesForVerifying(DataCache snapshot)
             {
                 return _signers.Select(p => p.Account).ToArray();
             }
@@ -69,11 +68,11 @@ namespace Neo.Plugins
                 Attributes = Array.Empty<TransactionAttribute>(),
                 Witnesses = signers.Witnesses,
             };
-            using ApplicationEngine engine = ApplicationEngine.Run(script, container: tx, gas: settings.MaxGasInvoke);
+            using ApplicationEngine engine = ApplicationEngine.Run(script, system.StoreView, container: tx, settings: system.Settings, gas: settings.MaxGasInvoke);
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(script);
             json["state"] = engine.State;
-            json["gasconsumed"] = new BigDecimal(engine.GasConsumed, NativeContract.GAS.Decimals).ToString();
+            json["gasconsumed"] = engine.GasConsumed.ToString();
             json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
@@ -90,11 +89,11 @@ namespace Neo.Plugins
             return json;
         }
 
-        private static Signers SignersFromJson(JArray _params)
+        private static Signers SignersFromJson(JArray _params, ProtocolSettings settings)
         {
             var ret = new Signers(_params.Select(u => new Signer()
             {
-                Account = AddressToScriptHash(u["account"].AsString()),
+                Account = AddressToScriptHash(u["account"].AsString(), settings.AddressVersion),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"]?.AsString()),
                 AllowedContracts = ((JArray)u["allowedcontracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray(),
                 AllowedGroups = ((JArray)u["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
@@ -107,69 +106,18 @@ namespace Neo.Plugins
             return ret;
         }
 
-        private JObject GetVerificationResult(UInt160 scriptHash, ContractParameter[] args, Signers signers = null)
-        {
-            var snapshot = Blockchain.Singleton.GetSnapshot();
-            var contract = NativeContract.Management.GetContract(snapshot, scriptHash);
-            if (contract is null)
-            {
-                throw new RpcException(-100, "Unknown contract");
-            }
-            var methodName = "verify";
-
-            Transaction tx = signers == null ? null : new Transaction
-            {
-                Signers = signers.GetSigners(),
-                Attributes = Array.Empty<TransactionAttribute>(),
-                Witnesses = signers.Witnesses,
-            };
-
-            using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.Clone());
-            engine.LoadContract(contract, methodName, CallFlags.None);
-
-            engine.LoadScript(new ScriptBuilder().EmitAppCall(scriptHash, methodName, args).ToArray(), CallFlags.AllowCall);
-
-            JObject json = new JObject();
-            json["script"] = Convert.ToBase64String(contract.Script);
-            json["state"] = engine.Execute();
-            json["gasconsumed"] = new BigDecimal(engine.GasConsumed, NativeContract.GAS.Decimals).ToString();
-            json["exception"] = GetExceptionMessage(engine.FaultException);
-            try
-            {
-                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
-            }
-            catch (InvalidOperationException)
-            {
-                json["stack"] = "error: recursive reference";
-            }
-            if (engine.State != VMState.FAULT)
-            {
-                ProcessInvokeWithWallet(json);
-            }
-            return json;
-        }
-
-        [RpcMethod]
-        protected virtual JObject InvokeContractVerify(JArray _params)
-        {
-            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
-            ContractParameter[] args = _params.Count >= 2 ? ((JArray)_params[1]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
-            Signers signers = _params.Count >= 3 ? SignersFromJson((JArray)_params[2]) : null;
-            return GetVerificationResult(script_hash, args, signers);
-        }
-
         [RpcMethod]
         protected virtual JObject InvokeFunction(JArray _params)
         {
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
-            Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3]) : null;
+            Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
 
             byte[] script;
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                script = sb.EmitAppCall(script_hash, operation, args).ToArray();
+                script = sb.EmitDynamicCall(script_hash, operation, args).ToArray();
             }
             return GetInvokeResult(script, signers);
         }
@@ -178,7 +126,7 @@ namespace Neo.Plugins
         protected virtual JObject InvokeScript(JArray _params)
         {
             byte[] script = Convert.FromBase64String(_params[0].AsString());
-            Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1]) : null;
+            Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], system.Settings) : null;
             return GetInvokeResult(script, signers);
         }
 
@@ -190,7 +138,7 @@ namespace Neo.Plugins
             UInt160 script_hash;
             try
             {
-                script_hash = AddressToScriptHash(address);
+                script_hash = AddressToScriptHash(address, system.Settings.AddressVersion);
             }
             catch
             {
@@ -198,22 +146,15 @@ namespace Neo.Plugins
             }
             if (script_hash == null)
                 throw new RpcException(-100, "Invalid address");
-            SnapshotView snapshot = Blockchain.Singleton.GetSnapshot();
-            json["unclaimed"] = new BigDecimal(NativeContract.NEO.UnclaimedGas(snapshot, script_hash, snapshot.Height + 1), NativeContract.GAS.Decimals).ToString();
-            json["address"] = script_hash.ToAddress();
+            var snapshot = system.StoreView;
+            json["unclaimed"] = NativeContract.NEO.UnclaimedGas(snapshot, script_hash, NativeContract.Ledger.CurrentIndex(snapshot) + 1).ToString();
+            json["address"] = script_hash.ToAddress(system.Settings.AddressVersion);
             return json;
         }
 
         static string GetExceptionMessage(Exception exception)
         {
-            if (exception == null) return null;
-
-            if (exception.InnerException != null)
-            {
-                return exception.InnerException.Message;
-            }
-
-            return exception.Message;
+            return exception?.GetBaseException().Message;
         }
     }
 }
