@@ -2,33 +2,31 @@ using Google.Protobuf;
 using Grpc.Core;
 using NeoFS.API.v2.Object;
 using NeoFS.API.v2.Cryptography;
-using V2Object = NeoFS.API.v2.Object.Object;
+using Neo.FSNode.Services.Object.Util;
 using System.Security.Cryptography;
-using Neo.FSNode.Utils;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using V2Object = NeoFS.API.v2.Object.Object;
 
 namespace Neo.FSNode.Services.Object.Get.Writer
 {
     public class GetWriter : IHeaderWriter, IChunkWriter
     {
         private readonly IServerStreamWriter<GetResponse> stream;
-        private readonly ECDsa key;
+        private readonly Responser responser;
 
-        public GetWriter(IServerStreamWriter<GetResponse> responseStream)
+        public GetWriter(IServerStreamWriter<GetResponse> stream, Responser responser)
         {
-            stream = responseStream;
+            this.stream = stream;
+            this.responser = responser;
         }
         public void WriteHeader(V2Object obj)
         {
-            var resp = Responser.GetInitResponse(obj);
-            resp.SignResponse(key);
+            var resp = responser.GetInitResponse(obj);
             stream.WriteAsync(resp);
         }
 
         public void WriteChunk(byte[] chunk)
         {
-            var resp = Responser.GetChunkResponse(ByteString.CopyFrom(chunk));
-            resp.SignResponse(key);
+            var resp = responser.GetChunkResponse(ByteString.CopyFrom(chunk));
             stream.WriteAsync(resp);
         }
     }

@@ -7,7 +7,7 @@ namespace Neo.FSNode.Services.Object.Delete
     public class DeletePrm : CommonPrm
     {
         public Address Address;
-
+        public ITombstoneWriter Writer;
         public static DeletePrm FromRequest(DeleteRequest request)
         {
             var prm = new DeletePrm

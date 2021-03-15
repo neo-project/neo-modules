@@ -3,6 +3,7 @@ using Grpc.Core;
 using Neo.Cryptography;
 using Neo.IO;
 using Neo.Wallets;
+using NeoFS.API.v2.Cryptography;
 using NeoFS.API.v2.Refs;
 using NeoFS.API.v2.Session;
 using System;
@@ -38,7 +39,7 @@ namespace Neo.FSNode.Services.Session.Storage
             random.NextBytes(sk);
 
             var key = new Key(Base58.Encode(gb), Base58.Encode(b));
-            tokens[key] = new PrivateToken(sk, body.Expiration);
+            tokens[key] = new PrivateToken(sk.LoadPrivateKey(), body.Expiration);
 
             var keyPair = new KeyPair(sk);
             return new CreateResponse.Types.Body() { Id = ByteString.CopyFrom(gb), SessionKey = ByteString.CopyFrom(keyPair.PublicKey.EncodePoint(true)) };

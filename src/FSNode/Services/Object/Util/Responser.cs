@@ -1,22 +1,31 @@
-using System.Collections.Generic;
 using Google.Protobuf;
 using NeoFS.API.v2.Object;
-using V2Object = NeoFS.API.v2.Object.Object;
 using System.Linq;
+using System.Collections.Generic;
+using System.Security.Cryptography;
+using V2Object = NeoFS.API.v2.Object.Object;
+using NeoFS.API.v2.Cryptography;
 
-namespace Neo.FSNode.Services.Object.Get
+namespace Neo.FSNode.Services.Object.Util
 {
-    public static class Responser
+    public class Responser
     {
-        public static HeadResponse HeadResponse(bool minimal, V2Object obj)
+        private readonly ECDsa key;
+
+        public Responser(ECDsa key)
+        {
+            this.key = key;
+        }
+
+        public HeadResponse HeadResponse(bool minimal, V2Object obj)
         {
             return new HeadResponse
             {
-                Body = minimal ? obj.ToShortHeader() : obj.ToFullHeader(),
+                Body = minimal ? ToShortHeader(obj) : ToFullHeader(obj),
             };
         }
 
-        private static HeadResponse.Types.Body ToFullHeader(this V2Object obj)
+        private HeadResponse.Types.Body ToFullHeader(V2Object obj)
         {
             return new HeadResponse.Types.Body
             {
@@ -28,7 +37,7 @@ namespace Neo.FSNode.Services.Object.Get
             };
         }
 
-        private static HeadResponse.Types.Body ToShortHeader(this V2Object obj)
+        private HeadResponse.Types.Body ToShortHeader(V2Object obj)
         {
             return new HeadResponse.Types.Body
             {
@@ -43,9 +52,9 @@ namespace Neo.FSNode.Services.Object.Get
             };
         }
 
-        public static GetResponse GetInitResponse(V2Object obj)
+        public GetResponse GetInitResponse(V2Object obj)
         {
-            return new GetResponse
+            var resp = new GetResponse
             {
                 Body = new GetResponse.Types.Body
                 {
@@ -57,31 +66,37 @@ namespace Neo.FSNode.Services.Object.Get
                     }
                 }
             };
+            resp.SignResponse(key);
+            return resp;
         }
 
-        public static GetResponse GetChunkResponse(ByteString chunk)
+        public GetResponse GetChunkResponse(ByteString chunk)
         {
-            return new GetResponse
+            var resp = new GetResponse
             {
                 Body = new GetResponse.Types.Body
                 {
                     Chunk = chunk,
                 }
             };
+            resp.SignResponse(key);
+            return resp;
         }
 
-        public static GetRangeResponse GetRangeResponse(ByteString chunk)
+        public GetRangeResponse GetRangeResponse(ByteString chunk)
         {
-            return new GetRangeResponse
+            var resp = new GetRangeResponse
             {
                 Body = new GetRangeResponse.Types.Body
                 {
                     Chunk = chunk,
                 }
             };
+            resp.SignResponse(key);
+            return resp;
         }
 
-        public static GetRangeHashResponse GetRangeHashResponse(List<byte[]> hashes)
+        public GetRangeHashResponse GetRangeHashResponse(List<byte[]> hashes)
         {
             var body = new GetRangeHashResponse.Types.Body();
             body.HashList.AddRange(hashes.Select(p => ByteString.CopyFrom(p)));

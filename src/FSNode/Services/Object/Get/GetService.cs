@@ -4,6 +4,7 @@ using Neo.FSNode.Network.Cache;
 using Neo.FSNode.Services.Object.Util;
 using System.Collections.Generic;
 using Neo.FSNode.Services.Object.Get.Writer;
+using V2Object = NeoFS.API.v2.Object.Object;
 using V2Range = NeoFS.API.v2.Object.Range;
 
 namespace Neo.FSNode.Services.Object.Get
@@ -19,9 +20,12 @@ namespace Neo.FSNode.Services.Object.Get
             Get(prm, null, false);
         }
 
-        public void Head(HeadPrm prm)
+        public V2Object Head(HeadPrm prm)
         {
+            var writer = new SimpleObjectWriter();
+            prm.HeaderWriter = writer;
             Get(prm, null, true);
+            return writer.Obj;
         }
 
         public void GetRange(RangePrm prm)
@@ -29,7 +33,7 @@ namespace Neo.FSNode.Services.Object.Get
             Get(prm, prm.Range, false);
         }
 
-        public GetRangeHashResponse GetRangeHash(RangeHashPrm prm)
+        public List<byte[]> GetRangeHash(RangeHashPrm prm)
         {
             var hashes = new List<byte[]>();
             foreach (var range in prm.Ranges)
@@ -45,7 +49,7 @@ namespace Neo.FSNode.Services.Object.Get
                 Get(range_prm, range, false);
                 hashes.Add(writer.GetHash());
             }
-            return Responser.GetRangeHashResponse(hashes);
+            return hashes;
         }
 
         internal void Get(GetCommonPrm prm, V2Range range, bool head_only)

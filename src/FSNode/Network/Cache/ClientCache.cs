@@ -10,9 +10,8 @@ namespace Neo.FSNode.Network.Cache
     {
         private readonly ConcurrentDictionary<string, Client> clients = new ConcurrentDictionary<string, Client>();
 
-        public Client GetClient(byte[] private_key, string address)
+        public Client GetClient(ECDsa key, string address)
         {
-            var key = private_key.LoadPrivateKey();
             var id = UniqueID(key, address);
             if (clients.TryGetValue(id, out Client client))
             {

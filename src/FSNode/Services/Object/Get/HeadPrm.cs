@@ -16,7 +16,6 @@ namespace Neo.FSNode.Services.Object.Get
                 Short = request.Body.MainOnly,
                 Address = request.Body.Address,
                 Raw = request.Body.Raw,
-                HeaderWriter = new SimpleObjectWriter(),
             };
             prm.WithCommonPrm(CommonPrm.FromRequest(request));
             return prm;

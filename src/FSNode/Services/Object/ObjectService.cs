@@ -3,7 +3,6 @@ using Grpc.Core;
 using NeoFS.API.v2.Acl;
 using NeoFS.API.v2.Cryptography;
 using NeoFS.API.v2.Object;
-using V2Object = NeoFS.API.v2.Object.Object;
 using Neo.FSNode.LocalObjectStorage.LocalStore;
 using Neo.FSNode.Core.Container;
 using Neo.FSNode.Services.Object.Acl;
@@ -13,14 +12,13 @@ using Neo.FSNode.Services.Object.Put;
 using Neo.FSNode.Services.Object.Search;
 using Neo.FSNode.Services.ObjectManager.Transformer;
 using System;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Neo.FSNode.Core.Netmap;
-using Neo.FSNode.Services.ObjectManager.Placement;
 using NeoFS.API.v2.Session;
 using NeoFS.API.v2.Refs;
 using Neo.FSNode.Services.Object.Get.Writer;
+using Neo.FSNode.Services.Object.Util;
 
 namespace Neo.FSNode.Services.Object
 {
@@ -38,6 +36,7 @@ namespace Neo.FSNode.Services.Object
         private readonly PutService putService;
         private readonly SearchService searchService;
         private readonly AclChecker aclChecker;
+        private readonly Responser responser;
 
         public ObjectServiceImpl(IContainerSource container_source, Storage local_storage, IEAclStorage eacl_storage, IState state, IInnerRingFetcher fetcher)
         {
@@ -52,6 +51,7 @@ namespace Neo.FSNode.Services.Object
             searchService = new SearchService();
             var classifier = new Classifier(innerRingFetcher, netmapSource);
             aclChecker = new AclChecker(contnainerSource, localStorage, eAclStorage, classifier, netmapState);
+            responser = new Responser(key);
         }
 
         private ObjectID GetObjectIDFromRequest(IRequest request)
@@ -90,9 +90,12 @@ namespace Neo.FSNode.Services.Object
                 throw new RpcException(new Status(StatusCode.PermissionDenied, e.Message));
             }
             if (!request.VerifyRequest()) throw new RpcException(new Status(StatusCode.Unauthenticated, "verify header failed"));
-            return Task.Factory.StartNew(() =>
+            return Task.Run(() =>
             {
                 var prm = GetPrm.FromRequest(request);
+                var writer = new GetWriter(responseStream);
+                prm.HeaderWriter = writer;
+                prm.ChunkWriter = writer;
                 getService.Get(prm);
             }, context.CancellationToken);
         }
@@ -165,10 +168,13 @@ namespace Neo.FSNode.Services.Object
             return Task.Run(() =>
             {
                 var prm = DeletePrm.FromRequest(request);
-                var result = deleteService.Delete(prm);
+                var address = deleteService.Delete(prm);
                 var resp = new DeleteResponse
                 {
-                    Body = new DeleteResponse.Types.Body { }
+                    Body = new DeleteResponse.Types.Body
+                    {
+                        Tombstone = address,
+                    }
                 };
                 resp.SignResponse(key);
                 return resp;
@@ -195,9 +201,8 @@ namespace Neo.FSNode.Services.Object
             return Task.Run(() =>
             {
                 var head_prm = HeadPrm.FromRequest(request);
-                getService.Head(head_prm);
-                var writer = (SimpleObjectWriter)head_prm.HeaderWriter;
-                return Responser.HeadResponse(head_prm.Short, writer.Obj);
+                var header = getService.Head(head_prm);
+                return responser.HeadResponse(head_prm.Short, header);
             }, context.CancellationToken);
         }
 
@@ -220,6 +225,8 @@ namespace Neo.FSNode.Services.Object
             return Task.Run(() =>
             {
                 var head_prm = RangePrm.FromRequest(request);
+                var writer = new RangeWriter(responseStream, responser);
+                head_prm.ChunkWriter = writer;
                 getService.GetRange(head_prm);
             }, context.CancellationToken);
         }
@@ -242,7 +249,7 @@ namespace Neo.FSNode.Services.Object
             return Task.Run(() =>
             {
                 var prm = RangeHashPrm.FromRequest(request);
-                return getService.GetRangeHash(prm);
+                return responser.GetRangeHashResponse(getService.GetRangeHash(prm));
             }, context.CancellationToken);
         }
 

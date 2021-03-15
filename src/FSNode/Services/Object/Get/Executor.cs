@@ -24,22 +24,11 @@ namespace Neo.FSNode.Services.Object.Get
 {
     public class Executor
     {
-        private enum Status : byte
-        {
-            Undefined,
-            Ok,
-            INHUMED,
-            VIRTUAL,
-            OutOfRange,
-        }
-
         public GetCommonPrm Prm;
         public GetService GetService;
         public V2Range Range;
         public bool HeadOnly;
         private bool assembly;
-        private Status status = Status.Undefined;
-        private Exception exception;
         private V2Object collectedObject;
         private SplitInfo splitInfo;
         private Traverser traverser;
@@ -57,32 +46,8 @@ namespace Neo.FSNode.Services.Object.Get
 
         private void ExecuteLocal()
         {
-            try
-            {
-                collectedObject = GetService.LocalStorage.Get(Prm.Address);
-                status = Status.Ok;
-                WriteCollectedObject();
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-                switch (ex)
-                {
-                    case ObjectAlreadyRemovedException _:
-                        status = Status.INHUMED;
-                        break;
-                    case SplitInfoException e:
-                        MergeSplitInfo(e.SplitInfo);
-                        status = Status.VIRTUAL;
-                        break;
-                    case RangeOutOfBoundsException _:
-                        status = Status.OutOfRange;
-                        break;
-                    default:
-                        status = Status.Undefined;
-                        break;
-                }
-            }
+            collectedObject = GetService.LocalStorage.Get(Prm.Address);
+            WriteCollectedObject();
         }
 
         private void MergeSplitInfo(SplitInfo info)
@@ -104,7 +69,6 @@ namespace Neo.FSNode.Services.Object.Get
             var parent = child.Parent();
             if (parent is null)
             {
-                status = Status.Undefined;
                 return (null, null);
             }
             collectedObject = parent;
@@ -115,9 +79,7 @@ namespace Neo.FSNode.Services.Object.Get
                 var parent_size = parent.Header.PayloadLength;
                 if (parent_size < seek_off + seek_len)
                 {
-                    status = Status.OutOfRange;
-                    exception = new RangeOutOfBoundsException();
-                    return (null, null);
+                    throw new RangeOutOfBoundsException();
                 }
                 var child_size = child.Header.PayloadLength;
                 currentOffset = parent_size - child_size;
@@ -153,11 +115,9 @@ namespace Neo.FSNode.Services.Object.Get
             prm.Local = false;
             GetService.Get(prm, range, false);
             var child = writer.Obj;
-            if (status == Status.Ok && with_header && !IsChild(child))
+            if (with_header && !IsChild(child))
             {
-                status = Status.Undefined;
-                exception = new Exception("wrong child header");
-                return null;
+                throw new Exception("wrong child header");
             }
             return child;
         }
@@ -226,8 +186,6 @@ namespace Neo.FSNode.Services.Object.Get
                 if (child is null) return;
                 if (!WriteObjectPayload(child)) return;
             }
-            status = Status.Ok;
-            exception = null;
         }
 
         private bool OvertakePayloadInReverse(ObjectID prev)
@@ -236,8 +194,6 @@ namespace Neo.FSNode.Services.Object.Get
             {
                 if (0 < ranges.Count) ranges.Reverse();
                 OvertakePayloadDirectly(oids, ranges, false);
-                status = Status.Ok;
-                exception = null;
             }
             return false;
         }
@@ -256,25 +212,13 @@ namespace Neo.FSNode.Services.Object.Get
             prm.Short = false;
             var writer = new SimpleObjectWriter();
             prm.HeaderWriter = writer;
-            try
-            {
-                GetService.Head(prm);
-            }
-            catch (Exception e)
-            {
-                status = Status.Undefined;
-                exception = e;
-                return null;
-            }
+            GetService.Head(prm);
             var child = writer.Obj;
             if (child.Parent().ObjectId != null && IsChild(child))
             {
-                status = Status.Undefined;
                 Utility.Log(nameof(Executor), LogLevel.Info, "parent address in child object differs");
                 return null;
             }
-            status = Status.Ok;
-            exception = null;
             return child;
         }
 
@@ -351,53 +295,28 @@ namespace Neo.FSNode.Services.Object.Get
 
         private void WriteCollectedObject()
         {
-            if (WriteCollectedHeader())
-                WriteObjectPayload(collectedObject);
+            WriteCollectedHeader();
+            WriteObjectPayload(collectedObject);
         }
 
-        private bool WriteCollectedHeader()
+        private void WriteCollectedHeader()
         {
-            if (!ShouldWriteHeader) return true;
+            if (!ShouldWriteHeader) return;
             var cut_obj = V2Object.Parser.ParseFrom(collectedObject.ToByteArray());
             cut_obj.Payload = null;
-            try
-            {
-                Prm.HeaderWriter.WriteHeader(cut_obj);
-                status = Status.Ok;
-                exception = null;
-            }
-            catch (Exception e)
-            {
-                exception = e;
-                status = Status.Undefined;
-            }
-            return status == Status.Ok;
+            Prm.HeaderWriter.WriteHeader(cut_obj);
         }
 
-        private bool WriteObjectPayload(V2Object obj)
+        private void WriteObjectPayload(V2Object obj)
         {
-            if (!ShouldWritePayload) return true;
-            try
-            {
-                Prm.ChunkWriter.WriteChunk(obj.Payload.ToByteArray());
-                status = Status.Ok;
-                exception = null;
-            }
-            catch (Exception e)
-            {
-                status = Status.Undefined;
-                exception = e;
-            }
-            return status == Status.Ok;
+            if (!ShouldWritePayload) return;
+            Prm.ChunkWriter.WriteChunk(obj.Payload.ToByteArray());
         }
 
         private void ExecuteOnContainer()
         {
             if (Prm.Local) return;
             traverser = GenerateTraverser(Prm.Address);
-            if (traverser is null) return;
-            status = Status.Undefined;
-
             while (true)
             {
                 var addrs = traverser.Next();
@@ -420,68 +339,26 @@ namespace Neo.FSNode.Services.Object.Get
         private bool ProcessNode(Network.Address address)
         {
             var client = RemoteClient(address);
-            if (client is null) return true;
             try
             {
                 collectedObject = client.GetObject(Prm.Context, new GetObjectParams { Address = Prm.Address, Raw = Prm.Raw }).Result;
-                if (collectedObject != null)
-                {
-                    status = Status.Ok;
-                    exception = null;
-                    return true;
-                }
             }
             catch (Exception e)
             {
-                switch (e)
-                {
-                    case ObjectAlreadyRemovedException _:
-                        status = Status.INHUMED;
-                        exception = e;
-                        break;
-                    case SplitInfoException splitInfoException:
-                        status = Status.VIRTUAL;
-                        MergeSplitInfo(splitInfoException.SplitInfo);
-                        exception = e;
-                        break;
-                    default:
-                        status = Status.Undefined;
-                        exception = e;
-                        break;
-                }
+                if (e is )
             }
-            return status != Status.Undefined;
+
         }
 
         private V2Client RemoteClient(Network.Address address)
         {
             var iport = address.IPAddressString();
-            try
-            {
-                var client = GetService.ClientCache.GetClient(Prm.Key.ExportECPrivateKey(), iport);
-                if (client != null) return client;
-            }
-            catch (Exception e)
-            {
-                status = Status.Undefined;
-                exception = e;
-            }
-            return null;
+            return GetService.ClientCache.GetClient(Prm.Key, iport);
         }
 
         private Traverser GenerateTraverser(Address address)
         {
-            try
-            {
-                var t = GetService.TraverserGenerator.GenerateTraverser(address);
-                return t;
-            }
-            catch (Exception e)
-            {
-                status = Status.Undefined;
-                exception = e;
-            }
-            return null;
+            return GetService.TraverserGenerator.GenerateTraverser(address);
         }
     }
 }

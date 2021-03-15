@@ -1,19 +1,21 @@
+using System.Security.Cryptography;
+
 namespace Neo.FSNode.Services.Session.Storage
 {
     public class PrivateToken
     {
-        private byte[] sessionKey;
+        private ECDsa sessionKey;
         private ulong exp;
 
-        public byte[] SessionKey
+        public ECDsa SessionKey
         {
-            get => this.sessionKey;
+            get => sessionKey;
         }
 
-        public PrivateToken(byte[] sk, ulong expiration)
+        public PrivateToken(ECDsa sk, ulong expiration)
         {
-            this.sessionKey = sk;
-            this.exp = expiration;
+            sessionKey = sk;
+            exp = expiration;
         }
     }
 }
