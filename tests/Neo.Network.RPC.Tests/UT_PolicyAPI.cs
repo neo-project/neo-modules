@@ -27,7 +27,7 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
-        public async Task GetExecFeeFactor()
+        public async Task TestGetExecFeeFactor()
         {
             byte[] testScript = NativeContract.Policy.Hash.MakeScript("getExecFeeFactor");
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(30) });
@@ -37,7 +37,7 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
-        public async Task GetStoragePrice()
+        public async Task TestGetStoragePrice()
         {
             byte[] testScript = NativeContract.Policy.Hash.MakeScript("getStoragePrice");
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(100000) });
