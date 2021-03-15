@@ -1,5 +1,4 @@
 using Neo.IO;
-using System;
 using System.IO;
 
 namespace Neo.Consensus
@@ -18,8 +17,6 @@ namespace Neo.Consensus
             void ISerializable.Deserialize(BinaryReader reader)
             {
                 ValidatorIndex = reader.ReadByte();
-                if (ValidatorIndex >= DBFTPlugin.System.Settings.ValidatorsCount)
-                    throw new FormatException();
                 InvocationScript = reader.ReadVarBytes(1024);
             }
 

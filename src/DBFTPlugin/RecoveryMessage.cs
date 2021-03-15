@@ -9,13 +9,13 @@ namespace Neo.Consensus
 {
     public partial class RecoveryMessage : ConsensusMessage
     {
-        public Dictionary<int, ChangeViewPayloadCompact> ChangeViewMessages;
+        public Dictionary<byte, ChangeViewPayloadCompact> ChangeViewMessages;
         public PrepareRequest PrepareRequestMessage;
         /// The PreparationHash in case the PrepareRequest hasn't been received yet.
         /// This can be null if the PrepareRequest information is present, since it can be derived in that case.
         public UInt256 PreparationHash;
-        public Dictionary<int, PreparationPayloadCompact> PreparationMessages;
-        public Dictionary<int, CommitPayloadCompact> CommitMessages;
+        public Dictionary<byte, PreparationPayloadCompact> PreparationMessages;
+        public Dictionary<byte, CommitPayloadCompact> CommitMessages;
 
         public override int Size => base.Size
             + /* ChangeViewMessages */ ChangeViewMessages?.Values.GetVarSize() ?? 0
@@ -24,16 +24,16 @@ namespace Neo.Consensus
             + /* PreparationMessages */ PreparationMessages?.Values.GetVarSize() ?? 0
             + /* CommitMessages */ CommitMessages?.Values.GetVarSize() ?? 0;
 
-        public RecoveryMessage() : base(ConsensusMessageType.RecoveryMessage)
-        {
-        }
+        public RecoveryMessage() : base(ConsensusMessageType.RecoveryMessage) { }
 
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);
-            ChangeViewMessages = reader.ReadSerializableArray<ChangeViewPayloadCompact>(DBFTPlugin.System.Settings.ValidatorsCount).ToDictionary(p => (int)p.ValidatorIndex);
+            ChangeViewMessages = reader.ReadSerializableArray<ChangeViewPayloadCompact>(byte.MaxValue).ToDictionary(p => (int)p.ValidatorIndex);
             if (reader.ReadBoolean())
+            {
                 PrepareRequestMessage = reader.ReadSerializable<PrepareRequest>();
+            }
             else
             {
                 int preparationHashSize = UInt256.Zero.Size;
@@ -41,8 +41,17 @@ namespace Neo.Consensus
                     PreparationHash = new UInt256(reader.ReadFixedBytes(preparationHashSize));
             }
 
-            PreparationMessages = reader.ReadSerializableArray<PreparationPayloadCompact>(DBFTPlugin.System.Settings.ValidatorsCount).ToDictionary(p => (int)p.ValidatorIndex);
-            CommitMessages = reader.ReadSerializableArray<CommitPayloadCompact>(DBFTPlugin.System.Settings.ValidatorsCount).ToDictionary(p => (int)p.ValidatorIndex);
+            PreparationMessages = reader.ReadSerializableArray<PreparationPayloadCompact>(byte.MaxValue).ToDictionary(p => p.ValidatorIndex);
+            CommitMessages = reader.ReadSerializableArray<CommitPayloadCompact>(byte.MaxValue).ToDictionary(p => p.ValidatorIndex);
+        }
+
+        public override bool Verify(ProtocolSettings protocolSettings)
+        {
+            if (!base.Verify(protocolSettings)) return false;
+            return (PrepareRequestMessage is null || PrepareRequestMessage.Verify(protocolSettings))
+                && ChangeViewMessages.Values.All(p => p.ValidatorIndex < protocolSettings.ValidatorsCount)
+                && PreparationMessages.Values.All(p => p.ValidatorIndex < protocolSettings.ValidatorsCount)
+                && CommitMessages.Values.All(p => p.ValidatorIndex < protocolSettings.ValidatorsCount);
         }
 
         internal ExtensiblePayload[] GetChangeViewPayloads(ConsensusContext context)

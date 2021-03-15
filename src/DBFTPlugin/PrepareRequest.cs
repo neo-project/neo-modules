@@ -18,10 +18,7 @@ namespace Neo.Consensus
             + sizeof(ulong)                     //Timestamp
             + TransactionHashes.GetVarSize();   //TransactionHashes
 
-        public PrepareRequest()
-            : base(ConsensusMessageType.PrepareRequest)
-        {
-        }
+        public PrepareRequest() : base(ConsensusMessageType.PrepareRequest) { }
 
         public override void Deserialize(BinaryReader reader)
         {
@@ -32,6 +29,12 @@ namespace Neo.Consensus
             TransactionHashes = reader.ReadSerializableArray<UInt256>(ushort.MaxValue);
             if (TransactionHashes.Distinct().Count() != TransactionHashes.Length)
                 throw new FormatException();
+        }
+
+        public override bool Verify(ProtocolSettings protocolSettings)
+        {
+            if (!base.Verify(protocolSettings)) return false;
+            return TransactionHashes.Length <= protocolSettings.MaxTransactionsPerBlock;
         }
 
         public override void Serialize(BinaryWriter writer)

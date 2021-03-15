@@ -30,8 +30,6 @@ namespace Neo.Consensus
                 throw new FormatException();
             BlockIndex = reader.ReadUInt32();
             ValidatorIndex = reader.ReadByte();
-            if (ValidatorIndex >= DBFTPlugin.System.Settings.ValidatorsCount)
-                throw new FormatException();
             ViewNumber = reader.ReadByte();
         }
 
@@ -42,6 +40,11 @@ namespace Neo.Consensus
             t = t.Assembly.GetType($"{t.Namespace}.{type}", false);
             if (t is null) throw new FormatException();
             return (ConsensusMessage)data.AsSerializable(t);
+        }
+
+        public virtual bool Verify(ProtocolSettings protocolSettings)
+        {
+            return ValidatorIndex < protocolSettings.ValidatorsCount;
         }
 
         public virtual void Serialize(BinaryWriter writer)

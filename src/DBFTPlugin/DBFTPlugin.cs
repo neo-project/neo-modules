@@ -11,20 +11,21 @@ namespace Neo.Consensus
         private IWalletProvider walletProvider;
         private IActorRef consensus;
         private bool started = false;
-        internal static NeoSystem System;
+        private NeoSystem neoSystem;
+        private Settings settings;
 
         public override string Description => "Consensus plugin with dBFT algorithm.";
 
         protected override void Configure()
         {
-            Settings.Load(GetConfiguration());
+            settings = new Settings(GetConfiguration());
         }
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            if (system.Settings.Magic != Settings.Default.Network) return;
-            System = system;
-            System.ServiceAdded += NeoSystem_ServiceAdded;
+            if (system.Settings.Magic != settings.Network) return;
+            neoSystem = system;
+            neoSystem.ServiceAdded += NeoSystem_ServiceAdded;
         }
 
         private void NeoSystem_ServiceAdded(object sender, object service)
@@ -32,8 +33,8 @@ namespace Neo.Consensus
             if (service is IWalletProvider)
             {
                 walletProvider = service as IWalletProvider;
-                System.ServiceAdded -= NeoSystem_ServiceAdded;
-                if (Settings.Default.AutoStart)
+                neoSystem.ServiceAdded -= NeoSystem_ServiceAdded;
+                if (settings.AutoStart)
                 {
                     walletProvider.WalletChanged += WalletProvider_WalletChanged;
                 }
@@ -52,11 +53,12 @@ namespace Neo.Consensus
             Start(walletProvider.GetWallet());
         }
 
-        public void Start(Wallet wallet)
+        public void Start(Wallet wallet, Settings settings = null)
         {
             if (started) return;
             started = true;
-            consensus = System.ActorSystem.ActorOf(ConsensusService.Props(System.LocalNode, System.TaskManager, System.Blockchain, System.LoadStore(Settings.Default.RecoveryLogs), wallet));
+            if (settings != null) this.settings = settings;
+            consensus = neoSystem.ActorSystem.ActorOf(ConsensusService.Props(neoSystem, this.settings, wallet));
             consensus.Tell(new ConsensusService.Start());
         }
 
