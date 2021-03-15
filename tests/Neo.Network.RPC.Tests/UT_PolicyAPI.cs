@@ -27,23 +27,23 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
-        public async Task TestGetMaxTransactionsPerBlock()
+        public async Task TestGetExecFeeFactor()
         {
-            byte[] testScript = NativeContract.Policy.Hash.MakeScript("getMaxTransactionsPerBlock");
-            UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(512) });
+            byte[] testScript = NativeContract.Policy.Hash.MakeScript("getExecFeeFactor");
+            UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(30) });
 
-            var result = await policyAPI.GetMaxTransactionsPerBlockAsync();
-            Assert.AreEqual(512u, result);
+            var result = await policyAPI.GetExecFeeFactorAsync();
+            Assert.AreEqual(30u, result);
         }
 
         [TestMethod]
-        public async Task TestGetMaxBlockSize()
+        public async Task TestGetStoragePrice()
         {
-            byte[] testScript = NativeContract.Policy.Hash.MakeScript("getMaxBlockSize");
-            UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1024u * 256u) });
+            byte[] testScript = NativeContract.Policy.Hash.MakeScript("getStoragePrice");
+            UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(100000) });
 
-            var result = await policyAPI.GetMaxBlockSizeAsync();
-            Assert.AreEqual(1024u * 256u, result);
+            var result = await policyAPI.GetStoragePriceAsync();
+            Assert.AreEqual(100000u, result);
         }
 
         [TestMethod]
