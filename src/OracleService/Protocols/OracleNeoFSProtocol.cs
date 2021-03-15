@@ -3,6 +3,7 @@ using Neo.FileSystem.API.Client;
 using Neo.FileSystem.API.Client.ObjectParams;
 using Neo.FileSystem.API.Cryptography;
 using Neo.FileSystem.API.Refs;
+using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Wallets;
 using System;
@@ -102,7 +103,7 @@ namespace Neo.Plugins
         private static async Task<string> GetHeaderAsync(Client client, Address addr, CancellationToken cancellation)
         {
             var obj = await client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 });
-            return obj.ToString();
+            return JObject.Parse(obj.ToString()).ToString();
         }
 
         private static async Task<string> GetHashAsync(Client client, Address addr, string[] ps, CancellationToken cancellation)
