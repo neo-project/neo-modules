@@ -102,7 +102,7 @@ namespace Neo.Plugins
         private static async Task<string> GetHeaderAsync(Client client, Address addr, CancellationToken cancellation)
         {
             var obj = await client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 });
-            return obj.Payload.ToString(Utility.StrictUTF8);
+            return obj.ToString();
         }
 
         private static async Task<string> GetHashAsync(Client client, Address addr, string[] ps, CancellationToken cancellation)
