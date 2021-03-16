@@ -347,7 +347,7 @@ namespace Neo.Plugins
             {
                 throw new RpcException(-100, "Unknown contract");
             }
-            var md = contract.Manifest.Abi.GetMethod("verify", 0);
+            var md = contract.Manifest.Abi.GetMethod("verify", -1);
             if (md is null)
                 throw new RpcException(-101, $"The smart contract {contract.Hash} haven't got verify method without arguments");
             if (md.ReturnType != ContractParameterType.Boolean)
@@ -357,10 +357,13 @@ namespace Neo.Plugins
             {
                 Signers = signers.GetSigners(),
                 Attributes = Array.Empty<TransactionAttribute>(),
-                Witnesses = signers.Witnesses,
             };
             using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.CreateSnapshot(), settings: system.Settings);
             engine.LoadContract(contract, md, CallFlags.ReadOnly);
+            if (args.Length > 0 && args[0].Value is byte[] invocation)
+            {
+                engine.LoadScript(new Script(invocation), configureState: p => p.CallFlags = CallFlags.None);
+            }
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(contract.Script);
             json["state"] = engine.Execute();
