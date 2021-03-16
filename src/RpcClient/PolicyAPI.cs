@@ -20,22 +20,22 @@ namespace Neo.Network.RPC
         public PolicyAPI(RpcClient rpcClient) : base(rpcClient) { }
 
         /// <summary>
-        /// Get Max Transactions Count Per Block
+        /// Get Fee Factor
         /// </summary>
         /// <returns></returns>
-        public async Task<uint> GetMaxTransactionsPerBlockAsync()
+        public async Task<uint> GetExecFeeFactorAsync()
         {
-            var result = await TestInvokeAsync(scriptHash, "getMaxTransactionsPerBlock").ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, "getExecFeeFactor").ConfigureAwait(false);
             return (uint)result.Stack.Single().GetInteger();
         }
 
         /// <summary>
-        /// Get Max Block Size
+        /// Get Storage Price
         /// </summary>
         /// <returns></returns>
-        public async Task<uint> GetMaxBlockSizeAsync()
+        public async Task<uint> GetStoragePriceAsync()
         {
-            var result = await TestInvokeAsync(scriptHash, "getMaxBlockSize").ConfigureAwait(false);
+            var result = await TestInvokeAsync(scriptHash, "getStoragePrice").ConfigureAwait(false);
             return (uint)result.Stack.Single().GetInteger();
         }
 
