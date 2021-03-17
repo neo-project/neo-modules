@@ -1,12 +1,10 @@
 using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Refs;
-using System;
 using System.Collections.Generic;
 
-namespace Neo.Plugins.FSNode.Tests.Services.Object.Delete
+namespace Neo.FileStorage.Tests.Services.Object.Delete
 {
     [TestClass]
     public class UT_Util

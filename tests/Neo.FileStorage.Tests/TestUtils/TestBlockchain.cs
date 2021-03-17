@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using static Neo.FileStorage.Morph.Invoke.MorphClient;
+using static Neo.FileStorage.Morph.Invoker.MorphClient;
 
 namespace Neo.FileStorage.Tests
 {

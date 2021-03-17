@@ -3,11 +3,10 @@ using Neo.FileStorage.Services.ObjectManager.Placement;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neo.Plugins.FSNode.Tests
+namespace Neo.FileStorage.Tests
 {
     public class TestBuilder : IBuilder
     {

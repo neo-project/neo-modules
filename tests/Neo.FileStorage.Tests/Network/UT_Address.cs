@@ -2,7 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Multiformats.Address;
 using Neo.FileStorage.Network;
 
-namespace Neo.FileStorage.Tests
+namespace Neo.FileStorage.Tests.Network
 {
     [TestClass]
     public class UT_Address

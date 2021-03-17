@@ -1,20 +1,20 @@
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
+using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.InnerRing.Processors;
-using Neo.FileStorage.Morph.Invoke;
+using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.API.Netmap;
+using Neo.IO;
 using Neo.Wallets;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
 using static Neo.FileStorage.InnerRing.Timer.EpochTickEvent;
 using System.Collections.Generic;
 using System.Linq;
-using Neo.FileStorage.API.Netmap;
-using Neo.IO;
-using Google.Protobuf;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
-    [TestClass()]
+    [TestClass]
     public class UT_NetMapContractProcessor : TestKit
     {
         private NeoSystem system;
@@ -43,7 +43,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             };
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void HandleNewEpochTickTest()
         {
             processor.HandleNewEpochTick(new NewEpochTickEvent());
@@ -51,7 +51,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(nt);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void HandleNewEpochTest()
         {
             processor.HandleNewEpoch(new NewEpochEvent());
@@ -59,7 +59,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(nt);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void HandleAddPeerTest()
         {
             processor.HandleAddPeer(new AddPeerEvent());
@@ -67,7 +67,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(nt);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void HandleUpdateStateTest()
         {
             IEnumerator<WalletAccount> accounts = wallet.GetAccounts().GetEnumerator();
@@ -81,7 +81,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(nt);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void HandleCleanupTickTest()
         {
             processor.HandleCleanupTick(new NetmapCleanupTickEvent());
@@ -89,28 +89,28 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(nt);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerHandlersTest()
         {
             var handlerInfos = processor.ListenerHandlers();
             Assert.AreEqual(handlerInfos.Length, 3);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerParsersTest()
         {
             var parserInfos = processor.ListenerParsers();
             Assert.AreEqual(parserInfos.Length, 3);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerTimersHandlersTest()
         {
             var handlerInfos = processor.TimersHandlers();
             Assert.AreEqual(handlerInfos.Length, 1);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ProcessNewEpochTest()
         {
             processor.ProcessNewEpoch(new NewEpochEvent()
@@ -121,13 +121,13 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(nt);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ProcessNewEpochTickTest()
         {
             processor.ProcessNewEpochTick(new NewEpochTickEvent());
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ProcessAddPeerTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
@@ -144,7 +144,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             });
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ProcessUpdateStateTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();

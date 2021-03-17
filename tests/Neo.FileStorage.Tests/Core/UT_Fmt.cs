@@ -1,3 +1,4 @@
+using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Netmap;
 using System;
@@ -5,9 +6,8 @@ using H = Neo.FileStorage.Core.Container.Helper;
 using V2Container = Neo.FileStorage.API.Container.Container;
 using V2Version = Neo.FileStorage.API.Refs.Version;
 using V2OwnerID = Neo.FileStorage.API.Refs.OwnerID;
-using Google.Protobuf;
 
-namespace Neo.Plugins.FSNode.Tests
+namespace Neo.FileStorage.Tests.Core
 {
     [TestClass]
     public class UT_Fmt

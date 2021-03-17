@@ -1,25 +1,13 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.SmartContract;
-using Neo.Wallets;
-using System;
-using Neo.IO.Json;
-using Neo.Network.P2P.Payloads;
 using Neo.IO;
-using Neo.VM;
-using System.Linq;
+using Neo.Wallets;
 using Neo.Wallets.NEP6;
-using Neo.Ledger;
-using System.Collections.Generic;
-using Neo.FileStorage.API.Netmap;
-using Google.Protobuf;
-using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.API.Container;
-using Neo.Cryptography;
-using System.IO;
+using System;
+using System.Linq;
 
 namespace Neo.FileStorage.Tests.Morph.Client.Tests
 {
-    [TestClass()]
+    [TestClass]
     public class UT_FSNode
     {
         private Wallet wallet;
@@ -29,7 +17,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
         {
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InitTest()
         {
             var sys = TestBlockchain.TheNeoSystem;
@@ -37,7 +25,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
             Console.WriteLine(temp.GetAccounts().ToArray()[0].GetKey().PublicKey.EncodePoint(true).ToHexString());
         }
 
-        /*        [TestMethod()]
+        /*        [TestMethod]
                 public void FsContractInnerRingUpdate()
                 {
                     NEP6Wallet walletIR = new NEP6Wallet("./walletIR.json");
@@ -78,7 +66,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
                     Console.WriteLine(Convert.ToBase64String(tx.ToArray()));
                 }
 
-                [TestMethod()]
+                [TestMethod]
                 public void BalanceContractBalanceOf()
                 {
                     var wallet1 = TestBlockchain.wallet;
@@ -95,7 +83,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
                 }
 
 
-                [TestMethod()]
+                [TestMethod]
                 public void FsContractBind()
                 {
                     var wallet1 = TestBlockchain.wallet;
@@ -123,7 +111,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
                     Console.WriteLine(Convert.ToBase64String(tx.ToArray()));
                 }
 
-                [TestMethod()]
+                [TestMethod]
                 public void FsContractDeposite()
                 {
                     var newwallet = new MyWallet("test");
@@ -154,7 +142,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
                     //Console.WriteLine(new Signer() { Account = accounts.ToArray()[0].ScriptHash, Scopes = WitnessScope.Global }.ToJson());
                 }
 
-                [TestMethod()]
+                [TestMethod]
                 public void FsContractWithDraw()
                 {
                     var newwallet = new MyWallet("test");
@@ -186,7 +174,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
                     Console.WriteLine(Convert.ToBase64String(tx.ToArray()));
                 }
 
-                [TestMethod()]
+                [TestMethod]
                 public void FsContractDeposit()
                 {
                     var newwallet = TestBlockchain.wallet;
@@ -256,7 +244,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
                     }
                 }
 
-                [TestMethod()]
+                [TestMethod]
                 public void BalanceContractInit()
                 {
                     var wallet1 = TestBlockchain.wallet;
@@ -285,7 +273,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
                     Console.WriteLine(Convert.ToBase64String(tx.ToArray()));
                 }
 
-                [TestMethod()]
+                [TestMethod]
                 public void NetMapContractHashContractInit()
                 {
                     var wallet1 = TestBlockchain.wallet;
@@ -312,7 +300,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
                     Console.WriteLine(Convert.ToBase64String(tx.ToArray()));
                 }
 
-                [TestMethod()]
+                [TestMethod]
                 public void NetMapContractHashContractInitConfig()
                 {
                     var wallet1 = TestBlockchain.wallet;
@@ -339,7 +327,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
                     Console.WriteLine(Convert.ToBase64String(tx.ToArray()));
                 }
 
-                [TestMethod()]
+                [TestMethod]
                 public void ContainerContractHashContractInit()
                 {
                     var wallet1 = TestBlockchain.wallet;
@@ -369,7 +357,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
                     Console.WriteLine(Convert.ToBase64String(tx.ToArray()));
                 }
 
-                [TestMethod()]
+                [TestMethod]
                 public void FsIdContractHashContractInit()
                 {
                     var wallet1 = TestBlockchain.wallet;
@@ -399,7 +387,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
                     Console.WriteLine(Convert.ToBase64String(tx.ToArray()));
                 }
 
-                [TestMethod()]
+                [TestMethod]
                 public void AlphabetContractHashContractInit()
                 {
                     var wallet1 = TestBlockchain.wallet;
@@ -430,7 +418,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
                     }
                 }
 
-                [TestMethod()]
+                [TestMethod]
                 public void NetMapEpoch()
                 {
                     var wallet1 = TestBlockchain.wallet;
@@ -458,7 +446,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
                     Console.WriteLine(Convert.ToBase64String(tx.ToArray()));
                 }
 
-                [TestMethod()]
+                [TestMethod]
                 public void NetMapContractAddPeer()
                 {
                     var newwallet = new MyWallet("test");
@@ -497,7 +485,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
                     Console.WriteLine(Convert.ToBase64String(tx.ToArray()));
                 }
 
-                [TestMethod()]
+                [TestMethod]
                 public void NetMapContractUpdateState()
                 {
                     var newwallet = new MyWallet("test");
@@ -529,7 +517,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
                     Console.WriteLine(Convert.ToBase64String(tx.ToArray()));
                 }
 
-                [TestMethod()]
+                [TestMethod]
                 public void ContainerContractPut()
                 {
                     var newwallet = new MyWallet("test");
@@ -576,7 +564,7 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
                     Console.WriteLine(Convert.ToBase64String(tx.ToArray()));
                 }
 
-                [TestMethod()]
+                [TestMethod]
                 public void ContainerContractDelete()
                 {
                     var newwallet = new MyWallet("test");

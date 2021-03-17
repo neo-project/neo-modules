@@ -1,9 +1,9 @@
 using Akka.Actor;
 using Neo.Cryptography.ECC;
-using Neo.FileStorage.InnerRing.Invoke;
+using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.InnerRing.Timer;
 using Neo.FileStorage.Morph.Event;
-using Neo.FileStorage.Morph.Invoke;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.Plugins.util;
 using Neo.FileStorage.API.Netmap;
 using System;

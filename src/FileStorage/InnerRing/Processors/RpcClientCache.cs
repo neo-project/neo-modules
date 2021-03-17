@@ -1,3 +1,4 @@
+using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.LocalObjectStorage.LocalStore;
 using Neo.FileStorage.Network.Cache;
 using Neo.FileStorage.Services.Audit;
@@ -14,7 +15,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using V2Range = Neo.FileStorage.API.Object.Range;
-using Neo.FileStorage.API.Cryptography;
 
 namespace Neo.Plugins.Innerring.Processors
 {

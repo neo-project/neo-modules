@@ -1,7 +1,7 @@
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.FileStorage.Morph.Invoke;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.IO;
 using Neo.Plugins.util;

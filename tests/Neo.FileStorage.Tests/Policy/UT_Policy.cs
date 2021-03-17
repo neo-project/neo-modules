@@ -3,7 +3,7 @@ using Neo.FileStorage.API.Netmap;
 using static Neo.FileStorage.Policy.Helper;
 using Sprache;
 
-namespace Neo.Plugins.FSNode.Policy.Tests
+namespace Neo.FileStorage.Tests.Policy
 {
     [TestClass]
     public class UT_Policy

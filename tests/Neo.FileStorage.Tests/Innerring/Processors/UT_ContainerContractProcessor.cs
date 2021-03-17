@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.InnerRing.Processors;
-using Neo.FileStorage.Morph.Invoke;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.IO;
 using Neo.Wallets;
 using System;
@@ -15,7 +15,7 @@ using static Neo.FileStorage.Morph.Event.MorphEvent;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
-    [TestClass()]
+    [TestClass]
     public class UT_ContainerContractProcessor : TestKit
     {
         private NeoSystem system;
@@ -44,7 +44,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             };
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void HandlePutTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
@@ -70,7 +70,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(nt);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void HandleDeleteTest()
         {
             processor.HandleDelete(new ContainerDeleteEvent()
@@ -82,7 +82,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(nt);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ProcessContainerPutTest()
         {
             activeState.SetActive(true);
@@ -117,7 +117,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             ExpectNoMsg();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ProcessContainerDeleteTest()
         {
             activeState.SetActive(true);
@@ -142,28 +142,28 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             ExpectNoMsg();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerHandlersTest()
         {
             var handlerInfos = processor.ListenerHandlers();
             Assert.AreEqual(handlerInfos.Length, 2);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerParsersTest()
         {
             var parserInfos = processor.ListenerParsers();
             Assert.AreEqual(parserInfos.Length, 2);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerTimersHandlersTest()
         {
             var handlerInfos = processor.TimersHandlers();
             Assert.AreEqual(0, handlerInfos.Length);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void CheckFormatTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();

@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace Neo.FileStorage.Tests.Morph.Event
 {
-    [TestClass()]
+    [TestClass]
     public class UT_Listener : TestKit, IProcessor
     {
         private IActorRef listener;
@@ -29,7 +29,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             listener = Sys.ActorOf(Listener.Props("Testlistener"));
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void OnStartAndOnStopAndNewContractEventTest()
         {
             //create notify

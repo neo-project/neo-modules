@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 using NeoCrypto = Neo.Cryptography.Crypto;
 
-namespace Neo.Plugins.FSNode.LocalObjectStorage.Tests
+namespace Neo.FileStorage.Tests.LocalObjectStorage
 {
     [TestClass]
     public class UT_TreeBucket

@@ -3,7 +3,7 @@ using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC;
 using Neo.Network.RPC.Models;
-using Neo.FileStorage.Morph.Invoke;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.SmartContract;
 using Neo.VM;
 using Neo.Wallets;
@@ -11,7 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neo.FileStorage.InnerRing.Invoke
+namespace Neo.FileStorage.InnerRing.Invoker
 {
     /// <summary>
     /// MainClient is an implementation of the IClient interface.

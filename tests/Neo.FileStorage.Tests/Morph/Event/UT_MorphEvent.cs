@@ -10,10 +10,10 @@ using Array = Neo.VM.Types.Array;
 
 namespace Neo.FileStorage.Tests.Morph.Event
 {
-    [TestClass()]
+    [TestClass]
     public class UT_MorphEvent
     {
-        [TestMethod()]
+        [TestMethod]
         public void ParseNewEpochEventTest()
         {
             Array array = new Array();
@@ -27,7 +27,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             @event.ContractEvent();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ParseAddPeerEventTest()
         {
             Array array = new Array();
@@ -41,7 +41,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             @event.ContractEvent();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ParseUpdatePeerEventTest()
         {
             Array array = new Array();
@@ -57,7 +57,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             @event.ContractEvent();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ParseLockEventTest()
         {
             Array array = new Array();
@@ -79,7 +79,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             @event.ContractEvent();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ParseContainerPutEventTest()
         {
             Array array = new Array();
@@ -97,7 +97,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             @event.ContractEvent();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ParseContainerDeleteEventTest()
         {
             Array array = new Array();
@@ -113,7 +113,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             @event.ContractEvent();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ParseBindEventTest()
         {
             List<ECPoint> keys = TestBlockchain.wallet.GetAccounts().ToArray().Select(p => p.GetKey().PublicKey).ToList();
@@ -135,7 +135,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             @event.ContractEvent();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ParseUnbindEventTest()
         {
             List<ECPoint> keys = TestBlockchain.wallet.GetAccounts().ToArray().Select(p => p.GetKey().PublicKey).ToList();
@@ -157,7 +157,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             @event.ContractEvent();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ParseChequeEventTest()
         {
             Array array = new Array();
@@ -177,7 +177,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             @event.ContractEvent();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ParseDepositEventTest()
         {
             Array array = new Array();
@@ -197,7 +197,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             @event.ContractEvent();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ParseWithdrawEventTest()
         {
             Array array = new Array();
@@ -215,7 +215,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             @event.ContractEvent();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ParseConfigEventTest()
         {
             Array array = new Array();
@@ -233,7 +233,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             @event.ContractEvent();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ParseUpdateInnerRingTest()
         {
             List<ECPoint> keys = TestBlockchain.wallet.GetAccounts().ToArray().Select(p => p.GetKey().PublicKey).ToList();

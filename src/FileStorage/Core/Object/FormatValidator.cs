@@ -4,7 +4,6 @@ using Neo.IO;
 using Neo.SmartContract;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
-using System;
 using V2Object = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Core.Object

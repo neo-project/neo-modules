@@ -7,7 +7,7 @@ using Neo.FileStorage.Morph.Event;
 
 namespace Neo.FileStorage.Tests.InnerRing.Timer
 {
-    [TestClass()]
+    [TestClass]
     public class UT_Timers : TestKit, IProcessor
     {
         private IActorRef timers;
@@ -21,7 +21,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Timer
             timers.Tell(new Timers.BindTimersEvent() { processor = this });
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void OnTimerTest()
         {
             timers.Tell(new Timers.Start());

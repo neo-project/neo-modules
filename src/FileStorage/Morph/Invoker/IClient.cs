@@ -1,7 +1,7 @@
 using Neo.VM;
 using Neo.VM.Types;
 
-namespace Neo.FileStorage.Morph.Invoke
+namespace Neo.FileStorage.Morph.Invoker
 {
     public interface IClient
     {

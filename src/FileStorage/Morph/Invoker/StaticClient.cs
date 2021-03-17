@@ -1,4 +1,4 @@
-namespace Neo.FileStorage.Morph.Invoke
+namespace Neo.FileStorage.Morph.Invoker
 {
     public class StaticClient
     {

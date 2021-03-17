@@ -1,15 +1,15 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Network.RPC;
-using Neo.FileStorage.InnerRing.Invoke;
+using Neo.FileStorage.InnerRing.Invoker;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
 using Moq;
 using Neo.Network.RPC.Models;
 using Neo.IO.Json;
 
-namespace Neo.FileStorage.Tests.InnerRing.Invoke
+namespace Neo.FileStorage.Tests.InnerRing.Invoker
 {
-    [TestClass()]
+    [TestClass]
     public class UT_MainClient
     {
         private NeoSystem system;
@@ -30,7 +30,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoke
                 .Verifiable();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeFunctionTest()
         {
             MainClient client = new MainClient(new string[] { "http://seed1t.neo.org:20332" }, wallet);

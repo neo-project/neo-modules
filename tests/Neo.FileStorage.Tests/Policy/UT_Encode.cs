@@ -2,7 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.Policy;
 using static Neo.FileStorage.Policy.Helper;
 
-namespace Neo.Plugins.FSNode.Policy.Tests
+namespace Neo.FileStorage.Tests.Policy
 {
     [TestClass]
     public class UT_Encode

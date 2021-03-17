@@ -1,19 +1,19 @@
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neo.Cryptography.ECC;
 using Neo.IO;
 using Neo.FileStorage.InnerRing.Processors;
-using Neo.FileStorage.Morph.Invoke;
+using Neo.FileStorage.Morph.Invoker;
+using Neo.Plugins.util;
 using Neo.Wallets;
 using System.Collections.Generic;
 using System.Linq;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
-using Neo.Cryptography.ECC;
-using Neo.Plugins.util;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
-    [TestClass()]
+    [TestClass]
     public class UT_FsContractProcessor : TestKit
     {
         private NeoSystem system;
@@ -44,7 +44,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             };
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void HandleDepositTest()
         {
             processor.HandleDeposit(new DepositEvent()
@@ -58,7 +58,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(nt);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void HandleWithdrawTest()
         {
             processor.HandleWithdraw(new WithdrawEvent()
@@ -71,7 +71,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(nt);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void HandleChequeTest()
         {
             processor.HandleCheque(new ChequeEvent()
@@ -85,7 +85,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(nt);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void HandleConfigTest()
         {
             processor.HandleConfig(new ConfigEvent()
@@ -97,7 +97,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(nt);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void HandleUpdateInnerRingTest()
         {
             processor.HandleUpdateInnerRing(new UpdateInnerRingEvent()
@@ -108,7 +108,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(nt);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ProcessDepositTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
@@ -123,7 +123,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(tx);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ProcessWithdrawTest()
         {
             processor.ProcessWithdraw(new WithdrawEvent()
@@ -136,7 +136,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(tx);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ProcessChequeTest()
         {
             processor.ProcessCheque(new ChequeEvent()
@@ -150,7 +150,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(tx);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ProcessConfigTest()
         {
             processor.ProcessConfig(new ConfigEvent()
@@ -163,7 +163,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(tx);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ProcessUpdateInnerRingTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
@@ -176,21 +176,21 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(tx);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerHandlersTest()
         {
             var handlerInfos = processor.ListenerHandlers();
             Assert.AreEqual(handlerInfos.Length, 5);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerParsersTest()
         {
             var parserInfos = processor.ListenerParsers();
             Assert.AreEqual(parserInfos.Length, 5);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerTimersHandlersTest()
         {
             var handlerInfos = processor.TimersHandlers();

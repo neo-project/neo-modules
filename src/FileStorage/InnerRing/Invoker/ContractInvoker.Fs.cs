@@ -1,12 +1,12 @@
 using Neo.Cryptography.ECC;
 using Neo.IO;
-using Neo.FileStorage.Morph.Invoke;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.VM.Types;
 using System.Collections.Generic;
 using System.Linq;
 using Array = Neo.VM.Types.Array;
 
-namespace Neo.FileStorage.InnerRing.Invoke
+namespace Neo.FileStorage.InnerRing.Invoker
 {
     public partial class ContractInvoker
     {

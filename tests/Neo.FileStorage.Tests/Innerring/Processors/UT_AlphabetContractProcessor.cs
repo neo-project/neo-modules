@@ -2,13 +2,13 @@ using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.InnerRing.Processors;
-using Neo.FileStorage.Morph.Invoke;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.Wallets;
 using static Neo.FileStorage.InnerRing.Timer.EpochTickEvent;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
-    [TestClass()]
+    [TestClass]
     public class UT_AlphabetContractProcessor : TestKit
     {
         private NeoSystem system;
@@ -37,7 +37,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             };
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void HandleHandleGasEmissionTest()
         {
             processor.HandleGasEmission(new NewAlphabetEmitTickEvent());
@@ -45,7 +45,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.IsNotNull(nt);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ProcessEmitTest()
         {
             processor.ProcessEmit();
@@ -56,21 +56,21 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             ExpectNoMsg();
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerHandlersTest()
         {
             var handlerInfos = processor.ListenerHandlers();
             Assert.AreEqual(0, handlerInfos.Length);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerParsersTest()
         {
             var parserInfos = processor.ListenerParsers();
             Assert.AreEqual(0, parserInfos.Length);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ListenerTimersHandlersTest()
         {
             var handlerInfos = processor.TimersHandlers();

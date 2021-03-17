@@ -5,7 +5,7 @@ using Neo.IO;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.FileStorage.InnerRing;
-using Neo.FileStorage.Morph.Invoke;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.SmartContract;
 using Neo.VM;
 using Neo.Wallets.NEP6;
@@ -36,7 +36,7 @@ namespace Neo.FileStorage.Tests.InnerRing
             innerring = system.ActorSystem.ActorOf(InnerRingService.Props(system, wallet, client, client));
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InitConfigAndContractEventTest()
         {
             innerring.Tell(new InnerRingService.Start());

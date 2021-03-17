@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Neo.FileStorage.Morph.Invoke
+namespace Neo.FileStorage.Morph.Invoker
 {
     /// <summary>
     /// MorphClient is an implementation of the IClient interface.

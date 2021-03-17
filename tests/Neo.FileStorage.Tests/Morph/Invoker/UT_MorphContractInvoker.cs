@@ -4,18 +4,18 @@ using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.Morph.Invoke;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Tests.InnerRing.Processors;
 using Neo.IO;
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static Neo.FileStorage.Morph.Invoke.MorphContractInvoker;
+using static Neo.FileStorage.Morph.Invoker.MorphContractInvoker;
 
-namespace Neo.FileStorage.Tests.Morph.Invoke
+namespace Neo.FileStorage.Tests.Morph.Invoker
 {
-    [TestClass()]
+    [TestClass]
     public class UT_MorphContractInvoker : TestKit
     {
         private MorphClient client;
@@ -33,21 +33,21 @@ namespace Neo.FileStorage.Tests.Morph.Invoke
             };
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeBalanceOfTest()
         {
             long result = MorphContractInvoker.InvokeBalanceOf(client, UInt160.Zero.ToArray());
             Assert.AreEqual(result, 0);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeDecimalsTest()
         {
             long result = MorphContractInvoker.InvokeDecimals(client);
             Assert.AreEqual(result, 12);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeAddPeerTest()
         {
             var key = wallet.GetAccounts().ToArray()[0].GetKey().PublicKey;
@@ -59,7 +59,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoke
             Assert.AreEqual(result, true);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeConfigTest()
         {
             var key = Neo.Utility.StrictUTF8.GetBytes("ContainerFee");
@@ -67,14 +67,14 @@ namespace Neo.FileStorage.Tests.Morph.Invoke
             Assert.AreEqual(result.ToHexString(), BitConverter.GetBytes(0).ToHexString());
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeEpochTest()
         {
             long result = MorphContractInvoker.InvokeEpoch(client);
             Assert.AreEqual(result, 1);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeNewEpochTest()
         {
             bool result = MorphContractInvoker.InvokeNewEpoch(client, 1);
@@ -83,14 +83,14 @@ namespace Neo.FileStorage.Tests.Morph.Invoke
             Assert.IsNotNull(tx);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeInnerRingListTest()
         {
             byte[][] result = MorphContractInvoker.InvokeInnerRingList(client);
             Assert.AreEqual(result.Length, 7);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeUpdateStateTest()
         {
             var key = wallet.GetAccounts().ToArray()[0].GetKey().PublicKey;
@@ -104,21 +104,21 @@ namespace Neo.FileStorage.Tests.Morph.Invoke
             Assert.IsNotNull(tx);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeSnapshotTest()
         {
             byte[][] result = MorphContractInvoker.InvokeSnapshot(client, 0);
             Assert.AreEqual(result.Length, 1);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeNetMapTest()
         {
             byte[][] result = MorphContractInvoker.InvokeNetMap(client);
             Assert.AreEqual(result.Length, 1);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokePutTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
@@ -144,7 +144,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoke
             Assert.IsNotNull(tx);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeDeleteTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
@@ -169,7 +169,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoke
             Assert.IsNotNull(tx);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeSetEACLTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
@@ -200,7 +200,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoke
             Assert.IsNotNull(tx);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeGetEACLTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
@@ -226,7 +226,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoke
             Assert.AreEqual(result.eacl.ToHexString(), eACLTable.ToByteArray().ToHexString());
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeGetContainerTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
@@ -244,7 +244,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoke
             Assert.AreEqual(result.ToHexString(), container.ToByteArray().ToHexString());
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeGetContainerListTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();

@@ -1,4 +1,3 @@
-using Neo.FileStorage.Services.Policer;
 using Google.Protobuf;
 using Neo.IO.Data.LevelDB;
 using Neo.FileStorage.API.Object;

@@ -1,14 +1,14 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Plugins.util;
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
-using static Neo.Plugins.util.WorkerPool;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neo.Plugins.util;
 using System.Threading.Tasks;
 using System;
+using static Neo.Plugins.util.WorkerPool;
 
 namespace Neo.FileStorage.Tests.Util
 {
-    [TestClass()]
+    [TestClass]
     public class WorkerPoolTests : TestKit
     {
         private NeoSystem system;
@@ -21,7 +21,7 @@ namespace Neo.FileStorage.Tests.Util
             workerpool = system.ActorSystem.ActorOf(WorkerPool.Props("test", 2));
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void NewTaskAndCompleteTaskTest()
         {
             workerpool.Tell(new NewTask() { process = "aaa", task = new Task(() => { Console.WriteLine("aaa"); }) });

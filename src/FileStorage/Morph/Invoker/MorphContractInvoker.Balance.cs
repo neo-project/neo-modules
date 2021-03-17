@@ -1,6 +1,6 @@
 using System;
 
-namespace Neo.FileStorage.Morph.Invoke
+namespace Neo.FileStorage.Morph.Invoker
 {
     public partial class MorphContractInvoker
     {

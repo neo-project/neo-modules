@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using Array = Neo.VM.Types.Array;
 
-namespace Neo.FileStorage.Morph.Invoke
+namespace Neo.FileStorage.Morph.Invoker
 {
     public partial class MorphContractInvoker
     {
@@ -34,28 +34,29 @@ namespace Neo.FileStorage.Morph.Invoke
             return ParseAuditResults(result.ResultStack[0]);
         }
 
-        public static byte[][] InvokeListAuditResultsByEpoch(IClient client,long epoch)
+        public static byte[][] InvokeListAuditResultsByEpoch(IClient client, long epoch)
         {
             InvokeResult result = client.InvokeLocalFunction(AuditContractHash, ListByEpochResultsMethod, epoch);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", ListByEpochResultsMethod));
             return ParseAuditResults(result.ResultStack[0]);
         }
 
-        public static byte[][] InvokeListAuditResultsByCID(IClient client, long epoch,byte[] cid)
+        public static byte[][] InvokeListAuditResultsByCID(IClient client, long epoch, byte[] cid)
         {
             InvokeResult result = client.InvokeLocalFunction(AuditContractHash, ListByCIDResultsMethod, epoch, cid);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", ListByEpochResultsMethod));
             return ParseAuditResults(result.ResultStack[0]);
         }
 
-        public static byte[][] InvokeListAuditResultsByNode(IClient client, long epoch,byte[] cid,byte[] nodeKey)
+        public static byte[][] InvokeListAuditResultsByNode(IClient client, long epoch, byte[] cid, byte[] nodeKey)
         {
-            InvokeResult result = client.InvokeLocalFunction(AuditContractHash, ListByNodeResultsMethod, epoch,cid, nodeKey);
+            InvokeResult result = client.InvokeLocalFunction(AuditContractHash, ListByNodeResultsMethod, epoch, cid, nodeKey);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", ListByEpochResultsMethod));
             return ParseAuditResults(result.ResultStack[0]);
         }
 
-        public static byte[][] ParseAuditResults(StackItem result) {
+        public static byte[][] ParseAuditResults(StackItem result)
+        {
             Array array = (Array)result;
             IEnumerator<StackItem> enumerator = array.GetEnumerator();
             List<byte[]> resultArray = new List<byte[]>();

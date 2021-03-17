@@ -3,10 +3,10 @@ using Neo.Plugins.util;
 
 namespace Neo.FileStorage.Tests.Util
 {
-    [TestClass()]
+    [TestClass]
     public class ConvertUtilTests
     {
-        [TestMethod()]
+        [TestMethod]
         public void ConvertTest()
         {
             ConvertUtil convertUtil = new ConvertUtil();
@@ -14,7 +14,7 @@ namespace Neo.FileStorage.Tests.Util
             Assert.AreEqual(convertUtil.Convert(10, 1, 1000000000), 1);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ToBasePrecisionAndToTargetPrecisionTest()
         {
             ConvertUtil convertUtil = new ConvertUtil();
@@ -25,7 +25,7 @@ namespace Neo.FileStorage.Tests.Util
             Assert.AreEqual(convertUtil.ToTargetPrecision(1), 1000000000);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void ToFixed8AndToBalancePrecisionTest()
         {
             Fixed8ConverterUtil fixed8ConverterUtil = new Fixed8ConverterUtil();

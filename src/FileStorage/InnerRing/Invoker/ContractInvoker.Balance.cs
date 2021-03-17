@@ -1,7 +1,6 @@
-using Neo.FileStorage.Morph.Invoke;
-using System;
+using Neo.FileStorage.Morph.Invoker;
 
-namespace Neo.FileStorage.InnerRing.Invoke
+namespace Neo.FileStorage.InnerRing.Invoker
 {
     public partial class ContractInvoker
     {

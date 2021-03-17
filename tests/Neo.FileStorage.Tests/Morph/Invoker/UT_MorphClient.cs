@@ -1,14 +1,14 @@
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
-using Neo.FileStorage.Tests.InnerRing.Processors;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.FileStorage.Morph.Invoke;
+using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Tests.InnerRing.Processors;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
 
-namespace Neo.FileStorage.Tests.Morph.Invoke
+namespace Neo.FileStorage.Tests.Morph.Invoker
 {
-    [TestClass()]
+    [TestClass]
     public class UT_MorphClient : TestKit
     {
         private NeoSystem system;
@@ -27,7 +27,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoke
             };
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeLocalFunctionTest()
         {
             InvokeResult result = client.InvokeLocalFunction(NativeContract.GAS.Hash, "balanceOf", UInt160.Zero);
@@ -36,7 +36,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoke
             Assert.AreEqual(result.ResultStack[0].GetInteger(), 0);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void InvokeFunctionTest()
         {
             client.InvokeFunction(NativeContract.GAS.Hash, "balanceOf", 0, UInt160.Zero);
@@ -44,7 +44,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoke
             Assert.IsNotNull(result);
         }
 
-        [TestMethod()]
+        [TestMethod]
         public void TransferGasTest()
         {
             client.TransferGas(UInt160.Zero, 0);
