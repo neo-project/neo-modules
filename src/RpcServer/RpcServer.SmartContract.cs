@@ -99,7 +99,8 @@ namespace Neo.Plugins
                 AllowedGroups = ((JArray)u["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
             }).ToArray())
             {
-                Witnesses = _params.Select(u => new
+                Witnesses = _params
+                    .Select(u => new
                     {
                         Invocation = u["invocation"]?.AsString(),
                         Verification = u["verification"]?.AsString()
