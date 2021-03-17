@@ -105,11 +105,11 @@ namespace Neo.Plugins
                         Invocation = u["invocation"]?.AsString(),
                         Verification = u["verification"]?.AsString()
                     })
-                    .Where(x => x.Invocation != null && x.Verification != null)
+                    .Where(x => x.Invocation != null || x.Verification != null)
                     .Select(x => new Witness()
                     {
-                        InvocationScript = Convert.FromBase64String(x.Invocation),
-                        VerificationScript = Convert.FromBase64String(x.Verification)
+                        InvocationScript = Convert.FromBase64String(x.Invocation ?? string.Empty),
+                        VerificationScript = Convert.FromBase64String(x.Verification ?? string.Empty)
                     }).ToArray()
             };
 
