@@ -362,17 +362,21 @@ namespace Neo.Plugins
             };
             using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.CreateSnapshot(), settings: system.Settings);
             engine.LoadContract(contract, md, CallFlags.ReadOnly);
+
+            var invocationScript = new byte[] { };
             if (args.Length > 0)
             {
                 using ScriptBuilder sb = new ScriptBuilder();
                 for (int i = args.Length - 1; i >= 0; i--)
                     sb.EmitPush(args[i]);
 
-                tx.Witnesses ??= new Witness[] {new() {InvocationScript = sb.ToArray()}};
-                engine.LoadScript(new Script(sb.ToArray()), configureState: p => p.CallFlags = CallFlags.None);
+                invocationScript = sb.ToArray();
+                tx.Witnesses ??= new Witness[] { new() { InvocationScript = invocationScript } };
+                engine.LoadScript(new Script(invocationScript), configureState: p => p.CallFlags = CallFlags.None);
             }
             JObject json = new JObject();
-            json["script"] = Convert.ToBase64String(contract.Script);
+
+            json["script"] = Convert.ToBase64String(invocationScript);
             json["state"] = engine.Execute();
             json["gasconsumed"] = engine.GasConsumed.ToString();
             json["exception"] = GetExceptionMessage(engine.FaultException);
