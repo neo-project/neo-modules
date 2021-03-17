@@ -353,14 +353,9 @@ namespace Neo.Plugins
             if (md.ReturnType != ContractParameterType.Boolean)
                 throw new RpcException(-102, "The verify method doesn't return boolean value.");
 
-            var defaultSigner = new List<Signer>() { new() { Account = scriptHash } };
-            if (signers != null)
-            {
-                defaultSigner.AddRange(signers.GetSigners());
-            }
             Transaction tx = new Transaction
             {
-                Signers = defaultSigner.ToArray(),
+                Signers = signers == null ? new Signer[] { new() { Account = scriptHash } } : signers.GetSigners(),
                 Attributes = Array.Empty<TransactionAttribute>(),
                 Script = new[] { (byte)OpCode.RET }
             };
