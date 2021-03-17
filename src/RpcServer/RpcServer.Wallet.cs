@@ -349,20 +349,30 @@ namespace Neo.Plugins
             }
             var md = contract.Manifest.Abi.GetMethod("verify", -1);
             if (md is null)
-                throw new RpcException(-101, $"The smart contract {contract.Hash} haven't got verify method without arguments");
+                throw new RpcException(-101, $"The smart contract {contract.Hash} haven't got verify method.");
             if (md.ReturnType != ContractParameterType.Boolean)
                 throw new RpcException(-102, "The verify method doesn't return boolean value.");
 
-            Transaction tx = signers == null ? null : new Transaction
+            var defaultSigner = new List<Signer>() { new() { Account = scriptHash } };
+            if (signers != null)
             {
-                Signers = signers.GetSigners(),
+                defaultSigner.AddRange(signers.GetSigners());
+            }
+            Transaction tx = new Transaction
+            {
+                Signers = defaultSigner.ToArray(),
                 Attributes = Array.Empty<TransactionAttribute>(),
+                Script = new[] { (byte)OpCode.RET }
             };
             using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.CreateSnapshot(), settings: system.Settings);
             engine.LoadContract(contract, md, CallFlags.ReadOnly);
-            if (args.Length > 0 && args[0].Value is byte[] invocation)
+            if (args.Length > 0)
             {
-                engine.LoadScript(new Script(invocation), configureState: p => p.CallFlags = CallFlags.None);
+                using ScriptBuilder sb = new ScriptBuilder();
+                for (int i = args.Length - 1; i >= 0; i--)
+                    sb.EmitPush(args[i]);
+
+                engine.LoadScript(new Script(sb.ToArray()), configureState: p => p.CallFlags = CallFlags.None);
             }
             JObject json = new JObject();
             json["script"] = Convert.ToBase64String(contract.Script);
