@@ -23,8 +23,6 @@ namespace Neo.Consensus
             {
                 ViewNumber = reader.ReadByte();
                 ValidatorIndex = reader.ReadByte();
-                if (ValidatorIndex >= DBFTPlugin.System.Settings.ValidatorsCount)
-                    throw new FormatException();
                 Signature = reader.ReadFixedBytes(64);
                 InvocationScript = reader.ReadVarBytes(1024);
             }
