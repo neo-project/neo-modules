@@ -368,6 +368,7 @@ namespace Neo.Plugins
                 for (int i = args.Length - 1; i >= 0; i--)
                     sb.EmitPush(args[i]);
 
+                tx.Witnesses ??= new Witness[] {new() {InvocationScript = sb.ToArray()}};
                 engine.LoadScript(new Script(sb.ToArray()), configureState: p => p.CallFlags = CallFlags.None);
             }
             JObject json = new JObject();
