@@ -357,6 +357,7 @@ namespace Neo.Plugins
             {
                 Signers = signers == null ? new Signer[] { new() { Account = scriptHash } } : signers.GetSigners(),
                 Attributes = Array.Empty<TransactionAttribute>(),
+                Witnesses = signers?.Witnesses,
                 Script = new[] { (byte)OpCode.RET }
             };
             using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.CreateSnapshot(), settings: system.Settings);
