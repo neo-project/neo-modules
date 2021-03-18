@@ -97,7 +97,21 @@ namespace Neo.Plugins
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"]?.AsString()),
                 AllowedContracts = ((JArray)u["allowedcontracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray(),
                 AllowedGroups = ((JArray)u["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
-            }).ToArray());
+            }).ToArray())
+            {
+                Witnesses = _params
+                    .Select(u => new
+                    {
+                        Invocation = u["invocation"]?.AsString(),
+                        Verification = u["verification"]?.AsString()
+                    })
+                    .Where(x => x.Invocation != null || x.Verification != null)
+                    .Select(x => new Witness()
+                    {
+                        InvocationScript = Convert.FromBase64String(x.Invocation ?? string.Empty),
+                        VerificationScript = Convert.FromBase64String(x.Verification ?? string.Empty)
+                    }).ToArray()
+            };
 
             // Validate format
 
