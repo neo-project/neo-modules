@@ -112,7 +112,6 @@ namespace Neo.Plugins
             if ((blockIndex % Settings.Default.BlockCacheSize == 0) || (Settings.Default.HeightToStartRealTimeSyncing != -1 && blockIndex >= Settings.Default.HeightToStartRealTimeSyncing))
             {
                 string path = HandlePaths(network, blockIndex);
-                Directory.CreateDirectory(path);
                 path = $"{path}/dump-block-{blockIndex}.json";
                 File.WriteAllText(path, cache.ToString());
                 cache.Clear();
