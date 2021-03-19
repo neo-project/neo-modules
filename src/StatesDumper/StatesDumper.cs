@@ -53,8 +53,7 @@ namespace Neo.Plugins
         }
 
         private void OnPersistStorage(uint network, DataCache snapshot)
-        {
-            if (!bs_cache.TryGetValue(network, out JArray cache)) return;
+        {            
             uint blockIndex = NativeContract.Ledger.CurrentIndex(snapshot);
             if (blockIndex >= Settings.Default.HeightToBegin)
             {
@@ -90,7 +89,12 @@ namespace Neo.Plugins
                 bs_item["block"] = blockIndex;
                 bs_item["size"] = array.Count;
                 bs_item["storage"] = array;
+                if (!bs_cache.TryGetValue(network, out JArray cache)) 
+                {
+                    cache = new JArray();
+                }   
                 cache.Add(bs_item);
+                bs_cache[network] = cache;
             }
         }
 
