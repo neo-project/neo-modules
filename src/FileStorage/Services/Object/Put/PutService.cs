@@ -15,7 +15,7 @@ namespace Neo.FileStorage.Services.Object.Put
         private INetmapSource netmapSource;
         private IContainerSource containerSource;
         private IMaxSizeSource maxSizeSource;
-        private FormatValidator objectValidator;
+        private ObjectValidator objectValidator;
         private KeyStorage keyStorage;
 
         public ObjectID Put(V2Object obj)

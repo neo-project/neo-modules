@@ -10,7 +10,7 @@ namespace Neo.FileStorage.Services.Object.Put
 {
     public abstract class ValidatingTarget : IObjectTarget
     {
-        public FormatValidator ObjectValidator;
+        public ObjectValidator ObjectValidator;
         protected Checksum checksum;
         protected bool initReceived;
         protected byte[] payload = Array.Empty<byte>();
