@@ -161,7 +161,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             byte[] sig = Neo.Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
             bool result = MorphContractInvoker.InvokeDelete(client, new DeleteArgs()
             {
-                cid = container.CalCulateAndGetID.Value.ToByteArray(),
+                cid = container.CalCulateAndGetId.Value.ToByteArray(),
                 sig = sig
             });
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
@@ -185,7 +185,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             };
             Neo.FileStorage.API.Acl.EACLTable eACLTable = new Neo.FileStorage.API.Acl.EACLTable()
             {
-                ContainerId = container.CalCulateAndGetID,
+                ContainerId = container.CalCulateAndGetId,
                 Version = new Neo.FileStorage.API.Refs.Version(),
             };
             eACLTable.Records.Add(new Neo.FileStorage.API.Acl.EACLRecord());
@@ -216,12 +216,12 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             };
             Neo.FileStorage.API.Acl.EACLTable eACLTable = new Neo.FileStorage.API.Acl.EACLTable()
             {
-                ContainerId = container.CalCulateAndGetID,
+                ContainerId = container.CalCulateAndGetId,
                 Version = new Neo.FileStorage.API.Refs.Version(),
             };
             eACLTable.Records.Add(new Neo.FileStorage.API.Acl.EACLRecord());
             byte[] sig = Neo.Cryptography.Crypto.Sign(eACLTable.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            EACLValues result = MorphContractInvoker.InvokeGetEACL(client, container.CalCulateAndGetID.Value.ToByteArray());
+            EACLValues result = MorphContractInvoker.InvokeGetEACL(client, container.CalCulateAndGetId.Value.ToByteArray());
             Assert.IsNotNull(result);
             Assert.AreEqual(result.eacl.ToHexString(), eACLTable.ToByteArray().ToHexString());
         }
@@ -240,7 +240,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 OwnerId = ownerId,
                 PlacementPolicy = new PlacementPolicy()
             };
-            byte[] result = MorphContractInvoker.InvokeGetContainer(client, container.CalCulateAndGetID.Value.ToByteArray());
+            byte[] result = MorphContractInvoker.InvokeGetContainer(client, container.CalCulateAndGetId.Value.ToByteArray());
             Assert.AreEqual(result.ToHexString(), container.ToByteArray().ToHexString());
         }
 
@@ -260,7 +260,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             };
             byte[][] result = MorphContractInvoker.InvokeGetContainerList(client, ownerId.Value.ToByteArray());
             Assert.AreEqual(result.Length, 1);
-            Assert.AreEqual(result[0].ToHexString(), container.CalCulateAndGetID.Value.ToByteArray().ToHexString());
+            Assert.AreEqual(result[0].ToHexString(), container.CalCulateAndGetId.Value.ToByteArray().ToHexString());
         }
     }
 }

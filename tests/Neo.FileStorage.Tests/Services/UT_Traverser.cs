@@ -94,7 +94,7 @@ namespace Neo.FileStorage.Tests
             {
                 Address = new Address
                 {
-                    ContainerId = ctn.CalCulateAndGetID,
+                    ContainerId = ctn.CalCulateAndGetId,
                 },
                 Policy = ctn.PlacementPolicy,
                 Builder = new TestBuilder(nodesCopy),
@@ -133,7 +133,7 @@ namespace Neo.FileStorage.Tests
             {
                 Address = new Address
                 {
-                    ContainerId = ctn.CalCulateAndGetID,
+                    ContainerId = ctn.CalCulateAndGetId,
                 },
                 Builder = new TestBuilder(nodesCopy),
                 FlatSuccess = 1,
@@ -179,7 +179,7 @@ namespace Neo.FileStorage.Tests
             {
                 Address = new Address
                 {
-                    ContainerId = ctn.CalCulateAndGetID,
+                    ContainerId = ctn.CalCulateAndGetId,
                 },
                 Builder = new TestBuilder(nodesCopy),
             };

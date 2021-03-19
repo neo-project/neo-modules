@@ -1,6 +1,6 @@
 namespace Neo.FileStorage.Core.Netmap
 {
-    public interface IState
+    public interface INetState
     {
         ulong CurrentEpoch();
     }

@@ -118,7 +118,7 @@ namespace Neo.FileStorage.Tests
             };
             byte[] sig = Neo.Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
             script = settings.ContainerContractHash.MakeScript("put", container.ToByteArray(), sig, key.PublicKey.ToArray());
-            var containerId = container.CalCulateAndGetID.Value.ToByteArray();
+            var containerId = container.CalCulateAndGetId.Value.ToByteArray();
             for (int i = 0; i < accounts.Count(); i++)
             {
                 ExecuteScript(snapshot, "FakeContainer", script, accounts.ToArray()[i].ScriptHash);
@@ -127,7 +127,7 @@ namespace Neo.FileStorage.Tests
             //Fake eacl
             Neo.FileStorage.API.Acl.EACLTable eACLTable = new Neo.FileStorage.API.Acl.EACLTable()
             {
-                ContainerId = container.CalCulateAndGetID,
+                ContainerId = container.CalCulateAndGetId,
                 Version = new Neo.FileStorage.API.Refs.Version(),
             };
             eACLTable.Records.Add(new Neo.FileStorage.API.Acl.EACLRecord());

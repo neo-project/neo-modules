@@ -22,7 +22,7 @@ namespace Neo.FileStorage.Services.Policer
         public ILocalAddressSource LocalAddressSource;
         public Replicator.Replicator Replicator;
         private Storage localStorage;
-        public ISource ContainerSource;
+        public IContainerSource ContainerSource;
         public IBuilder PlacementBuilder;
         public RemoteHeaderSource remoteHeaderSource;
         private static SearchFilters jobFilters;

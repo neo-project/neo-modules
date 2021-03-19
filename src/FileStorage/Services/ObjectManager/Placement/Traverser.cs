@@ -100,7 +100,7 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
         {
             if (Address is null)
                 Address = new Address();
-            Address.ContainerId = container.CalCulateAndGetID;
+            Address.ContainerId = container.CalCulateAndGetId;
             Policy = container.PlacementPolicy;
             return this;
         }

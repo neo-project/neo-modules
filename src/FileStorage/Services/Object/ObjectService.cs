@@ -29,7 +29,7 @@ namespace Neo.FileStorage.Services.Object
         private readonly IContainerSource contnainerSource;
         private readonly IInnerRingFetcher innerRingFetcher;
         private readonly INetmapSource netmapSource;
-        private readonly IState netmapState;
+        private readonly INetState netmapState;
         private readonly IEAclStorage eAclStorage;
         private readonly DeleteService deleteService;
         private readonly GetService getService;
@@ -38,7 +38,7 @@ namespace Neo.FileStorage.Services.Object
         private readonly AclChecker aclChecker;
         private readonly Responser responser;
 
-        public ObjectServiceImpl(IContainerSource container_source, Storage local_storage, IEAclStorage eacl_storage, IState state, IInnerRingFetcher fetcher)
+        public ObjectServiceImpl(IContainerSource container_source, Storage local_storage, IEAclStorage eacl_storage, INetState state, IInnerRingFetcher fetcher)
         {
             localStorage = local_storage;
             eAclStorage = eacl_storage;

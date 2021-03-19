@@ -40,7 +40,7 @@ namespace Neo.FileStorage.Services.Util.Response
     public class Cfg
     {
         public V2Version Version { get; set; }
-        public IState State { get; set; }
+        public INetState State { get; set; }
 
         public static readonly Cfg DefaultCfg = new Cfg() { Version = new V2Version() { Major = V2Version.MajorFieldNumber, Minor = V2Version.MinorFieldNumber } };
     }
@@ -58,7 +58,7 @@ namespace Neo.FileStorage.Services.Util.Response
             resp.MetaHeader = meta;
         }
 
-        public static Option WithNetworkState(this IState state)
+        public static Option WithNetworkState(this INetState state)
         {
             return (cfg) => cfg.State = state;
         }

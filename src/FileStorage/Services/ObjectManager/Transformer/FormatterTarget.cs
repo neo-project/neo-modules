@@ -11,7 +11,7 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
         public ECDsa Key;
         public IObjectTarget NextTarget;
         public SessionToken SessionToken;
-        public IState NetworkState;
+        public INetState NetworkState;
         private V2Object obj;
         private ulong sz;
 

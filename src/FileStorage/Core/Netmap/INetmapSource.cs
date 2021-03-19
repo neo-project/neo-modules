@@ -17,5 +17,20 @@ namespace Neo.FileStorage.Core.Netmap
         // the network map through it.
 
         NetMap GetNetMap(ulong diff);
+
+        // GetNetMapByEpoch reads network map by the epoch number from the storage.
+        // It returns the pointer to requested network map and any error encountered.
+        //
+        // Must return exactly one non-nil value.
+        //
+        // Implementations must not retain the network map pointer and modify
+        // the network map through it.
+        NetMap GetNetMapByEpoch(ulong epoch);
+
+        // Epoch reads current epoch from the storage.
+        // It returns number of the current epoch and any error encountered.
+        //
+        // Must return exactly one non-default value.
+        ulong Epoch();
     }
 }

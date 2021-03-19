@@ -34,7 +34,7 @@ namespace Neo.FileStorage.Services.Object.Put
             {
                 Address = new V2Address
                 {
-                    ContainerId = Prm.Container.CalCulateAndGetID,
+                    ContainerId = Prm.Container.CalCulateAndGetId,
                     ObjectId = Prm.Init.ObjectId,
                 },
                 Builder = Prm.Builder,

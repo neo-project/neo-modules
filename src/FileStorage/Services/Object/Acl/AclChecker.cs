@@ -21,9 +21,9 @@ namespace Neo.FileStorage.Services.Object.Acl
         private readonly Storage localStorage;
         private readonly EAclValidator eAclValidator;
         private readonly Classifier classifier;
-        private readonly IState netmapState;
+        private readonly INetState netmapState;
 
-        public AclChecker(IContainerSource cs, Storage local_storage, IEAclStorage storage, Classifier classifier, IState state)
+        public AclChecker(IContainerSource cs, Storage local_storage, IEAclStorage storage, Classifier classifier, INetState state)
         {
             containerSource = cs;
             localStorage = local_storage;
@@ -140,7 +140,7 @@ namespace Neo.FileStorage.Services.Object.Acl
             return info.SenderKey.PublicKeyToOwnerID().Value == owner.Value;
         }
 
-        private bool IsValidBearer(RequestInfo info, IState state)
+        private bool IsValidBearer(RequestInfo info, INetState state)
         {
             if (info.Bearer is null || info.Bearer.Body is null && info.Bearer.Signature is null)
                 return true;

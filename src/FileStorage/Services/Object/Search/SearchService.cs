@@ -45,7 +45,7 @@ namespace Neo.FileStorage.Services.Object.Search
                 Policy = container.PlacementPolicy,
                 Address = new V2Address
                 {
-                    ContainerId = container.CalCulateAndGetID,
+                    ContainerId = container.CalCulateAndGetId,
                 },
                 FlatSuccess = 1,
             };

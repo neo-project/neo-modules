@@ -1,25 +1,24 @@
 using Google.Protobuf;
 using Neo.Cryptography.ECC;
-using Neo.IO;
-using Neo.SmartContract;
+using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Core.Netmap;
+using Neo.IO;
+using Neo.SmartContract;
 using V2Object = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Core.Object
 {
-    public interface IDeleteHandler
-    {
-        void DeleteObjects(params Address[] objAddrs);
-    }
-
     public class FormatValidator
     {
-        private IDeleteHandler deleteHandler;
+        private IObjectDeleteHandler deleteHandler;
+        private INetState netState;
 
-        public FormatValidator()
+        public FormatValidator(IObjectDeleteHandler handler, INetState state)
         {
-
+            deleteHandler = handler;
+            netState = state;
         }
 
         public bool Validate(V2Object obj)
@@ -43,25 +42,19 @@ namespace Neo.FileStorage.Core.Object
 
         private bool ValidateSignatureKey(V2Object obj)
         {
-            var token = obj.Header.SessionToken;
+            var token = obj.SessionToken;
             var key = obj.Signature.Key;
 
             if (token is null || !token.Body.SessionKey.Equals(key))
-                return CheckOwnerKey(obj.Header.OwnerId, obj.Signature.Key.ToByteArray());
+                return obj.OwnerId == key.ToByteArray().PublicKeyToOwnerID();
 
             // TODO: perform token verification
             return true;
         }
 
-        private bool CheckOwnerKey(OwnerID id, byte[] key)
+        public bool CheckExpiration(V2Object obj)
         {
-            var pubKey = ECPoint.FromBytes(key, ECCurve.Secp256r1);
-            var scriptHash = pubKey.EncodePoint(true).ToScriptHash();
-            var w = scriptHash.ToArray()[..25];
-
-            var id2 = new OwnerID() { Value = ByteString.CopyFrom(w) };
-
-            return id.ToByteString() == id2.ToByteString();
+            return true;
         }
 
         public bool ValidateContent(ObjectType t, byte[] payload)
