@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageId>Neo.Plugins.FSNode</PackageId>
-    <RootNamespace>Neo.Plugins</RootNamespace>
+    <PackageId>Neo.FileStorage.Node</PackageId>
+    <RootNamespace>Neo.FileStorage</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

@@ -28,9 +28,8 @@ namespace Neo.FileStorage.Tests
 
         static TestBlockchain()
         {
-            TheNeoSystem = new NeoSystem();
+            TheNeoSystem = new NeoSystem(ProtocolSettings.Default);
             Console.WriteLine("initialize NeoSystem");
-            var _ = Blockchain.Singleton;
             InitializeMockNeoSystem();
         }
 
@@ -41,7 +40,7 @@ namespace Neo.FileStorage.Tests
             IConfigurationSection config = new ConfigurationBuilder().AddJsonFile(ConfigFilePath, optional: true).Build().GetSection("PluginConfiguration");
             Settings.Load(config);
             settings = Settings.Default;
-            wallet = new NEP6Wallet(Settings.Default.WalletPath);
+            wallet = new NEP6Wallet(Settings.Default.WalletPath, TheNeoSystem.Settings);
             wallet.Unlock(Settings.Default.Password);
             if (!File.Exists(Settings.Default.WalletPath))
             {
@@ -53,12 +52,12 @@ namespace Neo.FileStorage.Tests
             }
             //Fake balance
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            UInt160 from = Contract.GetBFTAddress(Blockchain.StandbyValidators);
+            UInt160 from = Contract.GetBFTAddress(TheNeoSystem.Settings.StandbyValidators);
             UInt160 to = accounts.ToArray()[0].ScriptHash;
             FakeSigners signers = new FakeSigners(from);
             byte[] script = NativeContract.GAS.Hash.MakeScript("transfer", from, to, 500_00000000, null);
-            var snapshot = Blockchain.Singleton.GetSnapshot();
-            ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, container: signers, null, 0, 2000000000);
+            using var snapshot = TheNeoSystem.GetSnapshot();
+            ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, container: signers, null, TheNeoSystem.Settings, 0, 2000000000);
             //Fake deploy contract
             string DeployContractsCasesPath = "./Config/Contracts/DeployContractCases.json";
             IEnumerable<IConfigurationSection> deployContracts = new ConfigurationBuilder().AddJsonFile(DeployContractsCasesPath, optional: true).Build().GetSection("DeployContracts").GetChildren();
@@ -183,7 +182,7 @@ namespace Neo.FileStorage.Tests
                 Signers = new Signer[] { new Signer() { Account = sender, Scopes = WitnessScope.Global } },
                 Attributes = Array.Empty<TransactionAttribute>(),
             };
-            ApplicationEngine engine = ApplicationEngine.Run(sb.ToArray(), snapshot, tx, null, 0, 2000000000);
+            ApplicationEngine engine = ApplicationEngine.Run(sb.ToArray(), snapshot, tx, null, TheNeoSystem.Settings, 0, 2000000000);
             if (engine.State != VMState.HALT)
                 Console.WriteLine(string.Format("Deploy {0} contract fault.Contract Hash:{1}", contractName, contractHash));
             else
@@ -193,7 +192,7 @@ namespace Neo.FileStorage.Tests
         private static void ExecuteScript(DataCache snapshot, string functionName, byte[] script, UInt160 sender)
         {
             FakeSigners signers = new FakeSigners(sender);
-            ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, container: signers, null, 0, 2000000000);
+            ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, container: signers, null, TheNeoSystem.Settings, 0, 2000000000);
             if (engine.State != VMState.HALT)
                 Console.WriteLine(string.Format("{0} execute fault.", functionName));
             else
@@ -211,7 +210,7 @@ namespace Neo.FileStorage.Tests
 
         Dictionary<UInt160, WalletAccount> accounts = new Dictionary<UInt160, WalletAccount>();
 
-        public MyWallet(string path) : base(path)
+        public MyWallet(string path) : base(path, ProtocolSettings.Default)
         {
         }
 
@@ -233,7 +232,7 @@ namespace Neo.FileStorage.Tests
         public override WalletAccount CreateAccount(byte[] privateKey)
         {
             KeyPair key = new KeyPair(privateKey);
-            Neo.Wallets.SQLite.VerificationContract contract = new Neo.Wallets.SQLite.VerificationContract
+            Contract contract = new Contract
             {
                 Script = Contract.CreateSignatureRedeemScript(key.PublicKey),
                 ParameterList = new[] { ContractParameterType.Signature }
@@ -291,7 +290,7 @@ namespace Neo.FileStorage.Tests
         public override bool HasKey => key != null;
 
         public MyWalletAccount(UInt160 scriptHash)
-            : base(scriptHash)
+            : base(scriptHash, ProtocolSettings.Default)
         {
         }
 

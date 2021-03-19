@@ -47,6 +47,7 @@ namespace Neo.FileStorage.InnerRing
         private AlphabetContractProcessor alphabetContractProcessor;
         private AuditContractProcessor auditContractProcessor;
 
+        private readonly NeoSystem system;
         private IClient mainNetClient;
         private IClient morphClient;
         private RpcClientCache clientCache;
@@ -68,11 +69,12 @@ namespace Neo.FileStorage.InnerRing
         /// <param name="system">NeoSystem</param>
         public InnerRingService(NeoSystem system, NEP6Wallet pwallet = null, IClient pMainNetClient = null, IClient pMorphClient = null)
         {
+            this.system = system;
             convert = new Fixed8ConverterUtil();
             //Create wallet
             if (pwallet is null)
             {
-                wallet = new NEP6Wallet(Settings.Default.WalletPath);
+                wallet = new NEP6Wallet(Settings.Default.WalletPath, system.Settings);
                 wallet.Unlock(Settings.Default.Password);
             }
             else

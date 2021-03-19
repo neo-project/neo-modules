@@ -20,6 +20,7 @@ namespace Neo.FileStorage.Morph.Invoker
     /// </summary>
     public class MorphClient : IClient
     {
+        public readonly NeoSystem system;
         public Wallet Wallet;
         public IActorRef Blockchain;
 
@@ -68,7 +69,7 @@ namespace Neo.FileStorage.Morph.Invoker
             InvokeResult result = InvokeLocalFunction(contractHash, method, args);
             Console.WriteLine("构建" + contractHash.ToArray().ToHexString() + "," + method + "," + str + "," + result.State);
             if (result.State != VMState.HALT) return false;
-            using var snapshot = Ledger.Blockchain.Singleton.GetSnapshot();
+            using var snapshot = system.GetSnapshot();
             Random rand = new Random();
             Transaction tx = new Transaction
             {
@@ -82,7 +83,7 @@ namespace Neo.FileStorage.Morph.Invoker
             tx.SystemFee = result.GasConsumed + fee;
             //todo version
             tx.NetworkFee = Wallet.CalculateNetworkFee(snapshot, tx);
-            var data = new ContractParametersContext(tx);
+            var data = new ContractParametersContext(snapshot, tx);
             Wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             Blockchain.Tell(tx);
@@ -100,17 +101,18 @@ namespace Neo.FileStorage.Morph.Invoker
 
         private InvokeResult GetInvokeResult(byte[] script, FakeSigners signers = null, bool testMode = true)
         {
-            using var snapshot = Ledger.Blockchain.Singleton.GetSnapshot();
-            ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, container: signers, null, 0, 20000000000);
+            using var snapshot = system.GetSnapshot();
+            ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, container: signers, null, system.Settings, 0, 20000000000);
             return new InvokeResult() { State = engine.State, GasConsumed = (long)engine.GasConsumed, Script = script, ResultStack = engine.ResultStack.ToArray<StackItem>() };
         }
 
         public void TransferGas(UInt160 to, long amount)
         {
+            using var snapshot = system.GetSnapshot();
             UInt160 assetId = NativeContract.GAS.Hash;
-            AssetDescriptor descriptor = new AssetDescriptor(assetId);
+            AssetDescriptor descriptor = new AssetDescriptor(snapshot, system.Settings, assetId);
             BigDecimal pamount = BigDecimal.Parse(amount.ToString(), descriptor.Decimals);
-            Transaction tx = Wallet.MakeTransaction(new[]
+            Transaction tx = Wallet.MakeTransaction(snapshot, new[]
             {
                 new TransferOutput
                 {
@@ -120,7 +122,7 @@ namespace Neo.FileStorage.Morph.Invoker
                 }
             });
             if (tx == null) throw new Exception("Insufficient funds");
-            ContractParametersContext data = new ContractParametersContext(tx);
+            ContractParametersContext data = new ContractParametersContext(snapshot, tx);
             Wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             Blockchain.Tell(tx);

@@ -29,15 +29,14 @@ namespace Neo.FileStorage
             Settings.Load(GetConfiguration());
         }
 
-        protected override void OnPluginsLoaded()
+        protected override void OnSystemLoaded(NeoSystem system)
         {
-            base.OnPluginsLoaded();
             if (Settings.Default.IsSender)
             {
-                innering = System.ActorSystem.ActorOf(InnerRingSender.Props());
+                innering = system.ActorSystem.ActorOf(InnerRingSender.Props());
                 return;
             }
-            innering = System.ActorSystem.ActorOf(InnerRingService.Props(Plugin.System));
+            innering = system.ActorSystem.ActorOf(InnerRingService.Props(system));
             RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
             innering.Tell(new Start() { });
         }

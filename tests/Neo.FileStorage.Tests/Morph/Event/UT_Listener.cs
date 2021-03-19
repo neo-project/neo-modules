@@ -17,6 +17,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
     [TestClass]
     public class UT_Listener : TestKit, IProcessor
     {
+        private NeoSystem system;
         private IActorRef listener;
         private Wallet wallet;
         private string name = "Testlistener";
@@ -32,6 +33,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
         [TestMethod]
         public void OnStartAndOnStopAndNewContractEventTest()
         {
+            using var snapshot = system.GetSnapshot();
             //create notify
             var tx = new Transaction()
             {
@@ -44,7 +46,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
                 ValidUntilBlock = 0,
                 Version = 0,
             };
-            var data = new ContractParametersContext(tx);
+            var data = new ContractParametersContext(snapshot, tx);
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             JArray obj = new JArray();

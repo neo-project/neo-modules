@@ -42,6 +42,7 @@ namespace Neo.FileStorage.Tests.InnerRing
             innerring.Tell(new InnerRingService.Start());
             var tx = ExpectMsg<Transaction>();
             Assert.IsNotNull(tx);
+            using var snapshot = system.GetSnapshot();
             //create notify
             tx = new Transaction()
             {
@@ -54,7 +55,7 @@ namespace Neo.FileStorage.Tests.InnerRing
                 ValidUntilBlock = 0,
                 Version = 0,
             };
-            var data = new ContractParametersContext(tx);
+            var data = new ContractParametersContext(snapshot, tx);
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             JArray obj = new JArray();

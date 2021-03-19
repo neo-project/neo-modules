@@ -10,6 +10,7 @@ using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Neo.Ledger;
 
 namespace Neo.FileStorage.InnerRing.Invoker
 {
@@ -19,6 +20,7 @@ namespace Neo.FileStorage.InnerRing.Invoker
     /// </summary>
     public class MainClient : IClient
     {
+        public NeoSystem system;
         public Wallet Wallet;
         public RpcClient[] Clients;
 
@@ -32,6 +34,7 @@ namespace Neo.FileStorage.InnerRing.Invoker
         {
             InvokeResult result = InvokeLocalFunction(contractHash, method, args);
             var blockHeight = (uint)(Clients[0].RpcSendAsync("getblockcount").Result.AsNumber());
+            using var snapshot = system.GetSnapshot();
             Random rand = new Random();
             Transaction tx = new Transaction
             {
@@ -44,12 +47,12 @@ namespace Neo.FileStorage.InnerRing.Invoker
                 SystemFee = result.GasConsumed + fee,
                 NetworkFee = 0
             };
-            var data = new ContractParametersContext(tx);
+            var data = new ContractParametersContext(snapshot, tx);
             Wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             var networkFee = Clients[0].RpcSendAsync("calculatenetworkfee", Convert.ToBase64String(tx.ToArray())).Result["networkfee"].AsNumber();
             tx.NetworkFee = (long)networkFee;
-            data = new ContractParametersContext(tx);
+            data = new ContractParametersContext(snapshot, tx);
             Wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             JObject hash = Clients[0].RpcSendAsync("sendrawtransaction", Convert.ToBase64String(tx.ToArray())).Result;

@@ -18,6 +18,7 @@ namespace Neo.FileStorage.InnerRing.Processors
     {
         private string name = "AlphabetContractProcessor";
 
+        public readonly NeoSystem system;
         public IClient Client;
         public IActorRef WorkPool;
         public IIndexer Indexer;
@@ -120,7 +121,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Dictionary<string, string> pairs = new Dictionary<string, string>();
                     pairs.Add("can't transfer gas", ":");
                     pairs.Add("receiver", e.Message);
-                    pairs.Add("amount", key.EncodePoint(true).ToScriptHash().ToAddress());
+                    pairs.Add("amount", key.EncodePoint(true).ToScriptHash().ToAddress(system.Settings.AddressVersion));
                     Neo.Utility.Log(Name, LogLevel.Warning, pairs.ParseToString());
                 }
             }
