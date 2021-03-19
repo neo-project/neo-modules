@@ -24,9 +24,5 @@
     <ProjectReference Include="..\RpcClient\RpcClient.csproj" />
     <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <PackageReference Update="Neo" Version="3.0.0-preview5" />
-  </ItemGroup>
 
 </Project>
