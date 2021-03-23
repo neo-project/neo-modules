@@ -40,7 +40,7 @@ namespace Neo.FileStorage.Services.Object.Put
                 Builder = Prm.Builder,
                 Policy = Prm.Container.PlacementPolicy,
             };
-            if (!ObjectValidator.ValidateContent(obj.Header.ObjectType, payload))
+            if (!ObjectValidator.ValidateContent(obj))
                 throw new InvalidOperationException(nameof(DistributeTarget) + " invalid content");
             obj.Payload = ByteString.CopyFrom(payload);
             while (true)

@@ -3,7 +3,7 @@ using Neo.FileStorage.API.Refs;
 
 namespace Neo.FileStorage.Core.Container
 {
-    public interface IEAclStorage
+    public interface IEAclSource
     {
         EACLTable GetEACL(ContainerID cid);
     }
