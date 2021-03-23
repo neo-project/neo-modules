@@ -23,11 +23,11 @@ namespace Neo.FileStorage.Services.Object.Acl
         private readonly Classifier classifier;
         private readonly INetState netmapState;
 
-        public AclChecker(IContainerSource cs, Storage local_storage, IEAclStorage storage, Classifier classifier, INetState state)
+        public AclChecker(IContainerSource cs, Storage local_storage, IEAclSource source, Classifier classifier, INetState state)
         {
             containerSource = cs;
             localStorage = local_storage;
-            eAclValidator = new EAclValidator(storage);
+            eAclValidator = new EAclValidator(source);
             this.classifier = classifier;
             netmapState = state;
         }

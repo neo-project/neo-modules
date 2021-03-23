@@ -72,7 +72,7 @@ namespace Neo.Plugins.Innerring.Processors
                 {
                     var source = new CancellationTokenSource();
                     source.CancelAfter(TimeSpan.FromMinutes(1));
-                    obj = cli.GetObject(source.Token, new GetObjectParams { Address = sgAddress, Raw = false }).Result;
+                    obj = cli.GetObject(new GetObjectParams { Address = sgAddress, Raw = false }, context: source.Token).Result;
                 }
                 catch (Exception e)
                 {
@@ -133,7 +133,7 @@ namespace Neo.Plugins.Innerring.Processors
             {
                 var source = new CancellationTokenSource();
                 source.CancelAfter(TimeSpan.FromMinutes(1));
-                head = client.GetObjectHeader(source.Token, new ObjectHeaderParams { Address = objAddress, Raw = raw }).Result;
+                head = client.GetObjectHeader(new ObjectHeaderParams { Address = objAddress, Raw = raw }, context: source.Token).Result;
             }
             catch (Exception e)
             {
@@ -172,7 +172,7 @@ namespace Neo.Plugins.Innerring.Processors
             {
                 var source = new CancellationTokenSource();
                 source.CancelAfter(TimeSpan.FromMinutes(1));
-                result = cli.GetObjectPayloadRangeHash(source.Token, new RangeChecksumParams { Address = objAddress, Ranges = new List<V2Range> { rng }, Type = ChecksumType.Tz, Salt = null }).Result;
+                result = cli.GetObjectPayloadRangeHash(new RangeChecksumParams { Address = objAddress, Ranges = new List<V2Range> { rng }, Type = ChecksumType.Tz, Salt = null }, context: source.Token).Result;
             }
             catch (Exception e)
             {

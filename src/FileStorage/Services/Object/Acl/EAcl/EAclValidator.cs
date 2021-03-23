@@ -7,11 +7,11 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
 {
     public class EAclValidator
     {
-        private readonly IEAclStorage EAclStorage;
+        private readonly IEAclSource EAclSource;
 
-        public EAclValidator(IEAclStorage storage)
+        public EAclValidator(IEAclSource source)
         {
-            EAclStorage = storage;
+            EAclSource = source;
         }
 
         public Action CalculateAction(ValidateUnit unit)
@@ -20,7 +20,7 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
             if (unit.Bearer is null)
                 table = unit.Bearer.Body?.EaclTable;
             else
-                table = EAclStorage.GetEACL(unit.Cid);
+                table = EAclSource.GetEACL(unit.Cid);
             if (table is null)
                 return Action.Allow;
             return TableAction(unit, table);

@@ -227,7 +227,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 {
                     var source = new CancellationTokenSource();
                     source.CancelAfter(TimeSpan.FromMinutes(1));
-                    List<ObjectID> result = cli.SearchObject(source.Token, new SearchObjectParams { ContainerID = cid, Filters = searchFilters }).Result;
+                    List<ObjectID> result = cli.SearchObject(new SearchObjectParams { ContainerID = cid, Filters = searchFilters }, context: source.Token).Result;
                     sg.AddRange(result);
                     break;
                 }

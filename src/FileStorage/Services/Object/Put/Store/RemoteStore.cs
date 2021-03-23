@@ -27,12 +27,12 @@ namespace Neo.FileStorage.Services.Object.Put.Store
                 throw new InvalidOperationException(nameof(Range) + $" could not create SDK client {addr}");
             var source = new CancellationTokenSource();
             source.CancelAfter(TimeSpan.FromMinutes(1));
-            var oid = client.PutObject(source.Token, new Neo.FileStorage.API.Client.ObjectParams.PutObjectParams { Object = obj }, new Neo.FileStorage.API.Client.CallOptions
+            var oid = client.PutObject(new Neo.FileStorage.API.Client.ObjectParams.PutObjectParams { Object = obj }, new Neo.FileStorage.API.Client.CallOptions
             {
                 Ttl = 1,
                 Session = SessionToken,
                 Bearer = BearerToken,
-            }).Result;
+            }, source.Token).Result;
             if (oid is null)
                 throw new InvalidOperationException(nameof(Range) + $" could not read object payload range from {addr}");
         }

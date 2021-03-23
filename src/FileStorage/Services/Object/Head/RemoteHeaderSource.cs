@@ -30,12 +30,12 @@ namespace Neo.FileStorage.Services.Object.Head.HeaderSource
                 throw new InvalidOperationException(nameof(Range) + $" could not create SDK client {addr}");
             var source = new CancellationTokenSource();
             source.CancelAfter(TimeSpan.FromMinutes(1));
-            var header = client.GetObjectHeader(source.Token, new ObjectHeaderParams { Address = address, Short = false }, new CallOptions
+            var header = client.GetObjectHeader(new ObjectHeaderParams { Address = address, Short = false }, new CallOptions
             {
                 Ttl = 1,
                 Session = SessionToken,
                 Bearer = BearerToken,
-            }).Result;
+            }, source.Token).Result;
             if (header is null)
                 throw new InvalidOperationException(nameof(Range) + $" could not read object payload range from {addr}");
             return header;

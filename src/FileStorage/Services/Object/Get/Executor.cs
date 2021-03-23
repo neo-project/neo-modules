@@ -313,7 +313,7 @@ namespace Neo.FileStorage.Services.Object.Get
             var client = RemoteClient(address);
             try
             {
-                collectedObject = client.GetObject(Prm.Context, new GetObjectParams { Address = Prm.Address, Raw = Prm.Raw }).Result;
+                collectedObject = client.GetObject(new GetObjectParams { Address = Prm.Address, Raw = Prm.Raw }, context: Prm.Context).Result;
             }
             catch (Exception e)
             {

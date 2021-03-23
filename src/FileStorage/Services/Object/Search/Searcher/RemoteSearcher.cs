@@ -27,18 +27,18 @@ namespace Neo.FileStorage.Services.Object.Search.Searcher
                 throw new InvalidOperationException(nameof(RemoteSearcher) + $" could not create SDK client {addr}");
             var source = new CancellationTokenSource();
             source.CancelAfter(TimeSpan.FromMinutes(1));
-            var oids = client.SearchObject(source.Token,
+            var oids = client.SearchObject(
                 new SearchObjectParams
                 {
                     ContainerID = cid,
                     Filters = filters,
                 },
-                new Neo.FileStorage.API.Client.CallOptions
+                new API.Client.CallOptions
                 {
                     Ttl = 1,
                     Session = prm.SessionToken,
                     Bearer = prm.BearerToken,
-                });
+                }, source.Token);
             if (oids is null)
                 throw new InvalidOperationException(nameof(RemoteSearcher) + $" could not read range hash from {addr}");
             return oids.Result;
