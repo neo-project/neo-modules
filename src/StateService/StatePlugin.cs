@@ -67,8 +67,8 @@ namespace Neo.Plugins.StateService
         public override void Dispose()
         {
             base.Dispose();
-            System.EnsureStoped(Store);
-            if (Verifier != null) System.EnsureStoped(Verifier);
+            if (Store is not null) System.EnsureStoped(Store);
+            if (Verifier is not null) System.EnsureStoped(Verifier);
         }
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
@@ -86,7 +86,7 @@ namespace Neo.Plugins.StateService
 
         public void Start(Wallet wallet)
         {
-            if (Verifier != null)
+            if (Verifier is not null)
             {
                 Console.WriteLine("Already started!");
                 return;
