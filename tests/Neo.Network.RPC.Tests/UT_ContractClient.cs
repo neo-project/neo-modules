@@ -49,7 +49,7 @@ namespace Neo.Network.RPC.Tests
                     Methods = new ContractMethodDescriptor[0]
                 },
                 Groups = new ContractGroup[0],
-                Trusts = WildcardContainer<UInt160>.Create(),
+                Trusts = WildcardContainer<ContractPermissionDescriptor>.Create(),
                 SupportedStandards = new string[] { "NEP-10" },
                 Extra = null,
             };
