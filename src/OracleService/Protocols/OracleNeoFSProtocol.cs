@@ -88,7 +88,7 @@ namespace Neo.Plugins
 
         private static async Task<string> GetPayloadAsync(Client client, Address addr, CancellationToken cancellation)
         {
-            Object obj = await client.GetObject(cancellation, new GetObjectParams() { Address = addr }, new CallOptions { Ttl = 2 });
+            Object obj = await client.GetObject(new GetObjectParams() { Address = addr }, new CallOptions { Ttl = 2 }, cancellation);
             return obj.Payload.ToString(Utility.StrictUTF8);
         }
 
@@ -96,13 +96,13 @@ namespace Neo.Plugins
         {
             if (ps.Length == 0) throw new FormatException("missing object range (expected 'Offset|Length')");
             Range range = ParseRange(ps[0]);
-            var res = await client.GetObjectPayloadRangeData(cancellation, new RangeDataParams() { Address = addr, Range = range }, new CallOptions { Ttl = 2 });
+            var res = await client.GetObjectPayloadRangeData(new RangeDataParams() { Address = addr, Range = range }, new CallOptions { Ttl = 2 }, cancellation);
             return Utility.StrictUTF8.GetString(res);
         }
 
         private static async Task<string> GetHeaderAsync(Client client, Address addr, CancellationToken cancellation)
         {
-            var obj = await client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 });
+            var obj = await client.GetObjectHeader(new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 }, cancellation);
             return obj.ToJson().ToString();
         }
 
@@ -110,11 +110,11 @@ namespace Neo.Plugins
         {
             if (ps.Length == 0 || ps[0] == "")
             {
-                Object obj = await client.GetObjectHeader(cancellation, new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 });
+                Object obj = await client.GetObjectHeader(new ObjectHeaderParams() { Address = addr }, new CallOptions { Ttl = 2 }, cancellation);
                 return $"\"{new UInt256(obj.PayloadChecksum.Sum.ToByteArray())}\"";
             }
             Range range = ParseRange(ps[0]);
-            List<byte[]> hashes = await client.GetObjectPayloadRangeHash(cancellation, new RangeChecksumParams() { Address = addr, Ranges = new List<Range>() { range }, Type = ChecksumType.Sha256, Salt = Array.Empty<byte>() }, new CallOptions { Ttl = 2 });
+            List<byte[]> hashes = await client.GetObjectPayloadRangeHash(new RangeChecksumParams() { Address = addr, Ranges = new List<Range>() { range }, Type = ChecksumType.Sha256, Salt = Array.Empty<byte>() }, new CallOptions { Ttl = 2 }, cancellation);
             if (hashes.Count == 0) throw new Exception("empty response, object range is invalid (expected 'Offset|Length')");
             return $"\"{new UInt256(hashes[0])}\"";
         }
