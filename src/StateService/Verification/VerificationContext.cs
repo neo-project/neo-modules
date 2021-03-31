@@ -123,7 +123,7 @@ namespace Neo.Plugins.StateService.Verification
             if (StateRoot.Witness is null)
             {
                 Contract contract = Contract.CreateMultiSigContract(M, verifiers);
-                ContractParametersContext sc = new(StatePlugin.System.StoreView, StateRoot);
+                ContractParametersContext sc = new(StatePlugin.System.StoreView, StateRoot, StatePlugin.System.Settings.Network);
                 for (int i = 0, j = 0; i < verifiers.Length && j < M; i++)
                 {
                     if (!signatures.TryGetValue(i, out byte[] sig)) continue;
