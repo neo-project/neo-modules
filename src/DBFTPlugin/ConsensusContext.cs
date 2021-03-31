@@ -108,7 +108,7 @@ namespace Neo.Consensus
         {
             EnsureHeader();
             Contract contract = Contract.CreateMultiSigContract(M, Validators);
-            ContractParametersContext sc = new ContractParametersContext(neoSystem.StoreView, Block.Header);
+            ContractParametersContext sc = new ContractParametersContext(neoSystem.StoreView, Block.Header, dbftSettings.Network);
             for (int i = 0, j = 0; i < Validators.Length && j < M; i++)
             {
                 if (GetMessage(CommitPayloads[i])?.ViewNumber != ViewNumber) continue;
@@ -269,7 +269,7 @@ namespace Neo.Consensus
         {
             return CommitPayloads[MyIndex] ?? (CommitPayloads[MyIndex] = MakeSignedPayload(new Commit
             {
-                Signature = EnsureHeader().Sign(keyPair, neoSystem.Settings.Magic)
+                Signature = EnsureHeader().Sign(keyPair, neoSystem.Settings.Network)
             }));
         }
 
@@ -288,7 +288,7 @@ namespace Neo.Consensus
             ContractParametersContext sc;
             try
             {
-                sc = new ContractParametersContext(neoSystem.StoreView, payload);
+                sc = new ContractParametersContext(neoSystem.StoreView, payload, dbftSettings.Network);
                 wallet.Sign(sc);
             }
             catch (InvalidOperationException)

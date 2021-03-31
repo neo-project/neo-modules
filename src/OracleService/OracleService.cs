@@ -56,7 +56,7 @@ namespace Neo.Plugins
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            if (system.Settings.Magic != Settings.Default.Network) return;
+            if (system.Settings.Network != Settings.Default.Network) return;
             System = system;
             System.ServiceAdded += NeoSystem_ServiceAdded;
             RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
@@ -139,7 +139,7 @@ namespace Neo.Plugins
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
-            if (system.Settings.Magic != Settings.Default.Network) return;
+            if (system.Settings.Network != Settings.Default.Network) return;
             if (stopped || !started) return;
             if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles) || !CheckOracleAccount(wallet, oracles))
                 OnStop();
@@ -270,8 +270,8 @@ namespace Neo.Plugins
                     var oraclePub = account.GetKey()?.PublicKey;
                     if (!account.HasKey || account.Lock || !oraclePublicKeys.Contains(oraclePub)) continue;
 
-                    var txSign = responseTx.Sign(account.GetKey(), System.Settings.Magic);
-                    var backTxSign = backupTx.Sign(account.GetKey(), System.Settings.Magic);
+                    var txSign = responseTx.Sign(account.GetKey(), System.Settings.Network);
+                    var backTxSign = backupTx.Sign(account.GetKey(), System.Settings.Network);
                     AddResponseTxSign(snapshot, requestId, oraclePub, txSign, responseTx, backupTx, backTxSign);
                     tasks.Add(SendResponseSignatureAsync(requestId, txSign, account.GetKey()));
 
@@ -417,13 +417,13 @@ namespace Neo.Plugins
             if (responseTx != null)
             {
                 task.Tx = responseTx;
-                var data = task.Tx.GetSignData(System.Settings.Magic);
+                var data = task.Tx.GetSignData(System.Settings.Network);
                 task.Signs.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.Signs.Remove(p.Key, out _));
             }
             if (backupTx != null)
             {
                 task.BackupTx = backupTx;
-                var data = task.BackupTx.GetSignData(System.Settings.Magic);
+                var data = task.BackupTx.GetSignData(System.Settings.Network);
                 task.BackupSigns.Where(p => !Crypto.VerifySignature(data, p.Value, p.Key)).ForEach(p => task.BackupSigns.Remove(p.Key, out _));
                 task.BackupSigns.TryAdd(oraclePub, backupSign);
             }
@@ -434,9 +434,9 @@ namespace Neo.Plugins
                 return;
             }
 
-            if (Crypto.VerifySignature(task.Tx.GetSignData(System.Settings.Magic), sign, oraclePub))
+            if (Crypto.VerifySignature(task.Tx.GetSignData(System.Settings.Network), sign, oraclePub))
                 task.Signs.TryAdd(oraclePub, sign);
-            else if (Crypto.VerifySignature(task.BackupTx.GetSignData(System.Settings.Magic), sign, oraclePub))
+            else if (Crypto.VerifySignature(task.BackupTx.GetSignData(System.Settings.Network), sign, oraclePub))
                 task.BackupSigns.TryAdd(oraclePub, sign);
             else
                 throw new RpcException(-100, "Invalid response transaction sign");

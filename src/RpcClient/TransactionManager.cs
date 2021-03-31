@@ -45,7 +45,7 @@ namespace Neo.Network.RPC
         public TransactionManager(Transaction tx, RpcClient rpcClient)
         {
             this.tx = tx;
-            this.context = new ContractParametersContext(null, tx);
+            this.context = new ContractParametersContext(null, tx, rpcClient.protocolSettings.Network);
             this.rpcClient = rpcClient;
         }
 
@@ -165,7 +165,7 @@ namespace Neo.Network.RPC
             {
                 foreach (var key in signStore[i].KeyPairs)
                 {
-                    byte[] signature = Tx.Sign(key, rpcClient.protocolSettings.Magic);
+                    byte[] signature = Tx.Sign(key, rpcClient.protocolSettings.Network);
                     if (!context.AddSignature(signStore[i].Contract, key.PublicKey, signature))
                     {
                         throw new Exception("AddSignature failed!");

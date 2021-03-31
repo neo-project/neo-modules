@@ -185,7 +185,7 @@ namespace Neo.Plugins
                 result["exception"] = GetExceptionMessage(e);
                 return;
             }
-            ContractParametersContext context = new(system.StoreView, tx);
+            ContractParametersContext context = new ContractParametersContext(system.StoreView, tx, settings.Network);
             wallet.Sign(context);
             if (context.Completed)
             {
@@ -224,7 +224,7 @@ namespace Neo.Plugins
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
-            ContractParametersContext transContext = new ContractParametersContext(snapshot, tx);
+            ContractParametersContext transContext = new ContractParametersContext(snapshot, tx, settings.Network);
             wallet.Sign(transContext);
             if (!transContext.Completed)
                 return transContext.ToJson();
@@ -275,7 +275,7 @@ namespace Neo.Plugins
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
-            ContractParametersContext transContext = new ContractParametersContext(snapshot, tx);
+            ContractParametersContext transContext = new ContractParametersContext(snapshot, tx, settings.Network);
             wallet.Sign(transContext);
             if (!transContext.Completed)
                 return transContext.ToJson();
@@ -314,7 +314,7 @@ namespace Neo.Plugins
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
-            ContractParametersContext transContext = new ContractParametersContext(snapshot, tx);
+            ContractParametersContext transContext = new ContractParametersContext(snapshot, tx, settings.Network);
             wallet.Sign(transContext);
             if (!transContext.Completed)
                 return transContext.ToJson();
@@ -393,7 +393,7 @@ namespace Neo.Plugins
 
         private JObject SignAndRelay(DataCache snapshot, Transaction tx)
         {
-            ContractParametersContext context = new ContractParametersContext(snapshot, tx);
+            ContractParametersContext context = new ContractParametersContext(snapshot, tx, settings.Network);
             wallet.Sign(context);
             if (context.Completed)
             {

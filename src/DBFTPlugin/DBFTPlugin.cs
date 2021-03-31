@@ -30,7 +30,7 @@ namespace Neo.Consensus
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            if (system.Settings.Magic != settings.Network) return;
+            if (system.Settings.Network != settings.Network) return;
             neoSystem = system;
             neoSystem.ServiceAdded += NeoSystem_ServiceAdded;
         }
