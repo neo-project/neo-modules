@@ -178,14 +178,14 @@ namespace Neo.Plugins
             Transaction tx;
             try
             {
-                tx = wallet.MakeTransaction(system.StoreView, Convert.FromBase64String(result["script"].AsString()), sender, witnessSigners);
+                tx = wallet.MakeTransaction(system.StoreView, Convert.FromBase64String(result["script"].AsString()), sender, witnessSigners, maxGas: settings.MaxGasInvoke);
             }
             catch (Exception e)
             {
                 result["exception"] = GetExceptionMessage(e);
                 return;
             }
-            ContractParametersContext context = new ContractParametersContext(system.StoreView, tx);
+            ContractParametersContext context = new(system.StoreView, tx);
             wallet.Sign(context);
             if (context.Completed)
             {
