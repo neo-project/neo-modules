@@ -33,6 +33,15 @@ namespace Neo.Plugins.StateService.Verification
         public int MyIndex => myIndex;
         public uint RootIndex => rootIndex;
         public ECPoint[] Verifiers => verifiers;
+        public int Sender
+        {
+            get
+            {
+                int p = ((int)rootIndex - Retries) % verifiers.Length;
+                return p >= 0 ? p : p + verifiers.Length;
+            }
+        }
+        public bool IsSender => myIndex == Sender;
         public ICancelable Timer;
         public StateRoot StateRoot
         {
@@ -111,17 +120,21 @@ namespace Neo.Plugins.StateService.Verification
         {
             if (StateRoot is null) return false;
             if (signatures.Count < M) return false;
-            if (StateRoot.Witness != null) return true;
-            Contract contract = Contract.CreateMultiSigContract(M, verifiers);
-            ContractParametersContext sc = new ContractParametersContext(StatePlugin.System.StoreView, StateRoot, StatePlugin.System.Settings.Network);
-            for (int i = 0, j = 0; i < verifiers.Length && j < M; i++)
+            if (StateRoot.Witness is null)
             {
-                if (!signatures.TryGetValue(i, out byte[] sig)) continue;
-                sc.AddSignature(contract, verifiers[i], sig);
-                j++;
+                Contract contract = Contract.CreateMultiSigContract(M, verifiers);
+                ContractParametersContext sc = new(StatePlugin.System.StoreView, StateRoot);
+                for (int i = 0, j = 0; i < verifiers.Length && j < M; i++)
+                {
+                    if (!signatures.TryGetValue(i, out byte[] sig)) continue;
+                    sc.AddSignature(contract, verifiers[i], sig);
+                    j++;
+                }
+                if (!sc.Completed) return false;
+                StateRoot.Witness = sc.GetWitnesses()[0];
             }
-            StateRoot.Witness = sc.GetWitnesses()[0];
-            rootPayload = CreatePayload(MessageType.StateRoot, StateRoot, MaxValidUntilBlockIncrement);
+            if (IsSender)
+                rootPayload = CreatePayload(MessageType.StateRoot, StateRoot, MaxValidUntilBlockIncrement);
             return true;
         }
 
