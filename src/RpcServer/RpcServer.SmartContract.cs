@@ -7,10 +7,12 @@ using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
+using Neo.SmartContract.Iterators;
 using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -125,14 +127,12 @@ namespace Neo.Plugins
         {
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
-            ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
+            ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : Array.Empty<ContractParameter>();
             Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
 
             byte[] script;
-            using (ScriptBuilder sb = new ScriptBuilder())
-            {
-                script = sb.EmitDynamicCall(script_hash, operation, args).ToArray();
-            }
+            using ScriptBuilder sb = new();
+            script = sb.EmitDynamicCall(script_hash, operation, args).ToArray();
             return GetInvokeResult(script, signers);
         }
 
@@ -142,6 +142,57 @@ namespace Neo.Plugins
             byte[] script = Convert.FromBase64String(_params[0].AsString());
             Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], system.Settings) : null;
             return GetInvokeResult(script, signers);
+        }
+
+        [RpcMethod]
+        protected virtual JObject InvokeIterator(JArray _params)
+        {
+            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
+            string operation = _params[1].AsString();
+            ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : Array.Empty<ContractParameter>();
+            Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
+            uint? startIndex = _params.Count >= 5 ? Convert.ToUInt32(_params[4].AsNumber()) : null;
+            uint? endIndex = _params.Count >= 6 ? Convert.ToUInt32(_params[5].AsNumber()) : null;
+
+            byte[] script;
+            using ScriptBuilder sb = new();
+            script = sb.EmitDynamicCall(script_hash, operation, args).ToArray();
+
+            Transaction tx = signers == null ? null : new Transaction
+            {
+                Signers = signers.GetSigners(),
+                Attributes = Array.Empty<TransactionAttribute>(),
+                Witnesses = signers.Witnesses,
+            };
+            using ApplicationEngine engine = ApplicationEngine.Run(script, system.StoreView, container: tx, settings: system.Settings, gas: settings.MaxGasInvoke);
+            JObject json = new();
+            json["script"] = Convert.ToBase64String(script);
+            json["state"] = engine.State;
+            json["gasconsumed"] = engine.GasConsumed.ToString();
+            json["exception"] = GetExceptionMessage(engine.FaultException);
+            List<object> resultList = new();
+            try
+            {
+                var result = engine.ResultStack.FirstOrDefault() as IIterator;
+                for (int i = 0; result.Next(); i++)
+                {
+                    if(i >= startIndex && i < endIndex)
+                        resultList.Add(result.Value());
+                }
+                json["result"] = new JArray(resultList.Select(p => ((VM.Types.StackItem)p).ToJson()));
+                json["startindex"] = startIndex;
+                json["endindex"] = endIndex;
+            }
+            catch (InvalidOperationException)
+            {
+                json["stack"] = "error: recursive reference";
+            }
+            if (engine.State != VMState.FAULT)
+            {
+                ProcessInvokeWithWallet(json, signers);
+            }
+
+            return json;
         }
 
         [RpcMethod]
