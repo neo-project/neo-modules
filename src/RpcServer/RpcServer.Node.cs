@@ -65,7 +65,7 @@ namespace Neo.Plugins
             json["wsport"] = localNode.ListenerWsPort;
             json["nonce"] = LocalNode.Nonce;
             json["useragent"] = LocalNode.UserAgent;
-            json["magic"] = system.Settings.Magic;
+            json["network"] = system.Settings.Network;
             return json;
         }
 

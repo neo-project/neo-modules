@@ -26,7 +26,7 @@ namespace Neo.Plugins
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            systems.Add(system.Settings.Magic, system);
+            systems.Add(system.Settings.Network, system);
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Neo.Plugins
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
-                OnPersistStorage(system.Settings.Magic, snapshot);
+                OnPersistStorage(system.Settings.Network, snapshot);
         }
 
         private void OnPersistStorage(uint network, DataCache snapshot)
@@ -101,7 +101,7 @@ namespace Neo.Plugins
         void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
-                OnCommitStorage(system.Settings.Magic, snapshot);
+                OnCommitStorage(system.Settings.Network, snapshot);
         }
 
         void OnCommitStorage(uint network, DataCache snapshot)
