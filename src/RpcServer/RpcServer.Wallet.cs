@@ -178,7 +178,7 @@ namespace Neo.Plugins
             Transaction tx;
             try
             {
-                tx = wallet.MakeTransaction(system.StoreView, Convert.FromBase64String(result["script"].AsString()), sender, witnessSigners);
+                tx = wallet.MakeTransaction(system.StoreView, Convert.FromBase64String(result["script"].AsString()), sender, witnessSigners, maxGas: settings.MaxGasInvoke);
             }
             catch (Exception e)
             {
