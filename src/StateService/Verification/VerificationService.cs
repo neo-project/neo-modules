@@ -45,7 +45,7 @@ namespace Neo.Plugins.StateService.Verification
 
         private void CheckVotes(VerificationContext context)
         {
-            if (context.CheckSignatures())
+            if (context.IsSender && context.CheckSignatures())
             {
                 if (context.StateRootMessage is null) return;
                 Utility.Log(nameof(VerificationService), LogLevel.Info, $"relay state root, height={context.StateRoot.Index}, root={context.StateRoot.RootHash}");
