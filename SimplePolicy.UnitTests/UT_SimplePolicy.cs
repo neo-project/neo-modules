@@ -31,8 +31,8 @@ namespace SimplePolicy.UnitTests
         [TestMethod]
         public void TestMaxTransactionsPerBlock()
         {
-            Settings.Default.MaxTransactionsPerBlock.Should().Be(500);
-            Settings.Default.MaxFreeTransactionsPerBlock.Should().Be(20);
+            Settings.Default.MaxTransactionsPerBlock.Should().Be(200);
+            Settings.Default.MaxFreeTransactionsPerBlock.Should().Be(199);
         }
 
         [TestMethod]
@@ -93,16 +93,15 @@ namespace SimplePolicy.UnitTests
 
             IEnumerable<Transaction> filteredTxList = uut.FilterForBlock(TxList);
             //filteredTxList.Count().Should().Be(124); // 20 free + 100 paid + 4 claims
-            filteredTxList.Count().Should().Be(120); // 20 free (including 2 claims) + 100 paid
-            filteredTxList.Where(tx => tx.NetworkFee == Fixed8.Zero).Count().Should().Be(2); // 2 fully free (2 claims)
+            filteredTxList.Count().Should().Be(199); // 99 free (including 2 claims) + 100 paid
+            filteredTxList.Where(tx => tx.NetworkFee == Fixed8.Zero).Count().Should().Be(81); // 81 fully free
 
-            // will select 20 low priority (including Claims)
+            // will select 99 low priority (including Claims)
             var vx = filteredTxList.Where(tx => tx.IsLowPriority == true);
-            vx.Count().Should().Be(20);
+            vx.Count().Should().Be(99);
 
-            // two Claim Transaction will survive
             vx = filteredTxList.Where(tx => tx.Type == TransactionType.ClaimTransaction);
-            vx.Count().Should().Be(2);
+            vx.Count().Should().Be(4);
 
             // =================================================================
 
@@ -122,24 +121,22 @@ namespace SimplePolicy.UnitTests
             TxList.Where(tx => tx.NetworkFee == Fixed8.Zero).Count().Should().Be(400 + 100 - 18 + 4); // 500-18 fully free + 4 claims
 
             filteredTxList = uut.FilterForBlock(TxList);
-            filteredTxList.Count().Should().Be(499); // full block
+            filteredTxList.Count().Should().Be(199); // full block
 
-            // will select 20 low priority (including Claims)
+            // will select 0 low priority
             vx = filteredTxList.Where(tx => tx.IsLowPriority == true);
-            vx.Count().Should().Be(20);
-
-            // will still select Claim Transactions
+            vx.Count().Should().Be(0);
             vx = filteredTxList.Where(tx => tx.Type == TransactionType.ClaimTransaction);
-            vx.Count().Should().Be(2);
+            vx.Count().Should().Be(0);
 
             // there are 3 tied Claim tx, will solve it based on smaller hash (0x01, 0x60) => 0xb2 is excluded
             // 0x01027faead9a0538048db7ac5657172f6e2240bff3f7d902e490bb1bd75c2df7
             // 0x60037520be0fd903703c2b67973296f22cac8932db07a2723addf79478aea75f
             // 0xb29426673b3ef5c226bd35d53c2cb2242e09c06f0efe9c0d5be2034f41cb85ba
             vx = filteredTxList.Where(tx => tx.Hash.ToString() == "0x01027faead9a0538048db7ac5657172f6e2240bff3f7d902e490bb1bd75c2df7");
-            vx.Count().Should().Be(1);
+            vx.Count().Should().Be(0);
             vx = filteredTxList.Where(tx => tx.Hash.ToString() == "0x60037520be0fd903703c2b67973296f22cac8932db07a2723addf79478aea75f");
-            vx.Count().Should().Be(1);
+            vx.Count().Should().Be(0);
             vx = filteredTxList.Where(tx => tx.Hash.ToString() == "0xb29426673b3ef5c226bd35d53c2cb2242e09c06f0efe9c0d5be2034f41cb85ba");
             vx.Count().Should().Be(0);
 
@@ -200,7 +197,7 @@ namespace SimplePolicy.UnitTests
             */
 
             IEnumerable<Transaction> filteredTxList = uut.FilterForBlock(txList);
-            filteredTxList.Count().Should().Be(20);
+            filteredTxList.Count().Should().Be(30);
 
             // will select top 20
             // part A: 18 transactions with ratio >= 0.000025
@@ -235,8 +232,8 @@ namespace SimplePolicy.UnitTests
             txList.Where(tx => (tx.NetworkFee / tx.Size) >= new Fixed8(2500)).Count().Should().Be(18); // they also exist in main list
             txList.Where(tx => (tx.NetworkFee / tx.Size) < new Fixed8(2500)).Count().Should().Be(30 - 18); // 12 not selected transactions in part A
             // part B
-            filteredTxList.Where(tx => (tx.NetworkFee / tx.Size) < new Fixed8(2500)).Count().Should().Be(2); // only two enter in part B
-            filteredTxList.Where(tx => (tx.NetworkFee / tx.Size) == new Fixed8(2000)).Count().Should().Be(2); // only two enter in part B with ratio 0.00002
+            filteredTxList.Where(tx => (tx.NetworkFee / tx.Size) < new Fixed8(2500)).Count().Should().Be(12); // only two enter in part B
+            filteredTxList.Where(tx => (tx.NetworkFee / tx.Size) == new Fixed8(2000)).Count().Should().Be(3); // only two enter in part B with ratio 0.00002
             txList.Where(tx => (tx.NetworkFee / tx.Size) == new Fixed8(2000)).Count().Should().Be(3); // 3 in tie (ratio 0.00002)
             txList.Where(tx => (tx.NetworkFee / tx.Size) == new Fixed8(2000) && (tx.NetworkFee > new Fixed8(20000))).Count().Should().Be(2); // only 2 survive (fee > 0.0002)
         }
@@ -264,9 +261,9 @@ namespace SimplePolicy.UnitTests
             txList.Count.Should().Be(24); // 20 free + 4 claims
 
             IEnumerable<Transaction> filteredTxList = uut.FilterForBlock(txList);
-            filteredTxList.Count().Should().Be(20);
+            filteredTxList.Count().Should().Be(24);
 
-            filteredTxList.Where(tx => tx.Type == TransactionType.ClaimTransaction).Count().Should().Be(2); // 2 claims will be selected
+            filteredTxList.Where(tx => tx.Type == TransactionType.ClaimTransaction).Count().Should().Be(4); // 4 claims will be selected
         }
 
         [TestMethod]

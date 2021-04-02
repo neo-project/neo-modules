@@ -128,7 +128,10 @@ namespace Neo.Plugins
                     Script = result["script"].AsString().HexToBytes(),
                     Gas = Fixed8.Parse(result["gas_consumed"].AsString())
                 };
-                tx.Gas -= Fixed8.FromDecimal(10);
+                if (Blockchain.Singleton.Height < ProtocolSettings.Default.FreeGasChangeHeight)
+                    tx.Gas -= Fixed8.FromDecimal(10);
+                else
+                    tx.Gas -= Fixed8.FromDecimal(50);
                 if (tx.Gas < Fixed8.Zero) tx.Gas = Fixed8.Zero;
                 tx.Gas = tx.Gas.Ceiling();
                 tx = Wallet.MakeTransaction(tx);

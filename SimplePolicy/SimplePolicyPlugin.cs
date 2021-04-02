@@ -1,4 +1,5 @@
 ﻿using Neo.Consensus;
+using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using System;
@@ -66,22 +67,44 @@ namespace Neo.Plugins
             if (!(transactions is IReadOnlyList<Transaction> tx_list))
                 tx_list = transactions.ToArray();
 
-            Transaction[] free = tx_list.Where(p => p.IsLowPriority)
+            if (Blockchain.Singleton.Height < ProtocolSettings.Default.FreeGasChangeHeight)
+            {
+                Transaction[] free = tx_list.Where(p => p.IsLowPriority)
                 .OrderByDescending(p => p.NetworkFee / p.Size)
                 .ThenByDescending(p => p.NetworkFee)
                 .ThenByDescending(p => InHigherLowPriorityList(p))
                 .ThenBy(p => p.Hash)
-                .Take(Settings.Default.MaxFreeTransactionsPerBlock)
+                .Take(20)
                 .ToArray();
 
-            Transaction[] non_free = tx_list.Where(p => !p.IsLowPriority)
+                Transaction[] non_free = tx_list.Where(p => !p.IsLowPriority)
                 .OrderByDescending(p => p.NetworkFee / p.Size)
                 .ThenByDescending(p => p.NetworkFee)
                 .ThenBy(p => p.Hash)
-                .Take(Settings.Default.MaxTransactionsPerBlock - free.Length - 1)
+                .Take(479)
                 .ToArray();
 
-            return non_free.Concat(free);
+                return non_free.Concat(free);
+            }
+            else
+            {
+                Transaction[] non_free = tx_list.Where(p => !p.IsLowPriority)
+                .OrderByDescending(p => p.NetworkFee / p.Size)
+                .ThenByDescending(p => p.NetworkFee)
+                .ThenBy(p => p.Hash)
+                .Take(Settings.Default.MaxTransactionsPerBlock - 1)
+                .ToArray();
+
+                Transaction[] free = tx_list.Where(p => p.IsLowPriority)
+                .OrderByDescending(p => p.NetworkFee / p.Size)
+                .ThenByDescending(p => p.NetworkFee)
+                .ThenByDescending(p => InHigherLowPriorityList(p))
+                .ThenBy(p => p.Hash)
+                .Take(Settings.Default.MaxTransactionsPerBlock - non_free.Length - 1)
+                .ToArray();
+
+                return non_free.Concat(free);
+            }
         }
 
         void ILogPlugin.Log(string source, LogLevel level, string message)

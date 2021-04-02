@@ -1,7 +1,7 @@
 ﻿{
   "PluginConfiguration": {
-    "MaxTransactionsPerBlock": 500,
-    "MaxFreeTransactionsPerBlock": 20,
+    "MaxTransactionsPerBlock": 200,
+    "MaxFreeTransactionsPerBlock": 199,
     "MaxFreeTransactionSize": 1024,
     "FeePerExtraByte": 0.00001,
     "HighPriorityTxType":

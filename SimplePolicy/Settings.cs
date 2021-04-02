@@ -20,8 +20,8 @@ namespace Neo.Plugins
 
         private Settings(IConfigurationSection section)
         {
-            this.MaxTransactionsPerBlock = GetValueOrDefault(section.GetSection("MaxTransactionsPerBlock"), 500, p => int.Parse(p));
-            this.MaxFreeTransactionsPerBlock = GetValueOrDefault(section.GetSection("MaxFreeTransactionsPerBlock"), 20, p => int.Parse(p));
+            this.MaxTransactionsPerBlock = GetValueOrDefault(section.GetSection("MaxTransactionsPerBlock"), 200, p => int.Parse(p));
+            this.MaxFreeTransactionsPerBlock = GetValueOrDefault(section.GetSection("MaxFreeTransactionsPerBlock"), 199, p => int.Parse(p));
             this.MaxFreeTransactionSize = GetValueOrDefault(section.GetSection("MaxFreeTransactionSize"), 1024, p => int.Parse(p));
             this.FeePerExtraByte = GetValueOrDefault(section.GetSection("FeePerExtraByte"), Fixed8.FromDecimal(0.00001M), p => Fixed8.Parse(p));
             this.HighPriorityTxType = new EnumSet<TransactionType>(section.GetSection("HighPriorityTxType"), TransactionType.ClaimTransaction);
