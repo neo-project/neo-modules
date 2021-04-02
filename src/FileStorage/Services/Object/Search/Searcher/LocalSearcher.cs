@@ -1,6 +1,6 @@
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.LocalObjectStorage.LocalStore;
+using Neo.FileStorage.LocalObjectStorage.Engine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +9,7 @@ namespace Neo.FileStorage.Services.Object.Search.Searcher
 {
     public class LocalSearcher : ISearcher
     {
-        private readonly Storage localStorage;
+        private readonly StorageEngine localStorage;
 
         public List<ObjectID> Search(ContainerID cid, SearchFilters Filters)
         {

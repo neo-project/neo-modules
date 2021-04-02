@@ -4,7 +4,7 @@ using Neo.FileStorage.API.Object;
 using V2Object = Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
-using Neo.FileStorage.LocalObjectStorage.LocalStore;
+using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Services.Object.Acl.EAcl;
 using System;
 using System.Collections.Generic;
@@ -14,10 +14,10 @@ namespace Neo.FileStorage.Services.Object.Acl
 {
     public class HeaderSource : ITypedHeaderSource
     {
-        private readonly Storage localStorage;
+        private readonly StorageEngine localStorage;
         private readonly object message;
 
-        public HeaderSource(Storage local_storage, object message)
+        public HeaderSource(StorageEngine local_storage, object message)
         {
             if (local_storage is null)
                 throw new ArgumentNullException(nameof(local_storage));

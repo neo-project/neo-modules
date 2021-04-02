@@ -1,7 +1,7 @@
 using Akka.Actor;
 using Neo.FileStorage.API.Netmap;
 using V2Address = Neo.FileStorage.API.Refs.Address;
-using Neo.FileStorage.LocalObjectStorage.LocalStore;
+using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Network.Cache;
 using Neo.FileStorage.Services.Object.Put.Store;
 using Neo.FileStorage.Services.Object.Util;
@@ -21,7 +21,7 @@ namespace Neo.FileStorage.Services.Replicator
 
         public int TaskCapacity;
         public TimeSpan PutTimeout;
-        public Storage LocalStorage;
+        public StorageEngine LocalStorage;
         public KeyStorage KeyStorage;
         public ClientCache ClientCache;
 

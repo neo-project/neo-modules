@@ -3,7 +3,6 @@ using Neo.FileStorage.API.Client.ObjectParams;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage;
-using Neo.FileStorage.LocalObjectStorage.LocalStore;
 using Neo.FileStorage.Network.Cache;
 using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.ObjectManager.Placement;
@@ -123,7 +122,7 @@ namespace Neo.FileStorage.Services.Object.Get
         private bool IsChild(V2Object obj)
         {
             var parent = obj.Parent;
-            return parent != null && parent.Address() == obj.Address();
+            return parent != null && parent.Address == obj.Address;
         }
 
         private void Assemble()

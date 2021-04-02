@@ -1,5 +1,5 @@
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.LocalObjectStorage.LocalStore;
+using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Network.Cache;
 using Neo.FileStorage.Services.Object.Util;
 using System.Collections.Generic;
@@ -11,7 +11,7 @@ namespace Neo.FileStorage.Services.Object.Get
 {
     public class GetService
     {
-        public Storage LocalStorage;
+        public StorageEngine LocalStorage;
         public ClientCache ClientCache;
         public ITraverserGenerator TraverserGenerator;
 

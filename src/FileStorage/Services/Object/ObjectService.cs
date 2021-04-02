@@ -3,7 +3,7 @@ using Grpc.Core;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.LocalObjectStorage.LocalStore;
+using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Core.Container;
 using Neo.FileStorage.Services.Object.Acl;
 using Neo.FileStorage.Services.Object.Delete;
@@ -25,7 +25,7 @@ namespace Neo.FileStorage.Services.Object
     public partial class ObjectServiceImpl : ObjectService.ObjectServiceBase
     {
         private readonly ECDsa key;
-        private readonly Storage localStorage;
+        private readonly StorageEngine localStorage;
         private readonly IContainerSource contnainerSource;
         private readonly IInnerRingFetcher innerRingFetcher;
         private readonly INetmapSource netmapSource;
@@ -38,7 +38,7 @@ namespace Neo.FileStorage.Services.Object
         private readonly AclChecker aclChecker;
         private readonly Responser responser;
 
-        public ObjectServiceImpl(IContainerSource container_source, Storage local_storage, IEAclSource eacl_storage, INetState state, IInnerRingFetcher fetcher)
+        public ObjectServiceImpl(IContainerSource container_source, StorageEngine local_storage, IEAclSource eacl_storage, INetState state, IInnerRingFetcher fetcher)
         {
             localStorage = local_storage;
             eAclStorage = eacl_storage;

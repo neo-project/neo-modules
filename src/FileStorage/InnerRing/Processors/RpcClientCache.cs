@@ -1,5 +1,4 @@
 using Neo.FileStorage.API.Cryptography;
-using Neo.FileStorage.LocalObjectStorage.LocalStore;
 using Neo.FileStorage.Network.Cache;
 using Neo.FileStorage.Services.Audit;
 using Neo.FileStorage.Services.Audit.Auditor;
@@ -23,7 +22,7 @@ namespace Neo.Plugins.Innerring.Processors
         public ClientCache clientCache;
         public Wallet wallet;
 
-        public Client Get(string address, params Option[] opts)
+        public Client Get(string address)
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             return clientCache.GetClient(accounts.ToArray()[0].GetKey().PrivateKey.LoadPrivateKey(), address);

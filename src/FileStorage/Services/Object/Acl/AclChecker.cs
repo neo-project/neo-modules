@@ -4,7 +4,7 @@ using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
-using Neo.FileStorage.LocalObjectStorage.LocalStore;
+using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Core.Container;
 using Neo.FileStorage.Core.Netmap;
 using Neo.FileStorage.Services.Object.Acl.EAcl;
@@ -18,12 +18,12 @@ namespace Neo.FileStorage.Services.Object.Acl
     public class AclChecker
     {
         private readonly IContainerSource containerSource;
-        private readonly Storage localStorage;
+        private readonly StorageEngine localStorage;
         private readonly EAclValidator eAclValidator;
         private readonly Classifier classifier;
         private readonly INetState netmapState;
 
-        public AclChecker(IContainerSource cs, Storage local_storage, IEAclSource source, Classifier classifier, INetState state)
+        public AclChecker(IContainerSource cs, StorageEngine local_storage, IEAclSource source, Classifier classifier, INetState state)
         {
             containerSource = cs;
             localStorage = local_storage;

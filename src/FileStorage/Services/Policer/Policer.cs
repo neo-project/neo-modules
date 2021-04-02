@@ -3,7 +3,7 @@ using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
 using V2Address = Neo.FileStorage.API.Refs.Address;
 using Neo.FileStorage.Core.Container;
-using Neo.FileStorage.LocalObjectStorage.LocalStore;
+using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Network;
 using static Neo.FileStorage.Network.Address;
 using Neo.FileStorage.Services.Object.Head.HeaderSource;
@@ -21,7 +21,7 @@ namespace Neo.FileStorage.Services.Policer
         public TimeSpan HeadTimeout;
         public ILocalAddressSource LocalAddressSource;
         public Replicator.Replicator Replicator;
-        private Storage localStorage;
+        private StorageEngine localStorage;
         public IContainerSource ContainerSource;
         public IBuilder PlacementBuilder;
         public RemoteHeaderSource remoteHeaderSource;
@@ -64,8 +64,8 @@ namespace Neo.FileStorage.Services.Policer
             // TODO: optimize the logic for selecting objects
             // We can prioritize objects for migration, newly arrived objects, etc.
             // It is recommended to make changes after updating the metabase
-            var res = this.localStorage.Select(GetJobFilter());
-            if (res.Length < limit) return res.ToList();
+            var res = localStorage.Select(GetJobFilter());
+            if (res.Count < limit) return res.ToList();
 
             return res.Take(limit).ToList();
         }
