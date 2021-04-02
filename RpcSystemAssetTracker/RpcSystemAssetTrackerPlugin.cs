@@ -13,9 +13,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Snapshot = Neo.Persistence.Snapshot;
-using System.IO;
-using System.Diagnostics;
-using System.Reflection;
 
 namespace Neo.Plugins
 {
@@ -38,6 +35,18 @@ namespace Neo.Plugins
         private bool _shouldPersistBlock;
         private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
 
+        
+        // public JObject OnProcess(HttpContext context, string method, JArray parameters)
+        // {
+        //     if (_shouldTrackUnclaimed)
+        //     {
+        //         if (method == "getclaimable") return ProcessGetClaimableSpents(parameters);
+        //         if (method == "getunclaimed") return ProcessGetUnclaimed(parameters);
+        //     }
+        //     if (_shouldTrackHistory)
+        //         if (method == "getutxotransfers") return ProcessGetUtxoTransfers(parameters);
+        //     return method != "getunspents" ? null : ProcessGetUnspents(parameters);
+        // }
         public JObject OnProcess(HttpContext context, string method, JArray parameters)
         {
             if (_shouldTrackUnclaimed)
@@ -792,18 +801,5 @@ namespace Neo.Plugins
 
             parentJArray.Add(group);
         }
-
-        public JObject OnProcess(HttpContext context, string method, JArray parameters)
-        {
-            if (_shouldTrackUnclaimed)
-            {
-                if (method == "getclaimable") return ProcessGetClaimableSpents(parameters);
-                if (method == "getunclaimed") return ProcessGetUnclaimed(parameters);
-            }
-            if (_shouldTrackHistory)
-                if (method == "getutxotransfers") return ProcessGetUtxoTransfers(parameters);
-            return method != "getunspents" ? null : ProcessGetUnspents(parameters);
-        }
-
     }
 }

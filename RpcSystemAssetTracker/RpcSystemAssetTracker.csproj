@@ -16,7 +16,7 @@
     <PackageReleaseNotes>Fixed a bug in cron_send, so the caller can transfer full precision amounts</PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="CRONIUM" Version="2.10.3" />
+    <PackageReference Include="CRONIUM" Version="2.12.4" />
   </ItemGroup>
   <ItemGroup>
     <None Update="RpcSystemAssetTracker\config.json">

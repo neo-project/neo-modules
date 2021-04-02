@@ -12,9 +12,9 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
-
+  
   <ItemGroup>
-    <PackageReference Include="Neo" Version="2.12.2" />
+    <PackageReference Include="CRONIUM" Version="2.12.4" />
   </ItemGroup>
 
 </Project>
