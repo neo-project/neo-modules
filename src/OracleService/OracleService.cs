@@ -38,7 +38,6 @@ namespace Neo.Plugins
         private Timer timer;
         private readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
         private bool started = false;
-        private bool stopped = false;
         private IWalletProvider walletProvider;
         private int counter;
         private NeoSystem System;
@@ -84,7 +83,7 @@ namespace Neo.Plugins
         public override void Dispose()
         {
             OnStop();
-            while (!stopped)
+            while (started)
                 Thread.Sleep(100);
             foreach (var p in protocols)
                 p.Value.Dispose();
@@ -134,13 +133,13 @@ namespace Neo.Plugins
                 timer.Dispose();
                 timer = null;
             }
-            stopped = true;
+            started = false;
         }
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
-            if (stopped || !started) return;
+            if (!started) return;
             if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles) || !CheckOracleAccount(wallet, oracles))
                 OnStop();
         }
@@ -177,7 +176,7 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject SubmitOracleResponse(JArray _params)
         {
-            if (stopped || !started) throw new InvalidOperationException();
+            if (!started) throw new InvalidOperationException();
             ECPoint oraclePub = ECPoint.DecodePoint(Convert.FromBase64String(_params[0].AsString()), ECCurve.Secp256r1);
             ulong requestId = (ulong)_params[1].AsNumber();
             byte[] txSign = Convert.FromBase64String(_params[2].AsString());
@@ -213,7 +212,7 @@ namespace Neo.Plugins
                     await dataStream.WriteAsync(content);
                 }
                 HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync();
-                if (response.ContentLength > ushort.MaxValue) throw new Exception("The response it's bigger than allowed");
+                if (response.ContentLength > ushort.MaxValue) throw new Exception("The response is bigger than allowed");
                 StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
                 await reader.ReadToEndAsync();
             }
@@ -297,7 +296,7 @@ namespace Neo.Plugins
                 if (cancelSource.IsCancellationRequested) break;
                 await Task.Delay(500);
             }
-            stopped = true;
+            started = false;
         }
 
         private async Task<(OracleResponseCode, string)> ProcessUrlAsync(string url)
