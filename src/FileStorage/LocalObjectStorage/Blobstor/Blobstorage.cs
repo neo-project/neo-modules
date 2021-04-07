@@ -66,9 +66,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
             return ExistsSmall(address);
         }
 
-        public FSObject GetSmall(Address address)
+        public FSObject GetSmall(Address address, BlobovniczaID id = null)
         {
-            return blobovniczas.Get(address);
+            return blobovniczas.Get(address, id);
         }
 
         public FSObject GetBig(Address address)
@@ -78,9 +78,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
             return FSObject.Parser.ParseFrom(data);
         }
 
-        public byte[] GetRangeSmall(Address address, FSRange range)
+        public byte[] GetRangeSmall(Address address, FSRange range, BlobovniczaID id = null)
         {
-            return blobovniczas.GetRange(address, range);
+            return blobovniczas.GetRange(address, range, id);
         }
 
         public byte[] GetRangeBig(Address address, FSRange range)
@@ -111,9 +111,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
             fsTree.Delete(address);
         }
 
-        public void DeleteSmall(Address address)
+        public void DeleteSmall(Address address, BlobovniczaID id = null)
         {
-            blobovniczas.Delete(address);
+            blobovniczas.Delete(address, id);
         }
 
         public void Iterate()

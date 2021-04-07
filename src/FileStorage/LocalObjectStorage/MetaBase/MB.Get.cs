@@ -17,6 +17,11 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             return db.Get(ReadOptions.Default, GraveYardKey(address)) is not null;
         }
 
+        public FSObject Get(Address address, bool raw)
+        {
+            return Get(address, true, raw);
+        }
+
         private FSObject Get(Address address, bool check_grave_yard, bool raw)
         {
             if (check_grave_yard && IsGraveYard(address))
