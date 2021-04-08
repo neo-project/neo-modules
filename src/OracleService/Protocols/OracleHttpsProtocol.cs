@@ -18,6 +18,7 @@ namespace Neo.Plugins
             foreach (string type in Settings.Default.AllowedContentTypes)
                 client.DefaultRequestHeaders.Accept.ParseAdd(type);
             client.Timeout = Settings.Default.Https.Timeout;
+            client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("neo3", "oracle service"));
         }
 
         public void Dispose()
