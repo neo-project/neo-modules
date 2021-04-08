@@ -22,6 +22,10 @@ namespace Neo.FileStorage.LocalObjectStorage.Shard
         private readonly int rmBatchSize;
         private readonly bool useWriteCache;
 
+        /// <summary>
+        /// Amount of free disk space. Measured in kilobytes.
+        /// </summary>
+        private ulong freeSpace;
 
         public ShardID ID { get; set; }
 
@@ -134,9 +138,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Shard
         }
 
 
-        public void Inhume(Address tombstone, List<Address> target)
+        public void Inhume(Address tombstone, params Address[] target)
         {
-            metaBase.Inhume(tombstone, target);
+            metaBase.Inhume(tombstone, target.ToList());
         }
 
         public List<Address> List()
@@ -181,7 +185,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shard
             }
         }
 
-        public FSObject GetRange(ulong length, ulong offset, Address address)
+        public FSObject GetRange(Address address, ulong length, ulong offset)
         {
             var range = new Range()
             {
@@ -239,6 +243,15 @@ namespace Neo.FileStorage.LocalObjectStorage.Shard
         public List<Address> Select(ContainerID cid, SearchFilters filter)
         {
             return metaBase.Select(cid, filter);
+        }
+
+        /// <summary>
+        ///  WeightValues returns current weight values of the Shard.
+        /// </summary>
+        /// <returns></returns>
+        public ulong WeightValues()
+        {
+            return freeSpace;
         }
     }
 }
