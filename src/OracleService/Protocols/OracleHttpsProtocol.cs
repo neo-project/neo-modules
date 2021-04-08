@@ -3,6 +3,8 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,13 +14,19 @@ namespace Neo.Plugins
     {
         private readonly HttpClient client = new HttpClient();
 
+        public OracleHttpsProtocol()
+        {
+            CustomAttributeData attribute = Assembly.GetExecutingAssembly().CustomAttributes.First(p => p.AttributeType == typeof(AssemblyInformationalVersionAttribute));
+            string version = (string)attribute.ConstructorArguments[0].Value;
+            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Neo Oracle Service", version));
+        }
+
         public void Configure()
         {
             client.DefaultRequestHeaders.Accept.Clear();
             foreach (string type in Settings.Default.AllowedContentTypes)
                 client.DefaultRequestHeaders.Accept.ParseAdd(type);
             client.Timeout = Settings.Default.Https.Timeout;
-            client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("neo3", "oracle service"));
         }
 
         public void Dispose()
