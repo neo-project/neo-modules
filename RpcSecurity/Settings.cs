@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System.Linq;
 
-namespace Neo.Plugins
+namespace Cron.Plugins
 {
     internal class Settings
     {

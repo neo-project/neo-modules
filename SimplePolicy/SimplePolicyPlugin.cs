@@ -1,19 +1,19 @@
-﻿using Neo.Consensus;
-using Neo.Ledger;
-using Neo.Network.P2P.Payloads;
-using Neo.SmartContract;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Http;
-using Neo.IO.Json;
-using Neo.Wallets;
+using Cron.Consensus;
+using Cron.Ledger;
+using Cron.Network.P2P.Payloads;
+using Cron.SmartContract;
+using Cron.IO.Json;
+using Cron.Wallets;
 
 [assembly: InternalsVisibleTo("SimplePolicy.UnitTests")]
 
-namespace Neo.Plugins
+namespace Cron.Plugins
 {
     public class SimplePolicyPlugin : Plugin, ILogPlugin, IPolicyPlugin, IRpcPlugin
     {

@@ -1,19 +1,19 @@
 using Akka.Actor;
 using Microsoft.AspNetCore.Http;
-using Neo.IO;
-using Neo.IO.Json;
-using Neo.Ledger;
-using Neo.Network.P2P;
-using Neo.Network.P2P.Payloads;
-using Neo.Network.RPC;
-using Neo.Persistence;
-using Neo.SmartContract;
-using Neo.Wallets;
-using Neo.Wallets.NEP6;
+using Cron.IO;
+using Cron.IO.Json;
+using Cron.Ledger;
+using Cron.Network.P2P;
+using Cron.Network.P2P.Payloads;
+using Cron.Network.RPC;
+using Cron.Persistence;
+using Cron.SmartContract;
+using Cron.Wallets;
+using Cron.Wallets.NEP6;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neo.Plugins
+namespace Cron.Plugins
 {
     public class RpcWallet : Plugin, IRpcPlugin
     {

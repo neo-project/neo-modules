@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Neo.IO.Json;
-using Neo.Network.RPC;
+using Cron.IO.Json;
+using Cron.Network.RPC;
 using System;
 using System.Linq;
 using System.Text;
 
-namespace Neo.Plugins
+namespace Cron.Plugins
 {
     public class RpcSecurity : Plugin, IRpcPlugin
     {

@@ -1,20 +1,22 @@
 using Microsoft.AspNetCore.Http;
-using Neo.IO.Caching;
-using Neo.IO.Data.LevelDB;
-using Neo.IO.Json;
-using Neo.Ledger;
-using Neo.Network.P2P.Payloads;
-using Neo.Network.RPC;
-using Neo.Persistence;
-using Neo.Persistence.LevelDB;
-using Neo.Wallets;
+using Cron.IO.Caching;
+using Cron.IO.Data.LevelDB;
+using Cron.IO.Json;
+using Cron.Ledger;
+using Cron.Network.P2P.Payloads;
+using Cron.Network.RPC;
+using Cron.Persistence;
+using Cron.Persistence.LevelDB;
+using Cron.Wallets;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Snapshot = Neo.Persistence.Snapshot;
+using System.Reflection;
+using Snapshot = Cron.Persistence.Snapshot;
 
-namespace Neo.Plugins
+namespace Cron.Plugins
 {
     public partial class RpcSystemAssetTrackerPlugin : Plugin, IPersistencePlugin, IRpcPlugin
     {
@@ -33,7 +35,7 @@ namespace Neo.Plugins
         private int _maxResults;
         private uint _lastPersistedBlock;
         private bool _shouldPersistBlock;
-        private Neo.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
+        private Cron.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
 
         
         // public JObject OnProcess(HttpContext context, string method, JArray parameters)
@@ -94,7 +96,7 @@ namespace Neo.Plugins
                     case 1: return Assets();
                 }
 
-                throw new Neo.Network.RPC.RpcException(-7171, "Wrong submethod code");
+                throw new Cron.Network.RPC.RpcException(-7171, "Wrong submethod code");
             }
 
             if (method == "cron_search_special")
@@ -105,7 +107,7 @@ namespace Neo.Plugins
                     case 0: return SearchScenarioZero(parameters);
                 }
 
-                throw new Neo.Network.RPC.RpcException(-7171, "Wrong submethod code");
+                throw new Cron.Network.RPC.RpcException(-7171, "Wrong submethod code");
             }
 
             if (method == "cron_get_transactions")
@@ -685,7 +687,7 @@ namespace Neo.Plugins
                 }
                 else
                 {
-                    throw new Neo.Network.RPC.RpcException(-7166, "Token not found");
+                    throw new Cron.Network.RPC.RpcException(-7166, "Token not found");
                 }
             }
 
@@ -726,8 +728,8 @@ namespace Neo.Plugins
             if (_params.Count > 1)
             {
                 if (!uint.TryParse(_params[1].AsString(), out start))
-                {   // neo or gas
-                    if (_params[1].AsString().ToLower() == "neo")
+                {   // cron or gas
+                    if (_params[1].AsString().ToLower() == "cron")
                         tokens.Remove(Blockchain.UtilityToken.Hash);
                     else if (_params[1].AsString().ToLower() == "gas")
                         tokens.Remove(Blockchain.GoverningToken.Hash);
@@ -782,7 +784,7 @@ namespace Neo.Plugins
             JArray transfers = new JArray();
             JObject group = new JObject();
             group["asset_hash"] = assetId.ToString();
-            group["asset"] = assetId == Blockchain.GoverningToken.Hash ? "NEO" : assetId == Blockchain.UtilityToken.Hash ? "GAS" : throw new NotSupportedException();
+            group["asset"] = assetId == Blockchain.GoverningToken.Hash ? "CRON" : assetId == Blockchain.UtilityToken.Hash ? "GAS" : throw new NotSupportedException();
 
             int resultCount = 0;
             foreach (var pair in transferPairs)

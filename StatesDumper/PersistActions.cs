@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Neo.Plugins
+namespace Cron.Plugins
 {
     [Flags]
     internal enum PersistActions : byte

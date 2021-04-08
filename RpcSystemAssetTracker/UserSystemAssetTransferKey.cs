@@ -1,9 +1,9 @@
-﻿using Neo.IO;
+﻿using Cron.IO;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Neo.Plugins
+namespace Cron.Plugins
 {
     public class UserSystemAssetTransferKey : IComparable<UserSystemAssetTransferKey>, IEquatable<UserSystemAssetTransferKey>, ISerializable
     {

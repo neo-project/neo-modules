@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Version>2.12.2</Version>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <RootNamespace>Neo.Plugins</RootNamespace>
+    <RootNamespace>Cron.Plugins</RootNamespace>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
@@ -12,6 +12,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CRONIUM" Version="2.12.4" />
+    <PackageReference Include="CRONIUM" Version="2.12.6-dev" />
   </ItemGroup>
 </Project>

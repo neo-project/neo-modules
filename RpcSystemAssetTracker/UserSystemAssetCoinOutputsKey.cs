@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Neo.IO;
+using Cron.IO;
 
-namespace Neo.Plugins
+namespace Cron.Plugins
 {
     public class UserSystemAssetCoinOutputsKey : IComparable<UserSystemAssetCoinOutputsKey>, IEquatable<UserSystemAssetCoinOutputsKey>,
         ISerializable

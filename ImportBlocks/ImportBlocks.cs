@@ -1,12 +1,12 @@
 ﻿using Akka.Actor;
-using Neo.IO;
-using Neo.Ledger;
-using Neo.Network.P2P.Payloads;
-using Neo.Persistence;
+using Cron.IO;
+using Cron.Ledger;
+using Cron.Network.P2P.Payloads;
+using Cron.Persistence;
 using System;
 using System.IO;
 
-namespace Neo.Plugins
+namespace Cron.Plugins
 {
     public class ImportBlocks : Plugin
     {

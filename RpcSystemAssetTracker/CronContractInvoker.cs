@@ -1,10 +1,10 @@
-﻿using Neo.Cryptography.ECC;
-using Neo.IO.Json;
-using Neo.Ledger;
-using Neo.Network.P2P.Payloads;
-using Neo.Network.RPC;
-using Neo.SmartContract;
-using Neo.Wallets;
+﻿using Cron.Cryptography.ECC;
+using Cron.IO.Json;
+using Cron.Ledger;
+using Cron.Network.P2P.Payloads;
+using Cron.Network.RPC;
+using Cron.SmartContract;
+using Cron.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -12,7 +12,7 @@ using System.Linq;
 using System.Numerics;
 using RandomNumberGenerator = System.Security.Cryptography.RandomNumberGenerator;
 
-namespace Neo.Plugins
+namespace Cron.Plugins
 {
 
     public partial class RpcSystemAssetTrackerPlugin

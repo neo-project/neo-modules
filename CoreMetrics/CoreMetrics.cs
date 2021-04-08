@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Neo.IO.Json;
-using Neo.Ledger;
-using Neo.Network.P2P.Payloads;
-using Neo.Persistence;
+using Cron.IO.Json;
+using Cron.Ledger;
+using Cron.Network.P2P.Payloads;
+using Cron.Persistence;
 
-namespace Neo.Plugins
+namespace Cron.Plugins
 {
     public class CoreMetrics : Plugin, IRpcPlugin
     {

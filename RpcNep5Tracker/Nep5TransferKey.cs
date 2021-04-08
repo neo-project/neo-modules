@@ -1,8 +1,8 @@
 using System;
 using System.IO;
-using Neo.IO;
+using Cron.IO;
 
-namespace Neo.Plugins
+namespace Cron.Plugins
 {
     public class Nep5TransferKey : IComparable<Nep5TransferKey>, IEquatable<Nep5TransferKey>, ISerializable
     {

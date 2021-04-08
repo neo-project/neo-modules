@@ -1,7 +1,7 @@
 using Akka.Actor;
-using Neo.IO;
-using Neo.Ledger;
-using Neo.Network.P2P.Payloads;
+using Cron.IO;
+using Cron.Ledger;
+using Cron.Network.P2P.Payloads;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,7 +9,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Neo.Plugins
+namespace Cron.Plugins
 {
     public class BlockImporter : UntypedActor
     {

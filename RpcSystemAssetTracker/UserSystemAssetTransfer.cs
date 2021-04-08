@@ -1,8 +1,8 @@
-﻿using Neo.IO;
-using Neo.Ledger;
+﻿using Cron.IO;
+using Cron.Ledger;
 using System.IO;
 
-namespace Neo.Plugins
+namespace Cron.Plugins
 {
     public class UserSystemAssetTransfer : StateBase, ICloneable<UserSystemAssetTransfer>
     {

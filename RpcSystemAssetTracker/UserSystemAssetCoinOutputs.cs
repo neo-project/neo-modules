@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using Neo.IO;
-using Neo.Ledger;
+using Cron.IO;
+using Cron.Ledger;
 
-namespace Neo.Plugins
+namespace Cron.Plugins
 {
     public class UserSystemAssetCoinOutputs : StateBase, ICloneable<UserSystemAssetCoinOutputs>
     {

@@ -1,11 +1,11 @@
 using Microsoft.Extensions.Configuration;
-using Neo.Network.P2P.Payloads;
-using Neo.Wallets;
+using Cron.Network.P2P.Payloads;
+using Cron.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neo.Plugins
+namespace Cron.Plugins
 {
     internal class Settings
     {
