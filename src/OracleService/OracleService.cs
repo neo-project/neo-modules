@@ -127,6 +127,11 @@ namespace Neo.Plugins
         [ConsoleCommand("stop oracle", Category = "Oracle", Description = "Stop oracle service")]
         private void OnStop()
         {
+            if (!started)
+            {
+                Console.WriteLine("Oracle service is not started");
+                return;
+            }
             cancelSource.Cancel();
             if (timer != null)
             {
