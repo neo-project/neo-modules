@@ -3,7 +3,7 @@ using System;
 using System.Threading;
 using static Neo.Utility;
 
-namespace Neo.FileStorage.Services.Container.Control
+namespace Neo.FileStorage.Services.Container.Announcement.Control
 {
     public class AnnounceContext
     {
@@ -17,7 +17,7 @@ namespace Neo.FileStorage.Services.Container.Control
             {
                 IIterator metricsIterator = Controller.LocalMetrics.InitIterator(Cancellation);
                 IWriter targetWriter = Controller.LocalAnnouncementTarget.InitWriter(Cancellation);
-                metricsIterator.Iterator(a => true, a =>
+                metricsIterator.Iterate(a => true, a =>
                 {
                     a.Epoch = Epoch;
                     targetWriter.Put(a);
@@ -36,7 +36,7 @@ namespace Neo.FileStorage.Services.Container.Control
             {
                 IIterator localIterator = Controller.AnnouncementAccumulator.InitIterator(Cancellation);
                 IWriter resultWriter = Controller.ResultReceiver.InitWriter(Cancellation);
-                localIterator.Iterator(a => a.Epoch == Epoch, resultWriter.Put);
+                localIterator.Iterate(a => a.Epoch == Epoch, resultWriter.Put);
                 resultWriter.Close();
             }
             catch (Exception e)

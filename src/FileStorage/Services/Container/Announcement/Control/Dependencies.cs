@@ -1,8 +1,8 @@
 using System;
 using System.Threading;
-using static Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types;
+using FSAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types.Announcement;
 
-namespace Neo.FileStorage.Services.Container.Control
+namespace Neo.FileStorage.Services.Container.Announcement.Control
 {
     public interface IIteratorProvider
     {
@@ -11,12 +11,12 @@ namespace Neo.FileStorage.Services.Container.Control
 
     public interface IIterator
     {
-        void Iterator(Func<Announcement, bool> filter, Action<Announcement> handler);
+        void Iterate(Func<FSAnnouncement, bool> filter, Action<FSAnnouncement> handler);
     }
 
     public interface IWriter
     {
-        void Put(Announcement announcement);
+        void Put(FSAnnouncement announcement);
         void Close();
     }
 

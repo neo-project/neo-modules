@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Neo.FileStorage.Services.Container.Control
+namespace Neo.FileStorage.Services.Container.Announcement.Control
 {
     public class Controller
     {
