@@ -18,7 +18,7 @@ namespace Neo.Plugins
         {
             CustomAttributeData attribute = Assembly.GetExecutingAssembly().CustomAttributes.First(p => p.AttributeType == typeof(AssemblyInformationalVersionAttribute));
             string version = (string)attribute.ConstructorArguments[0].Value;
-            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Neo Oracle Service", version));
+            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("NeoOracleService", version));
         }
 
         public void Configure()
