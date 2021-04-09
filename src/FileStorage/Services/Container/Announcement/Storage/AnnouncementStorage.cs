@@ -1,4 +1,3 @@
-using Neo.FileStorage.Services.Container.Announcement.Control;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,7 +24,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Storage
     /// and optional components. After successful creation,
     /// Storage is immediately ready to work through API.
     /// </summary>
-    public class AnnouncementStorage : IWriter, IIterator
+    public class AnnouncementStorage
     {
         private Dictionary<ulong, AnnounceUsedSpaceEstimation> mItems = new();
 
@@ -76,7 +75,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Storage
             {
                 int lowerIn = Percentile(lowerRank, sizes);
                 int upperIn = Percentile(upperRank, sizes);
-                sizes = sizes.Skip(lowerIn + 1).Take(upperIn - lowerIn).ToList();
+                sizes = sizes.Skip(lowerIn).Take(upperIn - lowerIn).ToList();
             }
             return sizes.Aggregate(0ul, (sum, p) => sum += p) / (ulong)sizes.Count;
         }

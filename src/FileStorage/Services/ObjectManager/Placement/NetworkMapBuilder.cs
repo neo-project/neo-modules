@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Neo.FileStorage.Services.ObjectManager.Placement
 {
-    public class NetworkMapBuilder : IBuilder
+    public class NetworkMapBuilder : IPlacementBuilder
     {
         private readonly INetmapSource netmapSource;
 

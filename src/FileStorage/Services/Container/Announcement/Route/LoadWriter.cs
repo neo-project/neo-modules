@@ -7,13 +7,13 @@ using static Neo.Utility;
 
 namespace Neo.FileStorage.Services.Container.Announcement.Route
 {
-    public class LoadWriter : IWriter
+    public class LoadWriter
     {
         public Router Router;
         public CancellationToken Cancellation;
         public RouteContext RouteContext;
         public Dictionary<RouteKey, RouteValue> mRoute = new();
-        public Dictionary<string, IWriter> mServers = new();
+        public Dictionary<string, RemoteAnnounceWriter> mServers = new();
 
         public void Put(FSAnnouncement announcement)
         {
@@ -40,12 +40,12 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route
                 string endpoint = "";
                 if (remoteInfo is not null)
                     endpoint = remoteInfo.Address;
-                exists = mServers.TryGetValue(endpoint, out IWriter remoteWriter);
+                exists = mServers.TryGetValue(endpoint, out RemoteAnnounceWriter remoteWriter);
                 if (!exists)
                 {
                     try
                     {
-                        var provider = Router.RemoteWriterProvider.InitRemote(remoteInfo);
+                        var provider = Router.remoteProvider.InitRemote(remoteInfo);
                         remoteWriter = provider.InitWriter(Cancellation);
                         mServers[endpoint] = remoteWriter;
                     }

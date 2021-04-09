@@ -1,27 +1,22 @@
-
+using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.Services.Container.Announcement.Route.Placement;
 using System;
 using System.Threading;
-using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.Services.Container.Announcement.Control;
 
 namespace Neo.FileStorage.Services.Container.Announcement.Route
 {
     public class Router
     {
-        public IRemoteWriterProvider RemoteWriterProvider;
-        public IBuilder RouteBuilder;
-        public NodeInfo LocalServerInfo;
+        public RemoteLoadAnnounceProvider remoteProvider;
+        public RouteBuilder RouteBuilder;
+        public NodeInfo LocalNodeInfo;
 
-        public IWriter InitWriter(object ctx)
+        public LoadWriter InitWriter(object ctx)
         {
             RouteContext context;
             if (ctx is CancellationToken token)
             {
-                context = new()
-                {
-                    Cancellation = token,
-                    PassedRoute = new() { LocalServerInfo },
-                };
+                context = new(new() { LocalNodeInfo }, token);
             }
             else if (ctx is RouteContext c)
             {

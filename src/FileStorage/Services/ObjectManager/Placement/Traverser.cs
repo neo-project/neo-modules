@@ -14,7 +14,7 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
         public int Rem;
         public Address Address;
         public PlacementPolicy Policy;
-        public IBuilder Builder;
+        public IPlacementBuilder Builder;
         private List<List<Node>> vectors;
         private int[] rem;
 
@@ -113,7 +113,7 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
             return this;
         }
 
-        public Traverser WithBuilder(IBuilder builder)
+        public Traverser WithBuilder(IPlacementBuilder builder)
         {
             Builder = builder;
             return this;

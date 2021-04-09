@@ -11,7 +11,7 @@ namespace Neo.FileStorage.Services.Object.Put
     {
         public V2Object Init;
         public V2Container Container;
-        public IBuilder Builder;
+        public IPlacementBuilder Builder;
 
         public static PutInitPrm FromRequest(PutRequest request)
         {

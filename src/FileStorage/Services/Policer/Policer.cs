@@ -23,7 +23,7 @@ namespace Neo.FileStorage.Services.Policer
         public Replicator.Replicator Replicator;
         private StorageEngine localStorage;
         public IContainerSource ContainerSource;
-        public IBuilder PlacementBuilder;
+        public IPlacementBuilder PlacementBuilder;
         public RemoteHeaderSource remoteHeaderSource;
         private static SearchFilters jobFilters;
         private readonly List<Task> tasks = new List<Task>();

@@ -1,4 +1,5 @@
-
+using Neo.FileStorage.Services.Container.Announcement.Route;
+using Neo.FileStorage.Services.Container.Announcement.Storage;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -6,10 +7,10 @@ namespace Neo.FileStorage.Services.Container.Announcement.Control
 {
     public class Controller
     {
-        public IIteratorProvider LocalMetrics;
-        public IWriterProvider LocalAnnouncementTarget;
-        public IIteratorProvider AnnouncementAccumulator;
-        public IWriterProvider ResultReceiver;
+        public LocalStorageLoad LocalMetrics;
+        public Router LocalAnnouncementTarget;
+        public AnnouncementStorage AnnouncementAccumulator;
+        public MorphLoadWriter ResultReceiver;
         public Dictionary<ulong, CancellationTokenSource> AnnounceCancellations = new();
         public Dictionary<ulong, CancellationTokenSource> ReportCancellations = new();
 

@@ -1,15 +1,14 @@
-using Grpc.Core;
-using Neo.FileStorage.Services.Util.Response;
-using Neo.FileStorage.API.Container;
-using Neo.FileStorage.Morph.Invoker;
-using System;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
 using Google.Protobuf;
-using FSContainer = Neo.FileStorage.API.Container.Container;
+using Grpc.Core;
+using Neo.FileStorage.API.Acl;
+using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.API.Acl;
+using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Services.Container.Announcement;
+using System.Security.Cryptography;
+using System.Threading.Tasks;
+using FSContainer = Neo.FileStorage.API.Container.Container;
 
 namespace Neo.FileStorage.Services.Container
 {
@@ -17,6 +16,7 @@ namespace Neo.FileStorage.Services.Container
     {
         private readonly IClient morphClient;
         private readonly ECDsa key;
+        private readonly UsedSpaceService usedSpaceService;
 
         public ContainerServiceImpl(ECDsa k, IClient morph)
         {
@@ -26,7 +26,11 @@ namespace Neo.FileStorage.Services.Container
 
         public override Task<AnnounceUsedSpaceResponse> AnnounceUsedSpace(AnnounceUsedSpaceRequest request, ServerCallContext context)
         {
-            throw new NotImplementedException();
+            return usedSpaceService.AnnounceUsedSpace(request, context).ContinueWith(t =>
+            {
+                key.SignResponse(t.Result);
+                return t.Result;
+            });
         }
 
         public override Task<DeleteResponse> Delete(DeleteRequest request, ServerCallContext context)

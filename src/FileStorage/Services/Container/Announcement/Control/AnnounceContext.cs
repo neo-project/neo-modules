@@ -1,4 +1,4 @@
-
+using Neo.FileStorage.Services.Container.Announcement.Route;
 using System;
 using System.Threading;
 using static Neo.Utility;
@@ -15,9 +15,8 @@ namespace Neo.FileStorage.Services.Container.Announcement.Control
         {
             try
             {
-                IIterator metricsIterator = Controller.LocalMetrics.InitIterator(Cancellation);
-                IWriter targetWriter = Controller.LocalAnnouncementTarget.InitWriter(Cancellation);
-                metricsIterator.Iterate(a => true, a =>
+                LoadWriter targetWriter = Controller.LocalAnnouncementTarget.InitWriter(Cancellation);
+                Controller.LocalMetrics.Iterate(a => true, a =>
                 {
                     a.Epoch = Epoch;
                     targetWriter.Put(a);
@@ -34,10 +33,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Control
         {
             try
             {
-                IIterator localIterator = Controller.AnnouncementAccumulator.InitIterator(Cancellation);
-                IWriter resultWriter = Controller.ResultReceiver.InitWriter(Cancellation);
-                localIterator.Iterate(a => a.Epoch == Epoch, resultWriter.Put);
-                resultWriter.Close();
+                Controller.AnnouncementAccumulator.Iterate(a => a.Epoch == Epoch, Controller.ResultReceiver.Put);
             }
             catch (Exception e)
             {

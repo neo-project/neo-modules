@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Neo.FileStorage.Services.ObjectManager.Placement
 {
-    public interface IBuilder
+    public interface IPlacementBuilder
     {
         List<List<Node>> BuildPlacement(Address address, PlacementPolicy policy);
     }

@@ -1,3 +1,4 @@
+using Neo.FileStorage.API.Refs;
 using Neo.VM.Types;
 using System;
 using System.Collections.Generic;
@@ -88,6 +89,11 @@ namespace Neo.FileStorage.Morph.Invoker
                 resultArray.Add(enumerator.Current.GetSpan().ToArray());
             }
             return resultArray.ToArray();
+        }
+
+        public static bool InvokePutSize(IClient client, ulong epoch, ContainerID cid, ulong size, byte[] key)
+        {
+            throw new NotImplementedException();
         }
     }
 }
