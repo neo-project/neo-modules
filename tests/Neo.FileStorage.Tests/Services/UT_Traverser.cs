@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Neo.FileStorage.Tests
 {
-    public class TestBuilder : IBuilder
+    public class TestBuilder : IPlacementBuilder
     {
         private List<List<Node>> vectors;
 

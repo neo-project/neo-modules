@@ -221,15 +221,5 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
                 mtx.ExitReadLock();
             }
         }
-
-        public List<ContainerID> ListContainers()
-        {
-            throw new NotImplementedException();
-        }
-
-        public ulong ContainerSize(ContainerID cid)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
