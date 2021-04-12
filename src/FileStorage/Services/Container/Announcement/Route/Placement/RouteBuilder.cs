@@ -15,6 +15,10 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route.Placement
             return placement.Select(p => p.Any() ? p.First() : null).Where(p => p is not null).Select(p => p.Info).ToList();
         }
 
+        /// <summary>
+        /// CheckRoute checks if the route is a route correctly constructed by the builder for value a.
+        /// Returns nil if route is correct, otherwise an error clarifying the inconsistency.
+        /// </summary>
         public bool CheckRoute(FSAnnouncement announcement, List<NodeInfo> route)
         {
             for (int i = 0; i < route.Count; i++)
@@ -28,7 +32,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route.Placement
                 {
                     return false;
                 }
-                if (servers.Count == 0) break;
+                if (servers is null || servers.Count == 0) break;
                 bool found = false;
                 foreach (var server in servers)
                 {

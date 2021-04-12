@@ -1,10 +1,12 @@
 using Grpc.Core;
 using Neo.FileStorage.API.Container;
+using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Services.Container.Announcement.Route;
 using Neo.FileStorage.Services.Container.Announcement.Route.Placement;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using FSAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types.Announcement;
 
@@ -12,6 +14,7 @@ namespace Neo.FileStorage.Services.Container.Announcement
 {
     public class UsedSpaceService
     {
+        private readonly ECDsa key;
         private readonly NodeInfo localNodeInfo;
         private readonly Router router;
         private readonly LoadPlacementBuilder loadbuilder;
@@ -37,6 +40,7 @@ namespace Neo.FileStorage.Services.Container.Announcement
                 {
                     Body = new AnnounceUsedSpaceResponse.Types.Body { }
                 };
+                key.SignResponse(resp);
                 return resp;
             });
         }

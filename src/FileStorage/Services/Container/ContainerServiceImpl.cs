@@ -26,11 +26,7 @@ namespace Neo.FileStorage.Services.Container
 
         public override Task<AnnounceUsedSpaceResponse> AnnounceUsedSpace(AnnounceUsedSpaceRequest request, ServerCallContext context)
         {
-            return usedSpaceService.AnnounceUsedSpace(request, context).ContinueWith(t =>
-            {
-                key.SignResponse(t.Result);
-                return t.Result;
-            });
+            return usedSpaceService.AnnounceUsedSpace(request, context);
         }
 
         public override Task<DeleteResponse> Delete(DeleteRequest request, ServerCallContext context)

@@ -22,5 +22,10 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
         {
             throw new NotImplementedException();
         }
+
+        public List<ContainerID> ListContainers()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

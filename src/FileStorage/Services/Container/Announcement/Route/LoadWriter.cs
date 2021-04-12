@@ -17,7 +17,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route
 
         public void Put(FSAnnouncement announcement)
         {
-            RouteKey key = new RouteKey
+            RouteKey key = new()
             {
                 Epoch = announcement.Epoch,
                 Cid = announcement.ContainerId.ToBase58String(),
@@ -26,7 +26,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route
             if (!exists)
             {
                 var route = Router.RouteBuilder.NextStage(announcement, RouteContext.PassedRoute);
-                if (route.Count == 0)
+                if (route is null || route.Count == 0)
                     route = new() { null };
                 value = new()
                 {
@@ -47,13 +47,13 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route
                     {
                         var provider = Router.remoteProvider.InitRemote(remoteInfo);
                         remoteWriter = provider.InitWriter(Cancellation);
-                        mServers[endpoint] = remoteWriter;
                     }
                     catch (Exception e)
                     {
                         Log(nameof(LoadWriter), LogLevel.Debug, $"could not initilize writer or provider, error={e.Message}");
                         continue;
                     }
+                    mServers[endpoint] = remoteWriter;
                 }
                 try
                 {
