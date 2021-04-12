@@ -13,17 +13,27 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Protobuf Include="Services\Control\Service\service.proto" GrpcServices="Both" Link="Services\Control\Service\service.proto" />
+    <Protobuf Include="Services\Control\Service\types.proto" GrpcServices="None" Link="Services\Control\Service\types.proto" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Akka" Version="1.4.17" />
     <PackageReference Include="Multiformats.Address" Version="1.1.1" />
     <PackageReference Include="Sprache" Version="2.3.1" />
-    <PackageReference Include="NeoFS.API" Version="0.0.34" />
+    <PackageReference Include="NeoFS.API" Version="0.0.33" />
     <PackageReference Include="ZstdNet" Version="1.4.5" />
+    <PackageReference Include="Grpc.Tools" Version="2.36.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\LevelDBStore\LevelDBStore.csproj" />
     <ProjectReference Include="..\RpcClient\RpcClient.csproj" />
     <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
+    <ProjectReference Include="..\..\..\neofs-api-csharp\src\Neo.FileStorage.API\Neo.FileStorage.API.csproj" />
   </ItemGroup>
 
 </Project>
