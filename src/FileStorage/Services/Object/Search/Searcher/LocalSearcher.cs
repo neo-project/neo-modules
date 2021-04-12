@@ -14,7 +14,7 @@ namespace Neo.FileStorage.Services.Object.Search.Searcher
         public List<ObjectID> Search(ContainerID cid, SearchFilters Filters)
         {
             Filters.AddObjectContainerIDFilter(MatchType.StringEqual, cid);
-            var addrs = localStorage.Select(Filters);
+            var addrs = localStorage.Select(cid, Filters);
             if (addrs is null)
                 throw new InvalidOperationException(nameof(LocalSearcher) + " could not select objects from local storage");
             return addrs.Select(p => p.ObjectId).ToList();

@@ -64,7 +64,7 @@ namespace Neo.FileStorage.Services.Policer
             // TODO: optimize the logic for selecting objects
             // We can prioritize objects for migration, newly arrived objects, etc.
             // It is recommended to make changes after updating the metabase
-            var res = localStorage.Select(GetJobFilter());
+            var res = localStorage.List((ulong)limit);
             if (res.Count < limit) return res.ToList();
 
             return res.Take(limit).ToList();
