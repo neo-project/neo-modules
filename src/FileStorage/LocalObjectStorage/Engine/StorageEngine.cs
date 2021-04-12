@@ -27,5 +27,10 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
         {
             throw new NotImplementedException();
         }
+
+        public ulong ContainerSize(ContainerID cid)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
