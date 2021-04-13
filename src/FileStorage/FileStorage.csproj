@@ -33,7 +33,6 @@
     <ProjectReference Include="..\LevelDBStore\LevelDBStore.csproj" />
     <ProjectReference Include="..\RpcClient\RpcClient.csproj" />
     <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
-    <ProjectReference Include="..\..\..\neofs-api-csharp\src\Neo.FileStorage.API\Neo.FileStorage.API.csproj" />
   </ItemGroup>
 
 </Project>
