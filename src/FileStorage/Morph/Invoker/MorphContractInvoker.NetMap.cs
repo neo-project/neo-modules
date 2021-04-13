@@ -47,18 +47,18 @@ namespace Neo.FileStorage.Morph.Invoker
             return client.InvokeFunction(NetMapContractHash, NewEpochMethod, ExtraFee, epochNumber);
         }
 
-        public static byte[][] InvokeInnerRingList(IClient client)
+        public static List<byte[]> InvokeInnerRingList(IClient client)
         {
             InvokeResult result = client.InvokeLocalFunction(NetMapContractHash, InnerRingListMethod);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (InnerRingList)");
             Array array = (Array)result.ResultStack[0];
             IEnumerator<StackItem> enumerator = array.GetEnumerator();
-            List<byte[]> resultArray = new List<byte[]>();
+            List<byte[]> resultArray = new();
             while (enumerator.MoveNext())
             {
                 resultArray.Add(((Array)enumerator.Current)[0].GetSpan().ToArray());
             }
-            return resultArray.ToArray();
+            return resultArray;
         }
 
         public static bool InvokeUpdateState(IClient client, UpdateStateArgs args)
@@ -87,14 +87,14 @@ namespace Neo.FileStorage.Morph.Invoker
             return res;
         }
 
-        public static byte[][] InvokeSnapshot(IClient client, int different)
+        public static List<byte[]> InvokeSnapshot(IClient client, int different)
         {
             InvokeResult result = client.InvokeLocalFunction(NetMapContractHash, SnapshotMethod, different);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (Snapshot)");
             if (result.ResultStack.Length != 1) throw new Exception(string.Format("unexpected stack item count ({0})", result.ResultStack.Length));
             Array peers = (Array)result.ResultStack[0];
             IEnumerator<StackItem> peersEnumerator = peers.GetEnumerator();
-            List<byte[]> res = new List<byte[]>();
+            List<byte[]> res = new();
             while (peersEnumerator.MoveNext())
             {
                 Array peer = (Array)peersEnumerator.Current;
@@ -105,7 +105,7 @@ namespace Neo.FileStorage.Morph.Invoker
                     res.Add(peerEnumerator.Current.GetSpan().ToArray());
                 }
             }
-            return res.ToArray();
+            return res;
         }
     }
 }
