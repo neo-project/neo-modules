@@ -1,6 +1,7 @@
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Cache;
 using Neo.FileStorage.LocalObjectStorage.Blob;
 using Neo.IO.Data.LevelDB;
 using System;

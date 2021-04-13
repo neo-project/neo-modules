@@ -132,9 +132,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Shard
 
 
 
-        public Header Head(Address address, bool raw)
+        public FSObject Head(Address address, bool raw)
         {
-            return metaBase.Get(address, raw)?.Header;
+            return metaBase.Get(address, raw)?.CutPayload();
         }
 
 

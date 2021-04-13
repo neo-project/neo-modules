@@ -160,7 +160,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
 
 
 
-        public Header Header(Address address, bool raw)
+        public FSObject Head(Address address, bool raw)
         {
             foreach (var shard in SortedShards(address))
             {

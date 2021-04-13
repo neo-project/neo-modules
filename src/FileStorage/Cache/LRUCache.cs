@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace Neo.FileStorage.LocalObjectStorage.Blobstor
+namespace Neo.FileStorage.Cache
 {
     public class LRUCache<K, V> where K : IEquatable<K>
     {
@@ -37,6 +37,18 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
             {
                 list.Remove(el);
                 list.AddFirst(el);
+                value = el.Value;
+                return true;
+            }
+            value = default;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.Synchronized)]
+        public bool TryPeek(K key, out V value)
+        {
+            if (cache.TryGetValue(key, out Element el))
+            {
                 value = el.Value;
                 return true;
             }
