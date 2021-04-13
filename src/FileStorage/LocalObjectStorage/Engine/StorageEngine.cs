@@ -170,8 +170,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
                     return result;
                 }
             }
-
-            return null;
+            throw new ObjectNotFoundException(nameof(StorageEngine) + " can't find object from all shards");
         }
 
         public void Inhume(Address tombstone, params Address[] addresses)
@@ -184,10 +183,6 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
                 }
             }
         }
-
-
-
-
 
         private List<Shard.Shard> UnsortedShards()
         {
