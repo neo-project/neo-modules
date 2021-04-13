@@ -1,4 +1,3 @@
-using Google.Protobuf;
 using Grpc.Core;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Cryptography;
@@ -15,10 +14,9 @@ using System;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Neo.FileStorage.Core.Netmap;
-using Neo.FileStorage.API.Session;
-using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Services.Object.Get.Writer;
 using Neo.FileStorage.Services.Object.Util;
+using Neo.FileStorage.Morph.Invoker;
 
 namespace Neo.FileStorage.Services.Object
 {
@@ -27,73 +25,68 @@ namespace Neo.FileStorage.Services.Object
         private readonly ECDsa key;
         private readonly StorageEngine localStorage;
         private readonly IContainerSource contnainerSource;
-        private readonly IInnerRingFetcher innerRingFetcher;
         private readonly INetmapSource netmapSource;
         private readonly INetState netmapState;
-        private readonly IEAclSource eAclStorage;
         private readonly DeleteService deleteService;
         private readonly GetService getService;
         private readonly PutService putService;
         private readonly SearchService searchService;
         private readonly AclChecker aclChecker;
         private readonly Responser responser;
+        private readonly IClient morph;
 
-        public ObjectServiceImpl(IContainerSource container_source, StorageEngine local_storage, IEAclSource eacl_storage, INetState state, IInnerRingFetcher fetcher)
+        public ObjectServiceImpl(IContainerSource container_source, StorageEngine local_storage, IClient client, INetState state)
         {
             localStorage = local_storage;
-            eAclStorage = eacl_storage;
+            morph = client;
             contnainerSource = container_source;
             netmapState = state;
-            innerRingFetcher = fetcher;
             deleteService = new DeleteService();
             getService = new GetService();
             putService = new PutService();
             searchService = new SearchService();
-            var classifier = new Classifier(innerRingFetcher, netmapSource);
-            aclChecker = new AclChecker(contnainerSource, localStorage, eAclStorage, classifier, netmapState);
-            responser = new Responser(key);
-        }
-
-        private ObjectID GetObjectIDFromRequest(IRequest request)
-        {
-            return request switch
+            aclChecker = new()
             {
-                GetRequest getRequest => getRequest.Body.Address.ObjectId,
-                DeleteRequest deleteRequest => deleteRequest.Body.Address.ObjectId,
-                HeadRequest headRequest => headRequest.Body.Address.ObjectId,
-                GetRangeRequest getRange => getRange.Body.Address.ObjectId,
-                GetRangeHashRequest getRangeHashRequest => getRangeHashRequest.Body.Address.ObjectId,
-                _ => null,
+                ContainerSource = container_source,
+                LocalStorage = local_storage,
+                EAclValidator = new()
+                {
+                    EAclStorage = new(morph),
+                },
+                Classifier = new()
+                {
+                    Morph = morph,
+                },
+                NetmapState = state,
             };
-        }
-
-        private void UseObjectIDFromSession(RequestInfo info, SessionToken session)
-        {
-            var oid = session?.Body?.Object?.Address?.ObjectId;
-            if (oid is null) return;
-            info.ObjectID = oid;
+            responser = new()
+            {
+                Key = key,
+            };
         }
 
         public override Task Get(GetRequest request, IServerStreamWriter<GetResponse> responseStream, ServerCallContext context)
         {
-            try
-            {
-                var cid = aclChecker.GetContainerIDFromRequest(request);
-                var info = aclChecker.FindRequestInfo(request, cid, Operation.Get);
-                info.ObjectID = GetObjectIDFromRequest(request);
-                UseObjectIDFromSession(info, request?.MetaHeader?.SessionToken);
-                if (!aclChecker.BasicAclCheck(info)) throw new RpcException(new Status(StatusCode.PermissionDenied, " basic acl check failed"));
-                if (!aclChecker.EAclCheck(request, info)) throw new RpcException(new Status(StatusCode.PermissionDenied, " eacl check failed"));
-            }
-            catch (Exception e)
-            {
-                throw new RpcException(new Status(StatusCode.PermissionDenied, e.Message));
-            }
-            if (!request.VerifyRequest()) throw new RpcException(new Status(StatusCode.Unauthenticated, "verify header failed"));
             return Task.Run(() =>
             {
+                RequestInfo info;
+                try
+                {
+                    info = aclChecker.CheckRequest(request, Operation.Get);
+                }
+                catch (Exception e)
+                {
+                    throw new RpcException(new Status(StatusCode.PermissionDenied, e.Message));
+                }
+                if (!request.VerifyRequest()) throw new RpcException(new Status(StatusCode.Unauthenticated, "verify header failed"));
                 var prm = GetPrm.FromRequest(request);
-                var writer = new GetWriter(responseStream, new Responser(key));
+                GetWriter writer = new()
+                {
+                    Stream = responseStream,
+                    Responser = new() { Key = key },
+                    AclChecker = aclChecker,
+                    Info = info
+                };
                 prm.HeaderWriter = writer;
                 prm.ChunkWriter = writer;
                 getService.Get(prm);
@@ -154,12 +147,7 @@ namespace Neo.FileStorage.Services.Object
         {
             try
             {
-                var cid = aclChecker.GetContainerIDFromRequest(request);
-                var info = aclChecker.FindRequestInfo(request, cid, Operation.Delete);
-                info.ObjectID = GetObjectIDFromRequest(request);
-                UseObjectIDFromSession(info, request?.MetaHeader?.SessionToken);
-                if (!aclChecker.BasicAclCheck(info)) throw new RpcException(new Status(StatusCode.PermissionDenied, " basic acl check failed"));
-                if (!aclChecker.EAclCheck(request, info)) throw new RpcException(new Status(StatusCode.PermissionDenied, " eacl check failed"));
+                aclChecker.CheckRequest(request, Operation.Delete);
             }
             catch (Exception e)
             {
@@ -186,12 +174,7 @@ namespace Neo.FileStorage.Services.Object
             RequestInfo info;
             try
             {
-                var cid = aclChecker.GetContainerIDFromRequest(request);
-                info = aclChecker.FindRequestInfo(request, cid, Operation.Head);
-                info.ObjectID = GetObjectIDFromRequest(request);
-                UseObjectIDFromSession(info, request?.MetaHeader?.SessionToken);
-                if (!aclChecker.BasicAclCheck(info)) throw new RpcException(new Status(StatusCode.PermissionDenied, " basic acl check failed"));
-                if (!aclChecker.EAclCheck(request, info)) throw new RpcException(new Status(StatusCode.PermissionDenied, " eacl check failed"));
+                info = aclChecker.CheckRequest(request, Operation.Head);
             }
             catch (Exception e)
             {
@@ -211,12 +194,7 @@ namespace Neo.FileStorage.Services.Object
         {
             try
             {
-                var cid = aclChecker.GetContainerIDFromRequest(request);
-                var info = aclChecker.FindRequestInfo(request, cid, Operation.Getrange);
-                info.ObjectID = GetObjectIDFromRequest(request);
-                UseObjectIDFromSession(info, request?.MetaHeader?.SessionToken);
-                if (!aclChecker.BasicAclCheck(info)) throw new RpcException(new Status(StatusCode.PermissionDenied, " basic acl check failed"));
-                if (!aclChecker.EAclCheck(request, info)) throw new RpcException(new Status(StatusCode.PermissionDenied, " eacl check failed"));
+                aclChecker.CheckRequest(request, Operation.Getrange);
             }
             catch (Exception e)
             {
@@ -235,12 +213,7 @@ namespace Neo.FileStorage.Services.Object
         {
             try
             {
-                var cid = aclChecker.GetContainerIDFromRequest(request);
-                var info = aclChecker.FindRequestInfo(request, cid, Operation.Getrangehash);
-                info.ObjectID = GetObjectIDFromRequest(request);
-                UseObjectIDFromSession(info, request?.MetaHeader?.SessionToken);
-                if (!aclChecker.BasicAclCheck(info)) throw new RpcException(new Status(StatusCode.PermissionDenied, " basic acl check failed"));
-                if (!aclChecker.EAclCheck(request, info)) throw new RpcException(new Status(StatusCode.PermissionDenied, " eacl check failed"));
+                aclChecker.CheckRequest(request, Operation.Getrangehash);
             }
             catch (Exception e)
             {
@@ -257,12 +230,7 @@ namespace Neo.FileStorage.Services.Object
         {
             try
             {
-                var cid = aclChecker.GetContainerIDFromRequest(request);
-                var info = aclChecker.FindRequestInfo(request, cid, Operation.Search);
-                info.ObjectID = GetObjectIDFromRequest(request);
-                UseObjectIDFromSession(info, request?.MetaHeader?.SessionToken);
-                if (!aclChecker.BasicAclCheck(info)) throw new RpcException(new Status(StatusCode.PermissionDenied, " basic acl check failed"));
-                if (!aclChecker.EAclCheck(request, info)) throw new RpcException(new Status(StatusCode.PermissionDenied, " eacl check failed"));
+                aclChecker.CheckRequest(request, Operation.Search);
             }
             catch (Exception e)
             {

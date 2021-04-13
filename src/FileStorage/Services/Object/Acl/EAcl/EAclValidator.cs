@@ -1,32 +1,36 @@
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.Core.Container;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using AclAction = Neo.FileStorage.API.Acl.Action;
 
 namespace Neo.FileStorage.Services.Object.Acl.EAcl
 {
     public class EAclValidator
     {
-        private readonly IEAclSource EAclSource;
+        public EAclCache EAclStorage { get; init; }
 
-        public EAclValidator(IEAclSource source)
-        {
-            EAclSource = source;
-        }
-
-        public Action CalculateAction(ValidateUnit unit)
+        public AclAction CalculateAction(ValidateUnit unit)
         {
             EACLTable table;
-            if (unit.Bearer is null)
-                table = unit.Bearer.Body?.EaclTable;
+            if (unit.Bearer is not null)
+                table = unit.Bearer.Body.EaclTable;
             else
-                table = EAclSource.GetEACL(unit.Cid);
-            if (table is null)
-                return Action.Allow;
+            {
+                try
+                {
+                    table = EAclStorage.GetEACL(unit.Cid);
+                }
+                catch (Exception)//TODO: not found exception, return allow
+                {
+                    return AclAction.Deny;
+                }
+            }
             return TableAction(unit, table);
         }
 
-        private Action TableAction(ValidateUnit unit, EACLTable table)
+        private AclAction TableAction(ValidateUnit unit, EACLTable table)
         {
             foreach (var record in table.Records)
             {
@@ -34,11 +38,11 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
                     continue;
                 if (!TargetMatches(unit, record))
                     continue;
-                var val = MatchFilters(unit.HeaderSource, record.Filters.ToList());
-                if (val < 0) return Action.Allow;
+                var val = MatchFilters(unit.HeaderSource, record.Filters);
+                if (val < 0) return AclAction.Allow;
                 if (val == 0) return record.Action;
             }
-            return Action.Allow;
+            return AclAction.Allow;
         }
 
         private bool TargetMatches(ValidateUnit unit, EACLRecord record)
@@ -54,12 +58,12 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
             return false;
         }
 
-        private int MatchFilters(ITypedHeaderSource headerSource, List<EACLRecord.Types.Filter> filters)
+        private int MatchFilters(HeaderSource headerSource, IEnumerable<EACLRecord.Types.Filter> filters)
         {
             int matched = 0;
             foreach (var filter in filters)
             {
-                var headers = headerSource.HeadersOfSource(filter.HeaderType);
+                var headers = headerSource.HeadersOfType(filter.HeaderType);
                 if (headers is null) return -1;
 
                 foreach (var header in headers)
@@ -81,7 +85,7 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
                     break;
                 }
             }
-            return filters.Count - matched;
+            return filters.Count() - matched;
         }
     }
 }

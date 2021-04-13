@@ -80,14 +80,8 @@ namespace Neo.FileStorage.InnerRing.Processors
             try
             {
                 List<NodeInfo> infos = new List<NodeInfo>();
-                byte[][] rawPeers = MorphContractInvoker.InvokeSnapshot(Client, 0);
-                foreach (var item in rawPeers)
-                {
-                    var nodeInfo = NodeInfo.Parser.ParseFrom(item);
-                    infos.Add(nodeInfo);
-                }
-                List<Node> nodes = infos.Select((p, i) => new Node(i, p)).ToList();
-                nm = new NetMap(nodes.ToArray());
+                List<byte[]> rawPeers = MorphContractInvoker.InvokeSnapshot(Client, 0);
+                nm = new NetMap(rawPeers.Select(p => NodeInfo.Parser.ParseFrom(p)).Select((p, i) => new Node(i, p)).ToList());
             }
             catch (Exception e)
             {

@@ -10,12 +10,7 @@ namespace Neo.FileStorage.Services.Object.Util
 {
     public class Responser
     {
-        private readonly ECDsa key;
-
-        public Responser(ECDsa key)
-        {
-            this.key = key;
-        }
+        public ECDsa Key { get; init; }
 
         public HeadResponse HeadResponse(bool minimal, V2Object obj)
         {
@@ -66,7 +61,7 @@ namespace Neo.FileStorage.Services.Object.Util
                     }
                 }
             };
-            key.SignResponse(resp);
+            Key.SignResponse(resp);
             return resp;
         }
 
@@ -79,7 +74,7 @@ namespace Neo.FileStorage.Services.Object.Util
                     Chunk = chunk,
                 }
             };
-            key.SignResponse(resp);
+            Key.SignResponse(resp);
             return resp;
         }
 
@@ -92,7 +87,7 @@ namespace Neo.FileStorage.Services.Object.Util
                     Chunk = chunk,
                 }
             };
-            key.SignResponse(resp);
+            Key.SignResponse(resp);
             return resp;
         }
 

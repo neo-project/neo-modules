@@ -1,7 +1,6 @@
-using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.FileStorage.LocalObjectStorage.Blobstor;
+using Neo.FileStorage.Cache;
 
 namespace Neo.FileStorage.Tests.LocalObjectStorage
 {

@@ -8,7 +8,7 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
         public ContainerID Cid;
         public Role Role;
         public Operation Op;
-        public ITypedHeaderSource HeaderSource;
+        public HeaderSource HeaderSource;
         public byte[] Key;
         public BearerToken Bearer;
     }

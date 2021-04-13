@@ -86,8 +86,8 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         [TestMethod]
         public void InvokeInnerRingListTest()
         {
-            byte[][] result = MorphContractInvoker.InvokeInnerRingList(client);
-            Assert.AreEqual(result.Length, 7);
+            var result = MorphContractInvoker.InvokeInnerRingList(client);
+            Assert.AreEqual(result.Count, 7);
         }
 
         [TestMethod]
@@ -107,15 +107,15 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         [TestMethod]
         public void InvokeSnapshotTest()
         {
-            byte[][] result = MorphContractInvoker.InvokeSnapshot(client, 0);
-            Assert.AreEqual(result.Length, 1);
+            var result = MorphContractInvoker.InvokeSnapshot(client, 0);
+            Assert.AreEqual(result.Count, 1);
         }
 
         [TestMethod]
         public void InvokeNetMapTest()
         {
-            byte[][] result = MorphContractInvoker.InvokeNetMap(client);
-            Assert.AreEqual(result.Length, 1);
+            var result = MorphContractInvoker.InvokeNetMap(client);
+            Assert.AreEqual(result.Count, 1);
         }
 
         [TestMethod]

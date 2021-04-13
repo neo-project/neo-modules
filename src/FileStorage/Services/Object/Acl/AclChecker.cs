@@ -1,47 +1,88 @@
+using Grpc.Core;
 using Neo.FileStorage.API.Acl;
-using V2Action = Neo.FileStorage.API.Acl.Action;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
-using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Core.Container;
 using Neo.FileStorage.Core.Netmap;
+using Neo.FileStorage.LocalObjectStorage.Engine;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Object.Acl.EAcl;
 using System;
 using static Neo.FileStorage.API.Acl.BearerToken.Types.Body.Types;
 using static Neo.FileStorage.API.Session.ObjectSessionContext.Types;
 using static Neo.FileStorage.API.Session.SessionToken.Types.Body;
+using V2Action = Neo.FileStorage.API.Acl.Action;
 
 namespace Neo.FileStorage.Services.Object.Acl
 {
     public class AclChecker
     {
-        private readonly IContainerSource containerSource;
-        private readonly StorageEngine localStorage;
-        private readonly EAclValidator eAclValidator;
-        private readonly Classifier classifier;
-        private readonly INetState netmapState;
+        public IContainerSource ContainerSource { get; init; }
+        public StorageEngine LocalStorage { get; init; }
+        public EAclValidator EAclValidator { get; init; }
+        public Classifier Classifier { get; init; }
+        public INetState NetmapState { get; init; }
 
-        public AclChecker(IContainerSource cs, StorageEngine local_storage, IEAclSource source, Classifier classifier, INetState state)
+        public RequestInfo CheckRequest(IRequest request, Operation op)
         {
-            containerSource = cs;
-            localStorage = local_storage;
-            eAclValidator = new EAclValidator(source);
-            this.classifier = classifier;
-            netmapState = state;
+            var cid = GetContainerIDFromRequest(request);
+            var info = FindRequestInfo(request, cid, op);
+            info.ObjectID = GetObjectIDFromRequest(request);
+            UseObjectIDFromSession(info, request?.MetaHeader?.SessionToken);
+            if (!BasicAclCheck(info) || (op == Operation.Put && !StickyBitCheck(info))) throw new Exception($"{nameof(CheckRequest)} basic acl check failed");
+            if (!EAclCheck(info, null)) throw new Exception($"{nameof(CheckRequest)} eacl check failed");
+            return info;
         }
 
-        public ContainerID GetContainerIDFromRequest(IRequest req)
+        private ObjectID GetObjectIDFromRequest(IRequest request)
+        {
+            return request switch
+            {
+                GetRequest getRequest => getRequest.Body.Address.ObjectId,
+                DeleteRequest deleteRequest => deleteRequest.Body.Address.ObjectId,
+                HeadRequest headRequest => headRequest.Body.Address.ObjectId,
+                GetRangeRequest getRange => getRange.Body.Address.ObjectId,
+                GetRangeHashRequest getRangeHashRequest => getRangeHashRequest.Body.Address.ObjectId,
+                _ => null,
+            };
+        }
+
+        private OwnerID GetOwnerIDFromRequest(object message)
+        {
+            switch (message)
+            {
+                case PutRequest putRequest:
+                    if (putRequest.Body.ObjectPartCase == PutRequest.Types.Body.ObjectPartOneofCase.Init)
+                        return putRequest.Body.Init.Header.OwnerId;
+                    throw new InvalidOperationException(nameof(GetOwnerIDFromRequest) + " cannt get owner from chunk");
+                case GetResponse getResponse:
+                    if (getResponse.Body.ObjectPartCase == GetResponse.Types.Body.ObjectPartOneofCase.Init)
+                        return getResponse.Body.Init.Header.OwnerId;
+                    throw new InvalidOperationException(nameof(GetOwnerIDFromRequest) + " cannt get owner from chunk");
+                default:
+                    throw new InvalidOperationException(nameof(GetOwnerIDFromRequest) + " unsupported request type");
+            }
+        }
+
+        private void UseObjectIDFromSession(RequestInfo info, SessionToken session)
+        {
+            var oid = session?.Body?.Object?.Address?.ObjectId;
+            if (oid is null) return;
+            info.ObjectID = oid;
+        }
+
+        private ContainerID GetContainerIDFromRequest(IRequest req)
         {
             switch (req)
             {
                 case GetRequest getReq:
                     return getReq.Body.Address.ContainerId;
                 case PutRequest putReq:
-                    var obj = putReq.Body.Init;
-                    if (obj is null) throw new InvalidOperationException(nameof(GetContainerIDFromRequest) + " cannt get cid from chunk");
-                    return obj.Header.ContainerId;
+                    if (putReq.Body.ObjectPartCase == PutRequest.Types.Body.ObjectPartOneofCase.Init)
+                        return putReq.Body.Init.Header.ContainerId;
+                    throw new InvalidOperationException(nameof(GetContainerIDFromRequest) + " cannt get cid from chunk");
                 case HeadRequest headReq:
                     return headReq.Body.Address.ContainerId;
                 case SearchRequest searchReq:
@@ -57,22 +98,22 @@ namespace Neo.FileStorage.Services.Object.Acl
             }
         }
 
-        public RequestInfo FindRequestInfo(IRequest request, ContainerID cid, Operation op)
+        private RequestInfo FindRequestInfo(IRequest request, ContainerID cid, Operation op)
         {
-            var container = containerSource.Get(cid);
-            classifier.Classify(request, cid, container);
-            if (classifier.Role == Role.Unspecified)
+            var container = ContainerSource.Get(cid);
+            var classifiered = Classifier.Classify(request, cid, container);
+            if (classifiered.Item1 == Role.Unspecified)
                 throw new InvalidOperationException(nameof(FindRequestInfo) + " unkown role");
             var verb = SourceVerbOfRequest(request, op);
             var info = new RequestInfo
             {
                 BasicAcl = container.BasicAcl,
-                Role = classifier.Role,
-                IsInnerRing = classifier.IsInnerRing,
+                Role = classifiered.Item1,
+                IsInnerRing = classifiered.Item3,
                 Op = verb,
                 Owner = container.OwnerId,
                 ContainerID = cid,
-                SenderKey = classifier.SenderKey,
+                SenderKey = classifiered.Item2,
                 Bearer = request.MetaHeader.BearerToken,
                 Request = request,
             };
@@ -114,25 +155,34 @@ namespace Neo.FileStorage.Services.Object.Acl
             };
         }
 
-        public bool EAclCheck(object message, RequestInfo info)
+        public bool EAclCheck(RequestInfo info, IResponse resp)
         {
             if (info.BasicAcl.Final()) return true;
             if (!info.BasicAcl.BearsAllowed(info.Op)) return false;
-            if (!IsValidBearer(info, netmapState)) return false;
+            if (!IsValidBearer(info, NetmapState)) return false;
             var unit = new ValidateUnit
             {
                 Cid = info.ContainerID,
                 Role = info.Role,
                 Op = info.Op,
                 Bearer = info.Bearer,
-                HeaderSource = new HeaderSource(localStorage, message),
+                HeaderSource = new HeaderSource(LocalStorage, info.Address, info.Request, resp),
             };
-            var action = eAclValidator.CalculateAction(unit);
+            var action = EAclValidator.CalculateAction(unit);
             return V2Action.Allow == action;
         }
 
-        public bool StickyBitCheck(RequestInfo info, OwnerID owner)
+        public bool StickyBitCheck(RequestInfo info)
         {
+            OwnerID owner;
+            try
+            {
+                owner = GetOwnerIDFromRequest(info.Request);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
             if (owner is null || info.SenderKey is null || info.SenderKey.Length == 0)
                 return false;
             if (!info.BasicAcl.Sticky())
