@@ -173,13 +173,21 @@ namespace Neo.Plugins
             List<object> resultList = new();
             try
             {
-                var result = engine.ResultStack.FirstOrDefault() as IIterator;
-                for (int i = 0; result.Next(); i++)
+                var result = engine.ResultStack.FirstOrDefault() as VM.Types.InteropInterface;
+                if (result is null)
                 {
-                    if(i >= startIndex && i < endIndex)
-                        resultList.Add(result.Value());
+                    json["result"] = null;
                 }
-                json["result"] = new JArray(resultList.Select(p => ((VM.Types.StackItem)p).ToJson()));
+                else
+                {
+                    var iterator = result.GetInterface<IIterator>();
+                    for (int i = 0; iterator.Next(); i++)
+                    {
+                        if (i >= startIndex && i < endIndex)
+                            resultList.Add(iterator.Value());
+                    }
+                    json["result"] = new JArray(resultList.Select(p => ((VM.Types.StackItem)p).ToJson()));
+                }
                 json["startindex"] = startIndex;
                 json["endindex"] = endIndex;
             }
