@@ -86,7 +86,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
         private SplitInfo SplitInfoFromObject(FSObject obj)
         {
             if (obj.Parent is null) return null;
-            SplitInfo result = new();
+            SplitInfo result = new ();
             result.SplitId = obj.SplitId.ToByteString();
             if (IsLinkObject(obj))
                 result.Link = obj.ObjectId;
@@ -109,7 +109,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 
         private List<(byte[], byte[])> UniqueIndexes(FSObject obj, SplitInfo si, BlobovniczaID bid)
         {
-            List<(byte[], byte[])> result = new();
+            List<(byte[], byte[])> result = new ();
             if (si is null)
             {
                 switch (obj.ObjectType)

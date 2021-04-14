@@ -11,8 +11,8 @@ namespace Neo.FileStorage.Services.Container.Announcement.Control
         public Router LocalAnnouncementTarget;
         public AnnouncementStorage AnnouncementAccumulator;
         public MorphLoadWriter ResultReceiver;
-        public Dictionary<ulong, CancellationTokenSource> AnnounceCancellations = new();
-        public Dictionary<ulong, CancellationTokenSource> ReportCancellations = new();
+        public Dictionary<ulong, CancellationTokenSource> AnnounceCancellations = new ();
+        public Dictionary<ulong, CancellationTokenSource> ReportCancellations = new ();
 
         public void Start(ulong epoch)
         {
@@ -29,7 +29,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Control
             {
                 if (!AnnounceCancellations.ContainsKey(epoch))
                 {
-                    CancellationTokenSource source = new();
+                    CancellationTokenSource source = new ();
                     AnnounceCancellations[epoch] = source;
                     cancellation = source.Token;
                 }
@@ -53,7 +53,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Control
             {
                 if (!ReportCancellations.ContainsKey(epoch))
                 {
-                    CancellationTokenSource source = new();
+                    CancellationTokenSource source = new ();
                     ReportCancellations[epoch] = source;
                     cancellation = source.Token;
                 }

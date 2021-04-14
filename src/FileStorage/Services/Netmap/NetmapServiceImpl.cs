@@ -53,7 +53,7 @@ namespace Neo.FileStorage.Services.Netmap
                 {
                     Body = new NetworkInfoResponse.Types.Body
                     {
-                        NetworkInfo = new()
+                        NetworkInfo = new ()
                         {
                             CurrentEpoch = snode.CurrentEpoch,
                             MagicNumber = snode.ProtocolSettings.Network,

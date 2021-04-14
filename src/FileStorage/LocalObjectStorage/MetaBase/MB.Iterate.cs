@@ -16,7 +16,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             for (it.Seek(GraveYardPrefix); it.Valid(); it.Next())
             {
                 if (!it.Key().AsSpan().StartsWith(GraveYardPrefix)) break;
-                func(new()
+                func(new ()
                 {
                     GCMark = it.Value().SequenceEqual(InhumeGCMarkValue),
                     Address = Address.Parser.ParseFrom(it.Key()[1..]),
@@ -47,7 +47,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                 ulong expired_epoch_value = ulong.Parse(StrictUTF8.GetString(key[..^32]));
                 if (epoch < expired_epoch_value) return;
                 byte[] oid = key[^32..];
-                Address address = new()
+                Address address = new ()
                 {
                     ContainerId = ContainerID.FromSha256Bytes(cid),
                     ObjectId = ObjectID.FromSha256Bytes(oid),
@@ -67,11 +67,11 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
         {
             Iterate(GraveYardPrefix, (key, value) =>
             {
-                if (tss.Contains(StrictUTF8.GetString(value)))
-                {
-                    func(new(ContainerID.FromSha256Bytes(key[1..^32]), ObjectID.FromSha256Bytes(key[^32..])));
-                }
-            });
+            if (tss.Contains(StrictUTF8.GetString(value)))
+            {
+                func(new (ContainerID.FromSha256Bytes(key[1..^32]), ObjectID.FromSha256Bytes(key[^32..])));
+        }
+    });
         }
     }
 }

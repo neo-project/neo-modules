@@ -40,7 +40,7 @@ namespace Neo.Plugins.util
         }
     }
 
-    public class Fixed8ConverterUtil: ConvertUtil
+    public class Fixed8ConverterUtil : ConvertUtil
     {
         private const uint Fixed8Precision = 8;
 

@@ -24,10 +24,10 @@ namespace Neo.FileStorage.Services.Container.Announcement
         {
             return Task.Run(() =>
             {
-                List<NodeInfo> passed = new();
+                List<NodeInfo> passed = new ();
                 for (var header = request.VerifyHeader; header != null; header = header.Origin)
                 {
-                    passed.Add(new() { PublicKey = header.BodySignature.Key });
+                    passed.Add(new () { PublicKey = header.BodySignature.Key });
                 }
                 passed.Reverse();
                 passed.Add(localNodeInfo);

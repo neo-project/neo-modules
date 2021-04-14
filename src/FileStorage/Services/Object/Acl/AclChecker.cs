@@ -4,7 +4,6 @@ using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
-using Neo.FileStorage.Core.Container;
 using Neo.FileStorage.Core.Netmap;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Morph.Invoker;

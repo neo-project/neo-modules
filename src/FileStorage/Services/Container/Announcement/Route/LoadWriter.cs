@@ -1,4 +1,3 @@
-using Neo.FileStorage.Services.Container.Announcement.Control;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -12,12 +11,12 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route
         public Router Router;
         public CancellationToken Cancellation;
         public RouteContext RouteContext;
-        public Dictionary<RouteKey, RouteValue> mRoute = new();
-        public Dictionary<string, RemoteAnnounceWriter> mServers = new();
+        public Dictionary<RouteKey, RouteValue> mRoute = new ();
+        public Dictionary<string, RemoteAnnounceWriter> mServers = new ();
 
         public void Put(FSAnnouncement announcement)
         {
-            RouteKey key = new()
+            RouteKey key = new ()
             {
                 Epoch = announcement.Epoch,
                 Cid = announcement.ContainerId.ToBase58String(),
@@ -27,11 +26,11 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route
             {
                 var route = Router.RouteBuilder.NextStage(announcement, RouteContext.PassedRoute);
                 if (route is null || route.Count == 0)
-                    route = new() { null };
-                value = new()
+                    route = new () { null };
+                value = new ()
                 {
                     Route = route,
-                    Values = new() { announcement },
+                    Values = new () { announcement },
                 };
                 mRoute.Add(key, value);
             }

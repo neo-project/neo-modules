@@ -14,7 +14,7 @@ namespace Neo.FileStorage.Services.Control
 {
     public class ControlServiceImpl : ControlService.ControlServiceBase
     {
-        private readonly HashSet<byte[]> allowKeys = new();
+        private readonly HashSet<byte[]> allowKeys = new ();
         private readonly ECDsa key;
         private readonly StorageEngine engine;
         private readonly INetmapSource netmapSource;
@@ -107,7 +107,7 @@ namespace Neo.FileStorage.Services.Control
 
         private NodeInfo NodeInfoFromAPI(APINodeInfo n)
         {
-            NodeInfo ni = new()
+            NodeInfo ni = new ()
             {
                 PublicKey = n.PublicKey,
                 Address = n.Address,
@@ -128,7 +128,7 @@ namespace Neo.FileStorage.Services.Control
 
         private NodeInfo.Types.Attribute AttributeFromAPI(APINodeInfo.Types.Attribute a)
         {
-            return new()
+            return new ()
             {
                 Key = a.Key,
                 Value = a.Value,

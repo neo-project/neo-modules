@@ -33,7 +33,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
         public MB(string p)
         {
             path = p;
-            matchers = new()
+            matchers = new ()
             {
                 { MatchType.Unspecified, UnknownMatcher },
                 { MatchType.StringEqual, StringEqualMatcher },
@@ -79,7 +79,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                 case Filter.FilterHeaderPayloadHash:
                     return value.HexToBytes();
                 case Filter.FilterHeaderSplitID:
-                    SplitID s = new();
+                    SplitID s = new ();
                     if (s.Parse(value)) return s.ToBytes();
                     return null;
                 default:

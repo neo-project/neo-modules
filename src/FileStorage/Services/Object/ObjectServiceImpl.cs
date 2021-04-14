@@ -45,17 +45,17 @@ namespace Neo.FileStorage.Services.Object
             getService = new GetService();
             putService = new PutService();
             searchService = new SearchService();
-            aclChecker = new()
+            aclChecker = new ()
             {
                 Morph = client,
                 LocalStorage = local_storage,
-                EAclValidator = new()
+                EAclValidator = new ()
                 {
-                    EAclStorage = new(morph),
+                    EAclStorage = new (morph),
                 },
                 NetmapState = state,
             };
-            responser = new()
+            responser = new ()
             {
                 Key = key,
             };
@@ -76,10 +76,10 @@ namespace Neo.FileStorage.Services.Object
                 }
                 if (!request.VerifyRequest()) throw new RpcException(new Status(StatusCode.Unauthenticated, "verify header failed"));
                 var prm = GetPrm.FromRequest(request);
-                GetWriter writer = new()
+                GetWriter writer = new ()
                 {
                     Stream = responseStream,
-                    Responser = new() { Key = key },
+                    Responser = new () { Key = key },
                     AclChecker = aclChecker,
                     Info = info
                 };

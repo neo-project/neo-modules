@@ -16,7 +16,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route
             RouteContext context;
             if (ctx is CancellationToken token)
             {
-                context = new(new() { LocalNodeInfo }, token);
+                context = new (new () { LocalNodeInfo }, token);
             }
             else if (ctx is RouteContext c)
             {

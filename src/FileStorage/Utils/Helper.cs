@@ -26,7 +26,8 @@ namespace Neo.Plugins.util
             return content;
         }
 
-        public static JObject ParseToJson(this NotifyEventArgs notify) {
+        public static JObject ParseToJson(this NotifyEventArgs notify)
+        {
             var container = notify.ScriptContainer.ToArray().ToHexString();
             var scriptHash = notify.ScriptHash.ToArray().ToHexString();
             var eventName = notify.EventName;

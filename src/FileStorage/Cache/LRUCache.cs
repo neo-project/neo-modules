@@ -18,8 +18,8 @@ namespace Neo.FileStorage.Cache
             }
         }
 
-        private readonly Dictionary<K, Element> cache = new();
-        private readonly LinkedList<Element> list = new();
+        private readonly Dictionary<K, Element> cache = new ();
+        private readonly LinkedList<Element> list = new ();
         private readonly int capacity;
         private readonly Action<K, V> onEvict;
         public int Count => cache.Count;
@@ -67,7 +67,7 @@ namespace Neo.FileStorage.Cache
                     list.AddFirst(el);
                     return true;
                 }
-                el = new(key, value);
+                el = new (key, value);
                 cache.Add(key, el);
                 list.AddFirst(el);
                 if (capacity < cache.Count)

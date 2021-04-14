@@ -96,12 +96,12 @@ namespace Neo.FileStorage.Core.Object
                         return false;
                     var cid = obj.ContainerId;
                     var id_list = tombstone.Members.ToList();
-                    List<Address> address_list = new();
+                    List<Address> address_list = new ();
                     address_list.Add(obj.Address);
                     foreach (var id in id_list)
                     {
                         if (id is null) return false;
-                        Address address = new(cid, id);
+                        Address address = new (cid, id);
                         address_list.Add(address);
                     }
                     if (deleteHandler != null)

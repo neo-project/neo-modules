@@ -4,8 +4,8 @@ namespace Neo.FileStorage.LocalObjectStorage.Blob
 {
     public sealed class ZstdCompressor : ICompressor
     {
-        private readonly Compressor compressor = new();
-        private readonly Decompressor decompressor = new();
+        private readonly Compressor compressor = new ();
+        private readonly Decompressor decompressor = new ();
 
         public byte[] Compress(byte[] data)
         {
