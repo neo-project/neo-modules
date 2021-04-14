@@ -46,10 +46,10 @@ namespace Neo.FileStorage.Tests.Morph.Event
                 ValidUntilBlock = 0,
                 Version = 0,
             };
-            var data = new ContractParametersContext(snapshot, tx);
+            var data = new ContractParametersContext(snapshot, tx, system.Settings.Network);
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
-            JArray obj = new JArray();
+            JArray obj = new();
             obj.Add(tx.ToArray().ToHexString());
             obj.Add(UInt160.Zero.ToArray().ToHexString());
             obj.Add("test");

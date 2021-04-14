@@ -47,15 +47,11 @@ namespace Neo.FileStorage.Services.Object
             searchService = new SearchService();
             aclChecker = new()
             {
-                ContainerSource = container_source,
+                Morph = client,
                 LocalStorage = local_storage,
                 EAclValidator = new()
                 {
                     EAclStorage = new(morph),
-                },
-                Classifier = new()
-                {
-                    Morph = morph,
                 },
                 NetmapState = state,
             };

@@ -83,7 +83,7 @@ namespace Neo.FileStorage.Morph.Invoker
             tx.SystemFee = result.GasConsumed + fee;
             //todo version
             tx.NetworkFee = Wallet.CalculateNetworkFee(snapshot, tx);
-            var data = new ContractParametersContext(snapshot, tx);
+            var data = new ContractParametersContext(snapshot, tx, system.Settings.Network);
             Wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             Blockchain.Tell(tx);
@@ -122,7 +122,7 @@ namespace Neo.FileStorage.Morph.Invoker
                 }
             });
             if (tx == null) throw new Exception("Insufficient funds");
-            ContractParametersContext data = new ContractParametersContext(snapshot, tx);
+            ContractParametersContext data = new ContractParametersContext(snapshot, tx, system.Settings.Network);
             Wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             Blockchain.Tell(tx);

@@ -55,7 +55,7 @@ namespace Neo.FileStorage.Tests.InnerRing
                 ValidUntilBlock = 0,
                 Version = 0,
             };
-            var data = new ContractParametersContext(snapshot, tx);
+            var data = new ContractParametersContext(snapshot, tx, system.Settings.Network);
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             JArray obj = new JArray();
