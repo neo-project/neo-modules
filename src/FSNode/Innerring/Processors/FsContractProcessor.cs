@@ -64,22 +64,22 @@ namespace Neo.Plugins.FSStorage.innerring.processors
             //deposit event
             ParserInfo depositParser = new ParserInfo();
             depositParser.ScriptHashWithType = new ScriptHashWithType() { Type = DepositNotification, ScriptHashValue = FsContractHash };
-            depositParser.Parser = MorphEvent.ParseDepositEvent;
+            depositParser.Parser = DepositEvent.ParseDepositEvent;
 
             //withdraw event
             ParserInfo withdrawParser = new ParserInfo();
             withdrawParser.ScriptHashWithType = new ScriptHashWithType() { Type = WithdrawNotification, ScriptHashValue = FsContractHash };
-            withdrawParser.Parser = MorphEvent.ParseWithdrawEvent;
+            withdrawParser.Parser = WithdrawEvent.ParseWithdrawEvent;
 
             //cheque event
             ParserInfo chequeParser = new ParserInfo();
             chequeParser.ScriptHashWithType = new ScriptHashWithType() { Type = ChequeNotification, ScriptHashValue = FsContractHash };
-            chequeParser.Parser = MorphEvent.ParseChequeEvent;
+            chequeParser.Parser = ChequeEvent.ParseChequeEvent;
 
             //config event
             ParserInfo configParser = new ParserInfo();
             configParser.ScriptHashWithType = new ScriptHashWithType() { Type = ConfigNotification, ScriptHashValue = FsContractHash };
-            configParser.Parser = MorphEvent.ParseConfigEvent;
+            configParser.Parser = ConfigEvent.ParseConfigEvent;
             return new ParserInfo[] { depositParser, withdrawParser, chequeParser, configParser};
         }
 
@@ -138,7 +138,8 @@ namespace Neo.Plugins.FSStorage.innerring.processors
                 if (ok && ((value + mintEmitThreshold) >= curEpoch))
                     Utility.Log(Name, LogLevel.Warning, string.Format("double mint emission declined,receiver:{0},last_emission:{1},current_epoch:{2}", receiver.ToString(), value.ToString(), curEpoch.ToString()));
                 var balance=MorphCli.GasBalance();
-                if(balance< gasBalanceThreshold) Utility.Log(Name, LogLevel.Warning, string.Format("gas balance threshold has been reached,balance:{0},threshold:{1}", balance, gasBalanceThreshold));
+                //todo gasBalanceThreshold
+                if (balance< 0) Utility.Log(Name, LogLevel.Warning, string.Format("gas balance threshold has been reached,balance:{0},threshold:{1}", balance, 0));
                 try
                 {
                     MorphCli.TransferGas(depositeEvent.To, mintEmitValue);

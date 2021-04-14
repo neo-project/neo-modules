@@ -41,7 +41,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
             ParserInfo parser = new ParserInfo()
             {
                 ScriptHashWithType = scriptHashWithType,
-                Parser = ParseLockEvent,
+                Parser = LockEvent.ParseLockEvent,
             };
             return new ParserInfo[] { parser };
         }

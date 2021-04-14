@@ -118,7 +118,7 @@ namespace Neo.Plugins.FSStorage.innerring
             };
             fsContractProcessor = new FsContractProcessor()
             {
-                Client = morphClient,
+                MorphCli = morphClient,
                 Convert = convert,
                 ActiveState = this,
                 EpochState = this,
@@ -177,17 +177,6 @@ namespace Neo.Plugins.FSStorage.innerring
             {
                 throw new Exception("can't read epoch");
             }
-            var key = wallet.GetAccounts().ToArray()[0].GetKey().PublicKey;
-            int index;
-            int size;
-            try
-            {
-                index = ContractInvoker.InnerRingIndex(mainNetClient, key, out size);
-            }
-            catch
-            {
-                throw new Exception("can't read inner ring list");
-            }
             uint balancePrecision;
             try
             {
@@ -198,16 +187,15 @@ namespace Neo.Plugins.FSStorage.innerring
                 throw new Exception("can't read balance contract precision");
             }
 
+            var key = wallet.GetAccounts().ToArray()[0].GetKey().PublicKey;
             SetEpochCounter((ulong)epoch);
-            SetIndexer(index);
-            SetInnerRingSize(size);
             convert.SetBalancePrecision(balancePrecision);
             Dictionary<string, string> pairs = new Dictionary<string, string>();
             pairs.Add("read config from blockchain", ":");
             pairs.Add("active", IsActive().ToString());
             pairs.Add("epoch", epoch.ToString());
             pairs.Add("precision", balancePrecision.ToString());
-            Neo.Utility.Log("", LogLevel.Info, pairs.ParseToString());
+            Utility.Log("", LogLevel.Info, pairs.ParseToString());
         }
 
         protected override void OnReceive(object message)

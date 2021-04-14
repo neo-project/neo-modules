@@ -2,7 +2,6 @@ using Akka.Actor;
 using Neo.IO;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
-using Neo.Plugins.Morph.Invoke;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
@@ -23,7 +22,7 @@ namespace Neo.Plugins.FSStorage.morph.invoke
     {
         public Wallet wallet;
         public IActorRef Blockchain;
-        public Notary notary;
+
         public Wallet GetWallet() => wallet;
         public class FakeSigners : IVerifiable
         {

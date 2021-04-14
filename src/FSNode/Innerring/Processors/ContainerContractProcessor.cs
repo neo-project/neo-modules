@@ -34,11 +34,11 @@ namespace Neo.Plugins.FSStorage.innerring.processors
             //container put event
             ParserInfo putParser = new ParserInfo();
             putParser.ScriptHashWithType = new ScriptHashWithType() { Type = PutNotification, ScriptHashValue = ContainerContractHash };
-            putParser.Parser = MorphEvent.ParseContainerPutEvent;
+            putParser.Parser = ContainerPutEvent.ParseContainerPutEvent;
             //container delete event
             ParserInfo deleteParser = new ParserInfo();
             deleteParser.ScriptHashWithType = new ScriptHashWithType() { Type = DeleteNotification, ScriptHashValue = ContainerContractHash };
-            deleteParser.Parser = MorphEvent.ParseContainerDeleteEvent;
+            deleteParser.Parser = ContainerDeleteEvent.ParseContainerDeleteEvent;
             return new ParserInfo[] { putParser, deleteParser };
         }
 
