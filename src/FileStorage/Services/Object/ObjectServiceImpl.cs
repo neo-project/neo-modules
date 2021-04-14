@@ -75,7 +75,7 @@ namespace Neo.FileStorage.Services.Object
                     throw new RpcException(new Status(StatusCode.PermissionDenied, e.Message));
                 }
                 if (!request.VerifyRequest()) throw new RpcException(new Status(StatusCode.Unauthenticated, "verify header failed"));
-                var prm = GetPrm.FromRequest(request);
+                var prm = getService.ToGetPrm(request);
                 GetWriter writer = new()
                 {
                     Stream = responseStream,
@@ -83,8 +83,7 @@ namespace Neo.FileStorage.Services.Object
                     AclChecker = aclChecker,
                     Info = info
                 };
-                prm.HeaderWriter = writer;
-                prm.ChunkWriter = writer;
+                prm.Writer = writer;
                 getService.Get(prm);
             }, context.CancellationToken);
         }
@@ -200,7 +199,7 @@ namespace Neo.FileStorage.Services.Object
             {
                 var head_prm = RangePrm.FromRequest(request);
                 var writer = new RangeWriter(responseStream, responser);
-                head_prm.ChunkWriter = writer;
+                head_prm.Writer = writer;
                 getService.GetRange(head_prm);
             }, context.CancellationToken);
         }

@@ -3,10 +3,11 @@ using Neo.Cryptography;
 using Neo.FileStorage.Utils;
 using System;
 using static Neo.Helper;
+using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Get.Writer
 {
-    public class RangeHashWriter : IChunkWriter
+    public class RangeHashWriter : IObjectWriter
     {
         private ChecksumType type;
         private byte[] data = Array.Empty<byte>();
@@ -14,6 +15,11 @@ namespace Neo.FileStorage.Services.Object.Get.Writer
         public RangeHashWriter(ChecksumType type)
         {
             this.type = type;
+        }
+
+        public void WriteHeader(FSObject obj)
+        {
+            throw new NotImplementedException(nameof(WriteHeader));
         }
 
         public void WriteChunk(byte[] chunk)

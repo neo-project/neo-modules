@@ -105,8 +105,7 @@ namespace Neo.FileStorage.Services.Object.Get
                     ContainerId = Prm.Address.ContainerId,
                     ObjectId = oid,
                 },
-                HeaderWriter = writer,
-                ChunkWriter = writer,
+                Writer = writer,
             };
             prm.WithCommonPrm(Prm);
             prm.Local = false;
@@ -208,7 +207,7 @@ namespace Neo.FileStorage.Services.Object.Get
             prm.Address = child_addr;
             prm.Short = false;
             var writer = new SimpleObjectWriter();
-            prm.HeaderWriter = writer;
+            prm.Writer = writer;
             GetService.Head(prm);
             var child = writer.Obj;
             if (child.Parent.ObjectId != null && IsChild(child))
@@ -273,14 +272,14 @@ namespace Neo.FileStorage.Services.Object.Get
             if (!ShouldWriteHeader) return true;
             var cut_obj = V2Object.Parser.ParseFrom(collectedObject.ToByteArray());
             cut_obj.Payload = null;
-            Prm.HeaderWriter.WriteHeader(cut_obj);
+            Prm.Writer.WriteHeader(cut_obj);
             return true;
         }
 
         private bool WriteObjectPayload(V2Object obj)
         {
             if (!ShouldWritePayload) return true;
-            Prm.ChunkWriter.WriteChunk(obj.Payload.ToByteArray());
+            Prm.Writer.WriteChunk(obj.Payload.ToByteArray());
             return true;
         }
 

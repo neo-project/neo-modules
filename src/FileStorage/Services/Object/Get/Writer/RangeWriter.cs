@@ -1,13 +1,13 @@
-using Google.Protobuf;
 using Grpc.Core;
+using Google.Protobuf;
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.Services.Object.Util;
-using System.Security.Cryptography;
+using System;
+using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Get.Writer
 {
-    public class RangeWriter : IChunkWriter
+    public class RangeWriter : IObjectWriter
     {
         private readonly IServerStreamWriter<GetRangeResponse> stream;
         private readonly Responser responser;
@@ -16,6 +16,11 @@ namespace Neo.FileStorage.Services.Object.Get.Writer
         {
             this.stream = stream;
             this.responser = responser;
+        }
+
+        public void WriteHeader(FSObject obj)
+        {
+            throw new NotImplementedException(nameof(WriteHeader));
         }
 
         public void WriteChunk(byte[] chunk)

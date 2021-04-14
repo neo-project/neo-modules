@@ -10,6 +10,8 @@ namespace Neo.FileStorage.Services.Object.Util
     {
         public CancellationToken Context;
         public bool Local;
+        public ulong NetmapEpoch;
+        public ulong NetmapLookupDepth;
         public SessionToken SessionToken;
         public BearerToken BearerToken;
         public ECDsa Key;
@@ -26,14 +28,17 @@ namespace Neo.FileStorage.Services.Object.Util
             };
         }
 
-        public void WithCommonPrm(CommonPrm other)
+        public CommonPrm WithCommonPrm(CommonPrm other)
         {
             Context = other.Context;
             Local = other.Local;
+            NetmapEpoch = other.NetmapEpoch;
+            NetmapLookupDepth = other.NetmapLookupDepth;
             SessionToken = other.SessionToken;
             BearerToken = other.BearerToken;
             Key = other.Key;
             CallOptions = other.CallOptions;
+            return this;
         }
     }
 }

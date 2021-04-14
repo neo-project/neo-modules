@@ -9,11 +9,12 @@ using V2Range = Neo.FileStorage.API.Object.Range;
 
 namespace Neo.FileStorage.Services.Object.Get
 {
-    public class GetService
+    public partial class GetService
     {
-        public StorageEngine LocalStorage;
-        public ClientCache ClientCache;
-        public ITraverserGenerator TraverserGenerator;
+        public KeyStorage KeyStorage { get; init; }
+        public StorageEngine LocalStorage { get; init; }
+        public ClientCache ClientCache { get; init; }
+        public ITraverserGenerator TraverserGenerator { get; init; }
 
         public void Get(GetPrm prm)
         {
@@ -23,7 +24,7 @@ namespace Neo.FileStorage.Services.Object.Get
         public V2Object Head(HeadPrm prm)
         {
             var writer = new SimpleObjectWriter();
-            prm.HeaderWriter = writer;
+            prm.Writer = writer;
             Get(prm, null, true);
             return writer.Obj;
         }
@@ -43,7 +44,7 @@ namespace Neo.FileStorage.Services.Object.Get
                 {
                     Range = range,
                     Raw = prm.Raw,
-                    ChunkWriter = writer,
+                    Writer = writer,
                 };
                 range_prm.WithCommonPrm(prm);
                 Get(range_prm, range, false);

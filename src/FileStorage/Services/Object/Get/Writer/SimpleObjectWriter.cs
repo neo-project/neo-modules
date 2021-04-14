@@ -1,14 +1,14 @@
 using Google.Protobuf;
-using V2Object = Neo.FileStorage.API.Object.Object;
 using Neo.FileStorage.Utils;
+using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Get.Writer
 {
-    public class SimpleObjectWriter : IHeaderWriter, IChunkWriter
+    public class SimpleObjectWriter : IObjectWriter
     {
-        public V2Object Obj { get; private set; }
+        public FSObject Obj { get; private set; }
 
-        public void WriteHeader(V2Object obj)
+        public void WriteHeader(FSObject obj)
         {
             Obj = obj;
         }

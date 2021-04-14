@@ -17,7 +17,7 @@ namespace Neo.FileStorage.Services.Object.Delete.Execute
             {
                 Address = address,
                 Raw = true,
-                HeaderWriter = writer,
+                Writer = writer,
                 Short = false,
             };
             prm.WithCommonPrm(context.Prm);
