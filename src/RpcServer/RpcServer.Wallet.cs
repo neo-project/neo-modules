@@ -176,14 +176,14 @@ namespace Neo.Plugins
             Transaction tx;
             try
             {
-                tx = wallet.MakeTransaction(system.StoreView, Convert.FromBase64String(result["script"].AsString()), sender, witnessSigners);
+                tx = wallet.MakeTransaction(system.StoreView, Convert.FromBase64String(result["script"].AsString()), sender, witnessSigners, maxGas: settings.MaxGasInvoke);
             }
             catch (Exception e)
             {
                 result["exception"] = GetExceptionMessage(e);
                 return;
             }
-            ContractParametersContext context = new ContractParametersContext(system.StoreView, tx);
+            ContractParametersContext context = new ContractParametersContext(system.StoreView, tx, settings.Network);
             wallet.Sign(context);
             if (context.Completed)
             {
@@ -205,7 +205,7 @@ namespace Neo.Plugins
             UInt160 to = AddressToScriptHash(_params[2].AsString(), system.Settings.AddressVersion);
             using var snapshot = system.GetSnapshot();
             AssetDescriptor descriptor = new AssetDescriptor(snapshot, system.Settings, assetId);
-            BigDecimal amount = BigDecimal.Parse(_params[3].AsString(), descriptor.Decimals);
+            BigDecimal amount = new BigDecimal(BigInteger.Parse(_params[3].AsString()), descriptor.Decimals);
             if (amount.Sign <= 0)
                 throw new RpcException(-32602, "Invalid params");
             Signer[] signers = _params.Count >= 5 ? ((JArray)_params[4]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
@@ -222,7 +222,7 @@ namespace Neo.Plugins
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
-            ContractParametersContext transContext = new ContractParametersContext(snapshot, tx);
+            ContractParametersContext transContext = new ContractParametersContext(snapshot, tx, settings.Network);
             wallet.Sign(transContext);
             if (!transContext.Completed)
                 return transContext.ToJson();
@@ -273,7 +273,7 @@ namespace Neo.Plugins
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
-            ContractParametersContext transContext = new ContractParametersContext(snapshot, tx);
+            ContractParametersContext transContext = new ContractParametersContext(snapshot, tx, settings.Network);
             wallet.Sign(transContext);
             if (!transContext.Completed)
                 return transContext.ToJson();
@@ -297,7 +297,7 @@ namespace Neo.Plugins
             UInt160 to = AddressToScriptHash(_params[1].AsString(), system.Settings.AddressVersion);
             using var snapshot = system.GetSnapshot();
             AssetDescriptor descriptor = new AssetDescriptor(snapshot, system.Settings, assetId);
-            BigDecimal amount = BigDecimal.Parse(_params[2].AsString(), descriptor.Decimals);
+            BigDecimal amount = new BigDecimal(BigInteger.Parse(_params[2].AsString()), descriptor.Decimals);
             if (amount.Sign <= 0)
                 throw new RpcException(-32602, "Invalid params");
             Transaction tx = wallet.MakeTransaction(snapshot, new[]
@@ -312,7 +312,7 @@ namespace Neo.Plugins
             if (tx == null)
                 throw new RpcException(-300, "Insufficient funds");
 
-            ContractParametersContext transContext = new ContractParametersContext(snapshot, tx);
+            ContractParametersContext transContext = new ContractParametersContext(snapshot, tx, settings.Network);
             wallet.Sign(transContext);
             if (!transContext.Completed)
                 return transContext.ToJson();
@@ -331,7 +331,6 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject InvokeContractVerify(JArray _params)
         {
-            CheckWallet();
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             ContractParameter[] args = _params.Count >= 2 ? ((JArray)_params[1]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
             Signers signers = _params.Count >= 3 ? SignersFromJson((JArray)_params[2], system.Settings) : null;
@@ -346,22 +345,36 @@ namespace Neo.Plugins
             {
                 throw new RpcException(-100, "Unknown contract");
             }
-            var methodName = "verify";
+            var md = contract.Manifest.Abi.GetMethod("verify", -1);
+            if (md is null)
+                throw new RpcException(-101, $"The smart contract {contract.Hash} haven't got verify method.");
+            if (md.ReturnType != ContractParameterType.Boolean)
+                throw new RpcException(-102, "The verify method doesn't return boolean value.");
 
-            Transaction tx = signers == null ? null : new Transaction
+            Transaction tx = new Transaction
             {
-                Signers = signers.GetSigners(),
-                Attributes = Array.Empty<TransactionAttribute>()
+                Signers = signers == null ? new Signer[] { new() { Account = scriptHash } } : signers.GetSigners(),
+                Attributes = Array.Empty<TransactionAttribute>(),
+                Witnesses = signers?.Witnesses,
+                Script = new[] { (byte)OpCode.RET }
             };
-            ContractParametersContext context = new ContractParametersContext(snapshot, tx);
-            wallet.Sign(context);
-            tx.Witnesses = context.Completed ? context.GetWitnesses() : null;
-
             using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, tx, snapshot.CreateSnapshot(), settings: system.Settings);
-            engine.LoadScript(new ScriptBuilder().EmitDynamicCall(scriptHash, methodName, args).ToArray(), rvcount: 1);
+            engine.LoadContract(contract, md, CallFlags.ReadOnly);
 
+            var invocationScript = new byte[] { };
+            if (args.Length > 0)
+            {
+                using ScriptBuilder sb = new ScriptBuilder();
+                for (int i = args.Length - 1; i >= 0; i--)
+                    sb.EmitPush(args[i]);
+
+                invocationScript = sb.ToArray();
+                tx.Witnesses ??= new Witness[] { new() { InvocationScript = invocationScript } };
+                engine.LoadScript(new Script(invocationScript), configureState: p => p.CallFlags = CallFlags.None);
+            }
             JObject json = new JObject();
-            json["script"] = Convert.ToBase64String(contract.Script);
+
+            json["script"] = Convert.ToBase64String(invocationScript);
             json["state"] = engine.Execute();
             json["gasconsumed"] = engine.GasConsumed.ToString();
             json["exception"] = GetExceptionMessage(engine.FaultException);
@@ -378,7 +391,7 @@ namespace Neo.Plugins
 
         private JObject SignAndRelay(DataCache snapshot, Transaction tx)
         {
-            ContractParametersContext context = new ContractParametersContext(snapshot, tx);
+            ContractParametersContext context = new ContractParametersContext(snapshot, tx, settings.Network);
             wallet.Sign(context);
             if (context.Completed)
             {

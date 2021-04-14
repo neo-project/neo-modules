@@ -37,9 +37,9 @@ namespace Neo.Plugins
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            if (system.Settings.Magic != _network) return;
+            if (system.Settings.Network != _network) return;
             System = system;
-            string path = string.Format(_dbPath, system.Settings.Magic.ToString("X8"));
+            string path = string.Format(_dbPath, system.Settings.Network.ToString("X8"));
             _db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
             RpcServerPlugin.RegisterMethods(this, _network);
         }
@@ -164,7 +164,7 @@ namespace Neo.Plugins
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
-            if (system.Settings.Magic != _network) return;
+            if (system.Settings.Network != _network) return;
             // Start freshly with a new DBCache for each block.
             ResetBatch();
             Dictionary<Nep17BalanceKey, Nep17Balance> nep17BalancesChanged = new Dictionary<Nep17BalanceKey, Nep17Balance>();
@@ -211,7 +211,7 @@ namespace Neo.Plugins
 
         void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
         {
-            if (system.Settings.Magic != _network) return;
+            if (system.Settings.Network != _network) return;
             _db.Write(WriteOptions.Default, _writeBatch);
         }
 

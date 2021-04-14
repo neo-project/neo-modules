@@ -29,7 +29,7 @@ namespace Neo.Consensus
         public override void Deserialize(BinaryReader reader)
         {
             base.Deserialize(reader);
-            ChangeViewMessages = reader.ReadSerializableArray<ChangeViewPayloadCompact>(byte.MaxValue).ToDictionary(p => (int)p.ValidatorIndex);
+            ChangeViewMessages = reader.ReadSerializableArray<ChangeViewPayloadCompact>(byte.MaxValue).ToDictionary(p => p.ValidatorIndex);
             if (reader.ReadBoolean())
             {
                 PrepareRequestMessage = reader.ReadSerializable<PrepareRequest>();

@@ -165,7 +165,7 @@ namespace Neo.Network.RPC.Tests
             var tx = txManager.Tx;
             byte[] signature = tx.Witnesses[0].InvocationScript.Skip(2).ToArray();
 
-            Assert.IsTrue(Crypto.VerifySignature(tx.GetSignData(client.protocolSettings.Magic), signature, keyPair1.PublicKey));
+            Assert.IsTrue(Crypto.VerifySignature(tx.GetSignData(client.protocolSettings.Network), signature, keyPair1.PublicKey));
             // verify network fee and system fee
             Assert.AreEqual(100000000/*Mock*/, tx.NetworkFee);
             Assert.AreEqual(100, tx.SystemFee);

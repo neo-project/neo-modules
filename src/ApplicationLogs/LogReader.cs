@@ -29,7 +29,7 @@ namespace Neo.Plugins
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            if (system.Settings.Magic != Settings.Default.Network) return;
+            if (system.Settings.Network != Settings.Default.Network) return;
             RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
         }
 
@@ -145,7 +145,7 @@ namespace Neo.Plugins
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
-            if (system.Settings.Magic != Settings.Default.Network) return;
+            if (system.Settings.Network != Settings.Default.Network) return;
 
             WriteBatch writeBatch = new WriteBatch();
 

@@ -49,13 +49,13 @@ namespace Neo.Network.RPC.Tests
                     Methods = new ContractMethodDescriptor[0]
                 },
                 Groups = new ContractGroup[0],
-                Trusts = WildcardContainer<UInt160>.Create(),
+                Trusts = WildcardContainer<ContractPermissionDescriptor>.Create(),
                 SupportedStandards = new string[] { "NEP-10" },
                 Extra = null,
             };
             using (ScriptBuilder sb = new ScriptBuilder())
             {
-                sb.EmitDynamicCall(NativeContract.ContractManagement.Hash, "deploy", new byte[1], manifest.ToString());
+                sb.EmitDynamicCall(NativeContract.ContractManagement.Hash, "deploy", new byte[1], manifest.ToJson().ToString());
                 script = sb.ToArray();
             }
 
