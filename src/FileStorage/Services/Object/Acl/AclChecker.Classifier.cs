@@ -11,53 +11,52 @@ using System.Collections.Generic;
 
 namespace Neo.FileStorage.Services.Object.Acl
 {
-    public class Classifier
+    public partial class AclChecker
     {
-        public IClient Morph { get; init; }
-
-        public (Role, byte[], bool) Classify(IRequest request, ContainerID cid, FSContainer container)
+        private (Role, byte[], bool) Classify(IRequest request, ContainerID cid, FSContainer container)
         {
             if (cid is null)
                 throw new ArgumentNullException(nameof(cid));
-            Role role = Role.Unspecified;
+            Role role;
             bool is_inner = false;
             byte[] public_key = RequestOwner(request);
             OwnerID owner = public_key.PublicKeyToOwnerID();
-            if (owner == container.OwnerId) role = Role.User;
-            if (is_inner = IsInnerRingKey(public_key)) role = Role.System;
-            if (IsContainerKey(public_key, cid, container)) role = Role.System;
-            role = Role.Others;
+            if (owner == container.OwnerId)
+                role = Role.User;
+            else if (is_inner = IsInnerRingKey(public_key))
+                role = Role.System;
+            else if (IsContainerKey(public_key, cid, container))
+                role = Role.System;
+            else
+                role = Role.Others;
             return (role, public_key, is_inner);
         }
 
         private byte[] RequestOwner(IRequest request)
         {
             if (request.VerifyHeader is null)
-                throw new ArgumentNullException(nameof(RequestOwner) + " no verification header");
-            if (request.MetaHeader?.SessionToken?.Body != null)
+                throw new ArgumentException($"{nameof(RequestOwner)} no verification header");
+            if (request.MetaHeader?.SessionToken?.Body is not null)
             {
-                return OwnerFromToken(request);
+                return OwnerFromToken(request.MetaHeader.SessionToken);
             }
-            var body_sig = OriginalBodySignature(request);
-            if (body_sig is null) throw new InvalidOperationException(nameof(RequestOwner) + " no body signature");
-            return body_sig.Key.ToByteArray();
+            return OriginalBodySignature(request.VerifyHeader).Key.ToByteArray();
         }
 
-        private byte[] OwnerFromToken(IRequest request)
+        private byte[] OwnerFromToken(SessionToken token)
         {
-            SessionToken token = request.MetaHeader.SessionToken;
-            if (!token.Signature.VerifyMessagePart(token.Body)) throw new InvalidOperationException(nameof(OwnerFromToken) + " verify failed");
+            if (!token.Signature.VerifyMessagePart(token.Body)) throw new InvalidOperationException($"{nameof(OwnerFromToken)} invalid session token signature");
             var tokenIssueKey = token.Signature.Key.ToByteArray();
             var tokenOwner = token.Body.OwnerId;
-            if (tokenIssueKey.PublicKeyToOwnerID() != tokenOwner) throw new InvalidOperationException(nameof(OwnerFromToken) + " OwnerID and key not equal");
+            if (tokenIssueKey.PublicKeyToOwnerID() != tokenOwner) throw new InvalidOperationException($"{nameof(OwnerFromToken)} invalid session token owner");
             return tokenIssueKey;
         }
 
-        private Signature OriginalBodySignature(IRequest request)
+        private Signature OriginalBodySignature(RequestVerificationHeader verification)
         {
-            var verification = request.VerifyHeader;
-            if (verification is null) return null;
-            if (verification.Origin != null) verification = verification.Origin;
+            if (verification is null) throw new InvalidOperationException($"{nameof(RequestOwner)} no body signature");
+            while (verification.Origin is not null)
+                verification = verification.Origin;
             return verification.BodySignature;
         }
 

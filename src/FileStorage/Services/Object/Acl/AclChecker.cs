@@ -1,4 +1,4 @@
-using Grpc.Core;
+using Google.Protobuf;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
@@ -13,16 +13,16 @@ using System;
 using static Neo.FileStorage.API.Acl.BearerToken.Types.Body.Types;
 using static Neo.FileStorage.API.Session.ObjectSessionContext.Types;
 using static Neo.FileStorage.API.Session.SessionToken.Types.Body;
-using V2Action = Neo.FileStorage.API.Acl.Action;
+using FSAction = Neo.FileStorage.API.Acl.Action;
+using FSContainer = Neo.FileStorage.API.Container.Container;
 
 namespace Neo.FileStorage.Services.Object.Acl
 {
-    public class AclChecker
+    public partial class AclChecker
     {
-        public IContainerSource ContainerSource { get; init; }
+        public IClient Morph { get; init; }
         public StorageEngine LocalStorage { get; init; }
         public EAclValidator EAclValidator { get; init; }
-        public Classifier Classifier { get; init; }
         public INetState NetmapState { get; init; }
 
         public RequestInfo CheckRequest(IRequest request, Operation op)
@@ -100,8 +100,8 @@ namespace Neo.FileStorage.Services.Object.Acl
 
         private RequestInfo FindRequestInfo(IRequest request, ContainerID cid, Operation op)
         {
-            var container = ContainerSource.Get(cid);
-            var classifiered = Classifier.Classify(request, cid, container);
+            var container = GetContainer(cid);
+            var classifiered = Classify(request, cid, container);
             if (classifiered.Item1 == Role.Unspecified)
                 throw new InvalidOperationException(nameof(FindRequestInfo) + " unkown role");
             var verb = SourceVerbOfRequest(request, op);
@@ -169,7 +169,7 @@ namespace Neo.FileStorage.Services.Object.Acl
                 HeaderSource = new HeaderSource(LocalStorage, info.Address, info.Request, resp),
             };
             var action = EAclValidator.CalculateAction(unit);
-            return V2Action.Allow == action;
+            return FSAction.Allow == action;
         }
 
         public bool StickyBitCheck(RequestInfo info)
@@ -211,6 +211,11 @@ namespace Neo.FileStorage.Services.Object.Acl
         private bool IsValidLifetime(TokenLifetime lifetime, ulong epoch)
         {
             return epoch >= lifetime.Nbf && epoch <= lifetime.Exp;
+        }
+
+        private FSContainer GetContainer(ContainerID cid)
+        {
+            return FSContainer.Parser.ParseFrom(MorphContractInvoker.InvokeGetContainer(Morph, cid.ToByteArray()));
         }
     }
 }

@@ -1,10 +1,9 @@
 using Neo.FileStorage.API.Acl;
-using System;
 using System.Collections.Generic;
 
 namespace Neo.FileStorage.Services.Object.Acl
 {
-    public static class BasicHelper
+    public static class BasicAcl
     {
         public const int ReservedBitNumber = 2;
         public const int StickyBitPos = ReservedBitNumber;
