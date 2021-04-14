@@ -151,8 +151,8 @@ namespace Neo.Plugins
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : Array.Empty<ContractParameter>();
             Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
-            uint? startIndex = _params.Count >= 5 ? Convert.ToUInt32(_params[4].AsNumber()) : null;
-            uint? endIndex = _params.Count >= 6 ? Convert.ToUInt32(_params[5].AsNumber()) : null;
+            uint startIndex = _params.Count >= 5 ? Convert.ToUInt32(_params[4].AsNumber()) : 0;
+            uint endIndex = _params.Count >= 6 ? Convert.ToUInt32(_params[5].AsNumber()) : 10;
 
             byte[] script;
             using ScriptBuilder sb = new();
@@ -188,8 +188,6 @@ namespace Neo.Plugins
                     }
                     json["result"] = new JArray(resultList.Select(p => ((VM.Types.StackItem)p).ToJson()));
                 }
-                json["startindex"] = startIndex;
-                json["endindex"] = endIndex;
             }
             catch (InvalidOperationException)
             {
