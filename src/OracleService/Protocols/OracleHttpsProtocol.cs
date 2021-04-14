@@ -3,6 +3,8 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,6 +13,13 @@ namespace Neo.Plugins
     class OracleHttpsProtocol : IOracleProtocol
     {
         private readonly HttpClient client = new HttpClient();
+
+        public OracleHttpsProtocol()
+        {
+            CustomAttributeData attribute = Assembly.GetExecutingAssembly().CustomAttributes.First(p => p.AttributeType == typeof(AssemblyInformationalVersionAttribute));
+            string version = (string)attribute.ConstructorArguments[0].Value;
+            client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("NeoOracleService", version));
+        }
 
         public void Configure()
         {

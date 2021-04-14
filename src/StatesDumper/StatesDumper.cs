@@ -26,7 +26,7 @@ namespace Neo.Plugins
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            systems.Add(system.Settings.Magic, system);
+            systems.Add(system.Settings.Network, system);
         }
 
         /// <summary>
@@ -49,12 +49,11 @@ namespace Neo.Plugins
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
-                OnPersistStorage(system.Settings.Magic, snapshot);
+                OnPersistStorage(system.Settings.Network, snapshot);
         }
 
         private void OnPersistStorage(uint network, DataCache snapshot)
         {
-            if (!bs_cache.TryGetValue(network, out JArray cache)) return;
             uint blockIndex = NativeContract.Ledger.CurrentIndex(snapshot);
             if (blockIndex >= Settings.Default.HeightToBegin)
             {
@@ -90,14 +89,19 @@ namespace Neo.Plugins
                 bs_item["block"] = blockIndex;
                 bs_item["size"] = array.Count;
                 bs_item["storage"] = array;
+                if (!bs_cache.TryGetValue(network, out JArray cache))
+                {
+                    cache = new JArray();
+                }
                 cache.Add(bs_item);
+                bs_cache[network] = cache;
             }
         }
 
         void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
-                OnCommitStorage(system.Settings.Magic, snapshot);
+                OnCommitStorage(system.Settings.Network, snapshot);
         }
 
         void OnCommitStorage(uint network, DataCache snapshot)
@@ -108,7 +112,6 @@ namespace Neo.Plugins
             if ((blockIndex % Settings.Default.BlockCacheSize == 0) || (Settings.Default.HeightToStartRealTimeSyncing != -1 && blockIndex >= Settings.Default.HeightToStartRealTimeSyncing))
             {
                 string path = HandlePaths(network, blockIndex);
-                Directory.CreateDirectory(path);
                 path = $"{path}/dump-block-{blockIndex}.json";
                 File.WriteAllText(path, cache.ToString());
                 cache.Clear();

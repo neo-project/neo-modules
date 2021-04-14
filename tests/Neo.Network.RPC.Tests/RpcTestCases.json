@@ -2450,11 +2450,11 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "magic": 0,
+        "network": 0,
         "tcpport": 20333,
         "wsport": 20334,
         "nonce": 592651621,
-        "useragent": "/Neo:3.0.0-preview1/"
+        "useragent": "/Neo:3.0.0-rc1/"
       }
     }
   },

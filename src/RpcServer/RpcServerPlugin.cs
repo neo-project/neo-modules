@@ -29,7 +29,7 @@ namespace Neo.Plugins
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            RpcServerSettings s = settings.Servers.FirstOrDefault(p => p.Network == system.Settings.Magic);
+            RpcServerSettings s = settings.Servers.FirstOrDefault(p => p.Network == system.Settings.Network);
             if (s is null) return;
 
             RpcServer server = new RpcServer(system, s);
