@@ -35,11 +35,11 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
             this.compressor = compressor;
             OpenedCacheSize = cap == 0 ? DefaultOpenedCacheSize : cap;
             BlzRootPath = path;
-            opened = new (cap, OnEvicted);
+            opened = new(cap, OnEvicted);
             ulong cp = 1;
             for (ulong i = 0; i < BlzShallowDepth; i++)
                 cp *= BlzShallowWidth;
-            active = new ((int) cp);
+            active = new((int)cp);
         }
 
         private void OnEvicted(string key, Blobovnicza value)
@@ -126,7 +126,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                 using var blz = OpenBlobovnicza(id.ToString());
                 return blz.Get(address);
             }
-            HashSet<string> cache = new ();
+            HashSet<string> cache = new();
             FSObject obj = null;
             bool DoGet(string path)
             {
@@ -171,7 +171,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                 using Blobovnicza b = OpenBlobovnicza(id.ToString());
                 b.Delete(address);
             }
-            HashSet<string> cache = new ();
+            HashSet<string> cache = new();
             bool DoDelete(string path)
             {
                 var dir = Path.GetDirectoryName(path);
@@ -213,7 +213,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                 using var blz = OpenBlobovnicza(id.ToString());
                 return blz.GetRange(address, range);
             }
-            HashSet<string> cache = new ();
+            HashSet<string> cache = new();
             byte[] data = null;
             bool DoGetRange(string path)
             {
@@ -347,7 +347,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
 
         private List<ulong> IndexSlice(ulong number)
         {
-            List<ulong> s = new ();
+            List<ulong> s = new();
             for (ulong i = 0; i < number; i++)
                 s.Add(i);
             return s;

@@ -1,4 +1,3 @@
-using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Services.Object.Util;
 

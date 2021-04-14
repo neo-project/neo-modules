@@ -53,7 +53,7 @@ namespace Neo.FileStorage.Morph.Invoker
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (InnerRingList)");
             Array array = (Array)result.ResultStack[0];
             IEnumerator<StackItem> enumerator = array.GetEnumerator();
-            List<byte[]> resultArray = new ();
+            List<byte[]> resultArray = new();
             while (enumerator.MoveNext())
             {
                 resultArray.Add(((Array)enumerator.Current)[0].GetSpan().ToArray());
@@ -73,7 +73,7 @@ namespace Neo.FileStorage.Morph.Invoker
             if (result.ResultStack.Length != 1) throw new Exception(string.Format("unexpected stack item count ({0})", result.ResultStack.Length));
             Array peers = (Array)result.ResultStack[0];
             IEnumerator<StackItem> peersEnumerator = peers.GetEnumerator();
-            List<byte[]> res = new ();
+            List<byte[]> res = new();
             while (peersEnumerator.MoveNext())
             {
                 Array peer = (Array)peersEnumerator.Current;
@@ -94,7 +94,7 @@ namespace Neo.FileStorage.Morph.Invoker
             if (result.ResultStack.Length != 1) throw new Exception(string.Format("unexpected stack item count ({0})", result.ResultStack.Length));
             Array peers = (Array)result.ResultStack[0];
             IEnumerator<StackItem> peersEnumerator = peers.GetEnumerator();
-            List<byte[]> res = new ();
+            List<byte[]> res = new();
             while (peersEnumerator.MoveNext())
             {
                 Array peer = (Array)peersEnumerator.Current;

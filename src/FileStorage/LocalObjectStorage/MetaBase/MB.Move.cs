@@ -18,12 +18,12 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 
         public List<Address> Moveable()
         {
-            List<Address> result = new ();
+            List<Address> result = new();
             Iterate(ToMoveItPrefix, (key, value) =>
             {
-            result.Add(new (ContainerID.FromSha256Bytes(key[1..^32]), ObjectID.FromSha256Bytes(key[^32..])));
-        });
+                result.Add(new(ContainerID.FromSha256Bytes(key[1..^32]), ObjectID.FromSha256Bytes(key[^32..])));
+            });
             return result;
         }
-}
+    }
 }

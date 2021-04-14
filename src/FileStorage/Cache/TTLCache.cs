@@ -17,7 +17,7 @@ namespace Neo.FileStorage.Cache
 
         public TTLCache(int capactiy, TimeSpan ttl, Func<K, V> fetcher)
         {
-            cache = new (capactiy, null);
+            cache = new(capactiy, null);
             this.ttl = ttl;
             this.fetcher = fetcher;
         }

@@ -12,7 +12,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route
         private readonly CancellationToken cancellation;
         private readonly Client client;
         private readonly ECDsa key;
-        private List<FSAnnouncement> buffer = new ();
+        private List<FSAnnouncement> buffer = new();
 
         public void Put(FSAnnouncement announcement)
         {

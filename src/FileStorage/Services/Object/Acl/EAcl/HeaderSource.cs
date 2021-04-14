@@ -43,7 +43,7 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
 
         private List<XHeader> GetRequestXHeaders()
         {
-            List<XHeader> result = new ();
+            List<XHeader> result = new();
             for (var meta = req.MetaHeader; meta is not null; meta = meta.Origin)
             {
                 result.AddRange(meta.XHeaders);
@@ -53,7 +53,7 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
 
         private List<XHeader> ObjectHeaders()
         {
-            Address addr = address ?? new ();
+            Address addr = address ?? new();
             if (resp is not null)
             {
                 switch (resp)
@@ -124,7 +124,7 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
                             };
                             if (addr is null)
                             {
-                                addr = new ()
+                                addr = new()
                                 {
                                     ContainerId = init.Header.ContainerId,
                                     ObjectId = init.ObjectId,
@@ -134,12 +134,12 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
                         }
                         break;
                     case SearchRequest searchRequest:
-                        return new () { ContainerIDHeader(searchRequest.Body.ContainerId) };
+                        return new() { ContainerIDHeader(searchRequest.Body.ContainerId) };
                     default:
                         throw new InvalidOperationException(nameof(ObjectHeaders) + " unexpected message type");
                 }
             }
-            return new ();
+            return new();
         }
 
         private List<XHeader> LocalObjectHeaders(Address address)
@@ -196,7 +196,7 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
 
         private XHeader ContainerIDHeader(ContainerID cid)
         {
-            return new ()
+            return new()
             {
                 Key = Filter.FilterObjectContainerID,
                 Value = cid.ToBase58String(),
@@ -205,7 +205,7 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
 
         private XHeader ObjectIDHeader(ObjectID oid)
         {
-            return new ()
+            return new()
             {
                 Key = Filter.FilterObjectID,
                 Value = oid.ToBase58String(),
@@ -214,7 +214,7 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
 
         private List<XHeader> AddressHeaders(Address address)
         {
-            List<XHeader> result = new ()
+            List<XHeader> result = new()
             {
                 ContainerIDHeader(address.ContainerId),
             };

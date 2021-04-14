@@ -65,19 +65,19 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
         {
             byte[] data = db.Get(ReadOptions.Default, ParentKey(address));
             if (data is null) return null;
-            List<Address> children = new ();
-            using MemoryStream ms = new (data);
-            using BinaryReader reader = new (ms);
+            List<Address> children = new();
+            using MemoryStream ms = new(data);
+            using BinaryReader reader = new(ms);
             int count = (int)reader.ReadVarInt(int.MaxValue);
             for (int i = 0; i < count; i++)
             {
-                Address addr = new ()
+                Address addr = new()
                 {
-                    ContainerId = new ()
+                    ContainerId = new()
                     {
                         Value = ByteString.CopyFrom(reader.ReadBytes(32)),
                     },
-                    ObjectId = new ()
+                    ObjectId = new()
                     {
                         Value = ByteString.CopyFrom(reader.ReadBytes(32)),
                     },

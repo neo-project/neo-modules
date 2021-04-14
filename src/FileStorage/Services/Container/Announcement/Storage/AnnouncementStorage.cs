@@ -26,7 +26,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Storage
     /// </summary>
     public class AnnouncementStorage
     {
-        private Dictionary<ulong, AnnounceUsedSpaceEstimation> mItems = new ();
+        private Dictionary<ulong, AnnounceUsedSpaceEstimation> mItems = new();
 
         public void Put(FSAnnouncement announcement)
         {
@@ -35,10 +35,10 @@ namespace Neo.FileStorage.Services.Container.Announcement.Storage
                 bool exists = mItems.TryGetValue(announcement.Epoch, out AnnounceUsedSpaceEstimation estimation);
                 if (!exists)
                 {
-                    estimation = new ()
+                    estimation = new()
                     {
                         Announcement = announcement,
-                        Sizes = new (),
+                        Sizes = new(),
                     };
                     mItems[announcement.Epoch] = estimation;
                 }

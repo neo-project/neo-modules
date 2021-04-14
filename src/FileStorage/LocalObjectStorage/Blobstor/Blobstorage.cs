@@ -22,8 +22,8 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
         {
             SmallSizeLimit = DefaultSmallSizeLimit;
             compressor = new ZstdCompressor();
-            fsTree = new ();
-            blobovniczas = new (BlobovniczaDir, compressor);
+            fsTree = new();
+            blobovniczas = new(BlobovniczaDir, compressor);
         }
 
         public Blobstorage(FSTree tree) : this()

@@ -38,7 +38,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
         private string TreePath(Address address)
         {
             string saddr = StringifyAddress(address);
-            List<string> dirs = new () { RootPath };
+            List<string> dirs = new() { RootPath };
             for (int i = 0; i < Depth; i++)
             {
                 dirs.Add(saddr[..DirNameLen]);

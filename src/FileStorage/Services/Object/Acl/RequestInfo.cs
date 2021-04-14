@@ -19,6 +19,6 @@ namespace Neo.FileStorage.Services.Object.Acl
         public BearerToken Bearer;
         public IRequest Request;
 
-        public Address Address => new () { ContainerId = ContainerID, ObjectId = ObjectID };
+        public Address Address => new() { ContainerId = ContainerID, ObjectId = ObjectID };
     }
 }

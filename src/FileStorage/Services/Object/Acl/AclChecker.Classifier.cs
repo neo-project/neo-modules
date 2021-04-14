@@ -101,13 +101,13 @@ namespace Neo.FileStorage.Services.Object.Acl
         private NetMap GetLatestNetworkMap()
         {
             var nis = MorphContractInvoker.InvokeSnapshot(Morph, 0);
-            return new (nis.Select(p => NodeInfo.Parser.ParseFrom(p)).Select((p, i) => new Node(i, p)).ToList());
+            return new(nis.Select(p => NodeInfo.Parser.ParseFrom(p)).Select((p, i) => new Node(i, p)).ToList());
         }
 
         private NetMap GetPreviousNetworkMap()
         {
             var nis = MorphContractInvoker.InvokeSnapshot(Morph, 1);
-            return new (nis.Select(p => NodeInfo.Parser.ParseFrom(p)).Select((p, i) => new Node(i, p)).ToList());
+            return new(nis.Select(p => NodeInfo.Parser.ParseFrom(p)).Select((p, i) => new Node(i, p)).ToList());
         }
     }
 }

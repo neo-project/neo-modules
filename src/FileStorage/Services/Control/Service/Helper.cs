@@ -14,7 +14,7 @@ namespace Neo.FileStorage.Services.Control.Service
 
         public static void SignMessage(this ECDsa key, ISignedMessage message)
         {
-            message.Signature = new ()
+            message.Signature = new()
             {
                 Key = ByteString.CopyFrom(key.PublicKey()),
                 Sign = ByteString.CopyFrom(key.SignData(message.SignedData.ToByteArray())),
