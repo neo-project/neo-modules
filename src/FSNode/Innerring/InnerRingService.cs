@@ -27,7 +27,7 @@ namespace Neo.Plugins.FSStorage.innerring
     /// All events will be distributed according to type.(2 event types:MainContractEvent and MorphContractEvent)
     /// Life process:Start--->Assignment event--->Stop
     /// </summary>
-    public class InnerRingService : UntypedActor, IActiveState, IEpochState, IEpochTimerReseter, IIndexer, IReporter
+    public class InnerRingService : UntypedActor, IActiveState, IEpochState, IEpochTimerReseter, IIndexer, IReporter, IVoter
     {
         public class MainContractEvent { public NotifyEventArgs notify; };
         public class MorphContractEvent { public NotifyEventArgs notify; };
@@ -46,8 +46,8 @@ namespace Neo.Plugins.FSStorage.innerring
         private AlphabetContractProcessor alphabetContractProcessor;
         private AuditContractProcessor auditContractProcessor;
 
-        private IClient mainNetClient;
-        private IClient morphClient;
+        private Client mainNetClient;
+        private Client morphClient;
         private RpcClientCache clientCache;
         private readonly NEP6Wallet wallet;
         private long epochCounter;
@@ -65,7 +65,7 @@ namespace Neo.Plugins.FSStorage.innerring
         /// 4)Initialization
         /// </summary>
         /// <param name="system">NeoSystem</param>
-        public InnerRingService(NeoSystem system, NEP6Wallet pwallet = null, IClient pMainNetClient = null, IClient pMorphClient = null)
+        public InnerRingService(NeoSystem system, NEP6Wallet pwallet = null, Client pMainNetClient = null, Client pMorphClient = null)
         {
             convert = new Fixed8ConverterUtil();
             //Create wallet
@@ -81,7 +81,7 @@ namespace Neo.Plugins.FSStorage.innerring
             //Build 2 clients(MainNetClient&MorphClient).
             if (pMainNetClient is null)
             {
-                mainNetClient = new MainClient(Settings.Default.Urls, wallet);
+                mainNetClient = new Client() { client = new MainClient(Settings.Default.Urls, wallet) };
             }
             else
             {
@@ -89,10 +89,13 @@ namespace Neo.Plugins.FSStorage.innerring
             }
             if (pMorphClient is null)
             {
-                morphClient = new MorphClient()
+                morphClient = new Client()
                 {
-                    Wallet = wallet,
-                    Blockchain = system.Blockchain,
+                    client = new MorphClient()
+                    {
+                        wallet = wallet,
+                        Blockchain = system.Blockchain,
+                    }
                 };
             }
             else
@@ -102,14 +105,14 @@ namespace Neo.Plugins.FSStorage.innerring
             //Build processor of contract.
             balanceContractProcessor = new BalanceContractProcessor()
             {
-                Client = mainNetClient,
+                MainCli = mainNetClient,
                 Convert = convert,
                 ActiveState = this,
                 WorkPool = system.ActorSystem.ActorOf(WorkerPool.Props("BalanceContract Processor", Settings.Default.BalanceContractWorkersSize))
             };
             containerContractProcessor = new ContainerContractProcessor()
             {
-                Client = morphClient,
+                MorphCli = morphClient,
                 ActiveState = this,
                 WorkPool = system.ActorSystem.ActorOf(WorkerPool.Props("ContainerContract Processor", Settings.Default.ContainerContractWorkersSize))
             };
@@ -123,7 +126,7 @@ namespace Neo.Plugins.FSStorage.innerring
             };
             netMapContractProcessor = new NetMapContractProcessor()
             {
-                Client = morphClient,
+                MorphCli = morphClient,
                 ActiveState = this,
                 EpochState = this,
                 EpochTimerReseter = this,
@@ -132,7 +135,7 @@ namespace Neo.Plugins.FSStorage.innerring
             };
             alphabetContractProcessor = new AlphabetContractProcessor()
             {
-                Client = morphClient,
+                MorphCli = morphClient,
                 Indexer = this,
                 StorageEmission = Settings.Default.StorageEmission,
                 WorkPool = system.ActorSystem.ActorOf(WorkerPool.Props("AlphabetContract Processor", Settings.Default.AlphabetContractWorkersSize))
@@ -142,7 +145,7 @@ namespace Neo.Plugins.FSStorage.innerring
 
             auditContractProcessor = new AuditContractProcessor()
             {
-                Client = morphClient,
+                MorphCli = morphClient,
                 Indexer = this,
                 ClientCache = clientCache,
                 TaskManager = auditTaskManager,
@@ -303,7 +306,7 @@ namespace Neo.Plugins.FSStorage.innerring
             timer.Tell(new Timers.Timer() { contractEvent = new NewEpochTickEvent() { } });
         }
 
-        public void VoteForSideChainValidator(ECPoint[] validators)
+        public void VoteForSidechainValidator(ECPoint[] validators)
         {
             if (Index() < 0 || Index() >= Settings.Default.AlphabetContractHash.Length)
             {
@@ -332,7 +335,7 @@ namespace Neo.Plugins.FSStorage.innerring
         public void InitAndVoteForSidechainValidator(ECPoint[] validators)
         {
             InitConfig();
-            VoteForSideChainValidator(validators);
+            VoteForSidechainValidator(validators);
         }
 
         public void WriteReport(Report r)
@@ -343,7 +346,7 @@ namespace Neo.Plugins.FSStorage.innerring
             MorphContractInvoker.InvokePutAuditResult(morphClient, res.ToByteArray());
         }
 
-        public static Props Props(NeoSystem system, NEP6Wallet pwallet = null, IClient pMainNetClient = null, IClient pMorphClient = null)
+        public static Props Props(NeoSystem system, NEP6Wallet pwallet = null, Client pMainNetClient = null, Client pMorphClient = null)
         {
             return Akka.Actor.Props.Create(() => new InnerRingService(system, pwallet, pMainNetClient, pMorphClient));
         }

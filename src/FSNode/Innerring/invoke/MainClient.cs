@@ -19,19 +19,21 @@ namespace Neo.Plugins.FSStorage.innerring.invoke
     /// </summary>
     public class MainClient : IClient
     {
-        public Wallet Wallet;
-        public RpcClient[] Clients;
+        public Wallet wallet;
+        public RpcClient[] clients;
 
         public MainClient(string[] urls, Wallet wallet)
         {
-            this.Clients = urls.Select(p => new RpcClient(p)).ToArray();
-            this.Wallet = wallet;
+            this.clients = urls.Select(p => new RpcClient(new Uri(p))).ToArray();
+            this.wallet = wallet;
         }
 
-        public bool InvokeFunction(UInt160 contractHash, string method, long fee, params object[] args)
+        public Wallet GetWallet() => wallet;
+
+        public bool Invoke(out UInt256 txId,UInt160 contractHash, string method, long fee, params object[] args)
         {
-            InvokeResult result = InvokeLocalFunction(contractHash, method, args);
-            var blockHeight = (uint)(Clients[0].RpcSendAsync("getblockcount").Result.AsNumber());
+            InvokeResult result = TestInvoke(contractHash, method, args);
+            var blockHeight = (uint)(clients[0].RpcSendAsync("getblockcount").Result.AsNumber());
             Random rand = new Random();
             Transaction tx = new Transaction
             {
@@ -39,36 +41,36 @@ namespace Neo.Plugins.FSStorage.innerring.invoke
                 Nonce = (uint)rand.Next(),
                 Script = result.Script,
                 ValidUntilBlock = blockHeight + Transaction.MaxValidUntilBlockIncrement - 1,
-                Signers = new Signer[] { new Signer() { Account = Wallet.GetAccounts().ToArray()[0].ScriptHash, Scopes = WitnessScope.Global } },
+                Signers = new Signer[] { new Signer() { Account = wallet.GetAccounts().ToArray()[0].ScriptHash, Scopes = WitnessScope.Global } },
                 Attributes = Array.Empty<TransactionAttribute>(),
                 SystemFee = result.GasConsumed + fee,
                 NetworkFee = 0
             };
             var data = new ContractParametersContext(tx);
-            Wallet.Sign(data);
+            wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
-            var networkFee = Clients[0].RpcSendAsync("calculatenetworkfee", Convert.ToBase64String(tx.ToArray())).Result["networkfee"].AsNumber();
+            var networkFee = clients[0].RpcSendAsync("calculatenetworkfee", Convert.ToBase64String(tx.ToArray())).Result["networkfee"].AsNumber();
             tx.NetworkFee = (long)networkFee;
             data = new ContractParametersContext(tx);
-            Wallet.Sign(data);
+            wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
-            JObject hash = Clients[0].RpcSendAsync("sendrawtransaction", Convert.ToBase64String(tx.ToArray())).Result;
+            txId = UInt256.Parse(clients[0].RpcSendAsync("sendrawtransaction", Convert.ToBase64String(tx.ToArray())).Result.ToString());
             return true;
         }
 
-        public InvokeResult InvokeLocalFunction(UInt160 contractHash, string method, params object[] args)
+        public InvokeResult TestInvoke(UInt160 contractHash, string method, params object[] args)
         {
             byte[] script = contractHash.MakeScript(method, args);
             List<JObject> parameters = new List<JObject> { Convert.ToBase64String(script) };
-            Signer[] signers = new Signer[] { new Signer() { Account = Wallet.GetAccounts().ToArray()[0].ScriptHash, Scopes = WitnessScope.Global } };
+            Signer[] signers = new Signer[] { new Signer() { Account = wallet.GetAccounts().ToArray()[0].ScriptHash, Scopes = WitnessScope.Global } };
             parameters.Add(signers.Select(p => p.ToJson()).ToArray());
-            var result = Clients[0].RpcSendAsync("invokescript", parameters.ToArray()).Result;
+            var result = clients[0].RpcSendAsync("invokescript", parameters.ToArray()).Result;
             RpcInvokeResult rpcInvokeResult = RpcInvokeResult.FromJson(result);
             var r = new InvokeResult()
             {
                 Script = Convert.FromBase64String(rpcInvokeResult.Script),
                 State = rpcInvokeResult.State,
-                GasConsumed = long.Parse(rpcInvokeResult.GasConsumed),
+                GasConsumed = rpcInvokeResult.GasConsumed,
                 ResultStack = rpcInvokeResult.Stack
             };
             return r;

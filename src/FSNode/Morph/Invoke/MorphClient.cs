@@ -2,6 +2,7 @@ using Akka.Actor;
 using Neo.IO;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.Plugins.Morph.Invoke;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
@@ -20,9 +21,10 @@ namespace Neo.Plugins.FSStorage.morph.invoke
     /// </summary>
     public class MorphClient : IClient
     {
-        public Wallet Wallet;
+        public Wallet wallet;
         public IActorRef Blockchain;
-
+        public Notary notary;
+        public Wallet GetWallet() => wallet;
         public class FakeSigners : IVerifiable
         {
             private readonly UInt160[] _hashForVerify;
@@ -45,7 +47,7 @@ namespace Neo.Plugins.FSStorage.morph.invoke
                 _hashForVerify = hashForVerify ?? new UInt160[0];
             }
 
-            UInt160[] IVerifiable.GetScriptHashesForVerifying(StoreView snapshot)
+            UInt160[] IVerifiable.GetScriptHashesForVerifying(DataCache snapshot)
             {
                 return _hashForVerify;
             }
@@ -61,46 +63,49 @@ namespace Neo.Plugins.FSStorage.morph.invoke
             }
         }
 
-        public bool InvokeFunction(UInt160 contractHash, string method, long fee, params object[] args)
+        public bool Invoke(out UInt256 txId,UInt160 contractHash, string method, long fee, params object[] args)
         {
+            txId = null;
             var str = "";
             args.ToList().ForEach(p => str += p.ToString());
-            InvokeResult result = InvokeLocalFunction(contractHash, method, args);
+            InvokeResult result = TestInvoke(contractHash, method, args);
             Console.WriteLine("构建" + contractHash.ToArray().ToHexString() + "," + method+","+ str + ","+result.State);
             if (result.State != VMState.HALT) return false;
-            StoreView snapshot = Ledger.Blockchain.Singleton.GetSnapshot().Clone();
+            SnapshotCache snapshot = Ledger.Blockchain.Singleton.GetSnapshot();
+            uint height = NativeContract.Ledger.CurrentIndex(snapshot);
             Random rand = new Random();
             Transaction tx = new Transaction
             {
                 Version = 0,
                 Nonce = (uint)rand.Next(),
                 Script = result.Script,
-                ValidUntilBlock = snapshot.Height + Transaction.MaxValidUntilBlockIncrement,
-                Signers = new Signer[] { new Signer() { Account = Wallet.GetAccounts().ToArray()[0].ScriptHash, Scopes = WitnessScope.Global } },
+                ValidUntilBlock = height + Transaction.MaxValidUntilBlockIncrement,
+                Signers = new Signer[] { new Signer() { Account = wallet.GetAccounts().ToArray()[0].ScriptHash, Scopes = WitnessScope.Global } },
                 Attributes = System.Array.Empty<TransactionAttribute>(),
             };
             tx.SystemFee = result.GasConsumed + fee;
             //todo version
-            tx.NetworkFee = Wallet.CalculateNetworkFee(snapshot, tx);
+            tx.NetworkFee = wallet.CalculateNetworkFee(snapshot, tx);
             var data = new ContractParametersContext(tx);
-            Wallet.Sign(data);
+            wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
+            txId = tx.Hash;
             Blockchain.Tell(tx);
             Console.WriteLine("发送:" + tx.Hash.ToString());
             return true;
         }
 
-        public InvokeResult InvokeLocalFunction(UInt160 contractHash, string method, params object[] args)
+        public InvokeResult TestInvoke(UInt160 contractHash, string method, params object[] args)
         {
             byte[] script = contractHash.MakeScript(method, args);
-            IEnumerable<WalletAccount> accounts = Wallet.GetAccounts();
+            IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             FakeSigners signers = new FakeSigners(accounts.ToArray()[0].ScriptHash);
             return GetInvokeResult(script, signers);
         }
 
         private InvokeResult GetInvokeResult(byte[] script, FakeSigners signers = null, bool testMode = true)
         {
-            StoreView snapshot = Ledger.Blockchain.Singleton.GetSnapshot().Clone();
+            SnapshotCache snapshot = Ledger.Blockchain.Singleton.GetSnapshot();
             ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, container: signers, null, 0, 20000000000);
             return new InvokeResult() { State = engine.State, GasConsumed = (long)engine.GasConsumed, Script = script, ResultStack = engine.ResultStack.ToArray<StackItem>() };
         }
@@ -110,7 +115,7 @@ namespace Neo.Plugins.FSStorage.morph.invoke
             UInt160 assetId = NativeContract.GAS.Hash;
             AssetDescriptor descriptor = new AssetDescriptor(assetId);
             BigDecimal pamount = BigDecimal.Parse(amount.ToString(), descriptor.Decimals);
-            Transaction tx = Wallet.MakeTransaction(new[]
+            Transaction tx = wallet.MakeTransaction(new[]
             {
                 new TransferOutput
                 {
@@ -121,7 +126,7 @@ namespace Neo.Plugins.FSStorage.morph.invoke
             });
             if (tx == null) throw new Exception("Insufficient funds");
             ContractParametersContext data = new ContractParametersContext(tx);
-            Wallet.Sign(data);
+            wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             Blockchain.Tell(tx);
         }

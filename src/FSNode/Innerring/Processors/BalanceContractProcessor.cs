@@ -1,30 +1,22 @@
 using Akka.Actor;
 using Neo.Plugins.FSStorage.innerring.invoke;
 using Neo.Plugins.FSStorage.morph.invoke;
+using Neo.Plugins.Innerring.Processors;
 using Neo.Plugins.util;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using static Neo.Plugins.FSStorage.innerring.invoke.ContractInvoker;
 using static Neo.Plugins.FSStorage.MorphEvent;
 using static Neo.Plugins.util.WorkerPool;
 
 namespace Neo.Plugins.FSStorage.innerring.processors
 {
-    public class BalanceContractProcessor : IProcessor
+    public class BalanceContractProcessor : BaseProcessor
     {
-        private string name = "BalanceContractProcessor";
-        private UInt160 BalanceContractHash => Settings.Default.BalanceContractHash;
+        public override string Name => "BalanceContractProcessor";
         private const string LockNotification = "Lock";
-
-        public IClient Client;
-        public IActiveState ActiveState;
-        public IActorRef WorkPool;
         public Fixed8ConverterUtil Convert;
 
-        public string Name { get => name; set => name = value; }
-
-        public HandlerInfo[] ListenerHandlers()
+        public override HandlerInfo[] ListenerHandlers()
         {
             ScriptHashWithType scriptHashWithType = new ScriptHashWithType()
             {
@@ -39,7 +31,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
             return new HandlerInfo[] { handler };
         }
 
-        public ParserInfo[] ListenerParsers()
+        public override ParserInfo[] ListenerParsers()
         {
             ScriptHashWithType scriptHashWithType = new ScriptHashWithType()
             {
@@ -54,43 +46,28 @@ namespace Neo.Plugins.FSStorage.innerring.processors
             return new ParserInfo[] { parser };
         }
 
-        public HandlerInfo[] TimersHandlers()
-        {
-            return new HandlerInfo[] { };
-        }
-
         public void HandleLock(IContractEvent morphEvent)
         {
             LockEvent lockEvent = (LockEvent)morphEvent;
-            Dictionary<string, string> pairs = new Dictionary<string, string>();
-            pairs.Add("notification", ":");
-            pairs.Add("type", "lock");
-            pairs.Add("value", lockEvent.Id.ToHexString());
-            Neo.Utility.Log(Name, LogLevel.Info, pairs.ParseToString());
-            WorkPool.Tell(new NewTask() { process = name, task = new Task(() => ProcessLock(lockEvent)) });
+            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:lock,value:{0}", lockEvent.Id.ToHexString()));
+            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessLock(lockEvent)) });
         }
 
         public void ProcessLock(LockEvent lockEvent)
         {
             if (!IsActive())
             {
-                Neo.Utility.Log(Name, LogLevel.Info, "passive mode, ignore balance lock");
+                Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore balance lock");
                 return;
             }
-            //invoke
             try
             {
-                ContractInvoker.CashOutCheque(Client, lockEvent.Id, Convert.ToFixed8(lockEvent.Amount), lockEvent.UserAccount, lockEvent.LockAccount);
+                ContractInvoker.CashOutCheque(MainCli, lockEvent.Id, Convert.ToFixed8(lockEvent.Amount), lockEvent.UserAccount, lockEvent.LockAccount);
             }
             catch (Exception e)
             {
-                Neo.Utility.Log(Name, LogLevel.Error, string.Format("can't send lock asset tx:{0}" + e.Message));
+                Utility.Log(Name, LogLevel.Error, string.Format("can't send lock asset tx:{0}", e.Message));
             }
-        }
-
-        public bool IsActive()
-        {
-            return ActiveState.IsActive();
         }
     }
 }

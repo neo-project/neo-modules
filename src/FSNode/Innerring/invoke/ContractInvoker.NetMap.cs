@@ -13,49 +13,38 @@ namespace Neo.Plugins.FSStorage.innerring.invoke
         private const string SetNewEpochMethod = "newEpoch";
         private const string ApprovePeerMethod = "addPeer";
         private const string UpdatePeerStateMethod = "updateState";
-        private const string SetConfigMethod = "setConfig";
-        private const string UpdateInnerRingMethod = "updateInnerRing";
+        private const string SetConfigMethod = "setConfigMethod";
         private const string GetNetmapSnapshotMethod = "netmap";
 
-        public static long GetEpoch(IClient client)
+        public static long GetEpoch(Client client)
         {
-            InvokeResult result = client.InvokeLocalFunction(NetMapContractHash, GetEpochMethod);
+            InvokeResult result = client.TestInvoke(NetMapContractHash, GetEpochMethod);
             return (long)(result.ResultStack[0].GetInteger());
         }
 
-        public static bool SetNewEpoch(IClient client, ulong epoch)
+        public static bool SetNewEpoch(Client client, ulong epoch)
         {
-            return client.InvokeFunction(NetMapContractHash, SetNewEpochMethod, FeeOneGas, epoch);
+            return client.Invoke(out _, NetMapContractHash, SetNewEpochMethod, FeeOneGas, epoch);
         }
 
-        public static bool ApprovePeer(IClient client, byte[] peer)
+        public static bool ApprovePeer(Client client, byte[] peer)
         {
-            return client.InvokeFunction(NetMapContractHash, ApprovePeerMethod, FeeOneGas, peer);
+            return client.Invoke(out _, NetMapContractHash, ApprovePeerMethod, FeeOneGas, peer);
         }
 
-        public static bool UpdatePeerState(IClient client, ECPoint key, int status)
+        public static bool UpdatePeerState(Client client, ECPoint key, int status)
         {
-            return client.InvokeFunction(NetMapContractHash, UpdatePeerStateMethod, ExtraFee, status, key.ToArray());
+            return client.Invoke(out _, NetMapContractHash, UpdatePeerStateMethod, ExtraFee, status, key.ToArray());
         }
 
-        public static bool SetConfig(IClient client, byte[] Id, byte[] key, byte[] value)
+        public static bool SetConfig(Client client, byte[] Id, byte[] key, byte[] value)
         {
-            return client.InvokeFunction(NetMapContractHash, SetConfigMethod, ExtraFee, Id, key, value);
+            return client.Invoke(out _, NetMapContractHash, SetConfigMethod, ExtraFee, Id, key, value);
         }
 
-        public static bool UpdateInnerRing(IClient client, ECPoint[] p)
+        public static NodeInfo[] NetmapSnapshot(Client client)
         {
-            List<byte[]> keys = new List<byte[]>();
-            foreach (ECPoint e in p)
-            {
-                keys.Add(e.ToArray());
-            }
-            return client.InvokeFunction(NetMapContractHash, UpdateInnerRingMethod, ExtraFee, keys.ToArray());
-        }
-
-        public static NodeInfo[] NetmapSnapshot(IClient client)
-        {
-            InvokeResult invokeResult = client.InvokeLocalFunction(NetMapContractHash, GetNetmapSnapshotMethod);
+            InvokeResult invokeResult = client.TestInvoke(NetMapContractHash, GetNetmapSnapshotMethod);
             var rawNodeInfos = ((VM.Types.Array)invokeResult.ResultStack[0]).GetEnumerator();
             var result = new List<NodeInfo>();
             while (rawNodeInfos.MoveNext())

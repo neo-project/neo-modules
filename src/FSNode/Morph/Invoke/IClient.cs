@@ -1,12 +1,14 @@
 using Neo.VM;
 using Neo.VM.Types;
+using Neo.Wallets;
 
 namespace Neo.Plugins.FSStorage.morph.invoke
 {
     public interface IClient
     {
-        public bool InvokeFunction(UInt160 contractHash, string method, long fee, params object[] args);
-        public InvokeResult InvokeLocalFunction(UInt160 contractHash, string method, params object[] args);
+        public Wallet GetWallet();
+        public bool Invoke(out UInt256 txId,UInt160 contractHash, string method, long fee, params object[] args);
+        public InvokeResult TestInvoke(UInt160 contractHash, string method, params object[] args);
     }
 
     public class InvokeResult

@@ -1,5 +1,4 @@
 using Neo.Plugins.FSStorage.morph.invoke;
-using System;
 
 namespace Neo.Plugins.FSStorage.innerring.invoke
 {
@@ -14,29 +13,29 @@ namespace Neo.Plugins.FSStorage.innerring.invoke
 
         private const long ExtraFee = 1_5000_0000;
 
-        public static bool TransferBalanceX(IClient client, byte[] sender, byte[] receiver, long amount, byte[] comment)
+        public static bool TransferBalanceX(Client client, byte[] sender, byte[] receiver, long amount, byte[] comment)
         {
-            return client.InvokeFunction(BalanceContractHash, TransferXMethod, ExtraFee, sender, receiver, amount, comment);
+            return client.Invoke(out _,BalanceContractHash, TransferXMethod, ExtraFee, sender, receiver, amount, comment);
         }
 
-        public static bool Mint(IClient client, byte[] scriptHash, long amount, byte[] comment)
+        public static bool Mint(Client client, byte[] scriptHash, long amount, byte[] comment)
         {
-            return client.InvokeFunction(BalanceContractHash, MintMethod, ExtraFee, scriptHash, amount, comment);
+            return client.Invoke(out _, BalanceContractHash, MintMethod, ExtraFee, scriptHash, amount, comment);
         }
 
-        public static bool Burn(IClient client, byte[] scriptHash, long amount, byte[] comment)
+        public static bool Burn(Client client, byte[] scriptHash, long amount, byte[] comment)
         {
-            return client.InvokeFunction(BalanceContractHash, BurnMethod, ExtraFee, scriptHash, amount, comment);
+            return client.Invoke(out _, BalanceContractHash, BurnMethod, ExtraFee, scriptHash, amount, comment);
         }
 
-        public static bool LockAsset(IClient client, byte[] ID, UInt160 userAccount, UInt160 lockAccount, long amount, ulong until)
+        public static bool LockAsset(Client client, byte[] ID, UInt160 userAccount, UInt160 lockAccount, long amount, ulong until)
         {
-            return client.InvokeFunction(BalanceContractHash, LockMethod, ExtraFee, ID, userAccount, lockAccount, amount, (int)until);
+            return client.Invoke(out _, BalanceContractHash, LockMethod, ExtraFee, ID, userAccount, lockAccount, amount, (int)until);
         }
 
-        public static uint BalancePrecision(IClient client)
+        public static uint BalancePrecision(Client client)
         {
-            InvokeResult result = client.InvokeLocalFunction(BalanceContractHash, PrecisionMethod);
+            InvokeResult result = client.TestInvoke(BalanceContractHash, PrecisionMethod);
             return (uint)result.ResultStack[0].GetInteger();
         }
     }
