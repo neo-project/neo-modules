@@ -29,15 +29,15 @@ namespace Neo.FileStorage.InnerRing.Processors
             Utility.Log(Name, LogLevel.Info, "audit processing finished");
         }
 
-
-
-        public void HandleIncomeCollectionEvent(IContractEvent morphEvent) {
+        public void HandleIncomeCollectionEvent(IContractEvent morphEvent)
+        {
             BasicIncomeCollectEvent basicIncomeCollectEvent = (BasicIncomeCollectEvent)morphEvent;
             var epoch = basicIncomeCollectEvent.epoch;
-            if (!ActiveState.IsActive()) {
+            if (!ActiveState.IsActive())
+            {
                 Utility.Log(Name, LogLevel.Info, "passive mode, ignore income collection event");
             }
-            Utility.Log(Name, LogLevel.Info, string.Format("start basic income collection,epoch:{0}",epoch));
+            Utility.Log(Name, LogLevel.Info, string.Format("start basic income collection,epoch:{0}", epoch));
 
         }
 
@@ -60,13 +60,12 @@ namespace Neo.FileStorage.InnerRing.Processors
             Utility.Log(Name, LogLevel.Info, "audit processing finished");
         }
 
+        public void Transfer(OwnerID sender, OwnerID recipient, int amount, byte[] details)
+        {
+            Utility.Log(Name, LogLevel.Info, string.Format("sender:{0},recipient:{1},amount (GASe-12):{2}", sender, recipient, amount));
 
-        public void Transfer(OwnerID sender, OwnerID recipient,int amount,byte[] details) {
-            Utility.Log(Name, LogLevel.Info, string.Format("sender:{0},recipient:{1},amount (GASe-12):{2}", sender,recipient,amount));
-
-            Utility.Log(Name, LogLevel.Info, "transfer transaction for audit was successfully sent");            
+            Utility.Log(Name, LogLevel.Info, "transfer transaction for audit was successfully sent");
         }
-
 
         public void Estimations(ulong epoch)
         {
@@ -83,36 +82,36 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         }
 
-        public IncomeSettlementContext CreateContext(ulong epoch) {
+        public IncomeSettlementContext CreateContext(ulong epoch)
+        {
             return null;
         }
 
-        public class IncomeSettlementContext {
+        public class IncomeSettlementContext
+        {
             public ulong epoch;
 
-
-
-
-            public void Collect() {
+            public void Collect()
+            {
 
             }
 
-            public OwnerID BankOwnerID() {
+            public OwnerID BankOwnerID()
+            {
                 UInt160 u = new UInt160(new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
                 OwnerID o = OwnerID.FromBase58String(u.ToString());
                 return o;
             }
         }
 
-        public class Calculator {
-
-            public void Calculate(ulong epoch) {
-                Utility.Log("Calculator", LogLevel.Info, string.Format("current epoch,{0}",epoch));
+        public class Calculator
+        {
+            public void Calculate(ulong epoch)
+            {
+                Utility.Log("Calculator", LogLevel.Info, string.Format("current epoch,{0}", epoch));
                 Utility.Log("Calculator", LogLevel.Info, "calculate audit settlements");
                 Utility.Log("Calculator", LogLevel.Debug, "getting results for the previous epoch");
-
             }
-
         }
     }
 }

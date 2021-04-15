@@ -30,7 +30,7 @@ namespace Neo.FileStorage.InnerRing.Invoker
 
         public Wallet GetWallet() => wallet;
 
-        public bool Invoke(out UInt256 txId,UInt160 contractHash, string method, long fee, params object[] args)
+        public bool Invoke(out UInt256 txId, UInt160 contractHash, string method, long fee, params object[] args)
         {
             InvokeResult result = TestInvoke(contractHash, method, args);
             var blockHeight = (uint)(clients[0].RpcSendAsync("getblockcount").Result.AsNumber());
@@ -46,7 +46,7 @@ namespace Neo.FileStorage.InnerRing.Invoker
                 SystemFee = result.GasConsumed + fee,
                 NetworkFee = 0
             };
-            var data = new ContractParametersContext(null,tx, Settings.Default.Network);
+            var data = new ContractParametersContext(null, tx, Settings.Default.Network);
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             var networkFee = clients[0].RpcSendAsync("calculatenetworkfee", Convert.ToBase64String(tx.ToArray())).Result["networkfee"].AsNumber();

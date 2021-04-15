@@ -69,14 +69,14 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             NewEpochTickEvent newEpochTickEvent = (NewEpochTickEvent)timersEvent;
             Utility.Log(Name, LogLevel.Info, "tick:type:epoch");
-            WorkPool.Tell(new NewTask() { process = Name,task = new Task(() => ProcessNewEpochTick(newEpochTickEvent))});
+            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessNewEpochTick(newEpochTickEvent)) });
         }
 
         public void HandleNewEpoch(IContractEvent morphEvent)
         {
             NewEpochEvent newEpochEvent = (NewEpochEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:new epoch,value:{0}", newEpochEvent.EpochNumber.ToString()));
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessNewEpoch(newEpochEvent))});
+            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessNewEpoch(newEpochEvent)) });
         }
 
         public void HandleAddPeer(IContractEvent morphEvent)
@@ -118,7 +118,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Warning, string.Format("can't iterate on netmap cleaner cache.{0}",e.Message));
+                Utility.Log(Name, LogLevel.Warning, string.Format("can't iterate on netmap cleaner cache.{0}", e.Message));
             }
         }
 
@@ -133,14 +133,14 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 Utility.Log("can't decode public key of netmap node", LogLevel.Warning, s);
             }
-            Utility.Log(Name, LogLevel.Info, string.Format("vote to remove node from netmap,{0}",s));
+            Utility.Log(Name, LogLevel.Info, string.Format("vote to remove node from netmap,{0}", s));
             try
             {
                 ContractInvoker.UpdatePeerState(MorphCli, key, (int)NodeInfo.Types.State.Offline);
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.UpdateState,{0}",e.Message));
+                Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.UpdateState,{0}", e.Message));
             }
         }
 
@@ -152,14 +152,14 @@ namespace Neo.FileStorage.InnerRing.Processors
                 return;
             }
             ulong nextEpoch = EpochCounter() + 1;
-            Utility.Log(Name, LogLevel.Info, string.Format("next epoch,{0}",nextEpoch));
+            Utility.Log(Name, LogLevel.Info, string.Format("next epoch,{0}", nextEpoch));
             try
             {
                 ContractInvoker.SetNewEpoch(MorphCli, nextEpoch);
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.NewEpoch,{0}",e.Message));
+                Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.NewEpoch,{0}", e.Message));
             }
         }
 
@@ -202,14 +202,14 @@ namespace Neo.FileStorage.InnerRing.Processors
             var key = nodeInfo.PublicKey.ToByteArray().ToHexString();
             if (!NetmapSnapshot.Touch(key, EpochState.EpochCounter()))
             {
-                Utility.Log(Name, LogLevel.Info, string.Format("approving network map candidate,{0}",key));
+                Utility.Log(Name, LogLevel.Info, string.Format("approving network map candidate,{0}", key));
                 try
                 {
                     ContractInvoker.ApprovePeer(MorphCli, addPeerEvent.Node);
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.AddPeer:{0}",e.Message));
+                    Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.AddPeer:{0}", e.Message));
                 }
             }
         }
@@ -235,7 +235,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.UpdatePeer,{0}", e.Message));
             }
-        } 
+        }
 
         public void ResetEpochTimer()
         {

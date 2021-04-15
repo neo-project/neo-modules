@@ -55,7 +55,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             configHandler.ScriptHashWithType = new ScriptHashWithType() { Type = ConfigNotification, ScriptHashValue = FsContractHash };
             configHandler.Handler = HandleConfig;
 
-            return new HandlerInfo[] { depositHandler, withdrwaHandler, chequeHandler, configHandler};
+            return new HandlerInfo[] { depositHandler, withdrwaHandler, chequeHandler, configHandler };
         }
 
         public override ParserInfo[] ListenerParsers()
@@ -79,7 +79,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             ParserInfo configParser = new ParserInfo();
             configParser.ScriptHashWithType = new ScriptHashWithType() { Type = ConfigNotification, ScriptHashValue = FsContractHash };
             configParser.Parser = ConfigEvent.ParseConfigEvent;
-            return new ParserInfo[] { depositParser, withdrawParser, chequeParser, configParser};
+            return new ParserInfo[] { depositParser, withdrawParser, chequeParser, configParser };
         }
 
         public void HandleDeposit(IContractEvent morphEvent)
@@ -136,9 +136,9 @@ namespace Neo.FileStorage.InnerRing.Processors
                 var ok = mintEmitCache.TryGetValue(receiver.ToString(), out ulong value);
                 if (ok && ((value + mintEmitThreshold) >= curEpoch))
                     Utility.Log(Name, LogLevel.Warning, string.Format("double mint emission declined,receiver:{0},last_emission:{1},current_epoch:{2}", receiver.ToString(), value.ToString(), curEpoch.ToString()));
-                var balance=MorphCli.GasBalance();
+                var balance = MorphCli.GasBalance();
                 //todo gasBalanceThreshold
-                if (balance< 0) Utility.Log(Name, LogLevel.Warning, string.Format("gas balance threshold has been reached,balance:{0},threshold:{1}", balance, 0));
+                if (balance < 0) Utility.Log(Name, LogLevel.Warning, string.Format("gas balance threshold has been reached,balance:{0},threshold:{1}", balance, 0));
                 try
                 {
                     MorphCli.TransferGas(depositeEvent.To, mintEmitValue);
@@ -177,7 +177,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 ulong curEpoch = EpochCounter();
                 //invoke
-                ContractInvoker.LockAsset(MorphCli, withdrawEvent.Id, withdrawEvent.UserAccount, lockeAccount,Convert.ToBalancePrecision(withdrawEvent.Amount), curEpoch + LockAccountLifetime);
+                ContractInvoker.LockAsset(MorphCli, withdrawEvent.Id, withdrawEvent.UserAccount, lockeAccount, Convert.ToBalancePrecision(withdrawEvent.Amount), curEpoch + LockAccountLifetime);
             }
             catch (Exception e)
             {
