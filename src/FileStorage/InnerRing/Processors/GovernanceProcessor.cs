@@ -78,16 +78,18 @@ namespace Neo.FileStorage.InnerRing.Processors
             var result = new List<ECPoint>();
             for (int i = 0; i < innerRing.Length; i++)
             {
+                bool loopFlag = false;
                 for (int j = 0; j < before.Length; j++)
                 {
                     if (innerRing[i].Equals(before[j]))
                     {
                         result.Add(after[j]);
-                        goto loop;
+                        loopFlag = true;
                     }
+                    if (loopFlag) break;
                 }
+                if (loopFlag) break;
                 result.Add(innerRing[i]);
-                loop:;
             }
             return result.ToArray();
         }
