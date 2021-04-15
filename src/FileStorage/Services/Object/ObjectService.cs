@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace Neo.FileStorage.Services.Object
 {
-    public class ObjectServices
+    public class ObjectService
     {
         public GetService GetService { get; init; }
         public PutService PutService { get; init; }

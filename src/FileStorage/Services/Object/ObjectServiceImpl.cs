@@ -3,10 +3,11 @@ using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Object;
 using System;
 using System.Threading.Tasks;
+using APIObjectService = Neo.FileStorage.API.Object.ObjectService;
 
 namespace Neo.FileStorage.Services.Object.Acl
 {
-    public partial class AclService : ObjectService.ObjectServiceBase
+    public partial class ObjectServiceImpl : APIObjectService.ObjectServiceBase
     {
         public ObjectSignService SignService { get; init; }
         public AclChecker AclChecker { get; init; }
@@ -84,10 +85,10 @@ namespace Neo.FileStorage.Services.Object.Acl
                         init_received = true;
                         break;
                     case PutRequest.Types.Body.ObjectPartOneofCase.Chunk:
-                        if (!init_received) throw new InvalidOperationException($"{nameof(AclService)} {nameof(Put)} missing init");
+                        if (!init_received) throw new InvalidOperationException($"{nameof(ObjectServiceImpl)} {nameof(Put)} missing init");
                         break;
                     default:
-                        throw new FormatException($"{nameof(AclService)} {nameof(Put)} invalid put request");
+                        throw new FormatException($"{nameof(ObjectServiceImpl)} {nameof(Put)} invalid put request");
                 }
                 next.Send(request);
             }

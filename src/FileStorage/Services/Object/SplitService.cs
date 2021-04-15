@@ -11,16 +11,16 @@ namespace Neo.FileStorage.Services.Object
     {
         public int ChunkSize { get; init; }
         public int AddressAmount { get; init; }
-        public ObjectServices ObjectServices { get; init; }
+        public ObjectService ObjectService { get; init; }
 
         public DeleteResponse Delete(DeleteRequest request)
         {
-            return ObjectServices.Delete(request);
+            return ObjectService.Delete(request);
         }
 
         public void Get(GetRequest request, Action<GetResponse> handler)
         {
-            ObjectServices.Get(request, resp =>
+            ObjectService.Get(request, resp =>
             {
                 switch (resp.Body.ObjectPartCase)
                 {
@@ -46,7 +46,7 @@ namespace Neo.FileStorage.Services.Object
 
         public void GetRange(GetRangeRequest request, Action<GetRangeResponse> handler)
         {
-            ObjectServices.GetRange(request, resp =>
+            ObjectService.GetRange(request, resp =>
             {
                 switch (resp.Body.RangePartCase)
                 {
@@ -72,22 +72,22 @@ namespace Neo.FileStorage.Services.Object
 
         public GetRangeHashResponse GetRangeHash(GetRangeHashRequest request)
         {
-            return ObjectServices.GetRangeHash(request);
+            return ObjectService.GetRangeHash(request);
         }
 
         public HeadResponse Head(HeadRequest request)
         {
-            return ObjectServices.Head(request);
+            return ObjectService.Head(request);
         }
 
         public PutStream Put(CancellationToken cancellation)
         {
-            return ObjectServices.Put(cancellation);
+            return ObjectService.Put(cancellation);
         }
 
         public void Search(SearchRequest request, Action<SearchResponse> handler)
         {
-            ObjectServices.Search(request, resp =>
+            ObjectService.Search(request, resp =>
             {
                 var ids = resp.Body.IdList.AsEnumerable();
                 while (ids.Any())
