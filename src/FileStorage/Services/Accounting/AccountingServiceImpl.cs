@@ -1,43 +1,20 @@
-using Google.Protobuf;
 using Grpc.Core;
 using Neo.FileStorage.API.Accounting;
-using Neo.FileStorage.API.Cryptography;
-using Neo.FileStorage.Morph.Invoker;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
+using APIAccountingService = Neo.FileStorage.API.Accounting.AccountingService;
 
 namespace Neo.FileStorage.Services.Accounting
 {
-    public class AccountingServiceImpl : AccountingService.AccountingServiceBase
+    public class AccountingServiceImpl : APIAccountingService.AccountingServiceBase
     {
-        private readonly Client morphClient;
-        private readonly ECDsa key;
-
-        public AccountingServiceImpl(ECDsa k, Client morph)
-        {
-            morphClient = morph;
-            key = k;
-        }
+        public AccountingSignService SignService { get; init; }
 
         public override Task<BalanceResponse> Balance(BalanceRequest request, ServerCallContext context)
         {
             return Task.Run(() =>
             {
-                long balance = MorphContractInvoker.InvokeBalanceOf(morphClient, request.Body.OwnerId.ToByteArray());
-                var resp = new BalanceResponse
-                {
-                    Body = new BalanceResponse.Types.Body
-                    {
-                        Balance = new Decimal
-                        {
-                            Value = balance,
-                            Precision = 8,
-                        }
-                    }
-                };
-                key.SignResponse(resp);
-                return resp;
-            });
+                return SignService.Balance(request);
+            }, context.CancellationToken);
         }
     }
 }
