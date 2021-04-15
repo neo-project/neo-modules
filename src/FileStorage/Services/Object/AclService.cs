@@ -13,7 +13,11 @@ namespace Neo.FileStorage.Services.Object.Acl
 
         public override Task<DeleteResponse> Delete(DeleteRequest request, ServerCallContext context)
         {
-            throw new NotImplementedException();
+            return Task.Run(() =>
+            {
+                AclChecker.CheckRequest(request, Operation.Delete);
+                return SignService.Delete(request);
+            }, context.CancellationToken);
         }
 
         public override Task Get(GetRequest request, IServerStreamWriter<GetResponse> responseStream, ServerCallContext context)

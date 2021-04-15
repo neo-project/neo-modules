@@ -11,6 +11,11 @@ namespace Neo.FileStorage.Services.Object
         public int ChunkSize { get; init; }
         public ObjectServices ObjectServices { get; init; }
 
+        public DeleteResponse Delete(DeleteRequest request)
+        {
+            return ObjectServices.Delete(request);
+        }
+
         public void Get(GetRequest request, Action<GetResponse> handler)
         {
             ObjectServices.Get(request, resp =>

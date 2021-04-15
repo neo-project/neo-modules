@@ -118,28 +118,7 @@ namespace Neo.FileStorage.Services.Object
 
         public override Task<DeleteResponse> Delete(DeleteRequest request, ServerCallContext context)
         {
-            try
-            {
-                aclChecker.CheckRequest(request, Operation.Delete);
-            }
-            catch (Exception e)
-            {
-                throw new RpcException(new Status(StatusCode.PermissionDenied, e.Message));
-            }
-            return Task.Run(() =>
-            {
-                var prm = DeletePrm.FromRequest(request);
-                var address = deleteService.Delete(prm);
-                var resp = new DeleteResponse
-                {
-                    Body = new DeleteResponse.Types.Body
-                    {
-                        Tombstone = address,
-                    }
-                };
-                key.SignResponse(resp);
-                return resp;
-            }, context.CancellationToken);
+            throw new NotImplementedException();
         }
 
         public override Task<HeadResponse> Head(HeadRequest request, ServerCallContext context)

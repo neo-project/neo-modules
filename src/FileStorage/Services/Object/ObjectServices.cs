@@ -14,6 +14,14 @@ namespace Neo.FileStorage.Services.Object
         public DeleteService DeleteService { get; init; }
         public SearchService SearchService { get; init; }
 
+        public DeleteResponse Delete(DeleteRequest request)
+        {
+            var resp = new DeleteResponse();
+            var prm = DeleteService.ToDeletePrm(request, resp);
+            DeleteService.Delete(prm);
+            return resp;
+        }
+
         public void Get(GetRequest request, Action<GetResponse> handler)
         {
             var prm = GetService.ToGetPrm(request, handler);

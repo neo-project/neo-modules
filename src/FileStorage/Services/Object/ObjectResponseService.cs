@@ -7,6 +7,14 @@ namespace Neo.FileStorage.Services.Object
     {
         public SplitService SplitService { get; init; }
 
+        public DeleteResponse Delete(DeleteRequest request)
+        {
+            return (DeleteResponse)HandleUnaryRequest(request, r =>
+            {
+                return SplitService.Delete((DeleteRequest)r);
+            });
+        }
+
         public void Get(GetRequest request, Action<GetResponse> handler)
         {
             SplitService.Get(request, resp => HandleServerStreamRequest(resp =>

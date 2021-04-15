@@ -8,6 +8,14 @@ namespace Neo.FileStorage.Services.Object
     {
         public ObjectResponseService ResponseService { get; init; }
 
+        public DeleteResponse Delete(DeleteRequest request)
+        {
+            return (DeleteResponse)HandleUnaryRequest(request, resp =>
+            {
+                return ResponseService.Delete((DeleteRequest)resp);
+            });
+        }
+
         public void Get(GetRequest request, Action<GetResponse> handler)
         {
             ResponseService.Get(request, resp => HandleServerStreamRequest(request, resp =>
