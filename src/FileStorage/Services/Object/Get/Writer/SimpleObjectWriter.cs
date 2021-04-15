@@ -4,7 +4,7 @@ using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Get.Writer
 {
-    public class SimpleObjectWriter : IObjectWriter
+    public class SimpleObjectWriter : IObjectResponseWriter
     {
         public FSObject Obj { get; private set; }
 

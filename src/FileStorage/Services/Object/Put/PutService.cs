@@ -18,9 +18,9 @@ namespace Neo.FileStorage.Services.Object.Put
         private ObjectValidator objectValidator;
         private KeyStorage keyStorage;
 
-        public ObjectID Put(V2Object obj)
+        public PutStream Put()
         {
-            return new ObjectID();
+            return new();
         }
 
         public IObjectTarget Init(PutInitPrm prm)

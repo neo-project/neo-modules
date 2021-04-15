@@ -143,7 +143,7 @@ namespace Neo.FileStorage.Services.Object.Acl
             return op;
         }
 
-        public bool BasicAclCheck(RequestInfo info)
+        private bool BasicAclCheck(RequestInfo info)
         {
             return info.Role switch
             {
@@ -171,7 +171,7 @@ namespace Neo.FileStorage.Services.Object.Acl
             return FSAction.Allow == action;
         }
 
-        public bool StickyBitCheck(RequestInfo info)
+        private bool StickyBitCheck(RequestInfo info)
         {
             OwnerID owner;
             try
