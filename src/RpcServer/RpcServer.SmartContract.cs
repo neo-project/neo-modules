@@ -67,7 +67,7 @@ namespace Neo.Plugins
             Transaction tx = signers == null ? null : new Transaction
             {
                 Signers = signers.GetSigners(),
-                Attributes = Array.Empty<TransactionAttribute>(),
+                Attributes = System.Array.Empty<TransactionAttribute>(),
                 Witnesses = signers.Witnesses,
             };
             using ApplicationEngine engine = ApplicationEngine.Run(script, system.StoreView, container: tx, settings: system.Settings, gas: settings.MaxGasInvoke);
