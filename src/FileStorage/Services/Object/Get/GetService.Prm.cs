@@ -31,5 +31,15 @@ namespace Neo.FileStorage.Services.Object.Get
             };
             return prm;
         }
+
+        public RangeHashPrm ToRangeHashPrm(GetRangeHashRequest request, GetRangeHashResponse resp)
+        {
+            return new();
+        }
+
+        public RangePrm ToRangePrm(GetRangeRequest request, Action<GetRangeResponse> handler)
+        {
+            return new();
+        }
     }
 }

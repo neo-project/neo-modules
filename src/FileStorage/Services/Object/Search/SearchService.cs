@@ -11,6 +11,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Neo.FileStorage.API.Object;
 
 namespace Neo.FileStorage.Services.Object.Search
 {
@@ -20,12 +21,17 @@ namespace Neo.FileStorage.Services.Object.Search
         private IContainerSource containerSource;
         private ILocalAddressSource localAddressSource;
 
-        public List<ObjectID> Search(SearchPrm prm)
+        public SearchPrm ToSearchPrm(SearchRequest request, Action<SearchResponse> handler)
+        {
+            return new();
+        }
+
+        public void Search(SearchPrm prm)
         {
             var traverser = PreparePlacementTraverser(prm);
             if (traverser is null)
                 throw new InvalidOperationException(nameof(SearchService) + " could not prepare placement traverser");
-            return Finish(prm, traverser);
+            Finish(prm, traverser);
         }
 
         private Traverser PreparePlacementTraverser(SearchPrm prm)

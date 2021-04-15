@@ -38,12 +38,24 @@ namespace Neo.FileStorage.Services.Object.Acl
 
         public override Task GetRange(GetRangeRequest request, IServerStreamWriter<GetRangeResponse> responseStream, ServerCallContext context)
         {
-            throw new NotImplementedException();
+            return Task.Run(() =>
+            {
+                var info = AclChecker.CheckRequest(request, Operation.Getrange);
+                SignService.GetRange(request, resp =>
+                {
+                    AclChecker.EAclCheck(info, resp);
+                    responseStream.WriteAsync(resp);
+                });
+            }, context.CancellationToken);
         }
 
         public override Task<GetRangeHashResponse> GetRangeHash(GetRangeHashRequest request, ServerCallContext context)
         {
-            throw new NotImplementedException();
+            return Task.Run(() =>
+            {
+                AclChecker.CheckRequest(request, Operation.Getrangehash);
+                return SignService.GetRangeHash(request);
+            }, context.CancellationToken);
         }
 
         public override Task<HeadResponse> Head(HeadRequest request, ServerCallContext context)
@@ -59,7 +71,7 @@ namespace Neo.FileStorage.Services.Object.Acl
 
         public override async Task<PutResponse> Put(IAsyncStreamReader<PutRequest> requestStream, ServerCallContext context)
         {
-            var next = SignService.Put();
+            var next = SignService.Put(context.CancellationToken);
             RequestInfo info = null;
             bool init_received = false;
             while (await requestStream.MoveNext())
@@ -84,8 +96,15 @@ namespace Neo.FileStorage.Services.Object.Acl
 
         public override Task Search(SearchRequest request, IServerStreamWriter<SearchResponse> responseStream, ServerCallContext context)
         {
-            throw new NotImplementedException();
+            return Task.Run(() =>
+            {
+                var info = AclChecker.CheckRequest(request, Operation.Search);
+                SignService.Search(request, resp =>
+                {
+                    AclChecker.EAclCheck(info, resp);
+                    responseStream.WriteAsync(resp);
+                });
+            }, context.CancellationToken);
         }
-
     }
 }

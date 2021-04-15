@@ -4,6 +4,7 @@ using Neo.FileStorage.Services.Object.Get;
 using Neo.FileStorage.Services.Object.Put;
 using Neo.FileStorage.Services.Object.Search;
 using System;
+using System.Threading;
 
 namespace Neo.FileStorage.Services.Object
 {
@@ -29,6 +30,20 @@ namespace Neo.FileStorage.Services.Object
             //TODO: split exception
         }
 
+        public void GetRange(GetRangeRequest request, Action<GetRangeResponse> handler)
+        {
+            var prm = GetService.ToRangePrm(request, handler);
+            GetService.GetRange(prm);
+        }
+
+        public GetRangeHashResponse GetRangeHash(GetRangeHashRequest request)
+        {
+            var resp = new GetRangeHashResponse();
+            var prm = GetService.ToRangeHashPrm(request, resp);
+            GetService.GetRangeHash(prm);
+            return resp;
+        }
+
         public HeadResponse Head(HeadRequest request)
         {
             var resp = new HeadResponse();
@@ -38,9 +53,15 @@ namespace Neo.FileStorage.Services.Object
             return resp;
         }
 
-        public PutStream Put()
+        public PutStream Put(CancellationToken cancellation)
         {
-            return PutService.Put();
+            return PutService.Put(cancellation);
+        }
+
+        public void Search(SearchRequest request, Action<SearchResponse> handler)
+        {
+            var prm = SearchService.ToSearchPrm(request, handler);
+            SearchService.Search(prm);
         }
     }
 }

@@ -1,6 +1,7 @@
 
 using Neo.FileStorage.API.Object;
 using System;
+using System.Threading;
 
 namespace Neo.FileStorage.Services.Object
 {
@@ -24,6 +25,22 @@ namespace Neo.FileStorage.Services.Object
             }));
         }
 
+        public void GetRange(GetRangeRequest request, Action<GetRangeResponse> handler)
+        {
+            ResponseService.GetRange(request, resp => HandleServerStreamRequest(request, resp =>
+            {
+                handler((GetRangeResponse)resp);
+            }));
+        }
+
+        public GetRangeHashResponse GetRangeHash(GetRangeHashRequest request)
+        {
+            return (GetRangeHashResponse)HandleUnaryRequest(request, resp =>
+            {
+                return ResponseService.GetRangeHash((GetRangeHashRequest)resp);
+            });
+        }
+
         public HeadResponse Head(HeadRequest request)
         {
             return (HeadResponse)HandleUnaryRequest(request, resp =>
@@ -32,13 +49,21 @@ namespace Neo.FileStorage.Services.Object
             });
         }
 
-        public IPutRequestStream Put()
+        public IPutRequestStream Put(CancellationToken cancellation)
         {
-            var next = ResponseService.Put();
+            var next = ResponseService.Put(cancellation);
             return new PutSignStream
             {
                 Stream = CreateRequestStreamer(request => next.Send((PutRequest)request), () => next.Close()),
             };
+        }
+
+        public void Search(SearchRequest request, Action<SearchResponse> handler)
+        {
+            ResponseService.Search(request, resp => HandleServerStreamRequest(request, resp =>
+            {
+                handler((SearchResponse)resp);
+            }));
         }
     }
 
