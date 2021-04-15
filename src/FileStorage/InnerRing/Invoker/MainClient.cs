@@ -1,9 +1,9 @@
+using Neo.FileStorage.Morph.Invoker;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC;
 using Neo.Network.RPC.Models;
-using Neo.Plugins.FSStorage.morph.invoke;
 using Neo.SmartContract;
 using Neo.VM;
 using Neo.Wallets;
@@ -11,7 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Neo.Plugins.FSStorage.innerring.invoke
+namespace Neo.FileStorage.InnerRing.Invoker
 {
     /// <summary>
     /// MainClient is an implementation of the IClient interface.
@@ -46,12 +46,12 @@ namespace Neo.Plugins.FSStorage.innerring.invoke
                 SystemFee = result.GasConsumed + fee,
                 NetworkFee = 0
             };
-            var data = new ContractParametersContext(tx);
+            var data = new ContractParametersContext(null,tx, Settings.Default.Network);
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             var networkFee = clients[0].RpcSendAsync("calculatenetworkfee", Convert.ToBase64String(tx.ToArray())).Result["networkfee"].AsNumber();
             tx.NetworkFee = (long)networkFee;
-            data = new ContractParametersContext(tx);
+            data = new ContractParametersContext(null, tx, Settings.Default.Network);
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             txId = UInt256.Parse(clients[0].RpcSendAsync("sendrawtransaction", Convert.ToBase64String(tx.ToArray())).Result.ToString());

@@ -2,12 +2,12 @@ using Neo.VM;
 using Neo.VM.Types;
 using Neo.Wallets;
 
-namespace Neo.Plugins.FSStorage.morph.invoke
+namespace Neo.FileStorage.Morph.Invoker
 {
     public interface IClient
     {
         public Wallet GetWallet();
-        public bool Invoke(out UInt256 txId,UInt160 contractHash, string method, long fee, params object[] args);
+        public bool Invoke(out UInt256 txId, UInt160 contractHash, string method, long fee, params object[] args);
         public InvokeResult TestInvoke(UInt160 contractHash, string method, params object[] args);
     }
 
@@ -20,7 +20,7 @@ namespace Neo.Plugins.FSStorage.morph.invoke
 
         public override string ToString()
         {
-            return string.Format("InvokeResult:VMState:{0}:GasConsumed:{1}:Script:{2}:ResultStack:{3}", State,GasConsumed,Script.ToHexString(),ResultStack.Length);
+            return string.Format("InvokeResult:VMState:{0}:GasConsumed:{1}:Script:{2}:ResultStack:{3}", State, GasConsumed, Script.ToHexString(), ResultStack.Length);
         }
     }
 }

@@ -1,6 +1,6 @@
-using Neo.Plugins.FSStorage;
+using Neo.FileStorage.Morph.Event;
 
-namespace Neo.Plugins.Innerring
+namespace Neo.FileStorage.InnerRing.Events
 {
     public partial class MorphEvent
     {

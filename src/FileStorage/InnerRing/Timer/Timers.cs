@@ -13,7 +13,7 @@ namespace Neo.FileStorage.InnerRing.Timer
         public class Timer { public IContractEvent contractEvent; }
         public class Start { };
         public class Stop { };
-        public class BindTimersEvent { public IProcessor processor; };
+        public class BindTimersEvent { public BaseProcessor processor; };
 
         private LocalTimer epochTimer = new LocalTimer() { Duration = Settings.Default.EpochDuration };
         private LocalTimer alphabetTimer = new LocalTimer() { Duration = Settings.Default.AlphabetDuration };
@@ -80,7 +80,7 @@ namespace Neo.FileStorage.InnerRing.Timer
             }
         }
 
-        public void BindProcessor(IProcessor processor)
+        public void BindProcessor(BaseProcessor processor)
         {
             HandlerInfo[] handlers = processor.TimersHandlers();
             foreach (HandlerInfo handler in handlers)

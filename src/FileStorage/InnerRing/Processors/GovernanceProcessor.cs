@@ -1,17 +1,14 @@
 using Akka.Actor;
 using Neo.Cryptography.ECC;
-using Neo.Plugins.FSStorage.innerring.invoke;
-using Neo.Plugins.FSStorage.morph.invoke;
-using Neo.Plugins.Innerring.Processors;
+using Neo.FileStorage.Morph.Event;
 using Neo.SmartContract;
 using Neo.Wallets;
-using NeoFS.API.v2.Netmap;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using static Neo.Plugins.util.WorkerPool;
+using static Neo.FileStorage.Utils.WorkerPool;
 
-namespace Neo.Plugins.FSStorage.innerring.processors
+namespace Neo.FileStorage.InnerRing.Processors
 {
     public class GovernanceProcessor : BaseProcessor
     {
@@ -52,12 +49,12 @@ namespace Neo.Plugins.FSStorage.innerring.processors
             if (mainnet.Length < sidechain.Length) throw new Exception(string.Format("expecting {0} keys", ln));
             var hmap = new Dictionary<string, bool>();
             var result = new List<ECPoint>();
-            foreach (var node in sidechain) hmap.Add(node.EncodePoint(true).ToScriptHash().ToAddress(), false);
+            foreach (var node in sidechain) hmap.Add(node.EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion), false);
             var newNodes = 0;
             var newNodeLimit = (ln - 1) / 3;
             for (int i = 0; i < ln; i++) {
                 if (newNodes == newNodeLimit) break;
-                var mainnetAddr = mainnet[i].EncodePoint(true).ToScriptHash().ToAddress();
+                var mainnetAddr = mainnet[i].EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion);
                 if (hmap.TryGetValue(mainnetAddr,out _)) newNodes++;
                 else hmap.Add(mainnetAddr, true);
                 result.Add(mainnet[i]);
@@ -65,7 +62,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
             if (newNodes == 0) return null;
             foreach (var node in sidechain) {
                 if (result.Count == ln) break;
-                if (!hmap[node.EncodePoint(true).ToScriptHash().ToAddress()]) result.Add(node);
+                if (!hmap[node.EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion)]) result.Add(node);
             }
             result.Sort();
             return result.ToArray();

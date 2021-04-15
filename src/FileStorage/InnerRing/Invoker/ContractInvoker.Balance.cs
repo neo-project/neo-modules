@@ -1,6 +1,6 @@
-using Neo.Plugins.FSStorage.morph.invoke;
+using Neo.FileStorage.Morph.Invoker;
 
-namespace Neo.Plugins.FSStorage.innerring.invoke
+namespace Neo.FileStorage.InnerRing.Invoker
 {
     public partial class ContractInvoker
     {
@@ -15,7 +15,7 @@ namespace Neo.Plugins.FSStorage.innerring.invoke
 
         public static bool TransferBalanceX(Client client, byte[] sender, byte[] receiver, long amount, byte[] comment)
         {
-            return client.Invoke(out _,BalanceContractHash, TransferXMethod, ExtraFee, sender, receiver, amount, comment);
+            return client.Invoke(out _, BalanceContractHash, TransferXMethod, ExtraFee, sender, receiver, amount, comment);
         }
 
         public static bool Mint(Client client, byte[] scriptHash, long amount, byte[] comment)

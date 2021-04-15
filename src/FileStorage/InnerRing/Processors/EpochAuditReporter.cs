@@ -1,6 +1,6 @@
 using Neo.FileStorage.Services.Audit;
 
-namespace Neo.Plugins.Innerring.Processors
+namespace Neo.FileStorage.InnerRing.Processors
 {
     public class EpochAuditReporter : IReporter
     {

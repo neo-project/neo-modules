@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Neo.Plugins.util
+namespace Neo.FileStorage.Utils
 {
     /// <summary>
     /// WorkerPool is a thread pool that uses Akka's message mechanism internally.

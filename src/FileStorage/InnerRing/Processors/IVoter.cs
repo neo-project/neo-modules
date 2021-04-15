@@ -1,6 +1,6 @@
 using Neo.Cryptography.ECC;
 
-namespace Neo.Plugins.Innerring.Processors
+namespace Neo.FileStorage.InnerRing.Processors
 {
     public interface IVoter
     {

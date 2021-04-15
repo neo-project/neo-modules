@@ -1,26 +1,27 @@
 using Akka.Actor;
-using Neo.Plugins.FSStorage.innerring.invoke;
-using Neo.Plugins.FSStorage.innerring.processors;
-using Neo.Plugins.FSStorage.innerring.timers;
-using Neo.Plugins.FSStorage.morph.invoke;
 using Neo.SmartContract;
 using System;
-using static Neo.Plugins.FSStorage.innerring.timers.Timers;
-using static Neo.Plugins.FSStorage.Listener;
 using Neo.Plugins.util;
 using Neo.Wallets.NEP6;
 using System.Collections.Generic;
 using System.Linq;
-using static Neo.Plugins.FSStorage.innerring.timers.EpochTickEvent;
 using System.Threading;
 using Neo.Cryptography.ECC;
-using Neo.Plugins.Innerring.Processors;
-using Neo.FSNode.Services.Audit;
-using NeoFS.API.v2.Audit;
 using Neo.IO;
 using Google.Protobuf;
+using Neo.FileStorage.InnerRing.Processors;
+using Neo.FileStorage.Services.Audit;
+using Neo.FileStorage.Morph.Event;
+using static Neo.FileStorage.InnerRing.Timer.Timers;
+using static Neo.FileStorage.Morph.Event.Listener;
+using Neo.FileStorage.InnerRing.Timer;
+using Neo.FileStorage.API.Audit;
+using static Neo.FileStorage.InnerRing.Timer.EpochTickEvent;
+using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.InnerRing.Invoker;
+using Neo.FileStorage.Utils;
 
-namespace Neo.Plugins.FSStorage.innerring
+namespace Neo.FileStorage.InnerRing
 {
     /// <summary>
     /// InneringService is the entry for processing all events related to the inner ring node.
@@ -71,7 +72,7 @@ namespace Neo.Plugins.FSStorage.innerring
             //Create wallet
             if (pwallet is null)
             {
-                wallet = new NEP6Wallet(Settings.Default.WalletPath);
+                wallet = new NEP6Wallet(Settings.Default.WalletPath, system.Settings);
                 wallet.Unlock(Settings.Default.Password);
             }
             else
@@ -94,7 +95,7 @@ namespace Neo.Plugins.FSStorage.innerring
                     client = new MorphClient()
                     {
                         wallet = wallet,
-                        Blockchain = system.Blockchain,
+                        system = system,
                     }
                 };
             }

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using Array = Neo.VM.Types.Array;
 
-namespace Neo.Plugins.FSStorage.morph.invoke
+namespace Neo.FileStorage.Morph.Invoker
 {
     public partial class MorphContractInvoker
     {

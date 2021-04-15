@@ -1,10 +1,8 @@
 using Akka.Actor;
-using Neo.Plugins.FSStorage;
-using Neo.Plugins.FSStorage.innerring.processors;
-using Neo.Plugins.FSStorage.morph.invoke;
-using Settings = Neo.Plugins.FSStorage.Settings;
+using Neo.FileStorage.Morph.Event;
+using Neo.FileStorage.Morph.Invoker;
 
-namespace Neo.Plugins.Innerring.Processors
+namespace Neo.FileStorage.InnerRing.Processors
 {
     public class BaseProcessor : IProcessor
     {
@@ -15,6 +13,7 @@ namespace Neo.Plugins.Innerring.Processors
         public UInt160 NetmapContractHash => Settings.Default.NetmapContractHash;
         public UInt160 FsIdContractHash => Settings.Default.FsIdContractHash;
         public UInt160 AuditContractHash => Settings.Default.AuditContractHash;
+
         private Client morphCli;
         private Client mainCli;
         public IIndexer indexer;
@@ -22,6 +21,7 @@ namespace Neo.Plugins.Innerring.Processors
         public IActorRef workPool;
         public IEpochState epochState;
         public IVoter voter;
+        public ProtocolSettings protocolSettings;
 
         public Client MainCli { get => mainCli; set => mainCli = value; }
         public Client MorphCli { get => morphCli; set => morphCli = value; }
@@ -30,6 +30,7 @@ namespace Neo.Plugins.Innerring.Processors
         public IActorRef WorkPool { get => workPool; set => workPool = value; }
         public IEpochState EpochState { get => epochState; set => epochState = value; }
         public IVoter Voter { get => voter; set => voter = value; }
+        public ProtocolSettings ProtocolSettings { get => protocolSettings; set => protocolSettings = value; }
 
 
         public virtual bool IsActive()

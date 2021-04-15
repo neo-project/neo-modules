@@ -1,16 +1,13 @@
 using Neo.Cryptography.ECC;
 using Neo.IO;
-using Neo.Persistence;
-using Neo.SmartContract;
 using Neo.SmartContract.Native;
-using Neo.VM;
 using Neo.VM.Types;
 using Neo.Wallets;
 using System.Linq;
 
-namespace Neo.Plugins.FSStorage.morph.invoke
+namespace Neo.FileStorage.Morph.Invoker
 {
-    public class Client:IClient
+    public class Client : IClient
     {
         public IClient client;
 
@@ -19,7 +16,7 @@ namespace Neo.Plugins.FSStorage.morph.invoke
             return client.GetWallet();
         }
 
-        public bool Invoke(out UInt256 txId,UInt160 contractHash, string method, long fee, params object[] args)
+        public bool Invoke(out UInt256 txId, UInt160 contractHash, string method, long fee, params object[] args)
         {
             return client.Invoke(out txId, contractHash, method, fee, args);
         }
@@ -29,9 +26,10 @@ namespace Neo.Plugins.FSStorage.morph.invoke
             return client.TestInvoke(contractHash, method, args);
         }
 
-        public bool TransferGas(UInt160 receiver,long amount) {
-            var result=client.Invoke(out var txId,NativeContract.GAS.Hash, "transferNEP17", 0, receiver, amount);
-            Utility.Log("",LogLevel.Debug,string.Format("native gas transfer invoke,to:{0},tx_hash:{1}", receiver.ToString(), txId.ToString()));
+        public bool TransferGas(UInt160 receiver, long amount)
+        {
+            var result = client.Invoke(out var txId, NativeContract.GAS.Hash, "transferNEP17", 0, receiver, amount);
+            Utility.Log("", LogLevel.Debug, string.Format("native gas transfer invoke,to:{0},tx_hash:{1}", receiver.ToString(), txId.ToString()));
             return result;
         }
 

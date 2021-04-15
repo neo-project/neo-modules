@@ -1,17 +1,16 @@
 using Akka.Actor;
+using Neo.FileStorage.InnerRing.Invoker;
+using Neo.FileStorage.Morph.Event;
 using Neo.IO;
-using Neo.Plugins.FSStorage.innerring.invoke;
-using Neo.Plugins.FSStorage.morph.invoke;
-using Neo.Plugins.Innerring.Processors;
 using Neo.Plugins.util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static Neo.Plugins.FSStorage.MorphEvent;
-using static Neo.Plugins.util.WorkerPool;
+using static Neo.FileStorage.Morph.Event.MorphEvent;
+using static Neo.FileStorage.Utils.WorkerPool;
 
-namespace Neo.Plugins.FSStorage.innerring.processors
+namespace Neo.FileStorage.InnerRing.Processors
 {
     public class FsContractProcessor : BaseProcessor
     {

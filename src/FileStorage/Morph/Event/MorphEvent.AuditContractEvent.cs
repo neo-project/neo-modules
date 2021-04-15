@@ -1,4 +1,3 @@
-
 namespace Neo.FileStorage.Morph.Event
 {
     public partial class MorphEvent

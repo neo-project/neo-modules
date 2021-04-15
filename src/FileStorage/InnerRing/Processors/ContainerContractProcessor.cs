@@ -1,16 +1,14 @@
 using Akka.Actor;
 using Neo.Cryptography;
-using Neo.Plugins.FSStorage.innerring.invoke;
-using Neo.Plugins.Innerring.Processors;
-using Neo.Plugins.util;
-using NeoFS.API.v2.Container;
+using Neo.FileStorage.API.Container;
+using Neo.FileStorage.InnerRing.Invoker;
+using Neo.FileStorage.Morph.Event;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using static Neo.Plugins.FSStorage.MorphEvent;
-using static Neo.Plugins.util.WorkerPool;
+using static Neo.FileStorage.Morph.Event.MorphEvent;
+using static Neo.FileStorage.Utils.WorkerPool;
 
-namespace Neo.Plugins.FSStorage.innerring.processors
+namespace Neo.FileStorage.InnerRing.Processors
 {
     public class ContainerContractProcessor : BaseProcessor
     {
@@ -112,8 +110,8 @@ namespace Neo.Plugins.FSStorage.innerring.processors
         public void CheckFormat(Container container)
         {
             if (container.PlacementPolicy is null) throw new Exception("placement policy is nil");
-            if (!NeoFS.API.v2.Refs.Version.IsSupportedVersion(container.Version)) throw new Exception("incorrect version");
-            if (container.OwnerId.Value.Length != 25) throw new Exception(string.Format("incorrect owner identifier:expected length {0}!={1}",25, container.OwnerId.Value.Length));
+            if (!API.Refs.Version.IsSupportedVersion(container.Version)) throw new Exception("incorrect version");
+            if (container.OwnerId.Value.Length != 25) throw new Exception(string.Format("incorrect owner identifier:expected length {0}!={1}", 25, container.OwnerId.Value.Length));
             if (container.Nonce.ToByteArray().Length != 16) throw new Exception("incorrect nonce");
         }
     }

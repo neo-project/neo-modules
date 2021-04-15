@@ -1,22 +1,22 @@
 using Akka.Actor;
 using Google.Protobuf;
-using Neo.Plugins.FSStorage.morph.invoke;
-using Neo.Plugins.Innerring.Processors;
-using NeoFS.API.v2.Client.ObjectParams;
-using NeoFS.API.v2.Container;
-using NeoFS.API.v2.Netmap;
-using NeoFS.API.v2.Object;
-using NeoFS.API.v2.Refs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static Neo.Plugins.FSStorage.MorphEvent;
-using static Neo.Plugins.util.WorkerPool;
-using Neo.FSNode.Services.Audit;
-using static Neo.FSNode.Services.Audit.Manager;
 using System.Threading;
+using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Morph.Event;
+using static Neo.FileStorage.Morph.Event.MorphEvent;
+using Neo.FileStorage.Services.Audit;
+using static Neo.FileStorage.Services.Audit.Manager;
+using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.API.Object;
+using Neo.FileStorage.API.Client.ObjectParams;
+using Neo.FileStorage.API.Container;
+using static Neo.FileStorage.Utils.WorkerPool;
 
-namespace Neo.Plugins.FSStorage.innerring.processors
+namespace Neo.FileStorage.InnerRing.Processors
 {
     public class AuditContractProcessor : BaseProcessor
     {
@@ -63,7 +63,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
                     infos.Add(nodeInfo);
                 }
                 List<Node> nodes = infos.Select((p, i) => new Node(i, p)).ToList();
-                nm = new NetMap(nodes.ToArray());
+                nm = new NetMap(nodes);
             }
             catch (Exception e)
             {
@@ -135,7 +135,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
             {
                 throw new Exception(string.Format("can't get list of containers to start audit,error {0}", e.Message));
             }
-            List<ContainerID> containers = rawcontainers.Select(p => ContainerID.FromByteArray(p)).ToList();
+            List<ContainerID> containers = rawcontainers.Select(p => ContainerID.FromSha256Bytes(p)).ToList();
             Utility.Log(Name, LogLevel.Info, string.Format("container listing finished,total amount {0}", containers.Count));
             containers.Sort((x, y) => x.ToBase58String().CompareTo(y.ToBase58String()));
             var ind = Indexer.Index();
@@ -180,14 +180,14 @@ namespace Neo.Plugins.FSStorage.innerring.processors
                 string address;
                 try
                 {
-                    address = Neo.FSNode.Network.Address.IPAddrFromMultiaddr(shuffled[0].NetworkAddress);
+                    address = Network.Address.IPAddrFromMultiaddr(shuffled[0].NetworkAddress);
                 }
                 catch (Exception e)
                 {
                     Utility.Log(Name, LogLevel.Warning, string.Format("can't parse remote address,error {0}", e.Message));
                     continue;
                 };
-                NeoFS.API.v2.Client.Client cli;
+                API.Client.Client cli;
                 try
                 {
                     cli = ClientCache.Get(address);
@@ -203,7 +203,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
                 {
                     var source = new CancellationTokenSource();
                     source.CancelAfter(TimeSpan.FromMinutes(1));
-                    List<ObjectID> result = cli.SearchObject(source.Token, new SearchObjectParams { ContainerID = cid, Filters = searchFilters }).Result;
+                    List<ObjectID> result = cli.SearchObject(new SearchObjectParams { ContainerID = cid, Filters = searchFilters },context:source.Token).Result;
                     sg.AddRange(result);
                     break;
                 }

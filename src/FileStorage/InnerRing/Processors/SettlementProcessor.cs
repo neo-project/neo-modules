@@ -1,18 +1,15 @@
 using Akka.Actor;
-using Neo.Plugins.FSStorage.morph.invoke;
-using NeoFS.API.v2.Refs;
-using System;
+using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Morph.Event;
 using System.Threading.Tasks;
-using static Neo.Plugins.Innerring.MorphEvent;
-using static Neo.Plugins.util.WorkerPool;
+using static Neo.FileStorage.InnerRing.Events.MorphEvent;
+using static Neo.FileStorage.Utils.WorkerPool;
 
-namespace Neo.Plugins.FSStorage.innerring.processors
+namespace Neo.FileStorage.InnerRing.Processors
 {
     public class SettlementProcessor
     {
         private string name = "SettlementProcessor";
-
-        public IClient Client;
         public IActiveState ActiveState;
         public IActorRef WorkPool;
 
@@ -64,7 +61,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
         }
 
 
-        public void Transfer(NeoFS.API.v2.Refs.OwnerID sender, NeoFS.API.v2.Refs.OwnerID recipient,int amount,byte[] details) {
+        public void Transfer(OwnerID sender, OwnerID recipient,int amount,byte[] details) {
             Utility.Log(Name, LogLevel.Info, string.Format("sender:{0},recipient:{1},amount (GASe-12):{2}", sender,recipient,amount));
 
             Utility.Log(Name, LogLevel.Info, "transfer transaction for audit was successfully sent");            
@@ -76,7 +73,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
 
         }
 
-        public int Balance(NeoFS.API.v2.Refs.OwnerID Id)
+        public int Balance(OwnerID Id)
         {
             return 0;
         }

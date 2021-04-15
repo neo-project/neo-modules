@@ -1,16 +1,16 @@
 using Akka.Actor;
 using Neo.Cryptography.ECC;
-using Neo.Plugins.FSStorage.innerring.invoke;
-using Neo.Plugins.FSStorage.innerring.timers;
-using Neo.Plugins.Innerring.Processors;
+using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.InnerRing.Invoker;
+using Neo.FileStorage.InnerRing.Timer;
+using Neo.FileStorage.Morph.Event;
 using Neo.SmartContract;
 using Neo.Wallets;
-using NeoFS.API.v2.Netmap;
 using System;
 using System.Threading.Tasks;
-using static Neo.Plugins.util.WorkerPool;
+using static Neo.FileStorage.Utils.WorkerPool;
 
-namespace Neo.Plugins.FSStorage.innerring.processors
+namespace Neo.FileStorage.InnerRing.Processors
 {
     public class AlphabetContractProcessor : BaseProcessor
     {
@@ -97,7 +97,7 @@ namespace Neo.Plugins.FSStorage.innerring.processors
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(Name, LogLevel.Warning, string.Format("can't transfer gas,receiver:{0},amount:{1},error:{2}", key.EncodePoint(true).ToScriptHash().ToAddress(), gasPerNode, e.Message));
+                    Utility.Log(Name, LogLevel.Warning, string.Format("can't transfer gas,receiver:{0},amount:{1},error:{2}", key.EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion), gasPerNode, e.Message));
                 }
             }
         }

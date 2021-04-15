@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Neo.Plugins.FSStorage.morph.invoke
+namespace Neo.FileStorage.Morph.Invoker
 {
     /// <summary>
     /// MorphClient is an implementation of the IClient interface.
@@ -21,7 +21,7 @@ namespace Neo.Plugins.FSStorage.morph.invoke
     public class MorphClient : IClient
     {
         public Wallet wallet;
-        public IActorRef Blockchain;
+        public NeoSystem system;
 
         public Wallet GetWallet() => wallet;
         public class FakeSigners : IVerifiable
@@ -62,15 +62,15 @@ namespace Neo.Plugins.FSStorage.morph.invoke
             }
         }
 
-        public bool Invoke(out UInt256 txId,UInt160 contractHash, string method, long fee, params object[] args)
+        public bool Invoke(out UInt256 txId, UInt160 contractHash, string method, long fee, params object[] args)
         {
             txId = null;
             var str = "";
             args.ToList().ForEach(p => str += p.ToString());
             InvokeResult result = TestInvoke(contractHash, method, args);
-            Console.WriteLine("构建" + contractHash.ToArray().ToHexString() + "," + method+","+ str + ","+result.State);
+            Console.WriteLine("构建" + contractHash.ToArray().ToHexString() + "," + method + "," + str + "," + result.State);
             if (result.State != VMState.HALT) return false;
-            SnapshotCache snapshot = Ledger.Blockchain.Singleton.GetSnapshot();
+            SnapshotCache snapshot = system.GetSnapshot();
             uint height = NativeContract.Ledger.CurrentIndex(snapshot);
             Random rand = new Random();
             Transaction tx = new Transaction
@@ -85,11 +85,11 @@ namespace Neo.Plugins.FSStorage.morph.invoke
             tx.SystemFee = result.GasConsumed + fee;
             //todo version
             tx.NetworkFee = wallet.CalculateNetworkFee(snapshot, tx);
-            var data = new ContractParametersContext(tx);
+            var data = new ContractParametersContext(snapshot, tx, system.Settings.Network);
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             txId = tx.Hash;
-            Blockchain.Tell(tx);
+            system.Blockchain.Tell(tx);
             Console.WriteLine("发送:" + tx.Hash.ToString());
             return true;
         }
@@ -104,17 +104,18 @@ namespace Neo.Plugins.FSStorage.morph.invoke
 
         private InvokeResult GetInvokeResult(byte[] script, FakeSigners signers = null, bool testMode = true)
         {
-            SnapshotCache snapshot = Ledger.Blockchain.Singleton.GetSnapshot();
-            ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, container: signers, null, 0, 20000000000);
+            SnapshotCache snapshot = system.GetSnapshot();
+            ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, container: signers, null, system.Settings, 0, 20000000000);
             return new InvokeResult() { State = engine.State, GasConsumed = (long)engine.GasConsumed, Script = script, ResultStack = engine.ResultStack.ToArray<StackItem>() };
         }
 
         public void TransferGas(UInt160 to, long amount)
         {
+            SnapshotCache snapshotCache = system.GetSnapshot();
             UInt160 assetId = NativeContract.GAS.Hash;
-            AssetDescriptor descriptor = new AssetDescriptor(assetId);
+            AssetDescriptor descriptor = new AssetDescriptor(snapshotCache, system.Settings, assetId);
             BigDecimal pamount = BigDecimal.Parse(amount.ToString(), descriptor.Decimals);
-            Transaction tx = wallet.MakeTransaction(new[]
+            Transaction tx = wallet.MakeTransaction(snapshotCache, new[]
             {
                 new TransferOutput
                 {
@@ -124,10 +125,10 @@ namespace Neo.Plugins.FSStorage.morph.invoke
                 }
             });
             if (tx == null) throw new Exception("Insufficient funds");
-            ContractParametersContext data = new ContractParametersContext(tx);
+            ContractParametersContext data = new ContractParametersContext(snapshotCache, tx, system.Settings.Network);
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
-            Blockchain.Tell(tx);
+            system.Blockchain.Tell(tx);
         }
     }
 }
