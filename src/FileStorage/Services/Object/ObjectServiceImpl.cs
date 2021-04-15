@@ -63,29 +63,7 @@ namespace Neo.FileStorage.Services.Object
 
         public override Task Get(GetRequest request, IServerStreamWriter<GetResponse> responseStream, ServerCallContext context)
         {
-            return Task.Run(() =>
-            {
-                RequestInfo info;
-                try
-                {
-                    info = aclChecker.CheckRequest(request, Operation.Get);
-                }
-                catch (Exception e)
-                {
-                    throw new RpcException(new Status(StatusCode.PermissionDenied, e.Message));
-                }
-                if (!request.VerifyRequest()) throw new RpcException(new Status(StatusCode.Unauthenticated, "verify header failed"));
-                var prm = getService.ToGetPrm(request);
-                GetWriter writer = new()
-                {
-                    Stream = responseStream,
-                    Responser = new() { Key = key },
-                    AclChecker = aclChecker,
-                    Info = info
-                };
-                prm.Writer = writer;
-                getService.Get(prm);
-            }, context.CancellationToken);
+            throw new NotImplementedException();
         }
 
         public override async Task<PutResponse> Put(IAsyncStreamReader<PutRequest> requestStream, ServerCallContext context)
@@ -166,22 +144,7 @@ namespace Neo.FileStorage.Services.Object
 
         public override Task<HeadResponse> Head(HeadRequest request, ServerCallContext context)
         {
-            RequestInfo info;
-            try
-            {
-                info = aclChecker.CheckRequest(request, Operation.Head);
-            }
-            catch (Exception e)
-            {
-                throw new RpcException(new Status(StatusCode.PermissionDenied, e.Message));
-            }
-            if (!request.VerifyRequest()) throw new RpcException(new Status(StatusCode.Unauthenticated, " verify failed"));
-            return Task.Run(() =>
-            {
-                var head_prm = HeadPrm.FromRequest(request);
-                var header = getService.Head(head_prm);
-                return responser.HeadResponse(head_prm.Short, header);
-            }, context.CancellationToken);
+            throw new NotImplementedException();
         }
 
 

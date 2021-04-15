@@ -7,7 +7,7 @@ using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Get.Writer
 {
-    public class RangeWriter : IObjectWriter
+    public class RangeWriter : IObjectResponseWriter
     {
         private readonly IServerStreamWriter<GetRangeResponse> stream;
         private readonly Responser responser;

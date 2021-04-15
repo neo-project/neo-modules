@@ -7,7 +7,7 @@ namespace Neo.FileStorage.Services.Object.Get
     {
         public Address Address;
         public bool Raw;
-        public IObjectWriter Writer;
+        public IObjectResponseWriter Writer;
 
         public void WithGetCommonPrm(GetCommonPrm prm)
         {
