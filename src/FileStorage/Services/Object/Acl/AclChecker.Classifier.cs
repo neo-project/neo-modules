@@ -95,7 +95,7 @@ namespace Neo.FileStorage.Services.Object.Acl
 
         private List<byte[]> InnerRingKeys()
         {
-            return MorphContractInvoker.InvokeInnerRingList(Morph);
+            return Morph.NeoFSAlphabetList().Select(p => p.EncodePoint(true)).ToList();
         }
 
         private NetMap GetLatestNetworkMap()

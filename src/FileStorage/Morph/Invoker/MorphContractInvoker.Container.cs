@@ -88,9 +88,9 @@ namespace Neo.FileStorage.Morph.Invoker
             return resultArray.ToArray();
         }
 
-        public static bool InvokePutSize(Client client, long epoch, byte[] cid, long size, byte[] reporterKey)
+        public static bool InvokePutSize(Client client, ulong epoch, byte[] cid, ulong size, byte[] reporterKey)
         {
-            return client.Invoke(out _, ContainerContractHash, PutSizeMethod, epoch, cid, size, reporterKey);
+            return client.Invoke(out _, ContainerContractHash, PutSizeMethod, ExtraFee, epoch, cid, size, reporterKey);
         }
 
         public static Estimations InvokeGetContainerSize(Client client, byte[] containerID)
