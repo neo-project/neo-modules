@@ -15,42 +15,42 @@ namespace Neo.FileStorage.Morph.Invoker
         private const string ListByCIDResultsMethod = "listByCID";
         private const string ListByNodeResultsMethod = "listByNode";
 
-        public static bool InvokePutAuditResult(IClient client, byte[] rawResult)
+        public static bool InvokePutAuditResult(Client client, byte[] rawResult)
         {
-            return client.InvokeFunction(AuditContractHash, PutResultMethod, 0, rawResult);
+            return client.Invoke(out _, AuditContractHash, PutResultMethod, 0, rawResult);
         }
 
-        public static byte[] InvokeGetAuditResult(IClient client)
+        public static byte[] InvokeGetAuditResult(Client client)
         {
-            InvokeResult result = client.InvokeLocalFunction(AuditContractHash, GetResultMethod);
+            InvokeResult result = client.TestInvoke(AuditContractHash, GetResultMethod);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", GetResultMethod));
             return result.ResultStack[0].GetSpan().ToArray();
         }
 
-        public static byte[][] InvokeListAuditResults(IClient client)
+        public static byte[][] InvokeListAuditResults(Client client)
         {
-            InvokeResult result = client.InvokeLocalFunction(AuditContractHash, ListResultsMethod);
+            InvokeResult result = client.TestInvoke(AuditContractHash, ListResultsMethod);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", ListResultsMethod));
             return ParseAuditResults(result.ResultStack[0]);
         }
 
-        public static byte[][] InvokeListAuditResultsByEpoch(IClient client, long epoch)
+        public static byte[][] InvokeListAuditResultsByEpoch(Client client, long epoch)
         {
-            InvokeResult result = client.InvokeLocalFunction(AuditContractHash, ListByEpochResultsMethod, epoch);
+            InvokeResult result = client.TestInvoke(AuditContractHash, ListByEpochResultsMethod, epoch);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", ListByEpochResultsMethod));
             return ParseAuditResults(result.ResultStack[0]);
         }
 
-        public static byte[][] InvokeListAuditResultsByCID(IClient client, long epoch, byte[] cid)
+        public static byte[][] InvokeListAuditResultsByCID(Client client, long epoch, byte[] cid)
         {
-            InvokeResult result = client.InvokeLocalFunction(AuditContractHash, ListByCIDResultsMethod, epoch, cid);
+            InvokeResult result = client.TestInvoke(AuditContractHash, ListByCIDResultsMethod, epoch, cid);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", ListByEpochResultsMethod));
             return ParseAuditResults(result.ResultStack[0]);
         }
 
-        public static byte[][] InvokeListAuditResultsByNode(IClient client, long epoch, byte[] cid, byte[] nodeKey)
+        public static byte[][] InvokeListAuditResultsByNode(Client client, long epoch, byte[] cid, byte[] nodeKey)
         {
-            InvokeResult result = client.InvokeLocalFunction(AuditContractHash, ListByNodeResultsMethod, epoch, cid, nodeKey);
+            InvokeResult result = client.TestInvoke(AuditContractHash, ListByNodeResultsMethod, epoch, cid, nodeKey);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", ListByEpochResultsMethod));
             return ParseAuditResults(result.ResultStack[0]);
         }

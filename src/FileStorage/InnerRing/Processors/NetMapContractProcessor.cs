@@ -1,42 +1,29 @@
 using Akka.Actor;
 using Neo.Cryptography.ECC;
+using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.InnerRing.Timer;
 using Neo.FileStorage.Morph.Event;
-using Neo.FileStorage.Morph.Invoker;
-using Neo.Plugins.util;
-using Neo.FileStorage.API.Netmap;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using static Neo.FileStorage.InnerRing.Timer.EpochTickEvent;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
-using static Neo.Plugins.util.WorkerPool;
+using static Neo.FileStorage.Utils.WorkerPool;
 
 namespace Neo.FileStorage.InnerRing.Processors
 {
-    public class NetMapContractProcessor : IProcessor
+    public class NetMapContractProcessor : BaseProcessor
     {
-        private string name = "NetMapContractProcessor";
-        private static UInt160 NetmapContractHash => Settings.Default.NetmapContractHash;
+        public override string Name => "NetMapContractProcessor";
         private const string NewEpochNotification = "NewEpoch";
         private const string AddPeerNotification = "AddPeer";
         private const string UpdatePeerStateNotification = "UpdateState";
 
-        public IClient Client;
-        public IActiveState ActiveState;
-        public IEpochState EpochState;
         public IEpochTimerReseter EpochTimerReseter;
-        public IActorRef WorkPool;
         public CleanupTable NetmapSnapshot;
-        public string Name { get => name; set => name = value; }
 
-        public bool IsActive()
-        {
-            return ActiveState.IsActive();
-        }
-
-        public HandlerInfo[] ListenerHandlers()
+        public override HandlerInfo[] ListenerHandlers()
         {
             HandlerInfo newEpochHandler = new HandlerInfo();
             newEpochHandler.ScriptHashWithType = new ScriptHashWithType() { Type = NewEpochNotification, ScriptHashValue = NetmapContractHash };
@@ -53,24 +40,24 @@ namespace Neo.FileStorage.InnerRing.Processors
             return new HandlerInfo[] { newEpochHandler, addPeerHandler, updatePeerStateHandler };
         }
 
-        public ParserInfo[] ListenerParsers()
+        public override ParserInfo[] ListenerParsers()
         {
             ParserInfo newEpochParser = new ParserInfo();
             newEpochParser.ScriptHashWithType = new ScriptHashWithType() { Type = NewEpochNotification, ScriptHashValue = NetmapContractHash };
-            newEpochParser.Parser = MorphEvent.ParseNewEpochEvent;
+            newEpochParser.Parser = NewEpochEvent.ParseNewEpochEvent;
 
             ParserInfo addPeerParser = new ParserInfo();
             addPeerParser.ScriptHashWithType = new ScriptHashWithType() { Type = AddPeerNotification, ScriptHashValue = NetmapContractHash };
-            addPeerParser.Parser = MorphEvent.ParseAddPeerEvent;
+            addPeerParser.Parser = AddPeerEvent.ParseAddPeerEvent;
 
             ParserInfo updatePeerParser = new ParserInfo();
             updatePeerParser.ScriptHashWithType = new ScriptHashWithType() { Type = UpdatePeerStateNotification, ScriptHashValue = NetmapContractHash };
-            updatePeerParser.Parser = MorphEvent.ParseUpdatePeerEvent;
+            updatePeerParser.Parser = UpdatePeerEvent.ParseUpdatePeerEvent;
 
             return new ParserInfo[] { newEpochParser, addPeerParser, updatePeerParser };
         }
 
-        public HandlerInfo[] TimersHandlers()
+        public override HandlerInfo[] TimersHandlers()
         {
             HandlerInfo newEpochHandler = new HandlerInfo();
             newEpochHandler.ScriptHashWithType = new ScriptHashWithType() { Type = Timers.EpochTimer };
@@ -81,42 +68,28 @@ namespace Neo.FileStorage.InnerRing.Processors
         public void HandleNewEpochTick(IContractEvent timersEvent)
         {
             NewEpochTickEvent newEpochTickEvent = (NewEpochTickEvent)timersEvent;
-            Dictionary<string, string> pairs = new Dictionary<string, string>();
-            pairs.Add("tick", ":");
-            pairs.Add("type", "epoch");
-            Neo.Utility.Log(Name, LogLevel.Info, pairs.ParseToString());
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessNewEpochTick(newEpochTickEvent)) });
+            Utility.Log(Name, LogLevel.Info, "tick:type:epoch");
+            WorkPool.Tell(new NewTask() { process = Name,task = new Task(() => ProcessNewEpochTick(newEpochTickEvent))});
         }
 
         public void HandleNewEpoch(IContractEvent morphEvent)
         {
             NewEpochEvent newEpochEvent = (NewEpochEvent)morphEvent;
-            Dictionary<string, string> pairs = new Dictionary<string, string>();
-            pairs.Add("notification", ":");
-            pairs.Add("type", "new epoch");
-            pairs.Add("value", newEpochEvent.EpochNumber.ToString());
-            Neo.Utility.Log(Name, LogLevel.Info, pairs.ParseToString());
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessNewEpoch(newEpochEvent)) });
+            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:new epoch,value:{0}", newEpochEvent.EpochNumber.ToString()));
+            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessNewEpoch(newEpochEvent))});
         }
 
         public void HandleAddPeer(IContractEvent morphEvent)
         {
             AddPeerEvent addPeerEvent = (AddPeerEvent)morphEvent;
-            Dictionary<string, string> pairs = new Dictionary<string, string>();
-            pairs.Add("notification", ":");
-            pairs.Add("type", "add peer");
-            Neo.Utility.Log(Name, LogLevel.Info, pairs.ParseToString());
+            Utility.Log(Name, LogLevel.Info, "notification:type:add peer");
             WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessAddPeer(addPeerEvent)) });
         }
 
         public void HandleUpdateState(IContractEvent morphEvent)
         {
             UpdatePeerEvent updateStateEvent = (UpdatePeerEvent)morphEvent;
-            Dictionary<string, string> pairs = new Dictionary<string, string>();
-            pairs.Add("notification", ":");
-            pairs.Add("type", "update peer state");
-            pairs.Add("key", updateStateEvent.PublicKey.EncodePoint(true).ToHexString());
-            Neo.Utility.Log(Name, LogLevel.Info, pairs.ParseToString());
+            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:update peer state,key:{0}", updateStateEvent.PublicKey.EncodePoint(true).ToHexString()));
             WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessUpdateState(updateStateEvent)) });
         }
 
@@ -124,14 +97,11 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             if (!NetmapSnapshot.Enabled)
             {
-                Neo.Utility.Log(Name, LogLevel.Debug, "netmap clean up routine is disabled");
+                Utility.Log(Name, LogLevel.Debug, "netmap clean up routine is disabled");
                 return;
             }
             NetmapCleanupTickEvent netmapCleanupTickEvent = (NetmapCleanupTickEvent)morphEvent;
-            Dictionary<string, string> pairs = new Dictionary<string, string>();
-            pairs.Add("tick", ":");
-            pairs.Add("type", "netmap cleaner");
-            Neo.Utility.Log(Name, LogLevel.Info, pairs.ParseToString());
+            Utility.Log(Name, LogLevel.Info, "tick:type:netmap cleaner");
             WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessNetmapCleanupTick(netmapCleanupTickEvent)) });
         }
 
@@ -139,7 +109,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             if (!IsActive())
             {
-                Neo.Utility.Log(Name, LogLevel.Info, "passive mode, ignore new netmap cleanup tick");
+                Utility.Log(Name, LogLevel.Info, "passive mode, ignore new netmap cleanup tick");
                 return;
             }
             try
@@ -148,7 +118,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             catch (Exception e)
             {
-                Neo.Utility.Log(Name, LogLevel.Warning, string.Format("can't iterate on netmap cleaner cache.{0}", e.Message));
+                Utility.Log(Name, LogLevel.Warning, string.Format("can't iterate on netmap cleaner cache.{0}",e.Message));
             }
         }
 
@@ -161,16 +131,16 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             catch
             {
-                Neo.Utility.Log("can't decode public key of netmap node", LogLevel.Warning, s);
+                Utility.Log("can't decode public key of netmap node", LogLevel.Warning, s);
             }
-            Neo.Utility.Log(Name, LogLevel.Info, string.Format("vote to remove node from netmap,{0}", s));
+            Utility.Log(Name, LogLevel.Info, string.Format("vote to remove node from netmap,{0}",s));
             try
             {
-                ContractInvoker.UpdatePeerState(Client, key, (int)Neo.FileStorage.API.Netmap.NodeInfo.Types.State.Offline);
+                ContractInvoker.UpdatePeerState(MorphCli, key, (int)NodeInfo.Types.State.Offline);
             }
             catch (Exception e)
             {
-                Neo.Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.UpdateState,{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.UpdateState,{0}",e.Message));
             }
         }
 
@@ -178,18 +148,18 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             if (!IsActive())
             {
-                Neo.Utility.Log(Name, LogLevel.Info, "passive mode, ignore new epoch tick");
+                Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore new epoch tick");
                 return;
             }
             ulong nextEpoch = EpochCounter() + 1;
-            Neo.Utility.Log(Name, LogLevel.Info, string.Format("next epoch,{0}", nextEpoch));
+            Utility.Log(Name, LogLevel.Info, string.Format("next epoch,{0}",nextEpoch));
             try
             {
-                ContractInvoker.SetNewEpoch(Client, nextEpoch);
+                ContractInvoker.SetNewEpoch(MorphCli, nextEpoch);
             }
             catch (Exception e)
             {
-                Neo.Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.NewEpoch,{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.NewEpoch,{0}",e.Message));
             }
         }
 
@@ -201,11 +171,11 @@ namespace Neo.FileStorage.InnerRing.Processors
             NodeInfo[] snapshot;
             try
             {
-                snapshot = ContractInvoker.NetmapSnapshot(Client);
+                snapshot = ContractInvoker.NetmapSnapshot(MorphCli);
             }
             catch (Exception e)
             {
-                Neo.Utility.Log(Name, LogLevel.Info, string.Format("can't get netmap snapshot to perform cleanup,{0}", e.Message));
+                Utility.Log(Name, LogLevel.Info, string.Format("can't get netmap snapshot to perform cleanup,{0}", e.Message));
                 return;
             }
             NetmapSnapshot.Update(snapshot, newEpochEvent.EpochNumber);
@@ -216,7 +186,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             if (!IsActive())
             {
-                Neo.Utility.Log(Name, LogLevel.Info, "passive mode, ignore new peer notification");
+                Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore new peer notification");
                 return;
             }
             NodeInfo nodeInfo = null;
@@ -226,20 +196,20 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             catch
             {
-                Neo.Utility.Log(Name, LogLevel.Warning, "can't parse network map candidate");
+                Utility.Log(Name, LogLevel.Warning, "can't parse network map candidate");
                 return;
             }
             var key = nodeInfo.PublicKey.ToByteArray().ToHexString();
             if (!NetmapSnapshot.Touch(key, EpochState.EpochCounter()))
             {
-                Neo.Utility.Log(Name, LogLevel.Info, string.Format("approving network map candidate,{0}", key));
+                Utility.Log(Name, LogLevel.Info, string.Format("approving network map candidate,{0}",key));
                 try
                 {
-                    ContractInvoker.ApprovePeer(Client, addPeerEvent.Node);
+                    ContractInvoker.ApprovePeer(MorphCli, addPeerEvent.Node);
                 }
                 catch (Exception e)
                 {
-                    Neo.Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.AddPeer:{0}", e.Message));
+                    Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.AddPeer:{0}",e.Message));
                 }
             }
         }
@@ -248,38 +218,24 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             if (!IsActive())
             {
-                Neo.Utility.Log(Name, LogLevel.Info, "passive mode, ignore new epoch tick");
+                Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore update peer notification");
                 return;
             }
-            if (updateStateEvent.Status != (uint)Neo.FileStorage.API.Netmap.NodeInfo.Types.State.Offline)
+            if (updateStateEvent.Status != (uint)NodeInfo.Types.State.Offline)
             {
-                Dictionary<string, string> pairs = new Dictionary<string, string>();
-                pairs.Add("node proposes unknown state", ":");
-                pairs.Add("key", updateStateEvent.PublicKey.EncodePoint(true).ToHexString());
-                pairs.Add("status", updateStateEvent.Status.ToString());
-                Neo.Utility.Log(Name, LogLevel.Warning, pairs.ParseToString());
+                Utility.Log(Name, LogLevel.Warning, string.Format("node proposes unknown state:key:{0},status:{1}", updateStateEvent.PublicKey.EncodePoint(true).ToHexString(), updateStateEvent.Status.ToString()));
                 return;
             }
             NetmapSnapshot.Flag(updateStateEvent.PublicKey.ToString());
             try
             {
-                ContractInvoker.UpdatePeerState(Client, updateStateEvent.PublicKey, (int)updateStateEvent.Status);
+                ContractInvoker.UpdatePeerState(MorphCli, updateStateEvent.PublicKey, (int)updateStateEvent.Status);
             }
             catch (Exception e)
             {
-                Neo.Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.UpdatePeer,{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.UpdatePeer,{0}", e.Message));
             }
-        }
-
-        public ulong EpochCounter()
-        {
-            return EpochState.EpochCounter();
-        }
-
-        public void SetEpochCounter(ulong epoch)
-        {
-            EpochState.SetEpochCounter(epoch);
-        }
+        } 
 
         public void ResetEpochTimer()
         {

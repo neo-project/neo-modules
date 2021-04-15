@@ -1,6 +1,6 @@
 using Neo.FileStorage.API.Client;
 
-namespace Neo.Plugins.Innerring.Processors
+namespace Neo.FileStorage.InnerRing.Processors
 {
     public interface INeoFSClientCache
     {

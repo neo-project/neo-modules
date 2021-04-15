@@ -1,6 +1,6 @@
 using Neo.Cryptography.ECC;
-using Neo.IO;
 using Neo.FileStorage.Morph.Invoker;
+using Neo.IO;
 using System.Linq;
 
 namespace Neo.FileStorage.InnerRing.Invoker
@@ -11,13 +11,13 @@ namespace Neo.FileStorage.InnerRing.Invoker
         private const string EmitMethod = "emit";
         private const string VoteMethod = "vote";
 
-        public static bool AlphabetEmit(IClient client, int index)
+        public static bool AlphabetEmit(Client client, int index)
         {
-            return client.InvokeFunction(AlphabetContractHash[index], EmitMethod, 0);
+            return client.Invoke(out _, AlphabetContractHash[index], EmitMethod, 0);
         }
-        public static bool AlphabetVote(IClient client, int index, ulong epoch, ECPoint[] publicKeys)
+        public static bool AlphabetVote(Client client, int index, ulong epoch, ECPoint[] publicKeys)
         {
-            return client.InvokeFunction(AlphabetContractHash[index], VoteMethod, FeeOneGas, epoch, publicKeys.Select(p => p.ToArray()).ToArray());
+            return client.Invoke(out _, AlphabetContractHash[index], VoteMethod, FeeOneGas, epoch, publicKeys.Select(p => p.ToArray()).ToArray());
         }
     }
 }

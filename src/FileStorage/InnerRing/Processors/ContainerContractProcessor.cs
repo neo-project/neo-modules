@@ -1,31 +1,22 @@
 using Akka.Actor;
 using Neo.Cryptography;
+using Neo.FileStorage.API.Container;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Morph.Event;
-using Neo.FileStorage.Morph.Invoker;
-using Neo.Plugins.util;
-using Neo.FileStorage.API.Container;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
-using static Neo.Plugins.util.WorkerPool;
+using static Neo.FileStorage.Utils.WorkerPool;
 
 namespace Neo.FileStorage.InnerRing.Processors
 {
-    public class ContainerContractProcessor : IProcessor
+    public class ContainerContractProcessor : BaseProcessor
     {
-        private string name = "ContainerContractProcessor";
-        private static UInt160 ContainerContractHash = Settings.Default.ContainerContractHash;
+        public override string Name => "ContainerContractProcessor";
         private const string PutNotification = "containerPut";
         private const string DeleteNotification = "containerDelete";
 
-        public IClient Client;
-        public IActiveState ActiveState;
-        public IActorRef WorkPool;
-        public string Name { get => name; set => name = value; }
-
-        public HandlerInfo[] ListenerHandlers()
+        public override HandlerInfo[] ListenerHandlers()
         {
             HandlerInfo putHandler = new HandlerInfo();
             putHandler.ScriptHashWithType = new ScriptHashWithType() { Type = PutNotification, ScriptHashValue = ContainerContractHash };
@@ -36,54 +27,39 @@ namespace Neo.FileStorage.InnerRing.Processors
             return new HandlerInfo[] { putHandler, deleteHandler };
         }
 
-        public ParserInfo[] ListenerParsers()
+        public override ParserInfo[] ListenerParsers()
         {
             //container put event
             ParserInfo putParser = new ParserInfo();
             putParser.ScriptHashWithType = new ScriptHashWithType() { Type = PutNotification, ScriptHashValue = ContainerContractHash };
-            putParser.Parser = MorphEvent.ParseContainerPutEvent;
+            putParser.Parser = ContainerPutEvent.ParseContainerPutEvent;
             //container delete event
             ParserInfo deleteParser = new ParserInfo();
             deleteParser.ScriptHashWithType = new ScriptHashWithType() { Type = DeleteNotification, ScriptHashValue = ContainerContractHash };
-            deleteParser.Parser = MorphEvent.ParseContainerDeleteEvent;
+            deleteParser.Parser = ContainerDeleteEvent.ParseContainerDeleteEvent;
             return new ParserInfo[] { putParser, deleteParser };
-        }
-
-        public HandlerInfo[] TimersHandlers()
-        {
-            return new HandlerInfo[] { };
         }
 
         public void HandlePut(IContractEvent morphEvent)
         {
             ContainerPutEvent putEvent = (ContainerPutEvent)morphEvent;
             var id = putEvent.RawContainer.Sha256();
-            Dictionary<string, string> pairs = new Dictionary<string, string>();
-            pairs.Add("notification", ":");
-            pairs.Add("type", "container put");
-            pairs.Add("id", Base58.Encode(id));
-            Neo.Utility.Log(Name, LogLevel.Info, pairs.ParseToString());
-            //send event to workpool
-            WorkPool.Tell(new NewTask() { process = name, task = new Task(() => ProcessContainerPut(putEvent)) });
+            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:container put,id:{0}", Base58.Encode(id)));
+            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessContainerPut(putEvent)) });
         }
 
         public void HandleDelete(IContractEvent morphEvent)
         {
             ContainerDeleteEvent deleteEvent = (ContainerDeleteEvent)morphEvent;
-            Dictionary<string, string> pairs = new Dictionary<string, string>();
-            pairs.Add("notification", ":");
-            pairs.Add("type", "container delete");
-            pairs.Add("id", Base58.Encode(deleteEvent.ContainerID));
-            Neo.Utility.Log(Name, LogLevel.Info, pairs.ParseToString());
-            //send event to workpool
-            WorkPool.Tell(new NewTask() { process = name, task = new Task(() => ProcessContainerDelete(deleteEvent)) });
+            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:container delete,id:{0}", Base58.Encode(deleteEvent.ContainerID)));
+            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessContainerDelete(deleteEvent)) });
         }
 
         public void ProcessContainerPut(ContainerPutEvent putEvent)
         {
             if (!IsActive())
             {
-                Neo.Utility.Log(Name, LogLevel.Info, "passive mode, ignore container put");
+                Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore container put");
                 return;
             }
             var cnrData = putEvent.RawContainer;
@@ -94,7 +70,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             catch (Exception e)
             {
-                Neo.Utility.Log(Name, LogLevel.Error, string.Format("could not unmarshal container structure:{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, string.Format("could not unmarshal container structure:{0}", e.Message));
             }
             try
             {
@@ -102,16 +78,15 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             catch (Exception e)
             {
-                Neo.Utility.Log(Name, LogLevel.Error, string.Format("container with incorrect format detected:{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, string.Format("container with incorrect format detected:{0}", e.Message));
             }
-            //invoke
             try
             {
-                ContractInvoker.RegisterContainer(Client, putEvent.PublicKey, putEvent.RawContainer, putEvent.Signature);
+                ContractInvoker.RegisterContainer(MainCli, putEvent.PublicKey, putEvent.RawContainer, putEvent.Signature);
             }
             catch (Exception e)
             {
-                Neo.Utility.Log(Name, LogLevel.Error, string.Format("can't invoke new container:{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, string.Format("can't invoke new container:{0}", e.Message));
             }
         }
 
@@ -119,29 +94,24 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             if (!IsActive())
             {
-                Neo.Utility.Log(Name, LogLevel.Info, "passive mode, ignore container put");
+                Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore container put");
                 return;
             }
-            //invoke
             try
             {
-                ContractInvoker.RemoveContainer(Client, deleteEvent.ContainerID, deleteEvent.Signature);
+                ContractInvoker.RemoveContainer(MainCli, deleteEvent.ContainerID, deleteEvent.Signature);
             }
             catch (Exception e)
             {
-                Neo.Utility.Log(Name, LogLevel.Error, string.Format("can't invoke delete container:{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, string.Format("can't invoke delete container:{0}", e.Message));
             }
-        }
-
-        public bool IsActive()
-        {
-            return ActiveState.IsActive();
         }
 
         public void CheckFormat(Container container)
         {
             if (container.PlacementPolicy is null) throw new Exception("placement policy is nil");
-            if (container.OwnerId.Value.Length != 25) throw new Exception("incorrect owner identifier");
+            if (!API.Refs.Version.IsSupportedVersion(container.Version)) throw new Exception("incorrect version");
+            if (container.OwnerId.Value.Length != 25) throw new Exception(string.Format("incorrect owner identifier:expected length {0}!={1}", 25, container.OwnerId.Value.Length));
             if (container.Nonce.ToByteArray().Length != 16) throw new Exception("incorrect nonce");
         }
     }

@@ -15,7 +15,7 @@ using System.Linq;
 using System.Threading;
 using V2Range = Neo.FileStorage.API.Object.Range;
 
-namespace Neo.Plugins.Innerring.Processors
+namespace Neo.FileStorage.InnerRing.Processors
 {
     public class RpcClientCache : INeoFSClientCache, IContainerCommunicator
     {

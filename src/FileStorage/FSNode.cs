@@ -23,6 +23,7 @@ namespace Neo.FileStorage
         public override string Name => "FSNode";
         public override string Description => "Uses FSNode to provide distributed file storage service";
         public IActorRef innering;
+        public NeoSystem neoSystem;
 
         protected override void Configure()
         {
@@ -31,6 +32,7 @@ namespace Neo.FileStorage
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
+            this.neoSystem = system;
             if (Settings.Default.IsSender)
             {
                 innering = system.ActorSystem.ActorOf(InnerRingSender.Props());
