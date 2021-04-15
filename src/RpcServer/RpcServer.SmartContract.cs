@@ -7,8 +7,10 @@ using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
+using Neo.SmartContract.Iterators;
 using Neo.SmartContract.Native;
 using Neo.VM;
+using Neo.VM.Types;
 using Neo.Wallets;
 using System;
 using System.IO;
@@ -76,17 +78,43 @@ namespace Neo.Plugins
             json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
-                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
+                int max = settings.MaxResultItems;
+                json["stack"] = new JArray(engine.ResultStack.Select(p => ToJson(p, ref max)));
             }
             catch (InvalidOperationException)
             {
-                json["stack"] = "error: recursive reference";
+                json["stack"] = "error: invalid operation";
             }
             if (engine.State != VMState.FAULT)
             {
                 ProcessInvokeWithWallet(json, signers);
             }
             return json;
+        }
+
+        private JObject ToJson(StackItem p, ref int max)
+        {
+            if (max <= 0) throw new InvalidOperationException();
+            max--;
+
+            if (p is InteropInterface result)
+            {
+                var iterator = result.GetInterface<IIterator>();
+                if (iterator != null)
+                {
+                    VM.Types.Array resultList = new();
+                    for (int i = 0; iterator.Next(); i++)
+                    {
+                        resultList.Add(iterator.Value());
+                        max--;
+                        if (max <= 0) throw new InvalidOperationException();
+                    }
+
+                    return ToJson(resultList, ref max);
+                }
+            }
+
+            return p.ToJson();
         }
 
         private static Signers SignersFromJson(JArray _params, ProtocolSettings settings)

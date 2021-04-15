@@ -31,6 +31,7 @@ namespace Neo.Plugins
         public long MaxGasInvoke { get; init; }
         public long MaxFee { get; init; }
         public string[] DisabledMethods { get; init; }
+        public int MaxResultItems { get; init; }
 
         public static RpcServerSettings Default { get; } = new RpcServerSettings
         {
@@ -43,6 +44,7 @@ namespace Neo.Plugins
             TrustedAuthorities = Array.Empty<string>(),
             DisabledMethods = Array.Empty<string>(),
             MaxConcurrentConnections = 40,
+            MaxResultItems = 100,
         };
 
         public static RpcServerSettings Load(IConfigurationSection section) => new RpcServerSettings
@@ -59,6 +61,7 @@ namespace Neo.Plugins
             MaxFee = (long)new BigDecimal(section.GetValue<decimal>("MaxFee", Default.MaxFee), NativeContract.GAS.Decimals).Value,
             DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray(),
             MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", Default.MaxConcurrentConnections),
+            MaxResultItems = section.GetValue("MaxResultItems", Default.MaxResultItems),
         };
     }
 }
