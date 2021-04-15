@@ -19,7 +19,7 @@ namespace Neo.FileStorage.Services.Object.Acl
 {
     public partial class AclChecker
     {
-        public IClient Morph { get; init; }
+        public Client Morph { get; init; }
         public StorageEngine LocalStorage { get; init; }
         public EAclValidator EAclValidator { get; init; }
         public INetState NetmapState { get; init; }

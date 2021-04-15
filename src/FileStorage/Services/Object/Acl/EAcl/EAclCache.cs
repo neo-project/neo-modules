@@ -17,7 +17,7 @@ namespace Neo.FileStorage.Services.Object.Acl
 
         private readonly TTLCache<ContainerID, EACLTable> cache;
 
-        public EAclCache(IClient client, int size = DefaultCacheSize, int ttl = DefaultTTLMilliseconds)
+        public EAclCache(Client client, int size = DefaultCacheSize, int ttl = DefaultTTLMilliseconds)
         {
             cache = new(size, TimeSpan.FromMilliseconds(ttl), cid =>
              {

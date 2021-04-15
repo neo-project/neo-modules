@@ -10,10 +10,10 @@ namespace Neo.FileStorage.Services.Accounting
 {
     public class AccountingServiceImpl : AccountingService.AccountingServiceBase
     {
-        private readonly IClient morphClient;
+        private readonly Client morphClient;
         private readonly ECDsa key;
 
-        public AccountingServiceImpl(ECDsa k, IClient morph)
+        public AccountingServiceImpl(ECDsa k, Client morph)
         {
             morphClient = morph;
             key = k;

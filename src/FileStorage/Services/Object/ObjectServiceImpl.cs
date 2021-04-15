@@ -33,9 +33,9 @@ namespace Neo.FileStorage.Services.Object
         private readonly SearchService searchService;
         private readonly AclChecker aclChecker;
         private readonly Responser responser;
-        private readonly IClient morph;
+        private readonly Client morph;
 
-        public ObjectServiceImpl(IContainerSource container_source, StorageEngine local_storage, IClient client, INetState state)
+        public ObjectServiceImpl(IContainerSource container_source, StorageEngine local_storage, Client client, INetState state)
         {
             localStorage = local_storage;
             morph = client;

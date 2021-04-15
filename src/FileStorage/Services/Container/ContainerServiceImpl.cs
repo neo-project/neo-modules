@@ -14,11 +14,11 @@ namespace Neo.FileStorage.Services.Container
 {
     public class ContainerServiceImpl : ContainerService.ContainerServiceBase
     {
-        private readonly IClient morphClient;
+        private readonly Client morphClient;
         private readonly ECDsa key;
         private readonly UsedSpaceService usedSpaceService;
 
-        public ContainerServiceImpl(ECDsa k, IClient morph)
+        public ContainerServiceImpl(ECDsa k, Client morph)
         {
             morphClient = morph;
             key = k;
@@ -35,7 +35,7 @@ namespace Neo.FileStorage.Services.Container
             {
                 byte[] cid = request.Body.ContainerId.ToByteArray();
                 byte[] sig = request.Body.Signature.Sign.ToByteArray();
-                bool ok = MorphContractInvoker.InvokeDelete(morphClient, new MorphContractInvoker.DeleteArgs { cid = cid, sig = sig });
+                bool ok = MorphContractInvoker.InvokeDelete(morphClient, cid, sig);
                 var resp = new DeleteResponse
                 {
                     Body = new DeleteResponse.Types.Body { }
@@ -106,7 +106,7 @@ namespace Neo.FileStorage.Services.Container
                 FSContainer container = request.Body.Container;
                 byte[] sig = request.Body.Signature.Sign.ToByteArray();
                 byte[] public_key = request.Body.Signature.Key.ToByteArray();
-                bool ok = MorphContractInvoker.InvokePut(morphClient, new MorphContractInvoker.PutArgs { cnr = container.ToByteArray(), sig = sig, publicKey = public_key });
+                bool ok = MorphContractInvoker.InvokePut(morphClient, container.ToByteArray(), sig, public_key);
                 var resp = new PutResponse
                 {
                     Body = new PutResponse.Types.Body
@@ -125,7 +125,7 @@ namespace Neo.FileStorage.Services.Container
             {
                 byte[] eacl = request.Body.Eacl.ToByteArray();
                 byte[] sig = request.Body.Signature.Sign.ToByteArray();
-                bool ok = MorphContractInvoker.InvokeSetEACL(morphClient, new MorphContractInvoker.SetEACLArgs { eacl = eacl, sig = sig });
+                bool ok = MorphContractInvoker.InvokeSetEACL(morphClient, eacl, sig);
                 var resp = new SetExtendedACLResponse
                 {
                     Body = new SetExtendedACLResponse.Types.Body { }
