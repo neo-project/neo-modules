@@ -103,7 +103,7 @@ namespace Neo.Plugins
                 if (iterator != null)
                 {
                     VM.Types.Array resultList = new();
-                    for (int i = 0; iterator.Next(); i++)
+                    while (iterator.Next())
                     {
                         resultList.Add(iterator.Value());
                         max--;
