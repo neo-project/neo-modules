@@ -42,7 +42,6 @@ namespace Neo.FileStorage.InnerRing.Processors
             ECPoint[] newInnerRing = UpdateInnerRing(innerRing, sidechainAlphabet, newAlphabet);
             Array.Sort(newInnerRing);
             //todo
-            //
         }
 
         private ECPoint[] NewAlphabetList(ECPoint[] sidechain, ECPoint[] mainnet)
