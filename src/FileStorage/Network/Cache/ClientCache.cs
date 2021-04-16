@@ -10,22 +10,15 @@ namespace Neo.FileStorage.Network.Cache
     {
         private readonly ConcurrentDictionary<string, Client> clients = new ConcurrentDictionary<string, Client>();
 
-        public Client GetClient(ECDsa key, string address)
+        public Client Get(string address)
         {
-            var id = UniqueID(key, address);
-            if (clients.TryGetValue(id, out Client client))
+            if (clients.TryGetValue(address, out Client client))
             {
                 return client;
             }
-            client = new Client(key, address);
-            clients[id] = client;
+            client = new Client(null, address);//TODO: make sure there is key in options
+            clients[address] = client;
             return client;
-        }
-
-        private string UniqueID(ECDsa key, string address)
-        {
-            var finger_print = key.ExportECPrivateKey().Sha256();
-            return Base58.Encode(finger_print) + address;
         }
     }
 }
