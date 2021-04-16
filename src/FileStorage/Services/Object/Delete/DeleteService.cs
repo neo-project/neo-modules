@@ -18,7 +18,12 @@ namespace Neo.FileStorage.Services.Object.Delete
         public readonly GetService GetService;
         private readonly KeyStorage keyStorage;
 
-        public Address Delete(DeletePrm prm)
+        public DeletePrm ToDeletePrm(DeleteRequest request, DeleteResponse response)
+        {
+            return new();
+        }
+
+        public void Delete(DeletePrm prm)
         {
             var writer = new SimpleTombstoneWriter();
             var executor = new Execute.Executor
@@ -30,7 +35,6 @@ namespace Neo.FileStorage.Services.Object.Delete
                 }
             };
             executor.Execute();
-            return writer.Address;
         }
 
         public DeletePrm ToDeletePrm(DeleteRequest request)

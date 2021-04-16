@@ -7,7 +7,7 @@ using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Get.Writer
 {
-    public class RangeHashWriter : IObjectWriter
+    public class RangeHashWriter : IObjectResponseWriter
     {
         private ChecksumType type;
         private byte[] data = Array.Empty<byte>();

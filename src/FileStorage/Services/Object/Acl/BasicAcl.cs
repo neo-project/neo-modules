@@ -18,15 +18,15 @@ namespace Neo.FileStorage.Services.Object.Acl
         public const byte BitOthers = 2;
         public const byte BitBearer = 3;
 
-        public static Dictionary<Operation, byte> Order = new Dictionary<Operation, byte>
+        public static Dictionary<Operation, byte> Order = new()
         {
-            {Operation.Getrangehash, 0},
-            {Operation.Getrange, 1},
-            {Operation.Search, 2},
-            {Operation.Delete, 3},
-            {Operation.Put, 4},
-            {Operation.Head, 5},
-            {Operation.Get, 6},
+            { Operation.Getrangehash, 0 },
+            { Operation.Getrange, 1 },
+            { Operation.Search, 2 },
+            { Operation.Delete, 3 },
+            { Operation.Put, 4 },
+            { Operation.Head, 5 },
+            { Operation.Get, 6 },
         };
 
         public static bool IsLeftBitSet(this uint value, byte n)

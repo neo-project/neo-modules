@@ -9,10 +9,10 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route
         public CancellationToken Cancellation;
         public List<NodeInfo> PassedRoute;
 
-        public RouteContext(List<NodeInfo> passed, CancellationToken cancel)
+        public RouteContext(List<NodeInfo> passed, CancellationToken cancellation)
         {
             PassedRoute = passed;
-            Cancellation = cancel;
+            Cancellation = cancellation;
         }
     }
 }

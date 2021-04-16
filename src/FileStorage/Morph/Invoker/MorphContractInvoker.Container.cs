@@ -1,7 +1,14 @@
+using Google.Protobuf;
+using Neo.FileStorage.API.Acl;
+using Neo.FileStorage.API.Client;
+using Neo.FileStorage.API.Refs;
 using Neo.VM.Types;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Array = Neo.VM.Types.Array;
+using FSContainer = Neo.FileStorage.API.Container.Container;
+using GByteString = Google.Protobuf.ByteString;
 
 namespace Neo.FileStorage.Morph.Invoker
 {
@@ -20,112 +27,110 @@ namespace Neo.FileStorage.Morph.Invoker
         private const string StartEstimationMethod = "startContainerEstimation";
         private const string StopEstimationMethod = "stopContainerEstimation";
 
-        public class EACLValues
-        {
-            public byte[] eacl;
-            public byte[] sig;
-        }
-
         public class Estimation
         {
-            public long size;
-            public byte[] reporter;
+            public long Size;
+            public byte[] Reporter;
         }
 
         public class Estimations
         {
-            public byte[] containerID;
-            public Estimation[] estimations;
+            public ContainerID ContainerID;
+            public List<Estimation> AllEstimation;
         }
 
-        public static bool InvokePut(Client client, byte[] cnr, byte[] sig, byte[] publicKey)
+        public static bool InvokePut(Client client, FSContainer cnr, byte[] sign, byte[] pubkey)
         {
-            return client.Invoke(out _, ContainerContractHash, PutMethod, ExtraFee, cnr, sig, publicKey);
+            return client.Invoke(out _, ContainerContractHash, PutMethod, ExtraFee, cnr.ToByteArray(), sign, pubkey);
         }
 
-        public static bool InvokeSetEACL(Client client, byte[] eacl, byte[] sig)
+        public static bool InvokeSetEACL(Client client, EACLTable eacl, byte[] sign)
         {
-            return client.Invoke(out _, ContainerContractHash, SetEACLMethod, ExtraFee, eacl, sig);
+            return client.Invoke(out _, ContainerContractHash, SetEACLMethod, ExtraFee, eacl.ToByteArray(), sign);
         }
 
-        public static bool InvokeDelete(Client client, byte[] cid, byte[] sig)
+        public static bool InvokeDelete(Client client, ContainerID cid, byte[] sig)
         {
-            return client.Invoke(out _, ContainerContractHash, DeleteMethod, ExtraFee, cid, sig);
+            return client.Invoke(out _, ContainerContractHash, DeleteMethod, ExtraFee, cid.Value.ToByteArray(), sig);
         }
-        public static EACLValues InvokeGetEACL(Client client, byte[] containerID)
+        public static EAclWithSignature InvokeGetEACL(Client client, ContainerID containerID)
         {
-            InvokeResult result = client.TestInvoke(ContainerContractHash, EACLMethod, containerID);
+            InvokeResult result = client.TestInvoke(ContainerContractHash, EACLMethod, containerID.Value.ToByteArray());
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (EACL)");
             Array array = (Array)result.ResultStack[0];
             var eacl = array[0].GetSpan().ToArray();
             var sig = array[1].GetSpan().ToArray();
-            EACLValues eACLValues = new EACLValues()
+            var pubkey = array[2].GetSpan().ToArray();
+            return new()
             {
-                eacl = eacl,
-                sig = sig
+                Table = EACLTable.Parser.ParseFrom(eacl),
+                Signature = new()
+                {
+                    Key = GByteString.CopyFrom(pubkey),
+                    Sign = GByteString.CopyFrom(sig),
+                }
             };
-            return eACLValues;
         }
 
-        public static byte[] InvokeGetContainer(Client client, byte[] containerID)
+        public static FSContainer InvokeGetContainer(Client client, ContainerID containerID)
         {
-            InvokeResult result = client.TestInvoke(ContainerContractHash, GetMethod, containerID);
+            InvokeResult result = client.TestInvoke(ContainerContractHash, GetMethod, containerID.Value.ToByteArray());
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (Get)");
-            return result.ResultStack[0].GetSpan().ToArray();
+            return FSContainer.Parser.ParseFrom(result.ResultStack[0].GetSpan().ToArray());
         }
 
-        public static byte[][] InvokeGetContainerList(Client client, byte[] ownerID)
+        public static List<ContainerID> InvokeGetContainerList(Client client, OwnerID ownerID)
         {
-            InvokeResult result = client.TestInvoke(ContainerContractHash, ListMethod, ownerID);
+            InvokeResult result = client.TestInvoke(ContainerContractHash, ListMethod, ownerID.Value.ToByteArray());
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (List)");
             Array array = (Array)result.ResultStack[0];
             IEnumerator<StackItem> enumerator = array.GetEnumerator();
-            List<byte[]> resultArray = new List<byte[]>();
+            List<byte[]> resultArray = new();
             while (enumerator.MoveNext())
             {
                 resultArray.Add(enumerator.Current.GetSpan().ToArray());
             }
-            return resultArray.ToArray();
+            return resultArray.Select(p => ContainerID.FromSha256Bytes(p)).ToList();
         }
 
-        public static bool InvokePutSize(Client client, ulong epoch, byte[] cid, ulong size, byte[] reporterKey)
+        public static bool InvokePutSize(Client client, ulong epoch, ContainerID cid, ulong size, byte[] reporterKey)
         {
-            return client.Invoke(out _, ContainerContractHash, PutSizeMethod, ExtraFee, epoch, cid, size, reporterKey);
+            return client.Invoke(out _, ContainerContractHash, PutSizeMethod, ExtraFee, epoch, cid.Value.ToByteArray(), size, reporterKey);
         }
 
-        public static Estimations InvokeGetContainerSize(Client client, byte[] containerID)
+        public static Estimations InvokeGetContainerSize(Client client, ContainerID containerID)
         {
-            InvokeResult result = client.TestInvoke(ContainerContractHash, GetSizeMethod, containerID);
+            InvokeResult result = client.TestInvoke(ContainerContractHash, GetSizeMethod, containerID.Value.ToByteArray());
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (GetContainerSize)");
             Array prms = (Array)result.ResultStack[0];
-            var es = new Estimations();
-            es.containerID = prms[0].GetSpan().ToArray();
-            List<Estimation> estimations = new List<Estimation>();
+            Estimations es = new();
+            es.ContainerID = ContainerID.FromSha256Bytes(prms[0].GetSpan().ToArray());
+            List<Estimation> estimations = new();
             prms = (Array)prms[1];
             foreach (var item in prms)
             {
                 Array array = (Array)item;
-                var e = new Estimation();
-                e.reporter = array[0].GetSpan().ToArray();
-                e.size = (long)array[1].GetInteger();
+                Estimation e = new();
+                e.Reporter = array[0].GetSpan().ToArray();
+                e.Size = (long)array[1].GetInteger();
                 estimations.Add(e);
             }
-            es.estimations = estimations.ToArray();
+            es.AllEstimation = estimations;
             return es;
         }
 
-        public static byte[][] InvokeListSizes(Client client, long epoch)
+        public static List<byte[]> InvokeListSizes(Client client, long epoch)
         {
             InvokeResult result = client.TestInvoke(ContainerContractHash, ListSizesMethod, epoch);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (ListSizes)");
             Array prms = (Array)result.ResultStack[0];
-            List<byte[]> ids = new List<byte[]>();
+            List<byte[]> ids = new();
             foreach (var item in prms)
             {
                 var id = item.GetSpan().ToArray();
                 ids.Add(id);
             }
-            return ids.ToArray();
+            return ids;
         }
 
         public static bool InvokeStartEstimation(Client client, long epoch)

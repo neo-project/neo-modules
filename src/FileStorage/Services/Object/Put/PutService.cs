@@ -1,5 +1,3 @@
-using V2Object = Neo.FileStorage.API.Object.Object;
-using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Core.Container;
 using Neo.FileStorage.Core.Netmap;
 using Neo.FileStorage.Core.Object;
@@ -7,6 +5,7 @@ using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using Neo.FileStorage.Services.ObjectManager.Transformer;
 using System;
+using System.Threading;
 
 namespace Neo.FileStorage.Services.Object.Put
 {
@@ -18,9 +17,9 @@ namespace Neo.FileStorage.Services.Object.Put
         private ObjectValidator objectValidator;
         private KeyStorage keyStorage;
 
-        public ObjectID Put(V2Object obj)
+        public PutStream Put(CancellationToken cancellation)
         {
-            return new ObjectID();
+            return new();
         }
 
         public IObjectTarget Init(PutInitPrm prm)

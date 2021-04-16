@@ -1,47 +1,27 @@
-using Google.Protobuf;
 using Grpc.Core;
-using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Container;
-using Neo.FileStorage.API.Cryptography;
-using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Morph.Invoker;
-using Neo.FileStorage.Services.Container.Announcement;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
-using FSContainer = Neo.FileStorage.API.Container.Container;
+using APIContainerService = Neo.FileStorage.API.Container.ContainerService;
 
 namespace Neo.FileStorage.Services.Container
 {
-    public class ContainerServiceImpl : ContainerService.ContainerServiceBase
+    public class ContainerServiceImpl : APIContainerService.ContainerServiceBase
     {
-        private readonly Client morphClient;
-        private readonly ECDsa key;
-        private readonly UsedSpaceService usedSpaceService;
-
-        public ContainerServiceImpl(ECDsa k, Client morph)
-        {
-            morphClient = morph;
-            key = k;
-        }
+        public ContainerSignService SignService { get; init; }
 
         public override Task<AnnounceUsedSpaceResponse> AnnounceUsedSpace(AnnounceUsedSpaceRequest request, ServerCallContext context)
         {
-            return usedSpaceService.AnnounceUsedSpace(request, context);
+            return Task.Run(() =>
+            {
+                return SignService.AnnounceUsedSpace(request);
+            }, context.CancellationToken);
         }
 
         public override Task<DeleteResponse> Delete(DeleteRequest request, ServerCallContext context)
         {
             return Task.Run(() =>
             {
-                byte[] cid = request.Body.ContainerId.ToByteArray();
-                byte[] sig = request.Body.Signature.Sign.ToByteArray();
-                bool ok = MorphContractInvoker.InvokeDelete(morphClient, cid, sig);
-                var resp = new DeleteResponse
-                {
-                    Body = new DeleteResponse.Types.Body { }
-                };
-                key.SignResponse(resp);
-                return resp;
+                return SignService.Delete(request);
             }, context.CancellationToken);
         }
 
@@ -49,17 +29,7 @@ namespace Neo.FileStorage.Services.Container
         {
             return Task.Run(() =>
             {
-                byte[] cid = request.Body.ContainerId.ToByteArray();
-                byte[] raw = MorphContractInvoker.InvokeGetContainer(morphClient, cid);
-                var resp = new GetResponse
-                {
-                    Body = new GetResponse.Types.Body
-                    {
-                        Container = FSContainer.Parser.ParseFrom(raw),
-                    }
-                };
-                key.SignResponse(resp);
-                return resp;
+                return SignService.Get(request);
             }, context.CancellationToken);
         }
 
@@ -67,18 +37,7 @@ namespace Neo.FileStorage.Services.Container
         {
             return Task.Run(() =>
             {
-                byte[] cid = request.Body.ContainerId.ToByteArray();
-                MorphContractInvoker.EACLValues result = MorphContractInvoker.InvokeGetEACL(morphClient, cid);
-                var resp = new GetExtendedACLResponse
-                {
-                    Body = new GetExtendedACLResponse.Types.Body
-                    {
-                        Eacl = EACLTable.Parser.ParseFrom(result.eacl),
-                        Signature = Signature.Parser.ParseFrom(result.sig),
-                    }
-                };
-                key.SignResponse(resp);
-                return resp;
+                return SignService.GetExtendedACL(request);
             }, context.CancellationToken);
         }
 
@@ -86,16 +45,7 @@ namespace Neo.FileStorage.Services.Container
         {
             return Task.Run(() =>
             {
-                byte[] owner = request.Body.OwnerId.Value.ToByteArray();
-                byte[][] containers = MorphContractInvoker.InvokeGetContainerList(morphClient, owner);
-                var resp = new ListResponse { Body = new ListResponse.Types.Body { } };
-                foreach (byte[] c in containers)
-                {
-                    ContainerID cid = ContainerID.Parser.ParseFrom(c);
-                    resp.Body.ContainerIds.Add(cid);
-                }
-                key.SignResponse(resp);
-                return resp;
+                return SignService.List(request);
             }, context.CancellationToken);
         }
 
@@ -103,19 +53,7 @@ namespace Neo.FileStorage.Services.Container
         {
             return Task.Run(() =>
             {
-                FSContainer container = request.Body.Container;
-                byte[] sig = request.Body.Signature.Sign.ToByteArray();
-                byte[] public_key = request.Body.Signature.Key.ToByteArray();
-                bool ok = MorphContractInvoker.InvokePut(morphClient, container.ToByteArray(), sig, public_key);
-                var resp = new PutResponse
-                {
-                    Body = new PutResponse.Types.Body
-                    {
-                        ContainerId = container.CalCulateAndGetId,
-                    }
-                };
-                key.SignResponse(resp);
-                return resp;
+                return SignService.Put(request);
             }, context.CancellationToken);
         }
 
@@ -123,15 +61,7 @@ namespace Neo.FileStorage.Services.Container
         {
             return Task.Run(() =>
             {
-                byte[] eacl = request.Body.Eacl.ToByteArray();
-                byte[] sig = request.Body.Signature.Sign.ToByteArray();
-                bool ok = MorphContractInvoker.InvokeSetEACL(morphClient, eacl, sig);
-                var resp = new SetExtendedACLResponse
-                {
-                    Body = new SetExtendedACLResponse.Types.Body { }
-                };
-                key.SignResponse(resp);
-                return resp;
+                return SignService.SetExtendedACL(request);
             }, context.CancellationToken);
         }
     }
