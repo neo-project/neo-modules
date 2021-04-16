@@ -1,16 +1,13 @@
 using Grpc.Core;
-using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Morph.Invoker;
 using System.Threading.Tasks;
+using APINetmapService = Neo.FileStorage.API.Netmap.NetmapService;
 
 namespace Neo.FileStorage.Services.Netmap
 {
-    public class NetmapServiceImpl : NetmapService.NetmapServiceBase
+    public class NetmapServiceImpl : APINetmapService.NetmapServiceBase
     {
-        private readonly IClient client;
-        private readonly StorageNode snode; //TODO: if this the best way?
+        public NetmapSignService SignService { get; init; }
 
         /// <summary>
         /// Get NodeInfo structure from the particular node directly. Node information
@@ -26,17 +23,8 @@ namespace Neo.FileStorage.Services.Netmap
         {
             return Task.Run(() =>
             {
-                var resp = new LocalNodeInfoResponse()
-                {
-                    Body = new LocalNodeInfoResponse.Types.Body
-                    {
-                        Version = Version.SDKVersion(),
-                        NodeInfo = snode.LocalNodeInfo,
-                    },
-                };
-                snode.Key.SignResponse(resp);
-                return resp;
-            });
+                return SignService.LocalNodeInfo(request);
+            }, context.CancellationToken);
         }
 
         /// <summary>
@@ -49,20 +37,8 @@ namespace Neo.FileStorage.Services.Netmap
         {
             return Task.Run(() =>
             {
-                var resp = new NetworkInfoResponse()
-                {
-                    Body = new NetworkInfoResponse.Types.Body
-                    {
-                        NetworkInfo = new()
-                        {
-                            CurrentEpoch = snode.CurrentEpoch,
-                            MagicNumber = snode.ProtocolSettings.Network,
-                        }
-                    }
-                };
-                snode.Key.SignResponse(resp);
-                return resp;
-            });
+                return SignService.NetworkInfo(request);
+            }, context.CancellationToken);
         }
     }
 }
