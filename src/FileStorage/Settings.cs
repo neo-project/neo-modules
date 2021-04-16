@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Neo.Cryptography.ECC;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -36,6 +37,7 @@ namespace Neo.FileStorage
         public long AlphabetDuration;
         public int MintEmitCacheSize;
         public ulong MintEmitThreshold;
+        public long GasBalanceThreshold;
         public long MintEmitValue;
         public ulong StorageEmission;
         public bool CleanupEnabled;
@@ -44,6 +46,7 @@ namespace Neo.FileStorage
         public ulong SearchTimeout;
         public ulong HeadTimeout;
         public ulong RangeTimeout;
+        public TimeSpan IndexerTimeout;
 
         public List<UInt160> Contracts = new List<UInt160>();
 
@@ -86,6 +89,7 @@ namespace Neo.FileStorage
             this.MintEmitCacheSize = int.Parse(emit.GetSection("mint").GetSection("cache_size").Value);
             this.MintEmitThreshold = ulong.Parse(emit.GetSection("mint").GetSection("threshold").Value);
             this.MintEmitValue = long.Parse(emit.GetSection("mint").GetSection("value").Value);
+            this.GasBalanceThreshold = long.Parse(emit.GetSection("gas").GetSection("balance_threshold").Value);
             this.StorageEmission = ulong.Parse(emit.GetSection("storage").GetSection("amount").Value);
 
             IConfigurationSection netmapCleaner = section.GetSection("netmap_cleaner");
@@ -102,6 +106,9 @@ namespace Neo.FileStorage
             this.PorPoolSize = int.Parse(audit.GetSection("por").GetSection("pool_size").Value);
             this.MaxPDPSleepInterval = ulong.Parse(audit.GetSection("pdp").GetSection("max_sleep_interval").Value);
             this.QueueCapacity = int.Parse(audit.GetSection("task").GetSection("queue_capacity").Value);
+
+            IConfigurationSection indexer = section.GetSection("indexer");
+            this.IndexerTimeout = TimeSpan.FromMilliseconds(long.Parse(audit.GetSection("cache_timeout").Value));
         }
 
         public static void Load(IConfigurationSection section)

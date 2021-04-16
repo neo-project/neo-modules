@@ -21,17 +21,20 @@ namespace Neo.FileStorage.Tests.InnerRing
         private NeoSystem system;
         private NEP6Wallet wallet;
         private IActorRef innerring;
-        private IClient client;
+        private Client client;
 
         [TestInitialize]
         public void TestSetup()
         {
             system = TestBlockchain.TheNeoSystem;
             wallet = TestBlockchain.wallet;
-            client = new MorphClient()
+            client = new Client()
             {
-                Wallet = wallet,
-                Blockchain = TestActor
+                client = new MorphClient()
+                {
+                    wallet = wallet,
+                    system = system
+                }
             };
             innerring = system.ActorSystem.ActorOf(InnerRingService.Props(system, wallet, client, client));
         }

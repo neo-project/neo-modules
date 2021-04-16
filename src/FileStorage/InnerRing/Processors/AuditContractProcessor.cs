@@ -138,8 +138,8 @@ namespace Neo.FileStorage.InnerRing.Processors
             List<ContainerID> containers = rawcontainers.Select(p => ContainerID.FromSha256Bytes(p)).ToList();
             Utility.Log(Name, LogLevel.Info, string.Format("container listing finished,total amount {0}", containers.Count));
             containers.Sort((x, y) => x.ToBase58String().CompareTo(y.ToBase58String()));
-            var ind = Indexer.Index();
-            var irSize = Indexer.InnerRingSize();
+            var ind = State.InnerRingIndex();
+            var irSize = State.InnerRingSize();
             if (ind < 0 || ind >= irSize) throw new Exception("node is not in the inner ring list");
             return Select(containers.ToArray(), epoch, (ulong)ind, (ulong)irSize);
         }

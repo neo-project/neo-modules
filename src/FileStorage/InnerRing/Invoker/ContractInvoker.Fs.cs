@@ -1,5 +1,6 @@
 using Neo.Cryptography.ECC;
 using Neo.FileStorage.Morph.Invoker;
+using System;
 
 namespace Neo.FileStorage.InnerRing.Invoker
 {
@@ -14,11 +15,13 @@ namespace Neo.FileStorage.InnerRing.Invoker
 
         public static bool CashOutCheque(Client client, byte[] Id, long amount, UInt160 userAccount, UInt160 lockAccount)
         {
+            if (client is null) throw new Exception("client is nil");
             return client.Invoke(out _, FsContractHash, ChequeMethod, ExtraFee, Id, userAccount, amount, lockAccount);
         }
 
         public static bool AlphabetUpdate(Client client, byte[] Id, ECPoint[] list)
         {
+            if (client is null) throw new Exception("client is nil");
             return client.Invoke(out _, FsContractHash, AlphabetUpdateMethod, ExtraFee, Id, list);
         }
     }

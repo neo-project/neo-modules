@@ -26,18 +26,19 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         public void TestSetup()
         {
             system = TestBlockchain.TheNeoSystem;
+            system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()));
             wallet = TestBlockchain.wallet;
             morphclient = new MorphClient()
             {
-                Wallet = wallet,
-                Blockchain = system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()))
+                wallet = wallet,
+                system = system
             };
             processor = new NetMapContractProcessor()
             {
-                Client = morphclient,
-                ActiveState = new TestActiveState(),
-                EpochState = new EpochState(),
-                EpochTimerReseter = new EpochTimerReseter(),
+                MorphCli = new Client() { client= morphclient },
+                //ActiveState = new TestActiveState(),
+                //EpochState = new EpochState(),
+                //EpochTimerReseter = new EpochTimerReseter(),
                 WorkPool = system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor())),
                 NetmapSnapshot = new NetMapContractProcessor.CleanupTable(true, 1)
             };
@@ -171,7 +172,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             });
         }
 
-        public class EpochTimerReseter : IEpochTimerReseter
+        public class EpochTimerReseter //: IEpochTimerReseter
         {
             public void ResetEpochTimer()
             {

@@ -18,7 +18,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Timer
         public void TestSetup()
         {
             timers = Sys.ActorOf(Props.Create(() => new Timers()));
-            timers.Tell(new Timers.BindTimersEvent() { processor = this });
+            //timers.Tell(new Timers.BindTimersEvent() { processor = this });
         }
 
         [TestMethod]

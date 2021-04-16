@@ -49,11 +49,11 @@ namespace Neo.FileStorage.InnerRing.Processors
                 string addr;
                 try
                 {
-                    addr = FileStorage.Network.Address.IPAddrFromMultiaddr(node.NetworkAddress);
+                    addr = Network.Address.IPAddrFromMultiaddr(node.NetworkAddress);
                 }
                 catch (Exception e)
                 {
-                    Neo.Utility.Log("RpcClientCache", LogLevel.Warning, string.Format("can't parse remote address,address:{0},errot:{1}", node.NetworkAddress, e.Message));
+                    Utility.Log("RpcClientCache", LogLevel.Warning, string.Format("can't parse remote address,address:{0},errot:{1}", node.NetworkAddress, e.Message));
                     continue;
                 }
                 Client cli;
@@ -63,7 +63,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 }
                 catch (Exception e)
                 {
-                    Neo.Utility.Log("RpcClientCache", LogLevel.Warning, string.Format("can't setup remote connection,address:{0},errot:{1}", addr, e.Message));
+                    Utility.Log("RpcClientCache", LogLevel.Warning, string.Format("can't setup remote connection,address:{0},errot:{1}", addr, e.Message));
                     continue;
                 }
                 Neo.FileStorage.API.Object.Object obj;
@@ -75,7 +75,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 }
                 catch (Exception e)
                 {
-                    Neo.Utility.Log("RpcClientCache", LogLevel.Warning, string.Format("can't get storage group object,error:{0}", e.Message));
+                    Utility.Log("RpcClientCache", LogLevel.Warning, string.Format("can't get storage group object,error:{0}", e.Message));
                     continue;
                 }
                 StorageGroup sg;

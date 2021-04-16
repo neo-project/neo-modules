@@ -52,8 +52,8 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
             mockRpc.Setup(p => p.RpcSendAsync("sendrawtransaction", It.Is<JObject[]>(u => true)))
                 .ReturnsAsync(true)
                 .Verifiable();
-            client.Clients = new RpcClient[] { mockRpc.Object };
-            bool result = client.InvokeFunction(NativeContract.GAS.Hash, "balanceOf", (long)100, UInt160.Zero);
+            client.clients = new RpcClient[] { mockRpc.Object };
+            bool result = client.Invoke(out _,NativeContract.GAS.Hash, "balanceOf", (long)100, UInt160.Zero);
             Assert.AreEqual(result, true);
         }
     }

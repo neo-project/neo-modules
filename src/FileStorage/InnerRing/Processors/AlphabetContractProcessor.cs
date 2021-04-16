@@ -39,7 +39,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessEmit()
         {
-            int index = Indexer.Index();
+            int index = State.AlphabetIndex();
             if (index < 0)
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore gas emission event");

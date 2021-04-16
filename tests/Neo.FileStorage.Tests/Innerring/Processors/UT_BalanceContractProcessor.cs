@@ -25,19 +25,20 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         public void TestSetup()
         {
             system = TestBlockchain.TheNeoSystem;
+            system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()));
             wallet = TestBlockchain.wallet;
             activeState = new TestActiveState();
             activeState.SetActive(true);
             morphclient = new MorphClient()
             {
-                Wallet = wallet,
-                Blockchain = system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()))
+                wallet = wallet,
+                system = system
             };
             processor = new BalanceContractProcessor()
             {
-                Client = morphclient,
+                MorphCli = new Client() { client=morphclient },
                 Convert = new Fixed8ConverterUtil(),
-                ActiveState = activeState,
+                //ActiveState = activeState,
                 WorkPool = system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()))
             };
         }

@@ -21,17 +21,18 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         public void TestSetup()
         {
             system = TestBlockchain.TheNeoSystem;
+            system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()));
             wallet = TestBlockchain.wallet;
             indexer = new Indexer();
             morphclient = new MorphClient()
             {
-                Wallet = wallet,
-                Blockchain = system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()))
+                wallet = wallet,
+                system = system
             };
             processor = new AlphabetContractProcessor()
             {
-                Client = morphclient,
-                Indexer = indexer,
+                MorphCli = new Client() { client= morphclient },
+                //Indexer = indexer,
                 WorkPool = system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor())),
                 StorageEmission = 2
             };
@@ -77,7 +78,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             Assert.AreEqual(handlerInfos.Length, 1);
         }
 
-        public class Indexer : IIndexer
+        public class Indexer //: IIndexer
         {
             private int index = 0;
             public int Index()

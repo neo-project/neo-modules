@@ -22,6 +22,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public IEpochTimerReseter EpochTimerReseter;
         public CleanupTable NetmapSnapshot;
+        public Validator NodeValidator;
 
         public override HandlerInfo[] ListenerHandlers()
         {
@@ -107,9 +108,9 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessNetmapCleanupTick(NetmapCleanupTickEvent netmapCleanupTickEvent)
         {
-            if (!IsActive())
+            if (!State.IsAlphabet())
             {
-                Utility.Log(Name, LogLevel.Info, "passive mode, ignore new netmap cleanup tick");
+                Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore new netmap cleanup tick");
                 return;
             }
             try
@@ -146,12 +147,12 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessNewEpochTick(NewEpochTickEvent timersEvent)
         {
-            if (!IsActive())
+            if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore new epoch tick");
                 return;
             }
-            ulong nextEpoch = EpochCounter() + 1;
+            ulong nextEpoch = State.EpochCounter() + 1;
             Utility.Log(Name, LogLevel.Info, string.Format("next epoch,{0}", nextEpoch));
             try
             {
@@ -165,9 +166,8 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessNewEpoch(NewEpochEvent newEpochEvent)
         {
-            EpochState.SetEpochCounter(newEpochEvent.EpochNumber);
-            EpochTimerReseter.ResetEpochTimer();
-
+            State.SetEpochCounter(newEpochEvent.EpochNumber);
+            State.ResetEpochTimer();
             NodeInfo[] snapshot;
             try
             {
@@ -180,11 +180,12 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             NetmapSnapshot.Update(snapshot, newEpochEvent.EpochNumber);
             HandleCleanupTick(new NetmapCleanupTickEvent() { Epoch = newEpochEvent.EpochNumber });
+            //todo
         }
 
         public void ProcessAddPeer(AddPeerEvent addPeerEvent)
         {
-            if (!IsActive())
+            if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore new peer notification");
                 return;
@@ -199,8 +200,11 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Warning, "can't parse network map candidate");
                 return;
             }
+            NodeValidator.VerifyAndUpdate(nodeInfo);
+            Google.Protobuf.Collections.RepeatedField<NodeInfo.Types.Attribute> attributes = nodeInfo.Attributes;
+            //attributes.sort();
             var key = nodeInfo.PublicKey.ToByteArray().ToHexString();
-            if (!NetmapSnapshot.Touch(key, EpochState.EpochCounter()))
+            if (!NetmapSnapshot.Touch(key, State.EpochCounter()))
             {
                 Utility.Log(Name, LogLevel.Info, string.Format("approving network map candidate,{0}", key));
                 try
@@ -216,7 +220,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessUpdateState(UpdatePeerEvent updateStateEvent)
         {
-            if (!IsActive())
+            if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore update peer notification");
                 return;
@@ -235,11 +239,6 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.UpdatePeer,{0}", e.Message));
             }
-        }
-
-        public void ResetEpochTimer()
-        {
-            EpochTimerReseter.ResetEpochTimer();
         }
 
         public class CleanupTable
@@ -348,6 +347,34 @@ namespace Neo.FileStorage.InnerRing.Processors
 
             public ulong Epoch { get => epoch; set => epoch = value; }
             public bool RemoveFlag { get => removeFlag; set => removeFlag = value; }
+        }
+
+        public class Validator {
+            private Dictionary<string, AttrDescriptor> mAttr;
+
+
+            public void VerifyAndUpdate(NodeInfo n) {
+                var mAttr= UniqueAttributes(n.Attributes.GetEnumerator());
+                //if (mAttr.TryGetValue(NodeInfo.AttrUNLOCODE, out var attrLocode)) return;
+            }
+
+            public Dictionary<String, NodeInfo.Types.Attribute> UniqueAttributes(IEnumerator<NodeInfo.Types.Attribute> attributes) {
+                Dictionary<String, NodeInfo.Types.Attribute> mAttr = new Dictionary<string, NodeInfo.Types.Attribute>();
+                while(attributes.MoveNext()) {
+                    var attr = attributes.Current;
+                    if (!mAttr.TryAdd(attr.Key, attr))
+                        mAttr[attr.Key]=attr;
+                }
+                return mAttr;
+            }
+            public class AttrDescriptor {
+                public bool optional;
+               private Func<string> converter;
+
+                //public string CountryCodeValue(Record r) { }
+
+
+            }
         }
     }
 }

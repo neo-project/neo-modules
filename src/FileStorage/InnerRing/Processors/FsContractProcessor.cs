@@ -27,6 +27,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         private object lockObj = new object();
         private int mintEmitCacheSize => Settings.Default.MintEmitCacheSize;
         private ulong mintEmitThreshold => Settings.Default.MintEmitThreshold;
+        private long gasBalanceThreshold => Settings.Default.GasBalanceThreshold;
         private long mintEmitValue = Settings.Default.MintEmitValue;
         private Dictionary<string, ulong> mintEmitCache;
 
@@ -112,24 +113,21 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessDeposit(DepositEvent depositeEvent)
         {
-            if (!IsActive())
+            if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore deposit");
                 return;
             }
             try
             {
-                List<byte> coment = new List<byte>();
-                coment.AddRange(System.Text.Encoding.UTF8.GetBytes(TxLogPrefix));
-                coment.AddRange(depositeEvent.Id);
-                ContractInvoker.Mint(MorphCli, depositeEvent.To.ToArray(), Convert.ToBalancePrecision(depositeEvent.Amount), coment.ToArray());
+                ContractInvoker.Mint(MorphCli, depositeEvent.To.ToArray(), Convert.ToBalancePrecision(depositeEvent.Amount), System.Text.Encoding.UTF8.GetBytes(TxLogPrefix).Concat(depositeEvent.Id).ToArray());
             }
             catch (Exception e)
             {
                 Utility.Log(Name, LogLevel.Error, string.Format("can't transfer assets to balance contract,{0}", e.Message));
             }
 
-            var curEpoch = EpochState.EpochCounter();
+            var curEpoch = State.EpochCounter();
             var receiver = depositeEvent.To;
             lock (lockObj)
             {
@@ -138,7 +136,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Warning, string.Format("double mint emission declined,receiver:{0},last_emission:{1},current_epoch:{2}", receiver.ToString(), value.ToString(), curEpoch.ToString()));
                 var balance = MorphCli.GasBalance();
                 //todo gasBalanceThreshold
-                if (balance < 0) Utility.Log(Name, LogLevel.Warning, string.Format("gas balance threshold has been reached,balance:{0},threshold:{1}", balance, 0));
+                if (balance < gasBalanceThreshold) Utility.Log(Name, LogLevel.Warning, string.Format("gas balance threshold has been reached,balance:{0},threshold:{1}", balance, gasBalanceThreshold));
                 try
                 {
                     MorphCli.TransferGas(depositeEvent.To, mintEmitValue);
@@ -153,7 +151,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessWithdraw(WithdrawEvent withdrawEvent)
         {
-            if (!IsActive())
+            if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore withdraw");
                 return;
@@ -175,7 +173,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                ulong curEpoch = EpochCounter();
+                ulong curEpoch = State.EpochCounter();
                 //invoke
                 ContractInvoker.LockAsset(MorphCli, withdrawEvent.Id, withdrawEvent.UserAccount, lockeAccount, Convert.ToBalancePrecision(withdrawEvent.Amount), curEpoch + LockAccountLifetime);
             }
@@ -187,7 +185,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessCheque(ChequeEvent chequeEvent)
         {
-            if (!IsActive())
+            if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore cheque");
                 return;
@@ -205,7 +203,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessConfig(ConfigEvent configEvent)
         {
-            if (!IsActive())
+            if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "passive mode, ignore deposit");
                 return;

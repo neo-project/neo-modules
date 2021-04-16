@@ -1,5 +1,6 @@
 using Neo.Cryptography.ECC;
 using Neo.FileStorage.Morph.Invoker;
+using System;
 
 namespace Neo.FileStorage.InnerRing.Invoker
 {
@@ -7,14 +8,15 @@ namespace Neo.FileStorage.InnerRing.Invoker
     {
         public static void InnerRingIndex(Client client, ECPoint key, out int index, out int length)
         {
+            if (client is null) throw new Exception("client is nil");
             ECPoint[] innerRing = client.NeoFSAlphabetList();
             index = KeyPosition(key, innerRing);
             length = innerRing.Length;
         }
         public static int AlphabetIndex(Client client, ECPoint key)
         {
-            ECPoint[] alphabet = client.Committee();
-            return KeyPosition(key, alphabet);
+            if (client is null) throw new Exception("client is nil");
+            return KeyPosition(key, client.Committee());
         }
 
         private static int KeyPosition(ECPoint key, ECPoint[] list)

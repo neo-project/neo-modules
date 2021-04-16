@@ -18,7 +18,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
     [TestClass]
     public class UT_MorphContractInvoker : TestKit
     {
-        private MorphClient client;
+        private FileStorage.Morph.Invoker.Client client;
         private Wallet wallet;
 
         [TestInitialize]
@@ -26,10 +26,14 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         {
             NeoSystem system = TestBlockchain.TheNeoSystem;
             wallet = TestBlockchain.wallet;
-            client = new MorphClient()
+            system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()));
+            client = new FileStorage.Morph.Invoker.Client()
             {
-                Wallet = wallet,
-                Blockchain = system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()))
+                client = new MorphClient()
+                {
+                    wallet = wallet,
+                    system = system,
+                }
             };
         }
 
@@ -84,13 +88,6 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         }
 
         [TestMethod]
-        public void InvokeInnerRingListTest()
-        {
-            var result = MorphContractInvoker.InvokeInnerRingList(client);
-            Assert.AreEqual(result.Count, 7);
-        }
-
-        [TestMethod]
         public void InvokeUpdateStateTest()
         {
             var key = wallet.GetAccounts().ToArray()[0].GetKey().PublicKey;
@@ -108,14 +105,14 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         public void InvokeSnapshotTest()
         {
             var result = MorphContractInvoker.InvokeSnapshot(client, 0);
-            Assert.AreEqual(result.Count, 1);
+            Assert.AreEqual(result.Length, 1);
         }
 
         [TestMethod]
         public void InvokeNetMapTest()
         {
             var result = MorphContractInvoker.InvokeNetMap(client);
-            Assert.AreEqual(result.Count, 1);
+            Assert.AreEqual(result.Length, 1);
         }
 
         [TestMethod]
@@ -133,12 +130,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 PlacementPolicy = new PlacementPolicy()
             };
             byte[] sig = Neo.Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            bool result = MorphContractInvoker.InvokePut(client, new PutArgs()
-            {
-                cnr = container.ToByteArray(),
-                publicKey = key.PublicKey.ToArray(),
-                sig = sig
-            });
+            bool result = MorphContractInvoker.InvokePut(client, container.ToByteArray(), key.PublicKey.ToArray(), sig);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -149,21 +141,17 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            Neo.FileStorage.API.Refs.OwnerID ownerId = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            API.Refs.OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
             Container container = new Container()
             {
-                Version = new Neo.FileStorage.API.Refs.Version(),
+                Version = new API.Refs.Version(),
                 BasicAcl = 0,
                 Nonce = ByteString.CopyFrom(new byte[16], 0, 16),
                 OwnerId = ownerId,
                 PlacementPolicy = new PlacementPolicy()
             };
-            byte[] sig = Neo.Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            bool result = MorphContractInvoker.InvokeDelete(client, new DeleteArgs()
-            {
-                cid = container.CalCulateAndGetId.Value.ToByteArray(),
-                sig = sig
-            });
+            byte[] sig = Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
+            bool result = MorphContractInvoker.InvokeDelete(client, container.CalCulateAndGetId.Value.ToByteArray(), sig);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -174,27 +162,23 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            Neo.FileStorage.API.Refs.OwnerID ownerId = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            API.Refs.OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
             Container container = new Container()
             {
-                Version = new Neo.FileStorage.API.Refs.Version(),
+                Version = new API.Refs.Version(),
                 BasicAcl = 0,
                 Nonce = ByteString.CopyFrom(new byte[16], 0, 16),
                 OwnerId = ownerId,
                 PlacementPolicy = new PlacementPolicy()
             };
-            Neo.FileStorage.API.Acl.EACLTable eACLTable = new Neo.FileStorage.API.Acl.EACLTable()
+            API.Acl.EACLTable eACLTable = new API.Acl.EACLTable()
             {
                 ContainerId = container.CalCulateAndGetId,
-                Version = new Neo.FileStorage.API.Refs.Version(),
+                Version = new API.Refs.Version(),
             };
-            eACLTable.Records.Add(new Neo.FileStorage.API.Acl.EACLRecord());
-            byte[] sig = Neo.Cryptography.Crypto.Sign(eACLTable.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            bool result = MorphContractInvoker.InvokeSetEACL(client, new SetEACLArgs()
-            {
-                eacl = eACLTable.ToByteArray(),
-                sig = sig
-            });
+            eACLTable.Records.Add(new API.Acl.EACLRecord());
+            byte[] sig = Cryptography.Crypto.Sign(eACLTable.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
+            bool result = MorphContractInvoker.InvokeSetEACL(client, eACLTable.ToByteArray(), sig);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -214,13 +198,13 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 OwnerId = ownerId,
                 PlacementPolicy = new PlacementPolicy()
             };
-            Neo.FileStorage.API.Acl.EACLTable eACLTable = new Neo.FileStorage.API.Acl.EACLTable()
+            API.Acl.EACLTable eACLTable = new API.Acl.EACLTable()
             {
                 ContainerId = container.CalCulateAndGetId,
-                Version = new Neo.FileStorage.API.Refs.Version(),
+                Version = new API.Refs.Version(),
             };
-            eACLTable.Records.Add(new Neo.FileStorage.API.Acl.EACLRecord());
-            byte[] sig = Neo.Cryptography.Crypto.Sign(eACLTable.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
+            eACLTable.Records.Add(new API.Acl.EACLRecord());
+            byte[] sig = Cryptography.Crypto.Sign(eACLTable.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
             EACLValues result = MorphContractInvoker.InvokeGetEACL(client, container.CalCulateAndGetId.Value.ToByteArray());
             Assert.IsNotNull(result);
             Assert.AreEqual(result.eacl.ToHexString(), eACLTable.ToByteArray().ToHexString());
@@ -231,10 +215,10 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            Neo.FileStorage.API.Refs.OwnerID ownerId = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            API.Refs.OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
             Container container = new Container()
             {
-                Version = new Neo.FileStorage.API.Refs.Version(),
+                Version = new API.Refs.Version(),
                 BasicAcl = 0,
                 Nonce = ByteString.CopyFrom(new byte[16], 0, 16),
                 OwnerId = ownerId,
@@ -249,10 +233,10 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            Neo.FileStorage.API.Refs.OwnerID ownerId = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            API.Refs.OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
             Container container = new Container()
             {
-                Version = new Neo.FileStorage.API.Refs.Version(),
+                Version = new API.Refs.Version(),
                 BasicAcl = 0,
                 Nonce = ByteString.CopyFrom(new byte[16], 0, 16),
                 OwnerId = ownerId,

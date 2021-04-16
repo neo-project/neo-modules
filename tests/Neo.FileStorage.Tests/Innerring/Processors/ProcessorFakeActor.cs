@@ -1,5 +1,6 @@
 using Akka.Actor;
 using Neo.FileStorage.Morph.Event;
+using Neo.FileStorage.Utils;
 using Neo.Network.P2P.Payloads;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
@@ -12,7 +13,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             {
                 Sender.Tell(new OperationResult1() { tx = create });
             });
-            Receive<Neo.Plugins.util.WorkerPool.NewTask>(create =>
+            Receive<WorkerPool.NewTask>(create =>
             {
                 Sender.Tell(new OperationResult2() { nt = create });
             });
@@ -23,7 +24,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         }
 
         public class OperationResult1 { public Transaction tx; };
-        public class OperationResult2 { public Neo.Plugins.util.WorkerPool.NewTask nt; };
+        public class OperationResult2 { public WorkerPool.NewTask nt; };
         public class OperationResult3 { public IContractEvent ce; };
     }
 }

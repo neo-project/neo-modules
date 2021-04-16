@@ -57,7 +57,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessContainerPut(ContainerPutEvent putEvent)
         {
-            if (!IsActive())
+            if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore container put");
                 return;
@@ -82,7 +82,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                ContractInvoker.RegisterContainer(MainCli, putEvent.PublicKey, putEvent.RawContainer, putEvent.Signature);
+                ContractInvoker.RegisterContainer(MorphCli, putEvent.PublicKey, putEvent.RawContainer, putEvent.Signature);
             }
             catch (Exception e)
             {
@@ -92,14 +92,14 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessContainerDelete(ContainerDeleteEvent deleteEvent)
         {
-            if (!IsActive())
+            if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore container put");
                 return;
             }
             try
             {
-                ContractInvoker.RemoveContainer(MainCli, deleteEvent.ContainerID, deleteEvent.Signature);
+                ContractInvoker.RemoveContainer(MorphCli, deleteEvent.ContainerID, deleteEvent.Signature);
             }
             catch (Exception e)
             {

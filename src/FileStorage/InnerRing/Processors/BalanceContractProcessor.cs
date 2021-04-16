@@ -54,7 +54,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessLock(LockEvent lockEvent)
         {
-            if (!IsActive())
+            if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore balance lock");
                 return;

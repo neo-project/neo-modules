@@ -28,7 +28,7 @@ namespace Neo.FileStorage.InnerRing
     /// All events will be distributed according to type.(2 event types:MainContractEvent and MorphContractEvent)
     /// Life process:Start--->Assignment event--->Stop
     /// </summary>
-    public class InnerRingService : UntypedActor, IActiveState, IEpochState, IEpochTimerReseter, IIndexer, IReporter, IVoter
+    public class InnerRingService : UntypedActor, IState
     {
         public class MainContractEvent { public NotifyEventArgs notify; };
         public class MorphContractEvent { public NotifyEventArgs notify; };
@@ -52,9 +52,7 @@ namespace Neo.FileStorage.InnerRing
         private RpcClientCache clientCache;
         private readonly NEP6Wallet wallet;
         private long epochCounter;
-        private int indexer = -1;
-        private int indexerSize = 0;
-
+        private InnerRingIndexer statusIndex;
         private Fixed8ConverterUtil convert;
 
         /// <summary>
@@ -103,41 +101,39 @@ namespace Neo.FileStorage.InnerRing
             {
                 morphClient = pMorphClient;
             }
+            statusIndex = new InnerRingIndexer(morphClient,Settings.Default.IndexerTimeout);
+
             //Build processor of contract.
             balanceContractProcessor = new BalanceContractProcessor()
             {
                 MainCli = mainNetClient,
                 Convert = convert,
-                ActiveState = this,
+                State = this,
                 WorkPool = system.ActorSystem.ActorOf(WorkerPool.Props("BalanceContract Processor", Settings.Default.BalanceContractWorkersSize))
             };
             containerContractProcessor = new ContainerContractProcessor()
             {
                 MorphCli = morphClient,
-                ActiveState = this,
+                State = this,
                 WorkPool = system.ActorSystem.ActorOf(WorkerPool.Props("ContainerContract Processor", Settings.Default.ContainerContractWorkersSize))
             };
             fsContractProcessor = new FsContractProcessor()
             {
                 MorphCli = morphClient,
                 Convert = convert,
-                ActiveState = this,
-                EpochState = this,
+                State = this,
                 WorkPool = system.ActorSystem.ActorOf(WorkerPool.Props("FsContract Processor", Settings.Default.FsContractWorkersSize))
             };
             netMapContractProcessor = new NetMapContractProcessor()
             {
                 MorphCli = morphClient,
-                ActiveState = this,
-                EpochState = this,
-                EpochTimerReseter = this,
+                State = this,
                 NetmapSnapshot = new NetMapContractProcessor.CleanupTable(Settings.Default.CleanupEnabled, Settings.Default.CleanupThreshold),
                 WorkPool = system.ActorSystem.ActorOf(WorkerPool.Props("NetMapContract Processor", Settings.Default.NetmapContractWorkersSize))
             };
             alphabetContractProcessor = new AlphabetContractProcessor()
             {
                 MorphCli = morphClient,
-                Indexer = this,
                 StorageEmission = Settings.Default.StorageEmission,
                 WorkPool = system.ActorSystem.ActorOf(WorkerPool.Props("AlphabetContract Processor", Settings.Default.AlphabetContractWorkersSize))
             };
@@ -147,7 +143,6 @@ namespace Neo.FileStorage.InnerRing
             auditContractProcessor = new AuditContractProcessor()
             {
                 MorphCli = morphClient,
-                Indexer = this,
                 ClientCache = clientCache,
                 TaskManager = auditTaskManager,
                 reporter = this,
@@ -231,7 +226,7 @@ namespace Neo.FileStorage.InnerRing
             }
             catch (Exception e)
             {
-                Neo.Utility.Log("", LogLevel.Error, e.Message);
+                Utility.Log("", LogLevel.Error, e.Message);
                 return;
             }
         }
@@ -254,9 +249,9 @@ namespace Neo.FileStorage.InnerRing
             morphEventListener.Tell(new NewContractEvent() { notify = notify });
         }
 
-        public bool IsActive()
+        public ulong EpochCounter()
         {
-            return Index() >= 0;
+            return Convert.ToUInt64(epochCounter);
         }
 
         public void SetEpochCounter(ulong epoch)
@@ -265,46 +260,41 @@ namespace Neo.FileStorage.InnerRing
             Interlocked.Exchange(ref epochCounter, temp);
         }
 
-        public int Index()
+        public bool IsActive()
         {
-            return indexer;
+            return InnerRingIndex() >= 0;
         }
 
-        public void SetIndexer(int index)
+        public bool IsAlphabet()
         {
-            Interlocked.Exchange(ref indexer, index);
+            return AlphabetIndex() >= 0;
         }
 
-        public void SetInnerRingSize(int size)
+        public int AlphabetIndex()
         {
-            Interlocked.Exchange(ref indexerSize, size);
+            return statusIndex.AlphabetIndex();
+        }
+
+        public int InnerRingIndex()
+        {
+            return statusIndex.InnerRingIndex();
         }
 
         public int InnerRingSize()
         {
-            return indexerSize;
-        }
-
-        public ulong EpochCounter()
-        {
-            return Convert.ToUInt64(epochCounter);
-        }
-
-        public void ResetEpochTimer()
-        {
-            timer.Tell(new Timers.Timer() { contractEvent = new NewEpochTickEvent() { } });
+            return statusIndex.InnerRingSize();
         }
 
         public void VoteForSidechainValidator(ECPoint[] validators)
         {
-            if (Index() < 0 || Index() >= Settings.Default.AlphabetContractHash.Length)
+            if (InnerRingIndex() < 0 || InnerRingIndex() >= Settings.Default.AlphabetContractHash.Length)
             {
-                Neo.Utility.Log("", LogLevel.Info, "ignore validator vote: node not in alphabet range");
+                Utility.Log("", LogLevel.Info, "ignore validator vote: node not in alphabet range");
                 return;
             }
             if (validators.Length == 0)
             {
-                Neo.Utility.Log("", LogLevel.Info, "ignore validator vote: empty validators list");
+                Utility.Log("", LogLevel.Info, "ignore validator vote: empty validators list");
                 return;
             }
             var epoch = EpochCounter();
@@ -316,7 +306,7 @@ namespace Neo.FileStorage.InnerRing
                 }
                 catch
                 {
-                    Neo.Utility.Log("", LogLevel.Info, string.Format("can't invoke vote method in alphabet contract,alphabet_index:{0},epoch:{1}}", i, epoch));
+                    Utility.Log("", LogLevel.Info, string.Format("can't invoke vote method in alphabet contract,alphabet_index:{0},epoch:{1}}", i, epoch));
                 }
             }
         }
@@ -333,6 +323,11 @@ namespace Neo.FileStorage.InnerRing
             DataAuditResult res = r.Result();
             res.PublicKey = ByteString.CopyFrom(accounts.ToArray()[0].GetKey().PublicKey.ToArray());
             MorphContractInvoker.InvokePutAuditResult(morphClient, res.ToByteArray());
+        }
+
+        public void ResetEpochTimer()
+        {
+            timer.Tell(new Timers.Timer() { contractEvent = new NewEpochTickEvent() { } });
         }
 
         public static Props Props(NeoSystem system, NEP6Wallet pwallet = null, Client pMainNetClient = null, Client pMorphClient = null)

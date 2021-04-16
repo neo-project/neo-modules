@@ -1,19 +1,20 @@
 using Akka.Actor;
+using Neo.FileStorage.API.Audit;
+using Neo.FileStorage.API.Container;
+using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Morph.Event;
+using System.Numerics;
 using System.Threading.Tasks;
 using static Neo.FileStorage.InnerRing.Events.MorphEvent;
 using static Neo.FileStorage.Utils.WorkerPool;
 
 namespace Neo.FileStorage.InnerRing.Processors
 {
-    public class SettlementProcessor
+    public class SettlementProcessor : BaseProcessor, ResultStorage
     {
-        private string name = "SettlementProcessor";
-        public IActiveState ActiveState;
-        public IActorRef WorkPool;
+        public override string Name => "SettlementProcessor";
 
-        public string Name { get => name; set => name = value; }
         public void HandleAuditEvent(IContractEvent morphEvent)
         {
             AuditEvent auditEvent = (AuditEvent)morphEvent;
@@ -33,7 +34,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             BasicIncomeCollectEvent basicIncomeCollectEvent = (BasicIncomeCollectEvent)morphEvent;
             var epoch = basicIncomeCollectEvent.epoch;
-            if (!ActiveState.IsActive())
+            if (!State.IsActive())
             {
                 Utility.Log(Name, LogLevel.Info, "passive mode, ignore income collection event");
             }
@@ -45,7 +46,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             BasicIncomeDistributeEvent basicIncomeDistributeEvent = (BasicIncomeDistributeEvent)morphEvent;
             var epoch = basicIncomeDistributeEvent.epoch;
-            if (!ActiveState.IsActive())
+            if (!State.IsActive())
             {
                 Utility.Log(Name, LogLevel.Info, "passive mode, ignore income distribution event");
             }
@@ -87,6 +88,11 @@ namespace Neo.FileStorage.InnerRing.Processors
             return null;
         }
 
+        public DataAuditResult AuditResultsForEpoch(ulong epoch)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public class IncomeSettlementContext
         {
             public ulong epoch;
@@ -106,6 +112,8 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public class Calculator
         {
+            public ResultStorage ResultStorage;
+
             public void Calculate(ulong epoch)
             {
                 Utility.Log("Calculator", LogLevel.Info, string.Format("current epoch,{0}", epoch));
@@ -113,5 +121,29 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log("Calculator", LogLevel.Debug, "getting results for the previous epoch");
             }
         }
+    }
+
+    public interface ResultStorage {
+        public DataAuditResult AuditResultsForEpoch(ulong epoch);
+    }
+
+    public interface ContainerStorage
+    {
+        public Container ContainerInfo(ContainerID containerID);
+    }
+
+    public interface PlacementCalculator
+    {
+        public NodeInfo[] ContainerNodes(ulong epoch,ContainerID containerID);
+    }
+
+    public interface AccountStorage
+    {
+        public OwnerID ResolveKey(NodeInfo nodeInfo);
+    }
+
+    public interface Exchanger
+    {
+        public void Transfer(OwnerID sender, OwnerID recipient, BigInteger amount);
     }
 }

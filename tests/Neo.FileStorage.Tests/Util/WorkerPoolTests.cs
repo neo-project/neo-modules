@@ -1,10 +1,10 @@
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Plugins.util;
 using System.Threading.Tasks;
 using System;
-using static Neo.Plugins.util.WorkerPool;
+using Neo.FileStorage.Utils;
+using static Neo.FileStorage.Utils.WorkerPool;
 
 namespace Neo.FileStorage.Tests.Util
 {

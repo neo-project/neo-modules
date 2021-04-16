@@ -20,17 +20,18 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         {
             system = TestBlockchain.TheNeoSystem;
             wallet = TestBlockchain.wallet;
+            system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()));
             client = new MorphClient()
             {
-                Wallet = wallet,
-                Blockchain = system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()))
+                wallet = wallet,
+                system = system
             };
         }
 
         [TestMethod]
         public void InvokeLocalFunctionTest()
         {
-            InvokeResult result = client.InvokeLocalFunction(NativeContract.GAS.Hash, "balanceOf", UInt160.Zero);
+            InvokeResult result = client.TestInvoke(NativeContract.GAS.Hash, "balanceOf", UInt160.Zero);
             Assert.AreEqual(result.State, VM.VMState.HALT);
             Assert.AreEqual(result.GasConsumed, 1999390);
             Assert.AreEqual(result.ResultStack[0].GetInteger(), 0);
@@ -39,7 +40,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         [TestMethod]
         public void InvokeFunctionTest()
         {
-            client.InvokeFunction(NativeContract.GAS.Hash, "balanceOf", 0, UInt160.Zero);
+            client.Invoke(out _, NativeContract.GAS.Hash, "balanceOf", 0, UInt160.Zero);
             var result = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.IsNotNull(result);
         }

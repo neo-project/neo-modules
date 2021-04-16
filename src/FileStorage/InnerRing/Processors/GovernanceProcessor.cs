@@ -22,7 +22,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessAlphabetSync()
         {
-            if (!ActiveState.IsActive())
+            if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore alphabet sync");
                 return;
@@ -37,11 +37,12 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             Utility.Log(Name, LogLevel.Info, "alphabet list has been changed, starting update");
             Array.Sort(newAlphabet);
-            voter.VoteForSidechainValidator(newAlphabet);
+            State.VoteForSidechainValidator(newAlphabet);
             ECPoint[] innerRing = MorphCli.NeoFSAlphabetList();
             ECPoint[] newInnerRing = UpdateInnerRing(innerRing, sidechainAlphabet, newAlphabet);
             Array.Sort(newInnerRing);
-            //todo
+            //to do
+            //MorphCli.Update
         }
 
         private ECPoint[] NewAlphabetList(ECPoint[] sidechain, ECPoint[] mainnet)

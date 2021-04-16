@@ -40,6 +40,9 @@
         "threshold": 100,
         "value": 2
       },
+      "gas": {
+        "balance_threshold": 100
+      },
       "storage": {
         "amount": 100000000
       }
@@ -65,6 +68,9 @@
       "task": {
         "queue_capacity": 100
       }
+    },
+    "indexer": {
+      "cache_timeout": 100
     }
   }
 }

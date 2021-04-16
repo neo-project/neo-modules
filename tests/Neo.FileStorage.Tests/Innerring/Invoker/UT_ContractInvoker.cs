@@ -2,7 +2,6 @@ using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Cryptography.ECC;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.InnerRing.Invoker;
@@ -20,18 +19,21 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
     [TestClass]
     public class UT_ContractInvoker : TestKit
     {
-        private MorphClient morphclient;
+        private Client morphclient;
         private Wallet wallet;
 
         [TestInitialize]
         public void TestSetup()
         {
             NeoSystem system = TestBlockchain.TheNeoSystem;
+            system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()));
             wallet = TestBlockchain.wallet;
-            morphclient = new MorphClient()
-            {
-                Wallet = wallet,
-                Blockchain = system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()))
+            morphclient = new Client() {
+                client = new MorphClient()
+                {
+                    wallet = wallet,
+                    system = system
+                }
             };
         }
 
@@ -160,17 +162,6 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
         }
 
         [TestMethod]
-        public void InvokeUpdateInnerRingTest()
-        {
-            IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            KeyPair key = accounts.ToArray()[0].GetKey();
-            bool result = ContractInvoker.UpdateInnerRing(morphclient, new ECPoint[] { key.PublicKey });
-            var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.AreEqual(result, true);
-            Assert.IsNotNull(tx);
-        }
-
-        [TestMethod]
         public void InvokeNetmapSnapshotTest()
         {
             NodeInfo[] result = ContractInvoker.NetmapSnapshot(morphclient);
@@ -184,25 +175,6 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
-        }
-
-        [TestMethod]
-        public void InvokeIsInnerRingTest()
-        {
-            IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            KeyPair key = accounts.ToArray()[0].GetKey();
-            bool result = ContractInvoker.IsInnerRing(morphclient, key.PublicKey);
-            Assert.AreEqual(result, true);
-        }
-
-        [TestMethod]
-        public void InvokeInnerRingIndexTest()
-        {
-            IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            KeyPair key = accounts.ToArray()[0].GetKey();
-            int result = ContractInvoker.InnerRingIndex(morphclient, key.PublicKey, out int size);
-            Assert.AreEqual(result, 0);
-            Assert.AreEqual(size, 7);
         }
 
         [TestMethod]

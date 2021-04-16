@@ -2,7 +2,7 @@ using Neo.FileStorage.InnerRing.Processors;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
-    public class EpochState : IEpochState
+    public class EpochState //: IEpochState
     {
         public ulong EpochCounter()
         {

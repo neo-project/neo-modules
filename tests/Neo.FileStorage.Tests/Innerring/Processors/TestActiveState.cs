@@ -2,7 +2,7 @@ using Neo.FileStorage.InnerRing.Processors;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
-    public class TestActiveState : IActiveState
+    public class TestActiveState //: IActiveState
     {
         private bool state = false;
 

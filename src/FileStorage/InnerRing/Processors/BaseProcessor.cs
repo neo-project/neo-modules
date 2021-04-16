@@ -16,37 +16,15 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         private Client morphCli;
         private Client mainCli;
-        public IIndexer indexer;
-        public IActiveState activeState;
+        public IState state;
         public IActorRef workPool;
-        public IEpochState epochState;
-        public IVoter voter;
         public ProtocolSettings protocolSettings;
 
         public Client MainCli { get => mainCli; set => mainCli = value; }
         public Client MorphCli { get => morphCli; set => morphCli = value; }
-        public IIndexer Indexer { get => indexer; set => indexer = value; }
-        public IActiveState ActiveState { get => activeState; set => activeState = value; }
+        public IState State { get => state; set => state = value; }
         public IActorRef WorkPool { get => workPool; set => workPool = value; }
-        public IEpochState EpochState { get => epochState; set => epochState = value; }
-        public IVoter Voter { get => voter; set => voter = value; }
         public ProtocolSettings ProtocolSettings { get => protocolSettings; set => protocolSettings = value; }
-
-
-        public virtual bool IsActive()
-        {
-            return ActiveState.IsActive();
-        }
-
-        public virtual ulong EpochCounter()
-        {
-            return EpochState.EpochCounter();
-        }
-
-        public virtual void SetEpochCounter(ulong epoch)
-        {
-            EpochState.SetEpochCounter(epoch);
-        }
 
         public virtual HandlerInfo[] ListenerHandlers()
         {
