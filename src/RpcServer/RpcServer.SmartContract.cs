@@ -110,7 +110,10 @@ namespace Neo.Plugins
                         if (max <= 0) throw new InvalidOperationException();
                     }
 
-                    return ToJson(resultList, ref max);
+                    JObject ret = new();
+                    ret["type"] = "InteropInterface";
+                    ret["value"] = ToJson(resultList, ref max);
+                    return ret;
                 }
             }
 
