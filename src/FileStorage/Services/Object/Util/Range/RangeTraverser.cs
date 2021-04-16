@@ -1,6 +1,6 @@
 using Neo.FileStorage.API.Refs;
 using System;
-using V2Object = Neo.FileStorage.API.Object.Object;
+using FSObject = Neo.FileStorage.API.Object.Object;
 using V2Range = Neo.FileStorage.API.Object.Range;
 
 namespace Neo.FileStorage.Services.Object.Util
@@ -10,7 +10,7 @@ namespace Neo.FileStorage.Services.Object.Util
         private RangeChain chain;
         private RangeBounds seekBounds;
 
-        public RangeTraverser(ulong originSize, V2Object rightElement, V2Range rngSeek)
+        public RangeTraverser(ulong originSize, FSObject rightElement, V2Range rngSeek)
         {
             var right = new RangeChain()
             {
@@ -47,7 +47,7 @@ namespace Neo.FileStorage.Services.Object.Util
             return (id, range);
         }
 
-        public void PushHeader(V2Object obj)
+        public void PushHeader(FSObject obj)
         {
             var id = obj.ObjectId;
             if (!id.Equals(this.chain.Prev.Id))

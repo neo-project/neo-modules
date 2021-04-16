@@ -3,60 +3,51 @@ using Neo.FileStorage.API.Client.ObjectParams;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage;
-using Neo.FileStorage.Network.Cache;
-using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.ObjectManager.Placement;
-using System;
-using V2Client = Neo.FileStorage.API.Client.Client;
-using V2Object = Neo.FileStorage.API.Object.Object;
-using V2Range = Neo.FileStorage.API.Object.Range;
-using Neo.SmartContract.Native;
 using Neo.FileStorage.Services.Object.Get.Writer;
-using System.IO;
 using Neo.FileStorage.Utils;
-using System.Linq;
+using System;
 using System.Collections.Generic;
-using System.Drawing;
+using System.Linq;
+using static Neo.Utility;
+using FSClient = Neo.FileStorage.API.Client.Client;
+using FSObject = Neo.FileStorage.API.Object.Object;
+using FSRange = Neo.FileStorage.API.Object.Range;
+using Neo.FileStorage.Morph.Invoker;
 
 namespace Neo.FileStorage.Services.Object.Get
 {
-    public class Executor
+    public partial class ExecuteContext
     {
         public GetCommonPrm Prm;
         public GetService GetService;
-        public V2Range Range;
+        public FSRange Range;
         public bool HeadOnly;
+
+        private ulong currentEpoch;
         private bool assembly;
-        private V2Object collectedObject;
+        private FSObject collectedObject;
         private SplitInfo splitInfo;
         private Traverser traverser;
         private ulong currentOffset;
 
         private bool ShouldWriteHeader => HeadOnly || Range is null;
         private bool ShouldWritePayload => !HeadOnly;
-        private bool CanAsseble => assembly && !Prm.Raw && !HeadOnly;
+        private bool CanAssemble => assembly && !Prm.Raw && !HeadOnly;
 
         public void Execute()
         {
-            ExecuteLocal();
-        }
-
-        private void ExecuteLocal()
-        {
-            collectedObject = GetService.LocalStorage.Get(Prm.Address);
-            WriteCollectedObject();
-        }
-
-        private void MergeSplitInfo(SplitInfo info)
-        {
-            if (splitInfo is null)
+            try
             {
-                splitInfo = info;
-                return;
+                ExecuteLocal();
             }
-            if (info.LastPart != null) splitInfo.LastPart = info.LastPart;
-            if (info.Link != null) splitInfo.Link = info.Link;
-            if (info.SplitId != null) splitInfo.SplitId = info.SplitId;
+            catch (Exception le)
+            {
+                Log("GetExecutor", LogLevel.Debug, "local:" + le.Message);
+                if (Prm.Local)
+                    throw;
+                ExecuteOnContainer();
+            }
         }
 
         private (ObjectID, List<ObjectID>) InitFromChild(ObjectID oid)
@@ -95,7 +86,7 @@ namespace Neo.FileStorage.Services.Object.Get
             return (child.Header.Split.Previous, child.Header.Split.Children.ToList());
         }
 
-        private V2Object GetChild(ObjectID oid, V2Range range, bool with_header)
+        private FSObject GetChild(ObjectID oid, FSRange range, bool with_header)
         {
             var writer = new SimpleObjectWriter();
             var prm = new GetCommonPrm
@@ -118,7 +109,7 @@ namespace Neo.FileStorage.Services.Object.Get
             return child;
         }
 
-        private bool IsChild(V2Object obj)
+        private bool IsChild(FSObject obj)
         {
             var parent = obj.Parent;
             return parent != null && parent.Address == obj.Address;
@@ -126,12 +117,12 @@ namespace Neo.FileStorage.Services.Object.Get
 
         private void Assemble()
         {
-            if (!CanAsseble)
+            if (!CanAssemble)
             {
-                Utility.Log(nameof(Executor), LogLevel.Debug, "can not assembly the object");
+                Log(nameof(ExecuteContext), LogLevel.Debug, "can not assembly the object");
                 return;
             }
-            Utility.Log(nameof(Executor), LogLevel.Debug, "trying to assemble the object...");
+            Log(nameof(ExecuteContext), LogLevel.Debug, "trying to assemble the object...");
             var child_id = splitInfo.Link;
             if (child_id is null)
                 child_id = splitInfo.LastPart;
@@ -167,16 +158,16 @@ namespace Neo.FileStorage.Services.Object.Get
             }
             else
             {
-                Utility.Log(nameof(Executor), LogLevel.Debug, " could not init parent from child");
+                Log(nameof(ExecuteContext), LogLevel.Debug, " could not init parent from child");
             }
         }
 
-        private void OvertakePayloadDirectly(List<ObjectID> children, List<V2Range> ranges, bool check_right)
+        private void OvertakePayloadDirectly(List<ObjectID> children, List<FSRange> ranges, bool check_right)
         {
             var with_range = 0 < ranges.Count && Range != null;
             for (int i = 0; i < children.Count; i++)
             {
-                V2Range r = null;
+                FSRange r = null;
                 if (with_range) r = ranges[i];
                 var child = GetChild(children[i], r, !with_range && check_right);
                 if (child is null) return;
@@ -186,7 +177,7 @@ namespace Neo.FileStorage.Services.Object.Get
 
         private bool OvertakePayloadInReverse(ObjectID prev)
         {
-            if (BuildChainInReverse(prev, out List<ObjectID> oids, out List<V2Range> ranges))
+            if (BuildChainInReverse(prev, out List<ObjectID> oids, out List<FSRange> ranges))
             {
                 if (0 < ranges.Count) ranges.Reverse();
                 OvertakePayloadDirectly(oids, ranges, false);
@@ -194,7 +185,7 @@ namespace Neo.FileStorage.Services.Object.Get
             return false;
         }
 
-        private V2Object HeadChild(ObjectID oid)
+        private FSObject HeadChild(ObjectID oid)
         {
             var child_addr = new Address
             {
@@ -212,18 +203,18 @@ namespace Neo.FileStorage.Services.Object.Get
             var child = writer.Obj;
             if (child.Parent.ObjectId != null && IsChild(child))
             {
-                Utility.Log(nameof(Executor), LogLevel.Info, "parent address in child object differs");
+                Log(nameof(ExecuteContext), LogLevel.Info, "parent address in child object differs");
                 return null;
             }
             return child;
         }
 
-        private bool BuildChainInReverse(ObjectID prev, out List<ObjectID> oids, out List<V2Range> ranges)
+        private bool BuildChainInReverse(ObjectID prev, out List<ObjectID> oids, out List<FSRange> ranges)
         {
             var from = Range.Offset;
             var to = from + Range.Length;
             oids = new List<ObjectID>();
-            ranges = new List<V2Range>();
+            ranges = new List<FSRange>();
             while (prev != null)
             {
                 if (currentOffset < from) break;
@@ -243,7 +234,7 @@ namespace Neo.FileStorage.Services.Object.Get
                         }
                         if (to < currentOffset + off + sz)
                             sz = to - off - currentOffset;
-                        var r = new V2Range
+                        var r = new FSRange
                         {
                             Offset = off,
                             Length = sz,
@@ -270,65 +261,29 @@ namespace Neo.FileStorage.Services.Object.Get
         private bool WriteCollectedHeader()
         {
             if (!ShouldWriteHeader) return true;
-            var cut_obj = V2Object.Parser.ParseFrom(collectedObject.ToByteArray());
+            var cut_obj = FSObject.Parser.ParseFrom(collectedObject.ToByteArray());
             cut_obj.Payload = null;
             Prm.Writer.WriteHeader(cut_obj);
             return true;
         }
 
-        private bool WriteObjectPayload(V2Object obj)
+        private bool WriteObjectPayload(FSObject obj)
         {
             if (!ShouldWritePayload) return true;
             Prm.Writer.WriteChunk(obj.Payload.ToByteArray());
             return true;
         }
 
-        private void ExecuteOnContainer()
-        {
-            if (Prm.Local) return;
-            traverser = GenerateTraverser(Prm.Address);
-            while (true)
-            {
-                var addrs = traverser.Next();
-                if (addrs.Length == 0)
-                {
-                    Utility.Log(nameof(Executor), LogLevel.Debug, " no more nodes, abort placement iteration");
-                    break;
-                }
-                foreach (var addr in addrs)
-                {
-                    if (ProcessNode(addr))
-                    {
-                        Utility.Log(nameof(ExecuteOnContainer), LogLevel.Debug, " completing the operation");
-                        break;
-                    }
-                }
-            }
-        }
-
-        private bool ProcessNode(Network.Address address)
-        {
-            var client = RemoteClient(address);
-            try
-            {
-                collectedObject = client.GetObject(new GetObjectParams { Address = Prm.Address, Raw = Prm.Raw }, context: Prm.Context).Result;
-            }
-            catch (Exception e)
-            {
-
-            }
-            return true;
-        }
-
-        private V2Client RemoteClient(Network.Address address)
-        {
-            var iport = address.IPAddressString();
-            return GetService.ClientCache.GetClient(Prm.Key, iport);
-        }
-
         private Traverser GenerateTraverser(Address address)
         {
             return GetService.TraverserGenerator.GenerateTraverser(address);
+        }
+
+        private void InitEpoch()
+        {
+            currentEpoch = Prm.NetmapEpoch;
+            if (0 < currentEpoch) return;
+            currentEpoch = MorphContractInvoker.InvokeEpoch(GetService.MorphClient);
         }
     }
 }

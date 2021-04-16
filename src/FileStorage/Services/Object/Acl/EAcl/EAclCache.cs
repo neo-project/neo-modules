@@ -21,12 +21,10 @@ namespace Neo.FileStorage.Services.Object.Acl
         {
             cache = new(size, TimeSpan.FromMilliseconds(ttl), cid =>
              {
-                 var result = MorphContractInvoker.InvokeGetEACL(client, cid.ToByteArray());//TODO: invoke arge type and return use EAclWithSignature
-                 var signature = Signature.Parser.ParseFrom(result.sig);
-                 var eacl = EACLTable.Parser.ParseFrom(result.eacl);
-                 if (!signature.VerifyMessagePart(eacl))
+                 var result = MorphContractInvoker.InvokeGetEACL(client, cid);//TODO: invoke arge type and return use EAclWithSignature
+                 if (!result.Signature.VerifyMessagePart(result.Table))
                      throw new InvalidOperationException("incorrect signature of eacl from morph client");
-                 return eacl;
+                 return result.Table;
              });
         }
 

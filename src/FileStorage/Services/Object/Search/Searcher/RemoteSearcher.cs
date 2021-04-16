@@ -22,7 +22,7 @@ namespace Neo.FileStorage.Services.Object.Search.Searcher
             if (key is null)
                 throw new InvalidOperationException(nameof(RemoteSearcher) + " could not receive private key");
             var addr = node.IPAddressString();
-            var client = clientCache.GetClient(key, addr);
+            var client = clientCache.Get(addr);
             if (client is null)
                 throw new InvalidOperationException(nameof(RemoteSearcher) + $" could not create SDK client {addr}");
             var source = new CancellationTokenSource();

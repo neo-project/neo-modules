@@ -4,13 +4,13 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Services.Object.Get;
 using Neo.FileStorage.Services.Object.Get.Writer;
-using V2Object = Neo.FileStorage.API.Object.Object;
+using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Delete.Execute
 {
     public static class Util
     {
-        public static V2Object HeadAddress(this GetService service, ExecuteContext context, Address address)
+        public static FSObject HeadAddress(this GetService service, ExecuteContext context, Address address)
         {
             var writer = new SimpleObjectWriter();
             var prm = new HeadPrm
@@ -21,7 +21,8 @@ namespace Neo.FileStorage.Services.Object.Delete.Execute
                 Short = false,
             };
             prm.WithCommonPrm(context.Prm);
-            return service.Head(prm);
+            service.Head(prm);
+            return writer.Obj;
         }
 
         public static SplitInfo SplitInfo(this GetService service, ExecuteContext context)

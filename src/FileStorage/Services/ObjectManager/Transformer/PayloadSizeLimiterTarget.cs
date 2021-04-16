@@ -6,7 +6,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using static Neo.FileStorage.API.Object.Header.Types;
 using V2Attribute = Neo.FileStorage.API.Object.Header.Types.Attribute;
-using V2Object = Neo.FileStorage.API.Object.Object;
+using FSObject = Neo.FileStorage.API.Object.Object;
 
 
 namespace Neo.FileStorage.Services.ObjectManager.Transformer
@@ -16,8 +16,8 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
         private ulong maxSize;
         private ulong written;
         private IObjectTarget target;
-        private V2Object current;
-        private V2Object parent;
+        private FSObject current;
+        private FSObject parent;
         private PayloadChecksumHasher[] currentHashers;
         private PayloadChecksumHasher[] parentHashers;
         private ObjectID[] previous;
@@ -33,7 +33,7 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
             splitID = Guid.NewGuid();
         }
 
-        public void WriteHeader(V2Object obj)
+        public void WriteHeader(FSObject obj)
         {
             current = FromObject(obj);
             Initialize();
@@ -69,9 +69,9 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
             InitializeCurrent();
         }
 
-        private V2Object FromObject(V2Object obj)
+        private FSObject FromObject(FSObject obj)
         {
-            var res = new V2Object();
+            var res = new FSObject();
             res.Header.ContainerId = obj.Header.ContainerId;
             res.Header.OwnerId = obj.Header.OwnerId;
             res.Header.Attributes.AddRange(obj.Header.Attributes);
@@ -94,7 +94,7 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
             // compose multi-writer from target and all payload hashers
         }
 
-        private PayloadChecksumHasher[] PayloadHashersForObject(V2Object obj)
+        private PayloadChecksumHasher[] PayloadHashersForObject(FSObject obj)
         {
             return new PayloadChecksumHasher[] { }; // TODO, need TzHash dependency
         }

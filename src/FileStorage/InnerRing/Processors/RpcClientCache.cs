@@ -25,7 +25,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         public Client Get(string address)
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            return clientCache.GetClient(accounts.ToArray()[0].GetKey().PrivateKey.LoadPrivateKey(), address);
+            return clientCache.Get(address); //TODO: fix no key when get client cache
         }
 
         public StorageGroup GetStorageGroup(AuditTask task, ObjectID id)
@@ -66,7 +66,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Neo.Utility.Log("RpcClientCache", LogLevel.Warning, string.Format("can't setup remote connection,address:{0},errot:{1}", addr, e.Message));
                     continue;
                 }
-                Neo.FileStorage.API.Object.Object obj;
+                API.Object.Object obj;
                 try
                 {
                     var source = new CancellationTokenSource();

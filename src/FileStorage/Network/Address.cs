@@ -52,8 +52,7 @@ namespace Neo.FileStorage.Network
         // IPAddrFromMultiaddr converts "/dns4/localhost/tcp/8080" to "192.168.0.1:8080".
         public static string IPAddrFromMultiaddr(string multiaddr)
         {
-            var address = AddressFromString(multiaddr);
-            return address.IPAddressString();
+            return AddressFromString(multiaddr).IPAddressString();
         }
     }
 

@@ -20,9 +20,8 @@ namespace Neo.FileStorage.Services.Container
 
         public DeleteResponse Delete(DeleteRequest request)
         {
-            byte[] cid = request.Body.ContainerId.ToByteArray();
             byte[] sig = request.Body.Signature.Sign.ToByteArray();
-            bool ok = MorphContractInvoker.InvokeDelete(MorphClient, cid, sig);//TODO: handle error
+            bool ok = MorphContractInvoker.InvokeDelete(MorphClient, request.Body.ContainerId, sig);//TODO: handle error
             var resp = new DeleteResponse
             {
                 Body = new DeleteResponse.Types.Body { }
@@ -32,13 +31,12 @@ namespace Neo.FileStorage.Services.Container
 
         public GetResponse Get(GetRequest request)
         {
-            byte[] cid = request.Body.ContainerId.ToByteArray();
-            byte[] raw = MorphContractInvoker.InvokeGetContainer(MorphClient, cid);
+            var container = MorphContractInvoker.InvokeGetContainer(MorphClient, request.Body.ContainerId);
             var resp = new GetResponse
             {
                 Body = new GetResponse.Types.Body
                 {
-                    Container = FSContainer.Parser.ParseFrom(raw),
+                    Container = container,
                 }
             };
             return resp;
@@ -46,14 +44,13 @@ namespace Neo.FileStorage.Services.Container
 
         public GetExtendedACLResponse GetExtendedACL(GetExtendedACLRequest request)
         {
-            byte[] cid = request.Body.ContainerId.ToByteArray();
-            MorphContractInvoker.EACLValues result = MorphContractInvoker.InvokeGetEACL(MorphClient, cid);
+            var result = MorphContractInvoker.InvokeGetEACL(MorphClient, request.Body.ContainerId);
             var resp = new GetExtendedACLResponse
             {
                 Body = new GetExtendedACLResponse.Types.Body
                 {
-                    Eacl = EACLTable.Parser.ParseFrom(result.eacl),
-                    Signature = Signature.Parser.ParseFrom(result.sig),
+                    Eacl = result.Table,
+                    Signature = result.Signature,
                 }
             };
             return resp;
@@ -61,14 +58,9 @@ namespace Neo.FileStorage.Services.Container
 
         public ListResponse List(ListRequest request)
         {
-            byte[] owner = request.Body.OwnerId.Value.ToByteArray();
-            byte[][] containers = MorphContractInvoker.InvokeGetContainerList(MorphClient, owner);
+            var containers = MorphContractInvoker.InvokeGetContainerList(MorphClient, request.Body.OwnerId);
             var resp = new ListResponse { Body = new ListResponse.Types.Body { } };
-            foreach (byte[] c in containers)
-            {
-                ContainerID cid = ContainerID.Parser.ParseFrom(c);
-                resp.Body.ContainerIds.Add(cid);
-            }
+            resp.Body.ContainerIds.AddRange(containers);
             return resp;
         }
 
@@ -77,7 +69,7 @@ namespace Neo.FileStorage.Services.Container
             FSContainer container = request.Body.Container;
             byte[] sig = request.Body.Signature.Sign.ToByteArray();
             byte[] public_key = request.Body.Signature.Key.ToByteArray();
-            bool ok = MorphContractInvoker.InvokePut(MorphClient, container.ToByteArray(), sig, public_key);//TODO: handle error
+            bool ok = MorphContractInvoker.InvokePut(MorphClient, container, sig, public_key);//TODO: handle error
             var resp = new PutResponse
             {
                 Body = new PutResponse.Types.Body
@@ -90,9 +82,8 @@ namespace Neo.FileStorage.Services.Container
 
         public SetExtendedACLResponse SetExtendedACL(SetExtendedACLRequest request)
         {
-            byte[] eacl = request.Body.Eacl.ToByteArray();
             byte[] sig = request.Body.Signature.Sign.ToByteArray();
-            bool ok = MorphContractInvoker.InvokeSetEACL(MorphClient, eacl, sig);//TODO: handle error
+            bool ok = MorphContractInvoker.InvokeSetEACL(MorphClient, request.Body.Eacl, sig);//TODO: handle error
             var resp = new SetExtendedACLResponse
             {
                 Body = new SetExtendedACLResponse.Types.Body { }

@@ -1,5 +1,5 @@
 using Neo.FileStorage.API.Object;
-using V2Object = Neo.FileStorage.API.Object.Object;
+using FSObject = Neo.FileStorage.API.Object.Object;
 using V2Container = Neo.FileStorage.API.Container.Container;
 using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.ObjectManager.Placement;
@@ -9,7 +9,7 @@ namespace Neo.FileStorage.Services.Object.Put
 {
     public class PutInitPrm : CommonPrm
     {
-        public V2Object Init;
+        public FSObject Init;
         public V2Container Container;
         public IPlacementBuilder Builder;
 
@@ -22,7 +22,7 @@ namespace Neo.FileStorage.Services.Object.Put
             var init = body.Init;
             if (init is null)
                 throw new InvalidOperationException(nameof(PutInitPrm) + " invalid init request");
-            var obj = new V2Object
+            var obj = new FSObject
             {
                 ObjectId = init.ObjectId,
                 Signature = init.Signature,

@@ -2,7 +2,7 @@ using Neo.FileStorage.Core.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
 using System.Security.Cryptography;
-using V2Object = Neo.FileStorage.API.Object.Object;
+using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.ObjectManager.Transformer
 {
@@ -12,10 +12,10 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
         public IObjectTarget NextTarget;
         public SessionToken SessionToken;
         public INetState NetworkState;
-        private V2Object obj;
+        private FSObject obj;
         private ulong sz;
 
-        public virtual void WriteHeader(V2Object obj)
+        public virtual void WriteHeader(FSObject obj)
         {
             this.obj = obj;
         }
@@ -32,16 +32,16 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
             obj.Header.CreationEpoch = curEpoch;
 
             ObjectID parId = null;
-            V2Object par;
+            FSObject par;
             if (obj.Header.Split.Parent != null)
             {
-                par = new V2Object()
+                par = new FSObject()
                 {
                     ObjectId = obj.Header.Split.Parent,
                     Signature = obj.Header.Split.ParentSignature,
                     Header = obj.Header.Split.ParentHeader
                 };
-                var rawPar = new V2Object(par);
+                var rawPar = new FSObject(par);
                 rawPar.Header.SessionToken = SessionToken;
                 rawPar.Header.CreationEpoch = curEpoch;
 

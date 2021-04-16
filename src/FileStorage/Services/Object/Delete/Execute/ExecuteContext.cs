@@ -2,7 +2,7 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Tombstone;
 using System;
 using System.Threading;
-using V2Object = Neo.FileStorage.API.Object.Object;
+using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Delete.Execute
 {
@@ -13,7 +13,7 @@ namespace Neo.FileStorage.Services.Object.Delete.Execute
         public DeletePrm Prm;
         public Tombstone Tombstone;
         public SplitInfo SplitInfo;
-        public V2Object TombstoneObject;
+        public FSObject TombstoneObject;
         public Exception Exception;
     }
 }

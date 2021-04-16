@@ -1,5 +1,5 @@
 using Google.Protobuf;
-using V2Object = Neo.FileStorage.API.Object.Object;
+using FSObject = Neo.FileStorage.API.Object.Object;
 using Neo.FileStorage.API.Refs;
 using static Neo.Helper;
 using Neo.FileStorage.Core.Object;
@@ -18,7 +18,7 @@ namespace Neo.FileStorage.Services.Object.Put
 
         public PutResult Result => putResult;
 
-        public virtual void WriteHeader(V2Object init)
+        public virtual void WriteHeader(FSObject init)
         {
             checksum = init.Header.PayloadHash;
             if (!(checksum.Type == ChecksumType.Sha256 || checksum.Type == ChecksumType.Tz))

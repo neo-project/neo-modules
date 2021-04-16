@@ -11,6 +11,7 @@ namespace Neo.FileStorage.Services.Object.Get
     {
         public ChecksumType HashType;
         public List<V2Range> Ranges;
+        public byte[] Salt;
 
         public static RangeHashPrm FromRequest(GetRangeHashRequest request)
         {
@@ -18,6 +19,7 @@ namespace Neo.FileStorage.Services.Object.Get
             {
                 Address = request.Body.Address,
                 HashType = request.Body.Type,
+                Salt = request.Body.Salt.ToByteArray(),
                 Ranges = request.Body.Ranges.ToList(),
             };
             prm.WithCommonPrm(CommonPrm.FromRequest(request));

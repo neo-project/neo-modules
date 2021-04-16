@@ -55,15 +55,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             NetMap nm;
             try
             {
-                List<NodeInfo> infos = new List<NodeInfo>();
-                byte[][] rawPeers = MorphContractInvoker.InvokeSnapshot(MorphCli, 0);
-                foreach (var item in rawPeers)
-                {
-                    var nodeInfo = NodeInfo.Parser.ParseFrom(item);
-                    infos.Add(nodeInfo);
-                }
-                List<Node> nodes = infos.Select((p, i) => new Node(i, p)).ToList();
-                nm = new NetMap(nodes);
+                nm = MorphContractInvoker.InvokeSnapshot(MorphCli, 0);
             }
             catch (Exception e)
             {
@@ -75,8 +67,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Container cnr;
                 try
                 {
-                    var rawContainer = MorphContractInvoker.InvokeGetContainer(MorphCli, containers[i].ToByteArray());
-                    cnr = Container.Parser.ParseFrom(rawContainer);
+                    cnr = MorphContractInvoker.InvokeGetContainer(MorphCli, containers[i]);
                 }
                 catch (Exception e)
                 {
@@ -99,7 +90,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, string.Format("select storage groups for audit,cid:{0},amount:{1}", containers[i], storageGroups.Length));
 
                 var source = new CancellationTokenSource();
-                AuditTask auditTask = new AuditTask()
+                AuditTask auditTask = new()
                 {
                     Reporter = new EpochAuditReporter()
                     {
@@ -126,16 +117,15 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         private ContainerID[] SelectContainersToAudit(ulong epoch)
         {
-            byte[][] rawcontainers;
+            List<ContainerID> containers;
             try
             {
-                rawcontainers = MorphContractInvoker.InvokeGetContainerList(MorphCli, new byte[0]);
+                containers = MorphContractInvoker.InvokeGetContainerList(MorphCli, new OwnerID());
             }
             catch (Exception e)
             {
                 throw new Exception(string.Format("can't get list of containers to start audit,error {0}", e.Message));
             }
-            List<ContainerID> containers = rawcontainers.Select(p => ContainerID.FromSha256Bytes(p)).ToList();
             Utility.Log(Name, LogLevel.Info, string.Format("container listing finished,total amount {0}", containers.Count));
             containers.Sort((x, y) => x.ToBase58String().CompareTo(y.ToBase58String()));
             var ind = Indexer.Index();

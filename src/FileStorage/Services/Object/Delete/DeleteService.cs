@@ -28,7 +28,7 @@ namespace Neo.FileStorage.Services.Object.Delete
             var writer = new SimpleTombstoneWriter();
             var executor = new Execute.Executor
             {
-                Context = new ExecuteContext
+                Context = new Execute.ExecuteContext
                 {
                     DeleteService = this,
                     Prm = prm,

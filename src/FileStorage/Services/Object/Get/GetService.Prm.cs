@@ -12,7 +12,7 @@ namespace Neo.FileStorage.Services.Object.Get
             var key = KeyStorage.GetKey(request.MetaHeader.SessionToken);
             var prm = GetPrm.FromRequest(request);
             prm.Key = key;
-            prm.Writer = new GetResponseWriter
+            prm.Writer = new GetStream
             {
                 Handler = handler,
             };
@@ -32,14 +32,24 @@ namespace Neo.FileStorage.Services.Object.Get
             return prm;
         }
 
-        public RangeHashPrm ToRangeHashPrm(GetRangeHashRequest request, GetRangeHashResponse resp)
+        public RangeHashPrm ToRangeHashPrm(GetRangeHashRequest request)
         {
-            return new();
+            var key = KeyStorage.GetKey(request.MetaHeader.SessionToken);
+            var prm = RangeHashPrm.FromRequest(request);
+            prm.Key = key;
+            return prm;
         }
 
         public RangePrm ToRangePrm(GetRangeRequest request, Action<GetRangeResponse> handler)
         {
-            return new();
+            var key = KeyStorage.GetKey(request.MetaHeader.SessionToken);
+            var prm = RangePrm.FromRequest(request);
+            prm.Key = key;
+            prm.Writer = new RangeStream
+            {
+                Handler = handler,
+            };
+            return prm;
         }
     }
 }

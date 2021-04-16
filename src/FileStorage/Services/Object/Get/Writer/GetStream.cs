@@ -1,14 +1,11 @@
 using Google.Protobuf;
-using Grpc.Core;
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.Services.Object.Util;
-using Neo.FileStorage.Services.Object.Acl;
 using System;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Get.Writer
 {
-    public class GetResponseWriter : IObjectResponseWriter
+    public class GetStream : IObjectResponseWriter
     {
         public Action<GetResponse> Handler { get; init; }
 

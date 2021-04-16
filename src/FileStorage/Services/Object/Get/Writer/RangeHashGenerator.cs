@@ -7,19 +7,19 @@ using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Get.Writer
 {
-    public class RangeHashWriter : IObjectResponseWriter
+    public class RangeHashGenerator : IObjectResponseWriter
     {
         private ChecksumType type;
         private byte[] data = Array.Empty<byte>();
 
-        public RangeHashWriter(ChecksumType type)
+        public RangeHashGenerator(ChecksumType type)
         {
             this.type = type;
         }
 
         public void WriteHeader(FSObject obj)
         {
-            throw new NotImplementedException(nameof(WriteHeader));
+            throw new NotImplementedException();
         }
 
         public void WriteChunk(byte[] chunk)
@@ -36,7 +36,7 @@ namespace Neo.FileStorage.Services.Object.Get.Writer
                 case ChecksumType.Tz:
                     return data.Tz();
                 default:
-                    throw new InvalidOperationException(nameof(RangeHashWriter) + " unsupported hash type");
+                    throw new InvalidOperationException(nameof(RangeHashGenerator) + " unsupported hash type");
             }
         }
     }

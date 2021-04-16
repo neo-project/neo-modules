@@ -38,10 +38,8 @@ namespace Neo.FileStorage.Services.Object
 
         public GetRangeHashResponse GetRangeHash(GetRangeHashRequest request)
         {
-            var resp = new GetRangeHashResponse();
-            var prm = GetService.ToRangeHashPrm(request, resp);
-            GetService.GetRangeHash(prm);
-            return resp;
+            var prm = GetService.ToRangeHashPrm(request);
+            return GetService.GetRangeHash(prm);
         }
 
         public HeadResponse Head(HeadRequest request)

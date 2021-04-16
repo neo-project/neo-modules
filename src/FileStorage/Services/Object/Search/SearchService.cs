@@ -65,7 +65,7 @@ namespace Neo.FileStorage.Services.Object.Search
             while (true)
             {
                 var addrs = traverser.Next();
-                if (addrs.Length == 0) break;
+                if (addrs.Count == 0) break;
                 var tasks = new List<Task>();
                 foreach (var addr in addrs)
                 {

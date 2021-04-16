@@ -1,6 +1,6 @@
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Session;
-using V2Object = Neo.FileStorage.API.Object.Object;
+using FSObject = Neo.FileStorage.API.Object.Object;
 using Neo.FileStorage.Network.Cache;
 using Neo.FileStorage.Services.Object.Util;
 using System;
@@ -16,13 +16,13 @@ namespace Neo.FileStorage.Services.Object.Put.Store
         public SessionToken SessionToken;
         public BearerToken BearerToken;
 
-        public void Put(V2Object obj)
+        public void Put(FSObject obj)
         {
             var key = KeyStorage.GetKey(SessionToken);
             if (key is null)
                 throw new InvalidOperationException(nameof(Range) + " could not receive private key");
             var addr = Node.IPAddressString();
-            var client = ClientCache.GetClient(key, addr);
+            var client = ClientCache.Get(addr);
             if (client is null)
                 throw new InvalidOperationException(nameof(Range) + $" could not create SDK client {addr}");
             var source = new CancellationTokenSource();

@@ -1,11 +1,17 @@
+using Google.Protobuf;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.LocalObjectStorage.Engine;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Network.Cache;
-using Neo.FileStorage.Services.Object.Util;
-using System.Collections.Generic;
 using Neo.FileStorage.Services.Object.Get.Writer;
-using V2Object = Neo.FileStorage.API.Object.Object;
-using V2Range = Neo.FileStorage.API.Object.Range;
+using Neo.FileStorage.Services.Object.Util;
+using Neo.FileStorage.Services.Reputaion;
+using System.Collections.Generic;
+using System.Linq;
+using FSClient = Neo.FileStorage.API.Client.Client;
+using FSObject = Neo.FileStorage.API.Object.Object;
+using FSRange = Neo.FileStorage.API.Object.Range;
+
 
 namespace Neo.FileStorage.Services.Object.Get
 {
@@ -13,7 +19,8 @@ namespace Neo.FileStorage.Services.Object.Get
     {
         public KeyStorage KeyStorage { get; init; }
         public StorageEngine LocalStorage { get; init; }
-        public ClientCache ClientCache { get; init; }
+        public ReputaionClientCache ClientCache { get; init; }
+        public Client MorphClient { get; init; }
         public ITraverserGenerator TraverserGenerator { get; init; }
 
         public void Get(GetPrm prm)
@@ -22,12 +29,9 @@ namespace Neo.FileStorage.Services.Object.Get
         }
 
 
-        public V2Object Head(HeadPrm prm)
+        public void Head(HeadPrm prm)
         {
-            var writer = new SimpleObjectWriter();
-            prm.Writer = writer;
             Get(prm, null, true);
-            return writer.Obj;
         }
 
         public void GetRange(RangePrm prm)
@@ -35,28 +39,30 @@ namespace Neo.FileStorage.Services.Object.Get
             Get(prm, prm.Range, false);
         }
 
-        public List<byte[]> GetRangeHash(RangeHashPrm prm)
+        public GetRangeHashResponse GetRangeHash(RangeHashPrm prm)
         {
-            var hashes = new List<byte[]>();
+            List<byte[]> hashes = new();
             foreach (var range in prm.Ranges)
             {
-                var writer = new RangeHashWriter(prm.HashType);
+                var writer = new RangeHashGenerator(prm.HashType);
                 var range_prm = new RangePrm
                 {
                     Range = range,
-                    Raw = prm.Raw,
                     Writer = writer,
                 };
-                range_prm.WithCommonPrm(prm);
+                range_prm.WithGetCommonPrm(prm);
                 Get(range_prm, range, false);
                 hashes.Add(writer.GetHash());
             }
-            return hashes;
+            GetRangeHashResponse resp = new();
+            resp.Body = new();
+            resp.Body.HashList.AddRange(hashes.Select(p => ByteString.CopyFrom(p)));
+            return resp;
         }
 
-        internal void Get(GetCommonPrm prm, V2Range range, bool head_only)
+        internal void Get(GetCommonPrm prm, FSRange range, bool head_only)
         {
-            var executor = new Executor
+            var executor = new ExecuteContext
             {
                 Prm = prm,
                 Range = range,

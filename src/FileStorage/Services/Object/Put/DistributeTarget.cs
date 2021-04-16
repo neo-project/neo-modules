@@ -1,6 +1,6 @@
 using Google.Protobuf;
 using V2Address = Neo.FileStorage.API.Refs.Address;
-using V2Object = Neo.FileStorage.API.Object.Object;
+using FSObject = Neo.FileStorage.API.Object.Object;
 using Neo.FileStorage.Network;
 using Neo.FileStorage.Services.Object.Put.Store;
 using Neo.FileStorage.Services.ObjectManager.Placement;
@@ -14,9 +14,9 @@ namespace Neo.FileStorage.Services.Object.Put
     {
         private ILocalAddressSource localAddressSource;
         public PutInitPrm Prm;
-        private V2Object obj;
+        private FSObject obj;
 
-        public override void WriteHeader(V2Object init)
+        public override void WriteHeader(FSObject init)
         {
             base.WriteHeader(init);
             obj = init;
@@ -46,9 +46,9 @@ namespace Neo.FileStorage.Services.Object.Put
             while (true)
             {
                 var addrs = traverser.Next();
-                if (addrs.Length == 0) break;
-                var tasks = new Task[addrs.Length];
-                for (int i = 0; i < addrs.Length; i++)
+                if (addrs.Count == 0) break;
+                var tasks = new Task[addrs.Count];
+                for (int i = 0; i < addrs.Count; i++)
                 {
                     tasks[i] = Task.Run(() =>
                     {
