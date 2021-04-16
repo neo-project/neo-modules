@@ -1,55 +1,19 @@
-using Google.Protobuf;
-using Neo.FileStorage.API.Client.ObjectParams;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage;
-using Neo.FileStorage.Services.ObjectManager.Placement;
 using Neo.FileStorage.Services.Object.Get.Writer;
 using Neo.FileStorage.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using static Neo.Utility;
-using FSClient = Neo.FileStorage.API.Client.Client;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSRange = Neo.FileStorage.API.Object.Range;
-using Neo.FileStorage.Morph.Invoker;
 
-namespace Neo.FileStorage.Services.Object.Get
+namespace Neo.FileStorage.Services.Object.Get.Execute
 {
     public partial class ExecuteContext
     {
-        public GetCommonPrm Prm;
-        public GetService GetService;
-        public FSRange Range;
-        public bool HeadOnly;
-
-        private ulong currentEpoch;
-        private bool assembly;
-        private FSObject collectedObject;
-        private SplitInfo splitInfo;
-        private Traverser traverser;
-        private ulong currentOffset;
-
-        private bool ShouldWriteHeader => HeadOnly || Range is null;
-        private bool ShouldWritePayload => !HeadOnly;
-        private bool CanAssemble => assembly && !Prm.Raw && !HeadOnly;
-
-        public void Execute()
-        {
-            try
-            {
-                ExecuteLocal();
-            }
-            catch (Exception le)
-            {
-                Log("GetExecutor", LogLevel.Debug, "local:" + le.Message);
-                if (Prm.Local)
-                    throw;
-                ExecuteOnContainer();
-            }
-        }
-
         private (ObjectID, List<ObjectID>) InitFromChild(ObjectID oid)
         {
             var child = GetChild(oid, null, true);
@@ -250,40 +214,6 @@ namespace Neo.FileStorage.Services.Object.Get
                 prev = head.Header.Split.Previous;
             }
             return true;
-        }
-
-        private void WriteCollectedObject()
-        {
-            WriteCollectedHeader();
-            WriteObjectPayload(collectedObject);
-        }
-
-        private bool WriteCollectedHeader()
-        {
-            if (!ShouldWriteHeader) return true;
-            var cut_obj = FSObject.Parser.ParseFrom(collectedObject.ToByteArray());
-            cut_obj.Payload = null;
-            Prm.Writer.WriteHeader(cut_obj);
-            return true;
-        }
-
-        private bool WriteObjectPayload(FSObject obj)
-        {
-            if (!ShouldWritePayload) return true;
-            Prm.Writer.WriteChunk(obj.Payload.ToByteArray());
-            return true;
-        }
-
-        private Traverser GenerateTraverser(Address address)
-        {
-            return GetService.TraverserGenerator.GenerateTraverser(address);
-        }
-
-        private void InitEpoch()
-        {
-            currentEpoch = Prm.NetmapEpoch;
-            if (0 < currentEpoch) return;
-            currentEpoch = MorphContractInvoker.InvokeEpoch(GetService.MorphClient);
         }
     }
 }

@@ -2,14 +2,12 @@ using Google.Protobuf;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Morph.Invoker;
-using Neo.FileStorage.Network.Cache;
+using Neo.FileStorage.Services.Object.Get.Execute;
 using Neo.FileStorage.Services.Object.Get.Writer;
 using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.Reputaion;
 using System.Collections.Generic;
 using System.Linq;
-using FSClient = Neo.FileStorage.API.Client.Client;
-using FSObject = Neo.FileStorage.API.Object.Object;
 using FSRange = Neo.FileStorage.API.Object.Range;
 
 

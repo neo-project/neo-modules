@@ -1,9 +1,7 @@
-using Neo.FileStorage.API.Client.ObjectParams;
 using Neo.FileStorage.API.Object.Exceptions;
 using System;
-using System.Threading;
 
-namespace Neo.FileStorage.Services.Object.Get
+namespace Neo.FileStorage.Services.Object.Get.Execute
 {
     public partial class ExecuteContext
     {
@@ -13,11 +11,11 @@ namespace Neo.FileStorage.Services.Object.Get
             var client = GetService.ClientCache.Get(iport);
             try
             {
-                collectedObject = client.GetObject(new GetObjectParams { Address = Prm.Address, Raw = Prm.Raw }, context: new CancellationTokenSource().Token).Result;
+                collectedObject = client.GetObject(this);
                 WriteCollectedObject();
                 return true;
             }
-            catch (Exception e) when (e is not SplitInfoException) //TODO: already removed
+            catch (Exception e) when (e is not SplitInfoException) //TODO: handle already removed exception & handle virtual exception: assemble
             {
                 return false;
             }
