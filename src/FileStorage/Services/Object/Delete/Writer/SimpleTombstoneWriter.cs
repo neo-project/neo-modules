@@ -3,7 +3,7 @@ using Neo.FileStorage.API.Refs;
 
 namespace Neo.FileStorage.Services.Object.Delete.Writer
 {
-    public class SimpleTombstoneWriter :ITombstoneWriter
+    public class SimpleTombstoneWriter : ITombstoneWriter
     {
         public DeleteResponse Response { get; init; }
 
