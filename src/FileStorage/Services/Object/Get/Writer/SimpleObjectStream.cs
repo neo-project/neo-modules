@@ -11,6 +11,7 @@ namespace Neo.FileStorage.Services.Object.Get.Writer
         public void WriteHeader(FSObject obj)
         {
             Obj = obj;
+            Obj.Payload = ByteString.Empty;
         }
 
         public void WriteChunk(byte[] chunk)

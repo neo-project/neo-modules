@@ -15,6 +15,8 @@ namespace Neo.FileStorage.Services.Object.Get
 {
     public partial class GetService
     {
+        //Default value should be true
+        public bool Assemble { get; init; }
         public KeyStorage KeyStorage { get; init; }
         public StorageEngine LocalStorage { get; init; }
         public ReputaionClientCache ClientCache { get; init; }
@@ -60,9 +62,12 @@ namespace Neo.FileStorage.Services.Object.Get
 
         internal void Get(GetCommonPrm prm, FSRange range, bool head_only)
         {
+            RangePrm range_prm = new();
+            range_prm.WithGetCommonPrm(prm);
+            range_prm.Range = range;
             var executor = new ExecuteContext
             {
-                Prm = prm,
+                Prm = range_prm,
                 Range = range,
                 HeadOnly = head_only,
                 GetService = this,

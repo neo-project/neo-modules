@@ -17,23 +17,22 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
         private (ObjectID, List<ObjectID>) InitFromChild(ObjectID oid)
         {
             var child = GetChild(oid, null, true);
-            if (child is null) return (null, null);
             var parent = child.Parent;
             if (parent is null)
             {
-                return (null, null);
+                throw new InvalidOperationException("asseble, received child with empty parent");
             }
             collectedObject = parent;
-            if (Range != null)
+            if (Range is not null)
             {
                 var seek_len = Range.Length;
                 var seek_off = Range.Offset;
-                var parent_size = parent.Header.PayloadLength;
+                var parent_size = parent.PayloadSize;
                 if (parent_size < seek_off + seek_len)
                 {
                     throw new RangeOutOfBoundsException();
                 }
-                var child_size = child.Header.PayloadLength;
+                var child_size = child.PayloadSize;
                 currentOffset = parent_size - child_size;
                 ulong from = 0;
                 if (currentOffset < seek_off)
@@ -47,36 +46,29 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
             {
                 collectedObject.Payload = child.Payload;
             }
-            return (child.Header.Split.Previous, child.Header.Split.Children.ToList());
+            return (child.PreviousId, child.Children.ToList());
         }
 
         private FSObject GetChild(ObjectID oid, FSRange range, bool with_header)
         {
             var writer = new SimpleObjectWriter();
-            var prm = new GetCommonPrm
+            RangePrm prm = new();
+            prm.WithGetCommonPrm(Prm);
+            prm.Writer = writer;
+            prm.Range = Range;
+            prm.Address = new()
             {
-                Address = new Address
-                {
-                    ContainerId = Prm.Address.ContainerId,
-                    ObjectId = oid,
-                },
-                Writer = writer,
+                ContainerId = Prm.Address.ContainerId,
+                ObjectId = oid,
             };
-            prm.WithCommonPrm(Prm);
             prm.Local = false;
             GetService.Get(prm, range, false);
             var child = writer.Obj;
-            if (with_header && !IsChild(child))
+            if (with_header && !child.IsChild())
             {
-                throw new Exception("wrong child header");
+                throw new InvalidOperationException("assemble, wrong child header");
             }
             return child;
-        }
-
-        private bool IsChild(FSObject obj)
-        {
-            var parent = obj.Parent;
-            return parent != null && parent.Address == obj.Address;
         }
 
         private void Assemble()
@@ -128,25 +120,30 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
 
         private void OvertakePayloadDirectly(List<ObjectID> children, List<FSRange> ranges, bool check_right)
         {
-            var with_range = 0 < ranges.Count && Range != null;
+            var with_range = ranges is not null && 0 < ranges.Count && Range != null;
             for (int i = 0; i < children.Count; i++)
             {
                 FSRange r = null;
                 if (with_range) r = ranges[i];
-                var child = GetChild(children[i], r, !with_range && check_right);
-                if (child is null) return;
-                if (!WriteObjectPayload(child)) return;
+                try
+                {
+                    var child = GetChild(children[i], r, !with_range && check_right);
+                    WriteObjectPayload(child);
+                }
+                catch (Exception)
+                {
+                    return;
+                }
             }
         }
 
         private bool OvertakePayloadInReverse(ObjectID prev)
         {
-            if (BuildChainInReverse(prev, out List<ObjectID> oids, out List<FSRange> ranges))
-            {
-                if (0 < ranges.Count) ranges.Reverse();
-                OvertakePayloadDirectly(oids, ranges, false);
-            }
-            return false;
+            if (!BuildChainInReverse(prev, out List<ObjectID> oids, out List<FSRange> ranges)) return false;
+            oids.Reverse();
+            ranges.Reverse();
+            OvertakePayloadDirectly(oids, ranges, false);
+            return true;
         }
 
         private FSObject HeadChild(ObjectID oid)
@@ -165,28 +162,38 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
             prm.Writer = writer;
             GetService.Head(prm);
             var child = writer.Obj;
-            if (child.Parent.ObjectId != null && IsChild(child))
+            if (child.ParentId is not null && !child.IsChild())
             {
-                Log(nameof(ExecuteContext), LogLevel.Info, "parent address in child object differs");
-                return null;
+                throw new InvalidOperationException("assemble, parent address in child object differs");
             }
             return child;
         }
 
         private bool BuildChainInReverse(ObjectID prev, out List<ObjectID> oids, out List<FSRange> ranges)
         {
-            var from = Range.Offset;
-            var to = from + Range.Length;
+            ulong from = 0, to = 0;
+            if (Range is not null)
+            {
+                from = Range.Offset;
+                to = from + Range.Length;
+            }
             oids = new List<ObjectID>();
             ranges = new List<FSRange>();
             while (prev != null)
             {
                 if (currentOffset < from) break;
-                var head = HeadChild(prev);
-                if (head is null) return false;
-                if (Range != null)
+                FSObject head;
+                try
                 {
-                    var sz = head.Header.PayloadLength;
+                    head = HeadChild(prev);
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+                if (Range is not null)
+                {
+                    var sz = head.PayloadSize;
                     currentOffset -= sz;
                     if (currentOffset < to)
                     {
@@ -211,7 +218,7 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
                 {
                     oids.Add(head.ObjectId);
                 }
-                prev = head.Header.Split.Previous;
+                prev = head.PreviousId;
             }
             return true;
         }
