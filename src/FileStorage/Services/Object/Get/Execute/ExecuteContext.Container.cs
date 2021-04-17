@@ -11,13 +11,13 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
             var depth = Prm.NetmapLookupDepth;
             while (0 < depth)
             {
-                ProcessCurrentEpoch();
+                if (ProcessCurrentEpoch()) break;
                 depth--;
                 CurrentEpoch--;
             }
         }
 
-        private void ProcessCurrentEpoch()
+        private bool ProcessCurrentEpoch()
         {
             traverser = GenerateTraverser(Prm.Address);
             while (true)
@@ -25,15 +25,15 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
                 var addrs = traverser.Next();
                 if (!addrs.Any())
                 {
-                    Log(nameof(ExecuteContext), LogLevel.Debug, " no more nodes, abort placement iteration");
-                    break;
+                    Log("GetExecutor", LogLevel.Debug, " no more nodes, abort placement iteration");
+                    return false;
                 }
                 foreach (var addr in addrs)
                 {
                     if (ProcessNode(addr))
                     {
                         Log(nameof(ExecuteOnContainer), LogLevel.Debug, " completing the operation");
-                        break;
+                        return true;
                     }
                 }
             }

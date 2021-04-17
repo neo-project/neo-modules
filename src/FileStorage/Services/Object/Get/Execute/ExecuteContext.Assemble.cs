@@ -73,12 +73,7 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
 
         private void Assemble()
         {
-            if (!CanAssemble)
-            {
-                Log(nameof(ExecuteContext), LogLevel.Debug, "can not assembly the object");
-                return;
-            }
-            Log(nameof(ExecuteContext), LogLevel.Debug, "trying to assemble the object...");
+            Log("GetExecutor", LogLevel.Debug, "trying to assemble the object...");
             var child_id = splitInfo.Link;
             if (child_id is null)
                 child_id = splitInfo.LastPart;
@@ -114,7 +109,7 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
             }
             else
             {
-                Log(nameof(ExecuteContext), LogLevel.Debug, " could not init parent from child");
+                Log("GetExecutor", LogLevel.Debug, " could not init parent from child");
             }
         }
 

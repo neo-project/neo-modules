@@ -7,7 +7,7 @@ using System;
 using static Neo.Utility;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSRange = Neo.FileStorage.API.Object.Range;
-
+using Neo.FileStorage.API.Object.Exceptions;
 
 namespace Neo.FileStorage.Services.Object.Get.Execute
 {
@@ -34,18 +34,29 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
             {
                 ExecuteLocal();
             }
-            catch (Exception e)
+            catch (Exception le) when (le is LocalObjectStorage.SplitInfoException se)
             {
-                Log("GetExecutor", LogLevel.Debug, $"local error, type={e.GetType()}, message={e.Message}");
-                if (e is ObjectAlreadyRemovedException || e is RangeOutOfBoundsException)
-                    return;
-                else if (e is SplitInfoException sie)
-                {
-                    splitInfo = sie.SplitInfo;
+                splitInfo = se.SplitInfo;
+                if (CanAssemble)
                     Assemble();
+                throw;
+            }
+            catch (Exception e) when (e is not ObjectAlreadyRemovedException && e is not RangeOutOfBoundsException)
+            {
+                if (!Prm.Local)
+                {
+                    try
+                    {
+                        ExecuteOnContainer();
+                    }
+                    catch (Exception re) when (re is API.Object.Exceptions.SplitInfoException se)
+                    {
+                        splitInfo = se.SplitInfo();
+                        if (CanAssemble)
+                            Assemble();
+                        throw;
+                    }
                 }
-                else if (Prm.Local)
-                    ExecuteOnContainer();
             }
         }
 

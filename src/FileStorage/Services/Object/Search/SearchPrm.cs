@@ -8,6 +8,7 @@ namespace Neo.FileStorage.Services.Object.Search
     {
         public ContainerID CID;
         public SearchFilters Filters;
+        public ISearchResponseWriter Writer;
 
         public static SearchPrm FromRequest(SearchRequest request)
         {

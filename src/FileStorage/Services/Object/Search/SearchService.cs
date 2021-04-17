@@ -12,18 +12,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Neo.FileStorage.API.Object;
+using Neo.FileStorage.Services.Object.Search.Writer;
 
 namespace Neo.FileStorage.Services.Object.Search
 {
     public class SearchService
     {
+        public KeyStorage KeyStorage { get; init; }
         private INetmapSource netmapSource;
         private IContainerSource containerSource;
         private ILocalAddressSource localAddressSource;
 
         public SearchPrm ToSearchPrm(SearchRequest request, Action<SearchResponse> handler)
         {
-            return new();
+            var key = KeyStorage.GetKey(request.MetaHeader.SessionToken);
+            var prm = SearchPrm.FromRequest(request);
+            prm.Key = key;
+            prm.Writer = new SearchStream
+            {
+                Handler = handler,
+            };
+            return prm;
         }
 
         public void Search(SearchPrm prm)

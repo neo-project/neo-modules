@@ -15,7 +15,7 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
                 WriteCollectedObject();
                 return true;
             }
-            catch (Exception e) when (e is not SplitInfoException) //TODO: handle already removed exception & handle virtual exception: assemble
+            catch (Exception e) when (e is not SplitInfoException) //TODO: || is not already removed
             {
                 return false;
             }
