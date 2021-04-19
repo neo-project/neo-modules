@@ -1,17 +1,21 @@
 using Neo.FileStorage.Core.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
+using System;
 using System.Security.Cryptography;
 using FSObject = Neo.FileStorage.API.Object.Object;
+using FSVersion = Neo.FileStorage.API.Refs.Version;
+using Neo.FileStorage.Morph.Invoker;
 
 namespace Neo.FileStorage.Services.ObjectManager.Transformer
 {
-    public class FormatterTarget : IObjectTarget
+    public class FormatTarget : IObjectTarget
     {
-        public ECDsa Key;
-        public IObjectTarget NextTarget;
-        public SessionToken SessionToken;
-        public INetState NetworkState;
+        public ECDsa Key { get; init; }
+        public IObjectTarget Next { get; init; }
+        public SessionToken SessionToken { get; init; }
+        public Client MorphClient { get; init; }
+
         private FSObject obj;
         private ulong sz;
 
@@ -20,13 +24,13 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
             this.obj = obj;
         }
 
-        public virtual void WriteChunk(byte[] chunk) { }
+        public virtual void WriteChunk(Byte[] chunk) { }
 
         public AccessIdentifiers Close()
         {
-            var curEpoch = NetworkState.CurrentEpoch();
+            var curEpoch = CurrentEpoch();
 
-            obj.Header.Version = Version.SDKVersion();
+            obj.Header.Version = FSVersion.SDKVersion();
             obj.Header.PayloadLength = sz;
             obj.Header.SessionToken = SessionToken;
             obj.Header.CreationEpoch = curEpoch;
@@ -54,14 +58,19 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
             var signature = obj.CalculateIDSignature(Key);
             obj.Signature = signature;
 
-            NextTarget.WriteHeader(obj);
-            NextTarget.Close();
+            Next.WriteHeader(obj);
+            Next.Close();
 
             return new AccessIdentifiers
             {
                 Self = obj.ObjectId,
                 Parent = parId
             };
+        }
+
+        private ulong CurrentEpoch()
+        {
+            return MorphContractInvoker.InvokeEpoch(MorphClient);
         }
     }
 }

@@ -10,11 +10,6 @@ namespace Neo.FileStorage.Services.Object.Search.Execute
         private ulong currentEpoch;
         private Traverser traverser;
 
-        public void Prepare()
-        {
-
-        }
-
         public void Execute()
         {
             ExecuteLocal();

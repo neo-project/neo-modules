@@ -36,7 +36,6 @@ namespace Neo.FileStorage.Services.Object.Search
                 Prm = prm,
                 SearchService = this,
             };
-            executor.Prepare();
             executor.Execute();
         }
     }

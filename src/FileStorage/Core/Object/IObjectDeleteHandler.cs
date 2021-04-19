@@ -4,6 +4,6 @@ namespace Neo.FileStorage.Core.Object
 {
     public interface IObjectDeleteHandler
     {
-        void DeleteObjects(params Address[] objAddrs);
+        void DeleteObjects(params Address[] ids);
     }
 }

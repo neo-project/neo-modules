@@ -3,7 +3,6 @@ using Neo.FileStorage.API.Netmap;
 using V2Address = Neo.FileStorage.API.Refs.Address;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Network.Cache;
-using Neo.FileStorage.Services.Object.Put.Store;
 using Neo.FileStorage.Services.Object.Util;
 using System;
 using System.Collections.Generic;
@@ -45,13 +44,13 @@ namespace Neo.FileStorage.Services.Replicator
                 var net_address = task.Nodes[i].NetworkAddress;
                 var node = Network.Address.AddressFromString(net_address);
                 //Timeout context
-                var remote_sender = new RemoteStore
-                {
-                    KeyStorage = KeyStorage,
-                    ClientCache = ClientCache,
-                    Node = node,
-                };
-                remote_sender.Put(obj);
+                // var remote_sender = new RemoteStore
+                // {
+                //     KeyStorage = KeyStorage,
+                //     ClientCache = ClientCache,
+                //     Node = node,
+                // };
+                // remote_sender.Put(obj);
                 task.Quantity--;
             }
         }

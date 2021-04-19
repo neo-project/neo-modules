@@ -96,7 +96,7 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
             return true;
         }
 
-        public Traverser WithContainer(V2Container container)
+        public Traverser ForContainer(V2Container container)
         {
             if (Address is null)
                 Address = new Address();
@@ -105,7 +105,7 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
             return this;
         }
 
-        public Traverser WithObjectID(ObjectID oid)
+        public Traverser ForObjectID(ObjectID oid)
         {
             if (Address is null)
                 Address = new Address();
@@ -117,6 +117,12 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
         {
             Builder = builder;
             return this;
+        }
+
+        public Traverser SuccessAfter(uint v)
+        {
+            //TODO:
+            throw new NotImplementedException();
         }
     }
 }

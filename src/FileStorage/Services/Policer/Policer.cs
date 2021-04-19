@@ -19,7 +19,7 @@ namespace Neo.FileStorage.Services.Policer
     {
         public class Trigger { }
         public TimeSpan HeadTimeout;
-        public ILocalAddressSource LocalAddressSource;
+        public Network.Address LocalAddress;
         public Replicator.Replicator Replicator;
         private StorageEngine localStorage;
         public IContainerSource ContainerSource;
@@ -86,7 +86,7 @@ namespace Neo.FileStorage.Services.Policer
                 if (shortage == 0) break;
                 var net_address = n.NetworkAddress;
                 var node = AddressFromString(net_address);
-                if (node.IsLocalAddress(LocalAddressSource))
+                if (node == LocalAddress)
                 {
                     shortage--;
                 }

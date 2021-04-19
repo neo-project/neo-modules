@@ -1,27 +1,25 @@
 using Neo.FileStorage.API.Object;
-using FSObject = Neo.FileStorage.API.Object.Object;
-using V2Container = Neo.FileStorage.API.Container.Container;
 using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using System;
+using FSContainer = Neo.FileStorage.API.Container.Container;
+using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Put
 {
     public class PutInitPrm : CommonPrm
     {
-        public FSObject Init;
-        public V2Container Container;
-        public IPlacementBuilder Builder;
+        public FSObject Header;
 
         public static PutInitPrm FromRequest(PutRequest request)
         {
             var body = request?.Body;
-            if (body is null) throw new InvalidOperationException(nameof(PutInitPrm) + " invalid request");
+            if (body is null) throw new InvalidOperationException($"{nameof(PutInitPrm)} invalid request, body missing");
             if (body.ObjectPartCase != PutRequest.Types.Body.ObjectPartOneofCase.Init)
-                throw new InvalidOperationException(nameof(PutInitPrm) + " invalid request");
+                throw new InvalidOperationException($"{nameof(PutInitPrm)} invalid init request");
             var init = body.Init;
             if (init is null)
-                throw new InvalidOperationException(nameof(PutInitPrm) + " invalid init request");
+                throw new InvalidOperationException($"{nameof(PutInitPrm)} invalid init request, missing init");
             var obj = new FSObject
             {
                 ObjectId = init.ObjectId,
@@ -30,7 +28,7 @@ namespace Neo.FileStorage.Services.Object.Put
             };
             var prm = new PutInitPrm
             {
-                Init = obj,
+                Header = obj,
             };
             prm.WithCommonPrm(CommonPrm.FromRequest(request));
             return prm;

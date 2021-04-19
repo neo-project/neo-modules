@@ -2,6 +2,7 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.Services.Object.Delete;
 using Neo.FileStorage.Services.Object.Get;
 using Neo.FileStorage.Services.Object.Put;
+using Neo.FileStorage.Services.Object.Put.Writer;
 using Neo.FileStorage.Services.Object.Search;
 using System;
 using System.Threading;
@@ -51,7 +52,7 @@ namespace Neo.FileStorage.Services.Object
             return resp;
         }
 
-        public PutStream Put(CancellationToken cancellation)
+        public IPutRequestStream Put(CancellationToken cancellation)
         {
             return PutService.Put(cancellation);
         }

@@ -1,32 +1,32 @@
 using Neo.FileStorage.API.Netmap;
-using V2Address = Neo.FileStorage.API.Refs.Address;
 using Neo.FileStorage.Network;
-using static Neo.FileStorage.Network.Address;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using System.Collections.Generic;
-using Neo.FileStorage.Core.Netmap;
+using static Neo.FileStorage.Network.Address;
+using FSAddress = Neo.FileStorage.API.Refs.Address;
 
 namespace Neo.FileStorage.Services.Object.Util
 {
-    public class LocalPlacementBuilder : NetworkMapBuilder
+    public class LocalPlacementBuilder : IPlacementBuilder
     {
-        private readonly ILocalAddressSource localAddressSource;
+        private readonly IPlacementBuilder builder;
+        private readonly Address localAddress;
 
-        public LocalPlacementBuilder(INetmapSource netmap_source, ILocalAddressSource address_source)
-        : base(netmap_source)
+        public LocalPlacementBuilder(IPlacementBuilder builder, Address address)
         {
-            localAddressSource = address_source;
+            this.builder = builder;
+            localAddress = address;
         }
 
-        public override List<List<Node>> BuildPlacement(V2Address address, PlacementPolicy policy)
+        public List<List<Node>> BuildPlacement(FSAddress address, PlacementPolicy policy)
         {
-            var node_list = base.BuildPlacement(address, policy);
+            var node_list = builder.BuildPlacement(address, policy);
             foreach (var ns in node_list)
             {
                 foreach (var n in ns)
                 {
                     var addr = AddressFromString(n.NetworkAddress);
-                    if (addr.IsLocalAddress(localAddressSource))
+                    if (addr == localAddress)
                         return new List<List<Node>> { new List<Node> { n } };
                 }
             }

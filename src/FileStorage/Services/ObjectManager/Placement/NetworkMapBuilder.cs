@@ -3,26 +3,28 @@ using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using System;
 using System.Collections.Generic;
+using Neo.FileStorage.Morph.Invoker;
 
 namespace Neo.FileStorage.Services.ObjectManager.Placement
 {
     public class NetworkMapBuilder : IPlacementBuilder
     {
-        private readonly INetmapSource netmapSource;
+        private readonly Client morphClient;
+        private readonly NetMap netMap;
 
-        public NetworkMapBuilder(INetmapSource source)
+        public NetworkMapBuilder(Client client)
         {
-            netmapSource = source;
+            morphClient = client;
         }
 
-        public NetworkMapBuilder(NetMap netMap)
+        public NetworkMapBuilder(NetMap nm)
         {
-            netmapSource = new NetworkMapSource(netMap);
+            netMap = nm;
         }
 
         public virtual List<List<Node>> BuildPlacement(Address address, PlacementPolicy policy)
         {
-            var netmap = netmapSource.GetLatestNetworkMap();
+            var netmap = GetLatestNetmap();
             var nodes = netmap.GetContainerNodes(policy, address.ContainerId.Value.ToByteArray());
             return BuildObjectPlacement(netmap, nodes, address.ObjectId);
         }
@@ -35,6 +37,13 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
             if (ns is null)
                 throw new InvalidOperationException(nameof(BuildObjectPlacement) + " could not get placement vectors for object");
             return ns;
+        }
+
+        private NetMap GetLatestNetmap()
+        {
+            if (netMap is not null)
+                return netMap;
+            return MorphContractInvoker.InvokeSnapshot(morphClient, 0);
         }
     }
 }

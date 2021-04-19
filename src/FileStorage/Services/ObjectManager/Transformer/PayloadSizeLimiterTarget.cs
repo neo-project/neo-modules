@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using static Neo.FileStorage.API.Object.Header.Types;
-using V2Attribute = Neo.FileStorage.API.Object.Header.Types.Attribute;
+using FSAttribute = Neo.FileStorage.API.Object.Header.Types.Attribute;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 
@@ -25,12 +25,13 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
         //private StreamWriter
         private BinaryWriter chunkWriter;
         private Guid splitID;
-        private V2Attribute[] parAttrs;
+        private FSAttribute[] parAttrs;
 
-        public PayloadSizeLimiterTarget(ulong maxSz)
+        public PayloadSizeLimiterTarget(ulong maxSz, IObjectTarget t)
         {
             maxSize = maxSz;
             splitID = Guid.NewGuid();
+            target = t;
         }
 
         public void WriteHeader(FSObject obj)
@@ -85,8 +86,6 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
 
         private void InitializeCurrent()
         {
-            // initialize current object target
-            target = new FormatterTarget();
             // create payload hashers
             currentHashers = PayloadHashersForObject(current);
 

@@ -3,7 +3,7 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.StorageGroup;
 using Neo.FileStorage.API.Tombstone;
-using Neo.FileStorage.Core.Netmap;
+using Neo.FileStorage.Morph.Invoker;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,12 +14,12 @@ namespace Neo.FileStorage.Core.Object
     public class ObjectValidator
     {
         private readonly IObjectDeleteHandler deleteHandler;
-        private readonly INetState netState;
+        private readonly Client morphClient;
 
-        public ObjectValidator(IObjectDeleteHandler handler, INetState state)
+        public ObjectValidator(IObjectDeleteHandler handler, Client client)
         {
             deleteHandler = handler;
-            netState = state;
+            morphClient = client;
         }
 
         public bool Validate(FSObject obj)
@@ -58,7 +58,7 @@ namespace Neo.FileStorage.Core.Object
             try
             {
                 var expire = ExpirationEpochAttributeValue(obj);
-                if (expire < netState.CurrentEpoch()) return false;
+                if (expire < CurrentEpoch()) return false;
             }
             catch (Exception e)
             {
@@ -117,6 +117,11 @@ namespace Neo.FileStorage.Core.Object
                     break;
             }
             return true;
+        }
+
+        private ulong CurrentEpoch()
+        {
+            return MorphContractInvoker.InvokeEpoch(morphClient);
         }
     }
 }

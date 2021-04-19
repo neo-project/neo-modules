@@ -1,3 +1,4 @@
+using Google.Protobuf;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.ObjectManager.Transformer
