@@ -79,7 +79,12 @@ namespace Neo.Plugins
             try
             {
                 int max = settings.MaxResultItems;
-                json["stack"] = new JArray(engine.ResultStack.Select(p => ToJson(p, ref max)));
+                string warning = null;
+                json["stack"] = new JArray(engine.ResultStack.Select(p => ToJson(p, ref max, ref warning)).Where(u => u is not null));
+                if (!string.IsNullOrEmpty(warning))
+                {
+                    json["warning"] = warning;
+                }
             }
             catch (InvalidOperationException)
             {
@@ -92,10 +97,13 @@ namespace Neo.Plugins
             return json;
         }
 
-        private JObject ToJson(StackItem p, ref int max)
+        private JObject ToJson(StackItem p, ref int max, ref string warning)
         {
-            string warning = null;
-            if (max <= 0) throw new InvalidOperationException();
+            if (max <= 0)
+            {
+                warning = "MaxIteratorItems is achieved. The values was truncated.";
+                return null;
+            }
             max--;
 
             if (p is InteropInterface result)
@@ -118,8 +126,7 @@ namespace Neo.Plugins
 
                     JObject ret = new();
                     ret["type"] = "InteropInterface";
-                    ret["value"] = ToJson(resultList, ref max);
-                    ret["warning"] = warning;
+                    ret["value"] = ToJson(resultList, ref max, ref warning);
                     return ret;
                 }
             }
