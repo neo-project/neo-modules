@@ -111,7 +111,7 @@ namespace Neo.Plugins
                         if (max <= 0)
                         {
                             max++;
-                            warning = "MaxIteratorItems is acheived. Can't show all values.";
+                            warning = "MaxIteratorItems is achieved. The values was truncated.";
                             break;
                         }
                     }
