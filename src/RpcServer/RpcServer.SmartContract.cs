@@ -78,13 +78,7 @@ namespace Neo.Plugins
             json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
-                int max = settings.MaxResultItems;
-                string warning = null;
-                json["stack"] = new JArray(engine.ResultStack.Select(p => ToJson(p, ref max, ref warning)).Where(u => u is not null));
-                if (!string.IsNullOrEmpty(warning))
-                {
-                    json["warning"] = warning;
-                }
+                json["stack"] = new JArray(engine.ResultStack.Select(p => ToJson(p, settings.MaxResultItems)));
             }
             catch (InvalidOperationException)
             {
@@ -97,40 +91,21 @@ namespace Neo.Plugins
             return json;
         }
 
-        private JObject ToJson(StackItem p, ref int max, ref string warning)
+        private static JObject ToJson(StackItem item, int max)
         {
-            if (max <= 0)
+            JObject json = item.ToJson();
+            if (item is InteropInterface interopInterface && interopInterface.GetInterface<object>() is IIterator iterator)
             {
-                warning = "MaxIteratorItems is achieved. The values was truncated.";
-                return null;
-            }
-            max--;
-
-            if (p is InteropInterface result)
-            {
-                var iterator = result.GetInterface<IIterator>();
-                if (iterator != null)
+                JArray array = new();
+                while (max > 0 && iterator.Next())
                 {
-                    VM.Types.Array resultList = new();
-                    while (iterator.Next())
-                    {
-                        resultList.Add(iterator.Value());
-                        max--;
-                        if (max < 0)
-                        {
-                            warning = "MaxIteratorItems is achieved. The values was truncated.";
-                            break;
-                        }
-                    }
-
-                    JObject ret = new();
-                    ret["type"] = "InteropInterface";
-                    ret["value"] = ToJson(resultList, ref max, ref warning);
-                    return ret;
+                    array.Add(iterator.Value().ToJson());
+                    max--;
                 }
+                json["iterator"] = array;
+                json["truncated"] = iterator.Next();
             }
-
-            return p.ToJson();
+            return json;
         }
 
         private static Signers SignersFromJson(JArray _params, ProtocolSettings settings)
