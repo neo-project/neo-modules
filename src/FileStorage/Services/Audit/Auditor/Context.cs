@@ -1,5 +1,5 @@
 using Neo.FileStorage.API.Cryptography.Tz;
-using V2Object = Neo.FileStorage.API.Object.Object;
+using FSObject = Neo.FileStorage.API.Object.Object;
 using Neo.FileStorage.API.Refs;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -53,7 +53,7 @@ namespace Neo.FileStorage.Services.Audit.Auditor
             return 0;
         }
 
-        private void UpdateHeader(V2Object header)
+        private void UpdateHeader(FSObject header)
         {
             HeaderCache[header.ObjectId.ToBase58String()] = new ShortHeader
             {

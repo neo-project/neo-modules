@@ -214,7 +214,7 @@ namespace Neo.FileStorage.Services.Object.Acl
 
         private FSContainer GetContainer(ContainerID cid)
         {
-            return FSContainer.Parser.ParseFrom(MorphContractInvoker.InvokeGetContainer(Morph, cid.ToByteArray()));
+            return MorphContractInvoker.InvokeGetContainer(Morph, cid);
         }
     }
 }

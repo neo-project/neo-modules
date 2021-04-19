@@ -10,6 +10,9 @@ namespace Neo.FileStorage.Morph.Invoker
 {
     public partial class MorphContractInvoker
     {
+        public static readonly byte[] MaxObjectSizeConfig = Utility.StrictUTF8.GetBytes("MaxObjectSize");
+        public static readonly byte[] BasicIncomeRateConfig = Utility.StrictUTF8.GetBytes("BasicIncomeRate");
+
         private static UInt160 NetMapContractHash => Settings.Default.NetmapContractHash;
         private const string AddPeerMethod = "addPeer";
         private const string NewEpochMethod = "newEpoch";

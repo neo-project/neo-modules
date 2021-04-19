@@ -1,5 +1,5 @@
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Object.Delete.Execute;
 using Neo.FileStorage.Services.Object.Delete.Writer;
 using Neo.FileStorage.Services.Object.Get;
@@ -12,39 +12,34 @@ namespace Neo.FileStorage.Services.Object.Delete
 {
     public class DeleteService
     {
-        private readonly OwnerID selfId;
-        public readonly PutService PutService;
-        public readonly SearchService SearchService;
-        public readonly GetService GetService;
-        private readonly KeyStorage keyStorage;
+        public Client MorphClient { get; init; }
+        public PutService PutService { get; init; }
+        public SearchService SearchService { get; init; }
+        public GetService GetService { get; init; }
+        public KeyStorage KeyStorage { get; init; }
 
         public DeletePrm ToDeletePrm(DeleteRequest request, DeleteResponse response)
         {
-            return new();
+            var meta = request.MetaHeader;
+            var key = KeyStorage.GetKey(meta.SessionToken);
+            if (key is null) throw new InvalidOperationException(nameof(ToDeletePrm) + " could not get key");
+            var prm = DeletePrm.FromRequest(request);
+            prm.Key = key;
+            prm.Writer = new SimpleTombstoneWriter
+            {
+                Response = response,
+            };
+            return prm;
         }
 
         public void Delete(DeletePrm prm)
         {
-            var writer = new SimpleTombstoneWriter();
-            var executor = new Execute.Executor
+            var executor = new ExecuteContext
             {
-                Context = new ExecuteContext
-                {
-                    DeleteService = this,
-                    Prm = prm,
-                }
+                DeleteService = this,
+                Prm = prm,
             };
             executor.Execute();
-        }
-
-        public DeletePrm ToDeletePrm(DeleteRequest request)
-        {
-            var meta = request.MetaHeader;
-            var key = keyStorage.GetKey(meta.SessionToken);
-            if (key is null) throw new InvalidOperationException(nameof(DeleteService) + " could not get key");
-            var prm = DeletePrm.FromRequest(request);
-            prm.Key = key;
-            return prm;
         }
     }
 }

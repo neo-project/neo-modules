@@ -1,6 +1,11 @@
+using Neo.FileStorage.API.Object;
 using Neo.FileStorage.Core.Container;
 using Neo.FileStorage.Core.Netmap;
 using Neo.FileStorage.Core.Object;
+using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Network;
+using Neo.FileStorage.Services.Object.Put;
+using Neo.FileStorage.Services.Object.Put.Writer;
 using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using Neo.FileStorage.Services.ObjectManager.Transformer;
@@ -11,55 +16,22 @@ namespace Neo.FileStorage.Services.Object.Put
 {
     public class PutService
     {
-        private INetmapSource netmapSource;
-        private IContainerSource containerSource;
-        private IMaxSizeSource maxSizeSource;
-        private ObjectValidator objectValidator;
-        private KeyStorage keyStorage;
+        public Client MorphClient { get; init; }
+        public Address LocalAddress { get; init; }
+        public KeyStorage KeyStorage { get; init; }
+        public LocalObjectInhumer ObjectInhumer { get; init; }
 
-        public PutStream Put(CancellationToken cancellation)
+        public PutInitPrm ToInitPrm(PutRequest request)
         {
-            return new();
+            return PutInitPrm.FromRequest(request);
         }
 
-        public IObjectTarget Init(PutInitPrm prm)
+        public IPutRequestStream Put(CancellationToken cancellation)
         {
-            var target = InitTarget(prm);
-            target.WriteHeader(prm.Init);
-            return target;
-        }
-
-        private IObjectTarget InitTarget(PutInitPrm prm)
-        {
-            PreparePrm(prm);
-            var session_token = prm.SessionToken;
-            if (session_token is null)
+            return new PutStream()
             {
-                return new DistributeTarget
-                {
-                    ObjectValidator = objectValidator,
-                    Prm = prm,
-                };
-            }
-            var session_key = keyStorage.GetKey(session_token);
-            if (session_key is null)
-                throw new InvalidOperationException(nameof(InitTarget) + " could not get session key");
-            var max_size = maxSizeSource.MaxObjectSize();
-            if (max_size == 0)
-                throw new InvalidOperationException(nameof(InitTarget) + " could not obtain max object size parameter");
-            return new PayloadSizeLimiterTarget(max_size);
-        }
-
-        private void PreparePrm(PutInitPrm prm)
-        {
-            var nm = netmapSource.GetLatestNetworkMap();
-            if (nm is null)
-                throw new InvalidOperationException(nameof(PreparePrm) + " could not get latest netmap");
-            var container = containerSource.Get(prm.Init.Header.ContainerId);
-            if (container is null)
-                throw new InvalidOperationException(nameof(PreparePrm) + " could not get container by cid");
-            prm.Container = container;
-            prm.Builder = new NetworkMapBuilder(new NetworkMapSource(nm));
+                PutService = this,
+            };
         }
     }
 }

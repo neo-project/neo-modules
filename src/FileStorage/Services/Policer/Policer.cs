@@ -6,7 +6,7 @@ using Neo.FileStorage.Core.Container;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Network;
 using static Neo.FileStorage.Network.Address;
-using Neo.FileStorage.Services.Object.Head.HeaderSource;
+using Neo.FileStorage.Services.Object.Head;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using System;
 using System.Collections.Generic;
@@ -19,12 +19,12 @@ namespace Neo.FileStorage.Services.Policer
     {
         public class Trigger { }
         public TimeSpan HeadTimeout;
-        public ILocalAddressSource LocalAddressSource;
+        public Network.Address LocalAddress;
         public Replicator.Replicator Replicator;
         private StorageEngine localStorage;
         public IContainerSource ContainerSource;
         public IPlacementBuilder PlacementBuilder;
-        public RemoteHeaderSource remoteHeaderSource;
+        public RemoteHeader remoteHeader;
         private static SearchFilters jobFilters;
         private readonly List<Task> tasks = new List<Task>();
         public int Undone;
@@ -86,14 +86,18 @@ namespace Neo.FileStorage.Services.Policer
                 if (shortage == 0) break;
                 var net_address = n.NetworkAddress;
                 var node = AddressFromString(net_address);
-                if (node.IsLocalAddress(LocalAddressSource))
+                if (node == LocalAddress)
                 {
                     shortage--;
                 }
                 else
                 {
-                    remoteHeaderSource.Node = node;
-                    var header = remoteHeaderSource.Head(address);
+                    RemoteHeadPrm prm = new()
+                    {
+                        Address = address,
+                        Node = node,
+                    };
+                    var header = remoteHeader.Head(prm, default);
                     if (header is null)
                     {
                         //TODO: fix

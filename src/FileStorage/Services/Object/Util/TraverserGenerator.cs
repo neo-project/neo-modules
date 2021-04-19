@@ -1,42 +1,51 @@
-using Neo.FileStorage.Core.Container;
-using Neo.FileStorage.Core.Netmap;
-using Neo.FileStorage.Network;
+using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using System;
-using V2Address = Neo.FileStorage.API.Refs.Address;
+using FSAddress = Neo.FileStorage.API.Refs.Address;
+using FSContainer = Neo.FileStorage.API.Container.Container;
 
 namespace Neo.FileStorage.Services.Object.Util
 {
     public class TraverserGenerator
     {
-        public INetmapSource NetmapSource;
-        public IContainerSource ContainerSource;
-        public ILocalAddressSource LocalAddressSource;
+        private readonly Client morphClient;
+        public Network.Address localAddress;
 
-        public TraverserGenerator(INetmapSource netmap_source, IContainerSource container_source, ILocalAddressSource address_source)
+        public TraverserGenerator(Client morph, Network.Address address)
         {
-            NetmapSource = netmap_source;
-            ContainerSource = container_source;
-            LocalAddressSource = address_source;
+            morphClient = morph;
+            localAddress = address;
         }
 
-        public Traverser GenerateTraverser(V2Address address)
+        public Traverser GenerateTraverser(FSAddress address)
         {
-            var nm = NetmapSource.GetLatestNetworkMap();
+            var nm = GetLatestNetmap();
             if (nm is null)
             {
                 throw new Exception(nameof(TraverserGenerator) + " could not get latest netmap");
             }
-            var container = ContainerSource.Get(address.ContainerId);
+            var container = GetContainer(address.ContainerId);
             if (container is null)
             {
                 throw new Exception(nameof(TraverserGenerator) + " could not get container");
             }
-            var builder = new RemotePlacementBuilder(NetmapSource, LocalAddressSource);
+            var builder = new RemotePlacementBuilder(morphClient, localAddress);
             return new Traverser()
                     .WithBuilder(builder)
-                    .WithContainer(container)
-                    .WithObjectID(address.ObjectId);
+                    .ForContainer(container)
+                    .ForObjectID(address.ObjectId);
+        }
+
+        private NetMap GetLatestNetmap()
+        {
+            return MorphContractInvoker.InvokeSnapshot(morphClient, 0);
+        }
+
+        private FSContainer GetContainer(ContainerID cid)
+        {
+            return MorphContractInvoker.InvokeGetContainer(morphClient, cid);
         }
     }
 }

@@ -11,7 +11,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route
     public class RemoteLoadAnnounceProvider
     {
         private readonly ECDsa key;
-        private readonly ILocalAddressSource localAddressSource;
+        private readonly Address localAddress;
         private readonly ClientCache clientCache;
         private readonly AnnouncementStorage deadEndProvider;
 

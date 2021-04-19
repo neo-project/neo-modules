@@ -1,14 +1,18 @@
+using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 
 namespace Neo.FileStorage.Services.Object.Delete.Writer
 {
-    public class SimpleTombstoneWriter
+    public class SimpleTombstoneWriter : ITombstoneWriter
     {
-        public Address Address { get; private set; }
+        public DeleteResponse Response { get; init; }
 
         public void SetAddress(Address address)
         {
-            Address = address;
+            Response.Body = new()
+            {
+                Tombstone = address,
+            };
         }
     }
 }

@@ -44,23 +44,15 @@ namespace Neo.FileStorage.Network
             return string.Join('/', prefix, s, L4Protocol, port);
         }
 
-        public bool IsLocalAddress(ILocalAddressSource src)
+        public bool IsLocalAddress(Address address)
         {
-            return src.LocalAddress().ma.Equals(this.ma);
+            return address.ma.Equals(ma);
         }
 
         // IPAddrFromMultiaddr converts "/dns4/localhost/tcp/8080" to "192.168.0.1:8080".
         public static string IPAddrFromMultiaddr(string multiaddr)
         {
-            var address = AddressFromString(multiaddr);
-            return address.IPAddressString();
+            return AddressFromString(multiaddr).IPAddressString();
         }
-    }
-
-    // ILocalAddressSource is an interface of local
-    // network address container with read access.
-    public interface ILocalAddressSource
-    {
-        Address LocalAddress();
     }
 }

@@ -1,6 +1,7 @@
 using Google.Protobuf;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.Services.Object.Put;
+using Neo.FileStorage.Services.Object.Put.Writer;
 using System;
 using System.Linq;
 using System.Threading;
@@ -80,7 +81,7 @@ namespace Neo.FileStorage.Services.Object
             return ObjectService.Head(request);
         }
 
-        public PutStream Put(CancellationToken cancellation)
+        public IPutRequestStream Put(CancellationToken cancellation)
         {
             return ObjectService.Put(cancellation);
         }

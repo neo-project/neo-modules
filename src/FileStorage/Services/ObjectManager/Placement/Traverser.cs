@@ -41,7 +41,7 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
             this.vectors = ns;
         }
 
-        public Network.Address[] Next()
+        public List<Network.Address> Next()
         {
             SkipEmptyVectors();
             if (vectors.Count == 0)
@@ -53,12 +53,12 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
             if (count < 0)
                 count = vectors[0].Count;
 
-            var addrs = Array.Empty<Network.Address>();
+            List<Network.Address> addrs = new();
 
             for (int i = 0; i < count; i++)
             {
                 var addr = Network.Address.AddressFromString(vectors[0][i].NetworkAddress);
-                addrs = addrs.Append(addr).ToArray();
+                addrs.Add(addr);
             }
 
             vectors[0] = vectors[0].Skip(count).ToList();
@@ -96,7 +96,7 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
             return true;
         }
 
-        public Traverser WithContainer(V2Container container)
+        public Traverser ForContainer(V2Container container)
         {
             if (Address is null)
                 Address = new Address();
@@ -105,7 +105,7 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
             return this;
         }
 
-        public Traverser WithObjectID(ObjectID oid)
+        public Traverser ForObjectID(ObjectID oid)
         {
             if (Address is null)
                 Address = new Address();
@@ -117,6 +117,12 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
         {
             Builder = builder;
             return this;
+        }
+
+        public Traverser SuccessAfter(uint v)
+        {
+            //TODO:
+            throw new NotImplementedException();
         }
     }
 }
