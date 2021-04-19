@@ -116,9 +116,8 @@ namespace Neo.Plugins
                     {
                         resultList.Add(iterator.Value());
                         max--;
-                        if (max <= 0)
+                        if (max < 0)
                         {
-                            max++;
                             warning = "MaxIteratorItems is achieved. The values was truncated.";
                             break;
                         }
