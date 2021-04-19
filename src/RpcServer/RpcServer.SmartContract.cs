@@ -94,6 +94,7 @@ namespace Neo.Plugins
 
         private JObject ToJson(StackItem p, ref int max)
         {
+            string warning = null;
             if (max <= 0) throw new InvalidOperationException();
             max--;
 
@@ -107,12 +108,18 @@ namespace Neo.Plugins
                     {
                         resultList.Add(iterator.Value());
                         max--;
-                        if (max <= 0) throw new InvalidOperationException();
+                        if (max <= 0)
+                        {
+                            max++;
+                            warning = "MaxIteratorItems is acheived. Can't show all values.";
+                            break;
+                        }
                     }
 
                     JObject ret = new();
                     ret["type"] = "InteropInterface";
                     ret["value"] = ToJson(resultList, ref max);
+                    ret["warning"] = warning;
                     return ret;
                 }
             }
