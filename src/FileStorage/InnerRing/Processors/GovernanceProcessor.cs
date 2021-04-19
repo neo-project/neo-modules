@@ -1,5 +1,6 @@
 using Akka.Actor;
 using Neo.Cryptography.ECC;
+using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Morph.Event;
 using Neo.SmartContract;
 using Neo.Wallets;
@@ -42,7 +43,11 @@ namespace Neo.FileStorage.InnerRing.Processors
             ECPoint[] newInnerRing = UpdateInnerRing(innerRing, sidechainAlphabet, newAlphabet);
             Array.Sort(newInnerRing);
             //to do
-            //MorphCli.Update
+            //Notary.Update
+            //
+            var epoch = State.EpochCounter();
+            ContractInvoker.AlphabetUpdate(MainCli, BitConverter.GetBytes(epoch), newAlphabet);
+            Utility.Log(Name, LogLevel.Info, "finished alphabet list update");
         }
 
         private ECPoint[] NewAlphabetList(ECPoint[] sidechain, ECPoint[] mainnet)

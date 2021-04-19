@@ -29,7 +29,7 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public class Estimation
         {
-            public long Size;
+            public ulong Size;
             public byte[] Reporter;
         }
 
@@ -112,7 +112,7 @@ namespace Neo.FileStorage.Morph.Invoker
                 Array array = (Array)item;
                 Estimation e = new();
                 e.Reporter = array[0].GetSpan().ToArray();
-                e.Size = (long)array[1].GetInteger();
+                e.Size = (ulong)array[1].GetInteger();
                 estimations.Add(e);
             }
             es.AllEstimation = estimations;

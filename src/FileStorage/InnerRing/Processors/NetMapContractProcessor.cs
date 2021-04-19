@@ -7,6 +7,7 @@ using Neo.FileStorage.Morph.Event;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static Neo.FileStorage.InnerRing.Events.MorphEvent;
 using static Neo.FileStorage.InnerRing.Timer.EpochTickEvent;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
 using static Neo.FileStorage.Utils.WorkerPool;
@@ -20,9 +21,12 @@ namespace Neo.FileStorage.InnerRing.Processors
         private const string AddPeerNotification = "AddPeer";
         private const string UpdatePeerStateNotification = "UpdateState";
 
-        public IEpochTimerReseter EpochTimerReseter;
+        //public IEpochTimerReseter EpochTimerReseter;
         public CleanupTable NetmapSnapshot;
         public Validator NodeValidator;
+        private Action<IContractEvent> HandleNewAudit;
+        private Action<IContractEvent> HandleAuditSettlements;
+        private Action<IContractEvent> HandleAlphabetSync;
 
         public override HandlerInfo[] ListenerHandlers()
         {
@@ -58,13 +62,13 @@ namespace Neo.FileStorage.InnerRing.Processors
             return new ParserInfo[] { newEpochParser, addPeerParser, updatePeerParser };
         }
 
-        public override HandlerInfo[] TimersHandlers()
-        {
-            HandlerInfo newEpochHandler = new HandlerInfo();
-            newEpochHandler.ScriptHashWithType = new ScriptHashWithType() { Type = Timers.EpochTimer };
-            newEpochHandler.Handler = HandleNewEpochTick;
-            return new HandlerInfo[] { newEpochHandler };
-        }
+        /*        public override HandlerInfo[] TimersHandlers()
+                {
+                    HandlerInfo newEpochHandler = new HandlerInfo();
+                    newEpochHandler.ScriptHashWithType = new ScriptHashWithType() { Type = Timers.EpochTimer };
+                    newEpochHandler.Handler = HandleNewEpochTick;
+                    return new HandlerInfo[] { newEpochHandler };
+                }*/
 
         public void HandleNewEpochTick(IContractEvent timersEvent)
         {
@@ -115,7 +119,27 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                NetmapSnapshot.ForEachRemoveCandidate(netmapCleanupTickEvent.Epoch, Func);
+                NetmapSnapshot.ForEachRemoveCandidate(netmapCleanupTickEvent.Epoch, (string s) =>
+                {
+                    ECPoint key = null;
+                    try
+                    {
+                        key = ECPoint.FromBytes(s.HexToBytes(), ECCurve.Secp256r1);
+                    }
+                    catch
+                    {
+                        Utility.Log("can't decode public key of netmap node", LogLevel.Warning, s);
+                    }
+                    Utility.Log(Name, LogLevel.Info, string.Format("vote to remove node from netmap,{0}", s));
+                    try
+                    {
+                        ContractInvoker.UpdatePeerState(MorphCli, key, (int)NodeInfo.Types.State.Offline);
+                    }
+                    catch (Exception e)
+                    {
+                        Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.UpdateState,{0}", e.Message));
+                    }
+                });
             }
             catch (Exception e)
             {
@@ -123,27 +147,27 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
         }
 
-        private void Func(string s)
-        {
-            ECPoint key = null;
-            try
-            {
-                key = ECPoint.FromBytes(s.HexToBytes(), ECCurve.Secp256r1);
-            }
-            catch
-            {
-                Utility.Log("can't decode public key of netmap node", LogLevel.Warning, s);
-            }
-            Utility.Log(Name, LogLevel.Info, string.Format("vote to remove node from netmap,{0}", s));
-            try
-            {
-                ContractInvoker.UpdatePeerState(MorphCli, key, (int)NodeInfo.Types.State.Offline);
-            }
-            catch (Exception e)
-            {
-                Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.UpdateState,{0}", e.Message));
-            }
-        }
+        /*        private void Func(string s)
+                {
+                    ECPoint key = null;
+                    try
+                    {
+                        key = ECPoint.FromBytes(s.HexToBytes(), ECCurve.Secp256r1);
+                    }
+                    catch
+                    {
+                        Utility.Log("can't decode public key of netmap node", LogLevel.Warning, s);
+                    }
+                    Utility.Log(Name, LogLevel.Info, string.Format("vote to remove node from netmap,{0}", s));
+                    try
+                    {
+                        ContractInvoker.UpdatePeerState(MorphCli, key, (int)NodeInfo.Types.State.Offline);
+                    }
+                    catch (Exception e)
+                    {
+                        Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.UpdateState,{0}", e.Message));
+                    }
+                }*/
 
         public void ProcessNewEpochTick(NewEpochTickEvent timersEvent)
         {
@@ -178,9 +202,12 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, string.Format("can't get netmap snapshot to perform cleanup,{0}", e.Message));
                 return;
             }
+            if (newEpochEvent.EpochNumber > 0)//todo
             NetmapSnapshot.Update(snapshot, newEpochEvent.EpochNumber);
             HandleCleanupTick(new NetmapCleanupTickEvent() { Epoch = newEpochEvent.EpochNumber });
-            //todo
+            HandleNewAudit(new StartEvent() { epoch = newEpochEvent.EpochNumber });
+            HandleAuditSettlements(new AuditEvent() { epoch = newEpochEvent.EpochNumber });
+            HandleAlphabetSync(new SyncEvent());
         }
 
         public void ProcessAddPeer(AddPeerEvent addPeerEvent)
@@ -202,7 +229,9 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             NodeValidator.VerifyAndUpdate(nodeInfo);
             Google.Protobuf.Collections.RepeatedField<NodeInfo.Types.Attribute> attributes = nodeInfo.Attributes;
+            //todo
             //attributes.sort();
+            
             var key = nodeInfo.PublicKey.ToByteArray().ToHexString();
             if (!NetmapSnapshot.Touch(key, State.EpochCounter()))
             {
@@ -349,27 +378,32 @@ namespace Neo.FileStorage.InnerRing.Processors
             public bool RemoveFlag { get => removeFlag; set => removeFlag = value; }
         }
 
-        public class Validator {
+        public class Validator
+        {
             private Dictionary<string, AttrDescriptor> mAttr;
 
 
-            public void VerifyAndUpdate(NodeInfo n) {
-                var mAttr= UniqueAttributes(n.Attributes.GetEnumerator());
+            public void VerifyAndUpdate(NodeInfo n)
+            {
+                var mAttr = UniqueAttributes(n.Attributes.GetEnumerator());
                 //if (mAttr.TryGetValue(NodeInfo.AttrUNLOCODE, out var attrLocode)) return;
             }
 
-            public Dictionary<String, NodeInfo.Types.Attribute> UniqueAttributes(IEnumerator<NodeInfo.Types.Attribute> attributes) {
+            public Dictionary<String, NodeInfo.Types.Attribute> UniqueAttributes(IEnumerator<NodeInfo.Types.Attribute> attributes)
+            {
                 Dictionary<String, NodeInfo.Types.Attribute> mAttr = new Dictionary<string, NodeInfo.Types.Attribute>();
-                while(attributes.MoveNext()) {
+                while (attributes.MoveNext())
+                {
                     var attr = attributes.Current;
                     if (!mAttr.TryAdd(attr.Key, attr))
-                        mAttr[attr.Key]=attr;
+                        mAttr[attr.Key] = attr;
                 }
                 return mAttr;
             }
-            public class AttrDescriptor {
+            public class AttrDescriptor
+            {
                 public bool optional;
-               private Func<string> converter;
+                private Func<string> converter;
 
                 //public string CountryCodeValue(Record r) { }
 

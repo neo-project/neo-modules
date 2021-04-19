@@ -33,8 +33,8 @@ namespace Neo.FileStorage
         public int QueueCapacity;
 
         public string[] Urls;
-        public long EpochDuration;
-        public long AlphabetDuration;
+        public uint EpochDuration;
+        public uint AlphabetDuration;
         public int MintEmitCacheSize;
         public ulong MintEmitThreshold;
         public long GasBalanceThreshold;
@@ -47,6 +47,12 @@ namespace Neo.FileStorage
         public ulong HeadTimeout;
         public ulong RangeTimeout;
         public TimeSpan IndexerTimeout;
+        public uint StopEstimationDMul;
+        public uint StopEstimationDDiv;
+        public uint CollectBasicIncomeMul;
+        public uint CollectBasicIncomeDiv;
+        public uint DistributeBasicIncomeMul;
+        public uint DistributeBasicIncomeDiv;
 
         public List<UInt160> Contracts = new List<UInt160>();
 
@@ -82,8 +88,14 @@ namespace Neo.FileStorage
             this.AlphabetContractWorkersSize = int.Parse(workSizes.GetSection("alphabet").Value);
 
             IConfigurationSection timers = section.GetSection("timers");
-            this.EpochDuration = long.Parse(timers.GetSection("epoch").Value);
-            this.AlphabetDuration = long.Parse(timers.GetSection("emit").Value);
+            this.EpochDuration = uint.Parse(timers.GetSection("epoch").Value);
+            this.AlphabetDuration = uint.Parse(timers.GetSection("emit").Value);
+            this.StopEstimationDMul = uint.Parse(timers.GetSection("stop_estimation").GetSection("mul").Value);
+            this.StopEstimationDDiv = uint.Parse(timers.GetSection("stop_estimation").GetSection("div").Value);
+            this.CollectBasicIncomeMul = uint.Parse(timers.GetSection("collect_basic_income").GetSection("mul").Value);
+            this.CollectBasicIncomeDiv = uint.Parse(timers.GetSection("collect_basic_income").GetSection("div").Value);
+            this.DistributeBasicIncomeMul = uint.Parse(timers.GetSection("distribute_basic_income").GetSection("mul").Value);
+            this.DistributeBasicIncomeDiv = uint.Parse(timers.GetSection("distribute_basic_income").GetSection("div").Value);
 
             IConfigurationSection emit = section.GetSection("emit");
             this.MintEmitCacheSize = int.Parse(emit.GetSection("mint").GetSection("cache_size").Value);
