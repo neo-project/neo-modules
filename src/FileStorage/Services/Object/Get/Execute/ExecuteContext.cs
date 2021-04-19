@@ -1,13 +1,10 @@
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.LocalObjectStorage;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using System;
-using static Neo.Utility;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSRange = Neo.FileStorage.API.Object.Range;
-using Neo.FileStorage.API.Object.Exceptions;
 
 namespace Neo.FileStorage.Services.Object.Get.Execute
 {
@@ -81,18 +78,6 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
             if (ShouldWritePayload)
                 Prm.Writer.WriteChunk(obj.Payload.ToByteArray());
             return true;
-        }
-
-        private Traverser GenerateTraverser(Address address)
-        {
-            return GetService.TraverserGenerator.GenerateTraverser(address);
-        }
-
-        private void InitEpoch()
-        {
-            CurrentEpoch = Prm.NetmapEpoch;
-            if (0 < CurrentEpoch) return;
-            CurrentEpoch = MorphContractInvoker.InvokeEpoch(GetService.MorphClient);
         }
     }
 }

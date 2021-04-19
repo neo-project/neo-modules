@@ -6,7 +6,7 @@ namespace Neo.FileStorage.Services.Object.Search
 {
     public class SearchPrm : CommonPrm
     {
-        public ContainerID CID;
+        public ContainerID ContainerID;
         public SearchFilters Filters;
         public ISearchResponseWriter Writer;
 
@@ -14,7 +14,7 @@ namespace Neo.FileStorage.Services.Object.Search
         {
             var prm = new SearchPrm
             {
-                CID = request.Body.ContainerId,
+                ContainerID = request.Body.ContainerId,
                 Filters = new SearchFilters(request.Body.Filters),
             };
             prm.WithCommonPrm(CommonPrm.FromRequest(request));

@@ -4,11 +4,11 @@ using Neo.FileStorage.Services.ObjectManager.Placement;
 using System.Linq;
 using static Neo.Utility;
 
-namespace Neo.FileStorage.Services.Object.Get.Execute
+namespace Neo.FileStorage.Services.Object.Search.Execute
 {
     public partial class ExecuteContext
     {
-        private void ExecuteOnContainer()
+        private void ExecuteContainer()
         {
             InitEpoch();
             var depth = Prm.NetmapLookupDepth;
@@ -16,25 +16,25 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
             {
                 if (ProcessCurrentEpoch()) break;
                 depth--;
-                CurrentEpoch--;
+                currentEpoch--;
             }
         }
 
         private void InitEpoch()
         {
-            CurrentEpoch = Prm.NetmapEpoch;
-            if (0 < CurrentEpoch) return;
-            CurrentEpoch = MorphContractInvoker.InvokeEpoch(GetService.MorphClient);
+            currentEpoch = Prm.NetmapEpoch;
+            if (0 < currentEpoch) return;
+            currentEpoch = MorphContractInvoker.InvokeEpoch(SearchService.MorphClient);
         }
 
-        private Traverser GenerateTraverser(Address address)
+        private Traverser GenerateTraverser(ContainerID cid)
         {
-            return GetService.TraverserGenerator.GenerateTraverser(address);
+            return SearchService.TraverserGenerator.GenerateTraverser(new() { ContainerId = cid });
         }
 
         private bool ProcessCurrentEpoch()
         {
-            traverser = GenerateTraverser(Prm.Address);
+            traverser = GenerateTraverser(Prm.ContainerID);
             while (true)
             {
                 var addrs = traverser.Next();
@@ -44,13 +44,7 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
                     return false;
                 }
                 foreach (var addr in addrs)
-                {
-                    if (ProcessNode(addr))
-                    {
-                        Log(nameof(ExecuteOnContainer), LogLevel.Debug, " completing the operation");
-                        return true;
-                    }
-                }
+                    ProcessNode(addr);
             }
         }
     }

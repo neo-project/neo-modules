@@ -74,7 +74,7 @@ namespace Neo.FileStorage.Services.Object.Delete.Execute
             SimpleIDWriter writer = new();
             SearchPrm prm = new()
             {
-                CID = context.Prm.Address.ContainerId,
+                ContainerID = context.Prm.Address.ContainerId,
                 Filters = filters,
                 Writer = writer,
             };
