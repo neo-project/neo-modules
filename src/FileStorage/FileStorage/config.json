@@ -71,6 +71,9 @@
     },
     "indexer": {
       "cache_timeout": 100
+    },
+    "settlement": {
+      "basic_income_rate": 10
     }
   }
 }

@@ -46,7 +46,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             //Notary.Update
             //
             var epoch = State.EpochCounter();
-            ContractInvoker.AlphabetUpdate(MainCli, BitConverter.GetBytes(epoch), newAlphabet);
+            MainCli.AlphabetUpdate(BitConverter.GetBytes(epoch), newAlphabet);
             Utility.Log(Name, LogLevel.Info, "finished alphabet list update");
         }
 

@@ -82,7 +82,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                ContractInvoker.RegisterContainer(MorphCli, putEvent.PublicKey, putEvent.RawContainer, putEvent.Signature);
+                MorphCli.RegisterContainer(putEvent.PublicKey, putEvent.RawContainer, putEvent.Signature);
             }
             catch (Exception e)
             {
@@ -99,7 +99,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                ContractInvoker.RemoveContainer(MorphCli, deleteEvent.ContainerID, deleteEvent.Signature);
+                MorphCli.RemoveContainer(deleteEvent.ContainerID, deleteEvent.Signature);
             }
             catch (Exception e)
             {

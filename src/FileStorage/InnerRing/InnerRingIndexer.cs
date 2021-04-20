@@ -25,7 +25,7 @@ namespace Neo.FileStorage.InnerRing
             {
                 if (DateTime.Now.Subtract(lastAccess) < timeout) return ind;
                 var key = client.GetWallet().GetAccounts().ToArray()[0].GetKey().PublicKey;
-                ContractInvoker.InnerRingIndex(client, key, out int innerRingIndex, out int innerRingSize);
+                client.InnerRingIndex(key, out int innerRingIndex, out int innerRingSize);
                 ind.innerRingIndex = innerRingIndex;
                 ind.innerRingSize = innerRingSize;
                 ind.alphabetIndex = ContractInvoker.AlphabetIndex(client, key);

@@ -61,7 +61,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                ContractInvoker.CashOutCheque(MainCli, lockEvent.Id, Convert.ToFixed8(lockEvent.Amount), lockEvent.UserAccount, lockEvent.LockAccount);
+                MainCli.CashOutCheque(lockEvent.Id, Convert.ToFixed8(lockEvent.Amount), lockEvent.UserAccount, lockEvent.LockAccount);
             }
             catch (Exception e)
             {

@@ -3,6 +3,7 @@ using Neo.FileStorage.API.Audit;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.API.StorageGroup;
 using Neo.FileStorage.Core.Container;
 using Neo.FileStorage.Core.Netmap;
 using Neo.FileStorage.InnerRing.Processors;
@@ -10,13 +11,13 @@ using Neo.FileStorage.Morph.Invoker;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor;
-using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor.IncomeSettlementContext;
+using System.Threading;
+using static Neo.FileStorage.Morph.Invoker.MorphContractInvoker;
 using NodeInfo = Neo.FileStorage.InnerRing.Processors.NodeInfo;
 
 namespace Neo.FileStorage.InnerRing
 {
-    public class SettlementDeps: ResultStorage, ContainerStorage, PlacementCalculator, AccountStorage, Exchanger, SGInfo,AuditProcessor, SGStorage
+    public abstract class SettlementDeps
     {
         public Client client;
         public INetmapSource nmSrc;
@@ -39,30 +40,31 @@ namespace Neo.FileStorage.InnerRing
             return cnrSrc.Get(cid);
 
         }
+
+        public void BuildContainer(ulong epoch, ContainerID cid, out List<List<Node>> containerNodes, out NetMap netMap)
+        {
+            if (epoch > 0)
+                netMap = nmSrc.GetNetMapByEpoch(epoch);
+            else
+                netMap = nmSrc.GetLatestNetworkMap();
+            Container cnr = cnrSrc.Get(cid);
+            containerNodes = netMap.GetContainerNodes(cnr.PlacementPolicy, cid.Value.ToByteArray());
+        }
+
         public NodeInfo[] ContainerNodes(ulong epoch, ContainerID cid)
         {
             BuildContainer(epoch, cid, out List<List<Node>> cn, out NetMap netMap);
             List<Node> ns = cn.Flatten();
             List<NodeInfo> res = new List<NodeInfo>();
             foreach (var node in ns)
-                res.Add(new NodeInfoWrapper(node));
+                res.Add(new NormalNodeInfoWrapper(node));
             return res.ToArray();
         }
 
-        public void BuildContainer(ulong epoch,ContainerID cid,out List<List<Node>> containerNodes,out NetMap netMap) {
-            if (epoch > 0)
-                netMap = nmSrc.GetNetMapByEpoch(epoch);
-            else
-                netMap = nmSrc.GetLatestNetworkMap();
-            Container cnr = cnrSrc.Get(cid);
-            containerNodes = netMap.GetContainerNodes(cnr.PlacementPolicy,cid.Value.ToByteArray());
-        }
-
-
-
-        public ulong Size()
+        public StorageGroup SGInfo(Address address)
         {
-            throw new NotImplementedException();
+            BuildContainer(0, address.ContainerId, out var cn, out var nm);
+            return clientCache.GetStorageGroup(new CancellationToken(), address,nm,cn);
         }
 
         public OwnerID ResolveKey(NodeInfo nodeInfo)
@@ -70,81 +72,50 @@ namespace Neo.FileStorage.InnerRing
             return OwnerID.Frombytes(nodeInfo.PublicKey());
         }
 
-
-        void Exchanger.Transfer(OwnerID sender, OwnerID recipient, BigInteger amount)
-        {
+        public void transfer(OwnerID sender, OwnerID recipient, BigInteger amount,byte[] details) {
             Utility.Log("SettlementDeps", LogLevel.Info, string.Format("sender:{0},recipient:{1},amount (GASe-12):{2}", sender, recipient, amount));
             //notary
             Utility.Log("SettlementDeps", LogLevel.Info, "transfer transaction for audit was successfully sent");
         }
 
-        public void ProcessAuditSettlements(ulong epoch)
-        {
-            //C//
-        }
-
-        public SGInfo SGInfo(Address address)
-        {
-            BuildContainer(0, address.ContainerId, out var cn, out var nm);
-            //clientCache.GetStorageGroup();
-            return null;
-        }
-    }
-
-    public class NodeInfoWrapper : NodeInfo
-    {
-        private Node ni;
-
-        public NodeInfoWrapper(Node ni)
-        {
-            this.ni = ni;
-        }
-
-        public BigInteger Price()
-        {
-            return ni.Price;
-        }
-
-        public byte[] PublicKey()
-        {
-            return ni.PublicKey;
-        }
+        public abstract void Transfer(OwnerID sender, OwnerID recipient, BigInteger amount);
     }
 
     public class AuditSettlementDeps : SettlementDeps
     {
+        public override void Transfer(OwnerID sender, OwnerID recipient, BigInteger amount)
+        {
+            transfer(sender, recipient, amount, System.Text.Encoding.UTF8.GetBytes("settlement-audit"));
+        }
     };
-    public class BasicIncomeSettlementDeps : SettlementDeps, EstimationFetcher,BalanceFetcher,RateFetcher, BasicIncomeInitializer
+    public class BasicIncomeSettlementDeps : SettlementDeps
     {
+        public ulong BasicRate => Settings.Default.BasicIncomeRate;
+        public override void Transfer(OwnerID sender, OwnerID recipient, BigInteger amount)
+        {
+            transfer(sender, recipient, amount, System.Text.Encoding.UTF8.GetBytes("settlement-basic-income"));
+        }
+
         public BigInteger Balance(OwnerID id)
         {
             return client.InvokeBalanceOf(id.ToByteArray());
         }
 
-        public ulong BasicRate()
+        public Estimations[] Estimations(ulong epoch)
         {
-            throw new NotImplementedException();
-        }
-
-        public IncomeSettlementContext CreateContext(ulong epoch)
-        {
-            return new IncomeSettlementContext() {
-                epoch=epoch,
-                rate= this,
-                estimations=this,
-                balances = this,
-                container = this,
-                placement = this,
-                exchange = this,
-                accounts = this,
-
-            };
-        }
-
-        public MorphContractInvoker.Estimations[] Estimations(ulong epoch)
-        {
-            //cnrClient;
-            return null;
+            List<byte[]> estimationIDs = client.InvokeListSizes(epoch);
+            List<Estimations> result = new List<Estimations>();
+            foreach (var estimationID in estimationIDs) {
+                try
+                {
+                    Estimations estimation = client.InvokeGetContainerSize(ContainerID.Parser.ParseFrom(estimationID));
+                    result.Add(estimation);
+                }
+                catch (Exception e) {
+                    Utility.Log("BasicIncomeSettlementDeps", LogLevel.Warning, string.Format("can't get used space estimation,estimation_id:{0},error:{1}", estimationID.ToHexString(),e.Message));
+                }
+            }
+            return result.ToArray();
         }
     };
 }

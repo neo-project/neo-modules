@@ -187,31 +187,35 @@ namespace Neo.FileStorage.InnerRing
             };
             // todo: create vivid id component
             // initialize epoch timers
-            epochTimer = NewEpochTimer(new EpochTimerArgs() {
-                context=system,
-                processor=netMapContractProcessor,
-                client=morphClient,
-                epoch=this,
-                epochDuration=Settings.Default.EpochDuration,
-                stopEstimationDMul=Settings.Default.StopEstimationDMul,
-                stopEstimationDDiv=Settings.Default.StopEstimationDDiv,
-                collectBasicIncome=new SubEpochEventHandler() {
-                    handler= settlementProcessor.HandleIncomeCollectionEvent,
-                    durationMul=Settings.Default.CollectBasicIncomeMul,
-                    durationDiv=Settings.Default.CollectBasicIncomeDiv,
+            epochTimer = NewEpochTimer(new EpochTimerArgs()
+            {
+                context = system,
+                processor = netMapContractProcessor,
+                client = morphClient,
+                epoch = this,
+                epochDuration = Settings.Default.EpochDuration,
+                stopEstimationDMul = Settings.Default.StopEstimationDMul,
+                stopEstimationDDiv = Settings.Default.StopEstimationDDiv,
+                collectBasicIncome = new SubEpochEventHandler()
+                {
+                    handler = settlementProcessor.HandleIncomeCollectionEvent,
+                    durationMul = Settings.Default.CollectBasicIncomeMul,
+                    durationDiv = Settings.Default.CollectBasicIncomeDiv,
                 },
-                distributeBasicIncome=new SubEpochEventHandler() {
-                    handler=settlementProcessor.HandleIncomeDistributionEvent,
+                distributeBasicIncome = new SubEpochEventHandler()
+                {
+                    handler = settlementProcessor.HandleIncomeDistributionEvent,
                     durationMul = Settings.Default.DistributeBasicIncomeMul,
                     durationDiv = Settings.Default.DistributeBasicIncomeDiv,
                 }
             });
             blockTimers.Add(epochTimer);
             // initialize emission timer
-            var emissionTimer = Timer.Helper.NewEmissionTimer(new EmitTimerArgs() {
-                context=system,
-                processor= alphabetContractProcessor,
-                epochDuration=Settings.Default.AlphabetDuration
+            var emissionTimer = Timer.Helper.NewEmissionTimer(new EmitTimerArgs()
+            {
+                context = system,
+                processor = alphabetContractProcessor,
+                epochDuration = Settings.Default.AlphabetDuration
             });
             blockTimers.Add(emissionTimer);
             //todo
@@ -223,7 +227,7 @@ namespace Neo.FileStorage.InnerRing
             long epoch;
             try
             {
-                epoch = ContractInvoker.GetEpoch(morphClient);
+                epoch = morphClient.GetEpoch();
             }
             catch
             {
@@ -232,7 +236,7 @@ namespace Neo.FileStorage.InnerRing
             uint balancePrecision;
             try
             {
-                balancePrecision = ContractInvoker.BalancePrecision(morphClient);
+                balancePrecision = morphClient.BalancePrecision();
             }
             catch
             {
@@ -378,7 +382,7 @@ namespace Neo.FileStorage.InnerRing
             {
                 try
                 {
-                    ContractInvoker.AlphabetVote(morphClient, i, epoch, validators);
+                    morphClient.AlphabetVote(i, epoch, validators);
                 }
                 catch
                 {
@@ -398,7 +402,7 @@ namespace Neo.FileStorage.InnerRing
             IEnumerable<Wallets.WalletAccount> accounts = wallet.GetAccounts();
             DataAuditResult res = r.Result();
             res.PublicKey = ByteString.CopyFrom(accounts.ToArray()[0].GetKey().PublicKey.ToArray());
-            MorphContractInvoker.InvokePutAuditResult(morphClient, res.ToByteArray());
+            morphClient.InvokePutAuditResult(res.ToByteArray());
         }
 
         public void ResetEpochTimer()

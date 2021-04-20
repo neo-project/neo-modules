@@ -28,22 +28,25 @@ namespace Neo.FileStorage.InnerRing.Processors
             return clientCache.Get(address); //TODO: fix no key when get client cache
         }
 
-        public StorageGroup GetStorageGroup(AuditTask task, ObjectID id)
-        {
-            List<List<Node>> nodes;
-            try
-            {
-                nodes = NetworkMapBuilder.BuildObjectPlacement(task.Netmap, task.ContainerNodes, id);
-            }
-            catch (Exception e)
-            {
-                throw new Exception(string.Format("can't build object placement: {0}", e.Message));
-            }
+        public StorageGroup GetStorageGroup(AuditTask task, ObjectID id) {
             var sgAddress = new Address()
             {
                 ContainerId = task.CID,
                 ObjectId = id
             };
+            return GetStorageGroup(task.Context,sgAddress,task.Netmap,task.ContainerNodes);
+        }
+        public StorageGroup GetStorageGroup(CancellationToken context, Address sgAddress, NetMap netMap, List<List<Node>> containerNodes)
+        {
+            List<List<Node>> nodes;
+            try
+            {
+                nodes = NetworkMapBuilder.BuildObjectPlacement(netMap, containerNodes, sgAddress.ObjectId);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(string.Format("can't build object placement: {0}", e.Message));
+            }
             foreach (var node in nodes.Flatten())
             {
                 string addr;

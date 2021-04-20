@@ -53,6 +53,7 @@ namespace Neo.FileStorage
         public uint CollectBasicIncomeDiv;
         public uint DistributeBasicIncomeMul;
         public uint DistributeBasicIncomeDiv;
+        public ulong BasicIncomeRate;
 
         public List<UInt160> Contracts = new List<UInt160>();
 
@@ -121,6 +122,9 @@ namespace Neo.FileStorage
 
             IConfigurationSection indexer = section.GetSection("indexer");
             this.IndexerTimeout = TimeSpan.FromMilliseconds(long.Parse(audit.GetSection("cache_timeout").Value));
+
+            IConfigurationSection settlement = section.GetSection("settlement");
+            this.BasicIncomeRate = ulong.Parse(audit.GetSection("basic_income_rate").Value);
         }
 
         public static void Load(IConfigurationSection section)

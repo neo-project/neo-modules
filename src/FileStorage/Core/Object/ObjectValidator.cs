@@ -121,7 +121,7 @@ namespace Neo.FileStorage.Core.Object
 
         private ulong CurrentEpoch()
         {
-            return MorphContractInvoker.InvokeEpoch(morphClient);
+            return morphClient.InvokeEpoch();
         }
     }
 }

@@ -133,7 +133,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Info, string.Format("vote to remove node from netmap,{0}", s));
                     try
                     {
-                        ContractInvoker.UpdatePeerState(MorphCli, key, (int)API.Netmap.NodeInfo.Types.State.Offline);
+                        MorphCli.UpdatePeerState(key, (int)API.Netmap.NodeInfo.Types.State.Offline);
                     }
                     catch (Exception e)
                     {
@@ -180,7 +180,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             Utility.Log(Name, LogLevel.Info, string.Format("next epoch,{0}", nextEpoch));
             try
             {
-                ContractInvoker.SetNewEpoch(MorphCli, nextEpoch);
+                MorphCli.SetNewEpoch(nextEpoch);
             }
             catch (Exception e)
             {
@@ -195,7 +195,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             API.Netmap.NodeInfo[] snapshot;
             try
             {
-                snapshot = ContractInvoker.NetmapSnapshot(MorphCli);
+                snapshot = MorphCli.NetmapSnapshot();
             }
             catch (Exception e)
             {
@@ -203,7 +203,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 return;
             }
             if (newEpochEvent.EpochNumber > 0)//todo
-            NetmapSnapshot.Update(snapshot, newEpochEvent.EpochNumber);
+                NetmapSnapshot.Update(snapshot, newEpochEvent.EpochNumber);
             HandleCleanupTick(new NetmapCleanupTickEvent() { Epoch = newEpochEvent.EpochNumber });
             HandleNewAudit(new StartEvent() { epoch = newEpochEvent.EpochNumber });
             HandleAuditSettlements(new AuditEvent() { epoch = newEpochEvent.EpochNumber });
@@ -231,14 +231,14 @@ namespace Neo.FileStorage.InnerRing.Processors
             Google.Protobuf.Collections.RepeatedField<API.Netmap.NodeInfo.Types.Attribute> attributes = nodeInfo.Attributes;
             //todo
             //attributes.sort();
-            
+
             var key = nodeInfo.PublicKey.ToByteArray().ToHexString();
             if (!NetmapSnapshot.Touch(key, State.EpochCounter()))
             {
                 Utility.Log(Name, LogLevel.Info, string.Format("approving network map candidate,{0}", key));
                 try
                 {
-                    ContractInvoker.ApprovePeer(MorphCli, addPeerEvent.Node);
+                    MorphCli.ApprovePeer(addPeerEvent.Node);
                 }
                 catch (Exception e)
                 {
@@ -262,7 +262,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             NetmapSnapshot.Flag(updateStateEvent.PublicKey.ToString());
             try
             {
-                ContractInvoker.UpdatePeerState(MorphCli, updateStateEvent.PublicKey, (int)updateStateEvent.Status);
+                MorphCli.UpdatePeerState(updateStateEvent.PublicKey, (int)updateStateEvent.Status);
             }
             catch (Exception e)
             {

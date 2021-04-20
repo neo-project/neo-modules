@@ -119,7 +119,7 @@ namespace Neo.FileStorage.Morph.Invoker
             return es;
         }
 
-        public static List<byte[]> InvokeListSizes(this Client client, long epoch)
+        public static List<byte[]> InvokeListSizes(this Client client, ulong epoch)
         {
             InvokeResult result = client.TestInvoke(ContainerContractHash, ListSizesMethod, epoch);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (ListSizes)");

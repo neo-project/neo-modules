@@ -55,7 +55,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             NetMap nm;
             try
             {
-                nm = MorphContractInvoker.InvokeSnapshot(MorphCli, 0);
+                nm = MorphCli.InvokeSnapshot(0);
             }
             catch (Exception e)
             {
@@ -67,7 +67,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Container cnr;
                 try
                 {
-                    cnr = MorphContractInvoker.InvokeGetContainer(MorphCli, containers[i]);
+                    cnr = MorphCli.InvokeGetContainer(containers[i]);
                 }
                 catch (Exception e)
                 {
@@ -120,7 +120,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             List<ContainerID> containers;
             try
             {
-                containers = MorphContractInvoker.InvokeGetContainerList(MorphCli, new OwnerID());
+                containers = MorphCli.InvokeGetContainerList(new OwnerID());
             }
             catch (Exception e)
             {

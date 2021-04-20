@@ -51,7 +51,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                ContractInvoker.AlphabetEmit(MorphCli, index);
+                MorphCli.AlphabetEmit(index);
             }
             catch (Exception)
             {
@@ -66,7 +66,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             API.Netmap.NodeInfo[] networkMap = null;
             try
             {
-                networkMap = ContractInvoker.NetmapSnapshot(MorphCli);
+                networkMap = MorphCli.NetmapSnapshot();
             }
             catch (Exception e)
             {

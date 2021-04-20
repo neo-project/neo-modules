@@ -120,7 +120,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                ContractInvoker.Mint(MorphCli, depositeEvent.To.ToArray(), Convert.ToBalancePrecision(depositeEvent.Amount), System.Text.Encoding.UTF8.GetBytes(TxLogPrefix).Concat(depositeEvent.Id).ToArray());
+                MorphCli.Mint(depositeEvent.To.ToArray(), Convert.ToBalancePrecision(depositeEvent.Amount), System.Text.Encoding.UTF8.GetBytes(TxLogPrefix).Concat(depositeEvent.Id).ToArray());
             }
             catch (Exception e)
             {
@@ -175,7 +175,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 ulong curEpoch = State.EpochCounter();
                 //invoke
-                ContractInvoker.LockAsset(MorphCli, withdrawEvent.Id, withdrawEvent.UserAccount, lockeAccount, Convert.ToBalancePrecision(withdrawEvent.Amount), curEpoch + LockAccountLifetime);
+                MorphCli.LockAsset(withdrawEvent.Id, withdrawEvent.UserAccount, lockeAccount, Convert.ToBalancePrecision(withdrawEvent.Amount), curEpoch + LockAccountLifetime);
             }
             catch (Exception e)
             {
@@ -193,7 +193,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             //invoke
             try
             {
-                ContractInvoker.Burn(MorphCli, chequeEvent.LockAccount.ToArray(), Convert.ToBalancePrecision(chequeEvent.Amount), System.Text.Encoding.UTF8.GetBytes(TxLogPrefix).Concat(chequeEvent.Id).ToArray());
+                MorphCli.Burn(chequeEvent.LockAccount.ToArray(), Convert.ToBalancePrecision(chequeEvent.Amount), System.Text.Encoding.UTF8.GetBytes(TxLogPrefix).Concat(chequeEvent.Id).ToArray());
             }
             catch (Exception e)
             {
@@ -211,7 +211,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             //invoke
             try
             {
-                ContractInvoker.SetConfig(MorphCli, configEvent.Id, configEvent.Key, configEvent.Value);
+                MorphCli.SetConfig(configEvent.Id, configEvent.Key, configEvent.Value);
             }
             catch (Exception e)
             {
