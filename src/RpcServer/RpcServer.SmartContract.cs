@@ -78,7 +78,7 @@ namespace Neo.Plugins
             json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
-                json["stack"] = new JArray(engine.ResultStack.Select(p => ToJson(p, settings.MaxResultItems)));
+                json["stack"] = new JArray(engine.ResultStack.Select(p => ToJson(p, settings.MaxIteratorResultItems)));
             }
             catch (InvalidOperationException)
             {

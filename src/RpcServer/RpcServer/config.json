@@ -13,7 +13,7 @@
         "MaxGasInvoke": 20,
         "MaxFee": 0.1,
         "MaxConcurrentConnections": 40,
-        "MaxResultItems": 100,
+        "MaxIteratorResultItems": 100,
         "DisabledMethods": [ "openwallet" ]
       }
     ]
