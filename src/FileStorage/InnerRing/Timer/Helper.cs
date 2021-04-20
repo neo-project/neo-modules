@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Neo.FileStorage.InnerRing.Timer.EpochTickEvent;
 
 namespace Neo.FileStorage.InnerRing.Timer
 {
@@ -14,15 +15,12 @@ namespace Neo.FileStorage.InnerRing.Timer
     {
         public static IActorRef NewEpochTimer(EpochTimerArgs args)
         {
-            system.ActorSystem.ActorOf(BlockTimer.Props(BlockTimer.StaticBlockMeter(Settings.Default.EpochDuration), () => { netMapContractProcessor.HandleNewEpochTick(new NewEpochTickEvent()); }));
-            return null;
+            return args.context.ActorSystem.ActorOf(BlockTimer.Props(BlockTimer.StaticBlockMeter(Settings.Default.EpochDuration), () => { args.processor.HandleNewEpochTick(new NewEpochTickEvent()); }));
         }
 
         public static IActorRef NewEmissionTimer(EmitTimerArgs args)
         {
-            var emissionTimer = system.ActorSystem.ActorOf(BlockTimer.Props(BlockTimer.StaticBlockMeter(Settings.Default.AlphabetDuration), () => { alphabetContractProcessor.HandleGasEmission(new NewAlphabetEmitTickEvent()); }));
-            system.ActorSystem.ActorOf(BlockTimer.Props(BlockTimer.StaticBlockMeter(Settings.Default.EpochDuration), () => { netMapContractProcessor.HandleNewEpochTick(new NewEpochTickEvent()); }));
-            return null;
+            return args.context.ActorSystem.ActorOf(BlockTimer.Props(BlockTimer.StaticBlockMeter(Settings.Default.AlphabetDuration), () => { args.processor.HandleGasEmission(new NewAlphabetEmitTickEvent()); }));
         }
 
         public class EmitTimerArgs

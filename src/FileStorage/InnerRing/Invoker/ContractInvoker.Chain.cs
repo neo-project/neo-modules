@@ -4,16 +4,16 @@ using System;
 
 namespace Neo.FileStorage.InnerRing.Invoker
 {
-    public partial class ContractInvoker
+    public static partial class ContractInvoker
     {
-        public static void InnerRingIndex(Client client, ECPoint key, out int index, out int length)
+        public static void InnerRingIndex(this Client client, ECPoint key, out int index, out int length)
         {
             if (client is null) throw new Exception("client is nil");
             ECPoint[] innerRing = client.NeoFSAlphabetList();
             index = KeyPosition(key, innerRing);
             length = innerRing.Length;
         }
-        public static int AlphabetIndex(Client client, ECPoint key)
+        public static int AlphabetIndex(this Client client, ECPoint key)
         {
             if (client is null) throw new Exception("client is nil");
             return KeyPosition(key, client.Committee());

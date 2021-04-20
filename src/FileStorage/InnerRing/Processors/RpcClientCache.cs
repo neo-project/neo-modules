@@ -92,7 +92,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             throw new Exception("object not found");
         }
 
-        public Neo.FileStorage.API.Object.Object GetHeader(AuditTask task, Node node, ObjectID id, bool relay)
+        public API.Object.Object GetHeader(AuditTask task, Node node, ObjectID id, bool relay)
         {
             bool raw = true;
             //todo
@@ -112,7 +112,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             string addr;
             try
             {
-                addr = FileStorage.Network.Address.IPAddrFromMultiaddr(node.NetworkAddress);
+                addr = Network.Address.IPAddrFromMultiaddr(node.NetworkAddress);
             }
             catch (Exception e)
             {
@@ -127,7 +127,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 throw new Exception(string.Format("can't setup remote connection with {0}: {1}", addr, e.Message));
             }
-            Neo.FileStorage.API.Object.Object head;
+            API.Object.Object head;
             try
             {
                 var source = new CancellationTokenSource();
@@ -151,7 +151,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             string addr;
             try
             {
-                addr = FileStorage.Network.Address.IPAddrFromMultiaddr(node.NetworkAddress);
+                addr = Network.Address.IPAddrFromMultiaddr(node.NetworkAddress);
             }
             catch (Exception e)
             {

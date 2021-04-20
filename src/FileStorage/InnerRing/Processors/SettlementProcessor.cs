@@ -1,5 +1,6 @@
 using Akka.Actor;
 using Neo.FileStorage.API.Audit;
+using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Morph.Event;
@@ -108,13 +109,13 @@ namespace Neo.FileStorage.InnerRing.Processors
                 var cnrEstimations = estimations.Estimations(epoch);
                 var txTable = new TransferTable();
                 foreach (var item in cnrEstimations) {
-                    ContainerInfo owner = container.ContainerInfo(item.ContainerID);
+                    OwnerID owner = container.ContainerInfo(item.ContainerID).OwnerId;
                     NodeInfo[] cnrNodes = placement.ContainerNodes(epoch, item.ContainerID);
                     ulong avg = AvgEstimation(item);
                     BigInteger total=CalculateBasicSum(avg,cachedRate,cnrNodes.Length);
                     foreach (var node in cnrNodes)
                         distributeTable.Put(node.PublicKey(), avg);
-                    txTable.Transfer(new TransferTable.TransferTx() { from=owner.Owner(),to= BankOwnerID(),amount=total});
+                    txTable.Transfer(new TransferTable.TransferTx() { from=owner,to= BankOwnerID(),amount=total});
                 }
             }
 
@@ -330,7 +331,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
 
             public void FillTransferTable(SingleResultCtx ctx) {
-                var cnrOwner = ctx.cnrInfo.Owner();
+                var cnrOwner = ctx.cnrInfo.OwnerId;
                 foreach (var item in ctx.passNodes) {
                     var ownerID = accountStorage.ResolveKey(item.Value);
                     var price = item.Value.Price();
@@ -347,7 +348,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 public DataAuditResult auditResult;
                 public ContainerID cid;
                 public TransferTable txTable;
-                public ContainerInfo cnrInfo;
+                public Container cnrInfo;
                 public NodeInfo[] cnrNodes;
                 public Dictionary<string, NodeInfo> passNodes = new();
                 public BigInteger sumSGSize;
@@ -384,13 +385,9 @@ namespace Neo.FileStorage.InnerRing.Processors
         }
     }
 
-    public interface ContainerInfo{
-        public OwnerID Owner();
-    }
-
     public interface ContainerStorage
     {
-        public ContainerInfo ContainerInfo(ContainerID containerID);
+        public Container ContainerInfo(ContainerID containerID);
     }
 
     public interface PlacementCalculator

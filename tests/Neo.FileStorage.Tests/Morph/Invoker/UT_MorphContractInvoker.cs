@@ -2,8 +2,10 @@ using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Tests.InnerRing.Processors;
 using Neo.IO;
@@ -74,7 +76,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         [TestMethod]
         public void InvokeEpochTest()
         {
-            long result = MorphContractInvoker.InvokeEpoch(client);
+            ulong result = MorphContractInvoker.InvokeEpoch(client);
             Assert.AreEqual(result, 1);
         }
 
@@ -91,11 +93,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         public void InvokeUpdateStateTest()
         {
             var key = wallet.GetAccounts().ToArray()[0].GetKey().PublicKey;
-            bool result = MorphContractInvoker.InvokeUpdateState(client, new UpdateStateArgs()
-            {
-                key = key.EncodePoint(true),
-                state = 2
-            });
+            bool result = MorphContractInvoker.InvokeUpdateState(client, 2, key.EncodePoint(true));
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -105,14 +103,14 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         public void InvokeSnapshotTest()
         {
             var result = MorphContractInvoker.InvokeSnapshot(client, 0);
-            Assert.AreEqual(result.Length, 1);
+            Assert.AreEqual(result.Nodes.Count, 1);
         }
 
         [TestMethod]
         public void InvokeNetMapTest()
         {
             var result = MorphContractInvoker.InvokeNetMap(client);
-            Assert.AreEqual(result.Length, 1);
+            Assert.AreEqual(result.Nodes.Count, 1);
         }
 
         [TestMethod]
@@ -130,7 +128,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 PlacementPolicy = new PlacementPolicy()
             };
             byte[] sig = Neo.Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            bool result = MorphContractInvoker.InvokePut(client, container.ToByteArray(), key.PublicKey.ToArray(), sig);
+            bool result = MorphContractInvoker.InvokePut(client, container, key.PublicKey.ToArray(), sig);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -151,7 +149,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 PlacementPolicy = new PlacementPolicy()
             };
             byte[] sig = Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            bool result = MorphContractInvoker.InvokeDelete(client, container.CalCulateAndGetId.Value.ToByteArray(), sig);
+            bool result = MorphContractInvoker.InvokeDelete(client, container.CalCulateAndGetId, sig);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -178,7 +176,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             };
             eACLTable.Records.Add(new API.Acl.EACLRecord());
             byte[] sig = Cryptography.Crypto.Sign(eACLTable.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            bool result = MorphContractInvoker.InvokeSetEACL(client, eACLTable.ToByteArray(), sig);
+            bool result = MorphContractInvoker.InvokeSetEACL(client, eACLTable, sig);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -205,9 +203,9 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             };
             eACLTable.Records.Add(new API.Acl.EACLRecord());
             byte[] sig = Cryptography.Crypto.Sign(eACLTable.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            EACLValues result = MorphContractInvoker.InvokeGetEACL(client, container.CalCulateAndGetId.Value.ToByteArray());
+            EAclWithSignature result = MorphContractInvoker.InvokeGetEACL(client, container.CalCulateAndGetId);
             Assert.IsNotNull(result);
-            Assert.AreEqual(result.eacl.ToHexString(), eACLTable.ToByteArray().ToHexString());
+            Assert.AreEqual(result.Table.ToByteArray().ToHexString(), eACLTable.ToByteArray().ToHexString());
         }
 
         [TestMethod]
@@ -224,8 +222,8 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 OwnerId = ownerId,
                 PlacementPolicy = new PlacementPolicy()
             };
-            byte[] result = MorphContractInvoker.InvokeGetContainer(client, container.CalCulateAndGetId.Value.ToByteArray());
-            Assert.AreEqual(result.ToHexString(), container.ToByteArray().ToHexString());
+            Container result = MorphContractInvoker.InvokeGetContainer(client, container.CalCulateAndGetId);
+            Assert.AreEqual(result.ToByteArray().ToHexString(), container.ToByteArray().ToHexString());
         }
 
         [TestMethod]
@@ -242,9 +240,9 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 OwnerId = ownerId,
                 PlacementPolicy = new PlacementPolicy()
             };
-            byte[][] result = MorphContractInvoker.InvokeGetContainerList(client, ownerId.Value.ToByteArray());
-            Assert.AreEqual(result.Length, 1);
-            Assert.AreEqual(result[0].ToHexString(), container.CalCulateAndGetId.Value.ToByteArray().ToHexString());
+            List<ContainerID> result = MorphContractInvoker.InvokeGetContainerList(client, ownerId);
+            Assert.AreEqual(result.Count, 1);
+            Assert.AreEqual(result.ElementAt(0).ToByteArray().ToHexString(), container.CalCulateAndGetId.Value.ToByteArray().ToHexString());
         }
     }
 }

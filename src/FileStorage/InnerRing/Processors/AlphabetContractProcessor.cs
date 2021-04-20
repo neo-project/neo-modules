@@ -63,7 +63,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, "storage node emission is off");
                 return;
             }
-            NodeInfo[] networkMap = null;
+            API.Netmap.NodeInfo[] networkMap = null;
             try
             {
                 networkMap = ContractInvoker.NetmapSnapshot(MorphCli);

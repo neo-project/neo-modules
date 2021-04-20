@@ -133,7 +133,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Info, string.Format("vote to remove node from netmap,{0}", s));
                     try
                     {
-                        ContractInvoker.UpdatePeerState(MorphCli, key, (int)NodeInfo.Types.State.Offline);
+                        ContractInvoker.UpdatePeerState(MorphCli, key, (int)API.Netmap.NodeInfo.Types.State.Offline);
                     }
                     catch (Exception e)
                     {
@@ -192,7 +192,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             State.SetEpochCounter(newEpochEvent.EpochNumber);
             State.ResetEpochTimer();
-            NodeInfo[] snapshot;
+            API.Netmap.NodeInfo[] snapshot;
             try
             {
                 snapshot = ContractInvoker.NetmapSnapshot(MorphCli);
@@ -217,10 +217,10 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore new peer notification");
                 return;
             }
-            NodeInfo nodeInfo = null;
+            API.Netmap.NodeInfo nodeInfo = null;
             try
             {
-                nodeInfo = NodeInfo.Parser.ParseFrom(addPeerEvent.Node);
+                nodeInfo = API.Netmap.NodeInfo.Parser.ParseFrom(addPeerEvent.Node);
             }
             catch
             {
@@ -228,7 +228,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 return;
             }
             NodeValidator.VerifyAndUpdate(nodeInfo);
-            Google.Protobuf.Collections.RepeatedField<NodeInfo.Types.Attribute> attributes = nodeInfo.Attributes;
+            Google.Protobuf.Collections.RepeatedField<API.Netmap.NodeInfo.Types.Attribute> attributes = nodeInfo.Attributes;
             //todo
             //attributes.sort();
             
@@ -254,7 +254,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore update peer notification");
                 return;
             }
-            if (updateStateEvent.Status != (uint)NodeInfo.Types.State.Offline)
+            if (updateStateEvent.Status != (uint)API.Netmap.NodeInfo.Types.State.Offline)
             {
                 Utility.Log(Name, LogLevel.Warning, string.Format("node proposes unknown state:key:{0},status:{1}", updateStateEvent.PublicKey.EncodePoint(true).ToHexString(), updateStateEvent.Status.ToString()));
                 return;
@@ -287,7 +287,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 lastAccess = new Dictionary<string, EpochStamp>();
             }
 
-            public void Update(NodeInfo[] snapshot, ulong now)
+            public void Update(API.Netmap.NodeInfo[] snapshot, ulong now)
             {
                 lock (lockObject)
                 {
@@ -383,15 +383,15 @@ namespace Neo.FileStorage.InnerRing.Processors
             private Dictionary<string, AttrDescriptor> mAttr;
 
 
-            public void VerifyAndUpdate(NodeInfo n)
+            public void VerifyAndUpdate(API.Netmap.NodeInfo n)
             {
                 var mAttr = UniqueAttributes(n.Attributes.GetEnumerator());
                 //if (mAttr.TryGetValue(NodeInfo.AttrUNLOCODE, out var attrLocode)) return;
             }
 
-            public Dictionary<String, NodeInfo.Types.Attribute> UniqueAttributes(IEnumerator<NodeInfo.Types.Attribute> attributes)
+            public Dictionary<String, API.Netmap.NodeInfo.Types.Attribute> UniqueAttributes(IEnumerator<API.Netmap.NodeInfo.Types.Attribute> attributes)
             {
-                Dictionary<String, NodeInfo.Types.Attribute> mAttr = new Dictionary<string, NodeInfo.Types.Attribute>();
+                Dictionary<String, API.Netmap.NodeInfo.Types.Attribute> mAttr = new Dictionary<string, API.Netmap.NodeInfo.Types.Attribute>();
                 while (attributes.MoveNext())
                 {
                     var attr = attributes.Current;

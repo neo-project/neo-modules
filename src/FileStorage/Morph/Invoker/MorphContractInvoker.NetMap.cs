@@ -8,7 +8,7 @@ using static Neo.FileStorage.API.Netmap.Helper;
 
 namespace Neo.FileStorage.Morph.Invoker
 {
-    public partial class MorphContractInvoker
+    public static partial class MorphContractInvoker
     {
         public static readonly byte[] MaxObjectSizeConfig = Utility.StrictUTF8.GetBytes("MaxObjectSize");
         public static readonly byte[] BasicIncomeRateConfig = Utility.StrictUTF8.GetBytes("BasicIncomeRate");
@@ -24,35 +24,35 @@ namespace Neo.FileStorage.Morph.Invoker
         private const string EpochSnapshotMethod = "snapshotByEpoch";
         private const long ExtraFee = 0;
 
-        public static bool InvokeAddPeer(Client client, byte[] info)
+        public static bool InvokeAddPeer(this Client client, byte[] info)
         {
             return client.Invoke(out _, NetMapContractHash, AddPeerMethod, ExtraFee, info);
         }
 
-        public static byte[] InvokeConfig(Client client, byte[] key)
+        public static byte[] InvokeConfig(this Client client, byte[] key)
         {
             InvokeResult result = client.TestInvoke(NetMapContractHash, ConfigMethod, key);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (Config)");
             return result.ResultStack[0].GetSpan().ToArray();
         }
-        public static ulong InvokeEpoch(Client client)
+        public static ulong InvokeEpoch(this Client client)
         {
             InvokeResult result = client.TestInvoke(NetMapContractHash, EpochMethod);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (Epoch)");
             return (ulong)result.ResultStack[0].GetInteger();
         }
 
-        public static bool InvokeNewEpoch(Client client, long epochNumber)
+        public static bool InvokeNewEpoch(this Client client, long epochNumber)
         {
             return client.Invoke(out _, NetMapContractHash, NewEpochMethod, ExtraFee, epochNumber);
         }
 
-        public static bool InvokeUpdateState(Client client, long state, byte[] key)
+        public static bool InvokeUpdateState(this Client client, long state, byte[] key)
         {
             return client.Invoke(out _, NetMapContractHash, UpdateStateMethod, ExtraFee, state, key);
         }
 
-        public static NetMap InvokeNetMap(Client client)
+        public static NetMap InvokeNetMap(this Client client)
         {
             InvokeResult result = client.TestInvoke(NetMapContractHash, NetMapMethod);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (NetMap)");
@@ -74,7 +74,7 @@ namespace Neo.FileStorage.Morph.Invoker
             return new(res.Select(p => NodeInfo.Parser.ParseFrom(p)).ToList().InfoToNodes());
         }
 
-        public static NetMap InvokeSnapshot(Client client, int different)
+        public static NetMap InvokeSnapshot(this Client client, int different)
         {
             InvokeResult result = client.TestInvoke(NetMapContractHash, SnapshotMethod, different);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (Snapshot)");
@@ -95,7 +95,7 @@ namespace Neo.FileStorage.Morph.Invoker
             return new(res.Select(p => NodeInfo.Parser.ParseFrom(p)).ToList().InfoToNodes());
         }
 
-        public static NetMap InvokeEpochSnapshot(Client client, long epoch)
+        public static NetMap InvokeEpochSnapshot(this Client client, long epoch)
         {
             InvokeResult result = client.TestInvoke(NetMapContractHash, EpochSnapshotMethod, epoch);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (EpochSnapshot)");

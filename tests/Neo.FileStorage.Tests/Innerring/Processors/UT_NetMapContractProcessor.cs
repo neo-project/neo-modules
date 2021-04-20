@@ -133,11 +133,11 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            var nodeInfo = new NodeInfo()
+            var nodeInfo = new API.Netmap.NodeInfo()
             {
                 PublicKey = Google.Protobuf.ByteString.CopyFrom(key.PublicKey.ToArray()),
-                Address = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToAddress(key.PublicKey.ToArray()),
-                State = NodeInfo.Types.State.Online
+                Address = API.Cryptography.KeyExtension.PublicKeyToAddress(key.PublicKey.ToArray()),
+                State = API.Netmap.NodeInfo.Types.State.Online
             };
             processor.ProcessAddPeer(new AddPeerEvent()
             {
@@ -150,16 +150,16 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            var nodeInfo = new NodeInfo()
+            var nodeInfo = new API.Netmap.NodeInfo()
             {
                 PublicKey = Google.Protobuf.ByteString.CopyFrom(key.PublicKey.ToArray()),
                 Address = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToAddress(key.PublicKey.ToArray()),
-                State = NodeInfo.Types.State.Online
+                State = API.Netmap.NodeInfo.Types.State.Online
             };
             processor.ProcessUpdateState(new UpdatePeerEvent()
             {
                 PublicKey = key.PublicKey,
-                Status = (int)NodeInfo.Types.State.Offline
+                Status = (int)API.Netmap.NodeInfo.Types.State.Offline
             });
         }
 

@@ -4,7 +4,7 @@ using System;
 
 namespace Neo.FileStorage.InnerRing.Invoker
 {
-    public partial class ContractInvoker
+    public static partial class ContractInvoker
     {
         private static UInt160 BalanceContractHash => Settings.Default.BalanceContractHash;
         private const string TransferXMethod = "transferX";
@@ -15,31 +15,31 @@ namespace Neo.FileStorage.InnerRing.Invoker
 
         private const long ExtraFee = 2_0000_0000;
 
-        public static bool TransferBalanceX(Client client, byte[] sender, byte[] receiver, long amount, byte[] comment)
+        public static bool TransferBalanceX(this Client client, byte[] sender, byte[] receiver, long amount, byte[] comment)
         {
             if (client is null) throw new Exception("client is nil");
             return client.Invoke(out _, BalanceContractHash, TransferXMethod, ExtraFee, sender, receiver, amount, comment);
         }
 
-        public static bool Mint(Client client, byte[] scriptHash, long amount, byte[] comment)
+        public static bool Mint(this Client client, byte[] scriptHash, long amount, byte[] comment)
         {
             if (client is null) throw new Exception("client is nil");
             return client.Invoke(out _, BalanceContractHash, MintMethod, ExtraFee, scriptHash, amount, comment);
         }
 
-        public static bool Burn(Client client, byte[] scriptHash, long amount, byte[] comment)
+        public static bool Burn(this Client client, byte[] scriptHash, long amount, byte[] comment)
         {
             if (client is null) throw new Exception("client is nil");
             return client.Invoke(out _, BalanceContractHash, BurnMethod, ExtraFee, scriptHash, amount, comment);
         }
 
-        public static bool LockAsset(Client client, byte[] ID, UInt160 userAccount, UInt160 lockAccount, long amount, ulong until)
+        public static bool LockAsset(this Client client, byte[] ID, UInt160 userAccount, UInt160 lockAccount, long amount, ulong until)
         {
             if (client is null) throw new Exception("client is nil");
             return client.Invoke(out _, BalanceContractHash, LockMethod, ExtraFee, ID, userAccount, lockAccount, amount, (int)until);
         }
 
-        public static uint BalancePrecision(Client client)
+        public static uint BalancePrecision(this Client client)
         {
             if (client is null) throw new Exception("client is nil");
             InvokeResult result = client.TestInvoke(BalanceContractHash, PrecisionMethod);

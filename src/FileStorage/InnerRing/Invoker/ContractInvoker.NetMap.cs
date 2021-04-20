@@ -8,7 +8,7 @@ using Neo.VM;
 
 namespace Neo.FileStorage.InnerRing.Invoker
 {
-    public partial class ContractInvoker
+    public static partial class ContractInvoker
     {
         private static UInt160 NetMapContractHash => Settings.Default.NetmapContractHash;
         private const string GetEpochMethod = "epoch";
@@ -18,7 +18,7 @@ namespace Neo.FileStorage.InnerRing.Invoker
         private const string SetConfigMethod = "setConfigMethod";
         private const string GetNetmapSnapshotMethod = "netmap";
 
-        public static long GetEpoch(Client client)
+        public static long GetEpoch(this Client client)
         {
             if (client is null) throw new Exception("client is nil");
             InvokeResult result = client.TestInvoke(NetMapContractHash, GetEpochMethod);
@@ -26,31 +26,31 @@ namespace Neo.FileStorage.InnerRing.Invoker
             return (long)(result.ResultStack[0].GetInteger());
         }
 
-        public static bool SetNewEpoch(Client client, ulong epoch)
+        public static bool SetNewEpoch(this Client client, ulong epoch)
         {
             if (client is null) throw new Exception("client is nil");
             return client.Invoke(out _, NetMapContractHash, SetNewEpochMethod, FeeOneGas, epoch);
         }
 
-        public static bool ApprovePeer(Client client, byte[] peer)
+        public static bool ApprovePeer(this Client client, byte[] peer)
         {
             if (client is null) throw new Exception("client is nil");
             return client.Invoke(out _, NetMapContractHash, ApprovePeerMethod, FeeOneGas, peer);
         }
 
-        public static bool UpdatePeerState(Client client, ECPoint key, int status)
+        public static bool UpdatePeerState(this Client client, ECPoint key, int status)
         {
             if (client is null) throw new Exception("client is nil");
             return client.Invoke(out _, NetMapContractHash, UpdatePeerStateMethod, ExtraFee, status, key.ToArray());
         }
 
-        public static bool SetConfig(Client client, byte[] Id, byte[] key, byte[] value)
+        public static bool SetConfig(this Client client, byte[] Id, byte[] key, byte[] value)
         {
             if (client is null) throw new Exception("client is nil");
             return client.Invoke(out _, NetMapContractHash, SetConfigMethod, ExtraFee, Id, key, value);
         }
 
-        public static NodeInfo[] NetmapSnapshot(Client client)
+        public static NodeInfo[] NetmapSnapshot(this Client client)
         {
             if (client is null) throw new Exception("client is nil");
             InvokeResult invokeResult = client.TestInvoke(NetMapContractHash, GetNetmapSnapshotMethod);
