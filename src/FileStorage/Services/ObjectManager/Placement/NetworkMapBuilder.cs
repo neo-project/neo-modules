@@ -33,10 +33,7 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
         {
             if (oid is null)
                 return container_nodes;
-            var ns = netmap.GetPlacementVectors(container_nodes, oid.Value.ToByteArray());
-            if (ns is null)
-                throw new InvalidOperationException(nameof(BuildObjectPlacement) + " could not get placement vectors for object");
-            return ns;
+            return netmap.GetPlacementVectors(container_nodes, oid.Value.ToByteArray());
         }
 
         private NetMap GetLatestNetmap()

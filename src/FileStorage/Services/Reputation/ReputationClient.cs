@@ -67,17 +67,17 @@ namespace Neo.FileStorage.Services.Reputaion
 
         public async Task<NodeInfo> LocalNodeInfo(CancellationToken context, CallOptions options = null)
         {
-            return await FSClient.LocalNodeInfo(context, options);
+            return await FSClient.LocalNodeInfo(options, context);
         }
 
         public async Task<ulong> Epoch(CancellationToken context, CallOptions options = null)
         {
-            return await FSClient.Epoch(context, options);
+            return await FSClient.Epoch(options, context);
         }
 
         public async Task<NetworkInfo> NetworkInfo(CancellationToken context, CallOptions options = null)
         {
-            return await FSClient.NetworkInfo(context, options);
+            return await FSClient.NetworkInfo(options, context);
         }
 
         public async Task<FSObject> GetObject(GetObjectParams param, CallOptions options = null, CancellationToken context = default)

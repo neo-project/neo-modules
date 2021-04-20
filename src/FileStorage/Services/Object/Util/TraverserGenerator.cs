@@ -32,10 +32,7 @@ namespace Neo.FileStorage.Services.Object.Util
                 throw new Exception(nameof(TraverserGenerator) + " could not get container");
             }
             var builder = new RemotePlacementBuilder(morphClient, localAddress);
-            return new Traverser()
-                    .WithBuilder(builder)
-                    .ForContainer(container)
-                    .ForObjectID(address.ObjectId);
+            return new Traverser(builder, container.PlacementPolicy, address);
         }
 
         private NetMap GetLatestNetmap()

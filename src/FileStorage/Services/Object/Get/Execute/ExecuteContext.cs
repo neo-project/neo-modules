@@ -46,9 +46,9 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
                     {
                         ExecuteOnContainer();
                     }
-                    catch (Exception re) when (re is API.Object.Exceptions.SplitInfoException se)
+                    catch (Exception re) when (re is API.Object.SplitInfoException se)
                     {
-                        splitInfo = se.SplitInfo();
+                        splitInfo = se.SplitInfo;
                         if (CanAssemble)
                             Assemble();
                         throw;

@@ -1,63 +1,37 @@
 using Akka.Actor;
-using V2Address = Neo.FileStorage.API.Refs.Address;
-using System;
-using System.Collections.Generic;
+using Neo.FileStorage.Core.Object;
+using FSAddress = Neo.FileStorage.API.Refs.Address;
 
 namespace Neo.FileStorage.Services.ObjectManager.GC
 {
     public class GC : UntypedActor
     {
-        public IRemover Remover;
-        public int QueueCapacity;
-        public TimeSpan WorkingInterval;
-        public TimeSpan SleepingInterval;
+        private readonly LocalObjectRemover remover;
 
-        private class Timer { }
-        private bool working = false;
-        private Queue<V2Address> Queue;
-
-        public GC()
+        public GC(LocalObjectRemover remover)
         {
-            Queue = new Queue<V2Address>(QueueCapacity);
+            this.remover = remover;
         }
 
         protected override void OnReceive(object message)
         {
             switch (message)
             {
-                case V2Address[] addresses:
+                case FSAddress[] addresses:
                     DeleteObjects(addresses);
-                    break;
-                case Timer _:
-                    OnTimer();
                     break;
             }
         }
 
-        private void OnTimer()
-        {
-            working = !working;
-            ResetTimer();
-            if (working)
-                while (Queue.TryDequeue(out V2Address address))
-                {
-                    Remover.Delete(address);
-                }
-        }
-
-        private void ResetTimer()
-        {
-            Context.System.Scheduler.ScheduleTellOnceCancelable(working ? SleepingInterval : WorkingInterval, Self, new Timer
-            { }, ActorRefs.NoSender);
-        }
-
-        private void DeleteObjects(V2Address[] addresses)
+        private void DeleteObjects(FSAddress[] addresses)
         {
             foreach (var address in addresses)
-                if (working)
-                    Remover.Delete(address);
-                else if (Queue.Count < QueueCapacity)
-                    Queue.Enqueue(address);
+                remover.DeleteObjects(address);
+        }
+
+        public static Props Props(LocalObjectRemover remover)
+        {
+            return Akka.Actor.Props.Create(() => new GC(remover));
         }
     }
 }

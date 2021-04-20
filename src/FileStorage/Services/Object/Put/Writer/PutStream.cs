@@ -104,16 +104,13 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
             var nm = GetLatestNetmap();
             var container = GetContainer(prm.Header.ContainerId);
             var builder = new NetworkMapBuilder(nm);
-            traverser = new Traverser()
-                .ForContainer(container)
-                .ForObjectID(prm.Header.ObjectId)
-                .WithBuilder(builder);
+
             if (prm.Local)
             {
-                traverser
-                .SuccessAfter(1)
-                .WithBuilder(new LocalPlacementBuilder(builder, PutService.LocalAddress));
+                traverser = new Traverser(new LocalPlacementBuilder(builder, PutService.LocalAddress), container.PlacementPolicy, prm.Header.Address, 1);
+                return;
             }
+            traverser = new Traverser(builder, container.PlacementPolicy, prm.Header.Address);
         }
 
         private void Chunk(ByteString chunk)

@@ -5,6 +5,7 @@ using Neo.FileStorage.LocalObjectStorage.Blob;
 using Neo.IO.Data.LevelDB;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.LocalObjectStorage.MetaBase
@@ -99,12 +100,12 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 
         private bool IsLinkObject(FSObject obj)
         {
-            return 0 < obj.Children.Count && obj.Parent is not null;
+            return obj.Children.Any() && obj.Parent is not null;
         }
 
         private bool IsLastObject(FSObject obj)
         {
-            return 0 == obj.Children.Count && obj.Parent is not null;
+            return !obj.Children.Any() && obj.Parent is not null;
         }
 
         private List<(byte[], byte[])> UniqueIndexes(FSObject obj, SplitInfo si, BlobovniczaID bid)

@@ -3,51 +3,42 @@ using Neo.FileStorage.API.Refs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using V2Container = Neo.FileStorage.API.Container.Container;
 
 namespace Neo.FileStorage.Services.ObjectManager.Placement
 {
     public class Traverser
     {
-        public bool TrackCopies;
-        public int FlatSuccess;
-        public int Rem;
-        public Address Address;
-        public PlacementPolicy Policy;
-        public IPlacementBuilder Builder;
-        private List<List<Node>> vectors;
-        private int[] rem;
+        private readonly List<List<Node>> vectors;
+        private readonly List<int> rem;
 
-        public Traverser()
+        public Traverser(IPlacementBuilder builder, PlacementPolicy policy, Address address, int successAfter = 0, bool trackCopies = true)
         {
-            if (Builder == null)
-                throw new InvalidOperationException("placement builder is null");
-            else if (Policy == null)
-                throw new InvalidOperationException("placement policy is null");
-
-            var ns = Builder.BuildPlacement(Address, Policy);
-            var rs = Policy.Replicas;
-            var rem = Array.Empty<int>();
-
-            foreach (var r in rs)
+            if (builder is null)
+                throw new ArgumentNullException(nameof(builder));
+            else if (policy is null)
+                throw new ArgumentNullException(nameof(policy));
+            else if (address is null)
+                throw new ArgumentNullException(nameof(address));
+            var ns = builder.BuildPlacement(address, policy);
+            if (successAfter != 0)
             {
-                var cnt = Rem;
-                if (cnt == 0)
-                    cnt = (int)r.Count;
-                rem = rem.Append(cnt).ToArray();
+                ns = new List<List<Node>> { ns.Flatten() };
+                rem = new List<int> { successAfter };
             }
-
-            this.rem = rem;
-            this.vectors = ns;
+            else
+            {
+                rem = policy.Replicas.Select(p => trackCopies ? (int)p.Count : -1).ToList();
+            }
+            vectors = ns;
         }
 
         public List<Network.Address> Next()
         {
             SkipEmptyVectors();
             if (vectors.Count == 0)
-                return null;
+                return new();
             else if (vectors[0].Count < rem[0])
-                return null;
+                return new();
 
             var count = rem[0];
             if (count < 0)
@@ -57,7 +48,15 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
 
             for (int i = 0; i < count; i++)
             {
-                var addr = Network.Address.AddressFromString(vectors[0][i].NetworkAddress);
+                Network.Address addr;
+                try
+                {
+                    addr = Network.Address.AddressFromString(vectors[0][i].NetworkAddress);
+                }
+                catch (Exception)
+                {
+                    return new();
+                }
                 addrs.Add(addr);
             }
 
@@ -71,8 +70,8 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
             {
                 if (vectors[i].Count == 0 && rem[i] <= 0 || rem[0] == 0)
                 {
-                    vectors.Remove(vectors[i]);
-                    rem = rem[..i].Concat(rem[(i + 1)..]).ToArray();
+                    vectors.RemoveAt(i);
+                    rem.RemoveAt(i);
                     i--;
                 }
                 else
@@ -82,47 +81,13 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
 
         public void SubmitSuccess()
         {
-            if (rem.Length > 0)
+            if (rem.Count > 0)
                 rem[0]--;
         }
 
         public bool Success()
         {
-            for (int i = 0; i < rem.Length; i++)
-            {
-                if (rem[i] > 0)
-                    return false;
-            }
-            return true;
-        }
-
-        public Traverser ForContainer(V2Container container)
-        {
-            if (Address is null)
-                Address = new Address();
-            Address.ContainerId = container.CalCulateAndGetId;
-            Policy = container.PlacementPolicy;
-            return this;
-        }
-
-        public Traverser ForObjectID(ObjectID oid)
-        {
-            if (Address is null)
-                Address = new Address();
-            Address.ObjectId = oid;
-            return this;
-        }
-
-        public Traverser WithBuilder(IPlacementBuilder builder)
-        {
-            Builder = builder;
-            return this;
-        }
-
-        public Traverser SuccessAfter(uint v)
-        {
-            //TODO:
-            throw new NotImplementedException();
+            return !rem.Any(p => 0 < p);
         }
     }
 }
