@@ -4,8 +4,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.PortableExecutable;
+using System.Text;
 using System.Threading;
+using Google.Protobuf;
+using Neo.FileStorage.API.Cryptography;
 using FSObject = Neo.FileStorage.API.Object.Object;
+using Neo.FileStorage.API.Netmap;
 
 namespace Neo.FileStorage.LocalObjectStorage.Engine
 {
@@ -204,7 +208,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
 
 
         /// <summary>
-        /// todo:实现
+        /// sort by value-distance * weights
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
@@ -213,13 +217,37 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
             try
             {
                 mtx.EnterReadLock();
-                //address.GetHashCode()
-                return shards.Values.ToList();
+                var target = address.ToByteArray().Murmur64(0);
+                var list = shards.Values.Select(s => new ShardDistance
+                {
+                    Shard = s,
+                    Weight = s.WeightValues(),
+                    Distance = Encoding.UTF8.GetBytes(s.ID.ToString()).Murmur64(0).Distance(target),
+                }.SetSort());
+                return list.OrderBy(s => s.Sort).Select(s => s.Shard).ToList();
             }
             finally
             {
                 mtx.ExitReadLock();
             }
+        }
+
+
+        class ShardDistance
+        {
+            public Shard.Shard Shard;
+            public ulong Weight;
+            public ulong Distance;
+
+
+            public ulong Sort;
+
+            public ShardDistance SetSort()
+            {
+                Sort = Weight * Distance;
+                return this;
+            }
+
         }
     }
 }

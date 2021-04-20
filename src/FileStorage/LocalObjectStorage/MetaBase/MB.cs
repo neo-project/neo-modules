@@ -39,7 +39,9 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                 { MatchType.StringEqual, StringEqualMatcher },
                 { MatchType.StringNotEqual, StringNotEqualMatcher }
             };
-            db = DB.Open(path);
+            var option = new Options();
+            option.CreateIfMissing = true;
+            db = DB.Open(path, option);
         }
 
         public void Dispose()
