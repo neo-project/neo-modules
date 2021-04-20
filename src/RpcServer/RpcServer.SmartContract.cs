@@ -7,8 +7,10 @@ using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
+using Neo.SmartContract.Iterators;
 using Neo.SmartContract.Native;
 using Neo.VM;
+using Neo.VM.Types;
 using Neo.Wallets;
 using System;
 using System.IO;
@@ -65,7 +67,7 @@ namespace Neo.Plugins
             Transaction tx = signers == null ? null : new Transaction
             {
                 Signers = signers.GetSigners(),
-                Attributes = Array.Empty<TransactionAttribute>(),
+                Attributes = System.Array.Empty<TransactionAttribute>(),
                 Witnesses = signers.Witnesses,
             };
             using ApplicationEngine engine = ApplicationEngine.Run(script, system.StoreView, container: tx, settings: system.Settings, gas: settings.MaxGasInvoke);
@@ -76,15 +78,32 @@ namespace Neo.Plugins
             json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
-                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
+                json["stack"] = new JArray(engine.ResultStack.Select(p => ToJson(p, settings.MaxIteratorResultItems)));
             }
             catch (InvalidOperationException)
             {
-                json["stack"] = "error: recursive reference";
+                json["stack"] = "error: invalid operation";
             }
             if (engine.State != VMState.FAULT)
             {
                 ProcessInvokeWithWallet(json, signers);
+            }
+            return json;
+        }
+
+        private static JObject ToJson(StackItem item, int max)
+        {
+            JObject json = item.ToJson();
+            if (item is InteropInterface interopInterface && interopInterface.GetInterface<object>() is IIterator iterator)
+            {
+                JArray array = new();
+                while (max > 0 && iterator.Next())
+                {
+                    array.Add(iterator.Value().ToJson());
+                    max--;
+                }
+                json["iterator"] = array;
+                json["truncated"] = iterator.Next();
             }
             return json;
         }
