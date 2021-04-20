@@ -1,29 +1,39 @@
 using Google.Protobuf;
-using Neo.FileStorage.Core.Object;
+using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Services.ObjectManager.Transformer;
-using Neo.FileStorage.API.Refs;
-using System;
-using static Neo.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Put
 {
     public class LocalTarget : IObjectTarget
     {
+        public StorageEngine LocalStorage { get; init; }
+
+        private FSObject obj;
+        private byte[] payload;
+        private int offset;
 
         public void WriteHeader(FSObject header)
         {
-            throw new NotImplementedException();
+            obj = header;
+            payload = new byte[obj.PayloadSize];
+            offset = 0;
         }
 
         public void WriteChunk(byte[] chunk)
         {
-            throw new NotImplementedException();
+            chunk.CopyTo(payload, offset);
+            offset += chunk.Length;
         }
 
         public AccessIdentifiers Close()
         {
-            throw new NotImplementedException();
+            obj.Payload = ByteString.CopyFrom(payload);
+            LocalStorage.Put(obj);
+            return new()
+            {
+                Self = obj.ObjectId,
+            };
         }
     }
 }

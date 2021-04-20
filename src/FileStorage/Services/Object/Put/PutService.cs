@@ -1,15 +1,9 @@
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.Core.Container;
-using Neo.FileStorage.Core.Netmap;
 using Neo.FileStorage.Core.Object;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Network;
-using Neo.FileStorage.Services.Object.Put;
 using Neo.FileStorage.Services.Object.Put.Writer;
 using Neo.FileStorage.Services.Object.Util;
-using Neo.FileStorage.Services.ObjectManager.Placement;
-using Neo.FileStorage.Services.ObjectManager.Transformer;
-using System;
 using System.Threading;
 
 namespace Neo.FileStorage.Services.Object.Put

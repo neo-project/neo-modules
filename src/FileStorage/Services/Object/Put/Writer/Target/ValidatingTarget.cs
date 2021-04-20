@@ -12,6 +12,7 @@ namespace Neo.FileStorage.Services.Object.Put
     {
         public IObjectTarget Next { get; init; }
         public ObjectValidator ObjectValidator { get; init; }
+
         private Checksum checksum;
         private byte[] payload = Array.Empty<byte>();
 

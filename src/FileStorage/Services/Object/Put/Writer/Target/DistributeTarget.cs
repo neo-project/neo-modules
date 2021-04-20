@@ -15,6 +15,7 @@ namespace Neo.FileStorage.Services.Object.Put
         public Traverser Traverser { get; init; }
         public ObjectValidator ObjectValidator { get; init; }
         public Func<Network.Address, IObjectTarget> NodeTargetInitializer { get; init; }
+
         private FSObject obj;
         private byte[] payload;
         private int offset;

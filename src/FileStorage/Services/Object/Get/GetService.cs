@@ -21,7 +21,7 @@ namespace Neo.FileStorage.Services.Object.Get
         public StorageEngine LocalStorage { get; init; }
         public ReputaionClientCache ClientCache { get; init; }
         public Client MorphClient { get; init; }
-        public ITraverserGenerator TraverserGenerator { get; init; }
+        public TraverserGenerator TraverserGenerator { get; init; }
 
         public void Get(GetPrm prm)
         {
