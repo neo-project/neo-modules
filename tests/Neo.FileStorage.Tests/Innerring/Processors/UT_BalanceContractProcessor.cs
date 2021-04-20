@@ -36,7 +36,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             };
             processor = new BalanceContractProcessor()
             {
-                MorphCli = new Client() { client=morphclient },
+                MorphCli = new Client() { client = morphclient },
                 Convert = new Fixed8ConverterUtil(),
                 //ActiveState = activeState,
                 WorkPool = system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()))

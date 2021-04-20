@@ -28,7 +28,8 @@ namespace Neo.FileStorage.InnerRing
         {
             List<byte[]> idList = MorphContractInvoker.InvokeListAuditResultsByEpoch(client, (long)epoch);
             var res = new List<DataAuditResult>();
-            foreach (var id in idList) {
+            foreach (var id in idList)
+            {
                 DataAuditResult dataAuditResult = DataAuditResult.Parser.ParseFrom(id);
                 res.Add(dataAuditResult);
             }
@@ -64,7 +65,7 @@ namespace Neo.FileStorage.InnerRing
         public StorageGroup SGInfo(Address address)
         {
             BuildContainer(0, address.ContainerId, out var cn, out var nm);
-            return clientCache.GetStorageGroup(new CancellationToken(), address,nm,cn);
+            return clientCache.GetStorageGroup(new CancellationToken(), address, nm, cn);
         }
 
         public OwnerID ResolveKey(NodeInfo nodeInfo)
@@ -72,7 +73,8 @@ namespace Neo.FileStorage.InnerRing
             return OwnerID.Frombytes(nodeInfo.PublicKey());
         }
 
-        public void transfer(OwnerID sender, OwnerID recipient, BigInteger amount,byte[] details) {
+        public void transfer(OwnerID sender, OwnerID recipient, BigInteger amount, byte[] details)
+        {
             Utility.Log("SettlementDeps", LogLevel.Info, string.Format("sender:{0},recipient:{1},amount (GASe-12):{2}", sender, recipient, amount));
             //notary
             Utility.Log("SettlementDeps", LogLevel.Info, "transfer transaction for audit was successfully sent");
@@ -105,14 +107,16 @@ namespace Neo.FileStorage.InnerRing
         {
             List<byte[]> estimationIDs = client.InvokeListSizes(epoch);
             List<Estimations> result = new List<Estimations>();
-            foreach (var estimationID in estimationIDs) {
+            foreach (var estimationID in estimationIDs)
+            {
                 try
                 {
                     Estimations estimation = client.InvokeGetContainerSize(ContainerID.Parser.ParseFrom(estimationID));
                     result.Add(estimation);
                 }
-                catch (Exception e) {
-                    Utility.Log("BasicIncomeSettlementDeps", LogLevel.Warning, string.Format("can't get used space estimation,estimation_id:{0},error:{1}", estimationID.ToHexString(),e.Message));
+                catch (Exception e)
+                {
+                    Utility.Log("BasicIncomeSettlementDeps", LogLevel.Warning, string.Format("can't get used space estimation,estimation_id:{0},error:{1}", estimationID.ToHexString(), e.Message));
                 }
             }
             return result.ToArray();

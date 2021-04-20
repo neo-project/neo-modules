@@ -53,7 +53,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
                 .ReturnsAsync(true)
                 .Verifiable();
             client.clients = new RpcClient[] { mockRpc.Object };
-            bool result = client.Invoke(out _,NativeContract.GAS.Hash, "balanceOf", (long)100, UInt160.Zero);
+            bool result = client.Invoke(out _, NativeContract.GAS.Hash, "balanceOf", (long)100, UInt160.Zero);
             Assert.AreEqual(result, true);
         }
     }

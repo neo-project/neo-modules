@@ -72,7 +72,7 @@ namespace Neo.FileStorage.InnerRing.Timer
         {
             var c = new DeltaCfg() { pulse = false };
             foreach (var opt in opts) opt(c);
-            ps.Add(Context.ActorOf(BlockTimer.Props(null,h, mul,div)));
+            ps.Add(Context.ActorOf(BlockTimer.Props(null, h, mul, div)));
         }
 
         private void OnReset()
@@ -124,12 +124,13 @@ namespace Neo.FileStorage.InnerRing.Timer
             }
             foreach (var process in ps) process.Tell(new TickEvent());
         }
-        public static Props Props(Func<uint> dur, Action h,uint mul= 1, uint div = 1)
+        public static Props Props(Func<uint> dur, Action h, uint mul = 1, uint div = 1)
         {
             return Akka.Actor.Props.Create(() => new BlockTimer(mul, div, dur, h));
         }
 
-        public static Func<uint> StaticBlockMeter(uint d) {
+        public static Func<uint> StaticBlockMeter(uint d)
+        {
             return () => { return d; };
         }
     }

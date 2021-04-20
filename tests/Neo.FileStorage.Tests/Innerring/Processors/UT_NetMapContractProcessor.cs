@@ -35,7 +35,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             };
             processor = new NetMapContractProcessor()
             {
-                MorphCli = new Client() { client= morphclient },
+                MorphCli = new Client() { client = morphclient },
                 //ActiveState = new TestActiveState(),
                 //EpochState = new EpochState(),
                 //EpochTimerReseter = new EpochTimerReseter(),
