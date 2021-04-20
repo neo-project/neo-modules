@@ -15,7 +15,7 @@ namespace Neo.FileStorage.Services.Object.Search
         public StorageEngine LocalStorage { get; init; }
         public Client MorphClient { get; init; }
         public ReputaionClientCache ClientCache { get; init; }
-        public ITraverserGenerator TraverserGenerator { get; init; }
+        public TraverserGenerator TraverserGenerator { get; init; }
 
         public SearchPrm ToSearchPrm(SearchRequest request, Action<SearchResponse> handler)
         {
