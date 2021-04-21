@@ -1,7 +1,7 @@
 using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Client.ObjectParams;
 using Neo.FileStorage.Services.Object.Util;
-using Neo.FileStorage.Services.Reputaion;
+using Neo.FileStorage.Services.Reputaion.Local.Client;
 using System;
 using System.Threading;
 using FSObject = Neo.FileStorage.API.Object.Object;

@@ -4,7 +4,7 @@ using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Object.Search.Execute;
 using Neo.FileStorage.Services.Object.Search.Writer;
 using Neo.FileStorage.Services.Object.Util;
-using Neo.FileStorage.Services.Reputaion;
+using Neo.FileStorage.Services.Reputaion.Local.Client;
 using System;
 
 namespace Neo.FileStorage.Services.Object.Search

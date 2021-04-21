@@ -8,12 +8,10 @@ namespace Neo.FileStorage
     {
         public ProtocolSettings ProtocolSettings;
         private ECDsa key;
-        private ulong epoch;
-        private NodeInfo localNodeInfo;
+        public ulong CurrentEpoch;
+        public NodeInfo LocalNodeInfo;
 
         public ECDsa Key => key;
-        public ulong CurrentEpoch => epoch;
-        public NodeInfo LocalNodeInfo => localNodeInfo;
 
         public void Dispose()
         {

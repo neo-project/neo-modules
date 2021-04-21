@@ -1,6 +1,6 @@
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Engine;
-using Neo.FileStorage.Services.Reputaion;
+using Neo.FileStorage.Services.Reputaion.Local.Client;
 using System.Collections.Generic;
 using System.Linq;
 
