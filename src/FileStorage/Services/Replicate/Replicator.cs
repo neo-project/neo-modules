@@ -1,20 +1,20 @@
 using Akka.Actor;
 using Neo.FileStorage.API.Netmap;
-using V2Address = Neo.FileStorage.API.Refs.Address;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Network.Cache;
 using Neo.FileStorage.Services.Object.Util;
 using System;
 using System.Collections.Generic;
+using FSAddress = Neo.FileStorage.API.Refs.Address;
 
-namespace Neo.FileStorage.Services.Replicator
+namespace Neo.FileStorage.Services.Replicate
 {
     public class Replicator : UntypedActor
     {
         public class Task
         {
             public uint Quantity;
-            public V2Address Address;
+            public FSAddress Address;
             public List<Node> Nodes;
         }
 
