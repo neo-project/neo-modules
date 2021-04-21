@@ -34,6 +34,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             try
             {
                 var id = await FSClient.GetBalance(owner, options, context);
+                SumbmitResult(true);
                 return id;
             }
             catch (Exception)
@@ -47,7 +48,9 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                return await FSClient.GetContainer(cid, options, context);
+                var r = await FSClient.GetContainer(cid, options, context);
+                SumbmitResult(true);
+                return r;
             }
             catch (Exception)
             {
@@ -60,7 +63,9 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                return await FSClient.PutContainer(container, options, context);
+                var r = await FSClient.PutContainer(container, options, context);
+                SumbmitResult(true);
+                return r;
             }
             catch (Exception)
             {
@@ -74,6 +79,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             try
             {
                 await FSClient.DeleteContainer(cid, options, context);
+                SumbmitResult(true);
             }
             catch (Exception)
             {
@@ -86,7 +92,9 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                return await FSClient.ListContainers(owner, options, context);
+                var r = await FSClient.ListContainers(owner, options, context);
+                SumbmitResult(true);
+                return r;
             }
             catch (Exception)
             {
@@ -99,7 +107,9 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                return await FSClient.GetEAclWithSignature(cid, options, context);
+                var r = await FSClient.GetEAclWithSignature(cid, options, context);
+                SumbmitResult(true);
+                return r;
             }
             catch (Exception)
             {
@@ -112,7 +122,9 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                return await FSClient.GetEACL(cid, options, context);
+                var r = await FSClient.GetEACL(cid, options, context);
+                SumbmitResult(true);
+                return r;
             }
             catch (Exception)
             {
@@ -126,6 +138,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             try
             {
                 await FSClient.SetEACL(eacl, options, context);
+                SumbmitResult(true);
             }
             catch (Exception)
             {
@@ -139,6 +152,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             try
             {
                 await FSClient.AnnounceContainerUsedSpace(announcements, options, context);
+                SumbmitResult(true);
             }
             catch (Exception)
             {
@@ -151,7 +165,9 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                return await FSClient.LocalNodeInfo(options, context);
+                var r = await FSClient.LocalNodeInfo(options, context);
+                SumbmitResult(true);
+                return r;
             }
             catch (Exception)
             {
@@ -164,7 +180,9 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                return await FSClient.Epoch(options, context);
+                var r = await FSClient.Epoch(options, context);
+                SumbmitResult(true);
+                return r;
             }
             catch (Exception)
             {
@@ -177,7 +195,9 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                return await FSClient.NetworkInfo(options, context);
+                var r = await FSClient.NetworkInfo(options, context);
+                SumbmitResult(true);
+                return r;
             }
             catch (Exception)
             {
@@ -190,7 +210,9 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                return await FSClient.GetObject(param, options, context);
+                var r = await FSClient.GetObject(param, options, context);
+                SumbmitResult(true);
+                return r;
             }
             catch (Exception)
             {
@@ -203,7 +225,9 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                return await FSClient.PutObject(param, options, context);
+                var r = await FSClient.PutObject(param, options, context);
+                SumbmitResult(true);
+                return r;
             }
             catch (Exception)
             {
@@ -216,7 +240,9 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                return await FSClient.DeleteObject(param, options, context);
+                var r = await FSClient.DeleteObject(param, options, context);
+                SumbmitResult(true);
+                return r;
             }
             catch (Exception)
             {
@@ -229,7 +255,9 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                return await FSClient.GetObjectHeader(param, options, context);
+                var r = await FSClient.GetObjectHeader(param, options, context);
+                SumbmitResult(true);
+                return r;
             }
             catch (Exception)
             {
@@ -242,7 +270,9 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                return await FSClient.GetObjectPayloadRangeData(param, options, context);
+                var r = await FSClient.GetObjectPayloadRangeData(param, options, context);
+                SumbmitResult(true);
+                return r;
             }
             catch (Exception)
             {
@@ -255,7 +285,9 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                return await FSClient.GetObjectPayloadRangeHash(param, options, context);
+                var r = await FSClient.GetObjectPayloadRangeHash(param, options, context);
+                SumbmitResult(true);
+                return r;
             }
             catch (Exception)
             {
@@ -268,7 +300,9 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                return await FSClient.SearchObject(param, options, context);
+                var r = await FSClient.SearchObject(param, options, context);
+                SumbmitResult(true);
+                return r;
             }
             catch (Exception)
             {
@@ -281,7 +315,9 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                return await FSClient.CreateSession(expiration, options, context);
+                var r = await FSClient.CreateSession(expiration, options, context);
+                SumbmitResult(true);
+                return r;
             }
             catch (Exception)
             {
