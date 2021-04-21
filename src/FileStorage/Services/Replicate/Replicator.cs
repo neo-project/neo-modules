@@ -2,10 +2,13 @@ using Akka.Actor;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Network.Cache;
+using Neo.FileStorage.Services.Object.Put;
 using Neo.FileStorage.Services.Object.Util;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using FSAddress = Neo.FileStorage.API.Refs.Address;
+using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Replicate
 {
@@ -17,42 +20,51 @@ namespace Neo.FileStorage.Services.Replicate
             public FSAddress Address;
             public List<Node> Nodes;
         }
+        private readonly Configuration config;
 
-        public int TaskCapacity;
-        public TimeSpan PutTimeout;
-        public StorageEngine LocalStorage;
-        public KeyStorage KeyStorage;
-        public ClientCache ClientCache;
+        public Replicator(Configuration c)
+        {
+            config = c;
+        }
 
         protected override void OnReceive(object message)
         {
             switch (message)
             {
                 case Task task:
-                    OnTask(task);
+                    HandleTask(task);
                     break;
             }
         }
 
-        private void OnTask(Task task)
+        private void HandleTask(Task task)
         {
-            var obj = LocalStorage.Get(task.Address);
-            if (obj is null)
-                throw new InvalidOperationException(nameof(Replicator) + "could not get object from local storage");
+            FSObject obj;
+            try
+            {
+                obj = config.LocalStorage.Get(task.Address);
+            }
+            catch (Exception)
+            {
+                return;
+            }
+            RemotePutPrm prm = new()
+            {
+                Object = obj,
+            };
             for (int i = 0; i < task.Nodes.Count && 0 < task.Quantity; i++)
             {
                 var net_address = task.Nodes[i].NetworkAddress;
                 var node = Network.Address.AddressFromString(net_address);
-                //Timeout context
-                // var remote_sender = new RemoteStore
-                // {
-                //     KeyStorage = KeyStorage,
-                //     ClientCache = ClientCache,
-                //     Node = node,
-                // };
-                // remote_sender.Put(obj);
+                prm.Node = node;
+                config.RemoteSender.PutObject(prm, new CancellationTokenSource(config.PutTimeout).Token);
                 task.Quantity--;
             }
+        }
+
+        public static Props Props(Configuration c)
+        {
+            return Akka.Actor.Props.Create(() => new Replicator(c));
         }
     }
 }

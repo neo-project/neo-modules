@@ -21,7 +21,7 @@ namespace Neo.FileStorage.Services.Object.Delete
         public DeletePrm ToDeletePrm(DeleteRequest request, DeleteResponse response)
         {
             var meta = request.MetaHeader;
-            var key = KeyStorage.GetKey(meta.SessionToken);
+            var key = KeyStorage.GetKey(meta?.SessionToken);
             if (key is null) throw new InvalidOperationException(nameof(ToDeletePrm) + " could not get key");
             var prm = DeletePrm.FromRequest(request);
             prm.Key = key;

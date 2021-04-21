@@ -34,7 +34,7 @@ namespace Neo.FileStorage.Services.Object.Put
         public AccessIdentifiers Close()
         {
             obj.Payload = ByteString.CopyFrom(payload);
-            var key = KeyStorage.GetKey(Prm.SessionToken);
+            var key = KeyStorage.GetKey(Prm?.SessionToken);
             var addr = Address.IPAddressString();
             var client = ClientCache.Get(addr);
             var id = client.PutObject(new() { Object = obj }, new() { Ttl = 1, Key = key }).Result;
