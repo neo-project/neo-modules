@@ -81,7 +81,7 @@ namespace Neo.FileStorage.Services.Object
             return ObjectService.Head(request);
         }
 
-        public IPutRequestStream Put(CancellationToken cancellation)
+        public IRequestStream Put(CancellationToken cancellation)
         {
             return ObjectService.Put(cancellation);
         }

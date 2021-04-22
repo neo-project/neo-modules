@@ -75,7 +75,7 @@ namespace Neo.FileStorage.Services.Object.Acl
             var next = SignService.Put(context.CancellationToken);
             RequestInfo info = null;
             bool init_received = false;
-            while (await requestStream.MoveNext())
+            while (await requestStream.MoveNext(context.CancellationToken))
             {
                 var request = requestStream.Current;
                 switch (request.Body.ObjectPartCase)
@@ -92,7 +92,7 @@ namespace Neo.FileStorage.Services.Object.Acl
                 }
                 next.Send(request);
             }
-            return next.Close();
+            return (PutResponse)next.Close();
         }
 
         public override Task Search(SearchRequest request, IServerStreamWriter<SearchResponse> responseStream, ServerCallContext context)
