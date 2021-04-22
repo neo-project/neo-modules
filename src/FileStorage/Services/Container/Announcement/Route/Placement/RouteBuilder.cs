@@ -7,7 +7,8 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route.Placement
 {
     public class RouteBuilder
     {
-        public LoadPlacementBuilder PlacementBuilder;
+        public LoadPlacementBuilder PlacementBuilder { get; init; }
+
         public List<NodeInfo> NextStage(FSAnnouncement announcement, List<NodeInfo> passed)
         {
             if (1 < passed.Count) return null;

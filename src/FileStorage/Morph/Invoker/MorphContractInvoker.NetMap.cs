@@ -95,7 +95,7 @@ namespace Neo.FileStorage.Morph.Invoker
             return new(res.Select(p => NodeInfo.Parser.ParseFrom(p)).ToList().InfoToNodes());
         }
 
-        public static NetMap InvokeEpochSnapshot(this Client client, long epoch)
+        public static NetMap InvokeEpochSnapshot(this Client client, ulong epoch)
         {
             InvokeResult result = client.TestInvoke(NetMapContractHash, EpochSnapshotMethod, epoch);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (EpochSnapshot)");

@@ -6,11 +6,11 @@ namespace Neo.FileStorage.Services.Accounting
 {
     public class AccountingService
     {
-        public Client Morph { get; init; }
+        public Client MorphClient { get; init; }
 
         public BalanceResponse Balance(BalanceRequest request)
         {
-            long balance = MorphContractInvoker.InvokeBalanceOf(Morph, request.Body.OwnerId.ToByteArray());
+            long balance = MorphContractInvoker.InvokeBalanceOf(MorphClient, request.Body.OwnerId.ToByteArray());
             var resp = new BalanceResponse
             {
                 Body = new BalanceResponse.Types.Body

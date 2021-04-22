@@ -1,5 +1,4 @@
 using Akka.Actor;
-using Google.Protobuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +11,6 @@ using Neo.FileStorage.Services.Audit;
 using static Neo.FileStorage.Services.Audit.Manager;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.API.Client.ObjectParams;
 using Neo.FileStorage.API.Container;
 using static Neo.FileStorage.Utils.WorkerPool;
 
@@ -193,7 +191,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 {
                     var source = new CancellationTokenSource();
                     source.CancelAfter(TimeSpan.FromMinutes(1));
-                    List<ObjectID> result = cli.SearchObject(new SearchObjectParams { ContainerID = cid, Filters = searchFilters }, context: source.Token).Result;
+                    List<ObjectID> result = cli.SearchObject(cid, searchFilters, context: source.Token).Result;
                     sg.AddRange(result);
                     break;
                 }

@@ -2,22 +2,32 @@
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Network;
 using Neo.FileStorage.Network.Cache;
-using Neo.FileStorage.Services.Container.Announcement.Storage;
 using System;
 using System.Security.Cryptography;
+using static Neo.FileStorage.Network.Address;
 
 namespace Neo.FileStorage.Services.Container.Announcement.Route
 {
     public class RemoteLoadAnnounceProvider
     {
-        private readonly ECDsa key;
-        private readonly Address localAddress;
-        private readonly ClientCache clientCache;
-        private readonly AnnouncementStorage deadEndProvider;
+        public ECDsa Key { get; init; }
+        public Address LocalAddress { get; init; }
+        public ClientCache ClientCache { get; init; }
+        public IWriterProvider DeadEndProvider { get; init; }
 
-        public RemoteLoadAnnounceWriterProvider InitRemote(NodeInfo info)
+        public IWriterProvider InitRemote(NodeInfo info)
         {
-            throw new NotImplementedException();
+            if (info is null)
+                throw new ArgumentNullException(nameof(info));
+            if (LocalAddress.ToString() == info.Address)
+                return new SimpleProvider(new NopLoadWriter());
+            string ipAddr = IPAddrFromMultiaddr(info.Address);
+            var client = ClientCache.Get(ipAddr);
+            return new RemoteLoadAnnounceWriterProvider
+            {
+                Key = Key,
+                Client = client,
+            };
         }
     }
 }

@@ -1,4 +1,3 @@
-using Grpc.Core;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
@@ -8,18 +7,17 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Threading;
-using System.Threading.Tasks;
 using FSAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types.Announcement;
 
 namespace Neo.FileStorage.Services.Container.Announcement
 {
     public class UsedSpaceService
     {
-        private readonly ECDsa key;
-        private readonly NodeInfo localNodeInfo;
-        private readonly Router router;
-        private readonly LoadPlacementBuilder loadbuilder;
-        private readonly RouteBuilder routeBuilder;
+        public ECDsa Key { get; init; }
+        public NodeInfo LocalNodeInfo { get; init; }
+        public LoadRouter Router { get; init; }
+        public LoadPlacementBuilder Loadbuilder { get; init; }
+        public RouteBuilder RouteBuilder { get; init; }
 
         public AnnounceUsedSpaceResponse AnnounceUsedSpace(AnnounceUsedSpaceRequest request)
         {
@@ -29,9 +27,9 @@ namespace Neo.FileStorage.Services.Container.Announcement
                 passed.Add(new() { PublicKey = header.BodySignature.Key });
             }
             passed.Reverse();
-            passed.Add(localNodeInfo);
+            passed.Add(LocalNodeInfo);
 
-            var writer = router.InitWriter(new RouteContext(passed, new CancellationTokenSource().Token));//TODO: fix cancellation token
+            var writer = Router.InitWriter(new RouteContext(passed, new CancellationTokenSource().Token));//TODO: fix cancellation token
             foreach (var announcement in request.Body.Announcements)
             {
                 ProcessLoadValue(announcement, passed, writer);
@@ -40,15 +38,15 @@ namespace Neo.FileStorage.Services.Container.Announcement
             {
                 Body = new AnnounceUsedSpaceResponse.Types.Body { }
             };
-            key.SignResponse(resp);
+            Key.SignResponse(resp);
             return resp;
         }
 
         private void ProcessLoadValue(FSAnnouncement announcement, List<NodeInfo> route, LoadWriter writer)
         {
-            if (!loadbuilder.IsNodeFromContainerKey(announcement.Epoch, announcement.ContainerId, route[0].PublicKey.ToByteArray()))
+            if (!Loadbuilder.IsNodeFromContainerKey(announcement.Epoch, announcement.ContainerId, route[0].PublicKey.ToByteArray()))
                 throw new Exception("node outside the container");
-            routeBuilder.CheckRoute(announcement, route);
+            RouteBuilder.CheckRoute(announcement, route);
             writer.Put(announcement);
         }
     }

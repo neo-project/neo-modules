@@ -1,5 +1,4 @@
 using Neo.FileStorage.Services.Container.Announcement.Route;
-using Neo.FileStorage.Services.Container.Announcement.Storage;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -7,12 +6,12 @@ namespace Neo.FileStorage.Services.Container.Announcement.Control
 {
     public class Controller
     {
-        public LocalStorageLoad LocalMetrics;
-        public Router LocalAnnouncementTarget;
-        public AnnouncementStorage AnnouncementAccumulator;
-        public MorphLoadWriter ResultReceiver;
-        public Dictionary<ulong, CancellationTokenSource> AnnounceCancellations = new();
-        public Dictionary<ulong, CancellationTokenSource> ReportCancellations = new();
+        public IIteratorProvider LocalMetrics { get; init; }
+        public IWriterProvider LocalAnnouncementTarget { get; init; }
+        public IIteratorProvider AnnouncementAccumulator { get; init; }
+        public IWriterProvider ResultReceiver { get; init; }
+        private readonly Dictionary<ulong, CancellationTokenSource> announceCancellations = new();
+        private readonly Dictionary<ulong, CancellationTokenSource> reportCancellations = new();
 
         public void Start(ulong epoch)
         {
@@ -22,21 +21,27 @@ namespace Neo.FileStorage.Services.Container.Announcement.Control
             FreeAnnouncement(epoch);
         }
 
+        public void Stop(ulong epoch)
+        {
+            AnnounceContext context = AcquireReport(epoch);
+            if (context is null) return;
+            FreeAnnouncement(epoch);
+            context.Report();
+            FreeReport(epoch);
+        }
+
         public AnnounceContext AcquireAnnouncement(ulong epoch)
         {
             CancellationToken cancellation;
-            lock (AnnounceCancellations)
+            lock (announceCancellations)
             {
-                if (!AnnounceCancellations.ContainsKey(epoch))
-                {
-                    CancellationTokenSource source = new();
-                    AnnounceCancellations[epoch] = source;
-                    cancellation = source.Token;
-                }
-                else
+                if (announceCancellations.ContainsKey(epoch))
                 {
                     return null;
                 }
+                CancellationTokenSource source = new();
+                announceCancellations[epoch] = source;
+                cancellation = source.Token;
             }
             return new AnnounceContext
             {
@@ -49,18 +54,15 @@ namespace Neo.FileStorage.Services.Container.Announcement.Control
         public AnnounceContext AcquireReport(ulong epoch)
         {
             CancellationToken cancellation;
-            lock (ReportCancellations)
+            lock (reportCancellations)
             {
-                if (!ReportCancellations.ContainsKey(epoch))
-                {
-                    CancellationTokenSource source = new();
-                    ReportCancellations[epoch] = source;
-                    cancellation = source.Token;
-                }
-                else
+                if (!reportCancellations.ContainsKey(epoch))
                 {
                     return null;
                 }
+                CancellationTokenSource source = new();
+                reportCancellations[epoch] = source;
+                cancellation = source.Token;
             }
             return new AnnounceContext
             {
@@ -70,35 +72,26 @@ namespace Neo.FileStorage.Services.Container.Announcement.Control
             };
         }
 
-        public void Stop(ulong epoch)
-        {
-            AnnounceContext context = AcquireReport(epoch);
-            if (context is null) return;
-            FreeAnnouncement(epoch);
-            context.Report();
-            FreeReport(epoch);
-        }
-
         public void FreeAnnouncement(ulong epoch)
         {
-            lock (AnnounceCancellations)
+            lock (announceCancellations)
             {
-                if (AnnounceCancellations.TryGetValue(epoch, out CancellationTokenSource token))
+                if (announceCancellations.TryGetValue(epoch, out CancellationTokenSource token))
                 {
                     token.Cancel();
-                    AnnounceCancellations.Remove(epoch);
+                    announceCancellations.Remove(epoch);
                 }
             }
         }
 
         public void FreeReport(ulong epoch)
         {
-            lock (ReportCancellations)
+            lock (reportCancellations)
             {
-                if (ReportCancellations.TryGetValue(epoch, out CancellationTokenSource token))
+                if (reportCancellations.TryGetValue(epoch, out CancellationTokenSource token))
                 {
                     token.Cancel();
-                    ReportCancellations.Remove(epoch);
+                    reportCancellations.Remove(epoch);
                 }
             }
         }

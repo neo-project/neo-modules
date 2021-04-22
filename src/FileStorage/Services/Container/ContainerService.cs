@@ -21,7 +21,7 @@ namespace Neo.FileStorage.Services.Container
         public DeleteResponse Delete(DeleteRequest request)
         {
             byte[] sig = request.Body.Signature.Sign.ToByteArray();
-            bool ok = MorphContractInvoker.InvokeDelete(MorphClient, request.Body.ContainerId, sig);//TODO: handle error
+            MorphClient.InvokeDelete(request.Body.ContainerId, sig);
             var resp = new DeleteResponse
             {
                 Body = new DeleteResponse.Types.Body { }
@@ -69,7 +69,7 @@ namespace Neo.FileStorage.Services.Container
             FSContainer container = request.Body.Container;
             byte[] sig = request.Body.Signature.Sign.ToByteArray();
             byte[] public_key = request.Body.Signature.Key.ToByteArray();
-            bool ok = MorphContractInvoker.InvokePut(MorphClient, container, sig, public_key);//TODO: handle error
+            MorphClient.InvokePut(container, sig, public_key);
             var resp = new PutResponse
             {
                 Body = new PutResponse.Types.Body
@@ -83,7 +83,7 @@ namespace Neo.FileStorage.Services.Container
         public SetExtendedACLResponse SetExtendedACL(SetExtendedACLRequest request)
         {
             byte[] sig = request.Body.Signature.Sign.ToByteArray();
-            bool ok = MorphContractInvoker.InvokeSetEACL(MorphClient, request.Body.Eacl, sig);//TODO: handle error
+            MorphClient.InvokeSetEACL(request.Body.Eacl, sig);
             var resp = new SetExtendedACLResponse
             {
                 Body = new SetExtendedACLResponse.Types.Body { }

@@ -1,10 +1,11 @@
 using Multiformats.Address;
 using Multiformats.Address.Net;
+using System;
 using System.Net.Sockets;
 
 namespace Neo.FileStorage.Network
 {
-    public class Address
+    public class Address : IEquatable<Address>
     {
         public const string L4Protocol = "tcp";
 
@@ -28,7 +29,11 @@ namespace Neo.FileStorage.Network
             return new Address { ma = m };
         }
 
-        // multiaddrStringFromHostAddr converts "localhost:8080" to "/dns4/localhost/tcp/8080"
+        /// <summary>
+        /// multiaddrStringFromHostAddr converts "localhost:8080" to "/dns4/localhost/tcp/8080"
+        /// </summary>
+        /// <param name="host"></param>
+        /// <returns></returns>
         private static string MultiAddrStringFromHostAddr(string host)
         {
             var endPoint = Multiaddress.Decode(host).ToEndPoint();
@@ -44,12 +49,17 @@ namespace Neo.FileStorage.Network
             return string.Join('/', prefix, s, L4Protocol, port);
         }
 
-        public bool IsLocalAddress(Address address)
+        bool IEquatable<Address>.Equals(Address other)
         {
-            return address.ma.Equals(ma);
+            if (other is null) return false;
+            return other.ma.Equals(ma);
         }
 
-        // IPAddrFromMultiaddr converts "/dns4/localhost/tcp/8080" to "192.168.0.1:8080".
+        /// <summary>
+        /// IPAddrFromMultiaddr converts "/dns4/localhost/tcp/8080" to "192.168.0.1:8080".
+        /// </summary>
+        /// <param name="multiaddr"></param>
+        /// <returns></returns>
         public static string IPAddrFromMultiaddr(string multiaddr)
         {
             return AddressFromString(multiaddr).IPAddressString();

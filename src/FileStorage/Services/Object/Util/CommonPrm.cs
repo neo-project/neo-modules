@@ -2,6 +2,7 @@ using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Session;
 using Neo.FileStorage.API.Client;
 using System.Security.Cryptography;
+using System.Collections.Generic;
 
 namespace Neo.FileStorage.Services.Object.Util
 {
@@ -18,27 +19,39 @@ namespace Neo.FileStorage.Services.Object.Util
         public static CommonPrm FromRequest(IRequest request)
         {
             var meta = request.MetaHeader;
+            var options = new CallOptions();
+            var xheaders = new List<XHeader>();
             var prm = new CommonPrm
             {
                 Local = meta.Ttl <= 1,
-                SessionToken = meta.SessionToken,
-                BearerToken = meta.BearerToken,
             };
-            foreach (var header in meta.XHeaders)
+            if (meta.SessionToken is not null)
             {
-                switch (header.Key)
+                prm.SessionToken = meta.SessionToken;
+                options.Session = meta.SessionToken;
+            }
+            if (meta.BearerToken is not null)
+            {
+                prm.BearerToken = meta.BearerToken;
+                options.Bearer = meta.BearerToken;
+            }
+            foreach (var xheader in meta.XHeaders)
+            {
+                switch (xheader.Key)
                 {
                     case XHeader.XHeaderNetmapEpoch:
-                        prm.NetmapEpoch = uint.Parse(header.Value);
+                        prm.NetmapEpoch = uint.Parse(xheader.Value);
                         break;
                     case XHeader.XHeaderNetmapLookupDepth:
-                        prm.NetmapLookupDepth = uint.Parse(header.Value);
+                        prm.NetmapLookupDepth = uint.Parse(xheader.Value);
                         break;
                     default:
-                        //TODO: call options
+                        xheaders.Add(xheader);
                         break;
                 }
             }
+            options.XHeaders = xheaders;
+            prm.CallOptions = options;
             return prm;
         }
 

@@ -5,7 +5,6 @@ using Neo.FileStorage.Services.Audit.Auditor;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using Neo.Wallets;
 using Neo.FileStorage.API.Client;
-using Neo.FileStorage.API.Client.ObjectParams;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.StorageGroup;
@@ -75,7 +74,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 {
                     var source = new CancellationTokenSource();
                     source.CancelAfter(TimeSpan.FromMinutes(1));
-                    obj = cli.GetObject(new GetObjectParams { Address = sgAddress, Raw = false }, context: source.Token).Result;
+                    obj = cli.GetObject(sgAddress, false, context: source.Token).Result;
                 }
                 catch (Exception e)
                 {
@@ -136,7 +135,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 var source = new CancellationTokenSource();
                 source.CancelAfter(TimeSpan.FromMinutes(1));
-                head = client.GetObjectHeader(new ObjectHeaderParams { Address = objAddress, Raw = raw }, context: source.Token).Result;
+                head = client.GetObjectHeader(objAddress, raw, context: source.Token).Result;
             }
             catch (Exception e)
             {
@@ -175,7 +174,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 var source = new CancellationTokenSource();
                 source.CancelAfter(TimeSpan.FromMinutes(1));
-                result = cli.GetObjectPayloadRangeHash(new RangeChecksumParams { Address = objAddress, Ranges = new List<V2Range> { rng }, Type = ChecksumType.Tz, Salt = null }, context: source.Token).Result;
+                result = cli.GetObjectPayloadRangeHash(objAddress, new List<V2Range> { rng }, ChecksumType.Tz, null, context: source.Token).Result;
             }
             catch (Exception e)
             {

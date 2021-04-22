@@ -1,5 +1,6 @@
 using Google.Protobuf;
 using Neo.FileStorage.API.Session;
+using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Services.Reputaion.Local.Client;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
@@ -9,41 +10,45 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
     {
         public static FSObject GetObject(this ReputationClient client, ExecuteContext context)
         {
+            var options = context.Prm.CallOptions
+                .WithExtraXHeaders(new XHeader[] { new() { Key = XHeader.XHeaderNetmapEpoch, Value = context.CurrentEpoch.ToString() } })
+                .WithKey(context.Prm.Key);
             if (context.HeadOnly)
             {
-                return client.GetObjectHeader(new()
-                {
-                    Address = context.Prm.Address,
-                    Raw = context.Prm.Raw,
-                }, new()
-                {
-                    XHeaders = new XHeader[] { new() { Key = XHeader.XHeaderNetmapEpoch, Value = context.CurrentEpoch.ToString() } },
-                    Key = context.Prm.Key,
-                }).Result;
+                return client.GetObjectHeader(
+                    context.Prm.Address,
+                    false,
+                    context.Prm.Raw,
+                    options).Result;
             }
             if (context.Range is not null)
             {
-                var data = client.GetObjectPayloadRangeData(new()
-                {
-                    Address = context.Prm.Address,
-                    Range = context.Range,
-                    Raw = context.Prm.Raw,
-                }, new()
-                {
-                    XHeaders = new XHeader[] { new() { Key = XHeader.XHeaderNetmapEpoch, Value = context.CurrentEpoch.ToString() } },
-                    Key = context.Prm.Key,
-                }).Result;
+                var data = client.GetObjectPayloadRangeData(context.Prm.Address,
+                    context.Range,
+                    context.Prm.Raw,
+                    options).Result;
                 return new() { Payload = ByteString.CopyFrom(data) };
             }
-            return client.GetObjectHeader(new()
+            return client.GetObject(
+                context.Prm.Address,
+                context.Prm.Raw,
+                options).Result;
+        }
+
+        public static FSObject GetObject(this StorageEngine engine, ExecuteContext context)
+        {
+            if (context.HeadOnly)
             {
-                Address = context.Prm.Address,
-                Raw = context.Prm.Raw,
-            }, new()
+                return engine.Head(context.Prm.Address, context.Prm.Raw);
+            }
+            else if (context.Range is not null)
             {
-                XHeaders = new XHeader[] { new() { Key = XHeader.XHeaderNetmapEpoch, Value = context.CurrentEpoch.ToString() } },
-                Key = context.Prm.Key,
-            }).Result;
+                return engine.GetRange(context.Prm.Address, context.Range.Offset, context.Range.Length);
+            }
+            else
+            {
+                return engine.Get(context.Prm.Address);
+            }
         }
 
         public static bool IsChild(this FSObject obj)

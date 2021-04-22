@@ -16,15 +16,14 @@ namespace Neo.FileStorage.Services.Object.Search.Execute
 
         public static IEnumerable<ObjectID> SearchObjects(this ReputationClient client, ExecuteContext context)
         {
-            return client.SearchObject(new()
-            {
-                ContainerID = context.Prm.ContainerID,
-                Filters = context.Prm.Filters
-            }, new()
-            {
-                Epoch = context.Prm.NetmapEpoch,
-                Key = context.Prm.Key,
-            }).Result;
+            return client.SearchObject(
+                context.Prm.ContainerID,
+                context.Prm.Filters,
+                new()
+                {
+                    Epoch = context.Prm.NetmapEpoch,
+                    Key = context.Prm.Key,
+                }).Result;
         }
     }
 }

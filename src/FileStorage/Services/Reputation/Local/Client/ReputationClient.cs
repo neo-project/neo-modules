@@ -1,7 +1,7 @@
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Client;
-using Neo.FileStorage.API.Client.ObjectParams;
 using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
 using Neo.FileStorage.Services.Reputaion.Local.Storage;
@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using FSClient = Neo.FileStorage.API.Client.Client;
 using FSContainer = Neo.FileStorage.API.Container.Container;
 using FSObject = Neo.FileStorage.API.Object.Object;
+using FSRange = Neo.FileStorage.API.Object.Range;
 using UsedSpaceAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types.Announcement;
 
 namespace Neo.FileStorage.Services.Reputaion.Local.Client
@@ -206,11 +207,11 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             }
         }
 
-        public async Task<FSObject> GetObject(GetObjectParams param, CallOptions options = null, CancellationToken context = default)
+        public async Task<FSObject> GetObject(Address address, bool raw = false, CallOptions options = null, CancellationToken context = default)
         {
             try
             {
-                var r = await FSClient.GetObject(param, options, context);
+                var r = await FSClient.GetObject(address, raw, options, context);
                 SumbmitResult(true);
                 return r;
             }
@@ -221,11 +222,11 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             }
         }
 
-        public async Task<ObjectID> PutObject(PutObjectParams param, CallOptions options = null, CancellationToken context = default)
+        public async Task<ObjectID> PutObject(FSObject obj, CallOptions options = null, CancellationToken context = default)
         {
             try
             {
-                var r = await FSClient.PutObject(param, options, context);
+                var r = await FSClient.PutObject(obj, options, context);
                 SumbmitResult(true);
                 return r;
             }
@@ -236,11 +237,11 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             }
         }
 
-        public async Task<Address> DeleteObject(DeleteObjectParams param, CallOptions options = null, CancellationToken context = default)
+        public async Task<Address> DeleteObject(Address address, CallOptions options = null, CancellationToken context = default)
         {
             try
             {
-                var r = await FSClient.DeleteObject(param, options, context);
+                var r = await FSClient.DeleteObject(address, options, context);
                 SumbmitResult(true);
                 return r;
             }
@@ -251,11 +252,11 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             }
         }
 
-        public async Task<FSObject> GetObjectHeader(ObjectHeaderParams param, CallOptions options = null, CancellationToken context = default)
+        public async Task<FSObject> GetObjectHeader(Address address, bool minimal = false, bool raw = false, CallOptions options = null, CancellationToken context = default)
         {
             try
             {
-                var r = await FSClient.GetObjectHeader(param, options, context);
+                var r = await FSClient.GetObjectHeader(address, minimal, raw, options, context);
                 SumbmitResult(true);
                 return r;
             }
@@ -266,11 +267,11 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             }
         }
 
-        public async Task<byte[]> GetObjectPayloadRangeData(RangeDataParams param, CallOptions options = null, CancellationToken context = default)
+        public async Task<byte[]> GetObjectPayloadRangeData(Address address, FSRange range, bool raw = false, CallOptions options = null, CancellationToken context = default)
         {
             try
             {
-                var r = await FSClient.GetObjectPayloadRangeData(param, options, context);
+                var r = await FSClient.GetObjectPayloadRangeData(address, range, raw, options, context);
                 SumbmitResult(true);
                 return r;
             }
@@ -281,11 +282,11 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             }
         }
 
-        public async Task<List<byte[]>> GetObjectPayloadRangeHash(RangeChecksumParams param, CallOptions options = null, CancellationToken context = default)
+        public async Task<List<byte[]>> GetObjectPayloadRangeHash(Address address, IEnumerable<FSRange> ranges, ChecksumType type, byte[] salt, CallOptions options = null, CancellationToken context = default)
         {
             try
             {
-                var r = await FSClient.GetObjectPayloadRangeHash(param, options, context);
+                var r = await FSClient.GetObjectPayloadRangeHash(address, ranges, type, salt, options, context);
                 SumbmitResult(true);
                 return r;
             }
@@ -296,11 +297,11 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             }
         }
 
-        public async Task<List<ObjectID>> SearchObject(SearchObjectParams param, CallOptions options = null, CancellationToken context = default)
+        public async Task<List<ObjectID>> SearchObject(ContainerID cid, SearchFilters filters, CallOptions options = null, CancellationToken context = default)
         {
             try
             {
-                var r = await FSClient.SearchObject(param, options, context);
+                var r = await FSClient.SearchObject(cid, filters, options, context);
                 SumbmitResult(true);
                 return r;
             }
