@@ -1,7 +1,7 @@
 using Grpc.Core;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Core.Netmap;
 using Neo.FileStorage.LocalObjectStorage.Engine;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Control.Service;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +15,10 @@ namespace Neo.FileStorage.Services.Control
     public class ControlServiceImpl : ControlService.ControlServiceBase
     {
         private readonly HashSet<byte[]> allowKeys = new();
-        private readonly ECDsa key;
-        private readonly StorageEngine engine;
-        private readonly INetmapSource netmapSource;
-        private NetmapStatus netmapStatus;
-        private HealthStatus healthStatus;
+        public ECDsa Key { get; init; }
+        public StorageEngine LocalStorage { get; init; }
+        public Client MorphClient { get; init; }
+        public StorageNode StorageNode { get; init; }
 
         public override Task<DropObjectsResponse> DropObjects(DropObjectsRequest request, ServerCallContext context)
         {
@@ -31,12 +30,12 @@ namespace Neo.FileStorage.Services.Control
                 {
                     addresses[i] = Address.Parser.ParseFrom(request.Body.AddressList[i]);
                 }
-                engine.Delete(addresses);
+                LocalStorage.Delete(addresses);
                 var resp = new DropObjectsResponse
                 {
                     Body = new DropObjectsResponse.Types.Body(),
                 };
-                key.SignMessage(resp);
+                Key.SignMessage(resp);
                 return resp;
             }, context.CancellationToken);
         }
@@ -50,11 +49,11 @@ namespace Neo.FileStorage.Services.Control
                 {
                     Body = new HealthCheckResponse.Types.Body
                     {
-                        NetmapStatus = netmapStatus,
-                        HealthStatus = healthStatus,
+                        NetmapStatus = StorageNode.NetmapStatus,
+                        HealthStatus = StorageNode.HealthStatus,
                     }
                 };
-                key.SignMessage(resp);
+                Key.SignMessage(resp);
                 return resp;
             }, context.CancellationToken);
         }
@@ -64,9 +63,9 @@ namespace Neo.FileStorage.Services.Control
             return Task.Run(() =>
             {
                 if (!IsValidRequest(request)) throw new RpcException(new Status(StatusCode.PermissionDenied, ""));
-                ulong epoch = netmapSource.Epoch();
-                var nm = netmapSource.GetNetMapByEpoch(epoch);
-                var netmap = new Control.Service.Netmap
+                ulong epoch = MorphClient.InvokeEpoch();
+                var nm = MorphClient.InvokeEpochSnapshot(epoch);
+                var netmap = new Service.Netmap
                 {
                     Epoch = epoch,
                 };
@@ -78,7 +77,7 @@ namespace Neo.FileStorage.Services.Control
                         Netmap = netmap,
                     },
                 };
-                key.SignMessage(resp);
+                Key.SignMessage(resp);
                 return resp;
             }, context.CancellationToken);
         }
@@ -88,12 +87,12 @@ namespace Neo.FileStorage.Services.Control
             return Task.Run(() =>
             {
                 if (!IsValidRequest(request)) throw new RpcException(new Status(StatusCode.PermissionDenied, ""));
-                netmapStatus = request.Body.Status;
+                StorageNode.NetmapStatus = request.Body.Status;
                 var resp = new SetNetmapStatusResponse
                 {
                     Body = new SetNetmapStatusResponse.Types.Body { }
                 };
-                key.SignMessage(resp);
+                Key.SignMessage(resp);
                 return resp;
             }, context.CancellationToken);
         }

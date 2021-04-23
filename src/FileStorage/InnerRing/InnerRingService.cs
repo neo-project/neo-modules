@@ -224,7 +224,7 @@ namespace Neo.FileStorage.InnerRing
 
         public void InitConfigFromBlockchain()
         {
-            long epoch;
+            ulong epoch;
             try
             {
                 epoch = morphClient.GetEpoch();

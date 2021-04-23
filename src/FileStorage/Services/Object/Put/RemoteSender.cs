@@ -13,6 +13,7 @@ namespace Neo.FileStorage.Services.Object.Put
         {
             var t = new RemoteTarget
             {
+                Cancellation = context,
                 KeyStorage = KeyStorage,
                 Address = prm.Node,
                 ClientCache = ClientCache,

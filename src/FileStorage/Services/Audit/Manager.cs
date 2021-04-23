@@ -1,5 +1,4 @@
 using Akka.Actor;
-using Akka.IO;
 using Neo.FileStorage.Services.Audit.Auditor;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -16,7 +15,7 @@ namespace Neo.FileStorage.Services.Audit
         private readonly IContainerCommunicator communicator;
         private readonly ulong maxPDPInterval;//MillisecondsTimeout
         private readonly Queue<AuditTask> taskQueue;
-        private System.Threading.Tasks.Task runningTask;
+        private Task runningTask;
 
         public Manager(int capacity, IContainerCommunicator container_communicator, ulong max_pdp_interval)
         {

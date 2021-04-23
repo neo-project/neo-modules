@@ -1,7 +1,5 @@
 using Google.Protobuf;
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.Services.Object.Put;
-using Neo.FileStorage.Services.Object.Put.Writer;
 using System;
 using System.Linq;
 using System.Threading;
@@ -10,8 +8,13 @@ namespace Neo.FileStorage.Services.Object
 {
     public class SplitService
     {
-        public int ChunkSize { get; init; }
-        public int AddressAmount { get; init; }
+        public const int MaxMsgSize = 4 << 20;
+        public const int AddressesSize = 72;
+        public const int MaxChunkSize = MaxMsgSize * 3 / 4;
+        public const int MaxAddrAmount = MaxChunkSize / AddressesSize;
+
+        public int ChunkSize { get; init; } = MaxChunkSize;
+        public int AddressAmount { get; init; } = MaxAddrAmount;
         public ObjectService ObjectService { get; init; }
 
         public DeleteResponse Delete(DeleteRequest request)
