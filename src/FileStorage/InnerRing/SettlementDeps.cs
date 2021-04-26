@@ -70,7 +70,7 @@ namespace Neo.FileStorage.InnerRing
 
         public OwnerID ResolveKey(NodeInfo nodeInfo)
         {
-            return OwnerID.Frombytes(nodeInfo.PublicKey());
+            return OwnerID.FromByteArray(nodeInfo.PublicKey());
         }
 
         public void transfer(OwnerID sender, OwnerID recipient, BigInteger amount, byte[] details)

@@ -39,7 +39,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                 { MatchType.StringEqual, StringEqualMatcher },
                 { MatchType.StringNotEqual, StringNotEqualMatcher }
             };
-            var option = new Options();
+            Options option = new();
             option.CreateIfMissing = true;
             db = DB.Open(path, option);
         }
@@ -82,11 +82,29 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                     return value.HexToBytes();
                 case Filter.FilterHeaderSplitID:
                     SplitID s = new();
-                    if (s.Parse(value)) return s.ToBytes();
+                    if (s.Parse(value)) return s.ToByteArray();
                     return null;
                 default:
                     return StrictUTF8.GetBytes(value);
             }
+        }
+
+        private Address ParseAddress(byte[] key)
+        {
+            if (key.Length != 1 + ContainerID.ValueSize + ObjectID.ValueSize) throw new ArgumentException("invalid format", nameof(key));
+            byte[] cidv = key[1..(1 + ContainerID.ValueSize)];
+            byte[] oidv = key[(1 + ContainerID.ValueSize)..];
+            return new()
+            {
+                ContainerId = new()
+                {
+                    Value = ByteString.CopyFrom(cidv)
+                },
+                ObjectId = new()
+                {
+                    Value = ByteString.CopyFrom(oidv)
+                },
+            };
         }
 
         private byte[] ContainerSizeKey(ContainerID cid)
@@ -95,10 +113,39 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             return Concat(ContainerPrefix, cid.Value.ToByteArray());
         }
 
+        private ContainerID ParseContainerSizeKey(byte[] key)
+        {
+            if (key.Length != 1 + ContainerID.ValueSize) throw new ArgumentException("invalid format", nameof(key));
+            return new ContainerID
+            {
+                Value = ByteString.CopyFrom(key[1..]),
+            };
+        }
+
         private byte[] GraveYardKey(Address address)
         {
             if (address is null) throw new ArgumentNullException(nameof(address));
             return Concat(GraveYardPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
+        }
+
+        private Address ParseGraveYardKey(byte[] key)
+        {
+            if (key.Length != 1 + ObjectID.ValueSize) throw new ArgumentException("invalid format", nameof(key));
+            int offset = 1;
+            byte[] cidv = key[offset..(offset + ContainerID.ValueSize)];
+            offset += ContainerID.ValueSize;
+            byte[] oidv = key[offset..(offset + ObjectID.ValueSize)];
+            return new()
+            {
+                ContainerId = new()
+                {
+                    Value = ByteString.CopyFrom(cidv)
+                },
+                ObjectId = new()
+                {
+                    Value = ByteString.CopyFrom(oidv)
+                }
+            };
         }
 
         private byte[] Primarykey(Address address)
@@ -107,10 +154,20 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             return Concat(ObjectPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
         }
 
+        private Address ParsePrimaryKey(byte[] key)
+        {
+            return ParseAddress(key);
+        }
+
         private byte[] TombstoneKey(Address address)
         {
             if (address is null) throw new ArgumentNullException(nameof(address));
             return Concat(TombstonePrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
+        }
+
+        private Address ParseTombstoneKey(byte[] key)
+        {
+            return ParseAddress(key);
         }
 
         private byte[] StorageGroupKey(Address address)
@@ -119,16 +176,34 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             return Concat(StorageGroupPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
         }
 
+        private Address ParseStorageGroupKey(byte[] key)
+        {
+            return ParseAddress(key);
+        }
+
         private byte[] RootKey(Address address)
         {
             if (address is null) throw new ArgumentNullException(nameof(address));
             return Concat(RootPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
         }
 
-        private byte[] ParentKey(Address address)
+        private Address ParseRootKey(byte[] key)
         {
-            if (address is null) throw new ArgumentNullException(nameof(address));
-            return Concat(ParentPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
+            return ParseAddress(key);
+        }
+
+
+        private byte[] ParentKey(ContainerID cid, ObjectID parent)
+        {
+            if (parent is null || cid is null) throw new ArgumentException();
+            return Concat(ParentPrefix, cid.Value.ToByteArray(), parent.Value.ToByteArray());
+        }
+
+        private void ParseParentKey(byte[] key, out ContainerID cid, out ObjectID parent)
+        {
+            var address = ParseAddress(key);
+            cid = address.ContainerId;
+            parent = address.ObjectId;
         }
 
         private byte[] SmallKey(Address address)
@@ -137,34 +212,131 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             return Concat(SmallPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
         }
 
+        private Address ParseSmallKey(byte[] key)
+        {
+            return ParseAddress(key);
+        }
+
         private byte[] ToMoveItKey(Address address)
         {
             if (address is null) throw new ArgumentNullException(nameof(address));
             return Concat(ToMoveItPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
         }
 
-        private byte[] PayloadHashKey(Address address, Checksum checksum)
+        private Address ParseToMoveItKey(byte[] key)
         {
-            if (address is null || checksum is null) throw new ArgumentNullException();
-            return Concat(PayloadHashPrefix, address.ContainerId.Value.ToByteArray(), checksum.Sum.ToByteArray(), address.ObjectId.Value.ToByteArray());
+            if (key.Length != 1 + ObjectID.ValueSize) throw new ArgumentException("invalid format", nameof(key));
+            int offset = 1;
+            byte[] cidv = key[offset..(offset + ContainerID.ValueSize)];
+            offset += ContainerID.ValueSize;
+            byte[] oidv = key[offset..(offset + ObjectID.ValueSize)];
+            return new()
+            {
+                ContainerId = new()
+                {
+                    Value = ByteString.CopyFrom(cidv)
+                },
+                ObjectId = new()
+                {
+                    Value = ByteString.CopyFrom(oidv)
+                }
+            };
         }
 
-        private byte[] SplitKey(Address address, SplitID sid)
+        private byte[] PayloadHashKey(ContainerID cid, Checksum checksum)
         {
-            if (address is null || sid is null) throw new ArgumentNullException();
-            return Concat(SplitPrefix, address.ContainerId.Value.ToByteArray(), sid.ToBytes(), address.ObjectId.Value.ToByteArray());
+            if (cid is null || checksum is null) throw new ArgumentNullException();
+            return Concat(PayloadHashPrefix, cid.Value.ToByteArray(), checksum.Sum.ToByteArray());
+        }
+
+        private void ParsePayloadHashKey(byte[] key, out ContainerID cid, out byte[] sum)
+        {
+            if (key.Length < 1 + ContainerID.ValueSize) throw new ArgumentException("invalid format", nameof(key));
+            int offset = 1;
+            byte[] cidv = key[offset..(offset + ContainerID.ValueSize)];
+            offset += ContainerID.ValueSize;
+            sum = key[offset..];
+            cid = new()
+            {
+                Value = ByteString.CopyFrom(cidv)
+            };
+        }
+
+        private byte[] SplitKey(ContainerID cid, SplitID sid)
+        {
+            if (cid is null || sid is null) throw new ArgumentNullException();
+            return Concat(SplitPrefix, cid.Value.ToByteArray(), sid.ToByteArray());
+        }
+
+        private void ParseSplitKey(byte[] key, out ContainerID cid, out SplitID sid)
+        {
+            if (key.Length != 1 + ContainerID.ValueSize + SplitID.Size) throw new ArgumentException("invalid format", nameof(key));
+            int offset = 1;
+            byte[] cidv = key[offset..(offset + ContainerID.ValueSize)];
+            offset += ContainerID.ValueSize;
+            byte[] sidv = key[offset..];
+            cid = new()
+            {
+                Value = ByteString.CopyFrom(cidv)
+            };
+            sid = new(sidv);
         }
 
         private byte[] OwnerKey(Address address, OwnerID wid)
         {
             if (address is null || wid is null) throw new ArgumentNullException();
-            return Concat(OwnerPrefix, address.ContainerId.Value.ToByteArray(), wid.Value.ToByteArray(), address.ObjectId.ToByteArray());
+            return Concat(OwnerPrefix, address.ContainerId.Value.ToByteArray(), wid.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
+        }
+
+        private void ParseOwnerKey(byte[] key, out Address address, out OwnerID wid)
+        {
+            if (key.Length != 1 + ContainerID.ValueSize + OwnerID.ValueSize) throw new ArgumentException("invalid format", nameof(key));
+            int offset = 1;
+            byte[] cidv = key[offset..(offset + ContainerID.ValueSize)];
+            offset += ContainerID.ValueSize;
+            byte[] widv = key[offset..(offset + OwnerID.ValueSize)];
+            offset += OwnerID.ValueSize;
+            byte[] oidv = key[offset..];
+            address = new()
+            {
+                ContainerId = new()
+                {
+                    Value = ByteString.CopyFrom(cidv)
+                },
+                ObjectId = new()
+                {
+                    Value = ByteString.CopyFrom(oidv)
+                }
+            };
+            wid = new()
+            {
+                Value = ByteString.CopyFrom(widv)
+            };
         }
 
         private byte[] AttributeKey(Address address, Header.Types.Attribute attr)
         {
             if (address is null || attr is null) throw new ArgumentNullException();
             return Concat(AttributePrefix, address.ContainerId.Value.ToByteArray(), StrictUTF8.GetBytes(attr.Key), StrictUTF8.GetBytes(attr.Value), address.ObjectId.Value.ToByteArray());
+        }
+
+        private void ParseAttributeKey(byte[] key, out Address address, out byte[] attribute)
+        {
+            if (key.Length < 1 + ContainerID.ValueSize + ObjectID.ValueSize + 2) throw new ArgumentException("invalid format", nameof(key));
+            byte[] cidv = key[1..(1 + ContainerID.ValueSize)];
+            byte[] oidv = key[^ObjectID.ValueSize..];
+            address = new()
+            {
+                ContainerId = new()
+                {
+                    Value = ByteString.CopyFrom(cidv)
+                },
+                ObjectId = new()
+                {
+                    Value = ByteString.CopyFrom(oidv)
+                }
+            };
+            attribute = key[(1 + ContainerID.ValueSize)..^ObjectID.ValueSize];
         }
     }
 }

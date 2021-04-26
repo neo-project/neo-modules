@@ -57,7 +57,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
 
         private bool ExistsSmall(Address address)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("neofs-node not implemented");
         }
 
         public bool Exists(Address address)
@@ -118,7 +118,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
 
         public void Iterate()
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("neofs-node not implemented");
         }
     }
 }

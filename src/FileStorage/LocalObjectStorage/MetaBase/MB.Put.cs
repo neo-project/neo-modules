@@ -6,6 +6,7 @@ using Neo.IO.Data.LevelDB;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Neo.FileStorage.LocalObjectStorage.MetaBase.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.LocalObjectStorage.MetaBase
@@ -43,9 +44,20 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                 SplitInfo psi = SplitInfoFromObject(obj);
                 Put(obj.Parent, bid, psi);
             }
-            foreach (var key_pair in UniqueIndexes(obj, si, bid))
+            foreach (var item in UniqueIndexes(obj, si, bid))
             {
-                db.Put(WriteOptions.Default, key_pair.Item1, key_pair.Item2);
+                db.Put(WriteOptions.Default, item.Item1, item.Item2);
+            }
+            foreach (var item in ListIndexes(obj))
+            {
+                List<ObjectID> list;
+                var data = db.Get(ReadOptions.Default, item.Item1);
+                if (data is null)
+                    list = new();
+                else
+                    list = DecodeObjectIDList(data);
+                list.Add(item.Item2);
+                db.Put(WriteOptions.Default, item.Item1, EncodeObjectIDList(list));
             }
             foreach (var key in FakeBucketTreeIndexes(obj))
             {
@@ -116,13 +128,13 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                 switch (obj.ObjectType)
                 {
                     case ObjectType.Regular:
-                        result.Add((Primarykey(obj.Address), obj.ToByteArray()));
+                        result.Add((Primarykey(obj.Address), obj.CutPayload().ToByteArray()));
                         break;
                     case ObjectType.Tombstone:
-                        result.Add((TombstoneKey(obj.Address), obj.ToByteArray()));
+                        result.Add((TombstoneKey(obj.Address), obj.CutPayload().ToByteArray()));
                         break;
                     case ObjectType.StorageGroup:
-                        result.Add((StorageGroupKey(obj.Address), obj.ToByteArray()));
+                        result.Add((StorageGroupKey(obj.Address), obj.CutPayload().ToByteArray()));
                         break;
                     default:
                         throw new UnknownObjectTypeException();
@@ -132,7 +144,8 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             }
             if (obj.ObjectType == ObjectType.Regular && !obj.HasParent)
             {
-                result.Add((RootKey(obj.Address), si is not null ? si.ToByteArray() : Array.Empty<byte>()));
+                if (si is null) throw new InvalidOperationException("cann't encode split info");
+                result.Add((RootKey(obj.Address), si.ToByteArray()));
             }
             return result;
         }
