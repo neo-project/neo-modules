@@ -31,13 +31,12 @@ namespace Neo.FileStorage
             if (system.Settings.Network == Settings.Default.MainNetwork)
             {
                 MainSystem = system;
-                SideSystem = new(ProtocolSettings.Load(Settings.Default.SideChainConfigPath), Settings.Default.SideChainStorageEngine, $"SideChain");
-                if (Settings.Default.StartInnerRing) InnerRingService = new(MainSystem, SideSystem);
-                if (Settings.Default.StartStorage) StorageService = new(SideSystem);
+                SideSystem = new(ProtocolSettings.Load(Settings.Default.SideChainConfigPath), Settings.Default.SideChainStorageEngine, "SideChain");
             }
             else if (system.Settings.Network == Settings.Default.SideNetwork)
             {
-                //TODO:
+                if (Settings.Default.StartInnerRing) InnerRingService = new(MainSystem, system);
+                if (Settings.Default.StartStorage) StorageService = new(system);
             }
         }
 

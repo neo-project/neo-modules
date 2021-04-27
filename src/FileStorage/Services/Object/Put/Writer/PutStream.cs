@@ -1,7 +1,5 @@
 using Google.Protobuf;
-using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
 using Neo.FileStorage.Core.Object;
 using Neo.FileStorage.Morph.Invoker;
@@ -10,7 +8,6 @@ using Neo.FileStorage.Services.ObjectManager.Placement;
 using Neo.FileStorage.Services.ObjectManager.Transformer;
 using System;
 using System.Threading;
-using FSContainer = Neo.FileStorage.API.Container.Container;
 
 namespace Neo.FileStorage.Services.Object.Put.Writer
 {
@@ -97,7 +94,7 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
                 return;
             }
             var key = PutService.KeyStorage.GetKey(prm.SessionToken);
-            var max = GetMaxObjectSize();
+            var max = BitConverter.ToUInt64(PutService.MorphClient.InvokeConfig(MorphContractInvoker.MaxObjectSizeConfig));
             if (max == 0) throw new InvalidOperationException($"{nameof(PutStream)} could not obtain max object size parameter");
             target = new PayloadSizeLimiterTarget(max, new FormatTarget
             {
@@ -131,8 +128,8 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
 
         private void PrepareInitPrm(PutInitPrm prm)
         {
-            var nm = GetLatestNetmap();
-            var container = GetContainer(prm.Header.ContainerId);
+            var nm = PutService.MorphClient.InvokeSnapshot(0);
+            var container = PutService.MorphClient.InvokeGetContainer(prm.Header.ContainerId);
             var builder = new NetworkMapBuilder(nm);
 
             if (prm.Local)
@@ -148,21 +145,6 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
             if (target is null)
                 throw new InvalidOperationException($"{nameof(PutStream)} target not initilized");
             target.WriteChunk(chunk.ToByteArray());
-        }
-
-        private NetMap GetLatestNetmap()
-        {
-            return MorphContractInvoker.InvokeSnapshot(PutService.MorphClient, 0);
-        }
-
-        private FSContainer GetContainer(ContainerID cid)
-        {
-            return MorphContractInvoker.InvokeGetContainer(PutService.MorphClient, cid);
-        }
-
-        private ulong GetMaxObjectSize()
-        {
-            return BitConverter.ToUInt64(MorphContractInvoker.InvokeConfig(PutService.MorphClient, MorphContractInvoker.MaxObjectSizeConfig));
         }
     }
 }
