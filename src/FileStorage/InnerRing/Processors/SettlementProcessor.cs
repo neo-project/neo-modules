@@ -6,6 +6,7 @@ using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Morph.Event;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using static Neo.FileStorage.InnerRing.Events.MorphEvent;
@@ -18,9 +19,19 @@ namespace Neo.FileStorage.InnerRing.Processors
     public class SettlementProcessor : BaseProcessor
     {
         public override string Name => "SettlementProcessor";
-        private Calculator auditProc;
-        private BasicIncomeSettlementDeps basicIncome;
+        public static BigInteger bigGB = new BigInteger(1 << 30);
+        public static BigInteger bigZero = new BigInteger(0);
+        public static BigInteger bigOne = new BigInteger(1);
         private Dictionary<ulong, IncomeSettlementContext> incomeContexts = new();
+        public BasicIncomeSettlementDeps basicIncome;
+        public Calculator auditProc;
+
+        public void Handle(ulong epoch)
+        {
+            Utility.Log(Name, LogLevel.Info, "process audit settlements");
+            auditProc.Calculate(epoch);
+            Utility.Log(Name, LogLevel.Info, "audit processing finished");
+        }
 
         public void HandleAuditEvent(IContractEvent morphEvent)
         {
@@ -32,15 +43,8 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, "ignore genesis epoch");
                 return;
             }
-            Utility.Log(Name, LogLevel.Info, "process audit settlements");
             WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => Handle(epoch)) });
-            Utility.Log(Name, LogLevel.Info, "audit processing finished");
-        }
-        public void Handle(ulong epoch)
-        {
-            Utility.Log(Name, LogLevel.Info, "process audit settlements");
-            auditProc.Calculate(epoch);
-            Utility.Log(Name, LogLevel.Info, "audit processing finished");
+            Utility.Log(Name, LogLevel.Info, "AuditEvent handling successfully scheduled");
         }
 
         public void HandleIncomeCollectionEvent(IContractEvent morphEvent)
@@ -50,6 +54,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore income collection event");
+                return;
             }
             Utility.Log(Name, LogLevel.Info, string.Format("start basic income collection,epoch:{0}", epoch));
             if (incomeContexts.TryGetValue(epoch, out _))
@@ -69,6 +74,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore income distribution event");
+                return;
             }
             Utility.Log(Name, LogLevel.Info, string.Format("start basic income distribution,epoch:{0}", epoch));
             var flag = incomeContexts.TryGetValue(epoch, out var incomeCtx);
@@ -84,9 +90,6 @@ namespace Neo.FileStorage.InnerRing.Processors
         public class IncomeSettlementContext
         {
             public BasicIncomeSettlementDeps settlementDeps;
-            public BigInteger bigGB = new BigInteger(1 << 30);
-            public BigInteger bigZero = new BigInteger(0);
-            public BigInteger bigOne = new BigInteger(1);
             public ulong epoch;
             public OwnerID bankOwner;
             public NodeSizeTable distributeTable;
@@ -228,10 +231,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     total += avg;
                 }
 
-                public BigInteger Total()
-                {
-                    return total;
-                }
+                public BigInteger Total() => total;
 
                 public void Iterate(Action<byte[], BigInteger> f)
                 {
@@ -250,7 +250,13 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log("Calculator", LogLevel.Info, string.Format("current epoch,{0}", epoch));
                 Utility.Log("Calculator", LogLevel.Info, "calculate audit settlements");
                 Utility.Log("Calculator", LogLevel.Debug, "getting results for the previous epoch");
-                List<DataAuditResult> auditResults = settlementDeps.AuditResultsForEpoch(epoch - 1);
+                List<DataAuditResult> auditResults;
+                try {
+                    auditResults = settlementDeps.AuditResultsForEpoch(epoch - 1);
+                } catch (Exception e) {
+                    Utility.Log("Calculator", LogLevel.Debug, "could not collect audit results");
+                    return;
+                }
                 if (auditResults.Count == 0)
                 {
                     Utility.Log("Calculator", LogLevel.Debug, "no audit results in previous epoch");
@@ -274,33 +280,67 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 Utility.Log("Calculator", LogLevel.Debug, string.Format("cid:{0},audit epoch:{1}", ctx.cid.ToBase58String(), ctx.auditResult.AuditEpoch));
                 Utility.Log("Calculator", LogLevel.Debug, "reading information about the container");
-                ReadContainerInfo(ctx);
+                if (!ReadContainerInfo(ctx)) return;
                 Utility.Log("Calculator", LogLevel.Debug, "building placement");
-                BuildPlacement(ctx);
+                if (!BuildPlacement(ctx)) return;
                 Utility.Log("Calculator", LogLevel.Debug, "collecting passed nodes");
-                CollectPassNodes(ctx);
+                if (!CollectPassNodes(ctx)) return;
                 Utility.Log("Calculator", LogLevel.Debug, "calculating sum of the sizes of all storage groups");
-                SumSGSizes(ctx);
+                if (!SumSGSizes(ctx)) return;
                 Utility.Log("Calculator", LogLevel.Debug, "filling transfer table");
-                FillTransferTable(ctx);
+                if (!FillTransferTable(ctx)) return;
             }
 
             public bool ReadContainerInfo(SingleResultCtx ctx)
             {
-                ctx.cnrInfo = settlementDeps.ContainerInfo(ctx.auditResult.ContainerId);
+                try {
+                    ctx.cnrInfo = settlementDeps.ContainerInfo(ctx.auditResult.ContainerId);
+                } catch (Exception e) {
+                    Utility.Log("Calculator", LogLevel.Error, string.Format("could not get container info,error:{0}",e.Message));
+                    return false;
+                }
                 return true;
             }
 
             public bool BuildPlacement(SingleResultCtx ctx)
             {
-                settlementDeps.ContainerNodes(ctx.eAudit, ctx.auditResult.ContainerId);
-                bool empty = ctx.cnrNodes.Length == 0;
-                return !empty;
+                try
+                {
+                    settlementDeps.ContainerNodes(ctx.eAudit, ctx.auditResult.ContainerId);
+                    return !(ctx.cnrNodes.Length == 0);
+                }
+                catch (Exception e)
+                {
+                    Utility.Log("Calculator", LogLevel.Error, string.Format("could not get container nodes,error:{0}", e.Message));
+                    return false;
+                }
             }
 
-            public void CollectPassNodes(SingleResultCtx ctx)
+            public bool CollectPassNodes(SingleResultCtx ctx)
             {
                 ctx.passNodes = new Dictionary<string, NodeInfo>();
+                bool loopflag = false;
+                foreach (var cnrNode in ctx.cnrNodes) {
+                    foreach (var passNode in ctx.auditResult.PassNodes)
+                    {
+                        if (cnrNode.PublicKey().SequenceEqual(passNode.ToByteArray())) continue;
+                        foreach (var failNode in ctx.auditResult.FailNodes)
+                        {
+                            if (cnrNode.PublicKey().SequenceEqual(failNode.ToByteArray()))
+                                loopflag = true;
+                            if (loopflag) break;
+                        }
+                        if (loopflag) break;
+                        ctx.passNodes[passNode.ToByteArray().ToHexString()] = cnrNode;
+                    }
+                    if (loopflag) break;
+                }
+                if (ctx.passNodes.Count == 0) {
+                    Utility.Log("Calculator", LogLevel.Error, "none of the container nodes passed the audit");
+                    return false;
+                }
+                return true;
+                
             }
 
             public bool SumSGSizes(SingleResultCtx ctx)
@@ -329,18 +369,26 @@ namespace Neo.FileStorage.InnerRing.Processors
                 return true;
             }
 
-            public void FillTransferTable(SingleResultCtx ctx)
+            public bool FillTransferTable(SingleResultCtx ctx)
             {
                 var cnrOwner = ctx.cnrInfo.OwnerId;
                 foreach (var item in ctx.passNodes)
                 {
-                    var ownerID = settlementDeps.ResolveKey(item.Value);
+                    OwnerID ownerID;
+                    try {
+                        ownerID = settlementDeps.ResolveKey(item.Value);
+                    } catch (Exception e) {
+                        Utility.Log("Calculator", LogLevel.Error, string.Format("could not resolve public key of the storage node,key:{0},error:{1}", item.Key,e.Message));
+                        return false;
+                    }
                     var price = item.Value.Price();
+                    Utility.Log("Calculator", LogLevel.Debug, string.Format("calculating storage node salary for audit (GASe-12),sum SG size:{0},price:{1}", ctx.sumSGSize,price));
                     var fee = BigInteger.Multiply(price, ctx.sumSGSize);
                     fee = BigInteger.Divide(fee, BigInteger.One);
                     if (fee.CompareTo(BigInteger.Zero) == 0) fee = BigInteger.Add(fee, BigInteger.One);
                     ctx.txTable.Transfer(new TransferTable.TransferTx() { from = cnrOwner, to = ownerID, amount = fee });
                 }
+                return false;
             }
 
             public class SingleResultCtx

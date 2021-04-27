@@ -13,6 +13,7 @@ namespace Neo.FileStorage.InnerRing.Timer
         public class ResetEvent { };
         public class ResetWithBaseIntervalEvent { public uint d; }
         public class TickEvent { };
+
         public class DeltaCfg
         {
             public bool pulse;
@@ -28,20 +29,11 @@ namespace Neo.FileStorage.InnerRing.Timer
         private List<IActorRef> ps;
         private DeltaCfg deltaCfg;
 
-        public BlockTimer(Func<uint> dur, Action h)
+        public BlockTimer(Func<uint> dur, Action h,uint pmul=1, uint pdiv=1)
         {
             this.dur = dur;
-            this.mul = 1;
-            this.div = 1;
-            this.h = h;
-            this.ps = new List<IActorRef>();
-            this.deltaCfg = new DeltaCfg() { pulse = true };
-        }
-        public BlockTimer(uint mul, uint div, Func<uint> dur, Action h)
-        {
-            this.dur = dur;
-            this.mul = mul;
-            this.div = div;
+            this.mul = pmul;
+            this.div = pdiv;
             this.h = h;
             this.ps = new List<IActorRef>();
             this.deltaCfg = new DeltaCfg() { pulse = true };
@@ -126,7 +118,7 @@ namespace Neo.FileStorage.InnerRing.Timer
         }
         public static Props Props(Func<uint> dur, Action h, uint mul = 1, uint div = 1)
         {
-            return Akka.Actor.Props.Create(() => new BlockTimer(mul, div, dur, h));
+            return Akka.Actor.Props.Create(() => new BlockTimer(dur, h, mul, div));
         }
 
         public static Func<uint> StaticBlockMeter(uint d)

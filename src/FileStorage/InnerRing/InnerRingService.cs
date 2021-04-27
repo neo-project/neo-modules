@@ -21,6 +21,9 @@ using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Utils;
 using static Neo.FileStorage.InnerRing.Timer.BlockTimer;
 using static Neo.FileStorage.InnerRing.Timer.Helper;
+using Neo.Network.P2P.Payloads;
+using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor;
+using Neo.IO.Data.LevelDB;
 
 namespace Neo.FileStorage.InnerRing
 {
@@ -51,7 +54,7 @@ namespace Neo.FileStorage.InnerRing
         private IActorRef auditTaskManager;
         // internal variables
         private readonly NEP6Wallet wallet;
-        private List<IActorRef> workers;
+        private List<Action> workers;
 
         private BalanceContractProcessor balanceContractProcessor;
         private ContainerContractProcessor containerContractProcessor;
@@ -67,6 +70,7 @@ namespace Neo.FileStorage.InnerRing
 
         private List<Action> starters;
         private List<Action> closers;
+        private DB _db;
 
         /// <summary>
         /// Constructor.
@@ -79,6 +83,8 @@ namespace Neo.FileStorage.InnerRing
         /// <param name="system">NeoSystem</param>
         public InnerRingService(NeoSystem system, NEP6Wallet pwallet = null, Client pMainNetClient = null, Client pMorphClient = null)
         {
+            string path = string.Format(_dbPath, system.Settings.Network.ToString("X8"));
+            _db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
             precision = new Fixed8ConverterUtil();
             //Create wallet
             if (pwallet is null)
@@ -86,19 +92,10 @@ namespace Neo.FileStorage.InnerRing
                 wallet = new NEP6Wallet(Settings.Default.WalletPath, system.Settings);
                 wallet.Unlock(Settings.Default.Password);
             }
-            else
-            {
-                wallet = pwallet;
-            }
+            else wallet = pwallet;
             //Build 2 clients(MainNetClient&MorphClient).
-            if (pMainNetClient is null)
-            {
-                mainNetClient = new Client() { client = new MainClient(Settings.Default.Urls, wallet) };
-            }
-            else
-            {
-                mainNetClient = pMainNetClient;
-            }
+            if (pMainNetClient is null) mainNetClient = new Client() { client = new MainClient(Settings.Default.Urls, wallet) };
+            else mainNetClient = pMainNetClient;
             if (pMorphClient is null)
             {
                 morphClient = new Client()
@@ -110,11 +107,7 @@ namespace Neo.FileStorage.InnerRing
                     }
                 };
             }
-            else
-            {
-                morphClient = pMorphClient;
-            }
-
+            else morphClient = pMorphClient;
             //Build 2 listeners(MorphEventListener&MainEventListener).
             morphEventListener = system.ActorSystem.ActorOf(Listener.Props("MorphEventListener"));
             mainEventListener = system.ActorSystem.ActorOf(Listener.Props("MainEventListener"));
@@ -134,12 +127,30 @@ namespace Neo.FileStorage.InnerRing
             };
             // create settlement processor dependencies
             //todo
-
+            var auditCalcDeps = new AuditSettlementDeps()
+            {
+                client = morphClient,
+                nmSrc=,
+                cnrSr=,
+                clientCache=clientCache,
+            };
+            var basicSettlementDeps = new BasicIncomeSettlementDeps() {
+            };
+            var auditSettlementCalc = new Calculator() {
+                settlementDeps=auditCalcDeps
+            };
+            settlementProcessor = new SettlementProcessor() {
+                basicIncome = basicSettlementDeps,
+                auditProc = auditSettlementCalc,
+                State = this,
+            };
+            var locodeValidator = new Validator(null);
             // create governance processor
             governanceProcessor = new GovernanceProcessor()
             {
                 MainCli = mainNetClient,
                 MorphCli = morphClient,
+                State=this,
             };
             // create netmap processor
             //todo
@@ -147,8 +158,12 @@ namespace Neo.FileStorage.InnerRing
             {
                 MorphCli = morphClient,
                 State = this,
-                NetmapSnapshot = new NetMapContractProcessor.CleanupTable(Settings.Default.CleanupEnabled, Settings.Default.CleanupThreshold),
-                WorkPool = system.ActorSystem.ActorOf(WorkerPool.Props("NetMapContract Processor", Settings.Default.NetmapContractWorkersSize))
+                NetmapSnapshot = new CleanupTable(Settings.Default.CleanupEnabled, Settings.Default.CleanupThreshold),
+                WorkPool = system.ActorSystem.ActorOf(WorkerPool.Props("NetMapContract Processor", Settings.Default.NetmapContractWorkersSize)),
+                HandleNewAudit=,
+                HandleAlphabetSync=,
+                HandleAlphabetSync=,
+                NodeValidator=locodeValidator
             };
             morphEventListener.Tell(new BindProcessorEvent() { processor = netMapContractProcessor });
             // create container processor
@@ -211,7 +226,7 @@ namespace Neo.FileStorage.InnerRing
             });
             blockTimers.Add(epochTimer);
             // initialize emission timer
-            var emissionTimer = Timer.Helper.NewEmissionTimer(new EmitTimerArgs()
+            var emissionTimer = NewEmissionTimer(new EmitTimerArgs()
             {
                 context = system,
                 processor = alphabetContractProcessor,
@@ -280,9 +295,20 @@ namespace Neo.FileStorage.InnerRing
                 foreach (var starter in starters)
                     starter();
                 InitConfigFromBlockchain();
+                //to do notary
                 VoteForSidechainValidator(Settings.Default.validators);
+                morphEventListener.Tell(new BindBlockHandlerEvent()
+                {
+                    handler = (Block b) =>
+                    {
+                        Utility.Log("MorphEventListener", LogLevel.Debug, string.Format("new block,index:{0}", b.Index));
+                        TickTimers();
+                    }
+                });
                 morphEventListener.Tell(new Listener.Start());
                 mainEventListener.Tell(new Listener.Start());
+                StartBlockTimers();
+                StartWorkers();
             }
             catch (Exception e)
             {
@@ -299,11 +325,17 @@ namespace Neo.FileStorage.InnerRing
             }
         }
 
-        private void StartWorkers()
+        private void TickTimers()
         {
             foreach (var blockTimer in blockTimers)
+                blockTimer.Tell(new TickEvent());
+        }
+
+        private void StartWorkers()
+        {
+            foreach (var worker in workers)
             {
-                blockTimer.Tell(new ResetEvent());
+                worker();
             }
         }
 

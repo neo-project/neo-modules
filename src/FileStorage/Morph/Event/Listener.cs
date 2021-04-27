@@ -1,5 +1,6 @@
 using Akka.Actor;
 using Neo.FileStorage.InnerRing.Processors;
+using Neo.Network.P2P.Payloads;
 using Neo.Plugins.util;
 using Neo.SmartContract;
 using System;
@@ -16,10 +17,12 @@ namespace Neo.FileStorage.Morph.Event
     {
         private Dictionary<ScriptHashWithType, Func<VM.Types.Array, IContractEvent>> parsers;
         private Dictionary<ScriptHashWithType, List<Action<IContractEvent>>> handlers;
+        private List<Action<Block>> blockHandlers;
         private string name;
         private bool started;
 
         public class BindProcessorEvent { public IProcessor processor; };
+        public class BindBlockHandlerEvent { public Action<Block> handler; };
         public class NewContractEvent { public NotifyEventArgs notify; };
         public class Start { };
         public class Stop { };
@@ -29,6 +32,7 @@ namespace Neo.FileStorage.Morph.Event
             this.name = name;
             parsers = new Dictionary<ScriptHashWithType, Func<VM.Types.Array, IContractEvent>>();
             handlers = new Dictionary<ScriptHashWithType, List<Action<IContractEvent>>>();
+            blockHandlers = new List<Action<Block>>();
         }
 
         public void ParseAndHandle(NotifyEventArgs notify)
@@ -110,6 +114,14 @@ namespace Neo.FileStorage.Morph.Event
                 parsers.Add(p.ScriptHashWithType, p.Parser);
         }
 
+        public void RegisterBlockHandler(Action<Block> blockHandler) {
+            if (blockHandler is null) {
+                Utility.Log(name, LogLevel.Warning, "ignore nil block handler");
+                return;
+            }
+            blockHandlers.Add(blockHandler);
+        }
+
         protected override void OnReceive(object message)
         {
             switch (message)
@@ -125,6 +137,9 @@ namespace Neo.FileStorage.Morph.Event
                     break;
                 case BindProcessorEvent bindMorphProcessor:
                     BindProcessor(bindMorphProcessor.processor);
+                    break;
+                case BindBlockHandlerEvent bindBlockHandler:
+                    RegisterBlockHandler(bindBlockHandler.handler);
                     break;
                 default:
                     break;

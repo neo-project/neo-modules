@@ -55,6 +55,7 @@ namespace Neo.FileStorage.InnerRing.Invoker
             if (client is null) throw new Exception("client is nil");
             InvokeResult invokeResult = client.TestInvoke(NetMapContractHash, GetNetmapSnapshotMethod);
             if (invokeResult.State != VMState.HALT) throw new Exception("can't get netmap snapshot");
+            if (invokeResult.ResultStack.Length != 1) throw new Exception("invalid RPC response");
             var rawNodeInfos = ((VM.Types.Array)invokeResult.ResultStack[0]).GetEnumerator();
             var result = new List<NodeInfo>();
             while (rawNodeInfos.MoveNext())

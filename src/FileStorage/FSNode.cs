@@ -77,7 +77,7 @@ namespace Neo.FileStorage
             pairs.Add("contracthash", notify.ScriptHash.ToString());
             pairs.Add("eventname", notify.EventName);
             pairs.Add("state", notify.State.ToJson().ToString());
-            Neo.Utility.Log("NeoFS Rpc", LogLevel.Info, pairs.ParseToString());
+            Utility.Log("NeoFS Rpc", LogLevel.Info, pairs.ParseToString());
             innering.Tell(new MainContractEvent() { notify = notify });
             return true;
         }

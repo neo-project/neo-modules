@@ -15,12 +15,6 @@ namespace Neo.FileStorage.InnerRing.Invoker
 
         private const long ExtraFee = 2_0000_0000;
 
-        public static bool TransferBalanceX(this Client client, byte[] sender, byte[] receiver, long amount, byte[] comment)
-        {
-            if (client is null) throw new Exception("client is nil");
-            return client.Invoke(out _, BalanceContractHash, TransferXMethod, ExtraFee, sender, receiver, amount, comment);
-        }
-
         public static bool Mint(this Client client, byte[] scriptHash, long amount, byte[] comment)
         {
             if (client is null) throw new Exception("client is nil");
@@ -45,6 +39,12 @@ namespace Neo.FileStorage.InnerRing.Invoker
             InvokeResult result = client.TestInvoke(BalanceContractHash, PrecisionMethod);
             if (result.State != VMState.HALT) throw new Exception("can't get BalancePrecision");
             return (uint)result.ResultStack[0].GetInteger();
+        }
+
+        public static bool TransferBalanceX(this Client client, byte[] sender, byte[] receiver, long amount, byte[] comment)
+        {
+            if (client is null) throw new Exception("client is nil");
+            return client.Invoke(out _, BalanceContractHash, TransferXMethod, ExtraFee, sender, receiver, amount, comment);
         }
     }
 }

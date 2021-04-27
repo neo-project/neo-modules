@@ -20,7 +20,6 @@ namespace Neo.FileStorage.InnerRing.Processors
         private const string WithdrawNotification = "Withdraw";
         private const string ChequeNotification = "Cheque";
         private const string ConfigNotification = "SetConfig";
-        private const string UpdateIRNotification = "InnerRingUpdate";
 
         private const string TxLogPrefix = "mainnet:";
         private const ulong LockAccountLifetime = 20;
@@ -86,14 +85,14 @@ namespace Neo.FileStorage.InnerRing.Processors
         public void HandleDeposit(IContractEvent morphEvent)
         {
             DepositEvent depositeEvent = (DepositEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:deposit,value:{0}", depositeEvent.Id.ToHexString()));
+            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:deposit,id:{0}", depositeEvent.Id.ToHexString()));
             WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessDeposit(depositeEvent)) });
         }
 
         public void HandleWithdraw(IContractEvent morphEvent)
         {
             WithdrawEvent withdrawEvent = (WithdrawEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:withdraw,value:{0}", withdrawEvent.Id.ToHexString()));
+            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:withdraw,id:{0}", withdrawEvent.Id.ToHexString()));
             WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessWithdraw(withdrawEvent)) });
         }
 
@@ -131,11 +130,18 @@ namespace Neo.FileStorage.InnerRing.Processors
             var receiver = depositeEvent.To;
             lock (lockObj)
             {
-                var ok = mintEmitCache.TryGetValue(receiver.ToString(), out ulong value);
-                if (ok && ((value + mintEmitThreshold) >= curEpoch))
+                if (mintEmitCache.TryGetValue(receiver.ToString(), out ulong value) && ((value + mintEmitThreshold) >= curEpoch))
                     Utility.Log(Name, LogLevel.Warning, string.Format("double mint emission declined,receiver:{0},last_emission:{1},current_epoch:{2}", receiver.ToString(), value.ToString(), curEpoch.ToString()));
-                var balance = MorphCli.GasBalance();
-                //todo gasBalanceThreshold
+                long balance;
+                try
+                {
+                    balance = MorphCli.GasBalance();
+                }
+                catch (Exception e)
+                {
+                    Utility.Log(Name, LogLevel.Warning, string.Format("can't get gas balance of the node,error:{0}", e.Message));
+                    return;
+                }
                 if (balance < gasBalanceThreshold) Utility.Log(Name, LogLevel.Warning, string.Format("gas balance threshold has been reached,balance:{0},threshold:{1}", balance, gasBalanceThreshold));
                 try
                 {
@@ -174,7 +180,6 @@ namespace Neo.FileStorage.InnerRing.Processors
             try
             {
                 ulong curEpoch = State.EpochCounter();
-                //invoke
                 MorphCli.LockAsset(withdrawEvent.Id, withdrawEvent.UserAccount, lockeAccount, Convert.ToBalancePrecision(withdrawEvent.Amount), curEpoch + LockAccountLifetime);
             }
             catch (Exception e)
@@ -190,7 +195,6 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore cheque");
                 return;
             }
-            //invoke
             try
             {
                 MorphCli.Burn(chequeEvent.LockAccount.ToArray(), Convert.ToBalancePrecision(chequeEvent.Amount), System.Text.Encoding.UTF8.GetBytes(TxLogPrefix).Concat(chequeEvent.Id).ToArray());
@@ -208,7 +212,6 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, "passive mode, ignore deposit");
                 return;
             }
-            //invoke
             try
             {
                 MorphCli.SetConfig(configEvent.Id, configEvent.Key, configEvent.Value);

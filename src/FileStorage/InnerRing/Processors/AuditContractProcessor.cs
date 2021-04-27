@@ -1,5 +1,4 @@
 using Akka.Actor;
-using Google.Protobuf;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -74,10 +73,11 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Error, string.Format("can't get container info, ignore,cid:{0},error:{1}", containers[i], e.Message));
                     continue;
                 }
+                var pivot = containers[i].Value.ToByteArray();
                 List<List<Node>> nodes;
                 try
                 {
-                    nodes = nm.GetContainerNodes(cnr.PlacementPolicy, null);
+                    nodes = nm.GetContainerNodes(cnr.PlacementPolicy, pivot);
                 }
                 catch (Exception e)
                 {

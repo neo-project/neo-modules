@@ -6,6 +6,7 @@ using Neo.SmartContract;
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using static Neo.FileStorage.Utils.WorkerPool;
 
@@ -13,6 +14,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 {
     public class GovernanceProcessor : BaseProcessor
     {
+        private const string AlphabetUpdateIDPrefix = "AlphabetUpdate";
         public override string Name => "GovernanceProcessor";
 
         public void HandleAlphabetSync(IContractEvent morphEvent)
@@ -28,9 +30,36 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore alphabet sync");
                 return;
             }
-            ECPoint[] mainnetAlphabet = MainCli.NeoFSAlphabetList();
-            ECPoint[] sidechainAlphabet = MorphCli.Committee();
-            ECPoint[] newAlphabet = NewAlphabetList(sidechainAlphabet, mainnetAlphabet);
+            ECPoint[] mainnetAlphabet;
+            try
+            {
+                mainnetAlphabet = MainCli.NeoFSAlphabetList();
+            }
+            catch (Exception e)
+            {
+                Utility.Log(Name, LogLevel.Error, string.Format("can't fetch alphabet list from main net,error:{0}", e.Message));
+                return;
+            }
+            ECPoint[] sidechainAlphabet;
+            try
+            {
+                sidechainAlphabet = MorphCli.Committee();
+            }
+            catch (Exception e)
+            {
+                Utility.Log(Name, LogLevel.Error, string.Format("can't fetch alphabet list from side chain,error:{0}", e.Message));
+                return;
+            }
+            ECPoint[] newAlphabet;
+            try
+            {
+                newAlphabet = NewAlphabetList(sidechainAlphabet, mainnetAlphabet);
+            }
+            catch (Exception e)
+            {
+                Utility.Log(Name, LogLevel.Error, string.Format("can't merge alphabet lists from main net and side chain,error:{0}", e.Message));
+                return;
+            }
             if (newAlphabet is null)
             {
                 Utility.Log(Name, LogLevel.Info, "no governance update, alphabet list has not been changed");
@@ -38,15 +67,47 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             Utility.Log(Name, LogLevel.Info, "alphabet list has been changed, starting update");
             Array.Sort(newAlphabet);
-            State.VoteForSidechainValidator(newAlphabet);
-            ECPoint[] innerRing = MorphCli.NeoFSAlphabetList();
-            ECPoint[] newInnerRing = UpdateInnerRing(innerRing, sidechainAlphabet, newAlphabet);
-            Array.Sort(newInnerRing);
-            //to do
-            //Notary.Update
-            //
+            try
+            {
+                State.VoteForSidechainValidator(newAlphabet);
+            }
+            catch (Exception e)
+            {
+                Utility.Log(Name, LogLevel.Info, string.Format("can't vote for side chain committee,error:{0}", e.Message));
+                return;
+            }
+            ECPoint[] innerRing;
+            try
+            {
+                innerRing = MorphCli.NeoFSAlphabetList();
+                ECPoint[] newInnerRing;
+                try
+                {
+                    newInnerRing = UpdateInnerRing(innerRing, sidechainAlphabet, newAlphabet);
+                    Array.Sort(newInnerRing);
+                    //notary to do:UpdateNeoFSAlphabetList
+                }
+                catch (Exception e)
+                {
+                    Utility.Log(Name, LogLevel.Info, string.Format("can't create new inner ring list with new alphabet keysn,error:{0}", e.Message));
+                }
+            }
+            catch (Exception e)
+            {
+                Utility.Log(Name, LogLevel.Info, string.Format("can't fetch inner ring list from side chain,error:{0}", e.Message));
+                return;
+            }
+            //notary to do:UpdateNotaryList
             var epoch = State.EpochCounter();
-            MainCli.AlphabetUpdate(BitConverter.GetBytes(epoch), newAlphabet);
+            var id = System.Text.Encoding.UTF8.GetBytes(AlphabetUpdateIDPrefix).Concat(BitConverter.GetBytes(epoch)).ToArray();
+            try
+            {
+                MainCli.AlphabetUpdate(id, newAlphabet);
+            }
+            catch (Exception e)
+            {
+                Utility.Log(Name, LogLevel.Info, string.Format("can't update list of alphabet nodes in neofs contract,error:{0}", e.Message));
+            }
             Utility.Log(Name, LogLevel.Info, "finished alphabet list update");
         }
 
@@ -54,7 +115,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             var ln = sidechain.Length;
             if (ln == 0) throw new Exception("sidechain list is empty");
-            if (mainnet.Length < sidechain.Length) throw new Exception(string.Format("expecting {0} keys", ln));
+            if (mainnet.Length < sidechain.Length) throw new Exception(string.Format("alphabet list in mainnet is too short,expecting {0} keys", ln));
             var hmap = new Dictionary<string, bool>();
             var result = new List<ECPoint>();
             foreach (var node in sidechain) hmap.Add(node.EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion), false);

@@ -1,15 +1,21 @@
 using Akka.Actor;
+using Google.Protobuf.Collections;
 using Neo.Cryptography.ECC;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.InnerRing.Invoker;
-using Neo.FileStorage.InnerRing.Timer;
 using Neo.FileStorage.Morph.Event;
+using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Utils;
+using Neo.FileStorage.Utils.locode.db;
+using Neo.IO.Data.LevelDB;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using static Neo.FileStorage.InnerRing.Events.MorphEvent;
 using static Neo.FileStorage.InnerRing.Timer.EpochTickEvent;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
+using static Neo.FileStorage.Utils.locode.Column;
 using static Neo.FileStorage.Utils.WorkerPool;
 
 namespace Neo.FileStorage.InnerRing.Processors
@@ -21,12 +27,11 @@ namespace Neo.FileStorage.InnerRing.Processors
         private const string AddPeerNotification = "AddPeer";
         private const string UpdatePeerStateNotification = "UpdateState";
 
-        //public IEpochTimerReseter EpochTimerReseter;
         public CleanupTable NetmapSnapshot;
         public Validator NodeValidator;
-        private Action<IContractEvent> HandleNewAudit;
-        private Action<IContractEvent> HandleAuditSettlements;
-        private Action<IContractEvent> HandleAlphabetSync;
+        public Action<IContractEvent> HandleNewAudit;
+        public Action<IContractEvent> HandleAuditSettlements;
+        public Action<IContractEvent> HandleAlphabetSync;
 
         public override HandlerInfo[] ListenerHandlers()
         {
@@ -61,14 +66,6 @@ namespace Neo.FileStorage.InnerRing.Processors
 
             return new ParserInfo[] { newEpochParser, addPeerParser, updatePeerParser };
         }
-
-        /*        public override HandlerInfo[] TimersHandlers()
-                {
-                    HandlerInfo newEpochHandler = new HandlerInfo();
-                    newEpochHandler.ScriptHashWithType = new ScriptHashWithType() { Type = Timers.EpochTimer };
-                    newEpochHandler.Handler = HandleNewEpochTick;
-                    return new HandlerInfo[] { newEpochHandler };
-                }*/
 
         public void HandleNewEpochTick(IContractEvent timersEvent)
         {
@@ -128,7 +125,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     }
                     catch
                     {
-                        Utility.Log("can't decode public key of netmap node", LogLevel.Warning, s);
+                        Utility.Log(Name, LogLevel.Warning, string.Format("can't decode public key of netmap node,key:{0}", s));
                     }
                     Utility.Log(Name, LogLevel.Info, string.Format("vote to remove node from netmap,{0}", s));
                     try
@@ -146,28 +143,6 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Warning, string.Format("can't iterate on netmap cleaner cache.{0}", e.Message));
             }
         }
-
-        /*        private void Func(string s)
-                {
-                    ECPoint key = null;
-                    try
-                    {
-                        key = ECPoint.FromBytes(s.HexToBytes(), ECCurve.Secp256r1);
-                    }
-                    catch
-                    {
-                        Utility.Log("can't decode public key of netmap node", LogLevel.Warning, s);
-                    }
-                    Utility.Log(Name, LogLevel.Info, string.Format("vote to remove node from netmap,{0}", s));
-                    try
-                    {
-                        ContractInvoker.UpdatePeerState(MorphCli, key, (int)NodeInfo.Types.State.Offline);
-                    }
-                    catch (Exception e)
-                    {
-                        Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.UpdateState,{0}", e.Message));
-                    }
-                }*/
 
         public void ProcessNewEpochTick(NewEpochTickEvent timersEvent)
         {
@@ -202,8 +177,18 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, string.Format("can't get netmap snapshot to perform cleanup,{0}", e.Message));
                 return;
             }
-            if (newEpochEvent.EpochNumber > 0)//todo
-                NetmapSnapshot.Update(snapshot, newEpochEvent.EpochNumber);
+            if (newEpochEvent.EpochNumber > 0)
+            {
+                try
+                {
+                    MorphCli.InvokeStartEstimation((long)newEpochEvent.EpochNumber);
+                }
+                catch (Exception e)
+                {
+                    Utility.Log(Name, LogLevel.Warning, string.Format("can't start container size estimation,epoch:{0},error:{1}", newEpochEvent.EpochNumber, e.Message));
+                }
+            }
+            NetmapSnapshot.Update(snapshot, newEpochEvent.EpochNumber);
             HandleCleanupTick(new NetmapCleanupTickEvent() { Epoch = newEpochEvent.EpochNumber });
             HandleNewAudit(new StartEvent() { epoch = newEpochEvent.EpochNumber });
             HandleAuditSettlements(new AuditEvent() { epoch = newEpochEvent.EpochNumber });
@@ -227,11 +212,25 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Warning, "can't parse network map candidate");
                 return;
             }
-            NodeValidator.VerifyAndUpdate(nodeInfo);
-            Google.Protobuf.Collections.RepeatedField<API.Netmap.NodeInfo.Types.Attribute> attributes = nodeInfo.Attributes;
-            //todo
-            //attributes.sort();
-
+            try
+            {
+                NodeValidator.VerifyAndUpdate(nodeInfo);
+            }
+            catch (Exception e)
+            {
+                Utility.Log(Name, LogLevel.Warning, string.Format("could not verify and update information about network map candidate,error:{0}", e.Message));
+                return;
+            }
+            RepeatedField<API.Netmap.NodeInfo.Types.Attribute> attributes = nodeInfo.Attributes;
+            List<API.Netmap.NodeInfo.Types.Attribute> attr = attributes.ToList();
+            attr.Sort((x, y) =>
+            {
+                var compareResult = x.Key.CompareTo(y.Key);
+                if (compareResult != 0) return compareResult;
+                else return x.Value.CompareTo(y.Value);
+            });
+            nodeInfo.Attributes.Clear();
+            nodeInfo.Attributes.AddRange(attr);
             var key = nodeInfo.PublicKey.ToByteArray().ToHexString();
             if (!NetmapSnapshot.Touch(key, State.EpochCounter()))
             {
@@ -269,146 +268,208 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.UpdatePeer,{0}", e.Message));
             }
         }
+    }
+    public class CleanupTable
+    {
+        private object lockObject = new();
+        private Dictionary<string, EpochStamp> lastAccess = new();
+        private bool enabled;
+        private ulong threshold;
 
-        public class CleanupTable
+        public bool Enabled { get => enabled; set => enabled = value; }
+
+        public CleanupTable(bool enabled, ulong threshold)
         {
-            private object lockObject;
-            private Dictionary<string, EpochStamp> lastAccess;
-            private bool enabled;
-            private ulong threshold;
+            this.enabled = enabled;
+            this.threshold = threshold;
+        }
 
-            public bool Enabled { get => enabled; set => enabled = value; }
-
-            public CleanupTable(bool enabled, ulong threshold)
+        public void Update(API.Netmap.NodeInfo[] snapshot, ulong now)
+        {
+            lock (lockObject)
             {
-                this.lockObject = new object();
-                this.enabled = enabled;
-                this.threshold = threshold;
-                lastAccess = new Dictionary<string, EpochStamp>();
-            }
-
-            public void Update(API.Netmap.NodeInfo[] snapshot, ulong now)
-            {
-                lock (lockObject)
+                var newMap = new Dictionary<string, EpochStamp>();
+                foreach (var item in snapshot)
                 {
-                    var newMap = new Dictionary<string, EpochStamp>();
-                    foreach (var item in snapshot)
-                    {
-                        var key = item.PublicKey.ToByteArray().ToHexString();
-                        if (lastAccess.TryGetValue(key, out EpochStamp access))
-                        {
-                            access.RemoveFlag = false;
-                            newMap.Add(key, access);
-                        }
-                        else
-                        {
-                            newMap.Add(key, new EpochStamp() { Epoch = now });
-                        }
-                    }
-                    lastAccess = newMap;
-                }
-            }
-
-            public bool Touch(string key, ulong now)
-            {
-                lock (lockObject)
-                {
-                    EpochStamp epochStamp = null;
-                    bool result = false;
+                    var key = item.PublicKey.ToByteArray().ToHexString();
                     if (lastAccess.TryGetValue(key, out EpochStamp access))
                     {
-                        epochStamp = access;
-                        result = !epochStamp.RemoveFlag;
+                        access.RemoveFlag = false;
+                        newMap[key] = access;
                     }
                     else
                     {
-                        epochStamp = new EpochStamp();
+                        newMap[key] = new EpochStamp() { Epoch = now };
                     }
-                    epochStamp.RemoveFlag = false;
-                    if (now > epochStamp.Epoch)
-                    {
-                        epochStamp.Epoch = now;
-                    }
-                    lastAccess[key] = epochStamp;
-                    return result;
+                }
+                lastAccess = newMap;
+            }
+        }
+
+        public bool Touch(string key, ulong now)
+        {
+            lock (lockObject)
+            {
+                EpochStamp epochStamp = null;
+                bool result = false;
+                if (lastAccess.TryGetValue(key, out EpochStamp access))
+                {
+                    epochStamp = access;
+                    result = !epochStamp.RemoveFlag;
+                }
+                else
+                {
+                    epochStamp = new EpochStamp();
+                }
+                epochStamp.RemoveFlag = false;
+                if (now > epochStamp.Epoch)
+                {
+                    epochStamp.Epoch = now;
+                }
+                lastAccess[key] = epochStamp;
+                return result;
+            }
+        }
+
+        public void Flag(string key)
+        {
+            lock (lockObject)
+            {
+                if (lastAccess.TryGetValue(key, out EpochStamp access))
+                {
+                    access.RemoveFlag = true;
+                    lastAccess[key] = access;
+                }
+                else
+                {
+                    lastAccess[key] = new EpochStamp() { RemoveFlag = true };
                 }
             }
+        }
 
-            public void Flag(string key)
+        public void ForEachRemoveCandidate(ulong epoch, Action<string> f)
+        {
+            lock (lockObject)
             {
-                lock (lockObject)
+                foreach (var item in lastAccess)
                 {
-                    if (lastAccess.TryGetValue(key, out EpochStamp access))
+                    var key = item.Key;
+                    var access = item.Value;
+                    if (epoch - access.Epoch > threshold)
                     {
                         access.RemoveFlag = true;
                         lastAccess[key] = access;
-                    }
-                    else
-                    {
-                        lastAccess[key] = new EpochStamp() { RemoveFlag = true };
-                    }
-                }
-            }
-
-            public void ForEachRemoveCandidate(ulong epoch, Action<string> f)
-            {
-                lock (lockObject)
-                {
-                    foreach (var item in lastAccess)
-                    {
-                        var key = item.Key;
-                        var access = item.Value;
-                        if (epoch - access.Epoch > threshold)
-                        {
-                            access.RemoveFlag = true;
-                            lastAccess[key] = access;
-                            f(key);
-                        }
+                        f(key);
                     }
                 }
             }
         }
+    }
 
-        public class EpochStamp
+    public class EpochStamp
+    {
+        private ulong epoch;
+        private bool removeFlag;
+
+        public ulong Epoch { get => epoch; set => epoch = value; }
+        public bool RemoveFlag { get => removeFlag; set => removeFlag = value; }
+    }
+
+    public class Validator
+    {
+        public Dictionary<string, AttrDescriptor> mAttr;
+        public DB dB;
+
+        public Validator(DB dB)
         {
-            private ulong epoch;
-            private bool removeFlag;
-
-            public ulong Epoch { get => epoch; set => epoch = value; }
-            public bool RemoveFlag { get => removeFlag; set => removeFlag = value; }
+            this.dB = dB;
+            this.mAttr = new Dictionary<string, AttrDescriptor>()
+                {
+                    { Node.AttributeCountryCode,new AttrDescriptor(){ converter=AttrDescriptor.CountryCodeValue} },
+                    { Node.AttributeCountry,new AttrDescriptor(){ converter=AttrDescriptor.CountryValue} },
+                    { Node.AttributeLocation,new AttrDescriptor(){ converter=AttrDescriptor.LocationValue} },
+                    { Node.AttributeSubDivCode,new AttrDescriptor(){ converter=AttrDescriptor.SubDivCodeValue,optional=true} },
+                    { Node.AttributeSubDiv,new AttrDescriptor(){ converter=AttrDescriptor.SubDivValue,optional=true} },
+                    { Node.AttributeContinent,new AttrDescriptor(){ converter=AttrDescriptor.ContinentValue} },
+                };
         }
 
-        public class Validator
+        public void VerifyAndUpdate(API.Netmap.NodeInfo n)
         {
-            private Dictionary<string, AttrDescriptor> mAttr;
-
-
-            public void VerifyAndUpdate(API.Netmap.NodeInfo n)
+            var tAttr = UniqueAttributes(n.Attributes.GetEnumerator());
+            if (tAttr.TryGetValue(Node.AttributeUNLOCODE, out var attrLocode)) return;
+            var lc = LOCODE.FromString(attrLocode.Value);
+            (Key, Record) record = dB.Get(lc);
+            foreach (var attr in mAttr)
             {
-                var mAttr = UniqueAttributes(n.Attributes.GetEnumerator());
-                //if (mAttr.TryGetValue(NodeInfo.AttrUNLOCODE, out var attrLocode)) return;
-            }
-
-            public Dictionary<String, API.Netmap.NodeInfo.Types.Attribute> UniqueAttributes(IEnumerator<API.Netmap.NodeInfo.Types.Attribute> attributes)
-            {
-                Dictionary<String, API.Netmap.NodeInfo.Types.Attribute> mAttr = new Dictionary<string, API.Netmap.NodeInfo.Types.Attribute>();
-                while (attributes.MoveNext())
+                var attrVal = attr.Value.converter(record);
+                if (attrVal == "")
                 {
-                    var attr = attributes.Current;
-                    if (!mAttr.TryAdd(attr.Key, attr))
-                        mAttr[attr.Key] = attr;
+                    if (!attr.Value.optional)
+                        throw new Exception("missing required attribute in DB record");
+                    continue;
                 }
-                return mAttr;
+                var a = new API.Netmap.NodeInfo.Types.Attribute();
+                a.Key = attr.Key;
+                a.Value = attrVal;
+                tAttr[attr.Key] = a;
             }
-            public class AttrDescriptor
+            var ass = new List<API.Netmap.NodeInfo.Types.Attribute>();
+            foreach (var item in tAttr)
+                ass.Add(item.Value);
+            n.Attributes.Clear();
+            n.Attributes.AddRange(ass);
+        }
+
+        public Dictionary<string, API.Netmap.NodeInfo.Types.Attribute> UniqueAttributes(IEnumerator<API.Netmap.NodeInfo.Types.Attribute> attributes)
+        {
+            Dictionary<string, API.Netmap.NodeInfo.Types.Attribute> tAttr = new Dictionary<string, API.Netmap.NodeInfo.Types.Attribute>();
+            while (attributes.MoveNext())
             {
-                public bool optional;
-                private Func<string> converter;
-
-                //public string CountryCodeValue(Record r) { }
-
-
+                var attr = attributes.Current;
+                if (!tAttr.TryAdd(attr.Key, attr))
+                    tAttr[attr.Key] = attr;
             }
+            return tAttr;
+        }
+    }
+    public class AttrDescriptor
+    {
+        public Func<(Key,Record), string> converter;
+        public bool optional;
+        public static string CountryCodeValue((Key, Record) record)
+        {
+            return string.Concat<char>(record.Item1.countryCode.Symbols());
+        }
+
+        public static string CountryValue((Key, Record) record)
+        {
+            return record.Item2.countryName;
+        }
+
+        public static string LocationCodeValue((Key, Record) record)
+        {
+            return string.Concat<char>(record.Item1.locationCode.Symbols());
+        }
+
+        public static string LocationValue((Key, Record) record)
+        {
+            return record.Item2.locationName;
+        }
+
+        public static string SubDivCodeValue((Key, Record) record)
+        {
+            return record.Item2.subDivCode;
+        }
+
+        public static string SubDivValue((Key, Record) record)
+        {
+            return record.Item2.subDivName;
+        }
+
+        public static string ContinentValue((Key, Record) record)
+        {
+            return record.Item2.cont.String();
         }
     }
 }
