@@ -49,12 +49,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             var data = new ContractParametersContext(snapshot, tx, system.Settings.Network);
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
-            JArray obj = new();
-            obj.Add(tx.ToArray().ToHexString());
-            obj.Add(UInt160.Zero.ToArray().ToHexString());
-            obj.Add("test");
-            obj.Add(new JArray(new VM.Types.Boolean(true).ToJson()));
-            NotifyEventArgs notify = FSNode.GetNotifyEventArgsFromJson(obj);
+            NotifyEventArgs notify = new(tx, UInt160.Zero, "test", new VM.Types.Array { new VM.Types.Boolean(true) });
             //send notify with no handler and parser
             listener.Tell(new Listener.Start());
             listener.Tell(new Listener.NewContractEvent()
@@ -81,24 +76,14 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(result.current, 2);
             ExpectNoMsg();
             //send notify with no state
-            JArray obj_no_state = new JArray();
-            obj_no_state.Add(tx.ToArray().ToHexString());
-            obj_no_state.Add(UInt160.Zero.ToArray().Reverse().ToArray().ToHexString());
-            obj_no_state.Add("test");
-            obj_no_state.Add(new JArray());
-            NotifyEventArgs notify_no_state = FSNode.GetNotifyEventArgsFromJson(obj_no_state);
+            NotifyEventArgs notify_no_state = new(tx, UInt160.Zero, "test", new VM.Types.Array());
             listener.Tell(new Listener.NewContractEvent()
             {
                 notify = notify_no_state
             });
             ExpectNoMsg();
             //send notify with no parser
-            JArray obj_no_parser = new JArray();
-            obj_no_parser.Add(tx.ToArray().ToHexString());
-            obj_no_parser.Add(wallet.GetAccounts().ToArray()[0].ScriptHash.ToString());
-            obj_no_parser.Add("test");
-            obj_no_parser.Add(new JArray(new VM.Types.Boolean(true).ToJson()));
-            NotifyEventArgs notify_no_parser = FSNode.GetNotifyEventArgsFromJson(obj_no_state);
+            NotifyEventArgs notify_no_parser = new(tx, wallet.GetAccounts().ToArray()[0].ScriptHash, "test", new VM.Types.Array { new VM.Types.Boolean(true) });
             listener.Tell(new Listener.NewContractEvent()
             {
                 notify = notify_no_parser
@@ -110,22 +95,14 @@ namespace Neo.FileStorage.Tests.Morph.Event
             obj_no_handler.Add(UInt160.Zero.ToArray().Reverse().ToArray().ToHexString());
             obj_no_handler.Add("test with no handler");
             obj_no_handler.Add(new JArray(new VM.Types.Boolean(true).ToJson()));
-            NotifyEventArgs notify_no_handler = FSNode.GetNotifyEventArgsFromJson(obj_no_handler);
+            NotifyEventArgs notify_no_handler = new(tx, UInt160.Zero, "test with no handler", new VM.Types.Array { new VM.Types.Boolean(true) });
             listener.Tell(new Listener.NewContractEvent()
             {
                 notify = notify_no_handler
             });
             ExpectNoMsg();
             //send wrong format notify
-            JArray obj_wrong_format = new JArray();
-            obj_wrong_format.Add(tx.ToArray().ToHexString());
-            obj_wrong_format.Add(UInt160.Zero.ToArray().Reverse().ToArray().ToHexString());
-            obj_wrong_format.Add("test");
-            var state = new JArray();
-            state.Add(new VM.Types.Boolean(true).ToJson());
-            state.Add(new VM.Types.Boolean(true).ToJson());
-            obj_wrong_format.Add(state);
-            NotifyEventArgs notify_wrong_format = FSNode.GetNotifyEventArgsFromJson(obj_wrong_format);
+            NotifyEventArgs notify_wrong_format = new(tx, UInt160.Zero, "test", new VM.Types.Array { new VM.Types.Boolean(true), new VM.Types.Boolean(true) });
             listener.Tell(new Listener.NewContractEvent()
             {
                 notify = notify_wrong_format

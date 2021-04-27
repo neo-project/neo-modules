@@ -217,7 +217,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage
         {
             var bytes = new byte[25];
             new Random().NextBytes(bytes);
-            return OwnerID.Frombytes(bytes);
+            return OwnerID.FromByteArray(bytes);
         }
         private FSObject GenerateRawObjectWithCID(ContainerID cid)
         {

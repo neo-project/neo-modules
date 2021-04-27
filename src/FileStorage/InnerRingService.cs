@@ -17,7 +17,7 @@ namespace Neo.FileStorage
 
         public InnerRingService(NeoSystem main, NeoSystem side)
         {
-            innering = side.ActorSystem.ActorOf(FSInnerRingService.Props(side));//TODO: mount to side chain?
+            innering = main.ActorSystem.ActorOf(FSInnerRingService.Props(side));//TODO: mount to side chain?
             innering.Tell(new Start() { });
         }
 
