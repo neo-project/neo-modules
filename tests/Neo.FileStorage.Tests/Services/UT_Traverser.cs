@@ -90,16 +90,15 @@ namespace Neo.FileStorage.Tests
 
             var nodesCopy = CopyVectors(nodes);
 
-            var tr = new Traverser
-            {
-                Address = new Address
+            var tr = new Traverser(
+                new TestBuilder(nodesCopy),
+                ctn.PlacementPolicy,
+                new Address
                 {
                     ContainerId = ctn.CalCulateAndGetId,
                 },
-                Policy = ctn.PlacementPolicy,
-                Builder = new TestBuilder(nodesCopy),
-                TrackCopies = true,
-            };
+                trackCopies: true
+            );
 
             for (int i = 0; i < selectors.Length; i++)
             {
@@ -129,15 +128,15 @@ namespace Neo.FileStorage.Tests
 
             var nodesCopy = CopyVectors(nodes);
 
-            var tr = new Traverser
-            {
-                Address = new Address
+            var tr = new Traverser(
+                new TestBuilder(nodesCopy),
+                ctn.PlacementPolicy,
+                new Address
                 {
                     ContainerId = ctn.CalCulateAndGetId,
                 },
-                Builder = new TestBuilder(nodesCopy),
-                FlatSuccess = 1,
-            };
+                1
+            );
 
             Fn fn = (cv) =>
             {
@@ -175,14 +174,14 @@ namespace Neo.FileStorage.Tests
 
             var nodesCopy = CopyVectors(nodes);
 
-            var tr = new Traverser
-            {
-                Address = new Address
+            var tr = new Traverser(
+                new TestBuilder(nodesCopy),
+                ctn.PlacementPolicy,
+                new Address
                 {
                     ContainerId = ctn.CalCulateAndGetId,
-                },
-                Builder = new TestBuilder(nodesCopy),
-            };
+                }
+            );
 
             Fn fn = (cv) =>
             {

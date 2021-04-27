@@ -1,3 +1,4 @@
+using Neo.FileStorage.Services.Container.Announcement.Route;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Storage
     /// and optional components. After successful creation,
     /// Storage is immediately ready to work through API.
     /// </summary>
-    public class AnnouncementStorage
+    public class AnnouncementStorage : IWriter
     {
         private Dictionary<ulong, AnnounceUsedSpaceEstimation> mItems = new();
 

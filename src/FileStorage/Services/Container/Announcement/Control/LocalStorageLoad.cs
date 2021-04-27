@@ -1,19 +1,20 @@
 using Neo.FileStorage.LocalObjectStorage.Engine;
+using Neo.FileStorage.Services.Container.Announcement.Route;
 using System;
 using FSAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types.Announcement;
 
 namespace Neo.FileStorage.Services.Container.Announcement.Control
 {
-    public class LocalStorageLoad
+    public class LocalStorageLoad : IIterator
     {
-        private readonly StorageEngine engine;
+        public StorageEngine LocalStorage { get; init; }
 
         public void Iterate(Func<FSAnnouncement, bool> filter, Action<FSAnnouncement> handler)
         {
-            var containers = engine.ListContainers();
+            var containers = LocalStorage.ListContainers();
             foreach (var cid in containers)
             {
-                var size = engine.ContainerSize(cid);
+                var size = LocalStorage.ContainerSize(cid);
                 var a = new FSAnnouncement
                 {
                     ContainerId = cid,

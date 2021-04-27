@@ -2,40 +2,45 @@ using Google.Protobuf;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.API.Session;
 using Neo.FileStorage.Core.Object;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using Neo.FileStorage.Services.ObjectManager.Transformer;
 using System;
+using System.Threading;
 using FSContainer = Neo.FileStorage.API.Container.Container;
 
 namespace Neo.FileStorage.Services.Object.Put.Writer
 {
-    public class PutStream : IPutRequestStream
+    public class PutStream : IRequestStream
     {
         public PutService PutService { get; init; }
+        public CancellationToken Cancellation;
 
         private Traverser traverser;
         private IObjectTarget target;
 
-        public void Send(PutRequest request)
+        public void Send(IRequest request)
         {
-            switch (request.Body.ObjectPartCase)
+            if (request is not PutRequest putRequest)
+                throw new InvalidOperationException($"{nameof(PutStream)} invalid object put request");
+            switch (putRequest.Body.ObjectPartCase)
             {
                 case PutRequest.Types.Body.ObjectPartOneofCase.Init:
-                    var init_prm = PutService.ToInitPrm(request);
+                    var init_prm = PutService.ToInitPrm(putRequest);
                     Init(init_prm);
                     break;
                 case PutRequest.Types.Body.ObjectPartOneofCase.Chunk:
-                    Chunk(request.Body.Chunk);
+                    Chunk(putRequest.Body.Chunk);
                     break;
                 default:
                     throw new InvalidOperationException($"{nameof(PutStream)} invalid object put request");
             }
         }
 
-        public PutResponse Close()
+        public IResponse Close()
         {
             if (target is null)
                 throw new InvalidOperationException($"{nameof(PutStream)} target not initilized");
@@ -73,14 +78,27 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
                         ObjectValidator = new ObjectValidator(PutService.ObjectInhumer, PutService.MorphClient),
                         NodeTargetInitializer = address =>
                         {
-                            return new RemoteTarget();
+                            if (address == PutService.LocalAddress)
+                                return new LocalTarget
+                                {
+                                    LocalStorage = PutService.LocalStorage,
+                                };
+                            return new RemoteTarget
+                            {
+                                Cancellation = Cancellation,
+                                KeyStorage = PutService.KeyStorage,
+                                Prm = prm,
+                                Address = address,
+                                ClientCache = PutService.ClientCache,
+                            };
                         }
                     },
                 };
                 return;
             }
             var key = PutService.KeyStorage.GetKey(prm.SessionToken);
-            var max = GetMaxObjectSize(); //TODO: check 0?
+            var max = GetMaxObjectSize();
+            if (max == 0) throw new InvalidOperationException($"{nameof(PutStream)} could not obtain max object size parameter");
             target = new PayloadSizeLimiterTarget(max, new FormatTarget
             {
                 Key = key,
@@ -93,7 +111,19 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
                     ObjectValidator = new ObjectValidator(PutService.ObjectInhumer, PutService.MorphClient),
                     NodeTargetInitializer = address =>
                     {
-                        return new RemoteTarget();
+                        if (address == PutService.LocalAddress)
+                            return new LocalTarget
+                            {
+                                LocalStorage = PutService.LocalStorage,
+                            };
+                        return new RemoteTarget
+                        {
+                            Cancellation = Cancellation,
+                            KeyStorage = PutService.KeyStorage,
+                            Prm = prm,
+                            Address = address,
+                            ClientCache = PutService.ClientCache,
+                        };
                     }
                 }
             });
@@ -104,16 +134,13 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
             var nm = GetLatestNetmap();
             var container = GetContainer(prm.Header.ContainerId);
             var builder = new NetworkMapBuilder(nm);
-            traverser = new Traverser()
-                .ForContainer(container)
-                .ForObjectID(prm.Header.ObjectId)
-                .WithBuilder(builder);
+
             if (prm.Local)
             {
-                traverser
-                .SuccessAfter(1)
-                .WithBuilder(new LocalPlacementBuilder(builder, PutService.LocalAddress));
+                traverser = new Traverser(new LocalPlacementBuilder(builder, PutService.LocalAddress), container.PlacementPolicy, prm.Header.Address, 1);
+                return;
             }
+            traverser = new Traverser(builder, container.PlacementPolicy, prm.Header.Address);
         }
 
         private void Chunk(ByteString chunk)

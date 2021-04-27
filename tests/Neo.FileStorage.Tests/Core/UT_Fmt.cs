@@ -25,7 +25,7 @@ namespace Neo.FileStorage.Tests.Core
             c.Version = V2Version.SDKVersion();
             Assert.ThrowsException<ArgumentException>(() => H.CheckFormat(c));
 
-            c.OwnerId = V2OwnerID.Frombytes(new byte[25]);
+            c.OwnerId = V2OwnerID.FromByteArray(new byte[25]);
             Assert.ThrowsException<ArgumentException>(() => H.CheckFormat(c));
 
             c.Nonce = ByteString.CopyFrom(Guid.NewGuid().ToByteArray());

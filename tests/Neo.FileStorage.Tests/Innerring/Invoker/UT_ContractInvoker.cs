@@ -118,7 +118,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
         [TestMethod]
         public void InvokeGetEpochTest()
         {
-            long result = morphclient.GetEpoch();
+            ulong result = morphclient.GetEpoch();
             Assert.AreEqual(result, 1);
         }
 

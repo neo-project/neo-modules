@@ -2,6 +2,8 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.IO.Data.LevelDB;
 using System.Collections.Generic;
+using System.Linq;
+using static Neo.FileStorage.LocalObjectStorage.MetaBase.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.LocalObjectStorage.MetaBase
@@ -45,7 +47,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                 {
                     ref_counter[obj.Parent.Address.String()] = new()
                     {
-                        All = GetChildren(obj.Parent.Address).Count,
+                        All = ParentLength(new() { ContainerId = address.ContainerId, ObjectId = obj.ParentId }),
                         Address = obj.Parent.Address,
                         Object = obj.Parent,
                     };
@@ -59,8 +61,17 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             foreach (byte[] key in DeleteUniqueIndexes(obj, is_parent))
                 db.Delete(WriteOptions.Default, key);
 
-            foreach (byte[] key in ListIndexes(obj))
-                db.Delete(WriteOptions.Default, key);
+            foreach (var (key, oid) in ListIndexes(obj))
+            {
+                var data = db.Get(ReadOptions.Default, key);
+                if (data is null) continue;
+                var list = DecodeObjectIDList(data);
+                list.Remove(oid);
+                if (!list.Any())
+                    db.Delete(WriteOptions.Default, key);
+                else
+                    db.Put(WriteOptions.Default, key, EncodeObjectIDList(list));
+            }
 
             foreach (byte[] key in FakeBucketTreeIndexes(obj))
                 db.Delete(WriteOptions.Default, key);
@@ -69,7 +80,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
         private List<byte[]> DeleteUniqueIndexes(FSObject obj, bool is_parent)
         {
             List<byte[]> keys = new();
-            if (is_parent)
+            if (!is_parent)
             {
                 switch (obj.ObjectType)
                 {
@@ -88,7 +99,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             }
             else
             {
-                keys.Add(ParentKey(obj.Address));
+                keys.Add(ParentKey(obj.ContainerId, obj.ObjectId));
             }
             keys.Add(SmallKey(obj.Address));
             keys.Add(RootKey(obj.Address));
@@ -97,15 +108,15 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             return keys;
         }
 
-        private List<byte[]> ListIndexes(FSObject obj)
+        private List<(byte[], ObjectID)> ListIndexes(FSObject obj)
         {
-            List<byte[]> keys = new();
-            keys.Add(PayloadHashKey(obj.Address, obj.PayloadChecksum));
+            List<(byte[], ObjectID)> indexes = new();
+            indexes.Add((PayloadHashKey(obj.ContainerId, obj.PayloadChecksum), obj.ObjectId));
             if (obj.ParentId is not null)
-                keys.Add(ParentKey(new Address(obj.ContainerId, obj.ParentId)));
+                indexes.Add((ParentKey(obj.Address.ContainerId, obj.ParentId), obj.ObjectId));
             if (obj.SplitId is not null)
-                keys.Add(SplitKey(obj.Address, obj.SplitId));
-            return keys;
+                indexes.Add((SplitKey(obj.ContainerId, obj.SplitId), obj.ObjectId));
+            return indexes;
         }
 
         private List<byte[]> FakeBucketTreeIndexes(FSObject obj)
@@ -117,6 +128,13 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                 keys.Add(AttributeKey(obj.Address, attr));
             }
             return keys;
+        }
+
+        private int ParentLength(Address address)
+        {
+            var data = db.Get(ReadOptions.Default, ParentKey(address.ContainerId, address.ObjectId));
+            if (data is null) return 0;
+            return DecodeObjectIDList(data).Count;
         }
     }
 }

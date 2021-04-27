@@ -1,4 +1,5 @@
 using Neo.FileStorage.API.Refs;
+using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.ObjectManager.Transformer
 {
@@ -6,5 +7,6 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
     {
         public ObjectID Parent;
         public ObjectID Self;
+        public FSObject ParentHeader;
     }
 }

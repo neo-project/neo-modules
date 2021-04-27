@@ -36,7 +36,7 @@ namespace Neo.FileStorage.Services.Object.Util
                         Utility.Log(nameof(RemotePlacementBuilder), LogLevel.Error, e.Message);
                         continue;
                     }
-                    if (addr.IsLocalAddress(localAddress))
+                    if (addr == localAddress)
                         ns.Remove(n);
                 }
             }

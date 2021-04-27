@@ -7,7 +7,7 @@ namespace Neo.FileStorage.Services
 {
     public class ResponseService
     {
-        public StorageNode StorageNode { get; init; }
+        public StorageService StorageNode { get; init; }
 
         public void SetMeta(IResponse response)
         {

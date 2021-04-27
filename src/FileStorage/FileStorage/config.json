@@ -1,7 +1,15 @@
 {
   "PluginConfiguration": {
+    "MainNetwork": 5195086,
+    "SideNetwork": 0,
+    "SideChainConfigPath": "./FileStorage/sidechain.json",
+    "SideChainStorageEngine": "LevelDBStore",
+    "StartInnerRing": true,
+    "StartStorageNode": true,
     "Path": "./FSStorage/",
-    "URLs": [ "http://localhost:10332" ],
+    "URLs": [
+      "http://localhost:10332"
+    ],
     "WalletPath": "./FSStorage/wallet.json",
     "Password": "123456",
     "contracts": {
@@ -22,7 +30,9 @@
         "0xb341340bef588676c9694dc006beaaf03f7a3bd9"
       ]
     },
-    "vote": [ "" ],
+    "vote": [
+      ""
+    ],
     "workers": {
       "netmap": "10",
       "neofs": "10",

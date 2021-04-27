@@ -46,12 +46,12 @@ namespace Neo.FileStorage.InnerRing.Invoker
                 SystemFee = result.GasConsumed + fee,
                 NetworkFee = 0
             };
-            var data = new ContractParametersContext(null, tx, Settings.Default.Network);
+            var data = new ContractParametersContext(null, tx, Settings.Default.MainNetwork);
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             var networkFee = clients[0].RpcSendAsync("calculatenetworkfee", Convert.ToBase64String(tx.ToArray())).Result["networkfee"].AsNumber();
             tx.NetworkFee = (long)networkFee;
-            data = new ContractParametersContext(null, tx, Settings.Default.Network);
+            data = new ContractParametersContext(null, tx, Settings.Default.MainNetwork);
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             txId = UInt256.Parse(clients[0].RpcSendAsync("sendrawtransaction", Convert.ToBase64String(tx.ToArray())).Result.ToString());

@@ -7,12 +7,12 @@ using FSAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Ty
 
 namespace Neo.FileStorage.Services.Container.Announcement.Route
 {
-    public class RemoteAnnounceWriter
+    public class RemoteLoadAnnounceWriter : IWriter
     {
-        private readonly CancellationToken cancellation;
-        private readonly Client client;
-        private readonly ECDsa key;
-        private List<FSAnnouncement> buffer = new();
+        public CancellationToken Cancellation { get; init; }
+        public Client Client { get; init; }
+        public ECDsa Key { get; init; }
+        private readonly List<FSAnnouncement> buffer = new();
 
         public void Put(FSAnnouncement announcement)
         {
@@ -21,7 +21,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route
 
         public void Close()
         {
-            client.AnnounceContainerUsedSpace(buffer, context: cancellation);
+            Client.AnnounceContainerUsedSpace(buffer, context: Cancellation);
         }
     }
 }

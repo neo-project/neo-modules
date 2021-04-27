@@ -7,11 +7,11 @@ namespace Neo.FileStorage.Core.Object
     {
         public StorageEngine LocalStorage { get; init; }
 
-        public void DeleteObjects(params Address[] ids)
+        public void DeleteObjects(params Address[] addresses)
         {
-            for (int i = 1; i < ids.Length; i++)
+            for (int i = 1; i < addresses.Length; i++)
             {
-                LocalStorage.Inhume(ids[0], ids[i]);
+                LocalStorage.Inhume(addresses[0], addresses[i]);
             }
         }
     }

@@ -1,10 +1,9 @@
 using Google.Protobuf;
+using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using static Neo.FileStorage.API.Object.Header.Types;
 using FSAttribute = Neo.FileStorage.API.Object.Header.Types.Attribute;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
@@ -13,24 +12,21 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
 {
     public class PayloadSizeLimiterTarget : IObjectTarget
     {
-        private ulong maxSize;
+        private readonly ulong maxSize;
+        private readonly IObjectTarget target;
+        private readonly List<ObjectID> previous;
+        private readonly SplitID splitID;
         private ulong written;
-        private IObjectTarget target;
         private FSObject current;
         private FSObject parent;
-        private PayloadChecksumHasher[] currentHashers;
-        private PayloadChecksumHasher[] parentHashers;
-        private ObjectID[] previous;
-
-        //private StreamWriter
-        private BinaryWriter chunkWriter;
-        private Guid splitID;
-        private FSAttribute[] parAttrs;
+        private IEnumerable<FSAttribute> parentAttributes;
+        private PayloadHasher[] currentHashers;
+        private PayloadHasher[] parentHashers;
 
         public PayloadSizeLimiterTarget(ulong maxSz, IObjectTarget t)
         {
             maxSize = maxSz;
-            splitID = Guid.NewGuid();
+            splitID = new();
             target = t;
         }
 
@@ -40,12 +36,6 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
             Initialize();
         }
 
-        public int Write(byte[] p)
-        {
-            WriteChunk(p);
-            return p.Length;
-        }
-
         public AccessIdentifiers Close()
         {
             return Release(true);
@@ -53,158 +43,145 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
 
         private void Initialize()
         {
-            var len = previous.Length;
-            if (len > 0)
+            if (previous.Any())
             {
-                if (len == 1)
+                if (previous.Count == 1)
                 {
-                    parent = current;
-                    parent.Header.Split = null; // resetRelations
-                    parentHashers = currentHashers;
-                    current = parent;
+                    DetachParent();
                 }
-
-                current.Header.Split.Previous = previous[len - 1];
+                current.Header.Split.Previous = previous[^1];
             }
-
             InitializeCurrent();
-        }
-
-        private FSObject FromObject(FSObject obj)
-        {
-            var res = new FSObject();
-            res.Header.ContainerId = obj.Header.ContainerId;
-            res.Header.OwnerId = obj.Header.OwnerId;
-            res.Header.Attributes.AddRange(obj.Header.Attributes);
-            res.Header.ObjectType = obj.Header.ObjectType;
-
-            if (obj.Header.Split.SplitId != null)
-                res.Header.Split.SplitId = obj.Header.Split.SplitId;
-
-            return res;
         }
 
         private void InitializeCurrent()
         {
-            // create payload hashers
-            currentHashers = PayloadHashersForObject(current);
-
-            // TBD, add writer
-            // compose multi-writer from target and all payload hashers
-        }
-
-        private PayloadChecksumHasher[] PayloadHashersForObject(FSObject obj)
-        {
-            return new PayloadChecksumHasher[] { }; // TODO, need TzHash dependency
+            currentHashers = new PayloadHasher[]
+            {
+                new(ChecksumType.Sha256),
+                new(ChecksumType.Tz),
+            };
         }
 
         private AccessIdentifiers Release(bool close)
         {
-            // Arg close is true only from Close method.
-            // We finalize parent and generate linking objects only if it is more
-            // than 1 object in split-chain
-            var withParent = close && previous.Length > 0;
-
+            var withParent = close && previous.Count > 0;
             if (withParent)
             {
-                WriteHashes(parentHashers);
+                Calculatehash(parent, parentHashers);
                 parent.Header.PayloadLength = written;
                 current.Header.Split.Parent = parent.ObjectId;
             }
-            // release current object
-            WriteHashes(currentHashers);
-            // release current
+            Calculatehash(current, currentHashers);
             target.WriteHeader(current);
-
             var ids = target.Close();
-            previous = previous.Append(ids.Self).ToArray();
-
+            previous.Add(ids.Self);
             if (withParent)
             {
-                InitializeLinking();
+                InitializeLinking(ids.ParentHeader);
                 InitializeCurrent();
                 Release(false);
             }
             return ids;
         }
-        private void WriteHashes(PayloadChecksumHasher[] hashers)
+
+        private void Calculatehash(FSObject obj, PayloadHasher[] hashers)
         {
-            for (int i = 0; i < hashers.Length; i++)
+            foreach (var hasher in hashers)
             {
-                hashers[i].ChecksumWriter(hashers[i].Hasher.Hash);
+                switch (hasher.Type)
+                {
+                    case ChecksumType.Sha256:
+                        obj.PayloadChecksum = new()
+                        {
+                            Type = hasher.Type,
+                            Sum = ByteString.CopyFrom(hasher.Sum()),
+                        };
+                        break;
+                    case ChecksumType.Tz:
+                        obj.PayloadHomomorphicHash = new()
+                        {
+                            Type = hasher.Type,
+                            Sum = ByteString.CopyFrom(hasher.Sum()),
+                        };
+                        break;
+                    default:
+                        throw new InvalidOperationException($"{nameof(PayloadSizeLimiterTarget)} not supported checksum type");
+                }
             }
         }
 
-        private void InitializeLinking()
+        private void InitializeLinking(FSObject parentHeader)
         {
             current = FromObject(current);
-            current.Header.Split.Parent = parent.ObjectId;
-            current.Header.Split.Children.AddRange(previous);
-            current.Header.Split.SplitId = ByteString.CopyFrom(splitID.ToByteArray());
+            current.Parent = parentHeader;
+            current.Children = previous;
+            current.SplitId = parentHeader.SplitId;
         }
 
         public void WriteChunk(byte[] chunk)
         {
-            // statement is true if the previous write of bytes reached exactly the boundary.
             if (written > 0 && written % maxSize == 0)
             {
                 if (written == maxSize)
                     PrepareFirstChild();
-
-                // need to release current object
                 Release(false);
-                // initialize another object
                 Initialize();
             }
-
-            ulong len = (ulong)chunk.Length;
+            var len = (ulong)chunk.Length;
             var cut = len;
             var leftToEdge = maxSize - written % maxSize;
-
-            if (len > leftToEdge)
+            if (cut > leftToEdge)
                 cut = leftToEdge;
-
-            chunkWriter.Write(chunk[..(int)cut]);
-            // increase written bytes counter
+            Write(chunk);
             written += cut;
-            // if there are more bytes in buffer we call method again to start filling another object
             if (len > leftToEdge)
                 WriteChunk(chunk[(int)cut..]);
         }
 
+        private void Write(byte[] chunk)
+        {
+            foreach (var hasher in currentHashers)
+                hasher.Write(chunk);
+            foreach (var hasher in parentHashers)
+                hasher.Write(chunk);
+            target.WriteChunk(chunk);
+        }
+
         private void PrepareFirstChild()
         {
-            // initialize split header with split ID on first object in chain
-            current.Header.Split = new Split(); // InitRelations
-            current.Header.Split.SplitId = ByteString.CopyFrom(splitID.ToByteArray());
-
-            // cut source attributes
-            parAttrs = current.Header.Attributes.ToArray();
+            current.Header.Split = new();
+            current.SplitId = splitID;
+            parentAttributes = current.Header.Attributes;
             current.Header.Attributes.Clear();
-
-            // attributes will be added to parent in detachParent
         }
 
         private void DetachParent()
         {
             parent = current;
             current = FromObject(parent);
-            parent.Header.Split = null; // reset relations
+            parent.Header.Split = null;
+            parent.Signature = null;
             parentHashers = currentHashers;
-
             parent.Header.Attributes.Clear();
-            parent.Header.Attributes.AddRange(parAttrs);
+            parent.Header.Attributes.AddRange(parentAttributes);
         }
-    }
 
-    public delegate void ChecksumWriter(byte[] b);
-
-    public class PayloadChecksumHasher
-    {
-        //private HashAlgorithm hasher;
-        //private ChecksumWriter checksumWriter;
-
-        public HashAlgorithm Hasher { get; set; }
-        public ChecksumWriter ChecksumWriter { get; set; }
+        private FSObject FromObject(FSObject obj)
+        {
+            FSObject r = new()
+            {
+                Header = new()
+                {
+                    ContainerId = obj.ContainerId,
+                    OwnerId = obj.OwnerId,
+                    ObjectType = obj.ObjectType,
+                }
+            };
+            r.Attributes.AddRange(obj.Attributes);
+            if (obj.SplitId is not null)
+                r.Header.Split.SplitId = obj.SplitId.ToByteString();
+            return r;
+        }
     }
 }

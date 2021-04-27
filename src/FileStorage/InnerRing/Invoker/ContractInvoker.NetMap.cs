@@ -18,12 +18,12 @@ namespace Neo.FileStorage.InnerRing.Invoker
         private const string SetConfigMethod = "setConfigMethod";
         private const string GetNetmapSnapshotMethod = "netmap";
 
-        public static long GetEpoch(this Client client)
+        public static ulong GetEpoch(this Client client)
         {
             if (client is null) throw new Exception("client is nil");
             InvokeResult result = client.TestInvoke(NetMapContractHash, GetEpochMethod);
             if (result.State != VMState.HALT) throw new Exception("can't get epoch");
-            return (long)(result.ResultStack[0].GetInteger());
+            return (ulong)(result.ResultStack[0].GetInteger());
         }
 
         public static bool SetNewEpoch(this Client client, ulong epoch)

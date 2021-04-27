@@ -1,12 +1,11 @@
-using Google.Protobuf;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Object;
 using Neo.IO.Data.LevelDB;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
+using static Neo.FileStorage.LocalObjectStorage.MetaBase.Helper;
+using static Neo.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
-using Neo.IO;
-using System;
 
 namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 {
@@ -46,12 +45,19 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
         {
             if (raw)
                 throw new SplitInfoException(GetSplitInfo(address));
-            var children = GetChildren(address);
-            if (children.Count == 0) throw new ObjectNotFoundException();
-            var child = GetObject(Primarykey(children[^1]));
-            if (child is null) throw new InvalidOperationException("can't get child with parent");
-            if (child.Parent is null) throw new ObjectNotFoundException();
-            return child.Parent;
+            var data = db.Get(ReadOptions.Default, ParentKey(address.ContainerId, address.ObjectId));
+            if (data is null) throw new ObjectNotFoundException();
+            var children = DecodeObjectIDList(data);
+            if (!children.Any()) throw new ObjectNotFoundException();
+            var child = children[^1];
+            var obj = GetObject(Primarykey(new()
+            {
+                ContainerId = address.ContainerId,
+                ObjectId = child,
+            }));
+            if (obj.Parent is null)
+                throw new ObjectNotFoundException();
+            return obj.Parent;
         }
 
         private SplitInfo GetSplitInfo(Address address)
@@ -61,38 +67,18 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             return SplitInfo.Parser.ParseFrom(data);
         }
 
-        private List<Address> GetChildren(Address address)
-        {
-            byte[] data = db.Get(ReadOptions.Default, ParentKey(address));
-            if (data is null) return null;
-            List<Address> children = new();
-            using MemoryStream ms = new(data);
-            using BinaryReader reader = new(ms);
-            int count = (int)reader.ReadVarInt(int.MaxValue);
-            for (int i = 0; i < count; i++)
-            {
-                Address addr = new()
-                {
-                    ContainerId = new()
-                    {
-                        Value = ByteString.CopyFrom(reader.ReadBytes(32)),
-                    },
-                    ObjectId = new()
-                    {
-                        Value = ByteString.CopyFrom(reader.ReadBytes(32)),
-                    },
-                };
-                children.Add(addr);
-            }
-            return children;
-        }
-
         public bool Exists(Address address)
         {
             if (IsGraveYard(address))
                 throw new ObjectAlreadyRemovedException();
             if (InBucket(Primarykey(address))) return true;
-            if (InBucket(ParentKey(address)))
+            List<byte[]> keys = new();
+            Iterate(Concat(ParentPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray()),
+                (key, _) =>
+                {
+                    keys.Add(key);
+                });
+            if (keys.Any())
                 throw new SplitInfoException(GetSplitInfo(address));
             if (InBucket(TombstoneKey(address))) return true;
             return InBucket(StorageGroupKey(address));

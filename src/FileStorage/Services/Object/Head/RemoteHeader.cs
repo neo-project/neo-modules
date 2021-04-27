@@ -1,7 +1,6 @@
 using Neo.FileStorage.API.Client;
-using Neo.FileStorage.API.Client.ObjectParams;
 using Neo.FileStorage.Services.Object.Util;
-using Neo.FileStorage.Services.Reputaion;
+using Neo.FileStorage.Services.Reputaion.Local.Client;
 using System;
 using System.Threading;
 using FSObject = Neo.FileStorage.API.Object.Object;
@@ -23,7 +22,7 @@ namespace Neo.FileStorage.Services.Object.Head
             var client = ClientCache.Get(addr);
             if (client is null)
                 throw new InvalidOperationException($"{nameof(RemoteHeader)} could not create SDK client {addr}");
-            var header = client.GetObjectHeader(new ObjectHeaderParams { Address = prm.Address, Short = prm.Short, Raw = prm.Raw }, new CallOptions
+            var header = client.GetObjectHeader(prm.Address, prm.Short, prm.Raw, new CallOptions
             {
                 Ttl = DefaultHeadTtl,
                 Session = prm.SessionToken,

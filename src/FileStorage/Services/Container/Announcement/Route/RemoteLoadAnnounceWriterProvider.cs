@@ -1,18 +1,22 @@
 using Neo.FileStorage.API.Client;
-using System;
 using System.Security.Cryptography;
 using System.Threading;
 
 namespace Neo.FileStorage.Services.Container.Announcement.Route
 {
-    public class RemoteLoadAnnounceWriterProvider
+    public class RemoteLoadAnnounceWriterProvider : IWriterProvider
     {
-        private readonly ECDsa key;
-        private readonly Client client;
+        public ECDsa Key { get; init; }
+        public Client Client;
 
-        public RemoteAnnounceWriter InitWriter(CancellationToken cancellation)
+        public IWriter InitWriter(CancellationToken cancellation)
         {
-            throw new NotImplementedException();
+            return new RemoteLoadAnnounceWriter
+            {
+                Cancellation = cancellation,
+                Key = Key,
+                Client = Client,
+            };
         }
     }
 }

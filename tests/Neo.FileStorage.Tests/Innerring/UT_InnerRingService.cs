@@ -36,13 +36,13 @@ namespace Neo.FileStorage.Tests.InnerRing
                     system = system
                 }
             };
-            innerring = system.ActorSystem.ActorOf(InnerRingService.Props(system, wallet, client, client));
+            innerring = system.ActorSystem.ActorOf(Props(system, wallet, client, client));
         }
 
         [TestMethod]
         public void InitConfigAndContractEventTest()
         {
-            innerring.Tell(new InnerRingService.Start());
+            innerring.Tell(new Start());
             var tx = ExpectMsg<Transaction>();
             Assert.IsNotNull(tx);
             using var snapshot = system.GetSnapshot();
@@ -61,17 +61,12 @@ namespace Neo.FileStorage.Tests.InnerRing
             var data = new ContractParametersContext(snapshot, tx, system.Settings.Network);
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
-            JArray obj = new JArray();
-            obj.Add(tx.ToArray().ToHexString());
-            obj.Add(UInt160.Zero.ToArray().ToHexString());
-            obj.Add("test");
-            obj.Add(new JArray(new VM.Types.Boolean(true).ToJson()));
-            NotifyEventArgs notify = FSNode.GetNotifyEventArgsFromJson(obj);
+            NotifyEventArgs notify = new(tx, UInt160.Zero, "test", new VM.Types.Array() { new VM.Types.Boolean(true) });
             innerring.Tell(new MainContractEvent() { notify = notify });
             ExpectNoMsg();
             innerring.Tell(new MorphContractEvent() { notify = notify });
             ExpectNoMsg();
-            innerring.Tell(new InnerRingService.Stop());
+            innerring.Tell(new Stop());
         }
     }
 }

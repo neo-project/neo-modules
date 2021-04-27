@@ -7,6 +7,7 @@ using Neo.FileStorage.Services.Object.Search;
 using Neo.FileStorage.Services.Object.Search.Writer;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Delete.Execute
@@ -39,9 +40,9 @@ namespace Neo.FileStorage.Services.Object.Delete.Execute
             {
                 return se.SplitInfo;
             }
-            catch (Exception e) when (e is API.Object.Exceptions.SplitInfoException se)
+            catch (Exception e) when (e is SplitInfoException se)
             {
-                return se.SplitInfo();
+                return se.SplitInfo;
             }
         }
 
@@ -53,7 +54,7 @@ namespace Neo.FileStorage.Services.Object.Delete.Execute
                 ContainerId = context.Prm.Address.ContainerId,
             };
             var header = service.HeadAddress(context, address);
-            return header.Children;
+            return header.Children.ToList();
         }
 
         public static ObjectID Previous(this GetService service, ExecuteContext context, ObjectID oid)

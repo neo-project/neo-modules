@@ -5,6 +5,7 @@ namespace Neo.FileStorage.Services.Accounting
     public class AccountingResponseService : ResponseService
     {
         public AccountingService AccountingService { get; init; }
+
         public BalanceResponse Balance(BalanceRequest request)
         {
             return (BalanceResponse)HandleUnaryRequest(request, r =>

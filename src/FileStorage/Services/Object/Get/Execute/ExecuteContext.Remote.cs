@@ -1,4 +1,4 @@
-using Neo.FileStorage.API.Object.Exceptions;
+using Neo.FileStorage.API.Object;
 using System;
 
 namespace Neo.FileStorage.Services.Object.Get.Execute

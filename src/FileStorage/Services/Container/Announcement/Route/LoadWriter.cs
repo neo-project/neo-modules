@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using FSAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types.Announcement;
 using static Neo.Utility;
+using FSAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types.Announcement;
 
 namespace Neo.FileStorage.Services.Container.Announcement.Route
 {
-    public class LoadWriter
+    public class LoadWriter : IWriter
     {
-        public Router Router;
+        public LoadRouter Router;
         public CancellationToken Cancellation;
         public RouteContext RouteContext;
         public Dictionary<RouteKey, RouteValue> mRoute = new();
-        public Dictionary<string, RemoteAnnounceWriter> mServers = new();
+        public Dictionary<string, IWriter> mServers = new();
 
         public void Put(FSAnnouncement announcement)
         {
@@ -39,12 +39,12 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route
                 string endpoint = "";
                 if (remoteInfo is not null)
                     endpoint = remoteInfo.Address;
-                exists = mServers.TryGetValue(endpoint, out RemoteAnnounceWriter remoteWriter);
+                exists = mServers.TryGetValue(endpoint, out IWriter remoteWriter);
                 if (!exists)
                 {
                     try
                     {
-                        var provider = Router.remoteProvider.InitRemote(remoteInfo);
+                        var provider = Router.RemoteProvider.InitRemote(remoteInfo);
                         remoteWriter = provider.InitWriter(Cancellation);
                     }
                     catch (Exception e)

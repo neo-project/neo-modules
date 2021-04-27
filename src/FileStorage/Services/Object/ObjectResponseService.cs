@@ -1,4 +1,5 @@
 using Neo.FileStorage.API.Object;
+using Neo.FileStorage.API.Session;
 using System;
 using System.Threading;
 
@@ -48,7 +49,7 @@ namespace Neo.FileStorage.Services.Object
             });
         }
 
-        public RequestResponseStream Put(CancellationToken cancellation)
+        public IRequestStream Put(CancellationToken cancellation)
         {
             var next = SplitService.Put(cancellation);
             return CreateRequestStream(req => next.Send((PutRequest)req), () => next.Close());
@@ -63,16 +64,16 @@ namespace Neo.FileStorage.Services.Object
         }
     }
 
-    public class PutResponseStream : IPutRequestStream
+    public class PutResponseStream : IRequestStream
     {
         public RequestResponseStream Stream { get; init; }
 
-        public void Send(PutRequest request)
+        public void Send(IRequest request)
         {
             Stream.Send(request);
         }
 
-        public PutResponse Close()
+        public IResponse Close()
         {
             return (PutResponse)Stream.Close();
         }

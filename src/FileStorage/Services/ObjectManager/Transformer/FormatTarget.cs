@@ -1,11 +1,8 @@
-using Neo.FileStorage.Core.Netmap;
-using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
-using System;
+using Neo.FileStorage.Morph.Invoker;
 using System.Security.Cryptography;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSVersion = Neo.FileStorage.API.Refs.Version;
-using Neo.FileStorage.Morph.Invoker;
 
 namespace Neo.FileStorage.Services.ObjectManager.Transformer
 {
@@ -17,54 +14,44 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
         public Client MorphClient { get; init; }
 
         private FSObject obj;
-        private ulong sz;
+        private ulong size;
 
-        public virtual void WriteHeader(FSObject obj)
+        public void WriteHeader(FSObject obj)
         {
             this.obj = obj;
         }
 
-        public virtual void WriteChunk(Byte[] chunk) { }
+        public void WriteChunk(byte[] chunk)
+        {
+            size += (ulong)chunk.Length;
+            Next.WriteChunk(chunk);
+        }
 
         public AccessIdentifiers Close()
         {
             var curEpoch = CurrentEpoch();
-
             obj.Header.Version = FSVersion.SDKVersion();
-            obj.Header.PayloadLength = sz;
+            obj.Header.PayloadLength = size;
             obj.Header.SessionToken = SessionToken;
             obj.Header.CreationEpoch = curEpoch;
-
-            ObjectID parId = null;
-            FSObject par;
-            if (obj.Header.Split.Parent != null)
+            if (obj.Parent is not null && obj.Parent.Signature is null)
             {
-                par = new FSObject()
-                {
-                    ObjectId = obj.Header.Split.Parent,
-                    Signature = obj.Header.Split.ParentSignature,
-                    Header = obj.Header.Split.ParentHeader
-                };
-                var rawPar = new FSObject(par);
-                rawPar.Header.SessionToken = SessionToken;
-                rawPar.Header.CreationEpoch = curEpoch;
-
-                var sig = rawPar.CalculateIDSignature(Key); // TBD, 
-                rawPar.Signature = sig;
-                parId = rawPar.ObjectId;
-                obj.Header.Split.Parent = parId;
+                var parent = obj.Parent;
+                parent.Header.SessionToken = SessionToken;
+                parent.Header.CreationEpoch = curEpoch;
+                parent.Signature = parent.CalculateIDSignature(Key);
+                obj.Header.Split.Parent = parent.CalculateID();
+                obj.Header.Split.ParentSignature = parent.Signature;
+                obj.Header.Split.ParentHeader = parent.Header;
             }
-
-            var signature = obj.CalculateIDSignature(Key);
-            obj.Signature = signature;
-
+            obj.Signature = obj.CalculateIDSignature(Key);
             Next.WriteHeader(obj);
             Next.Close();
-
             return new AccessIdentifiers
             {
                 Self = obj.ObjectId,
-                Parent = parId
+                Parent = obj.ParentId,
+                ParentHeader = obj.Parent,
             };
         }
 

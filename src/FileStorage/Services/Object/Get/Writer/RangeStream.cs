@@ -13,7 +13,7 @@ namespace Neo.FileStorage.Services.Object.Get.Writer
 
         public void WriteHeader(FSObject obj)
         {
-            throw new NotImplementedException(nameof(WriteHeader));
+            throw new NotImplementedException($"{nameof(WriteHeader)} shouldn't writer header in range stream");
         }
 
         public void WriteChunk(byte[] chunk)
