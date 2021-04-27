@@ -1,7 +1,5 @@
 
 using System;
-using Google.Protobuf;
-using Microsoft.Extensions.Caching.Memory;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Refs;
@@ -15,7 +13,7 @@ namespace Neo.FileStorage.Services.Object.Acl
         public const int DefaultCacheSize = 100;
         public const int DefaultTTLMilliseconds = 30000;
 
-        private readonly TTLCache<ContainerID, EACLTable> cache;
+        private readonly TTLNetworkCache<ContainerID, EACLTable> cache;
 
         public EAclCache(Client client, int size = DefaultCacheSize, int ttl = DefaultTTLMilliseconds)
         {
