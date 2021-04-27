@@ -5,7 +5,7 @@ namespace Neo.FileStorage.Services.Netmap
 {
     public class NetmapService
     {
-        public StorageNode StorageNode { get; init; } //TODO: if this the best way?
+        public StorageService StorageNode { get; init; } //TODO: if this the best way?
         public LocalNodeInfoResponse LocalNodeInfo(LocalNodeInfoRequest _)
         {
             var resp = new LocalNodeInfoResponse()

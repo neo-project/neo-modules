@@ -18,7 +18,7 @@ namespace Neo.FileStorage.Services.Control
         public ECDsa Key { get; init; }
         public StorageEngine LocalStorage { get; init; }
         public Client MorphClient { get; init; }
-        public StorageNode StorageNode { get; init; }
+        public StorageService StorageNode { get; init; }
 
         public override Task<DropObjectsResponse> DropObjects(DropObjectsRequest request, ServerCallContext context)
         {

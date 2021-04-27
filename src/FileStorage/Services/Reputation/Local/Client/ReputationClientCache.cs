@@ -11,7 +11,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
 {
     public class ReputaionClientCache
     {
-        public StorageNode StorageNode { get; init; }
+        public StorageService StorageNode { get; init; }
         public ClientCache BasicCache { get; init; }
         public MorphClient MorphClient { get; init; }
         public ReputationStorage ReputationStorage { get; init; }

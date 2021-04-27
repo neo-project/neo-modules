@@ -22,8 +22,12 @@ using Neo.FileStorage.Services.Replicate;
 using Neo.FileStorage.Services.Reputaion.Local.Client;
 using Neo.FileStorage.Services.Session;
 using Neo.FileStorage.Services.Session.Storage;
+using Neo.Ledger;
+using Neo.Network.P2P.Payloads;
+using Neo.Persistence;
 using Neo.Wallets;
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using APIAccountingService = Neo.FileStorage.API.Accounting.AccountingService;
 using APIContainerService = Neo.FileStorage.API.Container.ContainerService;
@@ -33,7 +37,7 @@ using APISessionService = Neo.FileStorage.API.Session.SessionService;
 
 namespace Neo.FileStorage
 {
-    public sealed class StorageNode : IDisposable
+    public sealed class StorageService : IDisposable
     {
         public ProtocolSettings ProtocolSettings;
         private readonly ECDsa key;
@@ -47,8 +51,9 @@ namespace Neo.FileStorage
 
         private Network.Address LocalAddress => Network.Address.AddressFromString(LocalNodeInfo.Address);
 
-        public StorageNode()
+        public StorageService(NeoSystem side)
         {
+            system = side;
             StorageEngine localStorage = new();
             morphClient = new Client
             {
@@ -285,6 +290,11 @@ namespace Neo.FileStorage
                 },
                 ReplicatorRef = replicatorRef
             }));
+        }
+
+        public void OnSidePersisted(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        {
+
         }
 
         public void Dispose()
