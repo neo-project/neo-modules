@@ -40,7 +40,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                 //EpochState = new EpochState(),
                 //EpochTimerReseter = new EpochTimerReseter(),
                 WorkPool = system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor())),
-                NetmapSnapshot = new NetMapContractProcessor.CleanupTable(true, 1)
+                NetmapSnapshot = new CleanupTable(true, 1)
             };
         }
 

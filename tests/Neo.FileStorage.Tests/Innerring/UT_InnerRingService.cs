@@ -36,7 +36,7 @@ namespace Neo.FileStorage.Tests.InnerRing
                     system = system
                 }
             };
-            innerring = system.ActorSystem.ActorOf(Props(system, wallet, client, client));
+            innerring = system.ActorSystem.ActorOf(Props(system, null, wallet, client, client));
         }
 
         [TestMethod]
@@ -62,9 +62,9 @@ namespace Neo.FileStorage.Tests.InnerRing
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             NotifyEventArgs notify = new(tx, UInt160.Zero, "test", new VM.Types.Array() { new VM.Types.Boolean(true) });
-            innerring.Tell(new MainContractEvent() { notify = notify });
+            innerring.Tell(new ContractEvent() { notify = notify });
             ExpectNoMsg();
-            innerring.Tell(new MorphContractEvent() { notify = notify });
+            innerring.Tell(new ContractEvent() { notify = notify });
             ExpectNoMsg();
             innerring.Tell(new Stop());
         }
