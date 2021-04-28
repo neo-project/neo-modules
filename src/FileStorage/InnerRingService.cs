@@ -17,12 +17,13 @@ namespace Neo.FileStorage
 
         public InnerRingService(NeoSystem main, NeoSystem side)
         {
-            innering = main.ActorSystem.ActorOf(FSInnerRingService.Props(side));//TODO: mount to side chain?
+            innering = main.ActorSystem.ActorOf(FSInnerRingService.Props(main,side));//TODO: mount to side chain?
             innering.Tell(new Start() { });
         }
 
-        public void OnMainPersisted(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        public void OnPersisted(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList,bool flag)
         {
+            innering.Tell(new BlockEvent() { block=block,flag=flag});
             foreach (var appExec in applicationExecutedList)
             {
                 Transaction tx = appExec.Transaction;
@@ -33,30 +34,14 @@ namespace Neo.FileStorage
                 foreach (var notify in notifys)
                 {
                     var contract = notify.ScriptHash;
-                    if (contract != Settings.Default.FsContractHash) continue;
-                    innering.Tell(new InnerRingSender.MainContractEvent() { notify = notify });
+                    if (flag)
+                        if (contract != Settings.Default.FsContractHash) continue;
+                    else
+                        if (!Settings.Default.Contracts.Contains(contract)) continue;
+                    innering.Tell(new ContractEvent() { notify = notify, flag = flag });
                 }
             }
         }
-
-        public void OnSidePersisted(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
-        {
-            foreach (var appExec in applicationExecutedList)
-            {
-                Transaction tx = appExec.Transaction;
-                VMState state = appExec.VMState;
-                if (tx is null || state != VMState.HALT) continue;
-                var notifys = appExec.Notifications;
-                if (notifys is null) continue;
-                foreach (var notify in notifys)
-                {
-                    var contract = notify.ScriptHash;
-                    if (!Settings.Default.Contracts.Contains(contract)) continue;
-                    innering.Tell(new MorphContractEvent() { notify = notify });
-                }
-            }
-        }
-
         public void Dispose()
         {
             innering.Tell(new Stop() { });

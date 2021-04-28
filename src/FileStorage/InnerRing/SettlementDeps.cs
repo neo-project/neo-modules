@@ -4,8 +4,6 @@ using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.StorageGroup;
-using Neo.FileStorage.Core.Container;
-using Neo.FileStorage.Core.Netmap;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Morph.Invoker;
 using System;
@@ -20,8 +18,6 @@ namespace Neo.FileStorage.InnerRing
     public abstract class SettlementDeps
     {
         public Client client;
-        public INetmapSource nmSrc;
-        public IContainerSource cnrSrc;
         public RpcClientCache clientCache;
 
         public List<DataAuditResult> AuditResultsForEpoch(ulong epoch)
@@ -38,17 +34,16 @@ namespace Neo.FileStorage.InnerRing
 
         public Container ContainerInfo(ContainerID cid)
         {
-            return cnrSrc.Get(cid);
-
+            return client.InvokeGetContainer(cid);
         }
 
         public void BuildContainer(ulong epoch, ContainerID cid, out List<List<Node>> containerNodes, out NetMap netMap)
         {
             if (epoch > 0)
-                netMap = nmSrc.GetNetMapByEpoch(epoch);
+                netMap = client.InvokeEpochSnapshot(epoch);
             else
-                netMap = nmSrc.GetLatestNetworkMap();
-            Container cnr = cnrSrc.Get(cid);
+                netMap = client.InvokeSnapshot(0);
+            Container cnr = client.InvokeGetContainer(cid);
             containerNodes = netMap.GetContainerNodes(cnr.PlacementPolicy, cid.Value.ToByteArray());
         }
 

@@ -243,7 +243,12 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public class Calculator
         {
-            public SettlementDeps settlementDeps;
+            private SettlementDeps settlementDeps;
+
+            public Calculator(SettlementDeps settlementDeps)
+            {
+                this.settlementDeps = settlementDeps;
+            }
 
             public void Calculate(ulong epoch)
             {

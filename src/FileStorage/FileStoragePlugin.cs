@@ -45,11 +45,11 @@ namespace Neo.FileStorage
         {
             if (system.Settings.Network == Settings.Default.MainNetwork)
             {
-                InnerRingService.OnMainPersisted(block, snapshot, applicationExecutedList);
+                InnerRingService.OnPersisted(block, snapshot, applicationExecutedList, true);
             }
             else if (system.Settings.Network == Settings.Default.SideNetwork)
             {
-                InnerRingService.OnSidePersisted(block, snapshot, applicationExecutedList);
+                InnerRingService.OnPersisted(block, snapshot, applicationExecutedList, false);
                 StorageService.OnSidePersisted(block, snapshot, applicationExecutedList);
             }
         }
