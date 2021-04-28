@@ -26,7 +26,8 @@ namespace Neo.FileStorage.Utils.locode
                 return new LOCODE(words);
             }
         }
-        public class LocationCode {
+        public class LocationCode
+        {
             public const int LocationCodeLen = 3;
             private char[] values = new char[LocationCodeLen];
 
@@ -35,12 +36,14 @@ namespace Neo.FileStorage.Utils.locode
                 this.values = values;
             }
 
-            public char[] Symbols() {
+            public char[] Symbols()
+            {
                 return values;
             }
 
-            public static LocationCode LocationCodeFromString(string s) {
-               string pattern = @"^[A-Z0-9]+$";
+            public static LocationCode LocationCodeFromString(string s)
+            {
+                string pattern = @"^[A-Z0-9]+$";
                 if (s.Length != LocationCodeLen) throw new Exception("invalid string format in UN/Locode");
                 if (!Regex.IsMatch(s, pattern)) throw new Exception("invalid string format in UN/Locode");
                 return new LocationCode(s.ToCharArray());
@@ -69,7 +72,8 @@ namespace Neo.FileStorage.Utils.locode
                 return new CountryCode(s.ToCharArray());
             }
         }
-        public class CordinateCode {
+        public class CordinateCode
+        {
             public const int MinutesDigits = 2;
             public const int HemisphereSymbols = 1;
             public const int LatDegDigits = 2;
@@ -77,22 +81,24 @@ namespace Neo.FileStorage.Utils.locode
             private int degDigits;
             private byte[] value;
 
-            public static CordinateCode CoordinateFromString(string s,int degDigits,byte[] hemisphereAlphabet) {
+            public static CordinateCode CoordinateFromString(string s, int degDigits, byte[] hemisphereAlphabet)
+            {
                 if (s.Length != degDigits + MinutesDigits + HemisphereSymbols) throw new Exception("invalid string format in UN/Locode");
                 string pattern = @"^[0-9]+$";
                 if (!Regex.IsMatch(s.Substring(0, degDigits + MinutesDigits), pattern)) throw new Exception("invalid string format in UN/Locode");
-                foreach(var sys in s.Substring(degDigits + MinutesDigits))
+                foreach (var sys in s.Substring(degDigits + MinutesDigits))
                     for (int j = 0; j < hemisphereAlphabet.Length; j++)
                         if (hemisphereAlphabet[j].Equals(sys)) throw new Exception("invalid string format in UN/Locode");
-                return new CordinateCode() { degDigits= degDigits ,value= System.Text.Encoding.UTF8.GetBytes(s)};
+                return new CordinateCode() { degDigits = degDigits, value = System.Text.Encoding.UTF8.GetBytes(s) };
             }
 
             public byte[] Hemisphere()
             {
-                return value.Take(degDigits+MinutesDigits).ToArray();
+                return value.Take(degDigits + MinutesDigits).ToArray();
             }
 
-            public byte[] Degrees() {
+            public byte[] Degrees()
+            {
                 return value.Take(degDigits).ToArray();
             }
 
@@ -101,8 +107,10 @@ namespace Neo.FileStorage.Utils.locode
                 return value.Skip(degDigits).ToArray();
             }
         }
-        public class LongitudeCode : CordinateCode {
-            public static LongitudeCode LongitudeFromString(string s) {
+        public class LongitudeCode : CordinateCode
+        {
+            public static LongitudeCode LongitudeFromString(string s)
+            {
                 return (LongitudeCode)CoordinateFromString(s, LngDegDigits, new byte[] { (byte)'W', (byte)'E' });
             }
 
@@ -111,7 +119,8 @@ namespace Neo.FileStorage.Utils.locode
                 return Hemisphere()[0] == 'E';
             }
         };
-        public class LatitudeCode : CordinateCode {
+        public class LatitudeCode : CordinateCode
+        {
             public static LatitudeCode LatitudeFromString(string s)
             {
                 return (LatitudeCode)CoordinateFromString(s, LatDegDigits, new byte[] { (byte)'N', (byte)'S' });

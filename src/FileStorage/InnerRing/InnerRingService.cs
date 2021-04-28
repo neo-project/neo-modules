@@ -153,8 +153,8 @@ namespace Neo.FileStorage.InnerRing
                 State = this,
                 NetmapSnapshot = new CleanupTable(Settings.Default.CleanupEnabled, Settings.Default.CleanupThreshold),
                 WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("NetMapContract Processor", Settings.Default.NetmapContractWorkersSize)),
-                HandleNewAudit =OnlyActiveEventHandler(auditContractProcessor.HandleNewAuditRound),
-                HandleAuditSettlements= OnlyAlphabetEventHandler(settlementProcessor.HandleAuditEvent),
+                HandleNewAudit = OnlyActiveEventHandler(auditContractProcessor.HandleNewAuditRound),
+                HandleAuditSettlements = OnlyAlphabetEventHandler(settlementProcessor.HandleAuditEvent),
                 HandleAlphabetSync = governanceProcessor.HandleAlphabetSync,
                 NodeValidator = locodeValidator
             };
@@ -327,9 +327,9 @@ namespace Neo.FileStorage.InnerRing
             mainEventListener.Tell(new Listener.Stop());
         }
 
-        private void OnContractEvent(NotifyEventArgs notify,bool flag)
+        private void OnContractEvent(NotifyEventArgs notify, bool flag)
         {
-            if(flag) mainEventListener.Tell(new NewContractEvent() { notify = notify });
+            if (flag) mainEventListener.Tell(new NewContractEvent() { notify = notify });
             else morphEventListener.Tell(new NewContractEvent() { notify = notify });
         }
 

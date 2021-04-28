@@ -256,9 +256,12 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log("Calculator", LogLevel.Info, "calculate audit settlements");
                 Utility.Log("Calculator", LogLevel.Debug, "getting results for the previous epoch");
                 List<DataAuditResult> auditResults;
-                try {
+                try
+                {
                     auditResults = settlementDeps.AuditResultsForEpoch(epoch - 1);
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     Utility.Log("Calculator", LogLevel.Debug, "could not collect audit results");
                     return;
                 }
@@ -298,10 +301,13 @@ namespace Neo.FileStorage.InnerRing.Processors
 
             public bool ReadContainerInfo(SingleResultCtx ctx)
             {
-                try {
+                try
+                {
                     ctx.cnrInfo = settlementDeps.ContainerInfo(ctx.auditResult.ContainerId);
-                } catch (Exception e) {
-                    Utility.Log("Calculator", LogLevel.Error, string.Format("could not get container info,error:{0}",e.Message));
+                }
+                catch (Exception e)
+                {
+                    Utility.Log("Calculator", LogLevel.Error, string.Format("could not get container info,error:{0}", e.Message));
                     return false;
                 }
                 return true;
@@ -325,7 +331,8 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 ctx.passNodes = new Dictionary<string, NodeInfo>();
                 bool loopflag = false;
-                foreach (var cnrNode in ctx.cnrNodes) {
+                foreach (var cnrNode in ctx.cnrNodes)
+                {
                     foreach (var passNode in ctx.auditResult.PassNodes)
                     {
                         if (cnrNode.PublicKey().SequenceEqual(passNode.ToByteArray())) continue;
@@ -340,12 +347,13 @@ namespace Neo.FileStorage.InnerRing.Processors
                     }
                     if (loopflag) break;
                 }
-                if (ctx.passNodes.Count == 0) {
+                if (ctx.passNodes.Count == 0)
+                {
                     Utility.Log("Calculator", LogLevel.Error, "none of the container nodes passed the audit");
                     return false;
                 }
                 return true;
-                
+
             }
 
             public bool SumSGSizes(SingleResultCtx ctx)
@@ -380,14 +388,17 @@ namespace Neo.FileStorage.InnerRing.Processors
                 foreach (var item in ctx.passNodes)
                 {
                     OwnerID ownerID;
-                    try {
+                    try
+                    {
                         ownerID = settlementDeps.ResolveKey(item.Value);
-                    } catch (Exception e) {
-                        Utility.Log("Calculator", LogLevel.Error, string.Format("could not resolve public key of the storage node,key:{0},error:{1}", item.Key,e.Message));
+                    }
+                    catch (Exception e)
+                    {
+                        Utility.Log("Calculator", LogLevel.Error, string.Format("could not resolve public key of the storage node,key:{0},error:{1}", item.Key, e.Message));
                         return false;
                     }
                     var price = item.Value.Price();
-                    Utility.Log("Calculator", LogLevel.Debug, string.Format("calculating storage node salary for audit (GASe-12),sum SG size:{0},price:{1}", ctx.sumSGSize,price));
+                    Utility.Log("Calculator", LogLevel.Debug, string.Format("calculating storage node salary for audit (GASe-12),sum SG size:{0},price:{1}", ctx.sumSGSize, price));
                     var fee = BigInteger.Multiply(price, ctx.sumSGSize);
                     fee = BigInteger.Divide(fee, BigInteger.One);
                     if (fee.CompareTo(BigInteger.Zero) == 0) fee = BigInteger.Add(fee, BigInteger.One);

@@ -5,12 +5,12 @@ using static Neo.FileStorage.Utils.locode.Column;
 
 namespace Neo.FileStorage.Utils.locode.db
 {
-    public class Point: ISerializable
+    public class Point : ISerializable
     {
         public double latitude;
         public double longitude;
 
-        public int Size => 2* sizeof(double);
+        public int Size => 2 * sizeof(double);
 
         public void Deserialize(BinaryReader reader)
         {
@@ -25,14 +25,15 @@ namespace Neo.FileStorage.Utils.locode.db
             writer.Flush();
         }
 
-        public static Point PointFromCoordinates(Coordinates crd) {
+        public static Point PointFromCoordinates(Coordinates crd)
+        {
             if (crd is null) return null;
             var cLat = crd.lat;
             var cLatDeg = cLat.Degrees();
             var cLatMnt = cLat.Minutes();
             var lat = Double.Parse(string.Join(string.Join(BitConverter.ToString(cLatDeg), "."), BitConverter.ToString(cLatMnt)));
             if (!cLat.North()) lat = -lat;
-            var cLng= crd.lng;
+            var cLng = crd.lng;
             var cLngDeg = cLng.Degrees();
             var cLngMnt = cLng.Minutes();
             var lng = Double.Parse(string.Join(string.Join(BitConverter.ToString(cLngDeg), "."), BitConverter.ToString(cLngMnt)));

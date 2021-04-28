@@ -1,8 +1,6 @@
 using Akka.Actor;
 using Neo.Cryptography.ECC;
-using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.InnerRing.Invoker;
-using Neo.FileStorage.InnerRing.Timer;
 using Neo.FileStorage.Morph.Event;
 using Neo.SmartContract;
 using Neo.Wallets;
@@ -17,19 +15,19 @@ namespace Neo.FileStorage.InnerRing.Processors
         public override string Name => "AlphabetContractProcessor";
         public ulong StorageEmission;
 
-/*        public override HandlerInfo[] TimersHandlers()
-        {
-            ScriptHashWithType scriptHashWithType = new ScriptHashWithType()
-            {
-                Type = Timers.AlphabetTimer,
-            };
-            HandlerInfo handler = new HandlerInfo()
-            {
-                ScriptHashWithType = scriptHashWithType,
-                Handler = HandleGasEmission
-            };
-            return new HandlerInfo[] { handler };
-        }*/
+        /*        public override HandlerInfo[] TimersHandlers()
+                {
+                    ScriptHashWithType scriptHashWithType = new ScriptHashWithType()
+                    {
+                        Type = Timers.AlphabetTimer,
+                    };
+                    HandlerInfo handler = new HandlerInfo()
+                    {
+                        ScriptHashWithType = scriptHashWithType,
+                        Handler = HandleGasEmission
+                    };
+                    return new HandlerInfo[] { handler };
+                }*/
 
         public void HandleGasEmission(IContractEvent morphEvent)
         {

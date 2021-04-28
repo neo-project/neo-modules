@@ -2,7 +2,6 @@ using Akka.Actor;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
-using Neo.FileStorage.InnerRing;
 using Neo.VM;
 using System;
 using System.Collections.Generic;
@@ -17,13 +16,13 @@ namespace Neo.FileStorage
 
         public InnerRingService(NeoSystem main, NeoSystem side)
         {
-            innering = main.ActorSystem.ActorOf(FSInnerRingService.Props(main,side));//TODO: mount to side chain?
+            innering = main.ActorSystem.ActorOf(FSInnerRingService.Props(main, side));//TODO: mount to side chain?
             innering.Tell(new Start() { });
         }
 
-        public void OnPersisted(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList,bool flag)
+        public void OnPersisted(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList, bool flag)
         {
-            innering.Tell(new BlockEvent() { block=block,flag=flag});
+            innering.Tell(new BlockEvent() { block = block, flag = flag });
             foreach (var appExec in applicationExecutedList)
             {
                 Transaction tx = appExec.Transaction;
@@ -36,7 +35,7 @@ namespace Neo.FileStorage
                     var contract = notify.ScriptHash;
                     if (flag)
                         if (contract != Settings.Default.FsContractHash) continue;
-                    else
+                        else
                         if (!Settings.Default.Contracts.Contains(contract)) continue;
                     innering.Tell(new ContractEvent() { notify = notify, flag = flag });
                 }

@@ -29,7 +29,7 @@ namespace Neo.FileStorage.InnerRing.Timer
         private List<IActorRef> ps;
         private DeltaCfg deltaCfg;
 
-        public BlockTimer(Func<uint> dur, Action h,uint pmul=1, uint pdiv=1)
+        public BlockTimer(Func<uint> dur, Action h, uint pmul = 1, uint pdiv = 1)
         {
             this.dur = dur;
             this.mul = pmul;

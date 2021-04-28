@@ -5,20 +5,20 @@ using static Neo.FileStorage.Utils.locode.Column;
 
 namespace Neo.FileStorage.Utils
 {
-    public class Record:ISerializable
+    public class Record : ISerializable
     {
-		public string countryName;
-		public string locationName;
-		public string subDivName;
-		public string subDivCode;
-		public Point p;
-		public Continent cont;
+        public string countryName;
+        public string locationName;
+        public string subDivName;
+        public string subDivCode;
+        public Point p;
+        public Continent cont;
 
         public Record()
         {
         }
 
-        public int Size => countryName.Length+ locationName.Length+ subDivName.Length+ subDivCode.Length+p.Size+1;
+        public int Size => countryName.Length + locationName.Length + subDivName.Length + subDivCode.Length + p.Size + 1;
 
         public void Deserialize(BinaryReader reader)
         {
@@ -42,9 +42,9 @@ namespace Neo.FileStorage.Utils
         }
     }
 
-	public class Key: ISerializable
-	{
-		public CountryCode countryCode;
+    public class Key : ISerializable
+    {
+        public CountryCode countryCode;
         public LocationCode locationCode;
 
         public Key()
@@ -61,8 +61,8 @@ namespace Neo.FileStorage.Utils
 
         public void Deserialize(BinaryReader reader)
         {
-            countryCode=new CountryCode(reader.ReadChars(CountryCode.CountryCodeLen));
-            locationCode=new LocationCode(reader.ReadChars(LocationCode.LocationCodeLen));
+            countryCode = new CountryCode(reader.ReadChars(CountryCode.CountryCodeLen));
+            locationCode = new LocationCode(reader.ReadChars(LocationCode.LocationCodeLen));
         }
 
         public void Serialize(BinaryWriter writer)

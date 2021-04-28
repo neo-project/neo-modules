@@ -2,7 +2,7 @@ namespace Neo.FileStorage.Utils.locode.db
 {
     public enum Continent : byte
     {
-        
+
         ContinentUnknown = 0x00,
         ContinentEurope,
         ContinentAfrica,
@@ -13,10 +13,12 @@ namespace Neo.FileStorage.Utils.locode.db
         ContinentOceania
     }
 
-    public static class Helper {
+    public static class Helper
+    {
         public static string String(this Continent continent)
         {
-            switch (continent) {
+            switch (continent)
+            {
                 case Continent.ContinentUnknown:
                     return "Unknown";
                 case Continent.ContinentEurope:

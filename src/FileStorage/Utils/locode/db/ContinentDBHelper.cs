@@ -12,18 +12,19 @@ namespace Neo.FileStorage.Utils.locode.db
     {
         private const byte PreContinent = 0x00;
 
-        public static void Init(this DB _db) {
+        public static void Init(this DB _db)
+        {
 
         }
 
+        /*        public static (Key,Record) Get(this DB _db, LOCODE lc) {
+                    Key key = new Key(lc);
+                    Record record = _db.Get(ReadOptions.Default, key.ToArray())?.AsSerializable<Record>();
+                    return (key,record);
+                }*/
 
-/*        public static (Key,Record) Get(this DB _db, LOCODE lc) {
-            Key key = new Key(lc);
-            Record record = _db.Get(ReadOptions.Default, key.ToArray())?.AsSerializable<Record>();
-            return (key,record);
-        }*/
-
-        public static void Put(this DB _db, LOCODE lc,Record record) {
+        public static void Put(this DB _db, LOCODE lc, Record record)
+        {
             //_db.Put(WriteOptions.Default, Key(PreLocode, new Key(lc)), record.ToArray());
         }
 

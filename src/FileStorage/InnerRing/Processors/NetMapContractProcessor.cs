@@ -435,7 +435,7 @@ namespace Neo.FileStorage.InnerRing.Processors
     }
     public class AttrDescriptor
     {
-        public Func<(Key,Record), string> converter;
+        public Func<(Key, Record), string> converter;
         public bool optional;
         public static string CountryCodeValue((Key, Record) record)
         {
