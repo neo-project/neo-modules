@@ -1,4 +1,9 @@
+using Neo.FileStorage.API.Acl;
+using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
+using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Cache;
 using Neo.FileStorage.Core.Object;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Morph.Invoker;
@@ -34,11 +39,18 @@ using APIContainerService = Neo.FileStorage.API.Container.ContainerService;
 using APINetmapService = Neo.FileStorage.API.Netmap.NetmapService;
 using APIObjectService = Neo.FileStorage.API.Object.ObjectService;
 using APISessionService = Neo.FileStorage.API.Session.SessionService;
+using FSContainer = Neo.FileStorage.API.Container.Container;
 
 namespace Neo.FileStorage
 {
     public sealed class StorageService : IDisposable
     {
+        public const int ContainerCacheSize = 100;
+        public const int ContainerCacheTTLSeconds = 30;
+        public const int EACLCacheSize = 100;
+        public const int EACLCacheTTLSeconds = 30;
+        public const int NetmapCacheSize = 10;
+
         public ProtocolSettings ProtocolSettings;
         private readonly ECDsa key;
         private readonly Client morphClient;
@@ -63,6 +75,18 @@ namespace Neo.FileStorage
                     system = system,
                 }
             };
+            var containerCache = new TTLNetworkCache<ContainerID, FSContainer>(ContainerCacheSize, TimeSpan.FromSeconds(ContainerCacheTTLSeconds), cid =>
+            {
+                return morphClient.InvokeGetContainer(cid);
+            });
+            var eaclCache = new TTLNetworkCache<ContainerID, EACLTable>(EACLCacheSize, TimeSpan.FromSeconds(EACLCacheTTLSeconds), cid =>
+            {
+                return morphClient.InvokeGetEACL(cid)?.Table;
+            });
+            var netmapCache = new TTLNetworkCache<ulong, NetMap>(NetmapCacheSize, TimeSpan.FromSeconds(ContainerCacheTTLSeconds), epoch =>
+            {
+                return morphClient.InvokeEpochSnapshot(epoch);
+            });
             //Audit
             var loadAccumulator = new AnnouncementStorage();
             Controller controller = new()

@@ -1,10 +1,8 @@
-using Google.Protobuf;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
-using Neo.FileStorage.Core.Netmap;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Object.Acl.EAcl;
@@ -13,16 +11,15 @@ using static Neo.FileStorage.API.Acl.BearerToken.Types.Body.Types;
 using static Neo.FileStorage.API.Session.ObjectSessionContext.Types;
 using static Neo.FileStorage.API.Session.SessionToken.Types.Body;
 using FSAction = Neo.FileStorage.API.Acl.Action;
-using FSContainer = Neo.FileStorage.API.Container.Container;
 
 namespace Neo.FileStorage.Services.Object.Acl
 {
     public partial class AclChecker
     {
-        public Client Morph { get; init; }
+        public Client MorphClient { get; init; }
         public StorageEngine LocalStorage { get; init; }
         public EAclValidator EAclValidator { get; init; }
-        public INetState NetmapState { get; init; }
+        public StorageService StorageService { get; init; }
 
         public RequestInfo CheckRequest(IRequest request, Operation op)
         {
@@ -99,7 +96,7 @@ namespace Neo.FileStorage.Services.Object.Acl
 
         private RequestInfo FindRequestInfo(IRequest request, ContainerID cid, Operation op)
         {
-            var container = GetContainer(cid);
+            var container = MorphClient.InvokeGetContainer(cid);
             var classifiered = Classify(request, cid, container);
             if (classifiered.Item1 == Role.Unspecified)
                 throw new InvalidOperationException(nameof(FindRequestInfo) + " unkown role");
@@ -158,7 +155,7 @@ namespace Neo.FileStorage.Services.Object.Acl
         {
             if (info.BasicAcl.Final()) return true;
             if (!info.BasicAcl.BearsAllowed(info.Op)) return false;
-            if (!IsValidBearer(info, NetmapState)) return false;
+            if (!IsValidBearer(info)) return false;
             var unit = new ValidateUnit
             {
                 Cid = info.ContainerID,
@@ -189,12 +186,12 @@ namespace Neo.FileStorage.Services.Object.Acl
             return info.SenderKey.PublicKeyToOwnerID().Value == owner.Value;
         }
 
-        private bool IsValidBearer(RequestInfo info, INetState state)
+        private bool IsValidBearer(RequestInfo info)
         {
             if (info.Bearer is null || info.Bearer.Body is null && info.Bearer.Signature is null)
                 return true;
 
-            if (!IsValidLifetime(info.Bearer.Body.Lifetime, state.CurrentEpoch()))
+            if (!IsValidLifetime(info.Bearer.Body.Lifetime, StorageService.CurrentEpoch))
                 return false;
             if (!info.Bearer.Signature.VerifyMessagePart(info.Bearer.Body))
                 return false;
@@ -210,11 +207,6 @@ namespace Neo.FileStorage.Services.Object.Acl
         private bool IsValidLifetime(TokenLifetime lifetime, ulong epoch)
         {
             return epoch >= lifetime.Nbf && epoch <= lifetime.Exp;
-        }
-
-        private FSContainer GetContainer(ContainerID cid)
-        {
-            return MorphContractInvoker.InvokeGetContainer(Morph, cid);
         }
     }
 }

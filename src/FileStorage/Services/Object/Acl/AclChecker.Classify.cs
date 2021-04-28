@@ -71,10 +71,10 @@ namespace Neo.FileStorage.Services.Object.Acl
         {
             try
             {
-                var nm = GetLatestNetworkMap();
+                var nm = MorphClient.InvokeSnapshot(0);
                 var is_in = LookUpKeyInContainer(nm, key, cid, container);
                 if (is_in) return true;
-                nm = GetPreviousNetworkMap();
+                nm = MorphClient.InvokeSnapshot(1);
                 return LookUpKeyInContainer(nm, key, cid, container);
             }
             catch
@@ -95,17 +95,7 @@ namespace Neo.FileStorage.Services.Object.Acl
 
         private List<byte[]> InnerRingKeys()
         {
-            return Morph.NeoFSAlphabetList().Select(p => p.EncodePoint(true)).ToList();
-        }
-
-        private NetMap GetLatestNetworkMap()
-        {
-            return MorphContractInvoker.InvokeSnapshot(Morph, 0);
-        }
-
-        private NetMap GetPreviousNetworkMap()
-        {
-            return MorphContractInvoker.InvokeSnapshot(Morph, 1);
+            return MorphClient.NeoFSAlphabetList().Select(p => p.EncodePoint(true)).ToList();
         }
     }
 }

@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Neo.FileStorage.Cache
 {
-    public class TTLCache<K, V> where K : IEquatable<K>
+    public class TTLNetworkCache<K, V> where K : IEquatable<K>
     {
         private class ValueWithTime
         {
@@ -15,7 +15,7 @@ namespace Neo.FileStorage.Cache
         private readonly Func<K, V> fetcher;
         private readonly LRUCache<K, ValueWithTime> cache;
 
-        public TTLCache(int capactiy, TimeSpan ttl, Func<K, V> fetcher)
+        public TTLNetworkCache(int capactiy, TimeSpan ttl, Func<K, V> fetcher)
         {
             cache = new(capactiy, null);
             this.ttl = ttl;
