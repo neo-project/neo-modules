@@ -1,3 +1,4 @@
+using Akka.Actor;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
@@ -6,6 +7,7 @@ using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.Core.Object;
 using Neo.FileStorage.LocalObjectStorage.Engine;
+using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Network.Cache;
 using Neo.FileStorage.Services.Accounting;
@@ -27,6 +29,8 @@ using Neo.FileStorage.Services.Replicate;
 using Neo.FileStorage.Services.Reputaion.Local.Client;
 using Neo.FileStorage.Services.Session;
 using Neo.FileStorage.Services.Session.Storage;
+using Neo.FileStorage.Storage;
+using Neo.FileStorage.Storage.Processors;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -49,18 +53,16 @@ namespace Neo.FileStorage
         public const int ContainerCacheTTLSeconds = 30;
         public const int EACLCacheSize = 100;
         public const int EACLCacheTTLSeconds = 30;
-        public const int NetmapCacheSize = 10;
-
-        public ProtocolSettings ProtocolSettings;
-        private readonly ECDsa key;
-        private readonly Client morphClient;
-        private readonly Wallet wallet;
-        private readonly NeoSystem system;
         public ulong CurrentEpoch;
         public API.Netmap.NodeInfo LocalNodeInfo;
         public NetmapStatus NetmapStatus = NetmapStatus.Online;
         public HealthStatus HealthStatus = HealthStatus.Ready;
-
+        private readonly ECDsa key;
+        private readonly Client morphClient;
+        private readonly Wallet wallet;
+        private readonly NeoSystem system;
+        private readonly IActorRef listener;
+        public ProtocolSettings ProtocolSettings => system.Settings;
         private Network.Address LocalAddress => Network.Address.AddressFromString(LocalNodeInfo.Address);
 
         public StorageService(NeoSystem side)
@@ -83,9 +85,21 @@ namespace Neo.FileStorage
             {
                 return morphClient.InvokeGetEACL(cid)?.Table;
             });
-            var netmapCache = new TTLNetworkCache<ulong, NetMap>(NetmapCacheSize, TimeSpan.FromSeconds(ContainerCacheTTLSeconds), epoch =>
+            var reputationController = new Services.Reputaion.Local.Control.Controller
             {
-                return morphClient.InvokeEpochSnapshot(epoch);
+                NetmapCache = new NetmapCache(this, morphClient),
+                ReputationStorage = new(),
+                LocalKey = key.PublicKey(),
+            };
+            listener = system.ActorSystem.ActorOf(Listener.Props("storage"));
+            var netmapProcessor = new NetmapProcessor();
+            netmapProcessor.AddEpochParser(MorphEvent.NewEpochEvent.ParseNewEpochEvent);
+            netmapProcessor.AddEpochHandler(p =>
+            {
+                if (p is MorphEvent.NewEpochEvent e)
+                {
+                    reputationController.Report(e.EpochNumber - 1);
+                }
             });
             //Audit
             var loadAccumulator = new AnnouncementStorage();

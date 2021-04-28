@@ -22,11 +22,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Storage
 
         public TrustStorage DataForEpoch(ulong epoch)
         {
-            if (store.TryGetValue(epoch, out TrustStorage storage))
-            {
-                return storage;
-            }
-            throw new InvalidOperationException($"{nameof(ReputationStorage)} data for epoch not found");
+            return store[epoch];
         }
     }
 }
