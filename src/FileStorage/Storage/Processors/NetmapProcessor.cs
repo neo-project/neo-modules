@@ -15,17 +15,17 @@ namespace Neo.FileStorage.Storage.Processors
 
         ParserInfo[] IProcessor.ListenerParsers()
         {
-            throw new NotImplementedException();
+            return parsers.ToArray();
         }
 
         HandlerInfo[] IProcessor.ListenerHandlers()
         {
-            throw new NotImplementedException();
+            return handlers.ToArray();
         }
 
         HandlerInfo[] IProcessor.TimersHandlers()
         {
-            throw new NotImplementedException();
+            return Array.Empty<HandlerInfo>();
         }
 
         public void AddEpochParser(Func<VM.Types.Array, IContractEvent> parser)
