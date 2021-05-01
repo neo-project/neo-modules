@@ -23,8 +23,6 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using NJArray = Newtonsoft.Json.Linq.JArray;
-using NJObject = Newtonsoft.Json.Linq.JObject;
 
 namespace Neo.Plugins
 {
@@ -453,9 +451,9 @@ namespace Neo.Plugins
             if (string.IsNullOrEmpty(filterArgs))
                 return Utility.StrictUTF8.GetBytes(input);
 
-            NJObject beforeObject = NJObject.Parse(input);
-            NJArray afterObjects = new NJArray(beforeObject.SelectTokens(filterArgs));
-            return Utility.StrictUTF8.GetBytes(afterObjects.ToString(Newtonsoft.Json.Formatting.None));
+            JObject beforeObject = JObject.Parse(input);
+            JArray afterObjects = beforeObject.JsonPath(filterArgs);
+            return Utility.StrictUTF8.GetBytes(afterObjects.ToString());
         }
 
         private bool CheckTxSign(DataCache snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
