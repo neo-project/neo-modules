@@ -453,7 +453,7 @@ namespace Neo.Plugins
 
             JObject beforeObject = JObject.Parse(input);
             JArray afterObjects = beforeObject.JsonPath(filterArgs);
-            return Utility.StrictUTF8.GetBytes(afterObjects.ToString());
+            return afterObjects.ToByteArray(false);
         }
 
         private bool CheckTxSign(DataCache snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
