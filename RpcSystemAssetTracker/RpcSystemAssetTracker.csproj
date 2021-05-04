@@ -9,14 +9,17 @@
     <Description>A plugin for calling contracts and sending assets with raw transactions using UTxO and without indexing wallets. This is Cron's RpcSystemAssetTracker plugin, downgraded for usage with CRONIUM 2.9.4 package but extended with cron_send, cron_invoke_contract_as, cron_get_address and cron_tx_block JSON-RPC methods</Description>
     <Copyright>Cron Project feat. CRON FOUNDATION</Copyright>
     <Company>Cron Project feat CRON FOUNDATION</Company>
-    <PackageLicenseUrl>https://github.com/cronfoundation/neo-plugins/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/cronfoundation/neo-plugins</PackageProjectUrl>
-    <RepositoryType>https://avatars2.githubusercontent.com/u/47320988</RepositoryType>
-    <RepositoryUrl>https://github.com/cronfoundation/neo-plugins</RepositoryUrl>
-    <PackageReleaseNotes>Fixed a bug in cron_send, so the caller can transfer full precision amounts</PackageReleaseNotes>
+    <PackageLicenseUrl></PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/cronfoundation/cronium-plugins</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/cronfoundation/cronium-plugins.git</RepositoryUrl>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageVersion>2.12.3</PackageVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>CRON.Plugin.RpcSystemAssetTracker</PackageId>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="CRONIUM" Version="2.12.6-dev" />
+    <PackageReference Include="CRONIUM" Version="2.14.1-dev" />
   </ItemGroup>
   <ItemGroup>
     <None Update="RpcSystemAssetTracker\config.json">

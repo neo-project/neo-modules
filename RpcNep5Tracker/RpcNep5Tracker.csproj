@@ -4,6 +4,9 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Cron.Plugins</RootNamespace>
     <LangVersion>latest</LangVersion>
+    <PackageVersion>2.12.3</PackageVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>CRON.Plugin.RpcNep5Tracker</PackageId>
   </PropertyGroup>
   <ItemGroup>
     <None Update="RpcNep5Tracker\config.json">
@@ -12,6 +15,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CRONIUM" Version="2.12.6-dev" />
+    <PackageReference Include="CRONIUM" Version="2.14.1-dev" />
   </ItemGroup>
 </Project>
