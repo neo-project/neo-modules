@@ -102,26 +102,19 @@ namespace Cron.Plugins.SyncBlocks
             return items.OrderBy(x => x.Index).ToList();
         }
         
-        private static IEnumerable<Block> GetBlocks(string fileName, bool readStart = false)
+        private static IEnumerable<Block> GetBlocks(string fileName)
         {
             var result = new List<Block>();
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 using (var r = new BinaryReader(fs))
                 {
-                    var start = readStart ? r.ReadUInt32() : 0;
                     var count = r.ReadUInt32();
                 
                     if (count == 0)
                         return result;
-                
-                    var end = checked(start + count) - 1;
-                
-                    if (end <= Blockchain.Singleton.Height)
-                        return result;
-
-                    var i = 0;
-                    for (var height = start; height <= end; height++)
+                    
+                    for (var i = 0; i < count; i++)
                     {
                         byte[] array = null;
                         try
@@ -133,12 +126,8 @@ namespace Cron.Plugins.SyncBlocks
                             Console.WriteLine(e);
                         }
                         
-                        if (height <= Blockchain.Singleton.Height)
-                            continue;
-                    
                         var block = array.AsSerializable<Block>();
                         result.Add(block);
-                        i++;
                         if (i % 100000 == 0)
                             Console.WriteLine($"Read {i} blocks");
                     }
