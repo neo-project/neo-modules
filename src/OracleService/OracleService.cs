@@ -23,8 +23,6 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using NJArray = Newtonsoft.Json.Linq.JArray;
-using NJObject = Newtonsoft.Json.Linq.JObject;
 
 namespace Neo.Plugins
 {
@@ -327,7 +325,7 @@ namespace Neo.Plugins
             {
                 Version = 0,
                 Nonce = unchecked((uint)response.Id),
-                ValidUntilBlock = requestTx.BlockIndex + Transaction.MaxValidUntilBlockIncrement,
+                ValidUntilBlock = requestTx.BlockIndex + settings.MaxValidUntilBlockIncrement,
                 Signers = new[]
                 {
                     new Signer
@@ -453,9 +451,9 @@ namespace Neo.Plugins
             if (string.IsNullOrEmpty(filterArgs))
                 return Utility.StrictUTF8.GetBytes(input);
 
-            NJObject beforeObject = NJObject.Parse(input);
-            NJArray afterObjects = new NJArray(beforeObject.SelectTokens(filterArgs));
-            return Utility.StrictUTF8.GetBytes(afterObjects.ToString(Newtonsoft.Json.Formatting.None));
+            JObject beforeObject = JObject.Parse(input);
+            JArray afterObjects = beforeObject.JsonPath(filterArgs);
+            return afterObjects.ToByteArray(false);
         }
 
         private bool CheckTxSign(DataCache snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)

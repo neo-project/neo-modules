@@ -20,40 +20,40 @@ namespace Neo.Plugins.Tests
         public void TestFilter()
         {
             var json = @"{
-  'Stores': [
-    'Lambton Quay',
-    'Willis Street'
+  ""Stores"": [
+    ""Lambton Quay"",
+    ""Willis Street""
   ],
-  'Manufacturers': [
+  ""Manufacturers"": [
     {
-      'Name': 'Acme Co',
-      'Products': [
+      ""Name"": ""Acme Co"",
+      ""Products"": [
         {
-          'Name': 'Anvil',
-          'Price': 50
+          ""Name"": ""Anvil"",
+          ""Price"": 50
         }
       ]
     },
     {
-      'Name': 'Contoso',
-      'Products': [
+      ""Name"": ""Contoso"",
+      ""Products"": [
         {
-          'Name': 'Elbow Grease',
-          'Price': 99.95
+          ""Name"": ""Elbow Grease"",
+          ""Price"": 99.95
         },
         {
-          'Name': 'Headlight Fluid',
-          'Price': 4
+          ""Name"": ""Headlight Fluid"",
+          ""Price"": 4
         }
       ]
     }
   ]
 }";
 
-            Assert.AreEqual(@"[""Acme Co""]", Utility.StrictUTF8.GetString(OracleService.Filter(json, "Manufacturers[0].Name")));
-            Assert.AreEqual("[50]", Utility.StrictUTF8.GetString(OracleService.Filter(json, "Manufacturers[0].Products[0].Price")));
-            Assert.AreEqual(@"[""Elbow Grease""]", Utility.StrictUTF8.GetString(OracleService.Filter(json, "Manufacturers[1].Products[0].Name")));
-            Assert.AreEqual(@"[{""Name"":""Elbow Grease"",""Price"":99.95}]", Utility.StrictUTF8.GetString(OracleService.Filter(json, "Manufacturers[1].Products[0]")));
+            Assert.AreEqual(@"[""Acme Co""]", Utility.StrictUTF8.GetString(OracleService.Filter(json, "$.Manufacturers[0].Name")));
+            Assert.AreEqual("[50]", Utility.StrictUTF8.GetString(OracleService.Filter(json, "$.Manufacturers[0].Products[0].Price")));
+            Assert.AreEqual(@"[""Elbow Grease""]", Utility.StrictUTF8.GetString(OracleService.Filter(json, "$.Manufacturers[1].Products[0].Name")));
+            Assert.AreEqual(@"[{""Name"":""Elbow Grease"",""Price"":99.95}]", Utility.StrictUTF8.GetString(OracleService.Filter(json, "$.Manufacturers[1].Products[0]")));
         }
 
         [TestMethod]
