@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FSStorageGroup = Neo.FileStorage.API.StorageGroup.StorageGroup;
+using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Audit.Auditor
 {
@@ -32,8 +34,15 @@ namespace Neo.FileStorage.Services.Audit.Auditor
 
         private void CheckStorageGroupPoR(int index, ObjectID oid)
         {
-            var sg = ContainerCommunacator.GetStorageGroup(AuditTask, oid);
-            if (sg is null) return;
+            FSStorageGroup sg;
+            try
+            {
+                sg = ContainerCommunacator.GetStorageGroup(AuditTask, oid);
+            }
+            catch (Exception)
+            {
+                return;
+            }
             var members = sg.Members.ToList();
             UpdateSGInfo(index, members);
             int acc_req = 0, acc_retries = 0;
@@ -41,16 +50,30 @@ namespace Neo.FileStorage.Services.Audit.Auditor
             byte[] tzhash = null;
             foreach (var member in members)
             {
-                var placement = BuildPlacement(member);
-                if (placement is null) continue;
+                List<List<Node>> placement;
+                try
+                {
+                    placement = BuildPlacement(member);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
                 var random = new Random();
                 var flat = placement.Flatten().OrderBy(p => random.Next()).ToList();
                 for (int j = 0; j < flat.Count; j++)
                 {
                     acc_req++;
                     if (0 < j) acc_retries++;
-                    var header = ContainerCommunacator.GetHeader(AuditTask, flat[j], oid, true);
-                    if (header is null) continue;
+                    FSObject header;
+                    try
+                    {
+                        header = ContainerCommunacator.GetHeader(AuditTask, flat[j], oid, true);
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
                     UpdateHeader(header);
                     if (tzhash is null)
                         tzhash = header.Header.HomomorphicHash.Sum.ToByteArray();

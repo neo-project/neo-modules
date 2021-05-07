@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Audit.Auditor
 {
@@ -13,7 +14,7 @@ namespace Neo.FileStorage.Services.Audit.Auditor
         private readonly ConcurrentDictionary<int, List<ObjectID>> sgMembersCache = default;
         private readonly ConcurrentDictionary<string, List<List<Node>>> placementCache = default;
         private uint hit, miss, fail;
-        private int containerNodesNumber;
+        private int ContainerNodesNumber => AuditTask.ContainerNodes.Flatten().Count;
 
         private void ExecutePoP()
         {
@@ -30,11 +31,10 @@ namespace Neo.FileStorage.Services.Audit.Auditor
                 Random rand = default;
                 foreach (var oid in members.OrderBy(p => rand.Next()))
                 {
-                    var table = BuildPlacement(oid);
-                    if (table is null) continue;
-                    for (int i = 0; i < table.Count && i < replicas.Count; i++)
+                    var nn = BuildPlacement(oid);
+                    for (int i = 0; i < nn.Count && i < replicas.Count; i++)
                     {
-                        ProcessObjectPlacement(oid, table[i], replicas[i].Count);
+                        ProcessObjectPlacement(oid, replicas[i].Count, nn[i]);
                         if (ContainerCovered()) return;
                     }
                 }
@@ -43,17 +43,24 @@ namespace Neo.FileStorage.Services.Audit.Auditor
 
         private bool ContainerCovered()
         {
-            return containerNodesNumber <= pairedNodes.Count;
+            return ContainerNodesNumber <= pairedNodes.Count;
         }
 
-        private void ProcessObjectPlacement(ObjectID oid, List<Node> nodes, uint replicas)
+        private void ProcessObjectPlacement(ObjectID oid, uint replicas, List<Node> nodes)
         {
             uint ok = 0;
             int unpaired_candidate1 = -1, unpaired_candidate2 = -1, paired_candidate = -1;
             for (int i = 0; i < nodes.Count && ok < replicas; i++)
             {
-                var header = ContainerCommunacator.GetHeader(AuditTask, nodes[i], oid, false);
-                if (header is null) continue;
+                FSObject header;
+                try
+                {
+                    header = ContainerCommunacator.GetHeader(AuditTask, nodes[i], oid, false);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
                 UpdateHeader(header);
                 ok++;
                 bool optimal = ok == replicas && i < replicas;
@@ -114,7 +121,6 @@ namespace Neo.FileStorage.Services.Audit.Auditor
                 return table;
             }
             var nn = NetworkMapBuilder.BuildObjectPlacement(AuditTask.Netmap, AuditTask.ContainerNodes, oid);
-            if (nn is null) return null;
             placementCache[oid.ToBase58String()] = nn;
             return nn;
         }

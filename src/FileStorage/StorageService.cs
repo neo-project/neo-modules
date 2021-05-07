@@ -35,6 +35,7 @@ using Neo.FileStorage.Storage.Processors;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.VM;
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
@@ -365,11 +366,25 @@ namespace Neo.FileStorage
                 },
                 ReplicatorRef = replicatorRef
             }));
+            listener.Tell(new Listener.Start());
         }
 
         public void OnPersisted(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
-
+            foreach (var appExec in applicationExecutedList)
+            {
+                Transaction tx = appExec.Transaction;
+                VMState state = appExec.VMState;
+                if (tx is null || state != VMState.HALT) continue;
+                var notifys = appExec.Notifications;
+                if (notifys is null) continue;
+                foreach (var notify in notifys)
+                {
+                    var contract = notify.ScriptHash;
+                    if (Settings.Default.Contracts.Contains(contract))
+                        listener.Tell(new Listener.NewContractEvent() { notify = notify });
+                }
+            }
         }
 
         public void Dispose()

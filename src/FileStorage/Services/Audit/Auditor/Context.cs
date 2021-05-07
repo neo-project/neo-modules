@@ -58,7 +58,7 @@ namespace Neo.FileStorage.Services.Audit.Auditor
             HeaderCache[header.ObjectId.ToBase58String()] = new ShortHeader
             {
                 TzHash = header.Header.HomomorphicHash.Sum.ToByteArray(),
-                ObjectSize = header.Header.PayloadLength,
+                ObjectSize = header.PayloadSize,
             };
         }
     }
