@@ -13,21 +13,7 @@ namespace Neo.FileStorage.InnerRing.Processors
     public class AlphabetContractProcessor : BaseProcessor
     {
         public override string Name => "AlphabetContractProcessor";
-        public ulong StorageEmission;
-
-        /*        public override HandlerInfo[] TimersHandlers()
-                {
-                    ScriptHashWithType scriptHashWithType = new ScriptHashWithType()
-                    {
-                        Type = Timers.AlphabetTimer,
-                    };
-                    HandlerInfo handler = new HandlerInfo()
-                    {
-                        ScriptHashWithType = scriptHashWithType,
-                        Handler = HandleGasEmission
-                    };
-                    return new HandlerInfo[] { handler };
-                }*/
+        public ulong StorageEmission => Settings.Default.StorageEmission;
 
         public void HandleGasEmission(IContractEvent morphEvent)
         {

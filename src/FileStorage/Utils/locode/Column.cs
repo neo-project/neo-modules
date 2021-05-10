@@ -71,6 +71,11 @@ namespace Neo.FileStorage.Utils.locode
                 if (!Regex.IsMatch(s, pattern)) throw new Exception("invalid string format in UN/Locode");
                 return new CountryCode(s.ToCharArray());
             }
+
+            public override string ToString()
+            {
+                return string.Join("", Symbols());
+            }
         }
         public class CordinateCode
         {

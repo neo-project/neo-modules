@@ -1,11 +1,16 @@
 using Akka.Actor;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
+using System.Numerics;
 
 namespace Neo.FileStorage.InnerRing.Processors
 {
     public class BaseProcessor : IProcessor
     {
+        public static BigInteger bigGB = new BigInteger(1 << 30);
+        public static BigInteger bigZero = new BigInteger(0);
+        public static BigInteger bigOne = new BigInteger(1);
+
         public virtual string Name => "BaseProcessor";
         public UInt160 ContainerContractHash => Settings.Default.ContainerContractHash;
         public UInt160 FsContractHash => Settings.Default.FsContractHash;

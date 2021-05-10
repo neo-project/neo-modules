@@ -32,6 +32,7 @@ namespace Neo.FileStorage.InnerRing
     /// </summary>
     public class InnerRingService : UntypedActor, IState
     {
+        private string Name = "InnerRingService";
         //event 
         public class ContractEvent { public NotifyEventArgs notify; public bool flag; };
         public class BlockEvent { public Block block; public bool flag; };
@@ -64,15 +65,6 @@ namespace Neo.FileStorage.InnerRing
         private RpcClientCache clientCache;
         private DB _db;
 
-        /// <summary>
-        /// Constructor.
-        /// 4 Tasks:
-        /// 1)Build mainnet and morph clients
-        /// 2)Build mainnet and morph contract event handlers
-        /// 3)Build mainnet and morph event listeners
-        /// 4)Initialization
-        /// </summary>
-        /// <param name="system">NeoSystem</param>
         public InnerRingService(NeoSystem main, NeoSystem side, NEP6Wallet pwallet = null, Client pMainNetClient = null, Client pMorphClient = null)
         {
             precision = new Fixed8ConverterUtil();
@@ -190,7 +182,6 @@ namespace Neo.FileStorage.InnerRing
             alphabetContractProcessor = new AlphabetContractProcessor()
             {
                 MorphCli = morphClient,
-                StorageEmission = Settings.Default.StorageEmission,
                 WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("AlphabetContract Processor", Settings.Default.AlphabetContractWorkersSize))
             };
             // todo: create vivid id component
@@ -271,7 +262,7 @@ namespace Neo.FileStorage.InnerRing
                     OnStop();
                     break;
                 case BlockEvent blockEvent:
-                    OnStop();
+                    OnBlockEvent(blockEvent.block, blockEvent.flag);
                     break;
                 case ContractEvent contractEvent:
                     OnContractEvent(contractEvent.notify, contractEvent.flag);
@@ -377,14 +368,16 @@ namespace Neo.FileStorage.InnerRing
 
         public void VoteForSidechainValidator(ECPoint[] validators)
         {
-            if (InnerRingIndex() < 0 || InnerRingIndex() >= Settings.Default.AlphabetContractHash.Length)
+            Array.Sort(validators);
+            var index = InnerRingIndex();
+            if (index < 0 || index >= Settings.Default.AlphabetContractHash.Length)
             {
-                Utility.Log("", LogLevel.Info, "ignore validator vote: node not in alphabet range");
+                Utility.Log(Name, LogLevel.Info, "ignore validator vote: node not in alphabet range");
                 return;
             }
             if (validators.Length == 0)
             {
-                Utility.Log("", LogLevel.Info, "ignore validator vote: empty validators list");
+                Utility.Log(Name, LogLevel.Info, "ignore validator vote: empty validators list");
                 return;
             }
             var epoch = EpochCounter();
@@ -396,7 +389,7 @@ namespace Neo.FileStorage.InnerRing
                 }
                 catch
                 {
-                    Utility.Log("", LogLevel.Info, string.Format("can't invoke vote method in alphabet contract,alphabet_index:{0},epoch:{1}}", i, epoch));
+                    Utility.Log(Name, LogLevel.Info, string.Format("can't invoke vote method in alphabet contract,alphabet_index:{0},epoch:{1}}", i, epoch));
                 }
             }
         }

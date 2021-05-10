@@ -34,7 +34,6 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                 MorphCli = new Client() { client = morphclient },
                 //Indexer = indexer,
                 WorkPool = system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor())),
-                StorageEmission = 2
             };
         }
 

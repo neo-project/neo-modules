@@ -19,9 +19,6 @@ namespace Neo.FileStorage.InnerRing.Processors
     public class SettlementProcessor : BaseProcessor
     {
         public override string Name => "SettlementProcessor";
-        public static BigInteger bigGB = new BigInteger(1 << 30);
-        public static BigInteger bigZero = new BigInteger(0);
-        public static BigInteger bigOne = new BigInteger(1);
         private Dictionary<ulong, IncomeSettlementContext> incomeContexts = new();
         public BasicIncomeSettlementDeps basicIncome;
         public Calculator auditProc;
@@ -96,9 +93,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
             public OwnerID BankOwnerID()
             {
-                UInt160 u = new UInt160(new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
-                OwnerID o = OwnerID.FromBase58String(u.ToString());
-                return o;
+                return OwnerID.FromBase58String(new UInt160(new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }).ToString());
             }
 
             public void Collect()
