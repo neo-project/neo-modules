@@ -76,7 +76,7 @@ namespace Neo.FileStorage.Morph.Invoker
             {
                 Version = 0,
                 Nonce = (uint)rand.Next(),
-                Script = result.Script, 
+                Script = result.Script,
                 ValidUntilBlock = height + system.Settings.MaxValidUntilBlockIncrement,
                 Signers = new Signer[] { new Signer() { Account = wallet.GetAccounts().ToArray()[0].ScriptHash, Scopes = WitnessScope.Global } },
                 Attributes = System.Array.Empty<TransactionAttribute>(),
