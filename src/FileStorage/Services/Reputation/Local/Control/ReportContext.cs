@@ -46,7 +46,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Control
                 }
                 var ln = nm.Nodes.Count;
                 if (0 <= localIndex && 0 < ln) ln--;
-                double p = 1.0/ln;
+                double p = 1.0 / ln;
                 for (int i = 0; i < nm.Nodes.Count; i++)
                 {
                     if (i == localIndex) continue;
