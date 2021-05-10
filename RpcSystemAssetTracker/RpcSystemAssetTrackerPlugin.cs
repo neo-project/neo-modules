@@ -143,9 +143,14 @@ namespace Cron.Plugins
             {
                 var tx = Transaction.DeserializeFrom(parameters[0].AsString().HexToBytes());
                 RelayResultReason reason = System.Blockchain.Ask<RelayResultReason>(tx).Result;
-                var result = new JObject();
-                result["transaction"] = tx.ToJson();
-                return result;
+                if (reason == RelayResultReason.Succeed)
+                {
+                    var result = new JObject();
+                    result["transaction"] = tx.ToJson();
+                    return result;
+                }
+
+                return GetRelayResult(reason);
             }
 
             return null;
