@@ -364,6 +364,7 @@
         "manifest": {
           "name": "GasToken",
           "groups": [],
+          "features": {},
           "supportedstandards": [
             "NEP-17"
           ],
@@ -484,6 +485,7 @@
         "manifest": {
           "name": "GasToken",
           "groups": [],
+          "features": {},
           "supportedstandards": [
             "NEP-17"
           ],
@@ -604,6 +606,7 @@
         "manifest": {
           "name": "NeoToken",
           "groups": [],
+          "features": {},
           "supportedstandards": [
             "NEP-17"
           ],
@@ -820,6 +823,7 @@
         "manifest": {
           "name": "NeoToken",
           "groups": [],
+          "features": {},
           "supportedstandards": [
             "NEP-17"
           ],
@@ -1036,6 +1040,7 @@
           "manifest": {
             "name": "ContractManagement",
             "groups": [],
+            "features": {},
             "supportedstandards": [],
             "abi": {
               "methods": [
@@ -1204,6 +1209,7 @@
           "manifest": {
             "name": "LedgerContract",
             "groups": [],
+            "features": {},
             "supportedstandards": [],
             "abi": {
               "methods": [
@@ -1300,6 +1306,7 @@
           "manifest": {
             "name": "NeoToken",
             "groups": [],
+            "features": {},
             "supportedstandards": [
               "NEP-17"
             ],
@@ -1503,6 +1510,7 @@
           "manifest": {
             "name": "GasToken",
             "groups": [],
+            "features": {},
             "supportedstandards": [
               "NEP-17"
             ],
@@ -1610,6 +1618,7 @@
           "manifest": {
             "name": "PolicyContract",
             "groups": [],
+            "features": {},
             "supportedstandards": [],
             "abi": {
               "methods": [
@@ -1790,6 +1799,7 @@
           "manifest": {
             "name": "RoleManagement",
             "groups": [],
+            "features": {},
             "supportedstandards": [],
             "abi": {
               "methods": [
@@ -1852,6 +1862,7 @@
           "manifest": {
             "name": "OracleContract",
             "groups": [],
+            "features": {},
             "supportedstandards": [],
             "abi": {
               "methods": [
@@ -1959,6 +1970,7 @@
           "manifest": {
             "name": "NameService",
             "groups": [],
+            "features": {},
             "supportedstandards": [],
             "abi": {
               "methods": [

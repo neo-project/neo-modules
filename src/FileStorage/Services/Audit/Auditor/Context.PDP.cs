@@ -1,13 +1,13 @@
 using Neo.FileStorage.API.Cryptography.Tz;
 using Neo.FileStorage.API.Netmap;
-using V2Range = Neo.FileStorage.API.Object.Range;
 using Neo.FileStorage.API.Refs;
-using static Neo.FileStorage.Services.Audit.Auditor.Util;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using static Neo.FileStorage.Services.Audit.Auditor.Util;
+using FSRange = Neo.FileStorage.API.Object.Range;
 
 namespace Neo.FileStorage.Services.Audit.Auditor
 {
@@ -55,12 +55,12 @@ namespace Neo.FileStorage.Services.Audit.Auditor
 
         private void DistributeRanges(GamePair pair)
         {
-            pair.Range1 = new List<V2Range>(hashRangeNumber - 1);
-            pair.Range2 = new List<V2Range>(hashRangeNumber - 1);
+            pair.Range1 = new List<FSRange>(hashRangeNumber - 1);
+            pair.Range2 = new List<FSRange>(hashRangeNumber - 1);
             for (int i = 0; i < hashRangeNumber - 1; i++)
             {
-                pair.Range1[i] = new V2Range();
-                pair.Range2[i] = new V2Range();
+                pair.Range1[i] = new FSRange();
+                pair.Range2[i] = new FSRange();
             }
             var notches = SplitPayload(pair.Id);
 
@@ -83,14 +83,14 @@ namespace Neo.FileStorage.Services.Audit.Auditor
             foreach (var range in pair.Range1)
             {
                 Thread.Sleep((int)RandomUInt64(MaxPDPInterval));
-                var hash = GetRangeHash(pair.Id, pair.N1, range);
+                var hash = ContainerCommunacator.GetRangeHash(AuditTask, pair.N1, pair.Id, range);
                 if (hash != null) pair.Hashes1.Add(hash);
             }
             pair.Hashes2 = new List<byte[]>(pair.Range2.Count);
             foreach (var range in pair.Range2)
             {
                 Thread.Sleep((int)RandomUInt64(MaxPDPInterval));
-                var hash = GetRangeHash(pair.Id, pair.N2, range);
+                var hash = ContainerCommunacator.GetRangeHash(AuditTask, pair.N2, pair.Id, range);
                 if (hash != null) pair.Hashes2.Add(hash);
             }
         }
@@ -127,7 +127,7 @@ namespace Neo.FileStorage.Services.Audit.Auditor
         private List<ulong> SplitPayload(ObjectID oid)
         {
             ulong prev = 0, size = ObjectSize(oid);
-            var notches = new List<ulong>();
+            List<ulong> notches = new();
             for (int i = 0; i < hashRangeNumber; i++)
             {
                 ulong next_len;
@@ -139,20 +139,6 @@ namespace Neo.FileStorage.Services.Audit.Auditor
                 prev += next_len;
             }
             return notches;
-        }
-
-        private byte[] GetRangeHash(ObjectID oid, Node node, V2Range range)
-        {
-            //Sleep? why
-            try
-            {
-                var hash = ContainerCommunacator.GetRangeHash(AuditTask, node, oid, range);
-                return hash;
-            }
-            catch
-            {
-                return null;
-            }
         }
 
         private void FailNodes(params Node[] nodes)

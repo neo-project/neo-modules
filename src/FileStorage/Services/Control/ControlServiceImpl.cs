@@ -14,11 +14,11 @@ namespace Neo.FileStorage.Services.Control
 {
     public class ControlServiceImpl : ControlService.ControlServiceBase
     {
-        private readonly HashSet<byte[]> allowKeys = new();
         public ECDsa Key { get; init; }
         public StorageEngine LocalStorage { get; init; }
         public Client MorphClient { get; init; }
         public StorageService StorageNode { get; init; }
+        private readonly HashSet<byte[]> allowKeys = new();
 
         public override Task<DropObjectsResponse> DropObjects(DropObjectsRequest request, ServerCallContext context)
         {

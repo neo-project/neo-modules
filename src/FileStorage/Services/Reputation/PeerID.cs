@@ -27,7 +27,7 @@ namespace Neo.FileStorage.Services.Reputaion
 
         public override string ToString()
         {
-            return StrictUTF8.GetString(value);
+            return Convert.ToBase64String(value);
         }
     }
 }

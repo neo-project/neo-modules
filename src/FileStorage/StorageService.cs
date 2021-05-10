@@ -1,3 +1,4 @@
+using Akka.Actor;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
@@ -6,6 +7,7 @@ using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.Core.Object;
 using Neo.FileStorage.LocalObjectStorage.Engine;
+using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Network.Cache;
 using Neo.FileStorage.Services.Accounting;
@@ -14,6 +16,7 @@ using Neo.FileStorage.Services.Container.Announcement;
 using Neo.FileStorage.Services.Container.Announcement.Control;
 using Neo.FileStorage.Services.Container.Announcement.Route;
 using Neo.FileStorage.Services.Container.Announcement.Storage;
+using Neo.FileStorage.Services.Control;
 using Neo.FileStorage.Services.Control.Service;
 using Neo.FileStorage.Services.Netmap;
 using Neo.FileStorage.Services.Object.Acl;
@@ -27,13 +30,17 @@ using Neo.FileStorage.Services.Replicate;
 using Neo.FileStorage.Services.Reputaion.Local.Client;
 using Neo.FileStorage.Services.Session;
 using Neo.FileStorage.Services.Session.Storage;
+using Neo.FileStorage.Storage;
+using Neo.FileStorage.Storage.Processors;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.VM;
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
+using System.Threading;
 using APIAccountingService = Neo.FileStorage.API.Accounting.AccountingService;
 using APIContainerService = Neo.FileStorage.API.Container.ContainerService;
 using APINetmapService = Neo.FileStorage.API.Netmap.NetmapService;
@@ -49,18 +56,16 @@ namespace Neo.FileStorage
         public const int ContainerCacheTTLSeconds = 30;
         public const int EACLCacheSize = 100;
         public const int EACLCacheTTLSeconds = 30;
-        public const int NetmapCacheSize = 10;
-
-        public ProtocolSettings ProtocolSettings;
-        private readonly ECDsa key;
-        private readonly Client morphClient;
-        private readonly Wallet wallet;
-        private readonly NeoSystem system;
         public ulong CurrentEpoch;
         public API.Netmap.NodeInfo LocalNodeInfo;
         public NetmapStatus NetmapStatus = NetmapStatus.Online;
         public HealthStatus HealthStatus = HealthStatus.Ready;
-
+        private readonly ECDsa key;
+        private readonly Client morphClient;
+        private readonly Wallet wallet;
+        private readonly NeoSystem system;
+        private readonly IActorRef listener;
+        public ProtocolSettings ProtocolSettings => system.Settings;
         private Network.Address LocalAddress => Network.Address.AddressFromString(LocalNodeInfo.Address);
 
         public StorageService(NeoSystem side)
@@ -75,20 +80,39 @@ namespace Neo.FileStorage
                     system = system,
                 }
             };
-            var containerCache = new TTLNetworkCache<ContainerID, FSContainer>(ContainerCacheSize, TimeSpan.FromSeconds(ContainerCacheTTLSeconds), cid =>
+            TTLNetworkCache<ContainerID, FSContainer> containerCache = new(ContainerCacheSize, TimeSpan.FromSeconds(ContainerCacheTTLSeconds), cid =>
             {
                 return morphClient.InvokeGetContainer(cid);
             });
-            var eaclCache = new TTLNetworkCache<ContainerID, EACLTable>(EACLCacheSize, TimeSpan.FromSeconds(EACLCacheTTLSeconds), cid =>
+            TTLNetworkCache<ContainerID, EACLTable> eaclCache = new(EACLCacheSize, TimeSpan.FromSeconds(EACLCacheTTLSeconds), cid =>
             {
                 return morphClient.InvokeGetEACL(cid)?.Table;
             });
-            var netmapCache = new TTLNetworkCache<ulong, NetMap>(NetmapCacheSize, TimeSpan.FromSeconds(ContainerCacheTTLSeconds), epoch =>
+            Services.Reputaion.Local.Control.Controller reputationController = new()
             {
-                return morphClient.InvokeEpochSnapshot(epoch);
+                NetmapCache = new NetmapCache(this, morphClient),
+                ReputationStorage = new(),
+                LocalKey = key.PublicKey(),
+            };
+            listener = system.ActorSystem.ActorOf(Listener.Props("storage"));
+            NetmapProcessor netmapProcessor = new();
+            netmapProcessor.AddEpochParser(MorphEvent.NewEpochEvent.ParseNewEpochEvent);
+            netmapProcessor.AddEpochHandler(p =>
+            {
+                if (p is MorphEvent.NewEpochEvent e)
+                {
+                    reputationController.Report(e.EpochNumber - 1);
+                }
             });
-            //Audit
-            var loadAccumulator = new AnnouncementStorage();
+            netmapProcessor.AddEpochHandler(p =>
+            {
+                if (p is MorphEvent.NewEpochEvent e)
+                {
+                    Interlocked.Exchange(ref CurrentEpoch, e.EpochNumber);
+                }
+            });
+            listener.Tell(new Listener.BindProcessorEvent { processor = netmapProcessor });
+            AnnouncementStorage loadAccumulator = new();
             Controller controller = new()
             {
                 LocalMetrics = new SimpleProvider(new LocalStorageLoad
@@ -120,6 +144,34 @@ namespace Neo.FileStorage
                     MorphClient = morphClient,
                 })
             };
+            var containerProcessor = new ContainerProcessor();
+            containerProcessor.AddStartEstimateContainerParser(MorphEvent.StartEstimationEvent.ParseStartEstimationEvent);
+            containerProcessor.AddStartEstimateHandler(p =>
+            {
+                if (p is MorphEvent.StartEstimationEvent e)
+                {
+                    controller.Start(e.Epoch);
+                }
+            });
+            containerProcessor.AddStopEstimateContainerParser(MorphEvent.StopEstimationEvent.ParseStopEstimationEvent);
+            containerProcessor.AddStopEstimateHandler(p =>
+            {
+                if (p is MorphEvent.StopEstimationEvent e)
+                {
+                    controller.Stop(e.Epoch);
+                }
+            });
+            listener.Tell(new Listener.BindProcessorEvent { processor = containerProcessor });
+
+            //Audit
+
+            ControlService.BindService(new ControlServiceImpl
+            {
+                Key = key,
+                LocalStorage = localStorage,
+                MorphClient = morphClient,
+                StorageNode = this,
+            });
 
             APIAccountingService.BindService(new AccountingServiceImpl
             {
@@ -314,11 +366,25 @@ namespace Neo.FileStorage
                 },
                 ReplicatorRef = replicatorRef
             }));
+            listener.Tell(new Listener.Start());
         }
 
-        public void OnSidePersisted(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        public void OnPersisted(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
-
+            foreach (var appExec in applicationExecutedList)
+            {
+                Transaction tx = appExec.Transaction;
+                VMState state = appExec.VMState;
+                if (tx is null || state != VMState.HALT) continue;
+                var notifys = appExec.Notifications;
+                if (notifys is null) continue;
+                foreach (var notify in notifys)
+                {
+                    var contract = notify.ScriptHash;
+                    if (Settings.Default.Contracts.Contains(contract))
+                        listener.Tell(new Listener.NewContractEvent() { notify = notify });
+                }
+            }
         }
 
         public void Dispose()

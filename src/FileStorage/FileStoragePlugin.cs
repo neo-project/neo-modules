@@ -49,7 +49,7 @@ namespace Neo.FileStorage
             else if (system.Settings.Network == Settings.Default.SideNetwork)
             {
                 InnerRingService.OnPersisted(block, snapshot, applicationExecutedList, false);
-                StorageService.OnSidePersisted(block, snapshot, applicationExecutedList);
+                StorageService.OnPersisted(block, snapshot, applicationExecutedList);
             }
         }
 
