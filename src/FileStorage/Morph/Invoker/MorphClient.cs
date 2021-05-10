@@ -68,7 +68,6 @@ namespace Neo.FileStorage.Morph.Invoker
             var str = "";
             args.ToList().ForEach(p => str += p.ToString());
             InvokeResult result = TestInvoke(contractHash, method, args);
-            Console.WriteLine("构建" + contractHash.ToArray().ToHexString() + "," + method + "," + str + "," + result.State);
             if (result.State != VMState.HALT) return false;
             SnapshotCache snapshot = system.GetSnapshot();
             uint height = NativeContract.Ledger.CurrentIndex(snapshot);
@@ -77,8 +76,8 @@ namespace Neo.FileStorage.Morph.Invoker
             {
                 Version = 0,
                 Nonce = (uint)rand.Next(),
-                Script = result.Script,
-                ValidUntilBlock = height + Transaction.MaxValidUntilBlockIncrement,
+                Script = result.Script, 
+                ValidUntilBlock = height + system.Settings.MaxValidUntilBlockIncrement,
                 Signers = new Signer[] { new Signer() { Account = wallet.GetAccounts().ToArray()[0].ScriptHash, Scopes = WitnessScope.Global } },
                 Attributes = System.Array.Empty<TransactionAttribute>(),
             };
@@ -90,7 +89,6 @@ namespace Neo.FileStorage.Morph.Invoker
             tx.Witnesses = data.GetWitnesses();
             txId = tx.Hash;
             system.Blockchain.Tell(tx);
-            Console.WriteLine("发送:" + tx.Hash.ToString());
             return true;
         }
 
