@@ -13,14 +13,14 @@ namespace Neo.FileStorage.Morph.Invoker
         private const string ReputationGetByIDMethod = "getByID";
         private const string ReputationListByEpochMethod = "listByEpoch";
 
-        public static bool InvokeReputationPut(this Client client, long epoch, byte[] peerID, byte[] value)
+        public static bool InvokeReputationPut(this Client client, ulong epoch, byte[] peerID, byte[] value)
         {
-            return client.Invoke(out _, ReputationContractHash, ReputationPutMethod, epoch, peerID, value);
+            return client.Invoke(out _, ReputationContractHash, ReputationPutMethod, 0, epoch, peerID, value);
         }
 
-        public static List<GlobalTrust> InvokeReputationGet(this Client client, long epoch, byte[] peerID)
+        public static List<GlobalTrust> InvokeReputationGet(this Client client, ulong epoch, byte[] peerID)
         {
-            InvokeResult result = client.TestInvoke(ReputationContractHash, ReputationGetMethod, epoch, peerID);
+            InvokeResult result = client.TestInvoke(ReputationContractHash, ReputationGetMethod, 0, epoch, peerID);
             if (result.State != VM.VMState.HALT) throw new Exception($"could not perform test invocation ({ReputationGetMethod})");
             if (result.ResultStack.Length != 1) throw new Exception();
             VM.Types.Array items = (VM.Types.Array)result.ResultStack[0];

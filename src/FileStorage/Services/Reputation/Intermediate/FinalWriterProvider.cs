@@ -8,7 +8,7 @@ namespace Neo.FileStorage.Services.Reputaion.Intermediate
     {
         public ECDsa PrivateKey { get; init; }
         public byte[] PublicKey { get; init; }
-        public MorphClient MorphClient { get; init; }
+        public Client MorphClient { get; init; }
 
         public FinalWriter InitIntermediateWriter()
         {

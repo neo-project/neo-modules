@@ -21,17 +21,11 @@ namespace Neo.FileStorage.Services.Reputaion.EigenTrust.Calculate
         private double alpha;
         private double beta;
 
-        public void Calculate(ulong epoch, uint index, bool last)
+        public void Calculate(IterationContext context)
         {
             alpha = MorphClient.EigenTrustAlpha();
             beta = 1 - alpha;
-            IterationContext context = new()
-            {
-                Cancellation = new CancellationTokenSource().Token,
-                Epoch = epoch,
-                Index = index,
-            };
-            if (index == 0)
+            if (context.Index == 0)
             {
                 SendInitValues(context);
                 return;
@@ -46,7 +40,7 @@ namespace Neo.FileStorage.Services.Reputaion.EigenTrust.Calculate
                     Process = "Reputation",
                     Task = Task.Run(() =>
                     {
-                        IterateDaughter(context, p, trusts, last);
+                        IterateDaughter(context, p, trusts, context.Last);
                     }),
                 });
             });

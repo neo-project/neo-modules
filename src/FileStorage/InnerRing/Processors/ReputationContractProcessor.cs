@@ -72,7 +72,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                MorphCli.InvokeReputationPut((long)reputationPutEvent.Epoch, reputationPutEvent.PeerID, reputationPutEvent.Trust.ToByteArray());
+                MorphCli.InvokeReputationPut(reputationPutEvent.Epoch, reputationPutEvent.PeerID, reputationPutEvent.Trust.ToByteArray());
             }
             catch (Exception e)
             {
