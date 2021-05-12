@@ -1,5 +1,5 @@
-hasstorage: true
-ispayable: false
+name: "NeoFS Netmap"
+safemethods: ["innerRingList", "epoch", "netmap", "snapshot", "snapshotByEpoch", "config", "listConfig", "version"]
 events:
   - name: AddPeer
     parameters:

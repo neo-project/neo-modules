@@ -1,5 +1,5 @@
-hasstorage: true
-ispayable: false
+name: "NeoFS Container"
+safemethods: ["get", "owner", "list", "eacl", "getContainerSize", "listContainerSizes", "version"]
 events:
   - name: containerPut
     parameters:
@@ -15,3 +15,11 @@ events:
         type: ByteArray
       - name: signature
         type: ByteArray
+  - name: StartEstimation
+    parameters:
+      - name: epoch
+        type: Integer
+  - name: StopEstimation
+    parameters:
+      - name: epoch
+        type: Integer

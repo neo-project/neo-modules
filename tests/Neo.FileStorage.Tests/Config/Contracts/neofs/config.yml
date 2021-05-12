@@ -1,5 +1,5 @@
-hasstorage: true
-ispayable: false
+name: "NeoFS"
+safemethods: ["alphabetList", "alphabetAddress", "innerRingCandidates", "config", "listConfig", "version"]
 events:
   - name: Deposit
     parameters:
@@ -41,11 +41,11 @@ events:
         type: ByteArray
       - name: keys
         type: Array
-  - name: InnerRingUpdate
+  - name: AlphabetUpdate
     parameters:
       - name: id
         type: ByteArray
-      - name: innerRingList
+      - name: alphabet
         type: Array
   - name: SetConfig
     parameters:

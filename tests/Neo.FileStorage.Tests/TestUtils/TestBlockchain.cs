@@ -61,6 +61,12 @@ namespace Neo.FileStorage.Tests
             //Fake deploy contract
             string DeployContractsCasesPath = "./Config/Contracts/DeployContractCases.json";
             IEnumerable<IConfigurationSection> deployContracts = new ConfigurationBuilder().AddJsonFile(DeployContractsCasesPath, optional: true).Build().GetSection("DeployContracts").GetChildren();
+            var balanceSender = UInt160.Zero;
+            var containerSender = UInt160.Zero;
+            var fsSender = UInt160.Zero;
+            var fsidSender = UInt160.Zero;
+            var alphabetSender = UInt160.Zero;
+            var netmapSender = UInt160.Zero;
             foreach (IConfigurationSection deployContract in deployContracts)
             {
                 string contractName = deployContract.GetSection("Name").Value;
@@ -68,30 +74,66 @@ namespace Neo.FileStorage.Tests
                 string manifestPath = deployContract.GetSection("ManifestPath").Value;
                 UInt160 sender = accounts.ToArray()[int.Parse(deployContract.GetSection("accountIndex").Value)].ScriptHash;
                 DeployContract(snapshot, contractName, nefFilePath, manifestPath, sender, out UInt160 contractHash);
+                switch (manifestPath)
+                {
+                    case "./Config/Contracts/balance/config.json":
+                        settings.BalanceContractHash = contractHash;
+                        balanceSender = sender;
+                        break;
+                    case "./Config/Contracts/alphabet/config.json":
+                        settings.AlphabetContractHash = new UInt160[] { contractHash };
+                        alphabetSender = sender;
+                        break;
+                    case "./Config/Contracts/audit/config.json":
+                        settings.AuditContractHash = contractHash;
+                        break;
+                    case "./Config/Contracts/container/config.json":
+                        settings.ContainerContractHash = contractHash;
+                        containerSender = sender;
+                        break;
+                    case "./Config/Contracts/neofs/config.json":
+                        settings.FsContractHash = contractHash;
+                        fsidSender = sender;
+                        break;
+                    case "./Config/Contracts/neofsid/config.json":
+                        settings.FsIdContractHash = contractHash;
+                        fsidSender = sender;
+                        break;
+                    case "./Config/Contracts/netmap/config.json":
+                        settings.NetmapContractHash = contractHash;
+                        netmapSender = sender;
+                        break;
+                        //case "./Config/Contracts/reputation/config.json":
+                        //    settings. = contractHash;
+                        //    break;
+
+                }
             }
             //Fake contract init
             //FakeBalanceInit
-            script = settings.BalanceContractHash.MakeScript("init", settings.NetmapContractHash.ToArray(), settings.ContainerContractHash.ToArray());
+            script = settings.BalanceContractHash.MakeScript("init", false, balanceSender, settings.NetmapContractHash.ToArray(), settings.ContainerContractHash.ToArray());
             ExecuteScript(snapshot, "BalanceInit", script, from);
             //FakeNetMapInit
-            script = MakeScript(settings.NetmapContractHash, "init", accounts.Select(p => p.GetKey().PublicKey.ToArray()).ToArray());
+            //script = MakeScript(settings.NetmapContractHash, "init", accounts.Select(p => p.GetKey().PublicKey.ToArray()).ToArray());
+            script = settings.NetmapContractHash.MakeScript("init", false, netmapSender, settings.BalanceContractHash.ToArray(), settings.ContainerContractHash.ToArray(), ToParameter(accounts.Select(p => p.GetKey().PublicKey.ToArray()).ToArray()));
             ExecuteScript(snapshot, "NetMapInit", script, from);
             //FakeNetMapConfigInit/ContainerFee
-            script = MakeScript(settings.NetmapContractHash, "initConfig", new byte[][] { Neo.Utility.StrictUTF8.GetBytes("ContainerFee"), BitConverter.GetBytes(0) });
+            //script = MakeScript(settings.NetmapContractHash, "initConfig", new byte[][] { Neo.Utility.StrictUTF8.GetBytes("ContainerFee"), BitConverter.GetBytes(0) });
+            script = settings.NetmapContractHash.MakeScript("initConfig", ToParameter(new byte[][] { Neo.Utility.StrictUTF8.GetBytes("ContainerFee"), BitConverter.GetBytes(0) }));
             ExecuteScript(snapshot, "NetMapConfigInit/ContainerFee", script, from);
             //FakeContainerInit
-            script = settings.ContainerContractHash.MakeScript("init", settings.NetmapContractHash.ToArray(), settings.BalanceContractHash.ToArray(), settings.FsIdContractHash.ToArray());
+            script = settings.ContainerContractHash.MakeScript("init", false, containerSender, settings.NetmapContractHash.ToArray(), settings.BalanceContractHash.ToArray(), settings.FsIdContractHash.ToArray());
             ExecuteScript(snapshot, "ContainerInit", script, from);
             //FakeFsIdInit
-            script = settings.FsIdContractHash.MakeScript("init", settings.NetmapContractHash.ToArray(), settings.ContainerContractHash.ToArray());
+            script = settings.FsIdContractHash.MakeScript("init", false, fsidSender, settings.NetmapContractHash.ToArray(), settings.ContainerContractHash.ToArray());
             ExecuteScript(snapshot, "FsIdInit", script, from);
             //FakeFsInit
-            script = MakeScript(settings.FsContractHash, "init", accounts.Select(p => p.GetKey().PublicKey.ToArray()).ToArray());
+            script = settings.FsContractHash.MakeScript("init", false, fsSender, UInt160.Zero, ToParameter(accounts.Select(p => p.GetKey().PublicKey.ToArray()).ToArray()));
             ExecuteScript(snapshot, "FsInit", script, from);
             //FakeAlphabetInit
             for (int i = 0; i < settings.AlphabetContractHash.Length; i++)
             {
-                script = settings.AlphabetContractHash[i].MakeScript("init", settings.NetmapContractHash.ToArray(), "Alphabet" + i, i, settings.AlphabetContractHash.Length);
+                script = settings.AlphabetContractHash[i].MakeScript("init", false, alphabetSender, settings.NetmapContractHash.ToArray(), UInt160.Zero, "Alphabet" + i, i, settings.AlphabetContractHash.Length);
                 ExecuteScript(snapshot, "Alphabet" + i + "Init", script, from);
             }
             //Fake peer
@@ -100,10 +142,12 @@ namespace Neo.FileStorage.Tests
             nodeInfo.PublicKey = ByteString.CopyFrom(accounts.ToArray()[0].GetKey().PublicKey.ToArray());
             var rawNodeInfo = nodeInfo.ToByteArray();
             script = settings.NetmapContractHash.MakeScript("addPeer", rawNodeInfo);
-            for (int i = 0; i < accounts.Count(); i++)
-            {
-                ExecuteScript(snapshot, "FakePeer", script, accounts.ToArray()[i].ScriptHash);
-            }
+            ExecuteScript(snapshot, "FakePeer", script, accounts.ToArray()[0].ScriptHash);
+
+            //for (int i = 0; i < accounts.Count(); i++)
+            //{
+            //    ExecuteScript(snapshot, "FakePeer", script, accounts.ToArray()[0].ScriptHash);
+            //}
             //Fake container
             KeyPair key = accounts.ToArray()[0].GetKey();
             Neo.FileStorage.API.Refs.OwnerID ownerId = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
@@ -118,9 +162,12 @@ namespace Neo.FileStorage.Tests
             byte[] sig = Neo.Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
             script = settings.ContainerContractHash.MakeScript("put", container.ToByteArray(), sig, key.PublicKey.ToArray());
             var containerId = container.CalCulateAndGetId.Value.ToByteArray();
+            var committees = NativeContract.NEO.GetCommittee(snapshot);
+            var address = Contract.CreateMultiSigRedeemScript(committees.Length * 2 / 3 + 1, committees).ToScriptHash();
             for (int i = 0; i < accounts.Count(); i++)
             {
-                ExecuteScript(snapshot, "FakeContainer", script, accounts.ToArray()[i].ScriptHash);
+               
+                ExecuteScript(snapshot, "FakeContainer", script, address);
             }
             Console.WriteLine("FakeContainerID:" + containerId.ToHexString());
             //Fake eacl
@@ -137,7 +184,7 @@ namespace Neo.FileStorage.Tests
             for (int i = 0; i < accounts.Count(); i++)
             {
                 script = settings.NetmapContractHash.MakeScript("newEpoch", 1);
-                ExecuteScript(snapshot, "FakeEpoch", script, accounts.ToArray()[i].ScriptHash);
+                ExecuteScript(snapshot, "FakeEpoch", script, address);
             }
             snapshot.Commit();
         }
@@ -161,6 +208,25 @@ namespace Neo.FileStorage.Tests
             }
         }
 
+
+        private static ContractParameter ToParameter(byte[][] args)
+        {
+            var array = new ContractParameter(ContractParameterType.Array);
+            var list = new List<ContractParameter>();
+            foreach (var bytes in args)
+            {
+                list.Add(new ContractParameter(ContractParameterType.ByteArray) { Value = bytes });
+            }
+
+            array.Value = list;
+            return array;
+        }
+        public static void ContractAdd(DataCache snapshot, ContractState contract)
+        {
+            var key = new KeyBuilder(-1, 8).Add(contract.Hash);
+            snapshot.Add(key, new StorageItem(contract));
+        }
+
         private static void DeployContract(DataCache snapshot, string contractName, string nefFilePath, string manifestFilePath, UInt160 sender, out UInt160 contractHash)
         {
             var manifest = ContractManifest.Parse(File.ReadAllBytes(manifestFilePath));
@@ -170,8 +236,7 @@ namespace Neo.FileStorage.Tests
                 nef = stream.ReadSerializable<NefFile>();
             }
             ScriptBuilder sb = new ScriptBuilder();
-            sb.EmitDynamicCall(NativeContract.ContractManagement.Hash, "deploy", nef.ToArray(), manifest.ToJson().ToString());
-            contractHash = SmartContract.Helper.GetContractHash(sender, nef.CheckSum, contractName);
+            sb.EmitDynamicCall(NativeContract.ContractManagement.Hash, "deploy", nef.ToArray(), manifest.ToJson().ToString(), null);
             Random rand = new Random();
             Transaction tx = new Transaction
             {
@@ -183,20 +248,35 @@ namespace Neo.FileStorage.Tests
                 Attributes = Array.Empty<TransactionAttribute>(),
             };
             ApplicationEngine engine = ApplicationEngine.Run(sb.ToArray(), snapshot, tx, null, TheNeoSystem.Settings, 0, 2000000000);
+
             if (engine.State != VMState.HALT)
-                Console.WriteLine(string.Format("Deploy {0} contract fault.Contract Hash:{1}", contractName, contractHash));
+            {
+                contractHash = UInt160.Zero;
+                Console.WriteLine($"Deploy {contractName} contract fault.Contract Hash:{contractHash}");
+            }
             else
-                Console.WriteLine(string.Format("Deploy {0} contract success.Contract Hash:{1}", contractName, contractHash));
+            {
+                contractHash = new UInt160(((VM.Types.Array)engine.ResultStack.Peek())[2].GetSpan());
+                Console.WriteLine($"Deploy {contractName} contract success.Contract Hash:{contractHash}");
+            }
         }
 
         private static void ExecuteScript(DataCache snapshot, string functionName, byte[] script, UInt160 sender)
         {
             FakeSigners signers = new FakeSigners(sender);
             ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, container: signers, null, TheNeoSystem.Settings, 0, 2000000000);
+            var faultMessage = engine.FaultException?.ToString();
+            var innerMessage = engine.FaultException?.InnerException?.ToString();
+            var errorMessage = $"\r\nException:{faultMessage}";
+            if (!string.IsNullOrWhiteSpace(innerMessage))
+            {
+                errorMessage += "\r\n\tInner:" + innerMessage;
+            }
+
             if (engine.State != VMState.HALT)
-                Console.WriteLine(string.Format("{0} execute fault.", functionName));
+                Console.WriteLine($"{functionName} execute fault.{errorMessage}");
             else
-                Console.WriteLine(string.Format("{0} execute success.", functionName));
+                Console.WriteLine($"{functionName} execute success.");
         }
     }
 

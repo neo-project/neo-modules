@@ -1,2 +1,2 @@
-hasstorage: true
-ispayable: false
+name: "NeoFS Alphabet"
+safemethods: ["gas", "neo", "name", "version"]
