@@ -20,9 +20,10 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
         public const int DefaultBlzShallowDepth = 2;
         public const int DefaultBlzShallowWidth = 16;
 
-        public int OpenedCacheSize { get; init; }
         public ulong BlzShallowDepth { get; init; }
         public ulong BlzShallowWidth { get; init; }
+        public ulong SmallSizeLimit { get; init; }
+        private readonly int cacheSize;
         private readonly ICompressor compressor;
         public string BlzRootPath { get; private set; }
         private readonly LRUCache<string, Blobovnicza> opened;
@@ -32,10 +33,11 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
         {
             BlzShallowDepth = DefaultBlzShallowDepth;
             BlzShallowWidth = DefaultBlzShallowWidth;
+            SmallSizeLimit = Blobovnicza.DefaultObjSizeLimit;
             this.compressor = compressor;
-            OpenedCacheSize = cap == 0 ? DefaultOpenedCacheSize : cap;
+            cacheSize = cap == 0 ? DefaultOpenedCacheSize : cap;
             BlzRootPath = path;
-            opened = new(cap, OnEvicted);
+            opened = new(cacheSize, OnEvicted);
             ulong cp = 1;
             for (ulong i = 0; i < BlzShallowDepth; i++)
                 cp *= BlzShallowWidth;
@@ -63,10 +65,10 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                 catch (LevelDBException)
                 {
                     Log(nameof(BlobovniczaTree), LogLevel.Debug, $"could not open blobovnicza {path}");
-                    return false;
+                    throw;
                 }
                 Log(nameof(BlobovniczaTree), LogLevel.Debug, $"blobovnicza opened {path}");
-                return true;
+                return false;
             };
             IterateLeaves(null, DoInit);
         }
@@ -76,41 +78,18 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
             BlobovniczaID id = null;
             bool DoPut(string p)
             {
-                BlobovniczaWithIndex bi;
-                try
-                {
-                    bi = GetActived(p);
-                }
-                catch (Exception ex) when (ex is InvalidOperationException || ex is LevelDBException)
-                {
-                    Log(nameof(BlobovniczaTree), LogLevel.Debug, "could not get active blobovnicza");
-                    return false;
-                }
+                BlobovniczaWithIndex bi = GetActived(p);
                 try
                 {
                     bi.Blobovnicza.Put(obj);
                 }
                 catch (BlobFullException)
                 {
-                    Log(nameof(BlobovniczaTree), LogLevel.Debug, "blobovnicza overflowed, " + Path.Join(p, bi.Index.ToString()));
-                    try
-                    {
-                        UpdateActive(p, bi.Index);
-                    }
-                    catch (Exception ex) when (ex is InvalidOperationException || ex is LevelDBException)
-                    {
-                        Log(nameof(BlobovniczaTree), LogLevel.Debug, "could not update active blobovnicza");
-                        return false;
-                    }
+                    Log(nameof(BlobovniczaTree), LogLevel.Debug, "blobovnicza overflowed, " + Path.Join(p, BitConverter.GetBytes(bi.Index).ToHexString()));
+                    UpdateActive(p, bi.Index);
                     return DoPut(p);
                 }
-                catch (Exception e)
-                {
-                    Log(nameof(BlobovniczaTree), LogLevel.Debug, "could not put object to active blobovnicza, path:" + Path.Join(p, bi.Index.ToString()) + " error:" + e.Message);
-                    return false;
-                }
-                p = Path.Join(p, bi.Index.ToString());
-                id = StrictUTF8.GetBytes(p);
+                id = Path.Join(p, BitConverter.GetBytes(bi.Index).ToHexString());
                 Log(nameof(BlobovniczaTree), LogLevel.Debug, "object successfully saved in active blobovnicza, path:" + p + " addr:" + obj.Address.String());
                 return true;
             };
@@ -123,7 +102,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
         {
             if (id is not null)
             {
-                using var blz = OpenBlobovnicza(id.ToString());
+                var blz = OpenBlobovnicza(id);
                 return blz.Get(address);
             }
             HashSet<string> cache = new();
@@ -133,7 +112,8 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                 var dir = Path.GetDirectoryName(path);
                 try
                 {
-                    OperateFromLevel(path, cache.Contains(dir), blz =>
+                    cache.Add(dir);
+                    return OperateFromLevel(path, !cache.Contains(dir), blz =>
                     {
                         try
                         {
@@ -146,18 +126,17 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                         }
                         return true;
                     });
-                    return true;
                 }
                 catch (ObjectNotFoundException)
                 {
                     Log(nameof(BlobovniczaTree), LogLevel.Debug, $"could not get object from level, level={path}");
+                    return false;
                 }
                 catch (Exception e)
                 {
                     Log(nameof(BlobovniczaTree), LogLevel.Debug, $"could not get object from level, level={path}, error={e.Message}");
+                    throw;
                 }
-                cache.Add(dir);
-                return false;
             };
             IterateLeaves(address, DoGet);
             if (obj is null) throw new ObjectNotFoundException();
@@ -168,8 +147,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
         {
             if (id is not null)
             {
-                using Blobovnicza b = OpenBlobovnicza(id.ToString());
+                Blobovnicza b = OpenBlobovnicza(id.ToString());
                 b.Delete(address);
+                return;
             }
             HashSet<string> cache = new();
             bool DoDelete(string path)
@@ -177,7 +157,8 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                 var dir = Path.GetDirectoryName(path);
                 try
                 {
-                    OperateFromLevel(path, cache.Contains(dir), blz =>
+                    cache.Add(dir);
+                    return OperateFromLevel(path, !cache.Contains(dir), blz =>
                     {
                         try
                         {
@@ -190,18 +171,17 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                         }
                         return true;
                     });
-                    return true;
                 }
                 catch (ObjectNotFoundException)
                 {
                     Log(nameof(BlobovniczaTree), LogLevel.Debug, $"could not get object from level, level={path}");
+                    return false;
                 }
                 catch (Exception e)
                 {
                     Log(nameof(BlobovniczaTree), LogLevel.Debug, $"could not get object from level, level={path}, error={e.Message}");
+                    throw;
                 }
-                cache.Add(dir);
-                return false;
             };
             IterateLeaves(address, DoDelete);
         }
@@ -210,7 +190,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
         {
             if (id is not null)
             {
-                using var blz = OpenBlobovnicza(id.ToString());
+                var blz = OpenBlobovnicza(id.ToString());
                 return blz.GetRange(address, range);
             }
             HashSet<string> cache = new();
@@ -220,7 +200,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                 var dir = Path.GetDirectoryName(path);
                 try
                 {
-                    OperateFromLevel(path, cache.Contains(dir), blz =>
+                    return OperateFromLevel(path, cache.Contains(dir), blz =>
                     {
                         try
                         {
@@ -233,11 +213,11 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                         }
                         return true;
                     });
-                    return true;
                 }
                 catch (ObjectNotFoundException)
                 {
                     Log(nameof(BlobovniczaTree), LogLevel.Debug, $"could not get object from level, level={path}");
+                    return false;
                 }
                 catch (Exception e)
                 {
@@ -251,12 +231,12 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
             return data;
         }
 
-        private void OperateFromLevel(string path, bool try_active, Func<Blobovnicza, bool> func)
+        private bool OperateFromLevel(string path, bool try_active, Func<Blobovnicza, bool> func)
         {
             var level_path = Path.GetDirectoryName(path);
             if (opened.TryGet(path, out Blobovnicza blz))
             {
-                if (func(blz)) return;
+                if (func(blz)) return true;
             }
             BlobovniczaWithIndex bi;
             bool exist = false;
@@ -266,12 +246,13 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
             }
             if (exist && try_active)
             {
-                if (func(bi.Blobovnicza)) return;
+                if (func(bi.Blobovnicza)) return true;
             }
             ulong index = BitConverter.ToUInt64(Path.GetFileName(path).HexToBytes());
             if (bi.Index < index) throw new ObjectNotFoundException();
-            using Blobovnicza b = OpenBlobovnicza(path);
-            func(b);
+            Blobovnicza b = OpenBlobovnicza(path);
+            if (func(b)) return true;
+            return false;
         }
 
         private BlobovniczaWithIndex GetActived(string path)
@@ -288,9 +269,10 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
 
         private BlobovniczaWithIndex UpdateAndGet(string path, ulong? old)
         {
+            BlobovniczaWithIndex bi;
             lock (active)
             {
-                bool exist = active.TryGetValue(path, out BlobovniczaWithIndex bi);
+                bool exist = active.TryGetValue(path, out bi);
                 if (exist)
                 {
                     if (old is null) return bi;
@@ -300,13 +282,15 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                         return bi;
                     bi.Index++;
                 }
+                else
+                {
+                    bi = new();
+                }
                 bi.Blobovnicza = OpenBlobovnicza(Path.Join(path, BitConverter.GetBytes(bi.Index).ToHexString()));
-                if (active.TryGetValue(path, out BlobovniczaWithIndex tbi) && tbi.Blobovnicza == bi.Blobovnicza)
-                    return tbi;
-                opened.Remove(path);
                 active[path] = bi;
-                return bi;
             }
+            opened.Remove(path);
+            return bi;
         }
 
         private void IterateLeaves(Address address, Func<string, bool> func)
@@ -321,7 +305,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
             IterateSorted(address, new List<string>(), depth, paths => func(Path.Join(paths.ToArray())));
         }
 
-        private bool IterateSorted(Address address, List<string> current_path, ulong depth, Func<List<string>, bool> func)
+        public bool IterateSorted(Address address, List<string> current_path, ulong depth, Func<List<string>, bool> func)
         {
             List<ulong> indices = IndexSlice(BlzShallowWidth);
             ulong hash = AddressHash(address, Path.Join(current_path.ToArray()));
@@ -339,7 +323,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                 }
                 else
                 {
-                    if (IterateSorted(address, current_path, depth, func)) return true;
+                    if (IterateSorted(address, current_path.ToList(), depth, func)) return true;
                 }
             }
             return false;
@@ -355,7 +339,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
 
         private ulong AddressHash(Address address, string path)
         {
-            return StrictUTF8.GetBytes(address.String() + path).Murmur64(0);
+            return StrictUTF8.GetBytes(address?.String() + path).Murmur64(0);
         }
 
 
@@ -365,10 +349,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
             {
                 if (opened.TryGet(path, out Blobovnicza b))
                     return b;
-                b = new Blobovnicza(Path.Join(BlzRootPath, path))
-                {
-                    Compressor = compressor,
-                };
+                b = new Blobovnicza(Path.Join(BlzRootPath, path), compressor);
                 b.Open();
                 opened.TryAdd(path, b);
                 return b;

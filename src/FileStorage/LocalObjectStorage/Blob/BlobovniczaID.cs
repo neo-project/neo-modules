@@ -21,9 +21,19 @@ namespace Neo.FileStorage.LocalObjectStorage.Blob
             return new BlobovniczaID(val);
         }
 
+        public static implicit operator BlobovniczaID(string str)
+        {
+            return new BlobovniczaID(Utility.StrictUTF8.GetBytes(str));
+        }
+
         public static implicit operator byte[](BlobovniczaID b)
         {
             return b.value;
+        }
+
+        public static implicit operator string(BlobovniczaID b)
+        {
+            return b.ToString();
         }
     }
 }

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using FSRange = Neo.FileStorage.API.Object.Range;
 using FSObject = Neo.FileStorage.API.Object.Object;
+using System.IO;
 
 namespace Neo.FileStorage.LocalObjectStorage.Blob
 {
@@ -21,22 +22,25 @@ namespace Neo.FileStorage.LocalObjectStorage.Blob
         private DB dB;
         private long filled;
 
-        public Blobovnicza(string path)
+        public Blobovnicza(string path, ICompressor compressor = null)
         {
             Path = path;
             FullSizeLimit = DefaultFullSizeLimit;
             ObjSizeLimit = DefaultObjSizeLimit;
-            Compressor = new NoneCompressor();
+            Compressor = compressor ?? new NoneCompressor();
         }
 
         public void Open()
         {
-            dB = DB.Open(Path);
+            var full = System.IO.Path.GetFullPath(Path);
+            if (!Directory.Exists(full))
+                Directory.CreateDirectory(full);
+            dB = DB.Open(full, new Options { CreateIfMissing = true, FilterPolicy = Native.leveldb_filterpolicy_create_bloom(15) });
         }
 
         public void Dispose()
         {
-            dB.Dispose();
+            dB?.Dispose();
         }
 
         private byte[] Addresskey(Address address)
@@ -73,7 +77,8 @@ namespace Neo.FileStorage.LocalObjectStorage.Blob
             var raw = Compressor.Compress(obj.ToByteArray());
             if (ObjSizeLimit < raw.Length)
                 throw new ObjectSizeExceedLimitException();
-            dB.Put(WriteOptions.Default, Addresskey(obj.Address), raw);
+            var key = Addresskey(obj.Address);
+            dB.Put(WriteOptions.Default, key, raw);
             IncSize(raw.Length);
         }
 
