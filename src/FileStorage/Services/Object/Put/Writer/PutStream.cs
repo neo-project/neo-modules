@@ -94,7 +94,7 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
                 return;
             }
             var key = PutService.KeyStorage.GetKey(prm.SessionToken);
-            var max = BitConverter.ToUInt64(PutService.MorphClient.InvokeConfig(MorphContractInvoker.MaxObjectSizeConfig));
+            var max = PutService.MorphClient.MaxObjectSize();
             if (max == 0) throw new InvalidOperationException($"{nameof(PutStream)} could not obtain max object size parameter");
             target = new PayloadSizeLimiterTarget(max, new FormatTarget
             {

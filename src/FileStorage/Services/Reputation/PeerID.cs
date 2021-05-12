@@ -1,9 +1,10 @@
 using System;
+using System.Linq;
 using static Neo.Utility;
 
 namespace Neo.FileStorage.Services.Reputaion
 {
-    public class PeerID
+    public class PeerID : IEquatable<PeerID>
     {
         public const int PeerIDLength = 33;
         private readonly byte[] value;
@@ -28,6 +29,13 @@ namespace Neo.FileStorage.Services.Reputaion
         public override string ToString()
         {
             return Convert.ToBase64String(value);
+        }
+
+        public bool Equals(PeerID other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return value.SequenceEqual(other.value);
         }
     }
 }

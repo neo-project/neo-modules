@@ -18,7 +18,7 @@ namespace Neo.FileStorage.Utils
         private int capacity;
         private int running;
 
-        public class NewTask { public string process; public Task task; };
+        public class NewTask { public string Process; public Task Task; };
         public class CompleteTask { };
 
         public WorkerPool(string name, int capacity)
@@ -48,12 +48,12 @@ namespace Neo.FileStorage.Utils
             int free = capacity - running;
             if (free == 0)
             {
-                Neo.Utility.Log(newTask.process, LogLevel.Warning, string.Format("worker pool drained,capacity:{0}", capacity.ToString()));
+                Neo.Utility.Log(newTask.Process, LogLevel.Warning, string.Format("worker pool drained,capacity:{0}", capacity.ToString()));
             }
             else
             {
-                newTask.task.ContinueWith(t => { actor.Tell(new CompleteTask()); });
-                newTask.task.Start();
+                newTask.Task.ContinueWith(t => { actor.Tell(new CompleteTask()); });
+                newTask.Task.Start();
                 running++;
             }
         }

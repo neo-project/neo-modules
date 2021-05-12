@@ -2,7 +2,7 @@ using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.Morph.Invoker;
 
-namespace Neo.FileStorage.Storage
+namespace Neo.FileStorage.Cache
 {
     public class NetmapCache
     {

@@ -10,14 +10,10 @@ namespace Neo.FileStorage.Morph.Invoker
 {
     public static partial class MorphContractInvoker
     {
-        public static readonly byte[] MaxObjectSizeConfig = Utility.StrictUTF8.GetBytes("MaxObjectSize");
-        public static readonly byte[] BasicIncomeRateConfig = Utility.StrictUTF8.GetBytes("BasicIncomeRate");
-
         private static UInt160 NetMapContractHash => Settings.Default.NetmapContractHash;
         private const string AddPeerMethod = "addPeer";
         private const string NewEpochMethod = "newEpoch";
         private const string UpdateStateMethod = "updateState";
-        private const string ConfigMethod = "config";
         private const string EpochMethod = "epoch";
         private const string SnapshotMethod = "snapshot";
         private const string NetMapMethod = "netmap";
@@ -29,12 +25,6 @@ namespace Neo.FileStorage.Morph.Invoker
             return client.Invoke(out _, NetMapContractHash, AddPeerMethod, ExtraFee, info);
         }
 
-        public static byte[] InvokeConfig(this Client client, byte[] key)
-        {
-            InvokeResult result = client.TestInvoke(NetMapContractHash, ConfigMethod, key);
-            if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (Config)");
-            return result.ResultStack[0].GetSpan().ToArray();
-        }
         public static ulong InvokeEpoch(this Client client)
         {
             InvokeResult result = client.TestInvoke(NetMapContractHash, EpochMethod);
