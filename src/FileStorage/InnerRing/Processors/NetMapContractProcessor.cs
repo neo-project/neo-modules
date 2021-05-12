@@ -71,28 +71,28 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             NewEpochTickEvent newEpochTickEvent = (NewEpochTickEvent)timersEvent;
             Utility.Log(Name, LogLevel.Info, "tick:type:epoch");
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessNewEpochTick(newEpochTickEvent)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessNewEpochTick(newEpochTickEvent)) });
         }
 
         public void HandleNewEpoch(IContractEvent morphEvent)
         {
             NewEpochEvent newEpochEvent = (NewEpochEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:new epoch,value:{0}", newEpochEvent.EpochNumber.ToString()));
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessNewEpoch(newEpochEvent)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessNewEpoch(newEpochEvent)) });
         }
 
         public void HandleAddPeer(IContractEvent morphEvent)
         {
             AddPeerEvent addPeerEvent = (AddPeerEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, "notification:type:add peer");
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessAddPeer(addPeerEvent)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessAddPeer(addPeerEvent)) });
         }
 
         public void HandleUpdateState(IContractEvent morphEvent)
         {
             UpdatePeerEvent updateStateEvent = (UpdatePeerEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:update peer state,key:{0}", updateStateEvent.PublicKey.EncodePoint(true).ToHexString()));
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessUpdateState(updateStateEvent)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessUpdateState(updateStateEvent)) });
         }
 
         public void HandleCleanupTick(IContractEvent morphEvent)
@@ -104,7 +104,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             NetmapCleanupTickEvent netmapCleanupTickEvent = (NetmapCleanupTickEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, "tick:type:netmap cleaner");
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessNetmapCleanupTick(netmapCleanupTickEvent)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessNetmapCleanupTick(netmapCleanupTickEvent)) });
         }
 
         public void ProcessNetmapCleanupTick(NetmapCleanupTickEvent netmapCleanupTickEvent)

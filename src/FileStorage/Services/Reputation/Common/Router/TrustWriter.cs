@@ -10,7 +10,7 @@ namespace Neo.FileStorage.Services.Reputaion.Common.Route
         public RouteContext RouteContext { get; init; }
         private readonly Dictionary<string, IWriter> servers = new();
         private readonly object writeLock = new();
-        
+
         public void Write(Trust trust)
         {
             lock (writeLock)

@@ -86,28 +86,28 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             DepositEvent depositeEvent = (DepositEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:deposit,id:{0}", depositeEvent.Id.ToHexString()));
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessDeposit(depositeEvent)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessDeposit(depositeEvent)) });
         }
 
         public void HandleWithdraw(IContractEvent morphEvent)
         {
             WithdrawEvent withdrawEvent = (WithdrawEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:withdraw,id:{0}", withdrawEvent.Id.ToHexString()));
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessWithdraw(withdrawEvent)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessWithdraw(withdrawEvent)) });
         }
 
         public void HandleCheque(IContractEvent morphEvent)
         {
             ChequeEvent chequeEvent = (ChequeEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:cheque,value:{0}", chequeEvent.Id.ToHexString()));
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessCheque(chequeEvent)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessCheque(chequeEvent)) });
         }
 
         public void HandleConfig(IContractEvent morphEvent)
         {
             ConfigEvent configEvent = (ConfigEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:setConfig,key:{0},value:{1}", configEvent.Key.ToHexString(), configEvent.Value.ToHexString()));
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessConfig(configEvent)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessConfig(configEvent)) });
         }
 
         public void ProcessDeposit(DepositEvent depositeEvent)

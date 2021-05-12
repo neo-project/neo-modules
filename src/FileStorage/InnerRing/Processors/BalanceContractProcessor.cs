@@ -49,7 +49,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             LockEvent lockEvent = (LockEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:lock,value:{0}", lockEvent.Id.ToHexString()));
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessLock(lockEvent)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessLock(lockEvent)) });
         }
 
         public void ProcessLock(LockEvent lockEvent)

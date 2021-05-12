@@ -24,7 +24,7 @@ namespace Neo.FileStorage.Tests.Util
         [TestMethod]
         public void NewTaskAndCompleteTaskTest()
         {
-            workerpool.Tell(new NewTask() { process = "aaa", task = new Task(() => { Console.WriteLine("aaa"); }) });
+            workerpool.Tell(new NewTask() { Process = "aaa", Task = new Task(() => { Console.WriteLine("aaa"); }) });
         }
     }
 }

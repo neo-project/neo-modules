@@ -15,13 +15,13 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public static bool InvokeReputationPut(this Client client, long epoch, byte[] peerID, byte[] value)
         {
-            return client.Invoke(out _,ReputationContractHash, ReputationPutMethod, epoch, peerID, value);
+            return client.Invoke(out _, ReputationContractHash, ReputationPutMethod, epoch, peerID, value);
         }
 
         public static List<GlobalTrust> InvokeReputationGet(this Client client, long epoch, byte[] peerID)
         {
             InvokeResult result = client.TestInvoke(ReputationContractHash, ReputationGetMethod, epoch, peerID);
-            if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", ReputationGetMethod));
+            if (result.State != VM.VMState.HALT) throw new Exception($"could not perform test invocation ({ReputationGetMethod})");
             if (result.ResultStack.Length != 1) throw new Exception();
             VM.Types.Array items = (VM.Types.Array)result.ResultStack[0];
             IEnumerator<StackItem> itemsEnumerator = items.GetEnumerator();

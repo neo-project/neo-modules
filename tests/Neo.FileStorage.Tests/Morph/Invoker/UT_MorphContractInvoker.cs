@@ -68,9 +68,8 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         [TestMethod]
         public void InvokeConfigTest()
         {
-            var key = Neo.Utility.StrictUTF8.GetBytes("ContainerFee");
-            byte[] result = MorphContractInvoker.InvokeConfig(client, key);
-            Assert.AreEqual(result.ToHexString(), BitConverter.GetBytes(0).ToHexString());
+            ulong result = MorphContractInvoker.ContainerFee(client);
+            Assert.AreEqual(0ul, result);
         }
 
         [TestMethod]
