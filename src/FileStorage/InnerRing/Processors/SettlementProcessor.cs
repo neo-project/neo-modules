@@ -32,7 +32,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void HandleAuditEvent(IContractEvent morphEvent)
         {
-            AuditEvent auditEvent = (AuditEvent)morphEvent;
+            AuditStartEvent auditEvent = (AuditStartEvent)morphEvent;
             var epoch = auditEvent.epoch;
             Utility.Log(Name, LogLevel.Info, string.Format("new audit settlement event,epoch:{0}", epoch));
             if (epoch == 0)

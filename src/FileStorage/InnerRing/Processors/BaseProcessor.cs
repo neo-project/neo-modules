@@ -18,6 +18,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         public UInt160 NetmapContractHash => Settings.Default.NetmapContractHash;
         public UInt160 FsIdContractHash => Settings.Default.FsIdContractHash;
         public UInt160 AuditContractHash => Settings.Default.AuditContractHash;
+        public UInt160 ReputationContractHash => Settings.Default.AuditContractHash;
 
         private Client morphCli;
         private Client mainCli;

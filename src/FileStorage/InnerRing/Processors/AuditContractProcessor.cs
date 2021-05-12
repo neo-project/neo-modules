@@ -23,7 +23,6 @@ namespace Neo.FileStorage.InnerRing.Processors
         public IActorRef TaskManager;
         public INeoFSClientCache ClientCache;
         public Action prevAuditCanceler = new Action(() => { });
-        public IReporter reporter;
 
         public void HandleNewAuditRound(IContractEvent morphEvent)
         {
@@ -93,7 +92,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Reporter = new EpochAuditReporter()
                     {
                         epoch = epoch,
-                        reporter = reporter
+                        reporter = State
                     },
                     Context = source.Token,
                     CID = containers[i],

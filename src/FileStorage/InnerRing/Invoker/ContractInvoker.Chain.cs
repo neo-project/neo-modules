@@ -13,6 +13,7 @@ namespace Neo.FileStorage.InnerRing.Invoker
             index = KeyPosition(key, innerRing);
             length = innerRing.Length;
         }
+
         public static int AlphabetIndex(this Client client, ECPoint key)
         {
             if (client is null) throw new Exception("client is nil");

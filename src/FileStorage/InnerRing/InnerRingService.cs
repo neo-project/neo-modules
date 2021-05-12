@@ -33,7 +33,7 @@ namespace Neo.FileStorage.InnerRing
     public class InnerRingService : UntypedActor, IState
     {
         private string Name = "InnerRingService";
-        //event 
+        //event
         public class ContractEvent { public NotifyEventArgs notify; public bool flag; };
         public class BlockEvent { public Block block; public bool flag; };
         public class Start { };
@@ -61,6 +61,7 @@ namespace Neo.FileStorage.InnerRing
         private SettlementProcessor settlementProcessor;
         private AlphabetContractProcessor alphabetContractProcessor;
         private AuditContractProcessor auditContractProcessor;
+        private ReputationContractProcessor reputationProcessor;
 
         private RpcClientCache clientCache;
         private DB _db;
@@ -68,6 +69,7 @@ namespace Neo.FileStorage.InnerRing
         public InnerRingService(NeoSystem main, NeoSystem side, NEP6Wallet pwallet = null, Client pMainNetClient = null, Client pMorphClient = null)
         {
             precision = new Fixed8ConverterUtil();
+            // Build 2 client(MorphClientr&MainClient).
             if (pwallet is null)
             {
                 wallet = new NEP6Wallet(Settings.Default.WalletPath, main.Settings);
@@ -85,7 +87,7 @@ namespace Neo.FileStorage.InnerRing
                     }
                 };
             }
-            else morphClient = pMorphClient;
+            else mainNetClient = pMainNetClient;
             if (pMorphClient is null)
             {
                 morphClient = new Client()
@@ -98,9 +100,10 @@ namespace Neo.FileStorage.InnerRing
                 };
             }
             else morphClient = pMorphClient;
-            //Build 2 listeners(MorphEventListener&MainEventListener).
+            // Build 2 listeners(MorphEventListener&MainEventListener).
             morphEventListener = side.ActorSystem.ActorOf(Listener.Props("MorphEventListener"));
             mainEventListener = main.ActorSystem.ActorOf(Listener.Props("MainEventListener"));
+            // create indexer
             statusIndex = new InnerRingIndexer(morphClient, Settings.Default.IndexerTimeout);
             // create audit processor
             clientCache = new RpcClientCache() { wallet = wallet };
@@ -110,7 +113,7 @@ namespace Neo.FileStorage.InnerRing
                 MorphCli = morphClient,
                 ClientCache = clientCache,
                 TaskManager = auditTaskManager,
-                reporter = this,
+                State = this,
             };
             // create settlement processor dependencies
             var auditCalcDeps = new AuditSettlementDeps()
@@ -138,7 +141,6 @@ namespace Neo.FileStorage.InnerRing
                 State = this,
             };
             // create netmap processor
-            //todo
             netMapContractProcessor = new NetMapContractProcessor()
             {
                 MorphCli = morphClient,
@@ -168,7 +170,6 @@ namespace Neo.FileStorage.InnerRing
                 WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("BalanceContract Processor", Settings.Default.BalanceContractWorkersSize))
             };
             morphEventListener.Tell(new BindProcessorEvent() { processor = balanceContractProcessor });
-            // todo: create reputation processor
             // create  neofs processor
             fsContractProcessor = new FsContractProcessor()
             {
@@ -184,6 +185,14 @@ namespace Neo.FileStorage.InnerRing
                 MorphCli = morphClient,
                 WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("AlphabetContract Processor", Settings.Default.AlphabetContractWorkersSize))
             };
+            // create reputation processor
+            reputationProcessor = new ReputationContractProcessor()
+            {
+                MorphCli = morphClient,
+                State = this,
+                WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("AlphabetContract Processor", Settings.Default.AlphabetContractWorkersSize))
+            };
+            morphEventListener.Tell(new BindProcessorEvent() { processor = fsContractProcessor });
             // todo: create vivid id component
             // initialize epoch timers
             epochTimer = NewEpochTimer(new EpochTimerArgs()
@@ -217,8 +226,6 @@ namespace Neo.FileStorage.InnerRing
                 epochDuration = Settings.Default.AlphabetDuration
             });
             blockTimers.Add(emissionTimer);
-            //todo
-            //notary
         }
 
         public void InitConfigFromBlockchain()
@@ -243,12 +250,7 @@ namespace Neo.FileStorage.InnerRing
             }
             SetEpochCounter((ulong)epoch);
             precision.SetBalancePrecision(balancePrecision);
-            Dictionary<string, string> pairs = new Dictionary<string, string>();
-            pairs.Add("read config from blockchain", ":");
-            pairs.Add("active", IsActive().ToString());
-            pairs.Add("epoch", epoch.ToString());
-            pairs.Add("precision", balancePrecision.ToString());
-            Utility.Log("InnerRingService", LogLevel.Info, pairs.ParseToString());
+            Utility.Log("InnerRingService", LogLevel.Info, string.Format("read config from blockchain,active:{0},epoch:{1},precision:{2}", IsActive(), epoch, balancePrecision));
         }
 
         protected override void OnReceive(object message)
@@ -277,7 +279,6 @@ namespace Neo.FileStorage.InnerRing
             try
             {
                 InitConfigFromBlockchain();
-                //to do notary
                 VoteForSidechainValidator(Settings.Default.validators);
                 morphEventListener.Tell(new BindBlockHandlerEvent()
                 {

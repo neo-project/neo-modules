@@ -178,7 +178,7 @@ namespace Neo.FileStorage.Tests
                 Version = 0,
                 Nonce = (uint)rand.Next(),
                 Script = sb.ToArray(),
-                ValidUntilBlock = NativeContract.Ledger.CurrentIndex(snapshot) + Transaction.MaxValidUntilBlockIncrement,
+                ValidUntilBlock = NativeContract.Ledger.CurrentIndex(snapshot) + TheNeoSystem.Settings.MaxValidUntilBlockIncrement,
                 Signers = new Signer[] { new Signer() { Account = sender, Scopes = WitnessScope.Global } },
                 Attributes = Array.Empty<TransactionAttribute>(),
             };

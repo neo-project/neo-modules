@@ -65,10 +65,7 @@ namespace Neo.FileStorage.Morph.Invoker
         public bool Invoke(out UInt256 txId, UInt160 contractHash, string method, long fee, params object[] args)
         {
             txId = null;
-            var str = "";
-            args.ToList().ForEach(p => str += p.ToString());
             InvokeResult result = TestInvoke(contractHash, method, args);
-            Console.WriteLine("构建" + contractHash.ToArray().ToHexString() + "," + method + "," + str + "," + result.State);
             if (result.State != VMState.HALT) return false;
             SnapshotCache snapshot = system.GetSnapshot();
             uint height = NativeContract.Ledger.CurrentIndex(snapshot);
@@ -78,19 +75,18 @@ namespace Neo.FileStorage.Morph.Invoker
                 Version = 0,
                 Nonce = (uint)rand.Next(),
                 Script = result.Script,
-                ValidUntilBlock = height + Transaction.MaxValidUntilBlockIncrement,
+                ValidUntilBlock = height + system.Settings.MaxValidUntilBlockIncrement,
                 Signers = new Signer[] { new Signer() { Account = wallet.GetAccounts().ToArray()[0].ScriptHash, Scopes = WitnessScope.Global } },
                 Attributes = System.Array.Empty<TransactionAttribute>(),
             };
             tx.SystemFee = result.GasConsumed + fee;
-            //todo version
             tx.NetworkFee = wallet.CalculateNetworkFee(snapshot, tx);
             var data = new ContractParametersContext(snapshot, tx, system.Settings.Network);
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             txId = tx.Hash;
             system.Blockchain.Tell(tx);
-            Console.WriteLine("发送:" + tx.Hash.ToString());
+            Utility.Log("client",LogLevel.Debug, string.Format("neo client invoke,method:{0},tx_hash:{1}",method,tx.Hash.ToString()));
             return true;
         }
 

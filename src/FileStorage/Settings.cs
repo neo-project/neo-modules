@@ -24,6 +24,7 @@ namespace Neo.FileStorage
         public UInt160[] AlphabetContractHash;
         public UInt160 AuditContractHash;
         public UInt160 FsIdContractHash;
+        public UInt160 ReputationContractHash;
         public ECPoint[] validators;
 
         public int NetmapContractWorkersSize;

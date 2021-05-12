@@ -17,6 +17,7 @@ namespace Neo.FileStorage.InnerRing.Invoker
             if (client is null) throw new Exception("client is nil");
             return client.Invoke(out _, AlphabetContractHash[index], EmitMethod, 0);
         }
+
         public static bool AlphabetVote(this Client client, int index, ulong epoch, ECPoint[] publicKeys)
         {
             if (client is null) throw new Exception("client is nil");

@@ -16,6 +16,7 @@ namespace Neo.FileStorage.InnerRing.Invoker
         private const string ApprovePeerMethod = "addPeer";
         private const string UpdatePeerStateMethod = "updateState";
         private const string SetConfigMethod = "setConfigMethod";
+        private const string SetInnerRingMethod = "updateInnerRing";
         private const string GetNetmapSnapshotMethod = "netmap";
 
         public static ulong GetEpoch(this Client client)
@@ -48,6 +49,12 @@ namespace Neo.FileStorage.InnerRing.Invoker
         {
             if (client is null) throw new Exception("client is nil");
             return client.Invoke(out _, NetMapContractHash, SetConfigMethod, ExtraFee, Id, key, value);
+        }
+
+        public static bool SetInnerRing(this Client client, ECPoint[] publicKeys)
+        {
+            if (client is null) throw new Exception("client is nil");
+            return client.Invoke(out _, NetMapContractHash, SetInnerRingMethod, ExtraFee, publicKeys);
         }
 
         public static NodeInfo[] NetmapSnapshot(this Client client)
