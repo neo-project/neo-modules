@@ -15,6 +15,8 @@ namespace Neo.FileStorage.Services.Object.Util
         public BearerToken BearerToken;
         public ECDsa Key;
         public CallOptions CallOptions;
+        public int SuccessAfter = 0;
+        public bool TrackCopies = true;
 
         public static CommonPrm FromRequest(IRequest request)
         {
@@ -64,6 +66,8 @@ namespace Neo.FileStorage.Services.Object.Util
             BearerToken = other.BearerToken;
             Key = other.Key;
             CallOptions = other.CallOptions;
+            SuccessAfter = other.SuccessAfter;
+            TrackCopies = other.TrackCopies;
             return this;
         }
     }

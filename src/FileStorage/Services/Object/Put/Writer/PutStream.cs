@@ -52,7 +52,7 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
             };
         }
 
-        private void Init(PutInitPrm prm)
+        public void Init(PutInitPrm prm)
         {
             InitTarget(prm);
             target.WriteHeader(prm.Header);
@@ -140,7 +140,7 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
             traverser = new Traverser(builder, container.PlacementPolicy, prm.Header.Address);
         }
 
-        private void Chunk(ByteString chunk)
+        public void Chunk(ByteString chunk)
         {
             if (target is null)
                 throw new InvalidOperationException($"{nameof(PutStream)} target not initilized");

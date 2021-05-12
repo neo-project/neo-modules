@@ -8,6 +8,7 @@ using Neo.FileStorage.Services.Object.Search.Writer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Delete.Execute
@@ -86,7 +87,20 @@ namespace Neo.FileStorage.Services.Object.Delete.Execute
 
         public static ObjectID Put(this PutService service, ExecuteContext context, bool broadcast)
         {
-            throw new NotImplementedException();
+            var streamer = service.Put(new CancellationTokenSource().Token);
+            var prm = new PutInitPrm
+            {
+                Header = context.TombstoneObject.CutPayload(),
+            };
+            prm.WithCommonPrm(context.Prm);
+            if (broadcast)
+            {
+                prm.TrackCopies = false;
+            }
+            streamer.Init(prm);
+            streamer.Chunk(context.TombstoneObject.Payload);
+            var resp = (PutResponse)streamer.Close();
+            return resp.Body.ObjectId;
         }
     }
 }
