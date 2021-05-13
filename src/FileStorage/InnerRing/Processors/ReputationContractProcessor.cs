@@ -49,7 +49,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             ReputationPutEvent reputationPutEvent = (ReputationPutEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:reputation put,peer_id:{0}", reputationPutEvent.PeerID.ToHexString()));
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessPut(reputationPutEvent)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessPut(reputationPutEvent)) });
         }
 
         public void ProcessPut(ReputationPutEvent reputationPutEvent)
@@ -60,19 +60,23 @@ namespace Neo.FileStorage.InnerRing.Processors
                 return;
             }
             var currentEpoch = State.EpochCounter();
-            if (reputationPutEvent.Epoch >= currentEpoch) {
-                Utility.Log(Name, LogLevel.Info, string.Format("ignore reputation value, trust_epoch:{0},local_epoch:{1}", reputationPutEvent.Epoch,currentEpoch));
+            if (reputationPutEvent.Epoch >= currentEpoch)
+            {
+                Utility.Log(Name, LogLevel.Info, string.Format("ignore reputation value, trust_epoch:{0},local_epoch:{1}", reputationPutEvent.Epoch, currentEpoch));
                 return;
             }
-            if (API.Cryptography.SignExtension.VerifyMessagePart(reputationPutEvent.Trust.Signature, reputationPutEvent.Trust.Body)) {
+            if (API.Cryptography.SignExtension.VerifyMessagePart(reputationPutEvent.Trust.Signature, reputationPutEvent.Trust.Body))
+            {
                 Utility.Log(Name, LogLevel.Info, "ignore reputation value, reason:invalid signature");
                 return;
             }
-            try {
-                MorphCli.InvokeReputationPut((long)reputationPutEvent.Epoch, reputationPutEvent.PeerID, reputationPutEvent.Trust.ToByteArray());
+            try
+            {
+                MorphCli.InvokeReputationPut(reputationPutEvent.Epoch, reputationPutEvent.PeerID, reputationPutEvent.Trust.ToByteArray());
             }
-            catch (Exception e) {
-                Utility.Log(Name, LogLevel.Info, string.Format("can't send approval tx for reputation value,peer_id:{0},error:{1}",reputationPutEvent.PeerID.ToHexString(),e.Message));
+            catch (Exception e)
+            {
+                Utility.Log(Name, LogLevel.Info, string.Format("can't send approval tx for reputation value,peer_id:{0},error:{1}", reputationPutEvent.PeerID.ToHexString(), e.Message));
             }
         }
     }

@@ -28,7 +28,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             StartEvent startEvent = (StartEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("new round of audit,epoch:{0}", startEvent.epoch));
-            WorkPool.Tell(new NewTask() { process = Name, task = new System.Threading.Tasks.Task(() => ProcessStartAudit(startEvent.epoch)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new System.Threading.Tasks.Task(() => ProcessStartAudit(startEvent.epoch)) });
         }
 
         public void ProcessStartAudit(ulong epoch)

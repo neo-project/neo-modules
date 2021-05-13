@@ -86,7 +86,7 @@ namespace Neo.FileStorage.Morph.Invoker
             tx.Witnesses = data.GetWitnesses();
             txId = tx.Hash;
             system.Blockchain.Tell(tx);
-            Utility.Log("client",LogLevel.Debug, string.Format("neo client invoke,method:{0},tx_hash:{1}",method,tx.Hash.ToString()));
+            Utility.Log("client", LogLevel.Debug, string.Format("neo client invoke,method:{0},tx_hash:{1}", method, tx.Hash.ToString()));
             return true;
         }
 

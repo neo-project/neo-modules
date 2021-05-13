@@ -24,7 +24,7 @@ namespace Neo.FileStorage.Services.Object.Put
             return PutInitPrm.FromRequest(request);
         }
 
-        public IRequestStream Put(CancellationToken cancellation)
+        public PutStream Put(CancellationToken cancellation)
         {
             return new PutStream()
             {

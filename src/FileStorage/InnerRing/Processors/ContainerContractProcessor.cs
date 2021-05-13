@@ -45,14 +45,14 @@ namespace Neo.FileStorage.InnerRing.Processors
             ContainerPutEvent putEvent = (ContainerPutEvent)morphEvent;
             var id = putEvent.RawContainer.Sha256();
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:container put,id:{0}", Base58.Encode(id)));
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessContainerPut(putEvent)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessContainerPut(putEvent)) });
         }
 
         public void HandleDelete(IContractEvent morphEvent)
         {
             ContainerDeleteEvent deleteEvent = (ContainerDeleteEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:container delete,id:{0}", Base58.Encode(deleteEvent.ContainerID)));
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessContainerDelete(deleteEvent)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessContainerDelete(deleteEvent)) });
         }
 
         public void ProcessContainerPut(ContainerPutEvent putEvent)

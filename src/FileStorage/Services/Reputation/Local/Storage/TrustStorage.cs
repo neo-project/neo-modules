@@ -44,7 +44,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Storage
             }
             if (sum != 0)
             {
-                foreach (var trust in values.Select(p => new Trust { PeerId = PeerID.FromString(p.Key), Value = p.Value }))
+                foreach (var trust in values.Select(p => new Trust { Peer = PeerID.FromString(p.Key), Value = p.Value }))
                 {
                     handler(trust);
                 }

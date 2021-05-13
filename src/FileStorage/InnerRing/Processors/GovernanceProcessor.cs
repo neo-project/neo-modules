@@ -20,7 +20,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         public void HandleAlphabetSync(IContractEvent morphEvent)
         {
             Utility.Log(Name, LogLevel.Info, "new event,type:sync");
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => ProcessAlphabetSync()) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessAlphabetSync()) });
         }
 
         public void ProcessAlphabetSync()

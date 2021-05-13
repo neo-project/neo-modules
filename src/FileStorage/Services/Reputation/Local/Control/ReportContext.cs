@@ -29,7 +29,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Control
             {
                 ts.Iterate(t =>
                 {
-                    Log("Reputation", LogLevel.Debug, $"local trust, epoch={Epoch}, peer={t.PeerId}, value={t.Value}");
+                    Log("Reputation", LogLevel.Debug, $"local trust, epoch={Epoch}, peer={t.Peer}, value={t.Value}");
                 });
             }
             else
@@ -52,10 +52,10 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Control
                     if (i == localIndex) continue;
                     Trust t = new()
                     {
-                        PeerId = new(nm.Nodes[i].PublicKey),
+                        Peer = new(nm.Nodes[i].PublicKey),
                         Value = p,
                     };
-                    Log("Reputation", LogLevel.Debug, $"local trust, epoch={Epoch}, peer={t.PeerId}, value={t.Value}");
+                    Log("Reputation", LogLevel.Debug, $"local trust, epoch={Epoch}, peer={t.Peer}, value={t.Value}");
                 }
             }
         }

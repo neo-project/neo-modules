@@ -19,7 +19,7 @@ namespace Neo.FileStorage.Services.Object.Get.Writer
 
         public void WriteHeader(FSObject obj)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException($"{nameof(RangeHashGenerator)} should not write header when get range hash");
         }
 
         public void WriteChunk(byte[] chunk)

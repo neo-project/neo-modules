@@ -40,7 +40,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, "ignore genesis epoch");
                 return;
             }
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => Handle(epoch)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => Handle(epoch)) });
             Utility.Log(Name, LogLevel.Info, "AuditEvent handling successfully scheduled");
         }
 
@@ -61,7 +61,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             IncomeSettlementContext incomeCtx = new IncomeSettlementContext() { settlementDeps = basicIncome, epoch = epoch };
             incomeContexts[epoch] = incomeCtx;
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => incomeCtx.Collect()) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => incomeCtx.Collect()) });
         }
 
         public void HandleIncomeDistributionEvent(IContractEvent morphEvent)
@@ -81,7 +81,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, string.Format("income context distribution does not exists,epoch:{0}", epoch));
                 return;
             }
-            WorkPool.Tell(new NewTask() { process = Name, task = new Task(() => incomeCtx.Distribute()) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => incomeCtx.Distribute()) });
         }
 
         public class IncomeSettlementContext
