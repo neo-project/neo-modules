@@ -14,6 +14,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Snapshot = Cron.Persistence.Snapshot;
 
@@ -43,7 +45,6 @@ namespace Cron.Plugins
         {
             if (_shouldTrackUnclaimed)
             {
-                if (method == "getclaimable") return ProcessGetClaimableSpents(parameters);
                 if (method == "getunclaimed") return ProcessGetUnclaimed(parameters);
             }
 
@@ -151,6 +152,34 @@ namespace Cron.Plugins
                 }
 
                 return GetRelayResult(reason);
+            }
+            
+            if (method == "gettransactionreceipt")
+            {
+                if (parameters[1] != null)
+                { 
+                    var parseResult = Int32.TryParse(parameters[1].AsString(), out int timeout);
+                    if (parseResult)
+                    {
+                        Thread.Sleep(TimeSpan.FromMilliseconds(timeout / 10));
+                        UInt256 hash = UInt256.Parse(parameters[0].AsString());
+
+                            var trx =  Blockchain.Singleton.Store.GetTransactions().TryGet(hash);
+                            var block = Blockchain.Singleton.Store.GetBlock(trx.BlockIndex);
+                            var fullTransaction = block.Transactions.FirstOrDefault(f => f.Hash == trx.Transaction.Hash);
+                            if (fullTransaction != null)
+                            {
+                                return fullTransaction.Data.ToJson();
+                            }
+                    }
+                }
+
+                return null;
+            }
+
+            if (method == "getclaimamount")
+            {
+                return ProcessGetClaimableSpents(parameters);
             }
 
             return null;
@@ -558,14 +587,15 @@ namespace Cron.Plugins
 
         private JObject ProcessGetClaimableSpents(JArray parameters)
         {
-            UInt160 scriptHash = GetScriptHashFromParam(parameters[0].AsString());
+            // UInt160 scriptHash =  GetScriptHashFromParam(parameters[0].AsString());
+            UInt256 scriptHash = UInt256.Parse(parameters[0].AsString());
             var dbCache = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(
                 _db, null, null, SystemAssetSpentUnclaimedCoinsPrefix);
 
             JObject json = new JObject();
             JArray claimable = new JArray();
             json["claimable"] = claimable;
-            json["address"] = scriptHash.ToAddress();
+            //json["address"] = scriptHash.ToAddress();
 
             Fixed8 totalUnclaimed = Fixed8.Zero;
             using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
@@ -581,6 +611,28 @@ namespace Cron.Plugins
             return json;
         }
 
+        private JArray ProcessGetUnclaimedTransactions( UInt160 scriptHash)
+        {
+            JArray json = new JArray();
+
+            var unspentsCache = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(
+                _db, null, null, SystemAssetUnspentCoinsPrefix);
+            using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                byte[] prefix = new[] { (byte)1 }.Concat(scriptHash.ToArray()).ToArray();
+
+                var transactionsCache = snapshot.Transactions;
+                foreach (var claimableInTx in unspentsCache.Find(prefix))
+                {
+                    var transaction = transactionsCache.TryGet(claimableInTx.Key.TxHash);
+                    var obj = new JObject();
+                    obj["txid"] = transaction.Transaction.Hash.ToString();
+                    obj["vout"] = transaction.Transaction.Outputs.Select((p, i) => p.ToJson((ushort)i)).Count();
+                    json.Add(obj);
+                }
+            }
+            return json;
+        }
         private JObject ProcessGetUnclaimed(JArray parameters)
         {
             UInt160 scriptHash = GetScriptHashFromParam(parameters[0].AsString());
@@ -809,13 +861,14 @@ namespace Cron.Plugins
                 }
             }
 
-            JObject json = new JObject();
+            var unclaimedArray = ProcessGetUnclaimedTransactions(scriptHash);
             
+            JObject json = new JObject();
             JArray balances = new JArray();
             JArray unpsentsArray = new JArray();
             json["balances"] = balances;
             json["unspent"] = unpsentsArray;
-            json["unclaimed"] =  new JArray();
+            json["unclaimed"] =  unclaimedArray;
             json["version"] = "0";
             json["votes"] = new JArray();
             json["frozen"] = false; // TODO : get from blockchain state

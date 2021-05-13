@@ -14,7 +14,7 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/cronfoundation/cronium-plugins.git</RepositoryUrl>
     <PackageReleaseNotes></PackageReleaseNotes>
-    <PackageVersion>2.12.4</PackageVersion>
+    <PackageVersion>2.12.3</PackageVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>CRON.Plugin.RpcSystemAssetTracker</PackageId>
   </PropertyGroup>
