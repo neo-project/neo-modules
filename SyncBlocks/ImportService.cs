@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Akka.Actor;
+using Cron.Cryptography.ECC;
 using Cron.IO;
+using Cron.IO.Json;
 using Cron.Ledger;
 using Cron.Network.P2P.Payloads;
+using Cron.Persistence;
 using Cron.Plugins.SyncBlocks.Extensions;
 
 namespace Cron.Plugins.SyncBlocks
@@ -16,6 +19,7 @@ namespace Cron.Plugins.SyncBlocks
         private bool _isImporting;
         private Action _doneAction;
         private List<Block> _importBlocks;
+        private List<AssetState> _importAsset;
         private static int _importChunkSize = 100000;
         
         public static Props Props()
@@ -32,10 +36,15 @@ namespace Cron.Plugins.SyncBlocks
                     _isImporting = true;
                     _blockchainActorRef = import.BlockchainActorRef;
                     _doneAction = import.OnComplete;
+                    _importAsset = GetAssetsFromFile();
                     _importBlocks = GetBlocksFromFiles();
                     Self.Tell(new ProcessBulkImport());
                     break;
                 case ProcessBulkImport _:
+                    if (_importAsset != null)
+                    {
+                        ImportAssets(_importAsset);
+                    }
                     if (_importBlocks != null)
                     {
                         _importBlocks = _importBlocks
@@ -55,6 +64,11 @@ namespace Cron.Plugins.SyncBlocks
                             _doneAction();
                         }
                     }
+                    else
+                    {
+                        _isImporting = false;
+                        _doneAction();
+                    }
                     break;
                 case Blockchain.ImportCompleted _:
                     if (_importBlocks.Any())
@@ -70,6 +84,52 @@ namespace Cron.Plugins.SyncBlocks
                     }
                     break;
             }
+        }
+
+        private static List<AssetState> GetAssetsFromFile()
+        {
+            var fileName = "assets.acc";
+            var path = GetAssemblyDirectory();
+            Console.WriteLine($"Root directory: {path}");
+            var filePath = $"{path}/{fileName}";
+            var fileExist = File.Exists(filePath);
+            if (!fileExist)
+            {
+                Console.WriteLine($"No file {fileName} into directory {path}");
+                return null;
+            }
+            Console.WriteLine($"-Read assets from file: {DateTime.Now}");
+            var fileContent = File.ReadAllText(filePath);
+            var jObject = JObject.Parse(fileContent);
+            var assets = new List<AssetState>();
+            foreach (var jAsset in (JArray)jObject)
+            {
+                var assetTypeValue = jAsset["type"].AsString();
+                if (Enum.TryParse(typeof(AssetType), assetTypeValue, true, out var assetType))
+                {
+                    var asset = new AssetState
+                    {
+                        AssetId = UInt256.Parse(jAsset["id"].AsString()),
+                        AssetType = (AssetType) assetType,
+                        Name = jAsset["name"].AsString(),
+                        Amount = Fixed8.Parse(jAsset["amount"].AsString()),
+                        Available = Fixed8.Parse(jAsset["available"].AsString()),
+                        Issuer = UInt160.Parse(jAsset["issuer"].AsString()),
+                        Precision = byte.Parse(jAsset["precision"].AsString()),
+                        Fee = Fixed8.Parse(jAsset["fee"].AsString()),
+                        FeeAddress = UInt160.Parse(jAsset["feeaddress"].AsString()),
+                        Owner = ECPoint.Parse(jAsset["owner"].AsString(), ECCurve.Secp256r1),
+                        Admin = UInt160.Parse(jAsset["admin"].AsString()),
+                        Expiration = uint.Parse(jAsset["expiration"].AsString()),
+                        IsFrozen = bool.Parse(jAsset["isfrozen"].AsString())
+                    };
+                    assets.Add(asset);
+                }
+            }
+            var newFileName = $"{path}/{fileName}p";
+            File.Move($"{path}/{fileName}", newFileName);
+            Console.WriteLine($"-Finish read assets from files: {DateTime.Now}");
+            return assets;
         }
         
         private static List<Block> GetBlocksFromFiles()
@@ -140,6 +200,23 @@ namespace Cron.Plugins.SyncBlocks
         private static string GetAssemblyDirectory()
         {
             return Directory.GetCurrentDirectory();
+        }
+
+        private static void ImportAssets(IEnumerable<AssetState> assets)
+        {
+            using (var snapshot = Blockchain.Singleton.Store.GetSnapshot())
+            {
+                foreach (var asset in assets)
+                {
+                    var current = snapshot.Assets.Find().Any(x => x.Key == asset.AssetId);
+                    if (!current)
+                    {
+                        snapshot.Assets.Add(asset.AssetId, asset);
+                        snapshot.Commit();
+                    }
+                    
+                }
+            }
         }
     }
 }
