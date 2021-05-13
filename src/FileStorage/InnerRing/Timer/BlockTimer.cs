@@ -14,10 +14,7 @@ namespace Neo.FileStorage.InnerRing.Timer
         public class ResetWithBaseIntervalEvent { public uint d; }
         public class TickEvent { };
 
-        public class DeltaCfg
-        {
-            public bool pulse;
-        }
+        public class DeltaCfg { public bool pulse; }
         private bool rolledBack;
         private Func<uint> dur;
         private uint baseDur;

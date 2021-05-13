@@ -8,7 +8,7 @@ using Neo.FileStorage.API.Netmap;
 using Neo.IO;
 using Neo.Wallets;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
-using static Neo.FileStorage.InnerRing.Timer.EpochTickEvent;
+using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
 using System.Collections.Generic;
 using System.Linq;
 

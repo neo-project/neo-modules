@@ -13,7 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using static Neo.FileStorage.InnerRing.Events.MorphEvent;
-using static Neo.FileStorage.InnerRing.Timer.EpochTickEvent;
+using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
 using static Neo.FileStorage.Utils.locode.Column;
 using static Neo.FileStorage.Utils.WorkerPool;
@@ -427,8 +427,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             while (attributes.MoveNext())
             {
                 var attr = attributes.Current;
-                if (!tAttr.TryAdd(attr.Key, attr))
-                    tAttr[attr.Key] = attr;
+                tAttr[attr.Key] = attr;
             }
             return tAttr;
         }

@@ -40,7 +40,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             ParserInfo parser = new ParserInfo()
             {
                 ScriptHashWithType = scriptHashWithType,
-                Parser = LockEvent.ParseLockEvent,
+                Parser = ReputationPutEvent.ParseReputationPutEvent,
             };
             return new ParserInfo[] { parser };
         }

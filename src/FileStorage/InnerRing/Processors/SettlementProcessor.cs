@@ -86,6 +86,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public class IncomeSettlementContext
         {
+            private object lockObject = new();
             public BasicIncomeSettlementDeps settlementDeps;
             public ulong epoch;
             public OwnerID bankOwner;
@@ -98,18 +99,20 @@ namespace Neo.FileStorage.InnerRing.Processors
 
             public void Collect()
             {
-                var cachedRate = settlementDeps.BasicRate;
-                var cnrEstimations = settlementDeps.Estimations(epoch);
-                var txTable = new TransferTable();
-                foreach (var item in cnrEstimations)
-                {
-                    OwnerID owner = settlementDeps.ContainerInfo(item.ContainerID).OwnerId;
-                    NodeInfo[] cnrNodes = settlementDeps.ContainerNodes(epoch, item.ContainerID);
-                    ulong avg = AvgEstimation(item);
-                    BigInteger total = CalculateBasicSum(avg, cachedRate, cnrNodes.Length);
-                    foreach (var node in cnrNodes)
-                        distributeTable.Put(node.PublicKey(), avg);
-                    txTable.Transfer(new TransferTable.TransferTx() { from = owner, to = BankOwnerID(), amount = total });
+                lock (lockObject) {
+                    var cachedRate = settlementDeps.BasicRate;
+                    var cnrEstimations = settlementDeps.Estimations(epoch);
+                    var txTable = new TransferTable();
+                    foreach (var item in cnrEstimations)
+                    {
+                        OwnerID owner = settlementDeps.ContainerInfo(item.ContainerID).OwnerId;
+                        NodeInfo[] cnrNodes = settlementDeps.ContainerNodes(epoch, item.ContainerID);
+                        ulong avg = AvgEstimation(item);
+                        BigInteger total = CalculateBasicSum(avg, cachedRate, cnrNodes.Length);
+                        foreach (var node in cnrNodes)
+                            distributeTable.Put(node.PublicKey(), avg);
+                        txTable.Transfer(new TransferTable.TransferTx() { from = owner, to = BankOwnerID(), amount = total });
+                    }
                 }
             }
 
@@ -136,15 +139,17 @@ namespace Neo.FileStorage.InnerRing.Processors
 
             public void Distribute()
             {
-                var txTable = new TransferTable();
-                BigInteger bankBalance = settlementDeps.Balance(bankOwner);
-                BigInteger total = distributeTable.Total();
-                distributeTable.Iterate((byte[] key, BigInteger n) =>
-                {
-                    var nodeOwner = settlementDeps.ResolveKey(new BasicNodeInfoWrapper(key));
-                    txTable.Transfer(new TransferTable.TransferTx() { from = bankOwner, to = nodeOwner, amount = NormalizedValue(n, total, bankBalance) });
-                });
-                TransferTable.TransferAssets(settlementDeps, txTable);
+                lock (lockObject) {
+                    var txTable = new TransferTable();
+                    BigInteger bankBalance = settlementDeps.Balance(bankOwner);
+                    BigInteger total = distributeTable.Total();
+                    distributeTable.Iterate((byte[] key, BigInteger n) =>
+                    {
+                        var nodeOwner = settlementDeps.ResolveKey(new BasicNodeInfoWrapper(key));
+                        txTable.Transfer(new TransferTable.TransferTx() { from = bankOwner, to = nodeOwner, amount = NormalizedValue(n, total, bankBalance) });
+                    });
+                    TransferTable.TransferAssets(settlementDeps, txTable);
+                }
             }
 
             public BigInteger NormalizedValue(BigInteger n, BigInteger total, BigInteger limit)
@@ -248,6 +253,10 @@ namespace Neo.FileStorage.InnerRing.Processors
             public void Calculate(ulong epoch)
             {
                 Utility.Log("Calculator", LogLevel.Info, string.Format("current epoch,{0}", epoch));
+                if (epoch == 0) {
+                    Utility.Log("Calculator", LogLevel.Info, "settlements are ignored for zero epoch");
+                    return;
+                }
                 Utility.Log("Calculator", LogLevel.Info, "calculate audit settlements");
                 Utility.Log("Calculator", LogLevel.Debug, "getting results for the previous epoch");
                 List<DataAuditResult> auditResults;
@@ -313,7 +322,9 @@ namespace Neo.FileStorage.InnerRing.Processors
                 try
                 {
                     settlementDeps.ContainerNodes(ctx.eAudit, ctx.auditResult.ContainerId);
-                    return !(ctx.cnrNodes.Length == 0);
+                    var empty = ctx.cnrNodes.Length == 0;
+                    Utility.Log("Calculator", LogLevel.Debug, "empty list of container nodes");
+                    return !empty;
                 }
                 catch (Exception e)
                 {
@@ -330,17 +341,17 @@ namespace Neo.FileStorage.InnerRing.Processors
                 {
                     foreach (var passNode in ctx.auditResult.PassNodes)
                     {
-                        if (cnrNode.PublicKey().SequenceEqual(passNode.ToByteArray())) continue;
+                        if (!cnrNode.PublicKey().SequenceEqual(passNode.ToByteArray())) continue;
                         foreach (var failNode in ctx.auditResult.FailNodes)
                         {
-                            if (cnrNode.PublicKey().SequenceEqual(failNode.ToByteArray()))
+                            if (cnrNode.PublicKey().SequenceEqual(failNode.ToByteArray())) {
                                 loopflag = true;
-                            if (loopflag) break;
+                                break;
+                            }
                         }
                         if (loopflag) break;
                         ctx.passNodes[passNode.ToByteArray().ToHexString()] = cnrNode;
                     }
-                    if (loopflag) break;
                 }
                 if (ctx.passNodes.Count == 0)
                 {
@@ -399,6 +410,8 @@ namespace Neo.FileStorage.InnerRing.Processors
                     if (fee.CompareTo(BigInteger.Zero) == 0) fee = BigInteger.Add(fee, BigInteger.One);
                     ctx.txTable.Transfer(new TransferTable.TransferTx() { from = cnrOwner, to = ownerID, amount = fee });
                 }
+                var auditIR = OwnerID.Parser.ParseFrom(ctx.auditResult.PublicKey);
+                ctx.txTable.Transfer(new TransferTable.TransferTx() { from = cnrOwner, to = auditIR, amount = ctx.auditFee});
                 return false;
             }
 
@@ -412,6 +425,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 public NodeInfo[] cnrNodes;
                 public Dictionary<string, NodeInfo> passNodes = new();
                 public BigInteger sumSGSize;
+                public BigInteger auditFee;
             }
         }
     }

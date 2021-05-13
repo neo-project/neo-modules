@@ -85,7 +85,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 {
                     newInnerRing = UpdateInnerRing(innerRing, sidechainAlphabet, newAlphabet);
                     Array.Sort(newInnerRing);
-                    //notary to do:UpdateNeoFSAlphabetList
+                    MorphCli.SetInnerRing(newInnerRing);
                 }
                 catch (Exception e)
                 {
@@ -97,7 +97,6 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, string.Format("can't fetch inner ring list from side chain,error:{0}", e.Message));
                 return;
             }
-            //notary to do:UpdateNotaryList
             var epoch = State.EpochCounter();
             var id = System.Text.Encoding.UTF8.GetBytes(AlphabetUpdateIDPrefix).Concat(BitConverter.GetBytes(epoch)).ToArray();
             try

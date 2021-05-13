@@ -39,9 +39,9 @@ namespace Neo.FileStorage.InnerRing
         public class Start { };
         public class Stop { };
         // event producers
+        private List<IActorRef> blockTimers = new();
         private IActorRef morphEventListener;
         private IActorRef mainEventListener;
-        private List<IActorRef> blockTimers;
         private IActorRef epochTimer;
         // global state
         private Client mainNetClient;

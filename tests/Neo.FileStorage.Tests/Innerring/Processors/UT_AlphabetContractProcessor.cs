@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.Wallets;
-using static Neo.FileStorage.InnerRing.Timer.EpochTickEvent;
+using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
