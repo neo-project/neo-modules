@@ -1,2 +1,11 @@
-hasstorage: true
-ispayable: false
+name: "NeoFS Reputation"
+safemethods: ["get, getByID, listByEpoch"]
+events:
+  - name: reputationPut
+    parameters:
+      - name: epoch
+        type: Integer
+      - name: peerID
+        type: ByteArray
+      - name: value
+        type: ByteArray

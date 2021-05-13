@@ -1,8 +1,6 @@
-hasstorage: true
-ispayable: false
 name: "NeoFS Balance"
 supportedstandards: ["NEP-17"]
-safemethods: ["balanceOf", "decimals", "symbol", "totalSupply"]
+safemethods: ["balanceOf", "decimals", "symbol", "totalSupply", "version"]
 events:
   - name: Lock
     parameters:

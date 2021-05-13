@@ -1,2 +1,2 @@
-hasstorage: true
-ispayable: false
+name: "NeoFS ID"
+safemethods: ["key", "version"]
