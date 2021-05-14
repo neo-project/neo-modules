@@ -1,14 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Neo.FileStorage.API.Audit;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Morph.Event;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Threading.Tasks;
 using static Neo.FileStorage.InnerRing.Events.MorphEvent;
 using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor.IncomeSettlementContext;
 using static Neo.FileStorage.Morph.Invoker.MorphContractInvoker;
@@ -99,7 +99,8 @@ namespace Neo.FileStorage.InnerRing.Processors
 
             public void Collect()
             {
-                lock (lockObject) {
+                lock (lockObject)
+                {
                     var cachedRate = settlementDeps.BasicRate;
                     var cnrEstimations = settlementDeps.Estimations(epoch);
                     var txTable = new TransferTable();
@@ -139,7 +140,8 @@ namespace Neo.FileStorage.InnerRing.Processors
 
             public void Distribute()
             {
-                lock (lockObject) {
+                lock (lockObject)
+                {
                     var txTable = new TransferTable();
                     BigInteger bankBalance = settlementDeps.Balance(bankOwner);
                     BigInteger total = distributeTable.Total();
@@ -253,7 +255,8 @@ namespace Neo.FileStorage.InnerRing.Processors
             public void Calculate(ulong epoch)
             {
                 Utility.Log("Calculator", LogLevel.Info, string.Format("current epoch,{0}", epoch));
-                if (epoch == 0) {
+                if (epoch == 0)
+                {
                     Utility.Log("Calculator", LogLevel.Info, "settlements are ignored for zero epoch");
                     return;
                 }
@@ -344,7 +347,8 @@ namespace Neo.FileStorage.InnerRing.Processors
                         if (!cnrNode.PublicKey().SequenceEqual(passNode.ToByteArray())) continue;
                         foreach (var failNode in ctx.auditResult.FailNodes)
                         {
-                            if (cnrNode.PublicKey().SequenceEqual(failNode.ToByteArray())) {
+                            if (cnrNode.PublicKey().SequenceEqual(failNode.ToByteArray()))
+                            {
                                 loopflag = true;
                                 break;
                             }
@@ -411,7 +415,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     ctx.txTable.Transfer(new TransferTable.TransferTx() { from = cnrOwner, to = ownerID, amount = fee });
                 }
                 var auditIR = OwnerID.Parser.ParseFrom(ctx.auditResult.PublicKey);
-                ctx.txTable.Transfer(new TransferTable.TransferTx() { from = cnrOwner, to = auditIR, amount = ctx.auditFee});
+                ctx.txTable.Transfer(new TransferTable.TransferTx() { from = cnrOwner, to = auditIR, amount = ctx.auditFee });
                 return false;
             }
 
