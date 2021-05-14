@@ -11,7 +11,7 @@ namespace Neo.FileStorage.Services.Object.Head
     {
         public const int DefaultHeadTtl = 1;
         public KeyStorage KeyStorage { get; init; }
-        public ReputaionClientCache ClientCache { get; init; }
+        public ReputationClientCache ClientCache { get; init; }
 
         public FSObject Head(RemoteHeadPrm prm, CancellationToken context)
         {

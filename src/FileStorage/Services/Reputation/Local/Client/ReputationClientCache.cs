@@ -9,7 +9,7 @@ using MorphClient = Neo.FileStorage.Morph.Invoker.Client;
 
 namespace Neo.FileStorage.Services.Reputaion.Local.Client
 {
-    public class ReputaionClientCache
+    public class ReputationClientCache
     {
         public StorageService StorageNode { get; init; }
         public ClientCache BasicCache { get; init; }
@@ -39,7 +39,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             }
             catch (Exception e)
             {
-                Log(nameof(ReputaionClientCache), LogLevel.Debug, e.Message);
+                Log(nameof(ReputationClientCache), LogLevel.Debug, e.Message);
             }
             return new()
             {

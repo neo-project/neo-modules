@@ -1,3 +1,4 @@
+using System.Threading;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.Core.Object;
 using Neo.FileStorage.LocalObjectStorage.Engine;
@@ -6,7 +7,6 @@ using Neo.FileStorage.Network;
 using Neo.FileStorage.Services.Object.Put.Writer;
 using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.Reputaion.Local.Client;
-using System.Threading;
 
 namespace Neo.FileStorage.Services.Object.Put
 {
@@ -17,7 +17,7 @@ namespace Neo.FileStorage.Services.Object.Put
         public KeyStorage KeyStorage { get; init; }
         public StorageEngine LocalStorage { get; init; }
         public LocalObjectInhumer ObjectInhumer { get; init; }
-        public ReputaionClientCache ClientCache { get; init; }
+        public ReputationClientCache ClientCache { get; init; }
 
         public PutInitPrm ToInitPrm(PutRequest request)
         {

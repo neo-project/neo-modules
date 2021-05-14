@@ -19,7 +19,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
 {
     public class ReputationClient
     {
-        public ReputaionClientCache ClientCache { get; init; }
+        public ReputationClientCache ClientCache { get; init; }
         public FSClient FSClient { get; init; }
         public UpdatePrm Prm { get; init; }
 

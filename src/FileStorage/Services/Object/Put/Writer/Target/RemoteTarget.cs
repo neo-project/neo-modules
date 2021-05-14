@@ -1,9 +1,9 @@
+using System.Threading;
 using Google.Protobuf;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.ObjectManager.Transformer;
 using Neo.FileStorage.Services.Reputaion.Local.Client;
-using System.Threading;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Put
@@ -15,7 +15,7 @@ namespace Neo.FileStorage.Services.Object.Put
         public KeyStorage KeyStorage { get; init; }
         public PutInitPrm Prm { get; init; }
         public Network.Address Address { get; init; }
-        public ReputaionClientCache ClientCache { get; init; }
+        public ReputationClientCache ClientCache { get; init; }
 
         private FSObject obj;
         private byte[] payload;
