@@ -1,3 +1,4 @@
+using System;
 using Akka.Actor;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.Cache;
@@ -13,8 +14,8 @@ using Neo.FileStorage.Services.Reputaion.Intermediate;
 using Neo.FileStorage.Services.Reputaion.Local;
 using Neo.FileStorage.Services.Reputaion.Local.Routes;
 using Neo.FileStorage.Services.Reputaion.Local.Storage;
+using Neo.FileStorage.Services.Reputaion.Service;
 using Neo.FileStorage.Utils;
-using System;
 
 namespace Neo.FileStorage
 {
@@ -22,7 +23,7 @@ namespace Neo.FileStorage
     {
         public const int DefaultReputationWorkPoolSize = 32;
 
-        private void InitializeReputation()
+        private ReputaionServiceImpl InitializeReputation()
         {
             IActorRef workPool = system.ActorSystem.ActorOf(WorkerPool.Props("Reputation", DefaultReputationWorkPoolSize));
             NetmapCache netmapCache = new(this, morphClient);
@@ -127,6 +128,22 @@ namespace Neo.FileStorage
                     localTrustController.Report(e.EpochNumber);
                 }
             });
+            return new ReputaionServiceImpl
+            {
+                SignService = new()
+                {
+                    Key = key,
+                    ResponseService = new()
+                    {
+                        ReputationService = new()
+                        {
+                            LocalRouter = localTrustRouter,
+                            IntermediateRouter = intermediateTrustRouter,
+                            RouteBuilder = localRouteBuilder
+                        }
+                    }
+                }
+            };
         }
     }
 }

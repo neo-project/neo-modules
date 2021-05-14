@@ -1,12 +1,10 @@
+using System.Collections.Generic;
+using System.Security.Cryptography;
 using Google.Protobuf;
 using Neo.FileStorage.API.Reputation;
 using Neo.FileStorage.Services.Reputaion.Common;
 using Neo.FileStorage.Services.Reputaion.EigenTrust;
-using System.Collections.Generic;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using APIClient = Neo.FileStorage.API.Client.Client;
-using APITrust = Neo.FileStorage.API.Reputation.Trust;
 
 namespace Neo.FileStorage.Services.Reputaion.Intermediate.Remote
 {

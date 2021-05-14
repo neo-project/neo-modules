@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Netmap;
@@ -5,10 +9,6 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
 using Neo.FileStorage.Services.Reputaion.Local.Storage;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using FSClient = Neo.FileStorage.API.Client.Client;
 using FSContainer = Neo.FileStorage.API.Container.Container;
 using FSObject = Neo.FileStorage.API.Object.Object;

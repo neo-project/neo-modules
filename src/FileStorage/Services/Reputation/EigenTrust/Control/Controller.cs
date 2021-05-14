@@ -1,11 +1,11 @@
-using Akka.Actor;
-using Neo.FileStorage.Morph.Invoker;
-using Neo.FileStorage.Services.Reputaion.EigenTrust.Calculate;
-using Neo.FileStorage.Utils;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Akka.Actor;
+using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Services.Reputaion.EigenTrust.Calculate;
+using Neo.FileStorage.Utils;
 
 namespace Neo.FileStorage.Services.Reputaion.EigenTrust.Control
 {

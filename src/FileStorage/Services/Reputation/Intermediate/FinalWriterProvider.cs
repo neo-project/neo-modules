@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using Neo.FileStorage.Morph.Invoker;
-using Neo.FileStorage.Services.Reputaion.EigenTrust;
 
 namespace Neo.FileStorage.Services.Reputaion.Intermediate
 {

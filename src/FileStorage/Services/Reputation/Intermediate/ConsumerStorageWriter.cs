@@ -1,7 +1,6 @@
 using Neo.FileStorage.Services.Reputaion.Common;
 using Neo.FileStorage.Services.Reputaion.EigenTrust;
 using Neo.FileStorage.Services.Reputaion.EigenTrust.Storage.Consumers;
-using Neo.FileStorage.Services.Reputaion.EigenTrust.Storage.Daughters;
 
 namespace Neo.FileStorage.Services.Reputaion.Intermediate
 {

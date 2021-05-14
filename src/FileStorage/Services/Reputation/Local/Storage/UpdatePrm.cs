@@ -1,4 +1,3 @@
-
 using System;
 
 namespace Neo.FileStorage.Services.Reputaion.Local.Storage
