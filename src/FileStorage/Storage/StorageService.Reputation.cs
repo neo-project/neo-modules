@@ -23,7 +23,7 @@ namespace Neo.FileStorage
     {
         public const int DefaultReputationWorkPoolSize = 32;
 
-        private ReputaionServiceImpl InitializeReputation()
+        private ReputationServiceImpl InitializeReputation()
         {
             IActorRef workPool = system.ActorSystem.ActorOf(WorkerPool.Props("Reputation", DefaultReputationWorkPoolSize));
             NetmapCache netmapCache = new(this, morphClient);
@@ -128,7 +128,7 @@ namespace Neo.FileStorage
                     localTrustController.Report(e.EpochNumber);
                 }
             });
-            return new ReputaionServiceImpl
+            return new ReputationServiceImpl
             {
                 SignService = new()
                 {
