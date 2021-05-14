@@ -37,5 +37,15 @@ namespace Neo.FileStorage.Services.Reputaion
             if (ReferenceEquals(this, other)) return true;
             return value.SequenceEqual(other.value);
         }
+
+        public static implicit operator byte[](PeerID p)
+        {
+            return p.value;
+        }
+
+        public static implicit operator PeerID(byte[] bytes)
+        {
+            return new PeerID(bytes);
+        }
     }
 }

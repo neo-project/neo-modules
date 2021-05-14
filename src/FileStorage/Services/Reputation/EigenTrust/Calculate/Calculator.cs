@@ -76,7 +76,7 @@ namespace Neo.FileStorage.Services.Reputaion.EigenTrust.Calculate
             }
         }
 
-        private void IterateDaughter(IterationContext context, PeerID peer, ConsumersTrusts trusts, bool last)
+        private void IterateDaughter(IterationContext context, PeerID peer, ConsumerTrusts trusts, bool last)
         {
             var init = InitialTrustSource.InitialTrust(peer);
             var daughters = DaughterTrustSource.InitDaughterIterator(context, peer);

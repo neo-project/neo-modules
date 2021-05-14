@@ -1,4 +1,3 @@
-using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.Network.Cache;
 using Neo.FileStorage.Services.Audit;
 using Neo.FileStorage.Services.Audit.Auditor;
@@ -10,7 +9,6 @@ using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.StorageGroup;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using V2Range = Neo.FileStorage.API.Object.Range;
 

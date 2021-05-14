@@ -6,9 +6,9 @@ namespace Neo.FileStorage.Morph.Invoker
 {
     public interface IClient
     {
-        public Wallet GetWallet();
-        public bool Invoke(out UInt256 txId, UInt160 contractHash, string method, long fee, params object[] args);
-        public InvokeResult TestInvoke(UInt160 contractHash, string method, params object[] args);
+        Wallet GetWallet();
+        bool Invoke(out UInt256 txId, UInt160 contractHash, string method, long fee, params object[] args);
+        InvokeResult TestInvoke(UInt160 contractHash, string method, params object[] args);
     }
 
     public class InvokeResult

@@ -50,7 +50,7 @@ using FSContainer = Neo.FileStorage.API.Container.Container;
 
 namespace Neo.FileStorage
 {
-    public sealed class StorageService : IDisposable
+    public sealed partial class StorageService : IDisposable
     {
         public const int ContainerCacheSize = 100;
         public const int ContainerCacheTTLSeconds = 30;
@@ -67,6 +67,8 @@ namespace Neo.FileStorage
         private readonly IActorRef listener;
         public ProtocolSettings ProtocolSettings => system.Settings;
         private Network.Address LocalAddress => Network.Address.AddressFromString(LocalNodeInfo.Address);
+        private NetmapProcessor netmapProcessor = new();
+        private ContainerProcessor containerProcessor = new();
 
         public StorageService(NeoSystem side)
         {
@@ -88,22 +90,9 @@ namespace Neo.FileStorage
             {
                 return morphClient.InvokeGetEACL(cid)?.Table;
             });
-            Services.Reputaion.Local.Control.Controller reputationController = new()
-            {
-                NetmapCache = new NetmapCache(this, morphClient),
-                ReputationStorage = new(),
-                LocalKey = key.PublicKey(),
-            };
             listener = system.ActorSystem.ActorOf(Listener.Props("storage"));
-            NetmapProcessor netmapProcessor = new();
             netmapProcessor.AddEpochParser(MorphEvent.NewEpochEvent.ParseNewEpochEvent);
-            netmapProcessor.AddEpochHandler(p =>
-            {
-                if (p is MorphEvent.NewEpochEvent e)
-                {
-                    reputationController.Report(e.EpochNumber - 1);
-                }
-            });
+
             netmapProcessor.AddEpochHandler(p =>
             {
                 if (p is MorphEvent.NewEpochEvent e)
@@ -144,7 +133,6 @@ namespace Neo.FileStorage
                     MorphClient = morphClient,
                 })
             };
-            var containerProcessor = new ContainerProcessor();
             containerProcessor.AddStartEstimateContainerParser(MorphEvent.StartEstimationEvent.ParseStartEstimationEvent);
             containerProcessor.AddStartEstimateHandler(p =>
             {
