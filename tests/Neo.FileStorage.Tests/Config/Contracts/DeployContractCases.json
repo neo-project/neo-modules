@@ -79,6 +79,18 @@
       "accountIndex": 6
     },
     {
+      "Name": "Processing Contract",
+      "NefFilePath": "./Config/Contracts/processing/processing_contract.nef",
+      "ManifestPath": "./Config/Contracts/processing/config.json",
+      "accountIndex": 0
+    },
+    {
+      "Name": "Proxy Contract",
+      "NefFilePath": "./Config/Contracts/proxy/proxy_contract.nef",
+      "ManifestPath": "./Config/Contracts/proxy/config.json",
+      "accountIndex": 0
+    },
+    {
       "Name": "Reputation Contract",
       "NefFilePath": "./Config/Contracts/reputation/reputation_contract.nef",
       "ManifestPath": "./Config/Contracts/reputation/config.json",

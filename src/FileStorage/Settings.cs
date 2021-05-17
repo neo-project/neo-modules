@@ -32,6 +32,7 @@ namespace Neo.FileStorage
         public int BalanceContractWorkersSize;
         public int ContainerContractWorkersSize;
         public int AlphabetContractWorkersSize;
+        public int ReputationContractWorkersSize;
 
         public int PdpPoolSize;
         public int PorPoolSize;
@@ -98,6 +99,7 @@ namespace Neo.FileStorage
             this.BalanceContractWorkersSize = int.Parse(workSizes.GetSection("balance").Value);
             this.ContainerContractWorkersSize = int.Parse(workSizes.GetSection("container").Value);
             this.AlphabetContractWorkersSize = int.Parse(workSizes.GetSection("alphabet").Value);
+            this.ReputationContractWorkersSize = int.Parse(workSizes.GetSection("reputation").Value);
 
             IConfigurationSection timers = section.GetSection("timers");
             this.EpochDuration = uint.Parse(timers.GetSection("epoch").Value);

@@ -1,2 +1,0 @@
-name: "NeoFS Audit"
-safemethods: ["get", "list", "listByEpoch", "listByCID", "listByNode", "version"]
