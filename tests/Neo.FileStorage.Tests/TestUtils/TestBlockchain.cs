@@ -150,8 +150,6 @@ namespace Neo.FileStorage.Tests
             //Fake IR
             script = NativeContract.RoleManagement.Hash.MakeScript("designateAsRole", Role.NeoFSAlphabetNode, ToParameter(accounts.Select(p => p.GetKey().PublicKey.ToArray()).ToArray()));
             ExecuteScript(snapshot, "FakeIR", script, NativeContract.NEO.GetCommitteeAddress(snapshot));
-            Cryptography.ECC.ECPoint[] eCPoints = NativeContract.NEO.GetCommittee(snapshot);
-            Console.WriteLine("委员会成员:"+eCPoints.Select(p=> { Console.WriteLine(p.ToString()); return p; }).ToArray().Length);
             NodeInfo nodeInfo = new NodeInfo();
             nodeInfo.Address = API.Cryptography.KeyExtension.PublicKeyToAddress(accounts.ToArray()[0].GetKey().PublicKey.ToArray());
             nodeInfo.PublicKey = ByteString.CopyFrom(accounts.ToArray()[0].GetKey().PublicKey.ToArray());
@@ -175,8 +173,6 @@ namespace Neo.FileStorage.Tests
             byte[] sig = Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
             script = settings.ContainerContractHash.MakeScript("put", container.ToByteArray(), sig, key.PublicKey.ToArray());
             var containerId = container.CalCulateAndGetId.Value.ToByteArray();
-            var committees = NativeContract.NEO.GetCommittee(snapshot);
-            var address = Contract.CreateMultiSigRedeemScript(committees.Length * 2 / 3 + 1, committees).ToScriptHash();
             for (int i = 0; i < accounts.Count(); i++)
             {
                
@@ -197,7 +193,7 @@ namespace Neo.FileStorage.Tests
             for (int i = 0; i < accounts.Count(); i++)
             {
                 script = settings.NetmapContractHash.MakeScript("newEpoch", 1);
-                ExecuteScript(snapshot, "FakeEpoch", script, address);
+                ExecuteScript(snapshot, "FakeEpoch", script, accounts.ToArray()[i].ScriptHash);
             }
             snapshot.Commit();
         }
