@@ -8,28 +8,28 @@ namespace Neo.FileStorage.Utils.locode.db
 {
     public class ContinentDB
     {
-        public string path;
-        private Once once = new();
+        public string Path { get; init; }
+        private readonly Once once = new();
         private IFeature[] features;
 
         public Continent PointContinent(Point point)
         {
-            once.Do(() => { Init(); });
-            NetTopologySuite.Geometries.Point planarPoint = new NetTopologySuite.Geometries.Point(point.longitude, point.latitude);
+            once.Do(Init);
+            NetTopologySuite.Geometries.Point planarPoint = new NetTopologySuite.Geometries.Point(point.Longitude, point.Latitude);
             string continent = null;
             foreach (var feature in features)
             {
-                if (feature.Geometry is MultiPolygon)
+                if (feature.Geometry is MultiPolygon m)
                 {
-                    if (((MultiPolygon)feature.Geometry).Contains(planarPoint))
+                    if (m.Contains(planarPoint))
                     {
                         continent = feature.Attributes["Continent"].ToString();
                         break;
                     }
                 }
-                else if (feature.Geometry is Polygon)
+                else if (feature.Geometry is Polygon p)
                 {
-                    if (((Polygon)feature.Geometry).Contains(planarPoint))
+                    if (p.Contains(planarPoint))
                     {
                         continent = feature.Attributes["Continent"].ToString();
                         break;
@@ -39,9 +39,9 @@ namespace Neo.FileStorage.Utils.locode.db
             return continent.ContinentFromString();
         }
 
-        public void Init()
+        private void Init()
         {
-            string data = File.ReadAllText(path);
+            string data = File.ReadAllText(Path);
             FeatureCollection featureCollection = JsonConvert.DeserializeObject<FeatureCollection>(data);
             features = featureCollection.ToArray();
         }

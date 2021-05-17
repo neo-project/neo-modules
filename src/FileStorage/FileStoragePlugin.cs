@@ -1,8 +1,8 @@
+using System.Collections.Generic;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.Plugins;
-using System.Collections.Generic;
 
 namespace Neo.FileStorage
 {
@@ -10,7 +10,7 @@ namespace Neo.FileStorage
     /// The entrance of the FSNode program.
     /// Built-in an innering service to process notification events related to FS when the block is persisted.
     /// </summary>
-    public class FileStoragePlugin : Plugin, IPersistencePlugin
+    public partial class FileStoragePlugin : Plugin, IPersistencePlugin
     {
         public override string Name => "FileStorageService";
         public override string Description => "Provide distributed file storage service";

@@ -1,27 +1,27 @@
-using Neo.IO;
 using System;
 using System.IO;
+using Neo.IO;
 using static Neo.FileStorage.Utils.locode.Column;
 
 namespace Neo.FileStorage.Utils.locode.db
 {
     public class Point : ISerializable
     {
-        public double latitude;
-        public double longitude;
+        public double Latitude;
+        public double Longitude;
 
         public int Size => 2 * sizeof(double);
 
         public void Deserialize(BinaryReader reader)
         {
-            latitude = reader.ReadDouble();
-            longitude = reader.ReadDouble();
+            Latitude = reader.ReadDouble();
+            Longitude = reader.ReadDouble();
         }
 
         public void Serialize(BinaryWriter writer)
         {
-            writer.Write(latitude);
-            writer.Write(longitude);
+            writer.Write(Latitude);
+            writer.Write(Longitude);
             writer.Flush();
         }
 
@@ -38,7 +38,7 @@ namespace Neo.FileStorage.Utils.locode.db
             var cLngMnt = cLng.Minutes();
             var lng = Double.Parse(string.Join(string.Join(BitConverter.ToString(cLngDeg), "."), BitConverter.ToString(cLngMnt)));
             if (!cLng.East()) lng = -lng;
-            return new Point() { latitude = lat, longitude = lng };
+            return new Point() { Latitude = lat, Longitude = lng };
         }
     }
 }
