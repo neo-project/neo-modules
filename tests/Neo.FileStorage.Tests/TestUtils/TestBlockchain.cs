@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Google.Protobuf;
 using Microsoft.Extensions.Configuration;
 using Neo.FileStorage.API.Container;
@@ -12,10 +16,6 @@ using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using static Neo.FileStorage.Morph.Invoker.MorphClient;
 
 namespace Neo.FileStorage.Tests
@@ -30,7 +30,7 @@ namespace Neo.FileStorage.Tests
         static TestBlockchain()
         {
             string ConfigFilePath = "./Config/ProtocolSettingsConfig.json";
-            protocolSettings=ProtocolSettings.Load(ConfigFilePath);
+            protocolSettings = ProtocolSettings.Load(ConfigFilePath);
             TheNeoSystem = new NeoSystem(protocolSettings);
             Console.WriteLine("initialize NeoSystem");
             InitializeMockNeoSystem();
@@ -175,7 +175,7 @@ namespace Neo.FileStorage.Tests
             var containerId = container.CalCulateAndGetId.Value.ToByteArray();
             for (int i = 0; i < accounts.Count(); i++)
             {
-               
+
                 ExecuteScript(snapshot, "FakeContainer", script, accounts.ToArray()[i].ScriptHash);
             }
             Console.WriteLine("FakeContainerID:" + containerId.ToHexString());
