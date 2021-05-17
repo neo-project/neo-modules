@@ -1,16 +1,14 @@
-using Neo.FileStorage.Cache;
-using Neo.FileStorage.Services.Reputaion.Local.Storage;
 using System.Collections.Generic;
 using System.Threading;
+using Neo.FileStorage.Services.Reputaion.Common.Route;
 
 namespace Neo.FileStorage.Services.Reputaion.Local.Control
 {
     public class Controller
     {
-        public ReputationStorage ReputationStorage { get; init; }
-        public NetmapCache NetmapCache { get; init; }
+        public LocalTrustStorage LocalTrustStorage { get; init; }
+        public Router Router { get; init; }
         public byte[] LocalKey { get; init; }
-
         private readonly Dictionary<ulong, CancellationTokenSource> cancels = new();
 
         public void Report(ulong epoch)

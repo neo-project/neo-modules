@@ -1,3 +1,4 @@
+using System;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Morph.Invoker;
@@ -5,7 +6,6 @@ using Neo.FileStorage.Services.Object.Search.Execute;
 using Neo.FileStorage.Services.Object.Search.Writer;
 using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.Reputaion.Local.Client;
-using System;
 
 namespace Neo.FileStorage.Services.Object.Search
 {
@@ -14,7 +14,7 @@ namespace Neo.FileStorage.Services.Object.Search
         public KeyStorage KeyStorage { get; init; }
         public StorageEngine LocalStorage { get; init; }
         public Client MorphClient { get; init; }
-        public ReputaionClientCache ClientCache { get; init; }
+        public ReputationClientCache ClientCache { get; init; }
         public TraverserGenerator TraverserGenerator { get; init; }
 
         public SearchPrm ToSearchPrm(SearchRequest request, Action<SearchResponse> handler)

@@ -1,54 +1,26 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Neo.FileStorage.Services.Reputaion.Local.Storage
 {
     public class TrustStorage
     {
-        private readonly ConcurrentDictionary<string, TrustValue> store = new();
+        private readonly ConcurrentDictionary<ulong, EpochTrustStorage> store = new();
 
         public void Update(UpdatePrm prm)
         {
-            string key = prm.PeerId.ToString();
-            if (store.TryGetValue(key, out TrustValue value))
+            if (store.TryGetValue(prm.Epoch, out EpochTrustStorage storage))
             {
-                if (prm.Sat) value.Sat++;
-                value.All++;
+                storage.Update(prm);
                 return;
             }
-            value = new()
-            {
-                Sat = prm.Sat ? 1 : 0,
-                All = 1,
-            };
-            store[key] = value;
+            storage = new();
+            storage.Update(prm);
+            store[prm.Epoch] = storage;
         }
 
-
-        public void Iterate(Action<Trust> handler)
+        public bool DataForEpoch(ulong epoch, out EpochTrustStorage storage)
         {
-            double sum = 0;
-            Dictionary<string, double> values = new();
-            foreach (var (id, tv) in store)
-            {
-                if (0 < tv.All)
-                {
-                    double num = (double)tv.Sat;
-                    double denom = (double)tv.All;
-                    double value = num / denom;
-                    values[id] = value;
-                    sum += value;
-                }
-            }
-            if (sum != 0)
-            {
-                foreach (var trust in values.Select(p => new Trust { Peer = PeerID.FromString(p.Key), Value = p.Value }))
-                {
-                    handler(trust);
-                }
-            }
+            return store.TryGetValue(epoch, out storage);
         }
     }
 }

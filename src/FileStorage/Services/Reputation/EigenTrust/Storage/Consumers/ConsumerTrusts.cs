@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 
 namespace Neo.FileStorage.Services.Reputaion.EigenTrust.Storage.Consumers
 {
-    public class ConsumersTrusts
+    public class ConsumerTrusts
     {
         private readonly ConcurrentDictionary<PeerID, Trust> store = new();
 

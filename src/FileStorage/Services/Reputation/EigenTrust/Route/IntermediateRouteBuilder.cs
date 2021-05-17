@@ -1,10 +1,10 @@
+using System.Collections.Generic;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Services.Reputaion.Common;
-using System.Collections.Generic;
 
 namespace Neo.FileStorage.Services.Reputaion.EigenTrust.Route
 {
-    public class Builder
+    public class IntermediateRouteBuilder : IBuilder
     {
         public ManagerBuilder ManagerBuilder { get; init; }
 

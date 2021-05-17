@@ -1,35 +1,29 @@
-using System;
 using System.Collections.Concurrent;
 
 namespace Neo.FileStorage.Services.Reputaion.EigenTrust.Storage.Consumers
 {
     public class ConsumersStorage
     {
-        private readonly ConcurrentDictionary<PeerID, ConsumersTrusts> store = new();
+        private readonly ConcurrentDictionary<ulong, IterationConsumerStorage> store = new();
 
         public void Put(IterationTrust t)
         {
-            if (!store.TryGetValue(t.Trust.Peer, out ConsumersTrusts storage))
+            if (!store.TryGetValue(t.Epoch, out IterationConsumerStorage storage))
             {
                 storage = new();
-                store[t.Trust.Peer] = storage;
+                store[t.Epoch] = storage;
             }
             storage.Put(t);
         }
 
-        public void Iterate(Action<PeerID, ConsumersTrusts> handler)
+        public bool Consumers(ulong epoch, uint iter, out ConsumerStorage storage)
         {
-            foreach (var (key, value) in store)
+            storage = null;
+            if (!store.TryGetValue(epoch, out IterationConsumerStorage stor))
             {
-                try
-                {
-                    handler(key, value);
-                }
-                catch
-                {
-                    break;
-                }
+                return false;
             }
+            return stor.Consumers(iter, out storage);
         }
     }
 }

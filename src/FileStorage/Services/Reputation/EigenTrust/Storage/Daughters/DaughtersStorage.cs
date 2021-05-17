@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 
 namespace Neo.FileStorage.Services.Reputaion.EigenTrust.Storage.Daughters
 {
-    public class Storage
+    public class DaughtersStorage
     {
         private readonly ConcurrentDictionary<ulong, DaughterStorage> store = new();
 

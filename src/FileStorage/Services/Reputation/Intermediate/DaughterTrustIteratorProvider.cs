@@ -1,14 +1,14 @@
+using System;
 using Neo.FileStorage.Services.Reputaion.EigenTrust;
 using Neo.FileStorage.Services.Reputaion.EigenTrust.Storage.Consumers;
 using Neo.FileStorage.Services.Reputaion.EigenTrust.Storage.Daughters;
-using System;
 
 namespace Neo.FileStorage.Services.Reputaion.Intermediate
 {
     public class DaughterTrustIteratorProvider
     {
-        public EigenTrust.Storage.Consumers.Storage ConsumerStorage { get; init; }
-        public EigenTrust.Storage.Daughters.Storage DaughterStorage { get; init; }
+        public ConsumersStorage ConsumerStorage { get; init; }
+        public DaughtersStorage DaughterStorage { get; init; }
 
         public DaughterTrusts InitDaughterIterator(IterationContext context, PeerID peer)
         {
@@ -24,9 +24,9 @@ namespace Neo.FileStorage.Services.Reputaion.Intermediate
             throw new InvalidOperationException();
         }
 
-        public ConsumersStorage InitConsumerIterator(IterationContext context)
+        public ConsumerStorage InitConsumerIterator(IterationContext context)
         {
-            if (ConsumerStorage.Consumers(context.Epoch, context.Index, out ConsumersStorage storage))
+            if (ConsumerStorage.Consumers(context.Epoch, context.Index, out ConsumerStorage storage))
                 return storage;
             throw new InvalidOperationException();
         }

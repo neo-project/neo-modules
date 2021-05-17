@@ -1,12 +1,11 @@
+using System;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Reputaion.Common.Route;
 using Neo.FileStorage.Services.Reputaion.EigenTrust.Storage.Consumers;
 using Neo.FileStorage.Services.Reputaion.Intermediate;
 using Neo.FileStorage.Utils;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Neo.FileStorage.Services.Reputaion.EigenTrust.Calculate
 {
@@ -76,7 +75,7 @@ namespace Neo.FileStorage.Services.Reputaion.EigenTrust.Calculate
             }
         }
 
-        private void IterateDaughter(IterationContext context, PeerID peer, ConsumersTrusts trusts, bool last)
+        private void IterateDaughter(IterationContext context, PeerID peer, ConsumerTrusts trusts, bool last)
         {
             var init = InitialTrustSource.InitialTrust(peer);
             var daughters = DaughterTrustSource.InitDaughterIterator(context, peer);

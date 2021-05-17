@@ -8,11 +8,11 @@ namespace Neo.FileStorage.Services.Reputaion.Common
 {
     public class ManagerBuilder
     {
-        public NetmapCache NetmapStorage { get; init; }
+        public NetmapCache NetmapCache { get; init; }
 
         public List<NodeInfo> BuilderManagers(ulong epoch, PeerID peer)
         {
-            var nm = NetmapStorage.GetNetMapByEpoch(epoch);
+            var nm = NetmapCache.GetNetMapByEpoch(epoch);
             var nodes = nm.Nodes.OrderBy(p => p.ID.Distance(epoch)).ToArray();
             for (int i = 0; i < nodes.Length; i++)
             {

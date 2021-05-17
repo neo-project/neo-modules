@@ -1,8 +1,8 @@
+using System;
 using Akka.Actor;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
-using System;
 using static Neo.FileStorage.InnerRing.Events.MorphEvent;
 using static Neo.FileStorage.InnerRing.Timer.BlockTimer;
 using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
@@ -14,30 +14,34 @@ namespace Neo.FileStorage.InnerRing.Timer
         public static IActorRef NewEpochTimer(EpochTimerArgs args)
         {
             IActorRef epochTimer = args.context.ActorSystem.ActorOf(BlockTimer.Props(BlockTimer.StaticBlockMeter(Settings.Default.EpochDuration), () => { args.processor.HandleNewEpochTick(new NewEpochTickEvent()); }));
-            epochTimer.Tell(new DeltaEvent() {
-                mul=args.stopEstimationDMul,
-                div=args.stopEstimationDDiv,
-                h=()=> {
+            epochTimer.Tell(new DeltaEvent()
+            {
+                mul = args.stopEstimationDMul,
+                div = args.stopEstimationDDiv,
+                h = () =>
+                {
                     long epochN = (long)args.epoch.EpochCounter();
                     if (epochN == 0) return;
-                    args.client.InvokeStopEstimation(epochN-1);
+                    args.client.InvokeStopEstimation(epochN - 1);
                 },
             });
             epochTimer.Tell(new DeltaEvent()
             {
                 mul = args.collectBasicIncome.durationMul,
                 div = args.collectBasicIncome.durationDiv,
-                h = () => {
+                h = () =>
+                {
                     ulong epochN = args.epoch.EpochCounter();
                     if (epochN == 0) return;
-                    args.collectBasicIncome.handler(new BasicIncomeCollectEvent() { epoch=epochN-1});
+                    args.collectBasicIncome.handler(new BasicIncomeCollectEvent() { epoch = epochN - 1 });
                 },
             });
             epochTimer.Tell(new DeltaEvent()
             {
                 mul = args.distributeBasicIncome.durationMul,
                 div = args.distributeBasicIncome.durationDiv,
-                h = () => {
+                h = () =>
+                {
                     ulong epochN = args.epoch.EpochCounter();
                     if (epochN == 0) return;
                     args.distributeBasicIncome.handler(new BasicIncomeDistributeEvent() { epoch = epochN - 1 });

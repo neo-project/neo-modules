@@ -2,13 +2,13 @@ using System.Collections.Concurrent;
 
 namespace Neo.FileStorage.Services.Reputaion.EigenTrust.Storage.Consumers
 {
-    public class IterationConsumersStorage
+    public class IterationConsumerStorage
     {
-        private readonly ConcurrentDictionary<uint, ConsumersStorage> store = new();
+        private readonly ConcurrentDictionary<uint, ConsumerStorage> store = new();
 
         public void Put(IterationTrust t)
         {
-            if (!store.TryGetValue(t.Index, out ConsumersStorage storage))
+            if (!store.TryGetValue(t.Index, out ConsumerStorage storage))
             {
                 storage = new();
                 store[t.Index] = storage;
@@ -16,7 +16,7 @@ namespace Neo.FileStorage.Services.Reputaion.EigenTrust.Storage.Consumers
             storage.Put(t);
         }
 
-        public bool Consumers(uint iter, out ConsumersStorage storage)
+        public bool Consumers(uint iter, out ConsumerStorage storage)
         {
             return store.TryGetValue(iter, out storage);
         }

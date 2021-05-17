@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Google.Protobuf;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.LocalObjectStorage.Engine;
@@ -6,8 +8,6 @@ using Neo.FileStorage.Services.Object.Get.Execute;
 using Neo.FileStorage.Services.Object.Get.Writer;
 using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.Reputaion.Local.Client;
-using System.Collections.Generic;
-using System.Linq;
 using FSRange = Neo.FileStorage.API.Object.Range;
 
 
@@ -19,7 +19,7 @@ namespace Neo.FileStorage.Services.Object.Get
         public bool Assemble { get; init; }
         public KeyStorage KeyStorage { get; init; }
         public StorageEngine LocalStorage { get; init; }
-        public ReputaionClientCache ClientCache { get; init; }
+        public ReputationClientCache ClientCache { get; init; }
         public Client MorphClient { get; init; }
         public TraverserGenerator TraverserGenerator { get; init; }
 

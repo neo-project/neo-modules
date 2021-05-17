@@ -1,11 +1,10 @@
-
 using System.Collections.Generic;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Services.Reputaion.Common;
 
 namespace Neo.FileStorage.Services.Reputaion.Local.Routes
 {
-    public class LocalBuilder : IBuilder
+    public class LocalRouteBuilder : IBuilder
     {
         public ManagerBuilder ManagerBuilder { get; init; }
 
