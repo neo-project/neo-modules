@@ -127,6 +127,7 @@ namespace Neo.Consensus
                 Category = "dBFT",
                 ValidBlockStart = 0,
                 ValidBlockEnd = message.BlockIndex,
+                //VRFProof = GetNonce(keyPair.PrivateKey, Block.PrevHash.ToArray()),
                 Sender = GetSender(message.ValidatorIndex),
                 Data = message.ToArray(),
                 Witness = invocationScript is null ? null : new Witness
@@ -232,6 +233,7 @@ namespace Neo.Consensus
             return p >= 0 ? (byte)p : (byte)(p + Validators.Length);
         }
 
+
         public UInt160 GetSender(int index)
         {
             return Contract.CreateSignatureRedeemScript(Validators[index]).ToScriptHash();
@@ -333,6 +335,13 @@ namespace Neo.Consensus
                 IO.Helper.GetVarSize(expectedTransactions);
         }
 
+        private Tuple<byte[], uint> GetNonce(byte[] prikey, UInt256 aplha)
+        {
+            var proof = VRF.Prove(prikey, aplha.ToArray());
+            var nonce = VRF.ProofToHash(proof);
+            return new Tuple<byte[], uint>(proof, BitConverter.ToUInt32(nonce[..4]));
+        }
+
         /// <summary>
         /// Prevent that block exceed the max size
         /// </summary>
@@ -374,12 +383,15 @@ namespace Neo.Consensus
         {
             EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
             Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
-
+            // TODO: make the VRF seed a few more blocks ahead to prevent view change
+            var (proof, nonce) = GetNonce(keyPair.PrivateKey, Block.PrevHash);
+            Block.Header.Nonce = nonce;
             return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
             {
                 Version = Block.Version,
                 PrevHash = Block.PrevHash,
                 Timestamp = Block.Timestamp,
+                VRFProof = proof,
                 TransactionHashes = TransactionHashes
             });
         }

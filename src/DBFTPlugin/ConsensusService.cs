@@ -423,9 +423,19 @@ namespace Neo.Consensus
                 Log($"Timestamp incorrect: {message.Timestamp}", LogLevel.Warning);
                 return;
             }
+
             if (message.TransactionHashes.Any(p => NativeContract.Ledger.ContainsTransaction(context.Snapshot, p)))
             {
                 Log($"Invalid request: transaction already exists", LogLevel.Warning);
+                return;
+            }
+
+            //if (message.BlockIndex > 3)
+            // TODO: make the VRF seed a few more blocks ahead to prevent view change
+            var nonce = VRF.Verify(context.Validators[message.ValidatorIndex], message.VRFProof, message.PrevHash.ToArray());
+            if (nonce == null)
+            {
+                Log($"Random number verification failed: {message.VRFProof}", LogLevel.Warning);
                 return;
             }
 
@@ -434,6 +444,7 @@ namespace Neo.Consensus
             ExtendTimerByFactor(2);
 
             context.Block.Header.Timestamp = message.Timestamp;
+            context.Block.Header.Nonce = BitConverter.ToUInt32(nonce[..4]);
             context.TransactionHashes = message.TransactionHashes;
             context.Transactions = new Dictionary<UInt256, Transaction>();
             context.VerificationContext = new TransactionVerificationContext();
