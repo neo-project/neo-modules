@@ -443,6 +443,9 @@ namespace Neo.Consensus
             // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
             ExtendTimerByFactor(2);
 
+            // Update the vrf proof 
+            context.VRFProof = message.VRFProof;
+
             context.Block.Header.Timestamp = message.Timestamp;
             context.Block.Header.Nonce = BitConverter.ToUInt32(nonce[..4]);
             context.TransactionHashes = message.TransactionHashes;

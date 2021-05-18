@@ -28,6 +28,7 @@ namespace Neo.Consensus
         public byte ViewNumber;
         public ECPoint[] Validators;
         public int MyIndex;
+        public byte[] VRFProof;
         public UInt256[] TransactionHashes;
         public Dictionary<UInt256, Transaction> Transactions;
         public ExtensiblePayload[] PreparationPayloads;
@@ -144,6 +145,7 @@ namespace Neo.Consensus
             Reset(0);
             if (reader.ReadUInt32() != Block.Version) throw new FormatException();
             if (reader.ReadUInt32() != Block.Index) throw new InvalidOperationException();
+            Block.Header.Nonce = reader.ReadUInt32();
             Block.Header.Timestamp = reader.ReadUInt64();
             Block.Header.PrimaryIndex = reader.ReadByte();
             Block.Header.NextConsensus = reader.ReadSerializable<UInt160>();
@@ -328,6 +330,7 @@ namespace Neo.Consensus
                 UInt256.Length +    // MerkleRoot
                 sizeof(ulong) +     // Timestamp
                 sizeof(uint) +      // Index
+                sizeof(uint) +      // Nonce
                 sizeof(byte) +      // PrimaryIndex
                 UInt160.Length +    // NextConsensus
                 1 + _witnessSize +  // Witness
@@ -338,6 +341,7 @@ namespace Neo.Consensus
         {
             var proof = VRF.Prove(prikey, aplha.ToArray());
             var nonce = VRF.ProofToHash(proof);
+            VRFProof = proof;
             return new Tuple<byte[], uint>(proof, BitConverter.ToUInt32(nonce[..4]));
         }
 
@@ -390,7 +394,7 @@ namespace Neo.Consensus
                 Version = Block.Version,
                 PrevHash = Block.PrevHash,
                 Timestamp = Block.Timestamp,
-                VRFProof = proof,
+                VRFProof = proof, // Add vrf proof to the prepare request
                 TransactionHashes = TransactionHashes
             });
         }
@@ -415,6 +419,7 @@ namespace Neo.Consensus
                     ViewNumber = ViewNumber,
                     Timestamp = Block.Timestamp,
                     BlockIndex = Block.Index,
+                    VRFProof = VRFProof, // Add vrf proof to the prepare request
                     TransactionHashes = TransactionHashes
                 };
             }
@@ -530,6 +535,7 @@ namespace Neo.Consensus
         {
             writer.Write(Block.Version);
             writer.Write(Block.Index);
+            writer.Write(Block.Nonce); // Add nonce 
             writer.Write(Block.Timestamp);
             writer.Write(Block.PrimaryIndex);
             writer.Write(Block.NextConsensus ?? UInt160.Zero);
