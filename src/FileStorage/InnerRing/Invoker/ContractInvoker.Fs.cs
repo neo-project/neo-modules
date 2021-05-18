@@ -1,6 +1,8 @@
 using Neo.Cryptography.ECC;
 using Neo.FileStorage.Morph.Invoker;
+using Neo.SmartContract;
 using System;
+using System.Collections.Generic;
 
 namespace Neo.FileStorage.InnerRing.Invoker
 {
@@ -19,10 +21,17 @@ namespace Neo.FileStorage.InnerRing.Invoker
             return client.Invoke(out _, FsContractHash, ChequeMethod, ExtraFee, Id, userAccount, amount, lockAccount);
         }
 
-        public static bool AlphabetUpdate(this Client client, byte[] Id, ECPoint[] list)
+        public static bool AlphabetUpdate(this Client client, byte[] Id, ECPoint[] publicKeys)
         {
             if (client is null) throw new Exception("client is nil");
-            return client.Invoke(out _, FsContractHash, AlphabetUpdateMethod, ExtraFee, Id, list);
+            var array = new ContractParameter(ContractParameterType.Array);
+            var list = new List<ContractParameter>();
+            foreach (var publicKey in publicKeys)
+            {
+                list.Add(new ContractParameter(ContractParameterType.PublicKey) { Value = publicKey });
+            }
+            array.Value = list;
+            return client.Invoke(out _, FsContractHash, AlphabetUpdateMethod, ExtraFee, Id, array);
         }
     }
 }

@@ -22,6 +22,7 @@ namespace Neo.FileStorage.Morph.Invoker
     {
         public Wallet wallet;
         public NeoSystem system;
+        public IActorRef actor;
 
         public Wallet GetWallet() => wallet;
         public class FakeSigners : IVerifiable
@@ -85,7 +86,7 @@ namespace Neo.FileStorage.Morph.Invoker
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             txId = tx.Hash;
-            system.Blockchain.Tell(tx);
+            actor.Tell(tx);
             Utility.Log("client", LogLevel.Debug, string.Format("neo client invoke,method:{0},tx_hash:{1}", method, tx.Hash.ToString()));
             return true;
         }
@@ -124,7 +125,7 @@ namespace Neo.FileStorage.Morph.Invoker
             ContractParametersContext data = new ContractParametersContext(snapshotCache, tx, system.Settings.Network);
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
-            system.Blockchain.Tell(tx);
+            actor.Tell(tx);
         }
     }
 }

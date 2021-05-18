@@ -84,6 +84,7 @@ namespace Neo.FileStorage.InnerRing
                     {
                         wallet = wallet,
                         system = main,
+                        actor=main.Blockchain
                     }
                 };
             }
@@ -96,6 +97,7 @@ namespace Neo.FileStorage.InnerRing
                     {
                         wallet = wallet,
                         system = side,
+                        actor= side.Blockchain
                     }
                 };
             }

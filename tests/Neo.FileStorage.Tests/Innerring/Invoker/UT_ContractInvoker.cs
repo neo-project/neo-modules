@@ -26,14 +26,14 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
         public void TestSetup()
         {
             NeoSystem system = TestBlockchain.TheNeoSystem;
-            system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()));
             wallet = TestBlockchain.wallet;
             morphclient = new Client()
             {
                 client = new MorphClient()
                 {
                     wallet = wallet,
-                    system = system
+                    system = system,
+                    actor = this.ActorOf(Props.Create(() => new ProcessorFakeActor()))
                 }
             };
         }
@@ -107,7 +107,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            var containerId = "f7bed8eca63266962baea8067021efb43a94ec7c0f7067926566d60322de9e52".HexToBytes();
+            var containerId = "fc780e98b7970002a80fbbeb60f9ed6cf44d5696588ea32e4338ceaeda4adddc".HexToBytes();
             var sig = Cryptography.Crypto.Sign(containerId, key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
             var result = morphclient.RemoveContainer(containerId, sig);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
@@ -119,7 +119,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
         public void InvokeGetEpochTest()
         {
             ulong result = morphclient.GetEpoch();
-            Assert.AreEqual(result, 1);
+            Assert.AreEqual(result, (ulong)1);
         }
 
         [TestMethod]
@@ -155,7 +155,16 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
         [TestMethod]
         public void InvokeSetConfigTest()
         {
-            bool result = morphclient.SetConfig(new byte[] { 0x01 }, Neo.Utility.StrictUTF8.GetBytes("ContainerFee"), BitConverter.GetBytes(0));
+            bool result = morphclient.SetConfig(new byte[] { 0x01 }, Utility.StrictUTF8.GetBytes("ContainerFee"), BitConverter.GetBytes(0));
+            var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
+            Assert.AreEqual(result, true);
+            Assert.IsNotNull(tx);
+        }
+
+        [TestMethod]
+        public void InvokeSetInnerRingTest()
+        {
+            bool result = morphclient.SetInnerRing(wallet.GetAccounts().Select(p=>p.GetKey().PublicKey).ToArray());
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -171,7 +180,16 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
         [TestMethod]
         public void InvokeAlphabetEmitTest()
         {
-            bool result = morphclient.AlphabetEmit(0);
+            bool result = morphclient.AlphabetEmit(1);
+            var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
+            Assert.AreEqual(result, true);
+            Assert.IsNotNull(tx);
+        }
+
+        [TestMethod]
+        public void InvokeAlphabetVoteTest()
+        {
+            bool result = morphclient.AlphabetVote(0,1,wallet.GetAccounts().Select(p=>p.GetKey().PublicKey).ToArray());
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -182,6 +200,33 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             bool result = morphclient.CashOutCheque(new byte[] { 0x01 }, 1, accounts.ToArray()[0].ScriptHash, accounts.ToArray()[0].ScriptHash);
+            var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
+            Assert.AreEqual(result, true);
+            Assert.IsNotNull(tx);
+        }
+
+        [TestMethod]
+        public void InvokeInnerRingIndexTest()
+        {
+            IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
+            morphclient.InnerRingIndex(accounts.ToArray()[0].GetKey().PublicKey,out int index,out int length);
+            Assert.AreEqual(index, 1);
+            Assert.AreEqual(length, 7);
+        }
+
+        [TestMethod]
+        public void InvokeAlphabetIndexTest()
+        {
+            IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
+            int index=morphclient.AlphabetIndex(accounts.ToArray()[0].GetKey().PublicKey);
+            Assert.AreEqual(index, 1);
+        }
+
+        [TestMethod]
+        public void InvokeAlphabetUpdateTest()
+        {
+            IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
+            bool result = morphclient.AlphabetUpdate(new byte[1] { 0x01},accounts.Select(p=>p.GetKey().PublicKey).ToArray());
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);

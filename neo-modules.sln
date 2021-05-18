@@ -1,4 +1,5 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28729.10
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -36,9 +37,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DBFTPlugin", "src\DBFTPlugi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Plugins.RpcServer.Tests", "tests\Neo.Plugins.RpcServer.Tests\Neo.Plugins.RpcServer.Tests.csproj", "{0DDAF738-0FD3-40A7-A433-C514BCDDF542}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileStorage", "src\FileStorage\FileStorage.csproj", "{6BC88E18-3DC5-4514-BC96-AF631A0AC8A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileStorage", "src\FileStorage\FileStorage.csproj", "{6BC88E18-3DC5-4514-BC96-AF631A0AC8A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neo.FileStorage.Tests", "tests\Neo.FileStorage.Tests\Neo.FileStorage.Tests.csproj", "{CFA12C4C-5752-49F6-B40D-8BE25EB6B0FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.FileStorage.Tests", "tests\Neo.FileStorage.Tests\Neo.FileStorage.Tests.csproj", "{CFA12C4C-5752-49F6-B40D-8BE25EB6B0FB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neo", "..\..\3.0\neo\src\neo\neo.csproj", "{ECEDAF57-F2FC-4743-A3D0-86ED6D1C988B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -114,6 +117,10 @@ Global
 		{CFA12C4C-5752-49F6-B40D-8BE25EB6B0FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CFA12C4C-5752-49F6-B40D-8BE25EB6B0FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CFA12C4C-5752-49F6-B40D-8BE25EB6B0FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ECEDAF57-F2FC-4743-A3D0-86ED6D1C988B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ECEDAF57-F2FC-4743-A3D0-86ED6D1C988B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ECEDAF57-F2FC-4743-A3D0-86ED6D1C988B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ECEDAF57-F2FC-4743-A3D0-86ED6D1C988B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

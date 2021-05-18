@@ -15,7 +15,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neo" Version="3.0.0-rc2" />
+    <ProjectReference Include="C:\Users\Shinelon\Desktop\neo-document\3.0\neo\src\neo\neo.csproj" />
+    <!--><PackageReference Include="Neo" Version="3.0.0-rc2" /><!-->
   </ItemGroup>
 
 </Project>

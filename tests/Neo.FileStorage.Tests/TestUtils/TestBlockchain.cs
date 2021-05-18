@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Netmap;
 using Neo.IO;
-using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
@@ -112,7 +111,7 @@ namespace Neo.FileStorage.Tests
                         settings.Contracts.Add(contractHash);
                         break;
                     default:
-                        settings.AlphabetContractHash.Append(contractHash);
+                        settings.AlphabetContractHash=settings.AlphabetContractHash.Append(contractHash).ToArray();
                         settings.Contracts.Add(contractHash);
                         break;
                 }
@@ -217,8 +216,7 @@ namespace Neo.FileStorage.Tests
             }
         }
 
-
-        private static ContractParameter ToParameter(byte[][] args)
+        public static ContractParameter ToParameter(byte[][] args)
         {
             var array = new ContractParameter(ContractParameterType.Array);
             var list = new List<ContractParameter>();
@@ -226,10 +224,10 @@ namespace Neo.FileStorage.Tests
             {
                 list.Add(new ContractParameter(ContractParameterType.ByteArray) { Value = bytes });
             }
-
             array.Value = list;
             return array;
         }
+
         public static void ContractAdd(DataCache snapshot, ContractState contract)
         {
             var key = new KeyBuilder(-1, 8).Add(contract.Hash);
