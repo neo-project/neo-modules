@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Google.Protobuf.Collections;
 using Neo.Cryptography.ECC;
@@ -8,10 +12,6 @@ using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Utils;
 using Neo.FileStorage.Utils.locode.db;
 using Neo.IO.Data.LevelDB;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using static Neo.FileStorage.InnerRing.Events.MorphEvent;
 using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
@@ -397,7 +397,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         public void VerifyAndUpdate(API.Netmap.NodeInfo n)
         {
             var tAttr = UniqueAttributes(n.Attributes.GetEnumerator());
-            if (tAttr.TryGetValue(Node.AttributeUNLOCODE, out var attrLocode)) return;
+            if (!tAttr.TryGetValue(Node.AttributeUNLOCODE, out var attrLocode)) return;
             var lc = LOCODE.FromString(attrLocode.Value);
             (Key, Record) record = dB.Get(lc);
             foreach (var attr in mAttr)
@@ -438,37 +438,37 @@ namespace Neo.FileStorage.InnerRing.Processors
         public bool optional;
         public static string CountryCodeValue((Key, Record) record)
         {
-            return string.Concat<char>(record.Item1.countryCode.Symbols());
+            return string.Concat<char>(record.Item1.CountryCode.Symbols());
         }
 
         public static string CountryValue((Key, Record) record)
         {
-            return record.Item2.countryName;
+            return record.Item2.CountryName;
         }
 
         public static string LocationCodeValue((Key, Record) record)
         {
-            return string.Concat<char>(record.Item1.locationCode.Symbols());
+            return string.Concat<char>(record.Item1.LocationCode.Symbols());
         }
 
         public static string LocationValue((Key, Record) record)
         {
-            return record.Item2.locationName;
+            return record.Item2.LocationName;
         }
 
         public static string SubDivCodeValue((Key, Record) record)
         {
-            return record.Item2.subDivCode;
+            return record.Item2.SubDivCode;
         }
 
         public static string SubDivValue((Key, Record) record)
         {
-            return record.Item2.subDivName;
+            return record.Item2.SubDivName;
         }
 
         public static string ContinentValue((Key, Record) record)
         {
-            return record.Item2.cont.String();
+            return record.Item2.Continent.String();
         }
     }
 }

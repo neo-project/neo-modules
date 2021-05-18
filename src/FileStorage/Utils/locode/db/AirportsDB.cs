@@ -7,6 +7,9 @@ namespace Neo.FileStorage.Utils.locode.db
 {
     public class AirportsDB
     {
+        public string AirportsPath { get; init; }
+        public string CountriesPath { get; init; }
+
         private const int airportCity = 2;
         private const int airportCountry = 3;
         private const int airportIATA = 4;
@@ -18,40 +21,51 @@ namespace Neo.FileStorage.Utils.locode.db
         private const int countryISOCode = 1;
         private const int countryFldNum = 3;
 
-        private Once airportsOnce = new();
-        private Once countriesOnce = new();
-        private string airportsPath;
-        private string countriesPath;
-        private Dictionary<string, string> mCountries = new();
-        private Dictionary<string, List<AirportsRecord>> mAirports = new();
+        private readonly Once airportsOnce = new();
+        private readonly Once countriesOnce = new();
+        private readonly Dictionary<string, string> mCountries = new();
+        private readonly Dictionary<string, List<Record>> mAirports = new();
 
-        public AirportsRecord Get(LocodeRecord locodeRecord)
+        private class Record
+        {
+            public string City;
+            public string Country;
+            public string Iata;
+            public string Lat;
+            public string Lng;
+        }
+        public AirportRecord Get(LocodeRecord locodeRecord)
         {
             InitAirports();
-            List<AirportsRecord> records = mAirports[locodeRecord.LOCODE.CountryCode()];
+            List<Record> records = mAirports[locodeRecord.LOCODE.CountryCode()];
             foreach (var record in records)
             {
-                if (locodeRecord.LOCODE.LocationCode() != record.iata && locodeRecord.NameWoDiacritics != record.city) continue;
-                return record;
+                if (locodeRecord.LOCODE.LocationCode() != record.Iata && locodeRecord.NameWoDiacritics != record.City) continue;
+                return new()
+                {
+                    CountryName = record.Country,
+                    Point = new()
+                    {
+                        Latitude = double.Parse(record.Lat),
+                        Longitude = double.Parse(record.Lng)
+                    }
+                };
             }
-            throw new Exception("airport not found");
+            throw new KeyNotFoundException("airport not found");
         }
 
 
         public string CountryName(CountryCode code)
         {
             InitCountries();
-            string name = null;
             foreach (var country in mCountries)
             {
                 if (country.Value == code.ToString())
                 {
-                    name = country.Key;
-                    break;
+                    return country.Key;
                 }
             }
-            if (name is null) throw new Exception("country not found");
-            return name;
+            throw new KeyNotFoundException("country not found");
         }
 
         public void InitAirports()
@@ -59,22 +73,22 @@ namespace Neo.FileStorage.Utils.locode.db
             airportsOnce.Do(() =>
             {
                 InitCountries();
-                ScanWords(airportsPath, airportFldNum, (string[] words) =>
+                ScanWords(AirportsPath, airportFldNum, (string[] words) =>
                 {
                     if (mCountries.TryGetValue(words[airportCountry], out var countryCode))
                     {
-                        AirportsRecord record = new AirportsRecord()
+                        Record record = new()
                         {
-                            city = words[airportCity],
-                            country = words[airportCountry],
-                            iata = words[airportIATA],
-                            lat = words[airportLatitude],
-                            lng = words[airportLongitude],
+                            City = words[airportCity],
+                            Country = words[airportCountry],
+                            Iata = words[airportIATA],
+                            Lat = words[airportLatitude],
+                            Lng = words[airportLongitude],
                         };
                         if (mAirports.TryGetValue(words[airportCountry], out var records))
                             records.Add(record);
                         else
-                            mAirports[words[airportCountry]] = new List<AirportsRecord>() { record };
+                            mAirports[words[airportCountry]] = new List<Record>() { record };
                     }
                 });
             });
@@ -83,7 +97,7 @@ namespace Neo.FileStorage.Utils.locode.db
         {
             countriesOnce.Do(() =>
             {
-                ScanWords(countriesPath, countryFldNum, (string[] words) =>
+                ScanWords(CountriesPath, countryFldNum, (string[] words) =>
                 {
                     mCountries[words[countryName]] = words[countryISOCode];
                 });
@@ -101,34 +115,10 @@ namespace Neo.FileStorage.Utils.locode.db
             }
         }
     }
-    public class Once
-    {
-        private bool flag;
-        private Object obj = new();
 
-        public void Do(Action action)
-        {
-            if (!flag)
-            {
-                lock (obj)
-                {
-                    if (!flag)
-                    {
-                        flag = true;
-                        action();
-                    }
-                }
-            }
-            else return;
-        }
-    }
-
-    public class AirportsRecord
+    public class AirportRecord
     {
-        public string city;
-        public string country;
-        public string iata;
-        public string lat;
-        public string lng;
+        public string CountryName;
+        public Point Point;
     }
 }

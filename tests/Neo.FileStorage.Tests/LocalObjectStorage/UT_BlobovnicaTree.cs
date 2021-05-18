@@ -1,12 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Blobstor;
 using Neo.IO.Data.LevelDB;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using static Neo.FileStorage.Tests.LocalObjectStorage.Helper;
 
 namespace Neo.FileStorage.Tests.LocalObjectStorage
