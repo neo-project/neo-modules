@@ -127,7 +127,6 @@ namespace Neo.Consensus
                 Category = "dBFT",
                 ValidBlockStart = 0,
                 ValidBlockEnd = message.BlockIndex,
-                //VRFProof = GetNonce(keyPair.PrivateKey, Block.PrevHash.ToArray()),
                 Sender = GetSender(message.ValidatorIndex),
                 Data = message.ToArray(),
                 Witness = invocationScript is null ? null : new Witness
