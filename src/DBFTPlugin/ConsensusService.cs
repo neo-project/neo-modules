@@ -430,6 +430,8 @@ namespace Neo.Consensus
                 return;
             }
 
+            // Possible vulnerability of the random number, dishonest nodes cooperate to
+            // attck the system. 
             //if (message.BlockIndex > 3)
             // TODO: make the VRF seed a few more blocks ahead to prevent view change
             var nonce = VRF.Verify(context.Validators[message.ValidatorIndex], message.VRFProof, message.PrevHash.ToArray());
