@@ -15,6 +15,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CRONIUM" Version="2.14.2-dev" />
+    <PackageReference Include="CRONIUM" Version="2.14.4-dev" />
   </ItemGroup>
 </Project>

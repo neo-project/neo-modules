@@ -19,7 +19,7 @@
     <PackageId>CRON.Plugin.RpcSystemAssetTracker</PackageId>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="CRONIUM" Version="2.14.2-dev" />
+    <PackageReference Include="CRONIUM" Version="2.14.4-dev" />
   </ItemGroup>
   <ItemGroup>
     <None Update="RpcSystemAssetTracker\config.json">
