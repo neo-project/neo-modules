@@ -89,13 +89,16 @@ namespace Cron.Plugins.SyncBlocks
         private static List<AssetState> GetAssetsFromFile()
         {
             var fileName = "assets.acc";
-            var path = GetAssemblyDirectory();
-            Console.WriteLine($"Root directory: {path}");
-            var filePath = $"{path}/{fileName}";
+            var assemblyPath = GetAssemblyDirectory();
+            var importPath = assemblyPath.EndsWith("\\") || assemblyPath.EndsWith("/")
+                ? $"{assemblyPath}data/import/"
+                : $"{assemblyPath}/data/import/";
+            Console.WriteLine($"Scan directory: {importPath}");
+            var filePath = $"{importPath}/{fileName}";
             var fileExist = File.Exists(filePath);
             if (!fileExist)
             {
-                Console.WriteLine($"No file {fileName} into directory {path}");
+                Console.WriteLine($"No file {fileName} into directory {importPath}");
                 return null;
             }
             Console.WriteLine($"-Read assets from file: {DateTime.Now}");
@@ -126,8 +129,8 @@ namespace Cron.Plugins.SyncBlocks
                     assets.Add(asset);
                 }
             }
-            var newFileName = $"{path}/{fileName}p";
-            File.Move($"{path}/{fileName}", newFileName);
+            var newFileName = $"{importPath}/{fileName}p";
+            File.Move(filePath, newFileName);
             Console.WriteLine($"-Finish read assets from files: {DateTime.Now}");
             return assets;
         }
@@ -135,12 +138,23 @@ namespace Cron.Plugins.SyncBlocks
         private static List<Block> GetBlocksFromFiles()
         {
             var fileMask = "block_chunk_*.acc";
-            var path = GetAssemblyDirectory();
-            Console.WriteLine($"Root directory: {path}");
-            var files = Directory.GetFiles(path, fileMask);
+            var assemblyPath = GetAssemblyDirectory();
+            var importPath = assemblyPath.EndsWith("\\") || assemblyPath.EndsWith("/")
+                ? $"{assemblyPath}data/import/"
+                : $"{assemblyPath}/data/import/";
+            
+            if (!Directory.Exists(importPath))
+            {
+                importPath = assemblyPath;
+            }
+
+            if (!importPath.EndsWith("\\") && !importPath.EndsWith("/"))
+                importPath = $"{importPath}/";
+            
+            var files = Directory.GetFiles(importPath, fileMask);
             if (!files.Any())
             {
-                Console.WriteLine($"No files with mask {fileMask} into directory {path}");
+                Console.WriteLine($"No files with mask {fileMask} into directory {importPath}");
                 return null;
             }
             
@@ -152,9 +166,11 @@ namespace Cron.Plugins.SyncBlocks
                 
                 var blocks = GetBlocks(f);
                 items.AddRange(blocks);
-                
-                var newFileName = $"{f}p";
+
+                var fi = new FileInfo(f);
+                var newFileName = $"{importPath}{fi.Name}p";
                 File.Move(f, newFileName);
+                
                 Console.WriteLine($"+-- Finish read blocks from file {f}: {DateTime.Now}");
             }
 
@@ -214,7 +230,6 @@ namespace Cron.Plugins.SyncBlocks
                         snapshot.Assets.Add(asset.AssetId, asset);
                         snapshot.Commit();
                     }
-                    
                 }
             }
         }

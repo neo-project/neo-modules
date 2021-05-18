@@ -18,11 +18,27 @@ namespace Cron.Plugins.SyncBlocks
             Console.WriteLine($"--Start export assets: {DateTime.Now}");
             var assetsCache = Blockchain.Singleton.Store.GetAssets().Find();
             var assetFileName = "assets.acc";
+            var assemblyPath = GetAssemblyDirectory();
+            var exportPath = assemblyPath.EndsWith("\\") || assemblyPath.EndsWith("/")
+                ? $"{assemblyPath}data/export/"
+                : $"{assemblyPath}/data/export/";
+
+            if (!Directory.Exists(exportPath))
+            {
+                exportPath = assemblyPath;
+            }
+
+            if (!exportPath.EndsWith("\\") && !exportPath.EndsWith("/"))
+                exportPath = $"{exportPath}/";
+            
+            Console.WriteLine($"+--- Export directory {exportPath}");
             Console.WriteLine($"+--- Start export assets in file {assetFileName}: {DateTime.Now}");
             var assets = assetsCache.Select(x => x.Value)
                 .OrderBy(x => x.AssetType)
                 .ThenBy(x => x.Expiration);
-            SerializeAssets(assetFileName, assets);
+
+            var assetFilePath = $"{exportPath}{assetFileName}";
+            SerializeAssets(assetFilePath, assets);
             Console.WriteLine($"+--- Finish export assets: {DateTime.Now}");
             Console.WriteLine($"--Finish export assets: {DateTime.Now}");
 
@@ -40,7 +56,8 @@ namespace Cron.Plugins.SyncBlocks
             {
                 var fileName = $"block_chunk_{chunkIndex}.acc";
                 Console.WriteLine($"+--- Start chunk {chunkIndex} in file {fileName}: {DateTime.Now}");
-                BinarySerialize(fileName, blocks);
+                var filePath = $"{exportPath}{fileName}";
+                BinarySerialize(filePath, blocks);
                 Console.WriteLine($"+--- Finish chunk {chunkIndex} in file {fileName}: {DateTime.Now}");
                 chunkIndex++;
             }
@@ -89,6 +106,11 @@ namespace Cron.Plugins.SyncBlocks
                 return state;
             }));
             File.WriteAllText(fileName, array.ToString());
+        }
+        
+        private static string GetAssemblyDirectory()
+        {
+            return Directory.GetCurrentDirectory();
         }
     }
 }
