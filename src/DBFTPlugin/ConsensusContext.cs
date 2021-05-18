@@ -337,8 +337,16 @@ namespace Neo.Consensus
                 IO.Helper.GetVarSize(expectedTransactions);
         }
 
-        private Tuple<byte[], uint> GetNonce(byte[] prikey, UInt256 aplha)
+        private Tuple<byte[], uint> GetNonce(byte[] prikey)
         {
+            UInt256 aplha;
+            if (Block.Index > 1000)
+                aplha = NativeContract.Ledger.GetBlockHash(Snapshot, Block.Index - 1000);
+            else
+            {
+                aplha = Block.PrevHash;
+            }
+
             var proof = VRF.Prove(prikey, aplha.ToArray());
             var nonce = VRF.ProofToHash(proof);
             VRFProof = proof;
@@ -387,7 +395,7 @@ namespace Neo.Consensus
             EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
             Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
             // TODO: make the VRF seed a few more blocks ahead to prevent view change
-            var (proof, nonce) = GetNonce(keyPair.PrivateKey, Block.PrevHash);
+            var (proof, nonce) = GetNonce(keyPair.PrivateKey);
             Block.Header.Nonce = nonce;
             return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
             {
