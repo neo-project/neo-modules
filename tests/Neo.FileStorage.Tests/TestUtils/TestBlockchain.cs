@@ -111,7 +111,7 @@ namespace Neo.FileStorage.Tests
                         settings.Contracts.Add(contractHash);
                         break;
                     default:
-                        settings.AlphabetContractHash=settings.AlphabetContractHash.Append(contractHash).ToArray();
+                        settings.AlphabetContractHash = settings.AlphabetContractHash.Append(contractHash).ToArray();
                         settings.Contracts.Add(contractHash);
                         break;
                 }

@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Google.Protobuf;
@@ -9,9 +12,6 @@ using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Tests.InnerRing.Processors;
 using Neo.IO;
 using Neo.Wallets;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Container = Neo.FileStorage.API.Container.Container;
 
 namespace Neo.FileStorage.Tests.InnerRing.Invoker
@@ -164,7 +164,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
         [TestMethod]
         public void InvokeSetInnerRingTest()
         {
-            bool result = morphclient.SetInnerRing(wallet.GetAccounts().Select(p=>p.GetKey().PublicKey).ToArray());
+            bool result = morphclient.SetInnerRing(wallet.GetAccounts().Select(p => p.GetKey().PublicKey).ToArray());
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -189,7 +189,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
         [TestMethod]
         public void InvokeAlphabetVoteTest()
         {
-            bool result = morphclient.AlphabetVote(0,1,wallet.GetAccounts().Select(p=>p.GetKey().PublicKey).ToArray());
+            bool result = morphclient.AlphabetVote(0, 1, wallet.GetAccounts().Select(p => p.GetKey().PublicKey).ToArray());
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -209,7 +209,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
         public void InvokeInnerRingIndexTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            morphclient.InnerRingIndex(accounts.ToArray()[0].GetKey().PublicKey,out int index,out int length);
+            morphclient.InnerRingIndex(accounts.ToArray()[0].GetKey().PublicKey, out int index, out int length);
             Assert.AreEqual(index, 1);
             Assert.AreEqual(length, 7);
         }
@@ -218,7 +218,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
         public void InvokeAlphabetIndexTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            int index=morphclient.AlphabetIndex(accounts.ToArray()[0].GetKey().PublicKey);
+            int index = morphclient.AlphabetIndex(accounts.ToArray()[0].GetKey().PublicKey);
             Assert.AreEqual(index, 1);
         }
 
@@ -226,7 +226,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
         public void InvokeAlphabetUpdateTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            bool result = morphclient.AlphabetUpdate(new byte[1] { 0x01},accounts.Select(p=>p.GetKey().PublicKey).ToArray());
+            bool result = morphclient.AlphabetUpdate(new byte[1] { 0x01 }, accounts.Select(p => p.GetKey().PublicKey).ToArray());
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
