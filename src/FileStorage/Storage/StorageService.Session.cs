@@ -7,6 +7,7 @@ namespace Neo.FileStorage
     public sealed partial class StorageService : IDisposable
     {
         private TokenStore tokenStore;
+
         public SessionServiceImpl InitializeSession()
         {
             tokenStore = new();
