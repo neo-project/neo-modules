@@ -234,7 +234,6 @@ namespace Neo.Consensus
             return p >= 0 ? (byte)p : (byte)(p + Validators.Length);
         }
 
-
         public UInt160 GetSender(int index)
         {
             return Contract.CreateSignatureRedeemScript(Validators[index]).ToScriptHash();
