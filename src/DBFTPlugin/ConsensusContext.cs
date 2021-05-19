@@ -338,12 +338,12 @@ namespace Neo.Consensus
 
         private Tuple<byte[], uint> GetNonce(byte[] prikey)
         {
-            byte[] aplha;
+            byte[] alpha;
             if (Block.Index > 1000)
             {
                 // To prevent the primary uses the same block hash in Height (1000, 2000)
                 // also add the Height to the VRF input.
-                aplha = NativeContract.Ledger
+                alpha = NativeContract.Ledger
                     .GetBlockHash(Snapshot, Block.Index - 1000)
                     .ToArray()
                     .Concat(BitConverter.GetBytes(Block.Index))
@@ -351,10 +351,10 @@ namespace Neo.Consensus
             }
             else
             {
-                aplha = Block.PrevHash.ToArray();
+                alpha = Block.PrevHash.ToArray();
             }
 
-            var proof = VRF.Prove(prikey, aplha);
+            var proof = VRF.Prove(prikey, alpha);
             var nonce = VRF.ProofToHash(proof);
             VRFProof = proof;
             return new Tuple<byte[], uint>(proof, BitConverter.ToUInt32(nonce[..4]));

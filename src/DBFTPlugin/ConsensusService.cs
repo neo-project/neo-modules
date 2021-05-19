@@ -450,7 +450,7 @@ namespace Neo.Consensus
             }
             catch (FormatException)
             {
-                Log($"Random number verification failed: {message.VRFProof}", LogLevel.Warning);
+                Log($"VRF Random number verification failed: {message.VRFProof}", LogLevel.Warning);
                 return;
             }
 
