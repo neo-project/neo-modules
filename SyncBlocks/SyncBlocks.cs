@@ -1,6 +1,5 @@
 ﻿using System;
 using Akka.Actor;
-using Cron.Plugins;
 
 namespace Cron.Plugins.SyncBlocks
 {
@@ -11,6 +10,21 @@ namespace Cron.Plugins.SyncBlocks
         public override void Configure()
         {
             Settings.Load(GetConfiguration());
+            
+            // create Import and Export directories
+            var importDirectory = Tools.GetImportDirectory();
+            var importCreated = Tools.TryCreateDirectory(importDirectory);
+            if (!importCreated)
+            {
+                Console.WriteLine($"Can not create directory {importDirectory}");
+            }
+
+            var exportDirectory = Tools.GetExportDirectory();
+            var exportCreated = Tools.TryCreateDirectory(exportDirectory);
+            if (!exportCreated)
+            {
+                Console.WriteLine($"Can not create directory {exportDirectory}");
+            }
         }
 
         protected override bool OnMessage(object message)

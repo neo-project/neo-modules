@@ -17,19 +17,22 @@ namespace Cron.Plugins.SyncBlocks
             Console.WriteLine($"-Start export: {DateTime.Now}");
             Console.WriteLine($"--Start export assets: {DateTime.Now}");
             var assetsCache = Blockchain.Singleton.Store.GetAssets().Find();
-            var assetFileName = "assets.acc";
-            var assemblyPath = GetAssemblyDirectory();
-            var exportPath = assemblyPath.EndsWith("\\") || assemblyPath.EndsWith("/")
-                ? $"{assemblyPath}data/export/"
-                : $"{assemblyPath}/data/export/";
+            const string assetFileName = "assets.acc";
+            var exportPath = Tools.GetExportDirectory();
 
             if (!Directory.Exists(exportPath))
             {
-                exportPath = assemblyPath;
+                try
+                {
+                    Directory.CreateDirectory(exportPath);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Can not create directory {exportPath}.");
+                    Console.WriteLine(e);
+                    return;
+                }
             }
-
-            if (!exportPath.EndsWith("\\") && !exportPath.EndsWith("/"))
-                exportPath = $"{exportPath}/";
             
             Console.WriteLine($"+--- Export directory {exportPath}");
             Console.WriteLine($"+--- Start export assets in file {assetFileName}: {DateTime.Now}");
@@ -106,11 +109,6 @@ namespace Cron.Plugins.SyncBlocks
                 return state;
             }));
             File.WriteAllText(fileName, array.ToString());
-        }
-        
-        private static string GetAssemblyDirectory()
-        {
-            return Directory.GetCurrentDirectory();
         }
     }
 }

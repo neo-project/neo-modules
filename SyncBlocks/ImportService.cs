@@ -8,7 +8,6 @@ using Cron.IO;
 using Cron.IO.Json;
 using Cron.Ledger;
 using Cron.Network.P2P.Payloads;
-using Cron.Persistence;
 using Cron.Plugins.SyncBlocks.Extensions;
 
 namespace Cron.Plugins.SyncBlocks
@@ -88,13 +87,15 @@ namespace Cron.Plugins.SyncBlocks
 
         private static List<AssetState> GetAssetsFromFile()
         {
-            var fileName = "assets.acc";
-            var assemblyPath = GetAssemblyDirectory();
-            var importPath = assemblyPath.EndsWith("\\") || assemblyPath.EndsWith("/")
-                ? $"{assemblyPath}data/import/"
-                : $"{assemblyPath}/data/import/";
+            const string fileName = "assets.acc";
+            var importPath = Tools.GetImportDirectory();
+            if (!Directory.Exists(importPath))
+            {
+                Console.WriteLine($"Directory {importPath} does not exist.");
+                return null;
+            }
             Console.WriteLine($"Scan directory: {importPath}");
-            var filePath = $"{importPath}/{fileName}";
+            var filePath = $"{importPath}{fileName}";
             var fileExist = File.Exists(filePath);
             if (!fileExist)
             {
@@ -129,7 +130,7 @@ namespace Cron.Plugins.SyncBlocks
                     assets.Add(asset);
                 }
             }
-            var newFileName = $"{importPath}/{fileName}p";
+            var newFileName = $"{importPath}{fileName}p";
             File.Move(filePath, newFileName);
             Console.WriteLine($"-Finish read assets from files: {DateTime.Now}");
             return assets;
@@ -137,19 +138,14 @@ namespace Cron.Plugins.SyncBlocks
         
         private static List<Block> GetBlocksFromFiles()
         {
-            var fileMask = "block_chunk_*.acc";
-            var assemblyPath = GetAssemblyDirectory();
-            var importPath = assemblyPath.EndsWith("\\") || assemblyPath.EndsWith("/")
-                ? $"{assemblyPath}data/import/"
-                : $"{assemblyPath}/data/import/";
+            const string fileMask = "block_chunk_*.acc";
+            var importPath = Tools.GetImportDirectory();
             
             if (!Directory.Exists(importPath))
             {
-                importPath = assemblyPath;
+                Console.WriteLine($"Directory {importPath} does not exist.");
+                return null;
             }
-
-            if (!importPath.EndsWith("\\") && !importPath.EndsWith("/"))
-                importPath = $"{importPath}/";
             
             var files = Directory.GetFiles(importPath, fileMask);
             if (!files.Any())
@@ -213,11 +209,6 @@ namespace Cron.Plugins.SyncBlocks
             return result;
         }
         
-        private static string GetAssemblyDirectory()
-        {
-            return Directory.GetCurrentDirectory();
-        }
-
         private static void ImportAssets(IEnumerable<AssetState> assets)
         {
             using (var snapshot = Blockchain.Singleton.Store.GetSnapshot())
