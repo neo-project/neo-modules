@@ -435,7 +435,7 @@ namespace Neo.Consensus
             // TODO: make the VRF seed a few more blocks ahead to prevent view change
             byte[] nonce;
             if (message.BlockIndex > 1000)
-                // To prevent the primary uses the same prevHash in Height (1000, 2000)
+                // To prevent the primary uses the same block hash in Height (1000, 2000)
                 // also add the Height to the VRF input.
                 nonce = VRF.Verify(context.Validators[message.ValidatorIndex], message.VRFProof, NativeContract.Ledger
                     .GetBlockHash(context.Snapshot, message.BlockIndex - 1000)

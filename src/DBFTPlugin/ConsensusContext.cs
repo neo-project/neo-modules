@@ -341,7 +341,7 @@ namespace Neo.Consensus
             byte[] aplha;
             if (Block.Index > 1000)
             {
-                // To prevent the primary uses the same prevHash in Height (1000, 2000)
+                // To prevent the primary uses the same block hash in Height (1000, 2000)
                 // also add the Height to the VRF input.
                 aplha = NativeContract.Ledger
                     .GetBlockHash(Snapshot, Block.Index - 1000)
