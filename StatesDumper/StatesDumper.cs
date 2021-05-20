@@ -32,7 +32,7 @@ namespace Cron.Plugins
                 return state;
             }));
             File.WriteAllText(path, array.ToString());
-            Console.WriteLine($"States ({array.Count}) have been dumped into file {path}");
+            Logger.Info($"States ({array.Count}) have been dumped into file {path}");
         }
 
         protected override bool OnMessage(object message)
@@ -69,7 +69,7 @@ namespace Cron.Plugins
             if (args.Length < 2) return false;
             if (!string.Equals(args[1], Name, StringComparison.OrdinalIgnoreCase))
                 return false;
-            Console.Write($"{Name} Commands:\n" + "\tdump storage <key>\n");
+            Logger.Info($"{Name} Commands:\n" + "\tdump storage <key>\n");
             return true;
         }
 
@@ -145,7 +145,7 @@ namespace Cron.Plugins
         
         public bool ShouldThrowExceptionFromCommit(Exception ex)
         {
-            Console.WriteLine($"Error writing States with StatesDumper.{Environment.NewLine}{ex}");
+            Logger.Error($"Error writing States with StatesDumper.{Environment.NewLine}{ex}");
             return true;
         }
 

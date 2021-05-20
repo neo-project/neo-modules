@@ -40,7 +40,7 @@ namespace Cron.Plugins
                 }
                 if (count <= 0)
                 {
-                    Console.WriteLine("nothing to export.");
+                    Logger.Info("nothing to export.");
                     return true;
                 }
                 path = $"root.{start}.acc";
@@ -71,8 +71,7 @@ namespace Cron.Plugins
             {
                 return false;
             }
-
-            Console.WriteLine();
+            
             return true;
         }
 
@@ -102,8 +101,8 @@ namespace Cron.Plugins
                     byte[] array = state.StateRoot.ToArray();
                     fs.Write(BitConverter.GetBytes(array.Length), 0, sizeof(int));
                     fs.Write(array, 0, array.Length);
-                    Console.SetCursorPosition(0, Console.CursorTop);
-                    Console.Write($"[root:{i}/{end}]");
+                    
+                    Logger.Info($"[root:{i}/{end}]");
                 }
             }
         }
@@ -146,8 +145,7 @@ namespace Cron.Plugins
                     byte[] array = block.ToArray();
                     fs.Write(BitConverter.GetBytes(array.Length), 0, sizeof(int));
                     fs.Write(array, 0, array.Length);
-                    Console.SetCursorPosition(0, Console.CursorTop);
-                    Console.Write($"[block:{i}/{end}]");
+                    Logger.Info($"[block:{i}/{end}]");
                 }
             }
         }

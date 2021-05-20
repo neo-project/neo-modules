@@ -14,6 +14,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using Akka.Actor;
 using Snapshot = Cron.Persistence.Snapshot;
 
 namespace Cron.Plugins
@@ -38,22 +41,10 @@ namespace Cron.Plugins
         private Cron.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
 
         
-        // public JObject OnProcess(HttpContext context, string method, JArray parameters)
-        // {
-        //     if (_shouldTrackUnclaimed)
-        //     {
-        //         if (method == "getclaimable") return ProcessGetClaimableSpents(parameters);
-        //         if (method == "getunclaimed") return ProcessGetUnclaimed(parameters);
-        //     }
-        //     if (_shouldTrackHistory)
-        //         if (method == "getutxotransfers") return ProcessGetUtxoTransfers(parameters);
-        //     return method != "getunspents" ? null : ProcessGetUnspents(parameters);
-        // }
         public JObject OnProcess(HttpContext context, string method, JArray parameters)
         {
             if (_shouldTrackUnclaimed)
             {
-                if (method == "getclaimable") return ProcessGetClaimableSpents(parameters);
                 if (method == "getunclaimed") return ProcessGetUnclaimed(parameters);
             }
 
@@ -135,6 +126,60 @@ namespace Cron.Plugins
             if (method == "getunspents")
             {
                 return this.ProcessGetUnspents(parameters);
+            }
+            
+            if (method == "getaccountstate")
+            {
+                return this.ProcessGetAccountState(parameters);
+            }
+            
+            if (method == "getoutput")
+            {
+                UInt256 hash = UInt256.Parse(parameters[0].AsString());
+                ushort index = ushort.Parse(parameters[1].AsString());
+                return Blockchain.Singleton.Store.GetUnspent(hash, index)?.ToJson(index);
+            }
+
+            if (method == "relaytransaction")
+            {
+                var tx = Transaction.DeserializeFrom(parameters[0].AsString().HexToBytes());
+                RelayResultReason reason = System.Blockchain.Ask<RelayResultReason>(tx).Result;
+                if (reason == RelayResultReason.Succeed)
+                {
+                    var result = new JObject();
+                    result["transaction"] = tx.ToJson();
+                    return result;
+                }
+
+                return GetRelayResult(reason);
+            }
+            
+            if (method == "gettransactionreceipt")
+            {
+                if (parameters[1] != null)
+                { 
+                    var parseResult = Int32.TryParse(parameters[1].AsString(), out int timeout);
+                    if (parseResult)
+                    {
+                        Thread.Sleep(TimeSpan.FromMilliseconds(timeout / 10));
+                        UInt256 hash = UInt256.Parse(parameters[0].AsString());
+
+                            var trx =  Blockchain.Singleton.Store.GetTransactions().TryGet(hash);
+                            var block = Blockchain.Singleton.Store.GetBlock(trx.BlockIndex);
+                            var fullTransaction = block.Transactions.FirstOrDefault(f => f.Hash == trx.Transaction.Hash);
+                            if (fullTransaction != null)
+                            {
+                                return fullTransaction.Data.ToJson();
+                            }
+                    }
+                }
+
+                return null;
+            }
+
+            if (method == "getclaimamount")
+            {
+                return ProcessGetClaimableSpents(parameters);
             }
 
             return null;
@@ -386,14 +431,17 @@ namespace Cron.Plugins
                (!x.Key.Equals(Blockchain.GoverningToken.Hash))
             && (!x.Key.Equals(Blockchain.UtilityToken.Hash)));
 
-            Console.WriteLine($"== Preparing assets: {assets.Count()}");
+            Logger.Info($"== Preparing assets: {assets.Count()}");
 
             foreach (var s in assets)
             {
-                Console.WriteLine($"==== {s.Value.GetName()} {s.Key.ToString()}");
+                Logger.Info($"==== {s.Value.GetName()} {s.Key.ToString()}");
                 var tx = transactionsCache.TryGet(s.Value.AssetId);
-                string f = tx.BlockIndex.ToString() + s.Value.AssetId.ToString();
-                L[f] = s.Value.AssetId;
+                if (tx != null)
+                {
+                    var f = tx.BlockIndex.ToString() + s.Value.AssetId.ToString();
+                    L[f] = s.Value.AssetId;
+                }
             }
 
             var LKS = L.Keys.ToList();
@@ -407,7 +455,7 @@ namespace Cron.Plugins
                     return false;       // still only 255 token IDs available
                 if (id.Equals(aid))
                 {
-                    Console.WriteLine($"=== Adding {aid.ToString()} with id = {baseTokenID}");
+                    Logger.Info($"=== Adding {aid.ToString()} with id = {baseTokenID}");
                     _dicTokenIds[aid] = baseTokenID;
                     return true;
                 }
@@ -542,14 +590,15 @@ namespace Cron.Plugins
 
         private JObject ProcessGetClaimableSpents(JArray parameters)
         {
-            UInt160 scriptHash = GetScriptHashFromParam(parameters[0].AsString());
+            // UInt160 scriptHash =  GetScriptHashFromParam(parameters[0].AsString());
+            UInt256 scriptHash = UInt256.Parse(parameters[0].AsString());
             var dbCache = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(
                 _db, null, null, SystemAssetSpentUnclaimedCoinsPrefix);
 
             JObject json = new JObject();
             JArray claimable = new JArray();
             json["claimable"] = claimable;
-            json["address"] = scriptHash.ToAddress();
+            //json["address"] = scriptHash.ToAddress();
 
             Fixed8 totalUnclaimed = Fixed8.Zero;
             using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
@@ -565,6 +614,28 @@ namespace Cron.Plugins
             return json;
         }
 
+        private JArray ProcessGetUnclaimedTransactions( UInt160 scriptHash)
+        {
+            JArray json = new JArray();
+
+            var unspentsCache = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(
+                _db, null, null, SystemAssetUnspentCoinsPrefix);
+            using (Snapshot snapshot = Blockchain.Singleton.GetSnapshot())
+            {
+                byte[] prefix = new[] { (byte)1 }.Concat(scriptHash.ToArray()).ToArray();
+
+                var transactionsCache = snapshot.Transactions;
+                foreach (var claimableInTx in unspentsCache.Find(prefix))
+                {
+                    var transaction = transactionsCache.TryGet(claimableInTx.Key.TxHash);
+                    var obj = new JObject();
+                    obj["txid"] = transaction.Transaction.Hash.ToString();
+                    obj["vout"] = transaction.Transaction.Outputs.Select((p, i) => p.ToJson((ushort)i)).Count();
+                    json.Add(obj);
+                }
+            }
+            return json;
+        }
         private JObject ProcessGetUnclaimed(JArray parameters)
         {
             UInt160 scriptHash = GetScriptHashFromParam(parameters[0].AsString());
@@ -632,6 +703,25 @@ namespace Cron.Plugins
                 if (unspents.Count > _maxResults)
                     return false;
             }
+            return true;
+        }
+        
+        private bool AddAccountUnspents(JArray unspents, ref Fixed8 runningTotal,
+            KeyValuePair<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs> unspentInTx)
+        {
+            var txId = unspentInTx.Key.TxHash.ToString().Substring(2);
+            foreach (var unspent in unspentInTx.Value.AmountByTxIndex)
+            {
+                var utxo = new JObject();
+                utxo["txid"] = txId;
+                utxo["vout"] = unspent.Key;
+                runningTotal += unspent.Value;
+
+                unspents.Add(utxo);
+                if (unspents.Count > _maxResults)
+                    return false;
+            }
+
             return true;
         }
 
@@ -713,6 +803,104 @@ namespace Cron.Plugins
                 balance["asset_symbol"] = balance["asset"] = nativeAssetNames[tokenIndex];
                 balance["amount"] = new JNumber((double)(decimal)total); ;
                 balances.Add(balance);
+            }
+
+            return json;
+        }
+        
+        private JObject ProcessGetAccountState(JArray _params)
+        {
+            UInt160 scriptHash = GetScriptHashFromParam(_params[0].AsString());
+            byte startingToken = 0; // 0 = Utility Token (CRON), 1 = Governing Token (CRONIUM)
+            int maxIterations = 2;
+
+            UInt256 th = UInt256.Zero;
+
+            if (_params.Count > 1)
+            {
+                string gh = _params[1].AsString();
+                bool isGoverningToken = (gh == "yes");
+                bool isUtilityToken = (gh == "util");
+                if (isGoverningToken)
+                {
+                    startingToken = 1;
+                    maxIterations = 1;
+                }
+                else if (isUtilityToken)
+                {
+                    startingToken = 0;
+                    maxIterations = 1;
+                }
+
+                if (_params.Count > 2)
+                {
+                    th = ParseTokenHash(_params[2].AsString());
+                    if (th.Equals(Blockchain.UtilityToken.Hash))
+                        th = UInt256.Zero;
+                }
+            }
+
+            var unspentsCache = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(
+                _db, null, null, SystemAssetUnspentCoinsPrefix);
+
+            string[] nativeAssetNames = {"CRON", "CRONIUM"};
+            UInt256[] nativeAssetIds = {Blockchain.UtilityToken.Hash, Blockchain.GoverningToken.Hash};
+
+            byte tokenId = 255;
+            var snapshot = Blockchain.Singleton.GetSnapshot();
+            var r = snapshot.Assets.Find();
+            var txs = snapshot.Transactions;
+            if (!th.Equals(UInt256.Zero))
+            {
+                tokenId = GetTokenID(r, th, txs);
+                if (tokenId != 255)
+                {
+                    nativeAssetNames[1] = snapshot.Assets.TryGet(th).GetName();
+                    nativeAssetIds[1] = th;
+                }
+                else
+                {
+                    throw new Cron.Network.RPC.RpcException(-7166, "Token not found");
+                }
+            }
+
+            var unclaimedArray = ProcessGetUnclaimedTransactions(scriptHash);
+            
+            JObject json = new JObject();
+            JArray balances = new JArray();
+            JArray unpsentsArray = new JArray();
+            json["balances"] = balances;
+            json["unspent"] = unpsentsArray;
+            json["unclaimed"] =  unclaimedArray;
+            json["version"] = "0";
+            json["votes"] = new JArray();
+            json["frozen"] = false; // TODO : get from blockchain state
+            json["script_hash"] = scriptHash.ToString();
+            for (byte tokenIndex = startingToken; maxIterations-- > 0; tokenIndex++)
+            {
+                byte[] prefix = new[] {(tokenId == 255 || tokenIndex == 0 ? tokenIndex : tokenId)}
+                    .Concat(scriptHash.ToArray()).ToArray();
+
+                var unspents = new JArray();
+                Fixed8 total = new Fixed8(0);
+
+                foreach (var unspentInTx in unspentsCache.Find(prefix))
+                    if (!AddAccountUnspents(unspents, ref total, unspentInTx))
+                        break;
+
+                if (unspents.Count <= 0) continue;
+
+                var balance = new JObject();
+                balance["asset"] = nativeAssetIds[tokenIndex].ToString();
+                balance["value"] =  total.ToString();
+                
+                balances.Add(balance);
+
+                foreach (var tmp in unspents)
+                {
+                    unpsentsArray.Add(tmp);
+                }
+                
             }
 
             return json;
