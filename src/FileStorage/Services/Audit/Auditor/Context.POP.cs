@@ -1,10 +1,10 @@
-using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Services.ObjectManager.Placement;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Services.ObjectManager.Placement;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Audit.Auditor
@@ -49,6 +49,7 @@ namespace Neo.FileStorage.Services.Audit.Auditor
         private void ProcessObjectPlacement(ObjectID oid, uint replicas, List<Node> nodes)
         {
             uint ok = 0;
+            bool optimal = false;
             int unpaired_candidate1 = -1, unpaired_candidate2 = -1, paired_candidate = -1;
             for (int i = 0; i < nodes.Count && ok < replicas; i++)
             {
@@ -63,7 +64,7 @@ namespace Neo.FileStorage.Services.Audit.Auditor
                 }
                 UpdateHeader(header);
                 ok++;
-                bool optimal = ok == replicas && i < replicas;
+                optimal = ok == replicas && i < replicas;
                 if (ObjectSize(oid) < (ulong)minGamePayloadSize) continue;
                 if (!pairedNodes.ContainsKey(nodes[i].Hash))
                 {
@@ -76,22 +77,22 @@ namespace Neo.FileStorage.Services.Audit.Auditor
                 {
                     paired_candidate = i;
                 }
-                if (optimal)
-                    hit++;
-                else if (ok == replicas)
-                    miss++;
-                else
-                    fail++;
-                if (0 <= unpaired_candidate1)
+            }
+            if (optimal)
+                hit++;
+            else if (ok == replicas)
+                miss++;
+            else
+                fail++;
+            if (0 <= unpaired_candidate1)
+            {
+                if (0 <= unpaired_candidate2)
                 {
-                    if (0 <= unpaired_candidate2)
-                    {
-                        ComposePair(oid, nodes[unpaired_candidate1], nodes[unpaired_candidate2]);
-                    }
-                    else if (0 <= paired_candidate)
-                    {
-                        ComposePair(oid, nodes[unpaired_candidate1], nodes[paired_candidate]);
-                    }
+                    ComposePair(oid, nodes[unpaired_candidate1], nodes[unpaired_candidate2]);
+                }
+                else if (0 <= paired_candidate)
+                {
+                    ComposePair(oid, nodes[unpaired_candidate1], nodes[paired_candidate]);
                 }
             }
         }

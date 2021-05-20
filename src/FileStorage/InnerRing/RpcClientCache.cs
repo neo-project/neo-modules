@@ -1,18 +1,18 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using Neo.FileStorage.API.Client;
+using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.API.StorageGroup;
 using Neo.FileStorage.Network.Cache;
 using Neo.FileStorage.Services.Audit;
 using Neo.FileStorage.Services.Audit.Auditor;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using Neo.Wallets;
-using Neo.FileStorage.API.Client;
-using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.API.StorageGroup;
-using System;
-using System.Collections.Generic;
-using System.Threading;
 using V2Range = Neo.FileStorage.API.Object.Range;
 
-namespace Neo.FileStorage.InnerRing.Processors
+namespace Neo.FileStorage.InnerRing
 {
     public class RpcClientCache : INeoFSClientCache, IContainerCommunicator
     {
@@ -21,20 +21,19 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public Client Get(string address)
         {
-            IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            return clientCache.Get(address); //TODO: fix no key when get client cache
+            return clientCache.Get(address);
         }
 
         public StorageGroup GetStorageGroup(AuditTask task, ObjectID id)
         {
             var sgAddress = new Address()
             {
-                ContainerId = task.CID,
+                ContainerId = task.ContainerID,
                 ObjectId = id
             };
-            return GetStorageGroup(task.Context, sgAddress, task.Netmap, task.ContainerNodes);
+            return GetStorageGroup(task.Cancellation, sgAddress, task.Netmap, task.ContainerNodes);
         }
-        public StorageGroup GetStorageGroup(CancellationToken context, Address sgAddress, NetMap netMap, List<List<Node>> containerNodes)
+        public StorageGroup GetStorageGroup(CancellationToken cancellation, Address sgAddress, NetMap netMap, List<List<Node>> containerNodes)
         {
             List<List<Node>> nodes;
             try
@@ -70,7 +69,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 API.Object.Object obj;
                 try
                 {
-                    var source = new CancellationTokenSource();
+                    var source = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
                     source.CancelAfter(TimeSpan.FromMinutes(1));
                     obj = cli.GetObject(sgAddress, false, context: source.Token).Result;
                 }
@@ -95,19 +94,11 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public API.Object.Object GetHeader(AuditTask task, Node node, ObjectID id, bool relay)
         {
-            bool raw = true;
-            //todo
-            //need set ttl
-            uint ttl = 1;
-            if (relay)
+            bool raw = !relay;
+            uint ttl = relay ? 10u : 1u;
+            Address objAddress = new()
             {
-                ttl = 10;
-                raw = false;
-            }
-
-            Address objAddress = new Address()
-            {
-                ContainerId = task.CID,
+                ContainerId = task.ContainerID,
                 ObjectId = id
             };
             string addr;
@@ -131,7 +122,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             API.Object.Object head;
             try
             {
-                var source = new CancellationTokenSource();
+                var source = CancellationTokenSource.CreateLinkedTokenSource(task.Cancellation);
                 source.CancelAfter(TimeSpan.FromMinutes(1));
                 head = client.GetObjectHeader(objAddress, raw, context: source.Token).Result;
             }
@@ -144,9 +135,9 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public byte[] GetRangeHash(AuditTask task, Node node, ObjectID id, Neo.FileStorage.API.Object.Range rng)
         {
-            Address objAddress = new Address()
+            Address objAddress = new()
             {
-                ContainerId = task.CID,
+                ContainerId = task.ContainerID,
                 ObjectId = id
             };
             string addr;
@@ -172,7 +163,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 var source = new CancellationTokenSource();
                 source.CancelAfter(TimeSpan.FromMinutes(1));
-                result = cli.GetObjectPayloadRangeHash(objAddress, new List<V2Range> { rng }, ChecksumType.Tz, null, context: source.Token).Result;
+                result = cli.GetObjectPayloadRangeHash(objAddress, new List<V2Range> { rng }, ChecksumType.Tz, null, new() { Ttl = 1 }, source.Token).Result;
             }
             catch (Exception e)
             {

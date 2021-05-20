@@ -41,8 +41,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileStorage", "src\FileStor
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.FileStorage.Tests", "tests\Neo.FileStorage.Tests\Neo.FileStorage.Tests.csproj", "{CFA12C4C-5752-49F6-B40D-8BE25EB6B0FB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neo", "..\..\3.0\neo\src\neo\neo.csproj", "{ECEDAF57-F2FC-4743-A3D0-86ED6D1C988B}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -117,10 +115,6 @@ Global
 		{CFA12C4C-5752-49F6-B40D-8BE25EB6B0FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CFA12C4C-5752-49F6-B40D-8BE25EB6B0FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CFA12C4C-5752-49F6-B40D-8BE25EB6B0FB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{ECEDAF57-F2FC-4743-A3D0-86ED6D1C988B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ECEDAF57-F2FC-4743-A3D0-86ED6D1C988B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ECEDAF57-F2FC-4743-A3D0-86ED6D1C988B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ECEDAF57-F2FC-4743-A3D0-86ED6D1C988B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
