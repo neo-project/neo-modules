@@ -1,14 +1,13 @@
-using Google.Protobuf;
-using Neo.FileStorage.API.Cryptography.Tz;
-using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.API.Refs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using FSStorageGroup = Neo.FileStorage.API.StorageGroup.StorageGroup;
+using Neo.FileStorage.API.Cryptography.Tz;
+using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.API.Refs;
 using FSObject = Neo.FileStorage.API.Object.Object;
+using FSStorageGroup = Neo.FileStorage.API.StorageGroup.StorageGroup;
 
 namespace Neo.FileStorage.Services.Audit.Auditor
 {
@@ -95,7 +94,7 @@ namespace Neo.FileStorage.Services.Audit.Auditor
             Interlocked.Add(ref porRequests, acc_req);
             Interlocked.Add(ref porRetries, acc_retries);
             var size_check = sg.ValidationDataSize == total_size;
-            var tz_check = tzhash.SequenceEqual(sg.ValidationHash.ToByteArray());
+            var tz_check = tzhash.SequenceEqual(sg.ValidationHash.Sum.ToByteArray());
             if (size_check && tz_check)
                 report.PassedPoR(oid);
             else

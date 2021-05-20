@@ -10,12 +10,12 @@ using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Utils;
-using Neo.FileStorage.Utils.locode.db;
+using Neo.FileStorage.Utils.Locode.Column;
+using Neo.FileStorage.Utils.Locode.Db;
 using Neo.IO.Data.LevelDB;
 using static Neo.FileStorage.InnerRing.Events.MorphEvent;
 using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
-using static Neo.FileStorage.Utils.locode.Column;
 using static Neo.FileStorage.Utils.WorkerPool;
 
 namespace Neo.FileStorage.InnerRing.Processors
@@ -377,10 +377,10 @@ namespace Neo.FileStorage.InnerRing.Processors
 
     public class Validator
     {
-        public Dictionary<string, AttrDescriptor> mAttr;
-        public DB dB;
+        private Dictionary<string, AttrDescriptor> mAttr;
+        private StorageDB dB;
 
-        public Validator(DB dB)
+        public Validator(StorageDB dB)
         {
             this.dB = dB;
             this.mAttr = new Dictionary<string, AttrDescriptor>()

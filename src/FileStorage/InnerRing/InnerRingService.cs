@@ -1,27 +1,27 @@
-using Akka.Actor;
-using Neo.SmartContract;
 using System;
-using Neo.Plugins.util;
-using Neo.Wallets.NEP6;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Neo.Cryptography.ECC;
-using Neo.IO;
+using Akka.Actor;
 using Google.Protobuf;
-using Neo.FileStorage.InnerRing.Processors;
-using Neo.FileStorage.Services.Audit;
-using Neo.FileStorage.Morph.Event;
-using static Neo.FileStorage.Morph.Event.Listener;
+using Neo.Cryptography.ECC;
 using Neo.FileStorage.API.Audit;
-using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.InnerRing.Invoker;
+using Neo.FileStorage.InnerRing.Processors;
+using Neo.FileStorage.Morph.Event;
+using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Services.Audit;
 using Neo.FileStorage.Utils;
+using Neo.IO;
+using Neo.IO.Data.LevelDB;
+using Neo.Network.P2P.Payloads;
+using Neo.Plugins.util;
+using Neo.SmartContract;
+using Neo.Wallets.NEP6;
+using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor;
 using static Neo.FileStorage.InnerRing.Timer.BlockTimer;
 using static Neo.FileStorage.InnerRing.Timer.Helper;
-using Neo.Network.P2P.Payloads;
-using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor;
-using Neo.IO.Data.LevelDB;
+using static Neo.FileStorage.Morph.Event.Listener;
 
 namespace Neo.FileStorage.InnerRing
 {
@@ -84,7 +84,7 @@ namespace Neo.FileStorage.InnerRing
                     {
                         wallet = wallet,
                         system = main,
-                        actor=main.Blockchain
+                        actor = main.Blockchain
                     }
                 };
             }
@@ -97,7 +97,7 @@ namespace Neo.FileStorage.InnerRing
                     {
                         wallet = wallet,
                         system = side,
-                        actor= side.Blockchain
+                        actor = side.Blockchain
                     }
                 };
             }

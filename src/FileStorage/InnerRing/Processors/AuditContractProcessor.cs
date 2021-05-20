@@ -1,17 +1,17 @@
-using Akka.Actor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Morph.Invoker;
-using Neo.FileStorage.Morph.Event;
-using static Neo.FileStorage.Morph.Event.MorphEvent;
-using Neo.FileStorage.Services.Audit;
-using static Neo.FileStorage.Services.Audit.Manager;
+using Akka.Actor;
+using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.API.Container;
+using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Morph.Event;
+using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Services.Audit;
+using static Neo.FileStorage.Morph.Event.MorphEvent;
+using static Neo.FileStorage.Services.Audit.Manager;
 using static Neo.FileStorage.Utils.WorkerPool;
 
 namespace Neo.FileStorage.InnerRing.Processors
@@ -94,8 +94,8 @@ namespace Neo.FileStorage.InnerRing.Processors
                         epoch = epoch,
                         reporter = State
                     },
-                    Context = source.Token,
-                    CID = containers[i],
+                    Cancellation = source.Token,
+                    ContainerID = containers[i],
                     SGList = storageGroups.ToList(),
                     Container = cnr,
                     ContainerNodes = nodes,

@@ -1,28 +1,26 @@
-using Akka.Actor;
-using Neo.FileStorage.Services.Audit.Auditor;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Akka.Actor;
+using Neo.FileStorage.Services.Audit.Auditor;
 
 namespace Neo.FileStorage.Services.Audit
 {
     public class Manager : UntypedActor
     {
-        public class ResetMessage { }
-        private class Start { }
-
         public const int DefaultCapacity = 100;
+        public class ResetMessage { }
         private readonly int taskQueueCapacity = DefaultCapacity;
         private readonly IContainerCommunicator communicator;
-        private readonly ulong maxPDPInterval;//MillisecondsTimeout
+        private readonly ulong maxPDPIntervalMilliseconds;
         private readonly Queue<AuditTask> taskQueue;
-        private Task runningTask;
+        private Task current;
 
         public Manager(int capacity, IContainerCommunicator container_communicator, ulong max_pdp_interval)
         {
             taskQueueCapacity = capacity;
             taskQueue = new Queue<AuditTask>(taskQueueCapacity);
             communicator = container_communicator;
-            maxPDPInterval = max_pdp_interval;
+            maxPDPIntervalMilliseconds = max_pdp_interval;
         }
 
         protected override void OnReceive(object message)
@@ -30,10 +28,7 @@ namespace Neo.FileStorage.Services.Audit
             switch (message)
             {
                 case AuditTask task:
-                    PushTask(task);
-                    break;
-                case Start _:
-                    HandleTask();
+                    NewTask(task);
                     break;
                 case ResetMessage _:
                     Sender.Tell(Reset());
@@ -41,32 +36,35 @@ namespace Neo.FileStorage.Services.Audit
             }
         }
 
-        private void PushTask(AuditTask task)
+        private void NewTask(AuditTask task)
         {
-            if (taskQueueCapacity <= taskQueue.Count)
-                return;
-            taskQueue.Enqueue(task);
-            if (runningTask is null || runningTask.Status != TaskStatus.Running)
-                Self.Tell(new Start());
+            if (taskQueue.Count < taskQueueCapacity)
+            {
+                taskQueue.Enqueue(task);
+            }
+            if (current is null ||
+                current.Status == TaskStatus.Canceled ||
+                current.Status == TaskStatus.Faulted ||
+                current.Status == TaskStatus.RanToCompletion)
+                HandleTask();
         }
 
         private void HandleTask()
         {
-            if (runningTask != null && runningTask.Status == TaskStatus.Running)
-                return;
-            if (!taskQueue.TryDequeue(out AuditTask task))
-                return;
-            var context = new Context
+            if (taskQueue.TryDequeue(out AuditTask task))
             {
-                ContainerCommunacator = communicator,
-                AuditTask = task,
-                MaxPDPInterval = maxPDPInterval,
-            };
-            runningTask = Task.Run(() =>
-            {
-                context.Execute();
-                Self.Tell(new Start());
-            });
+                var context = new Context
+                {
+                    ContainerCommunacator = communicator,
+                    AuditTask = task,
+                    MaxPDPInterval = maxPDPIntervalMilliseconds,
+                };
+                current = Task.Run(() =>
+                {
+                    context.Execute();
+                    HandleTask();
+                });
+            }
         }
 
         private int Reset()
