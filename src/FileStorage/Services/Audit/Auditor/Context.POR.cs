@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Google.Protobuf;
 using Neo.FileStorage.API.Cryptography.Tz;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;

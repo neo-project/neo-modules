@@ -6,6 +6,6 @@ namespace Neo.FileStorage.Tests.Services.Audit
     [TestClass]
     public class UT_Manager : TestKit
     {
-        
+
     }
 }

@@ -1,4 +1,3 @@
-
 namespace Neo.FileStorage.Services.Audit.Auditor
 {
     public class ShortHeader
