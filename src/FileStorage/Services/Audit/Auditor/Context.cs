@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Akka.Actor;
 using Neo.FileStorage.API.Cryptography.Tz;
 using Neo.FileStorage.API.Refs;
 using FSObject = Neo.FileStorage.API.Object.Object;
@@ -12,6 +13,8 @@ namespace Neo.FileStorage.Services.Audit.Auditor
         private readonly int minGamePayloadSize = hashRangeNumber * new TzHash().HashSize;
         public IContainerCommunicator ContainerCommunacator;
         public AuditTask AuditTask;
+        public IActorRef PorPool { get; init; }
+        public IActorRef PdpPool { get; init; }
         public ulong MaxPDPInterval;//MillisecondsTimeout
         private Report report;
         private readonly ConcurrentDictionary<string, ShortHeader> HeaderCache = default;

@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Akka.Actor;
 using Neo.FileStorage.API.Cryptography.Tz;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Utils;
 using static Neo.FileStorage.Services.Audit.Auditor.Util;
 using FSRange = Neo.FileStorage.API.Object.Range;
 
@@ -22,15 +24,19 @@ namespace Neo.FileStorage.Services.Audit.Auditor
 
         private void ProcessPairs()
         {
-            var tasks = new Task[pairs.Count];
+            List<Task> tasks = new();
             for (int i = 0; i < pairs.Count; i++)
             {
-                tasks[i] = Task.Run(() =>
+                Task t = new(() =>
                 {
                     ProcessPair(pairs[i]);
                 });
+                if ((bool)PorPool.Ask(new WorkerPool.NewTask { Process = "PDP", Task = tasks[i] }).Result)
+                {
+                    tasks.Add(t);
+                }
             }
-            Task.WaitAll(tasks);
+            Task.WaitAll(tasks.ToArray());
         }
 
         private void ProcessPair(GamePair pair)

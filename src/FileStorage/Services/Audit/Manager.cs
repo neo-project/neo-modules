@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Akka.Actor;
@@ -13,14 +14,20 @@ namespace Neo.FileStorage.Services.Audit
         private readonly IContainerCommunicator communicator;
         private readonly ulong maxPDPIntervalMilliseconds;
         private readonly Queue<AuditTask> taskQueue;
+        private readonly IActorRef workPool;
+        private readonly Func<IActorRef> porPoolGenerator;
+        private readonly Func<IActorRef> pdpPoolGenerator;
         private Task current;
 
-        public Manager(int capacity, IContainerCommunicator container_communicator, ulong max_pdp_interval)
+        public Manager(int capacity, IActorRef wp, Func<IActorRef> por_pool_generator, Func<IActorRef> pdp_pool_generator, IContainerCommunicator container_communicator, ulong max_pdp_interval)
         {
             taskQueueCapacity = capacity;
             taskQueue = new Queue<AuditTask>(taskQueueCapacity);
             communicator = container_communicator;
             maxPDPIntervalMilliseconds = max_pdp_interval;
+            porPoolGenerator = por_pool_generator;
+            pdpPoolGenerator = pdp_pool_generator;
+            workPool = wp;
         }
 
         protected override void OnReceive(object message)
@@ -58,6 +65,8 @@ namespace Neo.FileStorage.Services.Audit
                     ContainerCommunacator = communicator,
                     AuditTask = task,
                     MaxPDPInterval = maxPDPIntervalMilliseconds,
+                    PorPool = porPoolGenerator(),
+                    PdpPool = pdpPoolGenerator()
                 };
                 current = Task.Run(() =>
                 {
@@ -74,9 +83,9 @@ namespace Neo.FileStorage.Services.Audit
             return count;
         }
 
-        public static Props Props(int capacity, IContainerCommunicator container_communicator, ulong max_pdp_interval)
+        public static Props Props(int capacity, IActorRef wp, Func<IActorRef> por_pool_generator, Func<IActorRef> pdp_pool_generator, IContainerCommunicator container_communicator, ulong max_pdp_interval)
         {
-            return Akka.Actor.Props.Create(() => new Manager(capacity, container_communicator, max_pdp_interval));
+            return Akka.Actor.Props.Create(() => new Manager(capacity, wp, por_pool_generator, pdp_pool_generator, container_communicator, max_pdp_interval));
         }
     }
 }

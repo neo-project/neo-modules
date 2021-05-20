@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Akka.Actor;
 using Neo.FileStorage.API.Cryptography.Tz;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Utils;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSStorageGroup = Neo.FileStorage.API.StorageGroup.StorageGroup;
 
@@ -19,15 +21,19 @@ namespace Neo.FileStorage.Services.Audit.Auditor
         private void ExecutePoR()
         {
             if (Expired) return;
-            var tasks = new Task[AuditTask.SGList.Count];
+            List<Task> tasks = new();
             for (int i = 0; i < AuditTask.SGList.Count; i++)
             {
-                tasks[i] = Task.Run(() =>
+                Task t = new(() =>
                 {
                     CheckStorageGroupPoR(i, AuditTask.SGList[i]);
                 });
+                if ((bool)PorPool.Ask(new WorkerPool.NewTask { Process = "POR", Task = tasks[i] }).Result)
+                {
+                    tasks.Add(t);
+                }
             }
-            Task.WaitAll(tasks);
+            Task.WaitAll(tasks.ToArray());
             report.SetPoRCounters((uint)porRequests, (uint)porRetries);
         }
 

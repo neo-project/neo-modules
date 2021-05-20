@@ -109,7 +109,14 @@ namespace Neo.FileStorage.InnerRing
             statusIndex = new InnerRingIndexer(morphClient, Settings.Default.IndexerTimeout);
             // create audit processor
             clientCache = new RpcClientCache() { wallet = wallet };
-            auditTaskManager = side.ActorSystem.ActorOf(Manager.Props(Settings.Default.QueueCapacity, clientCache, Settings.Default.MaxPDPSleepInterval));
+            auditTaskManager = side.ActorSystem.ActorOf(Manager.Props(Settings.Default.QueueCapacity,
+            side.ActorSystem.ActorOf(WorkerPool.Props("AuditManager", Settings.Default.AuditTaskPoolSize)), () =>
+            {
+                return side.ActorSystem.ActorOf(WorkerPool.Props("POR", Settings.Default.PorPoolSize));
+            }, () =>
+            {
+                return side.ActorSystem.ActorOf(WorkerPool.Props("PDP", Settings.Default.PdpPoolSize));
+            }, clientCache, Settings.Default.MaxPDPSleepInterval));
             auditContractProcessor = new AuditContractProcessor()
             {
                 MorphCli = morphClient,

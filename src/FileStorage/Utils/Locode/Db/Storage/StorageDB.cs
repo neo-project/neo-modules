@@ -11,7 +11,7 @@ namespace Neo.FileStorage.Utils.Locode.Db
     public class StorageDB : IDisposable
     {
         private const byte PreLocode = 0x00;
-        private DB _db;
+        private readonly DB _db;
 
         public StorageDB(string path)
         {

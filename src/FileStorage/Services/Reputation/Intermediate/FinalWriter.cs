@@ -1,4 +1,3 @@
-using System;
 using System.Security.Cryptography;
 using Google.Protobuf;
 using Neo.FileStorage.API.Cryptography;
