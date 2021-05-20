@@ -60,7 +60,7 @@ namespace Neo.FileStorage.Services.Audit
         {
             if (taskQueue.TryDequeue(out AuditTask task))
             {
-                var context = new Context
+                task.Auditor = new Context
                 {
                     ContainerCommunacator = communicator,
                     AuditTask = task,
@@ -70,7 +70,7 @@ namespace Neo.FileStorage.Services.Audit
                 };
                 current = Task.Run(() =>
                 {
-                    context.Execute();
+                    task.Auditor.Execute();
                     HandleTask();
                 });
             }
