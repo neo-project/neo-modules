@@ -17,7 +17,7 @@ namespace Neo.Consensus
             + sizeof(uint)                      //Version
             + UInt256.Length                    //PrevHash
             + sizeof(ulong)                     //Timestamp
-            + VRFProof.GetVarSize()             // Nonce
+            + 81                                // Nonce
             + TransactionHashes.GetVarSize();   //TransactionHashes
 
         public PrepareRequest() : base(ConsensusMessageType.PrepareRequest) { }
