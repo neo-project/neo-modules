@@ -5,12 +5,14 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Cron.Plugins</RootNamespace>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageVersion>2.12.3</PackageVersion>
+    <PackageVersion>2.12.4</PackageVersion>
     <PackageId>CRON.Plugin.CoreMetrics</PackageId>
+    <AssemblyVersion>2.12.4</AssemblyVersion>
+    <FileVersion>2.12.4</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CRONIUM" Version="2.14.4-dev" />
+    <PackageReference Include="CRONIUM" Version="2.14.5-dev" />
   </ItemGroup>
 
 </Project>

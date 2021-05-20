@@ -112,7 +112,7 @@ namespace Cron.Plugins
             if (source != nameof(ConsensusService)) return;
             DateTime now = DateTime.Now;
             string line = $"[{now.TimeOfDay:hh\\:mm\\:ss\\.fff}] {message}";
-            Console.WriteLine(line);
+            Logger.Info(line);
             if (string.IsNullOrEmpty(log_dictionary)) return;
             lock (log_dictionary)
             {
