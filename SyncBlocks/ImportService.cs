@@ -4,11 +4,12 @@ using System.IO;
 using System.Linq;
 using Akka.Actor;
 using Cron.Cryptography.ECC;
+using Cron.Interface;
 using Cron.IO;
 using Cron.IO.Json;
 using Cron.Ledger;
 using Cron.Network.P2P.Payloads;
-using Cron.Plugins.SyncBlocks.Extensions;
+using Cron.Plugins.SyncBlocks.Model;
 
 namespace Cron.Plugins.SyncBlocks
 {
@@ -17,9 +18,8 @@ namespace Cron.Plugins.SyncBlocks
         private IActorRef _blockchainActorRef;
         private bool _isImporting;
         private Action _doneAction;
-        private List<Block> _importBlocks;
-        private List<AssetState> _importAsset;
-        private static int _importChunkSize = 100000;
+        private List<BlockFile> _blockFiles;
+        private static ICronLogger _logger;
         
         public static Props Props()
         {
@@ -30,54 +30,44 @@ namespace Cron.Plugins.SyncBlocks
         {
             switch (message)
             {
-                case PrepareBulkImport import:
+                case PrepareBulkImport prepare:
                     if (_isImporting) return;
                     _isImporting = true;
-                    _blockchainActorRef = import.BlockchainActorRef;
-                    _doneAction = import.OnComplete;
-                    _importAsset = GetAssetsFromFile();
-                    _importBlocks = GetBlocksFromFiles();
-                    Self.Tell(new ProcessBulkImport());
+                    _logger = prepare.Logger;
+                    _blockchainActorRef = prepare.BlockchainActorRef;
+                    _doneAction = prepare.OnComplete;
+                    ImportAssetsFromFile();
+                    _blockFiles = GetBlocksFiles();
+                    Self.Tell(new ProcessNextBlockFile());
                     break;
-                case ProcessBulkImport _:
-                    if (_importAsset != null)
+                case ProcessNextBlockFile _:
+                    ImportBlockFromFiles();
+                    break;
+                case ProcessImportBlocks processImport:
+                    if (processImport.Blocks != null && processImport.Blocks.Any())
                     {
-                        ImportAssets(_importAsset);
-                    }
-                    if (_importBlocks != null)
-                    {
-                        _importBlocks = _importBlocks
-                            .Where(x => x.Header.Index >= Blockchain.Singleton.Height)
-                            .OrderBy(x => x.Header.Index)
-                            .ToList();
-                        if (_importBlocks.Any())
-                        {
-                            var chunk = _importBlocks.Extract(_importChunkSize);
-                            Console.WriteLine($"Import next {_importChunkSize} blocks.");
-                            _blockchainActorRef.Tell(new Blockchain.Import { Blocks = chunk });
-                        }
-                        else
-                        {
-                            Console.WriteLine("Finish import blocks.");
-                            _isImporting = false;
-                            _doneAction();
-                        }
+                        _logger?.Info($"Import next {processImport.Blocks.Count} blocks.");
+                        _blockchainActorRef.Tell(new Blockchain.Import { Blocks = processImport.Blocks });
                     }
                     else
                     {
-                        _isImporting = false;
-                        _doneAction();
+                        Self.Tell(new ProcessNextBlockFile());
                     }
+                    break;
+                case BulkImportCompleted _:
+                    _logger?.Info("Finish import blocks.");
+                    _isImporting = false;
+                    _doneAction();
                     break;
                 case Blockchain.ImportCompleted _:
-                    if (_importBlocks.Any())
+                    if (_blockFiles.Any(x => !x.Processed))
                     {
-                        Console.WriteLine("Blocks imported.");
-                        Self.Tell(new ProcessBulkImport());
+                        _logger?.Info("Blocks imported.");
+                        Self.Tell(new ProcessNextBlockFile());
                     }
                     else
                     {
-                        Console.WriteLine("Finish import blocks.");
+                        _logger?.Info("Finish import blocks.");
                         _isImporting = false;
                         _doneAction();
                     }
@@ -85,31 +75,31 @@ namespace Cron.Plugins.SyncBlocks
             }
         }
 
-        private static List<AssetState> GetAssetsFromFile()
+        private void ImportAssetsFromFile()
         {
             const string fileName = "assets.acc";
             var importPath = Tools.GetImportDirectory();
             if (!Directory.Exists(importPath))
             {
-                Console.WriteLine($"Directory {importPath} does not exist.");
-                return null;
+                _logger?.Error($"Directory {importPath} does not exist.");
+                return;
             }
-            Console.WriteLine($"Scan directory: {importPath}");
+            _logger?.Info($"Scan directory: {importPath}");
             var filePath = $"{importPath}{fileName}";
             var fileExist = File.Exists(filePath);
             if (!fileExist)
             {
-                Console.WriteLine($"No file {fileName} into directory {importPath}");
-                return null;
+                _logger?.Error($"No file {fileName} into directory {importPath}");
+                return;
             }
-            Console.WriteLine($"-Read assets from file: {DateTime.Now}");
+            _logger?.Info($"-Import assets from file: {DateTime.Now}");
             var fileContent = File.ReadAllText(filePath);
             var jObject = JObject.Parse(fileContent);
             var assets = new List<AssetState>();
             foreach (var jAsset in (JArray)jObject)
             {
                 var assetTypeValue = jAsset["type"].AsString();
-                if (Enum.TryParse(typeof(AssetType), assetTypeValue, true, out var assetType))
+                if (Enum.TryParse(assetTypeValue, true, out AssetType assetType))
                 {
                     var asset = new AssetState
                     {
@@ -132,49 +122,72 @@ namespace Cron.Plugins.SyncBlocks
             }
             var newFileName = $"{importPath}{fileName}p";
             File.Move(filePath, newFileName);
-            Console.WriteLine($"-Finish read assets from files: {DateTime.Now}");
-            return assets;
+            ImportAssets(assets);
+            _logger?.Info($"-Finish import assets from files: {DateTime.Now}");
         }
         
-        private static List<Block> GetBlocksFromFiles()
+        private void ImportBlockFromFiles()
+        {
+            if (_blockFiles == null || !_blockFiles.Any())
+            {
+                Self.Tell(new BulkImportCompleted());
+                return;
+            }
+
+            if (_blockFiles.All(x => x.Processed))
+            {
+                Self.Tell(new BulkImportCompleted());
+                return;
+            }
+
+            var blockFile = _blockFiles
+                .Where(x => !x.Processed)
+                .OrderBy(x => x.Index)
+                .FirstOrDefault();
+
+            if (blockFile != null)
+            {
+                _logger?.Info($"- Import blocks from file {blockFile.FilePath}: {DateTime.Now}");
+                var blocks = GetBlocks(blockFile.FilePath);
+                blocks = blocks.Where(x => x.Header.Index >= Blockchain.Singleton.Height)
+                    .OrderBy(x => x.Header.Index)
+                    .ToList();
+                blockFile.Processed = true;
+                var newFileName = $"{blockFile.FilePath}p";
+                File.Move(blockFile.FilePath, newFileName);
+                Self.Tell(new ProcessImportBlocks { Blocks = blocks });
+            }
+            else
+            {
+                Self.Tell(new BulkImportCompleted());
+            }
+        }
+        
+        private static List<BlockFile> GetBlocksFiles()
         {
             const string fileMask = "block_chunk_*.acc";
             var importPath = Tools.GetImportDirectory();
             
             if (!Directory.Exists(importPath))
             {
-                Console.WriteLine($"Directory {importPath} does not exist.");
+                _logger?.Error($"Directory {importPath} does not exist.");
                 return null;
             }
             
             var files = Directory.GetFiles(importPath, fileMask);
             if (!files.Any())
             {
-                Console.WriteLine($"No files with mask {fileMask} into directory {importPath}");
+                _logger?.Error($"No files with mask {fileMask} into directory {importPath}");
                 return null;
             }
-            
-            Console.WriteLine($"- Read blocks from files: {DateTime.Now}");
-            var items = new List<Block>();
-            foreach (var f in files)
-            {
-                Console.WriteLine($"+-- Start read blocks from file {f}: {DateTime.Now}");
-                
-                var blocks = GetBlocks(f);
-                items.AddRange(blocks);
 
-                var fi = new FileInfo(f);
-                var newFileName = $"{importPath}{fi.Name}p";
-                File.Move(f, newFileName);
-                
-                Console.WriteLine($"+-- Finish read blocks from file {f}: {DateTime.Now}");
-            }
-
-            Console.WriteLine($"-Finish read blocks from files: {DateTime.Now}");
-            return items.OrderBy(x => x.Index).ToList();
+            return files
+                .Select(BlockFile.Create)
+                .OrderBy(x => x.Index)
+                .ToList();
         }
         
-        private static IEnumerable<Block> GetBlocks(string fileName)
+        private static List<Block> GetBlocks(string fileName)
         {
             var result = new List<Block>();
             using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -195,13 +208,13 @@ namespace Cron.Plugins.SyncBlocks
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine(e);
+                            _logger?.Error(e, "Error while read block from file");
                         }
                         
                         var block = array.AsSerializable<Block>();
                         result.Add(block);
                         if (i % 100000 == 0)
-                            Console.WriteLine($"Read {i} blocks");
+                            _logger?.Info($"Read {i} blocks");
                     }
                 }
             }

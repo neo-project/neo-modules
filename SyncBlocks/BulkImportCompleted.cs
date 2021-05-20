@@ -1,7 +1,7 @@
 ﻿namespace Cron.Plugins.SyncBlocks
 {
-    public class ProcessBulkImport
+    public class BulkImportCompleted
     {
-
+        
     }
 }

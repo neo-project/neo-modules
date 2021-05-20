@@ -60,9 +60,23 @@ namespace Cron.Plugins.SyncBlocks
             return exportPath;
         }
         
-        public static string GetAssemblyDirectory()
+        private static string GetAssemblyDirectory()
         {
             return Directory.GetCurrentDirectory();
+        }
+
+        public static int GetBlockChunkIndex(string fileName)
+        {
+            if (!fileName.StartsWith("block_chunk_"))
+                return 0;
+            var n = fileName
+                .Replace("block_chunk_", "")
+                .Replace(".acc", "");
+
+            if (int.TryParse(n, out var result))
+                return result;
+
+            return 0;
         }
     }
 }

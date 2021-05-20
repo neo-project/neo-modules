@@ -16,14 +16,14 @@ namespace Cron.Plugins.SyncBlocks
             var importCreated = Tools.TryCreateDirectory(importDirectory);
             if (!importCreated)
             {
-                Console.WriteLine($"Can not create directory {importDirectory}");
+                Logger.Error($"Can not create directory {importDirectory}");
             }
 
             var exportDirectory = Tools.GetExportDirectory();
             var exportCreated = Tools.TryCreateDirectory(exportDirectory);
             if (!exportCreated)
             {
-                Console.WriteLine($"Can not create directory {exportDirectory}");
+                Logger.Error($"Can not create directory {exportDirectory}");
             }
         }
 
@@ -60,8 +60,7 @@ namespace Cron.Plugins.SyncBlocks
 
         private bool OnExport(string[] args)
         {
-            ExportService.ExportData();
-            Console.WriteLine();
+            new ExportService(Logger).ExportData();
             return true;
         }
         
@@ -72,13 +71,13 @@ namespace Cron.Plugins.SyncBlocks
                 SuspendNodeStartup();
                 _bulkImporter = System.ActorSystem.ActorOf(ImportService.Props());
 
-                var importCmd = new PrepareBulkImport(System.Blockchain, OnBulkImportComplete);
+                var importCmd = new PrepareBulkImport(System.Blockchain, OnBulkImportComplete, Logger);
                 _bulkImporter.Tell(importCmd);
                 return true;
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error on import blocks: "+e);
+                Logger.Error(e, "Error on import blocks: "+e);
                 return false;
             }
         }
