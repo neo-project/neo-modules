@@ -437,8 +437,11 @@ namespace Cron.Plugins
             {
                 Console.WriteLine($"==== {s.Value.GetName()} {s.Key.ToString()}");
                 var tx = transactionsCache.TryGet(s.Value.AssetId);
-                string f = tx.BlockIndex.ToString() + s.Value.AssetId.ToString();
-                L[f] = s.Value.AssetId;
+                if (tx != null)
+                {
+                    var f = tx.BlockIndex.ToString() + s.Value.AssetId.ToString();
+                    L[f] = s.Value.AssetId;
+                }
             }
 
             var LKS = L.Keys.ToList();
