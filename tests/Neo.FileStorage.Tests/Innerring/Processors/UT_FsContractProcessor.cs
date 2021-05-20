@@ -4,11 +4,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.IO;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Morph.Invoker;
-using Neo.Plugins.util;
 using Neo.Wallets;
 using System.Collections.Generic;
 using System.Linq;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
+using Neo.Plugins.util;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
@@ -17,30 +17,33 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
     {
         private NeoSystem system;
         private FsContractProcessor processor;
-        private MorphClient morphclient;
+        private Client morphclient;
         private Wallet wallet;
-        private TestActiveState activeState;
+        private IActorRef actor;
+        private TestUtils.TestState state;
 
         [TestInitialize]
         public void TestSetup()
         {
             system = TestBlockchain.TheNeoSystem;
-            system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()));
             wallet = TestBlockchain.wallet;
-            morphclient = new MorphClient()
+            actor = this.ActorOf(Props.Create(() => new ProcessorFakeActor()));
+            morphclient = new Client()
             {
-                wallet = wallet,
-                system = system
+                client = new MorphClient()
+                {
+                    wallet = wallet,
+                    system = system,
+                    actor = actor
+                }
             };
-            activeState = new TestActiveState();
-            activeState.SetActive(true);
+            state = new TestUtils.TestState() { alphabetIndex = 1 };
             processor = new FsContractProcessor()
             {
-                MorphCli = new Client() { client = morphclient },
-                Convert = new Fixed8ConverterUtil(),
-                //ActiveState = activeState,
-                //EpochState = new EpochState(),
-                WorkPool = system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()))
+                MorphCli = morphclient,
+                State = state,
+                Convert= new Fixed8ConverterUtil(),
+                WorkPool = actor
             };
         }
 
@@ -100,6 +103,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         [TestMethod]
         public void ProcessDepositTest()
         {
+            state.isAlphabet = true;
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             processor.ProcessDeposit(new DepositEvent()
             {
@@ -115,6 +119,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         [TestMethod]
         public void ProcessWithdrawTest()
         {
+            state.isAlphabet = true;
             processor.ProcessWithdraw(new WithdrawEvent()
             {
                 Id = UInt160.Zero.ToArray(),
@@ -128,6 +133,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         [TestMethod]
         public void ProcessChequeTest()
         {
+            state.isAlphabet = true;
             processor.ProcessCheque(new ChequeEvent()
             {
                 Id = new byte[] { 0x01 },
@@ -142,6 +148,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         [TestMethod]
         public void ProcessConfigTest()
         {
+            state.isAlphabet = true;
             processor.ProcessConfig(new ConfigEvent()
             {
                 Id = new byte[] { 0x01 },
@@ -156,21 +163,14 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         public void ListenerHandlersTest()
         {
             var handlerInfos = processor.ListenerHandlers();
-            Assert.AreEqual(handlerInfos.Length, 5);
+            Assert.AreEqual(handlerInfos.Length, 4);
         }
 
         [TestMethod]
         public void ListenerParsersTest()
         {
             var parserInfos = processor.ListenerParsers();
-            Assert.AreEqual(parserInfos.Length, 5);
-        }
-
-        [TestMethod]
-        public void ListenerTimersHandlersTest()
-        {
-            var handlerInfos = processor.TimersHandlers();
-            Assert.AreEqual(0, handlerInfos.Length);
+            Assert.AreEqual(parserInfos.Length, 4);
         }
     }
 }

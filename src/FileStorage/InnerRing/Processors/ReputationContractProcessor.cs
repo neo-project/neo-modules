@@ -65,7 +65,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, string.Format("ignore reputation value, trust_epoch:{0},local_epoch:{1}", reputationPutEvent.Epoch, currentEpoch));
                 return;
             }
-            if (API.Cryptography.SignExtension.VerifyMessagePart(reputationPutEvent.Trust.Signature, reputationPutEvent.Trust.Body))
+            if (!API.Cryptography.SignExtension.VerifyMessagePart(reputationPutEvent.Trust.Signature, reputationPutEvent.Trust.Body))
             {
                 Utility.Log(Name, LogLevel.Info, "ignore reputation value, reason:invalid signature");
                 return;

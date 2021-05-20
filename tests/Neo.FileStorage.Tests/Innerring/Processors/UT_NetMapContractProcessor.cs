@@ -11,6 +11,9 @@ using static Neo.FileStorage.Morph.Event.MorphEvent;
 using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
 using System.Collections.Generic;
 using System.Linq;
+using Neo.Plugins.util;
+using Neo.FileStorage.Morph.Event;
+using System;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
@@ -19,30 +22,48 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
     {
         private NeoSystem system;
         private NetMapContractProcessor processor;
-        private MorphClient morphclient;
+        private Client morphclient;
         private Wallet wallet;
+        private IActorRef actor;
+        private TestUtils.TestState state;
 
         [TestInitialize]
         public void TestSetup()
         {
             system = TestBlockchain.TheNeoSystem;
-            system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()));
             wallet = TestBlockchain.wallet;
-            morphclient = new MorphClient()
+            actor = this.ActorOf(Props.Create(() => new ProcessorFakeActor()));
+            morphclient = new Client()
             {
-                wallet = wallet,
-                system = system
+                client = new MorphClient()
+                {
+                    wallet = wallet,
+                    system = system,
+                    actor = actor
+                }
             };
+            state = new TestUtils.TestState() { alphabetIndex = 1 };
             processor = new NetMapContractProcessor()
             {
                 MorphCli = new Client() { client = morphclient },
-                //ActiveState = new TestActiveState(),
-                //EpochState = new EpochState(),
-                //EpochTimerReseter = new EpochTimerReseter(),
-                WorkPool = system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor())),
-                NetmapSnapshot = new CleanupTable(true, 1)
+                State = state,
+                NetmapSnapshot = new CleanupTable(Settings.Default.CleanupEnabled, Settings.Default.CleanupThreshold),
+                WorkPool = actor,
+/*                HandleNewAudit = OnlyActiveEventHandler(auditContractProcessor.HandleNewAuditRound),
+                HandleAuditSettlements = OnlyAlphabetEventHandler(settlementProcessor.HandleAuditEvent),
+                HandleAlphabetSync = governanceProcessor.HandleAlphabetSync,
+                NodeValidator = locodeValidator*/
             };
         }
+        public Action<IContractEvent> OnlyActiveEventHandler(Action<IContractEvent> f)
+        {
+            return (IContractEvent morphEvent) => { if (state.IsActive()) f(morphEvent); };
+        }
+        public Action<IContractEvent> OnlyAlphabetEventHandler(Action<IContractEvent> f)
+        {
+            return (IContractEvent morphEvent) => { if (state.IsAlphabet()) f(morphEvent); };
+        }
+
 
         [TestMethod]
         public void HandleNewEpochTickTest()

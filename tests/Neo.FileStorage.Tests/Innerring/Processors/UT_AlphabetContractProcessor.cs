@@ -13,27 +13,32 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
     {
         private NeoSystem system;
         private AlphabetContractProcessor processor;
-        private MorphClient morphclient;
+        private Client morphclient;
         private Wallet wallet;
-        private Indexer indexer;
+        private TestUtils.TestState state;
+        private IActorRef actor;
 
         [TestInitialize]
         public void TestSetup()
         {
             system = TestBlockchain.TheNeoSystem;
-            system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()));
             wallet = TestBlockchain.wallet;
-            indexer = new Indexer();
-            morphclient = new MorphClient()
+            actor = this.ActorOf(Props.Create(() => new ProcessorFakeActor()));
+            morphclient = new Client()
             {
-                wallet = wallet,
-                system = system
+                client = new MorphClient()
+                {
+                    wallet = wallet,
+                    system = system,
+                    actor = actor
+                }
             };
+            state = new TestUtils.TestState() { alphabetIndex=1};
             processor = new AlphabetContractProcessor()
             {
-                MorphCli = new Client() { client = morphclient },
-                //Indexer = indexer,
-                WorkPool = system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor())),
+                MorphCli = morphclient,
+                State = state,
+                WorkPool = actor
             };
         }
 
@@ -51,7 +56,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             processor.ProcessEmit();
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.IsNotNull(tx);
-            indexer.SetIndexer(1);
+            state.alphabetIndex=1;
             processor.ProcessEmit();
             ExpectNoMsg();
         }
@@ -68,32 +73,6 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         {
             var parserInfos = processor.ListenerParsers();
             Assert.AreEqual(0, parserInfos.Length);
-        }
-
-        [TestMethod]
-        public void ListenerTimersHandlersTest()
-        {
-            var handlerInfos = processor.TimersHandlers();
-            Assert.AreEqual(handlerInfos.Length, 1);
-        }
-
-        public class Indexer //: IIndexer
-        {
-            private int index = 0;
-            public int Index()
-            {
-                return index;
-            }
-
-            public int InnerRingSize()
-            {
-                return 7;
-            }
-
-            public void SetIndexer(int index)
-            {
-                this.index = index;
-            }
         }
     }
 }

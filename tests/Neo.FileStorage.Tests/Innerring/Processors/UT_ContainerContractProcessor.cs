@@ -20,28 +20,32 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
     {
         private NeoSystem system;
         private ContainerContractProcessor processor;
-        private MorphClient morphclient;
+        private Client morphclient;
         private Wallet wallet;
-        private TestActiveState activeState;
+        private IActorRef actor;
+        private TestUtils.TestState state;
 
         [TestInitialize]
         public void TestSetup()
         {
             system = TestBlockchain.TheNeoSystem;
-            system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()));
             wallet = TestBlockchain.wallet;
-            activeState = new TestActiveState();
-            activeState.SetActive(true);
-            morphclient = new MorphClient()
+            actor = this.ActorOf(Props.Create(() => new ProcessorFakeActor()));
+            morphclient = new Client()
             {
-                wallet = wallet,
-                system = system
+                client = new MorphClient()
+                {
+                    wallet = wallet,
+                    system = system,
+                    actor = actor
+                }
             };
+            state = new TestUtils.TestState() { alphabetIndex = 1 };
             processor = new ContainerContractProcessor()
             {
-                MorphCli = new Client() { client = morphclient },
-                //ActiveState = activeState,
-                WorkPool = system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()))
+                MorphCli = morphclient,
+                State = state,
+                WorkPool = actor
             };
         }
 
@@ -50,16 +54,16 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            OwnerID ownerId = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
             Container container = new Container()
             {
-                Version = new Neo.FileStorage.API.Refs.Version(),
+                Version = new API.Refs.Version(),
                 BasicAcl = 0,
                 Nonce = ByteString.CopyFrom(new byte[16], 0, 16),
                 OwnerId = ownerId,
-                PlacementPolicy = new Neo.FileStorage.API.Netmap.PlacementPolicy()
+                PlacementPolicy = new API.Netmap.PlacementPolicy()
             };
-            byte[] sig = Neo.Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
+            byte[] sig = Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
 
             processor.HandlePut(new ContainerPutEvent()
             {
@@ -86,19 +90,19 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         [TestMethod]
         public void ProcessContainerPutTest()
         {
-            activeState.SetActive(true);
+            state.isAlphabet = true;
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            OwnerID ownerId = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
             Container container = new Container()
             {
-                Version = new Neo.FileStorage.API.Refs.Version(),
+                Version = new API.Refs.Version(),
                 BasicAcl = 0,
                 Nonce = ByteString.CopyFrom(new byte[16], 0, 16),
                 OwnerId = ownerId,
-                PlacementPolicy = new Neo.FileStorage.API.Netmap.PlacementPolicy()
+                PlacementPolicy = new API.Netmap.PlacementPolicy()
             };
-            byte[] sig = Neo.Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
+            byte[] sig = Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
             processor.ProcessContainerPut(new ContainerPutEvent()
             {
                 PublicKey = key.PublicKey,
@@ -108,7 +112,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.IsNotNull(tx);
 
-            activeState.SetActive(false);
+            state.isAlphabet = false;
             processor.ProcessContainerPut(new ContainerPutEvent()
             {
                 PublicKey = key.PublicKey,
@@ -121,11 +125,11 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         [TestMethod]
         public void ProcessContainerDeleteTest()
         {
-            activeState.SetActive(true);
+            state.isAlphabet = true;
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            var containerId = "f7bed8eca63266962baea8067021efb43a94ec7c0f7067926566d60322de9e52".HexToBytes();
-            var sig = Neo.Cryptography.Crypto.Sign(containerId, key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
+            var containerId = "fc780e98b7970002a80fbbeb60f9ed6cf44d5696588ea32e4338ceaeda4adddc".HexToBytes();
+            var sig = Cryptography.Crypto.Sign(containerId, key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
             processor.ProcessContainerDelete(new ContainerDeleteEvent()
             {
                 ContainerID = containerId,
@@ -134,7 +138,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.IsNotNull(tx);
 
-            activeState.SetActive(false);
+            state.isAlphabet = false;
             processor.ProcessContainerDelete(new ContainerDeleteEvent()
             {
                 ContainerID = containerId,
@@ -158,21 +162,14 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         }
 
         [TestMethod]
-        public void ListenerTimersHandlersTest()
-        {
-            var handlerInfos = processor.TimersHandlers();
-            Assert.AreEqual(0, handlerInfos.Length);
-        }
-
-        [TestMethod]
         public void CheckFormatTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            OwnerID ownerId = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
             Container container = new Container()
             {
-                Version = new Neo.FileStorage.API.Refs.Version()
+                Version = new API.Refs.Version()
                 {
                     Major = 1,
                     Minor = 1,
@@ -180,7 +177,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                 BasicAcl = 0,
                 Nonce = ByteString.CopyFrom(new byte[16], 0, 16),
                 OwnerId = ownerId,
-                PlacementPolicy = new Neo.FileStorage.API.Netmap.PlacementPolicy()
+                PlacementPolicy = new API.Netmap.PlacementPolicy()
             };
             Action action = () => processor.CheckFormat(container);
             //wrong nonce

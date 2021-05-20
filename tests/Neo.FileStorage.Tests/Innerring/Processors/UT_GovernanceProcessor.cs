@@ -1,26 +1,27 @@
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.FileStorage.Morph.Invoker;
-using Neo.FileStorage.InnerRing.Processors;
 using Neo.IO;
-using Neo.Plugins.util;
+using Neo.FileStorage.InnerRing.Processors;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.Wallets;
 using System.Collections.Generic;
 using System.Linq;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
+using Neo.Plugins.util;
+using static Neo.FileStorage.InnerRing.Events.MorphEvent;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
     [TestClass]
-    public class UT_BalanceContractProcessor : TestKit
+    public class UT_GovernanceProcessor : TestKit
     {
         private NeoSystem system;
-        private BalanceContractProcessor processor;
+        private GovernanceProcessor processor;
         private Client morphclient;
         private Wallet wallet;
-        private TestUtils.TestState state;
         private IActorRef actor;
+        private TestUtils.TestState state;
 
         [TestInitialize]
         public void TestSetup()
@@ -38,64 +39,46 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                 }
             };
             state = new TestUtils.TestState() { alphabetIndex = 1 };
-            processor = new BalanceContractProcessor()
+            processor = new GovernanceProcessor()
             {
                 MorphCli = morphclient,
                 MainCli = morphclient,
+                ProtocolSettings = system.Settings,
                 State = state,
-                Convert = new Fixed8ConverterUtil(),
                 WorkPool = actor
             };
         }
 
         [TestMethod]
-        public void HandleLockTest()
+        public void HandleAlphabetSyncTest()
         {
-            processor.HandleLock(new LockEvent()
-            {
-                Id = new byte[] { 0x01 }
-            });
+            processor.HandleAlphabetSync(new SyncEvent());
             var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;
             Assert.IsNotNull(nt);
         }
 
         [TestMethod]
-        public void ProcessLockTest()
+        public void ProcessAlphabetSyncTest()
         {
             state.isAlphabet = true;
-            IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            processor.ProcessLock(new LockEvent()
-            {
-                Id = new byte[] { 0x01 },
-                Amount = 0,
-                LockAccount = accounts.ToArray()[0].ScriptHash,
-                UserAccount = accounts.ToArray()[0].ScriptHash
-            });
+            state.morphClient = morphclient;
+            processor.ProcessAlphabetSync();
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.IsNotNull(tx);
-            state.isAlphabet = false;
-            processor.ProcessLock(new LockEvent()
-            {
-                Id = new byte[] { 0x01 },
-                Amount = 0,
-                LockAccount = accounts.ToArray()[0].ScriptHash,
-                UserAccount = accounts.ToArray()[0].ScriptHash
-            });
-            ExpectNoMsg();
         }
 
         [TestMethod]
         public void ListenerHandlersTest()
         {
             var handlerInfos = processor.ListenerHandlers();
-            Assert.AreEqual(handlerInfos.Length, 1);
+            Assert.AreEqual(handlerInfos.Length, 0);
         }
 
         [TestMethod]
         public void ListenerParsersTest()
         {
             var parserInfos = processor.ListenerParsers();
-            Assert.AreEqual(parserInfos.Length, 1);
+            Assert.AreEqual(parserInfos.Length, 0);
         }
     }
 }

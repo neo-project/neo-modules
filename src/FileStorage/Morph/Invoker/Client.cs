@@ -28,7 +28,7 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public bool TransferGas(UInt160 receiver, long amount)
         {
-            var result = client.Invoke(out var txId, NativeContract.GAS.Hash, "transferNEP17", 0, receiver, amount);
+            var result = client.Invoke(out var txId, NativeContract.GAS.Hash, "transfer", 0, receiver, amount);
             Utility.Log("", LogLevel.Debug, string.Format("native gas transfer invoke,to:{0},tx_hash:{1}", receiver.ToString(), txId.ToString()));
             return result;
         }
