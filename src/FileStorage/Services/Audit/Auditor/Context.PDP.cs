@@ -25,13 +25,13 @@ namespace Neo.FileStorage.Services.Audit.Auditor
         private void ProcessPairs()
         {
             List<Task> tasks = new();
-            for (int i = 0; i < pairs.Count; i++)
+            foreach (var pair in pairs)
             {
                 Task t = new(() =>
                 {
-                    ProcessPair(pairs[i]);
+                    ProcessPair(pair);
                 });
-                if ((bool)PorPool.Ask(new WorkerPool.NewTask { Process = "PDP", Task = tasks[i] }).Result)
+                if ((bool)PorPool.Ask(new WorkerPool.NewTask { Process = "PDP", Task = t }).Result)
                 {
                     tasks.Add(t);
                 }
@@ -48,7 +48,7 @@ namespace Neo.FileStorage.Services.Audit.Auditor
 
         private void WritePairsResult()
         {
-            List<byte[]> passed = default, failed = default;
+            List<byte[]> passed = new(), failed = new();
             foreach (var info in pairedNodes)
             {
                 if (info.Value.State)
@@ -138,7 +138,7 @@ namespace Neo.FileStorage.Services.Audit.Auditor
             }
             var fh = TzHash.Concat(new List<byte[]>() { h1, h2 });
             var expected = ObjectHomoHash(pair.Id);
-            if (fh is null || expected is null || expected.SequenceEqual(fh))
+            if (fh is null || expected is null || !expected.SequenceEqual(fh))
             {
                 FailNodes(pair.N1, pair.N2);
                 return;

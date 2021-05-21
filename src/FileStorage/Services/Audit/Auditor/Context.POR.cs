@@ -22,13 +22,13 @@ namespace Neo.FileStorage.Services.Audit.Auditor
         {
             if (Expired) return;
             List<Task> tasks = new();
-            for (int i = 0; i < AuditTask.SGList.Count; i++)
+            foreach (var (oid, index) in AuditTask.SGList.Select((p, index) => (p, index)))
             {
                 Task t = new(() =>
                 {
-                    CheckStorageGroupPoR(i, AuditTask.SGList[i]);
+                    CheckStorageGroupPoR(index, oid);
                 });
-                if ((bool)PorPool.Ask(new WorkerPool.NewTask { Process = "POR", Task = tasks[i] }).Result)
+                if ((bool)PorPool.Ask(new WorkerPool.NewTask { Process = "POR", Task = t }).Result)
                 {
                     tasks.Add(t);
                 }

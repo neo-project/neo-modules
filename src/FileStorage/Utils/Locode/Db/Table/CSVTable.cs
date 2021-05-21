@@ -121,7 +121,6 @@ namespace Neo.FileStorage.Utils.Locode
         {
             foreach (string path in paths)
             {
-                Console.WriteLine(path);
                 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
                     HasHeaderRecord = false,

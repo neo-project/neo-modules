@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Neo.FileStorage.Services.Audit.Auditor;
@@ -65,7 +64,7 @@ namespace Neo.FileStorage.Services.Audit
                     PorPool = porPoolGenerator(),
                     PdpPool = pdpPoolGenerator()
                 };
-                Task t = Task.Run(() =>
+                Task t = new(() =>
                 {
                     task.Auditor.Execute();
                     HandleTask();

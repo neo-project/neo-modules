@@ -37,7 +37,7 @@ namespace Neo.FileStorage.Services.Reputaion.EigenTrust.Calculate
                 WorkerPool.Tell(new WorkerPool.NewTask
                 {
                     Process = "Reputation",
-                    Task = Task.Run(() =>
+                    Task = new(() =>
                     {
                         IterateDaughter(context, p, trusts, context.Last);
                     }),

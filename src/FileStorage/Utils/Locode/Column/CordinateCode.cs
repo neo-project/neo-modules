@@ -18,11 +18,7 @@ namespace Neo.FileStorage.Utils.Locode.Column
 
         public static CordinateCode CoordinateFromString(string s, int degDigits, char[] hemisphereAlphabet)
         {
-            if (s.Length != degDigits + MinutesDigits + HemisphereSymbols)
-            {
-                Console.WriteLine(s);
-                throw new FormatException("invalid string format in UN/Locode");
-            }
+            if (s.Length != degDigits + MinutesDigits + HemisphereSymbols) throw new FormatException("invalid string format in UN/Locode");
             string pattern = @"^[0-9]+$";
             if (!Regex.IsMatch(s.Substring(0, degDigits + MinutesDigits), pattern)) throw new FormatException("invalid string format in UN/Locode");
             if (!hemisphereAlphabet.Contains(s[^1])) throw new FormatException("invalid string format in UN/Locode");

@@ -10,16 +10,16 @@ namespace Neo.FileStorage.Services.Audit.Auditor
     public partial class Context
     {
         private const int hashRangeNumber = 4;
-        private readonly int minGamePayloadSize = hashRangeNumber * new TzHash().HashSize;
+        private readonly int minGamePayloadSize = hashRangeNumber * TzHash.TzHashLength;
         public IContainerCommunicator ContainerCommunacator;
         public AuditTask AuditTask;
         public IActorRef PorPool { get; init; }
         public IActorRef PdpPool { get; init; }
         public ulong MaxPDPInterval;//MillisecondsTimeout
         private Report report;
-        private readonly ConcurrentDictionary<string, ShortHeader> HeaderCache = default;
-        private readonly List<GamePair> pairs = default;
-        private readonly ConcurrentDictionary<ulong, PairMemberInfo> pairedNodes = default;
+        private readonly ConcurrentDictionary<string, ShortHeader> HeaderCache = new();
+        private readonly List<GamePair> pairs = new();
+        private readonly ConcurrentDictionary<ulong, PairMemberInfo> pairedNodes = new();
         private bool Expired => AuditTask.Cancellation.IsCancellationRequested;
 
         public void Execute()
