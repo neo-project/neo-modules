@@ -1,18 +1,21 @@
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neo.FileStorage.InnerRing;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.Wallets;
+using static Neo.FileStorage.InnerRing.Events.MorphEvent;
+using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor;
 using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
     [TestClass]
-    public class UT_AlphabetContractProcessor : TestKit
+    public class UT_SettlementProcessor : TestKit
     {
         private NeoSystem system;
-        private AlphabetContractProcessor processor;
+        private SettlementProcessor processor;
         private Client morphclient;
         private Wallet wallet;
         private TestUtils.TestState state;
@@ -34,31 +37,59 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                 }
             };
             state = new TestUtils.TestState() { alphabetIndex=1};
-            processor = new AlphabetContractProcessor()
+            var clientCache = new RpcClientCache() { wallet = wallet };
+            var auditCalcDeps = new AuditSettlementDeps()
             {
-                
-                MorphCli = morphclient,
+                client = morphclient,
+                clientCache = clientCache,
+            };
+            var basicSettlementDeps = new BasicIncomeSettlementDeps()
+            {
+                client = morphclient,
+            };
+            var auditSettlementCalc = new Calculator(auditCalcDeps);
+            processor = new SettlementProcessor()
+            {
+                basicIncome = basicSettlementDeps,
+                auditProc = auditSettlementCalc,
                 State = state,
-                WorkPool = actor
+                WorkPool=actor
             };
         }
 
         [TestMethod]
-        public void HandleHandleGasEmissionTest()
+        public void HandleTest()
         {
-            processor.HandleGasEmission(new NewAlphabetEmitTickEvent());
+            state.isActive = true;
+            processor.Handle(0);
+            ExpectNoMsg();
+            processor.Handle(1);
+            ExpectNoMsg();
+        }
+
+        [TestMethod]
+        public void HandleAuditEventTest()
+        {
+            processor.HandleAuditEvent(new AuditStartEvent() { epoch=1});
             var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;
             Assert.IsNotNull(nt);
         }
 
         [TestMethod]
-        public void ProcessEmitTest()
+        public void HandleIncomeCollectionEventTest()
         {
             state.isAlphabet = true;
-            state.alphabetIndex = 1;
-            processor.ProcessEmit();
-            var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.IsNotNull(tx);
+            processor.HandleIncomeCollectionEvent(new BasicIncomeCollectEvent() { epoch=1});
+            var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;
+            Assert.IsNotNull(nt);
+        }
+
+        [TestMethod]
+        public void HandleIncomeDistributionEventTest()
+        {
+            state.isAlphabet = true;
+            processor.HandleIncomeDistributionEvent(new BasicIncomeDistributeEvent() { epoch=1});
+            ExpectNoMsg();
         }
 
         [TestMethod]

@@ -55,7 +55,7 @@
         "balance_threshold": 100
       },
       "storage": {
-        "amount": 100000000
+        "amount": 1
       }
     },
     "netmap_cleaner": {

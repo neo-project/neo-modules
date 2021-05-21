@@ -14,6 +14,10 @@ using System.Linq;
 using Neo.Plugins.util;
 using Neo.FileStorage.Morph.Event;
 using System;
+using Neo.FileStorage.InnerRing;
+using Neo.FileStorage.Services.Audit;
+using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor;
+using Neo.FileStorage.Utils.Locode.Db;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
@@ -42,17 +46,54 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                     actor = actor
                 }
             };
-            state = new TestUtils.TestState() { alphabetIndex = 1 };
+            state = new TestUtils.TestState() { alphabetIndex = 1 ,isAlphabet=true,isActive=true,epoch=1};
+            var clientCache = new RpcClientCache() { wallet = wallet };
+            var auditTaskManager = system.ActorSystem.ActorOf(Manager.Props(Settings.Default.QueueCapacity, clientCache, Settings.Default.MaxPDPSleepInterval));
+            var auditContractProcessor = new AuditContractProcessor()
+            {
+                MorphCli = morphclient,
+                ClientCache = clientCache,
+                TaskManager = auditTaskManager,
+                State = state,
+                WorkPool=actor,
+            };
+            var governanceProcessor = new GovernanceProcessor()
+            {
+                MorphCli = morphclient,
+                MainCli = morphclient,
+                ProtocolSettings = system.Settings,
+                State = state,
+                WorkPool = actor
+            };
+            var auditCalcDeps = new AuditSettlementDeps()
+            {
+                client = morphclient,
+                clientCache = clientCache,
+            };
+            var basicSettlementDeps = new BasicIncomeSettlementDeps()
+            {
+                client = morphclient,
+            };
+            var auditSettlementCalc = new Calculator(auditCalcDeps);
+            var settlementProcessor = new SettlementProcessor()
+            {
+                basicIncome = basicSettlementDeps,
+                auditProc = auditSettlementCalc,
+                State = state,
+                WorkPool = actor
+            };
+            StorageDB targetDb = new("./Config/Data_LOCODE/"); 
+            var locodeValidator = new Validator(targetDb);
             processor = new NetMapContractProcessor()
             {
-                MorphCli = new Client() { client = morphclient },
+                MorphCli = morphclient,
                 State = state,
                 NetmapSnapshot = new CleanupTable(Settings.Default.CleanupEnabled, Settings.Default.CleanupThreshold),
                 WorkPool = actor,
-/*                HandleNewAudit = OnlyActiveEventHandler(auditContractProcessor.HandleNewAuditRound),
+                HandleNewAudit = OnlyActiveEventHandler(auditContractProcessor.HandleNewAuditRound),
                 HandleAuditSettlements = OnlyAlphabetEventHandler(settlementProcessor.HandleAuditEvent),
                 HandleAlphabetSync = governanceProcessor.HandleAlphabetSync,
-                NodeValidator = locodeValidator*/
+                NodeValidator = locodeValidator
             };
         }
         public Action<IContractEvent> OnlyActiveEventHandler(Action<IContractEvent> f)
@@ -126,18 +167,11 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         }
 
         [TestMethod]
-        public void ListenerTimersHandlersTest()
-        {
-            var handlerInfos = processor.TimersHandlers();
-            Assert.AreEqual(handlerInfos.Length, 1);
-        }
-
-        [TestMethod]
         public void ProcessNewEpochTest()
         {
             processor.ProcessNewEpoch(new NewEpochEvent()
             {
-                EpochNumber = 1
+                EpochNumber = 2
             });
             var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;
             Assert.IsNotNull(nt);
@@ -156,7 +190,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             KeyPair key = accounts.ToArray()[0].GetKey();
             var nodeInfo = new API.Netmap.NodeInfo()
             {
-                PublicKey = Google.Protobuf.ByteString.CopyFrom(key.PublicKey.ToArray()),
+                PublicKey = ByteString.CopyFrom(key.PublicKey.ToArray()),
                 Address = API.Cryptography.KeyExtension.PublicKeyToAddress(key.PublicKey.ToArray()),
                 State = API.Netmap.NodeInfo.Types.State.Online
             };
@@ -173,8 +207,8 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             KeyPair key = accounts.ToArray()[0].GetKey();
             var nodeInfo = new API.Netmap.NodeInfo()
             {
-                PublicKey = Google.Protobuf.ByteString.CopyFrom(key.PublicKey.ToArray()),
-                Address = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToAddress(key.PublicKey.ToArray()),
+                PublicKey = ByteString.CopyFrom(key.PublicKey.ToArray()),
+                Address = API.Cryptography.KeyExtension.PublicKeyToAddress(key.PublicKey.ToArray()),
                 State = API.Netmap.NodeInfo.Types.State.Online
             };
             processor.ProcessUpdateState(new UpdatePeerEvent()

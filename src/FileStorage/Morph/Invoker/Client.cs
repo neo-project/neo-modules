@@ -1,5 +1,6 @@
 using Neo.Cryptography.ECC;
 using Neo.IO;
+using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM.Types;
 using Neo.Wallets;
@@ -28,7 +29,8 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public bool TransferGas(UInt160 receiver, long amount)
         {
-            var result = client.Invoke(out var txId, NativeContract.GAS.Hash, "transfer", 0, receiver, amount);
+            var account = GetWallet().GetAccounts().ToArray()[0].GetKey().PublicKey.EncodePoint(true).ToScriptHash();
+            var result = client.Invoke(out var txId, NativeContract.GAS.Hash, "transfer", 0, account,receiver, amount,new byte[0]);
             Utility.Log("", LogLevel.Debug, string.Format("native gas transfer invoke,to:{0},tx_hash:{1}", receiver.ToString(), txId.ToString()));
             return result;
         }
