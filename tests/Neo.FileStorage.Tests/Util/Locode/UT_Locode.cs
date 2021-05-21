@@ -41,6 +41,7 @@ namespace Neo.FileStorage.Tests.Util.Locode
             StorageDB targetDb = new(dbPath);
             Console.WriteLine(Path.GetFullPath(dbPath));
             targetDb.FillDatabase(locodeDB, airportsDB, continentDB);
+            targetDb.Dispose();
             //Directory.Delete(dbPath, true);
         }
 
