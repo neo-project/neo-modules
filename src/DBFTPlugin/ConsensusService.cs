@@ -435,13 +435,7 @@ namespace Neo.Consensus
             byte[] nonce;
             try
             {
-                // To prevent the primary uses the same block hash in Height (1000, 2000)
-                // also add the Height to the VRF input.
-                nonce = VRF.Verify(context.Validators[message.ValidatorIndex], message.VRFProof, NativeContract.Ledger
-                    .GetBlockHash(context.Snapshot, (uint)(message.BlockIndex - (message.BlockIndex > 1000 ? 1000 : 0)))
-                    .ToArray()
-                    .Concat(BitConverter.GetBytes(message.BlockIndex))
-                    .ToArray());
+                nonce = VRF.Verify(context.Validators[message.ValidatorIndex], message.VRFProof, message.PrevHash);
             }
             catch (FormatException)
             {
