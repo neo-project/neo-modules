@@ -1,14 +1,14 @@
+using System.Collections.Generic;
+using System.Linq;
 using Google.Protobuf;
 using Neo.FileStorage.API.Audit;
 using Neo.FileStorage.API.Refs;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Neo.FileStorage.Services.Audit
 {
     public class Report
     {
-        private DataAuditResult auditResult;
+        private readonly DataAuditResult auditResult;
 
         public Report()
         {

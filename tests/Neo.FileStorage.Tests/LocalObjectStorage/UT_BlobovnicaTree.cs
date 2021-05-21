@@ -34,7 +34,6 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage
                 var obj = RandomObject(objSize);
                 addrs.Add(obj.Address);
                 var id = tree.Put(obj);
-                Console.WriteLine(id);
                 var res = tree.Get(obj.Address, id);
                 Assert.IsTrue(obj.ToByteArray().SequenceEqual(res.ToByteArray()));
                 res = tree.Get(obj.Address);

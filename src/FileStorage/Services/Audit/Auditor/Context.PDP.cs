@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Akka.Actor;
 using Neo.FileStorage.API.Cryptography.Tz;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Utils;
 using static Neo.FileStorage.Services.Audit.Auditor.Util;
 using FSRange = Neo.FileStorage.API.Object.Range;
 
@@ -22,15 +24,19 @@ namespace Neo.FileStorage.Services.Audit.Auditor
 
         private void ProcessPairs()
         {
-            var tasks = new Task[pairs.Count];
-            for (int i = 0; i < pairs.Count; i++)
+            List<Task> tasks = new();
+            foreach (var pair in pairs)
             {
-                tasks[i] = Task.Run(() =>
+                Task t = new(() =>
                 {
-                    ProcessPair(pairs[i]);
+                    ProcessPair(pair);
                 });
+                if ((bool)PorPool.Ask(new WorkerPool.NewTask { Process = "PDP", Task = t }).Result)
+                {
+                    tasks.Add(t);
+                }
             }
-            Task.WaitAll(tasks);
+            Task.WaitAll(tasks.ToArray());
         }
 
         private void ProcessPair(GamePair pair)
@@ -42,7 +48,7 @@ namespace Neo.FileStorage.Services.Audit.Auditor
 
         private void WritePairsResult()
         {
-            List<byte[]> passed = default, failed = default;
+            List<byte[]> passed = new(), failed = new();
             foreach (var info in pairedNodes)
             {
                 if (info.Value.State)
@@ -132,7 +138,7 @@ namespace Neo.FileStorage.Services.Audit.Auditor
             }
             var fh = TzHash.Concat(new List<byte[]>() { h1, h2 });
             var expected = ObjectHomoHash(pair.Id);
-            if (fh is null || expected is null || expected.SequenceEqual(fh))
+            if (fh is null || expected is null || !expected.SequenceEqual(fh))
             {
                 FailNodes(pair.N1, pair.N2);
                 return;

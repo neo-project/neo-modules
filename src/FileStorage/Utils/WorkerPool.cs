@@ -1,7 +1,7 @@
-using Akka.Actor;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Akka.Actor;
 
 namespace Neo.FileStorage.Utils
 {
@@ -49,12 +49,14 @@ namespace Neo.FileStorage.Utils
             if (free == 0)
             {
                 Utility.Log(newTask.Process, LogLevel.Warning, string.Format("worker pool drained,capacity:{0}", capacity.ToString()));
+                Sender.Tell(false);
             }
             else
             {
                 newTask.Task.ContinueWith(t => { actor.Tell(new CompleteTask()); });
                 newTask.Task.Start();
                 running++;
+                Sender.Tell(true);
             }
         }
 

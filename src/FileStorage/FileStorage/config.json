@@ -76,7 +76,8 @@
         "pool_size": 100
       },
       "task": {
-        "queue_capacity": 100
+        "queue_capacity": 100,
+        "pool_size": 100
       }
     },
     "indexer": {

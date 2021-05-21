@@ -19,7 +19,7 @@ namespace Neo.FileStorage.InnerRing.Processors
     public class SettlementProcessor : BaseProcessor
     {
         public override string Name => "SettlementProcessor";
-        private Dictionary<ulong, IncomeSettlementContext> incomeContexts = new();
+        private readonly Dictionary<ulong, IncomeSettlementContext> incomeContexts = new();
         public BasicIncomeSettlementDeps basicIncome;
         public Calculator auditProc;
 

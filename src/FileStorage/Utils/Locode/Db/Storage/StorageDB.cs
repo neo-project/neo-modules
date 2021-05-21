@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,14 +8,19 @@ using Neo.IO.Data.LevelDB;
 
 namespace Neo.FileStorage.Utils.Locode.Db
 {
-    public class StorageDB
+    public class StorageDB : IDisposable
     {
         private const byte PreLocode = 0x00;
-        private DB _db;
+        private readonly DB _db;
 
         public StorageDB(string path)
         {
             _db = DB.Open(path, new Options { CreateIfMissing = true, FilterPolicy = Native.leveldb_filterpolicy_create_bloom(15) });
+        }
+
+        public void Dispose()
+        {
+            _db?.Dispose();
         }
 
         public (Key, Record) Get(LOCODE lc)

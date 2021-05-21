@@ -11,8 +11,8 @@ namespace Neo.FileStorage.Services.Audit.Auditor
 {
     public partial class Context
     {
-        private readonly ConcurrentDictionary<int, List<ObjectID>> sgMembersCache = default;
-        private readonly ConcurrentDictionary<string, List<List<Node>>> placementCache = default;
+        private readonly ConcurrentDictionary<int, List<ObjectID>> sgMembersCache = new();
+        private readonly ConcurrentDictionary<string, List<List<Node>>> placementCache = new();
         private uint hit, miss, fail;
         private int ContainerNodesNumber => AuditTask.ContainerNodes.Flatten().Count;
 
@@ -28,7 +28,7 @@ namespace Neo.FileStorage.Services.Audit.Auditor
             var replicas = AuditTask.Container.PlacementPolicy.Replicas;
             foreach (var members in sgMembersCache.Values)
             {
-                Random rand = default;
+                Random rand = new();
                 foreach (var oid in members.OrderBy(p => rand.Next()))
                 {
                     var nn = BuildPlacement(oid);

@@ -1,8 +1,8 @@
-using Microsoft.Extensions.Configuration;
-using Neo.Cryptography.ECC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Configuration;
+using Neo.Cryptography.ECC;
 
 namespace Neo.FileStorage
 {
@@ -38,6 +38,7 @@ namespace Neo.FileStorage
         public int PorPoolSize;
         public ulong MaxPDPSleepInterval;
         public int QueueCapacity;
+        public int AuditTaskPoolSize;
 
         public string[] Urls;
         public uint EpochDuration;
@@ -132,6 +133,7 @@ namespace Neo.FileStorage
             this.PorPoolSize = int.Parse(audit.GetSection("por").GetSection("pool_size").Value);
             this.MaxPDPSleepInterval = ulong.Parse(audit.GetSection("pdp").GetSection("max_sleep_interval").Value);
             this.QueueCapacity = int.Parse(audit.GetSection("task").GetSection("queue_capacity").Value);
+            this.AuditTaskPoolSize = int.Parse(audit.GetSection("task").GetSection("pool_size").Value);
 
             IConfigurationSection indexer = section.GetSection("indexer");
             this.IndexerTimeout = TimeSpan.FromMilliseconds(long.Parse(indexer.GetSection("cache_timeout").Value));
