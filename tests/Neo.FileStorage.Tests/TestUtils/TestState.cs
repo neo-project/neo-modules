@@ -1,14 +1,17 @@
+using Akka.Actor;
 using Neo.Cryptography.ECC;
 using Neo.FileStorage.InnerRing;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Audit;
 using System;
+using static Neo.FileStorage.InnerRing.Timer.BlockTimer;
 
 namespace Neo.FileStorage.Tests.TestUtils
 {
     public class TestState : IState
     {
+        public IActorRef actor;
         public int innerRingIndex;
         public int innerRingSize;
         public Client morphClient;
@@ -55,7 +58,7 @@ namespace Neo.FileStorage.Tests.TestUtils
 
         public void ResetEpochTimer()
         {
-            throw new NotImplementedException();
+            actor.Tell(new ResetEvent());
         }
 
         public void SetEpochCounter(ulong epoch)

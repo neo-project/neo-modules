@@ -16,6 +16,7 @@ using Neo.FileStorage.InnerRing;
 using Neo.FileStorage.Services.Audit;
 using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor;
 using Neo.FileStorage.Utils.Locode.Db;
+using Neo.FileStorage.Utils;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
@@ -44,9 +45,16 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                     actor = actor
                 }
             };
-            state = new TestUtils.TestState() { alphabetIndex = 1 ,isAlphabet=true,isActive=true,epoch=1};
+            state = new TestUtils.TestState() { alphabetIndex = 1 ,isAlphabet=true,isActive=true,epoch=1, actor =this.TestActor};
             var clientCache = new RpcClientCache() { wallet = wallet };
-            var auditTaskManager = system.ActorSystem.ActorOf(Manager.Props(Settings.Default.QueueCapacity, clientCache, Settings.Default.MaxPDPSleepInterval));
+            var auditTaskManager = system.ActorSystem.ActorOf(Manager.Props(Settings.Default.QueueCapacity,
+            system.ActorSystem.ActorOf(WorkerPool.Props("AuditManager", Settings.Default.AuditTaskPoolSize)), () =>
+            {
+                return system.ActorSystem.ActorOf(WorkerPool.Props("POR", Settings.Default.PorPoolSize));
+            }, () =>
+            {
+                return system.ActorSystem.ActorOf(WorkerPool.Props("PDP", Settings.Default.PdpPoolSize));
+            }, clientCache, Settings.Default.MaxPDPSleepInterval));
             var auditContractProcessor = new AuditContractProcessor()
             {
                 MorphCli = morphclient,
@@ -80,8 +88,6 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                 State = state,
                 WorkPool = actor
             };
-            StorageDB targetDb = new("./Config/Data_LOCODE/"); 
-            var locodeValidator = new Validator(targetDb);
             processor = new NetMapContractProcessor()
             {
                 MorphCli = morphclient,
@@ -91,7 +97,6 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                 HandleNewAudit = OnlyActiveEventHandler(auditContractProcessor.HandleNewAuditRound),
                 HandleAuditSettlements = OnlyAlphabetEventHandler(settlementProcessor.HandleAuditEvent),
                 HandleAlphabetSync = governanceProcessor.HandleAlphabetSync,
-                NodeValidator = locodeValidator
             };
         }
         public Action<IContractEvent> OnlyActiveEventHandler(Action<IContractEvent> f)
@@ -102,7 +107,6 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         {
             return (IContractEvent morphEvent) => { if (state.IsAlphabet()) f(morphEvent); };
         }
-
 
         [TestMethod]
         public void HandleNewEpochTickTest()
@@ -115,6 +119,9 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         [TestMethod]
         public void HandleNewEpochTest()
         {
+            StorageDB targetDb = new("./Config/Data_LOCODE");
+            var locodeValidator = new Validator(targetDb);
+            processor.NodeValidator=locodeValidator;
             processor.HandleNewEpoch(new NewEpochEvent());
             var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;
             Assert.IsNotNull(nt);
@@ -171,8 +178,8 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             {
                 EpochNumber = 2
             });
-            var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;
-            Assert.IsNotNull(nt);
+            var resetEvent = ExpectMsg<FileStorage.InnerRing.Timer.BlockTimer.ResetEvent>();
+            Assert.IsNotNull(resetEvent);
         }
 
         [TestMethod]
@@ -223,14 +230,6 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             {
                 Epoch = 1
             });
-        }
-
-        public class EpochTimerReseter //: IEpochTimerReseter
-        {
-            public void ResetEpochTimer()
-            {
-                return;
-            }
         }
     }
 }
