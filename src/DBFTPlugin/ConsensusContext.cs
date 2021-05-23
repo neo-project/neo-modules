@@ -338,7 +338,7 @@ namespace Neo.Consensus
 
         private Tuple<byte[], uint> GetNonce(byte[] prikey)
         {
-            var proof = VRF.Prove(prikey, Block.PrevHash);
+            var proof = VRF.Prove(prikey, Block.PrevHash.ToArray());
             var nonce = VRF.ProofToHash(proof);
             VRFProof = proof;
             return new Tuple<byte[], uint>(proof, BitConverter.ToUInt32(nonce[..4]));

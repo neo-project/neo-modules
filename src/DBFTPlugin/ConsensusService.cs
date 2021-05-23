@@ -430,12 +430,10 @@ namespace Neo.Consensus
                 return;
             }
 
-            // Possible vulnerability of the random number, dishonest nodes cooperate to
-            // attck the system. 
             byte[] nonce;
             try
             {
-                nonce = VRF.Verify(context.Validators[message.ValidatorIndex], message.VRFProof, message.PrevHash);
+                nonce = VRF.Verify(context.Validators[message.ValidatorIndex], message.VRFProof, message.PrevHash.ToArray());
             }
             catch (FormatException)
             {
