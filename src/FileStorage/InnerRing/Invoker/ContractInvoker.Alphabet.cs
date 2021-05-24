@@ -1,10 +1,8 @@
 using Neo.Cryptography.ECC;
 using Neo.FileStorage.Morph.Invoker;
-using Neo.IO;
 using Neo.SmartContract;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Neo.FileStorage.InnerRing.Invoker
 {
@@ -13,6 +11,8 @@ namespace Neo.FileStorage.InnerRing.Invoker
         private static UInt160[] AlphabetContractHash => Settings.Default.AlphabetContractHash;
         private const string EmitMethod = "emit";
         private const string VoteMethod = "vote";
+        private static long MainChainFee => Settings.Default.MainChainFee;
+        private static long SideChainFee => Settings.Default.SideChainFee;
 
         public static bool AlphabetEmit(this Client client, int index)
         {
@@ -30,7 +30,7 @@ namespace Neo.FileStorage.InnerRing.Invoker
                 list.Add(new ContractParameter(ContractParameterType.PublicKey) { Value = publicKey });
             }
             array.Value = list;
-            return client.Invoke(out _, AlphabetContractHash[index], VoteMethod, FeeOneGas, epoch, array);
+            return client.Invoke(out _, AlphabetContractHash[index], VoteMethod, SideChainFee, epoch, array);
         }
     }
 }

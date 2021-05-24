@@ -13,24 +13,22 @@ namespace Neo.FileStorage.InnerRing.Invoker
         private const string BurnMethod = "burn";
         private const string PrecisionMethod = "decimals";
 
-        private const long ExtraFee = 2_0000_0000;
-
         public static bool Mint(this Client client, byte[] scriptHash, long amount, byte[] comment)
         {
             if (client is null) throw new Exception("client is nil");
-            return client.Invoke(out _, BalanceContractHash, MintMethod, ExtraFee, scriptHash, amount, comment);
+            return client.Invoke(out _, BalanceContractHash, MintMethod, SideChainFee, scriptHash, amount, comment);
         }
 
         public static bool Burn(this Client client, byte[] scriptHash, long amount, byte[] comment)
         {
             if (client is null) throw new Exception("client is nil");
-            return client.Invoke(out _, BalanceContractHash, BurnMethod, ExtraFee, scriptHash, amount, comment);
+            return client.Invoke(out _, BalanceContractHash, BurnMethod, SideChainFee, scriptHash, amount, comment);
         }
 
         public static bool LockAsset(this Client client, byte[] ID, UInt160 userAccount, UInt160 lockAccount, long amount, ulong until)
         {
             if (client is null) throw new Exception("client is nil");
-            return client.Invoke(out _, BalanceContractHash, LockMethod, ExtraFee, ID, userAccount, lockAccount, amount, (int)until);
+            return client.Invoke(out _, BalanceContractHash, LockMethod, SideChainFee, ID, userAccount, lockAccount, amount, (int)until);
         }
 
         public static uint BalancePrecision(this Client client)
@@ -39,12 +37,6 @@ namespace Neo.FileStorage.InnerRing.Invoker
             InvokeResult result = client.TestInvoke(BalanceContractHash, PrecisionMethod);
             if (result.State != VMState.HALT) throw new Exception("can't get BalancePrecision");
             return (uint)result.ResultStack[0].GetInteger();
-        }
-
-        public static bool TransferBalanceX(this Client client, byte[] sender, byte[] receiver, long amount, byte[] comment)
-        {
-            if (client is null) throw new Exception("client is nil");
-            return client.Invoke(out _, BalanceContractHash, TransferXMethod, ExtraFee, sender, receiver, amount, comment);
         }
     }
 }

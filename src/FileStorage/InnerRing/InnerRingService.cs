@@ -12,6 +12,7 @@ using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Audit;
 using Neo.FileStorage.Utils;
+using Neo.FileStorage.Utils.Locode.Db;
 using Neo.IO;
 using Neo.IO.Data.LevelDB;
 using Neo.Network.P2P.Payloads;
@@ -64,7 +65,7 @@ namespace Neo.FileStorage.InnerRing
         private ReputationContractProcessor reputationProcessor;
 
         private RpcClientCache clientCache;
-        private DB _db;
+        private StorageDB _db;
 
         public InnerRingService(NeoSystem main, NeoSystem side, NEP6Wallet pwallet = null, Client pMainNetClient = null, Client pMorphClient = null)
         {
@@ -141,7 +142,8 @@ namespace Neo.FileStorage.InnerRing
                 auditProc = auditSettlementCalc,
                 State = this,
             };
-            var locodeValidator = new Validator(null);
+            _db = new("./FileStorage/Data_LOCODE");
+            var locodeValidator = new Validator(_db);
             // create governance processor
             governanceProcessor = new GovernanceProcessor()
             {

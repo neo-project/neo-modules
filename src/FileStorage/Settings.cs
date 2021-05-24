@@ -62,6 +62,8 @@ namespace Neo.FileStorage
         public uint DistributeBasicIncomeMul;
         public uint DistributeBasicIncomeDiv;
         public ulong BasicIncomeRate;
+        public long MainChainFee;
+        public long SideChainFee;
 
         public List<UInt160> Contracts = new();
 
@@ -140,6 +142,10 @@ namespace Neo.FileStorage
 
             IConfigurationSection settlement = section.GetSection("settlement");
             this.BasicIncomeRate = ulong.Parse(settlement.GetSection("basic_income_rate").Value);
+
+            IConfigurationSection fee = section.GetSection("fee");
+            this.MainChainFee = long.Parse(fee.GetSection("main_chain").Value);
+            this.SideChainFee = long.Parse(fee.GetSection("side_chain").Value);
         }
 
         public static void Load(IConfigurationSection section)

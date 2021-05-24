@@ -98,6 +98,10 @@
     },
     "settlement": {
       "basic_income_rate": 10
+    },
+    "fee": {
+      "main_chain": 10,
+      "side_chain": 10
     }
   }
 }

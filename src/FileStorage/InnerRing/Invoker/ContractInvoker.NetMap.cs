@@ -31,25 +31,25 @@ namespace Neo.FileStorage.InnerRing.Invoker
         public static bool SetNewEpoch(this Client client, ulong epoch)
         {
             if (client is null) throw new Exception("client is nil");
-            return client.Invoke(out _, NetMapContractHash, SetNewEpochMethod, FeeOneGas, epoch);
+            return client.Invoke(out _, NetMapContractHash, SetNewEpochMethod, SideChainFee, epoch);
         }
 
         public static bool ApprovePeer(this Client client, byte[] peer)
         {
             if (client is null) throw new Exception("client is nil");
-            return client.Invoke(out _, NetMapContractHash, ApprovePeerMethod, FeeOneGas, peer);
+            return client.Invoke(out _, NetMapContractHash, ApprovePeerMethod, SideChainFee, peer);
         }
 
         public static bool UpdatePeerState(this Client client, ECPoint key, int status)
         {
             if (client is null) throw new Exception("client is nil");
-            return client.Invoke(out _, NetMapContractHash, UpdatePeerStateMethod, ExtraFee, status, key.ToArray());
+            return client.Invoke(out _, NetMapContractHash, UpdatePeerStateMethod, SideChainFee, status, key.ToArray());
         }
 
         public static bool SetConfig(this Client client, byte[] Id, byte[] key, byte[] value)
         {
             if (client is null) throw new Exception("client is nil");
-            return client.Invoke(out _, NetMapContractHash, SetConfigMethod, ExtraFee, Id, key, value);
+            return client.Invoke(out _, NetMapContractHash, SetConfigMethod, SideChainFee, Id, key, value);
         }
 
         public static bool SetInnerRing(this Client client, ECPoint[] publicKeys)
@@ -62,7 +62,7 @@ namespace Neo.FileStorage.InnerRing.Invoker
                 list.Add(new ContractParameter(ContractParameterType.PublicKey) { Value = publicKey });
             }
             array.Value = list;
-            return client.Invoke(out _, NetMapContractHash, SetInnerRingMethod, ExtraFee, array);
+            return client.Invoke(out _, NetMapContractHash, SetInnerRingMethod, SideChainFee, array);
         }
 
         public static NodeInfo[] NetmapSnapshot(this Client client)

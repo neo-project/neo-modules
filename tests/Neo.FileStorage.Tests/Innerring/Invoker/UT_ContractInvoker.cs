@@ -39,15 +39,6 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
         }
 
         [TestMethod]
-        public void InvokeTransferBalanceXTest()
-        {
-            bool result = morphclient.TransferBalanceX(UInt160.Zero.ToArray(), UInt160.Zero.ToArray(), 0, new byte[] { 0x01 });
-            var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.AreEqual(result, true);
-            Assert.IsNotNull(tx);
-        }
-
-        [TestMethod]
         public void InvokeMintTest()
         {
             bool result = morphclient.Mint(Settings.Default.NetmapContractHash.ToArray(), 0, new byte[] { 0x01 });
