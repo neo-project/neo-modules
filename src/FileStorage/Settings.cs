@@ -12,7 +12,6 @@ namespace Neo.FileStorage
         public uint MainNetwork;
         public uint SideNetwork;
         public string SideChainConfigPath;
-        public string SideChainStorageEngine;
         public bool StartInnerRing;
         public bool StartStorage;
         public string WalletPath;
@@ -51,9 +50,10 @@ namespace Neo.FileStorage
         public bool CleanupEnabled;
         public ulong CleanupThreshold;
         public bool IsSender;
-        public ulong SearchTimeout;
-        public ulong HeadTimeout;
-        public ulong RangeTimeout;
+        public int SearchTimeout;
+        public int GetTimeout;
+        public int HeadTimeout;
+        public int RangeTimeout;
         public TimeSpan IndexerTimeout;
         public uint StopEstimationDMul;
         public uint StopEstimationDDiv;
@@ -62,31 +62,29 @@ namespace Neo.FileStorage
         public uint DistributeBasicIncomeMul;
         public uint DistributeBasicIncomeDiv;
         public ulong BasicIncomeRate;
-        public long MainChainFee;
-        public long SideChainFee;
 
         public List<UInt160> Contracts = new();
 
         private Settings(IConfigurationSection section)
         {
-            this.Urls = section.GetSection("URLs").GetChildren().Select(p => p.Get<string>()).ToArray();
-            this.MainNetwork = section.GetValue("MainNetwork", 5195086u);
-            this.SideNetwork = section.GetValue("SideNetwork", 0u);
-            this.SideChainConfigPath = section.GetValue("SideChainConfigPath", "./FileStorage/sidechain.json");
-            this.SideChainStorageEngine = section.GetValue("SideChainStorageEngine", "LevelDBStore");
-            this.StartInnerRing = section.GetValue("StartInnerRing", false);
-            this.StartStorage = section.GetValue("StartStorage", true);
-            this.WalletPath = section.GetSection("WalletPath").Value;
-            this.Password = section.GetSection("Password").Value;
+            Urls = section.GetSection("URLs").GetChildren().Select(p => p.Get<string>()).ToArray();
+            MainNetwork = section.GetValue("MainNetwork", 5195086u);
+            SideNetwork = section.GetValue("SideNetwork", 0u);
+            SideChainConfigPath = section.GetValue("SideChainConfigPath", "./FileStorage/sidechain.json");
+            StartInnerRing = section.GetValue("StartInnerRing", false);
+            StartStorage = section.GetValue("StartStorage", true);
+            WalletPath = section.GetSection("WalletPath").Value;
+            Password = section.GetSection("Password").Value;
 
-            IConfigurationSection contracts = section.GetSection("contracts");
-            this.NetmapContractHash = UInt160.Parse(contracts.GetSection("netmap").Value);
-            this.FsContractHash = UInt160.Parse(contracts.GetSection("neofs").Value);
-            this.FsIdContractHash = UInt160.Parse(contracts.GetSection("neofsId").Value);
-            this.BalanceContractHash = UInt160.Parse(contracts.GetSection("balance").Value);
-            this.ContainerContractHash = UInt160.Parse(contracts.GetSection("container").Value);
-            this.AuditContractHash = UInt160.Parse(contracts.GetSection("audit").Value);
-            this.AlphabetContractHash = contracts.GetSection("alphabet").GetChildren().Select(p => UInt160.Parse(p.Get<string>())).ToArray();
+            IConfigurationSection contracts = section.GetSection("Contracts");
+            NetmapContractHash = UInt160.Parse(contracts.GetSection("Netmap").Value);
+            FsContractHash = UInt160.Parse(contracts.GetSection("NeoFS").Value);
+            FsIdContractHash = UInt160.Parse(contracts.GetSection("NeoFSID").Value);
+            BalanceContractHash = UInt160.Parse(contracts.GetSection("Balance").Value);
+            ContainerContractHash = UInt160.Parse(contracts.GetSection("Container").Value);
+            AuditContractHash = UInt160.Parse(contracts.GetSection("Audit").Value);
+            ReputationContractHash = UInt160.Parse(contracts.GetSection("Reputation").Value);
+            AlphabetContractHash = contracts.GetSection("Alphabet").GetChildren().Select(p => UInt160.Parse(p.Get<string>())).ToArray();
             Contracts.Add(NetmapContractHash);
             Contracts.Add(FsContractHash);
             Contracts.Add(FsIdContractHash);
@@ -94,58 +92,55 @@ namespace Neo.FileStorage
             Contracts.Add(ContainerContractHash);
             Contracts.AddRange(AlphabetContractHash);
 
-            this.validators = section.GetSection("votes").GetChildren().Select(p => ECPoint.FromBytes(p.Get<string>().HexToBytes(), ECCurve.Secp256r1)).ToArray();
+            validators = section.GetSection("Votes").GetChildren().Select(p => ECPoint.FromBytes(p.Get<string>().HexToBytes(), ECCurve.Secp256r1)).ToArray();
 
-            IConfigurationSection workSizes = section.GetSection("workers");
-            this.NetmapContractWorkersSize = int.Parse(workSizes.GetSection("netmap").Value);
-            this.FsContractWorkersSize = int.Parse(workSizes.GetSection("neofs").Value);
-            this.BalanceContractWorkersSize = int.Parse(workSizes.GetSection("balance").Value);
-            this.ContainerContractWorkersSize = int.Parse(workSizes.GetSection("container").Value);
-            this.AlphabetContractWorkersSize = int.Parse(workSizes.GetSection("alphabet").Value);
-            this.ReputationContractWorkersSize = int.Parse(workSizes.GetSection("reputation").Value);
+            IConfigurationSection workSizes = section.GetSection("Workers");
+            NetmapContractWorkersSize = workSizes.GetValue("Netmap", 10);
+            FsContractWorkersSize = workSizes.GetValue("NeoFS", 10);
+            BalanceContractWorkersSize = workSizes.GetValue("Balance", 10);
+            ContainerContractWorkersSize = workSizes.GetValue("Container", 10);
+            AlphabetContractWorkersSize = workSizes.GetValue("Alphabet", 10);
+            ReputationContractWorkersSize = workSizes.GetValue("Reputation", 10);
 
-            IConfigurationSection timers = section.GetSection("timers");
-            this.EpochDuration = uint.Parse(timers.GetSection("epoch").Value);
-            this.AlphabetDuration = uint.Parse(timers.GetSection("emit").Value);
-            this.StopEstimationDMul = uint.Parse(timers.GetSection("stop_estimation").GetSection("mul").Value);
-            this.StopEstimationDDiv = uint.Parse(timers.GetSection("stop_estimation").GetSection("div").Value);
-            this.CollectBasicIncomeMul = uint.Parse(timers.GetSection("collect_basic_income").GetSection("mul").Value);
-            this.CollectBasicIncomeDiv = uint.Parse(timers.GetSection("collect_basic_income").GetSection("div").Value);
-            this.DistributeBasicIncomeMul = uint.Parse(timers.GetSection("distribute_basic_income").GetSection("mul").Value);
-            this.DistributeBasicIncomeDiv = uint.Parse(timers.GetSection("distribute_basic_income").GetSection("div").Value);
+            IConfigurationSection timers = section.GetSection("Timers");
+            EpochDuration = timers.GetValue("Epoch", 0u);
+            AlphabetDuration = timers.GetValue("Emit", 0u);
+            StopEstimationDMul = timers.GetSection("StopEstimation").GetValue("Mul", 1u);
+            StopEstimationDDiv = timers.GetSection("StopEstimation").GetValue("Div", 1u);
+            CollectBasicIncomeMul = timers.GetSection("CollectBasicIncome").GetValue("Mul", 1u);
+            CollectBasicIncomeDiv = timers.GetSection("CollectBasicIncome").GetValue("Div", 1u);
+            DistributeBasicIncomeMul = timers.GetSection("DistributeBasicIncome").GetValue("Mul", 1u);
+            DistributeBasicIncomeDiv = timers.GetSection("DistributeBasicIncome").GetValue("Div", 1u);
 
-            IConfigurationSection emit = section.GetSection("emit");
-            this.MintEmitCacheSize = int.Parse(emit.GetSection("mint").GetSection("cache_size").Value);
-            this.MintEmitThreshold = ulong.Parse(emit.GetSection("mint").GetSection("threshold").Value);
-            this.MintEmitValue = long.Parse(emit.GetSection("mint").GetSection("value").Value);
-            this.GasBalanceThreshold = long.Parse(emit.GetSection("gas").GetSection("balance_threshold").Value);
-            this.StorageEmission = ulong.Parse(emit.GetSection("storage").GetSection("amount").Value);
+            IConfigurationSection emit = section.GetSection("Emit");
+            MintEmitCacheSize = emit.GetSection("Mint").GetValue("CacheSize", 1000);
+            MintEmitThreshold = emit.GetSection("Mint").GetValue("Threshold", 1ul);
+            MintEmitValue = emit.GetSection("Mint").GetValue("Value", 20000000);
+            GasBalanceThreshold = emit.GetSection("Gas").GetValue("BalanceThreshold", 0);
+            StorageEmission = emit.GetSection("Storage").GetValue("Amount", 0ul);
 
-            IConfigurationSection netmapCleaner = section.GetSection("netmap_cleaner");
-            this.CleanupEnabled = bool.Parse(netmapCleaner.GetSection("enabled").Value);
-            this.CleanupThreshold = ulong.Parse(netmapCleaner.GetSection("threshold").Value);
+            IConfigurationSection netmapCleaner = section.GetSection("NetmapCleaner");
+            CleanupEnabled = netmapCleaner.GetValue("Eenabled", false);
+            CleanupThreshold = netmapCleaner.GetValue("Threshold", 3ul);
 
-            this.IsSender = bool.Parse(section.GetSection("isSender").Value);
+            IsSender = bool.Parse(section.GetSection("IsSender").Value);
 
-            IConfigurationSection audit = section.GetSection("audit");
-            this.SearchTimeout = ulong.Parse(audit.GetSection("timeout").GetSection("get").Value);
-            this.HeadTimeout = ulong.Parse(audit.GetSection("timeout").GetSection("head").Value);
-            this.RangeTimeout = ulong.Parse(audit.GetSection("timeout").GetSection("rangehash").Value);
-            this.PdpPoolSize = int.Parse(audit.GetSection("pdp").GetSection("pairs_pool_size").Value);
-            this.PorPoolSize = int.Parse(audit.GetSection("por").GetSection("pool_size").Value);
-            this.MaxPDPSleepInterval = ulong.Parse(audit.GetSection("pdp").GetSection("max_sleep_interval").Value);
-            this.QueueCapacity = int.Parse(audit.GetSection("task").GetSection("queue_capacity").Value);
-            this.AuditTaskPoolSize = int.Parse(audit.GetSection("task").GetSection("pool_size").Value);
+            IConfigurationSection audit = section.GetSection("Audit");
+            SearchTimeout = audit.GetSection("Timeout").GetValue("Search", 10000);
+            GetTimeout = audit.GetSection("Timeout").GetValue("Get", 5000);
+            HeadTimeout = audit.GetSection("Timeout").GetValue("Head", 5000);
+            RangeTimeout = audit.GetSection("Timeout").GetValue("RangeHash", 5000);
+            PdpPoolSize = audit.GetSection("POR").GetValue("PoolSize", 10);
+            PorPoolSize = audit.GetSection("PDP").GetValue("PoolSize", 10);
+            MaxPDPSleepInterval = audit.GetSection("PDP").GetValue("MaxSleepInterval", 5000ul);
+            QueueCapacity = audit.GetSection("Task").GetValue("QueueCapacity", 100);
+            AuditTaskPoolSize = audit.GetSection("Task").GetValue("PoolSize", 10);
 
-            IConfigurationSection indexer = section.GetSection("indexer");
-            this.IndexerTimeout = TimeSpan.FromMilliseconds(long.Parse(indexer.GetSection("cache_timeout").Value));
+            IConfigurationSection indexer = section.GetSection("Indexer");
+            IndexerTimeout = TimeSpan.FromMilliseconds(indexer.GetValue("CacheTimeout", 15000));
 
-            IConfigurationSection settlement = section.GetSection("settlement");
-            this.BasicIncomeRate = ulong.Parse(settlement.GetSection("basic_income_rate").Value);
-
-            IConfigurationSection fee = section.GetSection("fee");
-            this.MainChainFee = long.Parse(fee.GetSection("main_chain").Value);
-            this.SideChainFee = long.Parse(fee.GetSection("side_chain").Value);
+            IConfigurationSection settlement = section.GetSection("Settlement");
+            BasicIncomeRate = settlement.GetValue("BasicIncomeRate", 0ul);
         }
 
         public static void Load(IConfigurationSection section)

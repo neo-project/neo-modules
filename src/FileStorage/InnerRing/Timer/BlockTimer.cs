@@ -1,6 +1,6 @@
-using Akka.Actor;
 using System;
 using System.Collections.Generic;
+using Akka.Actor;
 
 namespace Neo.FileStorage.InnerRing.Timer
 {
@@ -60,7 +60,7 @@ namespace Neo.FileStorage.InnerRing.Timer
         private void OnDelta(uint mul, uint div, Action h, Action<DeltaCfg>[] opts)
         {
             var c = new DeltaCfg() { pulse = false };
-            if(opts is not null) foreach (var opt in opts) opt(c);
+            if (opts is not null) foreach (var opt in opts) opt(c);
             ps.Add(Context.ActorOf(BlockTimer.Props(null, h, mul, div)));
         }
 

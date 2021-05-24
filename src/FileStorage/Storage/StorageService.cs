@@ -42,9 +42,10 @@ namespace Neo.FileStorage
         private NetmapProcessor netmapProcessor = new();
         private ContainerProcessor containerProcessor = new();
 
-        public StorageService(NeoSystem side)
+        public StorageService(Wallet wallet, NeoSystem side)
         {
             system = side;
+            this.wallet = wallet;
             StorageEngine localStorage = new();
             morphClient = new Client
             {

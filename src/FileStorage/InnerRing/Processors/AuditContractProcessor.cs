@@ -19,7 +19,7 @@ namespace Neo.FileStorage.InnerRing.Processors
     public class AuditContractProcessor : BaseProcessor
     {
         public override string Name => "AuditContractProcessor";
-        public ulong SearchTimeout => Settings.Default.SearchTimeout;
+        public int SearchTimeout => Settings.Default.SearchTimeout;
         public IActorRef TaskManager;
         public INeoFSClientCache ClientCache;
         public Action prevAuditCanceler = new Action(() => { });
