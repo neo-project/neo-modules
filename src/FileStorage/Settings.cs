@@ -105,12 +105,12 @@ namespace Neo.FileStorage
             IConfigurationSection timers = section.GetSection("timers");
             this.EpochDuration = uint.Parse(timers.GetSection("epoch").Value);
             this.AlphabetDuration = uint.Parse(timers.GetSection("emit").Value);
-            //this.StopEstimationDMul = uint.Parse(timers.GetSection("stop_estimation").GetSection("mul").Value);
-            //this.StopEstimationDDiv = uint.Parse(timers.GetSection("stop_estimation").GetSection("div").Value);
-            //this.CollectBasicIncomeMul = uint.Parse(timers.GetSection("collect_basic_income").GetSection("mul").Value);
-            //this.CollectBasicIncomeDiv = uint.Parse(timers.GetSection("collect_basic_income").GetSection("div").Value);
-            //this.DistributeBasicIncomeMul = uint.Parse(timers.GetSection("distribute_basic_income").GetSection("mul").Value);
-            //this.DistributeBasicIncomeDiv = uint.Parse(timers.GetSection("distribute_basic_income").GetSection("div").Value);
+            this.StopEstimationDMul = uint.Parse(timers.GetSection("stop_estimation").GetSection("mul").Value);
+            this.StopEstimationDDiv = uint.Parse(timers.GetSection("stop_estimation").GetSection("div").Value);
+            this.CollectBasicIncomeMul = uint.Parse(timers.GetSection("collect_basic_income").GetSection("mul").Value);
+            this.CollectBasicIncomeDiv = uint.Parse(timers.GetSection("collect_basic_income").GetSection("div").Value);
+            this.DistributeBasicIncomeMul = uint.Parse(timers.GetSection("distribute_basic_income").GetSection("mul").Value);
+            this.DistributeBasicIncomeDiv = uint.Parse(timers.GetSection("distribute_basic_income").GetSection("div").Value);
 
             IConfigurationSection emit = section.GetSection("emit");
             this.MintEmitCacheSize = int.Parse(emit.GetSection("mint").GetSection("cache_size").Value);

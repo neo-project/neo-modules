@@ -38,9 +38,5 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
-  
-  <ItemGroup>
-    <Folder Include="Innerring\Timer\" />
-  </ItemGroup>
 
 </Project>

@@ -42,7 +42,19 @@
     },
     "timers": {
       "epoch": 300000,
-      "emit": 600000
+      "emit": 600000,
+      "stop_estimation": {
+        "mul": 1,
+        "div": 1
+      },
+      "collect_basic_income": {
+        "mul": 1,
+        "div": 1
+      },
+      "distribute_basic_income": {
+        "mul": 1,
+        "div": 1
+      }
     },
     "emit": {
       "mint": {
