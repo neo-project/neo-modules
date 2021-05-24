@@ -30,9 +30,7 @@
         "0xb341340bef588676c9694dc006beaaf03f7a3bd9"
       ]
     },
-    "Votes": [
-      ""
-    ],
+    "Votes": [],
     "Workers": {
       "Netmap": 10,
       "NeoFS": 10,
@@ -67,7 +65,7 @@
         "BalanceThreshold": 100
       },
       "Storage": {
-        "Amount": 100000000
+        "Amount": 1
       }
     },
     "NetmapCleaner": {
@@ -99,6 +97,10 @@
     },
     "Settlement": {
       "BasicIncomeRate": 10
+    },
+    "Fee": {
+      "MainChain": 5000,
+      "SideChain": 5000
     }
   }
 }
