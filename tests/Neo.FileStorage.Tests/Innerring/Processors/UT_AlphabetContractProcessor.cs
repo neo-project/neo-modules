@@ -33,10 +33,10 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                     actor = actor
                 }
             };
-            state = new TestUtils.TestState() { alphabetIndex=1};
+            state = new TestUtils.TestState() { alphabetIndex = 1 };
             processor = new AlphabetContractProcessor()
             {
-                
+
                 MorphCli = morphclient,
                 State = state,
                 WorkPool = actor

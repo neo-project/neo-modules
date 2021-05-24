@@ -7,7 +7,6 @@ using Neo.FileStorage.Morph.Invoker;
 using Neo.Wallets;
 using static Neo.FileStorage.InnerRing.Events.MorphEvent;
 using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor;
-using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
@@ -36,7 +35,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                     actor = actor
                 }
             };
-            state = new TestUtils.TestState() { alphabetIndex=1};
+            state = new TestUtils.TestState() { alphabetIndex = 1 };
             var clientCache = new RpcClientCache() { wallet = wallet };
             var auditCalcDeps = new AuditSettlementDeps()
             {
@@ -53,7 +52,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                 basicIncome = basicSettlementDeps,
                 auditProc = auditSettlementCalc,
                 State = state,
-                WorkPool=actor
+                WorkPool = actor
             };
         }
 
@@ -70,7 +69,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         [TestMethod]
         public void HandleAuditEventTest()
         {
-            processor.HandleAuditEvent(new AuditStartEvent() { epoch=1});
+            processor.HandleAuditEvent(new AuditStartEvent() { epoch = 1 });
             var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;
             Assert.IsNotNull(nt);
         }
@@ -79,7 +78,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         public void HandleIncomeCollectionEventTest()
         {
             state.isAlphabet = true;
-            processor.HandleIncomeCollectionEvent(new BasicIncomeCollectEvent() { epoch=1});
+            processor.HandleIncomeCollectionEvent(new BasicIncomeCollectEvent() { epoch = 1 });
             var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;
             Assert.IsNotNull(nt);
         }
@@ -88,7 +87,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         public void HandleIncomeDistributionEventTest()
         {
             state.isAlphabet = true;
-            processor.HandleIncomeDistributionEvent(new BasicIncomeDistributeEvent() { epoch=1});
+            processor.HandleIncomeDistributionEvent(new BasicIncomeDistributeEvent() { epoch = 1 });
             ExpectNoMsg();
         }
 

@@ -1,14 +1,14 @@
+using System.Collections.Generic;
+using System.Linq;
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.IO;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Morph.Invoker;
-using Neo.Wallets;
-using System.Collections.Generic;
-using System.Linq;
-using static Neo.FileStorage.Morph.Event.MorphEvent;
+using Neo.IO;
 using Neo.Plugins.util;
+using Neo.Wallets;
+using static Neo.FileStorage.Morph.Event.MorphEvent;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
@@ -42,7 +42,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             {
                 MorphCli = morphclient,
                 State = state,
-                Convert= new Fixed8ConverterUtil(),
+                Convert = new Fixed8ConverterUtil(),
                 WorkPool = actor
             };
         }

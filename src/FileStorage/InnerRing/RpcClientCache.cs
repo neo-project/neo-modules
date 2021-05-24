@@ -16,7 +16,7 @@ namespace Neo.FileStorage.InnerRing
 {
     public class RpcClientCache : INeoFSClientCache, IContainerCommunicator
     {
-        public ClientCache clientCache=new();
+        public ClientCache clientCache = new();
         public Wallet wallet;
 
         public Client Get(string address)
