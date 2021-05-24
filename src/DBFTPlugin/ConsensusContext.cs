@@ -145,7 +145,6 @@ namespace Neo.Consensus
             Reset(0);
             if (reader.ReadUInt32() != Block.Version) throw new FormatException();
             if (reader.ReadUInt32() != Block.Index) throw new InvalidOperationException();
-            Block.Header.Nonce = reader.ReadUInt32();
             Block.Header.Timestamp = reader.ReadUInt64();
             Block.Header.PrimaryIndex = reader.ReadByte();
             Block.Header.NextConsensus = reader.ReadSerializable<UInt160>();
@@ -352,8 +351,13 @@ namespace Neo.Consensus
         {
             uint maxTransactionsPerBlock = neoSystem.Settings.MaxTransactionsPerBlock;
 
+            // nonce transaction
+            var nonce_tx = CreateNonceTransaction(Block.Index, keyPair.PublicKey.EncodePoint(true), ProtocolSettings.Default);
+
             // Limit Speaker proposal to the limit `MaxTransactionsPerBlock` or all available transactions of the mempool
-            txs = txs.Take((int)maxTransactionsPerBlock);
+            txs = txs.Take((int)maxTransactionsPerBlock - 1);
+            txs.Append(nonce_tx);
+
             List<UInt256> hashes = new List<UInt256>();
             Transactions = new Dictionary<UInt256, Transaction>();
             VerificationContext = new TransactionVerificationContext();
@@ -386,8 +390,7 @@ namespace Neo.Consensus
             EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
             Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
             // TODO: make the VRF seed a few more blocks ahead to prevent view change
-            var (proof, nonce) = GetNonce(keyPair.PrivateKey);
-            Block.Header.Nonce = nonce;
+            var (proof, _) = GetNonce(keyPair.PrivateKey);
             return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
             {
                 Version = Block.Version,
@@ -545,6 +548,50 @@ namespace Neo.Consensus
             writer.WriteNullableArray(CommitPayloads);
             writer.WriteNullableArray(ChangeViewPayloads);
             writer.WriteNullableArray(LastChangeViewPayloads);
+        }
+
+        /// <summary>
+        /// Create a nonce transaction
+        /// </summary>
+        /// <param name="blockIndex">The index of the persisting block</param>
+        /// <param name="pubkey">The public key of the current account</param>
+        /// <param name="settings">Protocal setting</param>
+        /// <returns>Transaction</returns>
+        private Transaction CreateNonceTransaction(uint blockIndex, byte[] pubkey, ProtocolSettings settings)
+        {
+            var (_, nonce) = GetNonce(keyPair.PrivateKey);
+            var tx = new Transaction()
+            {
+                Version = 0,
+                Nonce = nonce,
+                ValidUntilBlock = blockIndex + settings.MaxValidUntilBlockIncrement,
+                Signers = new[]
+               {
+                    new Signer
+                    {
+                        Account = pubkey.ToScriptHash(),
+                        Scopes = WitnessScope.None
+                    }
+                },
+                Attributes = Array.Empty<TransactionAttribute>(),
+                Script = Array.Empty<byte>(),
+                SystemFee = 0,
+                NetworkFee = 0,
+                Witnesses = new Witness[1]
+            };
+
+            ContractParametersContext sc;
+            try
+            {
+                sc = new ContractParametersContext(neoSystem.StoreView, tx, dbftSettings.Network);
+                wallet.Sign(sc);
+            }
+            catch (InvalidOperationException)
+            {
+                throw new FormatException("Can not sign the nonce transaction");
+            }
+            tx.Witnesses[0] = sc.GetWitnesses()[0];
+            return tx;
         }
     }
 }
