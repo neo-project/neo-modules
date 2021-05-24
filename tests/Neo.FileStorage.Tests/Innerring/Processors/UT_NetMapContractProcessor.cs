@@ -1,22 +1,22 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neo.FileStorage.InnerRing;
 using Neo.FileStorage.InnerRing.Processors;
+using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Services.Audit;
+using Neo.FileStorage.Utils;
+using Neo.FileStorage.Utils.Locode.Db;
 using Neo.IO;
 using Neo.Wallets;
-using static Neo.FileStorage.Morph.Event.MorphEvent;
-using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
-using System.Collections.Generic;
-using System.Linq;
-using Neo.FileStorage.Morph.Event;
-using System;
-using Neo.FileStorage.InnerRing;
-using Neo.FileStorage.Services.Audit;
 using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor;
-using Neo.FileStorage.Utils.Locode.Db;
-using Neo.FileStorage.Utils;
+using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
+using static Neo.FileStorage.Morph.Event.MorphEvent;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
@@ -45,7 +45,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                     actor = actor
                 }
             };
-            state = new TestUtils.TestState() { alphabetIndex = 1 ,isAlphabet=true,isActive=true,epoch=1, actor =this.TestActor};
+            state = new TestUtils.TestState() { alphabetIndex = 1, isAlphabet = true, isActive = true, epoch = 1, actor = this.TestActor };
             var clientCache = new RpcClientCache() { wallet = wallet };
             var auditTaskManager = system.ActorSystem.ActorOf(Manager.Props(Settings.Default.QueueCapacity,
             system.ActorSystem.ActorOf(WorkerPool.Props("AuditManager", Settings.Default.AuditTaskPoolSize)), () =>
@@ -61,7 +61,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                 ClientCache = clientCache,
                 TaskManager = auditTaskManager,
                 State = state,
-                WorkPool=actor,
+                WorkPool = actor,
             };
             var governanceProcessor = new GovernanceProcessor()
             {
@@ -121,7 +121,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         {
             StorageDB targetDb = new("./Config/Data_LOCODE");
             var locodeValidator = new Validator(targetDb);
-            processor.NodeValidator=locodeValidator;
+            processor.NodeValidator = locodeValidator;
             processor.HandleNewEpoch(new NewEpochEvent());
             var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;
             Assert.IsNotNull(nt);

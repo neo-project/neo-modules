@@ -1,3 +1,4 @@
+using System.Linq;
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Google.Protobuf;
@@ -8,9 +9,6 @@ using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.IO;
 using Neo.Wallets;
-using System.Linq;
-using System.Security.Cryptography;
-using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
@@ -53,7 +51,8 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         public void HandlePutReputationTest()
         {
             byte[] publicKey = wallet.GetAccounts().Select(p => p.GetKey().PublicKey).ToArray()[0].ToArray();
-            processor.HandlePutReputation(new ReputationPutEvent() {
+            processor.HandlePutReputation(new ReputationPutEvent()
+            {
                 Epoch = 1,
                 PeerID = publicKey,
                 Trust = null
@@ -66,7 +65,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         public void ProcessPutTest()
         {
             byte[] privateKey = wallet.GetAccounts().Select(p => p.GetKey().PrivateKey).ToArray()[0].ToArray();
-            byte[] publicKey=wallet.GetAccounts().Select(p => p.GetKey().PublicKey).ToArray()[0].ToArray();
+            byte[] publicKey = wallet.GetAccounts().Select(p => p.GetKey().PublicKey).ToArray()[0].ToArray();
             GlobalTrust gt = new()
             {
                 Body = new()
@@ -88,10 +87,11 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             gt.Signature = KeyExtension.LoadPrivateKey(privateKey).SignMessagePart(gt.Body);
             state.isAlphabet = true;
             state.SetEpochCounter(2);
-            processor.ProcessPut(new ReputationPutEvent() {
-                Epoch=0,
-                PeerID= publicKey,
-                Trust= gt
+            processor.ProcessPut(new ReputationPutEvent()
+            {
+                Epoch = 0,
+                PeerID = publicKey,
+                Trust = gt
             });
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.IsNotNull(tx);

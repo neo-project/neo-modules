@@ -35,7 +35,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                     actor = actor
                 }
             };
-            state = new TestUtils.TestState() { alphabetIndex = 1,innerRingIndex=0,innerRingSize=1 };
+            state = new TestUtils.TestState() { alphabetIndex = 1, innerRingIndex = 0, innerRingSize = 1 };
             var auditTaskManager = system.ActorSystem.ActorOf(FakeAuditTaskManager.Props(TestActor));
             var clientCache = new RpcClientCache() { wallet = wallet };
             processor = new AuditContractProcessor()
@@ -44,14 +44,14 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                 ClientCache = clientCache,
                 TaskManager = auditTaskManager,
                 State = state,
-                WorkPool=actor
+                WorkPool = actor
             };
         }
 
         [TestMethod]
         public void HandleNewAuditRoundTest()
         {
-            processor.HandleNewAuditRound(new StartEvent() { epoch=1});
+            processor.HandleNewAuditRound(new StartEvent() { epoch = 1 });
             var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;
             Assert.IsNotNull(nt);
         }
@@ -69,7 +69,8 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
     {
         private IActorRef actor;
 
-        public FakeAuditTaskManager(IActorRef actor) {
+        public FakeAuditTaskManager(IActorRef actor)
+        {
             this.actor = actor;
         }
 
