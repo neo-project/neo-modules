@@ -1,10 +1,11 @@
+using System;
+using System.Collections.Generic;
 using Akka.Actor;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.VM;
-using System;
-using System.Collections.Generic;
+using Neo.Wallets;
 using static Neo.FileStorage.InnerRing.InnerRingService;
 using FSInnerRingService = Neo.FileStorage.InnerRing.InnerRingService;
 
@@ -14,9 +15,9 @@ namespace Neo.FileStorage
     {
         private readonly IActorRef innering;
 
-        public InnerRingService(NeoSystem main, NeoSystem side)
+        public InnerRingService(Wallet wallet, NeoSystem main, NeoSystem side)
         {
-            innering = main.ActorSystem.ActorOf(FSInnerRingService.Props(main, side));//TODO: mount to side chain?
+            innering = main.ActorSystem.ActorOf(FSInnerRingService.Props(main, side, wallet));//TODO: mount to side chain?
             innering.Tell(new Start() { });
         }
 

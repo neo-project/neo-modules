@@ -1,7 +1,7 @@
+using System;
 using Neo.ConsoleService;
 using Neo.FileStorage.Utils.Locode;
 using Neo.FileStorage.Utils.Locode.Db;
-using Neo.IO.Data.LevelDB;
 using Neo.Plugins;
 
 namespace Neo.FileStorage
@@ -15,6 +15,12 @@ namespace Neo.FileStorage
         public const string ReourcePath = "./Resources/";
         public const string DefaultTargetPath = "./Data_UNLOCODE";
 
+        [ConsoleCommand("fs start ir", Category = "StateService", Description = "Start as inner ring node")]
+        private void OnStartVerifyingState()
+        {
+            if (MainSystem is null || SideSystem is null) throw new InvalidOperationException("Network doesn't match");
+            Start(walletProvider.GetWallet());
+        }
 
         [ConsoleCommand("fs generate", Category = "FileStorage", Description = "generate UN/LOCODE database for NeoFS using specified paths")]
         private void OnGenerate(string tableInPaths, string tableSubDivPath, string airportsPath, string countriesPath, string continentsPath, string targetDBPath)

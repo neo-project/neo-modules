@@ -17,6 +17,7 @@ using Neo.IO.Data.LevelDB;
 using Neo.Network.P2P.Payloads;
 using Neo.Plugins.util;
 using Neo.SmartContract;
+using Neo.Wallets;
 using Neo.Wallets.NEP6;
 using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor;
 using static Neo.FileStorage.InnerRing.Timer.BlockTimer;
@@ -51,7 +52,7 @@ namespace Neo.FileStorage.InnerRing
         private Fixed8ConverterUtil precision;
         private IActorRef auditTaskManager;
         // internal variables
-        private readonly NEP6Wallet wallet;
+        private readonly Wallet wallet;
 
         private BalanceContractProcessor balanceContractProcessor;
         private ContainerContractProcessor containerContractProcessor;
@@ -66,14 +67,15 @@ namespace Neo.FileStorage.InnerRing
         private RpcClientCache clientCache;
         private DB _db;
 
-        public InnerRingService(NeoSystem main, NeoSystem side, NEP6Wallet pwallet = null, Client pMainNetClient = null, Client pMorphClient = null)
+        public InnerRingService(NeoSystem main, NeoSystem side, Wallet pwallet = null, Client pMainNetClient = null, Client pMorphClient = null)
         {
             precision = new Fixed8ConverterUtil();
             // Build 2 client(MorphClientr&MainClient).
             if (pwallet is null)
             {
-                wallet = new NEP6Wallet(Settings.Default.WalletPath, main.Settings);
-                wallet.Unlock(Settings.Default.Password);
+                NEP6Wallet w = new(Settings.Default.WalletPath, main.Settings);
+                w.Unlock(Settings.Default.Password);
+                wallet = w;
             }
             else wallet = pwallet;
             if (pMainNetClient is null)
@@ -434,7 +436,7 @@ namespace Neo.FileStorage.InnerRing
             return (IContractEvent morphEvent) => { if (IsAlphabet()) f(morphEvent); };
         }
 
-        public static Props Props(NeoSystem main, NeoSystem side, NEP6Wallet pwallet = null, Client pMainNetClient = null, Client pMorphClient = null)
+        public static Props Props(NeoSystem main, NeoSystem side, Wallet pwallet = null, Client pMainNetClient = null, Client pMorphClient = null)
         {
             return Akka.Actor.Props.Create(() => new InnerRingService(main, side, pwallet, pMainNetClient, pMorphClient));
         }

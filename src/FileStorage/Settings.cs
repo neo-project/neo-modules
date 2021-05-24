@@ -12,7 +12,6 @@ namespace Neo.FileStorage
         public uint MainNetwork;
         public uint SideNetwork;
         public string SideChainConfigPath;
-        public string SideChainStorageEngine;
         public bool StartInnerRing;
         public bool StartStorage;
         public string WalletPath;
@@ -71,7 +70,6 @@ namespace Neo.FileStorage
             this.MainNetwork = section.GetValue("MainNetwork", 5195086u);
             this.SideNetwork = section.GetValue("SideNetwork", 0u);
             this.SideChainConfigPath = section.GetValue("SideChainConfigPath", "./FileStorage/sidechain.json");
-            this.SideChainStorageEngine = section.GetValue("SideChainStorageEngine", "LevelDBStore");
             this.StartInnerRing = section.GetValue("StartInnerRing", false);
             this.StartStorage = section.GetValue("StartStorage", true);
             this.WalletPath = section.GetSection("WalletPath").Value;
