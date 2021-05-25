@@ -21,7 +21,7 @@ namespace Neo.FileStorage
             innering.Tell(new Start() { });
         }
 
-        public void OnPersisted(Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList, bool flag)
+        public void OnPersisted(Block block, DataCache _, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList, bool flag)
         {
             innering.Tell(new BlockEvent() { block = block, flag = flag });
             foreach (var appExec in applicationExecutedList)
