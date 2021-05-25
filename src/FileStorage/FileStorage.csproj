@@ -6,11 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="FileStorage\config.json">
+    <None Update="FileStorage\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
-    <None Update="Resources\*">
+    <None Update="Resources\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
@@ -40,8 +40,6 @@
   
   <ItemGroup>
     <ProjectReference Include="..\LevelDBStore\LevelDBStore.csproj" />
-    <ProjectReference Include="..\RpcClient\RpcClient.csproj" />
-    <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
   </ItemGroup>
 
 </Project>

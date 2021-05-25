@@ -1,11 +1,10 @@
 {
   "PluginConfiguration": {
-    "MainNetwork": 5195086,
-    "SideNetwork": 0,
-    "SideChainConfigPath": "./FileStorage/sidechain.json",
+    "Network": 5195086,
+    "SideChainConfig": "config.testnet.json",
     "SideChainStorageEngine": "LevelDBStore",
-    "StartInnerRing": true,
-    "StartStorageNode": true,
+    "AutoStartInnerRing": false,
+    "AutoStartStorage": false,
     "Path": "./FSStorage/",
     "URLs": [
       "http://localhost:10332"

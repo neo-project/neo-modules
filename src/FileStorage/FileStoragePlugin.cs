@@ -7,7 +7,6 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Akka.Actor;
-using Neo.ConsoleService;
 using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P;
@@ -35,6 +34,8 @@ namespace Neo.FileStorage
         public InnerRingService InnerRingService;
         public StorageService StorageService;
         private IWalletProvider walletProvider;
+        private SideChainSettings sideChainSettings;
+        private ProtocolSettings sideProtocolSettings;
 
         protected override void Configure()
         {
@@ -43,25 +44,56 @@ namespace Neo.FileStorage
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            if (!Settings.Default.StartInnerRing && !Settings.Default.StartStorage) return;
-            if (system.Settings.Network == Settings.Default.MainNetwork)
+            if (system.Settings.Network == Settings.Default.Network)
             {
                 MainSystem = system;
-                SideSystem = StartSideChain().Result;
+                sideChainSettings = SideChainSettings.Load(System.IO.Path.Combine(PluginsDirectory, GetType().Assembly.GetName().Name, Settings.Default.SideChainConfig));
+                sideProtocolSettings = ProtocolSettings.Load(System.IO.Path.Combine(PluginsDirectory, GetType().Assembly.GetName().Name, Settings.Default.SideChainConfig));
+                SideSystem = new(sideProtocolSettings, sideChainSettings.Storage.Engine, sideChainSettings.Storage.Path);
                 MainSystem.ServiceAdded += NeoSystem_ServiceAdded;
+                Task.Run(async () =>
+                {
+                    using (IEnumerator<Block> blocksBeingImported = GetBlocksFromFile(SideSystem).GetEnumerator())
+                    {
+                        while (true)
+                        {
+                            List<Block> blocksToImport = new();
+                            for (int i = 0; i < 10; i++)
+                            {
+                                if (!blocksBeingImported.MoveNext()) break;
+                                blocksToImport.Add(blocksBeingImported.Current);
+                            }
+                            if (blocksToImport.Count == 0) break;
+                            await SideSystem.Blockchain.Ask<Blockchain.ImportCompleted>(new Blockchain.Import
+                            {
+                                Blocks = blocksToImport,
+                                Verify = sideChainSettings.VerifyImport
+                            });
+                            if (SideSystem is null) throw new InvalidOperationException();
+                        }
+                    }
+                    SideSystem.StartNode(new ChannelsConfig
+                    {
+                        Tcp = new IPEndPoint(IPAddress.Any, sideChainSettings.P2P.Port),
+                        WebSocket = new IPEndPoint(IPAddress.Any, sideChainSettings.P2P.WsPort),
+                        MinDesiredConnections = sideChainSettings.P2P.MinDesiredConnections,
+                        MaxConnections = sideChainSettings.P2P.MaxConnections,
+                        MaxConnectionsPerAddress = sideChainSettings.P2P.MaxConnectionsPerAddress
+                    });
+                });
             }
         }
 
         public void OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
-            if (system.Settings.Network == Settings.Default.MainNetwork)
+            if (system.Settings.Network == Settings.Default.Network)
             {
-                InnerRingService.OnPersisted(block, snapshot, applicationExecutedList, true);
+                InnerRingService?.OnPersisted(block, snapshot, applicationExecutedList, true);
             }
-            else if (system.Settings.Network == Settings.Default.SideNetwork)
+            else if (system.Settings.Network == sideProtocolSettings.Network)
             {
-                InnerRingService.OnPersisted(block, snapshot, applicationExecutedList, false);
-                StorageService.OnPersisted(block, snapshot, applicationExecutedList);
+                InnerRingService?.OnPersisted(block, snapshot, applicationExecutedList, false);
+                StorageService?.OnPersisted(block, snapshot, applicationExecutedList);
             }
         }
 
@@ -71,7 +103,7 @@ namespace Neo.FileStorage
             {
                 walletProvider = service as IWalletProvider;
                 MainSystem.ServiceAdded -= NeoSystem_ServiceAdded;
-                if (Settings.Default.StartInnerRing || Settings.Default.StartStorage)
+                if (Settings.Default.AutoStartInnerRing || Settings.Default.AutoStartStorage)
                 {
                     walletProvider.WalletChanged += WalletProvider_WalletChanged;
                 }
@@ -86,43 +118,22 @@ namespace Neo.FileStorage
 
         private void Start(Wallet wallet)
         {
-            if (Settings.Default.StartInnerRing) InnerRingService = new(wallet, MainSystem, SideSystem);
-            if (Settings.Default.StartStorage) StorageService = new(wallet, SideSystem);
+            if (Settings.Default.AutoStartInnerRing) StartIR(wallet);
+            if (Settings.Default.AutoStartStorage) StartStorage(wallet);
         }
 
-        private async Task<NeoSystem> StartSideChain()
+        private void StartIR(Wallet wallet)
         {
-            SideChainSettings side_chain_settings = SideChainSettings.Load(Settings.Default.SideChainConfigPath);
-            ProtocolSettings protocol_settings = ProtocolSettings.Load(Settings.Default.SideChainConfigPath);
-            NeoSystem side_chain = new(protocol_settings, side_chain_settings.Storage.Engine, side_chain_settings.Storage.Path);
-            using (IEnumerator<Block> blocksBeingImported = GetBlocksFromFile(side_chain).GetEnumerator())
-            {
-                while (true)
-                {
-                    List<Block> blocksToImport = new();
-                    for (int i = 0; i < 10; i++)
-                    {
-                        if (!blocksBeingImported.MoveNext()) break;
-                        blocksToImport.Add(blocksBeingImported.Current);
-                    }
-                    if (blocksToImport.Count == 0) break;
-                    await side_chain.Blockchain.Ask<Blockchain.ImportCompleted>(new Blockchain.Import
-                    {
-                        Blocks = blocksToImport,
-                        Verify = side_chain_settings.VerifyImport
-                    });
-                    if (side_chain is null) throw new InvalidOperationException();
-                }
-            }
-            side_chain.StartNode(new ChannelsConfig
-            {
-                Tcp = new IPEndPoint(IPAddress.Any, side_chain_settings.P2P.Port),
-                WebSocket = new IPEndPoint(IPAddress.Any, side_chain_settings.P2P.WsPort),
-                MinDesiredConnections = side_chain_settings.P2P.MinDesiredConnections,
-                MaxConnections = side_chain_settings.P2P.MaxConnections,
-                MaxConnectionsPerAddress = side_chain_settings.P2P.MaxConnectionsPerAddress
-            });
-            return side_chain;
+            if (MainSystem is null || SideSystem is null) throw new InvalidOperationException("Neo system not initialized");
+            if (InnerRingService is not null) throw new InvalidOperationException("InnerRing service already started");
+            InnerRingService = new(wallet, MainSystem, SideSystem);
+        }
+
+        private void StartStorage(Wallet wallet)
+        {
+            if (SideSystem is null) throw new InvalidOperationException("Neo system not initialized");
+            if (StorageService is not null) throw new InvalidOperationException("Storage service already started");
+            StorageService = new(wallet, SideSystem);
         }
 
         private IEnumerable<Block> GetBlocksFromFile(NeoSystem system)

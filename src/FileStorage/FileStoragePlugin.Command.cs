@@ -3,6 +3,7 @@ using Neo.ConsoleService;
 using Neo.FileStorage.Utils.Locode;
 using Neo.FileStorage.Utils.Locode.Db;
 using Neo.Plugins;
+using Neo.SmartContract.Native;
 
 namespace Neo.FileStorage
 {
@@ -15,11 +16,22 @@ namespace Neo.FileStorage
         public const string ReourcePath = "./Resources/";
         public const string DefaultTargetPath = "./Data_UNLOCODE";
 
-        [ConsoleCommand("fs start ir", Category = "StateService", Description = "Start as inner ring node")]
-        private void OnStartVerifyingState()
+        [ConsoleCommand("fs node height", Category = "StateService", Description = "Show side chain node height")]
+        private void OnNodeHeight()
         {
-            if (MainSystem is null || SideSystem is null) throw new InvalidOperationException("Network doesn't match");
-            Start(walletProvider.GetWallet());
+            Console.WriteLine($"Height: {NativeContract.Ledger.CurrentIndex(SideSystem?.StoreView)}");
+        }
+
+        [ConsoleCommand("fs start ir", Category = "StateService", Description = "Start as inner ring node")]
+        private void OnStartIR()
+        {
+            StartIR(walletProvider.GetWallet());
+        }
+
+        [ConsoleCommand("fs start storage", Category = "StateService", Description = "Start as storage node")]
+        private void OnStartStorage()
+        {
+            StartStorage(walletProvider.GetWallet());
         }
 
         [ConsoleCommand("fs generate", Category = "FileStorage", Description = "generate UN/LOCODE database for NeoFS using specified paths")]
