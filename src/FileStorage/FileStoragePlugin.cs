@@ -152,7 +152,7 @@ namespace Neo.FileStorage
                     foreach (var block in GetBlocks(system, zs))
                         yield return block;
 
-            var paths = Directory.EnumerateFiles(".", "chain.*.acc", SearchOption.TopDirectoryOnly).Concat(Directory.EnumerateFiles(".", "chain.*.acc.zip", SearchOption.TopDirectoryOnly)).Select(p => new
+            var paths = Directory.EnumerateFiles(".", "chain.side.*.acc", SearchOption.TopDirectoryOnly).Concat(Directory.EnumerateFiles(".", "chain.side.*.acc.zip", SearchOption.TopDirectoryOnly)).Select(p => new
             {
                 FileName = System.IO.Path.GetFileName(p),
                 Start = uint.Parse(Regex.Match(p, @"\d+").Value),

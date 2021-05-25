@@ -18,9 +18,9 @@ namespace Neo.FileStorage
 
         public SideChainSettings(IConfigurationSection section)
         {
-            this.VerifyImport = section.GetValue("VerifyImport", true);
-            this.Storage = new StorageSettings(section.GetSection("Storage"));
-            this.P2P = new P2PSettings(section.GetSection("P2P"));
+            VerifyImport = section.GetValue("VerifyImport", true);
+            Storage = new StorageSettings(section.GetSection("Storage"));
+            P2P = new P2PSettings(section.GetSection("P2P"));
         }
     }
 
@@ -31,8 +31,8 @@ namespace Neo.FileStorage
 
         public StorageSettings(IConfigurationSection section)
         {
-            this.Engine = section.GetValue("Engine", "LevelDBStore");
-            this.Path = section.GetValue("Path", "Data_LevelDB_{0}");
+            Engine = section.GetValue("Engine", "LevelDBStore");
+            Path = section.GetValue("Path", "Data_LevelDB_{0}");
         }
     }
 
@@ -46,11 +46,11 @@ namespace Neo.FileStorage
 
         public P2PSettings(IConfigurationSection section)
         {
-            this.Port = ushort.Parse(section.GetValue("Port", "30333"));
-            this.WsPort = ushort.Parse(section.GetValue("WsPort", "30334"));
-            this.MinDesiredConnections = section.GetValue("MinDesiredConnections", Peer.DefaultMinDesiredConnections);
-            this.MaxConnections = section.GetValue("MaxConnections", Peer.DefaultMaxConnections);
-            this.MaxConnectionsPerAddress = section.GetValue("MaxConnectionsPerAddress", 3);
+            Port = ushort.Parse(section.GetValue("Port", "30333"));
+            WsPort = ushort.Parse(section.GetValue("WsPort", "30334"));
+            MinDesiredConnections = section.GetValue("MinDesiredConnections", Peer.DefaultMinDesiredConnections);
+            MaxConnections = section.GetValue("MaxConnections", Peer.DefaultMaxConnections);
+            MaxConnectionsPerAddress = section.GetValue("MaxConnectionsPerAddress", 3);
         }
     }
 }
