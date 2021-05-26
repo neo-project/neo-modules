@@ -1,3 +1,4 @@
+using Akka.Actor;
 using Neo.Cryptography;
 using Neo.Cryptography.ECC;
 using Neo.IO;
@@ -383,6 +384,9 @@ namespace Neo.Consensus
             }
 
             TransactionHashes = hashes.ToArray();
+
+            // Send nonce_tx
+            neoSystem.Blockchain.Tell(nonce_tx);
         }
 
         public ExtensiblePayload MakePrepareRequest()
@@ -537,7 +541,6 @@ namespace Neo.Consensus
         {
             writer.Write(Block.Version);
             writer.Write(Block.Index);
-            writer.Write(Block.Nonce); // Add nonce 
             writer.Write(Block.Timestamp);
             writer.Write(Block.PrimaryIndex);
             writer.Write(Block.NextConsensus ?? UInt160.Zero);
