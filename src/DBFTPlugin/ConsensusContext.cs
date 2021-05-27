@@ -329,7 +329,6 @@ namespace Neo.Consensus
                 UInt256.Length +    // MerkleRoot
                 sizeof(ulong) +     // Timestamp
                 sizeof(uint) +      // Index
-                sizeof(uint) +      // Nonce
                 sizeof(byte) +      // PrimaryIndex
                 UInt160.Length +    // NextConsensus
                 1 + _witnessSize +  // Witness
