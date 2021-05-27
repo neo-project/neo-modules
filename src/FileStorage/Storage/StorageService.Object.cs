@@ -84,7 +84,6 @@ namespace Neo.FileStorage
             {
                 LocalStorage = localStorage,
             };
-            gc = system.ActorSystem.ActorOf(Services.ObjectManager.GC.GC.Props(remover));
             PutService putService = new()
             {
                 MorphClient = morphClient,

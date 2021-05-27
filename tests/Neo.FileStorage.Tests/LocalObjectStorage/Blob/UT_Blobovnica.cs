@@ -1,9 +1,9 @@
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.LocalObjectStorage.Blob;
-using System.IO;
 using static Neo.FileStorage.Tests.LocalObjectStorage.Helper;
 
-namespace Neo.FileStorage.Tests.LocalObjectStorage
+namespace Neo.FileStorage.Tests.LocalObjectStorage.Blob
 {
     [TestClass]
     public class UT_Blobovnica

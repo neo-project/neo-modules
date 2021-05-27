@@ -1,11 +1,11 @@
-using Neo.FileStorage.API.Object;
-using Neo.FileStorage.API.Refs;
-using Neo.IO.Data.LevelDB;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FSObject = Neo.FileStorage.API.Object.Object;
+using Neo.FileStorage.API.Object;
+using Neo.FileStorage.API.Refs;
+using Neo.IO.Data.LevelDB;
 using static Neo.Utility;
+using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 {
@@ -13,7 +13,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
     {
         private readonly byte[] InhumeGCMarkValue = StrictUTF8.GetBytes("GCMARK");
 
-        public void Inhume(Address tomb, List<Address> target)
+        public void Inhume(Address tomb, params Address[] target)
         {
             byte[] tomb_key = InhumeGCMarkValue;
             if (tomb is not null)

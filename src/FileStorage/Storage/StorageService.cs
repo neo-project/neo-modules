@@ -38,7 +38,7 @@ namespace Neo.FileStorage
         private readonly NeoSystem system;
         private readonly IActorRef listener;
         public ProtocolSettings ProtocolSettings => system.Settings;
-        private Network.Address LocalAddress => Network.Address.AddressFromString(LocalNodeInfo.Address);
+        private Network.Address LocalAddress => Network.Address.FromString(LocalNodeInfo.Address);
         private NetmapProcessor netmapProcessor = new();
         private ContainerProcessor containerProcessor = new();
 

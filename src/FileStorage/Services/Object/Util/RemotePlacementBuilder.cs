@@ -1,10 +1,9 @@
+using System;
+using System.Collections.Generic;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Network;
 using Neo.FileStorage.Services.ObjectManager.Placement;
-using System;
-using System.Collections.Generic;
-using static Neo.FileStorage.Network.Address;
 using FSAddress = Neo.FileStorage.API.Refs.Address;
 
 namespace Neo.FileStorage.Services.Object.Util
@@ -29,7 +28,7 @@ namespace Neo.FileStorage.Services.Object.Util
                     Address addr;
                     try
                     {
-                        addr = AddressFromString(n.NetworkAddress);
+                        addr = Address.FromString(n.NetworkAddress);
                     }
                     catch (Exception e)
                     {

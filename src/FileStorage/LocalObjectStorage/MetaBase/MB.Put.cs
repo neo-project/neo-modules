@@ -1,11 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Google.Protobuf;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Blob;
 using Neo.IO.Data.LevelDB;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using static Neo.FileStorage.LocalObjectStorage.MetaBase.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
@@ -144,8 +144,9 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             }
             if (obj.ObjectType == ObjectType.Regular && !obj.HasParent)
             {
-                if (si is null) throw new InvalidOperationException("cann't encode split info");
-                result.Add((RootKey(obj.Address), si.ToByteArray()));
+                byte[] splitInfo = Array.Empty<byte>();
+                if (si is not null) splitInfo = si.ToByteArray();
+                result.Add((RootKey(obj.Address), splitInfo));
             }
             return result;
         }

@@ -1,8 +1,8 @@
+using System;
+using System.Threading;
 using Neo.FileStorage.API.Client;
 using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.Reputaion.Local.Client;
-using System;
-using System.Threading;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Head
@@ -18,7 +18,7 @@ namespace Neo.FileStorage.Services.Object.Head
             var key = KeyStorage.GetKey(prm.SessionToken);
             if (key is null)
                 throw new InvalidOperationException($"{nameof(RemoteHeader)} could not receive private key");
-            var addr = prm.Node.IPAddressString();
+            var addr = prm.Node.ToIPAddressString();
             var client = ClientCache.Get(addr);
             if (client is null)
                 throw new InvalidOperationException($"{nameof(RemoteHeader)} could not create SDK client {addr}");

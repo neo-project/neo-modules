@@ -9,7 +9,7 @@ using Neo.FileStorage.LocalObjectStorage.Blobstor;
 using Neo.IO.Data.LevelDB;
 using static Neo.FileStorage.Tests.LocalObjectStorage.Helper;
 
-namespace Neo.FileStorage.Tests.LocalObjectStorage
+namespace Neo.FileStorage.Tests.LocalObjectStorage.Blobstor
 {
     [TestClass]
     public class UT_BlobovnicaTree

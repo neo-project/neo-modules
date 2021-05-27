@@ -1,12 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Neo.Cryptography;
 
 
-namespace Neo.FileStorage.LocalObjectStorage.Shard
+namespace Neo.FileStorage.LocalObjectStorage.Shards
 {
     public class ShardID
     {
@@ -22,6 +18,11 @@ namespace Neo.FileStorage.LocalObjectStorage.Shard
         public override string ToString()
         {
             return Base58.Encode(value);
+        }
+
+        public static ShardID Generate()
+        {
+            return Guid.NewGuid().ToByteArray();
         }
 
         public static implicit operator ShardID(byte[] val)

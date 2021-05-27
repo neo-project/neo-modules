@@ -1,9 +1,9 @@
+using System;
+using System.Linq;
 using Google.Protobuf;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Blob;
-using System;
-using System.Linq;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSRange = Neo.FileStorage.API.Object.Range;
 
@@ -49,7 +49,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                 _ = fsTree.Exists(address);
                 return true;
             }
-            catch (FileNotFoundException)
+            catch (ObjectFileNotFoundException)
             {
                 return false;
             }

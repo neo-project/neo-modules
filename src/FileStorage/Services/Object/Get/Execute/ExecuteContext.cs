@@ -1,8 +1,8 @@
+using System;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage;
 using Neo.FileStorage.Services.ObjectManager.Placement;
-using System;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSRange = Neo.FileStorage.API.Object.Range;
 
@@ -14,8 +14,8 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
         public GetService GetService { get; init; }
         public FSRange Range { get; init; }
         public bool HeadOnly { get; init; }
-
         public ulong CurrentEpoch { get; private set; }
+        public bool Assembling { get; private set; }
         private FSObject collectedObject;
         private SplitInfo splitInfo;
         private Traverser traverser;
