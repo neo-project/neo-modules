@@ -187,11 +187,17 @@ namespace Neo.Network.RPC
         public static TransactionAttribute TransactionAttributeFromJson(JObject json)
         {
             TransactionAttributeType usage = Enum.Parse<TransactionAttributeType>(json["type"].AsString());
-
-            switch (usage)
+            return usage switch
             {
-                default: throw new FormatException();
-            }
+                TransactionAttributeType.HighPriority => new HighPriorityAttribute(),
+                TransactionAttributeType.OracleResponse => new OracleResponse()
+                {
+                    Id = (ulong)json["id"].AsNumber(),
+                    Code = Enum.Parse<OracleResponseCode>(json["code"].AsString()),
+                    Result = Convert.FromBase64String(json["result"].AsString()),
+                },
+                _ => throw new FormatException(),
+            };
         }
 
         public static Witness WitnessFromJson(JObject json)
