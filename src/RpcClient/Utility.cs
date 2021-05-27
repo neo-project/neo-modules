@@ -57,7 +57,7 @@ namespace Neo.Network.RPC
         public static KeyPair GetKeyPair(string key)
         {
             if (string.IsNullOrEmpty(key)) { throw new ArgumentNullException(nameof(key)); }
-            if (key.StartsWith("0x")) { key = key.Substring(2); }
+            if (key.StartsWith("0x")) { key = key[2..]; }
 
             if (key.Length == 52)
             {
@@ -80,7 +80,7 @@ namespace Neo.Network.RPC
         public static UInt160 GetScriptHash(string account, ProtocolSettings protocolSettings)
         {
             if (string.IsNullOrEmpty(account)) { throw new ArgumentNullException(nameof(account)); }
-            if (account.StartsWith("0x")) { account = account.Substring(2); }
+            if (account.StartsWith("0x")) { account = account[2..]; }
 
             if (account.Length == 34)
             {
@@ -217,17 +217,17 @@ namespace Neo.Network.RPC
                 case StackItemType.Integer:
                     return new Integer(new BigInteger(json["value"].AsNumber()));
                 case StackItemType.Array:
-                    Array array = new Array();
+                    Array array = new();
                     foreach (var item in (JArray)json["value"])
                         array.Add(StackItemFromJson(item));
                     return array;
                 case StackItemType.Struct:
-                    Struct @struct = new Struct();
+                    Struct @struct = new();
                     foreach (var item in (JArray)json["value"])
                         @struct.Add(StackItemFromJson(item));
                     return @struct;
                 case StackItemType.Map:
-                    Map map = new Map();
+                    Map map = new();
                     foreach (var item in (JArray)json["value"])
                     {
                         PrimitiveType key = (PrimitiveType)StackItemFromJson(item["key"]);

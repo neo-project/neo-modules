@@ -13,7 +13,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new JObject();
+            JObject json = new();
             json["publickey"] = PublicKey;
             json["votes"] = Votes.ToString();
             json["active"] = Active;

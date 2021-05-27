@@ -1,6 +1,3 @@
-#pragma warning disable IDE0051
-#pragma warning disable IDE0060
-
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
@@ -134,7 +131,7 @@ namespace Neo.Plugins
             if (!shouldGetUnverified)
                 return new JArray(system.MemPool.GetVerifiedTransactions().Select(p => (JObject)p.Hash.ToString()));
 
-            JObject json = new JObject();
+            JObject json = new();
             json["height"] = NativeContract.Ledger.CurrentIndex(system.StoreView);
             system.MemPool.GetVerifiedAndUnverifiedTransactions(
                 out IEnumerable<Transaction> verifiedTransactions,
@@ -207,7 +204,7 @@ namespace Neo.Plugins
             {
                 return candidates.Select(p =>
                 {
-                    JObject validator = new JObject();
+                    JObject validator = new();
                     validator["publickey"] = p.PublicKey.ToString();
                     validator["votes"] = p.Votes.ToString();
                     validator["active"] = validators.Contains(p.PublicKey);
@@ -218,7 +215,7 @@ namespace Neo.Plugins
             {
                 return validators.Select(p =>
                 {
-                    JObject validator = new JObject();
+                    JObject validator = new();
                     validator["publickey"] = p.ToString();
                     validator["votes"] = 0;
                     validator["active"] = true;
