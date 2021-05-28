@@ -1,16 +1,17 @@
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.LocalObjectStorage.Blob;
 using Neo.IO.Data.LevelDB;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using static Neo.Utility;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSRange = Neo.FileStorage.API.Object.Range;
-using static Neo.Utility;
 
 namespace Neo.FileStorage.LocalObjectStorage.Blobstor
 {
@@ -27,7 +28,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
         private readonly ICompressor compressor;
         public string BlzRootPath { get; private set; }
         private readonly LRUCache<string, Blobovnicza> opened;
-        private readonly Dictionary<string, BlobovniczaWithIndex> active;
+        private readonly ConcurrentDictionary<string, BlobovniczaWithIndex> active = new();
 
         public BlobovniczaTree(string path, ICompressor compressor = null, int cap = 0)
         {
@@ -41,7 +42,6 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
             ulong cp = 1;
             for (ulong i = 0; i < BlzShallowDepth; i++)
                 cp *= BlzShallowWidth;
-            active = new((int)cp);
         }
 
         private void OnEvicted(string key, Blobovnicza value)
@@ -238,13 +238,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
             {
                 if (func(blz)) return true;
             }
-            BlobovniczaWithIndex bi;
-            bool exist = false;
-            lock (active)
-            {
-                exist = active.TryGetValue(level_path, out bi);
-            }
-            if (exist && try_active)
+            if (active.TryGetValue(level_path, out BlobovniczaWithIndex bi) && try_active)
             {
                 if (func(bi.Blobovnicza)) return true;
             }
@@ -345,15 +339,17 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
 
         private Blobovnicza OpenBlobovnicza(string path)
         {
+            Blobovnicza b;
             lock (opened)
             {
-                if (opened.TryGet(path, out Blobovnicza b))
+                if (opened.TryGet(path, out b))
                     return b;
-                b = new Blobovnicza(Path.Join(BlzRootPath, path), compressor);
-                b.Open();
-                opened.TryAdd(path, b);
-                return b;
             }
+            b = new Blobovnicza(Path.Join(BlzRootPath, path), compressor);
+            b.Open();
+            opened.TryAdd(path, b);
+            return b;
+
         }
 
         public void Dispose()

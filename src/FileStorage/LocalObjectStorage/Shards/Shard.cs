@@ -115,11 +115,11 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             var isExist = metaBase.Exists(address);
             if (!isExist)
             {
-                return null;
+                throw new ObjectNotFoundException();
             }
 
             var blobovniczaID = metaBase.IsSmall(address);
-            if (blobovniczaID != null)
+            if (blobovniczaID is not null)
             {
                 return blobStor.GetSmall(address, blobovniczaID);
             }

@@ -88,14 +88,6 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             db.Put(WriteOptions.Default, key, si.ToByteArray());
         }
 
-        private SplitInfo MergeSplitInfo(SplitInfo from, SplitInfo to)
-        {
-            to.SplitId = from.SplitId;
-            if (from.LastPart is not null) to.LastPart = from.LastPart;
-            if (from.Link is not null) to.Link = from.Link;
-            return to;
-        }
-
         private SplitInfo SplitInfoFromObject(FSObject obj)
         {
             if (obj.Parent is null) return null;

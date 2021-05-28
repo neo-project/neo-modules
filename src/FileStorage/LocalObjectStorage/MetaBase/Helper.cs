@@ -1,8 +1,9 @@
-using Google.Protobuf;
-using Neo.FileStorage.API.Refs;
-using Neo.IO;
 using System.Collections.Generic;
 using System.IO;
+using Google.Protobuf;
+using Neo.FileStorage.API.Object;
+using Neo.FileStorage.API.Refs;
+using Neo.IO;
 
 namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 {
@@ -31,6 +32,14 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                     Value = ByteString.CopyFrom(reader.ReadFixedBytes(ObjectID.ValueSize))
                 });
             return oids;
+        }
+
+        public static SplitInfo MergeSplitInfo(SplitInfo from, SplitInfo to)
+        {
+            to.SplitId = from.SplitId;
+            if (from.LastPart is not null) to.LastPart = from.LastPart;
+            if (from.Link is not null) to.Link = from.Link;
+            return to;
         }
     }
 }
