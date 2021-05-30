@@ -352,10 +352,12 @@ namespace Neo.Consensus
             uint maxTransactionsPerBlock = neoSystem.Settings.MaxTransactionsPerBlock;
 
             // nonce transaction
-            var nonce_tx = CreateNonceTransaction(Block.Index, keyPair.PublicKey.EncodePoint(true), ProtocolSettings.Default);
+            var nonce_tx = CreateNonceTransaction(Block.Index, keyPair.PublicKey, ProtocolSettings.Default);
 
             // Limit Speaker proposal to the limit `MaxTransactionsPerBlock` or all available transactions of the mempool
             txs = txs.Take((int)maxTransactionsPerBlock - 1);
+
+            // Add the nonce transaction to the front
             txs.Prepend(nonce_tx);
 
             List<UInt256> hashes = new List<UInt256>();
@@ -559,7 +561,7 @@ namespace Neo.Consensus
         /// <param name="pubkey">The public key of the current account</param>
         /// <param name="settings">Protocal setting</param>
         /// <returns>Transaction</returns>
-        private Transaction CreateNonceTransaction(uint blockIndex, byte[] pubkey, ProtocolSettings settings)
+        private Transaction CreateNonceTransaction(uint blockIndex, ECPoint pubkey, ProtocolSettings settings)
         {
             var (_, nonce) = GetNonce(keyPair.PrivateKey);
             var tx = new Transaction()
@@ -571,7 +573,7 @@ namespace Neo.Consensus
                {
                     new Signer
                     {
-                        Account = pubkey.ToScriptHash(),
+                        Account = Contract.CreateSignatureRedeemScript(pubkey).ToScriptHash(),
                         Scopes = WitnessScope.None
                     }
                 },
