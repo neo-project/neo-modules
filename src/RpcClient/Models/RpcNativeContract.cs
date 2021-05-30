@@ -33,7 +33,7 @@ namespace Neo.Network.RPC.Models
                 ["hash"] = Hash.ToString(),
                 ["nef"] = Nef.ToJson(),
                 ["manifest"] = Manifest.ToJson(),
-                ["updatehistory"] = new JArray(UpdateHistory.Select(u => new JNumber(u)).ToArray())
+                ["updatehistory"] = UpdateHistory != null ? new JArray(UpdateHistory.Select(u => new JNumber(u)).ToArray()) : null
             };
         }
     }
