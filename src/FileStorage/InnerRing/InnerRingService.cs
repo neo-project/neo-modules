@@ -53,7 +53,8 @@ namespace Neo.FileStorage.InnerRing
         private Fixed8ConverterUtil precision;
         private IActorRef auditTaskManager;
         // internal variables
-        private readonly Wallet wallet;
+        private readonly Wallet mainWallet;
+        private readonly Wallet sideWallet;
 
         private BalanceContractProcessor balanceContractProcessor;
         private ContainerContractProcessor containerContractProcessor;
@@ -68,26 +69,33 @@ namespace Neo.FileStorage.InnerRing
         private RpcClientCache clientCache;
         private StorageDB _db;
 
-        public InnerRingService(NeoSystem main, NeoSystem side, Wallet pwallet = null, Client pMainNetClient = null, Client pMorphClient = null)
+        public InnerRingService(NeoSystem main, NeoSystem side, Wallet pMainwallet = null, Wallet pSideWallet = null, Client pMainNetClient = null, Client pMorphClient = null)
         {
             Console.WriteLine("创建ConvertUtil");
             precision = new Fixed8ConverterUtil();
             // Build 2 client(MorphClientr&MainClient).
             Console.WriteLine("创建Wallet&client");
-            if (pwallet is null)
+            if (pMainwallet is null)
             {
                 NEP6Wallet w = new(Settings.Default.WalletPath, main.Settings);
                 w.Unlock(Settings.Default.Password);
-                wallet = w;
+                mainWallet = w;
             }
-            else wallet = pwallet;
+            else mainWallet = pMainwallet;
+            if (pSideWallet is null)
+            {
+                NEP6Wallet w = new(Settings.Default.WalletPath, side.Settings);
+                w.Unlock(Settings.Default.Password);
+                sideWallet = w;
+            }
+            else mainWallet = pMainwallet;
             if (pMainNetClient is null)
             {
                 mainNetClient = new Client()
                 {
                     client = new MorphClient()
                     {
-                        wallet = wallet,
+                        wallet = mainWallet,
                         system = main,
                         actor = main.Blockchain
                     }
@@ -100,7 +108,7 @@ namespace Neo.FileStorage.InnerRing
                 {
                     client = new MorphClient()
                     {
-                        wallet = wallet,
+                        wallet = sideWallet,
                         system = side,
                         actor = side.Blockchain
                     }
@@ -115,7 +123,7 @@ namespace Neo.FileStorage.InnerRing
             statusIndex = new InnerRingIndexer(morphClient, Settings.Default.IndexerTimeout);
             Console.WriteLine("创建processor");
             // create audit processor
-            clientCache = new RpcClientCache() { wallet = wallet };
+            clientCache = new RpcClientCache() { wallet = sideWallet };
             auditTaskManager = side.ActorSystem.ActorOf(Manager.Props(Settings.Default.QueueCapacity,
             side.ActorSystem.ActorOf(WorkerPool.Props("AuditManager", Settings.Default.AuditTaskPoolSize)), () =>
             {
@@ -253,6 +261,7 @@ namespace Neo.FileStorage.InnerRing
 
         public void InitConfigFromBlockchain()
         {
+            Console.WriteLine("开始InitConfigFromBlockchain");
             ulong epoch;
             try
             {
@@ -299,6 +308,7 @@ namespace Neo.FileStorage.InnerRing
 
         private void OnStart()
         {
+            Console.WriteLine("创建InnerRingService启动");
             try
             {
                 InitConfigFromBlockchain();
@@ -320,14 +330,17 @@ namespace Neo.FileStorage.InnerRing
                 Utility.Log("InnerRingService", LogLevel.Error, e.Message);
                 return;
             }
+            Console.WriteLine("创建InnerRingService成功");
         }
 
         private void StartBlockTimers()
         {
+            Console.WriteLine("创建StartBlockTimers");
             foreach (var blockTimer in blockTimers)
             {
                 blockTimer.Tell(new ResetEvent());
             }
+            Console.WriteLine("创建StartBlockTimers成功");
         }
 
         private void TickTimers()
@@ -344,12 +357,14 @@ namespace Neo.FileStorage.InnerRing
 
         private void OnContractEvent(NotifyEventArgs notify, bool flag)
         {
+            Console.WriteLine("开始OnContractEvent");
             if (flag) mainEventListener.Tell(new NewContractEvent() { notify = notify });
             else morphEventListener.Tell(new NewContractEvent() { notify = notify });
         }
 
         private void OnBlockEvent(Block block, bool flag)
         {
+            Console.WriteLine("开始OnBlockEvent");
             if (flag) mainEventListener.Tell(new NewBlockEvent() { block = block });
             else morphEventListener.Tell(new NewBlockEvent() { block = block });
         }
@@ -392,7 +407,9 @@ namespace Neo.FileStorage.InnerRing
 
         public void VoteForSidechainValidator(ECPoint[] validators)
         {
+            Console.WriteLine("开始VoteForSidechainValidator");
             Array.Sort(validators);
+            Console.WriteLine("开始InnerRingIndex()");
             var index = InnerRingIndex();
             if (index < 0 || index >= Settings.Default.AlphabetContractHash.Length)
             {
@@ -404,12 +421,15 @@ namespace Neo.FileStorage.InnerRing
                 Utility.Log(Name, LogLevel.Info, "ignore validator vote: empty validators list");
                 return;
             }
+            Console.WriteLine("开始EpochCounter()");
             var epoch = EpochCounter();
+            Console.WriteLine("开始AlphabetVote()");
             for (int i = 0; i < Settings.Default.AlphabetContractHash.Length; i++)
             {
                 try
                 {
                     morphClient.AlphabetVote(i, epoch, validators);
+                    Console.WriteLine("开始AlphabetVote()成功");
                 }
                 catch
                 {
@@ -426,7 +446,7 @@ namespace Neo.FileStorage.InnerRing
 
         public void WriteReport(Report r)
         {
-            IEnumerable<Wallets.WalletAccount> accounts = wallet.GetAccounts();
+            IEnumerable<Wallets.WalletAccount> accounts = sideWallet.GetAccounts();
             DataAuditResult res = r.Result();
             res.PublicKey = ByteString.CopyFrom(accounts.ToArray()[0].GetKey().PublicKey.ToArray());
             morphClient.InvokePutAuditResult(res.ToByteArray());
@@ -446,9 +466,9 @@ namespace Neo.FileStorage.InnerRing
             return (IContractEvent morphEvent) => { if (IsAlphabet()) f(morphEvent); };
         }
 
-        public static Props Props(NeoSystem main, NeoSystem side, Wallet pwallet = null, Client pMainNetClient = null, Client pMorphClient = null)
+        public static Props Props(NeoSystem main, NeoSystem side, Wallet pMainWallet = null, Wallet pSideWallet = null, Client pMainNetClient = null, Client pMorphClient = null)
         {
-            return Akka.Actor.Props.Create(() => new InnerRingService(main, side, pwallet, pMainNetClient, pMorphClient));
+            return Akka.Actor.Props.Create(() => new InnerRingService(main, side, pMainWallet, pSideWallet, pMainNetClient, pMorphClient));
         }
     }
 }

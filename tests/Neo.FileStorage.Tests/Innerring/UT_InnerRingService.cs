@@ -36,7 +36,7 @@ namespace Neo.FileStorage.Tests.InnerRing
                     system = system
                 }
             };
-            innerring = system.ActorSystem.ActorOf(Props(system, null, wallet, client, client));
+            innerring = system.ActorSystem.ActorOf(Props(system, null, wallet, wallet, client, client));
         }
 
         [TestMethod]
