@@ -1,25 +1,14 @@
 {
   "ApplicationConfiguration": {
     "VerifyImport": true,
-    "Logger": {
-      "Path": "Logs_{0}",
-      "ConsoleOutput": false,
-      "Active": false
-    },
     "Storage": {
       "Engine": "LevelDBStore",
-      "Path": "Data_LevelDB_{0}"
+      "Path": "Data_LevelDB_1951352142"
     },
     "P2P": {
       "Port": 20333,
       "WsPort": 20334
-    },
-    "UnlockWallet": {
-      "Path": "",
-      "Password": "",
-      "IsActive": false
-    },
-    "PluginURL": "https://github.com/neo-project/neo-modules/releases/download/v{1}/{0}.zip"
+    }
   },
   "ProtocolConfiguration": {
     "Network": 1951352142,

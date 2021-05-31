@@ -1,8 +1,8 @@
+using System.Collections.Generic;
+using System.Linq;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.IO.Data.LevelDB;
-using System.Collections.Generic;
-using System.Linq;
 using static Neo.FileStorage.LocalObjectStorage.MetaBase.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
@@ -36,22 +36,29 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 
         private void Delete(Address address, Dictionary<string, ReferenceNumber> ref_counter)
         {
-            FSObject obj = Get(address, false, true);
+            db.Delete(WriteOptions.Default, GraveYardKey(address));
+            FSObject obj;
+            try
+            {
+                obj = Get(address, false, true);
+            }
+            catch (ObjectNotFoundException)
+            {
+                return;
+            }
             if (obj.Parent is not null)
             {
-                if (ref_counter.TryGetValue(obj.Parent.Address.String(), out ReferenceNumber rn))
+                if (!ref_counter.TryGetValue(obj.Parent.Address.String(), out ReferenceNumber rn))
                 {
-                    rn.Current++;
-                }
-                else
-                {
-                    ref_counter[obj.Parent.Address.String()] = new()
+                    rn = new()
                     {
                         All = ParentLength(new() { ContainerId = address.ContainerId, ObjectId = obj.ParentId }),
                         Address = obj.Parent.Address,
                         Object = obj.Parent,
                     };
+                    ref_counter[obj.Parent.Address.String()] = rn;
                 }
+                rn.Current++;
             }
             DeleteObject(obj, false);
         }

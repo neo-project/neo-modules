@@ -1,7 +1,9 @@
-using Neo.Cryptography;
-using Neo.FileStorage.API.Refs;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using Akka.Util.Internal;
+using Neo.FileStorage.API.Refs;
 
 namespace Neo.FileStorage.LocalObjectStorage.Blobstor
 {
@@ -9,7 +11,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
     {
         public const int DefaultDirNameLength = 1;
         public const int MaxDepth = (32 - 1) / DefaultDirNameLength;
-        public const int defaultShallowDepth = 4;
+        public const int DefaultShallowDepth = 4;
         public const string DefaultRootPath = "./";
 
         public int Depth { get; init; }
@@ -18,7 +20,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
 
         public FSTree()
         {
-            Depth = defaultShallowDepth;
+            Depth = DefaultShallowDepth;
             DirNameLen = DefaultDirNameLength * 2;
             RootPath = DefaultRootPath;
         }
@@ -32,7 +34,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
 
         private string StringifyAddress(Address address)
         {
-            return Utility.StrictUTF8.GetBytes(address.String()).Sha256().ToHexString();
+            return address.String().Replace('/', '.');
         }
 
         private string TreePath(Address address)
@@ -48,10 +50,36 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
             return Path.Join(dirs.ToArray());
         }
 
+        public void Iterate(Action<Address, byte[]> handler)
+        {
+            Iterate(0, new string[] { RootPath }, handler);
+        }
+
+        private void Iterate(int depth, IEnumerable<string> paths, Action<Address, byte[]> handler)
+        {
+            var dirs = Directory.GetDirectories(Path.Join(paths.ToArray())).Select(p => new DirectoryInfo(p).Name).ToArray();
+            foreach (string dir in dirs)
+            {
+                var current_paths = paths.Append(dir);
+                string current_path = Path.Join(current_paths.ToArray());
+                if (depth < Depth + 1)
+                {
+                    if (!Directory.Exists(current_path)) throw new InvalidOperationException();
+                    Iterate(depth + 1, current_paths, handler);
+                    continue;
+                }
+                if (!File.Exists(current_path)) throw new InvalidOperationException();
+                Console.WriteLine(current_path);
+                Address address = Address.ParseString(string.Join("", current_paths.Skip(1)).Replace('.', '/'));
+                byte[] data = File.ReadAllBytes(current_path);
+                handler(address, data);
+            }
+        }
+
         public string Exists(Address address)
         {
             string path = TreePath(address);
-            if (!File.Exists(path)) throw new FileNotFoundException(nameof(FSTree));
+            if (!File.Exists(path)) throw new ObjectFileNotFoundException(nameof(FSTree));
             return path;
         }
 

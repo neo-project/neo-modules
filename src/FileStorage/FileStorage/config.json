@@ -1,15 +1,7 @@
 {
   "PluginConfiguration": {
-    "MainNetwork": 5195086,
-    "SideNetwork": 0,
-    "SideChainConfigPath": "./FileStorage/sidechain.json",
-    "SideChainStorageEngine": "LevelDBStore",
-    "StartInnerRing": true,
-    "StartStorageNode": true,
-    "Path": "./FSStorage/",
-    "URLs": [
-      "http://localhost:10332"
-    ],
+    "AutoStartInnerRing": false,
+    "AutoStartStorage": false,
     "WalletPath": "./FSStorage/wallet.json",
     "Password": "123456",
     "Contracts": {

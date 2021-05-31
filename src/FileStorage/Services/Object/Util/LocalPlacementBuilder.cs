@@ -1,8 +1,7 @@
+using System.Collections.Generic;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Network;
 using Neo.FileStorage.Services.ObjectManager.Placement;
-using System.Collections.Generic;
-using static Neo.FileStorage.Network.Address;
 using FSAddress = Neo.FileStorage.API.Refs.Address;
 
 namespace Neo.FileStorage.Services.Object.Util
@@ -25,7 +24,7 @@ namespace Neo.FileStorage.Services.Object.Util
             {
                 foreach (var n in ns)
                 {
-                    var addr = AddressFromString(n.NetworkAddress);
+                    var addr = Address.FromString(n.NetworkAddress);
                     if (addr == localAddress)
                         return new List<List<Node>> { new List<Node> { n } };
                 }

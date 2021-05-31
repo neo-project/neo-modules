@@ -1,5 +1,5 @@
-using Neo.FileStorage.API.Object;
 using System;
+using Neo.FileStorage.API.Object;
 
 namespace Neo.FileStorage.Services.Object.Get.Execute
 {
@@ -7,7 +7,7 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
     {
         private bool ProcessNode(Network.Address address)
         {
-            var iport = address.IPAddressString();
+            var iport = address.ToHostAddressString();
             var client = GetService.ClientCache.Get(iport);
             try
             {

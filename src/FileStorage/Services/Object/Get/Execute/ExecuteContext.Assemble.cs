@@ -1,11 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage;
 using Neo.FileStorage.Services.Object.Get.Writer;
 using Neo.FileStorage.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using static Neo.Utility;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSRange = Neo.FileStorage.API.Object.Range;
@@ -74,6 +74,7 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
         private void Assemble()
         {
             Log("GetExecutor", LogLevel.Debug, "trying to assemble the object...");
+            Assembling = true;
             var child_id = splitInfo.Link;
             if (child_id is null)
                 child_id = splitInfo.LastPart;

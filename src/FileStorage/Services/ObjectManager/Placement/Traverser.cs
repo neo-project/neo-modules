@@ -1,8 +1,8 @@
-using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.API.Refs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.API.Refs;
 
 namespace Neo.FileStorage.Services.ObjectManager.Placement
 {
@@ -51,7 +51,7 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
                 Network.Address addr;
                 try
                 {
-                    addr = Network.Address.AddressFromString(vectors[0][i].NetworkAddress);
+                    addr = Network.Address.FromString(vectors[0][i].NetworkAddress);
                 }
                 catch (Exception)
                 {

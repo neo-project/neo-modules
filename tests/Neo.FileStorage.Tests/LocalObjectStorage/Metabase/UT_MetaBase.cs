@@ -3,7 +3,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.LocalObjectStorage.Blobstor;
 
-namespace Neo.FileStorage.Tests.LocalObjectStorage
+namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
 {
     [TestClass]
     public class UT_MetaBase

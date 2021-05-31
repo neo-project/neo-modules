@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace Neo.FileStorage.Cache
@@ -30,7 +31,6 @@ namespace Neo.FileStorage.Cache
             onEvict = evict;
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
         public bool TryGet(K key, out V value)
         {
             if (cache.TryGetValue(key, out Element el))
@@ -44,7 +44,6 @@ namespace Neo.FileStorage.Cache
             return false;
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
         public bool TryPeek(K key, out V value)
         {
             if (cache.TryGetValue(key, out Element el))
@@ -95,20 +94,34 @@ namespace Neo.FileStorage.Cache
             return evicted;
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
+        public bool RemoveOldest(out (K, V) result)
+        {
+            var to_rm = list.Last?.Value;
+            if (to_rm is null)
+            {
+                result.Item1 = default;
+                result.Item2 = default;
+                return false;
+            }
+            list.RemoveLast();
+            cache.Remove(to_rm.Key);
+            result.Item1 = to_rm.Key;
+            result.Item2 = to_rm.Value;
+            return true;
+        }
+
+
         public bool Contains(K key)
         {
             return cache.ContainsKey(key);
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
         public IEnumerable<K> Keys()
         {
             foreach (var n in list)
                 yield return n.Key;
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
         public void Purge()
         {
             foreach (var item in cache.Values)

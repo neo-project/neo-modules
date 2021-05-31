@@ -9,11 +9,9 @@ namespace Neo.FileStorage
     public class Settings
     {
         public static Settings Default { get; private set; }
-        public uint MainNetwork;
-        public uint SideNetwork;
-        public string SideChainConfigPath;
-        public bool StartInnerRing;
-        public bool StartStorage;
+        public string SideChainConfig;
+        public bool AutoStartInnerRing;
+        public bool AutoStartStorage;
         public string WalletPath;
         public string Password;
         public UInt160 NetmapContractHash;
@@ -39,7 +37,6 @@ namespace Neo.FileStorage
         public int QueueCapacity;
         public int AuditTaskPoolSize;
 
-        public string[] Urls;
         public uint EpochDuration;
         public uint AlphabetDuration;
         public int MintEmitCacheSize;
@@ -69,12 +66,9 @@ namespace Neo.FileStorage
 
         private Settings(IConfigurationSection section)
         {
-            Urls = section.GetSection("URLs").GetChildren().Select(p => p.Get<string>()).ToArray();
-            MainNetwork = section.GetValue("MainNetwork", 5195086u);
-            SideNetwork = section.GetValue("SideNetwork", 0u);
-            SideChainConfigPath = section.GetValue("SideChainConfigPath", "./FileStorage/sidechain.json");
-            StartInnerRing = section.GetValue("StartInnerRing", false);
-            StartStorage = section.GetValue("StartStorage", true);
+            SideChainConfig = section.GetValue("SideChainConfig", "config.neofs.mainnet.json");
+            AutoStartInnerRing = section.GetValue("AutoStartInnerRing", false);
+            AutoStartStorage = section.GetValue("AutoStartStorage", false);
             WalletPath = section.GetSection("WalletPath").Value;
             Password = section.GetSection("Password").Value;
 
@@ -145,8 +139,8 @@ namespace Neo.FileStorage
             BasicIncomeRate = settlement.GetValue("BasicIncomeRate", 0ul);
 
             IConfigurationSection fee = section.GetSection("Fee");
-            this.MainChainFee = fee.GetValue("MainChain", 5000L);
-            this.SideChainFee = fee.GetValue("SideChain", 5000L);
+            MainChainFee = fee.GetValue("MainChain", 5000L);
+            SideChainFee = fee.GetValue("SideChain", 5000L);
         }
 
         public static void Load(IConfigurationSection section)

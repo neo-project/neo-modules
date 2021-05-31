@@ -1,15 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Object.Head;
 using Neo.FileStorage.Services.Replicate;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using static Neo.FileStorage.Network.Address;
 using FSAddress = Neo.FileStorage.API.Refs.Address;
 using FSContainer = Neo.FileStorage.API.Container.Container;
 
@@ -84,7 +83,7 @@ namespace Neo.FileStorage.Services.Police
                 Network.Address node;
                 try
                 {
-                    node = AddressFromString(nodes[i].NetworkAddress);
+                    node = Network.Address.FromString(nodes[i].NetworkAddress);
                 }
                 catch (Exception)
                 {

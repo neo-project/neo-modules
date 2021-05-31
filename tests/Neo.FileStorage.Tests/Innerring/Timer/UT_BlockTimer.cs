@@ -1,8 +1,8 @@
+using System;
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.InnerRing.Timer;
-using System;
 using static Neo.FileStorage.InnerRing.Timer.BlockTimer;
 
 namespace Neo.FileStorage.Tests.Innerring.Timer

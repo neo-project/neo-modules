@@ -49,10 +49,10 @@ namespace Neo.FileStorage.LocalObjectStorage
         public ObjectSizeExceedLimitException(string? message) : base(message) { }
     }
 
-    public class FileNotFoundException : LocalStorageException
+    public class ObjectFileNotFoundException : LocalStorageException
     {
-        public FileNotFoundException() : base() { }
-        public FileNotFoundException(string? message) : base(message) { }
+        public ObjectFileNotFoundException() : base() { }
+        public ObjectFileNotFoundException(string? message) : base(message) { }
     }
 
     public class UnknownObjectTypeException : LocalStorageException

@@ -1,24 +1,24 @@
-using Neo.FileStorage.API.Object;
-using Neo.FileStorage.API.Refs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.PortableExecutable;
-using System.Text;
 using System.Threading;
-using Google.Protobuf;
-using Neo.FileStorage.API.Cryptography;
+using Neo.FileStorage.API.Object;
+using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.LocalObjectStorage.Shards;
 using FSObject = Neo.FileStorage.API.Object.Object;
-using Neo.FileStorage.API.Netmap;
 
 namespace Neo.FileStorage.LocalObjectStorage.Engine
 {
-    public class StorageEngine
+    public partial class StorageEngine : IDisposable
     {
 
-        private Dictionary<string, Shard.Shard> shards = new Dictionary<string, Shard.Shard>();
-        private ReaderWriterLockSlim mtx = new ReaderWriterLockSlim();
+        private readonly Dictionary<string, Shard> shards = new();
+        private readonly ReaderWriterLockSlim mtx = new();
 
+        public void Dispose()
+        {
+            mtx.Dispose();
+        }
 
         public FSObject Get(Address address)
         {
@@ -45,7 +45,6 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
             }
             return null;
         }
-
 
         public void Put(FSObject obj)
         {
@@ -91,7 +90,6 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
             }
             return result.ToList();
         }
-
 
         public List<Address> List(ulong limit)
         {
@@ -188,61 +186,42 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
             }
         }
 
-        private List<Shard.Shard> UnsortedShards()
+        private void Inhume(Address tombstone, Address[] addresses, bool check_exists)
         {
-            try
+            bool root = false;
+            bool RootCheck()
             {
-                mtx.EnterReadLock();
-                return shards.Values.ToList();
+                return check_exists && root;
             }
-            finally
+            foreach (var shard in SortedShards(addresses[0]))
             {
-                mtx.ExitReadLock();
-            }
-        }
-
-
-        /// <summary>
-        /// sort by value-distance * weights
-        /// </summary>
-        /// <param name="address"></param>
-        /// <returns></returns>
-        private List<Shard.Shard> SortedShards(Address address)
-        {
-            try
-            {
-                mtx.EnterReadLock();
-                var target = address.ToByteArray().Murmur64(0);
-                var list = shards.Values.Select(s => new ShardDistance
+                if (check_exists)
                 {
-                    Shard = s,
-                    Weight = s.WeightValues(),
-                    Distance = Encoding.UTF8.GetBytes(s.ID.ToString()).Murmur64(0).Distance(target),
-                }.SetSort());
-                return list.OrderBy(s => s.Sort).Select(s => s.Shard).ToList();
+                    try
+                    {
+                        if (!shard.Exists(addresses[0]) & RootCheck())
+                            continue;
+                    }
+                    catch (ObjectAlreadyRemovedException)
+                    {
+                        break;
+                    }
+                    catch (SplitInfoException)
+                    {
+                        root = true;
+                        continue;
+                    }
+                }
+                try
+                {
+                    shard.Inhume(tombstone, addresses);
+                    if (!RootCheck()) break;
+                }
+                catch
+                {
+                    continue;
+                }
             }
-            finally
-            {
-                mtx.ExitReadLock();
-            }
-        }
-
-
-        class ShardDistance
-        {
-            public Shard.Shard Shard;
-            public ulong Weight;
-            public ulong Distance;
-
-
-            public ulong Sort;
-
-            public ShardDistance SetSort()
-            {
-                Sort = Weight * Distance;
-                return this;
-            }
-
         }
     }
 }

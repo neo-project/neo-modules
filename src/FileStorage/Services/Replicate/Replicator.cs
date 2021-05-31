@@ -1,12 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
 using Akka.Actor;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Network.Cache;
 using Neo.FileStorage.Services.Object.Put;
 using Neo.FileStorage.Services.Object.Util;
-using System;
-using System.Collections.Generic;
-using System.Threading;
 using FSAddress = Neo.FileStorage.API.Refs.Address;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
@@ -55,7 +55,7 @@ namespace Neo.FileStorage.Services.Replicate
             for (int i = 0; i < task.Nodes.Count && 0 < task.Quantity; i++)
             {
                 var net_address = task.Nodes[i].NetworkAddress;
-                var node = Network.Address.AddressFromString(net_address);
+                var node = Network.Address.FromString(net_address);
                 prm.Node = node;
                 config.RemoteSender.PutObject(prm, new CancellationTokenSource(config.PutTimeout).Token);
                 task.Quantity--;

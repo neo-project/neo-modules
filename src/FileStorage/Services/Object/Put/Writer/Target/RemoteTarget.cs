@@ -38,7 +38,7 @@ namespace Neo.FileStorage.Services.Object.Put
         {
             obj.Payload = ByteString.CopyFrom(payload);
             var key = KeyStorage.GetKey(Prm?.SessionToken);
-            var addr = Address.IPAddressString();
+            var addr = Address.ToIPAddressString();
             var client = ClientCache.Get(addr);
             var id = client.PutObject(obj, Prm.CallOptions.WithTTL(1).WithKey(key), Cancellation).Result;
             return new()

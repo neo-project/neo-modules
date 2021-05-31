@@ -1,16 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.LocalObjectStorage.Shard;
+using Neo.FileStorage.LocalObjectStorage.Shards;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 
-namespace Neo.FileStorage.Tests.LocalObjectStorage
+namespace Neo.FileStorage.Tests.LocalObjectStorage.Shards
 {
     [TestClass]
     public class UT_Shard
@@ -167,7 +165,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage
 
             var list = shard.List();
 
-            Assert.AreEqual(addresses.Count, list.Count); ;
+            Assert.AreEqual(addresses.Count, list.Count()); ;
             Assert.AreEqual(0, list.Except(addresses).Count());
         }
 
@@ -193,7 +191,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage
 
             var list = shard.List();
 
-            Assert.AreEqual(addresses.Count, list.Count); ;
+            Assert.AreEqual(addresses.Count, list.Count()); ;
             Assert.AreEqual(0, list.Except(addresses).Count());
 
         }

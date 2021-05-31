@@ -12,7 +12,7 @@ using Neo.FileStorage.LocalObjectStorage.MetaBase;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 
-namespace Neo.FileStorage.LocalObjectStorage.Shard
+namespace Neo.FileStorage.LocalObjectStorage.Shards
 {
     public class Shard
     {
@@ -28,7 +28,6 @@ namespace Neo.FileStorage.LocalObjectStorage.Shard
         private ulong freeSpace;
 
         public ShardID ID { get; set; }
-
 
         private int mode;
         public ShardMode Mode
@@ -116,11 +115,11 @@ namespace Neo.FileStorage.LocalObjectStorage.Shard
             var isExist = metaBase.Exists(address);
             if (!isExist)
             {
-                return null;
+                throw new ObjectNotFoundException();
             }
 
             var blobovniczaID = metaBase.IsSmall(address);
-            if (blobovniczaID != null)
+            if (blobovniczaID is not null)
             {
                 return blobStor.GetSmall(address, blobovniczaID);
             }
@@ -140,7 +139,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shard
 
         public void Inhume(Address tombstone, params Address[] target)
         {
-            metaBase.Inhume(tombstone, target.ToList());
+            metaBase.Inhume(tombstone, target);
         }
 
         public List<Address> List()

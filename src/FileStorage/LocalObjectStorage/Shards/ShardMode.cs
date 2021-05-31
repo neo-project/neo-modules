@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Neo.FileStorage.LocalObjectStorage.Shard
+namespace Neo.FileStorage.LocalObjectStorage.Shards
 {
     public enum ShardMode
     {

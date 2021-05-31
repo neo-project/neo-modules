@@ -7,10 +7,8 @@ namespace Neo.FileStorage
     public class SideChainSettings
     {
         public bool VerifyImport { get; }
-        public LoggerSettings Logger { get; }
         public StorageSettings Storage { get; }
         public P2PSettings P2P { get; }
-        public UnlockWalletSettings UnlockWallet { get; }
 
         public static SideChainSettings Load(string path, bool optional = true)
         {
@@ -20,25 +18,9 @@ namespace Neo.FileStorage
 
         public SideChainSettings(IConfigurationSection section)
         {
-            this.VerifyImport = section.GetValue("VerifyImport", true);
-            this.Logger = new LoggerSettings(section.GetSection("Logger"));
-            this.Storage = new StorageSettings(section.GetSection("Storage"));
-            this.P2P = new P2PSettings(section.GetSection("P2P"));
-            this.UnlockWallet = new UnlockWalletSettings(section.GetSection("UnlockWallet"));
-        }
-    }
-
-    public class LoggerSettings
-    {
-        public string Path { get; }
-        public bool ConsoleOutput { get; }
-        public bool Active { get; }
-
-        public LoggerSettings(IConfigurationSection section)
-        {
-            this.Path = section.GetValue("Path", "Logs_{0}");
-            this.ConsoleOutput = section.GetValue("ConsoleOutput", false);
-            this.Active = section.GetValue("Active", false);
+            VerifyImport = section.GetValue("VerifyImport", true);
+            Storage = new StorageSettings(section.GetSection("Storage"));
+            P2P = new P2PSettings(section.GetSection("P2P"));
         }
     }
 
@@ -49,8 +31,8 @@ namespace Neo.FileStorage
 
         public StorageSettings(IConfigurationSection section)
         {
-            this.Engine = section.GetValue("Engine", "LevelDBStore");
-            this.Path = section.GetValue("Path", "Data_LevelDB_{0}");
+            Engine = section.GetValue("Engine", "LevelDBStore");
+            Path = section.GetValue("Path", "Data_LevelDB_Side");
         }
     }
 
@@ -64,28 +46,11 @@ namespace Neo.FileStorage
 
         public P2PSettings(IConfigurationSection section)
         {
-            this.Port = ushort.Parse(section.GetValue("Port", "30333"));
-            this.WsPort = ushort.Parse(section.GetValue("WsPort", "30334"));
-            this.MinDesiredConnections = section.GetValue("MinDesiredConnections", Peer.DefaultMinDesiredConnections);
-            this.MaxConnections = section.GetValue("MaxConnections", Peer.DefaultMaxConnections);
-            this.MaxConnectionsPerAddress = section.GetValue("MaxConnectionsPerAddress", 3);
-        }
-    }
-
-    public class UnlockWalletSettings
-    {
-        public string Path { get; }
-        public string Password { get; }
-        public bool IsActive { get; }
-
-        public UnlockWalletSettings(IConfigurationSection section)
-        {
-            if (section.Exists())
-            {
-                this.Path = section.GetValue("Path", "");
-                this.Password = section.GetValue("Password", "");
-                this.IsActive = bool.Parse(section.GetValue("IsActive", "false"));
-            }
+            Port = ushort.Parse(section.GetValue("Port", "30333"));
+            WsPort = ushort.Parse(section.GetValue("WsPort", "30334"));
+            MinDesiredConnections = section.GetValue("MinDesiredConnections", Peer.DefaultMinDesiredConnections);
+            MaxConnections = section.GetValue("MaxConnections", Peer.DefaultMaxConnections);
+            MaxConnectionsPerAddress = section.GetValue("MaxConnectionsPerAddress", 3);
         }
     }
 }
