@@ -15,9 +15,9 @@ namespace Neo.FileStorage
     {
         private readonly IActorRef innering;
 
-        public InnerRingService(Wallet wallet, NeoSystem main, NeoSystem side)
+        public InnerRingService(NeoSystem main, NeoSystem side)
         {
-            innering = main.ActorSystem.ActorOf(FSInnerRingService.Props(main, side, wallet));//TODO: mount to side chain?
+            innering = main.ActorSystem.ActorOf(FSInnerRingService.Props(main, side));//TODO: mount to side chain?
             innering.Tell(new Start() { });
         }
 
