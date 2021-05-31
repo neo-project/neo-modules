@@ -26,17 +26,8 @@ namespace Neo.Consensus
         /// <returns> An `ECPoint` representing the public key.</returns>
         public static Cryptography.ECC.ECPoint DerivePubkeyPoint(byte[] prikey)
         {
-            if (prikey.Length != 32 && prikey.Length != 96 && prikey.Length != 104)
-                throw new ArgumentException(null, nameof(prikey));
-
-            if (prikey.Length == 32)
-            {
-                return Cryptography.ECC.ECCurve.Secp256r1.G * prikey;
-            }
-            else
-            {
-                return Cryptography.ECC.ECPoint.FromBytes(prikey, Cryptography.ECC.ECCurve.Secp256r1);
-            }
+            byte[] padded_prikey_bytes = AppendLeadingZeros(prikey, qlen);
+            return Cryptography.ECC.ECCurve.Secp256r1.G * padded_prikey_bytes;
         }
 
         /// <summary>
