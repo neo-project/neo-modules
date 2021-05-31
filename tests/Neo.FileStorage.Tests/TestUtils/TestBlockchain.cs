@@ -174,7 +174,6 @@ namespace Neo.FileStorage.Tests
             var containerId = container.CalCulateAndGetId.Value.ToByteArray();
             for (int i = 0; i < accounts.Count(); i++)
             {
-
                 ExecuteScript(snapshot, "FakeContainer", script, accounts.ToArray()[i].ScriptHash);
             }
             Console.WriteLine("FakeContainerID:" + containerId.ToHexString());

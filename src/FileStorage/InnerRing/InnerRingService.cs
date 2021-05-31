@@ -70,8 +70,10 @@ namespace Neo.FileStorage.InnerRing
 
         public InnerRingService(NeoSystem main, NeoSystem side, Wallet pwallet = null, Client pMainNetClient = null, Client pMorphClient = null)
         {
+            Console.WriteLine("创建ConvertUtil");
             precision = new Fixed8ConverterUtil();
             // Build 2 client(MorphClientr&MainClient).
+            Console.WriteLine("创建Wallet&client");
             if (pwallet is null)
             {
                 NEP6Wallet w = new(Settings.Default.WalletPath, main.Settings);
@@ -105,11 +107,13 @@ namespace Neo.FileStorage.InnerRing
                 };
             }
             else morphClient = pMorphClient;
+            Console.WriteLine("创建Listener");
             // Build 2 listeners(MorphEventListener&MainEventListener).
             morphEventListener = side.ActorSystem.ActorOf(Listener.Props("MorphEventListener"));
             mainEventListener = main.ActorSystem.ActorOf(Listener.Props("MainEventListener"));
             // create indexer
             statusIndex = new InnerRingIndexer(morphClient, Settings.Default.IndexerTimeout);
+            Console.WriteLine("创建processor");
             // create audit processor
             clientCache = new RpcClientCache() { wallet = wallet };
             auditTaskManager = side.ActorSystem.ActorOf(Manager.Props(Settings.Default.QueueCapacity,
@@ -127,6 +131,7 @@ namespace Neo.FileStorage.InnerRing
                 TaskManager = auditTaskManager,
                 State = this,
             };
+            Console.WriteLine("创建auditContractProcessor成功");
             // create settlement processor dependencies
             var auditCalcDeps = new AuditSettlementDeps()
             {
@@ -144,6 +149,7 @@ namespace Neo.FileStorage.InnerRing
                 auditProc = auditSettlementCalc,
                 State = this,
             };
+            Console.WriteLine("创建settlementProcessor成功");
             _db = new("./FileStorage/Data_LOCODE");
             var locodeValidator = new Validator(_db);
             // create governance processor
@@ -154,6 +160,7 @@ namespace Neo.FileStorage.InnerRing
                 ProtocolSettings = main.Settings,
                 State = this,
             };
+            Console.WriteLine("创建governance成功");
             // create netmap processor
             netMapContractProcessor = new NetMapContractProcessor()
             {
@@ -167,6 +174,7 @@ namespace Neo.FileStorage.InnerRing
                 NodeValidator = locodeValidator
             };
             morphEventListener.Tell(new BindProcessorEvent() { processor = netMapContractProcessor });
+            Console.WriteLine("创建netMapContractProcessor成功");
             // create container processor
             containerContractProcessor = new ContainerContractProcessor()
             {

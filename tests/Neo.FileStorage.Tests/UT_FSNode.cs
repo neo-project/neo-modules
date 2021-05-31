@@ -1,8 +1,12 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neo.Cryptography.ECC;
 using Neo.IO;
+using Neo.SmartContract;
+using Neo.VM;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Neo.FileStorage.Tests.Morph.Client.Tests
@@ -23,6 +27,29 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
             var sys = TestBlockchain.TheNeoSystem;
             NEP6Wallet temp = TestBlockchain.wallet;
             Console.WriteLine(temp.GetAccounts().ToArray()[0].GetKey().PublicKey.EncodePoint(true).ToHexString());
+        }
+
+        [TestMethod]
+        public void FSContractInit() {
+            List<ECPoint> list = new List<ECPoint>();
+            list.Add(ECPoint.Parse("036bbe8d0e8c0c257feec1f179c1036511ff64c686cf3d62b60ee56633f5d7fb13",ECCurve.Secp256r1));
+            list.Add(ECPoint.Parse("02b0704d818e3bcdcfceb9941edcf6daaee74dc6453fc22761590bfc4ac2ab8d7f", ECCurve.Secp256r1));
+            list.Add(ECPoint.Parse("03261c49859f191eff7d1ac8fdd92cb8ea2d03083950042effc20df41f27243edd", ECCurve.Secp256r1));
+            var script =UInt160.Parse("0x6ce75cbf959a5f5211820ea2382218fb64d8b0ad").MakeScript("init", true, UInt160.Parse("0x7f5838cd8f030ebc2c571f6c474d57ad5c35a5da"), UInt160.Parse("0x0610ee4ac7d1f1a896a8feba253b3ad13ab13661"), ToParameter(list.Select(p => p.ToArray()).ToArray()));
+            Console.WriteLine(Convert.ToBase64String(Utility.StrictUTF8.GetBytes("ContainerFee")));
+            Console.WriteLine(Convert.ToBase64String(BitConverter.GetBytes(0)));
+        }
+
+        public static ContractParameter ToParameter(byte[][] args)
+        {
+            var array = new ContractParameter(ContractParameterType.Array);
+            var list = new List<ContractParameter>();
+            foreach (var bytes in args)
+            {
+                list.Add(new ContractParameter(ContractParameterType.ByteArray) { Value = bytes });
+            }
+            array.Value = list;
+            return array;
         }
 
         /*        [TestMethod]

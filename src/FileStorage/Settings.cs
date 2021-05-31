@@ -145,8 +145,8 @@ namespace Neo.FileStorage
             BasicIncomeRate = settlement.GetValue("BasicIncomeRate", 0ul);
 
             IConfigurationSection fee = section.GetSection("Fee");
-            this.MainChainFee = fee.GetValue("MainChain", 5000l);
-            this.SideChainFee = fee.GetValue("SideChain", 5000l);
+            this.MainChainFee = fee.GetValue("MainChain", 5000L);
+            this.SideChainFee = fee.GetValue("SideChain", 5000L);
         }
 
         public static void Load(IConfigurationSection section)
