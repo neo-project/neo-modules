@@ -1,16 +1,16 @@
+using System;
+using System.Linq;
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neo.FileStorage.InnerRing.Processors;
+using Neo.FileStorage.Morph.Event;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
-using Neo.FileStorage.InnerRing.Processors;
-using Neo.FileStorage.Morph.Event;
 using Neo.SmartContract;
 using Neo.VM;
 using Neo.Wallets;
-using System;
-using System.Linq;
 
 namespace Neo.FileStorage.Tests.Morph.Event
 {
@@ -27,6 +27,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
         public void TestSetup()
         {
             wallet = TestBlockchain.wallet;
+            system = TestBlockchain.TheNeoSystem;
             listener = Sys.ActorOf(Listener.Props("Testlistener"));
         }
 

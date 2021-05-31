@@ -5,12 +5,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Object.Head;
 using Neo.FileStorage.Services.Replicate;
 using FSAddress = Neo.FileStorage.API.Refs.Address;
-using FSContainer = Neo.FileStorage.API.Container.Container;
 
 namespace Neo.FileStorage.Services.Police
 {
@@ -19,7 +17,7 @@ namespace Neo.FileStorage.Services.Police
         public class Trigger { }
         private int workScope;
         private readonly Configuration config;
-        private readonly PoliceTask prevTask;
+        private readonly PoliceTask prevTask = new();
 
         public Policer(Configuration c)
         {

@@ -9,9 +9,10 @@ namespace Neo.FileStorage
     public class Settings
     {
         public static Settings Default { get; private set; }
+        public bool AutoStart;
         public string SideChainConfig;
-        public bool AutoStartInnerRing;
-        public bool AutoStartStorage;
+        public bool AsInnerRing;
+        public bool AsStorage;
         public string WalletPath;
         public string Password;
         public UInt160 NetmapContractHash;
@@ -67,8 +68,9 @@ namespace Neo.FileStorage
         private Settings(IConfigurationSection section)
         {
             SideChainConfig = section.GetValue("SideChainConfig", "config.neofs.mainnet.json");
-            AutoStartInnerRing = section.GetValue("AutoStartInnerRing", false);
-            AutoStartStorage = section.GetValue("AutoStartStorage", false);
+            AutoStart = section.GetValue("AutoStartInnerRing", false);
+            AsInnerRing = section.GetValue("AutoStartInnerRing", false);
+            AsStorage = section.GetValue("AutoStartStorage", true);
             WalletPath = section.GetSection("WalletPath").Value;
             Password = section.GetSection("Password").Value;
 

@@ -1,17 +1,15 @@
+using System;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.IO;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
-using System;
-using System.Linq;
 
 namespace Neo.FileStorage.Tests.Morph.Client.Tests
 {
     [TestClass]
     public class UT_FSNode
     {
-        private Wallet wallet;
-
         [TestInitialize]
         public void TestSetup()
         {

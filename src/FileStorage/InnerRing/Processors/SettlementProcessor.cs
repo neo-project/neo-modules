@@ -267,7 +267,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 {
                     auditResults = settlementDeps.AuditResultsForEpoch(epoch - 1);
                 }
-                catch (Exception e)
+                catch
                 {
                     Utility.Log("Calculator", LogLevel.Debug, "could not collect audit results");
                     return;

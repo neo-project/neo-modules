@@ -1,7 +1,8 @@
 {
   "PluginConfiguration": {
-    "AutoStartInnerRing": false,
-    "AutoStartStorage": false,
+    "AutoStart": false,
+    "AsInnerRing": false,
+    "AsStorage": true,
     "WalletPath": "./FSStorage/wallet.json",
     "Password": "123456",
     "Contracts": {

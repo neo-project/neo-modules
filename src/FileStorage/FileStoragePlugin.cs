@@ -45,6 +45,11 @@ namespace Neo.FileStorage
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
+            if (!Settings.Default.AsInnerRing && SideSystem is null)
+            {
+                SideSystem = system;
+                return;
+            }
             if (MainSystem is null)
             {
                 MainSystem = system;
@@ -88,7 +93,12 @@ namespace Neo.FileStorage
 
         public void OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
-            if (system.Settings.Network == MainSystem.Settings.Network)
+            if (!Settings.Default.AsInnerRing)
+            {
+                StorageService?.OnPersisted(block, snapshot, applicationExecutedList);
+                return;
+            }
+            if (system.Settings.Network == MainSystem?.Settings.Network)
             {
                 InnerRingService?.OnPersisted(block, snapshot, applicationExecutedList, true);
             }
@@ -105,7 +115,7 @@ namespace Neo.FileStorage
             {
                 walletProvider = service as IWalletProvider;
                 MainSystem.ServiceAdded -= NeoSystem_ServiceAdded;
-                if (Settings.Default.AutoStartInnerRing || Settings.Default.AutoStartStorage)
+                if (Settings.Default.AutoStart)
                 {
                     walletProvider.WalletChanged += WalletProvider_WalletChanged;
                 }
@@ -120,8 +130,8 @@ namespace Neo.FileStorage
 
         private void Start(Wallet wallet)
         {
-            if (Settings.Default.AutoStartInnerRing) StartIR(wallet);
-            if (Settings.Default.AutoStartStorage) StartStorage(wallet);
+            if (Settings.Default.AsInnerRing) StartIR(wallet);
+            if (Settings.Default.AsStorage) StartStorage(wallet);
         }
 
         private void StartIR(Wallet wallet)

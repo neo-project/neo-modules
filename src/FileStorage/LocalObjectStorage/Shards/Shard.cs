@@ -1,7 +1,6 @@
+using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
 using Google.Protobuf;
 using Neo.FileStorage.API.Object;
@@ -19,17 +18,10 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
         private readonly Blobstorage writeCache;
         private readonly Blobstorage blobStor;
         private readonly MB metaBase;
-        private readonly int rmBatchSize;
         private readonly bool useWriteCache;
-
-        /// <summary>
-        /// Amount of free disk space. Measured in kilobytes.
-        /// </summary>
-        private ulong freeSpace;
-
         public ShardID ID { get; set; }
-
         private int mode;
+
         public ShardMode Mode
         {
             get => (ShardMode)mode;
@@ -39,7 +31,6 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
 
         public Shard(bool useCache, string path)
         {
-            rmBatchSize = 100;
             useWriteCache = useCache;
             if (useCache)
             {
@@ -186,7 +177,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
 
         public FSObject GetRange(Address address, ulong length, ulong offset)
         {
-            var range = new Range()
+            var range = new API.Object.Range()
             {
                 Length = length,
                 Offset = offset,
@@ -250,7 +241,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
         /// <returns></returns>
         public ulong WeightValues()
         {
-            return freeSpace;
+            throw new NotImplementedException();
         }
     }
 }
