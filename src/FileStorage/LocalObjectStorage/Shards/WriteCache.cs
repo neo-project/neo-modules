@@ -3,13 +3,16 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Timers;
 using Google.Protobuf;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.LocalObjectStorage.Blob;
 using Neo.FileStorage.LocalObjectStorage.Blobstor;
 using Neo.FileStorage.LocalObjectStorage.MetaBase;
 using Neo.IO.Data.LevelDB;
+using Neo.Persistence;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.LocalObjectStorage.Shards
@@ -47,6 +50,8 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
         public const string DBName = "Data_CacheSmall";
         public const string FileTreeDirName = "FileTree_Cache";
         public const int LRUKeysCount = 256 * 1024 * 8;
+        public const int DefaultInterval = 1000;
+        public const int FlushBatchSize = 512;
         public string Path { get; init; }
         public Blobstorage Blobstorage { get; init; }
         public MB Mb { get; init; }
@@ -56,10 +61,12 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
         public int SmallObjectSize { get; init; }
         public int FlushWorkerCount { get; init; }
         private int currentMemorySize = 0;
-        private readonly ConcurrentDictionary<string, FSObject> mem = new();
+        private readonly ConcurrentDictionary<string, ObjectInfo> mem = new();
         private FSTree fsTree;
         private DB db;
         private LRUCache<string, bool> flushed;
+        private readonly Timer timer = new(DefaultInterval);
+
         public void Open()
         {
             var full = System.IO.Path.GetFullPath(System.IO.Path.Join(Path, DBName));
@@ -73,10 +80,63 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
                 DirNameLen = 1,
             };
             flushed = new(LRUKeysCount);
+            SetTimer();
+        }
+
+        private void SetTimer()
+        {
+            timer.Elapsed += OnTimer;
+            timer.AutoReset = true;
+            timer.Start();
+        }
+
+        private void OnTimer(object source, ElapsedEventArgs args)
+        {
+            Persist();
+            Flush();
+        }
+
+        private void Persist()
+        {
+            var m = mem.Values.OrderBy(p => p.SAddress);
+            mem.Clear();
+            PersistObjects(m.ToArray());
+            foreach (var oi in m)
+            {
+                currentMemorySize -= oi.Data.Length;
+            }
+        }
+
+        private void Flush()
+        {
+            int i = 0;
+            List<ObjectInfo> m = new();
+            foreach (var oi in db.Seek<ObjectInfo>(ReadOptions.Default, Array.Empty<byte>(), SeekDirection.Forward, (key, value) =>
+             {
+                 return new()
+                 {
+                     Object = FSObject.Parser.ParseFrom(value),
+                     SAddress = Utility.StrictUTF8.GetString(key),
+                 };
+
+             }))
+            {
+                if (flushed.TryPeek(oi.SAddress, out _))
+                    continue;
+                m.Add(oi);
+                WriteObject(oi.Object, false);
+                i++;
+                if (FlushBatchSize <= i) break;
+            }
+            EvictObjects(m.Count);
+            foreach (var oi in m)
+                flushed.TryAdd(oi.SAddress, true);
         }
 
         public void Dispose()
         {
+            timer.Stop();
+            timer.Dispose();
             db?.Dispose();
             flushed.Purge();
         }
@@ -84,9 +144,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
         public FSObject Get(Address address)
         {
             string saddress = address.String();
-            if (mem.TryGetValue(saddress, out FSObject obj))
+            if (mem.TryGetValue(saddress, out ObjectInfo oi))
             {
-                return obj;
+                return oi.Object;
             }
             byte[] data = db.Get(ReadOptions.Default, Utility.StrictUTF8.GetBytes(address.String()));
             if (data is not null)
@@ -101,63 +161,66 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
 
         public void Put(FSObject obj)
         {
-            int size = obj.CalculateSize();
-            if (MaxObjectSize < size)
-                throw new InvalidOperationException("Object too big");
-            if (size < SmallObjectSize && currentMemorySize + size <= MaxMemorySize)
+            ObjectInfo oi = new()
             {
-                currentMemorySize += size;
-                mem[obj.Address.String()] = obj;
+                Object = obj,
+                SAddress = obj.Address.String(),
+                Data = obj.ToByteArray()
+            };
+            if (MaxObjectSize < oi.Data.Length)
+                throw new InvalidOperationException("Object too big");
+            if (oi.Data.Length < SmallObjectSize && currentMemorySize + oi.Data.Length <= MaxMemorySize)
+            {
+                currentMemorySize += oi.Data.Length;
+                mem[obj.Address.String()] = oi;
                 return;
             }
-            PersistObjects(obj);
+            PersistObjects(oi);
         }
 
-        private void PersistObjects(params FSObject[] objs)
+        private void PersistObjects(params ObjectInfo[] ois)
         {
-            var toDisk = PersistCache(objs);
-            foreach (var obj in objs)
+            var failDisk = PersistCache(ois);
+            foreach (var oi in ois)
             {
-                if (toDisk.Contains(obj))
-                    WriteObject(obj, false);
+                if (failDisk.Contains(oi))
+                    WriteObject(oi.Object, false);
                 else
-                    WriteObject(obj, true);
+                    WriteObject(oi.Object, true);
             }
         }
 
-        private List<FSObject> PersistCache(FSObject[] objs)
+        private List<ObjectInfo> PersistCache(ObjectInfo[] ois)
         {
-            List<FSObject> fails = new();
-            List<FSObject> dones = new();
-            foreach (var obj in objs)
+            List<ObjectInfo> fails = new();
+            List<ObjectInfo> dones = new();
+            foreach (var oi in ois)
             {
-                int size = obj.CalculateSize();
-                if (SmallObjectSize <= size)
+                if (SmallObjectSize <= oi.Data.Length)
                 {
-                    fails.Add(obj);
+                    fails.Add(oi);
                     continue;
                 }
-                db.Put(WriteOptions.Default, Utility.StrictUTF8.GetBytes(obj.Address.String()), obj.ToByteArray());
-                dones.Add(obj);
+                db.Put(WriteOptions.Default, Utility.StrictUTF8.GetBytes(oi.SAddress), oi.Data);
+                dones.Add(oi);
             }
             if (dones.Any())
             {
                 EvictObjects(dones.Count);
-                foreach (var obj in dones)
+                foreach (var oi in dones)
                 {
-                    flushed.TryAdd(obj.Address.String(), true);
+                    flushed.TryAdd(oi.SAddress, true);
                 }
             }
-            List<FSObject> failDisks = new();
-            foreach (var obj in fails)
+            List<ObjectInfo> failDisks = new();
+            foreach (var oi in fails)
             {
-                var size = obj.CalculateSize();
-                if (MaxObjectSize < size)
+                if (MaxObjectSize < oi.Data.Length)
                 {
-                    failDisks.Add(obj);
+                    failDisks.Add(oi);
                     continue;
                 }
-                fsTree.Put(obj.Address, obj.ToByteArray());
+                fsTree.Put(oi.Object.Address, oi.Data);
             }
             return failDisks;
         }
@@ -201,13 +264,14 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
         public void Delete(FSObject obj)
         {
             string saddress = obj.Address.String();
+            byte[] key = Utility.StrictUTF8.GetBytes(saddress);
             if (mem.TryRemove(saddress, out _))
             {
                 return;
             }
-            if (db.Contains(ReadOptions.Default, Utility.StrictUTF8.GetBytes(saddress)))
+            if (db.Contains(ReadOptions.Default, key))
             {
-                db.Delete(WriteOptions.Default, Utility.StrictUTF8.GetBytes(saddress));
+                db.Delete(WriteOptions.Default, key);
                 return;
             }
             fsTree.Delete(obj.Address);
