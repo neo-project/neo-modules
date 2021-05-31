@@ -25,6 +25,7 @@ namespace Neo.FileStorage
     public partial class FileStoragePlugin : Plugin, IPersistencePlugin
     {
         public event EventHandler<Wallet> WalletChanged;
+        public const string SideChainConfig = "config.neofs.json";
         public const string ChainDataFileName = "chain.side.acc";
         public override string Name => "FileStorageService";
         public override string Description => "Provide distributed file storage service";
@@ -44,13 +45,17 @@ namespace Neo.FileStorage
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            if (system.Settings.Network == Settings.Default.Network)
+            if (MainSystem is null)
             {
                 MainSystem = system;
-                sideChainSettings = SideChainSettings.Load(System.IO.Path.Combine(PluginsDirectory, GetType().Assembly.GetName().Name, Settings.Default.SideChainConfig));
-                sideProtocolSettings = ProtocolSettings.Load(System.IO.Path.Combine(PluginsDirectory, GetType().Assembly.GetName().Name, Settings.Default.SideChainConfig));
+                // Console.WriteLine($"{system.Settings.Network}, 0");
+                string config_path = System.IO.Path.Combine(PluginsDirectory, GetType().Assembly.GetName().Name, SideChainConfig);
+                sideChainSettings = SideChainSettings.Load(config_path);
+                sideProtocolSettings = ProtocolSettings.Load(config_path);
+                // Console.WriteLine($"{system.Settings.Network}, 1");
                 SideSystem = new(sideProtocolSettings, sideChainSettings.Storage.Engine, sideChainSettings.Storage.Path);
                 MainSystem.ServiceAdded += NeoSystem_ServiceAdded;
+                // Console.WriteLine($"{system.Settings.Network}, 2");
                 Task.Run(async () =>
                 {
                     using (IEnumerator<Block> blocksBeingImported = GetBlocksFromFile(SideSystem).GetEnumerator())
@@ -82,11 +87,12 @@ namespace Neo.FileStorage
                     });
                 });
             }
+            // Console.WriteLine($"{system.Settings.Network}, FileStoragePlugin loaded");
         }
 
         public void OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
-            if (system.Settings.Network == Settings.Default.Network)
+            if (system.Settings.Network == MainSystem.Settings.Network)
             {
                 InnerRingService?.OnPersisted(block, snapshot, applicationExecutedList, true);
             }

@@ -9,7 +9,6 @@ namespace Neo.FileStorage
     public class Settings
     {
         public static Settings Default { get; private set; }
-        public uint Network;
         public string SideChainConfig;
         public bool AutoStartInnerRing;
         public bool AutoStartStorage;
@@ -38,7 +37,6 @@ namespace Neo.FileStorage
         public int QueueCapacity;
         public int AuditTaskPoolSize;
 
-        public string[] Urls;
         public uint EpochDuration;
         public uint AlphabetDuration;
         public int MintEmitCacheSize;
@@ -68,8 +66,6 @@ namespace Neo.FileStorage
 
         private Settings(IConfigurationSection section)
         {
-            Urls = section.GetSection("URLs").GetChildren().Select(p => p.Get<string>()).ToArray();
-            Network = section.GetValue("Network", 5195086u);
             SideChainConfig = section.GetValue("SideChainConfig", "config.neofs.mainnet.json");
             AutoStartInnerRing = section.GetValue("AutoStartInnerRing", false);
             AutoStartStorage = section.GetValue("AutoStartStorage", false);

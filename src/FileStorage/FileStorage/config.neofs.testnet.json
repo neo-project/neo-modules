@@ -3,7 +3,7 @@
     "VerifyImport": true,
     "Storage": {
       "Engine": "LevelDBStore",
-      "Path": "Data_LevelDB_Side"
+      "Path": "Data_LevelDB_1951352142"
     },
     "P2P": {
       "Port": 20333,

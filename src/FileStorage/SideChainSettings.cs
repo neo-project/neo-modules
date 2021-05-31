@@ -32,7 +32,7 @@ namespace Neo.FileStorage
         public StorageSettings(IConfigurationSection section)
         {
             Engine = section.GetValue("Engine", "LevelDBStore");
-            Path = section.GetValue("Path", "Data_LevelDB_{0}");
+            Path = section.GetValue("Path", "Data_LevelDB_Side");
         }
     }
 

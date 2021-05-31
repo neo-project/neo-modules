@@ -1,14 +1,7 @@
 {
   "PluginConfiguration": {
-    "Network": 5195086,
-    "SideChainConfig": "config.testnet.json",
-    "SideChainStorageEngine": "LevelDBStore",
     "AutoStartInnerRing": false,
     "AutoStartStorage": false,
-    "Path": "./FSStorage/",
-    "URLs": [
-      "http://localhost:10332"
-    ],
     "WalletPath": "./FSStorage/wallet.json",
     "Password": "123456",
     "Contracts": {

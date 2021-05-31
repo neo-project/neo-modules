@@ -22,7 +22,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka" Version="1.4.19" />
     <PackageReference Include="CsvHelper" Version="27.0.3" />
     <PackageReference Include="Grpc.Tools" Version="2.36.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
