@@ -48,14 +48,11 @@ namespace Neo.FileStorage
             if (MainSystem is null)
             {
                 MainSystem = system;
-                // Console.WriteLine($"{system.Settings.Network}, 0");
                 string config_path = System.IO.Path.Combine(PluginsDirectory, GetType().Assembly.GetName().Name, SideChainConfig);
                 sideChainSettings = SideChainSettings.Load(config_path);
                 sideProtocolSettings = ProtocolSettings.Load(config_path);
-                // Console.WriteLine($"{system.Settings.Network}, 1");
                 SideSystem = new(sideProtocolSettings, sideChainSettings.Storage.Engine, sideChainSettings.Storage.Path);
                 MainSystem.ServiceAdded += NeoSystem_ServiceAdded;
-                // Console.WriteLine($"{system.Settings.Network}, 2");
                 Task.Run(async () =>
                 {
                     using (IEnumerator<Block> blocksBeingImported = GetBlocksFromFile(SideSystem).GetEnumerator())
@@ -87,7 +84,6 @@ namespace Neo.FileStorage
                     });
                 });
             }
-            // Console.WriteLine($"{system.Settings.Network}, FileStoragePlugin loaded");
         }
 
         public void OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
@@ -132,7 +128,7 @@ namespace Neo.FileStorage
         {
             if (MainSystem is null || SideSystem is null) throw new InvalidOperationException("Neo system not initialized");
             if (InnerRingService is not null) throw new InvalidOperationException("InnerRing service already started");
-            InnerRingService = new(wallet, MainSystem, SideSystem);
+            InnerRingService = new(MainSystem, SideSystem);
         }
 
         private void StartStorage(Wallet wallet)
