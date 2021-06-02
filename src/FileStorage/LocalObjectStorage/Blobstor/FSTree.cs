@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Akka.Util.Internal;
 using Neo.FileStorage.API.Refs;
 
 namespace Neo.FileStorage.LocalObjectStorage.Blobstor
@@ -12,7 +11,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
         public const int DefaultDirNameLength = 1;
         public const int MaxDepth = (32 - 1) / DefaultDirNameLength;
         public const int DefaultShallowDepth = 4;
-        public const string DefaultRootPath = "./";
+        public const string DefaultRootPath = "./Data_FSTree";
 
         public int Depth { get; init; }
         public int DirNameLen { get; init; }
@@ -28,7 +27,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
         public FSTree(string root, int d, int l)
         {
             RootPath = root;
-            Depth = d;
+            Depth = MaxDepth < d ? MaxDepth : d;
             DirNameLen = l * 2;
         }
 

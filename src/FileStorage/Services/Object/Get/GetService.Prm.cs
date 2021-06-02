@@ -14,8 +14,10 @@ namespace Neo.FileStorage.Services.Object.Get
             prm.Key = key;
             prm.Writer = new GetStream
             {
-                Handler = handler,
+                Handler = handler
             };
+            if (!prm.Local)
+                prm.Forwarder = new(key, request);
             return prm;
         }
 
@@ -29,6 +31,8 @@ namespace Neo.FileStorage.Services.Object.Get
                 Short = request.Body.MainOnly,
                 Response = response,
             };
+            if (!prm.Local)
+                prm.Forwarder = new(key, request);
             return prm;
         }
 
@@ -49,6 +53,8 @@ namespace Neo.FileStorage.Services.Object.Get
             {
                 Handler = handler,
             };
+            if (!prm.Local)
+                prm.Forwarder = new(key, request);
             return prm;
         }
     }

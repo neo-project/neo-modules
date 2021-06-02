@@ -6,6 +6,7 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Blob;
 using Neo.IO.Data.LevelDB;
+using static Neo.FileStorage.LocalObjectStorage.Helper;
 using static Neo.FileStorage.LocalObjectStorage.MetaBase.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 

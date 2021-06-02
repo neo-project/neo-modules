@@ -1,8 +1,8 @@
+using System.Collections.Generic;
+using System.Linq;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Services.Reputaion.Local.Client;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Neo.FileStorage.Services.Object.Search.Execute
 {
@@ -16,6 +16,10 @@ namespace Neo.FileStorage.Services.Object.Search.Execute
 
         public static IEnumerable<ObjectID> SearchObjects(this ReputationClient client, ExecuteContext context)
         {
+            if (context.Prm.Forwarder is not null)
+            {
+                return context.Prm.Forwarder(client.FSClient);
+            }
             return client.SearchObject(
                 context.Prm.ContainerID,
                 context.Prm.Filters,

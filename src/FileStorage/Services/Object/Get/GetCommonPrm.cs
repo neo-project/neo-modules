@@ -1,5 +1,8 @@
+using System;
+using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Services.Object.Util;
+using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Get
 {
@@ -8,6 +11,7 @@ namespace Neo.FileStorage.Services.Object.Get
         public Address Address;
         public bool Raw;
         public IObjectResponseWriter Writer;
+        public Forwarder Forwarder;
 
         public void WithGetCommonPrm(GetCommonPrm prm)
         {

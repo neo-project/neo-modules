@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 using System.Threading;
-using Neo.FileStorage.Services.Reputaion.Common.Route;
+using Neo.FileStorage.Services.Reputaion.Common;
 
 namespace Neo.FileStorage.Services.Reputaion.Local.Control
 {
     public class Controller
     {
-        public LocalTrustStorage LocalTrustStorage { get; init; }
-        public Router Router { get; init; }
+        public IIteratorProvider LocalTrustStorage { get; init; }
+        public IWriterProvider Router { get; init; }
         public byte[] LocalKey { get; init; }
         private readonly Dictionary<ulong, CancellationTokenSource> cancels = new();
 

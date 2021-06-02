@@ -22,28 +22,60 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
 
         public FSObject Get(Address address)
         {
+            SplitInfo spi = null;
             foreach (var shard in SortedShards(address))
             {
-                var result = shard.Get(address);
-                if (result != null)
+                try
                 {
-                    return result;
+                    return shard.Get(address);
+                }
+                catch (ObjectNotFoundException)
+                {
+                    continue;
+                }
+                catch (SplitInfoException e)
+                {
+                    if (spi is null)
+                    {
+                        spi = new();
+                    }
+                    Helper.MergeSplitInfo(e.SplitInfo, spi);
+                    if (spi.Link is not null && spi.LastPart is not null)
+                        throw new SplitInfoException(spi);
+                    continue;
                 }
             }
-            return null;
+            if (spi is not null) throw new SplitInfoException(spi);
+            throw new ObjectNotFoundException();
         }
 
         public FSObject GetRange(Address address, ulong offset, ulong length)
         {
+            SplitInfo spi = null;
             foreach (var shard in SortedShards(address))
             {
-                var result = shard.GetRange(address, offset, length);
-                if (result != null)
+                try
                 {
-                    return result;
+                    return shard.GetRange(address, length, offset);
+                }
+                catch (ObjectNotFoundException)
+                {
+                    continue;
+                }
+                catch (SplitInfoException e)
+                {
+                    if (spi is null)
+                    {
+                        spi = new();
+                    }
+                    Helper.MergeSplitInfo(e.SplitInfo, spi);
+                    if (spi.Link is not null && spi.LastPart is not null)
+                        throw new SplitInfoException(spi);
+                    continue;
                 }
             }
-            return null;
+            if (spi is not null) throw new SplitInfoException(spi);
+            throw new ObjectNotFoundException();
         }
 
         public void Put(FSObject obj)
@@ -164,15 +196,31 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
 
         public FSObject Head(Address address, bool raw)
         {
+            SplitInfo spi = null;
             foreach (var shard in SortedShards(address))
             {
-                var result = shard.Head(address, raw);
-                if (result != null)
+                try
                 {
-                    return result;
+                    return shard.Head(address, raw);
+                }
+                catch (ObjectNotFoundException)
+                {
+                    continue;
+                }
+                catch (SplitInfoException e)
+                {
+                    if (spi is null)
+                    {
+                        spi = new();
+                    }
+                    Helper.MergeSplitInfo(e.SplitInfo, spi);
+                    if (spi.Link is not null && spi.LastPart is not null)
+                        throw new SplitInfoException(spi);
+                    continue;
                 }
             }
-            throw new ObjectNotFoundException(nameof(StorageEngine) + " can't find object from all shards");
+            if (spi is not null) throw new SplitInfoException(spi);
+            throw new ObjectNotFoundException();
         }
 
         public void Inhume(Address tombstone, params Address[] addresses)

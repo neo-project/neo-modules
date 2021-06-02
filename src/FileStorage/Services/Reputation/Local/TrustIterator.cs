@@ -5,7 +5,7 @@ using Neo.FileStorage.Services.Reputaion.Local.Storage;
 
 namespace Neo.FileStorage.Services.Reputaion.Local
 {
-    public class TrustIterator
+    public class TrustIterator : IIterator
     {
         public ICommonContext Context { get; init; }
         public LocalTrustStorage LocalTrustStorage { get; init; }
