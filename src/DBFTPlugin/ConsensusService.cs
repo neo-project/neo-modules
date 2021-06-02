@@ -496,8 +496,8 @@ namespace Neo.Consensus
                     Payload = InvPayload.Create(InventoryType.TX, hashes)
                 });
             }
-
-            var nonce_tx = context.Transactions[message.TransactionHashes[message.TransactionHashes.Length - 1]];
+            // Moved nonce_tx to the first place of merkletree list.
+            var nonce_tx = context.Transactions[message.TransactionHashes[0]];
             if (!CheckNonce(nonce_tx, nonce)) throw new FormatException("Nonce not correct.");
         }
 
