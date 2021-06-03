@@ -564,25 +564,16 @@ namespace Neo.Consensus
         private Transaction CreateNonceTransaction(uint blockIndex, ECPoint pubkey, ProtocolSettings settings)
         {
             var (_, nonce) = GetNonce(keyPair.PrivateKey);
-            var tx = new Transaction()
-            {
-                Version = 0,
-                Nonce = nonce,
-                ValidUntilBlock = blockIndex + settings.MaxValidUntilBlockIncrement,
-                Signers = new[]
-               {
+            using ScriptBuilder sb = new();
+            sb.Emit(OpCode.RET);
+            var tx = wallet.MakeTransaction(Snapshot, sb.ToArray(), null, new[]
+                {
                     new Signer
                     {
                         Account = Contract.CreateSignatureRedeemScript(pubkey).ToScriptHash(),
                         Scopes = WitnessScope.None
                     }
-                },
-                Attributes = Array.Empty<TransactionAttribute>(),
-                Script = Array.Empty<byte>(),
-                SystemFee = 0,
-                NetworkFee = 0,
-                Witnesses = new Witness[1]
-            };
+                }, Array.Empty<TransactionAttribute>());
 
             ContractParametersContext sc;
             try
@@ -594,6 +585,7 @@ namespace Neo.Consensus
             {
                 throw new FormatException("Can not sign the nonce transaction");
             }
+            tx.Witnesses = new Witness[1];
             tx.Witnesses[0] = sc.GetWitnesses()[0];
             return tx;
         }
