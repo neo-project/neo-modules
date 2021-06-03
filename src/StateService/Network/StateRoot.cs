@@ -90,7 +90,7 @@ namespace Neo.Plugins.StateService.Network
 
         public bool Verify(ProtocolSettings settings, DataCache snapshot)
         {
-            return this.VerifyWitnesses(settings, snapshot, 1_00000000);
+            return this.VerifyWitnesses(settings, snapshot, (1_00000000L * PolicyContract.MaxExecFeeFactor / PolicyContract.DefaultExecFeeFactor + 1));
         }
 
         public UInt160[] GetScriptHashesForVerifying(DataCache snapshot)
