@@ -564,9 +564,14 @@ namespace Neo.Consensus
         private Transaction CreateNonceTransaction(uint blockIndex, ECPoint pubkey, ProtocolSettings settings)
         {
             var (_, nonce) = GetNonce(keyPair.PrivateKey);
-            using ScriptBuilder sb = new();
-            sb.Emit(OpCode.RET);
-            var tx = wallet.MakeTransaction(Snapshot, sb.ToArray(), null, new[]
+            byte[] script;
+            using (ScriptBuilder scriptBuilder = new())
+            {
+                scriptBuilder.Emit(OpCode.RET);
+                script = scriptBuilder.ToArray();
+            };
+
+            var tx = wallet.MakeTransaction(Snapshot, script, null, new[]
                 {
                     new Signer
                     {
@@ -574,7 +579,7 @@ namespace Neo.Consensus
                         Scopes = WitnessScope.None
                     }
                 }, Array.Empty<TransactionAttribute>());
-
+           
             ContractParametersContext sc;
             try
             {
