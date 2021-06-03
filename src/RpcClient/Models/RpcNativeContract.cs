@@ -21,7 +21,7 @@ namespace Neo.Network.RPC.Models
                 Hash = UInt160.Parse(json["hash"].AsString()),
                 Nef = RpcNefFile.FromJson(json["nef"]),
                 Manifest = ContractManifest.FromJson(json["manifest"]),
-                UpdateHistory = json["updatehistory"]?.GetArray().Select(u => (uint)u.GetInt32()).ToArray() ?? null
+                UpdateHistory = json["updatehistory"].GetArray().Select(u => (uint)u.GetInt32()).ToArray()
             };
         }
 
@@ -33,7 +33,7 @@ namespace Neo.Network.RPC.Models
                 ["hash"] = Hash.ToString(),
                 ["nef"] = Nef.ToJson(),
                 ["manifest"] = Manifest.ToJson(),
-                ["updatehistory"] = UpdateHistory != null ? new JArray(UpdateHistory.Select(u => new JNumber(u)).ToArray()) : null
+                ["updatehistory"] = new JArray(UpdateHistory.Select(u => new JNumber(u)).ToArray())
             };
         }
     }
