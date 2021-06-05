@@ -218,7 +218,7 @@ namespace Neo.Consensus
             var kBytes  = AppendLeadingZeros(k.ToByteArray(true, true), qlen);
 
             // Step 6: c = ECVRF_hash_points(H, Gamma, k*B, k*H)
-            var u_point = DerivePubkeyPoint(k.ToByteArray(true, true));
+            var u_point = DerivePubkeyPoint(kBytes);
             var v_point = h_point * kBytes;
             var c = HashPoints(new Cryptography.ECC.ECPoint[] { h_point, gamma_point, u_point, v_point });
 
