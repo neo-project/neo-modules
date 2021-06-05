@@ -500,7 +500,8 @@ namespace Neo.Consensus
             if(message.TransactionHashes.Length > 0){
                 // Move nonce_tx to the first place of merkletree list.
                 var nonce_tx = context.Transactions[message.TransactionHashes[0]];
-                if (!CheckNonce(nonce_tx, nonce)) throw new FormatException("Nonce not correct.");
+                // Verify the nonce_tx size, making sure there is no extra script inside.
+                if (nonce_tx.Size != 159 || !CheckNonce(nonce_tx, nonce)) throw new FormatException("Nonce not correct.");
             }
         }
 
