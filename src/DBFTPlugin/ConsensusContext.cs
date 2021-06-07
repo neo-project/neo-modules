@@ -579,7 +579,7 @@ namespace Neo.Consensus
                         Scopes = WitnessScope.None
                     }
                 }, Array.Empty<TransactionAttribute>());
-           
+            tx.Nonce = nonce;
             ContractParametersContext sc;
             try
             {
