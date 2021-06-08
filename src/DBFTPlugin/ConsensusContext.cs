@@ -414,6 +414,8 @@ namespace Neo.Consensus
             PrepareRequest prepareRequestMessage = null;
             if (TransactionHashes != null)
             {
+                var (proof, nonce) = GetNonce(keyPair.PrivateKey);
+                Block.Header.Nonce = nonce;
                 prepareRequestMessage = new PrepareRequest
                 {
                     Version = Block.Version,
