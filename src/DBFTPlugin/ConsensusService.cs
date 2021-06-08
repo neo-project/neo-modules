@@ -324,7 +324,7 @@ namespace Neo.Consensus
 
         private void OnPersistCompleted(Block block)
         {
-            Log($"Persisted {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length}");
+            Log($"Persisted {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length} nonce={block.Nonce}");
             knownHashes.Clear();
             InitializeConsensus(0);
         }

@@ -329,6 +329,7 @@ namespace Neo.Consensus
                 UInt256.Length +    // PrevHash
                 UInt256.Length +    // MerkleRoot
                 sizeof(ulong) +     // Timestamp
+                sizeof(ulong) +     // Nonce
                 sizeof(uint) +      // Index
                 sizeof(byte) +      // PrimaryIndex
                 UInt160.Length +    // NextConsensus
@@ -336,12 +337,12 @@ namespace Neo.Consensus
                 IO.Helper.GetVarSize(expectedTransactions);
         }
 
-        private Tuple<byte[], uint> GetNonce(byte[] prikey)
+        private Tuple<byte[], ulong> GetNonce(byte[] prikey)
         {
             var proof = VRF.Prove(prikey, Block.PrevHash.ToArray());
             var nonce = VRF.ProofToHash(proof);
             VRFProof = proof;
-            return new Tuple<byte[], uint>(proof, BitConverter.ToUInt32(nonce[..4]));
+            return new Tuple<byte[], ulong>(proof, BitConverter.ToUInt64(nonce[..8]));
         }
 
         /// <summary>
@@ -380,9 +381,6 @@ namespace Neo.Consensus
             }
 
             TransactionHashes = hashes.ToArray();
-
-            // Send nonce_tx
-            neoSystem.Blockchain.Tell(nonce_tx);
         }
 
         public ExtensiblePayload MakePrepareRequest()
@@ -392,7 +390,7 @@ namespace Neo.Consensus
             // TODO: make the VRF seed a few more blocks ahead to prevent view change
             var (proof, nonce) = GetNonce(keyPair.PrivateKey);
             Block.Header.Nonce = nonce;
-
+            Utility.Log(nameof(ConsensusService), LogLevel.Info, $"MakePrepareRequest nonce {nonce}");
             return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
             {
                 Version = Block.Version,
