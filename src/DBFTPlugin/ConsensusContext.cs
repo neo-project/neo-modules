@@ -354,7 +354,7 @@ namespace Neo.Consensus
             uint maxTransactionsPerBlock = neoSystem.Settings.MaxTransactionsPerBlock;
 
             // Limit Speaker proposal to the limit `MaxTransactionsPerBlock` or all available transactions of the mempool
-            txs = txs.Take((int)maxTransactionsPerBlock - 1);
+            txs = txs.Take((int)maxTransactionsPerBlock);
 
             List<UInt256> hashes = new List<UInt256>();
             Transactions = new Dictionary<UInt256, Transaction>();
