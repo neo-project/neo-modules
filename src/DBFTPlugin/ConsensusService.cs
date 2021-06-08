@@ -449,6 +449,7 @@ namespace Neo.Consensus
             context.VRFProof = message.VRFProof;
 
             context.Block.Header.Timestamp = message.Timestamp;
+            context.Block.Header.Nonce = BitConverter.ToUInt64(nonce[..8]);
             context.TransactionHashes = message.TransactionHashes;
             context.Transactions = new Dictionary<UInt256, Transaction>();
             context.VerificationContext = new TransactionVerificationContext();
@@ -495,13 +496,6 @@ namespace Neo.Consensus
                 {
                     Payload = InvPayload.Create(InventoryType.TX, hashes)
                 });
-            }
-            // Does not need to verify the nonce_tx if there is no tx in the block
-            if(message.TransactionHashes.Length > 0){
-                // Move nonce_tx to the first place of merkletree list.
-                var nonce_tx = context.Transactions[message.TransactionHashes[0]];
-                // Verify the nonce_tx size, making sure there is no extra script inside.
-                if (nonce_tx.Size != 159 || !CheckNonce(nonce_tx, nonce)) throw new FormatException("Nonce not correct.");
             }
         }
 
@@ -680,12 +674,6 @@ namespace Neo.Consensus
                     localNode.Tell(Message.Create(MessageCommand.Inv, payload));
             }
             ChangeTimer(TimeSpan.FromMilliseconds((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0)));
-        }
-
-        private bool CheckNonce(Transaction tx, byte[] nonce)
-        {
-            if (tx == null) return false;
-            return tx.Nonce == BitConverter.ToUInt32(nonce[..4]);
         }
     }
 }
