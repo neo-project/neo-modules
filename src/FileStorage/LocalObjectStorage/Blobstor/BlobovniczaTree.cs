@@ -183,7 +183,8 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                     throw;
                 }
             };
-            IterateLeaves(address, DoDelete);
+            if (!IterateLeaves(address, DoDelete))
+                throw new ObjectNotFoundException();
         }
 
         public byte[] GetRange(Address address, FSRange range, BlobovniczaID id = null)
@@ -287,9 +288,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
             return bi;
         }
 
-        private void IterateLeaves(Address address, Func<string, bool> func)
+        private bool IterateLeaves(Address address, Func<string, bool> func)
         {
-            IterateSorted(address, new List<string>(), BlzShallowDepth, paths => func(Path.Join(paths.ToArray())));
+            return IterateSorted(address, new List<string>(), BlzShallowDepth, paths => func(Path.Join(paths.ToArray())));
         }
 
         private void IterateDeepest(Address address, Func<string, bool> func)

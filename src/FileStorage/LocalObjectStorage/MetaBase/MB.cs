@@ -1,9 +1,9 @@
-using Google.Protobuf;
-using Neo.IO.Data.LevelDB;
-using Neo.FileStorage.API.Object;
-using Neo.FileStorage.API.Refs;
 using System;
 using System.Collections.Generic;
+using Google.Protobuf;
+using Neo.FileStorage.API.Object;
+using Neo.FileStorage.API.Refs;
+using Neo.IO.Data.LevelDB;
 using static Neo.FileStorage.API.Object.SearchRequest.Types.Body.Types;
 using static Neo.Helper;
 using static Neo.Utility;
@@ -91,9 +91,9 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 
         private Address ParseAddress(byte[] key)
         {
-            if (key.Length != 1 + ContainerID.ValueSize + ObjectID.ValueSize) throw new ArgumentException("invalid format", nameof(key));
+            if (key.Length < 1 + ContainerID.ValueSize + ObjectID.ValueSize) throw new ArgumentException("invalid format", nameof(key));
             byte[] cidv = key[1..(1 + ContainerID.ValueSize)];
-            byte[] oidv = key[(1 + ContainerID.ValueSize)..];
+            byte[] oidv = key[^ObjectID.ValueSize..];
             return new()
             {
                 ContainerId = new()
@@ -130,22 +130,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 
         private Address ParseGraveYardKey(byte[] key)
         {
-            if (key.Length != 1 + ObjectID.ValueSize) throw new ArgumentException("invalid format", nameof(key));
-            int offset = 1;
-            byte[] cidv = key[offset..(offset + ContainerID.ValueSize)];
-            offset += ContainerID.ValueSize;
-            byte[] oidv = key[offset..(offset + ObjectID.ValueSize)];
-            return new()
-            {
-                ContainerId = new()
-                {
-                    Value = ByteString.CopyFrom(cidv)
-                },
-                ObjectId = new()
-                {
-                    Value = ByteString.CopyFrom(oidv)
-                }
-            };
+            return ParseAddress(key);
         }
 
         private byte[] Primarykey(Address address)
@@ -225,22 +210,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 
         private Address ParseToMoveItKey(byte[] key)
         {
-            if (key.Length != 1 + ObjectID.ValueSize) throw new ArgumentException("invalid format", nameof(key));
-            int offset = 1;
-            byte[] cidv = key[offset..(offset + ContainerID.ValueSize)];
-            offset += ContainerID.ValueSize;
-            byte[] oidv = key[offset..(offset + ObjectID.ValueSize)];
-            return new()
-            {
-                ContainerId = new()
-                {
-                    Value = ByteString.CopyFrom(cidv)
-                },
-                ObjectId = new()
-                {
-                    Value = ByteString.CopyFrom(oidv)
-                }
-            };
+            return ParseAddress(key);
         }
 
         private byte[] PayloadHashKey(ContainerID cid, Checksum checksum)
@@ -279,7 +249,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             {
                 Value = ByteString.CopyFrom(cidv)
             };
-            sid = new(sidv);
+            sid = sidv;
         }
 
         private byte[] OwnerKey(Address address, OwnerID wid)

@@ -1,11 +1,8 @@
 
-using Neo.FileStorage.API.Refs;
-using Neo.IO.Data.LevelDB;
-using Neo.Persistence;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using static Neo.Helper;
+using Neo.FileStorage.API.Refs;
+using Neo.IO.Data.LevelDB;
 
 namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 {
@@ -13,10 +10,12 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
     {
         public List<ContainerID> Containers()
         {
-            return db.Seek(ReadOptions.Default, ContainerPrefix, SeekDirection.Forward, (key, value) =>
+            List<ContainerID> list = new();
+            Iterate(ContainerPrefix, (key, value) =>
             {
-                return ContainerID.FromSha256Bytes(key[1..]);
-            }).ToList();
+                list.Add(ContainerID.FromSha256Bytes(key[1..]));
+            });
+            return list;
         }
 
         public ulong ContainerSize(ContainerID cid)

@@ -27,8 +27,17 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             }
             foreach (Address address in target)
             {
-                FSObject obj = Get(address, false, true);
-                if (obj.ObjectType == ObjectType.Regular)
+                FSObject obj = null;
+                bool error = false;
+                try
+                {
+                    obj = Get(address, false, true);
+                }
+                catch
+                {
+                    error = true;
+                }
+                if (!error && obj.ObjectType == ObjectType.Regular)
                 {
                     ChangeContainerSize(obj.ContainerId, obj.PayloadSize, false);
                 }
@@ -44,10 +53,9 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                             if (is_tomb) throw new IterateBreakException();
                         });
                     }
-                    catch (IterateBreakException)
-                    {
+                    catch (IterateBreakException) { }
+                    if (is_tomb)
                         continue;
-                    }
                 }
                 db.Put(WriteOptions.Default, target_key, tomb_key);
             }

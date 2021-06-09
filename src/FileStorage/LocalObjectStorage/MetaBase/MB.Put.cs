@@ -14,7 +14,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 {
     public sealed partial class MB
     {
-        public void Put(FSObject obj, BlobovniczaID bid, SplitInfo si = null)
+        public void Put(FSObject obj, BlobovniczaID bid = null, SplitInfo si = null)
         {
             bool is_parent = si is not null;
             bool exist;

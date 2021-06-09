@@ -1,10 +1,11 @@
-using Google.Protobuf;
-using Neo.FileStorage.API.Object;
-using Neo.FileStorage.API.Refs;
-using Neo.IO.Data.LevelDB;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Google.Protobuf;
+using Neo.Cryptography;
+using Neo.FileStorage.API.Object;
+using Neo.FileStorage.API.Refs;
+using Neo.IO.Data.LevelDB;
 using static Neo.FileStorage.API.Object.SearchRequest.Types.Body.Types;
 using static Neo.FileStorage.LocalObjectStorage.MetaBase.Helper;
 using static Neo.Helper;
@@ -22,7 +23,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             if (BlindyProcess(filters))
                 return new();
             var container_id = GroupFilters(filters, out List<Filter> fast, out List<Filter> slow);
-            if (container_id is null || container_id != cid)
+            if (container_id is not null && container_id.Value != cid.Value)
                 return new();
             int exp_len = fast.Count;
             Dictionary<Address, int> mAddr = new();
@@ -74,6 +75,10 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             if (to.TryGetValue(key, out int value) && value == fnum)
             {
                 to[key] = value + 1;
+            }
+            else if (fnum == 0)
+            {
+                to[key] = 1;
             }
         }
 
@@ -141,33 +146,19 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             }
         }
 
-        private void SelectOutsideFKBT(ContainerID cid, List<byte[]> keyPrefixes, byte[] name, Filter filter, Dictionary<Address, int> to, int fnum)
+        private void SelectOutsideFKBT(ContainerID cid, List<byte[]> keyPrefixes, byte[] attrPrefix, Filter filter, Dictionary<Address, int> to, int fnum)
         {
             HashSet<Address> excludes = new();
-            Iterate(name, (key, _) =>
+            Iterate(attrPrefix, (key, _) =>
             {
-                Address address = new()
-                {
-                    ContainerId = cid,
-                    ObjectId = new()
-                    {
-                        Value = ByteString.CopyFrom()
-                    }
-                };
+                ParseAttributeKey(key, out Address address, out _);
                 excludes.Add(address);
             });
             foreach (var p in keyPrefixes)
             {
                 Iterate(p, (key, _) =>
                 {
-                    Address address = new()
-                    {
-                        ContainerId = cid,
-                        ObjectId = new()
-                        {
-                            Value = ByteString.CopyFrom(key[^ObjectID.ValueSize..])
-                        }
-                    };
+                    Address address = ParseAddress(key);
                     if (!excludes.Contains(address))
                         MarkAddressInCache(to, fnum, address);
                 });
@@ -185,11 +176,12 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                 };
                 try
                 {
-                    Exists(address);
+                    if (!Exists(address)) return;
                 }
-                catch (Exception e) when (e is not SplitInfoException)
+                catch (Exception e)
                 {
-                    return;
+                    if (e is not SplitInfoException)
+                        return;
                 }
                 MarkAddressInCache(to, fnum, address);
             }
@@ -209,7 +201,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                                 {
                                     Value = ByteString.CopyFrom(key[^ObjectID.ValueSize..])
                                 };
-                                if (matcher(filter.Key, key[^ObjectID.ValueSize..], filter.Value))
+                                if (matcher(filter.Key, StrictUTF8.GetBytes(oid.ToBase58String()), filter.Value))
                                 {
                                     AppendObjectID(oid);
                                 }
@@ -359,7 +351,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                 switch (f.Key)
                 {
                     case Filter.FilterHeaderVersion:
-                        data = StrictUTF8.GetBytes(obj.Version.ToString());
+                        data = StrictUTF8.GetBytes(obj.Version.String());
                         break;
                     case Filter.FilterHeaderHomomorphicHash:
                         data = obj.PayloadHomomorphicHash.Sum.ToByteArray();
@@ -388,6 +380,8 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                     var sid = new SplitID();
                     sid.Parse(filter.Value);
                     return sid.ToByteArray();
+                case Filter.FilterHeaderParent:
+                    return Base58.Decode(filter.Value);
                 default:
                     return StrictUTF8.GetBytes(filter.Value);
             }

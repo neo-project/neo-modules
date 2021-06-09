@@ -51,7 +51,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             {
                 var r = await FSClient.GetContainer(cid, options, context);
                 SumbmitResult(true);
-                return r;
+                return r.Container;
             }
             catch (Exception)
             {
@@ -108,22 +108,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
         {
             try
             {
-                var r = await FSClient.GetEAclWithSignature(cid, options, context);
-                SumbmitResult(true);
-                return r;
-            }
-            catch (Exception)
-            {
-                SumbmitResult(false);
-                throw;
-            }
-        }
-
-        public async Task<EACLTable> GetEACL(ContainerID cid, CallOptions options = null, CancellationToken context = default)
-        {
-            try
-            {
-                var r = await FSClient.GetEACL(cid, options, context);
+                var r = await FSClient.GetEAcl(cid, options, context);
                 SumbmitResult(true);
                 return r;
             }

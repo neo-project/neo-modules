@@ -1,8 +1,9 @@
-using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.API.Object;
-using Neo.IO.Data.LevelDB;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Neo.FileStorage.API.Object;
+using Neo.FileStorage.API.Refs;
+using Neo.IO.Data.LevelDB;
 using static Neo.FileStorage.LocalObjectStorage.MetaBase.Helper;
 using static Neo.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
@@ -16,7 +17,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             return db.Get(ReadOptions.Default, GraveYardKey(address)) is not null;
         }
 
-        public FSObject Get(Address address, bool raw)
+        public FSObject Get(Address address, bool raw = false)
         {
             return Get(address, true, raw);
         }
@@ -63,7 +64,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
         private SplitInfo GetSplitInfo(Address address)
         {
             byte[] data = db.Get(ReadOptions.Default, RootKey(address));
-            if (data is null) return null;
+            if (data is null) throw new ObjectNotFoundException();
             return SplitInfo.Parser.ParseFrom(data);
         }
 

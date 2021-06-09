@@ -1,13 +1,17 @@
+using System;
+using System.Linq;
+
 namespace Neo.FileStorage.LocalObjectStorage.Blob
 {
-    public class BlobovniczaID
+    public class BlobovniczaID : IEquatable<BlobovniczaID>
     {
-        private readonly byte[] value;
+        private readonly byte[] value = Array.Empty<byte>();
 
-        public bool IsEmpty => value is null || value.Length == 0;
+        public bool IsEmpty => value.Length == 0;
 
         public BlobovniczaID(byte[] bytes)
         {
+            if (bytes is null) throw new ArgumentNullException(nameof(bytes));
             value = bytes;
         }
 
@@ -16,8 +20,15 @@ namespace Neo.FileStorage.LocalObjectStorage.Blob
             return Utility.StrictUTF8.GetString(value);
         }
 
+        public bool Equals(BlobovniczaID other)
+        {
+            if (other is null) return false;
+            return value.SequenceEqual(other.value);
+        }
+
         public static implicit operator BlobovniczaID(byte[] val)
         {
+            if (val is null) return null;
             return new BlobovniczaID(val);
         }
 
