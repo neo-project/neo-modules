@@ -2,20 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Neo.FileStorage.Database;
+using Neo.FileStorage.Database.LevelDB;
 using Neo.FileStorage.Utils.Locode.Column;
 using Neo.IO;
-using Neo.IO.Data.LevelDB;
 
 namespace Neo.FileStorage.Utils.Locode.Db
 {
     public class StorageDB : IDisposable
     {
         private const byte PreLocode = 0x00;
-        private readonly DB _db;
+        private readonly IDB _db;
 
         public StorageDB(string path)
         {
-            _db = DB.Open(path, new Options { CreateIfMissing = true, FilterPolicy = Native.leveldb_filterpolicy_create_bloom(15) });
+            _db = new DB(path);
         }
 
         public void Dispose()
@@ -26,18 +27,18 @@ namespace Neo.FileStorage.Utils.Locode.Db
         public (Key, Record) Get(LOCODE lc)
         {
             Key key = new(lc);
-            Record record = _db.Get(ReadOptions.Default, key.ToArray())?.AsSerializable<Record>();
+            Record record = _db.Get(key.ToArray())?.AsSerializable<Record>();
             return (key, record);
         }
 
         public void Put(LOCODE lc, Record record)
         {
-            _db.Put(WriteOptions.Default, Key(PreLocode, new Key(lc)), record.ToArray());
+            _db.Put(Key(PreLocode, new Key(lc)), record.ToArray());
         }
 
         public void Put(Key key, Record record)
         {
-            _db.Put(WriteOptions.Default, Key(PreLocode, key), record.ToArray());
+            _db.Put(Key(PreLocode, key), record.ToArray());
         }
 
         private byte[] Key(byte prefix, ISerializable key)

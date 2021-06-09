@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
 using Google.Protobuf;
-using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.IO;
 

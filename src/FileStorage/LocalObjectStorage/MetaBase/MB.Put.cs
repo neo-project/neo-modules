@@ -5,7 +5,6 @@ using Google.Protobuf;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Blob;
-using Neo.IO.Data.LevelDB;
 using static Neo.FileStorage.LocalObjectStorage.Helper;
 using static Neo.FileStorage.LocalObjectStorage.MetaBase.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
@@ -47,22 +46,22 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             }
             foreach (var item in UniqueIndexes(obj, si, bid))
             {
-                db.Put(WriteOptions.Default, item.Item1, item.Item2);
+                db.Put(item.Item1, item.Item2);
             }
             foreach (var item in ListIndexes(obj))
             {
                 List<ObjectID> list;
-                var data = db.Get(ReadOptions.Default, item.Item1);
+                var data = db.Get(item.Item1);
                 if (data is null)
                     list = new();
                 else
                     list = DecodeObjectIDList(data);
                 list.Add(item.Item2);
-                db.Put(WriteOptions.Default, item.Item1, EncodeObjectIDList(list));
+                db.Put(item.Item1, EncodeObjectIDList(list));
             }
             foreach (var key in FakeBucketTreeIndexes(obj))
             {
-                db.Put(WriteOptions.Default, key, ZeroValue);
+                db.Put(key, ZeroValue);
             }
             if (obj.ObjectType == ObjectType.Regular && !is_parent)
             {
@@ -73,20 +72,20 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
         private void UpdateBlobovniczaID(Address address, BlobovniczaID bid)
         {
             byte[] key = SmallKey(address);
-            if (db.Get(ReadOptions.Default, key) is null)
+            if (db.Get(key) is null)
                 throw new InvalidOperationException("updating blobovnicza id on object without it");
-            db.Put(WriteOptions.Default, SmallKey(address), bid);
+            db.Put(SmallKey(address), bid);
         }
 
         private void UpdateSplitInfo(Address address, SplitInfo si)
         {
             byte[] key = RootKey(address);
-            byte[] old = db.Get(ReadOptions.Default, key);
+            byte[] old = db.Get(key);
             if (old is null)
                 throw new InvalidOperationException("updating split info on object without it");
             SplitInfo osi = SplitInfo.Parser.ParseFrom(old);
             si = MergeSplitInfo(osi, si);
-            db.Put(WriteOptions.Default, key, si.ToByteArray());
+            db.Put(key, si.ToByteArray());
         }
 
         private SplitInfo SplitInfoFromObject(FSObject obj)

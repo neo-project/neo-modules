@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Google.Protobuf;
+using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Blob;
@@ -15,11 +16,12 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
 {
     public class Shard
     {
+        public ShardID ID { get; init; }
+        public Action<List<Address>, CancellationToken> ExpiredObjectCallback { get; init; }
         private readonly Blobstorage writeCache;
         private readonly Blobstorage blobStor;
         private readonly MB metaBase;
         private readonly bool useWriteCache;
-        public ShardID ID { get; set; }
         private int mode;
 
         public ShardMode Mode
@@ -242,6 +244,17 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
         public ulong WeightValues()
         {
             throw new NotImplementedException();
+        }
+
+        public void HandleExpiredTombstones(List<Address> addresses)
+        {
+            List<Address> inhume = new();
+            metaBase.IterateCoveredByTombstones(addresses.ToHashSet(), address =>
+            {
+                inhume.Add(address);
+            });
+            if (!inhume.Any()) return;
+            metaBase.Inhume(null, inhume.ToArray());
         }
     }
 }

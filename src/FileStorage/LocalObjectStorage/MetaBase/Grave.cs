@@ -1,4 +1,3 @@
-
 using Neo.FileStorage.API.Refs;
 
 namespace Neo.FileStorage.LocalObjectStorage.MetaBase

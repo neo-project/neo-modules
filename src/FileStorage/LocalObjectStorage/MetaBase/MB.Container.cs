@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using Neo.FileStorage.API.Refs;
-using Neo.IO.Data.LevelDB;
 
 namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 {
@@ -11,16 +10,17 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
         public List<ContainerID> Containers()
         {
             List<ContainerID> list = new();
-            Iterate(ContainerPrefix, (key, value) =>
+            db.Iterate(ContainerPrefix, (key, value) =>
             {
                 list.Add(ContainerID.FromSha256Bytes(key[1..]));
+                return false;
             });
             return list;
         }
 
         public ulong ContainerSize(ContainerID cid)
         {
-            byte[] sizeb = db.Get(ReadOptions.Default, ContainerSizeKey(cid));
+            byte[] sizeb = db.Get(ContainerSizeKey(cid));
             if (sizeb is null) throw new KeyNotFoundException();
             return BitConverter.ToUInt64(sizeb);
         }
@@ -42,7 +42,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             {
                 size = delta;
             }
-            db.Put(WriteOptions.Default, ContainerSizeKey(cid), BitConverter.GetBytes(size));
+            db.Put(ContainerSizeKey(cid), BitConverter.GetBytes(size));
         }
     }
 }

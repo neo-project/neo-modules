@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using Google.Protobuf;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
-using Neo.IO.Data.LevelDB;
+using Neo.FileStorage.Database;
+using Neo.FileStorage.Database.LevelDB;
 using static Neo.FileStorage.API.Object.SearchRequest.Types.Body.Types;
 using static Neo.Helper;
 using static Neo.Utility;
@@ -27,7 +28,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
         private readonly byte[] AttributePrefix = new byte[] { 0x0c };
         private readonly byte[] ZeroValue = new byte[] { 0xFF };
         private readonly string path;
-        private readonly DB db;
+        private readonly IDB db;
         private readonly Dictionary<MatchType, Func<string, byte[], string, bool>> matchers;
 
         public MB(string p)
@@ -39,9 +40,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                 { MatchType.StringEqual, StringEqualMatcher },
                 { MatchType.StringNotEqual, StringNotEqualMatcher }
             };
-            Options option = new();
-            option.CreateIfMissing = true;
-            db = DB.Open(path, option);
+            db = new DB(path);
         }
 
         public void Dispose()

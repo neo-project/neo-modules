@@ -8,7 +8,6 @@ using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.LocalObjectStorage.Blob;
-using Neo.IO.Data.LevelDB;
 using static Neo.Utility;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSRange = Neo.FileStorage.API.Object.Range;
@@ -62,7 +61,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                 {
                     Blobovnicza b = OpenBlobovnicza(path);
                 }
-                catch (LevelDBException)
+                catch (Exception)
                 {
                     Log(nameof(BlobovniczaTree), LogLevel.Debug, $"could not open blobovnicza {path}");
                     throw;

@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
-using Neo.IO.Data.LevelDB;
 using static Neo.FileStorage.LocalObjectStorage.MetaBase.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
@@ -36,7 +35,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 
         private void Delete(Address address, Dictionary<string, ReferenceNumber> ref_counter)
         {
-            db.Delete(WriteOptions.Default, GraveYardKey(address));
+            db.Delete(GraveYardKey(address));
             FSObject obj;
             try
             {
@@ -66,22 +65,22 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
         private void DeleteObject(FSObject obj, bool is_parent)
         {
             foreach (byte[] key in DeleteUniqueIndexes(obj, is_parent))
-                db.Delete(WriteOptions.Default, key);
+                db.Delete(key);
 
             foreach (var (key, oid) in ListIndexes(obj))
             {
-                var data = db.Get(ReadOptions.Default, key);
+                var data = db.Get(key);
                 if (data is null) continue;
                 var list = DecodeObjectIDList(data);
                 list.Remove(oid);
                 if (!list.Any())
-                    db.Delete(WriteOptions.Default, key);
+                    db.Delete(key);
                 else
-                    db.Put(WriteOptions.Default, key, EncodeObjectIDList(list));
+                    db.Put(key, EncodeObjectIDList(list));
             }
 
             foreach (byte[] key in FakeBucketTreeIndexes(obj))
-                db.Delete(WriteOptions.Default, key);
+                db.Delete(key);
         }
 
         private List<byte[]> DeleteUniqueIndexes(FSObject obj, bool is_parent)
@@ -139,7 +138,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 
         private int ParentLength(Address address)
         {
-            var data = db.Get(ReadOptions.Default, ParentKey(address.ContainerId, address.ObjectId));
+            var data = db.Get(ParentKey(address.ContainerId, address.ObjectId));
             if (data is null) return 0;
             return DecodeObjectIDList(data).Count;
         }

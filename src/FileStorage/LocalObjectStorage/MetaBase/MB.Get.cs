@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
-using Neo.IO.Data.LevelDB;
 using static Neo.FileStorage.LocalObjectStorage.MetaBase.Helper;
 using static Neo.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
@@ -14,7 +12,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
     {
         private bool IsGraveYard(Address address)
         {
-            return db.Get(ReadOptions.Default, GraveYardKey(address)) is not null;
+            return db.Get(GraveYardKey(address)) is not null;
         }
 
         public FSObject Get(Address address, bool raw = false)
@@ -37,7 +35,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 
         private FSObject GetObject(byte[] key)
         {
-            byte[] data = db.Get(ReadOptions.Default, key);
+            byte[] data = db.Get(key);
             if (data is null) return null;
             return FSObject.Parser.ParseFrom(data);
         }
@@ -46,7 +44,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
         {
             if (raw)
                 throw new SplitInfoException(GetSplitInfo(address));
-            var data = db.Get(ReadOptions.Default, ParentKey(address.ContainerId, address.ObjectId));
+            var data = db.Get(ParentKey(address.ContainerId, address.ObjectId));
             if (data is null) throw new ObjectNotFoundException();
             var children = DecodeObjectIDList(data);
             if (!children.Any()) throw new ObjectNotFoundException();
@@ -63,7 +61,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 
         private SplitInfo GetSplitInfo(Address address)
         {
-            byte[] data = db.Get(ReadOptions.Default, RootKey(address));
+            byte[] data = db.Get(RootKey(address));
             if (data is null) throw new ObjectNotFoundException();
             return SplitInfo.Parser.ParseFrom(data);
         }
@@ -74,10 +72,11 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                 throw new ObjectAlreadyRemovedException();
             if (InBucket(Primarykey(address))) return true;
             List<byte[]> keys = new();
-            Iterate(Concat(ParentPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray()),
+            db.Iterate(Concat(ParentPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray()),
                 (key, _) =>
                 {
                     keys.Add(key);
+                    return false;
                 });
             if (keys.Any())
                 throw new SplitInfoException(GetSplitInfo(address));
@@ -87,7 +86,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 
         private bool InBucket(byte[] key)
         {
-            return db.Get(ReadOptions.Default, key) is not null;
+            return db.Get(key) is not null;
         }
     }
 }

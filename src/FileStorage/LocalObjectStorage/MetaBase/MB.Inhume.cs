@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
-using Neo.IO.Data.LevelDB;
 using static Neo.Utility;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
@@ -19,10 +17,10 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             if (tomb is not null)
             {
                 tomb_key = GraveYardKey(tomb);
-                byte[] data = db.Get(ReadOptions.Default, tomb_key);
+                byte[] data = db.Get(tomb_key);
                 if (data is not null && !data.SequenceEqual(InhumeGCMarkValue))
                 {
-                    db.Delete(WriteOptions.Default, tomb_key);
+                    db.Delete(tomb_key);
                 }
             }
             foreach (Address address in target)
@@ -45,19 +43,16 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                 if (tomb is not null)
                 {
                     bool is_tomb = false;
-                    try
+                    db.Iterate(GraveYardPrefix, (k, v) =>
                     {
-                        Iterate(GraveYardPrefix, (k, v) =>
-                        {
-                            is_tomb = target_key.SequenceEqual(v);
-                            if (is_tomb) throw new IterateBreakException();
-                        });
-                    }
-                    catch (IterateBreakException) { }
+                        is_tomb = target_key.SequenceEqual(v);
+                        if (is_tomb) return true;
+                        return false;
+                    });
                     if (is_tomb)
                         continue;
                 }
-                db.Put(WriteOptions.Default, target_key, tomb_key);
+                db.Put(target_key, tomb_key);
             }
         }
     }

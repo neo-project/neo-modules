@@ -1179,5 +1179,15 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
                 Directory.Delete(path, true);
             }
         }
+
+        [TestMethod]
+        public void TestAddressHashSet()
+        {
+            var set = new HashSet<Address>();
+            var address = RandomAddress();
+            set.Add(address);
+            Assert.IsTrue(set.Contains(address));
+            Assert.IsFalse(set.Add(address));
+        }
     }
 }

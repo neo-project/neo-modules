@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Google.Protobuf;
+using Neo.FileStorage.API.Cryptography;
+using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Shards;
@@ -9,7 +12,7 @@ using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.LocalObjectStorage.Engine
 {
-    public partial class StorageEngine : IDisposable
+    public sealed class StorageEngine : IDisposable
     {
 
         private readonly Dictionary<string, Shard> shards = new();
@@ -269,6 +272,78 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
                 {
                     continue;
                 }
+            }
+        }
+
+        public ShardID AddShard(string path, bool use_cache)
+        {
+            ShardID id = new();
+            shards[id.ToString()] = new Shard(use_cache, path)
+            {
+                ID = id,
+                ExpiredObjectCallback = ProcessExpiredTomstones,
+            };
+            return id;
+        }
+
+        private void ProcessExpiredTomstones(List<Address> addresses, CancellationToken token)
+        {
+            foreach (var shard in UnsortedShards())
+            {
+                shard.HandleExpiredTombstones(addresses);
+                if (token.IsCancellationRequested) return;
+            }
+        }
+
+        private List<Shard> UnsortedShards()
+        {
+            try
+            {
+                mtx.EnterReadLock();
+                return shards.Values.ToList();
+            }
+            finally
+            {
+                mtx.ExitReadLock();
+            }
+        }
+
+        /// <summary>
+        /// sort by value-distance * weights
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        private List<Shard> SortedShards(Address address)
+        {
+            try
+            {
+                mtx.EnterReadLock();
+                var target = address.ToByteArray().Murmur64(0);
+                var list = shards.Values.Select(s => new ShardDistance
+                {
+                    Shard = s,
+                    Weight = s.WeightValues(),
+                    Distance = Utility.StrictUTF8.GetBytes(s.ID.ToString()).Murmur64(0).Distance(target),
+                });
+                return list.OrderBy(s => s.Sort).Select(s => s.Shard).ToList();
+            }
+            finally
+            {
+                mtx.ExitReadLock();
+            }
+        }
+
+        class ShardDistance
+        {
+            public Shard Shard;
+            public ulong Weight;
+            public ulong Distance;
+            public ulong Sort;
+
+            public ShardDistance SetSort()
+            {
+                Sort = Weight * Distance;
+                return this;
             }
         }
     }

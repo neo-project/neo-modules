@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
-using Neo.IO.Data.LevelDB;
 using static Neo.Utility;
 
 namespace Neo.FileStorage.LocalObjectStorage.MetaBase
@@ -12,38 +11,29 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
     {
         public void IterateGraveYard(Action<Grave> handler)
         {
-            Iterate(GraveYardPrefix, (key, value) =>
+            db.Iterate(GraveYardPrefix, (key, value) =>
             {
                 handler(new()
                 {
                     GCMark = value.SequenceEqual(InhumeGCMarkValue),
                     Address = ParseGraveYardKey(key)
                 });
+                return false;
             });
-        }
-
-        private void Iterate(byte[] prefix, Action<byte[], byte[]> handler)
-        {
-            using Iterator it = db.NewIterator(ReadOptions.Default);
-            for (it.Seek(prefix); it.Valid(); it.Next())
-            {
-                if (!it.Key().AsSpan().StartsWith(prefix)) break;
-                handler(it.Key(), it.Value());
-            }
         }
 
         public void IterateExpired(ulong epoch, Action<ObjectType, Address> handler)
         {
             byte[] expired_epoch_key = StrictUTF8.GetBytes(Header.Types.Attribute.SysAttributeExpEpoch);
-            Iterate(AttributePrefix, (key, value) =>
+            db.Iterate(AttributePrefix, (key, value) =>
             {
                 key = key[1..];
                 byte[] cid = key[..32];
                 key = key[32..];
-                if (!key.AsSpan().StartsWith(expired_epoch_key)) return;
+                if (!key.AsSpan().StartsWith(expired_epoch_key)) return false;
                 key = key[expired_epoch_key.Length..];
                 ulong expired_epoch_value = ulong.Parse(StrictUTF8.GetString(key[..^32]));
-                if (epoch <= expired_epoch_value) return;
+                if (epoch <= expired_epoch_value) return false;
                 byte[] oid = key[^32..];
                 Address address = new()
                 {
@@ -51,6 +41,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                     ObjectId = ObjectID.FromSha256Bytes(oid),
                 };
                 handler(GetObjectType(address), address);
+                return false;
             });
         }
 
@@ -63,13 +54,14 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 
         public void IterateCoveredByTombstones(HashSet<Address> tss, Action<Address> func)
         {
-            Iterate(GraveYardPrefix, (key, value) =>
+            db.Iterate(GraveYardPrefix, (key, value) =>
             {
-                if (value.SequenceEqual(InhumeGCMarkValue)) return;
+                if (value.SequenceEqual(InhumeGCMarkValue)) return false;
                 if (tss.Contains(ParseGraveYardKey(value)))
                 {
                     func(ParseGraveYardKey(key));
                 }
+                return false;
             });
         }
     }

@@ -5,7 +5,6 @@ using Google.Protobuf;
 using Neo.Cryptography;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
-using Neo.IO.Data.LevelDB;
 using static Neo.FileStorage.API.Object.SearchRequest.Types.Body.Types;
 using static Neo.FileStorage.LocalObjectStorage.MetaBase.Helper;
 using static Neo.Helper;
@@ -56,7 +55,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
 
         private void SelectAllFromBucket(ContainerID cid, byte[] prefix, Dictionary<Address, int> to, int fnum)
         {
-            Iterate(prefix, (key, value) =>
+            db.Iterate(prefix, (key, value) =>
             {
                 Address address = new()
                 {
@@ -67,6 +66,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                     }
                 };
                 MarkAddressInCache(to, fnum, address);
+                return false;
             });
         }
 
@@ -127,7 +127,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
         {
             if (matchers.TryGetValue(filter.MatchType, out var matcher))
             {
-                Iterate(keyPrefix, (key, value) =>
+                db.Iterate(keyPrefix, (key, value) =>
                 {
                     if (matcher(filter.Key, key[keyPrefix.Length..^ObjectID.ValueSize], filter.Value))
                     {
@@ -142,6 +142,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                         };
                         MarkAddressInCache(to, fnum, address);
                     }
+                    return false;
                 });
             }
         }
@@ -149,18 +150,20 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
         private void SelectOutsideFKBT(ContainerID cid, List<byte[]> keyPrefixes, byte[] attrPrefix, Filter filter, Dictionary<Address, int> to, int fnum)
         {
             HashSet<Address> excludes = new();
-            Iterate(attrPrefix, (key, _) =>
+            db.Iterate(attrPrefix, (key, _) =>
             {
                 ParseAttributeKey(key, out Address address, out _);
                 excludes.Add(address);
+                return false;
             });
             foreach (var p in keyPrefixes)
             {
-                Iterate(p, (key, _) =>
+                db.Iterate(p, (key, _) =>
                 {
                     Address address = ParseAddress(key);
                     if (!excludes.Contains(address))
                         MarkAddressInCache(to, fnum, address);
+                    return false;
                 });
             }
         }
@@ -195,7 +198,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                     {
                         foreach (var p in KeyPrefixForType(cid, MatchType.StringNotEqual, ""))
                         {
-                            Iterate(p, (key, value) =>
+                            db.Iterate(p, (key, value) =>
                             {
                                 ObjectID oid = new()
                                 {
@@ -205,6 +208,7 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
                                 {
                                     AppendObjectID(oid);
                                 }
+                                return false;
                             });
                         }
                     }
@@ -218,19 +222,20 @@ namespace Neo.FileStorage.LocalObjectStorage.MetaBase
             switch (filter.MatchType)
             {
                 case MatchType.StringEqual:
-                    var data = db.Get(ReadOptions.Default, Concat(keyPrefix, PrefixHelper(filter)));
+                    var data = db.Get(Concat(keyPrefix, PrefixHelper(filter)));
                     if (data is null) return;
                     list = DecodeObjectIDList(data);
                     break;
                 default:
                     if (matchers.TryGetValue(filter.MatchType, out Func<string, byte[], string, bool> matcher))
                     {
-                        Iterate(keyPrefix, (key, value) =>
+                        db.Iterate(keyPrefix, (key, value) =>
                         {
                             if (matcher(filter.Key, key[keyPrefix.Length..], filter.Value))
                             {
                                 list.AddRange(DecodeObjectIDList(value));
                             }
+                            return false;
                         });
                     }
                     break;
