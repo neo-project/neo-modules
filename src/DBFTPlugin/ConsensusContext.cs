@@ -387,10 +387,8 @@ namespace Neo.Consensus
         {
             EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
             Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
-            // TODO: make the VRF seed a few more blocks ahead to prevent view change
             var (proof, nonce) = GetNonce(keyPair.PrivateKey);
             Block.Header.Nonce = nonce;
-            Utility.Log(nameof(ConsensusService), LogLevel.Info, $"MakePrepareRequest nonce {nonce}");
             return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
             {
                 Version = Block.Version,
@@ -423,7 +421,7 @@ namespace Neo.Consensus
                     ViewNumber = ViewNumber,
                     Timestamp = Block.Timestamp,
                     BlockIndex = Block.Index,
-                    VRFProof = VRFProof, // Add vrf proof to the prepare request
+                    VRFProof = proof, // Add vrf proof to the prepare request
                     TransactionHashes = TransactionHashes
                 };
             }

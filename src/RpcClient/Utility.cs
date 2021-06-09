@@ -142,6 +142,7 @@ namespace Neo.Network.RPC
                 PrevHash = UInt256.Parse(json["previousblockhash"].AsString()),
                 MerkleRoot = UInt256.Parse(json["merkleroot"].AsString()),
                 Timestamp = (ulong)json["time"].AsNumber(),
+                Nonce = (ulong)json["nonce"].AsNumber(),
                 Index = (uint)json["index"].AsNumber(),
                 PrimaryIndex = (byte)json["primary"].AsNumber(),
                 NextConsensus = json["nextconsensus"].ToScriptHash(protocolSettings),
