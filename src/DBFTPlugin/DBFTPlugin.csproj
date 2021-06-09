@@ -15,8 +15,4 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\neo\src\neo\neo.csproj" />
-  </ItemGroup>
 </Project>
