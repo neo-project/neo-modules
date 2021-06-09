@@ -10,7 +10,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new JObject();
+            JObject json = new();
             json["address"] = Address;
             json["isvalid"] = IsValid;
             return json;

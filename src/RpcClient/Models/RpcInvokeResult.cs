@@ -22,7 +22,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new JObject();
+            JObject json = new();
             json["script"] = Script;
             json["state"] = State;
             json["gasconsumed"] = GasConsumed.ToString();
@@ -43,7 +43,7 @@ namespace Neo.Network.RPC.Models
 
         public static RpcInvokeResult FromJson(JObject json)
         {
-            RpcInvokeResult invokeScriptResult = new RpcInvokeResult
+            RpcInvokeResult invokeScriptResult = new()
             {
                 Script = json["script"].AsString(),
                 State = json["state"].TryGetEnum<VMState>(),
@@ -69,7 +69,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new JObject();
+            JObject json = new();
             json["type"] = Type;
             json["value"] = Value;
             return json;

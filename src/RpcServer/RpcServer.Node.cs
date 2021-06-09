@@ -1,6 +1,3 @@
-#pragma warning disable IDE0051
-#pragma warning disable IDE0060
-
 using Akka.Actor;
 using Neo.IO;
 using Neo.IO.Json;
@@ -24,10 +21,10 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetPeers(JArray _params)
         {
-            JObject json = new JObject();
+            JObject json = new();
             json["unconnected"] = new JArray(localNode.GetUnconnectedPeers().Select(p =>
             {
-                JObject peerJson = new JObject();
+                JObject peerJson = new();
                 peerJson["address"] = p.Address.ToString();
                 peerJson["port"] = p.Port;
                 return peerJson;
@@ -35,7 +32,7 @@ namespace Neo.Plugins
             json["bad"] = new JArray(); //badpeers has been removed
             json["connected"] = new JArray(localNode.GetRemoteNodes().Select(p =>
             {
-                JObject peerJson = new JObject();
+                JObject peerJson = new();
                 peerJson["address"] = p.Remote.Address.ToString();
                 peerJson["port"] = p.ListenerTcpPort;
                 return peerJson;
@@ -60,7 +57,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject GetVersion(JArray _params)
         {
-            JObject json = new JObject();
+            JObject json = new();
             json["tcpport"] = localNode.ListenerTcpPort;
             json["wsport"] = localNode.ListenerWsPort;
             json["nonce"] = LocalNode.Nonce;
