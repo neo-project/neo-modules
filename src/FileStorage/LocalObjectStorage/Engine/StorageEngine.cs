@@ -52,14 +52,14 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
             throw new ObjectNotFoundException();
         }
 
-        public FSObject GetRange(Address address, ulong offset, ulong length)
+        public FSObject GetRange(Address address, API.Object.Range range)
         {
             SplitInfo spi = null;
             foreach (var shard in SortedShards(address))
             {
                 try
                 {
-                    return shard.GetRange(address, length, offset);
+                    return shard.GetRange(address, range);
                 }
                 catch (ObjectNotFoundException)
                 {
@@ -91,7 +91,6 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
                     shard.ToMoveIt(obj.Address);
                     return;
                 }
-
                 shard.Put(obj);
                 return;
             }
@@ -193,8 +192,6 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
             }
             return false;
         }
-
-
 
 
         public FSObject Head(Address address, bool raw)
@@ -333,7 +330,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
             }
         }
 
-        class ShardDistance
+        private class ShardDistance
         {
             public Shard Shard;
             public ulong Weight;

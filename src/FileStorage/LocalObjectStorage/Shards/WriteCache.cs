@@ -38,7 +38,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
     /// Some of them prioritize flushing items, others prioritize putting new objects.
     /// The current ration is 50/50. This helps to make some progress even under load.
     /// </summary>
-    public sealed class writeCache : IDisposable
+    public sealed class WriteCache : IDisposable
     {
         private class ObjectInfo
         {
@@ -259,9 +259,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             Mb.Put(obj, id);
         }
 
-        public void Delete(FSObject obj)
+        public void Delete(Address address)
         {
-            string saddress = obj.Address.String();
+            string saddress = address.String();
             byte[] key = Utility.StrictUTF8.GetBytes(saddress);
             if (mem.TryRemove(saddress, out _))
             {
@@ -272,7 +272,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
                 db.Delete(key);
                 return;
             }
-            fsTree.Delete(obj.Address);
+            fsTree.Delete(address);
         }
     }
 }

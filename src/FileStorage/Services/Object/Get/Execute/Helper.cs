@@ -45,7 +45,7 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
             }
             else if (context.Range is not null)
             {
-                return engine.GetRange(context.Prm.Address, context.Range.Offset, context.Range.Length);
+                return engine.GetRange(context.Prm.Address, context.Range);
             }
             else
             {

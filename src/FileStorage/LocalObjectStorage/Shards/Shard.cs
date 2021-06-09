@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Google.Protobuf;
-using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Blob;
 using Neo.FileStorage.LocalObjectStorage.Blobstor;
 using Neo.FileStorage.LocalObjectStorage.MetaBase;
+using Neo.FileStorage.Utils;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 
@@ -18,7 +18,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
     {
         public ShardID ID { get; init; }
         public Action<List<Address>, CancellationToken> ExpiredObjectCallback { get; init; }
-        private readonly Blobstorage writeCache;
+        private readonly WriteCache writeCache;
         private readonly Blobstorage blobStor;
         private readonly MB metaBase;
         private readonly bool useWriteCache;
@@ -36,7 +36,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             useWriteCache = useCache;
             if (useCache)
             {
-                writeCache = new Blobstorage();
+                writeCache = new WriteCache();
             }
             blobStor = new Blobstorage();
             metaBase = new MB(path);
@@ -55,8 +55,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             {
                 if (useWriteCache)
                 {
-                    writeCache.DeleteSmall(address);
-                    writeCache.DeleteBig(address);
+                    writeCache.Delete(address);
                 }
                 var blobovniczaID = metaBase.IsSmall(address);
                 if (blobovniczaID.IsEmpty)
@@ -93,24 +92,21 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
         {
             if (useWriteCache)
             {
-                var smallResult = writeCache.GetSmall(address);
-                if (smallResult != null)
+                try
                 {
-                    return smallResult;
+                    var result = writeCache.Get(address);
+                    if (result != null)
+                    {
+                        return result;
+                    }
                 }
-
-                var bigResult = writeCache.GetBig(address);
-                if (bigResult != null)
-                {
-                    return bigResult;
-                }
+                catch (ObjectNotFoundException) { }
             }
             var isExist = metaBase.Exists(address);
             if (!isExist)
             {
                 throw new ObjectNotFoundException();
             }
-
             var blobovniczaID = metaBase.IsSmall(address);
             if (blobovniczaID is not null)
             {
@@ -121,8 +117,6 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
                 return blobStor.GetBig(address);
             }
         }
-
-
 
         public FSObject Head(Address address, bool raw)
         {
@@ -177,28 +171,16 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             }
         }
 
-        public FSObject GetRange(Address address, ulong length, ulong offset)
+        public FSObject GetRange(Address address, API.Object.Range range)
         {
-            var range = new API.Object.Range()
-            {
-                Length = length,
-                Offset = offset,
-            };
             var obj = new FSObject();
 
             if (useWriteCache)
             {
-                var small = writeCache.GetRangeSmall(address, range);
-                if (small != null)
+                var result = writeCache.Get(address);
+                if (result != null)
                 {
-                    obj.Payload = ByteString.CopyFrom(small);
-                    return obj;
-                }
-
-                var big = writeCache.GetRangeBig(address, range);
-                if (big != null)
-                {
-                    obj.Payload = ByteString.CopyFrom(big);
+                    obj.Payload = obj.Payload.Range(range.Offset, range.Offset + range.Length);
                     return obj;
                 }
             }
