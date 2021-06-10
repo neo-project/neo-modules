@@ -215,7 +215,7 @@ namespace Neo.Consensus
 
             // Step 5: k = ECVRF_nonce_generation(SK, h_string)
             var k = GenerateNonce(prikey, h_string);
-            var kBytes  = AppendLeadingZeros(k.ToByteArray(true, true), qlen);
+            var kBytes = AppendLeadingZeros(k.ToByteArray(true, true), qlen);
 
             // Step 6: c = ECVRF_hash_points(H, Gamma, k*B, k*H)
             var u_point = DerivePubkeyPoint(kBytes);
