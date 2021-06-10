@@ -1,4 +1,3 @@
-using Akka.Actor;
 using Neo.Cryptography;
 using Neo.Cryptography.ECC;
 using Neo.IO;
