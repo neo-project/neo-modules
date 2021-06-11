@@ -411,8 +411,6 @@ namespace Neo.Consensus
             PrepareRequest prepareRequestMessage = null;
             if (TransactionHashes != null)
             {
-                var (proof, nonce) = GetNonce(keyPair.PrivateKey);
-                Block.Header.Nonce = nonce;
                 prepareRequestMessage = new PrepareRequest
                 {
                     Version = Block.Version,
@@ -420,7 +418,7 @@ namespace Neo.Consensus
                     ViewNumber = ViewNumber,
                     Timestamp = Block.Timestamp,
                     BlockIndex = Block.Index,
-                    VRFProof = proof, // Add vrf proof to the prepare request
+                    VRFProof = VRFProof, // Add vrf proof to the prepare request
                     TransactionHashes = TransactionHashes
                 };
             }
