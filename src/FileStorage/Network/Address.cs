@@ -22,6 +22,11 @@ namespace Neo.FileStorage.Network
             ma = m;
         }
 
+        public Address Encapsulate(Address other)
+        {
+            return new(ma.Encapsulate(other.ma));
+        }
+
         public string ToIPAddressString()
         {
             return ma.ToEndPoint().ToString();
