@@ -1,9 +1,9 @@
 
+using System;
+using System.Security.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Network;
 using Neo.FileStorage.Network.Cache;
-using System;
-using System.Security.Cryptography;
 using static Neo.FileStorage.Network.Address;
 
 namespace Neo.FileStorage.Services.Container.Announcement.Route
@@ -21,8 +21,8 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route
                 throw new ArgumentNullException(nameof(info));
             if (LocalAddress.ToString() == info.Address)
                 return new SimpleProvider(new NopLoadWriter());
-            string ipAddr = IPAddrFromMultiaddr(info.Address);
-            var client = ClientCache.Get(ipAddr);
+            var addr = Network.Address.FromString(info.Address);
+            var client = ClientCache.Get(addr);
             return new RemoteLoadAnnounceWriterProvider
             {
                 Key = Key,

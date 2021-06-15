@@ -1,7 +1,7 @@
+using System.Security.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Network;
 using Neo.FileStorage.Network.Cache;
-using System.Security.Cryptography;
 
 namespace Neo.FileStorage.Services.Reputaion.Common
 {
@@ -18,8 +18,8 @@ namespace Neo.FileStorage.Services.Reputaion.Common
             if (ni is null) return DeadEndProvider;
             if (LocalAddress.ToString() == ni.Address)
                 return new SimpleWriterProvider(new NonWriter());
-            var ipAddr = Address.IPAddrFromMultiaddr(ni.Address);
-            var client = ClientCache.Get(ipAddr);
+            var addr = Address.FromString(ni.Address);
+            var client = ClientCache.Get(addr);
             return RemoteProvider.WithClient(client);
         }
     }

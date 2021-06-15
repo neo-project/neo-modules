@@ -19,7 +19,12 @@ namespace Neo.FileStorage.InnerRing
         public ClientCache clientCache = new();
         public Wallet wallet;
 
-        public Client Get(string address)
+        public void Dispose()
+        {
+            clientCache.Dispose();
+        }
+
+        public Client Get(Network.Address address)
         {
             return clientCache.Get(address);
         }
@@ -46,10 +51,10 @@ namespace Neo.FileStorage.InnerRing
             }
             foreach (var node in nodes.Flatten())
             {
-                string addr;
+                Network.Address addr;
                 try
                 {
-                    addr = Network.Address.IPAddrFromMultiaddr(node.NetworkAddress);
+                    addr = Network.Address.FromString(node.NetworkAddress);
                 }
                 catch (Exception e)
                 {
@@ -101,10 +106,10 @@ namespace Neo.FileStorage.InnerRing
                 ContainerId = task.ContainerID,
                 ObjectId = id
             };
-            string addr;
+            Network.Address addr;
             try
             {
-                addr = Network.Address.IPAddrFromMultiaddr(node.NetworkAddress);
+                addr = Network.Address.FromString(node.NetworkAddress);
             }
             catch (Exception e)
             {
@@ -140,10 +145,10 @@ namespace Neo.FileStorage.InnerRing
                 ContainerId = task.ContainerID,
                 ObjectId = id
             };
-            string addr;
+            Network.Address addr;
             try
             {
-                addr = Network.Address.IPAddrFromMultiaddr(node.NetworkAddress);
+                addr = Network.Address.FromString(node.NetworkAddress);
             }
             catch (Exception e)
             {
