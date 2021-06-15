@@ -1,3 +1,4 @@
+using System.Threading;
 using Neo.FileStorage.API.Container;
 
 namespace Neo.FileStorage.Services.Container
@@ -6,11 +7,11 @@ namespace Neo.FileStorage.Services.Container
     {
         public ContainerService ContainerService { get; init; }
 
-        public AnnounceUsedSpaceResponse AnnounceUsedSpace(AnnounceUsedSpaceRequest request)
+        public AnnounceUsedSpaceResponse AnnounceUsedSpace(AnnounceUsedSpaceRequest request, CancellationToken context)
         {
             return (AnnounceUsedSpaceResponse)HandleUnaryRequest(request, r =>
             {
-                return ContainerService.AnnounceUsedSpace((AnnounceUsedSpaceRequest)r);
+                return ContainerService.AnnounceUsedSpace((AnnounceUsedSpaceRequest)r, context);
             });
         }
 

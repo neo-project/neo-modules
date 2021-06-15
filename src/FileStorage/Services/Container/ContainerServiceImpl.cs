@@ -1,6 +1,6 @@
+using System.Threading.Tasks;
 using Grpc.Core;
 using Neo.FileStorage.API.Container;
-using System.Threading.Tasks;
 using APIContainerService = Neo.FileStorage.API.Container.ContainerService;
 
 namespace Neo.FileStorage.Services.Container
@@ -13,7 +13,7 @@ namespace Neo.FileStorage.Services.Container
         {
             return Task.Run(() =>
             {
-                return SignService.AnnounceUsedSpace(request);
+                return SignService.AnnounceUsedSpace(request, context.CancellationToken);
             }, context.CancellationToken);
         }
 
