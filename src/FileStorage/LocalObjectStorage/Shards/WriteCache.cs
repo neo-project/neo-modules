@@ -11,7 +11,7 @@ using Neo.FileStorage.Database;
 using Neo.FileStorage.Database.LevelDB;
 using Neo.FileStorage.LocalObjectStorage.Blob;
 using Neo.FileStorage.LocalObjectStorage.Blobstor;
-using Neo.FileStorage.LocalObjectStorage.MetaBase;
+using Neo.FileStorage.LocalObjectStorage.Metabase;
 using Neo.Persistence;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
@@ -52,8 +52,11 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
         public const int LRUKeysCount = 256 * 1024 * 8;
         public const int DefaultInterval = 1000;
         public const int FlushBatchSize = 512;
+        public const int DefaultMemorySize = 1 << 30;
+        public const int DefaultMaxObjectSize = 64 << 20;
+        public const int DefaultSmallObjectSize = 32 << 10;
         public string Path { get; init; }
-        public Blobstorage Blobstorage { get; init; }
+        public BlobStorage Blobstorage { get; init; }
         public MB Mb { get; init; }
         public int MaxMemorySize { get; init; }
         public int MaxDBSize { get; init; }

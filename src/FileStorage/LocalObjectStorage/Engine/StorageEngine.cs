@@ -275,7 +275,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
         public ShardID AddShard(string path, bool use_cache)
         {
             ShardID id = new();
-            shards[id.ToString()] = new Shard(use_cache, path)
+            shards[id.ToString()] = new Shard(use_cache)
             {
                 ID = id,
                 ExpiredObjectCallback = ProcessExpiredTomstones,

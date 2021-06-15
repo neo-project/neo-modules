@@ -16,7 +16,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
 {
     public class BlobovniczaTree : IDisposable
     {
-        public const int DefaultOpenedCacheSize = 50;
+        public const int DefaultOpenedCacheSize = 16;
         public const int DefaultBlzShallowDepth = 2;
         public const int DefaultBlzShallowWidth = 16;
 
