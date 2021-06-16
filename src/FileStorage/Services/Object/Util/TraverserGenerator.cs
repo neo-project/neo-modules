@@ -1,6 +1,6 @@
+using System;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.ObjectManager.Placement;
-using System;
 using FSAddress = Neo.FileStorage.API.Refs.Address;
 
 namespace Neo.FileStorage.Services.Object.Util
@@ -27,7 +27,7 @@ namespace Neo.FileStorage.Services.Object.Util
             {
                 throw new Exception(nameof(TraverserGenerator) + " could not get latest netmap");
             }
-            var container = morphClient.InvokeGetContainer(address.ContainerId);
+            var container = morphClient.GetContainer(address.ContainerId)?.Container;
             if (container is null)
             {
                 throw new Exception(nameof(TraverserGenerator) + " could not get container");

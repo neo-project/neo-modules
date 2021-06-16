@@ -1,9 +1,9 @@
-using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Morph.Invoker;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Morph.Invoker;
 using static Neo.Helper;
 using static Neo.Utility;
 
@@ -18,7 +18,7 @@ namespace Neo.FileStorage.Services.Container.Announcement
         {
             byte[] pivot = Concat(StrictUTF8.GetBytes(PivotPrefix + epoch));
             var nm = MorphClient.InvokeEpochSnapshot(epoch);
-            var container = MorphClient.InvokeGetContainer(cid);
+            var container = MorphClient.GetContainer(cid)?.Container;
             var nodes = nm.GetContainerNodes(container.PlacementPolicy, cid.Value.ToByteArray());
             return nm.GetPlacementVectors(nodes, pivot);
         }
@@ -26,7 +26,7 @@ namespace Neo.FileStorage.Services.Container.Announcement
         public bool IsNodeFromContainerKey(ulong epoch, ContainerID cid, byte[] key)
         {
             var nm = MorphClient.InvokeEpochSnapshot(epoch);
-            var container = MorphClient.InvokeGetContainer(cid);
+            var container = MorphClient.GetContainer(cid)?.Container;
             var nodes = nm.GetContainerNodes(container.PlacementPolicy, cid.Value.ToByteArray());
             foreach (var vector in nodes)
             {

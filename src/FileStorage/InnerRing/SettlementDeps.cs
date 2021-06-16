@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Numerics;
+using System.Threading;
 using Google.Protobuf;
 using Neo.FileStorage.API.Audit;
 using Neo.FileStorage.API.Container;
@@ -6,10 +10,6 @@ using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.StorageGroup;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Morph.Invoker;
-using System;
-using System.Collections.Generic;
-using System.Numerics;
-using System.Threading;
 using static Neo.FileStorage.Morph.Invoker.MorphContractInvoker;
 using NodeInfo = Neo.FileStorage.InnerRing.Processors.NodeInfo;
 
@@ -34,7 +34,7 @@ namespace Neo.FileStorage.InnerRing
 
         public Container ContainerInfo(ContainerID cid)
         {
-            return client.InvokeGetContainer(cid);
+            return client.GetContainer(cid)?.Container;
         }
 
         public void BuildContainer(ulong epoch, ContainerID cid, out List<List<Node>> containerNodes, out NetMap netMap)
@@ -43,7 +43,7 @@ namespace Neo.FileStorage.InnerRing
                 netMap = client.InvokeEpochSnapshot(epoch);
             else
                 netMap = client.InvokeSnapshot(0);
-            Container cnr = client.InvokeGetContainer(cid);
+            Container cnr = client.GetContainer(cid)?.Container;
             containerNodes = netMap.GetContainerNodes(cnr.PlacementPolicy, cid.Value.ToByteArray());
         }
 
@@ -100,7 +100,7 @@ namespace Neo.FileStorage.InnerRing
 
         public Estimations[] Estimations(ulong epoch)
         {
-            List<byte[]> estimationIDs = client.InvokeListSizes(epoch);
+            List<byte[]> estimationIDs = client.ListSizes(epoch);
             List<Estimations> result = new List<Estimations>();
             foreach (var estimationID in estimationIDs)
             {

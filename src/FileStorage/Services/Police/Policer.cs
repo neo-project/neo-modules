@@ -128,7 +128,7 @@ namespace Neo.FileStorage.Services.Police
 
         private void ProcessObject(FSAddress address)
         {
-            var container = config.MorphClient.InvokeGetContainer(address.ContainerId);
+            var container = config.MorphClient.GetContainer(address.ContainerId)?.Container;
             var policy = container.PlacementPolicy;
             var nodes = config.PlacementBuilder.BuildPlacement(address, policy);
             var replicas = policy.Replicas;

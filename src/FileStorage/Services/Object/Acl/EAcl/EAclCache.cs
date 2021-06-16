@@ -19,7 +19,7 @@ namespace Neo.FileStorage.Services.Object.Acl
         {
             cache = new(size, TimeSpan.FromMilliseconds(ttl), cid =>
              {
-                 var result = MorphContractInvoker.InvokeGetEACL(client, cid);//TODO: invoke arge type and return use EAclWithSignature
+                 var result = MorphContractInvoker.GetEACL(client, cid);
                  if (!result.Signature.VerifyMessagePart(result.Table))
                      throw new InvalidOperationException("incorrect signature of eacl from morph client");
                  return result.Table;
