@@ -10,6 +10,8 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
     {
         public static FSObject GetObject(this ReputationClient client, ExecuteContext context)
         {
+            if (!context.Assembling && context.Prm.Forwarder is not null)
+                return context.Prm.Forwarder.Forward(client.FSClient);
             var options = context.Prm.CallOptions
                 .WithExtraXHeaders(new XHeader[] { new() { Key = XHeader.XHeaderNetmapEpoch, Value = context.CurrentEpoch.ToString() } })
                 .WithKey(context.Prm.Key);
@@ -43,7 +45,7 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
             }
             else if (context.Range is not null)
             {
-                return engine.GetRange(context.Prm.Address, context.Range.Offset, context.Range.Length);
+                return engine.GetRange(context.Prm.Address, context.Range);
             }
             else
             {

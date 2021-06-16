@@ -8,7 +8,6 @@ using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.LocalObjectStorage.Blob;
-using Neo.IO.Data.LevelDB;
 using static Neo.Utility;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSRange = Neo.FileStorage.API.Object.Range;
@@ -17,7 +16,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
 {
     public class BlobovniczaTree : IDisposable
     {
-        public const int DefaultOpenedCacheSize = 50;
+        public const int DefaultOpenedCacheSize = 16;
         public const int DefaultBlzShallowDepth = 2;
         public const int DefaultBlzShallowWidth = 16;
 
@@ -62,7 +61,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                 {
                     Blobovnicza b = OpenBlobovnicza(path);
                 }
-                catch (LevelDBException)
+                catch (Exception)
                 {
                     Log(nameof(BlobovniczaTree), LogLevel.Debug, $"could not open blobovnicza {path}");
                     throw;
@@ -183,7 +182,8 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                     throw;
                 }
             };
-            IterateLeaves(address, DoDelete);
+            if (!IterateLeaves(address, DoDelete))
+                throw new ObjectNotFoundException();
         }
 
         public byte[] GetRange(Address address, FSRange range, BlobovniczaID id = null)
@@ -287,9 +287,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
             return bi;
         }
 
-        private void IterateLeaves(Address address, Func<string, bool> func)
+        private bool IterateLeaves(Address address, Func<string, bool> func)
         {
-            IterateSorted(address, new List<string>(), BlzShallowDepth, paths => func(Path.Join(paths.ToArray())));
+            return IterateSorted(address, new List<string>(), BlzShallowDepth, paths => func(Path.Join(paths.ToArray())));
         }
 
         private void IterateDeepest(Address address, Func<string, bool> func)

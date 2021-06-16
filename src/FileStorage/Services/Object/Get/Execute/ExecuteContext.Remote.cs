@@ -7,8 +7,7 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
     {
         private bool ProcessNode(Network.Address address)
         {
-            var iport = address.ToHostAddressString();
-            var client = GetService.ClientCache.Get(iport);
+            var client = GetService.ClientCache.Get(address);
             try
             {
                 collectedObject = client.GetObject(this);

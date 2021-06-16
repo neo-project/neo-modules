@@ -18,10 +18,9 @@ namespace Neo.FileStorage.Services.Object.Head
             var key = KeyStorage.GetKey(prm.SessionToken);
             if (key is null)
                 throw new InvalidOperationException($"{nameof(RemoteHeader)} could not receive private key");
-            var addr = prm.Node.ToIPAddressString();
-            var client = ClientCache.Get(addr);
+            var client = ClientCache.Get(prm.Node);
             if (client is null)
-                throw new InvalidOperationException($"{nameof(RemoteHeader)} could not create SDK client {addr}");
+                throw new InvalidOperationException($"{nameof(RemoteHeader)} could not create SDK client {prm.Node}");
             var header = client.GetObjectHeader(prm.Address, prm.Short, prm.Raw, new CallOptions
             {
                 Ttl = DefaultHeadTtl,
@@ -30,7 +29,7 @@ namespace Neo.FileStorage.Services.Object.Head
                 Key = key,
             }, context).Result;
             if (header is null)
-                throw new InvalidOperationException(nameof(RemoteHeader) + $" could not read object payload range from {addr}");
+                throw new InvalidOperationException(nameof(RemoteHeader) + $" could not read object payload range from {prm.Node}");
             return header;
         }
     }

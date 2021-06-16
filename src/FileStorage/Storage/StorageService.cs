@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using Akka.Actor;
+using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
@@ -34,7 +36,6 @@ namespace Neo.FileStorage
         public HealthStatus HealthStatus = HealthStatus.Ready;
         private readonly ECDsa key;
         private readonly Client morphClient;
-        private readonly Wallet wallet;
         private readonly NeoSystem system;
         private readonly IActorRef listener;
         public ProtocolSettings ProtocolSettings => system.Settings;
@@ -45,7 +46,7 @@ namespace Neo.FileStorage
         public StorageService(Wallet wallet, NeoSystem side)
         {
             system = side;
-            this.wallet = wallet;
+            key = wallet.GetAccounts().First().GetKey().PrivateKey.LoadPrivateKey();
             StorageEngine localStorage = new();
             morphClient = new Client
             {

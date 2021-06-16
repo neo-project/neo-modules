@@ -72,7 +72,7 @@ namespace Neo.FileStorage.Services.Object.Delete.Execute
         public static List<ObjectID> SplitMembers(this SearchService service, ExecuteContext context)
         {
             SearchFilters filters = new();
-            filters.AddSplitIDFilter(MatchType.StringEqual, new SplitID(context.SplitInfo.SplitId));
+            filters.AddSplitIDFilter(MatchType.StringEqual, context.SplitInfo.SplitId);
             SimpleIDWriter writer = new();
             SearchPrm prm = new()
             {

@@ -13,13 +13,21 @@ namespace Neo.FileStorage.Network
 
         private Multiaddress ma;
 
-        public string String() => ma.ToString();
-
         public Address() { }
 
         public Address(Multiaddress m)
         {
             ma = m;
+        }
+
+        public Address Encapsulate(Address other)
+        {
+            return new(ma.Encapsulate(other.ma));
+        }
+
+        public Address Decapsulate(Address other)
+        {
+            return new(ma.Decapsulate(other.ma));
         }
 
         public string ToIPAddressString()
@@ -81,6 +89,11 @@ namespace Neo.FileStorage.Network
         public static string IPAddrFromMultiaddr(string multiaddr)
         {
             return FromString(multiaddr).ToIPAddressString();
+        }
+
+        public override string ToString()
+        {
+            return ma.ToString();
         }
     }
 }

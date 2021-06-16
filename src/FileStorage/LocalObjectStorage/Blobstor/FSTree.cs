@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Akka.Util.Internal;
 using Neo.FileStorage.API.Refs;
 
 namespace Neo.FileStorage.LocalObjectStorage.Blobstor
@@ -12,7 +11,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
         public const int DefaultDirNameLength = 1;
         public const int MaxDepth = (32 - 1) / DefaultDirNameLength;
         public const int DefaultShallowDepth = 4;
-        public const string DefaultRootPath = "./";
+        public const string DefaultRootPath = "./Data_FSTree";
 
         public int Depth { get; init; }
         public int DirNameLen { get; init; }
@@ -28,7 +27,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
         public FSTree(string root, int d, int l)
         {
             RootPath = root;
-            Depth = d;
+            Depth = MaxDepth < d ? MaxDepth : d;
             DirNameLen = l * 2;
         }
 
@@ -57,22 +56,28 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
 
         private void Iterate(int depth, IEnumerable<string> paths, Action<Address, byte[]> handler)
         {
-            var dirs = Directory.GetDirectories(Path.Join(paths.ToArray())).Select(p => new DirectoryInfo(p).Name).ToArray();
+            string[] dirs;
+            if (depth == Depth)
+                dirs = Directory.GetFiles(Path.Join(paths.ToArray())).Select(p => new FileInfo(p).Name).ToArray();
+            else
+                dirs = Directory.GetDirectories(Path.Join(paths.ToArray())).Select(p => new DirectoryInfo(p).Name).ToArray();
             foreach (string dir in dirs)
             {
                 var current_paths = paths.Append(dir);
                 string current_path = Path.Join(current_paths.ToArray());
-                if (depth < Depth + 1)
+                if (depth == Depth)
+                {
+                    if (!File.Exists(current_path)) throw new InvalidOperationException();
+                    Address address = Address.ParseString(string.Join("", current_paths.Skip(1)).Replace('.', '/'));
+                    byte[] data = File.ReadAllBytes(current_path);
+                    handler(address, data);
+                }
+                if (depth < Depth)
                 {
                     if (!Directory.Exists(current_path)) throw new InvalidOperationException();
                     Iterate(depth + 1, current_paths, handler);
                     continue;
                 }
-                if (!File.Exists(current_path)) throw new InvalidOperationException();
-                Console.WriteLine(current_path);
-                Address address = Address.ParseString(string.Join("", current_paths.Skip(1)).Replace('.', '/'));
-                byte[] data = File.ReadAllBytes(current_path);
-                handler(address, data);
             }
         }
 

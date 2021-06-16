@@ -10,6 +10,11 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
 
         public bool IsEmpty => value is null || value.Length == 0;
 
+        public ShardID()
+        {
+            value = Guid.NewGuid().ToByteArray();
+        }
+
         public ShardID(byte[] bytes)
         {
             value = bytes;
@@ -20,19 +25,15 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             return Base58.Encode(value);
         }
 
-        public static ShardID Generate()
-        {
-            return Guid.NewGuid().ToByteArray();
-        }
-
         public static implicit operator ShardID(byte[] val)
         {
+            if (val is null) return null;
             return new ShardID(val);
         }
 
         public static implicit operator byte[](ShardID b)
         {
-            return b.value;
+            return b?.value;
         }
     }
 }

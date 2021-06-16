@@ -1,9 +1,9 @@
-using Google.Protobuf;
-using Neo.FileStorage.API.Object;
-using Neo.FileStorage.API.Refs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Google.Protobuf;
+using Neo.FileStorage.API.Object;
+using Neo.FileStorage.API.Refs;
 using FSAttribute = Neo.FileStorage.API.Object.Header.Types.Attribute;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
@@ -14,7 +14,7 @@ namespace Neo.FileStorage.Services.ObjectManager.Transformer
     {
         private readonly ulong maxSize;
         private readonly IObjectTarget target;
-        private readonly List<ObjectID> previous;
+        private readonly List<ObjectID> previous = new();
         private readonly SplitID splitID;
         private ulong written;
         private FSObject current;

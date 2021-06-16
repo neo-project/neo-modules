@@ -1,10 +1,10 @@
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.FileStorage.Services.ObjectManager.Placement;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
-using System.Collections.Generic;
-using System.Linq;
+using Neo.FileStorage.Services.ObjectManager.Placement;
 
 namespace Neo.FileStorage.Tests
 {
@@ -107,7 +107,7 @@ namespace Neo.FileStorage.Tests
 
                 for (int j = 0; j < nodes[i].Count; j++)
                 {
-                    Assert.AreEqual(addrs[j].String(), nodes[i][j].NetworkAddress);
+                    Assert.AreEqual(addrs[j].ToString(), nodes[i][j].NetworkAddress);
                 }
             }
 
@@ -144,7 +144,7 @@ namespace Neo.FileStorage.Tests
                 {
                     var addrs = tr.Next();
                     Assert.AreEqual(1, addrs.Count);
-                    Assert.AreEqual(nodes[cv][i].NetworkAddress, addrs[0].String());
+                    Assert.AreEqual(nodes[cv][i].NetworkAddress, addrs[0].ToString());
                 }
 
                 Assert.IsFalse(tr.Success());
@@ -191,7 +191,7 @@ namespace Neo.FileStorage.Tests
                     Assert.AreEqual(replicas[cv], addrs.Count);
                     for (int j = 0; j < addrs.Count; j++)
                     {
-                        Assert.AreEqual(nodes[cv][i + j].NetworkAddress, addrs[j].String());
+                        Assert.AreEqual(nodes[cv][i + j].NetworkAddress, addrs[j].ToString());
                     }
                 }
 

@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Google.Protobuf;
+using Neo.FileStorage.API.Cryptography;
+using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Shards;
@@ -9,7 +12,7 @@ using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.LocalObjectStorage.Engine
 {
-    public partial class StorageEngine : IDisposable
+    public sealed class StorageEngine : IDisposable
     {
 
         private readonly Dictionary<string, Shard> shards = new();
@@ -22,28 +25,60 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
 
         public FSObject Get(Address address)
         {
+            SplitInfo spi = null;
             foreach (var shard in SortedShards(address))
             {
-                var result = shard.Get(address);
-                if (result != null)
+                try
                 {
-                    return result;
+                    return shard.Get(address);
+                }
+                catch (ObjectNotFoundException)
+                {
+                    continue;
+                }
+                catch (SplitInfoException e)
+                {
+                    if (spi is null)
+                    {
+                        spi = new();
+                    }
+                    Helper.MergeSplitInfo(e.SplitInfo, spi);
+                    if (spi.Link is not null && spi.LastPart is not null)
+                        throw new SplitInfoException(spi);
+                    continue;
                 }
             }
-            return null;
+            if (spi is not null) throw new SplitInfoException(spi);
+            throw new ObjectNotFoundException();
         }
 
-        public FSObject GetRange(Address address, ulong offset, ulong length)
+        public FSObject GetRange(Address address, API.Object.Range range)
         {
+            SplitInfo spi = null;
             foreach (var shard in SortedShards(address))
             {
-                var result = shard.GetRange(address, offset, length);
-                if (result != null)
+                try
                 {
-                    return result;
+                    return shard.GetRange(address, range);
+                }
+                catch (ObjectNotFoundException)
+                {
+                    continue;
+                }
+                catch (SplitInfoException e)
+                {
+                    if (spi is null)
+                    {
+                        spi = new();
+                    }
+                    Helper.MergeSplitInfo(e.SplitInfo, spi);
+                    if (spi.Link is not null && spi.LastPart is not null)
+                        throw new SplitInfoException(spi);
+                    continue;
                 }
             }
-            return null;
+            if (spi is not null) throw new SplitInfoException(spi);
+            throw new ObjectNotFoundException();
         }
 
         public void Put(FSObject obj)
@@ -56,7 +91,6 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
                     shard.ToMoveIt(obj.Address);
                     return;
                 }
-
                 shard.Put(obj);
                 return;
             }
@@ -160,19 +194,33 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
         }
 
 
-
-
         public FSObject Head(Address address, bool raw)
         {
+            SplitInfo spi = null;
             foreach (var shard in SortedShards(address))
             {
-                var result = shard.Head(address, raw);
-                if (result != null)
+                try
                 {
-                    return result;
+                    return shard.Head(address, raw);
+                }
+                catch (ObjectNotFoundException)
+                {
+                    continue;
+                }
+                catch (SplitInfoException e)
+                {
+                    if (spi is null)
+                    {
+                        spi = new();
+                    }
+                    Helper.MergeSplitInfo(e.SplitInfo, spi);
+                    if (spi.Link is not null && spi.LastPart is not null)
+                        throw new SplitInfoException(spi);
+                    continue;
                 }
             }
-            throw new ObjectNotFoundException(nameof(StorageEngine) + " can't find object from all shards");
+            if (spi is not null) throw new SplitInfoException(spi);
+            throw new ObjectNotFoundException();
         }
 
         public void Inhume(Address tombstone, params Address[] addresses)
@@ -221,6 +269,78 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
                 {
                     continue;
                 }
+            }
+        }
+
+        public ShardID AddShard(string path, bool use_cache)
+        {
+            ShardID id = new();
+            shards[id.ToString()] = new Shard(use_cache)
+            {
+                ID = id,
+                ExpiredObjectCallback = ProcessExpiredTomstones,
+            };
+            return id;
+        }
+
+        private void ProcessExpiredTomstones(List<Address> addresses, CancellationToken token)
+        {
+            foreach (var shard in UnsortedShards())
+            {
+                shard.HandleExpiredTombstones(addresses);
+                if (token.IsCancellationRequested) return;
+            }
+        }
+
+        private List<Shard> UnsortedShards()
+        {
+            try
+            {
+                mtx.EnterReadLock();
+                return shards.Values.ToList();
+            }
+            finally
+            {
+                mtx.ExitReadLock();
+            }
+        }
+
+        /// <summary>
+        /// sort by value-distance * weights
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        private List<Shard> SortedShards(Address address)
+        {
+            try
+            {
+                mtx.EnterReadLock();
+                var target = address.ToByteArray().Murmur64(0);
+                var list = shards.Values.Select(s => new ShardDistance
+                {
+                    Shard = s,
+                    Weight = s.WeightValues(),
+                    Distance = Utility.StrictUTF8.GetBytes(s.ID.ToString()).Murmur64(0).Distance(target),
+                });
+                return list.OrderBy(s => s.Sort).Select(s => s.Shard).ToList();
+            }
+            finally
+            {
+                mtx.ExitReadLock();
+            }
+        }
+
+        private class ShardDistance
+        {
+            public Shard Shard;
+            public ulong Weight;
+            public ulong Distance;
+            public ulong Sort;
+
+            public ShardDistance SetSort()
+            {
+                Sort = Weight * Distance;
+                return this;
             }
         }
     }

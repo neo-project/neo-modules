@@ -1,12 +1,13 @@
-using Google.Protobuf;
-using Neo.FileStorage.API.Refs;
-using Neo.IO.Data.LevelDB;
 using System;
+using System.IO;
 using System.Text;
 using System.Threading;
-using FSRange = Neo.FileStorage.API.Object.Range;
+using Google.Protobuf;
+using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Database;
+using Neo.FileStorage.Database.LevelDB;
 using FSObject = Neo.FileStorage.API.Object.Object;
-using System.IO;
+using FSRange = Neo.FileStorage.API.Object.Range;
 
 namespace Neo.FileStorage.LocalObjectStorage.Blob
 {
@@ -19,7 +20,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blob
         public ICompressor Compressor { get; init; }
         public long FullSizeLimit { get; init; }
         public long ObjSizeLimit { get; init; }
-        private DB dB;
+        private IDB dB;
         private long filled;
 
         public Blobovnicza(string path, ICompressor compressor = null)
@@ -35,7 +36,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blob
             var full = System.IO.Path.GetFullPath(Path);
             if (!Directory.Exists(full))
                 Directory.CreateDirectory(full);
-            dB = DB.Open(full, new Options { CreateIfMissing = true, FilterPolicy = Native.leveldb_filterpolicy_create_bloom(15) });
+            dB = new DB(full);
         }
 
         public void Dispose()
@@ -52,7 +53,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blob
         {
             if (address is null)
                 throw new ArgumentNullException(nameof(address));
-            var raw = dB.Get(ReadOptions.Default, Addresskey(address));
+            var raw = dB.Get(Addresskey(address));
             if (raw is null) throw new ObjectNotFoundException();
             return FSObject.Parser.ParseFrom(Compressor.Decompress(raw));
         }
@@ -78,7 +79,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blob
             if (ObjSizeLimit < raw.Length)
                 throw new ObjectSizeExceedLimitException();
             var key = Addresskey(obj.Address);
-            dB.Put(WriteOptions.Default, key, raw);
+            dB.Put(key, raw);
             IncSize(raw.Length);
         }
 
@@ -86,9 +87,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Blob
         {
             if (address is null)
                 throw new ArgumentNullException(nameof(address));
-            var raw = dB.Get(ReadOptions.Default, Addresskey(address));
+            var raw = dB.Get(Addresskey(address));
             if (raw is null) throw new ObjectNotFoundException();
-            dB.Delete(WriteOptions.Default, Addresskey(address));
+            dB.Delete(Addresskey(address));
             DecSize(raw.Length);
         }
 

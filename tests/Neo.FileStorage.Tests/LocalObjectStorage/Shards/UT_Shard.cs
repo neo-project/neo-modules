@@ -230,12 +230,12 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Shards
 
         private Shard GetShardWithCache()
         {
-            return new Shard(true, "shard_with_cache");
+            return new Shard(true);
         }
 
         private Shard GetShardWithoutCache()
         {
-            return new Shard(false, "shard_without_cache");
+            return new Shard(false);
         }
     }
 }

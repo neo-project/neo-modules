@@ -1,12 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Threading;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Services.Container.Announcement.Route;
 using Neo.FileStorage.Services.Container.Announcement.Route.Placement;
-using System;
-using System.Collections.Generic;
-using System.Security.Cryptography;
-using System.Threading;
 using FSAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types.Announcement;
 
 namespace Neo.FileStorage.Services.Container.Announcement
@@ -19,7 +19,7 @@ namespace Neo.FileStorage.Services.Container.Announcement
         public LoadPlacementBuilder Loadbuilder { get; init; }
         public RouteBuilder RouteBuilder { get; init; }
 
-        public AnnounceUsedSpaceResponse AnnounceUsedSpace(AnnounceUsedSpaceRequest request)
+        public AnnounceUsedSpaceResponse AnnounceUsedSpace(AnnounceUsedSpaceRequest request, CancellationToken context)
         {
             List<NodeInfo> passed = new();
             for (var header = request.VerifyHeader; header != null; header = header.Origin)
@@ -29,7 +29,7 @@ namespace Neo.FileStorage.Services.Container.Announcement
             passed.Reverse();
             passed.Add(LocalNodeInfo);
 
-            var writer = Router.InitWriter(new RouteContext(passed, new CancellationTokenSource().Token));//TODO: fix cancellation token
+            var writer = Router.InitWriter(new RouteContext(passed, context));
             foreach (var announcement in request.Body.Announcements)
             {
                 ProcessLoadValue(announcement, passed, writer);

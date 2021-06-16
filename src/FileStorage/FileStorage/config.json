@@ -1,7 +1,8 @@
 {
   "PluginConfiguration": {
-    "AutoStartInnerRing": false,
-    "AutoStartStorage": false,
+    "AutoStart": false,
+    "AsInnerRing": false,
+    "AsStorage": true,
     "WalletPath": "./FSStorage/wallet.json",
     "Password": "123456",
     "Contracts": {
@@ -93,6 +94,60 @@
     "Fee": {
       "MainChain": 5000,
       "SideChain": 5000
+    },
+    "Storage": {
+      "Shards": [
+        {
+          "UseWriteCache": true,
+          "WriteCache": {
+            "Path": "./Data/0/Data_WriteCache",
+            "MaxMemorySize": 1073741824,
+            "MaxObjectSize": 67108864,
+            "SmallObjectSize": 32768,
+            "MaxDBSize": 0
+          },
+          "BlobStorage": {
+            "Path": "./Data/0/Data_BlobStorage",
+            "Compress": true,
+            "ShallowDepth": 4,
+            "SmallSizeLimit": 1048576,
+            "Blobovnicza": {
+              "Size": 1073741824,
+              "ShallowDepth": 2,
+              "ShallowWidth": 16,
+              "OpenCacheSize": 16
+            }
+          },
+          "Metabase": {
+            "Path": "./Data/0/Data_Metabase"
+          }
+        },
+        {
+          "UseWriteCache": true,
+          "WriteCache": {
+            "Path": "./Data/1/Data_WriteCache",
+            "MaxMemorySize": 1073741824,
+            "MaxObjectSize": 67108864,
+            "SmallObjectSize": 32768,
+            "MaxDbSize": 0
+          },
+          "BlobStorage": {
+            "Path": "./Data/1/Data_BlobStorage",
+            "Compress": true,
+            "ShallowDepth": 4,
+            "SmallSizeLimit": 1048576,
+            "Blobovnicza": {
+              "Size": 1073741824,
+              "ShallowDepth": 2,
+              "ShallowWidth": 16,
+              "OpenCacheSize": 16
+            }
+          },
+          "Metabase": {
+            "Path": "./Data/1/Data_Metabase"
+          }
+        }
+      ]
     }
   }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -20,33 +21,44 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Blobstor
                 Depth = 2,
                 DirNameLen = 2,
             };
-            List<Address> addrs = new();
-            int count = 3;
-            for (int i = 0; i < count; i++)
+            try
             {
-                Address address = Helper.RandomAddress();
-                byte[] data = new byte[10];
-                fs.Put(address, data);
+                List<Address> addrs = new();
+                const int count = 3;
+                for (int i = 0; i < count; i++)
+                {
+                    Address address = Helper.RandomAddress();
+                    byte[] data = new byte[10];
+                    fs.Put(address, data);
+                    addrs.Add(address);
+                }
+                foreach (var address in addrs)
+                {
+                    Assert.IsNotNull(fs.Get(address));
+                    Console.WriteLine($"get {address.String()}");
+                }
+                Assert.ThrowsException<ObjectFileNotFoundException>(() => fs.Get(Helper.RandomAddress()));
+                foreach (var address in addrs)
+                {
+                    Assert.IsTrue(0 < fs.Exists(address).Length);
+                }
+                Assert.ThrowsException<ObjectFileNotFoundException>(() => fs.Exists(Helper.RandomAddress()));
+                int j = 0;
+                fs.Iterate((address, data) =>
+                {
+                    Assert.IsTrue(addrs.Contains(address));
+                    j++;
+                });
+                Assert.AreEqual(count, j);
+                foreach (var address in addrs)
+                {
+                    fs.Delete(address);
+                }
             }
-            foreach (var address in addrs)
+            finally
             {
-                Assert.IsNotNull(fs.Get(address));
+                Directory.Delete(root_dir, true);
             }
-            Assert.ThrowsException<ObjectFileNotFoundException>(() => fs.Get(Helper.RandomAddress()));
-            foreach (var address in addrs)
-            {
-                Assert.IsTrue(0 < fs.Exists(address).Length);
-            }
-            Assert.ThrowsException<ObjectFileNotFoundException>(() => fs.Exists(Helper.RandomAddress()));
-            fs.Iterate((address, data) =>
-            {
-                Assert.IsTrue(addrs.Contains(address));
-            });
-            foreach (var address in addrs)
-            {
-                fs.Delete(address);
-            }
-            Directory.Delete(root_dir, true);
         }
     }
 }

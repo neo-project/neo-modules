@@ -1,3 +1,4 @@
+using System.Threading;
 using Google.Protobuf;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Container;
@@ -13,9 +14,9 @@ namespace Neo.FileStorage.Services.Container
         public Client MorphClient { get; init; }
         public UsedSpaceService UsedSpaceService { get; init; }
 
-        public AnnounceUsedSpaceResponse AnnounceUsedSpace(AnnounceUsedSpaceRequest request)
+        public AnnounceUsedSpaceResponse AnnounceUsedSpace(AnnounceUsedSpaceRequest request, CancellationToken context)
         {
-            return UsedSpaceService.AnnounceUsedSpace(request);
+            return UsedSpaceService.AnnounceUsedSpace(request, context);
         }
 
         public DeleteResponse Delete(DeleteRequest request)

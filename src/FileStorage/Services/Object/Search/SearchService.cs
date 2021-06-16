@@ -1,5 +1,7 @@
 using System;
+using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
+using Neo.FileStorage.API.Session;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Object.Search.Execute;
@@ -26,6 +28,18 @@ namespace Neo.FileStorage.Services.Object.Search
             {
                 Handler = handler,
             };
+            if (!prm.Local)
+            {
+                RequestMetaHeader meta = new();
+                meta.Ttl = request.MetaHeader.Ttl - 1;
+                meta.Origin = request.MetaHeader;
+                request.MetaHeader = meta;
+                key.SignRequest(request);
+                prm.Forwarder = client =>
+                {
+                    return client.SearchObject(request).Result;
+                };
+            }
             return prm;
         }
 

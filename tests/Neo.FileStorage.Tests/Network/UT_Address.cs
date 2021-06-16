@@ -50,5 +50,20 @@ namespace Neo.FileStorage.Tests.Network
             address = Address.FromString(":");
             Assert.AreEqual("0.0.0.0:0", address.ToHostAddressString());
         }
+
+        [TestMethod]
+        public void TestEncapsulate()
+        {
+            var ma1 = "/dns4/neofs.bigcorp.com/tcp/8080";
+            var ma2 = "/http";
+            var addr1 = new Address(Multiaddress.Decode(ma1));
+            var addr2 = new Address(Multiaddress.Decode(ma2));
+            var addr = addr1.Encapsulate(addr2);
+            Console.WriteLine(addr.ToString());
+            Assert.AreEqual(ma1 + ma2, addr.ToString());
+            addr = addr2.Encapsulate(addr1);
+            Console.WriteLine(addr.ToString());
+            Assert.AreEqual(ma2 + ma1, addr.ToString());
+        }
     }
 }

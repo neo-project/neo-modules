@@ -1,6 +1,4 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Akka.Actor;
 using Neo.ConsoleService;
 using Neo.FileStorage.Utils.Locode;
@@ -20,18 +18,19 @@ namespace Neo.FileStorage
         public const string ReourcePath = "./Resources/";
         public const string DefaultTargetPath = "./Data_UNLOCODE";
 
-        [ConsoleCommand("fs node height", Category = "StateService", Description = "Show side chain node height")]
-        private void OnNodeState()
+        [ConsoleCommand("fs show state", Category = "StateService", Description = "Show side chain node height and connection")]
+        private void OnNodeHeight()
         {
-            var localNode =  SideSystem.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
-            Console.WriteLine($"block: {NativeContract.Ledger.CurrentIndex(SideSystem?.StoreView)}  connected: {localNode.ConnectedCount}  unconnected: {localNode.UnconnectedCount}", Console.WindowWidth - 1);
-            //Console.WriteLine($"Height: {NativeContract.Ledger.CurrentIndex(SideSystem?.StoreView)}");
+            var localNode = SideSystem.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
+            uint height = NativeContract.Ledger.CurrentIndex(SideSystem.StoreView);
+            uint headerHeight = SideSystem?.HeaderCache.Last?.Index ?? height;
+            Console.WriteLine($"block: {height}/{headerHeight}  connected: {localNode.ConnectedCount}  unconnected: {localNode.UnconnectedCount}");
         }
 
         [ConsoleCommand("fs start ir", Category = "StateService", Description = "Start as inner ring node")]
         private void OnStartIR()
         {
-            StartIR();
+            StartIR(walletProvider.GetWallet());
         }
 
         [ConsoleCommand("fs start storage", Category = "StateService", Description = "Start as storage node")]

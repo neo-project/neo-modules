@@ -166,10 +166,10 @@ namespace Neo.FileStorage.InnerRing.Processors
                 pairs.Add("address", shuffled[i].Info.Address);
                 pairs.Add("try", i.ToString());
                 pairs.Add("total_tries", shuffled.Length.ToString());
-                string address;
+                Network.Address address;
                 try
                 {
-                    address = Network.Address.IPAddrFromMultiaddr(shuffled[0].NetworkAddress);
+                    address = Network.Address.FromString(shuffled[0].NetworkAddress);
                 }
                 catch (Exception e)
                 {

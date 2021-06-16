@@ -23,7 +23,6 @@ namespace Neo.FileStorage
 {
     public sealed partial class StorageService : IDisposable
     {
-        private IActorRef gc;
         private ObjectServiceImpl InitializeObject(StorageEngine localStorage)
         {
             KeyStorage keyStorage = new(key, tokenStore);
