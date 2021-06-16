@@ -67,12 +67,9 @@ namespace Neo.FileStorage.Morph.Invoker
         {
             txId = null;
             InvokeResult result = TestInvoke(contractHash, method, args);
-            Console.WriteLine("TestInvoke成功");
             if (result.State != VMState.HALT) return false;
             SnapshotCache snapshot = system.GetSnapshot();
             uint height = NativeContract.Ledger.CurrentIndex(snapshot);
-            Console.WriteLine("获取高度成功");
-            Console.WriteLine(wallet.GetAccounts().ToArray()[0].Address);
             Random rand = new Random();
             Transaction tx = new Transaction
             {
@@ -85,15 +82,17 @@ namespace Neo.FileStorage.Morph.Invoker
             };
             tx.SystemFee = result.GasConsumed + fee;
             tx.NetworkFee = wallet.CalculateNetworkFee(snapshot, tx);
-            Console.WriteLine("计算费用成功");
-            Console.WriteLine("计算Network："+ system.Settings.Network);
             var data = new ContractParametersContext(snapshot, tx, system.Settings.Network);
             bool sigresult=wallet.Sign(data);
-            Console.WriteLine("context network"+ data.Network);
-            Console.WriteLine("签字结果"+sigresult);
             tx.Witnesses = data.GetWitnesses();
             txId = tx.Hash;
-            Console.WriteLine("构建交易成功");
+
+            var bal = NativeContract.GAS.BalanceOf(snapshot, wallet.GetAccounts().ToArray()[0].ScriptHash);
+            Console.WriteLine("交易花费系统手续费："+tx.SystemFee);
+            Console.WriteLine("交易花费网络手续费："+tx.NetworkFee);
+            Console.WriteLine("当前账户余额："+ bal);
+            Console.WriteLine("交易消耗：" + tx.SystemFee+tx.NetworkFee);
+            Console.WriteLine("当前账户扣除消耗后余额：" + (bal - tx.SystemFee-tx.NetworkFee));
             actor.Tell(tx);
             Utility.Log("client", LogLevel.Debug, string.Format("neo client invoke,method:{0},tx_hash:{1}", method, tx.Hash.ToString()));
             return true;

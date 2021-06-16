@@ -30,6 +30,9 @@ namespace Neo.FileStorage
         public int ContainerContractWorkersSize;
         public int AlphabetContractWorkersSize;
         public int ReputationContractWorkersSize;
+        public int AuditContractWorkersSize;
+        public int SettlementWorkersSize;
+        public int GovernanceWorkersSize;
 
         public int PdpPoolSize;
         public int PorPoolSize;
@@ -97,6 +100,9 @@ namespace Neo.FileStorage
             ContainerContractWorkersSize = workSizes.GetValue("Container", 10);
             AlphabetContractWorkersSize = workSizes.GetValue("Alphabet", 10);
             ReputationContractWorkersSize = workSizes.GetValue("Reputation", 10);
+            AuditContractWorkersSize = workSizes.GetValue("Audit", 10);
+            SettlementWorkersSize = workSizes.GetValue("Settlement", 10);
+            GovernanceWorkersSize = workSizes.GetValue("Governance", 10);
 
             IConfigurationSection timers = section.GetSection("Timers");
             EpochDuration = timers.GetValue("Epoch", 0u);

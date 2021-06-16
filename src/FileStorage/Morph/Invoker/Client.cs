@@ -37,7 +37,8 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public long GasBalance()
         {
-            var result = client.TestInvoke(NativeContract.GAS.Hash, "balanceOf");
+            var account = GetWallet().GetAccounts().ToArray()[0].GetKey().PublicKey.EncodePoint(true).ToScriptHash();
+            var result = client.TestInvoke(NativeContract.GAS.Hash, "balanceOf",account);
             return (long)result.ResultStack[0].GetInteger();
         }
         public ECPoint[] Committee()
@@ -48,7 +49,8 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public ECPoint[] NeoFSAlphabetList()
         {
-            var result = client.TestInvoke(NativeContract.NEO.Hash, "getCommittee");
+            var height= client.TestInvoke(NativeContract.Ledger.Hash, "currentIndex").ResultStack[0].GetInteger();
+            var result = client.TestInvoke(NativeContract.RoleManagement.Hash, "getDesignatedByRole", Role.NeoFSAlphabetNode, height);
             return ((Array)result.ResultStack[0]).Select(p => p.GetSpan().AsSerializable<ECPoint>()).ToArray();
         }
 

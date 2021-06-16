@@ -71,24 +71,22 @@ namespace Neo.FileStorage.InnerRing
 
         public InnerRingService(NeoSystem main, NeoSystem side, Wallet pMainwallet = null, Wallet pSideWallet = null, Client pMainNetClient = null, Client pMorphClient = null)
         {
-            Console.WriteLine("创建ConvertUtil");
             precision = new Fixed8ConverterUtil();
             // Build 2 client(MorphClientr&MainClient).
-            Console.WriteLine("创建Wallet&client");
             if (pMainwallet is null)
             {
-                NEP6Wallet w = new(Settings.Default.WalletPath, main.Settings);
-                w.Unlock(Settings.Default.Password);
-                mainWallet = w;
+                NEP6Wallet mw = new(Settings.Default.WalletPath, main.Settings);
+                mw.Unlock(Settings.Default.Password);
+                mainWallet = mw;
             }
             else mainWallet = pMainwallet;
             if (pSideWallet is null)
             {
-                NEP6Wallet w = new(Settings.Default.WalletPath, side.Settings);
-                w.Unlock(Settings.Default.Password);
-                sideWallet = w;
+                NEP6Wallet sw = new(Settings.Default.WalletPath, side.Settings);
+                sw.Unlock(Settings.Default.Password);
+                sideWallet = sw;
             }
-            else mainWallet = pMainwallet;
+            else sideWallet = pSideWallet;
             if (pMainNetClient is null)
             {
                 mainNetClient = new Client()
@@ -115,13 +113,11 @@ namespace Neo.FileStorage.InnerRing
                 };
             }
             else morphClient = pMorphClient;
-            Console.WriteLine("创建Listener");
             // Build 2 listeners(MorphEventListener&MainEventListener).
             morphEventListener = side.ActorSystem.ActorOf(Listener.Props("MorphEventListener"));
             mainEventListener = main.ActorSystem.ActorOf(Listener.Props("MainEventListener"));
             // create indexer
             statusIndex = new InnerRingIndexer(morphClient, Settings.Default.IndexerTimeout);
-            Console.WriteLine("创建processor");
             // create audit processor
             clientCache = new RpcClientCache() { wallet = sideWallet };
             auditTaskManager = side.ActorSystem.ActorOf(Manager.Props(Settings.Default.QueueCapacity,
@@ -138,8 +134,8 @@ namespace Neo.FileStorage.InnerRing
                 ClientCache = clientCache,
                 TaskManager = auditTaskManager,
                 State = this,
+                WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("AuditContract Processor", Settings.Default.AuditContractWorkersSize)),
             };
-            Console.WriteLine("创建auditContractProcessor成功");
             // create settlement processor dependencies
             var auditCalcDeps = new AuditSettlementDeps()
             {
@@ -156,8 +152,8 @@ namespace Neo.FileStorage.InnerRing
                 basicIncome = basicSettlementDeps,
                 auditProc = auditSettlementCalc,
                 State = this,
+                WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("Settlement Processor", Settings.Default.SettlementWorkersSize)),
             };
-            Console.WriteLine("创建settlementProcessor成功");
             _db = new("./FileStorage/Data_LOCODE");
             var locodeValidator = new Validator(_db);
             // create governance processor
@@ -167,8 +163,8 @@ namespace Neo.FileStorage.InnerRing
                 MorphCli = morphClient,
                 ProtocolSettings = main.Settings,
                 State = this,
+                WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("Governance Processor", Settings.Default.GovernanceWorkersSize)),
             };
-            Console.WriteLine("创建governance成功");
             // create netmap processor
             netMapContractProcessor = new NetMapContractProcessor()
             {
@@ -182,7 +178,6 @@ namespace Neo.FileStorage.InnerRing
                 NodeValidator = locodeValidator
             };
             morphEventListener.Tell(new BindProcessorEvent() { processor = netMapContractProcessor });
-            Console.WriteLine("创建netMapContractProcessor成功");
             // create container processor
             containerContractProcessor = new ContainerContractProcessor()
             {
@@ -261,15 +256,14 @@ namespace Neo.FileStorage.InnerRing
 
         public void InitConfigFromBlockchain()
         {
-            Console.WriteLine("开始InitConfigFromBlockchain");
             ulong epoch;
             try
             {
                 epoch = morphClient.GetEpoch();
             }
-            catch
+            catch(Exception e)
             {
-                throw new Exception("can't read epoch");
+                throw new Exception("can't read epoch"+e.Message);
             }
             uint balancePrecision;
             try
@@ -308,7 +302,6 @@ namespace Neo.FileStorage.InnerRing
 
         private void OnStart()
         {
-            Console.WriteLine("创建InnerRingService启动");
             try
             {
                 InitConfigFromBlockchain();
@@ -330,17 +323,14 @@ namespace Neo.FileStorage.InnerRing
                 Utility.Log("InnerRingService", LogLevel.Error, e.Message);
                 return;
             }
-            Console.WriteLine("创建InnerRingService成功");
         }
 
         private void StartBlockTimers()
         {
-            Console.WriteLine("创建StartBlockTimers");
             foreach (var blockTimer in blockTimers)
             {
                 blockTimer.Tell(new ResetEvent());
             }
-            Console.WriteLine("创建StartBlockTimers成功");
         }
 
         private void TickTimers()
@@ -357,14 +347,12 @@ namespace Neo.FileStorage.InnerRing
 
         private void OnContractEvent(NotifyEventArgs notify, bool flag)
         {
-            Console.WriteLine("开始OnContractEvent");
             if (flag) mainEventListener.Tell(new NewContractEvent() { notify = notify });
             else morphEventListener.Tell(new NewContractEvent() { notify = notify });
         }
 
         private void OnBlockEvent(Block block, bool flag)
         {
-            Console.WriteLine("开始OnBlockEvent");
             if (flag) mainEventListener.Tell(new NewBlockEvent() { block = block });
             else morphEventListener.Tell(new NewBlockEvent() { block = block });
         }
@@ -407,9 +395,8 @@ namespace Neo.FileStorage.InnerRing
 
         public void VoteForSidechainValidator(ECPoint[] validators)
         {
-            Console.WriteLine("开始VoteForSidechainValidator");
+            Console.WriteLine("开始vote侧链共识节点");
             Array.Sort(validators);
-            Console.WriteLine("开始InnerRingIndex()");
             var index = InnerRingIndex();
             if (index < 0 || index >= Settings.Default.AlphabetContractHash.Length)
             {
@@ -421,15 +408,13 @@ namespace Neo.FileStorage.InnerRing
                 Utility.Log(Name, LogLevel.Info, "ignore validator vote: empty validators list");
                 return;
             }
-            Console.WriteLine("开始EpochCounter()");
             var epoch = EpochCounter();
-            Console.WriteLine("开始AlphabetVote()");
             for (int i = 0; i < Settings.Default.AlphabetContractHash.Length; i++)
             {
                 try
                 {
-                    morphClient.AlphabetVote(i, epoch, validators);
-                    Console.WriteLine("开始AlphabetVote()成功");
+                    var r=morphClient.AlphabetVote(i, epoch, validators);
+                    Console.WriteLine("vote侧链共识节点:alphabetindex:"+i+",epoch:"+epoch+",result:"+r);
                 }
                 catch
                 {

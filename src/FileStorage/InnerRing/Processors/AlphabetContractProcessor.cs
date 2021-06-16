@@ -35,7 +35,8 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                MorphCli.AlphabetEmit(index);
+                var r=MorphCli.AlphabetEmit(index);
+                Console.WriteLine("AlphabetEmit结果:"+r);
             }
             catch (Exception)
             {

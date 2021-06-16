@@ -7,6 +7,7 @@ using Neo.Wallets;
 using Neo.Wallets.NEP6;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Neo.FileStorage.Tests.Morph.Client.Tests
@@ -38,6 +39,55 @@ namespace Neo.FileStorage.Tests.Morph.Client.Tests
             var script =UInt160.Parse("0x6ce75cbf959a5f5211820ea2382218fb64d8b0ad").MakeScript("init", true, UInt160.Parse("0x7f5838cd8f030ebc2c571f6c474d57ad5c35a5da"), UInt160.Parse("0x0610ee4ac7d1f1a896a8feba253b3ad13ab13661"), ToParameter(list.Select(p => p.ToArray()).ToArray()));
             Console.WriteLine(Convert.ToBase64String(Utility.StrictUTF8.GetBytes("ContainerFee")));
             Console.WriteLine(Convert.ToBase64String(BitConverter.GetBytes(0)));
+            Console.WriteLine(Convert.ToBase64String(Utility.StrictUTF8.GetBytes("WithdrawFee")));
+            Console.WriteLine(Convert.ToBase64String(BitConverter.GetBytes(300000000)));
+        }
+
+        [TestMethod]
+        public void NewAlphabetListTest()
+        {
+            List<ECPoint> list1 = new List<ECPoint>();
+            list1.Add(ECPoint.Parse("030551b149b5f3b34cb5f0bb90e3c60d2b269a99bb9b58a271fbe8f73fc9d54678", ECCurve.Secp256r1));
+            list1.Add(ECPoint.Parse("036bbe8d0e8c0c257feec1f179c1036511ff64c686cf3d62b60ee56633f5d7fb13", ECCurve.Secp256r1));
+            list1.Add(ECPoint.Parse("038e0cef33a623cf49b164249ed45909a2c0ee9d303d8d0ab9579c863399da81db", ECCurve.Secp256r1));
+            list1.Add(ECPoint.Parse("02b0704d818e3bcdcfceb9941edcf6daaee74dc6453fc22761590bfc4ac2ab8d7f", ECCurve.Secp256r1));
+
+            List<ECPoint> list2 = new List<ECPoint>();
+            list2.Add(ECPoint.Parse("030551b149b5f3b34cb5f0bb90e3c60d2b269a99bb9b58a271fbe8f73fc9d54678", ECCurve.Secp256r1));
+            list2.Add(ECPoint.Parse("03261c49859f191eff7d1ac8fdd92cb8ea2d03083950042effc20df41f27243edd", ECCurve.Secp256r1));
+            list2.Add(ECPoint.Parse("036bbe8d0e8c0c257feec1f179c1036511ff64c686cf3d62b60ee56633f5d7fb13", ECCurve.Secp256r1));
+            list2.Add(ECPoint.Parse("02b0704d818e3bcdcfceb9941edcf6daaee74dc6453fc22761590bfc4ac2ab8d7f", ECCurve.Secp256r1));
+
+            ECPoint[] list = NewAlphabetList(list1.ToArray(), list2.ToArray());
+            Assert.AreEqual(4,list.Length);
+        }
+
+        private ECPoint[] NewAlphabetList(ECPoint[] sidechain, ECPoint[] mainnet)
+        {
+            var ln = sidechain.Length;
+            if (ln == 0) throw new Exception("sidechain list is empty");
+            if (mainnet.Length < ln) throw new Exception(string.Format("alphabet list in mainnet is too short,expecting {0} keys", ln));
+            var hmap = new Dictionary<string, bool>();
+            var result = new List<ECPoint>();
+            foreach (var node in sidechain) hmap[node.EncodePoint(true).ToScriptHash().ToAddress(TestBlockchain.TheNeoSystem.Settings.AddressVersion)]=false;
+            var newNodes = 0;
+            var newNodeLimit = (ln - 1) / 3;
+            for (int i = 0; i < ln; i++)
+            {
+                if (newNodes == newNodeLimit) break;
+                var mainnetAddr = mainnet[i].EncodePoint(true).ToScriptHash().ToAddress(TestBlockchain.TheNeoSystem.Settings.AddressVersion);
+                if (!hmap.TryGetValue(mainnetAddr, out _)) newNodes++;
+                else hmap[mainnetAddr] = true;
+                result.Add(mainnet[i]);
+            }
+            if (newNodes == 0) return null;
+            foreach (var node in sidechain)
+            {
+                if (result.Count == ln) break;
+                if (!hmap[node.EncodePoint(true).ToScriptHash().ToAddress(TestBlockchain.TheNeoSystem.Settings.AddressVersion)]) result.Add(node);
+            }
+            result.Sort();
+            return result.ToArray();
         }
 
         public static ContractParameter ToParameter(byte[][] args)

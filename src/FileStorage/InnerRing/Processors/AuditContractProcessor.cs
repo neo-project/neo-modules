@@ -33,8 +33,10 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessStartAudit(ulong epoch)
         {
+            Console.WriteLine("启动ProcessStartAudit");
             Utility.Log(Name, LogLevel.Info, string.Format("epoch:{0}", epoch));
             prevAuditCanceler();
+            Console.WriteLine("AuditTaskManager任务筛选");
             int skipped = (int)TaskManager.Ask(new ResetMessage()).Result;
             if (skipped > 0) Utility.Log(Name, LogLevel.Info, string.Format("some tasks from previous epoch are skipped,amount{0}", skipped));
             ContainerID[] containers;

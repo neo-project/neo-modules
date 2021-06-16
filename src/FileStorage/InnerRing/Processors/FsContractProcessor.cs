@@ -142,7 +142,10 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Warning, string.Format("can't get gas balance of the node,error:{0}", e.Message));
                     return;
                 }
-                if (balance < gasBalanceThreshold) Utility.Log(Name, LogLevel.Warning, string.Format("gas balance threshold has been reached,balance:{0},threshold:{1}", balance, gasBalanceThreshold));
+                if (balance < gasBalanceThreshold) {
+                   Utility.Log(Name, LogLevel.Warning, string.Format("gas balance threshold has been reached,balance:{0},threshold:{1}", balance, gasBalanceThreshold));
+                    return;
+                }
                 try
                 {
                     MorphCli.TransferGas(depositeEvent.To, mintEmitValue);

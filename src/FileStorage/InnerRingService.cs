@@ -23,7 +23,7 @@ namespace Neo.FileStorage
 
         public void OnPersisted(Block block, DataCache _, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList, bool flag)
         {
-            if (flag) innering.Tell(new BlockEvent() { block = block, flag = flag });
+            if (!flag) innering.Tell(new BlockEvent() { block = block, flag = flag });
             foreach (var appExec in applicationExecutedList)
             {
                 Transaction tx = appExec.Transaction;
@@ -34,10 +34,8 @@ namespace Neo.FileStorage
                 foreach (var notify in notifys)
                 {
                     var contract = notify.ScriptHash;
-                    if (flag)
-                        if (contract != Settings.Default.FsContractHash) continue;
-                        else
-                        if (!Settings.Default.Contracts.Contains(contract)) continue;
+                    if (flag&&contract != Settings.Default.FsContractHash) continue;
+                    if (!flag&&!Settings.Default.Contracts.Contains(contract)) continue;
                     innering.Tell(new ContractEvent() { notify = notify, flag = flag });
                 }
             }

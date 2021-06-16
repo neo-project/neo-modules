@@ -22,7 +22,6 @@ namespace Neo.FileStorage.InnerRing.Invoker
 
         public static bool AlphabetVote(this Client client, int index, ulong epoch, ECPoint[] publicKeys)
         {
-            Console.WriteLine("开始AlphabetVote()参数构建");
             if (client is null) throw new Exception("client is nil");
             var array = new ContractParameter(ContractParameterType.Array);
             var list = new List<ContractParameter>();
@@ -31,10 +30,7 @@ namespace Neo.FileStorage.InnerRing.Invoker
                 list.Add(new ContractParameter(ContractParameterType.PublicKey) { Value = publicKey });
             }
             array.Value = list;
-            Console.WriteLine("开始AlphabetVote()调用");
-            var result= client.Invoke(out _, AlphabetContractHash[index], VoteMethod, SideChainFee, epoch, array);
-            Console.WriteLine("开始AlphabetVote()调用成功");
-            return result;
+            return client.Invoke(out _, AlphabetContractHash[index], VoteMethod, SideChainFee, epoch, array);
         }
     }
 }

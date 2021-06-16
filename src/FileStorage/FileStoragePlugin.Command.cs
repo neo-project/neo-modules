@@ -1,7 +1,11 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Akka.Actor;
 using Neo.ConsoleService;
 using Neo.FileStorage.Utils.Locode;
 using Neo.FileStorage.Utils.Locode.Db;
+using Neo.Network.P2P;
 using Neo.Plugins;
 using Neo.SmartContract.Native;
 
@@ -17,15 +21,17 @@ namespace Neo.FileStorage
         public const string DefaultTargetPath = "./Data_UNLOCODE";
 
         [ConsoleCommand("fs node height", Category = "StateService", Description = "Show side chain node height")]
-        private void OnNodeHeight()
+        private void OnNodeState()
         {
-            Console.WriteLine($"Height: {NativeContract.Ledger.CurrentIndex(SideSystem?.StoreView)}");
+            var localNode =  SideSystem.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
+            Console.WriteLine($"block: {NativeContract.Ledger.CurrentIndex(SideSystem?.StoreView)}  connected: {localNode.ConnectedCount}  unconnected: {localNode.UnconnectedCount}", Console.WindowWidth - 1);
+            //Console.WriteLine($"Height: {NativeContract.Ledger.CurrentIndex(SideSystem?.StoreView)}");
         }
 
         [ConsoleCommand("fs start ir", Category = "StateService", Description = "Start as inner ring node")]
         private void OnStartIR()
         {
-            StartIR(walletProvider.GetWallet());
+            StartIR();
         }
 
         [ConsoleCommand("fs start storage", Category = "StateService", Description = "Start as storage node")]

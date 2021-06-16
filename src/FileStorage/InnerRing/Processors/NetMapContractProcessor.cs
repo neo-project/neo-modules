@@ -165,6 +165,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessNewEpoch(NewEpochEvent newEpochEvent)
         {
+            Console.WriteLine("本地时隙更新："+ newEpochEvent.EpochNumber);
             State.SetEpochCounter(newEpochEvent.EpochNumber);
             State.ResetEpochTimer();
             API.Netmap.NodeInfo[] snapshot;
@@ -188,10 +189,15 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Warning, string.Format("can't start container size estimation,epoch:{0},error:{1}", newEpochEvent.EpochNumber, e.Message));
                 }
             }
+            Console.WriteLine("执行跟新NetmapSnapshot");
             NetmapSnapshot.Update(snapshot, newEpochEvent.EpochNumber);
+            Console.WriteLine("执行HandleCleanupTick");
             HandleCleanupTick(new NetmapCleanupTickEvent() { Epoch = newEpochEvent.EpochNumber });
+            Console.WriteLine("HandleNewAudit");
             HandleNewAudit(new StartEvent() { epoch = newEpochEvent.EpochNumber });
+            Console.WriteLine("HandleAuditSettlements");
             HandleAuditSettlements(new AuditStartEvent() { epoch = newEpochEvent.EpochNumber });
+            Console.WriteLine("HandleAlphabetSync执行");
             HandleAlphabetSync(new SyncEvent());
         }
 

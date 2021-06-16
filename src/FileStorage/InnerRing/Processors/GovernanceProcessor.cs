@@ -25,6 +25,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessAlphabetSync()
         {
+            Console.WriteLine("同步alphabet节点");
             if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore alphabet sync");
@@ -40,6 +41,8 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Error, string.Format("can't fetch alphabet list from main net,error:{0}", e.Message));
                 return;
             }
+            Console.WriteLine("主网alphabet节点");
+            mainnetAlphabet.ToList().ForEach(p=>Console.WriteLine("主网alphabet节点:"+p.ToString()));
             ECPoint[] sidechainAlphabet;
             try
             {
@@ -50,6 +53,8 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Error, string.Format("can't fetch alphabet list from side chain,error:{0}", e.Message));
                 return;
             }
+            Console.WriteLine("侧链alphabet节点");
+            sidechainAlphabet.ToList().ForEach(p => Console.WriteLine("侧链alphabet节点:" + p.ToString()));
             ECPoint[] newAlphabet;
             try
             {
@@ -67,6 +72,8 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             Utility.Log(Name, LogLevel.Info, "alphabet list has been changed, starting update");
             Array.Sort(newAlphabet);
+            Console.WriteLine("新alphabet节点");
+            newAlphabet.ToList().ForEach(p => Console.WriteLine("新alphabet节点:" + p.ToString()));
             try
             {
                 State.VoteForSidechainValidator(newAlphabet);
@@ -76,6 +83,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, string.Format("can't vote for side chain committee,error:{0}", e.Message));
                 return;
             }
+            Console.WriteLine("开始更新节点侧链innerRing节点列表");
             ECPoint[] innerRing;
             try
             {
@@ -85,6 +93,8 @@ namespace Neo.FileStorage.InnerRing.Processors
                 {
                     newInnerRing = UpdateInnerRing(innerRing, sidechainAlphabet, newAlphabet);
                     Array.Sort(newInnerRing);
+                    Console.WriteLine("新侧链innerRing节点列表");
+                    newInnerRing.ToList().ForEach(p=> Console.WriteLine("新侧链innerRing节点列表:"+p.ToString()));
                     MorphCli.SetInnerRing(newInnerRing);
                 }
                 catch (Exception e)
@@ -99,6 +109,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             var epoch = State.EpochCounter();
             var id = System.Text.Encoding.UTF8.GetBytes(AlphabetUpdateIDPrefix).Concat(BitConverter.GetBytes(epoch)).ToArray();
+            Console.WriteLine("开始更新主网Alphabet列表");
             try
             {
                 MainCli.AlphabetUpdate(id, newAlphabet);
@@ -114,18 +125,18 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             var ln = sidechain.Length;
             if (ln == 0) throw new Exception("sidechain list is empty");
-            if (mainnet.Length < sidechain.Length) throw new Exception(string.Format("alphabet list in mainnet is too short,expecting {0} keys", ln));
+            if (mainnet.Length < ln) throw new Exception(string.Format("alphabet list in mainnet is too short,expecting {0} keys", ln));
             var hmap = new Dictionary<string, bool>();
             var result = new List<ECPoint>();
-            foreach (var node in sidechain) hmap.Add(node.EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion), false);
+            foreach (var node in sidechain) hmap[node.EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion)] = false;
             var newNodes = 0;
             var newNodeLimit = (ln - 1) / 3;
             for (int i = 0; i < ln; i++)
             {
                 if (newNodes == newNodeLimit) break;
                 var mainnetAddr = mainnet[i].EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion);
-                if (hmap.TryGetValue(mainnetAddr, out _)) newNodes++;
-                else hmap.Add(mainnetAddr, true);
+                if (!hmap.TryGetValue(mainnetAddr, out _)) newNodes++;
+                else hmap[mainnetAddr] = true;
                 result.Add(mainnet[i]);
             }
             if (newNodes == 0) return null;
@@ -140,6 +151,9 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         private ECPoint[] UpdateInnerRing(ECPoint[] innerRing, ECPoint[] before, ECPoint[] after)
         {
+            Console.WriteLine("执行UpdateInnerRing");
+            Console.WriteLine("执行UpdateInnerRing，before.length:"+ before.Length);
+            Console.WriteLine("执行UpdateInnerRing,adter.length:"+ after.Length);
             if (before.Length != after.Length) throw new Exception("old and new alphabet lists have different length");
             var result = new List<ECPoint>();
             for (int i = 0; i < innerRing.Length; i++)

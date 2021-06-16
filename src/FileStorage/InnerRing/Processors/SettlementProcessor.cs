@@ -32,6 +32,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void HandleAuditEvent(IContractEvent morphEvent)
         {
+            Console.WriteLine("执行HandleAuditEvent");
             AuditStartEvent auditEvent = (AuditStartEvent)morphEvent;
             var epoch = auditEvent.epoch;
             Utility.Log(Name, LogLevel.Info, string.Format("new audit settlement event,epoch:{0}", epoch));
@@ -59,8 +60,10 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Error, string.Format("income context already exists,epoch:{0}", epoch));
                 return;
             }
+            Console.WriteLine("构建IncomeSettlementContext上下文");
             IncomeSettlementContext incomeCtx = new IncomeSettlementContext() { settlementDeps = basicIncome, epoch = epoch };
             incomeContexts[epoch] = incomeCtx;
+            Console.WriteLine("发送basic income collection任务");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => incomeCtx.Collect()) });
         }
 
@@ -101,9 +104,11 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 lock (lockObject)
                 {
+                    Console.WriteLine("执行Collect");
                     var cachedRate = settlementDeps.BasicRate;
                     var cnrEstimations = settlementDeps.Estimations(epoch);
                     var txTable = new TransferTable();
+                    Console.WriteLine("创建TransferTable");
                     foreach (var item in cnrEstimations)
                     {
                         OwnerID owner = settlementDeps.ContainerInfo(item.ContainerID).OwnerId;
@@ -112,6 +117,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                         BigInteger total = CalculateBasicSum(avg, cachedRate, cnrNodes.Length);
                         foreach (var node in cnrNodes)
                             distributeTable.Put(node.PublicKey(), avg);
+                        Console.WriteLine("创建交易缓存");
                         txTable.Transfer(new TransferTable.TransferTx() { from = owner, to = BankOwnerID(), amount = total });
                     }
                 }

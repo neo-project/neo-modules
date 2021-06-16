@@ -120,11 +120,11 @@ namespace Neo.FileStorage
 
         private void Start(Wallet wallet)
         {
-            if (Settings.Default.AutoStartInnerRing) StartIR(wallet);
+            if (Settings.Default.AutoStartInnerRing) StartIR();
             if (Settings.Default.AutoStartStorage) StartStorage(wallet);
         }
 
-        private void StartIR(Wallet wallet)
+        private void StartIR()
         {
             if (MainSystem is null || SideSystem is null) throw new InvalidOperationException("Neo system not initialized");
             if (InnerRingService is not null) throw new InvalidOperationException("InnerRing service already started");
