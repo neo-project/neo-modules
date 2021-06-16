@@ -63,11 +63,11 @@ namespace Neo.FileStorage
 
             TTLNetworkCache<ContainerID, FSContainer> containerCache = new(ContainerCacheSize, TimeSpan.FromSeconds(ContainerCacheTTLSeconds), cid =>
             {
-                return morphClient.InvokeGetContainer(cid);
+                return morphClient.GetContainer(cid)?.Container;
             });
             TTLNetworkCache<ContainerID, EACLTable> eaclCache = new(EACLCacheSize, TimeSpan.FromSeconds(EACLCacheTTLSeconds), cid =>
             {
-                return morphClient.InvokeGetEACL(cid)?.Table;
+                return morphClient.GetEACL(cid)?.Table;
             });
 
             LoadPlacementBuilder loadPlacementBuilder = new()

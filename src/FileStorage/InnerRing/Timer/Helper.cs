@@ -22,7 +22,7 @@ namespace Neo.FileStorage.InnerRing.Timer
                 {
                     long epochN = (long)args.epoch.EpochCounter();
                     if (epochN == 0) return;
-                    args.client.InvokeStopEstimation(epochN - 1);
+                    args.client.StopEstimation(epochN - 1);
                 },
             });
             epochTimer.Tell(new DeltaEvent()

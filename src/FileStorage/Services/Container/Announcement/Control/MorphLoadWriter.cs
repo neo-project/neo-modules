@@ -11,7 +11,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Control
 
         public void Put(FSAnnouncement announcement)
         {
-            MorphClient.InvokePutSize(announcement.Epoch, announcement.ContainerId, announcement.UsedSpace, PublicKey);
+            MorphClient.AnnounceLoad(announcement, PublicKey);
         }
 
         public void Close() { }

@@ -1,3 +1,4 @@
+using System;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
@@ -6,7 +7,6 @@ using Neo.FileStorage.API.Session;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Object.Acl.EAcl;
-using System;
 using static Neo.FileStorage.API.Acl.BearerToken.Types.Body.Types;
 using static Neo.FileStorage.API.Session.ObjectSessionContext.Types;
 using static Neo.FileStorage.API.Session.SessionToken.Types.Body;
@@ -96,7 +96,7 @@ namespace Neo.FileStorage.Services.Object.Acl
 
         private RequestInfo FindRequestInfo(IRequest request, ContainerID cid, Operation op)
         {
-            var container = MorphClient.InvokeGetContainer(cid);
+            var container = MorphClient.GetContainer(cid)?.Container;
             var classifiered = Classify(request, cid, container);
             if (classifiered.Item1 == Role.Unspecified)
                 throw new InvalidOperationException(nameof(FindRequestInfo) + " unkown role");

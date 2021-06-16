@@ -182,7 +182,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 try
                 {
-                    MorphCli.InvokeStartEstimation((long)newEpochEvent.EpochNumber);
+                    MorphCli.StartEstimation((long)newEpochEvent.EpochNumber);
                 }
                 catch (Exception e)
                 {

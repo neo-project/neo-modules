@@ -1,18 +1,21 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Container;
+using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.API.Session;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Tests.InnerRing.Processors;
 using Neo.IO;
 using Neo.Wallets;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using static Neo.FileStorage.Morph.Invoker.MorphContractInvoker;
 
 namespace Neo.FileStorage.Tests.Morph.Invoker
@@ -116,18 +119,30 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         public void InvokePutTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            KeyPair key = accounts.ToArray()[0].GetKey();
-            Neo.FileStorage.API.Refs.OwnerID ownerId = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            KeyPair kp = accounts.ToArray()[0].GetKey();
+            ECDsa key = kp.PrivateKey.LoadPrivateKey();
+            OwnerID owner = key.ToOwnerID();
             Container container = new Container()
             {
                 Version = new Neo.FileStorage.API.Refs.Version(),
                 BasicAcl = 0,
                 Nonce = ByteString.CopyFrom(new byte[16], 0, 16),
-                OwnerId = ownerId,
+                OwnerId = owner,
                 PlacementPolicy = new PlacementPolicy()
             };
-            byte[] sig = Neo.Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            bool result = MorphContractInvoker.InvokePut(client, container, key.PublicKey.ToArray(), sig);
+            Signature sig = key.SignMessagePart(container);
+            SessionToken token = new()
+            {
+                Body = new()
+                {
+                    OwnerId = owner,
+                    Id = ByteString.CopyFrom(Guid.NewGuid().ToByteArray()),
+                    SessionKey = ByteString.CopyFrom(Guid.NewGuid().ToByteArray()),
+                    Lifetime = new()
+                }
+            };
+            token.Signature = key.SignMessagePart(token.Body);
+            bool result = MorphContractInvoker.PutContainer(client, container, sig, token);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -221,8 +236,8 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 OwnerId = ownerId,
                 PlacementPolicy = new PlacementPolicy()
             };
-            Container result = MorphContractInvoker.InvokeGetContainer(client, container.CalCulateAndGetId);
-            Assert.AreEqual(result.ToByteArray().ToHexString(), container.ToByteArray().ToHexString());
+            ContainerWithSignature result = MorphContractInvoker.GetContainer(client, container.CalCulateAndGetId);
+            Assert.AreEqual(result.Container.ToByteArray().ToHexString(), container.ToByteArray().ToHexString());
         }
 
         [TestMethod]
@@ -239,7 +254,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 OwnerId = ownerId,
                 PlacementPolicy = new PlacementPolicy()
             };
-            List<ContainerID> result = MorphContractInvoker.InvokeGetContainerList(client, ownerId);
+            List<ContainerID> result = MorphContractInvoker.GetContainerList(client, ownerId);
             Assert.AreEqual(result.Count, 1);
             Assert.AreEqual(result.ElementAt(0).ToByteArray().ToHexString(), container.CalCulateAndGetId.Value.ToByteArray().ToHexString());
         }

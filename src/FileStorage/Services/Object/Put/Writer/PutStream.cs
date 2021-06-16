@@ -1,3 +1,5 @@
+using System;
+using System.Threading;
 using Google.Protobuf;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Session;
@@ -6,8 +8,6 @@ using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using Neo.FileStorage.Services.ObjectManager.Transformer;
-using System;
-using System.Threading;
 
 namespace Neo.FileStorage.Services.Object.Put.Writer
 {
@@ -129,7 +129,7 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
         private void PrepareInitPrm(PutInitPrm prm)
         {
             var nm = PutService.MorphClient.InvokeSnapshot(0);
-            var container = PutService.MorphClient.InvokeGetContainer(prm.Header.ContainerId);
+            var container = PutService.MorphClient.GetContainer(prm.Header.ContainerId)?.Container;
             var builder = new NetworkMapBuilder(nm);
 
             if (prm.Local)

@@ -65,7 +65,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Container cnr;
                 try
                 {
-                    cnr = MorphCli.InvokeGetContainer(containers[i]);
+                    cnr = MorphCli.GetContainer(containers[i]).Container;
                 }
                 catch (Exception e)
                 {
@@ -119,7 +119,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             List<ContainerID> containers;
             try
             {
-                containers = MorphCli.InvokeGetContainerList(new OwnerID());
+                containers = MorphCli.ListContainers(new OwnerID());
             }
             catch (Exception e)
             {

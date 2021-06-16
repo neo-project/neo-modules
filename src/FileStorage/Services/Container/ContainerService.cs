@@ -3,6 +3,7 @@ using Google.Protobuf;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.API.Session;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Container.Announcement;
 using FSContainer = Neo.FileStorage.API.Container.Container;
@@ -22,7 +23,7 @@ namespace Neo.FileStorage.Services.Container
         public DeleteResponse Delete(DeleteRequest request)
         {
             byte[] sig = request.Body.Signature.Sign.ToByteArray();
-            MorphClient.InvokeDelete(request.Body.ContainerId, sig);
+            MorphClient.DeleteContainer(request.Body.ContainerId, sig, GetSessionToken(request));
             var resp = new DeleteResponse
             {
                 Body = new DeleteResponse.Types.Body { }
@@ -32,12 +33,14 @@ namespace Neo.FileStorage.Services.Container
 
         public GetResponse Get(GetRequest request)
         {
-            var container = MorphContractInvoker.InvokeGetContainer(MorphClient, request.Body.ContainerId);
+            var cnr = MorphContractInvoker.GetContainer(MorphClient, request.Body.ContainerId);
             var resp = new GetResponse
             {
                 Body = new GetResponse.Types.Body
                 {
-                    Container = container,
+                    Container = cnr.Container,
+                    Signature = cnr.Signature,
+                    SessionToken = cnr.SessionToken
                 }
             };
             return resp;
@@ -45,7 +48,7 @@ namespace Neo.FileStorage.Services.Container
 
         public GetExtendedACLResponse GetExtendedACL(GetExtendedACLRequest request)
         {
-            var result = MorphContractInvoker.InvokeGetEACL(MorphClient, request.Body.ContainerId);
+            var result = MorphContractInvoker.GetEACL(MorphClient, request.Body.ContainerId);
             var resp = new GetExtendedACLResponse
             {
                 Body = new GetExtendedACLResponse.Types.Body
@@ -59,7 +62,7 @@ namespace Neo.FileStorage.Services.Container
 
         public ListResponse List(ListRequest request)
         {
-            var containers = MorphContractInvoker.InvokeGetContainerList(MorphClient, request.Body.OwnerId);
+            var containers = MorphContractInvoker.ListContainers(MorphClient, request.Body.OwnerId);
             var resp = new ListResponse { Body = new ListResponse.Types.Body { } };
             resp.Body.ContainerIds.AddRange(containers);
             return resp;
@@ -68,9 +71,7 @@ namespace Neo.FileStorage.Services.Container
         public PutResponse Put(PutRequest request)
         {
             FSContainer container = request.Body.Container;
-            byte[] sig = request.Body.Signature.Sign.ToByteArray();
-            byte[] public_key = request.Body.Signature.Key.ToByteArray();
-            MorphClient.InvokePut(container, sig, public_key);
+            MorphClient.PutContainer(container, request.Body.Signature, GetSessionToken(request));
             var resp = new PutResponse
             {
                 Body = new PutResponse.Types.Body
@@ -83,13 +84,21 @@ namespace Neo.FileStorage.Services.Container
 
         public SetExtendedACLResponse SetExtendedACL(SetExtendedACLRequest request)
         {
-            byte[] sig = request.Body.Signature.Sign.ToByteArray();
-            MorphClient.InvokeSetEACL(request.Body.Eacl, sig);
+            MorphClient.SetEACL(request.Body.Eacl, request.Body.Signature, GetSessionToken(request));
             var resp = new SetExtendedACLResponse
             {
                 Body = new SetExtendedACLResponse.Types.Body { }
             };
             return resp;
+        }
+
+        private SessionToken GetSessionToken(IRequest request)
+        {
+            RequestMetaHeader meta;
+            meta = request.MetaHeader;
+            while (meta is not null)
+                meta = meta.Origin;
+            return meta.SessionToken;
         }
     }
 }
