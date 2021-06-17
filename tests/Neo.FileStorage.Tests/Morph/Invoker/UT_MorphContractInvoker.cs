@@ -163,10 +163,19 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 PlacementPolicy = new PlacementPolicy()
             };
             byte[] sig = Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            bool result = MorphContractInvoker.InvokeDelete(client, container.CalCulateAndGetId, sig);
+            bool result = MorphContractInvoker.DeleteContainer(client, container.CalCulateAndGetId, sig);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
+        }
+
+        private SessionToken GetSessionToken(IRequest request)
+        {
+            RequestMetaHeader meta;
+            meta = request.MetaHeader;
+            while (meta is not null)
+                meta = meta.Origin;
+            return meta.SessionToken;
         }
 
         [TestMethod]
@@ -190,7 +199,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             };
             eACLTable.Records.Add(new API.Acl.EACLRecord());
             byte[] sig = Cryptography.Crypto.Sign(eACLTable.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            bool result = MorphContractInvoker.InvokeSetEACL(client, eACLTable, sig);
+            bool result = MorphContractInvoker.SetEACL(client, eACLTable, sig);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -217,7 +226,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             };
             eACLTable.Records.Add(new API.Acl.EACLRecord());
             byte[] sig = Cryptography.Crypto.Sign(eACLTable.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            EAclWithSignature result = MorphContractInvoker.InvokeGetEACL(client, container.CalCulateAndGetId);
+            EAclWithSignature result = MorphContractInvoker.GetEACL(client, container.CalCulateAndGetId);
             Assert.IsNotNull(result);
             Assert.AreEqual(result.Table.ToByteArray().ToHexString(), eACLTable.ToByteArray().ToHexString());
         }

@@ -18,9 +18,6 @@ namespace Neo.FileStorage.InnerRing.Invoker
         public static int AlphabetIndex(this Client client, ECPoint key)
         {
             if (client is null) throw new Exception("client is nil");
-            Console.WriteLine("系统当前Committee：");
-            client.Committee().ToList().ForEach(p=> Console.WriteLine(p.ToString()));
-            Console.WriteLine("钱包key:"+ key.ToString());
             return KeyPosition(key, client.Committee());
         }
 

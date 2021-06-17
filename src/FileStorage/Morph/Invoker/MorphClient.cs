@@ -86,13 +86,6 @@ namespace Neo.FileStorage.Morph.Invoker
             bool sigresult=wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             txId = tx.Hash;
-
-            var bal = NativeContract.GAS.BalanceOf(snapshot, wallet.GetAccounts().ToArray()[0].ScriptHash);
-            Console.WriteLine("交易花费系统手续费："+tx.SystemFee);
-            Console.WriteLine("交易花费网络手续费："+tx.NetworkFee);
-            Console.WriteLine("当前账户余额："+ bal);
-            Console.WriteLine("交易消耗：" + tx.SystemFee+tx.NetworkFee);
-            Console.WriteLine("当前账户扣除消耗后余额：" + (bal - tx.SystemFee-tx.NetworkFee));
             actor.Tell(tx);
             Utility.Log("client", LogLevel.Debug, string.Format("neo client invoke,method:{0},tx_hash:{1}", method, tx.Hash.ToString()));
             return true;

@@ -29,7 +29,6 @@ namespace Neo.FileStorage.InnerRing
                 ind.innerRingIndex = innerRingIndex;
                 ind.innerRingSize = innerRingSize;
                 ind.alphabetIndex = ContractInvoker.AlphabetIndex(client, key);
-                Console.WriteLine("当前钱包账户在Alphabet中位置"+ ind.alphabetIndex);
                 lastAccess = DateTime.Now;
                 return ind;
             }
