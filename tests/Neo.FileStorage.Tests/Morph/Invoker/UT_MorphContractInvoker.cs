@@ -152,8 +152,9 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         public void InvokeDeleteTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            KeyPair key = accounts.ToArray()[0].GetKey();
-            API.Refs.OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            KeyPair kp = accounts.ToArray()[0].GetKey();
+            ECDsa key = kp.PrivateKey.LoadPrivateKey();
+            OwnerID ownerId = key.ToOwnerID();
             Container container = new Container()
             {
                 Version = new API.Refs.Version(),
@@ -162,8 +163,19 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 OwnerId = ownerId,
                 PlacementPolicy = new PlacementPolicy()
             };
-            byte[] sig = Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            bool result = MorphContractInvoker.InvokeDelete(client, container.CalCulateAndGetId, sig);
+            byte[] sig = Cryptography.Crypto.Sign(container.ToByteArray(), kp.PrivateKey, kp.PublicKey.EncodePoint(false)[1..]);
+            SessionToken token = new()
+            {
+                Body = new()
+                {
+                    OwnerId = ownerId,
+                    Id = ByteString.CopyFrom(Guid.NewGuid().ToByteArray()),
+                    SessionKey = ByteString.CopyFrom(Guid.NewGuid().ToByteArray()),
+                    Lifetime = new()
+                }
+            };
+            token.Signature = key.SignMessagePart(token.Body);
+            bool result = MorphContractInvoker.DeleteContainer(client, container.CalCulateAndGetId, sig, token);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -173,8 +185,9 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         public void InvokeSetEACLTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            KeyPair key = accounts.ToArray()[0].GetKey();
-            API.Refs.OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            KeyPair kp = accounts.ToArray()[0].GetKey();
+            ECDsa key = kp.PrivateKey.LoadPrivateKey();
+            OwnerID ownerId = key.ToOwnerID();
             Container container = new Container()
             {
                 Version = new API.Refs.Version(),
@@ -189,8 +202,19 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 Version = new API.Refs.Version(),
             };
             eACLTable.Records.Add(new API.Acl.EACLRecord());
-            byte[] sig = Cryptography.Crypto.Sign(eACLTable.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            bool result = MorphContractInvoker.InvokeSetEACL(client, eACLTable, sig);
+            Signature sig = key.SignMessagePart(eACLTable);
+            SessionToken token = new()
+            {
+                Body = new()
+                {
+                    OwnerId = ownerId,
+                    Id = ByteString.CopyFrom(Guid.NewGuid().ToByteArray()),
+                    SessionKey = ByteString.CopyFrom(Guid.NewGuid().ToByteArray()),
+                    Lifetime = new()
+                }
+            };
+            token.Signature = key.SignMessagePart(token.Body);
+            bool result = MorphContractInvoker.SetEACL(client, eACLTable, sig, token);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -217,7 +241,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             };
             eACLTable.Records.Add(new API.Acl.EACLRecord());
             byte[] sig = Cryptography.Crypto.Sign(eACLTable.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            EAclWithSignature result = MorphContractInvoker.InvokeGetEACL(client, container.CalCulateAndGetId);
+            EAclWithSignature result = MorphContractInvoker.GetEACL(client, container.CalCulateAndGetId);
             Assert.IsNotNull(result);
             Assert.AreEqual(result.Table.ToByteArray().ToHexString(), eACLTable.ToByteArray().ToHexString());
         }
@@ -254,7 +278,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 OwnerId = ownerId,
                 PlacementPolicy = new PlacementPolicy()
             };
-            List<ContainerID> result = MorphContractInvoker.GetContainerList(client, ownerId);
+            List<ContainerID> result = MorphContractInvoker.ListContainers(client, ownerId);
             Assert.AreEqual(result.Count, 1);
             Assert.AreEqual(result.ElementAt(0).ToByteArray().ToHexString(), container.CalCulateAndGetId.Value.ToByteArray().ToHexString());
         }
