@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
@@ -97,32 +98,33 @@ namespace Neo.FileStorage.Services.Object.Acl
         private RequestInfo FindRequestInfo(IRequest request, ContainerID cid, Operation op)
         {
             var container = MorphClient.GetContainer(cid)?.Container;
-            var classifiered = Classify(request, cid, container);
-            if (classifiered.Item1 == Role.Unspecified)
-                throw new InvalidOperationException(nameof(FindRequestInfo) + " unkown role");
-            var verb = SourceVerbOfRequest(request, op);
             var info = new RequestInfo
             {
-                BasicAcl = container.BasicAcl,
-                Role = classifiered.Item1,
-                IsInnerRing = classifiered.Item3,
-                Op = verb,
-                Owner = container.OwnerId,
-                ContainerID = cid,
-                SenderKey = classifiered.Item2,
-                Bearer = request.MetaHeader.BearerToken,
+                OriginalSessionToken = OriginalSessionToken(request),
                 Request = request,
+                BasicAcl = container.BasicAcl,
+                Owner = container.OwnerId,
+                Bearer = OriginalBearerToken(request),
+                ContainerID = cid,
             };
+            var classifiered = Classify(info, cid, container);
+            if (classifiered.Item1 == Role.Unspecified)
+                throw new InvalidOperationException(nameof(FindRequestInfo) + " unkown role");
+            var verb = SourceVerbOfRequest(info, op);
+            info.Role = classifiered.Item1;
+            info.IsInnerRing = classifiered.Item3;
+            info.Op = verb;
+            info.SenderKey = classifiered.Item2;
             return info;
         }
 
-        private Operation SourceVerbOfRequest(IRequest request, Operation op)
+        private Operation SourceVerbOfRequest(RequestInfo info, Operation op)
         {
-            if (request.MetaHeader?.SessionToken != null)
+            if (info.OriginalSessionToken != null)
             {
-                if (request.MetaHeader.SessionToken.Body?.ContextCase == ContextOneofCase.Object)
+                if (info.OriginalSessionToken.Body?.ContextCase == ContextOneofCase.Object)
                 {
-                    var ctx = request.MetaHeader.SessionToken.Body?.Object;
+                    var ctx = info.OriginalSessionToken.Body?.Object;
                     if (ctx is null) return op;
                     return ctx.Verb switch
                     {
@@ -179,7 +181,7 @@ namespace Neo.FileStorage.Services.Object.Acl
             {
                 return false;
             }
-            if (owner is null || info.SenderKey is null || info.SenderKey.Length == 0)
+            if (owner is null || info.SenderKey is null || !info.SenderKey.Any())
                 return false;
             if (!info.BasicAcl.Sticky())
                 return false;
@@ -207,6 +209,22 @@ namespace Neo.FileStorage.Services.Object.Acl
         private bool IsValidLifetime(TokenLifetime lifetime, ulong epoch)
         {
             return epoch >= lifetime.Nbf && epoch <= lifetime.Exp;
+        }
+
+        private SessionToken OriginalSessionToken(IRequest request)
+        {
+            RequestMetaHeader meta = request.MetaHeader;
+            while (meta.Origin is not null)
+                meta = meta.Origin;
+            return meta.SessionToken;
+        }
+
+        private BearerToken OriginalBearerToken(IRequest request)
+        {
+            RequestMetaHeader meta = request.MetaHeader;
+            while (meta.Origin is not null)
+                meta = meta.Origin;
+            return meta.BearerToken;
         }
     }
 }

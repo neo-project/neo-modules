@@ -146,5 +146,10 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
                 throw new InvalidOperationException($"{nameof(PutStream)} target not initilized");
             target.WriteChunk(chunk.ToByteArray());
         }
+
+        public void RelayRequest(Client client)
+        {
+            
+        }
     }
 }

@@ -1,27 +1,27 @@
-using FSContainer = Neo.FileStorage.API.Container.Container;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
 using Neo.FileStorage.Morph.Invoker;
-using System;
-using System.Linq;
-using System.Collections.Generic;
+using FSContainer = Neo.FileStorage.API.Container.Container;
 
 namespace Neo.FileStorage.Services.Object.Acl
 {
     public partial class AclChecker
     {
-        private (Role, byte[], bool) Classify(IRequest request, ContainerID cid, FSContainer container)
+        private (Role, byte[], bool) Classify(RequestInfo info, ContainerID cid, FSContainer container)
         {
             if (cid is null)
                 throw new ArgumentNullException(nameof(cid));
             Role role;
             bool is_inner = false;
-            byte[] public_key = RequestOwner(request);
+            byte[] public_key = RequestOwner(info);
             OwnerID owner = public_key.PublicKeyToOwnerID();
-            if (owner == container.OwnerId)
+            if (owner.Equals(container.OwnerId))
                 role = Role.User;
             else if (is_inner = IsInnerRingKey(public_key))
                 role = Role.System;
@@ -32,15 +32,15 @@ namespace Neo.FileStorage.Services.Object.Acl
             return (role, public_key, is_inner);
         }
 
-        private byte[] RequestOwner(IRequest request)
+        private byte[] RequestOwner(RequestInfo info)
         {
-            if (request.VerifyHeader is null)
+            if (info.Request.VerifyHeader is null)
                 throw new ArgumentException($"{nameof(RequestOwner)} no verification header");
-            if (request.MetaHeader?.SessionToken?.Body is not null)
+            if (info.OriginalSessionToken.Body is not null)
             {
-                return OwnerFromToken(request.MetaHeader.SessionToken);
+                return OwnerFromToken(info.OriginalSessionToken);
             }
-            return OriginalBodySignature(request.VerifyHeader).Key.ToByteArray();
+            return OriginalBodySignature(info.Request.VerifyHeader).Key.ToByteArray();
         }
 
         private byte[] OwnerFromToken(SessionToken token)
@@ -48,7 +48,7 @@ namespace Neo.FileStorage.Services.Object.Acl
             if (!token.Signature.VerifyMessagePart(token.Body)) throw new InvalidOperationException($"{nameof(OwnerFromToken)} invalid session token signature");
             var tokenIssueKey = token.Signature.Key.ToByteArray();
             var tokenOwner = token.Body.OwnerId;
-            if (tokenIssueKey.PublicKeyToOwnerID() != tokenOwner) throw new InvalidOperationException($"{nameof(OwnerFromToken)} invalid session token owner");
+            if (!tokenIssueKey.PublicKeyToOwnerID().Equals(tokenOwner)) throw new InvalidOperationException($"{nameof(OwnerFromToken)} invalid session token owner");
             return tokenIssueKey;
         }
 

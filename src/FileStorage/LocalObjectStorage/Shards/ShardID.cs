@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Neo.Cryptography;
 
 
@@ -8,7 +9,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
     {
         private readonly byte[] value;
 
-        public bool IsEmpty => value is null || value.Length == 0;
+        public bool IsEmpty => value is null || !value.Any();
 
         public ShardID()
         {

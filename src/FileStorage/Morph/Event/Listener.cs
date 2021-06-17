@@ -1,10 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Akka.Actor;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.Network.P2P.Payloads;
 using Neo.Plugins.util;
 using Neo.SmartContract;
-using System;
-using System.Collections.Generic;
 
 namespace Neo.FileStorage.Morph.Event
 {
@@ -59,7 +60,7 @@ namespace Neo.FileStorage.Morph.Event
                     Utility.Log(name, LogLevel.Warning, string.Format("could not parse notification event:{0}", e.Message));
                     return;
                 }
-                if (!handlers.TryGetValue(keyEvent, out var handlersArray) || handlersArray.Count == 0)
+                if (!handlers.TryGetValue(keyEvent, out var handlersArray) || !handlersArray.Any())
                 {
                     Utility.Log(name, LogLevel.Warning, string.Format("handlers for parsed notification event were not registered:{0}", contractEvent.ToString()));
                     return;

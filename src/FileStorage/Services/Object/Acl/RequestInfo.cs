@@ -16,6 +16,7 @@ namespace Neo.FileStorage.Services.Object.Acl
         public ContainerID ContainerID;
         public ObjectID ObjectID;
         public byte[] SenderKey;
+        public SessionToken OriginalSessionToken;
         public BearerToken Bearer;
         public IRequest Request;
 

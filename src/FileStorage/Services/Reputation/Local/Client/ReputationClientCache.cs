@@ -24,7 +24,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
                 foreach (var n in nm.Nodes)
                 {
                     var ipaddr = Network.Address.FromString(n.NetworkAddress);
-                    if (ipaddr == address)
+                    if (ipaddr.Equals(address))
                     {
                         UpdatePrm prm = new(new(n.PublicKey));
                         return new()

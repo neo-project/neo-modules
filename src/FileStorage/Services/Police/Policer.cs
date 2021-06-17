@@ -87,7 +87,7 @@ namespace Neo.FileStorage.Services.Police
                 {
                     continue;
                 }
-                if (node == config.LocalAddress)
+                if (node.Equals(config.LocalAddress))
                 {
                     if (shortage == 0)
                         redundantLocalCopy = true;
