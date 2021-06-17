@@ -364,6 +364,7 @@
         "manifest": {
           "name": "GasToken",
           "groups": [],
+          "features": {},
           "supportedstandards": [
             "NEP-17"
           ],
@@ -484,6 +485,7 @@
         "manifest": {
           "name": "GasToken",
           "groups": [],
+          "features": {},
           "supportedstandards": [
             "NEP-17"
           ],
@@ -604,6 +606,7 @@
         "manifest": {
           "name": "NeoToken",
           "groups": [],
+          "features": {},
           "supportedstandards": [
             "NEP-17"
           ],
@@ -820,6 +823,7 @@
         "manifest": {
           "name": "NeoToken",
           "groups": [],
+          "features": {},
           "supportedstandards": [
             "NEP-17"
           ],
@@ -1036,6 +1040,7 @@
           "manifest": {
             "name": "ContractManagement",
             "groups": [],
+            "features": {},
             "supportedstandards": [],
             "abi": {
               "methods": [
@@ -1189,7 +1194,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [0]
         },
         {
           "id": -2,
@@ -1204,6 +1209,7 @@
           "manifest": {
             "name": "LedgerContract",
             "groups": [],
+            "features": {},
             "supportedstandards": [],
             "abi": {
               "methods": [
@@ -1285,7 +1291,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [0]
         },
         {
           "id": -3,
@@ -1300,6 +1306,7 @@
           "manifest": {
             "name": "NeoToken",
             "groups": [],
+            "features": {},
             "supportedstandards": [
               "NEP-17"
             ],
@@ -1488,7 +1495,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [0]
         },
         {
           "id": -4,
@@ -1503,6 +1510,7 @@
           "manifest": {
             "name": "GasToken",
             "groups": [],
+            "features": {},
             "supportedstandards": [
               "NEP-17"
             ],
@@ -1595,7 +1603,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [0]
         },
         {
           "id": -5,
@@ -1610,6 +1618,7 @@
           "manifest": {
             "name": "PolicyContract",
             "groups": [],
+            "features": {},
             "supportedstandards": [],
             "abi": {
               "methods": [
@@ -1775,7 +1784,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [0]
         },
         {
           "id": -6,
@@ -1790,6 +1799,7 @@
           "manifest": {
             "name": "RoleManagement",
             "groups": [],
+            "features": {},
             "supportedstandards": [],
             "abi": {
               "methods": [
@@ -1837,7 +1847,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [0]
         },
         {
           "id": -7,
@@ -1852,6 +1862,7 @@
           "manifest": {
             "name": "OracleContract",
             "groups": [],
+            "features": {},
             "supportedstandards": [],
             "abi": {
               "methods": [
@@ -1944,7 +1955,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [0]
         },
         {
           "id": -8,
@@ -1959,6 +1970,7 @@
           "manifest": {
             "name": "NameService",
             "groups": [],
+            "features": {},
             "supportedstandards": [],
             "abi": {
               "methods": [
@@ -2236,7 +2248,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [0]
         }
       ]
     }
@@ -2450,11 +2462,11 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "magic": 0,
+        "network": 0,
         "tcpport": 20333,
         "wsport": 20334,
         "nonce": 592651621,
-        "useragent": "/Neo:3.0.0-preview1/"
+        "useragent": "/Neo:3.0.0-rc1/"
       }
     }
   },

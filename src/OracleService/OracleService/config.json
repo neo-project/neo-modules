@@ -9,7 +9,7 @@
       "Timeout": 5000
     },
     "NeoFS": {
-      "EndPoint": "127.0.0.1:8080",
+      "EndPoint": "http://127.0.0.1:8080",
       "Timeout": 15000
     },
     "AutoStart": false

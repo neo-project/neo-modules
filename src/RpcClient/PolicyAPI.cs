@@ -1,8 +1,6 @@
 using Neo.SmartContract.Native;
-using Neo.VM;
 using System.Linq;
 using System.Threading.Tasks;
-using Neo.IO.Json;
 
 namespace Neo.Network.RPC
 {
