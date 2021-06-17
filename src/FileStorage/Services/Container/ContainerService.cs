@@ -23,7 +23,7 @@ namespace Neo.FileStorage.Services.Container
         public DeleteResponse Delete(DeleteRequest request)
         {
             byte[] sig = request.Body.Signature.Sign.ToByteArray();
-            MorphClient.DeleteContainer(request.Body.ContainerId, sig, GetSessionToken(request));
+            MorphClient.DeleteContainer(request.Body.ContainerId, sig, OriginalSessionToken(request));
             var resp = new DeleteResponse
             {
                 Body = new DeleteResponse.Types.Body { }
@@ -71,7 +71,7 @@ namespace Neo.FileStorage.Services.Container
         public PutResponse Put(PutRequest request)
         {
             FSContainer container = request.Body.Container;
-            MorphClient.PutContainer(container, request.Body.Signature, GetSessionToken(request));
+            MorphClient.PutContainer(container, request.Body.Signature, OriginalSessionToken(request));
             var resp = new PutResponse
             {
                 Body = new PutResponse.Types.Body
@@ -84,7 +84,7 @@ namespace Neo.FileStorage.Services.Container
 
         public SetExtendedACLResponse SetExtendedACL(SetExtendedACLRequest request)
         {
-            MorphClient.SetEACL(request.Body.Eacl, request.Body.Signature, GetSessionToken(request));
+            MorphClient.SetEACL(request.Body.Eacl, request.Body.Signature, OriginalSessionToken(request));
             var resp = new SetExtendedACLResponse
             {
                 Body = new SetExtendedACLResponse.Types.Body { }
@@ -92,11 +92,10 @@ namespace Neo.FileStorage.Services.Container
             return resp;
         }
 
-        private SessionToken GetSessionToken(IRequest request)
+        private SessionToken OriginalSessionToken(IRequest request)
         {
-            RequestMetaHeader meta;
-            meta = request.MetaHeader;
-            while (meta is not null)
+            RequestMetaHeader meta = request.MetaHeader;
+            while (meta.Origin is not null)
                 meta = meta.Origin;
             return meta.SessionToken;
         }

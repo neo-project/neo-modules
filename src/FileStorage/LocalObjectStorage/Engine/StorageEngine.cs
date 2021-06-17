@@ -131,7 +131,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
             foreach (var shard in UnsortedShards())
             {
                 var addresses = shard.List();
-                if (addresses == null) { continue; }
+                if (addresses is null) { continue; }
                 foreach (var address in addresses)
                 {
                     if (!result.Contains(address))

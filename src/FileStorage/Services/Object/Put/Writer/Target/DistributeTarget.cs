@@ -1,9 +1,10 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Google.Protobuf;
 using Neo.FileStorage.Core.Object;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using Neo.FileStorage.Services.ObjectManager.Transformer;
-using System;
-using System.Threading.Tasks;
 using static Neo.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
@@ -41,7 +42,7 @@ namespace Neo.FileStorage.Services.Object.Put
             while (true)
             {
                 var addrs = Traverser.Next();
-                if (addrs.Count == 0) break;
+                if (!addrs.Any()) break;
                 var tasks = new Task[addrs.Count];
                 for (int i = 0; i < addrs.Count; i++)
                 {
@@ -50,8 +51,8 @@ namespace Neo.FileStorage.Services.Object.Put
                         var target = NodeTargetInitializer(addrs[i]);
                         target.WriteHeader(obj);
                         target.Close();
+                        Traverser.SubmitSuccess();
                     });
-                    Traverser.SubmitSuccess();
                 }
                 Task.WaitAll(tasks);
             }

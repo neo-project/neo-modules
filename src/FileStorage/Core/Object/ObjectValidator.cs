@@ -1,12 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.StorageGroup;
 using Neo.FileStorage.API.Tombstone;
 using Neo.FileStorage.Morph.Invoker;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Core.Object
@@ -47,7 +47,7 @@ namespace Neo.FileStorage.Core.Object
             var key = obj.Signature.Key;
 
             if (token is null || !token.Body.SessionKey.Equals(key))
-                return obj.OwnerId == key.ToByteArray().PublicKeyToOwnerID();
+                return obj.OwnerId.Equals(key.ToByteArray().PublicKeyToOwnerID());
 
             // TODO: perform token verification
             return true;
@@ -71,7 +71,7 @@ namespace Neo.FileStorage.Core.Object
         private ulong ExpirationEpochAttributeValue(FSObject obj)
         {
             var expires = obj.Attributes.Where(p => p.Key == Header.Types.Attribute.SysAttributeExpEpoch).ToList();
-            if (expires.Count == 0) throw new InvalidOperationException();
+            if (!expires.Any()) throw new InvalidOperationException();
             return ulong.Parse(expires[0].Value);
         }
 
@@ -80,7 +80,7 @@ namespace Neo.FileStorage.Core.Object
             switch (obj.ObjectType)
             {
                 case ObjectType.Tombstone:
-                    if (obj.Payload.Length == 0) return false;
+                    if (!obj.Payload.Any()) return false;
                     Tombstone tombstone = Tombstone.Parser.ParseFrom(obj.Payload);
                     ulong exp;
                     try
@@ -108,7 +108,7 @@ namespace Neo.FileStorage.Core.Object
                         deleteHandler.DeleteObjects(address_list.ToArray());
                     break;
                 case ObjectType.StorageGroup:
-                    if (obj.Payload.Length == 0) return false;
+                    if (!obj.Payload.Any()) return false;
                     StorageGroup sg = StorageGroup.Parser.ParseFrom(obj.Payload.ToByteArray());
                     foreach (var id in sg.Members)
                     {

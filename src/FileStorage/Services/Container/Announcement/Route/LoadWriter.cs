@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using static Neo.Utility;
 using FSAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types.Announcement;
@@ -25,7 +26,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Route
             if (!exists)
             {
                 var route = Router.RouteBuilder.NextStage(announcement, RouteContext.PassedRoute);
-                if (route is null || route.Count == 0)
+                if (route is null || !route.Any())
                     route = new() { null };
                 value = new()
                 {

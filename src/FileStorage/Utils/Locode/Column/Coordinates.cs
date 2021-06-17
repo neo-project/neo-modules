@@ -9,7 +9,7 @@ namespace Neo.FileStorage.Utils.Locode.Column
 
         public static Coordinates CoordinatesFromString(string s)
         {
-            if (s.Length == 0) return null;
+            if (s == "") return null;
             var strs = s.Split(" ");
             if (strs.Length != 2) throw new Exception("invalid string format in UN/Locode");
             var lat = LatitudeCode.LatitudeFromString(strs[0]);

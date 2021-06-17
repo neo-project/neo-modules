@@ -21,7 +21,8 @@ namespace Neo.FileStorage.Services.Object.Put
 
         public PutInitPrm ToInitPrm(PutRequest request)
         {
-            return PutInitPrm.FromRequest(request);
+            var prm = PutInitPrm.FromRequest(request);
+            return prm;
         }
 
         public PutStream Put(CancellationToken cancellation)

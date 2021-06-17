@@ -55,7 +55,7 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
 
         public static bool IsChild(this FSObject obj)
         {
-            return obj.Parent != null && obj.Parent.Address == obj.Address;
+            return obj.Parent != null && obj.Parent.Address.Equals(obj.Address);
         }
     }
 }

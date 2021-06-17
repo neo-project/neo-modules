@@ -1,11 +1,12 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Neo.Cryptography.ECC;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Morph.Event;
 using Neo.SmartContract;
 using Neo.Wallets;
-using System;
-using System.Threading.Tasks;
 using static Neo.FileStorage.Utils.WorkerPool;
 
 namespace Neo.FileStorage.InnerRing.Processors
@@ -57,7 +58,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Warning, string.Format("can't get netmap snapshot to emit gas to storage nodes,error:{0}", e.Message));
                 return;
             }
-            if (networkMap.Length == 0)
+            if (!networkMap.Any())
             {
                 Utility.Log(Name, LogLevel.Debug, "empty network map, do not emit gas");
                 return;

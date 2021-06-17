@@ -120,7 +120,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             public ulong AvgEstimation(Estimations e)
             {
                 ulong avg = 0;
-                if (e.AllEstimation.Count == 0) return avg;
+                if (!e.AllEstimation.Any()) return avg;
                 foreach (var estimation in e.AllEstimation)
                     avg += estimation.Size;
                 return avg / (ulong)e.AllEstimation.Count;
@@ -272,7 +272,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log("Calculator", LogLevel.Debug, "could not collect audit results");
                     return;
                 }
-                if (auditResults.Count == 0)
+                if (!auditResults.Any())
                 {
                     Utility.Log("Calculator", LogLevel.Debug, "no audit results in previous epoch");
                     return;

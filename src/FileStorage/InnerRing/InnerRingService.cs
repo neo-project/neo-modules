@@ -391,7 +391,7 @@ namespace Neo.FileStorage.InnerRing
                 Utility.Log(Name, LogLevel.Info, "ignore validator vote: node not in alphabet range");
                 return;
             }
-            if (validators.Length == 0)
+            if (!validators.Any())
             {
                 Utility.Log(Name, LogLevel.Info, "ignore validator vote: empty validators list");
                 return;

@@ -7,7 +7,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blob
     {
         private readonly byte[] value = Array.Empty<byte>();
 
-        public bool IsEmpty => value.Length == 0;
+        public bool IsEmpty => !value.Any();
 
         public BlobovniczaID(byte[] bytes)
         {

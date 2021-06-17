@@ -35,7 +35,7 @@ namespace Neo.FileStorage.Services.ObjectManager.Placement
         public List<Network.Address> Next()
         {
             SkipEmptyVectors();
-            if (vectors.Count == 0)
+            if (!vectors.Any())
                 return new();
             else if (vectors[0].Count < rem[0])
                 return new();
