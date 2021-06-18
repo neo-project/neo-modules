@@ -1,8 +1,8 @@
+using System;
 using Google.Protobuf;
+using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Core.Object;
 using Neo.FileStorage.Services.ObjectManager.Transformer;
-using Neo.FileStorage.API.Refs;
-using System;
 using static Neo.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 

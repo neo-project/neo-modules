@@ -28,7 +28,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Multiformats.Address" Version="1.1.1" />
-    <PackageReference Include="NeoFS.API" Version="0.0.51" />
+    <PackageReference Include="NeoFS.API" Version="0.0.52" />
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
     <PackageReference Include="NetTopologySuite" Version="2.2.0" />
     <PackageReference Include="NetTopologySuite.Features" Version="2.1.0" />
