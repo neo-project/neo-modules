@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Google.Protobuf;
 using Neo.FileStorage.API.Client;
+using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Session;
 using Neo.FileStorage.Core.Object;
@@ -22,7 +23,7 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
         private Traverser traverser;
         private IObjectTarget target;
         private PutRequest init;
-        private List<PutRequest> chunks;
+        private readonly List<PutRequest> chunks = new();
         private ulong maxObjectSize;
         private bool saveChunks;
         private ulong writenPayloadSize;
@@ -66,6 +67,13 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
                 default:
                     throw new InvalidOperationException($"{nameof(PutStream)} invalid object put request");
             }
+            var metaHdr = new RequestMetaHeader();
+            var meta = request.MetaHeader;
+            metaHdr.Ttl = meta.Ttl - 1;
+            metaHdr.Origin = meta;
+            request.MetaHeader = metaHdr;
+            var key = PutService.KeyStorage.GetKey(meta.SessionToken);
+            key.SignRequest(request);
         }
 
         public IResponse Close()
@@ -96,7 +104,7 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
             PrepareInitPrm(prm);
             if (prm.Header.Signature is not null)
             {
-                target = new ValidatingTarget
+                target = new ValidationTarget
                 {
                     ObjectValidator = new ObjectValidator(PutService.ObjectInhumer, PutService.MorphClient),
                     Next = NewCommonTarget(prm),
