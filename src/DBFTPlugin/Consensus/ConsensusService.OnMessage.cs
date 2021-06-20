@@ -52,11 +52,11 @@ namespace Neo.Consensus
                 case ChangeView view:
                     OnChangeViewReceived(payload, view);
                     break;
-                case TXHashesRequest request:
-                    OnTXHashesRequestReceived(payload, request);
+                case TXListRequest request:
+                    OnTXListRequestReceived(payload, request);
                     break;
-                case TXHashesResponce responce:
-                    OnTXHashesResponceReceived(payload, responce);
+                case TXListResponse response:
+                    OnTXListResponseReceived(payload, response);
                     break;
                 case PrepareRequest request:
                     OnPrepareRequestReceived(payload, request);
@@ -92,8 +92,99 @@ namespace Neo.Consensus
             CheckExpectedView(message.NewViewNumber);
         }
 
-        private void OnTXHashesRequestReceived(ExtensiblePayload payload, TXHashesRequest message) { }
-        private void OnTXHashesResponceReceived(ExtensiblePayload payload, TXHashesResponce message) { }
+        private void OnTXListRequestReceived(ExtensiblePayload payload, TXListRequest message) {
+            if (context.TXHashResponseSent || context.NotAcceptingPayloadsDueToViewChanging) return;
+
+            // Timeout extension: TXList request has been received with success
+            // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
+            ExtendTimerByFactor(2);
+
+            Log($"Sending {nameof(TXListRequest)}: height={context.Block.Index} view={context.ViewNumber}");
+            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeTXListResponse() });
+
+
+            if (context.TransactionHashes.Length > 0)
+            {
+                foreach (InvPayload ipayload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes))
+                    localNode.Tell(Message.Create(MessageCommand.Inv, ipayload));
+            }
+        }
+
+        private void OnTXListResponseReceived(ExtensiblePayload payload, TXListResponse message) {
+
+            if (context.TXListPayloads[message.ValidatorIndex] != null
+                || context.NotAcceptingPayloadsDueToViewChanging
+                || message.ValidatorIndex != context.Block.PrimaryIndex
+                || message.ViewNumber != context.ViewNumber
+                || message.TransactionHashes.Length > neoSystem.Settings.MaxTransactionsPerBlock)
+                return;
+
+            Log($"{nameof(OnTXListResponseReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} tx={message.TransactionHashes.Length}");
+            
+            if (message.TransactionHashes.Any(p => NativeContract.Ledger.ContainsTransaction(context.Snapshot, p)))
+            {
+                Log($"Invalid TXList response: transaction already exists", LogLevel.Warning);
+                return;
+            }
+
+            // Timeout extension: TXList request has been received with success
+            // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
+            ExtendTimerByFactor(2);
+
+            //context.TransactionHashes = message.TransactionHashes;
+            //context.Transactions = new Dictionary<UInt256, Transaction>();
+            //context.VerificationContext = new TransactionVerificationContext();
+
+            context.TXListPayloads[message.ValidatorIndex] = payload;
+
+            //for (int i = 0; i < context.PreparationPayloads.Length; i++)
+            //    if (context.PreparationPayloads[i] != null)
+            //        if (!context.GetMessage<PrepareResponse>(context.PreparationPayloads[i]).PreparationHash.Equals(payload.Hash))
+            //            context.PreparationPayloads[i] = null;
+
+            //context.PreparationPayloads[message.ValidatorIndex] = payload;
+
+            //byte[] hashData = context.EnsureHeader().GetSignData(neoSystem.Settings.Network);
+            //for (int i = 0; i < context.CommitPayloads.Length; i++)
+            //    if (context.GetMessage(context.CommitPayloads[i])?.ViewNumber == context.ViewNumber)
+            //        if (!Crypto.VerifySignature(hashData, context.GetMessage<Commit>(context.CommitPayloads[i]).Signature, context.Validators[i]))
+            //            context.CommitPayloads[i] = null;
+
+            if (context.TransactionHashes.Length == 0)
+            {
+                // There are no tx so we should act like if all the transactions were filled
+                CheckPrepareResponse();
+                return;
+            }
+
+            Dictionary<UInt256, Transaction> mempoolVerified = neoSystem.MemPool.GetVerifiedTransactions().ToDictionary(p => p.Hash);
+            List<Transaction> unverified = new List<Transaction>();
+            foreach (UInt256 hash in context.TransactionHashes)
+            {
+                if (mempoolVerified.TryGetValue(hash, out Transaction tx))
+                {
+                    if (!AddTransaction(tx, false))
+                        return;
+                }
+                else
+                {
+                    if (neoSystem.MemPool.TryGetValue(hash, out tx))
+                        unverified.Add(tx);
+                }
+            }
+            foreach (Transaction tx in unverified)
+                if (!AddTransaction(tx, true))
+                    return;
+            if (context.Transactions.Count < context.TransactionHashes.Length)
+            {
+                UInt256[] hashes = context.TransactionHashes.Where(i => !context.Transactions.ContainsKey(i)).ToArray();
+                taskManager.Tell(new TaskManager.RestartTasks
+                {
+                    Payload = InvPayload.Create(InventoryType.TX, hashes)
+                });
+            }
+
+        }
 
         private void OnPrepareRequestReceived(ExtensiblePayload payload, PrepareRequest message)
         {

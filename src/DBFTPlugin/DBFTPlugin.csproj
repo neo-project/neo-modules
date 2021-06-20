@@ -12,6 +12,8 @@
   <ItemGroup>
     <None Remove="Messages\" />
     <None Remove="Messages\RecoryMessage\" />
+    <None Remove="Consts\" />
+    <None Remove="Consensus\" />
   </ItemGroup>
   <ItemGroup>
     <None Update="DBFTPlugin\config.json">
@@ -23,5 +25,7 @@
   <ItemGroup>
     <Folder Include="Messages\" />
     <Folder Include="Messages\RecoveryMessage\" />
+    <Folder Include="Types\" />
+    <Folder Include="Consensus\" />
   </ItemGroup>
 </Project>

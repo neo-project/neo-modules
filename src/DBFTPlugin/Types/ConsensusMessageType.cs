@@ -4,8 +4,8 @@ namespace Neo.Consensus
     {
         ChangeView = 0x00,
 
-        TXHashesRequest = 0x10,
-        TXHashesResponce = 0x11,
+        TXListRequest = 0x10,
+        TXListResponse = 0x11,
 
         PrepareRequest = 0x20,
         PrepareResponse = 0x21,
