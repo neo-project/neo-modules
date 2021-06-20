@@ -10,10 +10,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Messages\" />
+    <None Remove="Messages\RecoryMessage\" />
+  </ItemGroup>
+  <ItemGroup>
     <None Update="DBFTPlugin\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Messages\" />
+    <Folder Include="Messages\RecoveryMessage\" />
+  </ItemGroup>
 </Project>
