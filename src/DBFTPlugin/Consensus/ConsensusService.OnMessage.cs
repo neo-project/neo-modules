@@ -7,12 +7,10 @@ using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
-using Neo.Consensus.Messages;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using static Neo.Ledger.Blockchain;
 
 namespace Neo.Consensus
 {
@@ -55,8 +53,8 @@ namespace Neo.Consensus
                 case TXListRequest request:
                     OnTXListRequestReceived(payload, request);
                     break;
-                case TXListResponse response:
-                    OnTXListResponseReceived(payload, response);
+                case TXListMessage response:
+                    OnTXListMessageReceived(payload, response);
                     break;
                 case PrepareRequest request:
                     OnPrepareRequestReceived(payload, request);
@@ -100,7 +98,7 @@ namespace Neo.Consensus
             ExtendTimerByFactor(2);
 
             Log($"Sending {nameof(TXListRequest)}: height={context.Block.Index} view={context.ViewNumber}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeTXListResponse() });
+            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeTXListMessage() });
 
 
             if (context.TransactionHashes.Length > 0)
@@ -110,7 +108,7 @@ namespace Neo.Consensus
             }
         }
 
-        private void OnTXListResponseReceived(ExtensiblePayload payload, TXListResponse message) {
+        private void OnTXListMessageReceived(ExtensiblePayload payload, TXListMessage message) {
 
             if (context.TXListPayloads[message.ValidatorIndex] != null
                 || context.NotAcceptingPayloadsDueToViewChanging
@@ -119,7 +117,7 @@ namespace Neo.Consensus
                 || message.TransactionHashes.Length > neoSystem.Settings.MaxTransactionsPerBlock)
                 return;
 
-            Log($"{nameof(OnTXListResponseReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} tx={message.TransactionHashes.Length}");
+            Log($"{nameof(OnTXListMessageReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} tx={message.TransactionHashes.Length}");
             
             if (message.TransactionHashes.Any(p => NativeContract.Ledger.ContainsTransaction(context.Snapshot, p)))
             {
@@ -127,33 +125,11 @@ namespace Neo.Consensus
                 return;
             }
 
-            // Timeout extension: TXList request has been received with success
-            // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
-            ExtendTimerByFactor(2);
-
-            //context.TransactionHashes = message.TransactionHashes;
-            //context.Transactions = new Dictionary<UInt256, Transaction>();
-            //context.VerificationContext = new TransactionVerificationContext();
-
             context.TXListPayloads[message.ValidatorIndex] = payload;
 
-            //for (int i = 0; i < context.PreparationPayloads.Length; i++)
-            //    if (context.PreparationPayloads[i] != null)
-            //        if (!context.GetMessage<PrepareResponse>(context.PreparationPayloads[i]).PreparationHash.Equals(payload.Hash))
-            //            context.PreparationPayloads[i] = null;
-
-            //context.PreparationPayloads[message.ValidatorIndex] = payload;
-
-            //byte[] hashData = context.EnsureHeader().GetSignData(neoSystem.Settings.Network);
-            //for (int i = 0; i < context.CommitPayloads.Length; i++)
-            //    if (context.GetMessage(context.CommitPayloads[i])?.ViewNumber == context.ViewNumber)
-            //        if (!Crypto.VerifySignature(hashData, context.GetMessage<Commit>(context.CommitPayloads[i]).Signature, context.Validators[i]))
-            //            context.CommitPayloads[i] = null;
-
-            if (context.TransactionHashes.Length == 0)
+            if (message.TransactionHashes.Length == 0)
             {
-                // There are no tx so we should act like if all the transactions were filled
-                CheckPrepareResponse();
+                CheckTXLists(message);
                 return;
             }
 
@@ -163,8 +139,7 @@ namespace Neo.Consensus
             {
                 if (mempoolVerified.TryGetValue(hash, out Transaction tx))
                 {
-                    if (!AddTransaction(tx, false))
-                        return;
+                    if (!AddTransaction(tx, false))  return;
                 }
                 else
                 {
@@ -172,9 +147,10 @@ namespace Neo.Consensus
                         unverified.Add(tx);
                 }
             }
+
             foreach (Transaction tx in unverified)
-                if (!AddTransaction(tx, true))
-                    return;
+                if (!AddTransaction(tx, true)) return;
+
             if (context.Transactions.Count < context.TransactionHashes.Length)
             {
                 UInt256[] hashes = context.TransactionHashes.Where(i => !context.Transactions.ContainsKey(i)).ToArray();

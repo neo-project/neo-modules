@@ -1,16 +1,11 @@
 using Akka.Actor;
-using Neo.Cryptography;
 using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
-using Neo.SmartContract;
-using Neo.SmartContract.Native;
 using Neo.Wallets;
-using Neo.Consensus.Messages;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using static Neo.Ledger.Blockchain;
 
@@ -79,6 +74,25 @@ namespace Neo.Consensus
             }
             context.Transactions[tx.Hash] = tx;
             context.VerificationContext.AddTransaction(tx);
+
+            if(context.IsPrimary)
+            {
+                foreach (ExtensiblePayload payload in context.TXListPayloads)
+                {
+                    var message = context.GetMessage<TXListMessage>(payload);
+
+                    if (message.TransactionHashes.Contains(tx.Hash) && !context.TXListVerification[message.ValidatorIndex].Contains(tx.Hash))
+                    {
+                        context.TXListVerification[message.ValidatorIndex].Append(tx.Hash);
+                        CheckTXLists(message);
+                    }
+                    
+                }
+                    
+            }
+             
+                
+
             return CheckPrepareResponse();
         }
 
@@ -93,8 +107,6 @@ namespace Neo.Consensus
                 ViewNumber = context.ViewNumber
             }, ActorRefs.NoSender);
         }
-
-
 
         private void InitializeConsensus(byte viewNumber)
         {
@@ -290,6 +302,31 @@ namespace Neo.Consensus
             if (relayResult.Result != VerifyResult.Succeed) return false;
             OnConsensusPayload(payload);
             return true;
+        }
+
+        private void SendTXListRequest()
+        {
+            // If there is only one validator, skip this step.
+            if (context.Validators.Length == 1)
+            {
+                SendPrepareRequest();
+                CheckPreparations();
+                return;
+            }
+                
+
+            Log($"Sending {nameof(TXListRequest)}: height={context.Block.Index} view={context.ViewNumber}");
+            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeTXListRequest() });
+
+       
+
+            if (context.TransactionHashes.Length > 0)
+            {
+                foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes))
+                    localNode.Tell(Message.Create(MessageCommand.Inv, payload));
+            }
+            ChangeTimer(TimeSpan.FromMilliseconds((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0)));
+
         }
 
         private void SendPrepareRequest()

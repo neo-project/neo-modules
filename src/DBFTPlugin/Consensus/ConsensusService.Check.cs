@@ -4,27 +4,46 @@ using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using System;
 using System.Linq;
-
 namespace Neo.Consensus
 {
     partial class ConsensusService
     {
 
-        private bool CheckTXLists()
+        private bool CheckTXLists(TXListMessage message)
         {
-            if (context.ValidTXListPayloads.Count(p => context.GetMessage(p)?.ViewNumber == context.ViewNumber) > context.F && context.TransactionHashes.All(p => context.Transactions.ContainsKey(p)))
+            // If the all the tranactions in the list is confirmed, then mark the list as valid.
+            if(message.TransactionHashes.Length == context.TXListVerification[message.ValidatorIndex].Length)
             {
-                //block_received_index = context.Block.Index;
-                //block_received_time = TimeProvider.Current.UtcNow;
-                //Block block = context.CreateBlock();
-                //Log($"Sending {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length}");
-                //blockchain.Tell(block);
-
-
-                /// TODO: Generate the final TXList based on the valid TXList Payloads.
+                context.ValidTXListPayloads[message.ValidatorIndex] = context.TXListPayloads[message.ValidatorIndex];
             }
 
-            return true;
+            if (context.ValidTXListPayloads.Count(p => context.GetMessage(p)?.ViewNumber == context.ViewNumber) > context.F)
+            {
+
+                /// TODO: Generate the final TXList based on the valid TXList Payloads.
+                foreach (ExtensiblePayload payload in context.ValidTXListPayloads)
+                {
+                    TXListMessage response = (TXListMessage)context.GetMessage(payload);
+
+                    var transactions = context.ValidTXListPayloads
+                        .Where(p => p != null)
+                        .Select(p => context.GetMessage<TXListMessage>(p).TransactionHashes)
+                        .Cast<UInt256>()
+                        .ToList()
+                        .Distinct()
+                        .Where(p => context.Transactions.ContainsKey(p))
+                        .Select(p => context.Transactions[p])
+                        .OrderByDescending(p => p.NetworkFee + p.SystemFee)
+                        .ToArray();
+
+
+                    context.MakePrepareRequest(transactions);
+                }
+
+                    return true;
+            }
+
+            return false;
         }
 
         private bool CheckPrepareResponse()

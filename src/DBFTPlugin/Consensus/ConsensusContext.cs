@@ -31,8 +31,8 @@ namespace Neo.Consensus
         public UInt256[] TransactionHashes;
         public Dictionary<UInt256, Transaction> Transactions;
         //public Dictionary<uint, UInt256[]> validTXList;
-        public Dictionary<uint, UInt256[]> TXListVerification;
 
+        public Dictionary<uint, UInt256[]> TXListVerification;
         public ExtensiblePayload[] ValidTXListPayloads;
         public ExtensiblePayload[] TXListPayloads;
         public ExtensiblePayload[] PreparationPayloads;

@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using static Neo.Consensus.RecoveryMessage;
-using Neo.Consensus.Messages;
 
 namespace Neo.Consensus
 {
@@ -92,9 +91,12 @@ namespace Neo.Consensus
             TransactionHashes = hashes.ToArray();
         }
 
-        public ExtensiblePayload MakePrepareRequest()
+        public ExtensiblePayload MakePrepareRequest(Transaction[] transactions)
         {
-            EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
+            // if in single node mode, get transactoin from mempool
+            if(transactions == null && Validators.Length == 1)
+                EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
+
             Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
 
             return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
@@ -102,8 +104,8 @@ namespace Neo.Consensus
                 Version = Block.Version,
                 PrevHash = Block.PrevHash,
                 Timestamp = Block.Timestamp,
-                TransactionHashes = TransactionHashes
-            });
+                TransactionHashes = transactions.Select(p => p.Hash).ToArray()
+            }) ;
         }
 
         public ExtensiblePayload MakeRecoveryRequest()
@@ -150,11 +152,11 @@ namespace Neo.Consensus
             });
         }
 
-        public ExtensiblePayload MakeTXListResponse()
+        public ExtensiblePayload MakeTXListMessage()
         {
             EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
 
-            return TXListPayloads[MyIndex] = MakeSignedPayload(new TXListResponse
+            return TXListPayloads[MyIndex] = MakeSignedPayload(new TXListMessage
             {
                 TransactionHashes = TransactionHashes
             });
