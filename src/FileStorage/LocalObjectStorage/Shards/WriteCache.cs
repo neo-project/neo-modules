@@ -12,7 +12,6 @@ using Neo.FileStorage.Database.LevelDB;
 using Neo.FileStorage.LocalObjectStorage.Blob;
 using Neo.FileStorage.LocalObjectStorage.Blobstor;
 using Neo.FileStorage.LocalObjectStorage.Metabase;
-using Neo.Persistence;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.LocalObjectStorage.Shards
@@ -55,30 +54,40 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
         public const int DefaultMemorySize = 1 << 30;
         public const int DefaultMaxObjectSize = 64 << 20;
         public const int DefaultSmallObjectSize = 32 << 10;
-        public string Path { get; init; }
-        public BlobStorage Blobstorage { get; init; }
-        public MB Mb { get; init; }
-        public int MaxMemorySize { get; init; }
-        public int MaxDBSize { get; init; }
-        public int MaxObjectSize { get; init; }
-        public int SmallObjectSize { get; init; }
-        public int FlushWorkerCount { get; init; }
-        private int currentMemorySize = 0;
+        private readonly string path;
+        private readonly BlobStorage blobStorage;
+        private readonly MB metabase;
+        private readonly ulong MaxMemorySize;
+        private readonly ulong MaxDBSize;
+        private readonly ulong MaxObjectSize;
+        private readonly ulong SmallObjectSize;
+        private ulong currentMemorySize = 0;
         private readonly ConcurrentDictionary<string, ObjectInfo> mem = new();
         private FSTree fsTree;
         private IDB db;
         private LRUCache<string, bool> flushed;
         private readonly Timer timer = new(DefaultInterval);
 
+        public WriteCache(WriteCacheSettings settings, BlobStorage blobStor, MB mb)
+        {
+            path = settings.Path;
+            MaxMemorySize = settings.MaxMemorySize;
+            MaxObjectSize = settings.MaxObjectSize;
+            SmallObjectSize = settings.SmallObjectSize;
+            MaxDBSize = settings.MaxDBSize;
+            blobStorage = blobStor;
+            metabase = mb;
+        }
+
         public void Open()
         {
-            var full = System.IO.Path.GetFullPath(System.IO.Path.Join(Path, DBName));
+            var full = Path.GetFullPath(Path.Join(path, DBName));
             if (!Directory.Exists(full))
                 Directory.CreateDirectory(full);
             db = new DB(full);
             fsTree = new()
             {
-                RootPath = System.IO.Path.Join(Path, FileTreeDirName),
+                RootPath = Path.Join(path, FileTreeDirName),
                 Depth = 1,
                 DirNameLen = 1,
             };
@@ -106,7 +115,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             PersistObjects(m.ToArray());
             foreach (var oi in m)
             {
-                currentMemorySize -= oi.Data.Length;
+                currentMemorySize -= (ulong)oi.Data.Length;
             }
         }
 
@@ -155,7 +164,14 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
                 flushed.TryGet(saddress, out _);
                 return FSObject.Parser.ParseFrom(data);
             }
-            data = fsTree.Get(address);
+            try
+            {
+                data = fsTree.Get(address);
+            }
+            catch
+            {
+                throw new ObjectNotFoundException();
+            }
             flushed.TryGet(saddress, out _);
             return FSObject.Parser.ParseFrom(data);
         }
@@ -168,11 +184,12 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
                 SAddress = obj.Address.String(),
                 Data = obj.ToByteArray()
             };
-            if (MaxObjectSize < oi.Data.Length)
+            var len = (ulong)oi.Data.Length;
+            if (MaxObjectSize < len)
                 throw new InvalidOperationException("Object too big");
-            if (oi.Data.Length < SmallObjectSize && currentMemorySize + oi.Data.Length <= MaxMemorySize)
+            if (len < SmallObjectSize && currentMemorySize + len <= MaxMemorySize)
             {
-                currentMemorySize += oi.Data.Length;
+                currentMemorySize += (ulong)oi.Data.Length;
                 mem[obj.Address.String()] = oi;
                 return;
             }
@@ -197,7 +214,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             List<ObjectInfo> dones = new();
             foreach (var oi in ois)
             {
-                if (SmallObjectSize <= oi.Data.Length)
+                if (SmallObjectSize <= (ulong)oi.Data.Length)
                 {
                     fails.Add(oi);
                     continue;
@@ -216,7 +233,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             List<ObjectInfo> failDisks = new();
             foreach (var oi in fails)
             {
-                if (MaxObjectSize < oi.Data.Length)
+                if (MaxObjectSize < (ulong)oi.Data.Length)
                 {
                     failDisks.Add(oi);
                     continue;
@@ -257,9 +274,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             BlobovniczaID id = null;
             if (metaOnly)
             {
-                id = Blobstorage.Put(obj);
+                id = blobStorage.Put(obj);
             }
-            Mb.Put(obj, id);
+            metabase.Put(obj, id);
         }
 
         public void Delete(Address address)

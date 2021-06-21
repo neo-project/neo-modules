@@ -42,8 +42,8 @@ namespace Neo.FileStorage
         private readonly IActorRef listener;
         public ProtocolSettings ProtocolSettings => system.Settings;
         private Network.Address LocalAddress => Network.Address.FromString(LocalNodeInfo.Address);
-        private NetmapProcessor netmapProcessor = new();
-        private ContainerProcessor containerProcessor = new();
+        private readonly NetmapProcessor netmapProcessor = new();
+        private readonly ContainerProcessor containerProcessor = new();
 
         public StorageService(Wallet wallet, NeoSystem side)
         {
@@ -53,13 +53,7 @@ namespace Neo.FileStorage
             int i = 0;
             foreach (var shardSettings in Settings.Default.LocalStorageSettings.Shards)
             {
-                localStorage.AddShard(new Shard(shardSettings.UseWriteCache)
-                {
-                    ID = new(),
-                    BlobStorage = new(shardSettings.BlobStorageSettings),
-                    Metabase = new(shardSettings.MetabaseSettings.Path),
-                    WorkPool = system.ActorSystem.ActorOf(WorkerPool.Props($"Shard{i}", 2))
-                });
+                localStorage.AddShard(new Shard(shardSettings, system.ActorSystem.ActorOf(WorkerPool.Props($"Shard{i}", 2))));
                 i++;
             }
             morphClient = new Client
