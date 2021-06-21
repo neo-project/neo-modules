@@ -21,8 +21,9 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Blobstor
         {
             string path = "./test_blzs";
             int size_limit = 2 << 10;
-            BlobovniczaTree tree = new(path)
+            BlobovniczaTree tree = new()
             {
+                BlzRootPath = path,
                 BlzShallowWidth = 2,
                 BlzShallowDepth = 2,
                 SmallSizeLimit = (ulong)size_limit,

@@ -14,8 +14,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
 {
     public sealed class StorageEngine : IDisposable
     {
-
-        private readonly Dictionary<string, Shard> shards = new();
+        private readonly Dictionary<ShardID, Shard> shards = new();
         private readonly ReaderWriterLockSlim mtx = new();
 
         public void Dispose()
@@ -272,15 +271,10 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
             }
         }
 
-        public ShardID AddShard(string path, bool use_cache)
+        public ShardID AddShard(Shard shard)
         {
-            ShardID id = new();
-            shards[id.ToString()] = new Shard(use_cache)
-            {
-                ID = id,
-                ExpiredObjectCallback = ProcessExpiredTomstones,
-            };
-            return id;
+            shards[shard.ID] = shard;
+            return shard.ID;
         }
 
         private void ProcessExpiredTomstones(List<Address> addresses, CancellationToken token)

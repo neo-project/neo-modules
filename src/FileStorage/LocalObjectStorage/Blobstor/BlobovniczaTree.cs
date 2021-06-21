@@ -23,24 +23,21 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
         public ulong BlzShallowDepth { get; init; }
         public ulong BlzShallowWidth { get; init; }
         public ulong SmallSizeLimit { get; init; }
+        public ulong FullSizeLimit { get; init; }
+        public ICompressor Compressor { get; init; }
+        public string BlzRootPath { get; init; }
         private readonly int cacheSize;
-        private readonly ICompressor compressor;
-        public string BlzRootPath { get; private set; }
         private readonly LRUCache<string, Blobovnicza> opened;
         private readonly ConcurrentDictionary<string, BlobovniczaWithIndex> active = new();
 
-        public BlobovniczaTree(string path, ICompressor compressor = null, int cap = 0)
+        public BlobovniczaTree(int cap = 0)
         {
             BlzShallowDepth = DefaultBlzShallowDepth;
             BlzShallowWidth = DefaultBlzShallowWidth;
             SmallSizeLimit = Blobovnicza.DefaultObjSizeLimit;
-            this.compressor = compressor;
+            FullSizeLimit = Blobovnicza.DefaultFullSizeLimit;
             cacheSize = cap == 0 ? DefaultOpenedCacheSize : cap;
-            BlzRootPath = path;
             opened = new(cacheSize, OnEvicted);
-            ulong cp = 1;
-            for (ulong i = 0; i < BlzShallowDepth; i++)
-                cp *= BlzShallowWidth;
         }
 
         private void OnEvicted(string key, Blobovnicza value)
@@ -345,7 +342,11 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                 if (opened.TryGet(path, out b))
                     return b;
             }
-            b = new Blobovnicza(Path.Join(BlzRootPath, path), compressor);
+            b = new Blobovnicza(Path.Join(BlzRootPath, path), Compressor)
+            {
+                FullSizeLimit = FullSizeLimit,
+                ObjSizeLimit = SmallSizeLimit,
+            };
             b.Open();
             opened.TryAdd(path, b);
             return b;

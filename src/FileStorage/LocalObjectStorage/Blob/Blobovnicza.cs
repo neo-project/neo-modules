@@ -13,13 +13,13 @@ namespace Neo.FileStorage.LocalObjectStorage.Blob
 {
     public sealed class Blobovnicza : IEquatable<Blobovnicza>, IDisposable
     {
-        public const long DefaultFullSizeLimit = 1 << 30;
-        public const long DefaultObjSizeLimit = 1 << 20;
+        public const ulong DefaultFullSizeLimit = 1 << 30;
+        public const ulong DefaultObjSizeLimit = 1 << 20;
         public readonly Func<byte[], byte[]> DefaultCompressor = d => d;
         public string Path { get; private set; }
         public ICompressor Compressor { get; init; }
-        public long FullSizeLimit { get; init; }
-        public long ObjSizeLimit { get; init; }
+        public ulong FullSizeLimit { get; init; }
+        public ulong ObjSizeLimit { get; init; }
         private IDB dB;
         private long filled;
 
@@ -74,9 +74,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Blob
         {
             if (obj is null)
                 throw new ArgumentNullException(nameof(obj));
-            if (FullSizeLimit < filled) throw new BlobFullException();
+            if (FullSizeLimit < (ulong)filled) throw new BlobFullException();
             var raw = Compressor.Compress(obj.ToByteArray());
-            if (ObjSizeLimit < raw.Length)
+            if (ObjSizeLimit < (ulong)raw.Length)
                 throw new ObjectSizeExceedLimitException();
             var key = Addresskey(obj.Address);
             dB.Put(key, raw);

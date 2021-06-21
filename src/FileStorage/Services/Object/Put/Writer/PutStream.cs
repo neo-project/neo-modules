@@ -43,7 +43,6 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
             switch (putRequest.Body.ObjectPartCase)
             {
                 case PutRequest.Types.Body.ObjectPartOneofCase.Init:
-                    init = putRequest;
                     var init_prm = ToInitPrm(init);
                     Init(init_prm);
                     saveChunks = init.Body.Init.Signature is not null;
@@ -52,6 +51,7 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
                         payloadSize = init.Body.Init.Header.PayloadLength;
                         if (maxObjectSize < payloadSize)
                             throw new InvalidOperationException("payload size is greater than the limit");
+                        init = putRequest;
                     }
                     break;
                 case PutRequest.Types.Body.ObjectPartOneofCase.Chunk:
@@ -61,12 +61,14 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
                         if (payloadSize < writenPayloadSize)
                             throw new InvalidOperationException("wrong payload size");
                     }
-                    chunks.Add(putRequest);
                     Chunk(putRequest.Body.Chunk);
+                    if (saveChunks)
+                        chunks.Add(putRequest);
                     break;
                 default:
                     throw new InvalidOperationException($"{nameof(PutStream)} invalid object put request");
             }
+            if (!saveChunks) return;
             var metaHdr = new RequestMetaHeader();
             var meta = request.MetaHeader;
             metaHdr.Ttl = meta.Ttl - 1;
@@ -146,6 +148,7 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
 
         public async void RelayRequest(ReputationClient client)
         {
+            if (init is null) return;
             using var stream = await client.FSClient.PutObject(init, context: Cancellation);
             foreach (var chunk in chunks)
                 stream.Write(chunk);

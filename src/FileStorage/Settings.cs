@@ -10,186 +10,6 @@ namespace Neo.FileStorage
 {
     public class Settings
     {
-        public class WriteCacheSettings
-        {
-            public string Path;
-            public ulong MaxMemorySize;
-            public ulong MaxObjectSize;
-            public ulong SmallObjectSize;
-            public ulong MaxDBSize;
-
-            public static WriteCacheSettings Default { get; private set; }
-
-            static WriteCacheSettings()
-            {
-                Default = new()
-                {
-                    Path = "Data_WriteCache",
-                    MaxMemorySize = 1ul << 30,
-                    MaxObjectSize = 64ul << 20,
-                    SmallObjectSize = 32ul << 10,
-                    MaxDBSize = 0ul//TODO
-                };
-            }
-
-            public static WriteCacheSettings Load(IConfigurationSection section)
-            {
-                return new()
-                {
-                    Path = section.GetValue("Path", "Data_WriteCache"),
-                    MaxMemorySize = section.GetValue("MaxMemorySize", 1ul << 30),
-                    MaxObjectSize = section.GetValue("MaxObjectSize", 64ul << 20),
-                    SmallObjectSize = section.GetValue("SmallObjectSize", 32ul << 10),
-                    MaxDBSize = section.GetValue("MaxDBSize", 0ul)//TODO
-                };
-            }
-        }
-
-        public class BlobovniczaSettings
-        {
-            public ulong Size;
-            public int ShallowDepth;
-            public int ShallowWidth;
-            public int OpenCacheSize;
-
-            public static BlobovniczaSettings Default { get; private set; }
-
-            static BlobovniczaSettings()
-            {
-                Default = new()
-                {
-                    Size = 1ul << 30,
-                    ShallowDepth = 2,
-                    ShallowWidth = 16,
-                    OpenCacheSize = 16
-                };
-            }
-
-            public static BlobovniczaSettings Load(IConfigurationSection section)
-            {
-                return new()
-                {
-                    Size = section.GetValue("Size", 1ul << 30),
-                    ShallowDepth = section.GetValue("ShallowDepth", 2),
-                    ShallowWidth = section.GetValue("ShallowWidth", 16),
-                    OpenCacheSize = section.GetValue("OpenCacheSize", 16)
-                };
-            }
-        }
-
-        public class BlobStorageSettings
-        {
-            public string Path;
-            public bool Compress;
-            public int ShallowDepth;
-            public ulong SmallSizeLimit;
-            public BlobovniczaSettings BlobovniczaSettings;
-
-            public static BlobStorageSettings Default { get; private set; }
-
-            static BlobStorageSettings()
-            {
-                Default = new()
-                {
-                    Path = "Data_BlobStorage",
-                    Compress = true,
-                    ShallowDepth = 4,
-                    SmallSizeLimit = 1ul << 20,
-                    BlobovniczaSettings = BlobovniczaSettings.Default
-                };
-            }
-
-            public static BlobStorageSettings Load(IConfigurationSection section)
-            {
-                return new()
-                {
-                    Path = section.GetValue("Path", "Data_BlobStorage"),
-                    Compress = section.GetValue("Compress", true),
-                    ShallowDepth = section.GetValue("ShallowDepth", 4),
-                    SmallSizeLimit = section.GetValue("SmallSizeLimit", 1ul << 20),
-                    BlobovniczaSettings = BlobovniczaSettings.Load(section.GetSection("Blobovnicza"))
-                };
-            }
-        }
-
-        public class MetabaseSettings
-        {
-            public string Path;
-
-            public static MetabaseSettings Default { get; private set; }
-
-            static MetabaseSettings()
-            {
-                Default = new()
-                {
-                    Path = "Data_Metabase"
-                };
-            }
-
-            public static MetabaseSettings Load(IConfigurationSection section)
-            {
-                return new()
-                {
-                    Path = section.GetValue("Path", "Data_Metabase")
-                };
-            }
-        }
-
-        public class ShardSettings
-        {
-            public bool UseWriteCache;
-            public WriteCacheSettings WriteCacheSettings;
-            public BlobStorageSettings BlobStorageSettings;
-            public MetabaseSettings MetabaseSettings;
-
-            public static ShardSettings Default { get; private set; }
-
-            static ShardSettings()
-            {
-                Default = new()
-                {
-                    UseWriteCache = true,
-                    WriteCacheSettings = WriteCacheSettings.Default,
-                    BlobStorageSettings = BlobStorageSettings.Default,
-                    MetabaseSettings = MetabaseSettings.Default,
-                };
-            }
-
-            public static ShardSettings Load(IConfigurationSection section)
-            {
-                ShardSettings settings = new();
-                settings.UseWriteCache = section.GetValue("UseWriteCache", true);
-                if (settings.UseWriteCache)
-                    settings.WriteCacheSettings = WriteCacheSettings.Load(section.GetSection("WriteCache"));
-                settings.BlobStorageSettings = BlobStorageSettings.Load(section.GetSection("BlobStorage"));
-                settings.MetabaseSettings = MetabaseSettings.Load(section.GetSection("Metabase"));
-                return settings;
-            }
-        }
-
-        public class StorageSettings
-        {
-            public ShardSettings[] Shards;
-
-            public static StorageSettings Default { get; private set; }
-
-            static StorageSettings()
-            {
-                Default = new()
-                {
-                    Shards = new ShardSettings[] { ShardSettings.Default }
-                };
-            }
-
-            public static StorageSettings Load(IConfigurationSection section)
-            {
-                return new()
-                {
-                    Shards = section.GetChildren().Select(p => ShardSettings.Load(p)).ToArray(),
-                };
-            }
-        }
-
         public static Settings Default { get; private set; }
         public bool AutoStart;
         public string SideChainConfig;
@@ -244,7 +64,7 @@ namespace Neo.FileStorage
         public ulong BasicIncomeRate;
         public long MainChainFee;
         public long SideChainFee;
-        public StorageSettings LocalStorageSettings;
+        public ObjectStorageSettings LocalStorageSettings;
         public List<UInt160> Contracts = new();
 
         private Settings(IConfigurationSection section)
@@ -326,13 +146,193 @@ namespace Neo.FileStorage
             MainChainFee = fee.GetValue("MainChain", 5000L);
             SideChainFee = fee.GetValue("SideChain", 5000L);
 
-            LocalStorageSettings = StorageSettings.Load(section.GetSection("Storage"));
-            if (!LocalStorageSettings.Shards.Any()) LocalStorageSettings = StorageSettings.Default;
+            LocalStorageSettings = ObjectStorageSettings.Load(section.GetSection("Storage"));
+            if (!LocalStorageSettings.Shards.Any()) LocalStorageSettings = ObjectStorageSettings.Default;
         }
 
         public static void Load(IConfigurationSection section)
         {
             Default = new Settings(section);
+        }
+    }
+
+    public class WriteCacheSettings
+    {
+        public string Path;
+        public ulong MaxMemorySize;
+        public ulong MaxObjectSize;
+        public ulong SmallObjectSize;
+        public ulong MaxDBSize;
+
+        public static WriteCacheSettings Default { get; private set; }
+
+        static WriteCacheSettings()
+        {
+            Default = new()
+            {
+                Path = "Data_WriteCache",
+                MaxMemorySize = 1ul << 30,
+                MaxObjectSize = 64ul << 20,
+                SmallObjectSize = 32ul << 10,
+                MaxDBSize = 0ul//TODO
+            };
+        }
+
+        public static WriteCacheSettings Load(IConfigurationSection section)
+        {
+            return new()
+            {
+                Path = section.GetValue("Path", "Data_WriteCache"),
+                MaxMemorySize = section.GetValue("MaxMemorySize", 1ul << 30),
+                MaxObjectSize = section.GetValue("MaxObjectSize", 64ul << 20),
+                SmallObjectSize = section.GetValue("SmallObjectSize", 32ul << 10),
+                MaxDBSize = section.GetValue("MaxDBSize", 0ul)//TODO
+            };
+        }
+    }
+
+    public class BlobovniczasSettings
+    {
+        public ulong Size;
+        public int ShallowDepth;
+        public int ShallowWidth;
+        public int OpenCacheSize;
+
+        public static BlobovniczasSettings Default { get; private set; }
+
+        static BlobovniczasSettings()
+        {
+            Default = new()
+            {
+                Size = 1ul << 30,
+                ShallowDepth = 2,
+                ShallowWidth = 16,
+                OpenCacheSize = 16
+            };
+        }
+
+        public static BlobovniczasSettings Load(IConfigurationSection section)
+        {
+            return new()
+            {
+                Size = section.GetValue("Size", 1ul << 30),
+                ShallowDepth = section.GetValue("ShallowDepth", 2),
+                ShallowWidth = section.GetValue("ShallowWidth", 16),
+                OpenCacheSize = section.GetValue("OpenCacheSize", 16)
+            };
+        }
+    }
+
+    public class BlobStorageSettings
+    {
+        public string Path;
+        public bool Compress;
+        public int ShallowDepth;
+        public ulong SmallSizeLimit;
+        public BlobovniczasSettings BlobovniczasSettings;
+
+        public static BlobStorageSettings Default { get; private set; }
+
+        static BlobStorageSettings()
+        {
+            Default = new()
+            {
+                Path = "Data_BlobStorage",
+                Compress = true,
+                ShallowDepth = 4,
+                SmallSizeLimit = 1ul << 20,
+                BlobovniczasSettings = BlobovniczasSettings.Default
+            };
+        }
+
+        public static BlobStorageSettings Load(IConfigurationSection section)
+        {
+            return new()
+            {
+                Path = section.GetValue("Path", "Data_BlobStorage"),
+                Compress = section.GetValue("Compress", true),
+                ShallowDepth = section.GetValue("ShallowDepth", 4),
+                SmallSizeLimit = section.GetValue("SmallSizeLimit", 1ul << 20),
+                BlobovniczasSettings = BlobovniczasSettings.Load(section.GetSection("Blobovnicza"))
+            };
+        }
+    }
+
+    public class MetabaseSettings
+    {
+        public string Path;
+
+        public static MetabaseSettings Default { get; private set; }
+
+        static MetabaseSettings()
+        {
+            Default = new()
+            {
+                Path = "Data_Metabase"
+            };
+        }
+
+        public static MetabaseSettings Load(IConfigurationSection section)
+        {
+            return new()
+            {
+                Path = section.GetValue("Path", "Data_Metabase")
+            };
+        }
+    }
+
+    public class ShardSettings
+    {
+        public bool UseWriteCache;
+        public WriteCacheSettings WriteCacheSettings;
+        public BlobStorageSettings BlobStorageSettings;
+        public MetabaseSettings MetabaseSettings;
+
+        public static ShardSettings Default { get; private set; }
+
+        static ShardSettings()
+        {
+            Default = new()
+            {
+                UseWriteCache = true,
+                WriteCacheSettings = WriteCacheSettings.Default,
+                BlobStorageSettings = BlobStorageSettings.Default,
+                MetabaseSettings = MetabaseSettings.Default,
+            };
+        }
+
+        public static ShardSettings Load(IConfigurationSection section)
+        {
+            ShardSettings settings = new();
+            settings.UseWriteCache = section.GetValue("UseWriteCache", true);
+            if (settings.UseWriteCache)
+                settings.WriteCacheSettings = WriteCacheSettings.Load(section.GetSection("WriteCache"));
+            settings.BlobStorageSettings = BlobStorageSettings.Load(section.GetSection("BlobStorage"));
+            settings.MetabaseSettings = MetabaseSettings.Load(section.GetSection("Metabase"));
+            return settings;
+        }
+    }
+
+    public class ObjectStorageSettings
+    {
+        public ShardSettings[] Shards;
+
+        public static ObjectStorageSettings Default { get; private set; }
+
+        static ObjectStorageSettings()
+        {
+            Default = new()
+            {
+                Shards = new ShardSettings[] { ShardSettings.Default }
+            };
+        }
+
+        public static ObjectStorageSettings Load(IConfigurationSection section)
+        {
+            return new()
+            {
+                Shards = section.GetChildren().Select(p => ShardSettings.Load(p)).ToArray(),
+            };
         }
     }
 }

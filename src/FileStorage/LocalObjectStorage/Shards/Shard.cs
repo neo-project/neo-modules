@@ -17,7 +17,7 @@ using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.LocalObjectStorage.Shards
 {
-    public class Shard
+    public class Shard : IDisposable
     {
         public ShardID ID { get; init; }
         public BlobStorage BlobStorage { get; init; }
@@ -36,7 +36,6 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             set => Interlocked.Exchange(ref mode, (int)value);
         }
 
-
         public Shard(bool useCache)
         {
             useWriteCache = useCache;
@@ -45,6 +44,14 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
                 writeCache = new WriteCache();
             }
             Mode = ShardMode.Undefined;
+        }
+
+        public void Dispose()
+        {
+            source?.Cancel();
+            prevGroup?.Wait();
+            BlobStorage?.Dispose();
+            Metabase?.Dispose();
         }
 
         public ulong ContainerSize(ContainerID cid)

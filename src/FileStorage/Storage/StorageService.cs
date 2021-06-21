@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using Akka.Actor;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.LocalObjectStorage.Engine;
+using Neo.FileStorage.LocalObjectStorage.Shards;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Accounting;
@@ -16,6 +17,7 @@ using Neo.FileStorage.Services.Object.Acl;
 using Neo.FileStorage.Services.Reputaion.Service;
 using Neo.FileStorage.Services.Session;
 using Neo.FileStorage.Storage.Processors;
+using Neo.FileStorage.Utils;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -48,6 +50,18 @@ namespace Neo.FileStorage
             system = side;
             key = wallet.GetAccounts().First().GetKey().PrivateKey.LoadPrivateKey();
             StorageEngine localStorage = new();
+            int i = 0;
+            foreach (var shardSettings in Settings.Default.LocalStorageSettings.Shards)
+            {
+                localStorage.AddShard(new Shard(shardSettings.UseWriteCache)
+                {
+                    ID = new(),
+                    BlobStorage = new(shardSettings.BlobStorageSettings),
+                    Metabase = new(shardSettings.MetabaseSettings.Path),
+                    WorkPool = system.ActorSystem.ActorOf(WorkerPool.Props($"Shard{i}", 2))
+                });
+                i++;
+            }
             morphClient = new Client
             {
                 client = new MorphClient()

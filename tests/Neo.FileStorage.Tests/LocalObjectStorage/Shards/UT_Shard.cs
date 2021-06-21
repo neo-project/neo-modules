@@ -1,241 +1,49 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Shards;
+using static Neo.FileStorage.Tests.LocalObjectStorage.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
-
 
 namespace Neo.FileStorage.Tests.LocalObjectStorage.Shards
 {
     [TestClass]
     public class UT_Shard
     {
-        [TestMethod]
-        public void GetWithCache_Test()
+        private Shard NewShard(string testName, bool useCache)
         {
-            var cid = GenerateContainerID();
-            var obj = GenerateRawObjectWithCID(cid);
-            var shard = GetShardWithCache();
-
-            shard.Put(obj);
-
-            var val = shard.Get(obj.Address);
-
-            Assert.Equals(obj, val);
-        }
-
-
-        [TestMethod]
-        public void GetWithoutCache_Test()
-        {
-            var cid = GenerateContainerID();
-            var obj = GenerateRawObjectWithCID(cid);
-            var shard = GetShardWithoutCache();
-
-            shard.Put(obj);
-
-            var val = shard.Get(obj.Address);
-            Assert.Equals(obj, val);
-        }
-
-
-        [TestMethod]
-        public void GetHeadWithCache_Test()
-        {
-            var cid = GenerateContainerID();
-            var obj = GenerateRawObjectWithCID(cid);
-            var shard = GetShardWithCache();
-
-            shard.Put(obj);
-
-            var val = shard.Head(obj.Address, false);
-
-            Assert.Equals(obj.Header, val);
-        }
-
-
-        [TestMethod]
-        public void GetHeadWithoutCache_Test()
-        {
-            var cid = GenerateContainerID();
-            var obj = GenerateRawObjectWithCID(cid);
-            var shard = GetShardWithoutCache();
-
-            shard.Put(obj);
-
-            var val = shard.Head(obj.Address, false);
-            Assert.Equals(obj.Header, val);
-        }
-
-        [TestMethod]
-        public void DeleteWithCache_Test()
-        {
-            var cid = GenerateContainerID();
-            var obj = GenerateRawObjectWithCID(cid);
-            var shard = GetShardWithCache();
-
-            shard.Put(obj);
-
-            var val = shard.Get(obj.Address);
-
-            shard.Delete(obj.Address);
-
-            var valNull = shard.Get(obj.Address);
-            Assert.IsNull(valNull);
-        }
-
-
-        [TestMethod]
-        public void DeleteWithoutCache_Test()
-        {
-            var cid = GenerateContainerID();
-            var obj = GenerateRawObjectWithCID(cid);
-            var shard = GetShardWithoutCache();
-
-            shard.Put(obj);
-
-            var val = shard.Get(obj.Address);
-
-            shard.Delete(obj.Address);
-
-            var valNull = shard.Get(obj.Address);
-            Assert.IsNull(valNull);
-        }
-
-
-
-        [TestMethod]
-        public void InhumeWithCache_Test()
-        {
-            var cid = GenerateContainerID();
-            var obj = GenerateRawObjectWithCID(cid);
-            var shard = GetShardWithCache();
-
-            shard.Put(obj);
-
-            var val = shard.Get(obj.Address);
-
-            shard.Inhume(obj.Address, obj.Address);
-
-            var valNull = shard.Get(obj.Address);
-            Assert.IsNull(valNull);
-        }
-
-
-        [TestMethod]
-        public void InhumeWithoutCache_Test()
-        {
-            var cid = GenerateContainerID();
-            var obj = GenerateRawObjectWithCID(cid);
-            var shard = GetShardWithoutCache();
-
-            shard.Put(obj);
-
-            var val = shard.Get(obj.Address);
-
-            shard.Inhume(obj.Address, obj.Address);
-
-            var valNull = shard.Get(obj.Address);
-            Assert.IsNull(valNull);
-        }
-
-
-
-        [TestMethod]
-        public void ListWithCache_Test()
-        {
-            const int C = 5;
-            const int N = 10;
-            var addresses = new HashSet<Address>();
-            var shard = GetShardWithCache();
-
-            for (int i = 0; i < C; i++)
+            BlobStorageSettings blobStorSettings = BlobStorageSettings.Default;
+            blobStorSettings.Path = testName + "/" + blobStorSettings.Path;
+            return new(useCache)
             {
-                var cid = GenerateContainerID();
-                for (int j = 0; j < N; j++)
-                {
-                    var obj = GenerateRawObjectWithCID(cid);
-                    shard.Put(obj);
-                    addresses.Add(obj.Address);
-                }
-            }
-
-            var list = shard.List();
-
-            Assert.AreEqual(addresses.Count, list.Count()); ;
-            Assert.AreEqual(0, list.Except(addresses).Count());
+                ID = new(),
+                BlobStorage = new(blobStorSettings),
+                Metabase = new(testName + "/metabase"),
+                WorkPool = null
+            };
         }
-
 
         [TestMethod]
-        public void ListWithoutCache_Test()
+        public void TestShardGetWithoutCache()
         {
-            const int C = 5;
-            const int N = 10;
-            var addresses = new HashSet<Address>();
-            var shard = GetShardWithoutCache();
-
-            for (int i = 0; i < C; i++)
+            try
             {
-                var cid = GenerateContainerID();
-                for (int j = 0; j < N; j++)
-                {
-                    var obj = GenerateRawObjectWithCID(cid);
-                    shard.Put(obj);
-                    addresses.Add(obj.Address);
-                }
+                using var shard = NewShard(nameof(TestShardGetWithoutCache), false);
+                // small object
+                var obj = RandomObject();
+                obj.Header.Attributes.Add(new Header.Types.Attribute { Key = "foo", Value = "bar" });
+                shard.Put(obj);
+                var o = shard.Get(obj.Address);
+                Assert.IsNotNull(o);
             }
-
-            var list = shard.List();
-
-            Assert.AreEqual(addresses.Count, list.Count()); ;
-            Assert.AreEqual(0, list.Except(addresses).Count());
-
-        }
-
-        private ContainerID GenerateContainerID()
-        {
-            var bytes = new byte[32];
-            new Random().NextBytes(bytes);
-            return ContainerID.FromSha256Bytes(bytes);
-        }
-
-        private ObjectID GenerateObjectID()
-        {
-            var bytes = new byte[32];
-            new Random().NextBytes(bytes);
-            return ObjectID.FromSha256Bytes(bytes);
-        }
-
-
-        private OwnerID GenerateOwnerID()
-        {
-            var bytes = new byte[25];
-            new Random().NextBytes(bytes);
-            return OwnerID.FromByteArray(bytes);
-        }
-        private FSObject GenerateRawObjectWithCID(ContainerID cid)
-        {
-            var obj = new FSObject();
-            obj.ObjectId = GenerateObjectID();
-            obj.Header = new Header();
-            obj.Header.ContainerId = cid;
-            obj.Header.OwnerId = GenerateOwnerID();
-            return obj;
-        }
-
-
-        private Shard GetShardWithCache()
-        {
-            return new Shard(true);
-        }
-
-        private Shard GetShardWithoutCache()
-        {
-            return new Shard(false);
+            finally
+            {
+                Directory.Delete(nameof(TestShardGetWithoutCache), true);
+            }
         }
     }
 }

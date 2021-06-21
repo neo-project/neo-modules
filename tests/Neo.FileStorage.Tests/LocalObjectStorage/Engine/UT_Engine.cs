@@ -30,7 +30,15 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Engine
             try
             {
                 using StorageEngine engine = new();
-                engine.AddShard(path, false);
+                BlobStorageSettings blobStorSettings = BlobStorageSettings.Default;
+                blobStorSettings.Path = path + blobStorSettings.Path;
+                engine.AddShard(new(false)
+                {
+                    ID = new(),
+                    BlobStorage = new(blobStorSettings),
+                    Metabase = new(path + "/metabase"),
+                    WorkPool = null
+                });
                 engine.Put(parent);
                 engine.Inhume(parent.Address);
             }
