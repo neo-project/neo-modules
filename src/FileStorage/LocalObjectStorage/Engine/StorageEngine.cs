@@ -271,10 +271,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
             }
         }
 
-        public ShardID AddShard(Shard shard)
+        public void AddShard(Shard shard)
         {
             shards[shard.ID] = shard;
-            return shard.ID;
         }
 
         private void ProcessExpiredTomstones(List<Address> addresses, CancellationToken token)
@@ -313,7 +312,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
                 var list = shards.Values.Select(s => new ShardDistance
                 {
                     Shard = s,
-                    Weight = s.WeightValues(),
+                    Weight = s.WeightValue(),
                     Distance = Utility.StrictUTF8.GetBytes(s.ID.ToString()).Murmur64(0).Distance(target),
                 });
                 return list.OrderBy(s => s.Sort).Select(s => s.Shard).ToList();

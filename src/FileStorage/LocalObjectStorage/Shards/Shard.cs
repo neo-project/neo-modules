@@ -38,6 +38,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
 
         public Shard(ShardSettings settings, IActorRef wp)
         {
+            ID = new();
             useWriteCache = settings.UseWriteCache;
             blobStorage = new(settings.BlobStorageSettings);
             metabase = new(settings.MetabaseSettings.Path);
@@ -242,9 +243,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
         ///  WeightValues returns current weight values of the Shard.
         /// </summary>
         /// <returns></returns>
-        public ulong WeightValues()
+        public ulong WeightValue()
         {
-            throw new NotImplementedException();
+            return 0ul;
         }
 
         public void HandleExpiredTombstones(List<FSAddress> addresses)

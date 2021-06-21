@@ -49,9 +49,9 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Blobstor
                         Length = obj.PayloadSize / 3
                     };
                     byte[] data = tree.GetRange(obj.Address, range, id);
-                    Assert.IsTrue(obj.Payload.ToByteArray()[(int)range.Offset..(int)range.Length].SequenceEqual(data));
+                    Assert.AreEqual(obj.Payload.ToByteArray()[(int)range.Offset..(int)(range.Length + range.Offset)].ToHexString(), data.ToHexString());
                     data = tree.GetRange(obj.Address, range);
-                    Assert.IsTrue(obj.Payload.ToByteArray()[(int)range.Offset..(int)range.Length].SequenceEqual(data));
+                    Assert.IsTrue(obj.Payload.ToByteArray()[(int)range.Offset..(int)(range.Length + range.Offset)].SequenceEqual(data));
                 }
                 foreach (var address in addrs)
                 {
