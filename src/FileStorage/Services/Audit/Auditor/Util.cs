@@ -4,7 +4,7 @@ namespace Neo.FileStorage.Services.Audit.Auditor
 {
     public static class Util
     {
-        public static ulong RandomUInt64(ulong max)
+        public static ulong RandomUInt64(ulong max = ulong.MaxValue)
         {
             var random = new Random();
             var buffer = new byte[sizeof(ulong)];

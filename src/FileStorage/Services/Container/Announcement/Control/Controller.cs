@@ -1,6 +1,6 @@
-using Neo.FileStorage.Services.Container.Announcement.Route;
 using System.Collections.Generic;
 using System.Threading;
+using Neo.FileStorage.Services.Container.Announcement.Route;
 
 namespace Neo.FileStorage.Services.Container.Announcement.Control
 {
@@ -56,7 +56,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Control
             CancellationToken cancellation;
             lock (reportCancellations)
             {
-                if (!reportCancellations.ContainsKey(epoch))
+                if (reportCancellations.ContainsKey(epoch))
                 {
                     return null;
                 }
