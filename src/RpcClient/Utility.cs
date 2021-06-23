@@ -221,7 +221,7 @@ namespace Neo.Network.RPC
                 case StackItemType.ByteString:
                     return new ByteString(Convert.FromBase64String(json["value"].AsString()));
                 case StackItemType.Integer:
-                    return new Integer(new BigInteger(json["value"].AsNumber()));
+                    return BigInteger.Parse(json["value"].AsString());
                 case StackItemType.Array:
                     Array array = new();
                     foreach (var item in (JArray)json["value"])
