@@ -13,7 +13,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new JObject();
+            JObject json = new();
             json["name"] = Name;
             json["version"] = Version;
             json["interfaces"] = new JArray(Interfaces.Select(p => (JObject)p));
