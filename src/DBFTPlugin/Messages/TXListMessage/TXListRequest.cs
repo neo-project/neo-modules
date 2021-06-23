@@ -2,7 +2,7 @@
 using System.IO;
 
 
-namespace Neo.Consensus.Messages
+namespace Neo.Consensus
 {
     public class TXListRequest : ConsensusMessage
     {

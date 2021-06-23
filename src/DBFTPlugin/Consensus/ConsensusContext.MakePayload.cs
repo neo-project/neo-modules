@@ -96,6 +96,10 @@ namespace Neo.Consensus
             // if in single node mode, get transactoin from mempool
             if(transactions == null && Validators.Length == 1)
                 EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
+            else
+            {
+                EnsureMaxBlockLimitation(transactions);
+            }
 
             Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
 
@@ -104,7 +108,8 @@ namespace Neo.Consensus
                 Version = Block.Version,
                 PrevHash = Block.PrevHash,
                 Timestamp = Block.Timestamp,
-                TransactionHashes = transactions.Select(p => p.Hash).ToArray()
+                TransactionHashes = transactions.Select(p => p.Hash).ToArray(),
+                TXLists = ValidTXListPayloads, // Add the TXLists to the prepareation for consensus
             }) ;
         }
 

@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Neo.Consensus
 {
-    public class PrepareRequest : ConsensusMessage
+    public partial class PrepareRequest : ConsensusMessage
     {
         public uint Version;
         public UInt256 PrevHash;
@@ -19,7 +19,7 @@ namespace Neo.Consensus
             + UInt256.Length                    //PrevHash
             + sizeof(ulong)                     //Timestamp
             + TransactionHashes.GetVarSize();   //TransactionHashes
-
+            
         public PrepareRequest() : base(ConsensusMessageType.PrepareRequest) { }
 
         public override void Deserialize(BinaryReader reader)

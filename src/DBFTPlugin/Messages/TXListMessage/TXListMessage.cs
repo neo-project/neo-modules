@@ -3,7 +3,7 @@ using Neo.IO;
 using System.IO;
 using System.Linq;
 
-namespace Neo.Consensus.Messages
+namespace Neo.Consensus
 {
     public class TXListMessage : ConsensusMessage
     {

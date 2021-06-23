@@ -189,63 +189,6 @@ namespace Neo.Consensus
             return Block;
         }
 
-        public ConsensusMessage GetMessage(ExtensiblePayload payload)
-        {
-            if (payload is null) return null;
-            if (!cachedMessages.TryGetValue(payload.Hash, out ConsensusMessage message))
-                cachedMessages.Add(payload.Hash, message = ConsensusMessage.DeserializeFrom(payload.Data));
-            return message;
-        }
-
-        public T GetMessage<T>(ExtensiblePayload payload) where T : ConsensusMessage
-        {
-            return (T)GetMessage(payload);
-        }
-
-        private ChangeViewPayloadCompact GetChangeViewPayloadCompact(ExtensiblePayload payload)
-        {
-            ChangeView message = GetMessage<ChangeView>(payload);
-            return new ChangeViewPayloadCompact
-            {
-                ValidatorIndex = message.ValidatorIndex,
-                OriginalViewNumber = message.ViewNumber,
-                Timestamp = message.Timestamp,
-                InvocationScript = payload.Witness.InvocationScript
-            };
-        }
-
-        private CommitPayloadCompact GetCommitPayloadCompact(ExtensiblePayload payload)
-        {
-            Commit message = GetMessage<Commit>(payload);
-            return new CommitPayloadCompact
-            {
-                ViewNumber = message.ViewNumber,
-                ValidatorIndex = message.ValidatorIndex,
-                Signature = message.Signature,
-                InvocationScript = payload.Witness.InvocationScript
-            };
-        }
-
-        private PreparationPayloadCompact GetPreparationPayloadCompact(ExtensiblePayload payload)
-        {
-            return new PreparationPayloadCompact
-            {
-                ValidatorIndex = GetMessage(payload).ValidatorIndex,
-                InvocationScript = payload.Witness.InvocationScript
-            };
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte GetPrimaryIndex(byte viewNumber)
-        {
-            int p = ((int)Block.Index - viewNumber) % Validators.Length;
-            return p >= 0 ? (byte)p : (byte)(p + Validators.Length);
-        }
-
-        public UInt160 GetSender(int index)
-        {
-            return Contract.CreateSignatureRedeemScript(Validators[index]).ToScriptHash();
-        }
 
         public bool Load()
         {
@@ -266,42 +209,6 @@ namespace Neo.Consensus
             }
         }
        
-
-        /// <summary>
-        /// Return the expected block size
-        /// </summary>
-        public int GetExpectedBlockSize()
-        {
-            return GetExpectedBlockSizeWithoutTransactions(Transactions.Count) + // Base size
-                Transactions.Values.Sum(u => u.Size);   // Sum Txs
-        }
-
-        /// <summary>
-        /// Return the expected block system fee
-        /// </summary>
-        public long GetExpectedBlockSystemFee()
-        {
-            return Transactions.Values.Sum(u => u.SystemFee);  // Sum Txs
-        }
-
-        /// <summary>
-        /// Return the expected block size without txs
-        /// </summary>
-        /// <param name="expectedTransactions">Expected transactions</param>
-        internal int GetExpectedBlockSizeWithoutTransactions(int expectedTransactions)
-        {
-            return
-                sizeof(uint) +      // Version
-                UInt256.Length +    // PrevHash
-                UInt256.Length +    // MerkleRoot
-                sizeof(ulong) +     // Timestamp
-                sizeof(uint) +      // Index
-                sizeof(byte) +      // PrimaryIndex
-                UInt160.Length +    // NextConsensus
-                1 + _witnessSize +  // Witness
-                IO.Helper.GetVarSize(expectedTransactions);
-        }
-
         public void Reset(byte viewNumber)
         {
             if (viewNumber == 0)
