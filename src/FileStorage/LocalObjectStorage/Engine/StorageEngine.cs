@@ -8,11 +8,12 @@ using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Shards;
+using Neo.FileStorage.Services.Object.Acl.EAcl;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.LocalObjectStorage.Engine
 {
-    public sealed class StorageEngine : IDisposable
+    public sealed class StorageEngine : ILocalHeadSource, IDisposable
     {
         private readonly Dictionary<ShardID, Shard> shards = new();
         private readonly ReaderWriterLockSlim mtx = new();
@@ -192,6 +193,10 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
             return false;
         }
 
+        public FSObject Head(Address address)
+        {
+            return Head(address, false);
+        }
 
         public FSObject Head(Address address, bool raw)
         {

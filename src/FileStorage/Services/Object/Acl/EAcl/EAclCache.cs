@@ -5,10 +5,11 @@ using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Services.Object.Acl.EAcl;
 
 namespace Neo.FileStorage.Services.Object.Acl
 {
-    public class EAclCache
+    public class EAclCache : IEAclSource
     {
         public const int DefaultCacheSize = 100;
         public const int DefaultTTLMilliseconds = 30000;

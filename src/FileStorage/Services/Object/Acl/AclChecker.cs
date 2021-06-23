@@ -11,6 +11,7 @@ using Neo.FileStorage.Services.Object.Acl.EAcl;
 using static Neo.FileStorage.API.Acl.BearerToken.Types.Body.Types;
 using static Neo.FileStorage.API.Session.ObjectSessionContext.Types;
 using static Neo.FileStorage.API.Session.SessionToken.Types.Body;
+using static Neo.FileStorage.Services.Object.Util.Helper;
 using FSAction = Neo.FileStorage.API.Acl.Action;
 
 namespace Neo.FileStorage.Services.Object.Acl
@@ -100,11 +101,11 @@ namespace Neo.FileStorage.Services.Object.Acl
             var container = MorphClient.GetContainer(cid)?.Container;
             var info = new RequestInfo
             {
-                OriginalSessionToken = OriginalSessionToken(request),
+                OriginalSessionToken = OriginalSessionToken(request.MetaHeader),
                 Request = request,
                 BasicAcl = container.BasicAcl,
                 Owner = container.OwnerId,
-                Bearer = OriginalBearerToken(request),
+                Bearer = OriginalBearerToken(request.MetaHeader),
                 ContainerID = cid,
             };
             var classifiered = Classify(info, cid, container);
@@ -160,7 +161,7 @@ namespace Neo.FileStorage.Services.Object.Acl
             if (!IsValidBearer(info)) return false;
             var unit = new ValidateUnit
             {
-                Cid = info.ContainerID,
+                ContainerId = info.ContainerID,
                 Role = info.Role,
                 Op = info.Op,
                 Bearer = info.Bearer,
@@ -209,22 +210,6 @@ namespace Neo.FileStorage.Services.Object.Acl
         private bool IsValidLifetime(TokenLifetime lifetime, ulong epoch)
         {
             return epoch >= lifetime.Nbf && epoch <= lifetime.Exp;
-        }
-
-        private SessionToken OriginalSessionToken(IRequest request)
-        {
-            RequestMetaHeader meta = request.MetaHeader;
-            while (meta.Origin is not null)
-                meta = meta.Origin;
-            return meta.SessionToken;
-        }
-
-        private BearerToken OriginalBearerToken(IRequest request)
-        {
-            RequestMetaHeader meta = request.MetaHeader;
-            while (meta.Origin is not null)
-                meta = meta.Origin;
-            return meta.BearerToken;
         }
     }
 }

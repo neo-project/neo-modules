@@ -1,15 +1,15 @@
-using Neo.FileStorage.API.Acl;
-using Neo.FileStorage.Core.Container;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Neo.FileStorage.API.Acl;
+using Neo.FileStorage.Core.Container;
 using AclAction = Neo.FileStorage.API.Acl.Action;
 
 namespace Neo.FileStorage.Services.Object.Acl.EAcl
 {
     public class EAclValidator
     {
-        public EAclCache EAclStorage { get; init; }
+        public IEAclSource EAclStorage { get; init; }
 
         public AclAction CalculateAction(ValidateUnit unit)
         {
@@ -20,7 +20,7 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
             {
                 try
                 {
-                    table = EAclStorage.GetEACL(unit.Cid);
+                    table = EAclStorage.GetEACL(unit.ContainerId);
                 }
                 catch (Exception)//TODO: not found exception, return allow
                 {
@@ -58,7 +58,7 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
             return false;
         }
 
-        private int MatchFilters(HeaderSource headerSource, IEnumerable<EACLRecord.Types.Filter> filters)
+        private int MatchFilters(IHeaderSource headerSource, IEnumerable<EACLRecord.Types.Filter> filters)
         {
             int matched = 0;
             foreach (var filter in filters)

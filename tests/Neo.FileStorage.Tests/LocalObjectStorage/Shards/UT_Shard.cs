@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.LocalObjectStorage;
 using Neo.FileStorage.LocalObjectStorage.Shards;
-using static Neo.FileStorage.Tests.LocalObjectStorage.Helper;
+using static Neo.FileStorage.Tests.Helper;
 
 namespace Neo.FileStorage.Tests.LocalObjectStorage.Shards
 {

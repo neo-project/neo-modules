@@ -6,7 +6,7 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.LocalObjectStorage.Shards;
-using static Neo.FileStorage.Tests.LocalObjectStorage.Helper;
+using static Neo.FileStorage.Tests.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Tests.LocalObjectStorage.Engine

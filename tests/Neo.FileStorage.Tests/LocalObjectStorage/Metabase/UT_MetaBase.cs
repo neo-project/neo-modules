@@ -8,7 +8,7 @@ using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage;
 using Neo.FileStorage.LocalObjectStorage.Blob;
 using Neo.FileStorage.LocalObjectStorage.Metabase;
-using static Neo.FileStorage.Tests.LocalObjectStorage.Helper;
+using static Neo.FileStorage.Tests.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase

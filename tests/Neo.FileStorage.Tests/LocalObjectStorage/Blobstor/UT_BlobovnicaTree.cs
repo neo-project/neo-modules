@@ -8,7 +8,7 @@ using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage;
 using Neo.FileStorage.LocalObjectStorage.Blobstor;
 using Neo.IO.Data.LevelDB;
-using static Neo.FileStorage.Tests.LocalObjectStorage.Helper;
+using static Neo.FileStorage.Tests.Helper;
 using FSRange = Neo.FileStorage.API.Object.Range;
 
 namespace Neo.FileStorage.Tests.LocalObjectStorage.Blobstor

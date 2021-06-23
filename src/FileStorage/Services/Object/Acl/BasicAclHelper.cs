@@ -1,9 +1,9 @@
-using Neo.FileStorage.API.Acl;
 using System.Collections.Generic;
+using Neo.FileStorage.API.Acl;
 
 namespace Neo.FileStorage.Services.Object.Acl
 {
-    public static class BasicAcl
+    public static class BasicAclHelper
     {
         public const int ReservedBitNumber = 2;
         public const int StickyBitPos = ReservedBitNumber;
@@ -97,7 +97,7 @@ namespace Neo.FileStorage.Services.Object.Acl
 
         public static bool SystemAllowed(this uint value, Operation op)
         {
-            if (op != Operation.Delete && op != Operation.Getrangehash) return true;
+            if (op != Operation.Delete && op != Operation.Getrange) return true;
             if (Order.TryGetValue(op, out byte n))
             {
                 return value.IsLeftBitSet((byte)(OpOffset + n * BitsPerOp + BitSystem));

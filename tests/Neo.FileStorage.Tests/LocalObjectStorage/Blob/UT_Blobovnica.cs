@@ -2,7 +2,7 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.LocalObjectStorage;
 using Neo.FileStorage.LocalObjectStorage.Blob;
-using static Neo.FileStorage.Tests.LocalObjectStorage.Helper;
+using static Neo.FileStorage.Tests.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Tests.LocalObjectStorage.Blob

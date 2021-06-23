@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.Services.Container.Announcement.Storage;
 using static Neo.FileStorage.Services.Container.Announcement.Storage.Helper;
-using static Neo.FileStorage.Tests.Services.Container.Helper;
+using static Neo.FileStorage.Tests.Helper;
 
 namespace Neo.FileStorage.Tests.Services.Container.Announcement
 {

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.Services.Container.Announcement.Control;
 using Neo.FileStorage.Services.Container.Announcement.Route;
-using static Neo.FileStorage.Tests.Services.Container.Helper;
+using static Neo.FileStorage.Tests.Helper;
 using FSAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types.Announcement;
 
 namespace Neo.FileStorage.Tests.Services.Container.Announcement
