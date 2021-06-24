@@ -19,12 +19,6 @@ namespace Neo.FileStorage.Services.Object.Put
         public LocalObjectInhumer ObjectInhumer { get; init; }
         public ReputationClientCache ClientCache { get; init; }
 
-        public PutInitPrm ToInitPrm(PutRequest request)
-        {
-            var prm = PutInitPrm.FromRequest(request);
-            return prm;
-        }
-
         public PutStream Put(CancellationToken cancellation)
         {
             return new PutStream()

@@ -16,6 +16,7 @@ using Neo.FileStorage.API.StorageGroup;
 using Neo.FileStorage.Services.Audit;
 using Neo.FileStorage.Services.Audit.Auditor;
 using Neo.FileStorage.Utils;
+using FSContainer = Neo.FileStorage.API.Container.Container;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSRange = Neo.FileStorage.API.Object.Range;
 
@@ -36,7 +37,7 @@ namespace Neo.FileStorage.Tests.Services.Audit
 
         public class TestContainerCommunacator : IContainerCommunicator
         {
-            public Container Container { get; init; }
+            public FSContainer Container { get; init; }
             public FSObject Object { get; init; }
 
             public StorageGroup GetStorageGroup(AuditTask task, ObjectID oid)
@@ -68,7 +69,7 @@ namespace Neo.FileStorage.Tests.Services.Audit
             var key = "L4kWTNckyaWn2QdUrACCJR1qJNgFFGhTCy63ERk7ZK3NvBoXap6t".LoadWif();
             int cap = 3;
             ulong max_pdp_internal = 3000;
-            Container container = new()
+            FSContainer container = new()
             {
                 Version = API.Refs.Version.SDKVersion(),
                 OwnerId = key.ToOwnerID(),

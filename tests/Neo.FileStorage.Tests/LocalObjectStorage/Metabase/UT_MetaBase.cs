@@ -8,7 +8,7 @@ using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage;
 using Neo.FileStorage.LocalObjectStorage.Blob;
 using Neo.FileStorage.LocalObjectStorage.Metabase;
-using static Neo.FileStorage.Tests.LocalObjectStorage.Helper;
+using static Neo.FileStorage.Tests.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
@@ -973,20 +973,16 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
                 var cid = RandomContainerID();
                 var sid = new SplitID();
                 var parent = RandomObject(cid);
-                Console.WriteLine($"parent: {parent.ObjectId.ToBase58String()}");
                 var regular = RandomObject(cid);
                 regular.Parent = parent;
                 regular.SplitId = sid;
                 mb.Put(regular);
-                Console.WriteLine($"regular: {regular.ObjectId.ToBase58String()}");
                 var ts = RandomObject(cid);
                 ts.ObjectType = ObjectType.Tombstone;
                 mb.Put(ts);
-                Console.WriteLine($"ts: {ts.ObjectId.ToBase58String()}");
                 var sg = RandomObject(cid);
                 sg.ObjectType = ObjectType.StorageGroup;
                 mb.Put(sg);
-                Console.WriteLine($"sg: {sg.ObjectId.ToBase58String()}");
                 //not present
                 SearchFilters fs = new();
                 fs.AddObjectIDFilter(API.Object.MatchType.NotPresent, new());
@@ -995,7 +991,6 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
                 //not found objects
                 fs = new();
                 var raw = RandomObject(cid);
-                Console.WriteLine($"raw: {raw.ObjectId.ToBase58String()}");
                 fs.AddObjectIDFilter(API.Object.MatchType.StringEqual, raw.ObjectId);
                 list = mb.Select(cid, fs);
                 Assert.AreEqual(0, list.Count);

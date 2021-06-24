@@ -16,6 +16,7 @@ namespace Neo.FileStorage.Services.Object.Put
         public Traverser Traverser { get; init; }
         public ObjectValidator ObjectValidator { get; init; }
         public Func<Network.Address, IObjectTarget> NodeTargetInitializer { get; init; }
+        public Action<Network.Address> Relay;
 
         private FSObject obj;
         private byte[] payload;
@@ -48,6 +49,8 @@ namespace Neo.FileStorage.Services.Object.Put
                 {
                     tasks[i] = Task.Run(() =>
                     {
+                        if (Relay is not null)
+                            Relay(addrs[i]);
                         var target = NodeTargetInitializer(addrs[i]);
                         target.WriteHeader(obj);
                         target.Close();

@@ -1,7 +1,5 @@
 using System;
-using System.Linq;
 using Google.Protobuf;
-using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Blob;
 using FSObject = Neo.FileStorage.API.Object.Object;
@@ -12,29 +10,35 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
     public sealed class BlobStorage : IDisposable
     {
         public const ulong DefaultSmallSizeLimit = 1 << 20;
-        public const string BlobovniczaDir = "blobovnicza";
+        public const string BlobovniczasDir = "blobovnicza";
         private readonly ICompressor compressor;
         private readonly FSTree fsTree;
         private readonly BlobovniczaTree blobovniczas;
         public ulong SmallSizeLimit { get; init; }
 
-        public BlobStorage()
+        public BlobStorage(BlobStorageSettings settings)
         {
-            SmallSizeLimit = DefaultSmallSizeLimit;
-            compressor = new ZstdCompressor();
-            fsTree = new();
-            blobovniczas = new(BlobovniczaDir, compressor);
-        }
-
-        public BlobStorage(FSTree tree) : this()
-        {
-            fsTree = tree;
+            SmallSizeLimit = settings.SmallSizeLimit;
+            compressor = settings.Compress ? new ZstdCompressor() : null;
+            fsTree = new()
+            {
+                RootPath = settings.Path,
+                Depth = settings.ShallowDepth,
+            };
+            blobovniczas = new()
+            {
+                BlzRootPath = System.IO.Path.Join(settings.Path, BlobovniczasDir),
+                Compressor = compressor,
+                BlzShallowDepth = (ulong)settings.BlobovniczasSettings.ShallowDepth,
+                BlzShallowWidth = (ulong)settings.BlobovniczasSettings.ShallowWidth
+            };
+            blobovniczas.Initialize();
         }
 
         public void Dispose()
         {
             blobovniczas.Dispose();
-            compressor.Dispose();
+            compressor?.Dispose();
         }
 
         private bool IsBig(byte[] data)

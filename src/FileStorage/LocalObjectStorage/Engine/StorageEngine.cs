@@ -8,14 +8,14 @@ using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Shards;
+using Neo.FileStorage.Services.Object.Acl.EAcl;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.LocalObjectStorage.Engine
 {
-    public sealed class StorageEngine : IDisposable
+    public sealed class StorageEngine : ILocalHeadSource, IDisposable
     {
-
-        private readonly Dictionary<string, Shard> shards = new();
+        private readonly Dictionary<ShardID, Shard> shards = new();
         private readonly ReaderWriterLockSlim mtx = new();
 
         public void Dispose()
@@ -193,6 +193,10 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
             return false;
         }
 
+        public FSObject Head(Address address)
+        {
+            return Head(address, false);
+        }
 
         public FSObject Head(Address address, bool raw)
         {
@@ -272,15 +276,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
             }
         }
 
-        public ShardID AddShard(string path, bool use_cache)
+        public void AddShard(Shard shard)
         {
-            ShardID id = new();
-            shards[id.ToString()] = new Shard(use_cache)
-            {
-                ID = id,
-                ExpiredObjectCallback = ProcessExpiredTomstones,
-            };
-            return id;
+            shards[shard.ID] = shard;
         }
 
         private void ProcessExpiredTomstones(List<Address> addresses, CancellationToken token)
@@ -319,7 +317,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
                 var list = shards.Values.Select(s => new ShardDistance
                 {
                     Shard = s,
-                    Weight = s.WeightValues(),
+                    Weight = s.WeightValue(),
                     Distance = Utility.StrictUTF8.GetBytes(s.ID.ToString()).Murmur64(0).Distance(target),
                 });
                 return list.OrderBy(s => s.Sort).Select(s => s.Shard).ToList();

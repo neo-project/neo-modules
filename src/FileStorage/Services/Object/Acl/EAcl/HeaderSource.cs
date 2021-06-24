@@ -1,24 +1,24 @@
+using System;
+using System.Collections.Generic;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
 using Neo.FileStorage.LocalObjectStorage.Engine;
-using System;
-using System.Collections.Generic;
 using static Neo.FileStorage.API.Acl.EACLRecord.Types;
 using FSObject = Neo.FileStorage.API.Object;
 
 
 namespace Neo.FileStorage.Services.Object.Acl.EAcl
 {
-    public class HeaderSource
+    public class HeaderSource : IHeaderSource
     {
-        private readonly StorageEngine localStorage;
+        private readonly ILocalHeadSource localStorage;
         private readonly IRequest req;
         private readonly IResponse resp;
         private readonly Address address;
 
-        public HeaderSource(StorageEngine local_storage, Address address, IRequest request, IResponse response)
+        public HeaderSource(ILocalHeadSource local_storage, Address address, IRequest request, IResponse response)
         {
             localStorage = local_storage;
             this.address = address;
@@ -146,14 +146,12 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
         {
             try
             {
-                var obj = localStorage.Head(address, false);
+                var obj = localStorage.Head(address);
                 return HeadersFromObject(obj, address);
             }
             catch (Exception)
             {
-                //csharp can't return flag, we return null here
-                // return AddressHeaders(address);
-                return null;
+                return AddressHeaders(address);
             }
         }
 

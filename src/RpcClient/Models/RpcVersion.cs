@@ -17,7 +17,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new JObject();
+            JObject json = new();
             json["network"] = Network;
             json["tcpport"] = TcpPort;
             json["wsport"] = WsPort;

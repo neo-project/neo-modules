@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using Akka.Actor;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.LocalObjectStorage.Engine;
+using Neo.FileStorage.LocalObjectStorage.Shards;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Accounting;
@@ -16,6 +17,7 @@ using Neo.FileStorage.Services.Object.Acl;
 using Neo.FileStorage.Services.Reputaion.Service;
 using Neo.FileStorage.Services.Session;
 using Neo.FileStorage.Storage.Processors;
+using Neo.FileStorage.Utils;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -40,14 +42,20 @@ namespace Neo.FileStorage
         private readonly IActorRef listener;
         public ProtocolSettings ProtocolSettings => system.Settings;
         private Network.Address LocalAddress => Network.Address.FromString(LocalNodeInfo.Address);
-        private NetmapProcessor netmapProcessor = new();
-        private ContainerProcessor containerProcessor = new();
+        private readonly NetmapProcessor netmapProcessor = new();
+        private readonly ContainerProcessor containerProcessor = new();
 
         public StorageService(Wallet wallet, NeoSystem side)
         {
             system = side;
             key = wallet.GetAccounts().First().GetKey().PrivateKey.LoadPrivateKey();
             StorageEngine localStorage = new();
+            int i = 0;
+            foreach (var shardSettings in Settings.Default.LocalStorageSettings.Shards)
+            {
+                localStorage.AddShard(new Shard(shardSettings, system.ActorSystem.ActorOf(WorkerPool.Props($"Shard{i}", 2))));
+                i++;
+            }
             morphClient = new Client
             {
                 client = new MorphClient()

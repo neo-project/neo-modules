@@ -5,7 +5,7 @@ using Neo.Cryptography;
 
 namespace Neo.FileStorage.LocalObjectStorage.Shards
 {
-    public class ShardID
+    public class ShardID : IEquatable<ShardID>
     {
         private readonly byte[] value;
 
@@ -19,6 +19,13 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
         public ShardID(byte[] bytes)
         {
             value = bytes;
+        }
+
+        public bool Equals(ShardID other)
+        {
+            if (other is null)
+                return false;
+            return value.SequenceEqual(other.value);
         }
 
         public override string ToString()

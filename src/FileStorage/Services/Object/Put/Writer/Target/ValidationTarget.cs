@@ -1,14 +1,14 @@
+using System;
 using Google.Protobuf;
+using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Core.Object;
 using Neo.FileStorage.Services.ObjectManager.Transformer;
-using Neo.FileStorage.API.Refs;
-using System;
 using static Neo.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Put
 {
-    public class ValidatingTarget : IObjectTarget
+    public class ValidationTarget : IObjectTarget
     {
         public IObjectTarget Next { get; init; }
         public ObjectValidator ObjectValidator { get; init; }
@@ -20,9 +20,9 @@ namespace Neo.FileStorage.Services.Object.Put
         {
             checksum = header.Header.PayloadHash;
             if (checksum.Type != ChecksumType.Sha256 && checksum.Type != ChecksumType.Tz)
-                throw new InvalidOperationException(nameof(ValidatingTarget) + " unsupported paylaod checksum type " + checksum.Type);
+                throw new InvalidOperationException(nameof(ValidationTarget) + " unsupported paylaod checksum type " + checksum.Type);
             if (!ObjectValidator.Validate(header))
-                throw new FormatException(nameof(ValidatingTarget) + " invalid object");
+                throw new FormatException(nameof(ValidationTarget) + " invalid object");
             Next.WriteHeader(header);
         }
 
@@ -34,7 +34,7 @@ namespace Neo.FileStorage.Services.Object.Put
 
         public AccessIdentifiers Close()
         {
-            if (!checksum.Verify(ByteString.CopyFrom(payload))) throw new InvalidOperationException(nameof(ValidatingTarget) + " invalid checksum");
+            if (!checksum.Verify(ByteString.CopyFrom(payload))) throw new InvalidOperationException(nameof(ValidationTarget) + " invalid checksum");
             return Next.Close();
         }
     }

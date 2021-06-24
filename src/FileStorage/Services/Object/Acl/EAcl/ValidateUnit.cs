@@ -5,10 +5,10 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
 {
     public class ValidateUnit
     {
-        public ContainerID Cid;
+        public ContainerID ContainerId;
         public Role Role;
         public Operation Op;
-        public HeaderSource HeaderSource;
+        public IHeaderSource HeaderSource;
         public byte[] Key;
         public BearerToken Bearer;
     }

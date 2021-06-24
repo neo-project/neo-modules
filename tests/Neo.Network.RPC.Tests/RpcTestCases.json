@@ -1194,7 +1194,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [0]
         },
         {
           "id": -2,
@@ -1291,7 +1291,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [0]
         },
         {
           "id": -3,
@@ -1495,7 +1495,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [0]
         },
         {
           "id": -4,
@@ -1603,7 +1603,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [0]
         },
         {
           "id": -5,
@@ -1784,7 +1784,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [0]
         },
         {
           "id": -6,
@@ -1847,7 +1847,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [0]
         },
         {
           "id": -7,
@@ -1955,7 +1955,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [0]
         },
         {
           "id": -8,
@@ -2248,7 +2248,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [0]
         }
       ]
     }

@@ -1,11 +1,8 @@
 using System.Threading;
-using Google.Protobuf;
-using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Container;
-using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.API.Session;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Container.Announcement;
+using static Neo.FileStorage.Services.Object.Util.Helper;
 using FSContainer = Neo.FileStorage.API.Container.Container;
 
 namespace Neo.FileStorage.Services.Container
@@ -23,7 +20,7 @@ namespace Neo.FileStorage.Services.Container
         public DeleteResponse Delete(DeleteRequest request)
         {
             byte[] sig = request.Body.Signature.Sign.ToByteArray();
-            MorphClient.DeleteContainer(request.Body.ContainerId, sig, OriginalSessionToken(request));
+            MorphClient.DeleteContainer(request.Body.ContainerId, sig, OriginalSessionToken(request.MetaHeader));
             var resp = new DeleteResponse
             {
                 Body = new DeleteResponse.Types.Body { }
@@ -71,7 +68,7 @@ namespace Neo.FileStorage.Services.Container
         public PutResponse Put(PutRequest request)
         {
             FSContainer container = request.Body.Container;
-            MorphClient.PutContainer(container, request.Body.Signature, OriginalSessionToken(request));
+            MorphClient.PutContainer(container, request.Body.Signature, OriginalSessionToken(request.MetaHeader));
             var resp = new PutResponse
             {
                 Body = new PutResponse.Types.Body
@@ -84,20 +81,12 @@ namespace Neo.FileStorage.Services.Container
 
         public SetExtendedACLResponse SetExtendedACL(SetExtendedACLRequest request)
         {
-            MorphClient.SetEACL(request.Body.Eacl, request.Body.Signature, OriginalSessionToken(request));
+            MorphClient.SetEACL(request.Body.Eacl, request.Body.Signature, OriginalSessionToken(request.MetaHeader));
             var resp = new SetExtendedACLResponse
             {
                 Body = new SetExtendedACLResponse.Types.Body { }
             };
             return resp;
-        }
-
-        private SessionToken OriginalSessionToken(IRequest request)
-        {
-            RequestMetaHeader meta = request.MetaHeader;
-            while (meta.Origin is not null)
-                meta = meta.Origin;
-            return meta.SessionToken;
         }
     }
 }

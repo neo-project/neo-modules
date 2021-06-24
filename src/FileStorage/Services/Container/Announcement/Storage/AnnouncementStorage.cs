@@ -1,7 +1,6 @@
-using Neo.FileStorage.Services.Container.Announcement.Route;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using Neo.FileStorage.Services.Container.Announcement.Route;
 using FSAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types.Announcement;
 
 namespace Neo.FileStorage.Services.Container.Announcement.Storage
@@ -55,7 +54,7 @@ namespace Neo.FileStorage.Services.Container.Announcement.Storage
             {
                 if (estimation.Announcement is not null)
                 {
-                    estimation.Announcement.UsedSpace = FinalEstimation(estimation.Sizes);
+                    estimation.Announcement.UsedSpace = Helper.FinalEstimation(estimation.Sizes);
                     try
                     {
                         handler(estimation.Announcement);
@@ -68,22 +67,6 @@ namespace Neo.FileStorage.Services.Container.Announcement.Storage
             }
         }
 
-        private ulong FinalEstimation(List<ulong> sizes)
-        {
-            sizes.Sort();
-            int lowerRank = 10, upperRank = 90;
-            if (lowerRank <= sizes.Count)
-            {
-                int lowerIn = Percentile(lowerRank, sizes);
-                int upperIn = Percentile(upperRank, sizes);
-                sizes = sizes.Skip(lowerIn).Take(upperIn - lowerIn).ToList();
-            }
-            return sizes.Aggregate(0ul, (sum, p) => sum += p) / (ulong)sizes.Count;
-        }
 
-        private int Percentile(int rank, List<ulong> sizes)
-        {
-            return sizes.Count * rank / 100;
-        }
     }
 }

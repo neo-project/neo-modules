@@ -8,7 +8,7 @@ using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage;
 using Neo.FileStorage.LocalObjectStorage.Blobstor;
 using Neo.IO.Data.LevelDB;
-using static Neo.FileStorage.Tests.LocalObjectStorage.Helper;
+using static Neo.FileStorage.Tests.Helper;
 using FSRange = Neo.FileStorage.API.Object.Range;
 
 namespace Neo.FileStorage.Tests.LocalObjectStorage.Blobstor
@@ -21,8 +21,9 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Blobstor
         {
             string path = "./test_blzs";
             int size_limit = 2 << 10;
-            BlobovniczaTree tree = new(path)
+            BlobovniczaTree tree = new()
             {
+                BlzRootPath = path,
                 BlzShallowWidth = 2,
                 BlzShallowDepth = 2,
                 SmallSizeLimit = (ulong)size_limit,
@@ -48,9 +49,9 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Blobstor
                         Length = obj.PayloadSize / 3
                     };
                     byte[] data = tree.GetRange(obj.Address, range, id);
-                    Assert.IsTrue(obj.Payload.ToByteArray()[(int)range.Offset..(int)range.Length].SequenceEqual(data));
+                    Assert.AreEqual(obj.Payload.ToByteArray()[(int)range.Offset..(int)(range.Length + range.Offset)].ToHexString(), data.ToHexString());
                     data = tree.GetRange(obj.Address, range);
-                    Assert.IsTrue(obj.Payload.ToByteArray()[(int)range.Offset..(int)range.Length].SequenceEqual(data));
+                    Assert.IsTrue(obj.Payload.ToByteArray()[(int)range.Offset..(int)(range.Length + range.Offset)].SequenceEqual(data));
                 }
                 foreach (var address in addrs)
                 {
