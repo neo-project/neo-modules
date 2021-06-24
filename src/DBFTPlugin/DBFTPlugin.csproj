@@ -10,9 +10,21 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Consensus\" />
+    <None Remove="Type\" />
+    <None Remove="Messages\" />
+    <None Remove="Messages\RecoveryMessage\" />
+  </ItemGroup>
+  <ItemGroup>
     <None Update="DBFTPlugin\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Consensus\" />
+    <Folder Include="Types\" />
+    <Folder Include="Messages\" />
+    <Folder Include="Messages\RecoveryMessage\" />
   </ItemGroup>
 </Project>
