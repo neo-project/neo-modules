@@ -417,6 +417,7 @@ namespace Neo.Consensus
                     PrevHash = Block.PrevHash,
                     ViewNumber = ViewNumber,
                     Timestamp = Block.Timestamp,
+                    Nonce = Block.Nonce,
                     BlockIndex = Block.Index,
                     TransactionHashes = TransactionHashes
                 };
