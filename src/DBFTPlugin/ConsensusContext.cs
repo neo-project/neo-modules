@@ -52,6 +52,8 @@ namespace Neo.Consensus
         private readonly IStore store;
         private Dictionary<UInt256, ConsensusMessage> cachedMessages;
 
+        private readonly Random _random = new Random();
+
         public int F => (Validators.Length - 1) / 3;
         public int M => Validators.Length - F;
         public bool IsPrimary => MyIndex == Block.PrimaryIndex;
@@ -335,10 +337,11 @@ namespace Neo.Consensus
                 IO.Helper.GetVarSize(expectedTransactions);
         }
 
-        internal ulong GetNonce(ulong seed)
+        internal ulong GetNonce()
         {
-            var nonce = BitConverter.GetBytes(seed).Murmur128(123u);
-            return  BitConverter.ToUInt64(nonce[..8]);
+            byte[] buffer = new byte[8];
+            _random.NextBytes(buffer);
+            return BitConverter.ToUInt64(buffer, 0);
         }
 
         /// <summary>
@@ -383,13 +386,14 @@ namespace Neo.Consensus
         {
             EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
             Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
-            var nonce = GetNonce(Block.Header.Timestamp);
+            var nonce = GetNonce();
             Block.Header.Nonce = nonce;
             return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
             {
                 Version = Block.Version,
                 PrevHash = Block.PrevHash,
                 Timestamp = Block.Timestamp,
+                Nonce = nonce,
                 TransactionHashes = TransactionHashes
             });
         }
