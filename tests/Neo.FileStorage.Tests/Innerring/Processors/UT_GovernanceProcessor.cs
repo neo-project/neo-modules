@@ -63,22 +63,21 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             state.isAlphabet = true;
             state.morphClient = morphclient;
             processor.ProcessAlphabetSync();
-            var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.IsNotNull(tx);
+            ExpectNoMsg();
         }
 
         [TestMethod]
         public void ListenerHandlersTest()
         {
             var handlerInfos = processor.ListenerHandlers();
-            Assert.AreEqual(handlerInfos.Length, 0);
+            Assert.AreEqual(handlerInfos.Length, 1);
         }
 
         [TestMethod]
         public void ListenerParsersTest()
         {
             var parserInfos = processor.ListenerParsers();
-            Assert.AreEqual(parserInfos.Length, 0);
+            Assert.AreEqual(parserInfos.Length, 1);
         }
     }
 }

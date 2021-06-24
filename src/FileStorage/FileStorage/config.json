@@ -89,7 +89,8 @@
       "CacheTimeout": 100
     },
     "Settlement": {
-      "BasicIncomeRate": 10
+      "BasicIncomeRate": 10,
+      "AuditFee": 1000
     },
     "Fee": {
       "MainChain": 5000,

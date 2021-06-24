@@ -15,6 +15,8 @@ namespace Neo.FileStorage.Morph.Invoker
         private const string ListByEpochResultsMethod = "listByEpoch";
         private const string ListByCIDResultsMethod = "listByCID";
         private const string ListByNodeResultsMethod = "listByNode";
+        private static long MainChainFee => Settings.Default.MainChainFee;
+        private static long SideChainFee => Settings.Default.SideChainFee;
 
         public static bool InvokePutAuditResult(this Client client, byte[] rawResult)
         {

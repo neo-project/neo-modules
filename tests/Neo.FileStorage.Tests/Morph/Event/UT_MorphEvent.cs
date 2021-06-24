@@ -136,28 +136,6 @@ namespace Neo.FileStorage.Tests.Morph.Event
         }
 
         [TestMethod]
-        public void ParseUnbindEventTest()
-        {
-            List<ECPoint> keys = TestBlockchain.wallet.GetAccounts().ToArray().Select(p => p.GetKey().PublicKey).ToList();
-            Array ecpints = new Array();
-            foreach (ECPoint item in keys)
-            {
-                ecpints.Add(item.ToArray());
-            }
-            Array array = new Array();
-            array.Add(UInt160.Zero.ToArray());
-            array.Add(ecpints);
-            IContractEvent @event = UnbindEvent.ParseUnbindEvent(array);
-            Assert.IsTrue(@event is UnbindEvent);
-            Assert.AreEqual(((UnbindEvent)@event).UserAccount, UInt160.Zero);
-            Assert.AreEqual(((UnbindEvent)@event).Keys.Length, 7);
-            array.Add(1);
-            Action action = () => NewEpochEvent.ParseNewEpochEvent(array);
-            Assert.ThrowsException<Exception>(action);
-            @event.ContractEvent();
-        }
-
-        [TestMethod]
         public void ParseChequeEventTest()
         {
             Array array = new Array();

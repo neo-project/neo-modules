@@ -22,7 +22,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         public int SearchTimeout => Settings.Default.SearchTimeout;
         public IActorRef TaskManager;
         public INeoFSClientCache ClientCache;
-        public Action prevAuditCanceler = new Action(() => { });
+        public CancellationTokenSource prevAuditCanceler = new CancellationTokenSource();
 
         public void HandleNewAuditRound(IContractEvent morphEvent)
         {
@@ -33,10 +33,8 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessStartAudit(ulong epoch)
         {
-            Console.WriteLine("启动ProcessStartAudit");
             Utility.Log(Name, LogLevel.Info, string.Format("epoch:{0}", epoch));
-            prevAuditCanceler();
-            Console.WriteLine("AuditTaskManager任务筛选");
+            prevAuditCanceler.Cancel();
             int skipped = (int)TaskManager.Ask(new ResetMessage()).Result;
             if (skipped > 0) Utility.Log(Name, LogLevel.Info, string.Format("some tasks from previous epoch are skipped,amount{0}", skipped));
             ContainerID[] containers;
@@ -88,7 +86,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 var storageGroups = FindStorageGroups(containers[i], n);
                 Utility.Log(Name, LogLevel.Info, string.Format("select storage groups for audit,cid:{0},amount:{1}", containers[i], storageGroups.Length));
 
-                var source = new CancellationTokenSource();
+                prevAuditCanceler = new CancellationTokenSource();
                 AuditTask auditTask = new()
                 {
                     Reporter = new EpochAuditReporter()
@@ -96,7 +94,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                         epoch = epoch,
                         reporter = State
                     },
-                    Cancellation = source.Token,
+                    Cancellation = prevAuditCanceler.Token,
                     ContainerID = containers[i],
                     SGList = storageGroups.ToList(),
                     Container = cnr,
@@ -166,6 +164,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 pairs.Add("address", shuffled[i].Info.Address);
                 pairs.Add("try", i.ToString());
                 pairs.Add("total_tries", shuffled.Length.ToString());
+                Utility.Log(Name, LogLevel.Info, pairs.ToString());
                 Network.Address address;
                 try
                 {

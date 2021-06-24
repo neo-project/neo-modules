@@ -87,7 +87,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
                 PlacementPolicy = new PlacementPolicy()
             };
             byte[] sig = Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            bool result = morphclient.RegisterContainer(key.PublicKey, container.ToByteArray(), sig);
+            bool result = morphclient.RegisterContainer(key.PublicKey.ToArray(), container.ToByteArray(), sig,null);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -100,7 +100,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
             KeyPair key = accounts.ToArray()[0].GetKey();
             var containerId = "fc780e98b7970002a80fbbeb60f9ed6cf44d5696588ea32e4338ceaeda4adddc".HexToBytes();
             var sig = Cryptography.Crypto.Sign(containerId, key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            var result = morphclient.RemoveContainer(containerId, sig);
+            var result = morphclient.RemoveContainer(containerId, sig,null);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -202,7 +202,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             morphclient.InnerRingIndex(accounts.ToArray()[0].GetKey().PublicKey, out int index, out int length);
             Assert.AreEqual(index, 1);
-            Assert.AreEqual(length, 7);
+            Assert.AreEqual(length,7);
         }
 
         [TestMethod]

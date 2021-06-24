@@ -59,7 +59,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         [TestMethod]
         public void ProcessStartAuditTest()
         {
-            processor.ProcessStartAudit(0);
+            processor.ProcessStartAudit(1);
             var nt = ExpectMsg<AuditTask>();
             Assert.IsNotNull(nt);
         }

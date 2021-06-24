@@ -3,6 +3,7 @@ using Akka.TestKit.Xunit2;
 using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Container;
+using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Morph.Invoker;
@@ -68,7 +69,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             processor.HandlePut(new ContainerPutEvent()
             {
                 RawContainer = container.ToByteArray(),
-                PublicKey = key.PublicKey,
+                PublicKey = key.PublicKey.ToArray(),
                 Signature = sig
             });
             var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;
@@ -102,12 +103,13 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                 OwnerId = ownerId,
                 PlacementPolicy = new API.Netmap.PlacementPolicy()
             };
-            byte[] sig = Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
+            byte[] sig = key.PrivateKey.LoadPrivateKey().SignData(container.Sha256Checksum().Sum.ToByteArray());
             processor.ProcessContainerPut(new ContainerPutEvent()
             {
-                PublicKey = key.PublicKey,
+                PublicKey = key.PublicKey.ToArray(),
                 Signature = sig,
-                RawContainer = container.ToByteArray()
+                RawContainer = container.ToByteArray(),
+                token=null
             });
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.IsNotNull(tx);
@@ -115,9 +117,10 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             state.isAlphabet = false;
             processor.ProcessContainerPut(new ContainerPutEvent()
             {
-                PublicKey = key.PublicKey,
+                PublicKey = key.PublicKey.ToArray(),
                 Signature = sig,
-                RawContainer = container.ToByteArray()
+                RawContainer = container.ToByteArray(),
+                token=null
             });
             ExpectNoMsg();
         }
@@ -129,11 +132,12 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
             var containerId = "fc780e98b7970002a80fbbeb60f9ed6cf44d5696588ea32e4338ceaeda4adddc".HexToBytes();
-            var sig = Cryptography.Crypto.Sign(containerId, key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
+             var sig = key.PrivateKey.LoadPrivateKey().SignData(ContainerID.FromSha256Bytes(containerId).Sha256Checksum().Sum.ToByteArray());
             processor.ProcessContainerDelete(new ContainerDeleteEvent()
             {
                 ContainerID = containerId,
-                Signature = sig
+                Signature = sig,
+                token=null
             });
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.IsNotNull(tx);
@@ -151,14 +155,14 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         public void ListenerHandlersTest()
         {
             var handlerInfos = processor.ListenerHandlers();
-            Assert.AreEqual(handlerInfos.Length, 2);
+            Assert.AreEqual(handlerInfos.Length, 3);
         }
 
         [TestMethod]
         public void ListenerParsersTest()
         {
             var parserInfos = processor.ListenerParsers();
-            Assert.AreEqual(parserInfos.Length, 2);
+            Assert.AreEqual(parserInfos.Length, 3);
         }
 
         [TestMethod]

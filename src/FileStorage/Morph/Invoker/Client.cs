@@ -53,6 +53,5 @@ namespace Neo.FileStorage.Morph.Invoker
             var result = client.TestInvoke(NativeContract.RoleManagement.Hash, "getDesignatedByRole", Role.NeoFSAlphabetNode, height);
             return ((Array)result.ResultStack[0]).Select(p => p.GetSpan().AsSerializable<ECPoint>()).ToArray();
         }
-
     }
 }

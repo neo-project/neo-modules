@@ -247,6 +247,7 @@ namespace Neo.FileStorage
         public ulong BasicIncomeRate;
         public long MainChainFee;
         public long SideChainFee;
+        public long AuditFee;
         public StorageSettings LocalStorageSettings;
         public List<UInt160> Contracts = new();
 
@@ -327,6 +328,7 @@ namespace Neo.FileStorage
 
             IConfigurationSection settlement = section.GetSection("Settlement");
             BasicIncomeRate = settlement.GetValue("BasicIncomeRate", 0ul);
+            AuditFee = settlement.GetValue("AuditFee", 5000L);
 
             IConfigurationSection fee = section.GetSection("Fee");
             MainChainFee = fee.GetValue("MainChain", 5000L);

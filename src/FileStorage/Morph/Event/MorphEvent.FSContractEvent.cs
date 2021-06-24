@@ -31,30 +31,6 @@ namespace Neo.FileStorage.Morph.Event
             }
         }
 
-        public class UnbindEvent : IContractEvent
-        {
-            public UInt160 UserAccount;
-            public ECPoint[] Keys;
-
-            public void ContractEvent() { }
-
-            public static UnbindEvent ParseUnbindEvent(VM.Types.Array eventParams)
-            {
-                var unbindEvent = new UnbindEvent();
-                if (eventParams.Count != 2) throw new Exception();
-                unbindEvent.UserAccount = eventParams[0].GetSpan().AsSerializable<UInt160>();
-                List<ECPoint> keys = new List<ECPoint>();
-                var bindKeys = ((VM.Types.Array)eventParams[1]).GetEnumerator();
-                while (bindKeys.MoveNext())
-                {
-                    var key = bindKeys.Current.GetSpan().AsSerializable<ECPoint>();
-                    keys.Add(key);
-                }
-                unbindEvent.Keys = keys.ToArray();
-                return unbindEvent;
-            }
-        }
-
         public class ChequeEvent : IContractEvent
         {
             public byte[] Id;

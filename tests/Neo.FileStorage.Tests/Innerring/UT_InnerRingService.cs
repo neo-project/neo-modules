@@ -33,10 +33,11 @@ namespace Neo.FileStorage.Tests.InnerRing
                 client = new MorphClient()
                 {
                     wallet = wallet,
-                    system = system
+                    system = system,
+                    actor=this.TestActor
                 }
             };
-            innerring = system.ActorSystem.ActorOf(Props(system, null, wallet, wallet, client, client));
+            innerring = system.ActorSystem.ActorOf(Props(system, system, wallet, wallet, client, client));
         }
 
         [TestMethod]
@@ -63,9 +64,7 @@ namespace Neo.FileStorage.Tests.InnerRing
             tx.Witnesses = data.GetWitnesses();
             NotifyEventArgs notify = new(tx, UInt160.Zero, "test", new VM.Types.Array() { new VM.Types.Boolean(true) });
             innerring.Tell(new ContractEvent() { notify = notify });
-            ExpectNoMsg();
-            innerring.Tell(new ContractEvent() { notify = notify });
-            ExpectNoMsg();
+            ExpectMsg<Transaction>();
             innerring.Tell(new Stop());
         }
     }

@@ -163,14 +163,14 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
         public void ListenerHandlersTest()
         {
             var handlerInfos = processor.ListenerHandlers();
-            Assert.AreEqual(handlerInfos.Length, 4);
+            Assert.AreEqual(handlerInfos.Length, 6);
         }
 
         [TestMethod]
         public void ListenerParsersTest()
         {
             var parserInfos = processor.ListenerParsers();
-            Assert.AreEqual(parserInfos.Length, 4);
+            Assert.AreEqual(parserInfos.Length, 6);
         }
     }
 }

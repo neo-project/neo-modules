@@ -3,11 +3,13 @@ using Neo.Cryptography.ECC;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Morph.Event;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static Neo.FileStorage.InnerRing.Events.MorphEvent;
 using static Neo.FileStorage.Utils.WorkerPool;
 
 namespace Neo.FileStorage.InnerRing.Processors
@@ -16,10 +18,35 @@ namespace Neo.FileStorage.InnerRing.Processors
     {
         private const string AlphabetUpdateIDPrefix = "AlphabetUpdate";
         public override string Name => "GovernanceProcessor";
+        private const string DesignationNotification = "Designation";
+
+        public override HandlerInfo[] ListenerHandlers()
+        {
+            HandlerInfo designateHandler = new HandlerInfo();
+            designateHandler.ScriptHashWithType = new ScriptHashWithType() { Type = DesignationNotification, ScriptHashValue = NativeContract.RoleManagement.Hash };
+            designateHandler.Handler = HandleAlphabetSync;
+            return new HandlerInfo[] { designateHandler };
+        }
+
+        public override ParserInfo[] ListenerParsers()
+        {
+            //deposit event
+            ParserInfo designateParser = new ParserInfo();
+            designateParser.ScriptHashWithType = new ScriptHashWithType() { Type = DesignationNotification, ScriptHashValue = NativeContract.RoleManagement.Hash };
+            designateParser.Parser = DesignateEvent.ParseDesignateEvent;
+            return new ParserInfo[] { designateParser};
+        }
 
         public void HandleAlphabetSync(IContractEvent morphEvent)
         {
-            Utility.Log(Name, LogLevel.Info, "new event,type:sync");
+            string type;
+            if (morphEvent is SyncEvent) type = "sync";
+            else if (morphEvent is DesignateEvent) {
+                if (((DesignateEvent)morphEvent).role != (byte)Role.NeoFSAlphabetNode) return;
+                type = "designation";
+            }
+            else return;
+            Utility.Log(Name, LogLevel.Info, string.Format("new event,type:{0}",type));
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessAlphabetSync()) });
         }
 

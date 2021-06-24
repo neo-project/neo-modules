@@ -1,6 +1,7 @@
 using Akka.Actor;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Morph.Event;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.IO;
 using Neo.Plugins.util;
 using System;
@@ -20,6 +21,8 @@ namespace Neo.FileStorage.InnerRing.Processors
         private const string WithdrawNotification = "Withdraw";
         private const string ChequeNotification = "Cheque";
         private const string ConfigNotification = "SetConfig";
+        private const string BindNotification = "Bind";
+        private const string UnBindNotification = "Unbind";
 
         private const string TxLogPrefix = "mainnet:";
         private const ulong LockAccountLifetime = 20;
@@ -55,7 +58,15 @@ namespace Neo.FileStorage.InnerRing.Processors
             configHandler.ScriptHashWithType = new ScriptHashWithType() { Type = ConfigNotification, ScriptHashValue = FsContractHash };
             configHandler.Handler = HandleConfig;
 
-            return new HandlerInfo[] { depositHandler, withdrwaHandler, chequeHandler, configHandler };
+            HandlerInfo bindHandler = new HandlerInfo();
+            bindHandler.ScriptHashWithType = new ScriptHashWithType() { Type = BindNotification, ScriptHashValue = FsContractHash };
+            bindHandler.Handler = HandleBind;
+
+            HandlerInfo unbindHandler = new HandlerInfo();
+            unbindHandler.ScriptHashWithType = new ScriptHashWithType() { Type = UnBindNotification, ScriptHashValue = FsContractHash };
+            unbindHandler.Handler = HandleUnBind;
+
+            return new HandlerInfo[] { depositHandler, withdrwaHandler, chequeHandler, configHandler, bindHandler,unbindHandler };
         }
 
         public override ParserInfo[] ListenerParsers()
@@ -79,7 +90,17 @@ namespace Neo.FileStorage.InnerRing.Processors
             ParserInfo configParser = new ParserInfo();
             configParser.ScriptHashWithType = new ScriptHashWithType() { Type = ConfigNotification, ScriptHashValue = FsContractHash };
             configParser.Parser = ConfigEvent.ParseConfigEvent;
-            return new ParserInfo[] { depositParser, withdrawParser, chequeParser, configParser };
+
+            //bind event
+            ParserInfo bindParser = new ParserInfo();
+            bindParser.ScriptHashWithType = new ScriptHashWithType() { Type = BindNotification, ScriptHashValue = FsContractHash };
+            bindParser.Parser = BindEvent.ParseBindEvent;
+
+            //unbind event
+            ParserInfo unbindParser = new ParserInfo();
+            unbindParser.ScriptHashWithType = new ScriptHashWithType() { Type = UnBindNotification, ScriptHashValue = FsContractHash };
+            unbindParser.Parser = BindEvent.ParseBindEvent;
+            return new ParserInfo[] { depositParser, withdrawParser, chequeParser, configParser , bindParser , unbindParser };
         }
 
         public void HandleDeposit(IContractEvent morphEvent)
@@ -108,6 +129,20 @@ namespace Neo.FileStorage.InnerRing.Processors
             ConfigEvent configEvent = (ConfigEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:setConfig,key:{0},value:{1}", configEvent.Key.ToHexString(), configEvent.Value.ToHexString()));
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessConfig(configEvent)) });
+        }
+
+        public void HandleBind(IContractEvent morphEvent)
+        {
+            BindEvent bindEvent = (BindEvent)morphEvent;
+            Utility.Log(Name, LogLevel.Info, "notification:type:bind");
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessBind(bindEvent,true)) });
+        }
+
+        public void HandleUnBind(IContractEvent morphEvent)
+        {
+            BindEvent bindEvent = (BindEvent)morphEvent;
+            Utility.Log(Name, LogLevel.Info, "notification:type:unbind");
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessBind(bindEvent,false)) });
         }
 
         public void ProcessDeposit(DepositEvent depositeEvent)
@@ -222,6 +257,26 @@ namespace Neo.FileStorage.InnerRing.Processors
             catch (Exception e)
             {
                 Utility.Log(Name, LogLevel.Error, string.Format("can't relay set config event,{0}", e.Message));
+            }
+        }
+
+        public void ProcessBind(BindEvent bindEvent,bool bind)
+        {
+            if (!State.IsAlphabet())
+            {
+                Utility.Log(Name, LogLevel.Info, "passive mode, ignore bind");
+                return;
+            }
+            try
+            {
+                if(bind)
+                    MorphCli.InvokeAddKeys(bindEvent.UserAccount, bindEvent.Keys);
+                else
+                    MorphCli.InvokeRemoveKeys(bindEvent.UserAccount,bindEvent.Keys);
+            }
+            catch (Exception e)
+            {
+                Utility.Log(Name, LogLevel.Error, "can't approve bind/unbind event");
             }
         }
     }
