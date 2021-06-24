@@ -430,27 +430,17 @@ namespace Neo.Consensus
                 return;
             }
 
-            byte[] nonce;
-            try
-            {
-                nonce = VRF.Verify(context.Validators[message.ValidatorIndex], message.VRFProof, message.PrevHash.ToArray());
-            }
-            catch (FormatException)
-            {
-                Log($"VRF Random number verification failed: {message.VRFProof}", LogLevel.Warning);
-                return;
-            }
-
             // Timeout extension: prepare request has been received with success
             // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
             ExtendTimerByFactor(2);
 
-            // Update the vrf proof 
-            context.VRFProof = message.VRFProof;
 
             context.Block.Header.Timestamp = message.Timestamp;
-            context.Block.Header.Nonce = BitConverter.ToUInt64(nonce[..8]);
             context.TransactionHashes = message.TransactionHashes;
+
+            var nonce = context.GetNonce(message.TransactionHashes);
+            context.Block.Header.Nonce = nonce;
+
             context.Transactions = new Dictionary<UInt256, Transaction>();
             context.VerificationContext = new TransactionVerificationContext();
             for (int i = 0; i < context.PreparationPayloads.Length; i++)

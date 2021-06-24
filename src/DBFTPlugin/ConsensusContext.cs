@@ -28,7 +28,6 @@ namespace Neo.Consensus
         public byte ViewNumber;
         public ECPoint[] Validators;
         public int MyIndex;
-        public byte[] VRFProof;
         public UInt256[] TransactionHashes;
         public Dictionary<UInt256, Transaction> Transactions;
         public ExtensiblePayload[] PreparationPayloads;
@@ -336,12 +335,10 @@ namespace Neo.Consensus
                 IO.Helper.GetVarSize(expectedTransactions);
         }
 
-        private Tuple<byte[], ulong> GetNonce(byte[] prikey)
+        internal ulong GetNonce(UInt256[] transactionHashes)
         {
-            var proof = VRF.Prove(prikey, Block.PrevHash.ToArray());
-            var nonce = VRF.ProofToHash(proof);
-            VRFProof = proof;
-            return new Tuple<byte[], ulong>(proof, BitConverter.ToUInt64(nonce[..8]));
+            var nonce = MerkleTree.ComputeRoot(TransactionHashes).ToArray().Murmur128(123u);
+            return  BitConverter.ToUInt64(nonce[..8]);
         }
 
         /// <summary>
@@ -386,14 +383,13 @@ namespace Neo.Consensus
         {
             EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
             Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
-            var (proof, nonce) = GetNonce(keyPair.PrivateKey);
+            var nonce = GetNonce(TransactionHashes);
             Block.Header.Nonce = nonce;
             return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
             {
                 Version = Block.Version,
                 PrevHash = Block.PrevHash,
                 Timestamp = Block.Timestamp,
-                VRFProof = proof, // Add vrf proof to the prepare request
                 TransactionHashes = TransactionHashes
             });
         }
@@ -418,7 +414,6 @@ namespace Neo.Consensus
                     ViewNumber = ViewNumber,
                     Timestamp = Block.Timestamp,
                     BlockIndex = Block.Index,
-                    VRFProof = VRFProof, // Add vrf proof to the prepare request
                     TransactionHashes = TransactionHashes
                 };
             }
