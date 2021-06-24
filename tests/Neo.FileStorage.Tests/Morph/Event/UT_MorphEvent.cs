@@ -103,6 +103,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Array array = new Array();
             array.Add(new byte[] { 0x01 });
             array.Add(new byte[] { 0x01 });
+            array.Add(null);
             IContractEvent @event = ContainerDeleteEvent.ParseContainerDeleteEvent(array);
             Assert.IsTrue(@event is ContainerDeleteEvent);
             Assert.AreEqual(((ContainerDeleteEvent)@event).ContainerID.ToHexString(), new byte[] { 0x01 }.ToHexString());

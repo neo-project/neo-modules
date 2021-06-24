@@ -20,7 +20,7 @@ namespace Neo.FileStorage.Morph.Event
                 if (eventParams.Count != 3) throw new Exception();
                 containerDeleteEvent.ContainerID = eventParams[0].GetSpan().ToArray();
                 containerDeleteEvent.Signature = eventParams[1].GetSpan().ToArray();
-                containerDeleteEvent.token = eventParams[2].GetSpan().ToArray();
+                containerDeleteEvent.token = eventParams[2] is VM.Types.Null ? null : eventParams[2].GetSpan().ToArray();
                 return containerDeleteEvent;
             }
         }
@@ -41,7 +41,7 @@ namespace Neo.FileStorage.Morph.Event
                 containerPutEvent.RawContainer = eventParams[0].GetSpan().ToArray();
                 containerPutEvent.Signature = eventParams[1].GetSpan().ToArray();
                 containerPutEvent.PublicKey = eventParams[2].GetSpan().ToArray();
-                containerPutEvent.token = eventParams[2] is VM.Types.Null? null: eventParams[2].GetSpan().ToArray();
+                containerPutEvent.token = eventParams[3] is VM.Types.Null? null: eventParams[2].GetSpan().ToArray();
                 return containerPutEvent;
             }
         }

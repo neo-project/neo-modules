@@ -33,6 +33,9 @@ namespace Neo.FileStorage
         public int ContainerContractWorkersSize;
         public int AlphabetContractWorkersSize;
         public int ReputationContractWorkersSize;
+        public int SettlementWorkersSize;
+        public int GovernanceWorkersSize;
+        public int AuditContractWorkersSize;
 
         public int PdpPoolSize;
         public int PorPoolSize;
@@ -64,6 +67,7 @@ namespace Neo.FileStorage
         public ulong BasicIncomeRate;
         public long MainChainFee;
         public long SideChainFee;
+        public long AuditFee;
         public ObjectStorageSettings LocalStorageSettings;
         public List<UInt160> Contracts = new();
 
@@ -101,6 +105,9 @@ namespace Neo.FileStorage
             ContainerContractWorkersSize = workSizes.GetValue("Container", 10);
             AlphabetContractWorkersSize = workSizes.GetValue("Alphabet", 10);
             ReputationContractWorkersSize = workSizes.GetValue("Reputation", 10);
+            SettlementWorkersSize = workSizes.GetValue("Settlement", 10);
+            GovernanceWorkersSize = workSizes.GetValue("Governance", 10);
+            AuditContractWorkersSize = workSizes.GetValue("AuditContract", 10);
 
             IConfigurationSection timers = section.GetSection("Timers");
             EpochDuration = timers.GetValue("Epoch", 0u);
@@ -141,6 +148,7 @@ namespace Neo.FileStorage
 
             IConfigurationSection settlement = section.GetSection("Settlement");
             BasicIncomeRate = settlement.GetValue("BasicIncomeRate", 0ul);
+            AuditFee = settlement.GetValue("AuditFee", 0L);
 
             IConfigurationSection fee = section.GetSection("Fee");
             MainChainFee = fee.GetValue("MainChain", 5000L);
