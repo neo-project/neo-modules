@@ -10,14 +10,12 @@ namespace Neo.Consensus
         public uint Version;
         public UInt256 PrevHash;
         public ulong Timestamp;
-        public byte[] VRFProof;
         public UInt256[] TransactionHashes;
 
         public override int Size => base.Size
             + sizeof(uint)                      //Version
             + UInt256.Length                    //PrevHash
             + sizeof(ulong)                     //Timestamp
-            + 81                                // Nonce
             + TransactionHashes.GetVarSize();   //TransactionHashes
 
         public PrepareRequest() : base(ConsensusMessageType.PrepareRequest) { }
@@ -28,7 +26,6 @@ namespace Neo.Consensus
             Version = reader.ReadUInt32();
             PrevHash = reader.ReadSerializable<UInt256>();
             Timestamp = reader.ReadUInt64();
-            VRFProof = reader.ReadBytes(81); // proof size 81 bytes
             TransactionHashes = reader.ReadSerializableArray<UInt256>(ushort.MaxValue);
             if (TransactionHashes.Distinct().Count() != TransactionHashes.Length)
                 throw new FormatException();
@@ -46,7 +43,6 @@ namespace Neo.Consensus
             writer.Write(Version);
             writer.Write(PrevHash);
             writer.Write(Timestamp);
-            writer.Write(VRFProof);
             writer.Write(TransactionHashes);
         }
     }

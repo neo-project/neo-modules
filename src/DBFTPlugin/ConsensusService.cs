@@ -438,7 +438,7 @@ namespace Neo.Consensus
             context.Block.Header.Timestamp = message.Timestamp;
             context.TransactionHashes = message.TransactionHashes;
 
-            var nonce = context.GetNonce(message.TransactionHashes);
+            var nonce = context.GetNonce(message.Timestamp);
             context.Block.Header.Nonce = nonce;
 
             context.Transactions = new Dictionary<UInt256, Transaction>();

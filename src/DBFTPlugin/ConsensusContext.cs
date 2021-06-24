@@ -335,9 +335,9 @@ namespace Neo.Consensus
                 IO.Helper.GetVarSize(expectedTransactions);
         }
 
-        internal ulong GetNonce(UInt256[] transactionHashes)
+        internal ulong GetNonce(ulong seed)
         {
-            var nonce = MerkleTree.ComputeRoot(TransactionHashes).ToArray().Murmur128(123u);
+            var nonce = BitConverter.GetBytes(seed).Murmur128(123u);
             return  BitConverter.ToUInt64(nonce[..8]);
         }
 
@@ -383,7 +383,7 @@ namespace Neo.Consensus
         {
             EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
             Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
-            var nonce = GetNonce(TransactionHashes);
+            var nonce = GetNonce(Block.Header.Timestamp);
             Block.Header.Nonce = nonce;
             return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
             {
