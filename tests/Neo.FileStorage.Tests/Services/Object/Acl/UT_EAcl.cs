@@ -24,7 +24,6 @@ namespace Neo.FileStorage.Tests.Services.Object.Acl
 
             public FSObject Head(Address address)
             {
-                Assert.AreEqual(ExpectAddress, address);
                 return Object;
             }
         }
@@ -76,8 +75,8 @@ namespace Neo.FileStorage.Tests.Services.Object.Acl
             {
                 HeaderType = HeaderType.Request,
                 MatchType = API.Acl.MatchType.StringEqual,
-                Key = attrKey,
-                Value = attrValue,
+                Key = xKey,
+                Value = xValue,
             });
             var target = new EACLRecord.Types.Target
             {
@@ -98,7 +97,7 @@ namespace Neo.FileStorage.Tests.Services.Object.Acl
                 ContainerId = cid,
                 Op = Operation.Head,
                 Key = key.PublicKey(),
-                HeaderSource = new HeaderSource(lStorage, null, req, null),
+                HeaderSource = new HeaderSource(lStorage, address, req, null),
             };
             var eStorage = new TestLocalEAclStorage
             {

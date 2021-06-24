@@ -151,9 +151,7 @@ namespace Neo.FileStorage.Services.Object.Acl.EAcl
             }
             catch (Exception)
             {
-                //csharp can't return flag, we return null here
-                // return AddressHeaders(address);
-                return null;
+                return AddressHeaders(address);
             }
         }
 
