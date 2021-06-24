@@ -36,7 +36,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.IsTrue(@event is AddPeerEvent);
             Assert.AreEqual(((AddPeerEvent)@event).Node.ToString(), new byte[] { 0x01 }.ToString());
             array.Add(1);
-            Action action = () => NewEpochEvent.ParseNewEpochEvent(array);
+            Action action = () => AddPeerEvent.ParseAddPeerEvent(array);
             Assert.ThrowsException<Exception>(action);
             @event.ContractEvent();
         }
@@ -52,7 +52,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((UpdatePeerEvent)@event).PublicKey.ToString(), TestBlockchain.wallet.GetAccounts().ToArray()[0].GetKey().PublicKey.ToString());
             Assert.AreEqual(((UpdatePeerEvent)@event).Status, (uint)1);
             array.Add(1);
-            Action action = () => NewEpochEvent.ParseNewEpochEvent(array);
+            Action action = () => UpdatePeerEvent.ParseUpdatePeerEvent(array);
             Assert.ThrowsException<Exception>(action);
             @event.ContractEvent();
         }
@@ -74,7 +74,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((LockEvent)@event).Amount, (long)1);
             Assert.AreEqual(((LockEvent)@event).Util, (long)1);
             array.Add(1);
-            Action action = () => NewEpochEvent.ParseNewEpochEvent(array);
+            Action action = () => LockEvent.ParseLockEvent(array);
             Assert.ThrowsException<Exception>(action);
             @event.ContractEvent();
         }
@@ -86,13 +86,14 @@ namespace Neo.FileStorage.Tests.Morph.Event
             array.Add(new byte[] { 0x01 });
             array.Add(new byte[] { 0x01 });
             array.Add(TestBlockchain.wallet.GetAccounts().ToArray()[0].GetKey().PublicKey.ToArray());
+            array.Add(VM.Types.Null.Null);
             IContractEvent @event = ContainerPutEvent.ParseContainerPutEvent(array);
             Assert.IsTrue(@event is ContainerPutEvent);
             Assert.AreEqual(((ContainerPutEvent)@event).RawContainer.ToString(), new byte[] { 0x01 }.ToString());
             Assert.AreEqual(((ContainerPutEvent)@event).Signature.ToString(), new byte[] { 0x01 }.ToString());
-            Assert.AreEqual(((ContainerPutEvent)@event).PublicKey.ToString(), TestBlockchain.wallet.GetAccounts().ToArray()[0].GetKey().PublicKey.ToString());
+            Assert.AreEqual(((ContainerPutEvent)@event).PublicKey.ToHexString(), TestBlockchain.wallet.GetAccounts().ToArray()[0].GetKey().PublicKey.ToString());
             array.Add(1);
-            Action action = () => NewEpochEvent.ParseNewEpochEvent(array);
+            Action action = () => ContainerPutEvent.ParseContainerPutEvent(array);
             Assert.ThrowsException<Exception>(action);
             @event.ContractEvent();
         }
@@ -103,13 +104,13 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Array array = new Array();
             array.Add(new byte[] { 0x01 });
             array.Add(new byte[] { 0x01 });
-            array.Add(null);
+            array.Add(VM.Types.Null.Null);
             IContractEvent @event = ContainerDeleteEvent.ParseContainerDeleteEvent(array);
             Assert.IsTrue(@event is ContainerDeleteEvent);
             Assert.AreEqual(((ContainerDeleteEvent)@event).ContainerID.ToHexString(), new byte[] { 0x01 }.ToHexString());
             Assert.AreEqual(((ContainerDeleteEvent)@event).Signature.ToHexString(), new byte[] { 0x01 }.ToHexString());
             array.Add(1);
-            Action action = () => NewEpochEvent.ParseNewEpochEvent(array);
+            Action action = () => ContainerDeleteEvent.ParseContainerDeleteEvent(array);
             Assert.ThrowsException<Exception>(action);
             @event.ContractEvent();
         }
@@ -131,7 +132,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((BindEvent)@event).UserAccount, UInt160.Zero);
             Assert.AreEqual(((BindEvent)@event).Keys.Length, 7);
             array.Add(1);
-            Action action = () => NewEpochEvent.ParseNewEpochEvent(array);
+            Action action = () => BindEvent.ParseBindEvent(array);
             Assert.ThrowsException<Exception>(action);
             @event.ContractEvent();
         }
@@ -151,7 +152,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((ChequeEvent)@event).Amount, (long)1);
             Assert.AreEqual(((ChequeEvent)@event).LockAccount, UInt160.Zero);
             array.Add(1);
-            Action action = () => NewEpochEvent.ParseNewEpochEvent(array);
+            Action action = () => ChequeEvent.ParseChequeEvent(array);
             Assert.ThrowsException<Exception>(action);
             @event.ContractEvent();
         }
@@ -171,7 +172,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((DepositEvent)@event).Amount, (long)1);
             Assert.AreEqual(((DepositEvent)@event).To, UInt160.Zero);
             array.Add(1);
-            Action action = () => NewEpochEvent.ParseNewEpochEvent(array);
+            Action action = () => DepositEvent.ParseDepositEvent(array);
             Assert.ThrowsException<Exception>(action);
             @event.ContractEvent();
         }
@@ -189,7 +190,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((WithdrawEvent)@event).UserAccount, UInt160.Zero);
             Assert.AreEqual(((WithdrawEvent)@event).Amount, (long)1);
             array.Add(1);
-            Action action = () => NewEpochEvent.ParseNewEpochEvent(array);
+            Action action = () => WithdrawEvent.ParseWithdrawEvent(array);
             Assert.ThrowsException<Exception>(action);
             @event.ContractEvent();
         }
@@ -207,7 +208,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((ConfigEvent)@event).Key.ToHexString(), new byte[] { 0x02 }.ToHexString());
             Assert.AreEqual(((ConfigEvent)@event).Value.ToHexString(), new byte[] { 0x03 }.ToHexString());
             array.Add(1);
-            Action action = () => NewEpochEvent.ParseNewEpochEvent(array);
+            Action action = () => ConfigEvent.ParseConfigEvent(array);
             Assert.ThrowsException<Exception>(action);
             @event.ContractEvent();
         }
@@ -227,7 +228,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.IsTrue(@event is UpdateInnerRingEvent);
             Assert.AreEqual(((UpdateInnerRingEvent)@event).Keys.Length, 7);
             array.Add(1);
-            Action action = () => NewEpochEvent.ParseNewEpochEvent(array);
+            Action action = () => UpdateInnerRingEvent.ParseUpdateInnerRingEvent(array);
             Assert.ThrowsException<Exception>(action);
             @event.ContractEvent();
         }

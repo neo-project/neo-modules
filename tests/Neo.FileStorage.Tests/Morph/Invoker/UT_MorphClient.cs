@@ -3,6 +3,7 @@ using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Tests.InnerRing.Processors;
+using Neo.Network.P2P.Payloads;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
 
@@ -24,7 +25,8 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             client = new MorphClient()
             {
                 wallet = wallet,
-                system = system
+                system = system,
+                actor=this.TestActor
             };
         }
 
@@ -33,7 +35,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         {
             InvokeResult result = client.TestInvoke(NativeContract.GAS.Hash, "balanceOf", UInt160.Zero);
             Assert.AreEqual(result.State, VM.VMState.HALT);
-            Assert.AreEqual(result.GasConsumed, 1999390);
+            Assert.AreEqual(result.GasConsumed, 2028330);
             Assert.AreEqual(result.ResultStack[0].GetInteger(), 0);
         }
 
@@ -41,7 +43,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         public void InvokeFunctionTest()
         {
             client.Invoke(out _, NativeContract.GAS.Hash, "balanceOf", 0, UInt160.Zero);
-            var result = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
+            var result = ExpectMsg<Transaction>();
             Assert.IsNotNull(result);
         }
 
@@ -49,7 +51,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         public void TransferGasTest()
         {
             client.TransferGas(UInt160.Zero, 0);
-            var result = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
+            var result = ExpectMsg<Transaction>();
             Assert.IsNotNull(result);
         }
     }

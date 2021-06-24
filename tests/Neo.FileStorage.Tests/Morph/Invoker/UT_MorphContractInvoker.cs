@@ -15,6 +15,7 @@ using Neo.FileStorage.API.Session;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Tests.InnerRing.Processors;
 using Neo.IO;
+using Neo.Network.P2P.Payloads;
 using Neo.Wallets;
 using static Neo.FileStorage.Morph.Invoker.MorphContractInvoker;
 
@@ -38,6 +39,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 {
                     wallet = wallet,
                     system = system,
+                    actor=this.TestActor
                 }
             };
         }
@@ -79,14 +81,14 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         public void InvokeEpochTest()
         {
             ulong result = MorphContractInvoker.InvokeEpoch(client);
-            Assert.AreEqual(result, 1);
+            Assert.AreEqual(result, 1uL);
         }
 
         [TestMethod]
         public void InvokeNewEpochTest()
         {
-            bool result = MorphContractInvoker.InvokeNewEpoch(client, 1);
-            var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
+            bool result = MorphContractInvoker.InvokeNewEpoch(client, 2);
+            var tx = ExpectMsg<Transaction>();
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
