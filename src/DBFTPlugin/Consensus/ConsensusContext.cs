@@ -281,6 +281,7 @@ namespace Neo.Consensus
             Block.Header.PrimaryIndex = GetPrimaryIndex(viewNumber);
             Block.Header.MerkleRoot = null;
             Block.Header.Timestamp = 0;
+            Block.Header.Nonce = 0;
             Block.Transactions = null;
             TransactionHashes = null;
             PreparationPayloads = new ExtensiblePayload[Validators.Length];
