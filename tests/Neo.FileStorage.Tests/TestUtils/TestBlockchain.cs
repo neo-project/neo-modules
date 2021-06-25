@@ -241,7 +241,7 @@ namespace Neo.FileStorage.Tests
             }
             //Fake container
             KeyPair key = accounts.ToArray()[0].GetKey();
-            API.Refs.OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            API.Refs.OwnerID ownerId = KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
             Container container = new Container()
             {
                 Version = new API.Refs.Version(),
@@ -250,7 +250,7 @@ namespace Neo.FileStorage.Tests
                 OwnerId = ownerId,
                 PlacementPolicy = new PlacementPolicy()
             };
-            byte[] sig = key.PrivateKey.LoadPrivateKey().SignData(container.ToByteArray());
+            byte[] sig = key.PrivateKey.LoadPrivateKey().SignRFC6979(container.ToByteArray());
             script = settings.ContainerContractHash.MakeScript("put", container.ToByteArray(), sig, key.PublicKey.ToArray(),null);
             var containerId = container.CalCulateAndGetId.Value.ToByteArray();
             for (int i = 0; i < accounts.Count(); i++)
@@ -267,7 +267,10 @@ namespace Neo.FileStorage.Tests
             eACLTable.Records.Add(new API.Acl.EACLRecord());
             sig = Cryptography.Crypto.Sign(eACLTable.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
             script = settings.ContainerContractHash.MakeScript("setEACL", eACLTable.ToByteArray(), sig, key.PublicKey.EncodePoint(false), null);
-            ExecuteScript(snapshot, "FakeEacl", script, accounts.ToArray()[0].ScriptHash);
+            for (int i = 0; i < accounts.Count(); i++)
+            {
+                ExecuteScript(snapshot, "FakeEacl", script, accounts.ToArray()[i].ScriptHash);
+            }
             //Fake Epoch
             for (int i = 0; i < accounts.Count(); i++)
             {

@@ -98,7 +98,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         {
             var key = wallet.GetAccounts().ToArray()[0].GetKey().PublicKey;
             bool result = MorphContractInvoker.InvokeUpdateState(client, 2, key.EncodePoint(true));
-            var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
+            var tx = ExpectMsg<Transaction>();
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
@@ -126,7 +126,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             OwnerID owner = key.ToOwnerID();
             Container container = new Container()
             {
-                Version = new Neo.FileStorage.API.Refs.Version(),
+                Version = new API.Refs.Version(),
                 BasicAcl = 0,
                 Nonce = ByteString.CopyFrom(new byte[16], 0, 16),
                 OwnerId = owner,
@@ -145,7 +145,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             };
             token.Signature = key.SignMessagePart(token.Body);
             bool result = MorphContractInvoker.PutContainer(client, container, sig, token);
-            var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
+            var tx = ExpectMsg<Transaction>();
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
@@ -165,7 +165,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 OwnerId = ownerId,
                 PlacementPolicy = new PlacementPolicy()
             };
-            byte[] sig = Cryptography.Crypto.Sign(container.ToByteArray(), kp.PrivateKey, kp.PublicKey.EncodePoint(false)[1..]);
+            byte[] sig = key.SignRFC6979(container.ToByteArray());
             SessionToken token = new()
             {
                 Body = new()
@@ -178,7 +178,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             };
             token.Signature = key.SignMessagePart(token.Body);
             bool result = MorphContractInvoker.DeleteContainer(client, container.CalCulateAndGetId, sig, token);
-            var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
+            var tx = ExpectMsg<Transaction>();
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
@@ -217,7 +217,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             };
             token.Signature = key.SignMessagePart(token.Body);
             bool result = MorphContractInvoker.SetEACL(client, eACLTable, sig, token);
-            var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
+            var tx = ExpectMsg<Transaction>();
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
@@ -242,7 +242,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 Version = new API.Refs.Version(),
             };
             eACLTable.Records.Add(new API.Acl.EACLRecord());
-            byte[] sig = Cryptography.Crypto.Sign(eACLTable.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
+            byte[] sig = key.PrivateKey.LoadPrivateKey().SignRFC6979(eACLTable.ToByteArray());
             EAclWithSignature result = MorphContractInvoker.GetEACL(client, container.CalCulateAndGetId);
             Assert.IsNotNull(result);
             Assert.AreEqual(result.Table.ToByteArray().ToHexString(), eACLTable.ToByteArray().ToHexString());
@@ -271,7 +271,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            API.Refs.OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            API.Refs.OwnerID ownerId = KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
             Container container = new Container()
             {
                 Version = new API.Refs.Version(),
@@ -282,7 +282,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             };
             List<ContainerID> result = MorphContractInvoker.ListContainers(client, ownerId);
             Assert.AreEqual(result.Count, 1);
-            Assert.AreEqual(result.ElementAt(0).ToByteArray().ToHexString(), container.CalCulateAndGetId.Value.ToByteArray().ToHexString());
+            Assert.AreEqual(result.ElementAt(0).ToByteArray().ToHexString(), container.CalCulateAndGetId.ToByteArray().ToHexString());
         }
     }
 }

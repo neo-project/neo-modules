@@ -44,13 +44,13 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public static bool PutContainer(this Client client, FSContainer cnr, Signature sig, SessionToken token)
         {
-            if (cnr is null) throw new ArgumentNullException(nameof(cnr));
+            if (client is null) throw new ArgumentNullException(nameof(cnr));
             return client.Invoke(out _, ContainerContractHash, PutMethod, ExtraFee, cnr.ToByteArray(), sig.Sign.ToByteArray(), sig.Key.ToByteArray(), token.ToByteArray());
         }
 
         public static bool SetEACL(this Client client, EACLTable eacl, Signature sig, SessionToken token)
         {
-            if (eacl is not null) throw new ArgumentNullException(nameof(eacl));
+            if (client is null) throw new ArgumentNullException(nameof(eacl));
             return client.Invoke(out _, ContainerContractHash, SetEACLMethod, ExtraFee, eacl.ToByteArray(), sig.Key.ToByteArray(), sig.Sign.ToByteArray(), token.ToByteArray());
         }
 
@@ -73,7 +73,7 @@ namespace Neo.FileStorage.Morph.Invoker
                     Key = GByteString.CopyFrom(array[2].GetSpan().ToArray()),
                     Sign = GByteString.CopyFrom(array[1].GetSpan().ToArray()),
                 },
-                SessionToken = SessionToken.Parser.ParseFrom(array[3].GetSpan().ToArray())
+                SessionToken = array[3] is VM.Types.Null ? null : SessionToken.Parser.ParseFrom(array[3].GetSpan().ToArray())
             };
         }
 
