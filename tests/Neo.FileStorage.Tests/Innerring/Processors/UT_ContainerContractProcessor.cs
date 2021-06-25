@@ -109,7 +109,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                 PublicKey = key.PublicKey.ToArray(),
                 Signature = sig,
                 RawContainer = container.ToByteArray(),
-                token=null
+                token = null
             });
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.IsNotNull(tx);
@@ -120,7 +120,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                 PublicKey = key.PublicKey.ToArray(),
                 Signature = sig,
                 RawContainer = container.ToByteArray(),
-                token=null
+                token = null
             });
             ExpectNoMsg();
         }
@@ -132,12 +132,12 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
             var containerId = "fc780e98b7970002a80fbbeb60f9ed6cf44d5696588ea32e4338ceaeda4adddc".HexToBytes();
-             var sig = key.PrivateKey.LoadPrivateKey().SignData(ContainerID.FromSha256Bytes(containerId).Sha256Checksum().Sum.ToByteArray());
+            var sig = key.PrivateKey.LoadPrivateKey().SignData(ContainerID.FromSha256Bytes(containerId).Sha256Checksum().Sum.ToByteArray());
             processor.ProcessContainerDelete(new ContainerDeleteEvent()
             {
                 ContainerID = containerId,
                 Signature = sig,
-                token=null
+                token = null
             });
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.IsNotNull(tx);

@@ -91,7 +91,7 @@ namespace Neo.FileStorage.Morph.Invoker
                     Sign = GByteString.CopyFrom(array[1].GetSpan().ToArray()),
                     Key = GByteString.CopyFrom(array[2].GetSpan().ToArray()),
                 },
-                SessionToken = array[3] is VM.Types.Null?null:SessionToken.Parser.ParseFrom(array[3].GetSpan().ToArray())
+                SessionToken = array[3] is VM.Types.Null ? null : SessionToken.Parser.ParseFrom(array[3].GetSpan().ToArray())
             };
             return cnr;
         }

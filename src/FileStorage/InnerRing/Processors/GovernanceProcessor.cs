@@ -34,19 +34,20 @@ namespace Neo.FileStorage.InnerRing.Processors
             ParserInfo designateParser = new ParserInfo();
             designateParser.ScriptHashWithType = new ScriptHashWithType() { Type = DesignationNotification, ScriptHashValue = NativeContract.RoleManagement.Hash };
             designateParser.Parser = DesignateEvent.ParseDesignateEvent;
-            return new ParserInfo[] { designateParser};
+            return new ParserInfo[] { designateParser };
         }
 
         public void HandleAlphabetSync(IContractEvent morphEvent)
         {
             string type;
             if (morphEvent is SyncEvent) type = "sync";
-            else if (morphEvent is DesignateEvent) {
+            else if (morphEvent is DesignateEvent)
+            {
                 if (((DesignateEvent)morphEvent).role != (byte)Role.NeoFSAlphabetNode) return;
                 type = "designation";
             }
             else return;
-            Utility.Log(Name, LogLevel.Info, string.Format("new event,type:{0}",type));
+            Utility.Log(Name, LogLevel.Info, string.Format("new event,type:{0}", type));
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessAlphabetSync()) });
         }
 

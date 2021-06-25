@@ -66,7 +66,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             unbindHandler.ScriptHashWithType = new ScriptHashWithType() { Type = UnBindNotification, ScriptHashValue = FsContractHash };
             unbindHandler.Handler = HandleUnBind;
 
-            return new HandlerInfo[] { depositHandler, withdrwaHandler, chequeHandler, configHandler, bindHandler,unbindHandler };
+            return new HandlerInfo[] { depositHandler, withdrwaHandler, chequeHandler, configHandler, bindHandler, unbindHandler };
         }
 
         public override ParserInfo[] ListenerParsers()
@@ -100,7 +100,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             ParserInfo unbindParser = new ParserInfo();
             unbindParser.ScriptHashWithType = new ScriptHashWithType() { Type = UnBindNotification, ScriptHashValue = FsContractHash };
             unbindParser.Parser = BindEvent.ParseBindEvent;
-            return new ParserInfo[] { depositParser, withdrawParser, chequeParser, configParser , bindParser , unbindParser };
+            return new ParserInfo[] { depositParser, withdrawParser, chequeParser, configParser, bindParser, unbindParser };
         }
 
         public void HandleDeposit(IContractEvent morphEvent)
@@ -135,14 +135,14 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             BindEvent bindEvent = (BindEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, "notification:type:bind");
-            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessBind(bindEvent,true)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessBind(bindEvent, true)) });
         }
 
         public void HandleUnBind(IContractEvent morphEvent)
         {
             BindEvent bindEvent = (BindEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, "notification:type:unbind");
-            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessBind(bindEvent,false)) });
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessBind(bindEvent, false)) });
         }
 
         public void ProcessDeposit(DepositEvent depositeEvent)
@@ -177,8 +177,9 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Warning, string.Format("can't get gas balance of the node,error:{0}", e.Message));
                     return;
                 }
-                if (balance < gasBalanceThreshold) {
-                   Utility.Log(Name, LogLevel.Warning, string.Format("gas balance threshold has been reached,balance:{0},threshold:{1}", balance, gasBalanceThreshold));
+                if (balance < gasBalanceThreshold)
+                {
+                    Utility.Log(Name, LogLevel.Warning, string.Format("gas balance threshold has been reached,balance:{0},threshold:{1}", balance, gasBalanceThreshold));
                     return;
                 }
                 try
@@ -260,7 +261,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
         }
 
-        public void ProcessBind(BindEvent bindEvent,bool bind)
+        public void ProcessBind(BindEvent bindEvent, bool bind)
         {
             if (!State.IsAlphabet())
             {
@@ -269,10 +270,10 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                if(bind)
+                if (bind)
                     MorphCli.InvokeAddKeys(bindEvent.UserAccount, bindEvent.Keys);
                 else
-                    MorphCli.InvokeRemoveKeys(bindEvent.UserAccount,bindEvent.Keys);
+                    MorphCli.InvokeRemoveKeys(bindEvent.UserAccount, bindEvent.Keys);
             }
             catch (Exception e)
             {

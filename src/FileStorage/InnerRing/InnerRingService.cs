@@ -261,9 +261,9 @@ namespace Neo.FileStorage.InnerRing
             {
                 epoch = morphClient.GetEpoch();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                throw new Exception("can't read epoch"+e.Message);
+                throw new Exception("can't read epoch" + e.Message);
             }
             uint balancePrecision;
             try
@@ -413,8 +413,8 @@ namespace Neo.FileStorage.InnerRing
             {
                 try
                 {
-                    var r=morphClient.AlphabetVote(i, epoch, validators);
-                    Console.WriteLine("vote侧链共识节点:alphabetindex:"+i+",epoch:"+epoch+",result:"+r);
+                    var r = morphClient.AlphabetVote(i, epoch, validators);
+                    Console.WriteLine("vote侧链共识节点:alphabetindex:" + i + ",epoch:" + epoch + ",result:" + r);
                 }
                 catch
                 {

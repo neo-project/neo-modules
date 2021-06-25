@@ -44,7 +44,7 @@ namespace Neo.FileStorage.Morph.Invoker
             return client.Invoke(out _, FsIdContractHash, AddKeysMethod, SideChainFee, owner, array);
         }
 
-        public static bool InvokeRemoveKeys(this Client client, UInt160 owner,ECPoint[] keys)
+        public static bool InvokeRemoveKeys(this Client client, UInt160 owner, ECPoint[] keys)
         {
             if (client is null) throw new Exception("client is nil");
             var array = new ContractParameter(ContractParameterType.Array);

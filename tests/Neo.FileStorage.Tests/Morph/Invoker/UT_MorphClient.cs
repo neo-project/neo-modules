@@ -26,7 +26,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             {
                 wallet = wallet,
                 system = system,
-                actor=this.TestActor
+                actor = this.TestActor
             };
         }
 

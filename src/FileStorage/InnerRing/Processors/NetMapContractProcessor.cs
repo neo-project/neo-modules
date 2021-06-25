@@ -165,7 +165,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessNewEpoch(NewEpochEvent newEpochEvent)
         {
-            Console.WriteLine("本地时隙更新："+ newEpochEvent.EpochNumber);
+            Console.WriteLine("本地时隙更新：" + newEpochEvent.EpochNumber);
             State.SetEpochCounter(newEpochEvent.EpochNumber);
             State.ResetEpochTimer();
             API.Netmap.NodeInfo[] snapshot;

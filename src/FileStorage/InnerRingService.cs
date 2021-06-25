@@ -34,8 +34,8 @@ namespace Neo.FileStorage
                 foreach (var notify in notifys)
                 {
                     var contract = notify.ScriptHash;
-                    if (flag&&contract != Settings.Default.FsContractHash) continue;
-                    if (!flag&&!Settings.Default.Contracts.Contains(contract)) continue;
+                    if (flag && contract != Settings.Default.FsContractHash) continue;
+                    if (!flag && !Settings.Default.Contracts.Contains(contract)) continue;
                     innering.Tell(new ContractEvent() { notify = notify, flag = flag });
                 }
             }

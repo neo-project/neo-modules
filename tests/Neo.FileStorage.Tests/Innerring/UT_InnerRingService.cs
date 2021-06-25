@@ -34,7 +34,7 @@ namespace Neo.FileStorage.Tests.InnerRing
                 {
                     wallet = wallet,
                     system = system,
-                    actor=this.TestActor
+                    actor = this.TestActor
                 }
             };
             innerring = system.ActorSystem.ActorOf(Props(system, system, wallet, wallet, client, client));

@@ -41,7 +41,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             HandlerInfo setEACLHandler = new HandlerInfo();
             setEACLHandler.ScriptHashWithType = new ScriptHashWithType() { Type = SetEACLNotification, ScriptHashValue = ContainerContractHash };
             setEACLHandler.Handler = HandleSetEACL;
-            return new HandlerInfo[] { putHandler, deleteHandler , setEACLHandler };
+            return new HandlerInfo[] { putHandler, deleteHandler, setEACLHandler };
         }
 
         public override ParserInfo[] ListenerParsers()
@@ -103,7 +103,8 @@ namespace Neo.FileStorage.InnerRing.Processors
                 return;
             }
             var tableHash = container.Sha256Checksum().Sum.ToByteArray();
-            if (!key.EncodePoint(true).LoadPublicKey().VerifyData(tableHash, putEvent.Signature)) {
+            if (!key.EncodePoint(true).LoadPublicKey().VerifyData(tableHash, putEvent.Signature))
+            {
                 Utility.Log(Name, LogLevel.Error, "invalid signature");
                 return;
             }
@@ -121,13 +122,15 @@ namespace Neo.FileStorage.InnerRing.Processors
                 token = SessionToken.Parser.ParseFrom(putEvent.token);
                 CheckTokenContext(token, (ContainerSessionContext c) => { return c.Verb == ContainerSessionContext.Types.Verb.Put; });
             }
-            ContainerWithSignature cnr = new() {
-                Container=container,
-                Signature=   new Signature() {
-                    Key= ByteString.CopyFrom(key.ToArray()),
+            ContainerWithSignature cnr = new()
+            {
+                Container = container,
+                Signature = new Signature()
+                {
+                    Key = ByteString.CopyFrom(key.ToArray()),
                     Sign = ByteString.CopyFrom(putEvent.Signature)
                 },
-                SessionToken=token
+                SessionToken = token
             };
             CheckKeyOwnership(cnr, key);
             try
@@ -150,25 +153,26 @@ namespace Neo.FileStorage.InnerRing.Processors
             var checkKeys = new List<ECPoint>();
             try
             {
-                var cnr=MorphCli.GetContainer(ContainerID.FromSha256Bytes(deleteEvent.ContainerID));
+                var cnr = MorphCli.GetContainer(ContainerID.FromSha256Bytes(deleteEvent.ContainerID));
                 SessionToken token = null;
                 if (deleteEvent.token != null)
                 {
-                    token= SessionToken.Parser.ParseFrom(deleteEvent.token);
+                    token = SessionToken.Parser.ParseFrom(deleteEvent.token);
                     var containerId = ContainerID.FromSha256Bytes(deleteEvent.ContainerID);
                     CheckTokenContextWithCID(token, containerId, (ContainerSessionContext c) => { return c.Verb == ContainerSessionContext.Types.Verb.Delete; });
                     var key = ECPoint.DecodePoint(token.Body.SessionKey.ToByteArray(), Cryptography.ECC.ECCurve.Secp256r1);
                     CheckKeyOwnershipWithToken(cnr, key, token);
                     checkKeys.Add(key);
                 }
-                else {
+                else
+                {
                     ECPoint[] keys = MorphCli.InvokeAccountKeys(cnr.Container.OwnerId.Value.ToByteArray());
                     checkKeys.AddRange(keys);
                 }
                 var cidHash = ContainerID.FromSha256Bytes(deleteEvent.ContainerID).Sha256Checksum().Sum.ToByteArray();
                 var sig = deleteEvent.Signature;
                 if (!checkKeys.Any(p => p.EncodePoint(true).LoadPublicKey().VerifyData(cidHash, sig))) throw new Exception("signature verification failed on all owner keys");
-                MorphCli.RemoveContainer(deleteEvent.ContainerID, deleteEvent.Signature,deleteEvent.token);
+                MorphCli.RemoveContainer(deleteEvent.ContainerID, deleteEvent.Signature, deleteEvent.token);
             }
             catch (Exception e)
             {
@@ -183,18 +187,21 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore container put");
                 return;
             }
-            try {
+            try
+            {
                 var table = EACLTable.Parser.ParseFrom(setEACLEvent.Table);
                 var signature = Signature.Parser.ParseFrom(setEACLEvent.Signature);
                 var sessionToken = SessionToken.Parser.ParseFrom(setEACLEvent.Token);
                 var key = ECPoint.DecodePoint(setEACLEvent.PublicKey, Cryptography.ECC.ECCurve.Secp256r1);
-                if (!key.EncodePoint(true).LoadPublicKey().VerifyHash(table.Sha256Checksum().Sum.ToByteArray(), setEACLEvent.Signature)) {
+                if (!key.EncodePoint(true).LoadPublicKey().VerifyHash(table.Sha256Checksum().Sum.ToByteArray(), setEACLEvent.Signature))
+                {
                     Utility.Log(Name, LogLevel.Error, "invalid signature");
                     return;
                 }
-                var cnr=MorphCli.GetContainer(table.ContainerId);
-                if (sessionToken != null) {
-                    CheckTokenContextWithCID(sessionToken, table.ContainerId, (ContainerSessionContext c)=> { return c.Verb == ContainerSessionContext.Types.Verb.Seteacl; });
+                var cnr = MorphCli.GetContainer(table.ContainerId);
+                if (sessionToken != null)
+                {
+                    CheckTokenContextWithCID(sessionToken, table.ContainerId, (ContainerSessionContext c) => { return c.Verb == ContainerSessionContext.Types.Verb.Seteacl; });
                 }
                 CheckKeyOwnership(cnr, key);
                 MorphCli.SetEACL(table, signature, sessionToken);
@@ -216,17 +223,19 @@ namespace Neo.FileStorage.InnerRing.Processors
         public void CheckKeyOwnership(ContainerWithSignature ownerIDSource, ECPoint key)
         {
             var token = ownerIDSource.SessionToken;
-            if (token is not null) {
+            if (token is not null)
+            {
                 CheckKeyOwnershipWithToken(ownerIDSource, key, token);
                 return;
             }
             if (ownerIDSource.Container.OwnerId.Equals(key.EncodePoint(true).PublicKeyToOwnerID())) return;
-            var ownerKeys=MorphCli.InvokeAccountKeys(ownerIDSource.Container.OwnerId.Value.ToByteArray());
-            if(ownerKeys is null) throw new Exception("could not received owner keys");
-            if (!ownerKeys.Any(p => p.Equals(key))) throw new Exception(string.Format("key {0} is not tied to the owner of the container",key));
+            var ownerKeys = MorphCli.InvokeAccountKeys(ownerIDSource.Container.OwnerId.Value.ToByteArray());
+            if (ownerKeys is null) throw new Exception("could not received owner keys");
+            if (!ownerKeys.Any(p => p.Equals(key))) throw new Exception(string.Format("key {0} is not tied to the owner of the container", key));
         }
 
-        public void CheckKeyOwnershipWithToken(ContainerWithSignature ownerIDSource, ECPoint key, SessionToken token) {
+        public void CheckKeyOwnershipWithToken(ContainerWithSignature ownerIDSource, ECPoint key, SessionToken token)
+        {
             if (!key.EncodePoint(true).SequenceEqual(token.Body.SessionKey.ToByteArray())) throw new Exception("signed with a non-session key");
             if (!token.Body.OwnerId.Equals(ownerIDSource.Container.OwnerId)) throw new Exception("owner differs with token owner");
             CheckSessionToken(token);
@@ -239,27 +248,30 @@ namespace Neo.FileStorage.InnerRing.Processors
             // check lifetime
             var curEpoch = state.EpochCounter();
             var nbf = token.Body.Lifetime.Nbf;
-            if (curEpoch < nbf) throw new Exception(string.Format("token is not valid yet: nbf {0}, cur {1}",nbf,curEpoch));
+            if (curEpoch < nbf) throw new Exception(string.Format("token is not valid yet: nbf {0}, cur {1}", nbf, curEpoch));
             var iat = token.Body.Lifetime.Iat;
             if (curEpoch < iat) throw new Exception(string.Format("token is issued in future: iat {0}, cur {1}", iat, curEpoch));
             var exp = token.Body.Lifetime.Exp;
             if (curEpoch < exp) throw new Exception(string.Format("token is expired: exp {0}, cur {1}", exp, curEpoch));
         }
 
-        public ContainerSessionContext ContextWithVerifiedVerb(SessionToken token, Func<ContainerSessionContext,bool> verbAssert) {
+        public ContainerSessionContext ContextWithVerifiedVerb(SessionToken token, Func<ContainerSessionContext, bool> verbAssert)
+        {
             ContainerSessionContext c = token.Body.Container;
             if (c is null) throw new Exception("wrong session context");
             if (!verbAssert(c)) throw new Exception("wrong token verb");
             return c;
         }
 
-        public void CheckTokenContext(SessionToken token, Func<ContainerSessionContext, bool> verbAssert) {
+        public void CheckTokenContext(SessionToken token, Func<ContainerSessionContext, bool> verbAssert)
+        {
             ContextWithVerifiedVerb(token, verbAssert);
         }
 
-        public void CheckTokenContextWithCID(SessionToken token,ContainerID id, Func<ContainerSessionContext, bool> verbAssert) {
-            var c=ContextWithVerifiedVerb(token, verbAssert);
-            var tokCID=c.ContainerId;
+        public void CheckTokenContextWithCID(SessionToken token, ContainerID id, Func<ContainerSessionContext, bool> verbAssert)
+        {
+            var c = ContextWithVerifiedVerb(token, verbAssert);
+            var tokCID = c.ContainerId;
             if (tokCID is not null && !tokCID.Equals(id)) throw new Exception("wrong container ID");
         }
     }

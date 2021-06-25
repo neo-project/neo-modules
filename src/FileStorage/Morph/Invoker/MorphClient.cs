@@ -84,7 +84,7 @@ namespace Neo.FileStorage.Morph.Invoker
             tx.SystemFee = result.GasConsumed + fee;
             tx.NetworkFee = wallet.CalculateNetworkFee(snapshot, tx);
             var data = new ContractParametersContext(snapshot, tx, system.Settings.Network);
-            bool sigresult=wallet.Sign(data);
+            bool sigresult = wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             txId = tx.Hash;
             actor.Tell(tx);

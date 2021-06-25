@@ -145,7 +145,7 @@ namespace Neo.FileStorage.Tests
                 {
                     case "./Config/Contracts/reputation/config.json":
                         data.Clear();
-                        data.Add(new ContractParameter(ContractParameterType.Boolean) { Value= true});
+                        data.Add(new ContractParameter(ContractParameterType.Boolean) { Value = true });
                         data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = sender });
                         break;
                     case "./Config/Contracts/balance/config.json":
@@ -218,7 +218,7 @@ namespace Neo.FileStorage.Tests
                         data.Add(new ContractParameter(ContractParameterType.Integer) { Value = settings.AlphabetContractHash.Length });
                         break;
                 }
-                DeployContract(snapshot, contractName, nefFilePath, manifestPath, new ContractParameter(ContractParameterType.Array) { Value=data}, sender);
+                DeployContract(snapshot, contractName, nefFilePath, manifestPath, new ContractParameter(ContractParameterType.Array) { Value = data }, sender);
             }
 
             //Fake contract init
@@ -251,7 +251,7 @@ namespace Neo.FileStorage.Tests
                 PlacementPolicy = new PlacementPolicy()
             };
             byte[] sig = key.PrivateKey.LoadPrivateKey().SignRFC6979(container.ToByteArray());
-            script = settings.ContainerContractHash.MakeScript("put", container.ToByteArray(), sig, key.PublicKey.ToArray(),null);
+            script = settings.ContainerContractHash.MakeScript("put", container.ToByteArray(), sig, key.PublicKey.ToArray(), null);
             var containerId = container.CalCulateAndGetId.Value.ToByteArray();
             for (int i = 0; i < accounts.Count(); i++)
             {
@@ -278,10 +278,11 @@ namespace Neo.FileStorage.Tests
                 ExecuteScript(snapshot, "FakeEpoch", script, accounts.ToArray()[i].ScriptHash);
             }
             NodeList list = new();
-            list.AddRange(accounts.Select(p=>p.GetKey().PublicKey));
+            list.AddRange(accounts.Select(p => p.GetKey().PublicKey));
             list.Sort();
             snapshot.Add(new KeyBuilder(NativeContract.RoleManagement.Id, (byte)Role.NeoFSAlphabetNode).AddBigEndian(0), new StorageItem(list));
-            for (int i = 0; i < 7; i++) {
+            for (int i = 0; i < 7; i++)
+            {
                 script = NativeContract.GAS.Hash.MakeScript("transfer", from, settings.AlphabetContractHash[i], 500_00000000, null);
                 engine = ApplicationEngine.Run(script, snapshot, container: signers, null, TheNeoSystem.Settings, 0, 2000000000);
             }
