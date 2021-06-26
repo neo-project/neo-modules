@@ -12,8 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using static Neo.Consensus.RecoveryMessage;
 
 namespace Neo.Consensus
 {
@@ -141,35 +139,6 @@ namespace Neo.Consensus
             return payload;
         }
 
-        public void Deserialize(BinaryReader reader)
-        {
-            Reset(0);
-            if (reader.ReadUInt32() != Block.Version) throw new FormatException();
-            if (reader.ReadUInt32() != Block.Index) throw new InvalidOperationException();
-            Block.Header.Timestamp = reader.ReadUInt64();
-            Block.Header.Nonce = reader.ReadUInt64();
-            Block.Header.PrimaryIndex = reader.ReadByte();
-            Block.Header.NextConsensus = reader.ReadSerializable<UInt160>();
-            if (Block.NextConsensus.Equals(UInt160.Zero))
-                Block.Header.NextConsensus = null;
-            ViewNumber = reader.ReadByte();
-            TransactionHashes = reader.ReadSerializableArray<UInt256>(ushort.MaxValue);
-            Transaction[] transactions = reader.ReadSerializableArray<Transaction>(ushort.MaxValue);
-            PreparationPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
-            CommitPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
-            ChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
-            LastChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
-            if (TransactionHashes.Length == 0 && !RequestSentOrReceived)
-                TransactionHashes = null;
-            Transactions = transactions.Length == 0 && !RequestSentOrReceived ? null : transactions.ToDictionary(p => p.Hash);
-            VerificationContext = new TransactionVerificationContext();
-            if (Transactions != null)
-            {
-                foreach (Transaction tx in Transactions.Values)
-                    VerificationContext.AddTransaction(tx);
-            }
-        }
-
         public void Dispose()
         {
             Snapshot?.Dispose();
@@ -181,10 +150,6 @@ namespace Neo.Consensus
             Block.Header.MerkleRoot ??= MerkleTree.ComputeRoot(TransactionHashes);
             return Block;
         }
-
-
-
-
 
         public bool Load()
         {
@@ -291,6 +256,35 @@ namespace Neo.Consensus
         public void Save()
         {
             store.PutSync(ConsensusStateKey, this.ToArray());
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            Reset(0);
+            if (reader.ReadUInt32() != Block.Version) throw new FormatException();
+            if (reader.ReadUInt32() != Block.Index) throw new InvalidOperationException();
+            Block.Header.Timestamp = reader.ReadUInt64();
+            Block.Header.Nonce = reader.ReadUInt64();
+            Block.Header.PrimaryIndex = reader.ReadByte();
+            Block.Header.NextConsensus = reader.ReadSerializable<UInt160>();
+            if (Block.NextConsensus.Equals(UInt160.Zero))
+                Block.Header.NextConsensus = null;
+            ViewNumber = reader.ReadByte();
+            TransactionHashes = reader.ReadSerializableArray<UInt256>(ushort.MaxValue);
+            Transaction[] transactions = reader.ReadSerializableArray<Transaction>(ushort.MaxValue);
+            PreparationPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
+            CommitPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
+            ChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
+            LastChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
+            if (TransactionHashes.Length == 0 && !RequestSentOrReceived)
+                TransactionHashes = null;
+            Transactions = transactions.Length == 0 && !RequestSentOrReceived ? null : transactions.ToDictionary(p => p.Hash);
+            VerificationContext = new TransactionVerificationContext();
+            if (Transactions != null)
+            {
+                foreach (Transaction tx in Transactions.Values)
+                    VerificationContext.AddTransaction(tx);
+            }
         }
 
         public void Serialize(BinaryWriter writer)

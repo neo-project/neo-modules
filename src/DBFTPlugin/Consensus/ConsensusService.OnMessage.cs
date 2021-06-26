@@ -7,11 +7,158 @@ using Neo.Network.P2P.Payloads;
 using Neo.SmartContract.Native;
 using System.Collections.Generic;
 using System.Linq;
+using Neo.SmartContract;
+using System.IO;
+using Neo.Wallets;
+using System;
 
 namespace Neo.Consensus
 {
     partial class ConsensusService
     {
+        private void OnConsensusPayload(ExtensiblePayload payload)
+        {
+            if (context.BlockSent) return;
+            ConsensusMessage message;
+            try
+            {
+                message = context.GetMessage(payload);
+            }
+            catch (FormatException)
+            {
+                return;
+            }
+            catch (IOException)
+            {
+                return;
+            }
+            if (!message.Verify(neoSystem.Settings)) return;
+            if (message.BlockIndex != context.Block.Index)
+            {
+                if (context.Block.Index < message.BlockIndex)
+                {
+                    Log($"Chain is behind: expected={message.BlockIndex} current={context.Block.Index - 1}", LogLevel.Warning);
+                }
+                return;
+            }
+            if (message.ValidatorIndex >= context.Validators.Length) return;
+            if (payload.Sender != Contract.CreateSignatureRedeemScript(context.Validators[message.ValidatorIndex]).ToScriptHash()) return;
+            context.LastSeenMessage[context.Validators[message.ValidatorIndex]] = message.BlockIndex;
+            switch (message)
+            {
+                case PrepareRequest request:
+                    OnPrepareRequestReceived(payload, request);
+                    break;
+                case PrepareResponse response:
+                    OnPrepareResponseReceived(payload, response);
+                    break;
+                case ChangeView view:
+                    OnChangeViewReceived(payload, view);
+                    break;
+                case Commit commit:
+                    OnCommitReceived(payload, commit);
+                    break;
+                case RecoveryRequest request:
+                    OnRecoveryRequestReceived(payload, request);
+                    break;
+                case RecoveryMessage recovery:
+                    OnRecoveryMessageReceived(recovery);
+                    break;
+            }
+        }
+
+        private void OnPrepareRequestReceived(ExtensiblePayload payload, PrepareRequest message)
+        {
+            if (context.RequestSentOrReceived || context.NotAcceptingPayloadsDueToViewChanging) return;
+            if (message.ValidatorIndex != context.Block.PrimaryIndex || message.ViewNumber != context.ViewNumber) return;
+            if (message.Version != context.Block.Version || message.PrevHash != context.Block.PrevHash) return;
+            if (message.TransactionHashes.Length > neoSystem.Settings.MaxTransactionsPerBlock) return;
+            Log($"{nameof(OnPrepareRequestReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} tx={message.TransactionHashes.Length}");
+            if (message.Timestamp <= context.PrevHeader.Timestamp || message.Timestamp > TimeProvider.Current.UtcNow.AddMilliseconds(8 * neoSystem.Settings.MillisecondsPerBlock).ToTimestampMS())
+            {
+                Log($"Timestamp incorrect: {message.Timestamp}", LogLevel.Warning);
+                return;
+            }
+
+            if (message.TransactionHashes.Any(p => NativeContract.Ledger.ContainsTransaction(context.Snapshot, p)))
+            {
+                Log($"Invalid request: transaction already exists", LogLevel.Warning);
+                return;
+            }
+
+            // Timeout extension: prepare request has been received with success
+            // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
+            ExtendTimerByFactor(2);
+
+            context.Block.Header.Timestamp = message.Timestamp;
+            context.Block.Header.Nonce = message.Nonce;
+            context.TransactionHashes = message.TransactionHashes;
+
+            context.Transactions = new Dictionary<UInt256, Transaction>();
+            context.VerificationContext = new TransactionVerificationContext();
+            for (int i = 0; i < context.PreparationPayloads.Length; i++)
+                if (context.PreparationPayloads[i] != null)
+                    if (!context.GetMessage<PrepareResponse>(context.PreparationPayloads[i]).PreparationHash.Equals(payload.Hash))
+                        context.PreparationPayloads[i] = null;
+            context.PreparationPayloads[message.ValidatorIndex] = payload;
+            byte[] hashData = context.EnsureHeader().GetSignData(neoSystem.Settings.Network);
+            for (int i = 0; i < context.CommitPayloads.Length; i++)
+                if (context.GetMessage(context.CommitPayloads[i])?.ViewNumber == context.ViewNumber)
+                    if (!Crypto.VerifySignature(hashData, context.GetMessage<Commit>(context.CommitPayloads[i]).Signature, context.Validators[i]))
+                        context.CommitPayloads[i] = null;
+
+            if (context.TransactionHashes.Length == 0)
+            {
+                // There are no tx so we should act like if all the transactions were filled
+                CheckPrepareResponse();
+                return;
+            }
+
+            Dictionary<UInt256, Transaction> mempoolVerified = neoSystem.MemPool.GetVerifiedTransactions().ToDictionary(p => p.Hash);
+            List<Transaction> unverified = new List<Transaction>();
+            foreach (UInt256 hash in context.TransactionHashes)
+            {
+                if (mempoolVerified.TryGetValue(hash, out Transaction tx))
+                {
+                    if (!AddTransaction(tx, false))
+                        return;
+                }
+                else
+                {
+                    if (neoSystem.MemPool.TryGetValue(hash, out tx))
+                        unverified.Add(tx);
+                }
+            }
+            foreach (Transaction tx in unverified)
+                if (!AddTransaction(tx, true))
+                    return;
+            if (context.Transactions.Count < context.TransactionHashes.Length)
+            {
+                UInt256[] hashes = context.TransactionHashes.Where(i => !context.Transactions.ContainsKey(i)).ToArray();
+                taskManager.Tell(new TaskManager.RestartTasks
+                {
+                    Payload = InvPayload.Create(InventoryType.TX, hashes)
+                });
+            }
+        }
+
+        private void OnPrepareResponseReceived(ExtensiblePayload payload, PrepareResponse message)
+        {
+            if (message.ViewNumber != context.ViewNumber) return;
+            if (context.PreparationPayloads[message.ValidatorIndex] != null || context.NotAcceptingPayloadsDueToViewChanging) return;
+            if (context.PreparationPayloads[context.Block.PrimaryIndex] != null && !message.PreparationHash.Equals(context.PreparationPayloads[context.Block.PrimaryIndex].Hash))
+                return;
+
+            // Timeout extension: prepare response has been received with success
+            // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
+            ExtendTimerByFactor(2);
+
+            Log($"{nameof(OnPrepareResponseReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex}");
+            context.PreparationPayloads[message.ValidatorIndex] = payload;
+            if (context.WatchOnly || context.CommitSent) return;
+            if (context.RequestSentOrReceived)
+                CheckPreparations();
+        }
 
         private void OnChangeViewReceived(ExtensiblePayload payload, ChangeView message)
         {
@@ -148,98 +295,5 @@ namespace Neo.Consensus
             localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeRecoveryMessage() });
         }
 
-        private void OnPrepareRequestReceived(ExtensiblePayload payload, PrepareRequest message)
-        {
-            if (context.RequestSentOrReceived || context.NotAcceptingPayloadsDueToViewChanging) return;
-            if (message.ValidatorIndex != context.Block.PrimaryIndex || message.ViewNumber != context.ViewNumber) return;
-            if (message.Version != context.Block.Version || message.PrevHash != context.Block.PrevHash) return;
-            if (message.TransactionHashes.Length > neoSystem.Settings.MaxTransactionsPerBlock) return;
-            Log($"{nameof(OnPrepareRequestReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} tx={message.TransactionHashes.Length}");
-            if (message.Timestamp <= context.PrevHeader.Timestamp || message.Timestamp > TimeProvider.Current.UtcNow.AddMilliseconds(8 * neoSystem.Settings.MillisecondsPerBlock).ToTimestampMS())
-            {
-                Log($"Timestamp incorrect: {message.Timestamp}", LogLevel.Warning);
-                return;
-            }
-
-            if (message.TransactionHashes.Any(p => NativeContract.Ledger.ContainsTransaction(context.Snapshot, p)))
-            {
-                Log($"Invalid request: transaction already exists", LogLevel.Warning);
-                return;
-            }
-
-            // Timeout extension: prepare request has been received with success
-            // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
-            ExtendTimerByFactor(2);
-
-
-            context.Block.Header.Timestamp = message.Timestamp;
-            context.Block.Header.Nonce = message.Nonce;
-            context.TransactionHashes = message.TransactionHashes;
-
-            context.Transactions = new Dictionary<UInt256, Transaction>();
-            context.VerificationContext = new TransactionVerificationContext();
-            for (int i = 0; i < context.PreparationPayloads.Length; i++)
-                if (context.PreparationPayloads[i] != null)
-                    if (!context.GetMessage<PrepareResponse>(context.PreparationPayloads[i]).PreparationHash.Equals(payload.Hash))
-                        context.PreparationPayloads[i] = null;
-            context.PreparationPayloads[message.ValidatorIndex] = payload;
-            byte[] hashData = context.EnsureHeader().GetSignData(neoSystem.Settings.Network);
-            for (int i = 0; i < context.CommitPayloads.Length; i++)
-                if (context.GetMessage(context.CommitPayloads[i])?.ViewNumber == context.ViewNumber)
-                    if (!Crypto.VerifySignature(hashData, context.GetMessage<Commit>(context.CommitPayloads[i]).Signature, context.Validators[i]))
-                        context.CommitPayloads[i] = null;
-
-            if (context.TransactionHashes.Length == 0)
-            {
-                // There are no tx so we should act like if all the transactions were filled
-                CheckPrepareResponse();
-                return;
-            }
-
-            Dictionary<UInt256, Transaction> mempoolVerified = neoSystem.MemPool.GetVerifiedTransactions().ToDictionary(p => p.Hash);
-            List<Transaction> unverified = new List<Transaction>();
-            foreach (UInt256 hash in context.TransactionHashes)
-            {
-                if (mempoolVerified.TryGetValue(hash, out Transaction tx))
-                {
-                    if (!AddTransaction(tx, false))
-                        return;
-                }
-                else
-                {
-                    if (neoSystem.MemPool.TryGetValue(hash, out tx))
-                        unverified.Add(tx);
-                }
-            }
-            foreach (Transaction tx in unverified)
-                if (!AddTransaction(tx, true))
-                    return;
-            if (context.Transactions.Count < context.TransactionHashes.Length)
-            {
-                UInt256[] hashes = context.TransactionHashes.Where(i => !context.Transactions.ContainsKey(i)).ToArray();
-                taskManager.Tell(new TaskManager.RestartTasks
-                {
-                    Payload = InvPayload.Create(InventoryType.TX, hashes)
-                });
-            }
-        }
-
-        private void OnPrepareResponseReceived(ExtensiblePayload payload, PrepareResponse message)
-        {
-            if (message.ViewNumber != context.ViewNumber) return;
-            if (context.PreparationPayloads[message.ValidatorIndex] != null || context.NotAcceptingPayloadsDueToViewChanging) return;
-            if (context.PreparationPayloads[context.Block.PrimaryIndex] != null && !message.PreparationHash.Equals(context.PreparationPayloads[context.Block.PrimaryIndex].Hash))
-                return;
-
-            // Timeout extension: prepare response has been received with success
-            // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
-            ExtendTimerByFactor(2);
-
-            Log($"{nameof(OnPrepareResponseReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex}");
-            context.PreparationPayloads[message.ValidatorIndex] = payload;
-            if (context.WatchOnly || context.CommitSent) return;
-            if (context.RequestSentOrReceived)
-                CheckPreparations();
-        }
     }
 }
