@@ -11,6 +11,7 @@
         <Command>
           <type>BeforeBuild</type>
           <command>dotnet-format</command>
+          <externalConsole>True</externalConsole>
         </Command>
       </CustomCommands>
     </CustomCommands>
