@@ -1,14 +1,14 @@
-using Neo.FileStorage.Services.Session.Storage;
-using Neo.FileStorage.API.Session;
 using System;
 using System.Security.Cryptography;
+using Neo.FileStorage.API.Session;
+using Neo.FileStorage.Services.Session.Storage;
 
 namespace Neo.FileStorage.Services.Object.Util
 {
     public class KeyStorage
     {
-        private ECDsa key;
-        private TokenStore tokenStore;
+        private readonly ECDsa key;
+        private readonly TokenStore tokenStore;
 
         public KeyStorage(ECDsa localKey, TokenStore ts)
         {

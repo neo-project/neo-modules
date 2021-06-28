@@ -1,4 +1,5 @@
 using Google.Protobuf;
+using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Session;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Services.Reputaion.Local.Client;
@@ -8,10 +9,10 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
 {
     public static class Helper
     {
-        public static FSObject GetObject(this ReputationClient client, ExecuteContext context)
+        public static FSObject GetObject(this IFSClient client, ExecuteContext context)
         {
             if (!context.Assembling && context.Prm.Forwarder is not null)
-                return context.Prm.Forwarder.Forward(client.FSClient);
+                return context.Prm.Forwarder.Forward(client.Raw());
             var options = context.Prm.CallOptions
                 .WithExtraXHeaders(new XHeader[] { new() { Key = XHeader.XHeaderNetmapEpoch, Value = context.CurrentEpoch.ToString() } })
                 .WithKey(context.Prm.Key);

@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using Google.Protobuf;
+using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Reputation;
 using Neo.FileStorage.Services.Reputaion.Common;
 using Neo.FileStorage.Services.Reputaion.EigenTrust;
-using APIClient = Neo.FileStorage.API.Client.Client;
 
 namespace Neo.FileStorage.Services.Reputaion.Intermediate.Remote
 {
@@ -12,7 +12,7 @@ namespace Neo.FileStorage.Services.Reputaion.Intermediate.Remote
     {
         public IterationContext Context { get; init; }
         public ECDsa Key { get; init; }
-        public APIClient Client { get; init; }
+        public IFSClient Client { get; init; }
         private readonly List<PeerToPeerTrust> buffer = new();
 
         public void Write(Trust t)

@@ -9,11 +9,12 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Shards;
 using Neo.FileStorage.Services.Object.Acl.EAcl;
+using Neo.FileStorage.Services.Object.Search;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.LocalObjectStorage.Engine
 {
-    public sealed class StorageEngine : ILocalHeadSource, IDisposable
+    public sealed class StorageEngine : ILocalHeadSource, ILocalSearchSource, IDisposable
     {
         private readonly Dictionary<ShardID, Shard> shards = new();
         private readonly ReaderWriterLockSlim mtx = new();

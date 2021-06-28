@@ -1,7 +1,7 @@
+using System.Linq;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.ObjectManager.Placement;
-using System.Linq;
 using static Neo.Utility;
 
 namespace Neo.FileStorage.Services.Object.Get.Execute
@@ -29,7 +29,7 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
 
         private Traverser GenerateTraverser(Address address)
         {
-            return GetService.TraverserGenerator.GenerateTraverser(address);
+            return GetService.TraverserGenerator.GenerateTraverser(address, CurrentEpoch);
         }
 
         private bool ProcessCurrentEpoch()

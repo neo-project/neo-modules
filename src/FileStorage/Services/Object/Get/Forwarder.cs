@@ -25,7 +25,7 @@ namespace Neo.FileStorage.Services.Object.Get
             key.SignRequest(request);
         }
 
-        public FSObject Forward(Client client)
+        public FSObject Forward(IFSRawClient client)
         {
             switch (request)
             {

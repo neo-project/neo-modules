@@ -1,7 +1,7 @@
+using System.Linq;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.ObjectManager.Placement;
-using System.Linq;
 using static Neo.Utility;
 
 namespace Neo.FileStorage.Services.Object.Search.Execute
@@ -12,24 +12,25 @@ namespace Neo.FileStorage.Services.Object.Search.Execute
         {
             InitEpoch();
             var depth = Prm.NetmapLookupDepth;
-            while (0 < depth)
+            while (true)
             {
                 if (ProcessCurrentEpoch()) break;
+                if (depth == 0) break;
                 depth--;
                 currentEpoch--;
-            }
+            };
         }
 
         private void InitEpoch()
         {
             currentEpoch = Prm.NetmapEpoch;
             if (0 < currentEpoch) return;
-            currentEpoch = MorphContractInvoker.InvokeEpoch(SearchService.MorphClient);
+            currentEpoch = SearchService.MorphClient.CurrentEpoch();
         }
 
         private Traverser GenerateTraverser(ContainerID cid)
         {
-            return SearchService.TraverserGenerator.GenerateTraverser(new() { ContainerId = cid });
+            return SearchService.TraverserGenerator.GenerateTraverser(new() { ContainerId = cid }, currentEpoch);
         }
 
         private bool ProcessCurrentEpoch()

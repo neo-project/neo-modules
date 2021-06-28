@@ -146,10 +146,10 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
             target.WriteChunk(chunk.ToByteArray());
         }
 
-        public async void RelayRequest(ReputationClient client)
+        public async void RelayRequest(IFSClient client)
         {
             if (init is null) return;
-            using var stream = await client.FSClient.PutObject(init, context: Cancellation);
+            using var stream = await client.Raw().PutObject(init, context: Cancellation);
             foreach (var chunk in chunks)
                 stream.Write(chunk);
             await stream.Close();

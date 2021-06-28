@@ -3,7 +3,6 @@ using Akka.Actor;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.Morph.Event;
-using Neo.FileStorage.Network.Cache;
 using Neo.FileStorage.Services.Reputaion.Common;
 using Neo.FileStorage.Services.Reputaion.Common.Route;
 using Neo.FileStorage.Services.Reputaion.EigenTrust.Calculate;

@@ -2,9 +2,6 @@ using System;
 using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.Services.Object.Util;
-using Neo.FileStorage.Services.ObjectManager.Placement;
-using Neo.FileStorage.Services.Reputaion.Local.Client;
-using FSContainer = Neo.FileStorage.API.Container.Container;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Put
@@ -12,7 +9,7 @@ namespace Neo.FileStorage.Services.Object.Put
     public class PutInitPrm : CommonPrm
     {
         public FSObject Header;
-        public Action<ReputationClient> Relay;
+        public Action<IFSClient> Relay;
 
         public static PutInitPrm FromRequest(PutRequest request)
         {

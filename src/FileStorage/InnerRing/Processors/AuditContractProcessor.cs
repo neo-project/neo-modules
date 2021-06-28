@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Akka.Actor;
+using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Cache;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Audit;
@@ -21,8 +23,8 @@ namespace Neo.FileStorage.InnerRing.Processors
         public override string Name => "AuditContractProcessor";
         public int SearchTimeout => Settings.Default.SearchTimeout;
         public IActorRef TaskManager;
-        public INeoFSClientCache ClientCache;
         public CancellationTokenSource prevAuditCanceler = new CancellationTokenSource();
+        public IFSClientCache ClientCache;
 
         public void HandleNewAuditRound(IContractEvent morphEvent)
         {
@@ -175,7 +177,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Warning, string.Format("can't parse remote address,error {0}", e.Message));
                     continue;
                 };
-                API.Client.Client cli;
+                IFSClient cli;
                 try
                 {
                     cli = ClientCache.Get(address);
@@ -185,7 +187,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Warning, string.Format("can't setup remote connection,error {0}", e.Message));
                     continue;
                 };
-                SearchFilters searchFilters = new SearchFilters();
+                SearchFilters searchFilters = new();
                 searchFilters.AddTypeFilter(MatchType.StringEqual, ObjectType.StorageGroup);
                 try
                 {

@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.Cache;
 using Neo.FileStorage.Network;
-using Neo.FileStorage.Network.Cache;
 
 namespace Neo.FileStorage.Services.Reputaion.Common
 {
@@ -10,7 +10,7 @@ namespace Neo.FileStorage.Services.Reputaion.Common
         public ECDsa Key { get; init; }
         public Address LocalAddress { get; init; }
         public IWriterProvider DeadEndProvider { get; init; }
-        public ClientCache ClientCache { get; init; }
+        public IFSClientCache ClientCache { get; init; }
         public IClientKeyRemoteProvider RemoteProvider { get; init; }
 
         public IWriterProvider InitRemote(NodeInfo ni)

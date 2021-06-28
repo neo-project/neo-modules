@@ -1,9 +1,9 @@
-using APIClient = Neo.FileStorage.API.Client.Client;
+using Neo.FileStorage.API.Client;
 
 namespace Neo.FileStorage.Services.Reputaion.Common
 {
     public interface IClientKeyRemoteProvider
     {
-        IWriterProvider WithClient(APIClient client);
+        IWriterProvider WithClient(IFSClient client);
     }
 }

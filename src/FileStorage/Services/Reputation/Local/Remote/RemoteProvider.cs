@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
+using Neo.FileStorage.API.Client;
 using Neo.FileStorage.Services.Reputaion.Common;
-using APIClient = Neo.FileStorage.API.Client.Client;
 
 namespace Neo.FileStorage.Services.Reputaion.Local.Remote
 {
@@ -8,7 +8,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Remote
     {
         public ECDsa Key { get; init; }
 
-        public IWriterProvider WithClient(APIClient client)
+        public IWriterProvider WithClient(IFSClient client)
         {
             return new TrustWriterProvider
             {

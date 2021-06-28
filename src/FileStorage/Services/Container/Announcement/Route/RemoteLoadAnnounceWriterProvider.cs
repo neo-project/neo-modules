@@ -1,13 +1,13 @@
-using Neo.FileStorage.API.Client;
 using System.Security.Cryptography;
 using System.Threading;
+using Neo.FileStorage.API.Client;
 
 namespace Neo.FileStorage.Services.Container.Announcement.Route
 {
     public class RemoteLoadAnnounceWriterProvider : IWriterProvider
     {
         public ECDsa Key { get; init; }
-        public Client Client;
+        public IFSClient Client;
 
         public IWriter InitWriter(CancellationToken cancellation)
         {

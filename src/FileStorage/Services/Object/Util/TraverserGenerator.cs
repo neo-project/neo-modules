@@ -5,7 +5,7 @@ using FSAddress = Neo.FileStorage.API.Refs.Address;
 
 namespace Neo.FileStorage.Services.Object.Util
 {
-    public class TraverserGenerator
+    public class TraverserGenerator : ITraverserGenerator
     {
         private readonly Client morphClient;
         private readonly Network.Address localAddress;
@@ -20,9 +20,9 @@ namespace Neo.FileStorage.Services.Object.Util
             this.trackCopies = trackCopies;
         }
 
-        public Traverser GenerateTraverser(FSAddress address)
+        public Traverser GenerateTraverser(FSAddress address, ulong epoch)
         {
-            var nm = morphClient.InvokeSnapshot(0);
+            var nm = morphClient.InvokeEpochSnapshot(epoch);
             if (nm is null)
             {
                 throw new Exception(nameof(TraverserGenerator) + " could not get latest netmap");

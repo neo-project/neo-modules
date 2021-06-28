@@ -5,7 +5,7 @@ using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.StorageGroup;
-using Neo.FileStorage.Network.Cache;
+using Neo.FileStorage.Cache;
 using Neo.FileStorage.Services.Audit;
 using Neo.FileStorage.Services.Audit.Auditor;
 using Neo.FileStorage.Services.ObjectManager.Placement;
@@ -14,7 +14,7 @@ using V2Range = Neo.FileStorage.API.Object.Range;
 
 namespace Neo.FileStorage.InnerRing
 {
-    public class RpcClientCache : INeoFSClientCache, IContainerCommunicator
+    public class RpcClientCache : IFSClientCache, IContainerCommunicator
     {
         public ClientCache clientCache = new();
         public Wallet wallet;
@@ -24,7 +24,7 @@ namespace Neo.FileStorage.InnerRing
             clientCache.Dispose();
         }
 
-        public Client Get(Network.Address address)
+        public IFSClient Get(Network.Address address)
         {
             return clientCache.Get(address);
         }
@@ -61,7 +61,7 @@ namespace Neo.FileStorage.InnerRing
                     Utility.Log("RpcClientCache", LogLevel.Warning, string.Format("can't parse remote address,address:{0},errot:{1}", node.NetworkAddress, e.Message));
                     continue;
                 }
-                Client cli;
+                IFSClient cli;
                 try
                 {
                     cli = Get(addr);
@@ -115,7 +115,7 @@ namespace Neo.FileStorage.InnerRing
             {
                 throw new Exception(string.Format("can't parse remote address {0}: {1}", node.NetworkAddress, e.Message));
             }
-            Client client;
+            IFSClient client;
             try
             {
                 client = Get(addr);
@@ -154,7 +154,7 @@ namespace Neo.FileStorage.InnerRing
             {
                 throw new Exception(string.Format("can't parse remote address,address:{0},error:{1}", node.NetworkAddress, e.Message));
             }
-            Client cli;
+            IFSClient cli;
             try
             {
                 cli = Get(addr);
