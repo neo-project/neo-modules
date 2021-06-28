@@ -44,7 +44,7 @@ namespace Neo.Consensus
         private readonly NeoSystem neoSystem;
 
         public ConsensusService(NeoSystem neoSystem, Settings settings, Wallet wallet)
-            : this(neoSystem, settings, new ConsensusContext(neoSystem, settings, wallet)){}
+            : this(neoSystem, settings, new ConsensusContext(neoSystem, settings, wallet)) { }
 
         internal ConsensusService(NeoSystem neoSystem, Settings settings, ConsensusContext context)
         {
