@@ -39,7 +39,6 @@
   
   <ItemGroup>
     <ProjectReference Include="..\LevelDBStore\LevelDBStore.csproj" />
-    <ProjectReference Include="..\..\..\neofs-api-csharp\src\Neo.FileStorage.API\Neo.FileStorage.API.csproj" />
   </ItemGroup>
 
 </Project>
