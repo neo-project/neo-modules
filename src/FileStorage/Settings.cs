@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Neo.Cryptography.ECC;
-using Neo.FileStorage.LocalObjectStorage.Blob;
 
 namespace Neo.FileStorage
 {
@@ -52,7 +51,6 @@ namespace Neo.FileStorage
         public ulong StorageEmission;
         public bool CleanupEnabled;
         public ulong CleanupThreshold;
-        public bool IsSender;
         public int SearchTimeout;
         public int GetTimeout;
         public int HeadTimeout;
@@ -129,8 +127,6 @@ namespace Neo.FileStorage
             IConfigurationSection netmapCleaner = section.GetSection("NetmapCleaner");
             CleanupEnabled = netmapCleaner.GetValue("Eenabled", false);
             CleanupThreshold = netmapCleaner.GetValue("Threshold", 3ul);
-
-            IsSender = bool.Parse(section.GetSection("IsSender").Value);
 
             IConfigurationSection audit = section.GetSection("Audit");
             SearchTimeout = audit.GetSection("Timeout").GetValue("Search", 10000);

@@ -65,7 +65,6 @@
       "Eenabled": false,
       "Threshold": 3
     },
-    "IsSender": false,
     "Audit": {
       "Timeout": {
         "Get": 5000,
