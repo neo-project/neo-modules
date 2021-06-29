@@ -14,19 +14,21 @@ using Neo.FileStorage.Utils;
 using FSAddress = Neo.FileStorage.API.Refs.Address;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
-
 namespace Neo.FileStorage.LocalObjectStorage.Shards
 {
     public class Shard : IDisposable
     {
         public ShardID ID { get; private set; }
+        private readonly bool useWriteCache;
+        private readonly int removeBatchSize;
+        private int mode;
+        private readonly int removeInteral;
+        private Timer timer;
         private readonly BlobStorage blobStorage;
         private readonly MB metabase;
         private readonly IActorRef workPool;
-        private readonly Action<List<FSAddress>, CancellationToken> expiredObjectCallback;
+        private readonly Action<List<FSAddress>, CancellationToken> expiredTomestonesCallback;
         private readonly WriteCache writeCache;
-        private readonly bool useWriteCache;
-        private int mode;
         private CancellationTokenSource source;
         private Task prevGroup;
 
@@ -36,7 +38,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             set => Interlocked.Exchange(ref mode, (int)value);
         }
 
-        public Shard(ShardSettings settings, IActorRef wp)
+        public Shard(ShardSettings settings, IActorRef wp, Action<List<FSAddress>, CancellationToken> expiredCallback)
         {
             ID = new();
             useWriteCache = settings.UseWriteCache;
@@ -46,13 +48,24 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             if (useWriteCache)
             {
                 writeCache = new WriteCache(settings.WriteCacheSettings, blobStorage, metabase);
-                writeCache.Open();
             }
             Mode = ShardMode.Undefined;
+            expiredTomestonesCallback = expiredCallback;
+            //GC
+            removeInteral = settings.RemoverInterval;
+        }
+
+        public void Open()
+        {
+            if (useWriteCache) writeCache.Open();
+            blobStorage.Open();
+            metabase.Open();
+            timer = new(RemoveGarbage, null, removeInteral, removeInteral);
         }
 
         public void Dispose()
         {
+            timer?.Dispose();
             source?.Cancel();
             prevGroup?.Wait();
             blobStorage?.Dispose();
@@ -261,12 +274,48 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
 
         private void CollectExpiredObjects(ulong epoch, CancellationToken context)
         {
-            throw new NotImplementedException();
+            List<FSAddress> expired = new();
+            try
+            {
+                metabase.IterateExpired(epoch, (t, address) =>
+                {
+                    if (context.IsCancellationRequested)
+                        throw new OperationCanceledException("operation is cancelled");
+                    if (t != ObjectType.Tombstone)
+                        expired.Add(address);
+                });
+            }
+            catch (Exception e)
+            {
+                Utility.Log(nameof(Shard), LogLevel.Warning, $"iterator over expired objects failed, error: {e}");
+                return;
+            }
+            if (!expired.Any()) return;
+            if (context.IsCancellationRequested) return;
+            Inhume(null, expired.ToArray());
         }
 
         private void CollectExpiredTombstones(ulong epoch, CancellationToken context)
         {
-            throw new NotImplementedException();
+            List<FSAddress> expired = new();
+            try
+            {
+                metabase.IterateExpired(epoch, (t, address) =>
+                {
+                    if (context.IsCancellationRequested)
+                        throw new OperationCanceledException("operation is cancelled");
+                    if (t == ObjectType.Tombstone)
+                        expired.Add(address);
+                });
+            }
+            catch (Exception e)
+            {
+                Utility.Log(nameof(Shard), LogLevel.Warning, $"iterator over expired objects failed, error: {e}");
+                return;
+            }
+            if (!expired.Any()) return;
+            if (context.IsCancellationRequested) return;
+            if (expiredTomestonesCallback is not null) expiredTomestonesCallback(expired, context);
         }
 
         public void OnNewEpoch(ulong epoch)
@@ -293,6 +342,21 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
                 Task = t2,
             });
             prevGroup = Task.WhenAll(t1, t2);
+        }
+
+        private void RemoveGarbage(object state)
+        {
+            List<FSAddress> buf = new();
+            metabase.IterateGraveYard(g =>
+            {
+                if (g.GCMark)
+                {
+                    buf.Add(g.Address);
+                }
+                return removeBatchSize <= buf.Count;
+            });
+            if (!buf.Any()) return;
+            Delete(buf.ToArray());
         }
     }
 }

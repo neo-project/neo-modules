@@ -53,7 +53,7 @@ namespace Neo.FileStorage
             int i = 0;
             foreach (var shardSettings in Settings.Default.LocalStorageSettings.Shards)
             {
-                localStorage.AddShard(new Shard(shardSettings, system.ActorSystem.ActorOf(WorkerPool.Props($"Shard{i}", 2))));
+                localStorage.AddShard(new Shard(shardSettings, system.ActorSystem.ActorOf(WorkerPool.Props($"Shard{i}", 2)), localStorage.ProcessExpiredTomstones));
                 i++;
             }
             morphClient = new Client

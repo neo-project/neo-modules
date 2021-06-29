@@ -288,6 +288,7 @@ namespace Neo.FileStorage
     public class ShardSettings
     {
         public bool UseWriteCache;
+        public int RemoverInterval;
         public WriteCacheSettings WriteCacheSettings;
         public BlobStorageSettings BlobStorageSettings;
         public MetabaseSettings MetabaseSettings;
@@ -299,6 +300,7 @@ namespace Neo.FileStorage
             Default = new()
             {
                 UseWriteCache = true,
+                RemoverInterval = 10000,
                 WriteCacheSettings = WriteCacheSettings.Default,
                 BlobStorageSettings = BlobStorageSettings.Default,
                 MetabaseSettings = MetabaseSettings.Default,
@@ -311,6 +313,7 @@ namespace Neo.FileStorage
             settings.UseWriteCache = section.GetValue("UseWriteCache", true);
             if (settings.UseWriteCache)
                 settings.WriteCacheSettings = WriteCacheSettings.Load(section.GetSection("WriteCache"));
+            settings.RemoverInterval = section.GetValue("RemoverInterval", 10000);
             settings.BlobStorageSettings = BlobStorageSettings.Load(section.GetSection("BlobStorage"));
             settings.MetabaseSettings = MetabaseSettings.Load(section.GetSection("Metabase"));
             return settings;

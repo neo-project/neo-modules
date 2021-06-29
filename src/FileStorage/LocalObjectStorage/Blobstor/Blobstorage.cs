@@ -32,12 +32,16 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
                 BlzShallowDepth = (ulong)settings.BlobovniczasSettings.ShallowDepth,
                 BlzShallowWidth = (ulong)settings.BlobovniczasSettings.ShallowWidth
             };
-            blobovniczas.Initialize();
+        }
+
+        public void Open()
+        {
+            blobovniczas.Open();
         }
 
         public void Dispose()
         {
-            blobovniczas.Dispose();
+            blobovniczas?.Dispose();
             compressor?.Dispose();
         }
 

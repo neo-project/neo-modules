@@ -23,7 +23,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Engine
             settings.BlobStorageSettings.BlobovniczasSettings.ShallowDepth = 2;
             settings.BlobStorageSettings.BlobovniczasSettings.ShallowWidth = 2;
             settings.MetabaseSettings.Path = root + $"/Data_Metabase_{num}";
-            return new(settings, null);
+            return new(settings, null, null);
         }
 
         [TestMethod]
@@ -48,6 +48,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Engine
                 var s2 = NewShard(path, 2);
                 engine.AddShard(s1);
                 engine.AddShard(s2);
+                engine.Open();
                 s1.Put(child);
                 s2.Put(link);
                 var o = engine.Head(parent.Address, false);
@@ -93,6 +94,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Engine
                 using StorageEngine engine = new();
                 var s1 = NewShard(path, 1);
                 engine.AddShard(s1);
+                engine.Open();
                 engine.Put(parent);
                 engine.Inhume(ts.Address, parent.Address);
                 var addrs = engine.Select(cid, filters);
@@ -129,6 +131,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Engine
                 var s2 = NewShard(path, 2);
                 engine.AddShard(s1);
                 engine.AddShard(s2);
+                engine.Open();
                 s1.Put(child);
                 s2.Put(link);
                 engine.Inhume(ts.Address, parent.Address);
