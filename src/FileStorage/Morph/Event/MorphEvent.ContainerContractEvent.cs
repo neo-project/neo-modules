@@ -1,6 +1,6 @@
+using System;
 using Neo.Cryptography.ECC;
 using Neo.IO;
-using System;
 
 namespace Neo.FileStorage.Morph.Event
 {
@@ -41,7 +41,7 @@ namespace Neo.FileStorage.Morph.Event
                 containerPutEvent.RawContainer = eventParams[0].GetSpan().ToArray();
                 containerPutEvent.Signature = eventParams[1].GetSpan().ToArray();
                 containerPutEvent.PublicKey = eventParams[2].GetSpan().ToArray();
-                containerPutEvent.token = eventParams[3] is VM.Types.Null? null: eventParams[3].GetSpan().ToArray();
+                containerPutEvent.token = eventParams[3] is VM.Types.Null ? null : eventParams[3].GetSpan().ToArray();
                 return containerPutEvent;
             }
         }

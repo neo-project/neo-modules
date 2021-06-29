@@ -395,7 +395,6 @@ namespace Neo.FileStorage.InnerRing
 
         public void VoteForSidechainValidator(ECPoint[] validators)
         {
-            Console.WriteLine("开始vote侧链共识节点");
             Array.Sort(validators);
             var index = InnerRingIndex();
             if (index < 0 || index >= Settings.Default.AlphabetContractHash.Length)
@@ -414,7 +413,6 @@ namespace Neo.FileStorage.InnerRing
                 try
                 {
                     var r = morphClient.AlphabetVote(i, epoch, validators);
-                    Console.WriteLine("vote侧链共识节点:alphabetindex:" + i + ",epoch:" + epoch + ",result:" + r);
                 }
                 catch
                 {
