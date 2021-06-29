@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -5,8 +6,9 @@ using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Services.ObjectManager.Placement;
+using FSContainer = Neo.FileStorage.API.Container.Container;
 
-namespace Neo.FileStorage.Tests
+namespace Neo.FileStorage.Tests.Services.ObjectManager
 {
     public class TestBuilder : IPlacementBuilder
     {
@@ -14,67 +16,43 @@ namespace Neo.FileStorage.Tests
 
         public TestBuilder(List<List<Node>> vs)
         {
-            this.vectors = vs;
+            vectors = vs;
         }
 
-        public List<List<Node>> BuildPlacement(Address addr, PlacementPolicy pp)
+        public List<List<Node>> BuildPlacement(Address address, PlacementPolicy pp)
         {
-            return this.vectors;
+            return vectors;
         }
     }
 
     [TestClass]
     public class UT_Traverser
     {
-        private (List<List<Node>>, Container) PreparePlacement(int[] ss, int[] rs)
+        private (List<List<Node>>, FSContainer) PreparePlacement(int[] ss, int[] rs)
         {
             var nodes = new List<List<Node>>();
-            var replicas = new Replica[0];
+            var replicas = new List<Replica>();
             uint num = 0;
-
             for (int i = 0; i < ss.Length; i++)
             {
-                var ns = new NodeInfo[0];
+                List<NodeInfo> ns = new();
                 for (int j = 0; j < ss[i]; j++)
                 {
-                    ns = ns.Append(PrepareNode(num)).ToArray();
+                    ns.Add(new NodeInfo() { Address = "/ip4/0.0.0.0/tcp/" + num.ToString() });
                     num++;
                 }
-                nodes.Add(NodesFromInfo(ns));
-
-                var r = new Replica() { Count = (uint)rs[i] };
-                replicas = replicas.Append(r).ToArray();
+                nodes.Add(ns.Select((p, index) => new Node(index, p)).ToList());
+                replicas.Add(new Replica((uint)rs[i], ""));
             }
-
-            var policy = new PlacementPolicy(0, replicas, null, null);
-
-            return (nodes, new Container() { PlacementPolicy = policy });
-        }
-
-        private NodeInfo PrepareNode(uint v)
-        {
-            return new NodeInfo() { Address = "/ip4/0.0.0.0/tcp/" + v.ToString() };
-        }
-
-        private List<Node> NodesFromInfo(NodeInfo[] infos)
-        {
-            var nodes = new List<Node>();
-            for (int i = 0; i < infos.Length; i++)
-            {
-                nodes[i] = new Node(i, infos[i]);
-            }
-            return nodes;
+            var policy = new PlacementPolicy(0, replicas.ToArray(), null, null);
+            return (nodes, new FSContainer() { PlacementPolicy = policy });
         }
 
         private List<List<Node>> CopyVectors(List<List<Node>> v)
         {
             var vc = new List<List<Node>>();
-            for (int i = 0; i < v.Count; i++)
-            {
-                var ns = new List<Node>();
-                v[i].ForEach(n => ns.Add(n));
-                vc.Add(ns);
-            }
+            foreach (var li in v)
+                vc.Add(li.ToList());
             return vc;
         }
 
@@ -85,7 +63,7 @@ namespace Neo.FileStorage.Tests
             var replicas = new int[] { 1, 2 };
 
             List<List<Node>> nodes;
-            Container ctn;
+            FSContainer ctn;
             (nodes, ctn) = PreparePlacement(selectors, replicas);
 
             var nodesCopy = CopyVectors(nodes);
@@ -97,7 +75,7 @@ namespace Neo.FileStorage.Tests
                 {
                     ContainerId = ctn.CalCulateAndGetId,
                 },
-                trackCopies: true
+                trackCopies: false
             );
 
             for (int i = 0; i < selectors.Length; i++)
@@ -114,8 +92,6 @@ namespace Neo.FileStorage.Tests
             Assert.IsTrue(tr.Success());
         }
 
-        private delegate void Fn(int curVector);
-
         [TestMethod]
         public void TestTraverserRead()
         {
@@ -123,7 +99,7 @@ namespace Neo.FileStorage.Tests
             var replicas = new int[] { 2, 2 };
 
             List<List<Node>> nodes;
-            Container ctn;
+            FSContainer ctn;
             (nodes, ctn) = PreparePlacement(selectors, replicas);
 
             var nodesCopy = CopyVectors(nodes);
@@ -137,29 +113,11 @@ namespace Neo.FileStorage.Tests
                 },
                 1
             );
-
-            Fn fn = (cv) =>
-            {
-                for (int i = 0; i < selectors[cv]; i++)
-                {
-                    var addrs = tr.Next();
-                    Assert.AreEqual(1, addrs.Count);
-                    Assert.AreEqual(nodes[cv][i].NetworkAddress, addrs[0].ToString());
-                }
-
-                Assert.IsFalse(tr.Success());
-                tr.SubmitSuccess();
-            };
-
-            for (int i = 0; i < selectors.Length; i++)
-            {
-                fn(i);
-
-                if (i < selectors.Length - 1)
-                    Assert.IsFalse(tr.Success());
-                else
-                    Assert.IsTrue(tr.Success());
-            }
+            for (int i = 0; i < nodes[0].Count; i++)
+                tr.Next();
+            var ns = tr.Next();
+            Assert.AreEqual(1, ns.Count);
+            Assert.AreEqual(nodes[1][0].NetworkAddress, ns[0].ToString());
         }
 
         [TestMethod]
@@ -169,7 +127,7 @@ namespace Neo.FileStorage.Tests
             var replicas = new int[] { 2, 2 };
 
             List<List<Node>> nodes;
-            Container ctn;
+            FSContainer ctn;
             (nodes, ctn) = PreparePlacement(selectors, replicas);
 
             var nodesCopy = CopyVectors(nodes);
@@ -183,7 +141,7 @@ namespace Neo.FileStorage.Tests
                 }
             );
 
-            Fn fn = (cv) =>
+            void fn(int cv)
             {
                 for (int i = 0; i + replicas[cv] < selectors[cv]; i += replicas[cv])
                 {
@@ -194,7 +152,7 @@ namespace Neo.FileStorage.Tests
                         Assert.AreEqual(nodes[cv][i + j].NetworkAddress, addrs[j].ToString());
                     }
                 }
-
+                Assert.IsFalse(tr.Next().Any());
                 Assert.IsFalse(tr.Success());
                 for (int i = 0; i < replicas[cv]; i++)
                 {
@@ -211,6 +169,32 @@ namespace Neo.FileStorage.Tests
                 else
                     Assert.IsTrue(tr.Success());
             }
+        }
+
+        [TestMethod]
+        public void TestLocalOperation()
+        {
+            var selectors = new int[] { 2, 3 };
+            var replicas = new int[] { 1, 2 };
+
+            List<List<Node>> nodes;
+            FSContainer ctn;
+            (nodes, ctn) = PreparePlacement(selectors, replicas);
+
+            var tr = new Traverser(
+                new TestBuilder(new List<List<Node>>() { new List<Node> { nodes[1][1] } }),
+                ctn.PlacementPolicy,
+                new Address
+                {
+                    ContainerId = ctn.CalCulateAndGetId,
+                },
+                1
+            );
+            Assert.IsTrue(tr.Next().Any());
+            Assert.IsFalse(tr.Success());
+            tr.SubmitSuccess();
+            Assert.IsFalse(tr.Next().Any());
+            Assert.IsTrue(tr.Success());
         }
     }
 }

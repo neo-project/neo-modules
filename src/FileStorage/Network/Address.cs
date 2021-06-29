@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using Multiformats.Address;
 using Multiformats.Address.Net;
 
@@ -37,7 +38,7 @@ namespace Neo.FileStorage.Network
 
         public string ToHostAddressString()
         {
-            return ToIPAddressString();
+            return DialArgs(ma);
         }
 
         public static Address FromString(string s)
@@ -94,6 +95,142 @@ namespace Neo.FileStorage.Network
         public override string ToString()
         {
             return ma.ToString();
+        }
+
+        private string DialArgs(Multiaddress ma)
+        {
+            var res = DialArgsComponents(ma);
+            if (res.HostName)
+            {
+                return res.Network switch
+                {
+                    "ip" or "ip4" or "ip6" => res.IP,
+                    "tcp" or "tcp4" or "tcp6" or "udp" or "udp4" or "udp6" => res.IP + ":" + res.Port,
+                    _ => throw new InvalidOperationException("unreachable"),
+                };
+            }
+            return res.Network switch
+            {
+                "ip4" => res.IP,
+                "tcp4" or "udp4" => res.IP + ":" + res.Port,
+                "tcp6" or "udp6" => "[" + res.IP + "]" + ":" + res.Port,
+                "unix" => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? res.IP.Replace("/", "\\") : res.IP,
+                _ => throw new InvalidOperationException($"{ma} is not a 'thin waist' address"),
+            };
+        }
+
+        private class DialArgsComponentsResult
+        {
+            public string Network;
+            public string IP;
+            public string Port;
+            public bool HostName;
+        }
+
+        private DialArgsComponentsResult DialArgsComponents(Multiaddress ma)
+        {
+            DialArgsComponentsResult res = new();
+            foreach (var p in ma.Protocols)
+            {
+                switch (res.Network)
+                {
+                    case null:
+                        {
+                            switch (p)
+                            {
+                                case Multiformats.Address.Protocols.IP4 ip4:
+                                    {
+                                        res.Network = "ip4";
+                                        res.IP = ip4.Value.ToString();
+                                        continue;
+                                    }
+                                case Multiformats.Address.Protocols.IP6 ip6:
+                                    {
+                                        res.Network = "ip6";
+                                        res.IP = ip6.Value.ToString();
+                                        continue;
+                                    }
+                                case Multiformats.Address.Protocols.DNS dns:
+                                    {
+                                        res.Network = "ip";
+                                        res.IP = dns.Value.ToString();
+                                        res.HostName = true;
+                                        continue;
+                                    }
+                                case Multiformats.Address.Protocols.DNS4 dns4:
+                                    {
+                                        res.Network = "ip4";
+                                        res.IP = dns4.Value.ToString();
+                                        res.HostName = true;
+                                        continue;
+                                    }
+                                case Multiformats.Address.Protocols.DNS6 dns6:
+                                    {
+                                        res.Network = "ip6";
+                                        res.IP = dns6.Value.ToString();
+                                        res.HostName = true;
+                                        continue;
+                                    }
+                                case Multiformats.Address.Protocols.Unix unix:
+                                    {
+                                        res.Network = "unix";
+                                        res.IP = unix.Value.ToString();
+                                        return res;
+                                    }
+                            }
+                            break;
+                        }
+                    case "ip":
+                        {
+                            switch (p)
+                            {
+                                case Multiformats.Address.Protocols.UDP:
+                                    res.Network = "udp";
+                                    break;
+                                case Multiformats.Address.Protocols.TCP:
+                                    res.Network = "tcp";
+                                    break;
+                                default:
+                                    return res;
+                            }
+                            res.Port = p.Value.ToString();
+                            break;
+                        }
+                    case "ip4":
+                        {
+                            switch (p)
+                            {
+                                case Multiformats.Address.Protocols.UDP:
+                                    res.Network = "udp4";
+                                    break;
+                                case Multiformats.Address.Protocols.TCP:
+                                    res.Network = "tcp4";
+                                    break;
+                                default:
+                                    return res;
+                            }
+                            res.Port = p.Value.ToString();
+                            break;
+                        }
+                    case "ip6":
+                        {
+                            switch (p)
+                            {
+                                case Multiformats.Address.Protocols.UDP:
+                                    res.Network = "udp6";
+                                    break;
+                                case Multiformats.Address.Protocols.TCP:
+                                    res.Network = "tcp6";
+                                    break;
+                                default:
+                                    return res;
+                            }
+                            res.Port = p.Value.ToString();
+                            break;
+                        }
+                }
+            }
+            return res;
         }
     }
 }
