@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Google.Protobuf;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.LocalObjectStorage.Engine;
@@ -23,27 +25,28 @@ namespace Neo.FileStorage.Services.Object.Get
         public Client MorphClient { get; init; }
         public TraverserGenerator TraverserGenerator { get; init; }
 
-        public void Get(GetPrm prm)
+        public void Get(GetPrm prm, CancellationToken cancellation)
         {
-            Get(prm, null, false);
+            Get(prm, null, false, cancellation);
         }
 
 
-        public void Head(HeadPrm prm)
+        public void Head(HeadPrm prm, CancellationToken cancellation)
         {
-            Get(prm, null, true);
+            Get(prm, null, true, cancellation);
         }
 
-        public void GetRange(RangePrm prm)
+        public void GetRange(RangePrm prm, CancellationToken cancellation)
         {
-            Get(prm, prm.Range, false);
+            Get(prm, prm.Range, false, cancellation);
         }
 
-        public GetRangeHashResponse GetRangeHash(RangeHashPrm prm)
+        public GetRangeHashResponse GetRangeHash(RangeHashPrm prm, CancellationToken cancellation)
         {
             List<byte[]> hashes = new();
             foreach (var range in prm.Ranges)
             {
+                if (cancellation.IsCancellationRequested) throw new OperationCanceledException();
                 var writer = new RangeHashGenerator(prm.HashType);
                 var range_prm = new RangePrm
                 {
@@ -51,7 +54,7 @@ namespace Neo.FileStorage.Services.Object.Get
                     Writer = writer,
                 };
                 range_prm.WithGetCommonPrm(prm);
-                Get(range_prm, range, false);
+                Get(range_prm, range, false, cancellation);
                 hashes.Add(writer.GetHash());
             }
             GetRangeHashResponse resp = new();
@@ -60,13 +63,14 @@ namespace Neo.FileStorage.Services.Object.Get
             return resp;
         }
 
-        internal void Get(GetCommonPrm prm, FSRange range, bool head_only)
+        internal void Get(GetCommonPrm prm, FSRange range, bool head_only, CancellationToken cancellation)
         {
             RangePrm range_prm = new();
             range_prm.WithGetCommonPrm(prm);
             range_prm.Range = range;
             var executor = new ExecuteContext
             {
+                Cancellation = cancellation,
                 Prm = range_prm,
                 Range = range,
                 HeadOnly = head_only,

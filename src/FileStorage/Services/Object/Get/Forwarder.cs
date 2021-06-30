@@ -1,5 +1,6 @@
 using System;
 using System.Security.Cryptography;
+using System.Threading;
 using Google.Protobuf;
 using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Cryptography;
@@ -11,10 +12,11 @@ namespace Neo.FileStorage.Services.Object.Get
 {
     public class Forwarder
     {
+        private readonly CancellationToken cancellation;
         private readonly ECDsa key;
         private readonly IRequest request;
 
-        public Forwarder(ECDsa key, IRequest req)
+        public Forwarder(ECDsa key, IRequest req, CancellationToken cancellation)
         {
             this.key = key;
             request = req;
@@ -23,6 +25,7 @@ namespace Neo.FileStorage.Services.Object.Get
             meta.Origin = req.MetaHeader;
             request.MetaHeader = meta;
             key.SignRequest(request);
+            this.cancellation = cancellation;
         }
 
         public FSObject Forward(IFSRawClient client)

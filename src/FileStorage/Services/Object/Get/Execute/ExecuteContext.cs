@@ -1,6 +1,6 @@
 using System;
+using System.Threading;
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using FSObject = Neo.FileStorage.API.Object.Object;
@@ -10,6 +10,7 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
 {
     public partial class ExecuteContext
     {
+        public CancellationToken Cancellation { get; init; }
         public RangePrm Prm { get; init; }
         public GetService GetService { get; init; }
         public FSRange Range { get; init; }

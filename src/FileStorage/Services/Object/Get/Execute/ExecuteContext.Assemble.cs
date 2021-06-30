@@ -62,7 +62,7 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
                 ObjectId = oid,
             };
             prm.Local = false;
-            GetService.Get(prm, range, false);
+            GetService.Get(prm, range, false, Cancellation);
             var child = writer.Obj;
             if (with_header && !child.IsChild())
             {
@@ -156,7 +156,7 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
             prm.Short = false;
             var writer = new SimpleObjectWriter();
             prm.Writer = writer;
-            GetService.Head(prm);
+            GetService.Head(prm, Cancellation);
             var child = writer.Obj;
             if (child.ParentId is not null && !child.IsChild())
             {

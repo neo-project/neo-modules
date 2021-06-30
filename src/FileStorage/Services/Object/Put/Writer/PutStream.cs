@@ -11,14 +11,13 @@ using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using Neo.FileStorage.Services.ObjectManager.Transformer;
-using Neo.FileStorage.Services.Reputaion.Local.Client;
 
 namespace Neo.FileStorage.Services.Object.Put.Writer
 {
     public class PutStream : IRequestStream
     {
         public PutService PutService { get; init; }
-        public CancellationToken Cancellation;
+        public CancellationToken Cancellation { get; init; }
 
         private Traverser traverser;
         private IObjectTarget target;

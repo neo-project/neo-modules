@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.Services.Object.Get.Writer;
 using Neo.FileStorage.Services.Object.Util;
@@ -7,7 +8,7 @@ namespace Neo.FileStorage.Services.Object.Get
 {
     public partial class GetService
     {
-        public GetPrm ToGetPrm(GetRequest request, Action<GetResponse> handler)
+        public GetPrm ToGetPrm(GetRequest request, Action<GetResponse> handler, CancellationToken cancellation)
         {
             var key = KeyStorage.GetKey(request.MetaHeader.SessionToken);
             var prm = GetPrm.FromRequest(request);
@@ -17,11 +18,11 @@ namespace Neo.FileStorage.Services.Object.Get
                 Handler = handler
             };
             if (!prm.Local)
-                prm.Forwarder = new(key, request);
+                prm.Forwarder = new(key, request, cancellation);
             return prm;
         }
 
-        public HeadPrm ToHeadPrm(HeadRequest request, HeadResponse response)
+        public HeadPrm ToHeadPrm(HeadRequest request, HeadResponse response, CancellationToken cancellation)
         {
             var key = KeyStorage.GetKey(request.MetaHeader.SessionToken);
             var prm = HeadPrm.FromRequest(request);
@@ -32,7 +33,7 @@ namespace Neo.FileStorage.Services.Object.Get
                 Response = response,
             };
             if (!prm.Local)
-                prm.Forwarder = new(key, request);
+                prm.Forwarder = new(key, request, cancellation);
             return prm;
         }
 
@@ -44,7 +45,7 @@ namespace Neo.FileStorage.Services.Object.Get
             return prm;
         }
 
-        public RangePrm ToRangePrm(GetRangeRequest request, Action<GetRangeResponse> handler)
+        public RangePrm ToRangePrm(GetRangeRequest request, Action<GetRangeResponse> handler, CancellationToken cancellation)
         {
             var key = KeyStorage.GetKey(request.MetaHeader.SessionToken);
             var prm = RangePrm.FromRequest(request);
@@ -54,7 +55,7 @@ namespace Neo.FileStorage.Services.Object.Get
                 Handler = handler,
             };
             if (!prm.Local)
-                prm.Forwarder = new(key, request);
+                prm.Forwarder = new(key, request, cancellation);
             return prm;
         }
     }

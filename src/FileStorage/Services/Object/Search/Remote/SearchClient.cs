@@ -27,7 +27,8 @@ namespace Neo.FileStorage.Services.Object.Search.Remote
                 {
                     Epoch = context.Prm.NetmapEpoch,
                     Key = context.Prm.Key,
-                }).Result;
+                },
+                context.Cancellation).Result;
         }
     }
 }

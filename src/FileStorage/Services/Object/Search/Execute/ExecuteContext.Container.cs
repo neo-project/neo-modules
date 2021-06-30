@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Morph.Invoker;
@@ -45,7 +46,10 @@ namespace Neo.FileStorage.Services.Object.Search.Execute
                     return false;
                 }
                 foreach (var addr in addrs)
+                {
+                    if (Cancellation.IsCancellationRequested) throw new OperationCanceledException();
                     ProcessNode(addr);
+                }
             }
         }
     }

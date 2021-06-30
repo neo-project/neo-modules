@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Morph.Invoker;
@@ -45,6 +46,7 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
                 }
                 foreach (var addr in addrs)
                 {
+                    if (Cancellation.IsCancellationRequested) throw new OperationCanceledException();
                     if (ProcessNode(addr))
                     {
                         Log(nameof(ExecuteOnContainer), LogLevel.Debug, " completing the operation");

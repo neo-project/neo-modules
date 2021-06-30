@@ -136,7 +136,7 @@ namespace Neo.FileStorage.Tests.Services.Object.Search
                 ContainerID = cid,
                 Writer = w,
             };
-            srv.Search(prm);
+            srv.Search(prm, default);
             Assert.AreEqual(10, w.IDs.Count);
         }
 
@@ -157,7 +157,7 @@ namespace Neo.FileStorage.Tests.Services.Object.Search
                 ContainerID = cid,
                 Writer = w,
             };
-            Assert.ThrowsException<ArgumentNullException>(() => srv.Search(prm));
+            Assert.ThrowsException<ArgumentNullException>(() => srv.Search(prm, default));
         }
 
         [TestMethod]
@@ -205,7 +205,7 @@ namespace Neo.FileStorage.Tests.Services.Object.Search
                 ContainerID = cid,
                 Writer = w,
             };
-            srv.Search(prm);
+            srv.Search(prm, default);
             Assert.AreEqual(ids1.Count + ids2.Count, w.IDs.Count);
         }
     }

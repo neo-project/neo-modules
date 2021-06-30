@@ -1,9 +1,11 @@
+using System.Threading;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 
 namespace Neo.FileStorage.Services.Object.Search.Execute
 {
     public partial class ExecuteContext
     {
+        public CancellationToken Cancellation { get; init; }
         public SearchPrm Prm { get; init; }
         public SearchService SearchService { get; init; }
 

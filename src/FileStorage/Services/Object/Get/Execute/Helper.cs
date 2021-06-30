@@ -22,20 +22,23 @@ namespace Neo.FileStorage.Services.Object.Get.Execute
                     context.Prm.Address,
                     false,
                     context.Prm.Raw,
-                    options).Result;
+                    options,
+                    context.Cancellation).Result;
             }
             if (context.Range is not null)
             {
                 var data = client.GetObjectPayloadRangeData(context.Prm.Address,
                     context.Range,
                     context.Prm.Raw,
-                    options).Result;
+                    options,
+                    context.Cancellation).Result;
                 return new() { Payload = ByteString.CopyFrom(data) };
             }
             return client.GetObject(
                 context.Prm.Address,
                 context.Prm.Raw,
-                options).Result;
+                options,
+                context.Cancellation).Result;
         }
 
         public static FSObject GetObject(this StorageEngine engine, ExecuteContext context)

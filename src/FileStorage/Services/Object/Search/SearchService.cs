@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Session;
@@ -19,7 +20,7 @@ namespace Neo.FileStorage.Services.Object.Search
         public ISearchClientCache ClientCache { get; init; }
         public ITraverserGenerator TraverserGenerator { get; init; }
 
-        public SearchPrm ToSearchPrm(SearchRequest request, Action<SearchResponse> handler)
+        public SearchPrm ToSearchPrm(SearchRequest request, Action<SearchResponse> handler, CancellationToken cancellation)
         {
             var key = KeyStorage.GetKey(request.MetaHeader.SessionToken);
             var prm = SearchPrm.FromRequest(request);
@@ -37,16 +38,17 @@ namespace Neo.FileStorage.Services.Object.Search
                 key.SignRequest(request);
                 prm.Forwarder = client =>
                 {
-                    return client.SearchObject(request).Result;
+                    return client.SearchObject(request, context: cancellation).Result;
                 };
             }
             return prm;
         }
 
-        public void Search(SearchPrm prm)
+        public void Search(SearchPrm prm, CancellationToken cancellation)
         {
             ExecuteContext executor = new()
             {
+                Cancellation = cancellation,
                 Prm = prm,
                 SearchService = this,
             };
