@@ -3,6 +3,7 @@
     "AutoStart": false,
     "AsInnerRing": false,
     "AsStorage": true,
+    "Port": 8080,
     "WalletPath": "./FSStorage/wallet.json",
     "Password": "123456",
     "Contracts": {
@@ -99,6 +100,8 @@
       "Shards": [
         {
           "UseWriteCache": true,
+          "RemoveBatchSize": 100,
+          "RemoverInterval": 60000,
           "WriteCache": {
             "Path": "./Data/0/Data_WriteCache",
             "MaxMemorySize": 1073741824,
@@ -114,7 +117,7 @@
             "Blobovnicza": {
               "Size": 1073741824,
               "ShallowDepth": 2,
-              "ShallowWidth": 16,
+              "ShallowWidth": 2,
               "OpenCacheSize": 16
             }
           },
@@ -139,7 +142,7 @@
             "Blobovnicza": {
               "Size": 1073741824,
               "ShallowDepth": 2,
-              "ShallowWidth": 16,
+              "ShallowWidth": 2,
               "OpenCacheSize": 16
             }
           },

@@ -14,6 +14,7 @@ namespace Neo.FileStorage
         public string SideChainConfig;
         public bool AsInnerRing;
         public bool AsStorage;
+        public int Port;
         public string WalletPath;
         public string Password;
         public UInt160 NetmapContractHash;
@@ -75,6 +76,7 @@ namespace Neo.FileStorage
             AutoStart = section.GetValue("AutoStart", false);
             AsInnerRing = section.GetValue("AsInnerRing", false);
             AsStorage = section.GetValue("AsStorage", true);
+            Port = section.GetValue("Port", 8080);
             WalletPath = section.GetSection("WalletPath").Value;
             Password = section.GetSection("Password").Value;
 
@@ -151,6 +153,7 @@ namespace Neo.FileStorage
             SideChainFee = fee.GetValue("SideChain", 5000L);
 
             LocalStorageSettings = ObjectStorageSettings.Load(section.GetSection("Storage"));
+            Console.WriteLine(LocalStorageSettings.Shards.Length);
             if (!LocalStorageSettings.Shards.Any()) LocalStorageSettings = ObjectStorageSettings.Default;
         }
 
@@ -289,6 +292,7 @@ namespace Neo.FileStorage
     {
         public bool UseWriteCache;
         public int RemoverInterval;
+        public int RemoveBatchSize;
         public WriteCacheSettings WriteCacheSettings;
         public BlobStorageSettings BlobStorageSettings;
         public MetabaseSettings MetabaseSettings;
@@ -300,7 +304,8 @@ namespace Neo.FileStorage
             Default = new()
             {
                 UseWriteCache = true,
-                RemoverInterval = 10000,
+                RemoverInterval = 60000,
+                RemoveBatchSize = 100,
                 WriteCacheSettings = WriteCacheSettings.Default,
                 BlobStorageSettings = BlobStorageSettings.Default,
                 MetabaseSettings = MetabaseSettings.Default,
@@ -338,7 +343,7 @@ namespace Neo.FileStorage
         {
             return new()
             {
-                Shards = section.GetChildren().Select(p => ShardSettings.Load(p)).ToArray(),
+                Shards = section.GetSection("Shards").GetChildren().Select(p => ShardSettings.Load(p)).ToArray(),
             };
         }
     }

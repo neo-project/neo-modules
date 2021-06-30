@@ -18,7 +18,7 @@ namespace Neo.FileStorage
         public const string ReourcePath = "./Resources/";
         public const string DefaultTargetPath = "./Data_UNLOCODE";
 
-        [ConsoleCommand("fs show state", Category = "StateService", Description = "Show side chain node height and connection")]
+        [ConsoleCommand("fs show state", Category = "FileStorageService", Description = "Show side chain node height and connection")]
         private void OnNodeHeight()
         {
             var localNode = SideSystem.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
@@ -27,19 +27,19 @@ namespace Neo.FileStorage
             Console.WriteLine($"block: {height}/{headerHeight}  connected: {localNode.ConnectedCount}  unconnected: {localNode.UnconnectedCount}");
         }
 
-        [ConsoleCommand("fs start ir", Category = "StateService", Description = "Start as inner ring node")]
+        [ConsoleCommand("fs start ir", Category = "FileStorageService", Description = "Start as inner ring node")]
         private void OnStartIR()
         {
             StartIR(walletProvider.GetWallet());
         }
 
-        [ConsoleCommand("fs start storage", Category = "StateService", Description = "Start as storage node")]
+        [ConsoleCommand("fs start storage", Category = "FileStorageService", Description = "Start as storage node")]
         private void OnStartStorage()
         {
-            StartStorage(walletProvider.GetWallet());
+            StartStorage(walletProvider?.GetWallet());
         }
 
-        [ConsoleCommand("fs generate", Category = "FileStorage", Description = "generate UN/LOCODE database for NeoFS using specified paths")]
+        [ConsoleCommand("fs generate", Category = "FileStorageService", Description = "generate UN/LOCODE database for NeoFS using specified paths")]
         private void OnGenerate(string tableInPaths, string tableSubDivPath, string airportsPath, string countriesPath, string continentsPath, string targetDBPath)
         {
             CSVTable locodeDB = new(tableInPaths.Split(","), tableSubDivPath);
@@ -56,7 +56,7 @@ namespace Neo.FileStorage
             targetDb.FillDatabase(locodeDB, airportsDB, continentDB);
         }
 
-        [ConsoleCommand("fs generate default", Category = "FileStorage", Description = "generate UN/LOCODE database for NeoFS using default resources")]
+        [ConsoleCommand("fs generate default", Category = "FileStorageService", Description = "generate UN/LOCODE database for NeoFS using default resources")]
         private void OnGenerate()
         {
             string[] tableInPaths = new string[]

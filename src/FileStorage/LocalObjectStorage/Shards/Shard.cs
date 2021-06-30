@@ -18,6 +18,8 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
 {
     public class Shard : IDisposable
     {
+        public const int DefaultRemoveBatchSize = 100;
+        public const int DefaultRemoveInterval = 60000;
         public ShardID ID { get; private set; }
         private readonly bool useWriteCache;
         private readonly int removeBatchSize;
@@ -52,7 +54,8 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             Mode = ShardMode.Undefined;
             expiredTomestonesCallback = expiredCallback;
             //GC
-            removeInteral = settings.RemoverInterval;
+            removeInteral = settings.RemoverInterval <= 0 ? DefaultRemoveInterval : settings.RemoverInterval;
+            removeBatchSize = settings.RemoveBatchSize <= 0 ? DefaultRemoveBatchSize : settings.RemoveBatchSize;
         }
 
         public void Open()

@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using Akka.Actor;
+using Google.Protobuf;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Hosting;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.LocalObjectStorage.Shards;
@@ -49,13 +53,27 @@ namespace Neo.FileStorage
         {
             system = side;
             key = wallet.GetAccounts().First().GetKey().PrivateKey.LoadPrivateKey();
+            LocalNodeInfo = new()
+            {
+                Address = "127.0.0.1:8080",
+                PublicKey = ByteString.CopyFrom(key.PublicKey()),
+            };
             StorageEngine localStorage = new();
             int i = 0;
             foreach (var shardSettings in Settings.Default.LocalStorageSettings.Shards)
             {
-                localStorage.AddShard(new Shard(shardSettings, system.ActorSystem.ActorOf(WorkerPool.Props($"Shard{i}", 2)), localStorage.ProcessExpiredTomstones));
+                var shard = new Shard(shardSettings, system.ActorSystem.ActorOf(WorkerPool.Props($"Shard{i}", 2)), localStorage.ProcessExpiredTomstones);
+                netmapProcessor.AddEpochHandler(p =>
+                {
+                    if (p is MorphEvent.NewEpochEvent e)
+                    {
+                        shard.OnNewEpoch(e.EpochNumber);
+                    }
+                });
+                localStorage.AddShard(shard);
                 i++;
             }
+            localStorage.Open();
             morphClient = new Client
             {
                 client = new MorphClient()
@@ -65,17 +83,34 @@ namespace Neo.FileStorage
                 }
             };
             listener = system.ActorSystem.ActorOf(Listener.Props("storage"));
-            SessionServiceImpl sessionService = InitializeSession();
             AccountingServiceImpl accountingService = InitializeAccounting();
             ContainerServiceImpl containerService = InitializeContainer(localStorage);
             ControlServiceImpl controlService = InitializeControl(localStorage);
             NetmapServiceImpl netmapService = InitializeNetmap();
             ObjectServiceImpl objectService = InitializeObject(localStorage);
-            ReputationServiceImpl reputationServiceImpl = InitializeReputation();
+            ReputationServiceImpl reputationService = InitializeReputation();
+            SessionServiceImpl sessionService = InitializeSession();
             listener.Tell(new Listener.BindProcessorEvent { processor = netmapProcessor });
             listener.Tell(new Listener.BindProcessorEvent { processor = containerProcessor });
             listener.Tell(new Listener.Start());
-            //Start grpc server
+            Host.CreateDefaultBuilder()
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.ConfigureKestrel(options =>
+                    {
+                        options.ListenAnyIP(Settings.Default.Port,
+                            listenOptions => { listenOptions.Protocols = HttpProtocols.Http2; });
+                    });
+                    webBuilder.UseStartup(context => new Startup
+                    {
+                        AccountingService = accountingService,
+                        ContainerService = containerService,
+                        ControlService = controlService,
+                        NetmapService = netmapService,
+                        ObjectService = objectService,
+                        ReputationService = reputationService,
+                    });
+                });
         }
 
         public void OnPersisted(Block _1, DataCache _2, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
