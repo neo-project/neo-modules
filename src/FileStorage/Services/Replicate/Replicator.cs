@@ -3,10 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Akka.Actor;
 using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.LocalObjectStorage.Engine;
-using Neo.FileStorage.Network.Cache;
 using Neo.FileStorage.Services.Object.Put;
-using Neo.FileStorage.Services.Object.Util;
 using FSAddress = Neo.FileStorage.API.Refs.Address;
 using FSObject = Neo.FileStorage.API.Object.Object;
 

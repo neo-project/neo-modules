@@ -7,6 +7,7 @@ using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.API.Reputation;
 using Neo.FileStorage.API.Session;
 using Neo.FileStorage.Services.Reputaion.Local.Storage;
 using FSClient = Neo.FileStorage.API.Client.Client;
@@ -17,10 +18,10 @@ using UsedSpaceAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceReq
 
 namespace Neo.FileStorage.Services.Reputaion.Local.Client
 {
-    public class ReputationClient
+    public class ReputationClient : IFSClient
     {
         public ReputationClientCache ClientCache { get; init; }
-        public FSClient FSClient { get; init; }
+        public IFSClient FSClient { get; init; }
         public UpdatePrm Prm { get; init; }
 
         private void SumbmitResult(bool sat)
@@ -28,6 +29,13 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             Prm.Sat = sat;
             Prm.Epoch = ClientCache.StorageNode.CurrentEpoch;
             ClientCache.ReputationStorage.Update(Prm);
+        }
+
+        public void Dispose() { }
+
+        public IFSRawClient Raw()
+        {
+            return FSClient.Raw();
         }
 
         public async Task<API.Accounting.Decimal> GetBalance(OwnerID owner = null, CallOptions options = null, CancellationToken context = default)
@@ -45,13 +53,13 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             }
         }
 
-        public async Task<FSContainer> GetContainer(ContainerID cid, CallOptions options = null, CancellationToken context = default)
+        public async Task<ContainerWithSignature> GetContainer(ContainerID cid, CallOptions options = null, CancellationToken context = default)
         {
             try
             {
                 var r = await FSClient.GetContainer(cid, options, context);
                 SumbmitResult(true);
-                return r.Container;
+                return r;
             }
             catch (Exception)
             {
@@ -104,7 +112,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             }
         }
 
-        public async Task<EAclWithSignature> GetEAclWithSignature(ContainerID cid, CallOptions options = null, CancellationToken context = default)
+        public async Task<EAclWithSignature> GetEAcl(ContainerID cid, CallOptions options = null, CancellationToken context = default)
         {
             try
             {
@@ -133,6 +141,34 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             }
         }
 
+        public async Task AnnounceTrust(ulong epoch, List<API.Reputation.Trust> trusts, CallOptions options = null, CancellationToken context = default)
+        {
+            try
+            {
+                await FSClient.AnnounceTrust(epoch, trusts, options, context);
+                SumbmitResult(true);
+            }
+            catch (Exception)
+            {
+                SumbmitResult(false);
+                throw;
+            }
+        }
+
+        public async Task AnnounceIntermediateTrust(ulong epoch, uint iter, PeerToPeerTrust trust, CallOptions options = null, CancellationToken context = default)
+        {
+            try
+            {
+                await FSClient.AnnounceIntermediateTrust(epoch, iter, trust, options, context);
+                SumbmitResult(true);
+            }
+            catch (Exception)
+            {
+                SumbmitResult(false);
+                throw;
+            }
+        }
+
         public async Task AnnounceContainerUsedSpace(List<UsedSpaceAnnouncement> announcements, CallOptions options = null, CancellationToken context = default)
         {
             try
@@ -147,7 +183,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             }
         }
 
-        public async Task<NodeInfo> LocalNodeInfo(CancellationToken context, CallOptions options = null)
+        public async Task<NodeInfo> LocalNodeInfo(CallOptions options = null, CancellationToken context = default)
         {
             try
             {
@@ -162,7 +198,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             }
         }
 
-        public async Task<ulong> Epoch(CancellationToken context, CallOptions options = null)
+        public async Task<ulong> Epoch(CallOptions options = null, CancellationToken context = default)
         {
             try
             {
@@ -177,7 +213,7 @@ namespace Neo.FileStorage.Services.Reputaion.Local.Client
             }
         }
 
-        public async Task<NetworkInfo> NetworkInfo(CancellationToken context, CallOptions options = null)
+        public async Task<NetworkInfo> NetworkInfo(CallOptions options = null, CancellationToken context = default)
         {
             try
             {

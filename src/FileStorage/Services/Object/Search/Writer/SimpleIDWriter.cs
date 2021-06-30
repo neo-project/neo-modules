@@ -1,4 +1,5 @@
 
+using System;
 using System.Collections.Generic;
 using Neo.FileStorage.API.Refs;
 
@@ -10,6 +11,7 @@ namespace Neo.FileStorage.Services.Object.Search.Writer
 
         public void WriteIDs(IEnumerable<ObjectID> ids)
         {
+            if (ids is null) throw new ArgumentNullException(nameof(ids));
             IDs.AddRange(ids);
         }
     }

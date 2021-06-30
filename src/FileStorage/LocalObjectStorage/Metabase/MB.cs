@@ -28,7 +28,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Metabase
         private readonly byte[] AttributePrefix = new byte[] { 0x0c };
         private readonly byte[] ZeroValue = new byte[] { 0xFF };
         private readonly string path;
-        private readonly IDB db;
+        private IDB db;
         private readonly Dictionary<MatchType, Func<string, byte[], string, bool>> matchers;
 
         public MB(string p)
@@ -40,12 +40,16 @@ namespace Neo.FileStorage.LocalObjectStorage.Metabase
                 { MatchType.StringEqual, StringEqualMatcher },
                 { MatchType.StringNotEqual, StringNotEqualMatcher }
             };
+        }
+
+        public void Open()
+        {
             db = new DB(path);
         }
 
         public void Dispose()
         {
-            db.Dispose();
+            db?.Dispose();
         }
 
         private string StringifyValue(string key, byte[] value)

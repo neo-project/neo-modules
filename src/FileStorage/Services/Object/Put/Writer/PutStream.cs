@@ -11,14 +11,13 @@ using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using Neo.FileStorage.Services.ObjectManager.Transformer;
-using Neo.FileStorage.Services.Reputaion.Local.Client;
 
 namespace Neo.FileStorage.Services.Object.Put.Writer
 {
     public class PutStream : IRequestStream
     {
         public PutService PutService { get; init; }
-        public CancellationToken Cancellation;
+        public CancellationToken Cancellation { get; init; }
 
         private Traverser traverser;
         private IObjectTarget target;
@@ -146,10 +145,10 @@ namespace Neo.FileStorage.Services.Object.Put.Writer
             target.WriteChunk(chunk.ToByteArray());
         }
 
-        public async void RelayRequest(ReputationClient client)
+        public async void RelayRequest(IFSClient client)
         {
             if (init is null) return;
-            using var stream = await client.FSClient.PutObject(init, context: Cancellation);
+            using var stream = await client.Raw().PutObject(init, context: Cancellation);
             foreach (var chunk in chunks)
                 stream.Write(chunk);
             await stream.Close();

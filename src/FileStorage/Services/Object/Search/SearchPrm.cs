@@ -12,7 +12,7 @@ namespace Neo.FileStorage.Services.Object.Search
         public ContainerID ContainerID;
         public SearchFilters Filters;
         public ISearchResponseWriter Writer;
-        public Func<Client, List<ObjectID>> Forwarder;
+        public Func<IFSRawClient, List<ObjectID>> Forwarder;
         public static SearchPrm FromRequest(SearchRequest request)
         {
             var prm = new SearchPrm

@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.InnerRing.Invoker;
@@ -5,10 +9,6 @@ using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.IO;
 using Neo.Plugins.util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
 using static Neo.FileStorage.Utils.WorkerPool;
 
@@ -276,7 +276,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 else
                     MorphCli.InvokeRemoveKeys(bindEvent.UserAccount, bindEvent.Keys);
             }
-            catch (Exception e)
+            catch
             {
                 Utility.Log(Name, LogLevel.Error, "can't approve bind/unbind event");
             }

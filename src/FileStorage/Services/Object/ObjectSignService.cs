@@ -1,8 +1,8 @@
 
-using Neo.FileStorage.API.Object;
-using Neo.FileStorage.API.Session;
 using System;
 using System.Threading;
+using Neo.FileStorage.API.Object;
+using Neo.FileStorage.API.Session;
 
 namespace Neo.FileStorage.Services.Object
 {
@@ -10,43 +10,43 @@ namespace Neo.FileStorage.Services.Object
     {
         public ObjectResponseService ResponseService { get; init; }
 
-        public DeleteResponse Delete(DeleteRequest request)
+        public DeleteResponse Delete(DeleteRequest request, CancellationToken cancellation)
         {
             return (DeleteResponse)HandleUnaryRequest(request, resp =>
             {
-                return ResponseService.Delete((DeleteRequest)resp);
+                return ResponseService.Delete((DeleteRequest)resp, cancellation);
             });
         }
 
-        public void Get(GetRequest request, Action<GetResponse> handler)
+        public void Get(GetRequest request, Action<GetResponse> handler, CancellationToken cancellation)
         {
             ResponseService.Get(request, resp => HandleServerStreamRequest(request, resp =>
             {
                 handler((GetResponse)resp);
-            }));
+            }), cancellation);
         }
 
-        public void GetRange(GetRangeRequest request, Action<GetRangeResponse> handler)
+        public void GetRange(GetRangeRequest request, Action<GetRangeResponse> handler, CancellationToken cancellation)
         {
             ResponseService.GetRange(request, resp => HandleServerStreamRequest(request, resp =>
             {
                 handler((GetRangeResponse)resp);
-            }));
+            }), cancellation);
         }
 
-        public GetRangeHashResponse GetRangeHash(GetRangeHashRequest request)
+        public GetRangeHashResponse GetRangeHash(GetRangeHashRequest request, CancellationToken cancellation)
         {
             return (GetRangeHashResponse)HandleUnaryRequest(request, resp =>
             {
-                return ResponseService.GetRangeHash((GetRangeHashRequest)resp);
+                return ResponseService.GetRangeHash((GetRangeHashRequest)resp, cancellation);
             });
         }
 
-        public HeadResponse Head(HeadRequest request)
+        public HeadResponse Head(HeadRequest request, CancellationToken cancellation)
         {
             return (HeadResponse)HandleUnaryRequest(request, resp =>
             {
-                return ResponseService.Head((HeadRequest)resp);
+                return ResponseService.Head((HeadRequest)resp, cancellation);
             });
         }
 
@@ -59,12 +59,12 @@ namespace Neo.FileStorage.Services.Object
             };
         }
 
-        public void Search(SearchRequest request, Action<SearchResponse> handler)
+        public void Search(SearchRequest request, Action<SearchResponse> handler, CancellationToken cancellation)
         {
             ResponseService.Search(request, resp => HandleServerStreamRequest(request, resp =>
             {
                 handler((SearchResponse)resp);
-            }));
+            }), cancellation);
         }
     }
 

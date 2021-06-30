@@ -25,6 +25,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             {
                 Dictionary<ContainerID, int> cids = new();
                 using MB mb = new(path);
+                mb.Open();
                 for (int i = 0; i < N; i++)
                 {
                     var obj = RandomObject(1 << 10);
@@ -68,6 +69,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 Dictionary<ContainerID, int> cids = new();
                 Dictionary<ContainerID, List<FSObject>> objs = new();
                 for (int i = 0; i < C; i++)
@@ -121,6 +123,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var cid = RandomContainerID();
                 var parent = RandomObject(cid);
                 parent.Header.Attributes.Add(new Header.Types.Attribute()
@@ -158,6 +161,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var cid = RandomContainerID();
                 var parent = RandomObject(cid);
                 var child1 = RandomObject(cid);
@@ -186,6 +190,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var address = RandomAddress();
                 mb.Inhume(address);
                 mb.Delete(address);
@@ -203,6 +208,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var obj = RandomObject();
 
                 //no object
@@ -312,6 +318,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var obj = RandomObject();
 
                 //object not found
@@ -377,6 +384,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var obj1 = RandomObject();
                 var obj2 = RandomObject();
                 mb.Put(obj1);
@@ -393,6 +401,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
                     else
                         buriedTS.Add(g.Address);
                     counter++;
+                    return false;
                 });
                 Assert.AreEqual(2, counter);
                 Assert.AreEqual(obj1.Address, buriedTS[0]);
@@ -411,6 +420,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var obj = RandomObject();
                 obj.Header.Attributes.Add(new Header.Types.Attribute()
                 {
@@ -436,6 +446,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var address1 = RandomAddress();
                 var address2 = RandomAddress();
                 var address3 = RandomAddress();
@@ -473,6 +484,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 ulong epoch = 13;
                 Dictionary<ObjectType, Address> mAlive = new(), mExpired = new();
                 foreach (var t in new ObjectType[] { ObjectType.Regular, ObjectType.Tombstone, ObjectType.StorageGroup })
@@ -500,6 +512,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var ts = RandomAddress();
                 var protected1 = RandomAddress();
                 var protected2 = RandomAddress();
@@ -529,6 +542,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var raw1 = RandomObject();
                 var raw2 = RandomObject();
                 mb.Put(raw1);
@@ -556,6 +570,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var obj1 = RandomObject();
                 BlobovniczaID bid = new byte[] { 1, 2, 3, 4 };
                 mb.Put(obj1, bid);
@@ -579,6 +594,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var cid = RandomContainerID();
                 var obj1 = RandomObject(cid);
                 obj1.Header.Attributes.Add(new Header.Types.Attribute
@@ -680,6 +696,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var cid = RandomContainerID();
                 var sid = new SplitID();
                 var small = RandomObject(cid);
@@ -813,6 +830,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var cid = RandomContainerID();
                 var obj1 = RandomObject(cid);
                 mb.Put(obj1);
@@ -842,6 +860,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var cid = RandomContainerID();
                 var obj1 = RandomObject(cid);
                 mb.Put(obj1);
@@ -875,6 +894,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var cid = RandomContainerID();
                 var v20 = new API.Refs.Version()
                 {
@@ -970,6 +990,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var cid = RandomContainerID();
                 var sid = new SplitID();
                 var parent = RandomObject(cid);
@@ -1068,6 +1089,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var cid = RandomContainerID();
                 var child1 = RandomObject(cid);
                 var child2 = RandomObject(cid);
@@ -1120,6 +1142,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var cid = RandomContainerID();
                 var obj1 = RandomObject(cid);
                 mb.Put(obj1);
@@ -1160,6 +1183,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Metabase
             try
             {
                 using MB mb = new(path);
+                mb.Open();
                 var obj1 = RandomObject();
                 var obj2 = RandomObject();
                 BlobovniczaID bid = new byte[] { 1, 2, 3, 4 };

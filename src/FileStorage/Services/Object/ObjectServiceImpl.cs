@@ -1,8 +1,8 @@
+using System;
+using System.Threading.Tasks;
 using Grpc.Core;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Object;
-using System;
-using System.Threading.Tasks;
 using APIObjectService = Neo.FileStorage.API.Object.ObjectService;
 
 namespace Neo.FileStorage.Services.Object.Acl
@@ -17,7 +17,7 @@ namespace Neo.FileStorage.Services.Object.Acl
             return Task.Run(() =>
             {
                 AclChecker.CheckRequest(request, Operation.Delete);
-                return SignService.Delete(request);
+                return SignService.Delete(request, context.CancellationToken);
             }, context.CancellationToken);
         }
 
@@ -33,7 +33,7 @@ namespace Neo.FileStorage.Services.Object.Acl
                         AclChecker.EAclCheck(info, resp);
                     }
                     responseStream.WriteAsync(resp);
-                });
+                }, context.CancellationToken);
             }, context.CancellationToken);
         }
 
@@ -46,7 +46,7 @@ namespace Neo.FileStorage.Services.Object.Acl
                 {
                     AclChecker.EAclCheck(info, resp);
                     responseStream.WriteAsync(resp);
-                });
+                }, context.CancellationToken);
             }, context.CancellationToken);
         }
 
@@ -55,7 +55,7 @@ namespace Neo.FileStorage.Services.Object.Acl
             return Task.Run(() =>
             {
                 AclChecker.CheckRequest(request, Operation.Getrangehash);
-                return SignService.GetRangeHash(request);
+                return SignService.GetRangeHash(request, context.CancellationToken);
             }, context.CancellationToken);
         }
 
@@ -64,7 +64,7 @@ namespace Neo.FileStorage.Services.Object.Acl
             return Task.Run(() =>
             {
                 var info = AclChecker.CheckRequest(request, Operation.Head);
-                var resp = SignService.Head(request);
+                var resp = SignService.Head(request, context.CancellationToken);
                 AclChecker.EAclCheck(info, resp);
                 return resp;
             }, context.CancellationToken);
@@ -104,7 +104,7 @@ namespace Neo.FileStorage.Services.Object.Acl
                 {
                     AclChecker.EAclCheck(info, resp);
                     responseStream.WriteAsync(resp);
-                });
+                }, context.CancellationToken);
             }, context.CancellationToken);
         }
     }

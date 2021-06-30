@@ -1,8 +1,8 @@
 using System;
 using Neo.FileStorage.API.Cryptography;
+using Neo.FileStorage.Cache;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Morph.Event;
-using Neo.FileStorage.Network.Cache;
 using Neo.FileStorage.Services.Container;
 using Neo.FileStorage.Services.Container.Announcement;
 using Neo.FileStorage.Services.Container.Announcement.Control;

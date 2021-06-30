@@ -145,10 +145,10 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
 
         public void Dispose()
         {
-            timer.Stop();
-            timer.Dispose();
+            timer?.Stop();
+            timer?.Dispose();
             db?.Dispose();
-            flushed.Purge();
+            flushed?.Purge();
         }
 
         public FSObject Get(Address address)

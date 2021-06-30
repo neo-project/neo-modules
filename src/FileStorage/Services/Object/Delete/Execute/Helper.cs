@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Services.Object.Get;
@@ -5,10 +8,6 @@ using Neo.FileStorage.Services.Object.Get.Writer;
 using Neo.FileStorage.Services.Object.Put;
 using Neo.FileStorage.Services.Object.Search;
 using Neo.FileStorage.Services.Object.Search.Writer;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Delete.Execute
@@ -26,7 +25,7 @@ namespace Neo.FileStorage.Services.Object.Delete.Execute
                 Short = false,
             };
             prm.WithCommonPrm(context.Prm);
-            service.Head(prm);
+            service.Head(prm, context.Cancellation);
             return writer.Obj;
         }
 
@@ -81,13 +80,13 @@ namespace Neo.FileStorage.Services.Object.Delete.Execute
                 Writer = writer,
             };
             prm.WithCommonPrm(context.Prm);
-            service.Search(prm);
+            service.Search(prm, context.Cancellation);
             return writer.IDs;
         }
 
         public static ObjectID Put(this PutService service, ExecuteContext context, bool broadcast)
         {
-            var streamer = service.Put(new CancellationTokenSource().Token);
+            var streamer = service.Put(context.Cancellation);
             var prm = new PutInitPrm
             {
                 Header = context.TombstoneObject.CutPayload(),

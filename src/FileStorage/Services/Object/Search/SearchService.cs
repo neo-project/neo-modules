@@ -1,25 +1,26 @@
 using System;
+using System.Threading;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Session;
-using Neo.FileStorage.LocalObjectStorage.Engine;
+using Neo.FileStorage.Cache;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Object.Search.Execute;
+using Neo.FileStorage.Services.Object.Search.Remote;
 using Neo.FileStorage.Services.Object.Search.Writer;
 using Neo.FileStorage.Services.Object.Util;
-using Neo.FileStorage.Services.Reputaion.Local.Client;
 
 namespace Neo.FileStorage.Services.Object.Search
 {
     public class SearchService
     {
         public KeyStorage KeyStorage { get; init; }
-        public StorageEngine LocalStorage { get; init; }
-        public Client MorphClient { get; init; }
-        public ReputationClientCache ClientCache { get; init; }
-        public TraverserGenerator TraverserGenerator { get; init; }
+        public ILocalSearchSource LocalStorage { get; init; }
+        public IEpochSource MorphClient { get; init; }
+        public ISearchClientCache ClientCache { get; init; }
+        public ITraverserGenerator TraverserGenerator { get; init; }
 
-        public SearchPrm ToSearchPrm(SearchRequest request, Action<SearchResponse> handler)
+        public SearchPrm ToSearchPrm(SearchRequest request, Action<SearchResponse> handler, CancellationToken cancellation)
         {
             var key = KeyStorage.GetKey(request.MetaHeader.SessionToken);
             var prm = SearchPrm.FromRequest(request);
@@ -37,16 +38,17 @@ namespace Neo.FileStorage.Services.Object.Search
                 key.SignRequest(request);
                 prm.Forwarder = client =>
                 {
-                    return client.SearchObject(request).Result;
+                    return client.SearchObject(request, context: cancellation).Result;
                 };
             }
             return prm;
         }
 
-        public void Search(SearchPrm prm)
+        public void Search(SearchPrm prm, CancellationToken cancellation)
         {
             ExecuteContext executor = new()
             {
+                Cancellation = cancellation,
                 Prm = prm,
                 SearchService = this,
             };

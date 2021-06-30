@@ -26,7 +26,9 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Shards
                 settings.WriteCacheSettings.Path = testName + "/" + settings.WriteCacheSettings.Path;
                 settings.WriteCacheSettings.MaxMemorySize = 0;
             }
-            return new(settings, null);
+            Shard shard = new(settings, null, null);
+            shard.Open();
+            return shard;
         }
 
         private void TestShardGet(Shard shard)

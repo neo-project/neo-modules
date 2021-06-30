@@ -50,7 +50,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
             value.Dispose();
         }
 
-        public void Initialize()
+        public void Open()
         {
             bool DoInit(string path)
             {

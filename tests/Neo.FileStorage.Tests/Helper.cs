@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using Google.Protobuf;
 using Neo.Cryptography;
@@ -73,6 +74,14 @@ namespace Neo.FileStorage.Tests
         public static ObjectID RandomObjectID()
         {
             return ObjectID.FromSha256Bytes(RandomSha256());
+        }
+
+        public static List<ObjectID> RandomObjectIDs(int n)
+        {
+            List<ObjectID> results = new();
+            for (int i = 0; i < n; i++)
+                results.Add(RandomObjectID());
+            return results;
         }
 
         public static Address RandomAddress(ContainerID cid = null)

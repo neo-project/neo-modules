@@ -48,6 +48,7 @@ namespace Neo.FileStorage
             if (!Settings.Default.AsInnerRing && SideSystem is null)
             {
                 SideSystem = system;
+                SideSystem.ServiceAdded += NeoSystem_ServiceAdded;
                 return;
             }
             if (MainSystem is null)
@@ -114,7 +115,10 @@ namespace Neo.FileStorage
             if (service is IWalletProvider)
             {
                 walletProvider = service as IWalletProvider;
-                MainSystem.ServiceAdded -= NeoSystem_ServiceAdded;
+                if (Settings.Default.AsInnerRing)
+                    MainSystem.ServiceAdded -= NeoSystem_ServiceAdded;
+                else if (Settings.Default.AsStorage)
+                    SideSystem.ServiceAdded -= NeoSystem_ServiceAdded;
                 if (Settings.Default.AutoStart)
                 {
                     walletProvider.WalletChanged += WalletProvider_WalletChanged;
@@ -145,6 +149,7 @@ namespace Neo.FileStorage
         {
             if (SideSystem is null) throw new InvalidOperationException("Neo system not initialized");
             if (StorageService is not null) throw new InvalidOperationException("Storage service already started");
+            if (wallet is null) throw new InvalidOperationException("Please open wallet first");
             StorageService = new(wallet, SideSystem);
         }
 

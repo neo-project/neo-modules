@@ -1,11 +1,10 @@
+using System;
+using System.Threading;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.Services.Object.Delete;
 using Neo.FileStorage.Services.Object.Get;
 using Neo.FileStorage.Services.Object.Put;
-using Neo.FileStorage.Services.Object.Put.Writer;
 using Neo.FileStorage.Services.Object.Search;
-using System;
-using System.Threading;
 
 namespace Neo.FileStorage.Services.Object
 {
@@ -16,38 +15,38 @@ namespace Neo.FileStorage.Services.Object
         public DeleteService DeleteService { get; init; }
         public SearchService SearchService { get; init; }
 
-        public DeleteResponse Delete(DeleteRequest request)
+        public DeleteResponse Delete(DeleteRequest request, CancellationToken cancellation)
         {
             var resp = new DeleteResponse();
             var prm = DeleteService.ToDeletePrm(request, resp);
-            DeleteService.Delete(prm);
+            DeleteService.Delete(prm, cancellation);
             return resp;
         }
 
-        public void Get(GetRequest request, Action<GetResponse> handler)
+        public void Get(GetRequest request, Action<GetResponse> handler, CancellationToken cancellation)
         {
-            var prm = GetService.ToGetPrm(request, handler);
-            GetService.Get(prm);
+            var prm = GetService.ToGetPrm(request, handler, cancellation);
+            GetService.Get(prm, cancellation);
             //TODO: split exception
         }
 
-        public void GetRange(GetRangeRequest request, Action<GetRangeResponse> handler)
+        public void GetRange(GetRangeRequest request, Action<GetRangeResponse> handler, CancellationToken cancellation)
         {
-            var prm = GetService.ToRangePrm(request, handler);
-            GetService.GetRange(prm);
+            var prm = GetService.ToRangePrm(request, handler, cancellation);
+            GetService.GetRange(prm, cancellation);
         }
 
-        public GetRangeHashResponse GetRangeHash(GetRangeHashRequest request)
+        public GetRangeHashResponse GetRangeHash(GetRangeHashRequest request, CancellationToken cancellation)
         {
             var prm = GetService.ToRangeHashPrm(request);
-            return GetService.GetRangeHash(prm);
+            return GetService.GetRangeHash(prm, cancellation);
         }
 
-        public HeadResponse Head(HeadRequest request)
+        public HeadResponse Head(HeadRequest request, CancellationToken cancellation)
         {
             var resp = new HeadResponse();
-            var prm = GetService.ToHeadPrm(request, resp);
-            GetService.Head(prm);
+            var prm = GetService.ToHeadPrm(request, resp, cancellation);
+            GetService.Head(prm, cancellation);
             //TODO: split exception
             return resp;
         }
@@ -57,10 +56,10 @@ namespace Neo.FileStorage.Services.Object
             return PutService.Put(cancellation);
         }
 
-        public void Search(SearchRequest request, Action<SearchResponse> handler)
+        public void Search(SearchRequest request, Action<SearchResponse> handler, CancellationToken cancellation)
         {
-            var prm = SearchService.ToSearchPrm(request, handler);
-            SearchService.Search(prm);
+            var prm = SearchService.ToSearchPrm(request, handler, cancellation);
+            SearchService.Search(prm, cancellation);
         }
     }
 }

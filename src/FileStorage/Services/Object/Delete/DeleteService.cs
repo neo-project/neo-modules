@@ -1,3 +1,5 @@
+using System;
+using System.Threading;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Object.Delete.Execute;
@@ -6,7 +8,6 @@ using Neo.FileStorage.Services.Object.Get;
 using Neo.FileStorage.Services.Object.Put;
 using Neo.FileStorage.Services.Object.Search;
 using Neo.FileStorage.Services.Object.Util;
-using System;
 
 namespace Neo.FileStorage.Services.Object.Delete
 {
@@ -32,10 +33,11 @@ namespace Neo.FileStorage.Services.Object.Delete
             return prm;
         }
 
-        public void Delete(DeletePrm prm)
+        public void Delete(DeletePrm prm, CancellationToken cancellation)
         {
             var executor = new ExecuteContext
             {
+                Cancellation = cancellation,
                 DeleteService = this,
                 Prm = prm,
             };

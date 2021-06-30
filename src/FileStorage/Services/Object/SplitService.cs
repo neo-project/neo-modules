@@ -1,8 +1,8 @@
-using Google.Protobuf;
-using Neo.FileStorage.API.Object;
 using System;
 using System.Linq;
 using System.Threading;
+using Google.Protobuf;
+using Neo.FileStorage.API.Object;
 
 namespace Neo.FileStorage.Services.Object
 {
@@ -17,12 +17,12 @@ namespace Neo.FileStorage.Services.Object
         public int AddressAmount { get; init; } = MaxAddrAmount;
         public ObjectService ObjectService { get; init; }
 
-        public DeleteResponse Delete(DeleteRequest request)
+        public DeleteResponse Delete(DeleteRequest request, CancellationToken cancellation)
         {
-            return ObjectService.Delete(request);
+            return ObjectService.Delete(request, cancellation);
         }
 
-        public void Get(GetRequest request, Action<GetResponse> handler)
+        public void Get(GetRequest request, Action<GetResponse> handler, CancellationToken cancellation)
         {
             ObjectService.Get(request, resp =>
             {
@@ -45,10 +45,10 @@ namespace Neo.FileStorage.Services.Object
                     default:
                         throw new InvalidOperationException($"{nameof(SplitService)} invalid {resp.GetType()}");
                 }
-            });
+            }, cancellation);
         }
 
-        public void GetRange(GetRangeRequest request, Action<GetRangeResponse> handler)
+        public void GetRange(GetRangeRequest request, Action<GetRangeResponse> handler, CancellationToken cancellation)
         {
             ObjectService.GetRange(request, resp =>
             {
@@ -71,17 +71,17 @@ namespace Neo.FileStorage.Services.Object
                     default:
                         throw new InvalidOperationException($"{nameof(SplitService)} invalid {resp.GetType()}");
                 }
-            });
+            }, cancellation);
         }
 
-        public GetRangeHashResponse GetRangeHash(GetRangeHashRequest request)
+        public GetRangeHashResponse GetRangeHash(GetRangeHashRequest request, CancellationToken cancellation)
         {
-            return ObjectService.GetRangeHash(request);
+            return ObjectService.GetRangeHash(request, cancellation);
         }
 
-        public HeadResponse Head(HeadRequest request)
+        public HeadResponse Head(HeadRequest request, CancellationToken cancellation)
         {
-            return ObjectService.Head(request);
+            return ObjectService.Head(request, cancellation);
         }
 
         public IRequestStream Put(CancellationToken cancellation)
@@ -89,7 +89,7 @@ namespace Neo.FileStorage.Services.Object
             return ObjectService.Put(cancellation);
         }
 
-        public void Search(SearchRequest request, Action<SearchResponse> handler)
+        public void Search(SearchRequest request, Action<SearchResponse> handler, CancellationToken cancellation)
         {
             ObjectService.Search(request, resp =>
             {
@@ -104,7 +104,7 @@ namespace Neo.FileStorage.Services.Object
                     ids = ids.Skip(r.Body.IdList.Count);
                     handler(r);
                 }
-            });
+            }, cancellation);
         }
     }
 }

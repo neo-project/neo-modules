@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Akka.Util.Extensions;
 using Google.Protobuf;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
@@ -9,17 +10,27 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Shards;
 using Neo.FileStorage.Services.Object.Acl.EAcl;
+using Neo.FileStorage.Services.Object.Search;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.LocalObjectStorage.Engine
 {
-    public sealed class StorageEngine : ILocalHeadSource, IDisposable
+    public sealed class StorageEngine : ILocalHeadSource, ILocalSearchSource, IDisposable
     {
         private readonly Dictionary<ShardID, Shard> shards = new();
         private readonly ReaderWriterLockSlim mtx = new();
 
+        public void Open()
+        {
+            foreach (var shard in shards.Values)
+                shard.Open();
+        }
+
         public void Dispose()
         {
+            foreach (var shard in shards.Values)
+                shard.Dispose();
+            shards.Clear();
             mtx.Dispose();
         }
 
@@ -177,9 +188,6 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
             return uniqueIDs.Values.ToList();
         }
 
-
-
-
         public bool Exist(Address address)
         {
             foreach (var shard in SortedShards(address))
@@ -281,7 +289,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Engine
             shards[shard.ID] = shard;
         }
 
-        private void ProcessExpiredTomstones(List<Address> addresses, CancellationToken token)
+        public void ProcessExpiredTomstones(List<Address> addresses, CancellationToken token)
         {
             foreach (var shard in UnsortedShards())
             {

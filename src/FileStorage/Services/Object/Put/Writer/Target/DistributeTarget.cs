@@ -5,7 +5,6 @@ using Google.Protobuf;
 using Neo.FileStorage.Core.Object;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using Neo.FileStorage.Services.ObjectManager.Transformer;
-using static Neo.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Put

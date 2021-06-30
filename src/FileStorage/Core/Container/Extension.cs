@@ -1,5 +1,5 @@
-using Neo.FileStorage.API.Refs;
 using System;
+using Neo.FileStorage.API.Refs;
 using V2Container = Neo.FileStorage.API.Container;
 
 namespace Neo.FileStorage.Core.Container
@@ -10,7 +10,7 @@ namespace Neo.FileStorage.Core.Container
         {
             if (container.PlacementPolicy is null) return false;
             if (!API.Refs.Version.IsSupportedVersion(container.Version)) return false;
-            if (container.OwnerId.Value.Length != OwnerID.ValueSize) return false;
+            if (container.OwnerId?.Value?.Length != OwnerID.ValueSize) return false;
             try
             {
                 var guid = container.NonceUUID;

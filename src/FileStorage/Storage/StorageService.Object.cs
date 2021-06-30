@@ -6,12 +6,12 @@ using Neo.FileStorage.Cache;
 using Neo.FileStorage.Core.Object;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Morph.Invoker;
-using Neo.FileStorage.Network.Cache;
 using Neo.FileStorage.Services.Container.Announcement;
 using Neo.FileStorage.Services.Object.Acl;
 using Neo.FileStorage.Services.Object.Get;
 using Neo.FileStorage.Services.Object.Put;
 using Neo.FileStorage.Services.Object.Search;
+using Neo.FileStorage.Services.Object.Search.Clients;
 using Neo.FileStorage.Services.Object.Util;
 using Neo.FileStorage.Services.ObjectManager.Placement;
 using Neo.FileStorage.Services.Police;
@@ -26,11 +26,9 @@ namespace Neo.FileStorage
         private ObjectServiceImpl InitializeObject(StorageEngine localStorage)
         {
             KeyStorage keyStorage = new(key, tokenStore);
-            ClientCache clientCache = new();
             ReputationClientCache reputationClientCache = new()
             {
                 StorageNode = this,
-                BasicCache = clientCache,
                 MorphClient = morphClient,
                 ReputationStorage = new(),
             };
@@ -105,9 +103,9 @@ namespace Neo.FileStorage
             {
                 KeyStorage = keyStorage,
                 LocalStorage = localStorage,
-                MorphClient = morphClient,
-                ClientCache = reputationClientCache,
-                TraverserGenerator = new(morphClient, LocalAddress, trackCopies: false),
+                MorphClient = new EpochSource(morphClient),
+                ClientCache = new SearchClientCache(reputationClientCache),
+                TraverserGenerator = new TraverserGenerator(morphClient, LocalAddress, trackCopies: false),
             };
             return new ObjectServiceImpl
             {

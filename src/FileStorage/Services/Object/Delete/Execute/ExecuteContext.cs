@@ -1,15 +1,17 @@
-using Neo.FileStorage.API.Object;
-using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.API.Tombstone;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using Neo.FileStorage.API.Object;
+using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.API.Tombstone;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Object.Delete.Execute
 {
     public partial class ExecuteContext
     {
+        public CancellationToken Cancellation { get; init; }
         public DeleteService DeleteService { get; init; }
         public DeletePrm Prm { get; init; }
         public SplitInfo SplitInfo { get; private set; }

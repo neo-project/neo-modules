@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Neo.Cryptography.ECC;
-using Neo.FileStorage.LocalObjectStorage.Blob;
 
 namespace Neo.FileStorage
 {
@@ -15,6 +14,7 @@ namespace Neo.FileStorage
         public string SideChainConfig;
         public bool AsInnerRing;
         public bool AsStorage;
+        public int Port;
         public string WalletPath;
         public string Password;
         public UInt160 NetmapContractHash;
@@ -52,7 +52,6 @@ namespace Neo.FileStorage
         public ulong StorageEmission;
         public bool CleanupEnabled;
         public ulong CleanupThreshold;
-        public bool IsSender;
         public int SearchTimeout;
         public int GetTimeout;
         public int HeadTimeout;
@@ -77,6 +76,7 @@ namespace Neo.FileStorage
             AutoStart = section.GetValue("AutoStart", false);
             AsInnerRing = section.GetValue("AsInnerRing", false);
             AsStorage = section.GetValue("AsStorage", true);
+            Port = section.GetValue("Port", 8080);
             WalletPath = section.GetSection("WalletPath").Value;
             Password = section.GetSection("Password").Value;
 
@@ -130,8 +130,6 @@ namespace Neo.FileStorage
             CleanupEnabled = netmapCleaner.GetValue("Eenabled", false);
             CleanupThreshold = netmapCleaner.GetValue("Threshold", 3ul);
 
-            IsSender = bool.Parse(section.GetSection("IsSender").Value);
-
             IConfigurationSection audit = section.GetSection("Audit");
             SearchTimeout = audit.GetSection("Timeout").GetValue("Search", 10000);
             GetTimeout = audit.GetSection("Timeout").GetValue("Get", 5000);
@@ -155,6 +153,7 @@ namespace Neo.FileStorage
             SideChainFee = fee.GetValue("SideChain", 5000L);
 
             LocalStorageSettings = ObjectStorageSettings.Load(section.GetSection("Storage"));
+            Console.WriteLine(LocalStorageSettings.Shards.Length);
             if (!LocalStorageSettings.Shards.Any()) LocalStorageSettings = ObjectStorageSettings.Default;
         }
 
@@ -292,6 +291,8 @@ namespace Neo.FileStorage
     public class ShardSettings
     {
         public bool UseWriteCache;
+        public int RemoverInterval;
+        public int RemoveBatchSize;
         public WriteCacheSettings WriteCacheSettings;
         public BlobStorageSettings BlobStorageSettings;
         public MetabaseSettings MetabaseSettings;
@@ -303,6 +304,8 @@ namespace Neo.FileStorage
             Default = new()
             {
                 UseWriteCache = true,
+                RemoverInterval = 60000,
+                RemoveBatchSize = 100,
                 WriteCacheSettings = WriteCacheSettings.Default,
                 BlobStorageSettings = BlobStorageSettings.Default,
                 MetabaseSettings = MetabaseSettings.Default,
@@ -315,6 +318,7 @@ namespace Neo.FileStorage
             settings.UseWriteCache = section.GetValue("UseWriteCache", true);
             if (settings.UseWriteCache)
                 settings.WriteCacheSettings = WriteCacheSettings.Load(section.GetSection("WriteCache"));
+            settings.RemoverInterval = section.GetValue("RemoverInterval", 10000);
             settings.BlobStorageSettings = BlobStorageSettings.Load(section.GetSection("BlobStorage"));
             settings.MetabaseSettings = MetabaseSettings.Load(section.GetSection("Metabase"));
             return settings;
@@ -339,7 +343,7 @@ namespace Neo.FileStorage
         {
             return new()
             {
-                Shards = section.GetChildren().Select(p => ShardSettings.Load(p)).ToArray(),
+                Shards = section.GetSection("Shards").GetChildren().Select(p => ShardSettings.Load(p)).ToArray(),
             };
         }
     }

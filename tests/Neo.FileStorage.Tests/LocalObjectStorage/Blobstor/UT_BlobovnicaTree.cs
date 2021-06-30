@@ -28,7 +28,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage.Blobstor
                 BlzShallowDepth = 2,
                 SmallSizeLimit = (ulong)size_limit,
             };
-            tree.Initialize();
+            tree.Open();
             try
             {
                 var objSize = size_limit / 2;

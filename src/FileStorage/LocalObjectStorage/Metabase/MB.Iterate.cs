@@ -9,16 +9,15 @@ namespace Neo.FileStorage.LocalObjectStorage.Metabase
 {
     public sealed partial class MB
     {
-        public void IterateGraveYard(Action<Grave> handler)
+        public void IterateGraveYard(Func<Grave, bool> handler)
         {
             db.Iterate(GraveYardPrefix, (key, value) =>
             {
-                handler(new()
+                return handler(new()
                 {
                     GCMark = value.SequenceEqual(InhumeGCMarkValue),
                     Address = ParseGraveYardKey(key)
                 });
-                return false;
             });
         }
 

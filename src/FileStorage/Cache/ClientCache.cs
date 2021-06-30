@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Concurrent;
 using Neo.FileStorage.API.Client;
+using Neo.FileStorage.Network;
 
-namespace Neo.FileStorage.Network.Cache
+namespace Neo.FileStorage.Cache
 {
-    public class ClientCache : IDisposable
+    public class ClientCache : IFSClientCache
     {
-        private readonly ConcurrentDictionary<string, Client> clients = new ConcurrentDictionary<string, Client>();
+        private readonly ConcurrentDictionary<string, Client> clients = new();
 
-        public Client Get(Address address)
+        public virtual IFSClient Get(Address address)
         {
             var m_addr = address.ToString();
             if (clients.TryGetValue(m_addr, out Client client))
@@ -17,15 +18,18 @@ namespace Neo.FileStorage.Network.Cache
             }
             //TODO: tls
             var host = address.ToHostAddressString();
-            client = new Client(null, host);//TODO: make sure there is key in options
+            client = new Client(null, host);
             clients[m_addr] = client;
             return client;
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             foreach (var client in clients.Values)
+            {
                 client.Dispose();
+            }
+            clients.Clear();
         }
     }
 }

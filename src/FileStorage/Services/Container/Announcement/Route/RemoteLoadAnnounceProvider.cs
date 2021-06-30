@@ -2,9 +2,8 @@
 using System;
 using System.Security.Cryptography;
 using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.Cache;
 using Neo.FileStorage.Network;
-using Neo.FileStorage.Network.Cache;
-using static Neo.FileStorage.Network.Address;
 
 namespace Neo.FileStorage.Services.Container.Announcement.Route
 {
