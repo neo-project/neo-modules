@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
+using System.Text;
 using System.Threading;
 using Google.Protobuf;
 using Neo.FileStorage.API.Audit;
@@ -10,6 +12,7 @@ using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.StorageGroup;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Morph.Invoker;
+using Neo.IO;
 using static Neo.FileStorage.Morph.Invoker.MorphContractInvoker;
 using NodeInfo = Neo.FileStorage.InnerRing.Processors.NodeInfo;
 
@@ -68,19 +71,22 @@ namespace Neo.FileStorage.InnerRing
             return OwnerID.FromByteArray(nodeInfo.PublicKey());
         }
 
-        public void transfer(OwnerID sender, OwnerID recipient, BigInteger amount, byte[] details)
+        public void transfer(OwnerID sender, OwnerID recipient, long amount, byte[] details)
         {
-            Utility.Log("SettlementDeps", LogLevel.Info, string.Format("sender:{0},recipient:{1},amount (GASe-12):{2}", sender, recipient, amount));
+            Utility.Log("SettlementDeps", LogLevel.Info, string.Format("sender:{0},recipient:{1},amount (GASe-12):{2},details:{3}", sender, recipient, amount, Encoding.UTF8.GetString(details)));
             //notary
+            var from=new UInt160(Cryptography.Base58.Base58CheckDecode(Cryptography.Base58.Encode(sender.Value.ToByteArray())).Skip(1).ToArray());
+            var to=new UInt160(Cryptography.Base58.Base58CheckDecode(Cryptography.Base58.Encode(recipient.Value.ToByteArray())).Skip(1).ToArray());
+            client.InvokeTransferX(from.ToArray(), to.ToArray(), amount, details);
             Utility.Log("SettlementDeps", LogLevel.Info, "transfer transaction for audit was successfully sent");
         }
 
-        public abstract void Transfer(OwnerID sender, OwnerID recipient, BigInteger amount);
+        public abstract void Transfer(OwnerID sender, OwnerID recipient, long amount,byte[] details);
     }
 
     public class AuditSettlementDeps : SettlementDeps
     {
-        public override void Transfer(OwnerID sender, OwnerID recipient, BigInteger amount)
+        public override void Transfer(OwnerID sender, OwnerID recipient, long amount,byte[] details)
         {
             transfer(sender, recipient, amount, System.Text.Encoding.UTF8.GetBytes("settlement-audit"));
         }
@@ -88,7 +94,7 @@ namespace Neo.FileStorage.InnerRing
     public class BasicIncomeSettlementDeps : SettlementDeps
     {
         public ulong BasicRate => Settings.Default.BasicIncomeRate;
-        public override void Transfer(OwnerID sender, OwnerID recipient, BigInteger amount)
+        public override void Transfer(OwnerID sender, OwnerID recipient, long amount,byte[] details)
         {
             transfer(sender, recipient, amount, System.Text.Encoding.UTF8.GetBytes("settlement-basic-income"));
         }

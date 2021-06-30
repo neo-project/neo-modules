@@ -1,4 +1,5 @@
 using Akka.Actor;
+using Neo.FileStorage.Cache;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
@@ -31,13 +32,13 @@ namespace Neo.FileStorage.InnerRing.Processors
         private ulong mintEmitThreshold => Settings.Default.MintEmitThreshold;
         private long gasBalanceThreshold => Settings.Default.GasBalanceThreshold;
         private long mintEmitValue = Settings.Default.MintEmitValue;
-        private Dictionary<string, ulong> mintEmitCache;
+        private LRUCache<string, ulong> mintEmitCache;
 
         public Fixed8ConverterUtil Convert;
 
         public FsContractProcessor()
         {
-            mintEmitCache = new Dictionary<string, ulong>(mintEmitCacheSize);
+            mintEmitCache = new LRUCache<string, ulong>(mintEmitCacheSize);
         }
 
         public override HandlerInfo[] ListenerHandlers()
@@ -165,7 +166,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             var receiver = depositeEvent.To;
             lock (lockObj)
             {
-                if (mintEmitCache.TryGetValue(receiver.ToString(), out ulong value) && ((value + mintEmitThreshold) >= curEpoch))
+                if (mintEmitCache.TryGet(receiver.ToString(), out ulong value) && ((value + mintEmitThreshold) >= curEpoch))
                     Utility.Log(Name, LogLevel.Warning, string.Format("double mint emission declined,receiver:{0},last_emission:{1},current_epoch:{2}", receiver.ToString(), value.ToString(), curEpoch.ToString()));
                 long balance;
                 try
@@ -190,7 +191,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 {
                     Utility.Log(Name, LogLevel.Error, string.Format("can't transfer native gas to receiver,{0}", e.Message));
                 }
-                mintEmitCache.Add(receiver.ToString(), curEpoch);
+                mintEmitCache.TryAdd(receiver.ToString(), curEpoch);
             }
         }
 

@@ -45,7 +45,7 @@ namespace Neo.FileStorage.Morph.Invoker
         public static bool PutContainer(this Client client, FSContainer cnr, Signature sig, SessionToken token)
         {
             if (client is null) throw new ArgumentNullException(nameof(cnr));
-            return client.Invoke(out _, ContainerContractHash, PutMethod, ExtraFee, cnr.ToByteArray(), sig.Sign.ToByteArray(), sig.Key.ToByteArray(), token.ToByteArray());
+            return client.Invoke(out _, ContainerContractHash, PutMethod, SideChainFee, cnr.ToByteArray(), sig.Sign.ToByteArray(), sig.Key.ToByteArray(), token.ToByteArray());
         }
 
         public static bool SetEACL(this Client client, EACLTable eacl, Signature sig, SessionToken token)
@@ -141,6 +141,7 @@ namespace Neo.FileStorage.Morph.Invoker
         {
             InvokeResult result = client.TestInvoke(ContainerContractHash, ListSizesMethod, epoch);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (ListSizes)");
+            if (result.ResultStack[0] is Null) return new List<byte[]>();
             Array prms = (Array)result.ResultStack[0];
             List<byte[]> ids = new();
             foreach (var item in prms)
@@ -153,12 +154,12 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public static bool StartEstimation(this Client client, long epoch)
         {
-            return client.Invoke(out _, ContainerContractHash, StartEstimationMethod, epoch);
+            return client.Invoke(out _, ContainerContractHash, StartEstimationMethod, SideChainFee,epoch);
         }
 
         public static bool StopEstimation(this Client client, long epoch)
         {
-            return client.Invoke(out _, ContainerContractHash, StopEstimationMethod, epoch);
+            return client.Invoke(out _, ContainerContractHash, StopEstimationMethod, SideChainFee,epoch);
         }
     }
 }

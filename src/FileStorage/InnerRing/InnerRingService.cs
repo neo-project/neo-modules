@@ -398,6 +398,7 @@ namespace Neo.FileStorage.InnerRing
             Console.WriteLine("开始vote侧链共识节点");
             Array.Sort(validators);
             var index = InnerRingIndex();
+            Console.WriteLine("当前节点index:"+index);
             if (index < 0 || index >= Settings.Default.AlphabetContractHash.Length)
             {
                 Utility.Log(Name, LogLevel.Info, "ignore validator vote: node not in alphabet range");

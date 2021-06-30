@@ -1,7 +1,6 @@
 using Akka.Actor;
 using Google.Protobuf;
 using Neo.Cryptography;
-using Neo.Cryptography.ECC;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Container;
@@ -15,7 +14,6 @@ using Neo.IO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
 using static Neo.FileStorage.Utils.WorkerPool;

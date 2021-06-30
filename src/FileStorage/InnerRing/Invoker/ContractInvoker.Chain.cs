@@ -18,6 +18,9 @@ namespace Neo.FileStorage.InnerRing.Invoker
         public static int AlphabetIndex(this Client client, ECPoint key)
         {
             if (client is null) throw new Exception("client is nil");
+            Console.WriteLine("当前侧链委员会成员：");
+            client.Committee().ToList().ForEach(p=>Console.WriteLine(p.ToString()));
+            Console.WriteLine("本节点公钥：" + key.ToString());
             return KeyPosition(key, client.Committee());
         }
 
@@ -32,6 +35,7 @@ namespace Neo.FileStorage.InnerRing.Invoker
                     break;
                 }
             }
+            Console.WriteLine("KeyPosition结果："+ result);
             return result;
         }
     }

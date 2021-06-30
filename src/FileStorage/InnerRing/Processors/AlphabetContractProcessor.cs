@@ -18,7 +18,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void HandleGasEmission(IContractEvent morphEvent)
         {
-            Utility.Log(Name, LogLevel.Info, string.Format("tick,type:alphabet gas emit"));
+            Utility.Log(Name, LogLevel.Info, "tick,type:alphabet gas emit");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessEmit()) });
         }
 

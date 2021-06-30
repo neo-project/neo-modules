@@ -60,6 +60,7 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public static List<byte[]> ParseAuditResults(StackItem result)
         {
+            if (result is Null) return new List<byte[]>();
             Array array = (Array)result;
             IEnumerator<StackItem> enumerator = array.GetEnumerator();
             List<byte[]> resultArray = new();
