@@ -3,19 +3,11 @@
   <PropertyGroup>
     <PackageId>Neo.Consensus.DBFT</PackageId>
     <RootNamespace>Neo.Consensus</RootNamespace>
+    <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <CustomCommands>
-      <CustomCommands>
-        <Command>
-          <type>BeforeBuild</type>
-          <command>dotnet-format</command>
-          <externalConsole>True</externalConsole>
-        </Command>
-      </CustomCommands>
-    </CustomCommands>
-  </PropertyGroup>
+  <Import Project="../Prebuild.targets" />
+  
   <ItemGroup>
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
   </ItemGroup>

@@ -3,19 +3,10 @@
   <PropertyGroup>
     <PackageId>OracleService.Tests</PackageId>
     <RootNamespace>Neo.Plugins</RootNamespace>
+    <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <CustomCommands>
-      <CustomCommands>
-        <Command>
-          <type>BeforeBuild</type>
-          <command>dotnet-format</command>
-          <externalConsole>True</externalConsole>
-        </Command>
-      </CustomCommands>
-    </CustomCommands>
-  </PropertyGroup>
+  <Import Project="../Prebuild.targets" />
   <ItemGroup>
     <PackageReference Include="Akka.TestKit" Version="1.4.17" />
     <PackageReference Include="Akka.TestKit.Xunit2" Version="1.4.17" />

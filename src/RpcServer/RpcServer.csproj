@@ -3,19 +3,10 @@
   <PropertyGroup>
     <PackageId>Neo.Plugins.RpcServer</PackageId>
     <RootNamespace>Neo.Plugins</RootNamespace>
+    <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <CustomCommands>
-      <CustomCommands>
-        <Command>
-          <type>BeforeBuild</type>
-          <command>dotnet-format</command>
-          <externalConsole>True</externalConsole>
-        </Command>
-      </CustomCommands>
-    </CustomCommands>
-  </PropertyGroup>
+  <Import Project="../Prebuild.targets" />
   <ItemGroup>
     <None Update="RpcServer\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
