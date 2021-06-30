@@ -5,6 +5,17 @@
     <AssemblyName>Neo.Plugins.RpcServer.Tests</AssemblyName>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <CustomCommands>
+      <CustomCommands>
+        <Command>
+          <type>BeforeBuild</type>
+          <command>dotnet-format</command>
+          <externalConsole>True</externalConsole>
+        </Command>
+      </CustomCommands>
+    </CustomCommands>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\RpcServer\RpcServer.csproj" />
   </ItemGroup>

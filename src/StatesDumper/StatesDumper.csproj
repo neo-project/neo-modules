@@ -4,6 +4,17 @@
     <PackageId>Neo.Plugins.StatesDumper</PackageId>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <CustomCommands>
+      <CustomCommands>
+        <Command>
+          <type>BeforeBuild</type>
+          <command>dotnet-format</command>
+          <externalConsole>True</externalConsole>
+        </Command>
+      </CustomCommands>
+    </CustomCommands>
+  </PropertyGroup>
   <ItemGroup>
     <None Update="StatesDumper\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

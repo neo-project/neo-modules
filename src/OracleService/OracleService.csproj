@@ -4,6 +4,17 @@
     <PackageId>Neo.Plugins.OracleService</PackageId>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <CustomCommands>
+      <CustomCommands>
+        <Command>
+          <type>BeforeBuild</type>
+          <command>dotnet-format</command>
+          <externalConsole>True</externalConsole>
+        </Command>
+      </CustomCommands>
+    </CustomCommands>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
     <PackageReference Include="NeoFS.API" Version="0.0.54" />
