@@ -1,6 +1,7 @@
 using Neo.IO.Json;
 using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
+using System.Linq;
 
 namespace Neo.Network.RPC.Models
 {
@@ -10,7 +11,7 @@ namespace Neo.Network.RPC.Models
         public UInt160 Hash { get; set; }
         public NefFile Nef { get; set; }
         public ContractManifest Manifest { get; set; }
-        public uint ActiveBlockIndex { get; set; }
+        public uint[] UpdateHistory { get; set; }
 
         public static RpcNativeContract FromJson(JObject json)
         {
@@ -20,7 +21,7 @@ namespace Neo.Network.RPC.Models
                 Hash = UInt160.Parse(json["hash"].AsString()),
                 Nef = RpcNefFile.FromJson(json["nef"]),
                 Manifest = ContractManifest.FromJson(json["manifest"]),
-                ActiveBlockIndex = (uint)(json["activeblockindex"]?.AsNumber() ?? 0)
+                UpdateHistory = json["updatehistory"].GetArray().Select(u => (uint)u.GetInt32()).ToArray()
             };
         }
 
@@ -32,7 +33,7 @@ namespace Neo.Network.RPC.Models
                 ["hash"] = Hash.ToString(),
                 ["nef"] = Nef.ToJson(),
                 ["manifest"] = Manifest.ToJson(),
-                ["activeblockindex"] = ActiveBlockIndex
+                ["updatehistory"] = new JArray(UpdateHistory.Select(u => new JNumber(u)).ToArray())
             };
         }
     }
