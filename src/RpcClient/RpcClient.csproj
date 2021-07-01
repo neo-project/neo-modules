@@ -5,6 +5,5 @@
     <RootNamespace>Neo.Network.RPC</RootNamespace>
     <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
-
-  <Import Project="../Prebuild.targets" />
+  
 </Project>

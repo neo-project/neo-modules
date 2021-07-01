@@ -5,7 +5,6 @@
     <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 
-  <Import Project="../Prebuild.targets" />
   <ItemGroup>
     <None Update="StatesDumper\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

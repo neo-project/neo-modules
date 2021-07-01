@@ -6,7 +6,6 @@
     <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 
-  <Import Project="../Prebuild.targets" />
   <ItemGroup>
     <ProjectReference Include="..\..\src\RpcServer\RpcServer.csproj" />
   </ItemGroup>

@@ -5,7 +5,6 @@
     <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 
-  <Import Project="../Prebuild.targets" />
   <ItemGroup>
     <ProjectReference Include="..\..\src\LevelDBStore\LevelDBStore.csproj" />
     <ProjectReference Include="..\..\src\RocksDBStore\RocksDBStore.csproj" />

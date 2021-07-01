@@ -6,7 +6,6 @@
     <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 
-  <Import Project="../Prebuild.targets" />
   <ItemGroup>
     <None Update="RpcServer\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

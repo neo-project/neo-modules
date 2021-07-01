@@ -5,8 +5,7 @@
     <RootNamespace>Neo.Plugins.Storage</RootNamespace>
     <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
-
-  <Import Project="../Prebuild.targets" />
+  
   <ItemGroup>
     <PackageReference Include="rocksdb" Version="6.17.3.16253" />
   </ItemGroup>

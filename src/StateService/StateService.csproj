@@ -7,7 +7,6 @@
     <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 
-  <Import Project="../Prebuild.targets" />
   <ItemGroup>
     <None Update="StateService\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

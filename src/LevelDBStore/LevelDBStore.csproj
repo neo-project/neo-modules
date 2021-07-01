@@ -6,6 +6,5 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
-
-  <Import Project="../Prebuild.targets" />
+  
 </Project>

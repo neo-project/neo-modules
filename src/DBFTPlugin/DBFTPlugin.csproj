@@ -5,8 +5,6 @@
     <RootNamespace>Neo.Consensus</RootNamespace>
     <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
-
-  <Import Project="../Prebuild.targets" />
   
   <ItemGroup>
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
