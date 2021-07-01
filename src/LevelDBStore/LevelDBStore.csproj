@@ -4,7 +4,6 @@
     <PackageId>Neo.Plugins.Storage.LevelDBStore</PackageId>
     <RootNamespace>Neo.Plugins.Storage</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
-  
+
 </Project>

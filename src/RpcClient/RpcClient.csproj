@@ -3,7 +3,6 @@
   <PropertyGroup>
     <PackageId>Neo.Network.RPC.RpcClient</PackageId>
     <RootNamespace>Neo.Network.RPC</RootNamespace>
-    <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
-  
+
 </Project>

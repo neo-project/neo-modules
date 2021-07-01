@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <RootNamespace>Neo.Plugins.Storage.Tests</RootNamespace>
-    <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

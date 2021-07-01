@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <RootNamespace>Neo.Network.RPC.Tests</RootNamespace>
-    <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

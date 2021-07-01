@@ -3,9 +3,8 @@
   <PropertyGroup>
     <PackageId>Neo.Consensus.DBFT</PackageId>
     <RootNamespace>Neo.Consensus</RootNamespace>
-    <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
   </ItemGroup>

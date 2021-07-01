@@ -3,7 +3,6 @@
   <PropertyGroup>
     <RootNamespace>Neo.Plugins.RpcServer.Tests</RootNamespace>
     <AssemblyName>Neo.Plugins.RpcServer.Tests</AssemblyName>
-    <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

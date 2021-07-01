@@ -3,7 +3,6 @@
   <PropertyGroup>
     <PackageId>OracleService.Tests</PackageId>
     <RootNamespace>Neo.Plugins</RootNamespace>
-    <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
 
   <ItemGroup>

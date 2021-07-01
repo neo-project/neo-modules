@@ -3,9 +3,8 @@
   <PropertyGroup>
     <PackageId>Neo.Plugins.Storage.RocksDBStore</PackageId>
     <RootNamespace>Neo.Plugins.Storage</RootNamespace>
-    <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="rocksdb" Version="6.17.3.16253" />
   </ItemGroup>

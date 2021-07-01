@@ -2,9 +2,8 @@
 
   <PropertyGroup>
     <PackageId>Neo.Plugins.OracleService</PackageId>
-    <Configurations>Release;Debug</Configurations>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
     <PackageReference Include="NeoFS.API" Version="0.0.54" />
