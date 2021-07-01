@@ -5,7 +5,7 @@ using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Audit;
 using System;
-using static Neo.FileStorage.InnerRing.Timer.BlockTimer;
+using static Neo.FileStorage.InnerRing.Timer.BlockTimerListener;
 
 namespace Neo.FileStorage.Tests.TestUtils
 {

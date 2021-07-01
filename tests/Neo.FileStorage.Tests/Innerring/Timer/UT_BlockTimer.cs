@@ -3,7 +3,7 @@ using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.InnerRing.Timer;
-using static Neo.FileStorage.InnerRing.Timer.BlockTimer;
+using static Neo.FileStorage.InnerRing.Timer.BlockTimerListener;
 
 namespace Neo.FileStorage.Tests.Innerring.Timer
 {
@@ -22,7 +22,7 @@ namespace Neo.FileStorage.Tests.Innerring.Timer
         public void OnTickTest()
         {
             uint dur = 2;
-            var blockTimer = system.ActorSystem.ActorOf(BlockTimer.Props(() => { return dur; }, () => { this.TestActor.Tell(new Object()); }));
+            var blockTimer = system.ActorSystem.ActorOf(BlockTimerListener.Props(() => { return dur; }, () => { this.TestActor.Tell(new Object()); }));
             blockTimer.Tell(new ResetEvent());
             blockTimer.Tell(new TickEvent());
             ExpectNoMsg();
@@ -33,7 +33,7 @@ namespace Neo.FileStorage.Tests.Innerring.Timer
         [TestMethod]
         public void OnDelta()
         {
-            var blockTimer = system.ActorSystem.ActorOf(BlockTimer.Props(() => { return 1; }, () => { }));
+            var blockTimer = system.ActorSystem.ActorOf(BlockTimerListener.Props(() => { return 1; }, () => { }));
             blockTimer.Tell(new DeltaEvent()
             {
                 mul = 2,

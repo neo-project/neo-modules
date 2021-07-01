@@ -178,7 +178,7 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             {
                 EpochNumber = 2
             });
-            var resetEvent = ExpectMsg<FileStorage.InnerRing.Timer.BlockTimer.ResetEvent>();
+            var resetEvent = ExpectMsg<FileStorage.InnerRing.Timer.BlockTimerListener.ResetEvent>();
             Assert.IsNotNull(resetEvent);
         }
 

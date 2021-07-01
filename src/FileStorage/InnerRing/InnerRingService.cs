@@ -21,7 +21,7 @@ using Neo.SmartContract;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
 using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor;
-using static Neo.FileStorage.InnerRing.Timer.BlockTimer;
+using static Neo.FileStorage.InnerRing.Timer.BlockTimerListener;
 using static Neo.FileStorage.InnerRing.Timer.Helper;
 using static Neo.FileStorage.Morph.Event.Listener;
 

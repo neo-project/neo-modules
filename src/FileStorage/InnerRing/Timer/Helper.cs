@@ -4,7 +4,7 @@ using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
 using static Neo.FileStorage.InnerRing.Events.MorphEvent;
-using static Neo.FileStorage.InnerRing.Timer.BlockTimer;
+using static Neo.FileStorage.InnerRing.Timer.BlockTimerListener;
 using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
 
 namespace Neo.FileStorage.InnerRing.Timer
@@ -13,7 +13,7 @@ namespace Neo.FileStorage.InnerRing.Timer
     {
         public static IActorRef NewEpochTimer(EpochTimerArgs args)
         {
-            IActorRef epochTimer = args.context.ActorSystem.ActorOf(BlockTimer.Props(BlockTimer.StaticBlockMeter(Settings.Default.EpochDuration), () => { args.processor.HandleNewEpochTick(new NewEpochTickEvent()); }));
+            IActorRef epochTimer = args.context.ActorSystem.ActorOf(BlockTimerListener.Props(BlockTimer.StaticBlockMeter(Settings.Default.EpochDuration), () => { args.processor.HandleNewEpochTick(new NewEpochTickEvent()); }));
             epochTimer.Tell(new DeltaEvent()
             {
                 mul = args.stopEstimationDMul,
@@ -52,7 +52,7 @@ namespace Neo.FileStorage.InnerRing.Timer
 
         public static IActorRef NewEmissionTimer(EmitTimerArgs args)
         {
-            return args.context.ActorSystem.ActorOf(BlockTimer.Props(BlockTimer.StaticBlockMeter(Settings.Default.AlphabetDuration), () => { args.processor.HandleGasEmission(new NewAlphabetEmitTickEvent()); }));
+            return args.context.ActorSystem.ActorOf(BlockTimerListener.Props(BlockTimer.StaticBlockMeter(Settings.Default.AlphabetDuration), () => { args.processor.HandleGasEmission(new NewAlphabetEmitTickEvent()); }));
         }
 
         public class EmitTimerArgs
