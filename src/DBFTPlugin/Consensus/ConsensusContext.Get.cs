@@ -11,7 +11,6 @@ namespace Neo.Consensus
 {
     partial class ConsensusContext : IDisposable, ISerializable
     {
-
         public ConsensusMessage GetMessage(ExtensiblePayload payload)
         {
             if (payload is null) return null;
@@ -69,7 +68,6 @@ namespace Neo.Consensus
         {
             return Contract.CreateSignatureRedeemScript(Validators[index]).ToScriptHash();
         }
-
 
         /// <summary>
         /// Return the expected block size
