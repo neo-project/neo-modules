@@ -20,7 +20,7 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public static bool InvokePutAuditResult(this Client client, byte[] rawResult)
         {
-            return client.Invoke(out _, AuditContractHash, PutResultMethod, 0, rawResult);
+            return client.Invoke(out _, AuditContractHash, PutResultMethod, SideChainFee, rawResult);
         }
 
         public static DataAuditResult InvokeGetAuditResult(this Client client)

@@ -47,6 +47,7 @@ namespace Neo.FileStorage.Morph.Invoker
             InvokeResult result = client.TestInvoke(NetMapContractHash, NetMapMethod);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (NetMap)");
             if (result.ResultStack.Length != 1) throw new Exception(string.Format("unexpected stack item count ({0})", result.ResultStack.Length));
+            if (result.ResultStack[0] is VM.Types.Null) return new NetMap(new List<Node>());
             Array peers = (Array)result.ResultStack[0];
             IEnumerator<StackItem> peersEnumerator = peers.GetEnumerator();
             List<byte[]> res = new();

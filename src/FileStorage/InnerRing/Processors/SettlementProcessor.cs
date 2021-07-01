@@ -191,9 +191,10 @@ namespace Neo.FileStorage.InnerRing.Processors
                     if (from == to) return;
                     if (!txs.TryGetValue(from, out var m))
                     {
-                        if (!txs.TryGetValue(to, out m))
+                        if (txs.TryGetValue(to, out m))
                         {
                             to = from;
+                            tx.amount= BigInteger.Negate(tx.amount);
                         }
                         else
                         {
@@ -227,7 +228,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                             OwnerID temp = tx.from;
                             tx.from = tx.to;
                             tx.to = temp;
-                            tx.amount = BigInteger.Abs(tx.amount);
+                            tx.amount = BigInteger.Negate(tx.amount);
                         }
                         e.Transfer(tx.from, tx.to, (long)tx.amount, details);
                     });
@@ -312,7 +313,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
             public void ProcessResult(SingleResultCtx ctx)
             {
-                Utility.Log("Calculator", LogLevel.Debug, string.Format("cid:{0},audit epoch:{1}", ctx.cid.ToBase58String(), ctx.auditResult.AuditEpoch));
+                Utility.Log("Calculator", LogLevel.Debug, string.Format("cid:{0},audit epoch:{1}", ctx.auditResult.ContainerId.ToBase58String(), ctx.auditResult.AuditEpoch));
                 Utility.Log("Calculator", LogLevel.Debug, "reading information about the container");
                 if (!ReadContainerInfo(ctx)) return;
                 Utility.Log("Calculator", LogLevel.Debug, "building placement");
