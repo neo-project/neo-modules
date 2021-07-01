@@ -228,7 +228,7 @@ namespace Neo.Plugins
             tx.Witnesses = transContext.GetWitnesses();
             if (tx.Size > 1024)
             {
-                long calFee = tx.Size * 1000 + 100000;
+                long calFee = tx.Size * NativeContract.Policy.GetFeePerByte(snapshot) + 100000;
                 if (tx.NetworkFee < calFee)
                     tx.NetworkFee = calFee;
             }
@@ -279,7 +279,7 @@ namespace Neo.Plugins
             tx.Witnesses = transContext.GetWitnesses();
             if (tx.Size > 1024)
             {
-                long calFee = tx.Size * 1000 + 100000;
+                long calFee = tx.Size * NativeContract.Policy.GetFeePerByte(snapshot) + 100000;
                 if (tx.NetworkFee < calFee)
                     tx.NetworkFee = calFee;
             }
@@ -318,7 +318,7 @@ namespace Neo.Plugins
             tx.Witnesses = transContext.GetWitnesses();
             if (tx.Size > 1024)
             {
-                long calFee = tx.Size * 1000 + 100000;
+                long calFee = tx.Size * NativeContract.Policy.GetFeePerByte(snapshot) + 100000;
                 if (tx.NetworkFee < calFee)
                     tx.NetworkFee = calFee;
             }
