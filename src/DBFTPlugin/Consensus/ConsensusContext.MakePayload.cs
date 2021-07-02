@@ -11,7 +11,6 @@ namespace Neo.Consensus
 {
     public partial class ConsensusContext
     {
-
         public ExtensiblePayload MakeChangeView(ChangeViewReason reason)
         {
             return ChangeViewPayloads[MyIndex] = MakeSignedPayload(new ChangeView
