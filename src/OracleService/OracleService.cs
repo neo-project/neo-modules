@@ -149,17 +149,18 @@ namespace Neo.Plugins
             foreach (var (id, task) in pendingQueue)
             {
                 var span = TimeProvider.Current.UtcNow - task.Timestamp;
-                if (span > TimeSpan.FromSeconds(RefreshInterval) && span < TimeSpan.FromSeconds(RefreshInterval * 2))
+                if (span > Settings.Default.MaxTaskTimeout)
+                {
+                    outOfDate.Add(id);
+                    continue;
+                }
+                if (span > TimeSpan.FromSeconds(RefreshInterval))
                 {
                     List<Task> tasks = new List<Task>();
                     foreach (var account in wallet.GetAccounts())
                         if (task.BackupSigns.TryGetValue(account.GetKey().PublicKey, out byte[] sign))
                             tasks.Add(SendResponseSignatureAsync(id, sign, account.GetKey()));
                     await Task.WhenAll(tasks);
-                }
-                else if (span > Settings.Default.MaxTaskTimeout)
-                {
-                    outOfDate.Add(id);
                 }
             }
             foreach (ulong requestId in outOfDate)
@@ -257,7 +258,7 @@ namespace Neo.Plugins
                 }
                 var response = new OracleResponse() { Id = requestId, Code = code, Result = result };
                 var responseTx = CreateResponseTx(snapshot, request, response, oracleNodes, System.Settings);
-                var backupTx = CreateResponseTx(snapshot, request, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() }, oracleNodes, System.Settings);
+                var backupTx = CreateResponseTx(snapshot, request, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() }, oracleNodes, System.Settings, true);
 
                 Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
 
@@ -314,18 +315,23 @@ namespace Neo.Plugins
             }
         }
 
-        public static Transaction CreateResponseTx(DataCache snapshot, OracleRequest request, OracleResponse response, ECPoint[] oracleNodes, ProtocolSettings settings)
+        public static Transaction CreateResponseTx(DataCache snapshot, OracleRequest request, OracleResponse response, ECPoint[] oracleNodes, ProtocolSettings settings, bool useCurrentHeight = false)
         {
             var requestTx = NativeContract.Ledger.GetTransactionState(snapshot, request.OriginalTxid);
             var n = oracleNodes.Length;
             var m = n - (n - 1) / 3;
             var oracleSignContract = Contract.CreateMultiSigContract(m, oracleNodes);
-
+            uint height = NativeContract.Ledger.CurrentIndex(snapshot);
+            var validUntilBlock = requestTx.BlockIndex + settings.MaxValidUntilBlockIncrement;
+            while (useCurrentHeight && validUntilBlock <= height)
+            {
+                validUntilBlock += settings.MaxValidUntilBlockIncrement;
+            }
             var tx = new Transaction()
             {
                 Version = 0,
                 Nonce = unchecked((uint)response.Id),
-                ValidUntilBlock = requestTx.BlockIndex + settings.MaxValidUntilBlockIncrement,
+                ValidUntilBlock = validUntilBlock,
                 Signers = new[]
                 {
                     new Signer
