@@ -1,58 +1,50 @@
-using System;
-using Akka.Actor;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
+using System;
 using static Neo.FileStorage.InnerRing.Events.MorphEvent;
-using static Neo.FileStorage.InnerRing.Timer.BlockTimerListener;
 using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
 
 namespace Neo.FileStorage.InnerRing.Timer
 {
     public class Helper
     {
-        public static IActorRef NewEpochTimer(EpochTimerArgs args)
+        public static BlockTimer NewEpochTimer(EpochTimerArgs args)
         {
-            IActorRef epochTimer = args.context.ActorSystem.ActorOf(BlockTimerListener.Props(BlockTimer.StaticBlockMeter(Settings.Default.EpochDuration), () => { args.processor.HandleNewEpochTick(new NewEpochTickEvent()); }));
-            epochTimer.Tell(new DeltaEvent()
-            {
-                mul = args.stopEstimationDMul,
-                div = args.stopEstimationDDiv,
-                h = () =>
+            BlockTimer epochTimer = new BlockTimer(BlockTimer.StaticBlockMeter(Settings.Default.EpochDuration), () => { args.processor.HandleNewEpochTick(new NewEpochTickEvent()); });
+            epochTimer.Delta(
+                args.stopEstimationDMul,
+                args.stopEstimationDDiv,
+                () =>
                 {
                     long epochN = (long)args.epoch.EpochCounter();
                     if (epochN == 0) return;
                     args.client.StopEstimation(epochN - 1);
-                },
-            });
-            epochTimer.Tell(new DeltaEvent()
-            {
-                mul = args.collectBasicIncome.durationMul,
-                div = args.collectBasicIncome.durationDiv,
-                h = () =>
+                });
+            epochTimer.Delta(
+                args.collectBasicIncome.durationMul,
+                args.collectBasicIncome.durationDiv,
+                () =>
                 {
                     ulong epochN = args.epoch.EpochCounter();
                     if (epochN == 0) return;
                     args.collectBasicIncome.handler(new BasicIncomeCollectEvent() { epoch = epochN - 1 });
-                },
-            });
-            epochTimer.Tell(new DeltaEvent()
-            {
-                mul = args.distributeBasicIncome.durationMul,
-                div = args.distributeBasicIncome.durationDiv,
-                h = () =>
+                });
+            epochTimer.Delta(
+                args.distributeBasicIncome.durationMul,
+                args.distributeBasicIncome.durationDiv,
+                () =>
                 {
                     ulong epochN = args.epoch.EpochCounter();
                     if (epochN == 0) return;
                     args.distributeBasicIncome.handler(new BasicIncomeDistributeEvent() { epoch = epochN - 1 });
-                },
-            });
+                });
             return epochTimer;
         }
 
-        public static IActorRef NewEmissionTimer(EmitTimerArgs args)
+        public static BlockTimer NewEmissionTimer(EmitTimerArgs args)
         {
-            return args.context.ActorSystem.ActorOf(BlockTimerListener.Props(BlockTimer.StaticBlockMeter(Settings.Default.AlphabetDuration), () => { args.processor.HandleGasEmission(new NewAlphabetEmitTickEvent()); }));
+            return new BlockTimer(BlockTimer.StaticBlockMeter(Settings.Default.AlphabetDuration), () => { args.processor.HandleGasEmission(new NewAlphabetEmitTickEvent()); });
         }
 
         public class EmitTimerArgs

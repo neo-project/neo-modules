@@ -64,6 +64,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             IncomeSettlementContext incomeCtx = new IncomeSettlementContext() { settlementDeps = basicIncome, epoch = epoch };
             incomeCtx.bankOwner = incomeCtx.BankOwnerID();
             incomeContexts[epoch] = incomeCtx;
+            Console.WriteLine("Collect,incomeContexts个数：" + incomeContexts.Count+",epoch:"+epoch);
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => incomeCtx.Collect()) });
         }
 
@@ -84,6 +85,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, string.Format("income context distribution does not exists,epoch:{0}", epoch));
                 return;
             }
+            Console.WriteLine("Distribute,incomeContexts个数：" + incomeContexts.Count + ",epoch:" + epoch);
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => incomeCtx.Distribute()) });
         }
 

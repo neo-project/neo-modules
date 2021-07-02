@@ -27,7 +27,7 @@ namespace Neo.FileStorage.InnerRing.Timer
             this.deltaCfg = new DeltaCfg() { pulse = true };
         }
 
-        public void Delta(uint mul, uint div, Action h, Action<DeltaCfg>[] opts)
+        public void Delta(uint mul, uint div, Action h, Action<DeltaCfg>[] opts=null)
         {
             var c = new DeltaCfg() { pulse = false };
             if (opts is not null) foreach (var opt in opts) opt(c);

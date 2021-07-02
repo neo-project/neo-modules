@@ -1,9 +1,8 @@
-using System;
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.InnerRing.Timer;
-using static Neo.FileStorage.InnerRing.Timer.BlockTimerListener;
+using System;
 
 namespace Neo.FileStorage.Tests.Innerring.Timer
 {
@@ -22,28 +21,27 @@ namespace Neo.FileStorage.Tests.Innerring.Timer
         public void OnTickTest()
         {
             uint dur = 2;
-            var blockTimer = system.ActorSystem.ActorOf(BlockTimerListener.Props(() => { return dur; }, () => { this.TestActor.Tell(new Object()); }));
-            blockTimer.Tell(new ResetEvent());
-            blockTimer.Tell(new TickEvent());
+            var blockTimer = new BlockTimer(() => { return dur; }, () => { this.TestActor.Tell(new Object()); });
+            blockTimer.Reset();
+            blockTimer.Tick();
             ExpectNoMsg();
-            blockTimer.Tell(new TickEvent());
+            blockTimer.Tick();
             ExpectMsg<Object>();
         }
 
         [TestMethod]
         public void OnDelta()
         {
-            var blockTimer = system.ActorSystem.ActorOf(BlockTimerListener.Props(() => { return 1; }, () => { }));
-            blockTimer.Tell(new DeltaEvent()
-            {
-                mul = 2,
-                div = 1,
-                h = () => { this.TestActor.Tell(new Object()); },
-            });
-            blockTimer.Tell(new ResetEvent());
-            blockTimer.Tell(new TickEvent());
+            var blockTimer = new BlockTimer(() => { return 1; }, () => { });
+            blockTimer.Delta(
+                2,
+                1,
+                () => { this.TestActor.Tell(new Object()); }
+                );
+            blockTimer.Reset();
+            blockTimer.Tick();
             ExpectNoMsg();
-            blockTimer.Tell(new TickEvent());
+            blockTimer.Tick();
             ExpectMsg<Object>();
         }
     }

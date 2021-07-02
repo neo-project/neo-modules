@@ -95,22 +95,15 @@ namespace Neo.FileStorage.Morph.Invoker
         public InvokeResult TestInvoke(UInt160 contractHash, string method, params object[] args)
         {
             byte[] script = contractHash.MakeScript(method, args);
-            Console.WriteLine("TestInvoke:1");
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            Console.WriteLine("TestInvoke:2");
-            Console.WriteLine("TestInvoke:accounts:"+accounts.Count());
             FakeSigners signers = new FakeSigners(accounts.ToArray()[0].ScriptHash);
-            Console.WriteLine("TestInvoke:3");
             return GetInvokeResult(script, signers);
         }
 
         private InvokeResult GetInvokeResult(byte[] script, FakeSigners signers = null, bool testMode = true)
         {
-            Console.WriteLine("GetInvokeResult:1");
             SnapshotCache snapshot = system.GetSnapshot();
-            Console.WriteLine("GetInvokeResult:2");
             ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, container: signers, null, system.Settings, 0, 20000000000);
-            Console.WriteLine("GetInvokeResult:3");
             return new InvokeResult() { State = engine.State, GasConsumed = (long)engine.GasConsumed, Script = script, ResultStack = engine.ResultStack.ToArray<StackItem>() };
         }
 

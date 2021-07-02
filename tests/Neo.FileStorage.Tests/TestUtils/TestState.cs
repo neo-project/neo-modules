@@ -5,7 +5,6 @@ using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Audit;
 using System;
-using static Neo.FileStorage.InnerRing.Timer.BlockTimerListener;
 
 namespace Neo.FileStorage.Tests.TestUtils
 {
@@ -58,7 +57,7 @@ namespace Neo.FileStorage.Tests.TestUtils
 
         public void ResetEpochTimer()
         {
-            actor.Tell(new ResetEvent());
+            //actor.Tell(new ResetEvent());
         }
 
         public void SetEpochCounter(ulong epoch)

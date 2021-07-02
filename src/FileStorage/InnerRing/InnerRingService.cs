@@ -8,6 +8,7 @@ using Neo.Cryptography.ECC;
 using Neo.FileStorage.API.Audit;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.InnerRing.Processors;
+using Neo.FileStorage.InnerRing.Timer;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Audit;
@@ -21,7 +22,6 @@ using Neo.SmartContract;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
 using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor;
-using static Neo.FileStorage.InnerRing.Timer.BlockTimerListener;
 using static Neo.FileStorage.InnerRing.Timer.Helper;
 using static Neo.FileStorage.Morph.Event.Listener;
 
@@ -41,10 +41,10 @@ namespace Neo.FileStorage.InnerRing
         public class Start { };
         public class Stop { };
         // event producers
-        private List<IActorRef> blockTimers = new();
+        private List<BlockTimer> blockTimers = new();
+        private BlockTimer epochTimer;
         private IActorRef morphEventListener;
         private IActorRef mainEventListener;
-        private IActorRef epochTimer;
         // global state
         private Client mainNetClient;
         private Client morphClient;
@@ -329,14 +329,14 @@ namespace Neo.FileStorage.InnerRing
         {
             foreach (var blockTimer in blockTimers)
             {
-                blockTimer.Tell(new ResetEvent());
+                blockTimer.Reset();
             }
         }
 
         private void TickTimers()
         {
             foreach (var blockTimer in blockTimers)
-                blockTimer.Tell(new TickEvent());
+                blockTimer.Tick();
         }
 
         private void OnStop()
@@ -438,7 +438,7 @@ namespace Neo.FileStorage.InnerRing
 
         public void ResetEpochTimer()
         {
-            epochTimer.Tell(new ResetEvent());
+            epochTimer.Reset();
         }
 
         public Action<IContractEvent> OnlyActiveEventHandler(Action<IContractEvent> f)
