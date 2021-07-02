@@ -18,6 +18,7 @@ namespace Neo.FileStorage
                     Key = key,
                     ResponseService = new()
                     {
+                        StorageNode = this,
                         SessionService = new()
                         {
                             TokenStore = tokenStore

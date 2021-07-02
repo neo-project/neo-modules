@@ -24,6 +24,7 @@ namespace Neo.FileStorage
                     Key = key,
                     ResponseService = new()
                     {
+                        StorageNode = this,
                         NetmapService = new()
                         {
                             StorageNode = this,

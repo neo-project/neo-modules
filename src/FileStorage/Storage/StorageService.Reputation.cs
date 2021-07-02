@@ -134,6 +134,7 @@ namespace Neo.FileStorage
                     Key = key,
                     ResponseService = new()
                     {
+                        StorageNode = this,
                         ReputationService = new()
                         {
                             LocalRouter = localTrustRouter,

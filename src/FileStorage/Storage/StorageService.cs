@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Threading;
 using Akka.Actor;
 using Google.Protobuf;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.LocalObjectStorage.Shards;
@@ -36,7 +38,7 @@ namespace Neo.FileStorage
         public const int ContainerCacheTTLSeconds = 30;
         public const int EACLCacheSize = 100;
         public const int EACLCacheTTLSeconds = 30;
-        public ulong CurrentEpoch;
+        public ulong CurrentEpoch = 0;
         public API.Netmap.NodeInfo LocalNodeInfo;
         public NetmapStatus NetmapStatus = NetmapStatus.Online;
         public HealthStatus HealthStatus = HealthStatus.Ready;
@@ -48,6 +50,7 @@ namespace Neo.FileStorage
         private Network.Address LocalAddress => Network.Address.FromString(LocalNodeInfo.Address);
         private readonly NetmapProcessor netmapProcessor = new();
         private readonly ContainerProcessor containerProcessor = new();
+        private readonly CancellationTokenSource context = new();
 
         public StorageService(Wallet wallet, NeoSystem side)
         {
@@ -110,7 +113,9 @@ namespace Neo.FileStorage
                         ObjectService = objectService,
                         ReputationService = reputationService,
                     });
-                });
+                })
+                .Build()
+                .RunAsync(context.Token);
         }
 
         public void OnPersisted(Block _1, DataCache _2, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
@@ -133,7 +138,8 @@ namespace Neo.FileStorage
 
         public void Dispose()
         {
-            key.Dispose();
+            context.Cancel();
+            key?.Dispose();
         }
     }
 }
