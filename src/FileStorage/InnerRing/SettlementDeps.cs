@@ -75,18 +75,18 @@ namespace Neo.FileStorage.InnerRing
         {
             Utility.Log("SettlementDeps", LogLevel.Info, string.Format("sender:{0},recipient:{1},amount (GASe-12):{2},details:{3}", sender, recipient, amount, Encoding.UTF8.GetString(details)));
             //notary
-            var from=new UInt160(Cryptography.Base58.Base58CheckDecode(Cryptography.Base58.Encode(sender.Value.ToByteArray())).Skip(1).ToArray());
-            var to=new UInt160(Cryptography.Base58.Base58CheckDecode(Cryptography.Base58.Encode(recipient.Value.ToByteArray())).Skip(1).ToArray());
+            var from = new UInt160(Cryptography.Base58.Base58CheckDecode(Cryptography.Base58.Encode(sender.Value.ToByteArray())).Skip(1).ToArray());
+            var to = new UInt160(Cryptography.Base58.Base58CheckDecode(Cryptography.Base58.Encode(recipient.Value.ToByteArray())).Skip(1).ToArray());
             client.InvokeTransferX(from.ToArray(), to.ToArray(), amount, details);
             Utility.Log("SettlementDeps", LogLevel.Info, "transfer transaction for audit was successfully sent");
         }
 
-        public abstract void Transfer(OwnerID sender, OwnerID recipient, long amount,byte[] details);
+        public abstract void Transfer(OwnerID sender, OwnerID recipient, long amount, byte[] details);
     }
 
     public class AuditSettlementDeps : SettlementDeps
     {
-        public override void Transfer(OwnerID sender, OwnerID recipient, long amount,byte[] details)
+        public override void Transfer(OwnerID sender, OwnerID recipient, long amount, byte[] details)
         {
             transfer(sender, recipient, amount, System.Text.Encoding.UTF8.GetBytes("settlement-audit"));
         }
@@ -94,7 +94,7 @@ namespace Neo.FileStorage.InnerRing
     public class BasicIncomeSettlementDeps : SettlementDeps
     {
         public ulong BasicRate => Settings.Default.BasicIncomeRate;
-        public override void Transfer(OwnerID sender, OwnerID recipient, long amount,byte[] details)
+        public override void Transfer(OwnerID sender, OwnerID recipient, long amount, byte[] details)
         {
             transfer(sender, recipient, amount, System.Text.Encoding.UTF8.GetBytes("settlement-basic-income"));
         }

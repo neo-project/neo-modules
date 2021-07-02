@@ -154,12 +154,12 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public static bool StartEstimation(this Client client, long epoch)
         {
-            return client.Invoke(out _, ContainerContractHash, StartEstimationMethod, SideChainFee,epoch);
+            return client.Invoke(out _, ContainerContractHash, StartEstimationMethod, SideChainFee, epoch);
         }
 
         public static bool StopEstimation(this Client client, long epoch)
         {
-            return client.Invoke(out _, ContainerContractHash, StopEstimationMethod, SideChainFee,epoch);
+            return client.Invoke(out _, ContainerContractHash, StopEstimationMethod, SideChainFee, epoch);
         }
     }
 }

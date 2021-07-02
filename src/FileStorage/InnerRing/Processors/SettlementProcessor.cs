@@ -64,7 +64,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             IncomeSettlementContext incomeCtx = new IncomeSettlementContext() { settlementDeps = basicIncome, epoch = epoch };
             incomeCtx.bankOwner = incomeCtx.BankOwnerID();
             incomeContexts[epoch] = incomeCtx;
-            Console.WriteLine("Collect,incomeContexts个数：" + incomeContexts.Count+",epoch:"+epoch);
+            Console.WriteLine("Collect,incomeContexts个数：" + incomeContexts.Count + ",epoch:" + epoch);
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => incomeCtx.Collect()) });
         }
 
@@ -95,12 +95,12 @@ namespace Neo.FileStorage.InnerRing.Processors
             public BasicIncomeSettlementDeps settlementDeps;
             public ulong epoch;
             public OwnerID bankOwner;
-            public NodeSizeTable distributeTable=new();
+            public NodeSizeTable distributeTable = new();
 
             public OwnerID BankOwnerID()
             {
                 OwnerID ownerID = new OwnerID();
-                UInt160 account=new UInt160(new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });               
+                UInt160 account = new UInt160(new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
                 ownerID.Value = ByteString.CopyFrom(Cryptography.Base58.Decode(Cryptography.Base58.Base58CheckEncode(account.ToArray())));
                 return ownerID;
             }
@@ -115,16 +115,22 @@ namespace Neo.FileStorage.InnerRing.Processors
                     foreach (var item in cnrEstimations)
                     {
                         OwnerID owner = null;
-                        try {
+                        try
+                        {
                             owner = settlementDeps.ContainerInfo(item.ContainerID).OwnerId;
-                        } catch {
+                        }
+                        catch
+                        {
                             Utility.Log("IncomeSettlementContext", LogLevel.Info, string.Format("can't fetch container info,epoch:{0},container_id:{1}", epoch, item.ContainerID.ToByteString()));
                             continue;
                         }
                         NodeInfo[] cnrNodes = null;
-                        try {
+                        try
+                        {
                             cnrNodes = settlementDeps.ContainerNodes(epoch, item.ContainerID);
-                        } catch {
+                        }
+                        catch
+                        {
                             Utility.Log("IncomeSettlementContext", LogLevel.Info, string.Format("can't fetch container info,epoch:{0},container_id:{1}", epoch, item.ContainerID.ToByteString()));
                             continue;
                         }
@@ -134,7 +140,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                             distributeTable.Put(node.PublicKey(), avg);
                         txTable.Transfer(new TransferTable.TransferTx() { from = owner, to = BankOwnerID(), amount = total });
                     }
-                    TransferTable.TransferAssets(settlementDeps,txTable, System.Text.Encoding.UTF8.GetBytes("settlement-basincome"));
+                    TransferTable.TransferAssets(settlementDeps, txTable, System.Text.Encoding.UTF8.GetBytes("settlement-basincome"));
                 }
             }
 
@@ -196,7 +202,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                         if (txs.TryGetValue(to, out m))
                         {
                             to = from;
-                            tx.amount= BigInteger.Negate(tx.amount);
+                            tx.amount = BigInteger.Negate(tx.amount);
                         }
                         else
                         {
@@ -219,7 +225,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                             f(tx.Value);
                 }
 
-                public static void TransferAssets(SettlementDeps e, TransferTable t,byte[] details)
+                public static void TransferAssets(SettlementDeps e, TransferTable t, byte[] details)
                 {
                     t.Iterate((TransferTx tx) =>
                     {
