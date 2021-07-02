@@ -22,6 +22,7 @@ using Neo.FileStorage.Services.Netmap;
 using Neo.FileStorage.Services.Object.Acl;
 using Neo.FileStorage.Services.Reputaion.Service;
 using Neo.FileStorage.Services.Session;
+using Neo.FileStorage.Storage.gRPC;
 using Neo.FileStorage.Storage.Processors;
 using Neo.FileStorage.Utils;
 using Neo.Ledger;
@@ -97,6 +98,11 @@ namespace Neo.FileStorage
             listener.Tell(new Listener.BindProcessorEvent { processor = containerProcessor });
             listener.Tell(new Listener.Start());
             Host.CreateDefaultBuilder()
+                .ConfigureLogging(logBuilder =>
+                {
+                    logBuilder.ClearProviders()
+                        .AddProvider(new LoggerProvider());
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.ConfigureKestrel(options =>
