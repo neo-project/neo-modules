@@ -51,12 +51,12 @@ namespace Neo.FileStorage.Morph.Invoker
         public static bool SetEACL(this Client client, EACLTable eacl, Signature sig, SessionToken token)
         {
             if (client is null) throw new ArgumentNullException(nameof(eacl));
-            return client.Invoke(out _, ContainerContractHash, SetEACLMethod, ExtraFee, eacl.ToByteArray(), sig.Key.ToByteArray(), sig.Sign.ToByteArray(), token.ToByteArray());
+            return client.Invoke(out _, ContainerContractHash, SetEACLMethod, SideChainFee, eacl.ToByteArray(), sig.Key.ToByteArray(), sig.Sign.ToByteArray(), token.ToByteArray());
         }
 
         public static bool DeleteContainer(this Client client, ContainerID cid, byte[] sig, SessionToken token)
         {
-            return client.Invoke(out _, ContainerContractHash, DeleteMethod, ExtraFee, cid.Value.ToByteArray(), sig, token.ToByteArray());
+            return client.Invoke(out _, ContainerContractHash, DeleteMethod, SideChainFee, cid.Value.ToByteArray(), sig, token.ToByteArray());
         }
 
         public static EAclWithSignature GetEACL(this Client client, ContainerID containerID)
@@ -113,7 +113,7 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public static bool AnnounceLoad(this Client client, Announcement announcement, byte[] key)
         {
-            return client.Invoke(out _, ContainerContractHash, PutSizeMethod, ExtraFee, announcement.Epoch, announcement.ContainerId.Value.ToByteArray(), announcement.UsedSpace, key);
+            return client.Invoke(out _, ContainerContractHash, PutSizeMethod, SideChainFee, announcement.Epoch, announcement.ContainerId.Value.ToByteArray(), announcement.UsedSpace, key);
         }
 
         public static Estimations InvokeGetContainerSize(this Client client, ContainerID containerID)

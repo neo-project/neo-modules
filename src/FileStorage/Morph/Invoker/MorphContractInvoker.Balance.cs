@@ -25,7 +25,7 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public static bool InvokeTransferX(this Client client, byte[] from, byte[] to, long amount, byte[] details)
         {
-            return client.Invoke(out _, BalanceContractHash, TransferXMethod, ExtraFee, from, to, amount, details);
+            return client.Invoke(out _, BalanceContractHash, TransferXMethod, SideChainFee, from, to, amount, details);
         }
     }
 }

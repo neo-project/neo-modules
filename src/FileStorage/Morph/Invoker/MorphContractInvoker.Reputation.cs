@@ -15,7 +15,7 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public static bool InvokeReputationPut(this Client client, ulong epoch, byte[] peerID, byte[] value)
         {
-            return client.Invoke(out _, ReputationContractHash, ReputationPutMethod, 0, epoch, peerID, value);
+            return client.Invoke(out _, ReputationContractHash, ReputationPutMethod, SideChainFee, epoch, peerID, value);
         }
 
         public static List<GlobalTrust> InvokeReputationGet(this Client client, ulong epoch, byte[] peerID)

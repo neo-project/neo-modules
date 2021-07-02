@@ -22,7 +22,7 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public static bool InvokeAddPeer(this Client client, byte[] info)
         {
-            return client.Invoke(out _, NetMapContractHash, AddPeerMethod, ExtraFee, info);
+            return client.Invoke(out _, NetMapContractHash, AddPeerMethod, SideChainFee, info);
         }
 
         public static ulong InvokeEpoch(this Client client)
@@ -34,12 +34,12 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public static bool InvokeNewEpoch(this Client client, long epochNumber)
         {
-            return client.Invoke(out _, NetMapContractHash, NewEpochMethod, ExtraFee, epochNumber);
+            return client.Invoke(out _, NetMapContractHash, NewEpochMethod, SideChainFee, epochNumber);
         }
 
         public static bool InvokeUpdateState(this Client client, long state, byte[] key)
         {
-            return client.Invoke(out _, NetMapContractHash, UpdateStateMethod, ExtraFee, state, key);
+            return client.Invoke(out _, NetMapContractHash, UpdateStateMethod, SideChainFee, state, key);
         }
 
         public static NetMap InvokeNetMap(this Client client)
