@@ -61,7 +61,7 @@ namespace Neo.Plugins
             if (!message.IsSuccessStatusCode)
                 return (OracleResponseCode.Error, null);
             if (!Settings.Default.AllowedContentTypes.Contains(message.Content.Headers.ContentType.MediaType))
-                return (OracleResponseCode.ProtocolNotSupported, null);
+                return (OracleResponseCode.ContentTypeNotSupported, null);
             return (OracleResponseCode.Success, await message.Content.ReadAsStringAsync(cancellation));
         }
     }

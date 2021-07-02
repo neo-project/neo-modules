@@ -1,5 +1,4 @@
 using Neo.IO.Json;
-using Neo.SmartContract;
 using Neo.Wallets;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +16,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson(ProtocolSettings protocolSettings)
         {
-            JObject json = new JObject();
+            JObject json = new();
             json["sent"] = Sent.Select(p => p.ToJson(protocolSettings)).ToArray();
             json["received"] = Received.Select(p => p.ToJson(protocolSettings)).ToArray();
             json["address"] = UserScriptHash.ToAddress(protocolSettings.AddressVersion);
@@ -26,7 +25,7 @@ namespace Neo.Network.RPC.Models
 
         public static RpcNep17Transfers FromJson(JObject json, ProtocolSettings protocolSettings)
         {
-            RpcNep17Transfers transfers = new RpcNep17Transfers
+            RpcNep17Transfers transfers = new()
             {
                 Sent = ((JArray)json["sent"]).Select(p => RpcNep17Transfer.FromJson(p, protocolSettings)).ToList(),
                 Received = ((JArray)json["received"]).Select(p => RpcNep17Transfer.FromJson(p, protocolSettings)).ToList(),
@@ -54,7 +53,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson(ProtocolSettings protocolSettings)
         {
-            JObject json = new JObject();
+            JObject json = new();
             json["timestamp"] = TimestampMS;
             json["assethash"] = AssetHash.ToString();
             json["transferaddress"] = UserScriptHash?.ToAddress(protocolSettings.AddressVersion);

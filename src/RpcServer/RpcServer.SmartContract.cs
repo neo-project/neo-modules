@@ -1,6 +1,3 @@
-#pragma warning disable IDE0051
-#pragma warning disable IDE0060
-
 using Neo.Cryptography.ECC;
 using Neo.IO;
 using Neo.IO.Json;
@@ -71,7 +68,7 @@ namespace Neo.Plugins
                 Witnesses = signers.Witnesses,
             };
             using ApplicationEngine engine = ApplicationEngine.Run(script, system.StoreView, container: tx, settings: system.Settings, gas: settings.MaxGasInvoke);
-            JObject json = new JObject();
+            JObject json = new();
             json["script"] = Convert.ToBase64String(script);
             json["state"] = engine.State;
             json["gasconsumed"] = engine.GasConsumed.ToString();
@@ -144,11 +141,11 @@ namespace Neo.Plugins
         {
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
-            ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : new ContractParameter[0];
+            ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : System.Array.Empty<ContractParameter>();
             Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
 
             byte[] script;
-            using (ScriptBuilder sb = new ScriptBuilder())
+            using (ScriptBuilder sb = new())
             {
                 script = sb.EmitDynamicCall(script_hash, operation, args).ToArray();
             }
@@ -167,7 +164,7 @@ namespace Neo.Plugins
         protected virtual JObject GetUnclaimedGas(JArray _params)
         {
             string address = _params[0].AsString();
-            JObject json = new JObject();
+            JObject json = new();
             UInt160 script_hash;
             try
             {
