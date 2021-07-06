@@ -465,6 +465,10 @@ namespace Neo.Plugins
         private bool CheckTxSign(DataCache snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
         {
             uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
+            if (tx.ValidUntilBlock <= height)
+            {
+                return false;
+            }
             ECPoint[] oraclesNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
             int neededThreshold = oraclesNodes.Length - (oraclesNodes.Length - 1) / 3;
             if (OracleSigns.Count >= neededThreshold && tx != null)
