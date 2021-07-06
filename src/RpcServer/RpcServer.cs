@@ -75,7 +75,7 @@ namespace Neo.Plugins
 
         private static JObject CreateResponse(JObject id)
         {
-            JObject response = new JObject();
+            JObject response = new();
             response["jsonrpc"] = "2.0";
             response["id"] = id;
             return response;
@@ -176,7 +176,7 @@ namespace Neo.Plugins
             }
             else if (context.Request.Method == "POST")
             {
-                using StreamReader reader = new StreamReader(context.Request.Body);
+                using StreamReader reader = new(context.Request.Body);
                 try
                 {
                     request = JObject.Parse(await reader.ReadToEndAsync());

@@ -16,7 +16,7 @@ namespace Neo.Network.RPC.Models
 
         public static RpcResponse FromJson(JObject json)
         {
-            var response = new RpcResponse
+            RpcResponse response = new()
             {
                 Id = json["id"],
                 JsonRpc = json["jsonrpc"].AsString(),
@@ -33,7 +33,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            var json = new JObject();
+            JObject json = new();
             json["id"] = Id;
             json["jsonrpc"] = JsonRpc;
             json["error"] = Error?.ToJson();
@@ -62,7 +62,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            var json = new JObject();
+            JObject json = new();
             json["code"] = Code;
             json["message"] = Message;
             json["data"] = Data;

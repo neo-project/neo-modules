@@ -51,7 +51,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new JObject();
+            JObject json = new();
             json["trigger"] = Trigger;
             json["vmstate"] = VMState;
             json["gasconsumed"] = GasConsumed.ToString();
@@ -83,7 +83,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new JObject();
+            JObject json = new();
             json["contract"] = Contract.ToString();
             json["eventname"] = EventName;
             json["state"] = State.ToJson();

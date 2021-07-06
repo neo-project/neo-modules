@@ -47,7 +47,7 @@ namespace Neo.Plugins
             MaxConcurrentConnections = 40,
         };
 
-        public static RpcServerSettings Load(IConfigurationSection section) => new RpcServerSettings
+        public static RpcServerSettings Load(IConfigurationSection section) => new()
         {
             Network = section.GetValue("Network", Default.Network),
             BindAddress = IPAddress.Parse(section.GetSection("BindAddress").Value),
