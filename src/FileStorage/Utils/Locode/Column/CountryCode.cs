@@ -28,7 +28,7 @@ namespace Neo.FileStorage.Utils.Locode.Column
 
         public override string ToString()
         {
-            return string.Join("", Symbols());
+            return new string(values);
         }
     }
 }

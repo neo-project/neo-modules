@@ -31,5 +31,10 @@ namespace Neo.FileStorage.Utils
             writer.Write(LocationCode.Symbols());
             writer.Flush();
         }
+
+        public override string ToString()
+        {
+            return CountryCode.ToString() + " " + LocationCode.ToString();
+        }
     }
 }

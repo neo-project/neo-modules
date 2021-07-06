@@ -1,4 +1,5 @@
 using System;
+using Akka.Util.Internal;
 
 namespace Neo.FileStorage.Utils.Locode.Column
 {
@@ -20,6 +21,11 @@ namespace Neo.FileStorage.Utils.Locode.Column
             string[] words = s.Split(locationSeparator);
             if (words.Length != 1 && words.Length != 2) throw new FormatException("invalid string format in UN/Locode");
             return new LOCODE(words);
+        }
+
+        public override string ToString()
+        {
+            return values.Join(" ");
         }
     }
 }

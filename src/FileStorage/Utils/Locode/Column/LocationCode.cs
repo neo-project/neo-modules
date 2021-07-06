@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Neo.FileStorage.Utils.Locode.Column
@@ -24,6 +25,11 @@ namespace Neo.FileStorage.Utils.Locode.Column
             if (s.Length != LocationCodeLen) throw new Exception("invalid string format in UN/Locode");
             if (!Regex.IsMatch(s, pattern)) throw new Exception("invalid string format in UN/Locode");
             return new LocationCode(s.ToCharArray());
+        }
+
+        public override string ToString()
+        {
+            return new string(values);
         }
     }
 }
