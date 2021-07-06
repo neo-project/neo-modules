@@ -1,18 +1,47 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neo.FileStorage.Database;
+using Neo.FileStorage.Database.LevelDB;
+using Neo.FileStorage.Utils;
 using Neo.FileStorage.Utils.Locode;
 using Neo.FileStorage.Utils.Locode.Db;
+using Neo.IO;
 
 namespace Neo.FileStorage.Tests.Util.Locode
 {
     [TestClass]
     public class UT_Locode
     {
+        private class TestLOCODEStorage : IDisposable
+        {
+            private const byte PreLocode = 0x00;
+            private readonly IDB _db;
+
+            public TestLOCODEStorage(string path)
+            {
+                _db = new DB(path);
+            }
+
+            public void Dispose()
+            {
+                _db.Dispose();
+            }
+
+            public void Iterate(Func<Key, Record, bool> handler)
+            {
+                _db.Iterate(new byte[] { PreLocode }, (key, value) =>
+                   {
+                       return handler(key[1..].AsSerializable<Key>(), value.AsSerializable<Record>());
+                   });
+            }
+        }
+
         [TestMethod]
         public void TestFillDatabase()
         {
@@ -38,11 +67,9 @@ namespace Neo.FileStorage.Tests.Util.Locode
                 Path = continentsPath
             };
             string dbPath = "./Data_LOCODE";
-            StorageDB targetDb = new(dbPath);
-            Console.WriteLine(Path.GetFullPath(dbPath));
+            using StorageDB targetDb = new(dbPath);
             targetDb.FillDatabase(locodeDB, airportsDB, continentDB);
-            targetDb.Dispose();
-            //Directory.Delete(dbPath, true);
+            Directory.Delete(dbPath, true);
         }
 
         [TestMethod]
@@ -94,6 +121,17 @@ namespace Neo.FileStorage.Tests.Util.Locode
 
             var records = csv.GetRecords<CSVTable.UNLOCODERecord>();
             Assert.AreEqual(50990, records.Count());
+        }
+
+        [TestMethod]
+        public void TestContinents()
+        {
+            string continentsPath = "./Resources/continents.geojson";
+            ContinentDB continentDB = new()
+            {
+                Path = continentsPath
+            };
+            Assert.AreEqual(Continent.ContinentEurope, continentDB.PointContinent(new() { Latitude = 48.25, Longitude = 15.45 }));
         }
     }
 }

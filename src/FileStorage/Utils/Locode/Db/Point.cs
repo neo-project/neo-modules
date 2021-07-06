@@ -41,5 +41,10 @@ namespace Neo.FileStorage.Utils.Locode.Db
             if (!cLng.East()) lng = -lng;
             return new Point() { Latitude = lat, Longitude = lng };
         }
+
+        public override string ToString()
+        {
+            return Latitude + ", " + Longitude;
+        }
     }
 }

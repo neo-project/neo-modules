@@ -31,7 +31,7 @@ namespace Neo.FileStorage.Utils.Locode.Column
 
         public byte[] Hemisphere()
         {
-            return value.Take(degDigits + MinutesDigits).ToArray();
+            return value.Skip(degDigits + MinutesDigits).ToArray();
         }
 
         public byte[] Degrees()

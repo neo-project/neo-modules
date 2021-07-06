@@ -102,7 +102,7 @@ namespace Neo.FileStorage.Utils.Locode
         public string SubDivName(CountryCode countryCode, string code)
         {
             InitSubDiv();
-            if (!mSubDiv.TryGetValue((countryCode.Symbols().ToString(), code), out string rec)) throw new KeyNotFoundException("subdivision not found");
+            if (!mSubDiv.TryGetValue((countryCode.ToString(), code), out string rec)) throw new KeyNotFoundException("subdivision not found");
             return rec;
         }
 
