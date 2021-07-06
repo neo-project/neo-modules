@@ -27,7 +27,7 @@ namespace Neo.FileStorage.Utils.Locode.Db
         public (Key, Record) Get(LOCODE lc)
         {
             Key key = new(lc);
-            Record record = _db.Get(key.ToArray())?.AsSerializable<Record>();
+            Record record = _db.Get(Key(PreLocode, key))?.AsSerializable<Record>();
             return (key, record);
         }
 

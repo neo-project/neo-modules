@@ -88,7 +88,8 @@ namespace Neo.FileStorage.Morph.Invoker
             tx.Witnesses = data.GetWitnesses();
             txId = tx.Hash;
             actor.Tell(tx);
-            Utility.Log("client", LogLevel.Debug, string.Format("neo client invoke,method:{0},tx_hash:{1},当前区块高度：{2}", method, tx.Hash.ToString(), height));
+            var balance = wallet.GetBalance(snapshot, NativeContract.GAS.Hash, wallet.GetAccounts().ToArray()[0].ScriptHash);
+            Utility.Log("client", LogLevel.Debug, string.Format("neo client invoke,method:{0},tx_hash:{1},current height：{2},SystemFee:{3},NetWorkFee:{4},balance:{5},isInsufficient:{6}", method, tx.Hash.ToString(), height, tx.SystemFee, tx.NetworkFee, balance.Value * 100000000, (tx.SystemFee + tx.NetworkFee) > ((long)balance.Value * 100000000)));
             return true;
         }
 

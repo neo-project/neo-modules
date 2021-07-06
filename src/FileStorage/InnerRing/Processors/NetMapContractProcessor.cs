@@ -220,6 +220,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
+                Console.WriteLine("nodeInfo is null:" + nodeInfo is null);
                 NodeValidator.VerifyAndUpdate(nodeInfo);
             }
             catch (Exception e)
@@ -402,24 +403,35 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void VerifyAndUpdate(API.Netmap.NodeInfo n)
         {
+            Console.WriteLine("VerifyAndUpdate:step1");
             var tAttr = UniqueAttributes(n.Attributes.GetEnumerator());
+            Console.WriteLine("VerifyAndUpdate:step2");
             if (!tAttr.TryGetValue(Node.AttributeUNLOCODE, out var attrLocode)) return;
             var lc = LOCODE.FromString(attrLocode.Value);
+            Console.WriteLine("VerifyAndUpdate:step3:" + (lc.CountryCode() + " " + lc.LocationCode()));
             (Key, Record) record = dB.Get(lc);
+            Console.WriteLine("VerifyAndUpdate:record is null:" + record.Item2 is null);
+            Console.WriteLine("VerifyAndUpdate:step4");
             foreach (var attr in mAttr)
             {
+                Console.WriteLine("VerifyAndUpdate:step4-1:" + attr.Key);
                 var attrVal = attr.Value.converter(record);
+                Console.WriteLine("VerifyAndUpdate:step4-2:" + attr.Key);
                 if (attrVal == "")
                 {
+                    Console.WriteLine("VerifyAndUpdate:step4-2-1");
                     if (!attr.Value.optional)
                         throw new Exception("missing required attribute in DB record");
                     continue;
                 }
+                Console.WriteLine("VerifyAndUpdate:step4-3");
                 var a = new API.Netmap.NodeInfo.Types.Attribute();
                 a.Key = attr.Key;
                 a.Value = attrVal;
                 tAttr[attr.Key] = a;
+                Console.WriteLine("VerifyAndUpdate:step4-4");
             }
+            Console.WriteLine("VerifyAndUpdate:step5");
             var ass = new List<API.Netmap.NodeInfo.Types.Attribute>();
             foreach (var item in tAttr)
                 ass.Add(item.Value);
