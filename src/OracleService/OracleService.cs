@@ -28,7 +28,7 @@ namespace Neo.Plugins
 {
     public class OracleService : Plugin, IPersistencePlugin
     {
-        private const int RefreshInterval = 1000 * 60 * 3;
+        private const int RefreshIntervalMilliSeconds = 1000 * 60 * 3;
 
         private Wallet wallet;
         private readonly ConcurrentDictionary<ulong, OracleTask> pendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
@@ -118,7 +118,7 @@ namespace Neo.Plugins
             protocols["https"] = new OracleHttpsProtocol();
             protocols["neofs"] = new OracleNeoFSProtocol(wallet, oracles);
             started = true;
-            timer = new Timer(OnTimer, null, RefreshInterval, Timeout.Infinite);
+            timer = new Timer(OnTimer, null, RefreshIntervalMilliSeconds, Timeout.Infinite);
 
             ProcessRequestsAsync();
         }
@@ -154,7 +154,7 @@ namespace Neo.Plugins
                     outOfDate.Add(id);
                     continue;
                 }
-                if (span > TimeSpan.FromSeconds(RefreshInterval))
+                if (span > TimeSpan.FromMilliseconds(RefreshIntervalMilliSeconds))
                 {
                     List<Task> tasks = new List<Task>();
                     foreach (var account in wallet.GetAccounts())
@@ -170,7 +170,7 @@ namespace Neo.Plugins
                     finishedCache.TryRemove(key, out _);
 
             if (!cancelSource.IsCancellationRequested)
-                timer?.Change(RefreshInterval, Timeout.Infinite);
+                timer?.Change(RefreshIntervalMilliSeconds, Timeout.Infinite);
         }
 
         [RpcMethod]
@@ -235,7 +235,7 @@ namespace Neo.Plugins
 
         private async Task ProcessRequestAsync(DataCache snapshot, OracleRequest req)
         {
-            Log($"Process oracle request: {req}, txid: {req.OriginalTxid}, url: {req.Url}");
+            Log($"Process oracle request txid: {req.OriginalTxid}, url: {req.Url}");
 
             uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
 
@@ -260,7 +260,7 @@ namespace Neo.Plugins
                 var responseTx = CreateResponseTx(snapshot, request, response, oracleNodes, System.Settings);
                 var backupTx = CreateResponseTx(snapshot, request, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() }, oracleNodes, System.Settings, true);
 
-                Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
+                Log($"Builded response tx:{responseTx.Hash}, responseCode:{code}, validUntilBlock:{responseTx.ValidUntilBlock}-{backupTx.ValidUntilBlock}, requestTx:{request.OriginalTxid}, requestId: {requestId}");
 
                 List<Task> tasks = new List<Task>();
                 ECPoint[] oraclePublicKeys = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
