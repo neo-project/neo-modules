@@ -1,4 +1,3 @@
-using Neo.IO;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.Wallets;
@@ -9,7 +8,7 @@ using static Neo.Consensus.RecoveryMessage;
 
 namespace Neo.Consensus
 {
-    partial class ConsensusContext : IDisposable, ISerializable
+    partial class ConsensusContext
     {
         public ConsensusMessage GetMessage(ExtensiblePayload payload)
         {

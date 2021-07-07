@@ -9,7 +9,7 @@ using static Neo.Consensus.RecoveryMessage;
 
 namespace Neo.Consensus
 {
-    public partial class ConsensusContext
+    partial class ConsensusContext
     {
         public ExtensiblePayload MakeChangeView(ChangeViewReason reason)
         {
