@@ -42,7 +42,6 @@ namespace Neo.FileStorage.LocalObjectStorage.Blobstor
         public void Dispose()
         {
             blobovniczas?.Dispose();
-            compressor?.Dispose();
         }
 
         private bool IsBig(byte[] data)

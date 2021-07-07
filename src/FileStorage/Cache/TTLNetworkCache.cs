@@ -34,7 +34,7 @@ namespace Neo.FileStorage.Cache
                 cache.Remove(key);
             }
             var value = fetcher(key);
-            cache.TryAdd(key, new ValueWithTime { Expiration = DateTime.UtcNow + ttl, Value = value });
+            cache.Add(key, new ValueWithTime { Expiration = DateTime.UtcNow + ttl, Value = value });
             return value;
         }
     }

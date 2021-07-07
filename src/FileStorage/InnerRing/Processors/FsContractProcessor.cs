@@ -191,7 +191,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 {
                     Utility.Log(Name, LogLevel.Error, string.Format("can't transfer native gas to receiver,{0}", e.Message));
                 }
-                mintEmitCache.TryAdd(receiver.ToString(), curEpoch);
+                mintEmitCache.Add(receiver.ToString(), curEpoch);
             }
         }
 

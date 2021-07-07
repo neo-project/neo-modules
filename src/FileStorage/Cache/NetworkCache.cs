@@ -22,7 +22,7 @@ namespace Neo.FileStorage.Cache
                 return value;
             }
             value = fetcher(key);
-            cache.TryAdd(key, value);
+            cache.Add(key, value);
             return value;
         }
     }

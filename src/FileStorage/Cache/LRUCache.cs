@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace Neo.FileStorage.Cache
 {
@@ -19,6 +18,7 @@ namespace Neo.FileStorage.Cache
             }
         }
 
+        private readonly ReaderWriterLockSlim cacheLock = new();
         private readonly Dictionary<K, Element> cache = new();
         private readonly LinkedList<Element> list = new();
         private readonly int capacity;
@@ -33,12 +33,22 @@ namespace Neo.FileStorage.Cache
 
         public bool TryGet(K key, out V value)
         {
-            if (cache.TryGetValue(key, out Element el))
+            cacheLock.EnterUpgradeableReadLock();
+            try
             {
-                list.Remove(el);
-                list.AddFirst(el);
-                value = el.Value;
-                return true;
+                if (cache.TryGetValue(key, out Element el))
+                {
+                    cacheLock.EnterWriteLock();
+                    list.Remove(el);
+                    list.AddFirst(el);
+                    cacheLock.ExitWriteLock();
+                    value = el.Value;
+                    return true;
+                }
+            }
+            finally
+            {
+                cacheLock.ExitUpgradeableReadLock();
             }
             value = default;
             return false;
@@ -46,25 +56,34 @@ namespace Neo.FileStorage.Cache
 
         public bool TryPeek(K key, out V value)
         {
-            if (cache.TryGetValue(key, out Element el))
+            cacheLock.EnterReadLock();
+            try
             {
-                value = el.Value;
-                return true;
+                if (cache.TryGetValue(key, out Element el))
+                {
+                    value = el.Value;
+                    return true;
+                }
+            }
+            finally
+            {
+                cacheLock.ExitReadLock();
             }
             value = default;
             return false;
         }
 
-        public bool TryAdd(K key, V value)
+        public void Add(K key, V value)
         {
             Element evicted_el = null;
-            lock (this)
+            cacheLock.EnterWriteLock();
+            try
             {
                 if (cache.TryGetValue(key, out Element el))
                 {
                     list.Remove(el);
                     list.AddFirst(el);
-                    return true;
+                    return;
                 }
                 el = new(key, value);
                 cache.Add(key, el);
@@ -76,18 +95,26 @@ namespace Neo.FileStorage.Cache
                     list.RemoveLast();
                 }
             }
+            finally
+            {
+                cacheLock.ExitWriteLock();
+            }
             if (onEvict is not null && evicted_el is not null)
                 onEvict(evicted_el.Key, evicted_el.Value);
-            return true;
         }
 
         public bool Remove(K key)
         {
             bool evicted;
             Element evicted_e = null;
-            lock (this)
+            cacheLock.EnterWriteLock();
+            try
             {
                 evicted = cache.Remove(key, out evicted_e) && list.Remove(evicted_e);
+            }
+            finally
+            {
+                cacheLock.ExitWriteLock();
             }
             if (onEvict is not null && evicted)
                 onEvict(evicted_e.Key, evicted_e.Value);
@@ -96,15 +123,32 @@ namespace Neo.FileStorage.Cache
 
         public bool RemoveOldest(out (K, V) result)
         {
-            var to_rm = list.Last?.Value;
-            if (to_rm is null)
+            cacheLock.EnterUpgradeableReadLock();
+            Element to_rm;
+            try
             {
-                result.Item1 = default;
-                result.Item2 = default;
-                return false;
+                to_rm = list.Last?.Value;
+                if (to_rm is null)
+                {
+                    result.Item1 = default;
+                    result.Item2 = default;
+                    return false;
+                }
+                cacheLock.EnterWriteLock();
+                try
+                {
+                    list.RemoveLast();
+                    cache.Remove(to_rm.Key);
+                }
+                finally
+                {
+                    cacheLock.ExitWriteLock();
+                }
             }
-            list.RemoveLast();
-            cache.Remove(to_rm.Key);
+            finally
+            {
+                cacheLock.ExitUpgradeableReadLock();
+            }
             result.Item1 = to_rm.Key;
             result.Item2 = to_rm.Value;
             return true;
@@ -113,24 +157,49 @@ namespace Neo.FileStorage.Cache
 
         public bool Contains(K key)
         {
-            return cache.ContainsKey(key);
+            cacheLock.EnterReadLock();
+            try
+            {
+                return cache.ContainsKey(key);
+            }
+            finally
+            {
+                cacheLock.ExitReadLock();
+            }
         }
 
         public IEnumerable<K> Keys()
         {
-            foreach (var n in list)
-                yield return n.Key;
+            cacheLock.EnterReadLock();
+            try
+            {
+                foreach (var n in list)
+                    yield return n.Key;
+            }
+            finally
+            {
+                cacheLock.ExitReadLock();
+            }
         }
 
         public void Purge()
         {
-            foreach (var item in cache.Values)
+            cacheLock.EnterWriteLock();
+            try
             {
-                if (onEvict is not null)
-                    onEvict(item.Key, item.Value);
+
+                foreach (var item in cache.Values)
+                {
+                    if (onEvict is not null)
+                        onEvict(item.Key, item.Value);
+                }
+                cache.Clear();
+                list.Clear();
             }
-            cache.Clear();
-            list.Clear();
+            finally
+            {
+                cacheLock.ExitWriteLock();
+            }
         }
     }
 }
