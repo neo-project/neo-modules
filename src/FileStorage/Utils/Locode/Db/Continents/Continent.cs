@@ -56,6 +56,7 @@ namespace Neo.FileStorage.Utils.Locode.Db
                     return Continent.ContinentAsia;
                 case "Antarctica":
                     return Continent.ContinentAntarctica;
+                case "Australia":
                 case "Oceania":
                     return Continent.ContinentOceania;
                 default:

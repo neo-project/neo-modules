@@ -100,6 +100,7 @@ namespace Neo.FileStorage.Tests.Util.Locode
             using StorageDB targetDb = new(dbPath);
             var r = targetDb.Get(LOCODE.FromString("AU ADL"));
             Assert.IsNotNull(r.Item2);
+            Assert.AreEqual("", r.Item2.ToString());
         }
 
         [TestMethod]
@@ -156,12 +157,20 @@ namespace Neo.FileStorage.Tests.Util.Locode
         [TestMethod]
         public void TestContinents()
         {
+            List<(Point, Continent)> cases = new()
+            {
+                { (new() { Latitude = 48.25, Longitude = 15.45 }, Continent.ContinentEurope) },
+                { (new() { Latitude = -34.55, Longitude = 138.35 }, Continent.ContinentOceania) },
+            };
             string continentsPath = "./Resources/continents.geojson";
             ContinentDB continentDB = new()
             {
                 Path = continentsPath
             };
-            Assert.AreEqual(Continent.ContinentEurope, continentDB.PointContinent(new() { Latitude = 48.25, Longitude = 15.45 }));
+            foreach (var (p, expected) in cases)
+            {
+                Assert.AreEqual(expected, continentDB.PointContinent(p));
+            }
         }
 
         [TestMethod]
