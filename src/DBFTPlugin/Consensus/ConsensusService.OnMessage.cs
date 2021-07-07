@@ -4,13 +4,13 @@ using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
-using Neo.SmartContract.Native;
-using System.Collections.Generic;
-using System.Linq;
 using Neo.SmartContract;
-using System.IO;
+using Neo.SmartContract.Native;
 using Neo.Wallets;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace Neo.Consensus
 {
@@ -294,6 +294,5 @@ namespace Neo.Consensus
             }
             localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeRecoveryMessage() });
         }
-
     }
 }

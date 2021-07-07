@@ -4,6 +4,7 @@ using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using System;
 using System.Linq;
+
 namespace Neo.Consensus
 {
     partial class ConsensusService
