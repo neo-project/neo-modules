@@ -166,8 +166,10 @@ namespace Neo.FileStorage.InnerRing.Processors
             var receiver = depositeEvent.To;
             lock (lockObj)
             {
-                if (mintEmitCache.TryGet(receiver.ToString(), out ulong value) && ((value + mintEmitThreshold) >= curEpoch))
+                if (mintEmitCache.TryGet(receiver.ToString(), out ulong value) && ((value + mintEmitThreshold) >= curEpoch)) {
                     Utility.Log(Name, LogLevel.Warning, string.Format("double mint emission declined,receiver:{0},last_emission:{1},current_epoch:{2}", receiver.ToString(), value.ToString(), curEpoch.ToString()));
+                    return;
+                }
                 long balance;
                 try
                 {

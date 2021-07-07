@@ -29,7 +29,7 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public bool TransferGas(UInt160 receiver, long amount)
         {
-            var account = GetWallet().GetAccounts().ToArray()[0].GetKey().PublicKey.EncodePoint(true).ToScriptHash();
+            var account = GetWallet().GetAccounts().ToArray()[0].ScriptHash;
             var result = client.Invoke(out var txId, NativeContract.GAS.Hash, "transfer", 0, account, receiver, amount, new byte[0]);
             Utility.Log("", LogLevel.Debug, string.Format("native gas transfer invoke,to:{0},tx_hash:{1}", receiver.ToString(), txId.ToString()));
             return result;
@@ -37,7 +37,7 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public long GasBalance()
         {
-            var account = GetWallet().GetAccounts().ToArray()[0].GetKey().PublicKey.EncodePoint(true).ToScriptHash();
+            var account = GetWallet().GetAccounts().ToArray()[0].ScriptHash;
             var result = client.TestInvoke(NativeContract.GAS.Hash, "balanceOf", account);
             return (long)result.ResultStack[0].GetInteger();
         }

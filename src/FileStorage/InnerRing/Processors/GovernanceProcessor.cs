@@ -138,7 +138,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             Utility.Log(Name, LogLevel.Info, "finished alphabet list update");
         }
 
-        private ECPoint[] NewAlphabetList(ECPoint[] sidechain, ECPoint[] mainnet)
+        public ECPoint[] NewAlphabetList(ECPoint[] sidechain, ECPoint[] mainnet)
         {
             var ln = sidechain.Length;
             if (ln == 0) throw new Exception("sidechain list is empty");
@@ -182,7 +182,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     }
                     if (loopFlag) break;
                 }
-                if (loopFlag) break;
+                if (loopFlag) continue;
                 result.Add(innerRing[i]);
             }
             return result.ToArray();

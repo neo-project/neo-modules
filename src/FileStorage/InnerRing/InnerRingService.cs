@@ -154,7 +154,7 @@ namespace Neo.FileStorage.InnerRing
                 State = this,
                 WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("Settlement Processor", Settings.Default.SettlementWorkersSize)),
             };
-            _db = new("./FileStorage/Data_LOCODE");
+            _db = new("./Data_UNLOCODE");
             var locodeValidator = new Validator(_db);
             // create governance processor
             governanceProcessor = new GovernanceProcessor()
