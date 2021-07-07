@@ -10,6 +10,7 @@ using Neo.FileStorage.Database;
 using Neo.FileStorage.Database.LevelDB;
 using Neo.FileStorage.Utils;
 using Neo.FileStorage.Utils.Locode;
+using Neo.FileStorage.Utils.Locode.Column;
 using Neo.FileStorage.Utils.Locode.Db;
 using Neo.IO;
 
@@ -69,7 +70,37 @@ namespace Neo.FileStorage.Tests.Util.Locode
             string dbPath = "./Data_LOCODE";
             using StorageDB targetDb = new(dbPath);
             targetDb.FillDatabase(locodeDB, airportsDB, continentDB);
-            Directory.Delete(dbPath, true);
+            // Directory.Delete(dbPath, true);
+        }
+
+        [TestMethod]
+        public void TestResult1()
+        {
+            Dictionary<string, string> cases = new()
+            {
+                { "RU LED", "Russia, Saint Petersburg (ex Leningrad), Sankt-Peterburg, 59.53, 30.15, ContinentEurope" },
+                { "SE STO", "Sweden, Stockholm, Stockholms l�n, 59.2, 18.03, ContinentEurope" },
+                { "RU MSK", "Russia, Mishkino, , 55.2, 63.53, ContinentAsia" },
+                { "FI HEL", "Finland, Helsinki (Helsingfors), Uusimaa, 60.317199707031, 24.963300704956, ContinentEurope" },
+            };
+            string dbPath = "./Data_LOCODE";
+            using StorageDB targetDb = new(dbPath);
+            foreach (var (locode, expected) in cases)
+            {
+                var r = targetDb.Get(LOCODE.FromString(locode));
+                Assert.IsNotNull(r.Item2);
+                Assert.AreEqual(expected, r.Item2.ToString());
+            }
+        }
+
+        [TestMethod]
+        public void TestResult2()
+        {
+            string dbPath = "./Data_LOCODE";
+            using StorageDB targetDb = new(dbPath);
+            var r = targetDb.Get(LOCODE.FromString("AU ADL"));
+            Assert.IsNotNull(r.Item2);
+            Assert.AreEqual("", r.Item2.ToString());
         }
 
         [TestMethod]
@@ -126,12 +157,40 @@ namespace Neo.FileStorage.Tests.Util.Locode
         [TestMethod]
         public void TestContinents()
         {
+            List<(Point, Continent)> cases = new()
+            {
+                { (new() { Latitude = 48.25, Longitude = 15.45 }, Continent.ContinentEurope) },
+                { (new() { Latitude = -34.55, Longitude = 138.35 }, Continent.ContinentOceania) },
+            };
             string continentsPath = "./Resources/continents.geojson";
             ContinentDB continentDB = new()
             {
                 Path = continentsPath
             };
-            Assert.AreEqual(Continent.ContinentEurope, continentDB.PointContinent(new() { Latitude = 48.25, Longitude = 15.45 }));
+            foreach (var (p, expected) in cases)
+            {
+                Assert.AreEqual(expected, continentDB.PointContinent(p));
+            }
+        }
+
+        [TestMethod]
+        public void TestAirport()
+        {
+            string resourcePath = "./Resources/";
+            string airportsPath = resourcePath + "airports.dat";
+            string countriesPath = resourcePath + "countries.dat";
+            AirportsDB airportsDB = new()
+            {
+                AirportsPath = airportsPath,
+                CountriesPath = countriesPath
+            };
+            var r = airportsDB.Get(new()
+            {
+                LOCODE = LOCODE.FromString("FI HEL"),
+                NameWoDiacritics = "Helsingfors (Helsinki)",
+            });
+            Assert.IsNotNull(r);
+            Assert.AreEqual("60.317199707031, 24.963300704956", r.Point.ToString());
         }
     }
 }

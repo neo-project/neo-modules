@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Timers;
+using System.Threading;
 using Google.Protobuf;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Cache;
@@ -62,11 +62,13 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
         private readonly ulong MaxObjectSize;
         private readonly ulong SmallObjectSize;
         private ulong currentMemorySize = 0;
+        private ulong dbSize = 0;
+        private readonly ReaderWriterLockSlim mutex = new();
         private readonly ConcurrentDictionary<string, ObjectInfo> mem = new();
         private FSTree fsTree;
         private IDB db;
         private LRUCache<string, bool> flushed;
-        private readonly Timer timer = new(DefaultInterval);
+        private Timer timer;
 
         public WriteCache(WriteCacheSettings settings, BlobStorage blobStor, MB mb)
         {
@@ -77,6 +79,13 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             MaxDBSize = settings.MaxDBSize;
             blobStorage = blobStor;
             metabase = mb;
+            fsTree = new()
+            {
+                RootPath = Path.Join(path, FileTreeDirName),
+                Depth = 1,
+                DirNameLen = 1,
+            };
+            flushed = new(LRUKeysCount);
         }
 
         public void Open()
@@ -85,24 +94,10 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             if (!Directory.Exists(full))
                 Directory.CreateDirectory(full);
             db = new DB(full);
-            fsTree = new()
-            {
-                RootPath = Path.Join(path, FileTreeDirName),
-                Depth = 1,
-                DirNameLen = 1,
-            };
-            flushed = new(LRUKeysCount);
-            SetTimer();
+            timer = new(OnTimer, null, DefaultInterval, DefaultInterval);
         }
 
-        private void SetTimer()
-        {
-            timer.Elapsed += OnTimer;
-            timer.AutoReset = true;
-            timer.Start();
-        }
-
-        private void OnTimer(object source, ElapsedEventArgs args)
+        private void OnTimer(object _)
         {
             Persist();
             Flush();
@@ -113,10 +108,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             var m = mem.Values.OrderBy(p => p.SAddress);
             mem.Clear();
             PersistObjects(m.ToArray());
-            foreach (var oi in m)
-            {
-                currentMemorySize -= (ulong)oi.Data.Length;
-            }
+            currentMemorySize = 0;
         }
 
         private void Flush()
@@ -140,12 +132,11 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
              });
             EvictObjects(m.Count);
             foreach (var oi in m)
-                flushed.TryAdd(oi.SAddress, true);
+                flushed.Add(oi.SAddress, true);
         }
 
         public void Dispose()
         {
-            timer?.Stop();
             timer?.Dispose();
             db?.Dispose();
             flushed?.Purge();
@@ -187,12 +178,17 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             var len = (ulong)oi.Data.Length;
             if (MaxObjectSize < len)
                 throw new InvalidOperationException("Object too big");
+            mutex.EnterUpgradeableReadLock();
             if (len < SmallObjectSize && currentMemorySize + len <= MaxMemorySize)
             {
+                mutex.EnterWriteLock();
                 currentMemorySize += (ulong)oi.Data.Length;
+                mutex.ExitWriteLock();
+                mutex.ExitUpgradeableReadLock();
                 mem[obj.Address.String()] = oi;
                 return;
             }
+            mutex.ExitUpgradeableReadLock();
             PersistObjects(oi);
         }
 
@@ -221,13 +217,14 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
                 }
                 db.Put(Utility.StrictUTF8.GetBytes(oi.SAddress), oi.Data);
                 dones.Add(oi);
+                dbSize += (ulong)oi.Data.Length;
             }
             if (dones.Any())
             {
                 EvictObjects(dones.Count);
                 foreach (var oi in dones)
                 {
-                    flushed.TryAdd(oi.SAddress, true);
+                    flushed.Add(oi.SAddress, true);
                 }
             }
             List<ObjectInfo> failDisks = new();
@@ -260,7 +257,11 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
             }
             foreach (var saddress in memKeys)
             {
+                var length = db.Get(Utility.StrictUTF8.GetBytes(saddress))?.Length ?? 0;
                 db.Delete(Utility.StrictUTF8.GetBytes(saddress));
+                mutex.EnterWriteLock();
+                dbSize -= (ulong)length;
+                mutex.ExitWriteLock();
             }
             foreach (var saddress in diskKeys)
             {
@@ -283,13 +284,16 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
         {
             string saddress = address.String();
             byte[] key = Utility.StrictUTF8.GetBytes(saddress);
-            if (mem.TryRemove(saddress, out _))
+            if (mem.TryRemove(saddress, out var oi))
             {
+                currentMemorySize -= (ulong)oi.Data.Length;
                 return;
             }
             if (db.Contains(key))
             {
+                var length = db.Get(key).Length;
                 db.Delete(key);
+                dbSize -= (ulong)length;
                 return;
             }
             fsTree.Delete(address);

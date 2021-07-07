@@ -49,5 +49,10 @@ namespace Neo.FileStorage.Utils
             writer.Write((byte)Continent);
             writer.Flush();
         }
+
+        public override string ToString()
+        {
+            return CountryName + ", " + LocationName + ", " + SubDivName + ", " + Point.ToString() + ", " + Continent.ToString();
+        }
     }
 }

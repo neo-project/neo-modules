@@ -136,10 +136,10 @@ namespace Neo.FileStorage.Utils.Locode.Db
                             Lat = airport.Latitude,
                             Lng = airport.Longitude,
                         };
-                        if (mAirports.TryGetValue(airport.Country, out var records))
+                        if (mAirports.TryGetValue(countryCode, out var records))
                             records.Add(record);
                         else
-                            mAirports[airport.Country] = new List<Record>() { record };
+                            mAirports[countryCode] = new List<Record>() { record };
                     }
                 });
             });

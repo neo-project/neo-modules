@@ -13,7 +13,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage
             int evicted_counter = 0;
             LRUCache<int, int> lru = new(128, (int k, int v) => evicted_counter++);
             for (int i = 0; i < 256; i++)
-                Assert.IsTrue(lru.TryAdd(i, i));
+                lru.Add(i, i);
             Assert.AreEqual(128, lru.Count);
             Assert.AreEqual(128, evicted_counter);
             var keys = lru.Keys().ToArray();
@@ -47,7 +47,7 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage
         public void TestAddGet()
         {
             LRUCache<int, string> lru = new(3);
-            Assert.IsTrue(lru.TryAdd(0, "hello"));
+            lru.Add(0, "hello");
             Assert.AreEqual(1, lru.Count);
             Assert.IsTrue(lru.TryGet(0, out string value));
             Assert.AreEqual("hello", value);
@@ -57,10 +57,10 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage
         public void TestOrderAdd()
         {
             LRUCache<int, string> lru = new(3);
-            Assert.IsTrue(lru.TryAdd(0, "hello"));
-            Assert.IsTrue(lru.TryAdd(1, "neo"));
-            Assert.IsTrue(lru.TryAdd(2, "world"));
-            Assert.IsTrue(lru.TryAdd(3, "neofs"));
+            lru.Add(0, "hello");
+            lru.Add(1, "neo");
+            lru.Add(2, "world");
+            lru.Add(3, "neofs");
             Assert.IsFalse(lru.TryGet(0, out _));
             Assert.IsTrue(lru.TryGet(1, out _));
             Assert.IsTrue(lru.TryGet(2, out _));
@@ -71,11 +71,11 @@ namespace Neo.FileStorage.Tests.LocalObjectStorage
         public void TestOrderGet()
         {
             LRUCache<int, string> lru = new(3);
-            Assert.IsTrue(lru.TryAdd(0, "hello"));
-            Assert.IsTrue(lru.TryAdd(1, "neo"));
-            Assert.IsTrue(lru.TryAdd(2, "world"));
-            Assert.IsTrue(lru.TryGet(0, out _));
-            Assert.IsTrue(lru.TryAdd(3, "neofs"));
+            lru.Add(0, "hello");
+            lru.Add(1, "neo");
+            lru.Add(2, "world");
+            lru.TryGet(0, out _);
+            lru.Add(3, "neofs");
             Assert.IsFalse(lru.TryGet(1, out _));
             Assert.IsTrue(lru.TryGet(0, out _));
             Assert.IsTrue(lru.TryGet(2, out _));
