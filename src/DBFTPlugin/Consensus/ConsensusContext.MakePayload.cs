@@ -3,6 +3,7 @@ using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.Wallets;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
 using static Neo.Consensus.RecoveryMessage;
@@ -95,14 +96,13 @@ namespace Neo.Consensus
         {
             EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
             Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
-            var nonce = GetNonce();
-            Block.Header.Nonce = nonce;
+            Block.Header.Nonce = GetNonce();
             return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
             {
                 Version = Block.Version,
                 PrevHash = Block.PrevHash,
                 Timestamp = Block.Timestamp,
-                Nonce = nonce,
+                Nonce = Block.Nonce,
                 TransactionHashes = TransactionHashes
             });
         }
@@ -150,6 +150,14 @@ namespace Neo.Consensus
             {
                 PreparationHash = PreparationPayloads[Block.PrimaryIndex].Hash
             });
+        }
+
+        private static ulong GetNonce()
+        {
+            Random _random = new();
+            Span<byte> buffer = stackalloc byte[8];
+            _random.NextBytes(buffer);
+            return BinaryPrimitives.ReadUInt64LittleEndian(buffer);
         }
     }
 }

@@ -50,8 +50,6 @@ namespace Neo.Consensus
         private readonly IStore store;
         private Dictionary<UInt256, ConsensusMessage> cachedMessages;
 
-        private readonly Random _random = new Random();
-
         public int F => (Validators.Length - 1) / 3;
         public int M => Validators.Length - F;
         public bool IsPrimary => MyIndex == Block.PrimaryIndex;

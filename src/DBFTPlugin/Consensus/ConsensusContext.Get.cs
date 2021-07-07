@@ -1,7 +1,6 @@
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.Wallets;
-using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using static Neo.Consensus.RecoveryMessage;
@@ -102,13 +101,6 @@ namespace Neo.Consensus
                 UInt160.Length +    // NextConsensus
                 1 + _witnessSize +  // Witness
                 IO.Helper.GetVarSize(expectedTransactions);
-        }
-
-        internal ulong GetNonce()
-        {
-            byte[] buffer = new byte[8];
-            _random.NextBytes(buffer);
-            return BitConverter.ToUInt64(buffer, 0);
         }
     }
 }
