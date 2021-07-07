@@ -145,32 +145,44 @@ namespace Neo.Plugins
 
         private async void OnTimer(object state)
         {
-            List<ulong> outOfDate = new List<ulong>();
-            foreach (var (id, task) in pendingQueue)
+            try
             {
-                var span = TimeProvider.Current.UtcNow - task.Timestamp;
-                if (span > Settings.Default.MaxTaskTimeout)
+                List<ulong> outOfDate = new List<ulong>();
+                List<Task> tasks = new List<Task>();
+                foreach (var (id, task) in pendingQueue)
                 {
-                    outOfDate.Add(id);
-                    continue;
-                }
-                if (span > TimeSpan.FromMilliseconds(RefreshIntervalMilliSeconds))
-                {
-                    List<Task> tasks = new List<Task>();
-                    foreach (var account in wallet.GetAccounts())
-                        if (task.BackupSigns.TryGetValue(account.GetKey().PublicKey, out byte[] sign))
-                            tasks.Add(SendResponseSignatureAsync(id, sign, account.GetKey()));
-                    await Task.WhenAll(tasks);
-                }
-            }
-            foreach (ulong requestId in outOfDate)
-                pendingQueue.TryRemove(requestId, out _);
-            foreach (var (key, value) in finishedCache)
-                if (TimeProvider.Current.UtcNow - value > TimeSpan.FromDays(3))
-                    finishedCache.TryRemove(key, out _);
+                    var span = TimeProvider.Current.UtcNow - task.Timestamp;
+                    if (span > Settings.Default.MaxTaskTimeout)
+                    {
+                        outOfDate.Add(id);
+                        continue;
+                    }
 
-            if (!cancelSource.IsCancellationRequested)
-                timer?.Change(RefreshIntervalMilliSeconds, Timeout.Infinite);
+                    if (span > TimeSpan.FromMilliseconds(RefreshIntervalMilliSeconds))
+                    {
+                        foreach (var account in wallet.GetAccounts())
+                            if (task.BackupSigns.TryGetValue(account.GetKey().PublicKey, out byte[] sign))
+                                tasks.Add(SendResponseSignatureAsync(id, sign, account.GetKey()));
+                    }
+                }
+
+                await Task.WhenAll(tasks);
+
+                foreach (ulong requestId in outOfDate)
+                    pendingQueue.TryRemove(requestId, out _);
+                foreach (var (key, value) in finishedCache)
+                    if (TimeProvider.Current.UtcNow - value > TimeSpan.FromDays(3))
+                        finishedCache.TryRemove(key, out _);
+            }
+            catch (Exception e)
+            {
+                Log(e, LogLevel.Error);
+            }
+            finally
+            {
+                if (!cancelSource.IsCancellationRequested)
+                    timer?.Change(RefreshIntervalMilliSeconds, Timeout.Infinite);
+            }
         }
 
         [RpcMethod]
