@@ -51,9 +51,9 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
         public const int LRUKeysCount = 256 * 1024 * 8;
         public const int DefaultInterval = 1000;
         public const int FlushBatchSize = 512;
-        public const int DefaultMemorySize = 1 << 30;
-        public const int DefaultMaxObjectSize = 64 << 20;
-        public const int DefaultSmallObjectSize = 32 << 10;
+        public const ulong DefaultMemorySize = 1ul << 30;
+        public const ulong DefaultMaxObjectSize = 64ul << 20;
+        public const ulong DefaultSmallObjectSize = 32ul << 10;
         private readonly string path;
         private readonly BlobStorage blobStorage;
         private readonly MB metabase;

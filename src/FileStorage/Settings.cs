@@ -5,6 +5,8 @@ using System.Linq;
 using Akka.Actor;
 using Microsoft.Extensions.Configuration;
 using Neo.Cryptography.ECC;
+using Neo.FileStorage.LocalObjectStorage.Blob;
+using Neo.FileStorage.LocalObjectStorage.Blobstor;
 using Neo.FileStorage.LocalObjectStorage.Shards;
 
 namespace Neo.FileStorage
@@ -176,24 +178,26 @@ namespace Neo.FileStorage
         {
             Default = new()
             {
-                Path = "Data_WriteCache",
-                MaxMemorySize = 1ul << 30,
-                MaxObjectSize = 64ul << 20,
-                SmallObjectSize = 32ul << 10,
+                Path = $"Data_WriteCache_{Guid.NewGuid()}",
+                MaxMemorySize = WriteCache.DefaultMemorySize,
+                MaxObjectSize = WriteCache.DefaultMaxObjectSize,
+                SmallObjectSize = WriteCache.DefaultSmallObjectSize,
                 MaxDBSize = 0ul//TODO
             };
         }
 
         public static WriteCacheSettings Load(IConfigurationSection section)
         {
-            return new()
+            WriteCacheSettings settings = new()
             {
-                Path = section.GetValue("Path", "Data_WriteCache"),
-                MaxMemorySize = section.GetValue("MaxMemorySize", 1ul << 30),
-                MaxObjectSize = section.GetValue("MaxObjectSize", 64ul << 20),
-                SmallObjectSize = section.GetValue("SmallObjectSize", 32ul << 10),
+                Path = section.GetValue("Path", ""),
+                MaxMemorySize = section.GetValue("MaxMemorySize", WriteCache.DefaultMemorySize),
+                MaxObjectSize = section.GetValue("MaxObjectSize", WriteCache.DefaultMaxObjectSize),
+                SmallObjectSize = section.GetValue("SmallObjectSize", WriteCache.DefaultSmallObjectSize),
                 MaxDBSize = section.GetValue("MaxDBSize", 0ul)//TODO
             };
+            if (settings.Path == "") throw new FormatException("invalid writecache path");
+            return settings;
         }
     }
 
@@ -210,10 +214,10 @@ namespace Neo.FileStorage
         {
             Default = new()
             {
-                Size = 1ul << 30,
-                ShallowDepth = 2,
-                ShallowWidth = 16,
-                OpenCacheSize = 16
+                Size = Blobovnicza.DefaultFullSizeLimit,
+                ShallowDepth = BlobovniczaTree.DefaultBlzShallowDepth,
+                ShallowWidth = BlobovniczaTree.DefaultBlzShallowWidth,
+                OpenCacheSize = BlobovniczaTree.DefaultOpenedCacheSize,
             };
         }
 
@@ -221,10 +225,10 @@ namespace Neo.FileStorage
         {
             return new()
             {
-                Size = section.GetValue("Size", 1ul << 30),
-                ShallowDepth = section.GetValue("ShallowDepth", 2),
-                ShallowWidth = section.GetValue("ShallowWidth", 16),
-                OpenCacheSize = section.GetValue("OpenCacheSize", 16)
+                Size = section.GetValue("Size", Blobovnicza.DefaultFullSizeLimit),
+                ShallowDepth = section.GetValue("ShallowDepth", BlobovniczaTree.DefaultBlzShallowDepth),
+                ShallowWidth = section.GetValue("ShallowWidth", BlobovniczaTree.DefaultBlzShallowWidth),
+                OpenCacheSize = section.GetValue("OpenCacheSize", BlobovniczaTree.DefaultOpenedCacheSize)
             };
         }
     }
@@ -243,24 +247,26 @@ namespace Neo.FileStorage
         {
             Default = new()
             {
-                Path = "Data_BlobStorage",
+                Path = $"Data_BlobStorage_{Guid.NewGuid()}",
                 Compress = true,
-                ShallowDepth = 4,
-                SmallSizeLimit = 1ul << 20,
+                ShallowDepth = FSTree.DefaultShallowDepth,
+                SmallSizeLimit = BlobStorage.DefaultSmallSizeLimit,
                 BlobovniczasSettings = BlobovniczasSettings.Default
             };
         }
 
         public static BlobStorageSettings Load(IConfigurationSection section)
         {
-            return new()
+            BlobStorageSettings settings = new()
             {
-                Path = section.GetValue("Path", "Data_BlobStorage"),
+                Path = section.GetValue("Path", ""),
                 Compress = section.GetValue("Compress", true),
-                ShallowDepth = section.GetValue("ShallowDepth", 4),
-                SmallSizeLimit = section.GetValue("SmallSizeLimit", 1ul << 20),
+                ShallowDepth = section.GetValue("ShallowDepth", FSTree.DefaultShallowDepth),
+                SmallSizeLimit = section.GetValue("SmallSizeLimit", BlobStorage.DefaultSmallSizeLimit),
                 BlobovniczasSettings = BlobovniczasSettings.Load(section.GetSection("Blobovnicza"))
             };
+            if (settings.Path == "") throw new FormatException("invalid blobstorage path");
+            return settings;
         }
     }
 
@@ -274,16 +280,18 @@ namespace Neo.FileStorage
         {
             Default = new()
             {
-                Path = "Data_Metabase"
+                Path = $"Data_Metabase{Guid.NewGuid()}"
             };
         }
 
         public static MetabaseSettings Load(IConfigurationSection section)
         {
-            return new()
+            MetabaseSettings settings = new()
             {
-                Path = section.GetValue("Path", "Data_Metabase")
+                Path = section.GetValue("Path", "")
             };
+            if (settings.Path == "") throw new FormatException("invalid metabase path");
+            return settings;
         }
     }
 
