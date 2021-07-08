@@ -19,89 +19,66 @@ namespace Neo.FileStorage.Tests.Util.Locode
     [TestClass]
     public class UT_Locode
     {
-        private class TestLOCODEStorage : IDisposable
-        {
-            private const byte PreLocode = 0x00;
-            private readonly IDB _db;
+        // FillDatabase will take a long time to generate files so we commented these out
+        // [TestMethod]
+        // public void TestFillDatabase()
+        // {
+        //     string resourcePath = "./Resources/";
+        //     string[] tableInPaths = new string[]
+        //     {
+        //         resourcePath + "2020-2 UNLOCODE CodeListPart1.csv",
+        //         resourcePath + "2020-2 UNLOCODE CodeListPart2.csv",
+        //         resourcePath + "2020-2 UNLOCODE CodeListPart3.csv",
+        //     };
+        //     string tableSubDivPath = resourcePath + "2020-2 SubdivisionCodes.csv";
+        //     string airportsPath = resourcePath + "airports.dat";
+        //     string countriesPath = resourcePath + "countries.dat";
+        //     string continentsPath = resourcePath + "continents.geojson";
+        //     CSVTable locodeDB = new(tableInPaths, tableSubDivPath);
+        //     AirportsDB airportsDB = new()
+        //     {
+        //         AirportsPath = airportsPath,
+        //         CountriesPath = countriesPath
+        //     };
+        //     ContinentDB continentDB = new()
+        //     {
+        //         Path = continentsPath
+        //     };
+        //     string dbPath = "./Data_LOCODE";
+        //     using StorageDB targetDb = new(dbPath);
+        //     targetDb.FillDatabase(locodeDB, airportsDB, continentDB);
+        //     Directory.Delete(dbPath, true);
+        // }
 
-            public TestLOCODEStorage(string path)
-            {
-                _db = new DB(path);
-            }
+        // [TestMethod]
+        // public void TestResult1()
+        // {
+        //     Dictionary<string, string> cases = new()
+        //     {
+        //         { "RU LED", "Russia, Saint Petersburg (ex Leningrad), Sankt-Peterburg, 59.53, 30.15, ContinentEurope" },
+        //         { "SE STO", "Sweden, Stockholm, Stockholms l�n, 59.2, 18.03, ContinentEurope" },
+        //         { "RU MSK", "Russia, Mishkino, , 55.2, 63.53, ContinentAsia" },
+        //         { "FI HEL", "Finland, Helsinki (Helsingfors), Uusimaa, 60.317199707031, 24.963300704956, ContinentEurope" },
+        //     };
+        //     string dbPath = "./Data_LOCODE";
+        //     using StorageDB targetDb = new(dbPath);
+        //     foreach (var (locode, expected) in cases)
+        //     {
+        //         var r = targetDb.Get(LOCODE.FromString(locode));
+        //         Assert.IsNotNull(r.Item2);
+        //         Assert.AreEqual(expected, r.Item2.ToString());
+        //     }
+        // }
 
-            public void Dispose()
-            {
-                _db.Dispose();
-            }
-
-            public void Iterate(Func<Key, Record, bool> handler)
-            {
-                _db.Iterate(new byte[] { PreLocode }, (key, value) =>
-                   {
-                       return handler(key[1..].AsSerializable<Key>(), value.AsSerializable<Record>());
-                   });
-            }
-        }
-
-        [TestMethod]
-        public void TestFillDatabase()
-        {
-            string resourcePath = "./Resources/";
-            string[] tableInPaths = new string[]
-            {
-                resourcePath + "2020-2 UNLOCODE CodeListPart1.csv",
-                resourcePath + "2020-2 UNLOCODE CodeListPart2.csv",
-                resourcePath + "2020-2 UNLOCODE CodeListPart3.csv",
-            };
-            string tableSubDivPath = resourcePath + "2020-2 SubdivisionCodes.csv";
-            string airportsPath = resourcePath + "airports.dat";
-            string countriesPath = resourcePath + "countries.dat";
-            string continentsPath = resourcePath + "continents.geojson";
-            CSVTable locodeDB = new(tableInPaths, tableSubDivPath);
-            AirportsDB airportsDB = new()
-            {
-                AirportsPath = airportsPath,
-                CountriesPath = countriesPath
-            };
-            ContinentDB continentDB = new()
-            {
-                Path = continentsPath
-            };
-            string dbPath = "./Data_LOCODE";
-            using StorageDB targetDb = new(dbPath);
-            targetDb.FillDatabase(locodeDB, airportsDB, continentDB);
-            // Directory.Delete(dbPath, true);
-        }
-
-        [TestMethod]
-        public void TestResult1()
-        {
-            Dictionary<string, string> cases = new()
-            {
-                { "RU LED", "Russia, Saint Petersburg (ex Leningrad), Sankt-Peterburg, 59.53, 30.15, ContinentEurope" },
-                { "SE STO", "Sweden, Stockholm, Stockholms l�n, 59.2, 18.03, ContinentEurope" },
-                { "RU MSK", "Russia, Mishkino, , 55.2, 63.53, ContinentAsia" },
-                { "FI HEL", "Finland, Helsinki (Helsingfors), Uusimaa, 60.317199707031, 24.963300704956, ContinentEurope" },
-            };
-            string dbPath = "./Data_LOCODE";
-            using StorageDB targetDb = new(dbPath);
-            foreach (var (locode, expected) in cases)
-            {
-                var r = targetDb.Get(LOCODE.FromString(locode));
-                Assert.IsNotNull(r.Item2);
-                Assert.AreEqual(expected, r.Item2.ToString());
-            }
-        }
-
-        [TestMethod]
-        public void TestResult2()
-        {
-            string dbPath = "./Data_LOCODE";
-            using StorageDB targetDb = new(dbPath);
-            var r = targetDb.Get(LOCODE.FromString("AU ADL"));
-            Assert.IsNotNull(r.Item2);
-            Assert.AreEqual("", r.Item2.ToString());
-        }
+        // [TestMethod]
+        // public void TestResult2()
+        // {
+        //     string dbPath = "./Data_LOCODE";
+        //     using StorageDB targetDb = new(dbPath);
+        //     var r = targetDb.Get(LOCODE.FromString("AU ADL"));
+        //     Assert.IsNotNull(r.Item2);
+        //     Assert.AreEqual("", r.Item2.ToString());
+        // }
 
         [TestMethod]
         public void TestReadCountries()
