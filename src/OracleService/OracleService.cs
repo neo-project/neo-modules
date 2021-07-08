@@ -147,8 +147,8 @@ namespace Neo.Plugins
         {
             try
             {
-                List<ulong> outOfDate = new List<ulong>();
-                List<Task> tasks = new List<Task>();
+                List<ulong> outOfDate = new();
+                List<Task> tasks = new();
                 foreach (var (id, task) in pendingQueue)
                 {
                     var span = TimeProvider.Current.UtcNow - task.Timestamp;
