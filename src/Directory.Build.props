@@ -18,6 +18,8 @@
     <PackageReference Include="Neo" Version="3.0.0-CI01285" />
   </ItemGroup>
 
-  <Import Project="../Prebuild.targets" />
-  
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="dotnet format" />
+  </Target>
+
 </Project>
