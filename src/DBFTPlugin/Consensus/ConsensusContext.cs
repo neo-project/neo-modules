@@ -12,12 +12,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using static Neo.Consensus.RecoveryMessage;
 
 namespace Neo.Consensus
 {
-    public class ConsensusContext : IDisposable, ISerializable
+    public partial class ConsensusContext : IDisposable, ISerializable
     {
         /// <summary>
         /// Key for saving consensus state.
@@ -139,34 +137,6 @@ namespace Neo.Consensus
             return payload;
         }
 
-        public void Deserialize(BinaryReader reader)
-        {
-            Reset(0);
-            if (reader.ReadUInt32() != Block.Version) throw new FormatException();
-            if (reader.ReadUInt32() != Block.Index) throw new InvalidOperationException();
-            Block.Header.Timestamp = reader.ReadUInt64();
-            Block.Header.PrimaryIndex = reader.ReadByte();
-            Block.Header.NextConsensus = reader.ReadSerializable<UInt160>();
-            if (Block.NextConsensus.Equals(UInt160.Zero))
-                Block.Header.NextConsensus = null;
-            ViewNumber = reader.ReadByte();
-            TransactionHashes = reader.ReadSerializableArray<UInt256>(ushort.MaxValue);
-            Transaction[] transactions = reader.ReadSerializableArray<Transaction>(ushort.MaxValue);
-            PreparationPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
-            CommitPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
-            ChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
-            LastChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
-            if (TransactionHashes.Length == 0 && !RequestSentOrReceived)
-                TransactionHashes = null;
-            Transactions = transactions.Length == 0 && !RequestSentOrReceived ? null : transactions.ToDictionary(p => p.Hash);
-            VerificationContext = new TransactionVerificationContext();
-            if (Transactions != null)
-            {
-                foreach (Transaction tx in Transactions.Values)
-                    VerificationContext.AddTransaction(tx);
-            }
-        }
-
         public void Dispose()
         {
             Snapshot?.Dispose();
@@ -177,64 +147,6 @@ namespace Neo.Consensus
             if (TransactionHashes == null) return null;
             Block.Header.MerkleRoot ??= MerkleTree.ComputeRoot(TransactionHashes);
             return Block;
-        }
-
-        public ConsensusMessage GetMessage(ExtensiblePayload payload)
-        {
-            if (payload is null) return null;
-            if (!cachedMessages.TryGetValue(payload.Hash, out ConsensusMessage message))
-                cachedMessages.Add(payload.Hash, message = ConsensusMessage.DeserializeFrom(payload.Data));
-            return message;
-        }
-
-        public T GetMessage<T>(ExtensiblePayload payload) where T : ConsensusMessage
-        {
-            return (T)GetMessage(payload);
-        }
-
-        private ChangeViewPayloadCompact GetChangeViewPayloadCompact(ExtensiblePayload payload)
-        {
-            ChangeView message = GetMessage<ChangeView>(payload);
-            return new ChangeViewPayloadCompact
-            {
-                ValidatorIndex = message.ValidatorIndex,
-                OriginalViewNumber = message.ViewNumber,
-                Timestamp = message.Timestamp,
-                InvocationScript = payload.Witness.InvocationScript
-            };
-        }
-
-        private CommitPayloadCompact GetCommitPayloadCompact(ExtensiblePayload payload)
-        {
-            Commit message = GetMessage<Commit>(payload);
-            return new CommitPayloadCompact
-            {
-                ViewNumber = message.ViewNumber,
-                ValidatorIndex = message.ValidatorIndex,
-                Signature = message.Signature,
-                InvocationScript = payload.Witness.InvocationScript
-            };
-        }
-
-        private PreparationPayloadCompact GetPreparationPayloadCompact(ExtensiblePayload payload)
-        {
-            return new PreparationPayloadCompact
-            {
-                ValidatorIndex = GetMessage(payload).ValidatorIndex,
-                InvocationScript = payload.Witness.InvocationScript
-            };
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte GetPrimaryIndex(byte viewNumber)
-        {
-            int p = ((int)Block.Index - viewNumber) % Validators.Length;
-            return p >= 0 ? (byte)p : (byte)(p + Validators.Length);
-        }
-
-        public UInt160 GetSender(int index)
-        {
-            return Contract.CreateSignatureRedeemScript(Validators[index]).ToScriptHash();
         }
 
         public bool Load()
@@ -254,178 +166,6 @@ namespace Neo.Consensus
                 }
                 return true;
             }
-        }
-
-        public ExtensiblePayload MakeChangeView(ChangeViewReason reason)
-        {
-            return ChangeViewPayloads[MyIndex] = MakeSignedPayload(new ChangeView
-            {
-                Reason = reason,
-                Timestamp = TimeProvider.Current.UtcNow.ToTimestampMS()
-            });
-        }
-
-        public ExtensiblePayload MakeCommit()
-        {
-            return CommitPayloads[MyIndex] ?? (CommitPayloads[MyIndex] = MakeSignedPayload(new Commit
-            {
-                Signature = EnsureHeader().Sign(keyPair, neoSystem.Settings.Network)
-            }));
-        }
-
-        private ExtensiblePayload MakeSignedPayload(ConsensusMessage message)
-        {
-            message.BlockIndex = Block.Index;
-            message.ValidatorIndex = (byte)MyIndex;
-            message.ViewNumber = ViewNumber;
-            ExtensiblePayload payload = CreatePayload(message, null);
-            SignPayload(payload);
-            return payload;
-        }
-
-        private void SignPayload(ExtensiblePayload payload)
-        {
-            ContractParametersContext sc;
-            try
-            {
-                sc = new ContractParametersContext(neoSystem.StoreView, payload, dbftSettings.Network);
-                wallet.Sign(sc);
-            }
-            catch (InvalidOperationException)
-            {
-                return;
-            }
-            payload.Witness = sc.GetWitnesses()[0];
-        }
-
-        /// <summary>
-        /// Return the expected block size
-        /// </summary>
-        public int GetExpectedBlockSize()
-        {
-            return GetExpectedBlockSizeWithoutTransactions(Transactions.Count) + // Base size
-                Transactions.Values.Sum(u => u.Size);   // Sum Txs
-        }
-
-        /// <summary>
-        /// Return the expected block system fee
-        /// </summary>
-        public long GetExpectedBlockSystemFee()
-        {
-            return Transactions.Values.Sum(u => u.SystemFee);  // Sum Txs
-        }
-
-        /// <summary>
-        /// Return the expected block size without txs
-        /// </summary>
-        /// <param name="expectedTransactions">Expected transactions</param>
-        internal int GetExpectedBlockSizeWithoutTransactions(int expectedTransactions)
-        {
-            return
-                sizeof(uint) +      // Version
-                UInt256.Length +    // PrevHash
-                UInt256.Length +    // MerkleRoot
-                sizeof(ulong) +     // Timestamp
-                sizeof(uint) +      // Index
-                sizeof(byte) +      // PrimaryIndex
-                UInt160.Length +    // NextConsensus
-                1 + _witnessSize +  // Witness
-                IO.Helper.GetVarSize(expectedTransactions);
-        }
-
-        /// <summary>
-        /// Prevent that block exceed the max size
-        /// </summary>
-        /// <param name="txs">Ordered transactions</param>
-        internal void EnsureMaxBlockLimitation(IEnumerable<Transaction> txs)
-        {
-            uint maxTransactionsPerBlock = neoSystem.Settings.MaxTransactionsPerBlock;
-
-            // Limit Speaker proposal to the limit `MaxTransactionsPerBlock` or all available transactions of the mempool
-            txs = txs.Take((int)maxTransactionsPerBlock);
-            List<UInt256> hashes = new List<UInt256>();
-            Transactions = new Dictionary<UInt256, Transaction>();
-            VerificationContext = new TransactionVerificationContext();
-
-            // Expected block size
-            var blockSize = GetExpectedBlockSizeWithoutTransactions(txs.Count());
-            var blockSystemFee = 0L;
-
-            // Iterate transaction until reach the size or maximum system fee
-            foreach (Transaction tx in txs)
-            {
-                // Check if maximum block size has been already exceeded with the current selected set
-                blockSize += tx.Size;
-                if (blockSize > dbftSettings.MaxBlockSize) break;
-
-                // Check if maximum block system fee has been already exceeded with the current selected set
-                blockSystemFee += tx.SystemFee;
-                if (blockSystemFee > dbftSettings.MaxBlockSystemFee) break;
-
-                hashes.Add(tx.Hash);
-                Transactions.Add(tx.Hash, tx);
-                VerificationContext.AddTransaction(tx);
-            }
-
-            TransactionHashes = hashes.ToArray();
-        }
-
-        public ExtensiblePayload MakePrepareRequest()
-        {
-            EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
-            Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
-
-            return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
-            {
-                Version = Block.Version,
-                PrevHash = Block.PrevHash,
-                Timestamp = Block.Timestamp,
-                TransactionHashes = TransactionHashes
-            });
-        }
-
-        public ExtensiblePayload MakeRecoveryRequest()
-        {
-            return MakeSignedPayload(new RecoveryRequest
-            {
-                Timestamp = TimeProvider.Current.UtcNow.ToTimestampMS()
-            });
-        }
-
-        public ExtensiblePayload MakeRecoveryMessage()
-        {
-            PrepareRequest prepareRequestMessage = null;
-            if (TransactionHashes != null)
-            {
-                prepareRequestMessage = new PrepareRequest
-                {
-                    Version = Block.Version,
-                    PrevHash = Block.PrevHash,
-                    ViewNumber = ViewNumber,
-                    Timestamp = Block.Timestamp,
-                    BlockIndex = Block.Index,
-                    TransactionHashes = TransactionHashes
-                };
-            }
-            return MakeSignedPayload(new RecoveryMessage
-            {
-                ChangeViewMessages = LastChangeViewPayloads.Where(p => p != null).Select(p => GetChangeViewPayloadCompact(p)).Take(M).ToDictionary(p => p.ValidatorIndex),
-                PrepareRequestMessage = prepareRequestMessage,
-                // We only need a PreparationHash set if we don't have the PrepareRequest information.
-                PreparationHash = TransactionHashes == null ? PreparationPayloads.Where(p => p != null).GroupBy(p => GetMessage<PrepareResponse>(p).PreparationHash, (k, g) => new { Hash = k, Count = g.Count() }).OrderByDescending(p => p.Count).Select(p => p.Hash).FirstOrDefault() : null,
-                PreparationMessages = PreparationPayloads.Where(p => p != null).Select(p => GetPreparationPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex),
-                CommitMessages = CommitSent
-                    ? CommitPayloads.Where(p => p != null).Select(p => GetCommitPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex)
-                    : new Dictionary<byte, CommitPayloadCompact>()
-            });
-        }
-
-        public ExtensiblePayload MakePrepareResponse()
-        {
-            return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareResponse
-            {
-                PreparationHash = PreparationPayloads[Block.PrimaryIndex].Hash
-            });
         }
 
         public void Reset(byte viewNumber)
@@ -504,6 +244,7 @@ namespace Neo.Consensus
             Block.Header.PrimaryIndex = GetPrimaryIndex(viewNumber);
             Block.Header.MerkleRoot = null;
             Block.Header.Timestamp = 0;
+            Block.Header.Nonce = 0;
             Block.Transactions = null;
             TransactionHashes = null;
             PreparationPayloads = new ExtensiblePayload[Validators.Length];
@@ -515,11 +256,41 @@ namespace Neo.Consensus
             store.PutSync(ConsensusStateKey, this.ToArray());
         }
 
+        public void Deserialize(BinaryReader reader)
+        {
+            Reset(0);
+            if (reader.ReadUInt32() != Block.Version) throw new FormatException();
+            if (reader.ReadUInt32() != Block.Index) throw new InvalidOperationException();
+            Block.Header.Timestamp = reader.ReadUInt64();
+            Block.Header.Nonce = reader.ReadUInt64();
+            Block.Header.PrimaryIndex = reader.ReadByte();
+            Block.Header.NextConsensus = reader.ReadSerializable<UInt160>();
+            if (Block.NextConsensus.Equals(UInt160.Zero))
+                Block.Header.NextConsensus = null;
+            ViewNumber = reader.ReadByte();
+            TransactionHashes = reader.ReadSerializableArray<UInt256>(ushort.MaxValue);
+            Transaction[] transactions = reader.ReadSerializableArray<Transaction>(ushort.MaxValue);
+            PreparationPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
+            CommitPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
+            ChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
+            LastChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
+            if (TransactionHashes.Length == 0 && !RequestSentOrReceived)
+                TransactionHashes = null;
+            Transactions = transactions.Length == 0 && !RequestSentOrReceived ? null : transactions.ToDictionary(p => p.Hash);
+            VerificationContext = new TransactionVerificationContext();
+            if (Transactions != null)
+            {
+                foreach (Transaction tx in Transactions.Values)
+                    VerificationContext.AddTransaction(tx);
+            }
+        }
+
         public void Serialize(BinaryWriter writer)
         {
             writer.Write(Block.Version);
             writer.Write(Block.Index);
             writer.Write(Block.Timestamp);
+            writer.Write(Block.Nonce);
             writer.Write(Block.PrimaryIndex);
             writer.Write(Block.NextConsensus ?? UInt160.Zero);
             writer.Write(ViewNumber);
