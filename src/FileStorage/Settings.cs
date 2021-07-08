@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Akka.Actor;
 using Microsoft.Extensions.Configuration;
 using Neo.Cryptography.ECC;
+using Neo.FileStorage.LocalObjectStorage.Shards;
 
 namespace Neo.FileStorage
 {
@@ -14,7 +16,6 @@ namespace Neo.FileStorage
         public string SideChainConfig;
         public bool AsInnerRing;
         public bool AsStorage;
-        public int Port;
         public string WalletPath;
         public string Password;
         public UInt160 NetmapContractHash;
@@ -67,7 +68,7 @@ namespace Neo.FileStorage
         public long MainChainFee;
         public long SideChainFee;
         public long AuditFee;
-        public ObjectStorageSettings LocalStorageSettings;
+        public StorageNodeSettings StorageSettings;
         public List<UInt160> Contracts = new();
 
         private Settings(IConfigurationSection section)
@@ -76,7 +77,6 @@ namespace Neo.FileStorage
             AutoStart = section.GetValue("AutoStart", false);
             AsInnerRing = section.GetValue("AsInnerRing", false);
             AsStorage = section.GetValue("AsStorage", true);
-            Port = section.GetValue("Port", 8080);
             WalletPath = section.GetSection("WalletPath").Value;
             Password = section.GetSection("Password").Value;
 
@@ -152,9 +152,8 @@ namespace Neo.FileStorage
             MainChainFee = fee.GetValue("MainChain", 5000L);
             SideChainFee = fee.GetValue("SideChain", 5000L);
 
-            LocalStorageSettings = ObjectStorageSettings.Load(section.GetSection("Storage"));
-            Console.WriteLine(LocalStorageSettings.Shards.Length);
-            if (!LocalStorageSettings.Shards.Any()) LocalStorageSettings = ObjectStorageSettings.Default;
+            StorageSettings = StorageNodeSettings.Load(section.GetSection("Storage"));
+            if (!StorageSettings.Shards.Any()) StorageSettings = StorageNodeSettings.Default;
         }
 
         public static void Load(IConfigurationSection section)
@@ -303,9 +302,9 @@ namespace Neo.FileStorage
         {
             Default = new()
             {
-                UseWriteCache = true,
-                RemoverInterval = 60000,
-                RemoveBatchSize = 100,
+                UseWriteCache = Shard.DefaultUseWriteCache,
+                RemoverInterval = Shard.DefaultRemoveInterval,
+                RemoveBatchSize = Shard.DefaultRemoveBatchSize,
                 WriteCacheSettings = WriteCacheSettings.Default,
                 BlobStorageSettings = BlobStorageSettings.Default,
                 MetabaseSettings = MetabaseSettings.Default,
@@ -315,34 +314,46 @@ namespace Neo.FileStorage
         public static ShardSettings Load(IConfigurationSection section)
         {
             ShardSettings settings = new();
-            settings.UseWriteCache = section.GetValue("UseWriteCache", true);
+            settings.UseWriteCache = section.GetValue("UseWriteCache", Shard.DefaultUseWriteCache);
             if (settings.UseWriteCache)
                 settings.WriteCacheSettings = WriteCacheSettings.Load(section.GetSection("WriteCache"));
-            settings.RemoverInterval = section.GetValue("RemoverInterval", 10000);
+            settings.RemoverInterval = section.GetValue("RemoverInterval", Shard.DefaultRemoveInterval);
+            settings.RemoveBatchSize = section.GetValue("RemoveBatchSize", Shard.DefaultRemoveBatchSize);
             settings.BlobStorageSettings = BlobStorageSettings.Load(section.GetSection("BlobStorage"));
             settings.MetabaseSettings = MetabaseSettings.Load(section.GetSection("Metabase"));
             return settings;
         }
     }
 
-    public class ObjectStorageSettings
+    public class StorageNodeSettings
     {
+        public const string DefaultAddress = "/ip4/0.0.0.0/tcp/8080";
+        public const int DefaultPort = 8080;
+        public string Address;
+        public List<string> Attributes;
+        public int Port;
         public ShardSettings[] Shards;
 
-        public static ObjectStorageSettings Default { get; private set; }
+        public static StorageNodeSettings Default { get; private set; }
 
-        static ObjectStorageSettings()
+        static StorageNodeSettings()
         {
             Default = new()
             {
-                Shards = new ShardSettings[] { ShardSettings.Default }
+                Address = DefaultAddress,
+                Attributes = new(),
+                Port = DefaultPort,
+                Shards = new ShardSettings[] { ShardSettings.Default },
             };
         }
 
-        public static ObjectStorageSettings Load(IConfigurationSection section)
+        public static StorageNodeSettings Load(IConfigurationSection section)
         {
             return new()
             {
+                Address = section.GetValue("Address", DefaultAddress),
+                Attributes = section.GetSection("Attributes").GetChildren().Select(p => p.ToString()).ToList(),
+                Port = section.GetValue("Port", DefaultPort),
                 Shards = section.GetSection("Shards").GetChildren().Select(p => ShardSettings.Load(p)).ToArray(),
             };
         }

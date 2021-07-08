@@ -3,7 +3,6 @@
     "AutoStart": false,
     "AsInnerRing": false,
     "AsStorage": true,
-    "Port": 8080,
     "WalletPath": "./FSStorage/wallet.json",
     "Password": "123456",
     "Contracts": {
@@ -97,6 +96,11 @@
       "SideChain": 5000
     },
     "Storage": {
+      "Address": "/ip4/0.0.0.0/tcp/8080",
+      "Port": 8080,
+      "Attributes": [
+        "UN-LOCODE:CN SGH"
+      ],
       "Shards": [
         {
           "UseWriteCache": true,

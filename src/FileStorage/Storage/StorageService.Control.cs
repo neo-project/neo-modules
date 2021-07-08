@@ -6,7 +6,7 @@ namespace Neo.FileStorage
 {
     public sealed partial class StorageService : IDisposable
     {
-        private ControlServiceImpl InitializeControl(StorageEngine localStorage)
+        private ControlServiceImpl InitializeControl()
         {
             return new ControlServiceImpl
             {

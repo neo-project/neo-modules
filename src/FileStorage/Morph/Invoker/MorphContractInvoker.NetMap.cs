@@ -1,10 +1,11 @@
-using Neo.FileStorage.API.Netmap;
-using Neo.VM.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Array = Neo.VM.Types.Array;
+using Google.Protobuf;
+using Neo.FileStorage.API.Netmap;
+using Neo.VM.Types;
 using static Neo.FileStorage.API.Netmap.Helper;
+using Array = Neo.VM.Types.Array;
 
 namespace Neo.FileStorage.Morph.Invoker
 {
@@ -20,9 +21,9 @@ namespace Neo.FileStorage.Morph.Invoker
         private const string EpochSnapshotMethod = "snapshotByEpoch";
         private const long ExtraFee = 0;
 
-        public static bool InvokeAddPeer(this Client client, byte[] info)
+        public static bool InvokeAddPeer(this Client client, NodeInfo info)
         {
-            return client.Invoke(out _, NetMapContractHash, AddPeerMethod, SideChainFee, info);
+            return client.Invoke(out _, NetMapContractHash, AddPeerMethod, SideChainFee, info.ToByteArray());
         }
 
         public static ulong InvokeEpoch(this Client client)
