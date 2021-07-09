@@ -298,6 +298,7 @@ namespace Neo.Plugins
             {
                 using (var snapshot = System.GetSnapshot())
                 {
+                    SyncPendingQueue(snapshot);
                     foreach (var (id, request) in NativeContract.Oracle.GetRequests(snapshot))
                     {
                         if (cancelSource.IsCancellationRequested) break;
@@ -309,6 +310,17 @@ namespace Neo.Plugins
                 await Task.Delay(500);
             }
             stopped = true;
+        }
+
+
+        private void SyncPendingQueue(DataCache snapshot)
+        {
+            var offChainRequests = NativeContract.Oracle.GetRequests(snapshot).ToDictionary(r => r.Item1, r => r.Item2);
+            var onChainRequests = pendingQueue.Keys.Except(offChainRequests.Keys);
+            foreach (var onChainRequest in onChainRequests)
+            {
+                pendingQueue.TryRemove(onChainRequest, out _);
+            }
         }
 
         private async Task<(OracleResponseCode, string)> ProcessUrlAsync(string url)
