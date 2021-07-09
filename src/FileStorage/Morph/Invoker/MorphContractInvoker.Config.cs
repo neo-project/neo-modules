@@ -72,7 +72,7 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public static ulong WithdrawFee(this Client client)
         {
-            return client.ReadUInt64Config(InnerRingCandidateFeeConfig);
+            return client.ReadUInt64Config(WithdrawFeeConfig);
         }
     }
 }
