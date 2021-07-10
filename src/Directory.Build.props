@@ -18,7 +18,7 @@
     <PackageReference Include="Neo" Version="3.0.0-CI01285" />
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Exec Command="dotnet format" />
   </Target>
 
