@@ -12,7 +12,7 @@
     <PackageReference Include="MSTest.TestFramework" Version="2.2.3" />
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent" Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <Target Name="PreBuild" Condition="$(TestInCI) != 'True'" BeforeTargets="PreBuildEvent">
     <Exec Command="dotnet format" />
   </Target>
 
