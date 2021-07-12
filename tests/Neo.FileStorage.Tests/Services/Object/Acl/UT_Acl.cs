@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.Services.Object.Acl;
+using static Neo.FileStorage.Services.Object.Acl.BasicAclHelper;
 
 namespace Neo.FileStorage.Tests.Services.Object.Acl
 {
@@ -67,6 +68,16 @@ namespace Neo.FileStorage.Tests.Services.Object.Acl
                     Assert.IsTrue(r.OthersAllowed(op));
                 }
             }
+        }
+
+        [TestMethod]
+        public void TestPublicBasicAcl()
+        {
+            var b = (uint)BasicAcl.PublicBasicRule;
+            Console.WriteLine(b);
+            Assert.IsTrue(b.Final());
+            b.ForbidOthers(Operation.Delete);
+            Console.WriteLine(b);
         }
     }
 }
