@@ -38,9 +38,9 @@ namespace Neo.FileStorage.Morph.Invoker
             return client.Invoke(out _, NetMapContractHash, NewEpochMethod, SideChainFee, epochNumber);
         }
 
-        public static bool InvokeUpdateState(this Client client, long state, byte[] key)
+        public static bool InvokeUpdateState(this Client client, NodeInfo.Types.State state, byte[] key)
         {
-            return client.Invoke(out _, NetMapContractHash, UpdateStateMethod, SideChainFee, state, key);
+            return client.Invoke(out _, NetMapContractHash, UpdateStateMethod, SideChainFee, (int)state, key);
         }
 
         public static NetMap InvokeNetMap(this Client client)
