@@ -867,9 +867,8 @@ namespace Cron.Plugins
             var unclaimedArray = ProcessGetUnclaimedTransactions(scriptHash);
             
             JObject json = new JObject();
-            JArray balances = new JArray();
+          
             JArray unpsentsArray = new JArray();
-            json["balances"] = balances;
             json["unspent"] = unpsentsArray;
             json["unclaimed"] =  unclaimedArray;
             json["version"] = "0";
@@ -890,18 +889,23 @@ namespace Cron.Plugins
 
                 if (unspents.Count <= 0) continue;
 
-                var balance = new JObject();
-                balance["asset"] = nativeAssetIds[tokenIndex].ToString();
-                balance["value"] =  total.ToString();
-                
-                balances.Add(balance);
-
                 foreach (var tmp in unspents)
                 {
                     unpsentsArray.Add(tmp);
                 }
                 
             }
+            AccountState account = Blockchain.Singleton.Store.GetAccounts().TryGet(scriptHash) ??
+                                   new AccountState(scriptHash);
+            
+            json["balances"] = account.Balances.Select(p =>
+            {
+                JObject balance = new JObject();
+                balance["asset"] = p.Key.ToString();
+                balance["value"] = p.Value.ToString();
+                return balance;
+            }).ToArray();
+            
 
             return json;
         }
