@@ -23,10 +23,12 @@ namespace Neo.FileStorage
 {
     public sealed partial class StorageService : IDisposable
     {
-        private ObjectServiceImpl InitializeObject(StorageEngine localStorage)
+        private ReputationClientCache reputationClientCache;
+
+        private ObjectServiceImpl InitializeObject()
         {
             KeyStorage keyStorage = new(key, tokenStore);
-            ReputationClientCache reputationClientCache = new()
+            reputationClientCache = new()
             {
                 StorageNode = this,
                 MorphClient = morphClient,

@@ -2,7 +2,10 @@ using System;
 using Akka.Actor;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.Cache;
+using Neo.FileStorage.InnerRing.Invoker;
+using Neo.FileStorage.InnerRing.Timer;
 using Neo.FileStorage.Morph.Event;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Reputaion.Common;
 using Neo.FileStorage.Services.Reputaion.Common.Route;
 using Neo.FileStorage.Services.Reputaion.EigenTrust.Calculate;
@@ -21,6 +24,7 @@ namespace Neo.FileStorage
     public sealed partial class StorageService : IDisposable
     {
         public const int DefaultReputationWorkPoolSize = 32;
+        private BlockTimer eigenTrustTimer;
 
         private ReputationServiceImpl InitializeReputation()
         {
@@ -127,6 +131,21 @@ namespace Neo.FileStorage
                     localTrustController.Report(e.EpochNumber);
                 }
             });
+            EigenTrustDuration duration = new() { MorphClient = morphClient };
+            eigenTrustTimer = new(duration.Value, () =>
+            {
+                ulong epoch = 0;
+                try
+                {
+                    epoch = morphClient.GetEpoch();
+                }
+                catch (Exception e)
+                {
+                    Utility.Log(nameof(StorageService), LogLevel.Debug, $"eigen trust timer handler when get epoch, error: {e}");
+                }
+                eigenTrustController.Continue(epoch);
+            });
+            blockTimers.Add(eigenTrustTimer);
             return new ReputationServiceImpl
             {
                 SignService = new()
@@ -144,6 +163,44 @@ namespace Neo.FileStorage
                     }
                 }
             };
+        }
+
+        private class EigenTrustDuration
+        {
+            public Client MorphClient { get; init; }
+            private uint value = 0;
+
+            public uint Value()
+            {
+                lock (this)
+                {
+                    if (value == 0)
+                        UpdateInternal();
+                    return value;
+                }
+            }
+
+            public void Update()
+            {
+                lock (this)
+                {
+                    UpdateInternal();
+                }
+            }
+
+            public void UpdateInternal()
+            {
+                try
+                {
+                    var amount = MorphClient.EigenTrustIterations();
+                    var duration = MorphClient.EpochDuration();
+                    value = (uint)(duration / amount);
+                }
+                catch
+                {
+                    return;
+                }
+            }
         }
     }
 }

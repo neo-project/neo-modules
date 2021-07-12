@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Neo.FileStorage.API.Cryptography;
+using Neo.FileStorage.InnerRing.Invoker;
+using Neo.FileStorage.InnerRing.Timer;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.LocalObjectStorage.Shards;
 using Neo.FileStorage.Morph.Event;
@@ -41,30 +43,43 @@ namespace Neo.FileStorage
         public const int EACLCacheTTLSeconds = 30;
         public ulong CurrentEpoch = 0;
         public API.Netmap.NodeInfo LocalNodeInfo;
-        public NetmapStatus NetmapStatus = NetmapStatus.Online;
-        public HealthStatus HealthStatus = HealthStatus.Ready;
+        public NetmapStatus NetmapStatus => (NetmapStatus)LocalNodeInfo.State;
+        public HealthStatus HealthStatus;
         private readonly ECDsa key;
         private readonly Client morphClient;
         private readonly NeoSystem system;
         private readonly IActorRef listener;
+        private readonly StorageEngine localStorage;
         public ProtocolSettings ProtocolSettings => system.Settings;
         private Network.Address LocalAddress => Network.Address.FromString(LocalNodeInfo.Address);
         private readonly NetmapProcessor netmapProcessor = new();
         private readonly ContainerProcessor containerProcessor = new();
         private readonly CancellationTokenSource context = new();
+        private readonly List<BlockTimer> blockTimers = new();
 
         public StorageService(Wallet wallet, NeoSystem side)
         {
             system = side;
             key = wallet.GetAccounts().First().GetKey().PrivateKey.LoadPrivateKey();
+            HealthStatus = HealthStatus.Starting;
             LocalNodeInfo = new()
             {
-                Address = "127.0.0.1:8080",
+                Address = Settings.Default.StorageSettings.Address,
                 PublicKey = ByteString.CopyFrom(key.PublicKey()),
             };
-            StorageEngine localStorage = new();
+            LocalNodeInfo.Attributes.AddRange(Settings.Default.StorageSettings.Attributes.Select(p =>
+            {
+                var li = p.Split(":");
+                if (li.Length != 2) throw new FormatException("invalid attributes setting");
+                return new API.Netmap.NodeInfo.Types.Attribute
+                {
+                    Key = li[0],
+                    Value = li[1],
+                };
+            }));
+            localStorage = new();
             int i = 0;
-            foreach (var shardSettings in Settings.Default.LocalStorageSettings.Shards)
+            foreach (var shardSettings in Settings.Default.StorageSettings.Shards)
             {
                 var shard = new Shard(shardSettings, system.ActorSystem.ActorOf(WorkerPool.Props($"Shard{i}", 2)), localStorage.ProcessExpiredTomstones);
                 netmapProcessor.AddEpochHandler(p =>
@@ -88,14 +103,21 @@ namespace Neo.FileStorage
             };
             listener = system.ActorSystem.ActorOf(Listener.Props("storage"));
             AccountingServiceImpl accountingService = InitializeAccounting();
-            ContainerServiceImpl containerService = InitializeContainer(localStorage);
-            ControlServiceImpl controlService = InitializeControl(localStorage);
+            ContainerServiceImpl containerService = InitializeContainer();
+            ControlServiceImpl controlService = InitializeControl();
             NetmapServiceImpl netmapService = InitializeNetmap();
-            ObjectServiceImpl objectService = InitializeObject(localStorage);
+            ObjectServiceImpl objectService = InitializeObject();
             ReputationServiceImpl reputationService = InitializeReputation();
             SessionServiceImpl sessionService = InitializeSession();
             listener.Tell(new Listener.BindProcessorEvent { processor = netmapProcessor });
             listener.Tell(new Listener.BindProcessorEvent { processor = containerProcessor });
+            listener.Tell(new Listener.BindBlockHandlerEvent
+            {
+                handler = block =>
+                {
+                    TickBlockTimers();
+                }
+            });
             listener.Tell(new Listener.Start());
             Host.CreateDefaultBuilder()
                 .ConfigureLogging(logBuilder =>
@@ -107,7 +129,7 @@ namespace Neo.FileStorage
                 {
                     webBuilder.ConfigureKestrel(options =>
                     {
-                        options.ListenAnyIP(Settings.Default.Port,
+                        options.ListenAnyIP(Settings.Default.StorageSettings.Port,
                             listenOptions => { listenOptions.Protocols = HttpProtocols.Http2; });
                     });
                     webBuilder.UseStartup(context => new Startup
@@ -122,10 +144,52 @@ namespace Neo.FileStorage
                 })
                 .Build()
                 .RunAsync(context.Token);
+            InitState();
+            var ni = LocalNodeInfo.Clone();
+            ni.State = API.Netmap.NodeInfo.Types.State.Online;
+            morphClient.InvokeAddPeer(ni);
+            StartBlockTimers();
+            HealthStatus = HealthStatus.Ready;
         }
 
-        public void OnPersisted(Block _1, DataCache _2, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        private void InitState()
         {
+            var epoch = morphClient.GetEpoch();
+            var ni = NetmapLocalNodeInfo(epoch);
+            if (ni is null)
+            {
+                Utility.Log(nameof(StorageService), LogLevel.Debug, "could not found node info, offline");
+                LocalNodeInfo.State = API.Netmap.NodeInfo.Types.State.Offline;
+                return;
+            }
+            LocalNodeInfo = ni;
+            CurrentEpoch = epoch;
+        }
+
+        public void SetStatus(NetmapStatus status)
+        {
+            lock (LocalNodeInfo)
+            {
+                LocalNodeInfo.State = (API.Netmap.NodeInfo.Types.State)status;
+            }
+        }
+
+        private void StartBlockTimers()
+        {
+            foreach (var t in blockTimers)
+                t.Reset();
+        }
+
+        private void TickBlockTimers()
+        {
+            foreach (var t in blockTimers)
+                t.Tick();
+        }
+
+        public void OnPersisted(Block block, DataCache _2, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        {
+            if (listener is null) return;
+            listener.Tell(new Listener.NewBlockEvent { block = block });
             foreach (var appExec in applicationExecutedList)
             {
                 Transaction tx = appExec.Transaction;
@@ -144,8 +208,12 @@ namespace Neo.FileStorage
 
         public void Dispose()
         {
+            HealthStatus = HealthStatus.ShuttingDown;
             context.Cancel();
+            listener.Tell(new Listener.Stop());
             key?.Dispose();
+            reputationClientCache?.Dispose();
+            localStorage?.Dispose();
         }
     }
 }

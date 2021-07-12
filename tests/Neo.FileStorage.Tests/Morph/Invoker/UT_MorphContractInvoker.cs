@@ -65,8 +65,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             NodeInfo nodeInfo = new NodeInfo();
             nodeInfo.Address = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToAddress(key.ToArray());
             nodeInfo.PublicKey = ByteString.CopyFrom(key.ToArray());
-            var rawNodeInfo = nodeInfo.ToByteArray();
-            bool result = MorphContractInvoker.InvokeAddPeer(client, rawNodeInfo);
+            bool result = MorphContractInvoker.InvokeAddPeer(client, nodeInfo);
             Assert.AreEqual(result, true);
         }
 

@@ -1,12 +1,12 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Threading.Tasks;
 using Grpc.Core;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Control.Service;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Security.Cryptography;
 using APINodeInfo = Neo.FileStorage.API.Netmap.NodeInfo;
 using APIState = Neo.FileStorage.API.Netmap.NodeInfo.Types.State;
 
@@ -87,7 +87,7 @@ namespace Neo.FileStorage.Services.Control
             return Task.Run(() =>
             {
                 if (!IsValidRequest(request)) throw new RpcException(new Status(StatusCode.PermissionDenied, ""));
-                StorageNode.NetmapStatus = request.Body.Status;
+                StorageNode.SetStatus(request.Body.Status);
                 var resp = new SetNetmapStatusResponse
                 {
                     Body = new SetNetmapStatusResponse.Types.Body { }
@@ -110,19 +110,10 @@ namespace Neo.FileStorage.Services.Control
             {
                 PublicKey = n.PublicKey,
                 Address = n.Address,
-                State = StateFromAPI(n.State),
+                State = (NetmapStatus)n.State,
             };
             ni.Attributes.AddRange(n.Attributes.Select(p => AttributeFromAPI(p)));
             return ni;
-        }
-        private NetmapStatus StateFromAPI(APIState state)
-        {
-            return state switch
-            {
-                APIState.Online => NetmapStatus.Online,
-                APIState.Offline => NetmapStatus.Offline,
-                _ => NetmapStatus.StatusUndefined,
-            };
         }
 
         private NodeInfo.Types.Attribute AttributeFromAPI(APINodeInfo.Types.Attribute a)

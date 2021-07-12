@@ -13,7 +13,7 @@ namespace Neo.FileStorage
 {
     public sealed partial class StorageService : IDisposable
     {
-        private ContainerServiceImpl InitializeContainer(StorageEngine localStorage)
+        private ContainerServiceImpl InitializeContainer()
         {
             AnnouncementStorage loadAccumulator = new();
             Controller controller = new()

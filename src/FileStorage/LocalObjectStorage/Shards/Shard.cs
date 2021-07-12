@@ -20,6 +20,7 @@ namespace Neo.FileStorage.LocalObjectStorage.Shards
     {
         public const int DefaultRemoveBatchSize = 100;
         public const int DefaultRemoveInterval = 60000;
+        public const bool DefaultUseWriteCache = true;
         public ShardID ID { get; private set; }
         private readonly bool useWriteCache;
         private readonly int removeBatchSize;
