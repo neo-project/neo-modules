@@ -132,7 +132,8 @@ namespace Neo.FileStorage.InnerRing
             {
                 var source = CancellationTokenSource.CreateLinkedTokenSource(task.Cancellation);
                 source.CancelAfter(TimeSpan.FromMinutes(1));
-                head = client.GetObjectHeader(objAddress, raw, context: source.Token).Result;
+                var key = wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
+                head = client.GetObjectHeader(objAddress, raw, options: new CallOptions() { Key=key},context: source.Token).Result;
             }
             catch (Exception e)
             {
@@ -171,7 +172,8 @@ namespace Neo.FileStorage.InnerRing
             {
                 var source = new CancellationTokenSource();
                 source.CancelAfter(TimeSpan.FromMinutes(1));
-                result = cli.GetObjectPayloadRangeHash(objAddress, new List<V2Range> { rng }, ChecksumType.Tz, null, new() { Ttl = 1 }, source.Token).Result;
+                var key = wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
+                result = cli.GetObjectPayloadRangeHash(objAddress, new List<V2Range> { rng }, ChecksumType.Tz, null, new() { Ttl = 1,Key=key }, source.Token).Result;
             }
             catch (Exception e)
             {

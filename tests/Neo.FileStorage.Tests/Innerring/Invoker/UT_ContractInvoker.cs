@@ -222,5 +222,17 @@ namespace Neo.FileStorage.Tests.InnerRing.Invoker
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
+
+/*        [TestMethod]
+        public void InvokePutAuditResultTest()
+        {
+            morphclient.InvokePutAuditResult();
+            { "auditEpoch": "15", "containerID": { "value": "ffiBhFJACt+F1fABuKsfJZZ3PjA04SFp9P7tL2tmncA=" }, "publicKey": "ArNiK/QBe9/jF8WK7V9MdT8ga324lgRvp9d0u8S/f43C", "complete": true, "requests": 1, "passSG": [ { "value": "5Gv2Wk0MHyAOZdhhA5PBGGJ6aUryuA8MgXFstAJl4iA=" } ], "hit": 1 }
+            IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
+            bool result = morphclient.AlphabetUpdate(new byte[1] { 0x01 }, accounts.Select(p => p.GetKey().PublicKey).ToArray());
+            var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
+            Assert.AreEqual(result, true);
+            Assert.IsNotNull(tx);
+        }*/
     }
 }

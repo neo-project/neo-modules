@@ -13,6 +13,7 @@ namespace Neo.FileStorage.Services.Audit
         public Report()
         {
             auditResult = new DataAuditResult();
+            auditResult.Version = Version.SDKVersion();
         }
 
         public void SetContainerID(ContainerID cid)

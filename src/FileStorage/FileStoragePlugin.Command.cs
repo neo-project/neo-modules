@@ -108,8 +108,11 @@ namespace Neo.FileStorage
         }
 
         [ConsoleCommand("fs storage object put", Category = "FileStorageService", Description = "Create a container")]
-        private void OnStorageObject(string id,string objid)
+        private void OnStorageObject(string id, string objid)
         {
+            //fs storage object put 9Ujk3Va7AUgY76YeWVhzqsT5pY7uVH8Qt8iwDYDukrWK 5pxDt8uSXvPT2dmb1gNm8cNsGAKJF6f838e2NNagjnFa
+            try {
+            Console.WriteLine("OnStorageObject----step1");
             var host = "http://192.168.130.71:8080";
             var t = File.ReadAllBytes("wallet.key");
             var key = new KeyPair(t).Export().LoadWif();
@@ -118,6 +121,7 @@ namespace Neo.FileStorage
             List<ObjectID> oids = new() { ObjectID.FromBase58String(objid) };
             byte[] tzh = null;
             ulong size = 0;
+            Console.WriteLine("OnStorageObject----step2");
             foreach (var oid in oids)
             {
                 var address = new API.Refs.Address(cid, oid);
@@ -130,6 +134,7 @@ namespace Neo.FileStorage
                     tzh = TzHash.Concat(new() { tzh, oo.PayloadHomomorphicHash.Sum.ToByteArray() });
                 size += oo.PayloadSize;
             }
+            Console.WriteLine("OnStorageObject----step3");
             var epoch = client.Epoch().Result;
             StorageGroup sg = new()
             {
@@ -152,15 +157,23 @@ namespace Neo.FileStorage
                 },
                 Payload = ByteString.CopyFrom(sg.ToByteArray()),
             };
+            Console.WriteLine("OnStorageObject----step4");
             obj.ObjectId = obj.CalculateID();
             var source1 = new CancellationTokenSource();
             source1.CancelAfter(TimeSpan.FromMinutes(1));
             var session = client.CreateSession(ulong.MaxValue, context: source1.Token).Result;
             source1.Cancel();
+            Console.WriteLine("OnStorageObject----step5");
             var source2 = new CancellationTokenSource();
             source2.CancelAfter(TimeSpan.FromMinutes(1));
+            Console.WriteLine("OnStorageObject----step6");
             var o = client.PutObject(obj, new CallOptions { Ttl = 2, Session = session }, source2.Token).Result;
-            Console.WriteLine("Storage object ID:"+o.ToString());
+            Console.WriteLine("Storage object ID:" + o.ToString());
+        }
+             catch (Exception e)
+            {
+                Console.WriteLine("OnStorageObject----Exception:"+ e.Message);
+            }
         }
 
         [ConsoleCommand("fs container delete", Category = "FileStorageService", Description = "Create a container")]
