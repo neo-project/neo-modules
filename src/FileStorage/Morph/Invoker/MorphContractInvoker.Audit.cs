@@ -23,9 +23,9 @@ namespace Neo.FileStorage.Morph.Invoker
             return client.Invoke(out _, AuditContractHash, PutResultMethod, SideChainFee, rawResult);
         }
 
-        public static DataAuditResult InvokeGetAuditResult(this Client client)
+        public static DataAuditResult InvokeGetAuditResult(this Client client,byte[] id)
         {
-            InvokeResult result = client.TestInvoke(AuditContractHash, GetResultMethod);
+            InvokeResult result = client.TestInvoke(AuditContractHash, GetResultMethod,id);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", GetResultMethod));
             return DataAuditResult.Parser.ParseFrom(result.ResultStack[0].GetSpan().ToArray());
         }

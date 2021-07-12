@@ -25,11 +25,11 @@ namespace Neo.FileStorage.InnerRing
 
         public List<DataAuditResult> AuditResultsForEpoch(ulong epoch)
         {
-            List<byte[]> idList = MorphContractInvoker.InvokeListAuditResultsByEpoch(client, (long)epoch);
+            List<byte[]> idList = client.InvokeListAuditResultsByEpoch((long)epoch);
             var res = new List<DataAuditResult>();
             foreach (var id in idList)
             {
-                DataAuditResult dataAuditResult = DataAuditResult.Parser.ParseFrom(id);
+                DataAuditResult dataAuditResult=client.InvokeGetAuditResult(id);
                 res.Add(dataAuditResult);
             }
             return res;
@@ -42,21 +42,26 @@ namespace Neo.FileStorage.InnerRing
 
         public void BuildContainer(ulong epoch, ContainerID cid, out List<List<Node>> containerNodes, out NetMap netMap)
         {
+            Console.WriteLine("BuildContainer---step1");
             if (epoch > 0)
                 netMap = client.InvokeEpochSnapshot(epoch);
             else
                 netMap = client.InvokeSnapshot(0);
+            Console.WriteLine("BuildContainer---step1");
             Container cnr = client.GetContainer(cid)?.Container;
             containerNodes = netMap.GetContainerNodes(cnr.PlacementPolicy, cid.Value.ToByteArray());
         }
 
         public NodeInfo[] ContainerNodes(ulong epoch, ContainerID cid)
         {
+            Console.WriteLine("ContainerNodes---step1");
             BuildContainer(epoch, cid, out List<List<Node>> cn, out NetMap netMap);
+            Console.WriteLine("ContainerNodes---step2");
             List<Node> ns = cn.Flatten();
             List<NodeInfo> res = new List<NodeInfo>();
             foreach (var node in ns)
                 res.Add(new NormalNodeInfoWrapper(node));
+            Console.WriteLine("ContainerNodes---step3");
             return res.ToArray();
         }
 

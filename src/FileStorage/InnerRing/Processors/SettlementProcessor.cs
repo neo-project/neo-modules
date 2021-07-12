@@ -295,9 +295,9 @@ namespace Neo.FileStorage.InnerRing.Processors
                 {
                     auditResults = settlementDeps.AuditResultsForEpoch(epoch - 1);
                 }
-                catch
+                catch(Exception e)
                 {
-                    Utility.Log("Calculator", LogLevel.Debug, "could not collect audit results");
+                    Utility.Log("Calculator", LogLevel.Debug, "could not collect audit results,"+e);
                     return;
                 }
                 if (!auditResults.Any())
@@ -309,10 +309,12 @@ namespace Neo.FileStorage.InnerRing.Processors
                 var table = new TransferTable();
                 foreach (var auditResult in auditResults)
                 {
+                    Console.WriteLine("auditResult:"+ auditResult);
                     ProcessResult(new SingleResultCtx()
                     {
                         auditResult = auditResult,
-                        txTable = table
+                        txTable = table,
+                        auditFee=Settings.Default.AuditFee
                     });
                 }
                 Utility.Log("Calculator", LogLevel.Debug, "processing transfers");
@@ -352,14 +354,17 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 try
                 {
-                    settlementDeps.ContainerNodes(ctx.eAudit, ctx.auditResult.ContainerId);
+                    Console.WriteLine("BuildPlacement---step1,"+settlementDeps is null);
+                    ctx.cnrNodes=settlementDeps.ContainerNodes(ctx.eAudit, ctx.auditResult.ContainerId);
+                    Console.WriteLine("BuildPlacement---step2");
                     var empty = ctx.cnrNodes.Length == 0;
                     Utility.Log("Calculator", LogLevel.Debug, "empty list of container nodes");
+                    Console.WriteLine("BuildPlacement---step3");
                     return !empty;
                 }
                 catch (Exception e)
                 {
-                    Utility.Log("Calculator", LogLevel.Error, string.Format("could not get container nodes,error:{0}", e.Message));
+                    Utility.Log("Calculator", LogLevel.Error, string.Format("could not get container nodes,error:{0}", e));
                     return false;
                 }
             }
