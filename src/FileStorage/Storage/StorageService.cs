@@ -170,7 +170,23 @@ namespace Neo.FileStorage
         {
             lock (LocalNodeInfo)
             {
-                LocalNodeInfo.State = (API.Netmap.NodeInfo.Types.State)status;
+                switch (status)
+                {
+                    case NetmapStatus.Online:
+                        {
+                            Interlocked.Exchange(ref reBoostrapTurnedOff, 0);
+                            var ni = LocalNodeInfo.Clone();
+                            ni.State = API.Netmap.NodeInfo.Types.State.Online;
+                            morphClient.InvokeAddPeer(ni);
+                            break;
+                        }
+                    case NetmapStatus.Offline:
+                        {
+                            Interlocked.Exchange(ref reBoostrapTurnedOff, 1);
+                            morphClient.InvokeUpdateState(API.Netmap.NodeInfo.Types.State.Offline, key.PublicKey());
+                            break;
+                        }
+                }
             }
         }
 
