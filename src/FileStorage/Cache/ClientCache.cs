@@ -17,7 +17,7 @@ namespace Neo.FileStorage.Cache
                 return client;
             }
             //TODO: tls
-            var host = address.ToHostAddressString();
+            var host = "http://"+address.ToHostAddressString();
             client = new Client(null, host);
             clients[m_addr] = client;
             return client;

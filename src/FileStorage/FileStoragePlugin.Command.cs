@@ -1,11 +1,28 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
 using Akka.Actor;
+using Google.Protobuf;
 using Neo.ConsoleService;
+using Neo.FileStorage.API.Acl;
+using Neo.FileStorage.API.Client;
+using Neo.FileStorage.API.Container;
+using Neo.FileStorage.API.Cryptography;
+using Neo.FileStorage.API.Cryptography.Tz;
+using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.API.Object;
+using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.API.StorageGroup;
 using Neo.FileStorage.Utils.Locode;
 using Neo.FileStorage.Utils.Locode.Db;
 using Neo.Network.P2P;
 using Neo.Plugins;
 using Neo.SmartContract.Native;
+using Neo.Wallets;
+using Neo.Wallets.NEP6;
 
 namespace Neo.FileStorage
 {
@@ -32,6 +49,159 @@ namespace Neo.FileStorage
         {
             StartIR(walletProvider.GetWallet());
         }
+
+        [ConsoleCommand("fs container put", Category = "FileStorageService", Description = "Create a container")]
+        private void OnPutContainer()
+        {
+            var host = "http://192.168.130.71:8080";
+            var t = File.ReadAllBytes("wallet.key");
+            var key = new KeyPair(t).Export().LoadWif();
+            var client = new API.Client.Client(key, host);
+            var replica = new Replica(2, "");
+            var policy = new PlacementPolicy(2, new Replica[] { replica }, null, null);
+            var container = new API.Container.Container
+            {
+                Version = API.Refs.Version.SDKVersion(),
+                OwnerId = key.ToOwnerID(),
+                Nonce = Guid.NewGuid().ToByteString(),
+                BasicAcl = (uint)BasicAcl.PublicBasicRule,
+                PlacementPolicy = policy,
+            };
+            container.Attributes.Add(new Container.Types.Attribute
+            {
+                Key = "CreatedAt",
+                Value = DateTime.UtcNow.ToString(),
+            });
+            var source = new CancellationTokenSource();
+            source.CancelAfter(TimeSpan.FromMinutes(1));
+            var cid = client.PutContainer(container, context: source.Token).Result;
+            Console.WriteLine("create container"+cid.ToBase58String());
+        }
+
+        [ConsoleCommand("fs object put", Category = "FileStorageService", Description = "Create a container")]
+        private void OnPutObject(string id)
+        {
+            var host = "http://192.168.130.71:8080";
+            var t = File.ReadAllBytes("wallet.key");
+            var key = new KeyPair(t).Export().LoadWif();
+            var client = new API.Client.Client(key, host);
+            var cid = Neo.FileStorage.API.Refs.ContainerID.FromBase58String(id);
+            var payload = Encoding.ASCII.GetBytes("hello");
+            var obj = new Neo.FileStorage.API.Object.Object
+            {
+                Header = new Header
+                {
+                    OwnerId = key.ToOwnerID(),
+                    ContainerId = cid,
+                },
+                Payload = ByteString.CopyFrom(payload),
+            };
+            obj.ObjectId = obj.CalculateID();
+            var source1 = new CancellationTokenSource();
+            source1.CancelAfter(TimeSpan.FromMinutes(1));
+            var session = client.CreateSession(ulong.MaxValue, context: source1.Token).Result;
+            source1.Cancel();
+            var source2 = new CancellationTokenSource();
+            source2.CancelAfter(TimeSpan.FromMinutes(1));
+            var o = client.PutObject(obj, new CallOptions { Ttl = 2, Session = session }, source2.Token).Result;
+            Console.WriteLine("ObjectID:"+o.ToBase58String());
+        }
+
+        [ConsoleCommand("fs storage object put", Category = "FileStorageService", Description = "Create a container")]
+        private void OnStorageObject(string id,string objid)
+        {
+            var host = "http://192.168.130.71:8080";
+            var t = File.ReadAllBytes("wallet.key");
+            var key = new KeyPair(t).Export().LoadWif();
+            var client = new API.Client.Client(key, host);
+            var cid = Neo.FileStorage.API.Refs.ContainerID.FromBase58String(id);
+            List<ObjectID> oids = new() { ObjectID.FromBase58String(objid) };
+            byte[] tzh = null;
+            ulong size = 0;
+            foreach (var oid in oids)
+            {
+                var address = new API.Refs.Address(cid, oid);
+                var source = new CancellationTokenSource();
+                source.CancelAfter(TimeSpan.FromMinutes(1));
+                var oo = client.GetObject(address, false, new CallOptions { Ttl = 2 }, source.Token).Result;
+                if (tzh is null)
+                    tzh = oo.PayloadHomomorphicHash.Sum.ToByteArray();
+                else
+                    tzh = TzHash.Concat(new() { tzh, oo.PayloadHomomorphicHash.Sum.ToByteArray() });
+                size += oo.PayloadSize;
+            }
+            var epoch = client.Epoch().Result;
+            StorageGroup sg = new()
+            {
+                ValidationDataSize = size,
+                ValidationHash = new()
+                {
+                    Type = ChecksumType.Tz,
+                    Sum = ByteString.CopyFrom(tzh)
+                },
+                ExpirationEpoch = epoch + 100,
+            };
+            sg.Members.AddRange(oids);
+            var obj = new Neo.FileStorage.API.Object.Object
+            {
+                Header = new Header
+                {
+                    OwnerId = key.ToOwnerID(),
+                    ContainerId = cid,
+                    ObjectType = ObjectType.StorageGroup,
+                },
+                Payload = ByteString.CopyFrom(sg.ToByteArray()),
+            };
+            obj.ObjectId = obj.CalculateID();
+            var source1 = new CancellationTokenSource();
+            source1.CancelAfter(TimeSpan.FromMinutes(1));
+            var session = client.CreateSession(ulong.MaxValue, context: source1.Token).Result;
+            source1.Cancel();
+            var source2 = new CancellationTokenSource();
+            source2.CancelAfter(TimeSpan.FromMinutes(1));
+            var o = client.PutObject(obj, new CallOptions { Ttl = 2, Session = session }, source2.Token).Result;
+            Console.WriteLine("Storage object ID:"+o.ToString());
+        }
+
+        [ConsoleCommand("fs container delete", Category = "FileStorageService", Description = "Create a container")]
+        private void OnRemoveContainer(string id)
+        {
+            /*
+            192.168.130.10 bastion.neofs.devenv
+            192.168.130.50 main_chain.neofs.devenv
+            192.168.130.81 http.neofs.devenv
+            192.168.130.61 ir01.neofs.devenv
+            192.168.130.90 morph_chain.neofs.devenv
+            192.168.130.82 s3.neofs.devenv
+            192.168.130.82 *.s3.neofs.devenv
+            192.168.130.71 s01.neofs.devenv
+            192.168.130.72 s02.neofs.devenv
+            192.168.130.73 s03.neofs.devenv
+            192.168.130.74 s04.neofs.devenv
+            */
+            var host = "http://192.168.130.71:8080";
+            var t = File.ReadAllBytes("wallet.key");
+            var key = new KeyPair(t).Export().LoadWif();
+            var client = new API.Client.Client(key, host);
+            var cid = Neo.FileStorage.API.Refs.ContainerID.FromBase58String(id);
+            var source = new CancellationTokenSource();
+            source.CancelAfter(10000);
+            client.DeleteContainer(cid, context: source.Token).Wait();
+        }
+
+        [ConsoleCommand("fs container get", Category = "FileStorageService", Description = "Create a container")]
+        private void OnGetContainer(string id)
+        {
+            var host = "http://192.168.130.71:8080";
+            var t = File.ReadAllBytes("wallet.key");
+            var key = new KeyPair(t).Export().LoadWif();
+            var client = new API.Client.Client(key, host);
+            var cid = Neo.FileStorage.API.Refs.ContainerID.FromBase58String(id);
+            var source = new CancellationTokenSource();
+            var container = client.GetContainer(cid, context: source.Token).Result;
+            Console.WriteLine("Get container success");
+        }
+
 
         [ConsoleCommand("fs start storage", Category = "FileStorageService", Description = "Start as storage node")]
         private void OnStartStorage()

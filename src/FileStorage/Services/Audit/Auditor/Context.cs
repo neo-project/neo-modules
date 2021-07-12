@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Akka.Actor;
@@ -24,12 +25,19 @@ namespace Neo.FileStorage.Services.Audit.Auditor
 
         public void Execute()
         {
+            Console.WriteLine("Audit Execute---step1");
             Initialize();
+            Console.WriteLine("Audit Execute---step2");
             ExecutePoR();
+            Console.WriteLine("Audit Execute---step3");
             ExecutePoP();
+            Console.WriteLine("Audit Execute---step4");
             ExecutePDP();
+            Console.WriteLine("Audit Execute---step5");
             Complete();
+            Console.WriteLine("Audit Execute---step6");
             WriteReport();
+            Console.WriteLine("Audit Execute---step7");
         }
 
         private void Initialize()

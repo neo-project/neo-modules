@@ -5,6 +5,7 @@ using System.Threading;
 using Akka.Actor;
 using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Container;
+using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
@@ -54,6 +55,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             try
             {
                 nm = MorphCli.InvokeSnapshot(0);
+                Console.WriteLine("NetMap Nodes个数：" + nm.Nodes.Count);
             }
             catch (Exception e)
             {
@@ -77,6 +79,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 try
                 {
                     nodes = nm.GetContainerNodes(cnr.PlacementPolicy, pivot);
+                    Console.WriteLine("ContainerNodes个数："+nodes.Count);
                 }
                 catch (Exception e)
                 {
@@ -84,6 +87,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     continue;
                 }
                 var n = nodes.Flatten().ToArray();
+                Console.WriteLine("Container Nodes Flatten个数：" + n.Length);
                 n = n.OrderBy(c => Guid.NewGuid()).ToArray();
                 var storageGroups = FindStorageGroups(containers[i], n);
                 Utility.Log(Name, LogLevel.Info, string.Format("select storage groups for audit,cid:{0},amount:{1}", containers[i], storageGroups.Length));
@@ -158,6 +162,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         private ObjectID[] FindStorageGroups(ContainerID cid, Node[] shuffled)
         {
+            Console.WriteLine("FindStorageGroups---step1");
             List<ObjectID> sg = new List<ObjectID>();
             for (int i = 0; i < shuffled.Length; i++)
             {
@@ -168,15 +173,17 @@ namespace Neo.FileStorage.InnerRing.Processors
                 pairs.Add("total_tries", shuffled.Length.ToString());
                 Utility.Log(Name, LogLevel.Info, pairs.ToString());
                 Network.Address address;
+                Console.WriteLine("FindStorageGroups---step1-1");
                 try
                 {
-                    address = Network.Address.FromString(shuffled[0].NetworkAddress);
+                    address = Network.Address.FromString(shuffled[i].NetworkAddress);
                 }
                 catch (Exception e)
                 {
                     Utility.Log(Name, LogLevel.Warning, string.Format("can't parse remote address,error {0}", e.Message));
                     continue;
                 };
+                Console.WriteLine("FindStorageGroups---step1-2");
                 IFSClient cli;
                 try
                 {
@@ -187,13 +194,15 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Warning, string.Format("can't setup remote connection,error {0}", e.Message));
                     continue;
                 };
+                Console.WriteLine("FindStorageGroups---step1-3");
                 SearchFilters searchFilters = new();
                 searchFilters.AddTypeFilter(MatchType.StringEqual, ObjectType.StorageGroup);
                 try
                 {
                     var source = new CancellationTokenSource();
                     source.CancelAfter(TimeSpan.FromMinutes(1));
-                    List<ObjectID> result = cli.SearchObject(cid, searchFilters, context: source.Token).Result;
+                    var key = MorphCli.GetWallet().GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
+                    List<ObjectID> result = cli.SearchObject(cid, searchFilters, new CallOptions() { Key= key },context: source.Token).Result;
                     sg.AddRange(result);
                     break;
                 }
@@ -202,7 +211,9 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Warning, string.Format("error in storage group search,error {0}", e.Message));
                     continue;
                 }
+                Console.WriteLine("FindStorageGroups---step1-4");
             }
+            Console.WriteLine("FindStorageGroups---step2");
             return sg.ToArray();
         }
     }

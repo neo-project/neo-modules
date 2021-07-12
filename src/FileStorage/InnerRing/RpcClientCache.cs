@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Neo.FileStorage.API.Client;
+using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.StorageGroup;
@@ -76,7 +78,8 @@ namespace Neo.FileStorage.InnerRing
                 {
                     var source = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
                     source.CancelAfter(TimeSpan.FromMinutes(1));
-                    obj = cli.GetObject(sgAddress, false, context: source.Token).Result;
+                    var key = wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
+                    obj = cli.GetObject(sgAddress, false, new CallOptions() { Key = key },context: source.Token).Result;
                 }
                 catch (Exception e)
                 {

@@ -12,6 +12,13 @@ using Neo.Plugins.util;
 using static Neo.FileStorage.InnerRing.Events.MorphEvent;
 using Neo.Cryptography.ECC;
 using System;
+using Neo.Wallets.NEP6;
+using Neo.FileStorage.API.Cryptography;
+using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.API.Acl;
+using Neo.FileStorage.API.Container;
+using System.Threading;
+using System.IO;
 
 namespace Neo.FileStorage.Tests.InnerRing.Processors
 {
@@ -82,10 +89,34 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
                 ECPoint.DecodePoint(Convert.FromHexString("0323e9c548dc7eda8e0f93f02be71e43cbc4f43f3905d6b9c6adc22df81a138a4c"),ECCurve.Secp256r1),
                 ECPoint.DecodePoint(Convert.FromHexString("02b0704d818e3bcdcfceb9941edcf6daaee74dc6453fc22761590bfc4ac2ab8d7f"),ECCurve.Secp256r1)};
             processor.NewAlphabetList(sidechain, mainchain).ToList().ForEach(p=>Console.WriteLine("NewAlphabetListTest:"+p.ToString()));
-/*            NewAlphabetListTest: 030551b149b5f3b34cb5f0bb90e3c60d2b269a99bb9b58a271fbe8f73fc9d54678
- NewAlphabetListTest:0323e9c548dc7eda8e0f93f02be71e43cbc4f43f3905d6b9c6adc22df81a138a4c
- NewAlphabetListTest:03261c49859f191eff7d1ac8fdd92cb8ea2d03083950042effc20df41f27243edd
- NewAlphabetListTest:036bbe8d0e8c0c257feec1f179c1036511ff64c686cf3d62b60ee56633f5d7fb13*/
+            /*            NewAlphabetListTest: 030551b149b5f3b34cb5f0bb90e3c60d2b269a99bb9b58a271fbe8f73fc9d54678
+             NewAlphabetListTest:0323e9c548dc7eda8e0f93f02be71e43cbc4f43f3905d6b9c6adc22df81a138a4c
+             NewAlphabetListTest:03261c49859f191eff7d1ac8fdd92cb8ea2d03083950042effc20df41f27243edd
+             NewAlphabetListTest:036bbe8d0e8c0c257feec1f179c1036511ff64c686cf3d62b60ee56633f5d7fb13*/
+
+            var host = "192.168.130.71:8080";
+            var t=File.ReadAllBytes("wallet.key");
+            var key = new KeyPair(t).Export().LoadWif();
+            var client = new API.Client.Client(key, host);
+            var replica = new Replica(1, "");
+            var policy = new PlacementPolicy(2, new Replica[] { replica }, null, null);
+            var container = new API.Container.Container
+            {
+                Version = API.Refs.Version.SDKVersion(),
+                OwnerId = key.ToOwnerID(),
+                Nonce = Guid.NewGuid().ToByteString(),
+                BasicAcl = (uint)BasicAcl.PublicBasicRule,
+                PlacementPolicy = policy,
+            };
+            container.Attributes.Add(new Container.Types.Attribute
+            {
+                Key = "CreatedAt",
+                Value = DateTime.UtcNow.ToString(),
+            });
+            var source = new CancellationTokenSource();
+            source.CancelAfter(TimeSpan.FromMinutes(1));
+            var cid = client.PutContainer(container, context: source.Token).Result;
+            Console.WriteLine("create container" + cid.ToBase58String());
         }
 
         [TestMethod]

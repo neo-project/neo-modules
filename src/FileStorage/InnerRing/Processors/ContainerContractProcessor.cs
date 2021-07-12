@@ -83,11 +83,13 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessContainerPut(ContainerPutEvent putEvent)
         {
+            Console.WriteLine("ProcessContainerPut----step1");
             if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore container put");
                 return;
             }
+            Console.WriteLine("ProcessContainerPut----step2");
             var cnrData = putEvent.RawContainer;
             var key = ECPoint.DecodePoint(putEvent.PublicKey, Cryptography.ECC.ECCurve.Secp256r1);
             Container container = null;
@@ -100,12 +102,13 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Error, string.Format("could not unmarshal container structure:{0}", e.Message));
                 return;
             }
-            var tableHash = container.Sha256Checksum().Sum.ToByteArray();
-            if (!key.EncodePoint(true).LoadPublicKey().VerifyData(tableHash, putEvent.Signature))
+            Console.WriteLine("ProcessContainerPut----step3");
+            if (!key.EncodePoint(true).LoadPublicKey().VerifyData(cnrData, putEvent.Signature, System.Security.Cryptography.HashAlgorithmName.SHA256))
             {
                 Utility.Log(Name, LogLevel.Error, "invalid signature");
                 return;
             }
+            Console.WriteLine("ProcessContainerPut----step4");
             try
             {
                 CheckFormat(container);
@@ -114,12 +117,23 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 Utility.Log(Name, LogLevel.Error, string.Format("container with incorrect format detected:{0}", e.Message));
             }
+            Console.WriteLine("ProcessContainerPut----step5");
             SessionToken token = null;
-            if (putEvent.token != null)
+            if (putEvent.token != null&& !putEvent.token.SequenceEqual(new byte[0]))
             {
-                token = SessionToken.Parser.ParseFrom(putEvent.token);
-                CheckTokenContext(token, (ContainerSessionContext c) => { return c.Verb == ContainerSessionContext.Types.Verb.Put; });
+                try
+                {
+                    Console.WriteLine("ProcessContainerPut----step5-1");
+                    token = SessionToken.Parser.ParseFrom(putEvent.token);
+                    Console.WriteLine("ProcessContainerPut----step5-2");
+                    CheckTokenContext(token, (ContainerSessionContext c) => { return c.Verb == ContainerSessionContext.Types.Verb.Put; });
+                }
+                catch (Exception e) {
+                    Utility.Log(Name, LogLevel.Error, string.Format("container checkToken context fault,error:{0}", e.Message));
+                    return;
+                }
             }
+            Console.WriteLine("ProcessContainerPut----step6");
             ContainerWithSignature cnr = new()
             {
                 Container = container,
@@ -130,10 +144,13 @@ namespace Neo.FileStorage.InnerRing.Processors
                 },
                 SessionToken = token
             };
+            Console.WriteLine("ProcessContainerPut----step7");
             CheckKeyOwnership(cnr, key);
+            Console.WriteLine("ProcessContainerPut----step8");
             try
             {
-                MorphCli.RegisterContainer(putEvent.PublicKey, putEvent.RawContainer, putEvent.Signature, putEvent.token);
+                var r=MorphCli.RegisterContainer(putEvent.PublicKey, putEvent.RawContainer, putEvent.Signature, putEvent.token);
+                Console.WriteLine("ProcessContainerPut----step9:"+r);
             }
             catch (Exception e)
             {
@@ -153,7 +170,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 var cnr = MorphCli.GetContainer(ContainerID.FromSha256Bytes(deleteEvent.ContainerID));
                 SessionToken token = null;
-                if (deleteEvent.token != null)
+                if (deleteEvent.token != null && !deleteEvent.token.SequenceEqual(new byte[0]))
                 {
                     token = SessionToken.Parser.ParseFrom(deleteEvent.token);
                     var containerId = ContainerID.FromSha256Bytes(deleteEvent.ContainerID);
@@ -197,7 +214,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     return;
                 }
                 var cnr = MorphCli.GetContainer(table.ContainerId);
-                if (sessionToken != null)
+                if (sessionToken != null && !setEACLEvent.Token.SequenceEqual(new byte[0]))
                 {
                     CheckTokenContextWithCID(sessionToken, table.ContainerId, (ContainerSessionContext c) => { return c.Verb == ContainerSessionContext.Types.Verb.Seteacl; });
                 }
@@ -212,24 +229,32 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void CheckFormat(Container container)
         {
+            Console.WriteLine("ProcessContainerPut----step4-1");
             if (container.PlacementPolicy is null) throw new Exception("placement policy is nil");
+            Console.WriteLine("ProcessContainerPut----step4-2");
             if (!API.Refs.Version.IsSupportedVersion(container.Version)) throw new Exception("incorrect version");
+            Console.WriteLine("ProcessContainerPut----step4-3");
             if (container.OwnerId.Value.Length != 25) throw new Exception(string.Format("incorrect owner identifier:expected length {0}!={1}", 25, container.OwnerId.Value.Length));
+            Console.WriteLine("ProcessContainerPut----step4-4");
             if (container.Nonce.ToByteArray().Length != 16) throw new Exception("incorrect nonce");
         }
 
         public void CheckKeyOwnership(ContainerWithSignature ownerIDSource, ECPoint key)
         {
+            Console.WriteLine("ProcessContainerPut----step7-1");
             var token = ownerIDSource.SessionToken;
             if (token is not null)
             {
                 CheckKeyOwnershipWithToken(ownerIDSource, key, token);
                 return;
             }
+            Console.WriteLine("ProcessContainerPut----step7-2");
             if (ownerIDSource.Container.OwnerId.Equals(key.EncodePoint(true).PublicKeyToOwnerID())) return;
             var ownerKeys = MorphCli.InvokeAccountKeys(ownerIDSource.Container.OwnerId.Value.ToByteArray());
+            Console.WriteLine("ProcessContainerPut----step7-3");
             if (ownerKeys is null) throw new Exception("could not received owner keys");
             if (!ownerKeys.Any(p => p.Equals(key))) throw new Exception(string.Format("key {0} is not tied to the owner of the container", key));
+            Console.WriteLine("ProcessContainerPut----step7-4");
         }
 
         public void CheckKeyOwnershipWithToken(ContainerWithSignature ownerIDSource, ECPoint key, SessionToken token)
@@ -263,6 +288,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void CheckTokenContext(SessionToken token, Func<ContainerSessionContext, bool> verbAssert)
         {
+            Console.WriteLine("ProcessContainerPut----step5-3");
             ContextWithVerifiedVerb(token, verbAssert);
         }
 

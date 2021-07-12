@@ -228,6 +228,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Warning, string.Format("could not verify and update information about network map candidate,error:{0}", e.Message));
                 return;
             }
+            Console.WriteLine("VerifyAndUpdate finish");
             RepeatedField<API.Netmap.NodeInfo.Types.Attribute> attributes = nodeInfo.Attributes;
             List<API.Netmap.NodeInfo.Types.Attribute> attr = attributes.ToList();
             attr.Sort((x, y) =>
@@ -251,6 +252,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.AddPeer:{0}", e.Message));
                 }
             }
+            Console.WriteLine("ProcessAddPeer finish");
         }
 
         public void ProcessUpdateState(UpdatePeerEvent updateStateEvent)
