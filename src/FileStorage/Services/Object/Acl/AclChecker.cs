@@ -167,8 +167,7 @@ namespace Neo.FileStorage.Services.Object.Acl
                 Bearer = info.Bearer,
                 HeaderSource = new HeaderSource(LocalStorage, info.Address, info.Request, resp),
             };
-            var action = EAclValidator.CalculateAction(unit);
-            return FSAction.Allow == action;
+            return FSAction.Allow == EAclValidator.CalculateAction(unit);
         }
 
         private bool StickyBitCheck(RequestInfo info)

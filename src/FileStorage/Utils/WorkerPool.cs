@@ -44,16 +44,14 @@ namespace Neo.FileStorage.Utils
 
         private void OnNewTask(NewTask newTask)
         {
-            var actor = Self;
-            int free = capacity - running;
-            if (free == 0)
+            if (capacity <= running)
             {
                 Utility.Log(newTask.Process, LogLevel.Warning, string.Format("worker pool drained,capacity:{0}", capacity.ToString()));
                 Sender.Tell(false);
             }
             else
             {
-                newTask.Task.ContinueWith(t => { actor.Tell(new CompleteTask()); });
+                newTask.Task.ContinueWith(t => { Self.Tell(new CompleteTask()); });
                 newTask.Task.Start();
                 running++;
                 Sender.Tell(true);
