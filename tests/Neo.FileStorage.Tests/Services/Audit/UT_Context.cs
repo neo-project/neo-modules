@@ -6,6 +6,7 @@ using Akka.TestKit.Xunit2;
 using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Acl;
+using Neo.FileStorage.API.Audit;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Cryptography.Tz;
@@ -150,6 +151,14 @@ namespace Neo.FileStorage.Tests.Services.Audit
                 }
             };
             context.Execute();
+        }
+
+        [TestMethod]
+        public void AuditResultSerialize()
+        {
+            var r = DataAuditResult.Parser.ParseFrom(new byte[0]);
+            Assert.IsNotNull(r);
+            Assert.IsNull(r.ContainerId);
         }
     }
 }
