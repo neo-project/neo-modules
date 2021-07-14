@@ -96,8 +96,9 @@ namespace Neo.FileStorage.Services.Audit.Auditor
                     var hash = ContainerCommunacator.GetRangeHash(AuditTask, pair.N1, pair.Id, range);
                     pair.Hashes1.Add(hash);
                 }
-                catch
+                catch(Exception e)
                 {
+                    Console.WriteLine($"node1 rang hash failed. range={range}. error={e}");
                     return;
                 }
             }
@@ -110,8 +111,9 @@ namespace Neo.FileStorage.Services.Audit.Auditor
                     var hash = ContainerCommunacator.GetRangeHash(AuditTask, pair.N2, pair.Id, range);
                     pair.Hashes2.Add(hash);
                 }
-                catch
+                catch (Exception e)
                 {
+                    Console.WriteLine($"node2 rang hash failed. range={range}. error={e}");
                     return;
                 }
             }
@@ -119,23 +121,27 @@ namespace Neo.FileStorage.Services.Audit.Auditor
 
         private void AnalyzeHashes(GamePair pair)
         {
+            Console.WriteLine("AnalyzeHashes--step1");
             if (pair.Hashes1.Count != hashRangeNumber - 1 || pair.Hashes2.Count != hashRangeNumber - 1)
             {
                 FailNodes(pair.N1, pair.N2);
                 return;
             }
+            Console.WriteLine("AnalyzeHashes--step2");
             var h1 = TzHash.Concat(new List<byte[]>() { pair.Hashes2[0], pair.Hashes2[1] });
             if (h1 is null || !pair.Hashes1[0].SequenceEqual(h1))
             {
                 FailNodes(pair.N1, pair.N2);
                 return;
             }
+            Console.WriteLine("AnalyzeHashes--step3");
             var h2 = TzHash.Concat(new List<byte[]>() { pair.Hashes1[1], pair.Hashes1[2] });
             if (h2 is null || !pair.Hashes2[2].SequenceEqual(h2))
             {
                 FailNodes(pair.N1, pair.N2);
                 return;
             }
+            Console.WriteLine("AnalyzeHashes--step4");
             var fh = TzHash.Concat(new List<byte[]>() { h1, h2 });
             var expected = ObjectHomoHash(pair.Id);
             if (fh is null || expected is null || !expected.SequenceEqual(fh))
@@ -143,6 +149,7 @@ namespace Neo.FileStorage.Services.Audit.Auditor
                 FailNodes(pair.N1, pair.N2);
                 return;
             }
+            Console.WriteLine("AnalyzeHashes--step5");
             PassNodesPDP(pair.N1, pair.N2);
         }
 

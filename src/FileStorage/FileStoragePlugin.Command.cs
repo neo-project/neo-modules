@@ -81,13 +81,15 @@ namespace Neo.FileStorage
         [ConsoleCommand("fs object put", Category = "FileStorageService", Description = "Create a container")]
         private void OnPutObject(string id)
         {
+            //fs object put HiTQUCn1oZz7ehYC9S5q51xfebg5sAziLsiKREbuKSvG
             var host = "http://192.168.130.71:8080";
             var t = File.ReadAllBytes("wallet.key");
             var key = new KeyPair(t).Export().LoadWif();
-            var client = new API.Client.Client(key, host);
-            var cid = Neo.FileStorage.API.Refs.ContainerID.FromBase58String(id);
-            var payload = Encoding.ASCII.GetBytes("hello");
-            var obj = new Neo.FileStorage.API.Object.Object
+            var client = new Client(key, host);
+            var cid = ContainerID.FromBase58String(id);
+            var payload = new byte[1024];
+            new Random().NextBytes(payload);
+            var obj = new API.Object.Object
             {
                 Header = new Header
                 {
@@ -110,8 +112,11 @@ namespace Neo.FileStorage
         [ConsoleCommand("fs storage object put", Category = "FileStorageService", Description = "Create a container")]
         private void OnStorageObject(string id, string objid)
         {
-            //fs storage object put 9Ujk3Va7AUgY76YeWVhzqsT5pY7uVH8Qt8iwDYDukrWK 5pxDt8uSXvPT2dmb1gNm8cNsGAKJF6f838e2NNagjnFa
-            try {
+            //fs storage object put HiTQUCn1oZz7ehYC9S5q51xfebg5sAziLsiKREbuKSvG 2XohXeWZpLKzhecC3EsMVEwRbTjjYVLC7tQBc8DyviM6
+            //Storage object ID:{ "value": "q9u63PoPmgHLw6CIndI6ruuU4b+xqt+N2k3A1cI4nUo=" }
+
+            try
+            {
             Console.WriteLine("OnStorageObject----step1");
             var host = "http://192.168.130.71:8080";
             var t = File.ReadAllBytes("wallet.key");
@@ -172,7 +177,7 @@ namespace Neo.FileStorage
         }
              catch (Exception e)
             {
-                Console.WriteLine("OnStorageObject----Exception:"+ e.Message);
+                Console.WriteLine("OnStorageObject----Exception:"+ e);
             }
         }
 
@@ -213,6 +218,22 @@ namespace Neo.FileStorage
             var source = new CancellationTokenSource();
             var container = client.GetContainer(cid, context: source.Token).Result;
             Console.WriteLine("Get container success");
+        }
+
+        [ConsoleCommand("fs object get", Category = "FileStorageService", Description = "Create a container")]
+        private void OnGetObject(string cid,string objid)
+        {
+            var host = "http://192.168.130.71:8080";
+            var t = File.ReadAllBytes("wallet.key");
+            var key = new KeyPair(t).Export().LoadWif();
+            var client = new API.Client.Client(key, host);
+            var source = new CancellationTokenSource();
+            var obj = client.GetObject(new API.Refs.Address()
+            {
+                ContainerId = ContainerID.FromBase58String(cid),
+                ObjectId = ObjectID.FromBase58String(objid),
+            }, context: source.Token).Result;
+            Console.WriteLine($"Get object success, {obj}");
         }
 
 

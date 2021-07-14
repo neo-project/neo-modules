@@ -96,7 +96,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         public void InvokeUpdateStateTest()
         {
             var key = wallet.GetAccounts().ToArray()[0].GetKey().PublicKey;
-            bool result = MorphContractInvoker.InvokeUpdateState(client, 2, key.EncodePoint(true));
+            bool result = MorphContractInvoker.InvokeUpdateState(client, NodeInfo.Types.State.Offline, key.EncodePoint(true));
             var tx = ExpectMsg<Transaction>();
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);

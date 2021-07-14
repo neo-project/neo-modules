@@ -97,13 +97,13 @@ namespace Neo.FileStorage.Tests.InnerRing.Processors
             OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
             Container container = new Container()
             {
-                Version = new API.Refs.Version(),
+                Version = API.Refs.Version.SDKVersion(),
                 BasicAcl = 0,
                 Nonce = ByteString.CopyFrom(new byte[16], 0, 16),
                 OwnerId = ownerId,
                 PlacementPolicy = new API.Netmap.PlacementPolicy()
             };
-            byte[] sig = key.PrivateKey.LoadPrivateKey().SignData(container.Sha256Checksum().Sum.ToByteArray());
+            byte[] sig = key.PrivateKey.LoadPrivateKey().SignRFC6979(container.ToByteArray());
             processor.ProcessContainerPut(new ContainerPutEvent()
             {
                 PublicKey = key.PublicKey.ToArray(),
