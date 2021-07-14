@@ -99,7 +99,13 @@
       "Address": "/ip4/0.0.0.0/tcp/8080",
       "Port": 8080,
       "Attributes": [
-        "UN-LOCODE:CN SGH"
+        "Capacity: 0",
+        "Continent: Asia",
+        "Country: China",
+        "CountryCode: CN",
+        "Location: Shanghai",
+        "Price: 22",
+        "UN-LOCODE: CN SGH"
       ],
       "Shards": [
         {
