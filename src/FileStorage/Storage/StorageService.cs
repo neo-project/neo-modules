@@ -73,8 +73,8 @@ namespace Neo.FileStorage
                 if (li.Length != 2) throw new FormatException("invalid attributes setting");
                 return new API.Netmap.NodeInfo.Types.Attribute
                 {
-                    Key = li[0],
-                    Value = li[1],
+                    Key = li[0].Trim(),
+                    Value = li[1].Trim(),
                 };
             }));
             localStorage = new();
