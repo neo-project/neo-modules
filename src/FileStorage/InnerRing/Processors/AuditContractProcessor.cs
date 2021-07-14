@@ -13,6 +13,7 @@ using Neo.FileStorage.Cache;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Services.Audit;
+using Neo.IO.Json;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
 using static Neo.FileStorage.Services.Audit.Manager;
 using static Neo.FileStorage.Utils.WorkerPool;
@@ -79,7 +80,8 @@ namespace Neo.FileStorage.InnerRing.Processors
                 try
                 {
                     nodes = nm.GetContainerNodes(cnr.PlacementPolicy, pivot);
-                    Console.WriteLine("ContainerNodes个数："+nodes.Count);
+                    Console.WriteLine("ContainerNodes个数：" + nodes.Count);
+                    Console.WriteLine($"ContainerNodes: {new JArray(nodes.Select(p => new JArray(p.Select(q => q.ToJson()))))}");
                 }
                 catch (Exception e)
                 {
@@ -202,7 +204,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     var source = new CancellationTokenSource();
                     source.CancelAfter(TimeSpan.FromMinutes(1));
                     var key = MorphCli.GetWallet().GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
-                    List<ObjectID> result = cli.SearchObject(cid, searchFilters, new CallOptions() { Key= key },context: source.Token).Result;
+                    List<ObjectID> result = cli.SearchObject(cid, searchFilters, new CallOptions() { Key = key }, context: source.Token).Result;
                     sg.AddRange(result);
                     break;
                 }

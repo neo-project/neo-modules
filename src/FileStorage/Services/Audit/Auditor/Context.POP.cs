@@ -5,6 +5,7 @@ using System.Linq;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Services.ObjectManager.Placement;
+using Neo.IO.Json;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Services.Audit.Auditor
@@ -122,6 +123,7 @@ namespace Neo.FileStorage.Services.Audit.Auditor
                 return table;
             }
             var nn = NetworkMapBuilder.BuildObjectPlacement(AuditTask.Netmap, AuditTask.ContainerNodes, oid);
+            Console.WriteLine($"placement for {oid.ToBase58String()}: {new JArray(nn.Select(p => new JArray(p.Select(q => q.ToJson()))))}");
             placementCache[oid.ToBase58String()] = nn;
             return nn;
         }
