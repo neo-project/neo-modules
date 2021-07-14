@@ -64,7 +64,6 @@ namespace Neo.FileStorage.InnerRing.Processors
             IncomeSettlementContext incomeCtx = new IncomeSettlementContext() { settlementDeps = basicIncome, epoch = epoch };
             incomeCtx.bankOwner = incomeCtx.BankOwnerID();
             incomeContexts[epoch] = incomeCtx;
-            Console.WriteLine("Collect,incomeContexts个数：" + incomeContexts.Count + ",epoch:" + epoch);
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => incomeCtx.Collect()) });
         }
 
@@ -85,7 +84,6 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, string.Format("income context distribution does not exists,epoch:{0}", epoch));
                 return;
             }
-            Console.WriteLine("Distribute,incomeContexts个数：" + incomeContexts.Count + ",epoch:" + epoch);
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => incomeCtx.Distribute()) });
         }
 
@@ -309,7 +307,6 @@ namespace Neo.FileStorage.InnerRing.Processors
                 var table = new TransferTable();
                 foreach (var auditResult in auditResults)
                 {
-                    Console.WriteLine("auditResult:"+ auditResult);
                     ProcessResult(new SingleResultCtx()
                     {
                         auditResult = auditResult,
@@ -333,7 +330,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log("Calculator", LogLevel.Debug, "calculating sum of the sizes of all storage groups");
                 if (!SumSGSizes(ctx)) return;
                 Utility.Log("Calculator", LogLevel.Debug, "filling transfer table");
-                if (!FillTransferTable(ctx)) return;
+                FillTransferTable(ctx);
             }
 
             public bool ReadContainerInfo(SingleResultCtx ctx)
@@ -354,12 +351,9 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 try
                 {
-                    Console.WriteLine("BuildPlacement---step1,"+settlementDeps is null);
                     ctx.cnrNodes=settlementDeps.ContainerNodes(ctx.eAudit, ctx.auditResult.ContainerId);
-                    Console.WriteLine("BuildPlacement---step2");
                     var empty = ctx.cnrNodes.Length == 0;
                     Utility.Log("Calculator", LogLevel.Debug, "empty list of container nodes");
-                    Console.WriteLine("BuildPlacement---step3");
                     return !empty;
                 }
                 catch (Exception e)
@@ -409,12 +403,17 @@ namespace Neo.FileStorage.InnerRing.Processors
                 }
                 ulong sumPassSGSize = 0;
                 API.Refs.Address address = new API.Refs.Address();
-                address.ContainerId = ctx.cid;
+                address.ContainerId = ctx.auditResult.ContainerId;
                 foreach (var sgID in ctx.auditResult.PassSg)
                 {
-                    address.ObjectId = sgID;
-                    var sgInfo = settlementDeps.SGInfo(address);
-                    sumPassSGSize += sgInfo.ValidationDataSize;
+                    try {
+                        address.ObjectId = sgID;
+                        var sgInfo = settlementDeps.SGInfo(address);
+                        sumPassSGSize += sgInfo.ValidationDataSize;
+                    } catch {
+                        Utility.Log("Calculator", LogLevel.Debug, string.Format("could not get SG info,id:{0}",sgID));
+                        return false;
+                    }
                 }
                 if (sumPassSGSize == 0)
                 {

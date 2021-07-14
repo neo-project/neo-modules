@@ -7,6 +7,7 @@ using System.Threading;
 using Google.Protobuf;
 using Neo.FileStorage.API.Audit;
 using Neo.FileStorage.API.Container;
+using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.StorageGroup;
@@ -42,26 +43,21 @@ namespace Neo.FileStorage.InnerRing
 
         public void BuildContainer(ulong epoch, ContainerID cid, out List<List<Node>> containerNodes, out NetMap netMap)
         {
-            Console.WriteLine("BuildContainer---step1");
             if (epoch > 0)
                 netMap = client.InvokeEpochSnapshot(epoch);
             else
                 netMap = client.InvokeSnapshot(0);
-            Console.WriteLine("BuildContainer---step1");
             Container cnr = client.GetContainer(cid)?.Container;
             containerNodes = netMap.GetContainerNodes(cnr.PlacementPolicy, cid.Value.ToByteArray());
         }
 
         public NodeInfo[] ContainerNodes(ulong epoch, ContainerID cid)
         {
-            Console.WriteLine("ContainerNodes---step1");
             BuildContainer(epoch, cid, out List<List<Node>> cn, out NetMap netMap);
-            Console.WriteLine("ContainerNodes---step2");
             List<Node> ns = cn.Flatten();
             List<NodeInfo> res = new List<NodeInfo>();
             foreach (var node in ns)
                 res.Add(new NormalNodeInfoWrapper(node));
-            Console.WriteLine("ContainerNodes---step3");
             return res.ToArray();
         }
 
@@ -73,7 +69,7 @@ namespace Neo.FileStorage.InnerRing
 
         public OwnerID ResolveKey(NodeInfo nodeInfo)
         {
-            return OwnerID.FromByteArray(nodeInfo.PublicKey());
+            return nodeInfo.PublicKey().PublicKeyToOwnerID();
         }
 
         public void transfer(OwnerID sender, OwnerID recipient, long amount, byte[] details)

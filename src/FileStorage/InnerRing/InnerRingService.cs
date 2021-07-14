@@ -429,13 +429,10 @@ namespace Neo.FileStorage.InnerRing
 
         public void WriteReport(Report r)
         {
-            Console.WriteLine("WriteReport ----step1");
             IEnumerable<Wallets.WalletAccount> accounts = sideWallet.GetAccounts();
             DataAuditResult res = r.Result();
             res.PublicKey = ByteString.CopyFrom(accounts.ToArray()[0].GetKey().PublicKey.ToArray());
-            Console.WriteLine("WriteReport ----step2 " + res.ToByteArray().ToHexString());
-            var temp=morphClient.InvokePutAuditResult(res.ToByteArray());
-            Console.WriteLine("WriteReport ----step2:"+ temp+",report:"+ res.ToString());
+            morphClient.InvokePutAuditResult(res.ToByteArray());
         }
 
         public void ResetEpochTimer()

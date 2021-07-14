@@ -165,7 +165,6 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessNewEpoch(NewEpochEvent newEpochEvent)
         {
-            Console.WriteLine("本地时隙更新：" + newEpochEvent.EpochNumber);
             State.SetEpochCounter(newEpochEvent.EpochNumber);
             State.ResetEpochTimer();
             API.Netmap.NodeInfo[] snapshot;
@@ -189,15 +188,10 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Warning, string.Format("can't start container size estimation,epoch:{0},error:{1}", newEpochEvent.EpochNumber, e.Message));
                 }
             }
-            Console.WriteLine("执行跟新NetmapSnapshot");
             NetmapSnapshot.Update(snapshot, newEpochEvent.EpochNumber);
-            Console.WriteLine("执行HandleCleanupTick");
             HandleCleanupTick(new NetmapCleanupTickEvent() { Epoch = newEpochEvent.EpochNumber });
-            Console.WriteLine("HandleNewAudit");
             HandleNewAudit(new StartEvent() { epoch = newEpochEvent.EpochNumber });
-            Console.WriteLine("HandleAuditSettlements");
             HandleAuditSettlements(new AuditStartEvent() { epoch = newEpochEvent.EpochNumber });
-            Console.WriteLine("HandleAlphabetSync执行");
             HandleAlphabetSync(new SyncEvent());
         }
 
@@ -220,7 +214,6 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                Console.WriteLine("nodeInfo is null:" + nodeInfo is null);
                 NodeValidator.VerifyAndUpdate(nodeInfo);
             }
             catch (Exception e)
@@ -228,7 +221,6 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Warning, string.Format("could not verify and update information about network map candidate,error:{0}", e.Message));
                 return;
             }
-            Console.WriteLine("VerifyAndUpdate finish");
             RepeatedField<API.Netmap.NodeInfo.Types.Attribute> attributes = nodeInfo.Attributes;
             List<API.Netmap.NodeInfo.Types.Attribute> attr = attributes.ToList();
             attr.Sort((x, y) =>
@@ -252,7 +244,6 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.AddPeer:{0}", e.Message));
                 }
             }
-            Console.WriteLine("ProcessAddPeer finish");
         }
 
         public void ProcessUpdateState(UpdatePeerEvent updateStateEvent)
@@ -405,35 +396,24 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void VerifyAndUpdate(API.Netmap.NodeInfo n)
         {
-            Console.WriteLine("VerifyAndUpdate:step1");
             var tAttr = UniqueAttributes(n.Attributes.GetEnumerator());
-            Console.WriteLine("VerifyAndUpdate:step2");
             if (!tAttr.TryGetValue(Node.AttributeUNLOCODE, out var attrLocode)) return;
             var lc = LOCODE.FromString(attrLocode.Value);
-            Console.WriteLine("VerifyAndUpdate:step3:" + (lc.CountryCode() + " " + lc.LocationCode()));
             (Key, Record) record = dB.Get(lc);
-            Console.WriteLine("VerifyAndUpdate:record is null:" + record.Item2 is null);
-            Console.WriteLine("VerifyAndUpdate:step4");
             foreach (var attr in mAttr)
             {
-                Console.WriteLine("VerifyAndUpdate:step4-1:" + attr.Key);
                 var attrVal = attr.Value.converter(record);
-                Console.WriteLine("VerifyAndUpdate:step4-2:" + attr.Key);
                 if (attrVal == "")
                 {
-                    Console.WriteLine("VerifyAndUpdate:step4-2-1");
                     if (!attr.Value.optional)
                         throw new Exception("missing required attribute in DB record");
                     continue;
                 }
-                Console.WriteLine("VerifyAndUpdate:step4-3");
                 var a = new API.Netmap.NodeInfo.Types.Attribute();
                 a.Key = attr.Key;
                 a.Value = attrVal;
                 tAttr[attr.Key] = a;
-                Console.WriteLine("VerifyAndUpdate:step4-4");
             }
-            Console.WriteLine("VerifyAndUpdate:step5");
             var ass = new List<API.Netmap.NodeInfo.Types.Attribute>();
             foreach (var item in tAttr)
                 ass.Add(item.Value);
