@@ -12,12 +12,12 @@ namespace Neo.FileStorage.Morph.Invoker
         private const string ReputationGetByIDMethod = "getByID";
         private const string ReputationListByEpochMethod = "listByEpoch";
 
-        public bool InvokeReputationPut(ulong epoch, byte[] peerID, byte[] value)
+        public bool PutReputation(ulong epoch, byte[] peerID, byte[] value)
         {
             return Invoke(out _, ReputationContractHash, ReputationPutMethod, SideChainFee, epoch, peerID, value);
         }
 
-        public List<GlobalTrust> InvokeReputationGet(ulong epoch, byte[] peerID)
+        public List<GlobalTrust> GetReputation(ulong epoch, byte[] peerID)
         {
             InvokeResult result = TestInvoke(ReputationContractHash, ReputationGetMethod, 0, epoch, peerID);
             if (result.State != VM.VMState.HALT) throw new Exception($"could not perform test invocation ({ReputationGetMethod})");
@@ -32,7 +32,7 @@ namespace Neo.FileStorage.Morph.Invoker
             return lists;
         }
 
-        public List<GlobalTrust> InvokeReputationGetByID(byte[] id)
+        public List<GlobalTrust> GetReputationByID(byte[] id)
         {
             InvokeResult result = TestInvoke(ReputationContractHash, ReputationGetByIDMethod, id);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", ReputationGetByIDMethod));
@@ -47,7 +47,7 @@ namespace Neo.FileStorage.Morph.Invoker
             return lists;
         }
 
-        public List<byte[]> InvokeReputationListByEpoch(long epoch)
+        public List<byte[]> ListReputationByEpoch(long epoch)
         {
             InvokeResult result = TestInvoke(ReputationContractHash, ReputationListByEpochMethod, epoch);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", ReputationListByEpochMethod));

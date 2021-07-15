@@ -71,10 +71,10 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
         {
             try
             {
-                var nm = MorphInvoker.InvokeSnapshot(0);
+                var nm = MorphInvoker.Snapshot(0);
                 var is_in = LookUpKeyInContainer(nm, key, cid, container);
                 if (is_in) return true;
-                nm = MorphInvoker.InvokeSnapshot(1);
+                nm = MorphInvoker.Snapshot(1);
                 return LookUpKeyInContainer(nm, key, cid, container);
             }
             catch

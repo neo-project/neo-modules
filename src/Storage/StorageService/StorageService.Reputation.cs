@@ -136,7 +136,7 @@ namespace Neo.FileStorage.Storage
                 ulong epoch = 0;
                 try
                 {
-                    epoch = morphInvoker.InvokeEpoch();
+                    epoch = morphInvoker.Epoch();
                 }
                 catch (Exception e)
                 {

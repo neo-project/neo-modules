@@ -15,7 +15,7 @@ namespace Neo.FileStorage.Morph.Invoker
         private const string AddKeysMethod = "addKey";
         private const string RemoveKeysMethod = "removeKey";
 
-        public ECPoint[] InvokeAccountKeys(byte[] owner)
+        public ECPoint[] AccountKeys(byte[] owner)
         {
             InvokeResult result = TestInvoke(FsIdContractHash, KeyListingMethod, owner);
             if (result.State != VM.VMState.HALT) throw new Exception($"could not perform test invocation ({KeyListingMethod})");
@@ -30,7 +30,7 @@ namespace Neo.FileStorage.Morph.Invoker
             return lists.ToArray();
         }
 
-        public bool InvokeAddKeys(UInt160 owner, ECPoint[] keys)
+        public bool AddKeys(UInt160 owner, ECPoint[] keys)
         {
             var array = new ContractParameter(ContractParameterType.Array);
             var list = new List<ContractParameter>();
@@ -42,7 +42,7 @@ namespace Neo.FileStorage.Morph.Invoker
             return Invoke(out _, FsIdContractHash, AddKeysMethod, SideChainFee, owner, array);
         }
 
-        public bool InvokeRemoveKeys(UInt160 owner, ECPoint[] keys)
+        public bool RemoveKeys(UInt160 owner, ECPoint[] keys)
         {
             var array = new ContractParameter(ContractParameterType.Array);
             var list = new List<ContractParameter>();

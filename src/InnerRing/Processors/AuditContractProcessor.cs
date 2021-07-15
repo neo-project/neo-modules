@@ -54,7 +54,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             NetMap nm;
             try
             {
-                nm = MorphCli.InvokeSnapshot(0);
+                nm = MorphCli.Snapshot(0);
             }
             catch (Exception e)
             {

@@ -8,7 +8,6 @@ using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Storage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Storage.Services.Control.Service;
 using APINodeInfo = Neo.FileStorage.API.Netmap.NodeInfo;
-using APIState = Neo.FileStorage.API.Netmap.NodeInfo.Types.State;
 
 namespace Neo.FileStorage.Storage.Services.Control
 {
@@ -63,8 +62,8 @@ namespace Neo.FileStorage.Storage.Services.Control
             return Task.Run(() =>
             {
                 if (!IsValidRequest(request)) throw new RpcException(new Status(StatusCode.PermissionDenied, ""));
-                ulong epoch = MorphInvoker.InvokeEpoch();
-                var nm = MorphInvoker.InvokeEpochSnapshot(epoch);
+                ulong epoch = MorphInvoker.Epoch();
+                var nm = MorphInvoker.EpochSnapshot(epoch);
                 var netmap = new Service.Netmap
                 {
                     Epoch = epoch,

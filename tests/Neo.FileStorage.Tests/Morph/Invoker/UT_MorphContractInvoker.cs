@@ -41,14 +41,14 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         [TestMethod]
         public void InvokeBalanceOfTest()
         {
-            long result = invoker.InvokeBalanceOf(UInt160.Zero.ToArray());
+            long result = invoker.BalanceOf(UInt160.Zero.ToArray());
             Assert.AreEqual(result, 0);
         }
 
         [TestMethod]
         public void InvokeDecimalsTest()
         {
-            long result = invoker.InvokeDecimals();
+            long result = invoker.BalanceDecimals();
             Assert.AreEqual(result, 12);
         }
 
@@ -59,7 +59,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             NodeInfo nodeInfo = new NodeInfo();
             nodeInfo.Address = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToAddress(key.ToArray());
             nodeInfo.PublicKey = ByteString.CopyFrom(key.ToArray());
-            bool result = invoker.InvokeAddPeer(nodeInfo);
+            bool result = invoker.AddPeer(nodeInfo);
             Assert.AreEqual(result, true);
         }
 
@@ -73,14 +73,14 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         [TestMethod]
         public void InvokeEpochTest()
         {
-            ulong result = invoker.InvokeEpoch();
+            ulong result = invoker.Epoch();
             Assert.AreEqual(result, 1uL);
         }
 
         [TestMethod]
         public void InvokeNewEpochTest()
         {
-            bool result = invoker.InvokeNewEpoch(2);
+            bool result = invoker.NewEpoch(2);
             var tx = ExpectMsg<Transaction>();
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -90,7 +90,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         public void InvokeUpdateStateTest()
         {
             var key = wallet.GetAccounts().ToArray()[0].GetKey().PublicKey;
-            bool result = invoker.InvokeUpdateState(NodeInfo.Types.State.Online, key.EncodePoint(true));
+            bool result = invoker.UpdatePeerState(NodeInfo.Types.State.Online, key.EncodePoint(true));
             var tx = ExpectMsg<Transaction>();
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -99,15 +99,15 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         [TestMethod]
         public void InvokeSnapshotTest()
         {
-            var result = invoker.InvokeSnapshot(0);
+            var result = invoker.Snapshot(0);
             Assert.AreEqual(result.Nodes.Count, 1);
         }
 
         [TestMethod]
         public void InvokeNetMapTest()
         {
-            var result = invoker.InvokeNetMap();
-            Assert.AreEqual(result.Nodes.Count, 1);
+            var result = invoker.NetMap();
+            Assert.AreEqual(result.Length, 1);
         }
 
         [TestMethod]

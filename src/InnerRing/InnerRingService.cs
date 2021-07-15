@@ -260,7 +260,7 @@ namespace Neo.FileStorage.InnerRing
             ulong epoch;
             try
             {
-                epoch = morphClient.InvokeEpoch();
+                epoch = morphClient.Epoch();
             }
             catch (Exception e)
             {
@@ -433,7 +433,7 @@ namespace Neo.FileStorage.InnerRing
             IEnumerable<Wallets.WalletAccount> accounts = sideWallet.GetAccounts();
             DataAuditResult res = r.Result();
             res.PublicKey = ByteString.CopyFrom(accounts.ToArray()[0].GetKey().PublicKey.ToArray());
-            morphClient.InvokePutAuditResult(res.ToByteArray());
+            morphClient.PutAuditResult(res.ToByteArray());
         }
 
         public void ResetEpochTimer()

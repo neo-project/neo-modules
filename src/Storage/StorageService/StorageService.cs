@@ -147,14 +147,14 @@ namespace Neo.FileStorage.Storage
             InitState();
             var ni = LocalNodeInfo.Clone();
             ni.State = API.Netmap.NodeInfo.Types.State.Online;
-            morphInvoker.InvokeAddPeer(ni);
+            morphInvoker.AddPeer(ni);
             StartBlockTimers();
             HealthStatus = HealthStatus.Ready;
         }
 
         private void InitState()
         {
-            var epoch = morphInvoker.InvokeEpoch();
+            var epoch = morphInvoker.Epoch();
             var ni = NetmapLocalNodeInfo(epoch);
             if (ni is null)
             {
@@ -177,13 +177,13 @@ namespace Neo.FileStorage.Storage
                             Interlocked.Exchange(ref reBoostrapTurnedOff, 0);
                             var ni = LocalNodeInfo.Clone();
                             ni.State = API.Netmap.NodeInfo.Types.State.Online;
-                            morphInvoker.InvokeAddPeer(ni);
+                            morphInvoker.AddPeer(ni);
                             break;
                         }
                     case NetmapStatus.Offline:
                         {
                             Interlocked.Exchange(ref reBoostrapTurnedOff, 1);
-                            morphInvoker.InvokeUpdateState(API.Netmap.NodeInfo.Types.State.Offline, key.PublicKey());
+                            morphInvoker.UpdatePeerState(API.Netmap.NodeInfo.Types.State.Offline, key.PublicKey());
                             break;
                         }
                 }

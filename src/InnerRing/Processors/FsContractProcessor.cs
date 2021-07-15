@@ -275,9 +275,9 @@ namespace Neo.FileStorage.InnerRing.Processors
             try
             {
                 if (bind)
-                    MorphCli.InvokeAddKeys(bindEvent.UserAccount, bindEvent.Keys);
+                    MorphCli.AddKeys(bindEvent.UserAccount, bindEvent.Keys);
                 else
-                    MorphCli.InvokeRemoveKeys(bindEvent.UserAccount, bindEvent.Keys);
+                    MorphCli.RemoveKeys(bindEvent.UserAccount, bindEvent.Keys);
             }
             catch
             {

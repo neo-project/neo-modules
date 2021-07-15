@@ -17,7 +17,7 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement
         public List<List<Node>> BuildPlacement(ulong epoch, ContainerID cid)
         {
             byte[] pivot = Concat(StrictUTF8.GetBytes(PivotPrefix + epoch));
-            var nm = MorphInvoker.InvokeEpochSnapshot(epoch);
+            var nm = MorphInvoker.EpochSnapshot(epoch);
             var container = MorphInvoker.GetContainer(cid)?.Container;
             var nodes = nm.GetContainerNodes(container.PlacementPolicy, cid.Value.ToByteArray());
             return nm.GetPlacementVectors(nodes, pivot);
@@ -25,7 +25,7 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement
 
         public bool IsNodeFromContainerKey(ulong epoch, ContainerID cid, byte[] key)
         {
-            var nm = MorphInvoker.InvokeEpochSnapshot(epoch);
+            var nm = MorphInvoker.EpochSnapshot(epoch);
             var container = MorphInvoker.GetContainer(cid)?.Container;
             var nodes = nm.GetContainerNodes(container.PlacementPolicy, cid.Value.ToByteArray());
             foreach (var vector in nodes)

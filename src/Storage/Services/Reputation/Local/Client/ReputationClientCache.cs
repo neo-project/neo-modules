@@ -24,7 +24,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Local.Client
             var client = base.Get(address);
             try
             {
-                var nm = MorphInvoker.InvokeSnapshot(0);
+                var nm = MorphInvoker.Snapshot(0);
                 foreach (var n in nm.Nodes)
                 {
                     var ipaddr = Network.Address.FromString(n.NetworkAddress);

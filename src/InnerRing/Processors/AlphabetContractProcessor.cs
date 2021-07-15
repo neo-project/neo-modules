@@ -51,7 +51,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             API.Netmap.NodeInfo[] networkMap = null;
             try
             {
-                networkMap = MorphCli.InvokeSnapshot(0).Nodes.Select(p => p.Info).ToArray();
+                networkMap = MorphCli.NetMap();
             }
             catch (Exception e)
             {

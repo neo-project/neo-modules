@@ -28,34 +28,34 @@ namespace Neo.FileStorage.Morph.Invoker
 
         private const long ExtraFee = 0;
 
-        public bool InvokeAddPeer(NodeInfo info)
+        public bool AddPeer(NodeInfo info)
         {
             return Invoke(out _, NetMapContractHash, AddPeerMethod, SideChainFee, info.ToByteArray());
         }
 
-        public ulong InvokeEpoch()
+        public ulong Epoch()
         {
             InvokeResult result = TestInvoke(NetMapContractHash, EpochMethod);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (Epoch)");
             return (ulong)result.ResultStack[0].GetInteger();
         }
 
-        public bool InvokeNewEpoch(ulong epochNumber)
+        public bool NewEpoch(ulong epochNumber)
         {
             return Invoke(out _, NetMapContractHash, NewEpochMethod, SideChainFee, epochNumber);
         }
 
-        public bool InvokeUpdateState(NodeInfo.Types.State state, byte[] key)
+        public bool UpdatePeerState(NodeInfo.Types.State state, byte[] key)
         {
             return Invoke(out _, NetMapContractHash, UpdateStateMethod, SideChainFee, (int)state, key);
         }
 
-        public NetMap InvokeNetMap()
+        public NodeInfo[] NetMap()
         {
             InvokeResult result = TestInvoke(NetMapContractHash, NetMapMethod);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (NetMap)");
             if (result.ResultStack.Length != 1) throw new Exception(string.Format("unexpected stack item count ({0})", result.ResultStack.Length));
-            if (result.ResultStack[0] is VM.Types.Null) return new NetMap(new List<Node>());
+            if (result.ResultStack[0] is VM.Types.Null) return System.Array.Empty<NodeInfo>();
             Array peers = (Array)result.ResultStack[0];
             IEnumerator<StackItem> peersEnumerator = peers.GetEnumerator();
             List<byte[]> res = new();
@@ -70,10 +70,10 @@ namespace Neo.FileStorage.Morph.Invoker
                 }
             }
 
-            return new(res.Select(p => NodeInfo.Parser.ParseFrom(p)).ToList().InfoToNodes());
+            return res.Select(p => NodeInfo.Parser.ParseFrom(p)).ToArray();
         }
 
-        public NetMap InvokeSnapshot(int different)
+        public NetMap Snapshot(int different)
         {
             InvokeResult result = TestInvoke(NetMapContractHash, SnapshotMethod, different);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (Snapshot)");
@@ -94,7 +94,7 @@ namespace Neo.FileStorage.Morph.Invoker
             return new(res.Select(p => NodeInfo.Parser.ParseFrom(p)).ToList().InfoToNodes());
         }
 
-        public NetMap InvokeEpochSnapshot(ulong epoch)
+        public NetMap EpochSnapshot(ulong epoch)
         {
             InvokeResult result = TestInvoke(NetMapContractHash, EpochSnapshotMethod, epoch);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (EpochSnapshot)");

@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Google.Protobuf;
 using Neo.Cryptography;
@@ -11,10 +15,6 @@ using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.IO;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
 using static Neo.FileStorage.Utils.WorkerPool;
 using ECPoint = Neo.Cryptography.ECC.ECPoint;
@@ -182,7 +182,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 }
                 else
                 {
-                    ECPoint[] keys = MorphCli.InvokeAccountKeys(cnr.Container.OwnerId.Value.ToByteArray());
+                    ECPoint[] keys = MorphCli.AccountKeys(cnr.Container.OwnerId.Value.ToByteArray());
                     checkKeys.AddRange(keys);
                 }
                 var cidHash = ContainerID.FromSha256Bytes(deleteEvent.ContainerID).Sha256Checksum().Sum.ToByteArray();
@@ -251,7 +251,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             Console.WriteLine("ProcessContainerPut----step7-2");
             if (ownerIDSource.Container.OwnerId.Equals(key.EncodePoint(true).PublicKeyToOwnerID())) return;
-            var ownerKeys = MorphCli.InvokeAccountKeys(ownerIDSource.Container.OwnerId.Value.ToByteArray());
+            var ownerKeys = MorphCli.AccountKeys(ownerIDSource.Container.OwnerId.Value.ToByteArray());
             Console.WriteLine("ProcessContainerPut----step7-3");
             if (ownerKeys is null) throw new Exception("could not received owner keys");
             if (!ownerKeys.Any(p => p.Equals(key))) throw new Exception(string.Format("key {0} is not tied to the owner of the container", key));

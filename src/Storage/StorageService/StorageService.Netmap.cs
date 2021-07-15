@@ -16,7 +16,7 @@ namespace Neo.FileStorage.Storage
 
         private NetmapServiceImpl InitializeNetmap()
         {
-            startEpoch = morphInvoker.InvokeEpoch();
+            startEpoch = morphInvoker.Epoch();
             netmapProcessor.AddEpochParser(MorphEvent.NewEpochEvent.ParseNewEpochEvent);
             netmapProcessor.AddEpochHandler(p =>
             {
@@ -46,7 +46,7 @@ namespace Neo.FileStorage.Storage
                         ni.State = NodeInfo.Types.State.Online;
                         try
                         {
-                            var r = morphInvoker.InvokeAddPeer(ni);
+                            var r = morphInvoker.AddPeer(ni);
                             if (!r) throw new InvalidOperationException("add peer return false");
                         }
                         catch (Exception exp)
@@ -75,7 +75,7 @@ namespace Neo.FileStorage.Storage
 
         private NodeInfo NetmapLocalNodeInfo(ulong epoch)
         {
-            var nm = morphInvoker.InvokeEpochSnapshot(epoch);
+            var nm = morphInvoker.EpochSnapshot(epoch);
             Node node = null;
             foreach (var n in nm.Nodes)
             {

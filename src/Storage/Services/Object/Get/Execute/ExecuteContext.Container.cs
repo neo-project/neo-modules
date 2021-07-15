@@ -25,7 +25,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
         {
             CurrentEpoch = Prm.NetmapEpoch;
             if (0 < CurrentEpoch) return;
-            CurrentEpoch = GetService.MorphInvoker.InvokeEpoch();
+            CurrentEpoch = GetService.MorphInvoker.Epoch();
         }
 
         private Traverser GenerateTraverser(Address address)

@@ -57,7 +57,7 @@ namespace Neo.FileStorage.Storage.Services.ObjectManager.Transformer
 
         private ulong CurrentEpoch()
         {
-            return MorphInvoker.InvokeEpoch();
+            return MorphInvoker.Epoch();
         }
     }
 }

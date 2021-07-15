@@ -113,14 +113,14 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
         [TestMethod]
         public void InvokeGetEpochTest()
         {
-            ulong result = morphInvoker.InvokeEpoch();
+            ulong result = morphInvoker.Epoch();
             Assert.AreEqual(result, (ulong)1);
         }
 
         [TestMethod]
         public void InvokeSetNewEpochTest()
         {
-            bool result = morphInvoker.InvokeNewEpoch(100);
+            bool result = morphInvoker.NewEpoch(100);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -141,7 +141,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
-            result = morphInvoker.InvokeUpdateState(NodeInfo.Types.State.Offline, key.PublicKey.EncodePoint(true));
+            result = morphInvoker.UpdatePeerState(NodeInfo.Types.State.Offline, key.PublicKey.EncodePoint(true));
             tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -168,7 +168,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
         [TestMethod]
         public void InvokeNetmapSnapshotTest()
         {
-            NodeInfo[] result = morphInvoker.InvokeSnapshot(0).Nodes.Select(p => p.Info).ToArray();
+            NodeInfo[] result = morphInvoker.NetMap();
             Assert.AreEqual(result.Length, 1);
         }
 

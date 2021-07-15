@@ -34,7 +34,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Intermediate
                 }
             };
             gt.Signature = PrivateKey.SignMessagePart(gt.Body);
-            MorphInvoker.InvokeReputationPut(it.Epoch, it.Trust.Peer.ToByteArray(), gt.ToByteArray());
+            MorphInvoker.PutReputation(it.Epoch, it.Trust.Peer.ToByteArray(), gt.ToByteArray());
         }
     }
 }

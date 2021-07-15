@@ -62,7 +62,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Delete.Execute
 
         private ulong CurrentEpoch()
         {
-            return DeleteService.MorphInvoker.InvokeEpoch();
+            return DeleteService.MorphInvoker.Epoch();
         }
     }
 }

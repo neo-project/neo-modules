@@ -1,10 +1,10 @@
+using System;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Google.Protobuf;
 using Neo.FileStorage.API.Reputation;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
-using System;
-using System.Threading.Tasks;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
 using static Neo.FileStorage.Utils.WorkerPool;
 
@@ -72,7 +72,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                MorphCli.InvokeReputationPut(reputationPutEvent.Epoch, reputationPutEvent.PeerID, reputationPutEvent.Trust.ToByteArray());
+                MorphCli.PutReputation(reputationPutEvent.Epoch, reputationPutEvent.PeerID, reputationPutEvent.Trust.ToByteArray());
             }
             catch (Exception e)
             {

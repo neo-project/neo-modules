@@ -16,7 +16,7 @@ namespace Neo.FileStorage.Storage.Cache
             storageService = local;
             cache = new(NetmapCacheSize, epoch =>
             {
-                return morph.InvokeEpochSnapshot(epoch);
+                return morph.EpochSnapshot(epoch);
             });
         }
 

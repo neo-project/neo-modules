@@ -11,21 +11,21 @@ namespace Neo.FileStorage.Morph.Invoker
         private const string MintMethod = "mint";
         private const string BurnMethod = "burn";
 
-        public long InvokeBalanceOf(byte[] holder)
+        public long BalanceOf(byte[] holder)
         {
             InvokeResult result = TestInvoke(BalanceContractHash, BalanceOfMethod, holder);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", BalanceOfMethod));
             return (long)result.ResultStack[0].GetInteger();
         }
 
-        public uint InvokeDecimals()
+        public uint BalanceDecimals()
         {
             InvokeResult result = TestInvoke(BalanceContractHash, DecimalsMethod);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", DecimalsMethod));
             return (uint)(result.ResultStack[0].GetInteger());
         }
 
-        public bool InvokeTransferX(byte[] from, byte[] to, long amount, byte[] details)
+        public bool TransferX(byte[] from, byte[] to, long amount, byte[] details)
         {
             return Invoke(out _, BalanceContractHash, TransferXMethod, SideChainFee, from, to, amount, details);
         }
@@ -47,7 +47,7 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public uint BalancePrecision()
         {
-            return InvokeDecimals();
+            return BalanceDecimals();
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Neo.FileStorage.Storage.Services.Accounting
 
         public BalanceResponse Balance(BalanceRequest request)
         {
-            long balance = MorphInvoker.InvokeBalanceOf(request.Body.OwnerId.ToByteArray());
+            long balance = MorphInvoker.BalanceOf(request.Body.OwnerId.ToByteArray());
             var resp = new BalanceResponse
             {
                 Body = new BalanceResponse.Types.Body

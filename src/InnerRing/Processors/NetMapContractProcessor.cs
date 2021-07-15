@@ -127,7 +127,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Info, string.Format("vote to remove node from netmap,{0}", s));
                     try
                     {
-                        MorphCli.InvokeUpdateState(API.Netmap.NodeInfo.Types.State.Offline, key.EncodePoint(true));
+                        MorphCli.UpdatePeerState(API.Netmap.NodeInfo.Types.State.Offline, key.EncodePoint(true));
                     }
                     catch (Exception e)
                     {
@@ -152,7 +152,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             Utility.Log(Name, LogLevel.Info, string.Format("next epoch,{0}", nextEpoch));
             try
             {
-                MorphCli.InvokeNewEpoch(nextEpoch);
+                MorphCli.NewEpoch(nextEpoch);
             }
             catch (Exception e)
             {
@@ -167,7 +167,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             API.Netmap.NodeInfo[] snapshot;
             try
             {
-                snapshot = MorphCli.InvokeSnapshot(0)?.Nodes.Select(p => p.Info).ToArray();
+                snapshot = MorphCli.NetMap();
             }
             catch (Exception e)
             {
@@ -258,7 +258,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             NetmapSnapshot.Flag(updateStateEvent.PublicKey.ToString());
             try
             {
-                MorphCli.InvokeUpdateState((API.Netmap.NodeInfo.Types.State)updateStateEvent.Status, updateStateEvent.PublicKey.EncodePoint(true));
+                MorphCli.UpdatePeerState((API.Netmap.NodeInfo.Types.State)updateStateEvent.Status, updateStateEvent.PublicKey.EncodePoint(true));
             }
             catch (Exception e)
             {

@@ -25,11 +25,11 @@ namespace Neo.FileStorage.InnerRing
 
         public List<DataAuditResult> AuditResultsForEpoch(ulong epoch)
         {
-            List<byte[]> idList = Invoker.InvokeListAuditResultsByEpoch((long)epoch);
+            List<byte[]> idList = Invoker.ListAuditResultsByEpoch((long)epoch);
             var res = new List<DataAuditResult>();
             foreach (var id in idList)
             {
-                DataAuditResult dataAuditResult = Invoker.InvokeGetAuditResult(id);
+                DataAuditResult dataAuditResult = Invoker.GetAuditResult(id);
                 res.Add(dataAuditResult);
             }
             return res;
@@ -43,9 +43,9 @@ namespace Neo.FileStorage.InnerRing
         public void BuildContainer(ulong epoch, ContainerID cid, out List<List<Node>> containerNodes, out NetMap netMap)
         {
             if (epoch > 0)
-                netMap = Invoker.InvokeEpochSnapshot(epoch);
+                netMap = Invoker.EpochSnapshot(epoch);
             else
-                netMap = Invoker.InvokeSnapshot(0);
+                netMap = Invoker.Snapshot(0);
             Container cnr = Invoker.GetContainer(cid)?.Container;
             containerNodes = netMap.GetContainerNodes(cnr.PlacementPolicy, cid.Value.ToByteArray());
         }
@@ -77,7 +77,7 @@ namespace Neo.FileStorage.InnerRing
             //notary
             var from = new UInt160(Cryptography.Base58.Base58CheckDecode(Cryptography.Base58.Encode(sender.Value.ToByteArray())).Skip(1).ToArray());
             var to = new UInt160(Cryptography.Base58.Base58CheckDecode(Cryptography.Base58.Encode(recipient.Value.ToByteArray())).Skip(1).ToArray());
-            Invoker.InvokeTransferX(from.ToArray(), to.ToArray(), amount, details);
+            Invoker.TransferX(from.ToArray(), to.ToArray(), amount, details);
             Utility.Log("SettlementDeps", LogLevel.Info, "transfer transaction for audit was successfully sent");
         }
 
@@ -101,7 +101,7 @@ namespace Neo.FileStorage.InnerRing
 
         public BigInteger Balance(OwnerID id)
         {
-            return Invoker.InvokeBalanceOf(id.ToByteArray());
+            return Invoker.BalanceOf(id.ToByteArray());
         }
 
         public Estimations[] Estimations(ulong epoch)

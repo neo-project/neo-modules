@@ -16,40 +16,40 @@ namespace Neo.FileStorage.Morph.Invoker
         private const string ListByNodeResultsMethod = "listByNode";
 
 
-        public bool InvokePutAuditResult(byte[] rawResult)
+        public bool PutAuditResult(byte[] rawResult)
         {
             return Invoke(out _, AuditContractHash, PutResultMethod, SideChainFee, rawResult);
         }
 
-        public DataAuditResult InvokeGetAuditResult(byte[] id)
+        public DataAuditResult GetAuditResult(byte[] id)
         {
             InvokeResult result = TestInvoke(AuditContractHash, GetResultMethod, id);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", GetResultMethod));
             return DataAuditResult.Parser.ParseFrom(result.ResultStack[0].GetSpan().ToArray());
         }
 
-        public List<byte[]> InvokeListAuditResults()
+        public List<byte[]> ListAuditResults()
         {
             InvokeResult result = TestInvoke(AuditContractHash, ListResultsMethod);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", ListResultsMethod));
             return ParseAuditResults(result.ResultStack[0]);
         }
 
-        public List<byte[]> InvokeListAuditResultsByEpoch(long epoch)
+        public List<byte[]> ListAuditResultsByEpoch(long epoch)
         {
             InvokeResult result = TestInvoke(AuditContractHash, ListByEpochResultsMethod, epoch);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", ListByEpochResultsMethod));
             return ParseAuditResults(result.ResultStack[0]);
         }
 
-        public List<byte[]> InvokeListAuditResultsByCID(long epoch, byte[] cid)
+        public List<byte[]> ListAuditResultsByCID(long epoch, byte[] cid)
         {
             InvokeResult result = TestInvoke(AuditContractHash, ListByCIDResultsMethod, epoch, cid);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", ListByEpochResultsMethod));
             return ParseAuditResults(result.ResultStack[0]);
         }
 
-        public List<byte[]> InvokeListAuditResultsByNode(long epoch, byte[] cid, byte[] nodeKey)
+        public List<byte[]> ListAuditResultsByNode(long epoch, byte[] cid, byte[] nodeKey)
         {
             InvokeResult result = TestInvoke(AuditContractHash, ListByNodeResultsMethod, epoch, cid, nodeKey);
             if (result.State != VM.VMState.HALT) throw new Exception(string.Format("could not perform test invocation ({0})", ListByEpochResultsMethod));

@@ -13,7 +13,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Search
 
         ulong IEpochSource.CurrentEpoch()
         {
-            return morphInvoker.InvokeEpoch();
+            return morphInvoker.Epoch();
         }
     }
 }
