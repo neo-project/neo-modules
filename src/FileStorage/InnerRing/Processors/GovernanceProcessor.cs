@@ -148,11 +148,14 @@ namespace Neo.FileStorage.InnerRing.Processors
             foreach (var node in sidechain) hmap[node.EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion)] = false;
             var newNodes = 0;
             var newNodeLimit = (ln - 1) / 3;
-            for (int i = 0; i < ln; i++)
+            for (int i = 0; i < mainnet.Length; i++)
             {
-                if (newNodes == newNodeLimit) break;
+                if (result.Count == ln) break;
                 var mainnetAddr = mainnet[i].EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion);
-                if (!hmap.TryGetValue(mainnetAddr, out _)) newNodes++;
+                if (!hmap.TryGetValue(mainnetAddr, out _)) {
+                    if (newNodes == newNodeLimit) continue;
+                    newNodes++;
+                }
                 else hmap[mainnetAddr] = true;
                 result.Add(mainnet[i]);
             }
