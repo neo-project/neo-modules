@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Storage\Storage.csproj" />
+    <ProjectReference Include="..\..\src\FileStorageST\FileStorageST.csproj" />
   </ItemGroup>
 
 </Project>

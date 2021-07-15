@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\InnerRing\InnerRing.csproj" />
+    <ProjectReference Include="..\..\src\FileStorageIR\FileStorageIR.csproj" />
     <ProjectReference Include="..\Neo.FileStorage.Tests\Neo.FileStorage.Tests.csproj" />
   </ItemGroup>
   
