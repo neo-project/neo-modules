@@ -44,6 +44,7 @@ namespace Neo.FileStorage.Utils
 
         private void OnNewTask(NewTask newTask)
         {
+            IActorRef actor = Self;
             if (capacity <= running)
             {
                 Utility.Log(newTask.Process, LogLevel.Warning, string.Format("worker pool drained,capacity:{0}", capacity.ToString()));
@@ -51,7 +52,7 @@ namespace Neo.FileStorage.Utils
             }
             else
             {
-                newTask.Task.ContinueWith(t => { Self.Tell(new CompleteTask()); });
+                newTask.Task.ContinueWith(t => { actor.Tell(new CompleteTask()); });
                 newTask.Task.Start();
                 running++;
                 Sender.Tell(true);
