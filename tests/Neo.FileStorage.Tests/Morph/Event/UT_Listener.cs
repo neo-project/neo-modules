@@ -3,7 +3,6 @@ using System.Linq;
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Morph.Event;
 using Neo.IO;
 using Neo.IO.Json;
@@ -60,10 +59,10 @@ namespace Neo.FileStorage.Tests.Morph.Event
             ExpectNoMsg();
             listener.Tell(new Listener.Stop());
             //bind handler and parser
-            listener.Tell(new Listener.BindProcessorEvent() { processor = this });
+            listener.Tell(new Listener.BindProcessorEvent() { Processor = this });
             listener.Tell(new Listener.Start());
             //bind handler and parser on starting
-            listener.Tell(new Listener.BindProcessorEvent() { processor = this });
+            listener.Tell(new Listener.BindProcessorEvent() { Processor = this });
             //send normal notify 
             listener.Tell(new Listener.NewContractEvent()
             {

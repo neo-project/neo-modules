@@ -2,7 +2,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.Cache;
 
-namespace Neo.FileStorage.Tests.LocalObjectStorage
+namespace Neo.FileStorage.Tests.Cache
 {
     [TestClass]
     public class UT_LRUCache

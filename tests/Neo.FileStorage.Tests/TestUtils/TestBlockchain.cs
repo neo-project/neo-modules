@@ -8,6 +8,7 @@ using Neo.Cryptography.ECC;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.Morph.Invoker;
 using Neo.IO;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -18,16 +19,27 @@ using Neo.VM;
 using Neo.VM.Types;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
-using static Neo.FileStorage.Morph.Invoker.MorphClient;
 using ByteString = Google.Protobuf.ByteString;
 
 namespace Neo.FileStorage.Tests
 {
     public static class TestBlockchain
     {
+        private const string walletPath = "./Config/wallet-all.json";
+        private const string password = "123456";
+        public static UInt160 ReputationContractHash { get; private set; }
+        public static UInt160 BalanceContractHash { get; private set; }
+        public static UInt160 AuditContractHash { get; private set; }
+        public static UInt160 ContainerContractHash { get; private set; }
+        public static UInt160 FsIdContractHash { get; private set; }
+        public static UInt160 FsContractHash { get; private set; }
+        public static UInt160 NetmapContractHash { get; private set; }
+        public static UInt160 ProcessContractHash { get; private set; }
+        public static UInt160 ProxyContractHash { get; private set; }
+        public static UInt160[] AlphabetContractHash;
+        public static readonly List<UInt160> Contracts = new();
         public static readonly NeoSystem TheNeoSystem;
         public static NEP6Wallet wallet;
-        public static Settings settings;
         public static ProtocolSettings protocolSettings;
 
         static TestBlockchain()
@@ -42,13 +54,9 @@ namespace Neo.FileStorage.Tests
         public static void InitializeMockNeoSystem()
         {
             NeoSystem system = TheNeoSystem;
-            string ConfigFilePath = "./Config/config.json";
-            IConfigurationSection config = new ConfigurationBuilder().AddJsonFile(ConfigFilePath, optional: true).Build().GetSection("PluginConfiguration");
-            Settings.Load(config);
-            settings = Settings.Default;
-            wallet = new NEP6Wallet(Settings.Default.WalletPath, TheNeoSystem.Settings);
-            wallet.Unlock(Settings.Default.Password);
-            if (!File.Exists(Settings.Default.WalletPath))
+            wallet = new NEP6Wallet(walletPath, TheNeoSystem.Settings);
+            wallet.Unlock(password);
+            if (!File.Exists(walletPath))
             {
                 for (int i = 0; i < 7; i++)
                 {
@@ -58,7 +66,6 @@ namespace Neo.FileStorage.Tests
             }
             //Fake balance
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            settings.validators = accounts.Select(p => p.GetKey().PublicKey).ToArray();
             UInt160 from = Contract.GetBFTAddress(TheNeoSystem.Settings.StandbyValidators);
             UInt160 to = accounts.ToArray()[0].ScriptHash;
             FakeSigners signers = new FakeSigners(from);
@@ -68,8 +75,6 @@ namespace Neo.FileStorage.Tests
             //Fake deploy contract
             string DeployContractsCasesPath = "./Config/Contracts/DeployContractCases.json";
             IEnumerable<IConfigurationSection> deployContracts = new ConfigurationBuilder().AddJsonFile(DeployContractsCasesPath, optional: true).Build().GetSection("DeployContracts").GetChildren();
-            settings.AlphabetContractHash = new UInt160[0];
-            settings.Contracts.Clear();
             UInt160 ProcessContractHash = null;
             UInt160 ProxyContractHash = null;
             foreach (IConfigurationSection deployContract in deployContracts)
@@ -88,32 +93,32 @@ namespace Neo.FileStorage.Tests
                 switch (manifestPath)
                 {
                     case "./Config/Contracts/reputation/config.json":
-                        settings.ReputationContractHash = contractHash;
-                        settings.Contracts.Add(contractHash);
+                        ReputationContractHash = contractHash;
+                        Contracts.Add(contractHash);
                         break;
                     case "./Config/Contracts/balance/config.json":
-                        settings.BalanceContractHash = contractHash;
-                        settings.Contracts.Add(contractHash);
+                        BalanceContractHash = contractHash;
+                        Contracts.Add(contractHash);
                         break;
                     case "./Config/Contracts/audit/config.json":
-                        settings.AuditContractHash = contractHash;
-                        settings.Contracts.Add(contractHash);
+                        AuditContractHash = contractHash;
+                        Contracts.Add(contractHash);
                         break;
                     case "./Config/Contracts/container/config.json":
-                        settings.ContainerContractHash = contractHash;
-                        settings.Contracts.Add(contractHash);
+                        ContainerContractHash = contractHash;
+                        Contracts.Add(contractHash);
                         break;
                     case "./Config/Contracts/neofs/config.json":
-                        settings.FsContractHash = contractHash;
-                        settings.Contracts.Add(contractHash);
+                        FsContractHash = contractHash;
+                        Contracts.Add(contractHash);
                         break;
                     case "./Config/Contracts/neofsid/config.json":
-                        settings.FsIdContractHash = contractHash;
-                        settings.Contracts.Add(contractHash);
+                        FsIdContractHash = contractHash;
+                        Contracts.Add(contractHash);
                         break;
                     case "./Config/Contracts/netmap/config.json":
-                        settings.NetmapContractHash = contractHash;
-                        settings.Contracts.Add(contractHash);
+                        NetmapContractHash = contractHash;
+                        Contracts.Add(contractHash);
                         break;
                     case "./Config/Contracts/processing/config.json":
                         ProcessContractHash = contractHash;
@@ -122,8 +127,8 @@ namespace Neo.FileStorage.Tests
                         ProxyContractHash = contractHash;
                         break;
                     default:
-                        settings.AlphabetContractHash = settings.AlphabetContractHash.Append(contractHash).ToArray();
-                        settings.Contracts.Add(contractHash);
+                        AlphabetContractHash = AlphabetContractHash.Append(contractHash).ToArray();
+                        Contracts.Add(contractHash);
                         break;
                 }
             }
@@ -152,22 +157,22 @@ namespace Neo.FileStorage.Tests
                         data.Clear();
                         data.Add(new ContractParameter(ContractParameterType.Boolean) { Value = true });
                         data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = sender });
-                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = settings.NetmapContractHash });
-                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = settings.ContainerContractHash });
+                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = NetmapContractHash });
+                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = ContainerContractHash });
                         break;
                     case "./Config/Contracts/audit/config.json":
                         data.Clear();
                         data.Add(new ContractParameter(ContractParameterType.Boolean) { Value = true });
                         data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = sender });
-                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = settings.NetmapContractHash });
+                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = NetmapContractHash });
                         break;
                     case "./Config/Contracts/container/config.json":
                         data.Clear();
                         data.Add(new ContractParameter(ContractParameterType.Boolean) { Value = true });
                         data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = sender });
-                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = settings.NetmapContractHash });
-                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = settings.BalanceContractHash });
-                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = settings.FsIdContractHash });
+                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = NetmapContractHash });
+                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = BalanceContractHash });
+                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = FsIdContractHash });
                         break;
                     case "./Config/Contracts/neofs/config.json":
                         data.Clear();
@@ -182,15 +187,15 @@ namespace Neo.FileStorage.Tests
                         data.Clear();
                         data.Add(new ContractParameter(ContractParameterType.Boolean) { Value = true });
                         data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = sender });
-                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = settings.NetmapContractHash });
-                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = settings.ContainerContractHash });
+                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = NetmapContractHash });
+                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = ContainerContractHash });
                         break;
                     case "./Config/Contracts/netmap/config.json":
                         data.Clear();
                         data.Add(new ContractParameter(ContractParameterType.Boolean) { Value = true });
                         data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = sender });
-                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = settings.BalanceContractHash });
-                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = settings.ContainerContractHash });
+                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = BalanceContractHash });
+                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = ContainerContractHash });
                         keys = new List<ContractParameter>();
                         accounts.ToList().ForEach(p => keys.Add(new ContractParameter(ContractParameterType.PublicKey) { Value = p.GetKey().PublicKey }));
                         data.Add(new ContractParameter(ContractParameterType.Array) { Value = keys });
@@ -199,23 +204,23 @@ namespace Neo.FileStorage.Tests
                         data.Clear();
                         data.Add(new ContractParameter(ContractParameterType.Boolean) { Value = true });
                         data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = sender });
-                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = settings.FsContractHash });
+                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = FsContractHash });
                         break;
                     case "./Config/Contracts/proxy/config.json":
                         data.Clear();
                         data.Add(new ContractParameter(ContractParameterType.Boolean) { Value = true });
                         data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = sender });
-                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = settings.NetmapContractHash });
+                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = NetmapContractHash });
                         break;
                     default:
                         data.Clear();
                         data.Add(new ContractParameter(ContractParameterType.Boolean) { Value = true });
                         data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = sender });
-                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = settings.NetmapContractHash });
+                        data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = NetmapContractHash });
                         data.Add(new ContractParameter(ContractParameterType.Hash160) { Value = ProxyContractHash });
                         data.Add(new ContractParameter(ContractParameterType.String) { Value = "Alphabet" + int.Parse(deployContract.GetSection("accountIndex").Value) });
                         data.Add(new ContractParameter(ContractParameterType.Integer) { Value = int.Parse(deployContract.GetSection("accountIndex").Value) });
-                        data.Add(new ContractParameter(ContractParameterType.Integer) { Value = settings.AlphabetContractHash.Length });
+                        data.Add(new ContractParameter(ContractParameterType.Integer) { Value = AlphabetContractHash.Length });
                         break;
                 }
                 DeployContract(snapshot, contractName, nefFilePath, manifestPath, new ContractParameter(ContractParameterType.Array) { Value = data }, sender);
@@ -223,7 +228,7 @@ namespace Neo.FileStorage.Tests
 
             //Fake contract init
             //FakeNetMapConfigInit/ContainerFee
-            script = settings.NetmapContractHash.MakeScript("initConfig", ToParameter(new byte[][] { Utility.StrictUTF8.GetBytes("ContainerFee"), BitConverter.GetBytes(0) }));
+            script = NetmapContractHash.MakeScript("initConfig", ToParameter(new byte[][] { Utility.StrictUTF8.GetBytes("ContainerFee"), BitConverter.GetBytes(0) }));
             ExecuteScript(snapshot, "NetMapConfigInit/ContainerFee", script, from);
             //Fake others
             //Fake peer
@@ -234,7 +239,7 @@ namespace Neo.FileStorage.Tests
             nodeInfo.Address = API.Cryptography.KeyExtension.PublicKeyToAddress(accounts.ToArray()[0].GetKey().PublicKey.ToArray());
             nodeInfo.PublicKey = ByteString.CopyFrom(accounts.ToArray()[0].GetKey().PublicKey.ToArray());
             var rawNodeInfo = nodeInfo.ToByteArray();
-            script = settings.NetmapContractHash.MakeScript("addPeer", rawNodeInfo);
+            script = NetmapContractHash.MakeScript("addPeer", rawNodeInfo);
             for (int i = 0; i < accounts.Count(); i++)
             {
                 ExecuteScript(snapshot, "FakePeer", script, accounts.ToArray()[i].ScriptHash);
@@ -251,7 +256,7 @@ namespace Neo.FileStorage.Tests
                 PlacementPolicy = new PlacementPolicy()
             };
             byte[] sig = key.PrivateKey.LoadPrivateKey().SignRFC6979(container.ToByteArray());
-            script = settings.ContainerContractHash.MakeScript("put", container.ToByteArray(), sig, key.PublicKey.ToArray(), null);
+            script = ContainerContractHash.MakeScript("put", container.ToByteArray(), sig, key.PublicKey.ToArray(), null);
             var containerId = container.CalCulateAndGetId.Value.ToByteArray();
             for (int i = 0; i < accounts.Count(); i++)
             {
@@ -266,7 +271,7 @@ namespace Neo.FileStorage.Tests
             };
             eACLTable.Records.Add(new API.Acl.EACLRecord());
             sig = Cryptography.Crypto.Sign(eACLTable.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            script = settings.ContainerContractHash.MakeScript("setEACL", eACLTable.ToByteArray(), sig, key.PublicKey.EncodePoint(false), null);
+            script = ContainerContractHash.MakeScript("setEACL", eACLTable.ToByteArray(), sig, key.PublicKey.EncodePoint(false), null);
             for (int i = 0; i < accounts.Count(); i++)
             {
                 ExecuteScript(snapshot, "FakeEacl", script, accounts.ToArray()[i].ScriptHash);
@@ -274,7 +279,7 @@ namespace Neo.FileStorage.Tests
             //Fake Epoch
             for (int i = 0; i < accounts.Count(); i++)
             {
-                script = settings.NetmapContractHash.MakeScript("newEpoch", 1);
+                script = NetmapContractHash.MakeScript("newEpoch", 1);
                 ExecuteScript(snapshot, "FakeEpoch", script, accounts.ToArray()[i].ScriptHash);
             }
             NodeList list = new();
@@ -283,7 +288,7 @@ namespace Neo.FileStorage.Tests
             snapshot.Add(new KeyBuilder(NativeContract.RoleManagement.Id, (byte)Role.NeoFSAlphabetNode).AddBigEndian(0), new StorageItem(list));
             for (int i = 0; i < 7; i++)
             {
-                script = NativeContract.GAS.Hash.MakeScript("transfer", from, settings.AlphabetContractHash[i], 500_00000000, null);
+                script = NativeContract.GAS.Hash.MakeScript("transfer", from, AlphabetContractHash[i], 500_00000000, null);
                 engine = ApplicationEngine.Run(script, snapshot, container: signers, null, TheNeoSystem.Settings, 0, 2000000000);
             }
             snapshot.Commit();
