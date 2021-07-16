@@ -1,6 +1,7 @@
 using System;
+using Neo.FileStorage.Morph.Event;
 
-namespace Neo.FileStorage.Morph.Event
+namespace Neo.FileStorage.Morph.Listen
 {
     public class ParserInfo
     {

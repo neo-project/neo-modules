@@ -5,7 +5,7 @@ using Neo.IO.Json;
 using Neo.SmartContract;
 using Neo.VM;
 
-namespace Neo.FileStorage.Morph.Event
+namespace Neo.FileStorage.Morph.Listen
 {
     public static class Helper
     {
