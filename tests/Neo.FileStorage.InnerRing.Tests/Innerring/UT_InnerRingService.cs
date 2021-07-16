@@ -5,6 +5,7 @@ using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.InnerRing;
 using Neo.FileStorage.InnerRing.Invoker;
+using Neo.FileStorage.InnerRing.Tests;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.IO;
 using Neo.IO.Json;

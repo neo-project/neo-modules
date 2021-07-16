@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Akka.Actor;
 using Google.Protobuf;
 using Microsoft.Extensions.Configuration;
 using Neo.Cryptography.ECC;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.IO;
 using Neo.Network.P2P.Payloads;
@@ -21,7 +23,7 @@ using Neo.Wallets;
 using Neo.Wallets.NEP6;
 using ByteString = Google.Protobuf.ByteString;
 
-namespace Neo.FileStorage.Tests
+namespace Neo.FileStorage.InnerRing.Tests
 {
     public static class TestBlockchain
     {
@@ -44,8 +46,10 @@ namespace Neo.FileStorage.Tests
 
         static TestBlockchain()
         {
-            string ConfigFilePath = "./Config/ProtocolSettingsConfig.json";
-            protocolSettings = ProtocolSettings.Load(ConfigFilePath);
+            string ProtocolSettingsConfigPath = "./Config/ProtocolSettingsConfig.json";
+            protocolSettings = ProtocolSettings.Load(ProtocolSettingsConfigPath);
+            string SettingsConfigPath = "./Config/config.json";
+            Settings.Load(new ConfigurationBuilder().AddJsonFile(SettingsConfigPath, optional: true).Build().GetSection("PluginConfiguration"));
             TheNeoSystem = new NeoSystem(protocolSettings);
             Console.WriteLine("initialize NeoSystem");
             InitializeMockNeoSystem();
@@ -395,6 +399,33 @@ namespace Neo.FileStorage.Tests
                 Console.WriteLine($"{functionName} execute fault.{errorMessage}");
             else
                 Console.WriteLine($"{functionName} execute success.");
+        }
+
+        public static MainInvoker CreateTestMainInvoker(NeoSystem system, IActorRef testActor, Wallet wallet) {
+            return new MainInvoker
+            {
+                Wallet = wallet,
+                NeoSystem = system,
+                Blockchain = testActor,
+                FsContractHash = TestBlockchain.FsContractHash,
+            };
+        }
+
+        public static MorphInvoker CreateTestMorphInvoker(NeoSystem system, IActorRef testActor, Wallet wallet)
+        {
+            return new MorphInvoker
+            {
+                Wallet = wallet,
+                NeoSystem = system,
+                Blockchain = testActor,
+                ReputationContractHash = TestBlockchain.ReputationContractHash,
+                NetMapContractHash = TestBlockchain.NetmapContractHash,
+                BalanceContractHash = TestBlockchain.BalanceContractHash,
+                AuditContractHash = TestBlockchain.AuditContractHash,
+                ContainerContractHash = TestBlockchain.ContainerContractHash,
+                FsIdContractHash = TestBlockchain.FsIdContractHash,
+                AlphabetContractHash = TestBlockchain.AlphabetContractHash
+            };
         }
     }
 

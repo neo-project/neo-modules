@@ -9,7 +9,6 @@ using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Morph.Invoker;
-using Neo.FileStorage.Tests;
 using Neo.IO;
 using Neo.Wallets;
 using Container = Neo.FileStorage.API.Container.Container;
@@ -32,20 +31,29 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
             {
                 Wallet = wallet,
                 NeoSystem = system,
-                Blockchain = this.ActorOf(Props.Create(() => new ProcessorFakeActor()))
+                Blockchain = this.ActorOf(Props.Create(() => new ProcessorFakeActor())),
+                FsContractHash= TestBlockchain.FsContractHash,
+                
             };
             morphInvoker = new MorphInvoker()
             {
                 Wallet = wallet,
                 NeoSystem = system,
-                Blockchain = this.ActorOf(Props.Create(() => new ProcessorFakeActor()))
+                Blockchain = this.ActorOf(Props.Create(() => new ProcessorFakeActor())),
+                ReputationContractHash= TestBlockchain.ReputationContractHash,
+                NetMapContractHash=TestBlockchain.NetmapContractHash,
+                BalanceContractHash = TestBlockchain.BalanceContractHash,
+                AuditContractHash = TestBlockchain.AuditContractHash,
+                ContainerContractHash = TestBlockchain.ContainerContractHash,
+                FsIdContractHash = TestBlockchain.FsIdContractHash,
+                AlphabetContractHash=TestBlockchain.AlphabetContractHash
             };
         }
 
         [TestMethod]
         public void InvokeMintTest()
         {
-            bool result = morphInvoker.Mint(FileStorage.InnerRing.Settings.Default.NetmapContractHash.ToArray(), 0, new byte[] { 0x01 });
+            bool result = morphInvoker.Mint(TestBlockchain.NetmapContractHash.ToArray(), 0, new byte[] { 0x01 });
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
@@ -54,7 +62,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
         [TestMethod]
         public void InvokeBurnTest()
         {
-            bool result = morphInvoker.Burn(FileStorage.InnerRing.Settings.Default.NetmapContractHash.ToArray(), 0, new byte[] { 0x01 });
+            bool result = morphInvoker.Burn(TestBlockchain.NetmapContractHash.ToArray(), 0, new byte[] { 0x01 });
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
