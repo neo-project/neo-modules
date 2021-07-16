@@ -4,6 +4,7 @@ using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.Morph.Event;
+using Neo.FileStorage.Morph.Listen;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;

@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Akka.Actor;
+using Neo.FileStorage.Morph.Event;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 
-namespace Neo.FileStorage.Morph.Event
+namespace Neo.FileStorage.Morph.Listen
 {
     /// <summary>
     /// It is a listener for contract events. It will distribute event to the corresponding processor according to the type of event.

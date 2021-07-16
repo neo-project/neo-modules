@@ -16,7 +16,7 @@ namespace Neo.FileStorage.Storage
     public partial class StoragePlugin : Plugin, IPersistencePlugin
     {
         public event EventHandler<Wallet> WalletChanged;
-        public override string Name => "StorageService";
+        public override string Name => "FileStorageService";
         public override string Description => "Provide distributed file storage service";
 
         public NeoSystem MorphSystem;

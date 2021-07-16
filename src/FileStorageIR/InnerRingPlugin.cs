@@ -27,12 +27,12 @@ namespace Neo.FileStorage.InnerRing
         public event EventHandler<Wallet> WalletChanged;
         public const string MorphChainConfig = "config.morph.json";
         public const string ChainDataFileName = "chain.morph.acc";
-        public override string Name => "InnerRingService";
+        public override string Name => "innerRingService";
         public override string Description => "Provide distributed file storage inner ring service";
 
         public NeoSystem MainSystem;
         public NeoSystem MorphSystem;
-        public InnerRingServiceWrapper InnerRingService;
+        private IActorRef innerRingService;
         private IWalletProvider walletProvider;
         private MorphChainSettings morphSettings;
         private ProtocolSettings morphProtocolSettings;
@@ -87,13 +87,28 @@ namespace Neo.FileStorage.InnerRing
 
         public void OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
+            bool flag;
             if (system.Settings.Network == MainSystem?.Settings.Network)
-            {
-                InnerRingService?.OnPersisted(block, snapshot, applicationExecutedList, true);
-            }
+                flag = true;
             else if (system.Settings.Network == morphProtocolSettings.Network)
+                flag = false;
+            else
+                return;
+            if (!flag) innerRingService.Tell(new InnerRingService.BlockEvent() { block = block, flag = flag });
+            foreach (var appExec in applicationExecutedList)
             {
-                InnerRingService?.OnPersisted(block, snapshot, applicationExecutedList, false);
+                Transaction tx = appExec.Transaction;
+                VM.VMState state = appExec.VMState;
+                if (tx is null || state != VM.VMState.HALT) continue;
+                var notifys = appExec.Notifications;
+                if (notifys is null) continue;
+                foreach (var notify in notifys)
+                {
+                    var contract = notify.ScriptHash;
+                    if (flag && contract != Settings.Default.FsContractHash) continue;
+                    if (!flag && !Settings.Default.Contracts.Contains(contract)) continue;
+                    innerRingService.Tell(new InnerRingService.ContractEvent() { notify = notify, flag = flag });
+                }
             }
         }
 
@@ -119,8 +134,9 @@ namespace Neo.FileStorage.InnerRing
         private void Start(Wallet wallet)
         {
             if (MainSystem is null || MorphSystem is null) throw new InvalidOperationException("Neo system not initialized");
-            if (InnerRingService is not null) throw new InvalidOperationException("InnerRing service already started");
-            InnerRingService = new(MainSystem, MorphSystem);
+            if (innerRingService is not null) throw new InvalidOperationException("InnerRing service already started");
+            innerRingService = MainSystem.ActorSystem.ActorOf(InnerRingService.Props(MainSystem, MorphSystem));
+            innerRingService.Tell(new InnerRingService.Start() { });
         }
 
         private IEnumerable<Block> GetBlocksFromFile(NeoSystem system)
@@ -189,7 +205,7 @@ namespace Neo.FileStorage.InnerRing
         public override void Dispose()
         {
             base.Dispose();
-            InnerRingService?.Dispose();
+            innerRingService.Tell(new InnerRingService.Stop() { });
         }
     }
 }

@@ -1,14 +1,14 @@
-using Akka.Actor;
-using Neo.Cryptography.ECC;
-using Neo.FileStorage.InnerRing.Invoker;
-using Neo.FileStorage.Morph.Event;
-using Neo.SmartContract;
-using Neo.SmartContract.Native;
-using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Akka.Actor;
+using Neo.Cryptography.ECC;
+using Neo.FileStorage.Morph.Event;
+using Neo.FileStorage.Morph.Listen;
+using Neo.SmartContract;
+using Neo.SmartContract.Native;
+using Neo.Wallets;
 using static Neo.FileStorage.InnerRing.Events.MorphEvent;
 using static Neo.FileStorage.Utils.WorkerPool;
 
@@ -152,7 +152,8 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 if (result.Count == ln) break;
                 var mainnetAddr = mainnet[i].EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion);
-                if (!hmap.TryGetValue(mainnetAddr, out _)) {
+                if (!hmap.TryGetValue(mainnetAddr, out _))
+                {
                     if (newNodes == newNodeLimit) continue;
                     newNodes++;
                 }
