@@ -34,7 +34,14 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             {
                 Wallet = wallet,
                 NeoSystem = system,
-                Blockchain = this.TestActor
+                Blockchain = this.TestActor,
+                AlphabetContractHash = TestBlockchain.AlphabetContractHash,
+                AuditContractHash = TestBlockchain.AuditContractHash,
+                BalanceContractHash = TestBlockchain.BalanceContractHash,
+                ContainerContractHash = TestBlockchain.ContainerContractHash,
+                FsIdContractHash = TestBlockchain.FsIdContractHash,
+                NetMapContractHash = TestBlockchain.NetmapContractHash,
+                ReputationContractHash = TestBlockchain.ReputationContractHash,
             };
         }
 

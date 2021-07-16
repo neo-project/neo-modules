@@ -4,7 +4,7 @@ using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.Morph.Listen;
 
-namespace Neo.FileStorage.Tests.Morph.Event
+namespace Neo.FileStorage.Tests.Morph.Listen
 {
     [TestClass]
     public class UT_BlockTimer : TestKit
