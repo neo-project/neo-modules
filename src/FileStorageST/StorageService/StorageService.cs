@@ -5,10 +5,6 @@ using System.Security.Cryptography;
 using System.Threading;
 using Akka.Actor;
 using Google.Protobuf;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
@@ -31,6 +27,12 @@ using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.VM;
 using Neo.Wallets;
+using APIAccountingService = Neo.FileStorage.API.Accounting.AccountingService;
+using APIContainerService = Neo.FileStorage.API.Container.ContainerService;
+using APINetmapService = Neo.FileStorage.API.Netmap.NetmapService;
+using APIObjectService = Neo.FileStorage.API.Object.ObjectService;
+using APIReputationService = Neo.FileStorage.API.Reputation.ReputationService;
+using APISessionService = Neo.FileStorage.API.Session.SessionService;
 
 namespace Neo.FileStorage.Storage
 {
@@ -55,6 +57,7 @@ namespace Neo.FileStorage.Storage
         private readonly ContainerProcessor containerProcessor = new();
         private readonly CancellationTokenSource context = new();
         private readonly List<BlockTimer> blockTimers = new();
+        private readonly Server server;
 
         public StorageService(Wallet wallet, NeoSystem side)
         {
@@ -63,10 +66,10 @@ namespace Neo.FileStorage.Storage
             HealthStatus = HealthStatus.Starting;
             LocalNodeInfo = new()
             {
-                Address = Settings.Default.StorageSettings.Address,
+                Address = Settings.Default.Address,
                 PublicKey = ByteString.CopyFrom(key.PublicKey()),
             };
-            LocalNodeInfo.Attributes.AddRange(Settings.Default.StorageSettings.Attributes.Select(p =>
+            LocalNodeInfo.Attributes.AddRange(Settings.Default.Attributes.Select(p =>
             {
                 var li = p.Split(":");
                 if (li.Length != 2) throw new FormatException("invalid attributes setting");
@@ -78,7 +81,7 @@ namespace Neo.FileStorage.Storage
             }));
             localStorage = new();
             int i = 0;
-            foreach (var shardSettings in Settings.Default.StorageSettings.Shards)
+            foreach (var shardSettings in Settings.Default.Shards)
             {
                 var shard = new Shard(shardSettings, system.ActorSystem.ActorOf(WorkerPool.Props($"Shard{i}", 2)), localStorage.ProcessExpiredTomstones);
                 netmapProcessor.AddEpochHandler(p =>
@@ -110,6 +113,15 @@ namespace Neo.FileStorage.Storage
             ObjectServiceImpl objectService = InitializeObject();
             ReputationServiceImpl reputationService = InitializeReputation();
             SessionServiceImpl sessionService = InitializeSession();
+            server = new(Settings.Default.Port);
+            server.BindService<APIAccountingService.AccountingServiceBase>(accountingService);
+            server.BindService<APIContainerService.ContainerServiceBase>(containerService);
+            server.BindService<ControlService.ControlServiceBase>(controlService);
+            server.BindService<APINetmapService.NetmapServiceBase>(netmapService);
+            server.BindService<APIObjectService.ObjectServiceBase>(objectService);
+            server.BindService<APIReputationService.ReputationServiceBase>(reputationService);
+            server.BindService<APISessionService.SessionServiceBase>(sessionService);
+            server.Start();
             listener.Tell(new Listener.BindProcessorEvent { Processor = netmapProcessor });
             listener.Tell(new Listener.BindProcessorEvent { Processor = containerProcessor });
             listener.Tell(new Listener.BindBlockHandlerEvent
@@ -120,31 +132,6 @@ namespace Neo.FileStorage.Storage
                 }
             });
             listener.Tell(new Listener.Start());
-            Host.CreateDefaultBuilder()
-                .ConfigureLogging(logBuilder =>
-                {
-                    logBuilder.ClearProviders()
-                        .AddProvider(new LoggerProvider());
-                })
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.ConfigureKestrel(options =>
-                    {
-                        options.ListenAnyIP(Settings.Default.StorageSettings.Port,
-                            listenOptions => { listenOptions.Protocols = HttpProtocols.Http2; });
-                    });
-                    webBuilder.UseStartup(context => new Startup
-                    {
-                        AccountingService = accountingService,
-                        ContainerService = containerService,
-                        ControlService = controlService,
-                        NetmapService = netmapService,
-                        ObjectService = objectService,
-                        ReputationService = reputationService,
-                    });
-                })
-                .Build()
-                .RunAsync(context.Token);
             InitState();
             var ni = LocalNodeInfo.Clone();
             ni.State = API.Netmap.NodeInfo.Types.State.Online;
@@ -225,6 +212,7 @@ namespace Neo.FileStorage.Storage
 
         public void Dispose()
         {
+            server.Stop();
             HealthStatus = HealthStatus.ShuttingDown;
             context.Cancel();
             listener.Tell(new Listener.Stop());

@@ -10,19 +10,20 @@ namespace Neo.FileStorage.Storage
 {
     public class Settings
     {
+        public const string DefaultAddress = "/ip4/0.0.0.0/tcp/8080";
+        public const int DefaultPort = 8080;
         public static Settings Default { get; private set; }
         public bool AutoStart;
         public UInt160 NetmapContractHash;
         public UInt160 BalanceContractHash;
         public UInt160 ContainerContractHash;
         public UInt160 ReputationContractHash;
-
-        public ulong BasicIncomeRate;
-        public long MainChainFee;
-        public long SideChainFee;
-        public long AuditFee;
-        public StorageNodeSettings StorageSettings;
         public List<UInt160> Contracts = new();
+        public string Address;
+        public int Port;
+        public List<string> Attributes;
+        public long SideChainFee;
+        public List<ShardSettings> Shards;
 
         private Settings(IConfigurationSection section)
         {
@@ -33,17 +34,15 @@ namespace Neo.FileStorage.Storage
             BalanceContractHash = UInt160.Parse(contracts.GetSection("Balance").Value);
             ContainerContractHash = UInt160.Parse(contracts.GetSection("Container").Value);
             ReputationContractHash = UInt160.Parse(contracts.GetSection("Reputation").Value);
-
             Contracts.Add(NetmapContractHash);
             Contracts.Add(BalanceContractHash);
             Contracts.Add(ContainerContractHash);
-
-            IConfigurationSection fee = section.GetSection("Fee");
-            MainChainFee = fee.GetValue("MainChain", 5000L);
-            SideChainFee = fee.GetValue("SideChain", 5000L);
-
-            StorageSettings = StorageNodeSettings.Load(section.GetSection("Storage"));
-            if (!StorageSettings.Shards.Any()) StorageSettings = StorageNodeSettings.Default;
+            Address = section.GetValue("Address", DefaultAddress);
+            Port = section.GetValue("Port", DefaultPort);
+            Attributes = section.GetSection("Attributes").GetChildren().Select(p => p.Value).ToList();
+            SideChainFee = section.GetValue("SideChainFee", 5000L);
+            Shards = section.GetSection("Shards").GetChildren().Select(p => ShardSettings.Load(p)).ToList();
+            if (!Shards.Any()) Shards = new List<ShardSettings> { ShardSettings.Default };
         }
 
         public static void Load(IConfigurationSection section)
@@ -218,40 +217,6 @@ namespace Neo.FileStorage.Storage
             settings.BlobStorageSettings = BlobStorageSettings.Load(section.GetSection("BlobStorage"));
             settings.MetabaseSettings = MetabaseSettings.Load(section.GetSection("Metabase"));
             return settings;
-        }
-    }
-
-    public class StorageNodeSettings
-    {
-        public const string DefaultAddress = "/ip4/0.0.0.0/tcp/8080";
-        public const int DefaultPort = 8080;
-        public string Address;
-        public List<string> Attributes;
-        public int Port;
-        public ShardSettings[] Shards;
-
-        public static StorageNodeSettings Default { get; private set; }
-
-        static StorageNodeSettings()
-        {
-            Default = new()
-            {
-                Address = DefaultAddress,
-                Attributes = new(),
-                Port = DefaultPort,
-                Shards = new ShardSettings[] { ShardSettings.Default },
-            };
-        }
-
-        public static StorageNodeSettings Load(IConfigurationSection section)
-        {
-            return new()
-            {
-                Address = section.GetValue("Address", DefaultAddress),
-                Attributes = section.GetSection("Attributes").GetChildren().Select(p => p.ToString()).ToList(),
-                Port = section.GetValue("Port", DefaultPort),
-                Shards = section.GetSection("Shards").GetChildren().Select(p => ShardSettings.Load(p)).ToArray(),
-            };
         }
     }
 }

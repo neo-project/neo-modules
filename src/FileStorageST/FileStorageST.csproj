@@ -29,6 +29,7 @@
   
   <ItemGroup>
     <ProjectReference Include="..\FileStorageBase\FileStorageBase.csproj" />
+    <ProjectReference Include="..\..\..\..\ZhangTao1596\neo\src\neo\neo.csproj" />
   </ItemGroup>
 
 </Project>
