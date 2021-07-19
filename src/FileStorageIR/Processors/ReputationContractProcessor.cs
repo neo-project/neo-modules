@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Google.Protobuf;
+using Neo.FileStorage.API.Reputation;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Listen;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
@@ -71,6 +72,15 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
+                CheckManagers(reputationPutEvent.Epoch, reputationPutEvent.Trust.Body.Manager, reputationPutEvent.PeerID);
+            }
+            catch (Exception e)
+            {
+                Utility.Log(Name, LogLevel.Info, $"ignore reputation value, reason:wrong manager,errot:{e}");
+                return;
+            }
+            try
+            {
                 MorphCli.PutReputation(reputationPutEvent.Epoch, reputationPutEvent.PeerID, reputationPutEvent.Trust.ToByteArray());
             }
             catch (Exception e)
@@ -79,8 +89,9 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
         }
 
-        /*        public void CheckManagers(ulong epoch, mng apireputation.PeerID, peer apireputation.PeerID) {
-
-                }*/
+        public void CheckManagers(ulong epoch, PeerID mng, PeerID peer)
+        {
+            //to do
+        }
     }
 }
