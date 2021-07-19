@@ -87,6 +87,7 @@ namespace Neo.FileStorage.InnerRing
 
         public void OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
+            if (innerRingService is null) return;
             bool flag;
             if (system.Settings.Network == MainSystem?.Settings.Network)
                 flag = true;
@@ -205,7 +206,7 @@ namespace Neo.FileStorage.InnerRing
         public override void Dispose()
         {
             base.Dispose();
-            innerRingService.Tell(new InnerRingService.Stop() { });
+            innerRingService?.Tell(new InnerRingService.Stop() { });
         }
     }
 }
