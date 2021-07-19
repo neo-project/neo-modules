@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Google.Protobuf;
 using Neo.ConsoleService;
@@ -18,9 +20,11 @@ using Neo.FileStorage.API.StorageGroup;
 using Neo.FileStorage.InnerRing.Utils.Locode;
 using Neo.FileStorage.InnerRing.Utils.Locode.Db;
 using Neo.Network.P2P;
+using Neo.Network.P2P.Payloads;
 using Neo.Plugins;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
+using OHeader = Neo.FileStorage.API.Object.Header;
 
 namespace Neo.FileStorage.InnerRing
 {
@@ -32,14 +36,84 @@ namespace Neo.FileStorage.InnerRing
     {
         public const string ReourcePath = "./Resources/";
         public const string DefaultTargetPath = "./Data_UNLOCODE";
+        public LocalNode LocalNode;
+        private readonly CancellationTokenSource _shutdownTokenSource = new();
+
+        protected string ReadLine()
+        {
+            Task<string> readLineTask = Task.Run(() => Console.ReadLine());
+
+            try
+            {
+                readLineTask.Wait(_shutdownTokenSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return null;
+            }
+
+            return readLineTask.Result;
+        }
+
+        private static void WriteLineWithoutFlicker(string message = "", int maxWidth = 80)
+        {
+            if (message.Length > 0) Console.Write(message);
+            var spacesToErase = maxWidth - message.Length;
+            if (spacesToErase < 0) spacesToErase = 0;
+            Console.WriteLine(new string(' ', spacesToErase));
+        }
 
         [ConsoleCommand("fs show state", Category = "FileStorageService", Description = "Show side chain node height and connection")]
         private void OnNodeHeight()
         {
-            var localNode = MorphSystem.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
-            uint height = NativeContract.Ledger.CurrentIndex(MorphSystem.StoreView);
-            uint headerHeight = MorphSystem?.HeaderCache.Last?.Index ?? height;
-            Console.WriteLine($"block: {height}/{headerHeight}  connected: {localNode.ConnectedCount}  unconnected: {localNode.UnconnectedCount}");
+            var cancel = new CancellationTokenSource();
+
+            Console.CursorVisible = false;
+            Console.Clear();
+
+            Task broadcast = Task.Run(async () =>
+            {
+                while (!cancel.Token.IsCancellationRequested)
+                {
+                    MorphSystem.LocalNode.Tell(Message.Create(MessageCommand.Ping, PingPayload.Create(NativeContract.Ledger.CurrentIndex(MorphSystem.StoreView))));
+                    await Task.Delay(morphProtocolSettings.TimePerBlock, cancel.Token);
+                }
+            });
+            Task task = Task.Run(async () =>
+            {
+                int maxLines = 0;
+                while (!cancel.Token.IsCancellationRequested)
+                {
+                    uint height = NativeContract.Ledger.CurrentIndex(MorphSystem.StoreView);
+                    uint headerHeight = MorphSystem.HeaderCache.Last?.Index ?? height;
+
+                    Console.SetCursorPosition(0, 0);
+                    WriteLineWithoutFlicker($"block: {height}/{headerHeight}  connected: {LocalNode.ConnectedCount}  unconnected: {LocalNode.UnconnectedCount}", Console.WindowWidth - 1);
+
+                    int linesWritten = 1;
+                    foreach (RemoteNode node in LocalNode.GetRemoteNodes().OrderByDescending(u => u.LastBlockIndex).Take(Console.WindowHeight - 2).ToArray())
+                    {
+                        Console.WriteLine(
+                            $"  ip: {node.Remote.Address,-15}\tport: {node.Remote.Port,-5}\tlisten: {node.ListenerTcpPort,-5}\theight: {node.LastBlockIndex,-7}");
+                        linesWritten++;
+                    }
+
+                    maxLines = Math.Max(maxLines, linesWritten);
+
+                    while (linesWritten < maxLines)
+                    {
+                        WriteLineWithoutFlicker("", Console.WindowWidth - 1);
+                        maxLines--;
+                    }
+
+                    await Task.Delay(500, cancel.Token);
+                }
+            });
+            ReadLine();
+            cancel.Cancel();
+            try { Task.WaitAll(task, broadcast); } catch { }
+            Console.WriteLine();
+            Console.CursorVisible = true;
         }
 
         [ConsoleCommand("fs start ir", Category = "FileStorageService", Description = "Start as inner ring node")]
@@ -87,7 +161,7 @@ namespace Neo.FileStorage.InnerRing
             var payload = Encoding.ASCII.GetBytes("hello");
             var obj = new Neo.FileStorage.API.Object.Object
             {
-                Header = new Header
+                Header = new OHeader
                 {
                     OwnerId = key.ToOwnerID(),
                     ContainerId = cid,
@@ -173,7 +247,7 @@ namespace Neo.FileStorage.InnerRing
                 sg.Members.AddRange(oids);
                 var obj = new Neo.FileStorage.API.Object.Object
                 {
-                    Header = new Header
+                    Header = new OHeader
                     {
                         OwnerId = key.ToOwnerID(),
                         ContainerId = cid,

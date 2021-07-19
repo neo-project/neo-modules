@@ -51,6 +51,7 @@ namespace Neo.FileStorage.InnerRing
                 morphSettings = MorphChainSettings.Load(config_path);
                 morphProtocolSettings = ProtocolSettings.Load(config_path);
                 MorphSystem = new(morphProtocolSettings, morphSettings.Storage.Engine, morphSettings.Storage.Path);
+                LocalNode = MorphSystem.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
                 MainSystem.ServiceAdded += NeoSystem_ServiceAdded;
                 Task.Run(async () =>
                 {
@@ -206,6 +207,7 @@ namespace Neo.FileStorage.InnerRing
         public override void Dispose()
         {
             base.Dispose();
+            _shutdownTokenSource.Cancel();
             innerRingService?.Tell(new InnerRingService.Stop() { });
         }
     }
