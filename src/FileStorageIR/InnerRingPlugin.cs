@@ -25,8 +25,8 @@ namespace Neo.FileStorage.InnerRing
     public partial class InnerRingPlugin : Plugin, IPersistencePlugin
     {
         public event EventHandler<Wallet> WalletChanged;
-        public const string MorphChainConfig = "config.morph.json";
-        public const string ChainDataFileName = "chain.morph.acc";
+        public const string MorphChainConfig = "morph.json";
+        public const string ChainDataFileName = "morph.acc";
         public override string Name => "innerRingService";
         public override string Description => "Provide distributed file storage inner ring service";
 
@@ -51,6 +51,7 @@ namespace Neo.FileStorage.InnerRing
                 morphSettings = MorphChainSettings.Load(config_path);
                 morphProtocolSettings = ProtocolSettings.Load(config_path);
                 MorphSystem = new(morphProtocolSettings, morphSettings.Storage.Engine, morphSettings.Storage.Path);
+                LocalNode = MorphSystem.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
                 MainSystem.ServiceAdded += NeoSystem_ServiceAdded;
                 Task.Run(async () =>
                 {
@@ -87,6 +88,7 @@ namespace Neo.FileStorage.InnerRing
 
         public void OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
+            if (innerRingService is null) return;
             bool flag;
             if (system.Settings.Network == MainSystem?.Settings.Network)
                 flag = true;
@@ -155,7 +157,7 @@ namespace Neo.FileStorage.InnerRing
                     foreach (var block in GetBlocks(system, zs))
                         yield return block;
 
-            var paths = Directory.EnumerateFiles(".", "chain.side.*.acc", SearchOption.TopDirectoryOnly).Concat(Directory.EnumerateFiles(".", "chain.side.*.acc.zip", SearchOption.TopDirectoryOnly)).Select(p => new
+            var paths = Directory.EnumerateFiles(".", $"morph.*.acc", SearchOption.TopDirectoryOnly).Concat(Directory.EnumerateFiles(".", $"morph.*.acc.zip", SearchOption.TopDirectoryOnly)).Select(p => new
             {
                 FileName = System.IO.Path.GetFileName(p),
                 Start = uint.Parse(Regex.Match(p, @"\d+").Value),
@@ -205,7 +207,8 @@ namespace Neo.FileStorage.InnerRing
         public override void Dispose()
         {
             base.Dispose();
-            innerRingService.Tell(new InnerRingService.Stop() { });
+            _shutdownTokenSource.Cancel();
+            innerRingService?.Tell(new InnerRingService.Stop() { });
         }
     }
 }

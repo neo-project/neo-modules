@@ -1,4 +1,3 @@
-
 namespace Neo.FileStorage.InnerRing.Services.Audit
 {
     public interface IReporter

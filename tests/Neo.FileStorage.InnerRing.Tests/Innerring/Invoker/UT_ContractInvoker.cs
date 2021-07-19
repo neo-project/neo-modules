@@ -32,21 +32,21 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
                 Wallet = wallet,
                 NeoSystem = system,
                 Blockchain = this.ActorOf(Props.Create(() => new ProcessorFakeActor())),
-                FsContractHash= TestBlockchain.FsContractHash,
-                
+                FsContractHash = TestBlockchain.FsContractHash,
+
             };
             morphInvoker = new MorphInvoker()
             {
                 Wallet = wallet,
                 NeoSystem = system,
                 Blockchain = this.ActorOf(Props.Create(() => new ProcessorFakeActor())),
-                ReputationContractHash= TestBlockchain.ReputationContractHash,
-                NetMapContractHash=TestBlockchain.NetmapContractHash,
+                ReputationContractHash = TestBlockchain.ReputationContractHash,
+                NetMapContractHash = TestBlockchain.NetmapContractHash,
                 BalanceContractHash = TestBlockchain.BalanceContractHash,
                 AuditContractHash = TestBlockchain.AuditContractHash,
                 ContainerContractHash = TestBlockchain.ContainerContractHash,
                 FsIdContractHash = TestBlockchain.FsIdContractHash,
-                AlphabetContractHash=TestBlockchain.AlphabetContractHash
+                AlphabetContractHash = TestBlockchain.AlphabetContractHash
             };
         }
 
@@ -234,17 +234,5 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
             Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
-
-        /*        [TestMethod]
-                public void InvokePutAuditResultTest()
-                {
-                    morphInvoker.InvokePutAuditResult();
-                    { "auditEpoch": "15", "containerID": { "value": "ffiBhFJACt+F1fABuKsfJZZ3PjA04SFp9P7tL2tmncA=" }, "publicKey": "ArNiK/QBe9/jF8WK7V9MdT8ga324lgRvp9d0u8S/f43C", "complete": true, "requests": 1, "passSG": [ { "value": "5Gv2Wk0MHyAOZdhhA5PBGGJ6aUryuA8MgXFstAJl4iA=" } ], "hit": 1 }
-                    IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-                    bool result = morphInvoker.AlphabetUpdate(new byte[1] { 0x01 }, accounts.Select(p => p.GetKey().PublicKey).ToArray());
-                    var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-                    Assert.AreEqual(result, true);
-                    Assert.IsNotNull(tx);
-                }*/
     }
 }

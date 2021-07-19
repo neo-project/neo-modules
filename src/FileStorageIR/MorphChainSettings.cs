@@ -1,4 +1,3 @@
-using System.Threading;
 using Microsoft.Extensions.Configuration;
 using Neo.Network.P2P;
 

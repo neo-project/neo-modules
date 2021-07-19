@@ -27,7 +27,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             system = TestBlockchain.TheNeoSystem;
             wallet = TestBlockchain.wallet;
             actor = this.ActorOf(Props.Create(() => new ProcessorFakeActor()));
-            mainInvoker = TestBlockchain.CreateTestMainInvoker(system,actor,wallet);
+            mainInvoker = TestBlockchain.CreateTestMainInvoker(system, actor, wallet);
             morphInvoker = TestBlockchain.CreateTestMorphInvoker(system, actor, wallet);
             state = new TestState() { alphabetIndex = 1 };
             processor = new AlphabetContractProcessor()

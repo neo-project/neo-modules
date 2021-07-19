@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Morph.Invoker;
 
 namespace Neo.FileStorage.InnerRing

@@ -96,7 +96,7 @@ namespace Neo.FileStorage.InnerRing.Services.Audit.Auditor
                     var hash = ContainerCommunacator.GetRangeHash(AuditTask, pair.N1, pair.Id, range);
                     pair.Hashes1.Add(hash);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Console.WriteLine($"node1 rang hash failed. range={range}. error={e}");
                     return;

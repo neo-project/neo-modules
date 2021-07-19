@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,24 +24,18 @@ namespace Neo.FileStorage.Storage
 {
     public class Startup
     {
-        public AccountingServiceImpl AccountingService;
-        public ContainerServiceImpl ContainerService;
-        public ControlServiceImpl ControlService;
-        public NetmapServiceImpl NetmapService;
-        public ObjectServiceImpl ObjectService;
-        public ReputationServiceImpl ReputationService;
-        public SessionServiceImpl SessionService;
+        private readonly Dictionary<Type, object> registedServices = new();
+
+        public void InjectSingletonService(Type t, object impl)
+        {
+            registedServices.Add(t, impl);
+        }
 
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddGrpc();
-            services.AddSingleton<APIAccountingService.AccountingServiceBase, AccountingServiceImpl>(p => AccountingService);
-            services.AddSingleton<APIContainerService.ContainerServiceBase, ContainerServiceImpl>(p => ContainerService);
-            services.AddSingleton<ControlService.ControlServiceBase, ControlServiceImpl>(p => ControlService);
-            services.AddSingleton<APINetmapService.NetmapServiceBase, NetmapServiceImpl>(p => NetmapService);
-            services.AddSingleton<APIObjectService.ObjectServiceBase, ObjectServiceImpl>(p => ObjectService);
-            services.AddSingleton<APIReputationService.ReputationServiceBase, ReputationServiceImpl>(p => ReputationService);
-            services.AddSingleton<APISessionService.SessionServiceBase, SessionServiceImpl>(p => SessionService);
+            foreach (var (t, s) in registedServices)
+                services.AddSingleton(t, s);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

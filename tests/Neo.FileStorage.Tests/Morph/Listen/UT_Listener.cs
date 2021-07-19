@@ -12,7 +12,7 @@ using Neo.SmartContract;
 using Neo.VM;
 using Neo.Wallets;
 
-namespace Neo.FileStorage.Tests.Morph.Event
+namespace Neo.FileStorage.Tests.Morph.Listen
 {
     [TestClass]
     public class UT_Listener : TestKit, IProcessor
