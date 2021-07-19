@@ -78,5 +78,9 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, string.Format("can't send approval tx for reputation value,peer_id:{0},error:{1}", reputationPutEvent.PeerID.ToHexString(), e.Message));
             }
         }
+
+        /*        public void CheckManagers(ulong epoch, mng apireputation.PeerID, peer apireputation.PeerID) {
+
+                }*/
     }
 }

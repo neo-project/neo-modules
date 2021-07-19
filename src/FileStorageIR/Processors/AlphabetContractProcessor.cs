@@ -27,7 +27,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             int index = State.AlphabetIndex();
             if (index < 0)
             {
-                Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore gas emission event");
+                Utility.Log(Name, LogLevel.Debug, $"non alphabet mode, ignore gas emission event,index:{index}");
                 return;
             }
             else if (index >= Settings.Default.AlphabetContractHash.Length)
@@ -82,7 +82,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(Name, LogLevel.Warning, string.Format("can't transfer gas,receiver:{0},amount:{1},error:{2}", key.EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion), gasPerNode, e.Message));
+                    Utility.Log(Name, LogLevel.Warning, string.Format("can't transfer gas,receiver:{0},amount:{1},error:{2}", key.EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion), gasPerNode, e));
                 }
             }
         }

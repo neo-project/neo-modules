@@ -103,11 +103,11 @@ namespace Neo.FileStorage.InnerRing
             EpochDuration = timers.GetValue("Epoch", 0u);
             AlphabetDuration = timers.GetValue("Emit", 0u);
             StopEstimationDMul = timers.GetSection("StopEstimation").GetValue("Mul", 1u);
-            StopEstimationDDiv = timers.GetSection("StopEstimation").GetValue("Div", 1u);
+            StopEstimationDDiv = timers.GetSection("StopEstimation").GetValue("Div", 4u);
             CollectBasicIncomeMul = timers.GetSection("CollectBasicIncome").GetValue("Mul", 1u);
-            CollectBasicIncomeDiv = timers.GetSection("CollectBasicIncome").GetValue("Div", 1u);
-            DistributeBasicIncomeMul = timers.GetSection("DistributeBasicIncome").GetValue("Mul", 1u);
-            DistributeBasicIncomeDiv = timers.GetSection("DistributeBasicIncome").GetValue("Div", 1u);
+            CollectBasicIncomeDiv = timers.GetSection("CollectBasicIncome").GetValue("Div", 2u);
+            DistributeBasicIncomeMul = timers.GetSection("DistributeBasicIncome").GetValue("Mul", 3u);
+            DistributeBasicIncomeDiv = timers.GetSection("DistributeBasicIncome").GetValue("Div", 4u);
 
             IConfigurationSection emit = section.GetSection("Emit");
             MintEmitCacheSize = emit.GetSection("Mint").GetValue("CacheSize", 1000);
@@ -139,8 +139,8 @@ namespace Neo.FileStorage.InnerRing
             AuditFee = settlement.GetValue("AuditFee", 0L);
 
             IConfigurationSection fee = section.GetSection("Fee");
-            MainChainFee = fee.GetValue("MainChain", 5000L);
-            SideChainFee = fee.GetValue("SideChain", 5000L);
+            MainChainFee = fee.GetValue("MainChain", 200000000L);
+            SideChainFee = fee.GetValue("SideChain", 200000000L);
         }
 
         public static void Load(IConfigurationSection section)

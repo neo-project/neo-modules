@@ -32,18 +32,8 @@ namespace Neo.FileStorage.Tests.InnerRing
         {
             system = TestBlockchain.TheNeoSystem;
             wallet = TestBlockchain.wallet;
-            mainInvoker = new MainInvoker
-            {
-                Wallet = wallet,
-                NeoSystem = system,
-                Blockchain = TestActor,
-            };
-            morphInvoker = new MorphInvoker()
-            {
-                Wallet = wallet,
-                NeoSystem = system,
-                Blockchain = TestActor
-            };
+            mainInvoker = TestBlockchain.CreateTestMainInvoker(system, TestActor, wallet);
+            morphInvoker = TestBlockchain.CreateTestMorphInvoker(system, TestActor, wallet);
             innerring = system.ActorSystem.ActorOf(Props(system, system, wallet, wallet, mainInvoker, morphInvoker));
         }
 

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Google.Protobuf;
 using Neo.FileStorage.API.Audit;
+using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
@@ -293,9 +294,9 @@ namespace Neo.FileStorage.InnerRing.Processors
                 {
                     auditResults = settlementDeps.AuditResultsForEpoch(epoch - 1);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
-                    Utility.Log("Calculator", LogLevel.Debug, "could not collect audit results,"+e);
+                    Utility.Log("Calculator", LogLevel.Debug, "could not collect audit results," + e);
                     return;
                 }
                 if (!auditResults.Any())
@@ -311,7 +312,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     {
                         auditResult = auditResult,
                         txTable = table,
-                        auditFee=Settings.Default.AuditFee
+                        auditFee = Settings.Default.AuditFee
                     });
                 }
                 Utility.Log("Calculator", LogLevel.Debug, "processing transfers");
@@ -351,7 +352,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 try
                 {
-                    ctx.cnrNodes=settlementDeps.ContainerNodes(ctx.eAudit, ctx.auditResult.ContainerId);
+                    ctx.cnrNodes = settlementDeps.ContainerNodes(ctx.eAudit, ctx.auditResult.ContainerId);
                     var empty = ctx.cnrNodes.Length == 0;
                     Utility.Log("Calculator", LogLevel.Debug, "empty list of container nodes");
                     return !empty;
@@ -406,12 +407,15 @@ namespace Neo.FileStorage.InnerRing.Processors
                 address.ContainerId = ctx.auditResult.ContainerId;
                 foreach (var sgID in ctx.auditResult.PassSg)
                 {
-                    try {
+                    try
+                    {
                         address.ObjectId = sgID;
                         var sgInfo = settlementDeps.SGInfo(address);
                         sumPassSGSize += sgInfo.ValidationDataSize;
-                    } catch {
-                        Utility.Log("Calculator", LogLevel.Debug, string.Format("could not get SG info,id:{0}",sgID));
+                    }
+                    catch
+                    {
+                        Utility.Log("Calculator", LogLevel.Debug, string.Format("could not get SG info,id:{0}", sgID));
                         return false;
                     }
                 }
@@ -446,7 +450,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     if (fee.CompareTo(BigInteger.Zero) == 0) fee = BigInteger.Add(fee, BigInteger.One);
                     ctx.txTable.Transfer(new TransferTable.TransferTx() { from = cnrOwner, to = ownerID, amount = fee });
                 }
-                var auditIR = OwnerID.Parser.ParseFrom(ctx.auditResult.PublicKey);
+                var auditIR = ctx.auditResult.PublicKey.ToByteArray().PublicKeyToOwnerID();
                 ctx.txTable.Transfer(new TransferTable.TransferTx() { from = cnrOwner, to = auditIR, amount = ctx.auditFee });
                 return false;
             }

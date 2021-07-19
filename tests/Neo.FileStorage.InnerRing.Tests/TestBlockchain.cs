@@ -38,7 +38,7 @@ namespace Neo.FileStorage.InnerRing.Tests
         public static UInt160 NetmapContractHash { get; private set; }
         public static UInt160 ProcessContractHash { get; private set; }
         public static UInt160 ProxyContractHash { get; private set; }
-        public static UInt160[] AlphabetContractHash=new UInt160[0];
+        public static UInt160[] AlphabetContractHash = new UInt160[0];
         public static readonly List<UInt160> Contracts = new();
         public static readonly NeoSystem TheNeoSystem;
         public static NEP6Wallet wallet;
@@ -73,9 +73,10 @@ namespace Neo.FileStorage.InnerRing.Tests
             UInt160 from = Contract.GetBFTAddress(TheNeoSystem.Settings.StandbyValidators);
             UInt160 to = accounts.ToArray()[0].ScriptHash;
             FakeSigners signers = new FakeSigners(from);
-            byte[] script = NativeContract.GAS.Hash.MakeScript("transfer", from, to, 500_00000000, null);
+            byte[] script = NativeContract.GAS.Hash.MakeScript("transfer", from, to, 100000_00000000, null);
             using var snapshot = TheNeoSystem.GetSnapshot();
             ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, container: signers, null, TheNeoSystem.Settings, 0, 2000000000);
+            Settings.Default.validators = accounts.Select(p => p.GetKey().PublicKey).ToArray();
             //Fake deploy contract
             string DeployContractsCasesPath = "./Config/Contracts/DeployContractCases.json";
             IEnumerable<IConfigurationSection> deployContracts = new ConfigurationBuilder().AddJsonFile(DeployContractsCasesPath, optional: true).Build().GetSection("DeployContracts").GetChildren();
@@ -401,7 +402,8 @@ namespace Neo.FileStorage.InnerRing.Tests
                 Console.WriteLine($"{functionName} execute success.");
         }
 
-        public static MainInvoker CreateTestMainInvoker(NeoSystem system, IActorRef testActor, Wallet wallet) {
+        public static MainInvoker CreateTestMainInvoker(NeoSystem system, IActorRef testActor, Wallet wallet)
+        {
             return new MainInvoker
             {
                 Wallet = wallet,

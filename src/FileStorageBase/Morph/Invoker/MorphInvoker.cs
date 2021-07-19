@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Akka.Actor;
 using Neo.Cryptography.ECC;
@@ -80,24 +79,9 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public void TransferGas(UInt160 to, long amount)
         {
-            SnapshotCache snapshotCache = NeoSystem.GetSnapshot();
-            UInt160 assetId = NativeContract.GAS.Hash;
-            AssetDescriptor descriptor = new AssetDescriptor(snapshotCache, NeoSystem.Settings, assetId);
-            BigDecimal pamount = BigDecimal.Parse(amount.ToString(), descriptor.Decimals);
-            Transaction tx = Wallet.MakeTransaction(snapshotCache, new[]
-            {
-                new TransferOutput
-                {
-                    AssetId = assetId,
-                    Value = pamount,
-                    ScriptHash = to
-                }
-            });
-            if (tx == null) throw new Exception("Insufficient funds");
-            ContractParametersContext data = new ContractParametersContext(snapshotCache, tx, NeoSystem.Settings.Network);
-            Wallet.Sign(data);
-            tx.Witnesses = data.GetWitnesses();
-            Blockchain.Tell(tx);
+            var account = Wallet.GetAccounts().ToArray()[0].ScriptHash;
+            var result = Invoke(out var txId, NativeContract.GAS.Hash, "transfer", 0, account, to, amount, new byte[0]);
+            Utility.Log("", LogLevel.Debug, string.Format("native gas transfer invoke,to:{0},tx_hash:{1}", to.ToString(), txId.ToString()));
         }
 
         public long GasBalance()
