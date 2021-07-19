@@ -25,8 +25,8 @@ namespace Neo.FileStorage.InnerRing
     public partial class InnerRingPlugin : Plugin, IPersistencePlugin
     {
         public event EventHandler<Wallet> WalletChanged;
-        public const string MorphChainConfig = "config.morph.json";
-        public const string ChainDataFileName = "chain.morph";
+        public const string MorphChainConfig = "morph.json";
+        public const string ChainDataFileName = "morph.acc";
         public override string Name => "innerRingService";
         public override string Description => "Provide distributed file storage inner ring service";
 
@@ -142,13 +142,13 @@ namespace Neo.FileStorage.InnerRing
 
         private IEnumerable<Block> GetBlocksFromFile(NeoSystem system)
         {
-            string pathAcc = ChainDataFileName + ".acc";
+            string pathAcc = ChainDataFileName;
             if (File.Exists(pathAcc))
                 using (FileStream fs = new(pathAcc, FileMode.Open, FileAccess.Read, FileShare.Read))
                     foreach (var block in GetBlocks(system, fs))
                         yield return block;
 
-            string pathAccZip = ChainDataFileName + ".zip";
+            string pathAccZip = pathAcc + ".zip";
             if (File.Exists(pathAccZip))
                 using (FileStream fs = new(pathAccZip, FileMode.Open, FileAccess.Read, FileShare.Read))
                 using (ZipArchive zip = new(fs, ZipArchiveMode.Read))
@@ -156,7 +156,7 @@ namespace Neo.FileStorage.InnerRing
                     foreach (var block in GetBlocks(system, zs))
                         yield return block;
 
-            var paths = Directory.EnumerateFiles(".", $"{ChainDataFileName}.*.acc", SearchOption.TopDirectoryOnly).Concat(Directory.EnumerateFiles(".", $"{ChainDataFileName}.*.acc.zip", SearchOption.TopDirectoryOnly)).Select(p => new
+            var paths = Directory.EnumerateFiles(".", $"morph.*.acc", SearchOption.TopDirectoryOnly).Concat(Directory.EnumerateFiles(".", $"morph.*.acc.zip", SearchOption.TopDirectoryOnly)).Select(p => new
             {
                 FileName = System.IO.Path.GetFileName(p),
                 Start = uint.Parse(Regex.Match(p, @"\d+").Value),
