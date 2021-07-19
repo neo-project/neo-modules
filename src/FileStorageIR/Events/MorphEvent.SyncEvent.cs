@@ -1,6 +1,5 @@
-using Neo.FileStorage.Morph.Event;
-using Neo.SmartContract.Native;
 using System;
+using Neo.FileStorage.Morph.Event;
 
 namespace Neo.FileStorage.InnerRing.Events
 {

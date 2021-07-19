@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Neo.FileStorage.InnerRing.Utils.Locode.Column

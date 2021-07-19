@@ -38,7 +38,7 @@ namespace Neo.FileStorage.InnerRing.Tests
         public static UInt160 NetmapContractHash { get; private set; }
         public static UInt160 ProcessContractHash { get; private set; }
         public static UInt160 ProxyContractHash { get; private set; }
-        public static UInt160[] AlphabetContractHash=new UInt160[0];
+        public static UInt160[] AlphabetContractHash = new UInt160[0];
         public static readonly List<UInt160> Contracts = new();
         public static readonly NeoSystem TheNeoSystem;
         public static NEP6Wallet wallet;
@@ -401,7 +401,8 @@ namespace Neo.FileStorage.InnerRing.Tests
                 Console.WriteLine($"{functionName} execute success.");
         }
 
-        public static MainInvoker CreateTestMainInvoker(NeoSystem system, IActorRef testActor, Wallet wallet) {
+        public static MainInvoker CreateTestMainInvoker(NeoSystem system, IActorRef testActor, Wallet wallet)
+        {
             return new MainInvoker
             {
                 Wallet = wallet,

@@ -293,9 +293,9 @@ namespace Neo.FileStorage.InnerRing.Processors
                 {
                     auditResults = settlementDeps.AuditResultsForEpoch(epoch - 1);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
-                    Utility.Log("Calculator", LogLevel.Debug, "could not collect audit results,"+e);
+                    Utility.Log("Calculator", LogLevel.Debug, "could not collect audit results," + e);
                     return;
                 }
                 if (!auditResults.Any())
@@ -311,7 +311,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     {
                         auditResult = auditResult,
                         txTable = table,
-                        auditFee=Settings.Default.AuditFee
+                        auditFee = Settings.Default.AuditFee
                     });
                 }
                 Utility.Log("Calculator", LogLevel.Debug, "processing transfers");
@@ -351,7 +351,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 try
                 {
-                    ctx.cnrNodes=settlementDeps.ContainerNodes(ctx.eAudit, ctx.auditResult.ContainerId);
+                    ctx.cnrNodes = settlementDeps.ContainerNodes(ctx.eAudit, ctx.auditResult.ContainerId);
                     var empty = ctx.cnrNodes.Length == 0;
                     Utility.Log("Calculator", LogLevel.Debug, "empty list of container nodes");
                     return !empty;
@@ -406,12 +406,15 @@ namespace Neo.FileStorage.InnerRing.Processors
                 address.ContainerId = ctx.auditResult.ContainerId;
                 foreach (var sgID in ctx.auditResult.PassSg)
                 {
-                    try {
+                    try
+                    {
                         address.ObjectId = sgID;
                         var sgInfo = settlementDeps.SGInfo(address);
                         sumPassSGSize += sgInfo.ValidationDataSize;
-                    } catch {
-                        Utility.Log("Calculator", LogLevel.Debug, string.Format("could not get SG info,id:{0}",sgID));
+                    }
+                    catch
+                    {
+                        Utility.Log("Calculator", LogLevel.Debug, string.Format("could not get SG info,id:{0}", sgID));
                         return false;
                     }
                 }

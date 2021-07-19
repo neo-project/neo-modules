@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Neo.Cryptography.ECC;
-using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Morph.Event;
 using Neo.SmartContract;
 using Neo.Wallets;
