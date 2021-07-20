@@ -126,7 +126,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Writer
 
         private void PrepareInitPrm(PutInitPrm prm)
         {
-            var nm = PutService.MorphInvoker.Snapshot(0);
+            var nm = PutService.MorphInvoker.GetNetMapByDiff(0);
             var container = PutService.MorphInvoker.GetContainer(prm.Header.ContainerId)?.Container;
             var builder = new NetworkMapBuilder(nm);
 

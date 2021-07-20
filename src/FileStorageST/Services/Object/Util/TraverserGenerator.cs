@@ -23,7 +23,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Util
 
         public Traverser GenerateTraverser(FSAddress address, ulong epoch)
         {
-            var nm = morphInvoker.EpochSnapshot(epoch);
+            var nm = morphInvoker.GetNetMapByEpoch(epoch);
             if (nm is null)
             {
                 throw new Exception(nameof(TraverserGenerator) + " could not get latest netmap");

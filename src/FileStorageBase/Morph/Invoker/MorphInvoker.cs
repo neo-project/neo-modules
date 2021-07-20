@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Akka.Actor;
 using Neo.Cryptography.ECC;
-using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Reputation;
 using Neo.IO;
 using Neo.Network.P2P.Payloads;
@@ -103,11 +102,6 @@ namespace Neo.FileStorage.Morph.Invoker
             var height = TestInvoke(NativeContract.Ledger.Hash, "currentIndex").ResultStack[0].GetInteger();
             var result = TestInvoke(NativeContract.RoleManagement.Hash, "getDesignatedByRole", Role.NeoFSAlphabetNode, height);
             return ((VM.Types.Array)result.ResultStack[0]).Select(p => p.GetSpan().AsSerializable<ECPoint>()).ToArray();
-        }
-
-        public NetMap GetNetMapByEpoch(ulong epoch)
-        {
-            return EpochSnapshot(epoch);
         }
     }
 }

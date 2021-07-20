@@ -73,7 +73,7 @@ namespace Neo.FileStorage.Morph.Invoker
             return res.Select(p => NodeInfo.Parser.ParseFrom(p)).ToArray();
         }
 
-        public NetMap Snapshot(int different)
+        public NetMap GetNetMapByDiff(int different)
         {
             InvokeResult result = TestInvoke(NetMapContractHash, SnapshotMethod, different);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (Snapshot)");
@@ -94,7 +94,7 @@ namespace Neo.FileStorage.Morph.Invoker
             return new(res.Select(p => NodeInfo.Parser.ParseFrom(p)).ToList().InfoToNodes());
         }
 
-        public NetMap EpochSnapshot(ulong epoch)
+        public NetMap GetNetMapByEpoch(ulong epoch)
         {
             InvokeResult result = TestInvoke(NetMapContractHash, EpochSnapshotMethod, epoch);
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (EpochSnapshot)");
