@@ -1,8 +1,8 @@
 {
   "PluginConfiguration": {
     "AutoStart": false,
-    "WalletPath": "./FSStorage/wallet.json",
-    "Password": "123456",
+    "WalletPath": "./wallet.json",
+    "Password": "",
     "Contracts": {
       "Netmap": "0xfe047a1edfff3ace3df076d91b06842f8e4277c1",
       "NeoFS": "0x970460362a412f251cae676609e9ed250ff8af50",
