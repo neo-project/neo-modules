@@ -27,9 +27,9 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public CleanupTable NetmapSnapshot;
         public Validator NodeValidator;
-        public Action<IContractEvent> HandleNewAudit;
-        public Action<IContractEvent> HandleAuditSettlements;
-        public Action<IContractEvent> HandleAlphabetSync;
+        public Action<ContractEvent> HandleNewAudit;
+        public Action<ContractEvent> HandleAuditSettlements;
+        public Action<ContractEvent> HandleAlphabetSync;
 
         public override HandlerInfo[] ListenerHandlers()
         {
@@ -65,35 +65,35 @@ namespace Neo.FileStorage.InnerRing.Processors
             return new ParserInfo[] { newEpochParser, addPeerParser, updatePeerParser };
         }
 
-        public void HandleNewEpochTick(IContractEvent timersEvent)
+        public void HandleNewEpochTick(ContractEvent timersEvent)
         {
             NewEpochTickEvent newEpochTickEvent = (NewEpochTickEvent)timersEvent;
             Utility.Log(Name, LogLevel.Info, "tick:type:epoch");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessNewEpochTick(newEpochTickEvent)) });
         }
 
-        public void HandleNewEpoch(IContractEvent morphEvent)
+        public void HandleNewEpoch(ContractEvent morphEvent)
         {
             NewEpochEvent newEpochEvent = (NewEpochEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:new epoch,value:{0}", newEpochEvent.EpochNumber.ToString()));
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessNewEpoch(newEpochEvent)) });
         }
 
-        public void HandleAddPeer(IContractEvent morphEvent)
+        public void HandleAddPeer(ContractEvent morphEvent)
         {
             AddPeerEvent addPeerEvent = (AddPeerEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, "notification:type:add peer");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessAddPeer(addPeerEvent)) });
         }
 
-        public void HandleUpdateState(IContractEvent morphEvent)
+        public void HandleUpdateState(ContractEvent morphEvent)
         {
             UpdatePeerEvent updateStateEvent = (UpdatePeerEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:update peer state,key:{0}", updateStateEvent.PublicKey.EncodePoint(true).ToHexString()));
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessUpdateState(updateStateEvent)) });
         }
 
-        public void HandleCleanupTick(IContractEvent morphEvent)
+        public void HandleCleanupTick(ContractEvent morphEvent)
         {
             if (!NetmapSnapshot.Enabled)
             {

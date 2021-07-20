@@ -1,7 +1,5 @@
 namespace Neo.FileStorage.Morph.Event
 {
-    public interface IContractEvent
-    {
-        void ContractEvent();
-    }
+    public abstract class ContractEvent
+    { }
 }

@@ -6,13 +6,11 @@ namespace Neo.FileStorage.Morph.Event
 {
     public partial class MorphEvent
     {
-        public class ContainerDeleteEvent : IContractEvent
+        public class ContainerDeleteEvent : ContractEvent
         {
             public byte[] ContainerID;
             public byte[] Signature;
             public byte[] token;
-
-            public void ContractEvent() { }
 
             public static ContainerDeleteEvent ParseContainerDeleteEvent(VM.Types.Array eventParams)
             {
@@ -25,14 +23,12 @@ namespace Neo.FileStorage.Morph.Event
             }
         }
 
-        public class ContainerPutEvent : IContractEvent
+        public class ContainerPutEvent : ContractEvent
         {
             public byte[] RawContainer;
             public byte[] Signature;
             public byte[] PublicKey;
             public byte[] token;
-
-            public void ContractEvent() { }
 
             public static ContainerPutEvent ParseContainerPutEvent(VM.Types.Array eventParams)
             {
@@ -46,14 +42,12 @@ namespace Neo.FileStorage.Morph.Event
             }
         }
 
-        public class ContainerSetEACLEvent : IContractEvent
+        public class ContainerSetEACLEvent : ContractEvent
         {
             public byte[] Table;
             public byte[] Signature;
             public byte[] PublicKey;
             public byte[] Token;
-
-            public void ContractEvent() { }
 
             public static ContainerSetEACLEvent ParseContainerSetEACLEvent(VM.Types.Array eventParams)
             {
@@ -67,11 +61,9 @@ namespace Neo.FileStorage.Morph.Event
             }
         }
 
-        public class StartEstimationEvent : IContractEvent
+        public class StartEstimationEvent : ContractEvent
         {
             public ulong Epoch;
-
-            public void ContractEvent() { }
 
             public static StartEstimationEvent ParseStartEstimationEvent(VM.Types.Array eventParams)
             {
@@ -82,11 +74,9 @@ namespace Neo.FileStorage.Morph.Event
             }
         }
 
-        public class StopEstimationEvent : IContractEvent
+        public class StopEstimationEvent : ContractEvent
         {
             public ulong Epoch;
-
-            public void ContractEvent() { }
 
             public static StopEstimationEvent ParseStopEstimationEvent(VM.Types.Array eventParams)
             {

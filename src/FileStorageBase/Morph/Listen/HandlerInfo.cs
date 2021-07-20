@@ -6,6 +6,6 @@ namespace Neo.FileStorage.Morph.Listen
     public class HandlerInfo
     {
         public ScriptHashWithType ScriptHashWithType;
-        public Action<IContractEvent> Handler;
+        public Action<ContractEvent> Handler;
     }
 }

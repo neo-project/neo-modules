@@ -70,7 +70,7 @@ namespace Neo.FileStorage.InnerRing.Timer
 
         public class SubEpochEventHandler
         {
-            public Action<IContractEvent> handler;
+            public Action<ContractEvent> handler;
             public uint durationMul;
             public uint durationDiv;
         }

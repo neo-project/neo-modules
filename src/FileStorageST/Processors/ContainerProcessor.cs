@@ -28,7 +28,7 @@ namespace Neo.FileStorage.Storage.Processors
             return Array.Empty<HandlerInfo>();
         }
 
-        public void AddStartEstimateContainerParser(Func<VM.Types.Array, IContractEvent> parser)
+        public void AddStartEstimateContainerParser(Func<VM.Types.Array, ContractEvent> parser)
         {
             parsers.Add(new()
             {
@@ -41,7 +41,7 @@ namespace Neo.FileStorage.Storage.Processors
             });
         }
 
-        public void AddStopEstimateContainerParser(Func<VM.Types.Array, IContractEvent> parser)
+        public void AddStopEstimateContainerParser(Func<VM.Types.Array, ContractEvent> parser)
         {
             parsers.Add(new()
             {
@@ -54,7 +54,7 @@ namespace Neo.FileStorage.Storage.Processors
             });
         }
 
-        public void AddStartEstimateHandler(Action<IContractEvent> handler)
+        public void AddStartEstimateHandler(Action<ContractEvent> handler)
         {
             handlers.Add(new()
             {
@@ -67,7 +67,7 @@ namespace Neo.FileStorage.Storage.Processors
             });
         }
 
-        public void AddStopEstimateHandler(Action<IContractEvent> handler)
+        public void AddStopEstimateHandler(Action<ContractEvent> handler)
         {
             handlers.Add(new()
             {

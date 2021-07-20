@@ -443,13 +443,13 @@ namespace Neo.FileStorage.InnerRing
             epochTimer.Reset();
         }
 
-        public Action<IContractEvent> OnlyActiveEventHandler(Action<IContractEvent> f)
+        public Action<Morph.Event.ContractEvent> OnlyActiveEventHandler(Action<Morph.Event.ContractEvent> f)
         {
-            return (IContractEvent morphEvent) => { if (IsActive()) f(morphEvent); };
+            return (Morph.Event.ContractEvent morphEvent) => { if (IsActive()) f(morphEvent); };
         }
-        public Action<IContractEvent> OnlyAlphabetEventHandler(Action<IContractEvent> f)
+        public Action<Morph.Event.ContractEvent> OnlyAlphabetEventHandler(Action<Morph.Event.ContractEvent> f)
         {
-            return (IContractEvent morphEvent) => { if (IsAlphabet()) f(morphEvent); };
+            return (Morph.Event.ContractEvent morphEvent) => { if (IsAlphabet()) f(morphEvent); };
         }
 
         public static Props Props(NeoSystem main, NeoSystem side, Wallet pMainWallet = null, Wallet pSideWallet = null, MainInvoker pMainNetClient = null, MorphInvoker pMorphClient = null)

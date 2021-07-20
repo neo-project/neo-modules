@@ -15,7 +15,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         public override string Name => "AlphabetContractProcessor";
         public ulong StorageEmission => Settings.Default.StorageEmission;
 
-        public void HandleGasEmission(IContractEvent morphEvent)
+        public void HandleGasEmission(ContractEvent morphEvent)
         {
             Utility.Log(Name, LogLevel.Info, "tick,type:alphabet gas emit");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessEmit()) });

@@ -69,10 +69,10 @@ namespace Neo.FileStorage.Tests.Morph.Listen
             {
                 notify = notify
             });
-            var result = (TestContractEvent)ExpectMsg<IContractEvent>();
+            var result = (TestContractEvent)ExpectMsg<ContractEvent>();
             Assert.IsNotNull(result);
             Assert.AreEqual(result.current, 1);
-            result = (TestContractEvent)ExpectMsg<IContractEvent>();
+            result = (TestContractEvent)ExpectMsg<ContractEvent>();
             Assert.IsNotNull(result);
             Assert.AreEqual(result.current, 2);
             ExpectNoMsg();
@@ -198,7 +198,7 @@ namespace Neo.FileStorage.Tests.Morph.Listen
             return null;
         }
 
-        private void F(IContractEvent contractEvent)
+        private void F(ContractEvent contractEvent)
         {
             var testEvent = new TestContractEvent();
             TestContractEvent.count++;
@@ -206,7 +206,7 @@ namespace Neo.FileStorage.Tests.Morph.Listen
             TestActor.Tell(testEvent);
         }
 
-        public IContractEvent ParseContractEvent(VM.Types.Array eventParams)
+        public ContractEvent ParseContractEvent(VM.Types.Array eventParams)
         {
             if (eventParams.Count != 1) throw new Exception();
             return new TestContractEvent();
@@ -217,13 +217,10 @@ namespace Neo.FileStorage.Tests.Morph.Listen
             return "Listener test"; ;
         }
 
-        public class TestContractEvent : IContractEvent
+        public class TestContractEvent : ContractEvent
         {
             public int current;
             public static int count;
-            public void ContractEvent()
-            {
-            }
         }
     }
 }

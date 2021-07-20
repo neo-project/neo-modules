@@ -28,7 +28,7 @@ namespace Neo.FileStorage.Storage.Processors
             return Array.Empty<HandlerInfo>();
         }
 
-        public void AddEpochParser(Func<VM.Types.Array, IContractEvent> parser)
+        public void AddEpochParser(Func<VM.Types.Array, ContractEvent> parser)
         {
             parsers.Add(new()
             {
@@ -41,7 +41,7 @@ namespace Neo.FileStorage.Storage.Processors
             });
         }
 
-        public void AddEpochHandler(Action<IContractEvent> handler)
+        public void AddEpochHandler(Action<ContractEvent> handler)
         {
             handlers.Add(new()
             {

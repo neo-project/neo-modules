@@ -94,13 +94,13 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
                 HandleAlphabetSync = governanceProcessor.HandleAlphabetSync,
             };
         }
-        public Action<IContractEvent> OnlyActiveEventHandler(Action<IContractEvent> f)
+        public Action<ContractEvent> OnlyActiveEventHandler(Action<ContractEvent> f)
         {
-            return (IContractEvent morphEvent) => { if (state.IsActive()) f(morphEvent); };
+            return (ContractEvent morphEvent) => { if (state.IsActive()) f(morphEvent); };
         }
-        public Action<IContractEvent> OnlyAlphabetEventHandler(Action<IContractEvent> f)
+        public Action<ContractEvent> OnlyAlphabetEventHandler(Action<ContractEvent> f)
         {
-            return (IContractEvent morphEvent) => { if (state.IsAlphabet()) f(morphEvent); };
+            return (ContractEvent morphEvent) => { if (state.IsAlphabet()) f(morphEvent); };
         }
 
         [TestMethod]

@@ -37,7 +37,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             return new ParserInfo[] { designateParser };
         }
 
-        public void HandleAlphabetSync(IContractEvent morphEvent)
+        public void HandleAlphabetSync(ContractEvent morphEvent)
         {
             string type;
             if (morphEvent is SyncEvent) type = "sync";

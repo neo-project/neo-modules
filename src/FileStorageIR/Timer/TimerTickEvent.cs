@@ -4,21 +4,17 @@ namespace Neo.FileStorage.InnerRing.Timer
 {
     public class TimerTickEvent
     {
-        public class NewEpochTickEvent : IContractEvent
+        public class NewEpochTickEvent : ContractEvent
         {
-            public void ContractEvent() { }
         }
 
-        public class NewAlphabetEmitTickEvent : IContractEvent
+        public class NewAlphabetEmitTickEvent : ContractEvent
         {
-            public void ContractEvent() { }
         }
 
-        public class NetmapCleanupTickEvent : IContractEvent
+        public class NetmapCleanupTickEvent : ContractEvent
         {
             public ulong Epoch;
-
-            public void ContractEvent() { }
         }
     }
 }
