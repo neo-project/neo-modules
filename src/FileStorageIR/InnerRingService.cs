@@ -14,6 +14,7 @@ using Neo.FileStorage.InnerRing.Utils.Locode.Db;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Morph.Listen;
+using Neo.FileStorage.Reputation;
 using Neo.FileStorage.Utils;
 using Neo.IO;
 using Neo.IO.Data.LevelDB;
@@ -217,6 +218,7 @@ namespace Neo.FileStorage.InnerRing
             {
                 MorphCli = morphClient,
                 State = this,
+                mngBuilder = new ManagerBuilder() { NetmapSource = morphClient },
                 WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("AlphabetContract Processor", Settings.Default.AlphabetContractWorkersSize))
             };
             morphEventListener.Tell(new BindProcessorEvent() { Processor = fsContractProcessor });

@@ -1,10 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Google.Protobuf;
 using Neo.FileStorage.API.Reputation;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Listen;
+using Neo.FileStorage.Reputation;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
 using static Neo.FileStorage.Utils.WorkerPool;
 
@@ -14,6 +17,7 @@ namespace Neo.FileStorage.InnerRing.Processors
     {
         public override string Name => "ReputationContractProcessor";
         private const string PutReputationNotification = "reputationPut";
+        public ManagerBuilder mngBuilder;
 
         public override HandlerInfo[] ListenerHandlers()
         {
@@ -76,7 +80,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Info, $"ignore reputation value, reason:wrong manager,errot:{e}");
+                Utility.Log(Name, LogLevel.Info, $"ignore reputation value, reason:wrong manager,error:{e}");
                 return;
             }
             try
@@ -91,7 +95,13 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void CheckManagers(ulong epoch, PeerID mng, PeerID peer)
         {
-            //to do
+            List<API.Netmap.NodeInfo> mm = mngBuilder.BuilderManagers(epoch, peer);
+            foreach (var m in mm)
+            {
+                if (mng.PublicKey.ToByteArray().SequenceEqual(m.ToByteArray()))
+                    return;
+            }
+            throw new Exception("got manager that is incorrect for peer");
         }
     }
 }
