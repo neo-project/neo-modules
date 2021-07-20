@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Neo.FileStorage.API.Reputation;
 
 namespace Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Storage.Daughters
 {
@@ -6,7 +7,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Storage.Daughter
     {
         private readonly ConcurrentDictionary<ulong, DaughterStorage> store = new();
 
-        public void Put(ulong epoch, Trust t)
+        public void Put(ulong epoch, PeerToPeerTrust t)
         {
             if (!store.TryGetValue(epoch, out DaughterStorage storage))
             {

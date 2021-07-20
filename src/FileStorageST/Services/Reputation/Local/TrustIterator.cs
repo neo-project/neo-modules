@@ -1,7 +1,10 @@
 using System;
 using System.Linq;
+using Google.Protobuf;
+using Neo.FileStorage.API.Reputation;
 using Neo.FileStorage.Storage.Services.Reputaion.Common;
 using Neo.FileStorage.Storage.Services.Reputaion.Local.Storage;
+using Neo.Network.P2P;
 
 namespace Neo.FileStorage.Storage.Services.Reputaion.Local
 {
@@ -11,11 +14,17 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Local
         public LocalTrustStorage LocalTrustStorage { get; init; }
         public EpochTrustStorage EpochTrustStorage { get; init; }
 
-        public void Iterate(Action<Trust> handler)
+        public void Iterate(Action<PeerToPeerTrust> handler)
         {
             if (EpochTrustStorage is not null)
             {
-                EpochTrustStorage.Iterate(handler);
+                EpochTrustStorage.Iterate(t =>
+                {
+                    PeerToPeerTrust trust = new();
+                    trust.Trust = t;
+                    trust.TrustingPeer = LocalTrustStorage.LocalKey;
+                    handler(trust);
+                });
                 return;
             }
             var nm = LocalTrustStorage.NetmapCache.GetNetMapByEpoch(Context.Epoch);
@@ -30,11 +39,14 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Local
             for (int i = 0; i < nm.Nodes.Count; i++)
             {
                 if (i == lindex) continue;
-                Trust t = new()
+                PeerToPeerTrust t = new()
                 {
-                    Peer = nm.Nodes[i].PublicKey,
-                    Trusting = LocalTrustStorage.LocalKey,
-                    Value = p,
+                    TrustingPeer = LocalTrustStorage.LocalKey,
+                    Trust = new()
+                    {
+                        Peer = nm.Nodes[i].PublicKey,
+                        Value = p,
+                    },
                 };
                 handler(t);
             }

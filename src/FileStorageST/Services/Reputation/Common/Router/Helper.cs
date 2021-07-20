@@ -1,12 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.API.Reputation;
 
 namespace Neo.FileStorage.Storage.Services.Reputaion.Common.Route
 {
     public static class Helper
     {
-        public static bool CheckRoute(this IBuilder builder, ulong epoch, Trust trust, List<NodeInfo> route)
+        public static bool CheckRoute(this IBuilder builder, ulong epoch, PeerToPeerTrust trust, List<NodeInfo> route)
         {
             for (int i = 0; i < route.Count; i++)
             {

@@ -1,4 +1,5 @@
 using System.Linq;
+using Neo.FileStorage.API.Reputation;
 using Neo.FileStorage.Storage.Cache;
 
 namespace Neo.FileStorage.Storage.Services.Reputaion.Intermediate

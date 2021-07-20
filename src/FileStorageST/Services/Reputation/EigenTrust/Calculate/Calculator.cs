@@ -1,6 +1,6 @@
 using System;
-using System.Threading.Tasks;
 using Akka.Actor;
+using Neo.FileStorage.API.Reputation;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Storage.Services.Reputaion.Common.Route;
 using Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Storage.Consumers;
@@ -58,7 +58,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Calculate
                         try
                         {
                             var init_t = InitialTrustSource.InitialTrust(p);
-                            t.Value *= init_t;
+                            t.Trust.Value *= init_t;
                             intermediate_writer.Write(t);
                         }
                         catch
@@ -86,7 +86,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Calculate
                 {
                     if (!last && context.Cancellation.IsCancellationRequested)
                         throw new InvalidOperationException();
-                    sum += t.Value;
+                    sum += t.Trust.Value;
                 });
             }
             catch
@@ -101,13 +101,16 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Calculate
                 Index = context.Index,
                 Trust = new()
                 {
-                    Peer = peer,
+                    Trust = new()
+                    {
+                        Peer = peer,
+                    }
                 }
             };
             if (last)
             {
                 var final_writer = FinalWriteTarget.InitIntermediateWriter();
-                it.Trust.Value = sum;
+                it.Trust.Trust.Value = sum;
                 final_writer.WriteIntermediateTrust(it);
             }
             else
@@ -119,7 +122,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Calculate
                     {
                         if (context.Cancellation.IsCancellationRequested)
                             throw new InvalidOperationException();
-                        t.Value *= sum;
+                        t.Trust.Value *= sum;
                         intermediate_writer.Write(t);
                     });
                     intermediate_writer.Close();

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Neo.FileStorage.API.Reputation;
 
 namespace Neo.FileStorage.Storage.Services.Reputaion.Common.Route
 {
@@ -11,7 +12,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Common.Route
         private readonly Dictionary<string, IWriter> servers = new();
         private readonly object writeLock = new();
 
-        public void Write(Trust trust)
+        public void Write(PeerToPeerTrust trust)
         {
             lock (writeLock)
             {

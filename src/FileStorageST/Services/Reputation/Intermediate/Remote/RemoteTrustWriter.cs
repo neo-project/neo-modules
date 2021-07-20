@@ -15,24 +15,9 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Intermediate.Remote
         public IFSClient Client { get; init; }
         private readonly List<PeerToPeerTrust> buffer = new();
 
-        public void Write(Trust t)
+        public void Write(PeerToPeerTrust t)
         {
-            PeerToPeerTrust trust = new()
-            {
-                TrustingPeer = new()
-                {
-                    PublicKey = ByteString.CopyFrom(t.Trusting)
-                },
-                Trust = new()
-                {
-                    Peer = new()
-                    {
-                        PublicKey = ByteString.CopyFrom(t.Peer),
-                    },
-                    Value = t.Value
-                }
-            };
-            buffer.Add(trust);
+            buffer.Add(t);
         }
 
         public void Close()

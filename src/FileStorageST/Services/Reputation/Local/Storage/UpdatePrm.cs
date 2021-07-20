@@ -1,4 +1,6 @@
 using System;
+using Neo.FileStorage.API.Reputation;
+using Neo.Network.P2P;
 
 namespace Neo.FileStorage.Storage.Services.Reputaion.Local.Storage
 {

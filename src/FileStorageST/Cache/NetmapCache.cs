@@ -1,10 +1,11 @@
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Reputation;
 
 namespace Neo.FileStorage.Storage.Cache
 {
-    public class NetmapCache
+    public class NetmapCache : INetmapSource
     {
         public const int NetmapCacheSize = 10;
 

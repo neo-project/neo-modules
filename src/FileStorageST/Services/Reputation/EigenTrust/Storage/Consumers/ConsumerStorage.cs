@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using Neo.FileStorage.API.Reputation;
 
 namespace Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Storage.Consumers
 {
@@ -9,10 +10,10 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Storage.Consumer
 
         public void Put(IterationTrust t)
         {
-            if (!store.TryGetValue(t.Trust.Peer, out ConsumerTrusts storage))
+            if (!store.TryGetValue(t.Trust.Trust.Peer, out ConsumerTrusts storage))
             {
                 storage = new();
-                store[t.Trust.Peer] = storage;
+                store[t.Trust.Trust.Peer] = storage;
             }
             storage.Put(t);
         }

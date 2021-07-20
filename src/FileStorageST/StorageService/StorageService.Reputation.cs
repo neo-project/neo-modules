@@ -5,6 +5,7 @@ using Neo.FileStorage.Cache;
 using Neo.FileStorage.Morph.Event;
 using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Morph.Listen;
+using Neo.FileStorage.Reputation;
 using Neo.FileStorage.Storage.Cache;
 using Neo.FileStorage.Storage.Services.Reputaion.Common;
 using Neo.FileStorage.Storage.Services.Reputaion.Common.Route;
@@ -49,7 +50,7 @@ namespace Neo.FileStorage.Storage
             };
             ManagerBuilder managerBuilder = new()
             {
-                NetmapCache = netmapCache
+                NetmapSource = netmapCache
             };
             LocalRouteBuilder localRouteBuilder = new()
             {

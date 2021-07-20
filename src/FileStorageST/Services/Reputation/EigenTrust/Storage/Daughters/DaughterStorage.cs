@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using Neo.FileStorage.API.Reputation;
 
 namespace Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Storage.Daughters
 {
@@ -7,12 +8,12 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Storage.Daughter
     {
         private readonly ConcurrentDictionary<PeerID, DaughterTrusts> store = new();
 
-        public void Put(Trust t)
+        public void Put(PeerToPeerTrust t)
         {
-            if (!store.TryGetValue(t.Trusting, out DaughterTrusts storage))
+            if (!store.TryGetValue(t.TrustingPeer, out DaughterTrusts storage))
             {
                 storage = new();
-                store[t.Trusting] = storage;
+                store[t.TrustingPeer] = storage;
             }
             storage.Put(t);
         }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Google.Protobuf;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Reputation;
 using Neo.FileStorage.API.Session;
@@ -30,13 +31,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Service
                 Index = body.Iteration,
             };
             var writer = IntermediateRouter.InitWriter(ctx);
-            Trust t = new()
-            {
-                Peer = body.Trust.Trust.Peer.PublicKey.ToByteArray(),
-                Trusting = body.Trust.TrustingPeer.PublicKey.ToByteArray(),
-                Value = body.Trust.Trust.Value
-            };
-            writer.Write(t);
+            writer.Write(body.Trust);
             var resp = new AnnounceIntermediateResultResponse
             {
                 Body = new()
@@ -57,11 +52,10 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Service
             var writer = LocalRouter.InitWriter(ctx);
             foreach (var trust in body.Trusts)
             {
-                Trust t = new()
+                PeerToPeerTrust t = new()
                 {
-                    Peer = trust.Peer.PublicKey.ToByteArray(),
-                    Trusting = passed[0].PublicKey.ToByteArray(),
-                    Value = trust.Value
+                    TrustingPeer = new() { PublicKey = passed[0].PublicKey },
+                    Trust = trust,
                 };
                 if (!RouteBuilder.CheckRoute(body.Epoch, t, passed))
                     throw new InvalidOperationException("could not write one of local trusts");

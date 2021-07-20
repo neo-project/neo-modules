@@ -1,3 +1,4 @@
+using Neo.FileStorage.API.Reputation;
 using Neo.FileStorage.Storage.Services.Reputaion.Common;
 using Neo.FileStorage.Storage.Services.Reputaion.EigenTrust;
 using Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Storage.Consumers;
@@ -9,7 +10,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Intermediate
         public IterationContext Context { get; init; }
         public ConsumersStorage Storage { get; init; }
 
-        public void Write(Trust trust)
+        public void Write(PeerToPeerTrust trust)
         {
             IterationTrust t = new()
             {

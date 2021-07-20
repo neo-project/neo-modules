@@ -15,6 +15,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Intermediate
 
         public void WriteIntermediateTrust(IterationTrust it)
         {
+            Trust trust = it.Trust.Trust;
             GlobalTrust gt = new()
             {
                 Body = new()
@@ -23,18 +24,11 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Intermediate
                     {
                         PublicKey = ByteString.CopyFrom(PublicKey),
                     },
-                    Trust = new()
-                    {
-                        Peer = new()
-                        {
-                            PublicKey = ByteString.CopyFrom(it.Trust.Peer.ToByteArray()),
-                        },
-                        Value = it.Trust.Value,
-                    }
+                    Trust = trust,
                 }
             };
             gt.Signature = PrivateKey.SignMessagePart(gt.Body);
-            MorphInvoker.PutReputation(it.Epoch, it.Trust.Peer.ToByteArray(), gt.ToByteArray());
+            MorphInvoker.PutReputation(it.Epoch, trust.Peer.ToByteArray(), gt.ToByteArray());
         }
     }
 }
