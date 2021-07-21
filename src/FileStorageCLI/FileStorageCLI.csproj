@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Neo.FileStorage.Commands</PackageId>
+    <RootNamespace>Neo.FileStorage.Commands</RootNamespace>
+  </PropertyGroup>
+
+</Project>

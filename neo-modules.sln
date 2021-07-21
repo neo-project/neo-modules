@@ -49,6 +49,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileStorageIR", "src\FileSt
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileStorageST", "src\FileStorageST\FileStorageST.csproj", "{9E9F3328-E873-489D-B895-90BA154F77EA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileStorageCLI", "src\FileStorageCLI\FileStorageCLI.csproj", "{2E4BCC9C-AC50-4A6B-BED1-5C652393DD85}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -139,6 +141,10 @@ Global
 		{9E9F3328-E873-489D-B895-90BA154F77EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9E9F3328-E873-489D-B895-90BA154F77EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9E9F3328-E873-489D-B895-90BA154F77EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E4BCC9C-AC50-4A6B-BED1-5C652393DD85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E4BCC9C-AC50-4A6B-BED1-5C652393DD85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E4BCC9C-AC50-4A6B-BED1-5C652393DD85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E4BCC9C-AC50-4A6B-BED1-5C652393DD85}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -165,6 +171,7 @@ Global
 		{21B94042-A13F-4631-A617-CDCB2CCDE60B} = {59D802AB-C552-422A-B9C3-64D329FBCDCC}
 		{01B18535-8836-4ADC-A2AA-C827DE7229AC} = {97E81C78-1637-481F-9485-DA1225E94C23}
 		{9E9F3328-E873-489D-B895-90BA154F77EA} = {97E81C78-1637-481F-9485-DA1225E94C23}
+		{2E4BCC9C-AC50-4A6B-BED1-5C652393DD85} = {97E81C78-1637-481F-9485-DA1225E94C23}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {61D3ADE6-BBFC-402D-AB42-1C71C9F9EDE3}
