@@ -94,7 +94,9 @@ namespace Neo.FileStorage.InnerRing
                 {
                     Wallet = mainWallet,
                     NeoSystem = main,
-                    Blockchain = main.Blockchain
+                    Blockchain = main.Blockchain,
+                    FsContractHash=Settings.Default.FsContractHash,
+                    MainChainFee=Settings.Default.MainChainFee
                 };
             }
             else mainNetClient = pMainNetClient;
@@ -105,6 +107,7 @@ namespace Neo.FileStorage.InnerRing
                     Wallet = sideWallet,
                     NeoSystem = side,
                     Blockchain = side.Blockchain,
+                    SideChainFee=Settings.Default.SideChainFee,
                     AlphabetContractHash = Settings.Default.AlphabetContractHash,
                     AuditContractHash = Settings.Default.AuditContractHash,
                     BalanceContractHash = Settings.Default.BalanceContractHash,
