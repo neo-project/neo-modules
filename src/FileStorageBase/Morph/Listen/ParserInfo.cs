@@ -6,6 +6,6 @@ namespace Neo.FileStorage.Morph.Listen
     public class ParserInfo
     {
         public ScriptHashWithType ScriptHashWithType;
-        public Func<VM.Types.Array, IContractEvent> Parser;
+        public Func<VM.Types.Array, ContractEvent> Parser;
     }
 }

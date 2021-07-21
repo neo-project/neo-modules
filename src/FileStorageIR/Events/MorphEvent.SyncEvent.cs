@@ -5,17 +5,14 @@ namespace Neo.FileStorage.InnerRing.Events
 {
     public partial class MorphEvent
     {
-        public class SyncEvent : IContractEvent
+        public class SyncEvent : ContractEvent
         {
             public ulong epoch;
-            public void ContractEvent() { }
         }
 
-        public class DesignateEvent : IContractEvent
+        public class DesignateEvent : ContractEvent
         {
             public byte role;
-            public void ContractEvent() { }
-
             public static DesignateEvent ParseDesignateEvent(VM.Types.Array eventParams)
             {
                 var designateEvent = new DesignateEvent();

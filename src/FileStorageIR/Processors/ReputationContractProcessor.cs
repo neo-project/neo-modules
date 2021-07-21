@@ -49,7 +49,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             return new ParserInfo[] { parser };
         }
 
-        public void HandlePutReputation(IContractEvent morphEvent)
+        public void HandlePutReputation(ContractEvent morphEvent)
         {
             ReputationPutEvent reputationPutEvent = (ReputationPutEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:reputation put,peer_id:{0}", reputationPutEvent.PeerID.ToHexString()));

@@ -43,9 +43,9 @@ namespace Neo.FileStorage.InnerRing
         public void BuildContainer(ulong epoch, ContainerID cid, out List<List<Node>> containerNodes, out NetMap netMap)
         {
             if (epoch > 0)
-                netMap = Invoker.EpochSnapshot(epoch);
+                netMap = Invoker.GetNetMapByEpoch(epoch);
             else
-                netMap = Invoker.Snapshot(0);
+                netMap = Invoker.GetNetMapByDiff(0);
             Container cnr = Invoker.GetContainer(cid)?.Container;
             containerNodes = netMap.GetContainerNodes(cnr.PlacementPolicy, cid.Value.ToByteArray());
         }

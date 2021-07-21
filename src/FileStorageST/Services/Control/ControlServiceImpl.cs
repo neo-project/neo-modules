@@ -63,7 +63,7 @@ namespace Neo.FileStorage.Storage.Services.Control
             {
                 if (!IsValidRequest(request)) throw new RpcException(new Status(StatusCode.PermissionDenied, ""));
                 ulong epoch = MorphInvoker.Epoch();
-                var nm = MorphInvoker.EpochSnapshot(epoch);
+                var nm = MorphInvoker.GetNetMapByEpoch(epoch);
                 var netmap = new Service.Netmap
                 {
                     Epoch = epoch,

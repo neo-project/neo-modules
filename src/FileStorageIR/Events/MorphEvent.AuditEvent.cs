@@ -4,10 +4,9 @@ namespace Neo.FileStorage.InnerRing.Events
 {
     public partial class MorphEvent
     {
-        public class AuditStartEvent : IContractEvent
+        public class AuditStartEvent : ContractEvent
         {
             public ulong epoch;
-            public void ContractEvent() { }
         }
 
         public class BasicIncomeCollectEvent : AuditStartEvent { }

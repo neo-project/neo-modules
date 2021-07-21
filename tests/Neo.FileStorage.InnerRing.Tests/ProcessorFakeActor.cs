@@ -17,7 +17,7 @@ namespace Neo.FileStorage.InnerRing.Tests
             {
                 Sender.Tell(new OperationResult2() { nt = create });
             });
-            Receive<IContractEvent>(create =>
+            Receive<ContractEvent>(create =>
             {
                 Sender.Tell(new OperationResult3() { ce = create });
             });
@@ -25,6 +25,6 @@ namespace Neo.FileStorage.InnerRing.Tests
 
         public class OperationResult1 { public Transaction tx; };
         public class OperationResult2 { public WorkerPool.NewTask nt; };
-        public class OperationResult3 { public IContractEvent ce; };
+        public class OperationResult3 { public ContractEvent ce; };
     }
 }

@@ -106,7 +106,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         [TestMethod]
         public void InvokeSnapshotTest()
         {
-            var result = invoker.Snapshot(0);
+            var result = invoker.GetNetMapByDiff(0);
             Assert.AreEqual(result.Nodes.Count, 1);
         }
 

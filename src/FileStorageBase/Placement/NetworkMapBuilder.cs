@@ -38,7 +38,7 @@ namespace Neo.FileStorage.Placement
         {
             if (netMap is not null)
                 return netMap;
-            return invoker.Snapshot(0);
+            return invoker.GetNetMapByDiff(0);
         }
     }
 }

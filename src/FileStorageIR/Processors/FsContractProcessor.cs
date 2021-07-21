@@ -102,42 +102,42 @@ namespace Neo.FileStorage.InnerRing.Processors
             return new ParserInfo[] { depositParser, withdrawParser, chequeParser, configParser, bindParser, unbindParser };
         }
 
-        public void HandleDeposit(IContractEvent morphEvent)
+        public void HandleDeposit(ContractEvent morphEvent)
         {
             DepositEvent depositeEvent = (DepositEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:deposit,id:{0}", depositeEvent.Id.ToHexString()));
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessDeposit(depositeEvent)) });
         }
 
-        public void HandleWithdraw(IContractEvent morphEvent)
+        public void HandleWithdraw(ContractEvent morphEvent)
         {
             WithdrawEvent withdrawEvent = (WithdrawEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:withdraw,id:{0}", withdrawEvent.Id.ToHexString()));
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessWithdraw(withdrawEvent)) });
         }
 
-        public void HandleCheque(IContractEvent morphEvent)
+        public void HandleCheque(ContractEvent morphEvent)
         {
             ChequeEvent chequeEvent = (ChequeEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:cheque,value:{0}", chequeEvent.Id.ToHexString()));
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessCheque(chequeEvent)) });
         }
 
-        public void HandleConfig(IContractEvent morphEvent)
+        public void HandleConfig(ContractEvent morphEvent)
         {
             ConfigEvent configEvent = (ConfigEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:setConfig,key:{0},value:{1}", configEvent.Key.ToHexString(), configEvent.Value.ToHexString()));
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessConfig(configEvent)) });
         }
 
-        public void HandleBind(IContractEvent morphEvent)
+        public void HandleBind(ContractEvent morphEvent)
         {
             BindEvent bindEvent = (BindEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, "notification:type:bind");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessBind(bindEvent, true)) });
         }
 
-        public void HandleUnBind(IContractEvent morphEvent)
+        public void HandleUnBind(ContractEvent morphEvent)
         {
             BindEvent bindEvent = (BindEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, "notification:type:unbind");

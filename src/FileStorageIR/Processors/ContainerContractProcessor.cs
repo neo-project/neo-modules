@@ -58,7 +58,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             return new ParserInfo[] { putParser, deleteParser, setEACLParser };
         }
 
-        public void HandlePut(IContractEvent morphEvent)
+        public void HandlePut(ContractEvent morphEvent)
         {
             ContainerPutEvent putEvent = (ContainerPutEvent)morphEvent;
             var id = putEvent.RawContainer.Sha256();
@@ -66,14 +66,14 @@ namespace Neo.FileStorage.InnerRing.Processors
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessContainerPut(putEvent)) });
         }
 
-        public void HandleDelete(IContractEvent morphEvent)
+        public void HandleDelete(ContractEvent morphEvent)
         {
             ContainerDeleteEvent deleteEvent = (ContainerDeleteEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:container delete,id:{0}", Base58.Encode(deleteEvent.ContainerID)));
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessContainerDelete(deleteEvent)) });
         }
 
-        public void HandleSetEACL(IContractEvent morphEvent)
+        public void HandleSetEACL(ContractEvent morphEvent)
         {
             ContainerSetEACLEvent setEACLEvent = (ContainerSetEACLEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, "notification:type:set EACL");

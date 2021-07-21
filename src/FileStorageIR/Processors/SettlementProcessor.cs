@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Google.Protobuf;
 using Neo.FileStorage.API.Audit;
-using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Container;
+using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Morph.Event;
@@ -33,7 +33,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             Utility.Log(Name, LogLevel.Info, "audit processing finished");
         }
 
-        public void HandleAuditEvent(IContractEvent morphEvent)
+        public void HandleAuditEvent(ContractEvent morphEvent)
         {
             AuditStartEvent auditEvent = (AuditStartEvent)morphEvent;
             var epoch = auditEvent.epoch;
@@ -47,7 +47,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             Utility.Log(Name, LogLevel.Info, "AuditEvent handling successfully scheduled");
         }
 
-        public void HandleIncomeCollectionEvent(IContractEvent morphEvent)
+        public void HandleIncomeCollectionEvent(ContractEvent morphEvent)
         {
             BasicIncomeCollectEvent basicIncomeCollectEvent = (BasicIncomeCollectEvent)morphEvent;
             var epoch = basicIncomeCollectEvent.epoch;
@@ -68,7 +68,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => incomeCtx.Collect()) });
         }
 
-        public void HandleIncomeDistributionEvent(IContractEvent morphEvent)
+        public void HandleIncomeDistributionEvent(ContractEvent morphEvent)
         {
             BasicIncomeDistributeEvent basicIncomeDistributeEvent = (BasicIncomeDistributeEvent)morphEvent;
             var epoch = basicIncomeDistributeEvent.epoch;

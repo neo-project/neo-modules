@@ -45,7 +45,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             return new ParserInfo[] { parser };
         }
 
-        public void HandleLock(IContractEvent morphEvent)
+        public void HandleLock(ContractEvent morphEvent)
         {
             LockEvent lockEvent = (LockEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("notification:type:lock,value:{0}", lockEvent.Id.ToHexString()));

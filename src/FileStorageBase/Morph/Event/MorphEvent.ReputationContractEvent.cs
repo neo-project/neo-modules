@@ -1,17 +1,15 @@
-using Neo.FileStorage.API.Reputation;
 using System;
+using Neo.FileStorage.API.Reputation;
 
 namespace Neo.FileStorage.Morph.Event
 {
     public partial class MorphEvent
     {
-        public class ReputationPutEvent : IContractEvent
+        public class ReputationPutEvent : ContractEvent
         {
             public ulong Epoch;
             public byte[] PeerID;
             public GlobalTrust Trust;
-
-            public void ContractEvent() { }
 
             public static ReputationPutEvent ParseReputationPutEvent(VM.Types.Array eventParams)
             {

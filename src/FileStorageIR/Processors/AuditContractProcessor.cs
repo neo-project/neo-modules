@@ -26,7 +26,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         public CancellationTokenSource prevAuditCanceler = new CancellationTokenSource();
         public IFSClientCache ClientCache;
 
-        public void HandleNewAuditRound(IContractEvent morphEvent)
+        public void HandleNewAuditRound(ContractEvent morphEvent)
         {
             StartEvent startEvent = (StartEvent)morphEvent;
             Utility.Log(Name, LogLevel.Info, string.Format("new round of audit,epoch:{0}", startEvent.epoch));
@@ -53,7 +53,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             NetMap nm;
             try
             {
-                nm = MorphCli.Snapshot(0);
+                nm = MorphCli.GetNetMapByDiff(0);
             }
             catch (Exception e)
             {

@@ -1,16 +1,14 @@
+using System;
 using Neo.Cryptography.ECC;
 using Neo.IO;
-using System;
 
 namespace Neo.FileStorage.Morph.Event
 {
     partial class MorphEvent
     {
-        public class NewEpochEvent : IContractEvent
+        public class NewEpochEvent : ContractEvent
         {
             public ulong EpochNumber;
-
-            public void ContractEvent() { }
 
             public static NewEpochEvent ParseNewEpochEvent(VM.Types.Array eventParams)
             {
@@ -21,11 +19,9 @@ namespace Neo.FileStorage.Morph.Event
             }
         }
 
-        public class AddPeerEvent : IContractEvent
+        public class AddPeerEvent : ContractEvent
         {
             public byte[] Node;
-
-            public void ContractEvent() { }
 
             public static AddPeerEvent ParseAddPeerEvent(VM.Types.Array eventParams)
             {
@@ -36,12 +32,10 @@ namespace Neo.FileStorage.Morph.Event
             }
         }
 
-        public class UpdatePeerEvent : IContractEvent
+        public class UpdatePeerEvent : ContractEvent
         {
             public ECPoint PublicKey;
             public uint Status;
-
-            public void ContractEvent() { }
 
             public static UpdatePeerEvent ParseUpdatePeerEvent(VM.Types.Array eventParams)
             {

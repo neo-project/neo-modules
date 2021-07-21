@@ -1,18 +1,16 @@
-using Neo.Cryptography.ECC;
-using Neo.IO;
 using System;
 using System.Collections.Generic;
+using Neo.Cryptography.ECC;
+using Neo.IO;
 
 namespace Neo.FileStorage.Morph.Event
 {
     partial class MorphEvent
     {
-        public class BindEvent : IContractEvent
+        public class BindEvent : ContractEvent
         {
             public UInt160 UserAccount;
             public ECPoint[] Keys;
-
-            public void ContractEvent() { }
 
             public static BindEvent ParseBindEvent(VM.Types.Array eventParams)
             {
@@ -31,14 +29,12 @@ namespace Neo.FileStorage.Morph.Event
             }
         }
 
-        public class ChequeEvent : IContractEvent
+        public class ChequeEvent : ContractEvent
         {
             public byte[] Id;
             public long Amount;
             public UInt160 UserAccount;
             public UInt160 LockAccount;
-
-            public void ContractEvent() { }
 
             public static ChequeEvent ParseChequeEvent(VM.Types.Array eventParams)
             {
@@ -52,14 +48,12 @@ namespace Neo.FileStorage.Morph.Event
             }
         }
 
-        public class DepositEvent : IContractEvent
+        public class DepositEvent : ContractEvent
         {
             public byte[] Id;
             public long Amount;
             public UInt160 From;
             public UInt160 To;
-
-            public void ContractEvent() { }
 
             public static DepositEvent ParseDepositEvent(VM.Types.Array eventParams)
             {
@@ -73,13 +67,11 @@ namespace Neo.FileStorage.Morph.Event
             }
         }
 
-        public class WithdrawEvent : IContractEvent
+        public class WithdrawEvent : ContractEvent
         {
             public byte[] Id;
             public long Amount;
             public UInt160 UserAccount;
-
-            public void ContractEvent() { }
 
             public static WithdrawEvent ParseWithdrawEvent(VM.Types.Array eventParams)
             {
@@ -92,13 +84,11 @@ namespace Neo.FileStorage.Morph.Event
             }
         }
 
-        public class ConfigEvent : IContractEvent
+        public class ConfigEvent : ContractEvent
         {
             public byte[] Key;
             public byte[] Value;
             public byte[] Id;
-
-            public void ContractEvent() { }
 
             public static ConfigEvent ParseConfigEvent(VM.Types.Array eventParams)
             {
@@ -111,11 +101,9 @@ namespace Neo.FileStorage.Morph.Event
             }
         }
 
-        public class UpdateInnerRingEvent : IContractEvent
+        public class UpdateInnerRingEvent : ContractEvent
         {
             public ECPoint[] Keys;
-
-            public void ContractEvent() { }
 
             public static UpdateInnerRingEvent ParseUpdateInnerRingEvent(VM.Types.Array eventParams)
             {

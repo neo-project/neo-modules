@@ -75,7 +75,7 @@ namespace Neo.FileStorage.Storage
 
         private NodeInfo NetmapLocalNodeInfo(ulong epoch)
         {
-            var nm = morphInvoker.EpochSnapshot(epoch);
+            var nm = morphInvoker.GetNetMapByEpoch(epoch);
             Node node = null;
             foreach (var n in nm.Nodes)
             {

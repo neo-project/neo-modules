@@ -15,8 +15,8 @@ namespace Neo.FileStorage.Morph.Listen
     /// </summary>
     public class Listener : UntypedActor
     {
-        private Dictionary<ScriptHashWithType, Func<VM.Types.Array, IContractEvent>> parsers = new();
-        private Dictionary<ScriptHashWithType, List<Action<IContractEvent>>> handlers = new();
+        private Dictionary<ScriptHashWithType, Func<VM.Types.Array, ContractEvent>> parsers = new();
+        private Dictionary<ScriptHashWithType, List<Action<ContractEvent>>> handlers = new();
         private List<Action<Block>> blockHandlers = new();
         private string name;
         private bool started;
@@ -49,7 +49,7 @@ namespace Neo.FileStorage.Morph.Listen
                     Utility.Log(name, LogLevel.Warning, string.Format("event parser not set:{0}", notify.ScriptHash.ToString()));
                     return;
                 }
-                IContractEvent contractEvent = null;
+                ContractEvent contractEvent = null;
                 try
                 {
                     contractEvent = parser(notify.State);
@@ -77,7 +77,7 @@ namespace Neo.FileStorage.Morph.Listen
             if (p.Handler is null) return;
             if (!parsers.TryGetValue(p.ScriptHashWithType, out _)) return;
             if (handlers.TryGetValue(p.ScriptHashWithType, out var value)) value.Add(p.Handler);
-            else handlers.Add(p.ScriptHashWithType, new List<Action<IContractEvent>>() { p.Handler });
+            else handlers.Add(p.ScriptHashWithType, new List<Action<ContractEvent>>() { p.Handler });
         }
 
         public void SetParser(ParserInfo p)

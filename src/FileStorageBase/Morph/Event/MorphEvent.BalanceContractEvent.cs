@@ -1,19 +1,17 @@
-using Neo.IO;
 using System;
+using Neo.IO;
 
 namespace Neo.FileStorage.Morph.Event
 {
     public partial class MorphEvent
     {
-        public class LockEvent : IContractEvent
+        public class LockEvent : ContractEvent
         {
             public byte[] Id;
             public UInt160 UserAccount;
             public UInt160 LockAccount;
             public long Amount;
             public long Util;
-
-            public void ContractEvent() { }
 
             public static LockEvent ParseLockEvent(VM.Types.Array eventParams)
             {
