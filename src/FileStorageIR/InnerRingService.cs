@@ -268,18 +268,18 @@ namespace Neo.FileStorage.InnerRing
             {
                 throw new Exception("can't read epoch" + e.Message);
             }
-            uint balancePrecision;
+            uint BalanceDecimals;
             try
             {
-                balancePrecision = morphClient.BalancePrecision();
+                BalanceDecimals = morphClient.BalanceDecimals();
             }
             catch
             {
                 throw new Exception("can't read balance contract precision");
             }
             SetEpochCounter((ulong)epoch);
-            precision.SetBalancePrecision(balancePrecision);
-            Utility.Log("InnerRingService", LogLevel.Info, string.Format("read config from blockchain,active:{0},epoch:{1},precision:{2}", IsActive(), epoch, balancePrecision));
+            precision.SetBalanceDecimals(BalanceDecimals);
+            Utility.Log("InnerRingService", LogLevel.Info, string.Format("read config from blockchain,active:{0},epoch:{1},precision:{2}", IsActive(), epoch, BalanceDecimals));
         }
 
         protected override void OnReceive(object message)

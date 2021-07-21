@@ -78,9 +78,9 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
         }
 
         [TestMethod]
-        public void InvokeBalancePrecisionTest()
+        public void InvokeBalanceDecimalsTest()
         {
-            uint result = morphInvoker.BalancePrecision();
+            uint result = morphInvoker.BalanceDecimals();
             Assert.AreEqual(result, (uint)12);
         }
 

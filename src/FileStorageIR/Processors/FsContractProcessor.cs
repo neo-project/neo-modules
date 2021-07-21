@@ -153,7 +153,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                MorphCli.Mint(depositeEvent.To.ToArray(), Convert.ToBalancePrecision(depositeEvent.Amount), System.Text.Encoding.UTF8.GetBytes(TxLogPrefix).Concat(depositeEvent.Id).ToArray());
+                MorphCli.Mint(depositeEvent.To.ToArray(), Convert.ToBalanceDecimals(depositeEvent.Amount), System.Text.Encoding.UTF8.GetBytes(TxLogPrefix).Concat(depositeEvent.Id).ToArray());
             }
             catch (Exception e)
             {
@@ -221,7 +221,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             try
             {
                 ulong curEpoch = State.EpochCounter();
-                MorphCli.LockAsset(withdrawEvent.Id, withdrawEvent.UserAccount, lockeAccount, Convert.ToBalancePrecision(withdrawEvent.Amount), curEpoch + LockAccountLifetime);
+                MorphCli.LockAsset(withdrawEvent.Id, withdrawEvent.UserAccount, lockeAccount, Convert.ToBalanceDecimals(withdrawEvent.Amount), curEpoch + LockAccountLifetime);
             }
             catch (Exception e)
             {
@@ -238,7 +238,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                MorphCli.Burn(chequeEvent.LockAccount.ToArray(), Convert.ToBalancePrecision(chequeEvent.Amount), System.Text.Encoding.UTF8.GetBytes(TxLogPrefix).Concat(chequeEvent.Id).ToArray());
+                MorphCli.Burn(chequeEvent.LockAccount.ToArray(), Convert.ToBalanceDecimals(chequeEvent.Amount), System.Text.Encoding.UTF8.GetBytes(TxLogPrefix).Concat(chequeEvent.Id).ToArray());
             }
             catch (Exception e)
             {

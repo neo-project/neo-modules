@@ -114,7 +114,7 @@ namespace Neo.FileStorage.InnerRing
                 {
                     ContainerID id = new ContainerID();
                     id.Value = ByteString.CopyFrom(estimationID);
-                    Estimations estimation = Invoker.InvokeGetContainerSize(id);
+                    Estimations estimation = Invoker.GetContainerSize(id);
                     result.Add(estimation);
                 }
                 catch (Exception e)

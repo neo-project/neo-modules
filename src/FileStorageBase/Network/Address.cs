@@ -12,7 +12,7 @@ namespace Neo.FileStorage.Network
     {
         public const string L4Protocol = "tcp";
 
-        private Multiaddress ma;
+        private readonly Multiaddress ma;
 
         public Address() { }
 

@@ -17,7 +17,7 @@ namespace Neo.FileStorage.Morph.Event
                 var bindEvent = new BindEvent();
                 if (eventParams.Count != 2) throw new Exception();
                 bindEvent.UserAccount = eventParams[0].GetSpan().AsSerializable<UInt160>();
-                List<ECPoint> keys = new List<ECPoint>();
+                List<ECPoint> keys = new();
                 var bindKeys = ((VM.Types.Array)eventParams[1]).GetEnumerator();
                 while (bindKeys.MoveNext())
                 {

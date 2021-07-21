@@ -44,10 +44,5 @@ namespace Neo.FileStorage.Morph.Invoker
         {
             return Invoke(out _, BalanceContractHash, LockMethod, SideChainFee, ID, userAccount, lockAccount, amount, (int)until);
         }
-
-        public uint BalancePrecision()
-        {
-            return BalanceDecimals();
-        }
     }
 }

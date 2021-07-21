@@ -100,7 +100,7 @@ namespace Neo.FileStorage.Morph.Invoker
             return Invoke(out _, ContainerContractHash, PutSizeMethod, SideChainFee, announcement.Epoch, announcement.ContainerId.Value.ToByteArray(), announcement.UsedSpace, key);
         }
 
-        public Estimations InvokeGetContainerSize(ContainerID containerID)
+        public Estimations GetContainerSize(ContainerID containerID)
         {
             InvokeResult result = TestInvoke(ContainerContractHash, GetSizeMethod, containerID.Value.ToByteArray());
             if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (GetContainerSize)");

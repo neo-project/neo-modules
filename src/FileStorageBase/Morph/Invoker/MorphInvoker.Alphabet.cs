@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using Neo.Cryptography.ECC;
-using Neo.FileStorage.Morph.Invoker;
 using Neo.SmartContract;
 
 namespace Neo.FileStorage.Morph.Invoker

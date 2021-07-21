@@ -26,14 +26,14 @@ namespace Neo.FileStorage.InnerRing.Tests.Util
         }
 
         [TestMethod]
-        public void ToFixed8AndToBalancePrecisionTest()
+        public void ToFixed8AndToBalanceDecimalsTest()
         {
             Fixed8ConverterUtil fixed8ConverterUtil = new Fixed8ConverterUtil();
             fixed8ConverterUtil = new Fixed8ConverterUtil(1);
             Assert.AreEqual(fixed8ConverterUtil.ToFixed8(1), 10000000);
             fixed8ConverterUtil = new Fixed8ConverterUtil(9);
             Assert.AreEqual(fixed8ConverterUtil.ToFixed8(1000000000), 100000000);
-            Assert.AreEqual(fixed8ConverterUtil.ToBalancePrecision(100000000), 1000000000);
+            Assert.AreEqual(fixed8ConverterUtil.ToBalanceDecimals(100000000), 1000000000);
         }
     }
 }

@@ -47,7 +47,7 @@ namespace Neo.FileStorage.Utils
             IActorRef actor = Self;
             if (capacity <= running)
             {
-                Utility.Log(newTask.Process, LogLevel.Warning, string.Format("worker pool drained,capacity:{0}", capacity.ToString()));
+                Utility.Log(newTask.Process, LogLevel.Warning, $"worker pool drained, name={name}, capacity={capacity}");
                 Sender.Tell(false);
             }
             else

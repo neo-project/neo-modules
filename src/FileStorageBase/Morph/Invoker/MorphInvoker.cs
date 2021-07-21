@@ -41,8 +41,8 @@ namespace Neo.FileStorage.Morph.Invoker
             if (result.State != VMState.HALT) return false;
             SnapshotCache snapshot = NeoSystem.GetSnapshot();
             uint height = NativeContract.Ledger.CurrentIndex(snapshot);
-            Random rand = new Random();
-            Transaction tx = new Transaction
+            Random rand = new();
+            Transaction tx = new()
             {
                 Version = 0,
                 Nonce = (uint)rand.Next(),
@@ -54,7 +54,7 @@ namespace Neo.FileStorage.Morph.Invoker
             tx.SystemFee = result.GasConsumed + fee;
             tx.NetworkFee = Wallet.CalculateNetworkFee(snapshot, tx);
             var data = new ContractParametersContext(snapshot, tx, NeoSystem.Settings.Network);
-            bool sigresult = Wallet.Sign(data);
+            if (!Wallet.Sign(data)) return false;
             tx.Witnesses = data.GetWitnesses();
             txId = tx.Hash;
             Blockchain.Tell(tx);
