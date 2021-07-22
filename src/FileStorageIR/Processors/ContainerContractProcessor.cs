@@ -184,7 +184,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     ECPoint[] keys = MorphCli.AccountKeys(cnr.Container.OwnerId.Value.ToByteArray());
                     checkKeys.AddRange(keys);
                 }
-                var cidHash = ContainerID.FromSha256Bytes(deleteEvent.ContainerID).Sha256Checksum().Sum.ToByteArray();
+                var cidHash = deleteEvent.ContainerID.Sha256();
                 var sig = deleteEvent.Signature;
                 if (!checkKeys.Any(p => p.EncodePoint(true).LoadPublicKey().VerifyData(cidHash, sig))) throw new Exception("signature verification failed on all owner keys");
                 MorphCli.RemoveContainer(deleteEvent.ContainerID, deleteEvent.Signature, deleteEvent.token);
