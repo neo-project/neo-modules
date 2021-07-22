@@ -17,12 +17,12 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public override HandlerInfo[] ListenerHandlers()
         {
-            ScriptHashWithType scriptHashWithType = new ScriptHashWithType()
+            ScriptHashWithType scriptHashWithType = new()
             {
                 Type = LockNotification,
                 ScriptHashValue = BalanceContractHash
             };
-            HandlerInfo handler = new HandlerInfo()
+            HandlerInfo handler = new()
             {
                 ScriptHashWithType = scriptHashWithType,
                 Handler = HandleLock
@@ -32,12 +32,12 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public override ParserInfo[] ListenerParsers()
         {
-            ScriptHashWithType scriptHashWithType = new ScriptHashWithType()
+            ScriptHashWithType scriptHashWithType = new()
             {
                 Type = LockNotification,
                 ScriptHashValue = BalanceContractHash
             };
-            ParserInfo parser = new ParserInfo()
+            ParserInfo parser = new()
             {
                 ScriptHashWithType = scriptHashWithType,
                 Parser = LockEvent.ParseLockEvent,
@@ -48,7 +48,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         public void HandleLock(ContractEvent morphEvent)
         {
             LockEvent lockEvent = (LockEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:lock,value:{0}", lockEvent.Id.ToHexString()));
+            Utility.Log(Name, LogLevel.Info, $"event, type=lock, value={lockEvent.Id}");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessLock(lockEvent)) });
         }
 
@@ -61,11 +61,11 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                MainCli.CashOutCheque(lockEvent.Id, Convert.ToFixed8(lockEvent.Amount), lockEvent.UserAccount, lockEvent.LockAccount);
+                MainInvoker.CashOutCheque(lockEvent.Id, Convert.ToFixed8(lockEvent.Amount), lockEvent.UserAccount, lockEvent.LockAccount);
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Error, string.Format("can't send lock asset tx:{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, $"can't send lock asset, error={e}");
             }
         }
     }

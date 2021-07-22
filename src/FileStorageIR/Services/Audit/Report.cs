@@ -12,8 +12,13 @@ namespace Neo.FileStorage.InnerRing.Services.Audit
 
         public Report()
         {
-            auditResult = new DataAuditResult();
+            auditResult = new();
             auditResult.Version = Version.SDKVersion();
+        }
+
+        public void SetEpoch(ulong epoch)
+        {
+            auditResult.AuditEpoch = epoch;
         }
 
         public void SetContainerID(ContainerID cid)

@@ -9,8 +9,8 @@ using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.InnerRing.Services.Audit;
 using Neo.FileStorage.InnerRing.Utils.Locode.Db;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Morph.Event;
-using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Tests;
 using Neo.FileStorage.Utils;
 using Neo.IO;
@@ -52,7 +52,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             }, clientCache, Settings.Default.MaxPDPSleepInterval));
             var auditContractProcessor = new AuditContractProcessor()
             {
-                MorphCli = morphInvoker,
+                MorphInvoker = morphInvoker,
                 ClientCache = clientCache,
                 TaskManager = auditTaskManager,
                 State = state,
@@ -60,8 +60,8 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             };
             var governanceProcessor = new GovernanceProcessor()
             {
-                MorphCli = morphInvoker,
-                MainCli = mainInvoker,
+                MorphInvoker = morphInvoker,
+                MainInvoker = mainInvoker,
                 ProtocolSettings = system.Settings,
                 State = state,
                 WorkPool = actor
@@ -85,7 +85,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             };
             processor = new NetMapContractProcessor()
             {
-                MorphCli = morphInvoker,
+                MorphInvoker = morphInvoker,
                 State = state,
                 NetmapSnapshot = new CleanupTable(Settings.Default.CleanupEnabled, Settings.Default.CleanupThreshold),
                 WorkPool = actor,
@@ -106,7 +106,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
         [TestMethod]
         public void HandleNewEpochTickTest()
         {
-            processor.HandleNewEpochTick(new NewEpochTickEvent());
+            processor.HandleNewEpochTick();
             var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;
             Assert.IsNotNull(nt);
         }
@@ -173,14 +173,12 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             {
                 EpochNumber = 2
             });
-            //var resetEvent = ExpectMsg<FileStorage.InnerRing.Timer.BlockTimerListener.ResetEvent>();
-            //Assert.IsNotNull(resetEvent);
         }
 
         [TestMethod]
         public void ProcessNewEpochTickTest()
         {
-            processor.ProcessNewEpochTick(new NewEpochTickEvent());
+            processor.ProcessNewEpochTick();
         }
 
         [TestMethod]

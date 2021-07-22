@@ -11,7 +11,6 @@ namespace Neo.FileStorage.Network
     public class Address : IEquatable<Address>
     {
         public const string L4Protocol = "tcp";
-
         private readonly Multiaddress ma;
 
         public Address() { }

@@ -10,6 +10,7 @@ namespace Neo.FileStorage.InnerRing.Events
         }
 
         public class BasicIncomeCollectEvent : AuditStartEvent { }
+
         public class BasicIncomeDistributeEvent : AuditStartEvent { }
     }
 }

@@ -16,7 +16,7 @@ namespace Neo.FileStorage.Morph.Event
             public static LockEvent ParseLockEvent(VM.Types.Array eventParams)
             {
                 var lockEvent = new LockEvent();
-                if (eventParams.Count != 5) throw new Exception();
+                if (eventParams.Count != 5) throw new FormatException();
                 lockEvent.Id = eventParams[0].GetSpan().ToArray();
                 lockEvent.UserAccount = eventParams[1].GetSpan().AsSerializable<UInt160>();
                 lockEvent.LockAccount = eventParams[2].GetSpan().AsSerializable<UInt160>();

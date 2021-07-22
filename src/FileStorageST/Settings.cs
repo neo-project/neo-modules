@@ -37,10 +37,12 @@ namespace Neo.FileStorage.Storage
             Contracts.Add(NetmapContractHash);
             Contracts.Add(BalanceContractHash);
             Contracts.Add(ContainerContractHash);
+
             Address = section.GetValue("Address", DefaultAddress);
             Port = section.GetValue("Port", DefaultPort);
             Attributes = section.GetSection("Attributes").GetChildren().Select(p => p.Value).ToList();
             SideChainFee = section.GetValue("SideChainFee", 5000L);
+            
             Shards = section.GetSection("Shards").GetChildren().Select(p => ShardSettings.Load(p)).ToList();
             if (!Shards.Any()) Shards = new List<ShardSettings> { ShardSettings.Default };
         }

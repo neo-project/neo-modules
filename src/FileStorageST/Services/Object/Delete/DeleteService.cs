@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Storage.Services.Object.Delete.Execute;
 using Neo.FileStorage.Storage.Services.Object.Delete.Writer;
 using Neo.FileStorage.Storage.Services.Object.Get;

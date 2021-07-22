@@ -208,6 +208,7 @@ namespace Neo.FileStorage.InnerRing
         {
             base.Dispose();
             _shutdownTokenSource.Cancel();
+            _shutdownTokenSource.Dispose();
             innerRingService?.Tell(new InnerRingService.Stop() { });
         }
     }

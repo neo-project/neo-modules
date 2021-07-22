@@ -12,6 +12,7 @@ using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.IO;
 using Neo.Network.P2P.Payloads;
 using Neo.Wallets;
@@ -21,7 +22,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
     [TestClass]
     public class UT_MorphContractInvoker : TestKit
     {
-        private FileStorage.Morph.Invoker.MorphInvoker invoker;
+        private MorphInvoker invoker;
         private Wallet wallet;
 
         [TestInitialize]
@@ -30,7 +31,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             NeoSystem system = TestBlockchain.TheNeoSystem;
             wallet = TestBlockchain.wallet;
             system.ActorSystem.ActorOf(Props.Create(() => new ProcessorFakeActor()));
-            invoker = new FileStorage.Morph.Invoker.MorphInvoker()
+            invoker = new MorphInvoker()
             {
                 Wallet = wallet,
                 NeoSystem = system,
@@ -66,8 +67,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             NodeInfo nodeInfo = new NodeInfo();
             nodeInfo.Address = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToAddress(key.ToArray());
             nodeInfo.PublicKey = ByteString.CopyFrom(key.ToArray());
-            bool result = invoker.AddPeer(nodeInfo);
-            Assert.AreEqual(result, true);
+            invoker.AddPeer(nodeInfo);
         }
 
         [TestMethod]
@@ -87,9 +87,8 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         [TestMethod]
         public void InvokeNewEpochTest()
         {
-            bool result = invoker.NewEpoch(2);
+            invoker.NewEpoch(2);
             var tx = ExpectMsg<Transaction>();
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 
@@ -97,9 +96,8 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         public void InvokeUpdateStateTest()
         {
             var key = wallet.GetAccounts().ToArray()[0].GetKey().PublicKey;
-            bool result = invoker.UpdatePeerState(NodeInfo.Types.State.Online, key.EncodePoint(true));
+            invoker.UpdatePeerState(NodeInfo.Types.State.Online, key.EncodePoint(true));
             var tx = ExpectMsg<Transaction>();
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 
@@ -144,9 +142,8 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 }
             };
             token.Signature = key.SignMessagePart(token.Body);
-            bool result = invoker.PutContainer(container, sig, token);
+            invoker.PutContainer(container, sig, token);
             var tx = ExpectMsg<Transaction>();
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 
@@ -177,9 +174,8 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 }
             };
             token.Signature = key.SignMessagePart(token.Body);
-            bool result = invoker.DeleteContainer(container.CalCulateAndGetId, sig, token);
+            invoker.DeleteContainer(container.CalCulateAndGetId, sig, token);
             var tx = ExpectMsg<Transaction>();
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 
@@ -216,9 +212,8 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 }
             };
             token.Signature = key.SignMessagePart(token.Body);
-            bool result = invoker.SetEACL(eACLTable, sig, token);
+            invoker.SetEACL(eACLTable, sig, token);
             var tx = ExpectMsg<Transaction>();
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 

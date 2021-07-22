@@ -1,6 +1,6 @@
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Cache;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Reputation;
 
 namespace Neo.FileStorage.Storage.Cache

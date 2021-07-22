@@ -1,6 +1,6 @@
 using Google.Protobuf;
 using Neo.FileStorage.API.Accounting;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 
 namespace Neo.FileStorage.Storage.Services.Accounting
 {

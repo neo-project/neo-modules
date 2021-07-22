@@ -22,7 +22,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public override HandlerInfo[] ListenerHandlers()
         {
-            HandlerInfo designateHandler = new HandlerInfo();
+            HandlerInfo designateHandler = new();
             designateHandler.ScriptHashWithType = new ScriptHashWithType() { Type = DesignationNotification, ScriptHashValue = NativeContract.RoleManagement.Hash };
             designateHandler.Handler = HandleAlphabetSync;
             return new HandlerInfo[] { designateHandler };
@@ -30,8 +30,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public override ParserInfo[] ListenerParsers()
         {
-            //deposit event
-            ParserInfo designateParser = new ParserInfo();
+            ParserInfo designateParser = new();
             designateParser.ScriptHashWithType = new ScriptHashWithType() { Type = DesignationNotification, ScriptHashValue = NativeContract.RoleManagement.Hash };
             designateParser.Parser = DesignateEvent.ParseDesignateEvent;
             return new ParserInfo[] { designateParser };
@@ -40,14 +39,16 @@ namespace Neo.FileStorage.InnerRing.Processors
         public void HandleAlphabetSync(ContractEvent morphEvent)
         {
             string type;
-            if (morphEvent is SyncEvent) type = "sync";
-            else if (morphEvent is DesignateEvent)
+            if (morphEvent is SyncEvent)
+                type = "sync";
+            else if (morphEvent is DesignateEvent designateEvent)
             {
-                if (((DesignateEvent)morphEvent).role != (byte)Role.NeoFSAlphabetNode) return;
+                if (designateEvent.role != (byte)Role.NeoFSAlphabetNode) return;
                 type = "designation";
             }
-            else return;
-            Utility.Log(Name, LogLevel.Info, string.Format("new event,type:{0}", type));
+            else
+                return;
+            Utility.Log(Name, LogLevel.Info, $"event, type={type}");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessAlphabetSync()) });
         }
 
@@ -61,21 +62,21 @@ namespace Neo.FileStorage.InnerRing.Processors
             ECPoint[] mainnetAlphabet;
             try
             {
-                mainnetAlphabet = MainCli.NeoFSAlphabetList();
+                mainnetAlphabet = MainInvoker.NeoFSAlphabetList();
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Error, string.Format("can't fetch alphabet list from main net,error:{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, $"can't fetch alphabet list from main net, error={e}");
                 return;
             }
             ECPoint[] sidechainAlphabet;
             try
             {
-                sidechainAlphabet = MorphCli.Committee();
+                sidechainAlphabet = MorphInvoker.Committee();
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Error, string.Format("can't fetch alphabet list from side chain,error:{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, $"can't fetch alphabet list from side chain, error={e}");
                 return;
             }
             ECPoint[] newAlphabet;
@@ -85,7 +86,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Error, string.Format("can't merge alphabet lists from main net and side chain,error:{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, $"can't merge alphabet lists from main net and side chain, error={e}");
                 return;
             }
             if (newAlphabet is null)
@@ -101,39 +102,39 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Info, string.Format("can't vote for side chain committee,error:{0}", e.Message));
+                Utility.Log(Name, LogLevel.Info, $"can't vote for side chain committee, error={e}");
                 return;
             }
             ECPoint[] innerRing;
             try
             {
-                innerRing = MorphCli.NeoFSAlphabetList();
+                innerRing = MorphInvoker.NeoFSAlphabetList();
                 ECPoint[] newInnerRing;
                 try
                 {
                     newInnerRing = UpdateInnerRing(innerRing, sidechainAlphabet, newAlphabet);
                     Array.Sort(newInnerRing);
-                    MorphCli.SetInnerRing(newInnerRing);
+                    MorphInvoker.SetInnerRing(newInnerRing);
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(Name, LogLevel.Info, string.Format("can't create new inner ring list with new alphabet keysn,error:{0}", e.Message));
+                    Utility.Log(Name, LogLevel.Info, $"can't create new inner ring list with new alphabet keysn, error={e}");
                 }
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Info, string.Format("can't fetch inner ring list from side chain,error:{0}", e.Message));
+                Utility.Log(Name, LogLevel.Info, $"can't fetch inner ring list from side chain, error={e}");
                 return;
             }
             var epoch = State.EpochCounter();
             var id = System.Text.Encoding.UTF8.GetBytes(AlphabetUpdateIDPrefix).Concat(BitConverter.GetBytes(epoch)).ToArray();
             try
             {
-                MainCli.AlphabetUpdate(id, newAlphabet);
+                MainInvoker.AlphabetUpdate(id, newAlphabet);
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Info, string.Format("can't update list of alphabet nodes in neofs contract,error:{0}", e.Message));
+                Utility.Log(Name, LogLevel.Info, $"can't update list of alphabet nodes in neofs contract, error={e}");
             }
             Utility.Log(Name, LogLevel.Info, "finished alphabet list update");
         }
@@ -141,8 +142,8 @@ namespace Neo.FileStorage.InnerRing.Processors
         public ECPoint[] NewAlphabetList(ECPoint[] sidechain, ECPoint[] mainnet)
         {
             var ln = sidechain.Length;
-            if (ln == 0) throw new Exception("sidechain list is empty");
-            if (mainnet.Length < ln) throw new Exception(string.Format("alphabet list in mainnet is too short,expecting {0} keys", ln));
+            if (ln == 0) throw new InvalidOperationException("sidechain list is empty");
+            if (mainnet.Length < ln) throw new InvalidOperationException($"alphabet list in mainnet is too short,expecting {ln} keys");
             var hmap = new Dictionary<string, bool>();
             var result = new List<ECPoint>();
             foreach (var node in sidechain) hmap[node.EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion)] = false;
@@ -172,7 +173,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         private ECPoint[] UpdateInnerRing(ECPoint[] innerRing, ECPoint[] before, ECPoint[] after)
         {
-            if (before.Length != after.Length) throw new Exception("old and new alphabet lists have different length");
+            if (before.Length != after.Length) throw new InvalidOperationException("old and new alphabet lists have different length");
             var result = new List<ECPoint>();
             for (int i = 0; i < innerRing.Length; i++)
             {

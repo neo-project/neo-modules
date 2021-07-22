@@ -15,10 +15,10 @@ namespace Neo.FileStorage.Morph.Listen
     /// </summary>
     public class Listener : UntypedActor
     {
-        private Dictionary<ScriptHashWithType, Func<VM.Types.Array, ContractEvent>> parsers = new();
-        private Dictionary<ScriptHashWithType, List<Action<ContractEvent>>> handlers = new();
-        private List<Action<Block>> blockHandlers = new();
-        private string name;
+        private readonly Dictionary<ScriptHashWithType, Func<VM.Types.Array, ContractEvent>> parsers = new();
+        private readonly Dictionary<ScriptHashWithType, List<Action<ContractEvent>>> handlers = new();
+        private readonly List<Action<Block>> blockHandlers = new();
+        private readonly string name;
         private bool started;
 
         public class BindProcessorEvent { public IProcessor Processor; };
@@ -37,16 +37,16 @@ namespace Neo.FileStorage.Morph.Listen
         {
             if (started)
             {
-                Utility.Log(name, LogLevel.Info, string.Format("script hash LE:{0}", notify.ScriptHash.ToString()));
                 if (notify.State is null)
                 {
-                    Utility.Log(name, LogLevel.Warning, string.Format("stack item is not an array type:{0}", notify.ParseToJson().ToString()));
+                    Utility.Log(nameof(Listener), LogLevel.Warning, $"stack item is not an array type, listener={name}, notify={notify.ParseToJson()}");
+                    return;
                 }
-                Utility.Log(name, LogLevel.Info, string.Format("event type:{0}", notify.EventName));
+                Utility.Log(nameof(Listener), LogLevel.Info, $"listener={name}, event_type={notify.EventName}");
                 var keyEvent = new ScriptHashWithType() { Type = notify.EventName, ScriptHashValue = notify.ScriptHash };
                 if (!parsers.TryGetValue(keyEvent, out var parser))
                 {
-                    Utility.Log(name, LogLevel.Warning, string.Format("event parser not set:{0}", notify.ScriptHash.ToString()));
+                    Utility.Log(nameof(Listener), LogLevel.Warning, $"event parser not set, listener={name}, script_hash={notify.ScriptHash}");
                     return;
                 }
                 ContractEvent contractEvent = null;
@@ -56,12 +56,12 @@ namespace Neo.FileStorage.Morph.Listen
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(name, LogLevel.Warning, string.Format("could not parse notification event:{0}", e.Message));
+                    Utility.Log(nameof(Listener), LogLevel.Warning, $"could not parse notification, error={e}");
                     return;
                 }
                 if (!handlers.TryGetValue(keyEvent, out var handlersArray) || !handlersArray.Any())
                 {
-                    Utility.Log(name, LogLevel.Warning, string.Format("handlers for parsed notification event were not registered:{0}", contractEvent.ToString()));
+                    Utility.Log(nameof(Listener), LogLevel.Warning, $"handlers for parsed notification event were not registered, listener={name}, event={contractEvent}");
                     return;
                 }
                 foreach (var handler in handlersArray)
@@ -99,7 +99,7 @@ namespace Neo.FileStorage.Morph.Listen
         {
             if (blockHandler is null)
             {
-                Utility.Log(name, LogLevel.Warning, "ignore nil block handler");
+                Utility.Log(nameof(Listener), LogLevel.Warning, $"ignore nil block handler, listener={name}");
                 return;
             }
             blockHandlers.Add(blockHandler);

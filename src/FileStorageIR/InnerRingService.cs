@@ -11,8 +11,7 @@ using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.InnerRing.Services.Audit;
 using Neo.FileStorage.InnerRing.Utils;
 using Neo.FileStorage.InnerRing.Utils.Locode.Db;
-using Neo.FileStorage.Morph.Event;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Morph.Listen;
 using Neo.FileStorage.Reputation;
 using Neo.FileStorage.Utils;
@@ -33,7 +32,7 @@ namespace Neo.FileStorage.InnerRing
     /// All events will be distributed according to type.(2 event types:MainContractEvent and MorphContractEvent)
     /// Life process:Start--->Assignment event--->Stop
     /// </summary>
-    public class InnerRingService : UntypedActor, IState
+    public class InnerRingService : UntypedActor, IState, IDisposable
     {
         private string Name = "InnerRingService";
         //event
@@ -70,10 +69,10 @@ namespace Neo.FileStorage.InnerRing
         private RpcClientCache clientCache;
         private StorageDB _db;
 
-        public InnerRingService(NeoSystem main, NeoSystem side, Wallet pMainwallet = null, Wallet pSideWallet = null, MainInvoker pMainNetClient = null, MorphInvoker pMorphClient = null)
+        public InnerRingService(NeoSystem main, NeoSystem side, Wallet pMainwallet = null, Wallet pSideWallet = null, MainInvoker pMainNetClient = null, MorphInvoker pMorphInvokerent = null)
         {
             precision = new Fixed8ConverterUtil();
-            // Build 2 client(MorphClientr&MainClient).
+            // Build 2 client(MorphInvokerentr&MainInvokerent).
             if (pMainwallet is null)
             {
                 NEP6Wallet mw = new(Settings.Default.WalletPath, main.Settings);
@@ -98,7 +97,7 @@ namespace Neo.FileStorage.InnerRing
                 };
             }
             else mainNetClient = pMainNetClient;
-            if (pMorphClient is null)
+            if (pMorphInvokerent is null)
             {
                 morphClient = new MorphInvoker()
                 {
@@ -114,7 +113,7 @@ namespace Neo.FileStorage.InnerRing
                     ReputationContractHash = Settings.Default.ReputationContractHash,
                 };
             }
-            else morphClient = pMorphClient;
+            else morphClient = pMorphInvokerent;
             // Build 2 listeners(MorphEventListener&MainEventListener).
             morphEventListener = side.ActorSystem.ActorOf(Listener.Props("MorphEventListener"));
             mainEventListener = main.ActorSystem.ActorOf(Listener.Props("MainEventListener"));
@@ -132,7 +131,7 @@ namespace Neo.FileStorage.InnerRing
             }, clientCache, Settings.Default.MaxPDPSleepInterval));
             auditContractProcessor = new AuditContractProcessor()
             {
-                MorphCli = morphClient,
+                MorphInvoker = morphClient,
                 ClientCache = clientCache,
                 TaskManager = auditTaskManager,
                 State = this,
@@ -161,8 +160,8 @@ namespace Neo.FileStorage.InnerRing
             // create governance processor
             governanceProcessor = new GovernanceProcessor()
             {
-                MainCli = mainNetClient,
-                MorphCli = morphClient,
+                MainInvoker = mainNetClient,
+                MorphInvoker = morphClient,
                 ProtocolSettings = main.Settings,
                 State = this,
                 WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("Governance Processor", Settings.Default.GovernanceWorkersSize)),
@@ -170,7 +169,7 @@ namespace Neo.FileStorage.InnerRing
             // create netmap processor
             netMapContractProcessor = new NetMapContractProcessor()
             {
-                MorphCli = morphClient,
+                MorphInvoker = morphClient,
                 State = this,
                 NetmapSnapshot = new CleanupTable(Settings.Default.CleanupEnabled, Settings.Default.CleanupThreshold),
                 WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("NetMapContract Processor", Settings.Default.NetmapContractWorkersSize)),
@@ -183,7 +182,7 @@ namespace Neo.FileStorage.InnerRing
             // create container processor
             containerContractProcessor = new ContainerContractProcessor()
             {
-                MorphCli = morphClient,
+                MorphInvoker = morphClient,
                 State = this,
                 WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("ContainerContract Processor", Settings.Default.ContainerContractWorkersSize))
             };
@@ -191,7 +190,7 @@ namespace Neo.FileStorage.InnerRing
             // create balance processor
             balanceContractProcessor = new BalanceContractProcessor()
             {
-                MainCli = mainNetClient,
+                MainInvoker = mainNetClient,
                 Convert = precision,
                 State = this,
                 WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("BalanceContract Processor", Settings.Default.BalanceContractWorkersSize))
@@ -200,7 +199,7 @@ namespace Neo.FileStorage.InnerRing
             // create  neofs processor
             fsContractProcessor = new FsContractProcessor()
             {
-                MorphCli = morphClient,
+                MorphInvoker = morphClient,
                 Convert = precision,
                 State = this,
                 WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("FsContract Processor", Settings.Default.FsContractWorkersSize))
@@ -209,14 +208,14 @@ namespace Neo.FileStorage.InnerRing
             // create alphabet processor
             alphabetContractProcessor = new AlphabetContractProcessor()
             {
-                MorphCli = morphClient,
+                MorphInvoker = morphClient,
                 State = this,
                 WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("AlphabetContract Processor", Settings.Default.AlphabetContractWorkersSize))
             };
             // create reputation processor
             reputationProcessor = new ReputationContractProcessor()
             {
-                MorphCli = morphClient,
+                MorphInvoker = morphClient,
                 State = this,
                 mngBuilder = new ManagerBuilder() { NetmapSource = morphClient },
                 WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("AlphabetContract Processor", Settings.Default.AlphabetContractWorkersSize))
@@ -279,7 +278,7 @@ namespace Neo.FileStorage.InnerRing
             }
             SetEpochCounter((ulong)epoch);
             precision.SetBalanceDecimals(BalanceDecimals);
-            Utility.Log("InnerRingService", LogLevel.Info, string.Format("read config from blockchain,active:{0},epoch:{1},precision:{2}", IsActive(), epoch, BalanceDecimals));
+            Utility.Log("InnerRingService", LogLevel.Info, $"read config from blockchain, active={IsActive()}, epoch={epoch}, precision={BalanceDecimals}");
         }
 
         protected override void OnReceive(object message)
@@ -313,7 +312,7 @@ namespace Neo.FileStorage.InnerRing
                 {
                     handler = (Block b) =>
                     {
-                        Utility.Log("MorphEventListener", LogLevel.Debug, string.Format("new block,index:{0}", b.Index));
+                        Utility.Log("MorphEventListener", LogLevel.Debug, $"new block,index:{b.Index}");
                         TickTimers();
                     }
                 });
@@ -346,6 +345,7 @@ namespace Neo.FileStorage.InnerRing
         {
             morphEventListener.Tell(new Listener.Stop());
             mainEventListener.Tell(new Listener.Stop());
+            Dispose();
         }
 
         private void OnContractEvent(NotifyEventArgs notify, bool flag)
@@ -415,11 +415,11 @@ namespace Neo.FileStorage.InnerRing
             {
                 try
                 {
-                    var r = morphClient.AlphabetVote(i, epoch, validators);
+                    morphClient.AlphabetVote(i, epoch, validators);
                 }
                 catch
                 {
-                    Utility.Log(Name, LogLevel.Info, string.Format("can't invoke vote method in alphabet contract,alphabet_index:{0},epoch:{1}}", i, epoch));
+                    Utility.Log(Name, LogLevel.Info, $"can't invoke vote method in alphabet contract, alphabet_index={i}, epoch={epoch}");
                 }
             }
         }
@@ -452,9 +452,16 @@ namespace Neo.FileStorage.InnerRing
             return (Morph.Event.ContractEvent morphEvent) => { if (IsAlphabet()) f(morphEvent); };
         }
 
-        public static Props Props(NeoSystem main, NeoSystem side, Wallet pMainWallet = null, Wallet pSideWallet = null, MainInvoker pMainNetClient = null, MorphInvoker pMorphClient = null)
+        public void Dispose()
         {
-            return Akka.Actor.Props.Create(() => new InnerRingService(main, side, pMainWallet, pSideWallet, pMainNetClient, pMorphClient));
+            clientCache?.Dispose();
+            auditContractProcessor?.prevAuditCanceler.Cancel();
+            auditContractProcessor?.prevAuditCanceler.Dispose();
+        }
+
+        public static Props Props(NeoSystem main, NeoSystem side, Wallet pMainWallet = null, Wallet pSideWallet = null, MainInvoker pMainNetClient = null, MorphInvoker pMorphInvokerent = null)
+        {
+            return Akka.Actor.Props.Create(() => new InnerRingService(main, side, pMainWallet, pSideWallet, pMainNetClient, pMorphInvokerent));
         }
     }
 }

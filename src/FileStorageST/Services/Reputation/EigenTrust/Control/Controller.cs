@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Calculate;
 using Neo.FileStorage.Utils;
 

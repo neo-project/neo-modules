@@ -60,7 +60,7 @@
       }
     },
     "NetmapCleaner": {
-      "Eenabled": false,
+      "Enabled": false,
       "Threshold": 3
     },
     "Audit": {

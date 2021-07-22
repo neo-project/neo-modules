@@ -17,9 +17,9 @@ namespace Neo.FileStorage.InnerRing.Processors
         public override string Name => "AlphabetContractProcessor";
         public ulong StorageEmission => Settings.Default.StorageEmission;
 
-        public void HandleGasEmission(ContractEvent morphEvent)
+        public void HandleGasEmission()
         {
-            Utility.Log(Name, LogLevel.Info, "tick,type:alphabet gas emit");
+            Utility.Log(Name, LogLevel.Info, "event, type=AlphabetGasEmit");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessEmit()) });
         }
 
@@ -28,20 +28,20 @@ namespace Neo.FileStorage.InnerRing.Processors
             int index = State.AlphabetIndex();
             if (index < 0)
             {
-                Utility.Log(Name, LogLevel.Debug, $"non alphabet mode, ignore gas emission event,index:{index}");
+                Utility.Log(Name, LogLevel.Debug, $"non alphabet mode, ignore gas emission event, index={index}");
                 return;
             }
             else if (index >= Settings.Default.AlphabetContractHash.Length)
             {
-                Utility.Log(Name, LogLevel.Debug, string.Format("node is out of alphabet range, ignore gas emission event,index:{0}", index.ToString()));
+                Utility.Log(Name, LogLevel.Debug, $"node is out of alphabet range, ignore gas emission event, index={index}");
             }
             try
             {
-                MorphCli.AlphabetEmit(index);
+                MorphInvoker.AlphabetEmit(index);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Warning, "can't invoke alphabet emit method");
+                Utility.Log(Name, LogLevel.Warning, $"can't invoke alphabet emit method, error={e}");
                 return;
             }
             if (StorageEmission == 0)
@@ -49,14 +49,14 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, "storage node emission is off");
                 return;
             }
-            API.Netmap.NodeInfo[] networkMap = null;
+            API.Netmap.NodeInfo[] networkMap;
             try
             {
-                networkMap = MorphCli.NetMap();
+                networkMap = MorphInvoker.NetMap();
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Warning, string.Format("can't get netmap snapshot to emit gas to storage nodes,error:{0}", e.Message));
+                Utility.Log(Name, LogLevel.Warning, $"can't get netmap snapshot to emit gas to storage nodes,error={e}");
                 return;
             }
             if (!networkMap.Any())
@@ -67,23 +67,24 @@ namespace Neo.FileStorage.InnerRing.Processors
             var gasPerNode = (long)StorageEmission * 100000000 / networkMap.Length;
             for (int i = 0; i < networkMap.Length; i++)
             {
-                ECPoint key = null;
+                ECPoint key;
                 try
                 {
                     key = ECPoint.FromBytes(networkMap[i].PublicKey.ToByteArray(), ECCurve.Secp256r1);
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(Name, LogLevel.Warning, string.Format("can't convert node public key to address,error:{0}", e.Message));
+                    Utility.Log(Name, LogLevel.Warning, $"can't convert node public key to address, error={e}");
                     continue;
                 }
+                UInt160 scriptHash = Contract.CreateSignatureRedeemScript(key).ToScriptHash();
                 try
                 {
-                    MorphCli.TransferGas(Contract.CreateSignatureRedeemScript(key).ToScriptHash(), gasPerNode);
+                    MorphInvoker.TransferGas(scriptHash, gasPerNode);
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(Name, LogLevel.Warning, string.Format("can't transfer gas,receiver:{0},amount:{1},error:{2}", Contract.CreateSignatureRedeemScript(key).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion), gasPerNode, e));
+                    Utility.Log(Name, LogLevel.Warning, $"can't transfer gas, receiver={scriptHash.ToAddress(ProtocolSettings.AddressVersion)}, amount={gasPerNode}, error={e}");
                 }
             }
         }

@@ -1,16 +1,17 @@
 using System.Numerics;
 using Akka.Actor;
 using Neo.FileStorage.InnerRing.Invoker;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Morph.Listen;
+using Neo.VM.Types;
 
 namespace Neo.FileStorage.InnerRing.Processors
 {
     public class BaseProcessor : IProcessor
     {
-        public static BigInteger bigGB = new BigInteger(1 << 30);
-        public static BigInteger bigZero = new BigInteger(0);
-        public static BigInteger bigOne = new BigInteger(1);
+        public static readonly BigInteger bigGB = new(1 << 30);
+        public static readonly BigInteger bigZero = new(0);
+        public static readonly BigInteger bigOne = new(1);
 
         public virtual string Name => "BaseProcessor";
         public UInt160 ContainerContractHash => Settings.Default.ContainerContractHash;
@@ -21,31 +22,25 @@ namespace Neo.FileStorage.InnerRing.Processors
         public UInt160 AuditContractHash => Settings.Default.AuditContractHash;
         public UInt160 ReputationContractHash => Settings.Default.AuditContractHash;
 
-        private MorphInvoker morphCli;
-        private MainInvoker mainCli;
-        public IState state;
-        public IActorRef workPool;
-        public ProtocolSettings protocolSettings;
-
-        public MainInvoker MainCli { get => mainCli; set => mainCli = value; }
-        public MorphInvoker MorphCli { get => morphCli; set => morphCli = value; }
-        public IState State { get => state; set => state = value; }
-        public IActorRef WorkPool { get => workPool; set => workPool = value; }
-        public ProtocolSettings ProtocolSettings { get => protocolSettings; set => protocolSettings = value; }
+        public MainInvoker MainInvoker;
+        public MorphInvoker MorphInvoker;
+        public IState State;
+        public IActorRef WorkPool;
+        public ProtocolSettings ProtocolSettings;
 
         public virtual HandlerInfo[] ListenerHandlers()
         {
-            return new HandlerInfo[] { };
+            return System.Array.Empty<HandlerInfo>();
         }
 
         public virtual ParserInfo[] ListenerParsers()
         {
-            return new ParserInfo[] { };
+            return System.Array.Empty<ParserInfo>();
         }
 
         public virtual HandlerInfo[] TimersHandlers()
         {
-            return new HandlerInfo[] { };
+            return System.Array.Empty<HandlerInfo>();
         }
     }
 }

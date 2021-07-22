@@ -7,7 +7,7 @@ using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Session;
 using Neo.FileStorage.Core.Object;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Placement;
 using Neo.FileStorage.Storage.Services.Object.Util;
 using Neo.FileStorage.Storage.Services.ObjectManager.Transformer;

@@ -1,13 +1,13 @@
 using System;
 using System.Linq;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 
 namespace Neo.FileStorage.InnerRing
 {
     public class InnerRingIndexer
     {
-        private Object lockObject = new();
-        private Indexes ind = new();
+        private readonly Object lockObject = new();
+        private readonly Indexes ind = new();
         private DateTime lastAccess = DateTime.Now;
         private readonly MorphInvoker morphInvoker;
         private readonly TimeSpan timeout;

@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Storage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Storage.Services.Control.Service;
 using APINodeInfo = Neo.FileStorage.API.Netmap.NodeInfo;

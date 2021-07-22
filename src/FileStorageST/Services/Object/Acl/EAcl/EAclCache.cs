@@ -4,7 +4,7 @@ using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Cache;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Storage.Services.Object.Acl.EAcl;
 
 namespace Neo.FileStorage.Storage.Services.Object.Acl

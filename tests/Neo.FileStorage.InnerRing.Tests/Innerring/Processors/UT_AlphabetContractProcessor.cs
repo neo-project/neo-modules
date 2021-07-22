@@ -3,7 +3,7 @@ using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.InnerRing.Processors;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Tests;
 using Neo.Wallets;
 using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
@@ -32,7 +32,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             state = new TestState() { alphabetIndex = 1 };
             processor = new AlphabetContractProcessor()
             {
-                MorphCli = morphInvoker,
+                MorphInvoker = morphInvoker,
                 State = state,
                 WorkPool = actor
             };
@@ -41,7 +41,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
         [TestMethod]
         public void HandleHandleGasEmissionTest()
         {
-            processor.HandleGasEmission(new NewAlphabetEmitTickEvent());
+            processor.HandleGasEmission();
             var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;
             Assert.IsNotNull(nt);
         }

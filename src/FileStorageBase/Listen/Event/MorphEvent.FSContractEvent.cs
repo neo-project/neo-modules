@@ -15,7 +15,7 @@ namespace Neo.FileStorage.Morph.Event
             public static BindEvent ParseBindEvent(VM.Types.Array eventParams)
             {
                 var bindEvent = new BindEvent();
-                if (eventParams.Count != 2) throw new Exception();
+                if (eventParams.Count != 2) throw new FormatException();
                 bindEvent.UserAccount = eventParams[0].GetSpan().AsSerializable<UInt160>();
                 List<ECPoint> keys = new();
                 var bindKeys = ((VM.Types.Array)eventParams[1]).GetEnumerator();
@@ -39,7 +39,7 @@ namespace Neo.FileStorage.Morph.Event
             public static ChequeEvent ParseChequeEvent(VM.Types.Array eventParams)
             {
                 var chequeEvent = new ChequeEvent();
-                if (eventParams.Count != 4) throw new Exception();
+                if (eventParams.Count != 4) throw new FormatException();
                 chequeEvent.Id = eventParams[0].GetSpan().ToArray();
                 chequeEvent.UserAccount = eventParams[1].GetSpan().AsSerializable<UInt160>();
                 chequeEvent.Amount = (long)eventParams[2].GetInteger();
@@ -58,7 +58,7 @@ namespace Neo.FileStorage.Morph.Event
             public static DepositEvent ParseDepositEvent(VM.Types.Array eventParams)
             {
                 var depositEvent = new DepositEvent();
-                if (eventParams.Count != 4) throw new Exception();
+                if (eventParams.Count != 4) throw new FormatException();
                 depositEvent.From = eventParams[0].GetSpan().AsSerializable<UInt160>();
                 depositEvent.Amount = (long)eventParams[1].GetInteger();
                 depositEvent.To = eventParams[2].GetSpan().AsSerializable<UInt160>();
@@ -76,7 +76,7 @@ namespace Neo.FileStorage.Morph.Event
             public static WithdrawEvent ParseWithdrawEvent(VM.Types.Array eventParams)
             {
                 var withdrawEvent = new WithdrawEvent();
-                if (eventParams.Count != 3) throw new Exception();
+                if (eventParams.Count != 3) throw new FormatException();
                 withdrawEvent.UserAccount = eventParams[0].GetSpan().AsSerializable<UInt160>();
                 withdrawEvent.Amount = (long)eventParams[1].GetInteger();
                 withdrawEvent.Id = eventParams[2].GetSpan().ToArray();

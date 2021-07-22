@@ -5,7 +5,7 @@ using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 
 
-namespace Neo.FileStorage.Morph.Invoker
+namespace Neo.FileStorage.Invoker
 {
     public class FakeSigners : IVerifiable
     {
@@ -26,7 +26,7 @@ namespace Neo.FileStorage.Morph.Invoker
 
         public FakeSigners(params UInt160[] hashForVerify)
         {
-            _hashForVerify = hashForVerify ?? new UInt160[0];
+            _hashForVerify = hashForVerify ?? Array.Empty<UInt160>();
         }
 
         UInt160[] IVerifiable.GetScriptHashesForVerifying(DataCache snapshot)

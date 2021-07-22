@@ -6,7 +6,7 @@ using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using FSContainer = Neo.FileStorage.API.Container.Container;
 
 namespace Neo.FileStorage.Storage.Services.Object.Acl

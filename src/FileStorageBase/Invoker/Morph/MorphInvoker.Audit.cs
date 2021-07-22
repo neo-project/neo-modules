@@ -4,7 +4,7 @@ using Neo.FileStorage.API.Audit;
 using Neo.VM.Types;
 using Array = Neo.VM.Types.Array;
 
-namespace Neo.FileStorage.Morph.Invoker
+namespace Neo.FileStorage.Invoker.Morph
 {
     public partial class MorphInvoker
     {
@@ -16,9 +16,9 @@ namespace Neo.FileStorage.Morph.Invoker
         private const string ListByNodeResultsMethod = "listByNode";
 
 
-        public bool PutAuditResult(byte[] rawResult)
+        public void PutAuditResult(byte[] rawResult)
         {
-            return Invoke(out _, AuditContractHash, PutResultMethod, SideChainFee, rawResult);
+            Invoke(AuditContractHash, PutResultMethod, SideChainFee, rawResult);
         }
 
         public DataAuditResult GetAuditResult(byte[] id)

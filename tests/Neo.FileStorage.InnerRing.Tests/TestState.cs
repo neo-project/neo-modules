@@ -2,7 +2,7 @@ using System;
 using Akka.Actor;
 using Neo.Cryptography.ECC;
 using Neo.FileStorage.InnerRing.Services.Audit;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 
 namespace Neo.FileStorage.InnerRing.Tests
 {

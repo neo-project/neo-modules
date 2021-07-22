@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using Google.Protobuf;
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Storage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Storage.Services.Object.Get.Execute;
 using Neo.FileStorage.Storage.Services.Object.Get.Writer;
