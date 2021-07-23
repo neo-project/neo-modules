@@ -69,7 +69,8 @@ namespace FileStorageCLI
             {
                 var cid = ContainerID.FromBase58String(containerId);
                 string[] objectIds = pobjectIds.Split("_");
-                foreach (var objectId in objectIds) {
+                foreach (var objectId in objectIds)
+                {
                     var oid = ObjectID.FromBase58String(objectId);
                     Address address = new Address(cid, oid);
                     var source1 = new CancellationTokenSource();
