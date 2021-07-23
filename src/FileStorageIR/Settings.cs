@@ -117,7 +117,7 @@ namespace Neo.FileStorage.InnerRing
             StorageEmission = emit.GetSection("Storage").GetValue("Amount", 0ul);
 
             IConfigurationSection netmapCleaner = section.GetSection("NetmapCleaner");
-            CleanupEnabled = netmapCleaner.GetValue("Eenabled", false);
+            CleanupEnabled = netmapCleaner.GetValue("Enabled", false);
             CleanupThreshold = netmapCleaner.GetValue("Threshold", 3ul);
 
             IConfigurationSection audit = section.GetSection("Audit");

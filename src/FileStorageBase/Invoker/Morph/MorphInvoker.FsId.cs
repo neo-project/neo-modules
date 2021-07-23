@@ -7,7 +7,7 @@ using Neo.SmartContract;
 using Neo.VM.Types;
 using ECPoint = Neo.Cryptography.ECC.ECPoint;
 
-namespace Neo.FileStorage.Morph.Invoker
+namespace Neo.FileStorage.Invoker.Morph
 {
     public partial class MorphInvoker
     {
@@ -30,7 +30,7 @@ namespace Neo.FileStorage.Morph.Invoker
             return lists.ToArray();
         }
 
-        public bool AddKeys(UInt160 owner, ECPoint[] keys)
+        public void AddKeys(UInt160 owner, ECPoint[] keys)
         {
             var array = new ContractParameter(ContractParameterType.Array);
             var list = new List<ContractParameter>();
@@ -39,10 +39,10 @@ namespace Neo.FileStorage.Morph.Invoker
                 list.Add(new ContractParameter(ContractParameterType.PublicKey) { Value = publicKey });
             }
             array.Value = list;
-            return Invoke(out _, FsIdContractHash, AddKeysMethod, SideChainFee, owner, array);
+            Invoke(FsIdContractHash, AddKeysMethod, SideChainFee, owner, array);
         }
 
-        public bool RemoveKeys(UInt160 owner, ECPoint[] keys)
+        public void RemoveKeys(UInt160 owner, ECPoint[] keys)
         {
             var array = new ContractParameter(ContractParameterType.Array);
             var list = new List<ContractParameter>();
@@ -51,7 +51,7 @@ namespace Neo.FileStorage.Morph.Invoker
                 list.Add(new ContractParameter(ContractParameterType.PublicKey) { Value = publicKey });
             }
             array.Value = list;
-            return Invoke(out _, FsIdContractHash, RemoveKeysMethod, SideChainFee, owner, array);
+            Invoke(FsIdContractHash, RemoveKeysMethod, SideChainFee, owner, array);
         }
     }
 }

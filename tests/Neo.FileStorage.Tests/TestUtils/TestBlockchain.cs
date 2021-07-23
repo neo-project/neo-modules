@@ -8,7 +8,7 @@ using Neo.Cryptography.ECC;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker;
 using Neo.IO;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;

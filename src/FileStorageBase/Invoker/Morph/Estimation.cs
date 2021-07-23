@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Neo.FileStorage.API.Refs;
 
-namespace Neo.FileStorage.Morph.Invoker
+namespace Neo.FileStorage.Invoker.Morph
 {
     public class Estimation
     {

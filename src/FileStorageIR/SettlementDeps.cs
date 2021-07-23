@@ -12,7 +12,7 @@ using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.StorageGroup;
 using Neo.FileStorage.InnerRing.Processors;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.IO;
 using NodeInfo = Neo.FileStorage.InnerRing.Processors.NodeInfo;
 
@@ -114,7 +114,7 @@ namespace Neo.FileStorage.InnerRing
                 {
                     ContainerID id = new ContainerID();
                     id.Value = ByteString.CopyFrom(estimationID);
-                    Estimations estimation = Invoker.InvokeGetContainerSize(id);
+                    Estimations estimation = Invoker.GetContainerSize(id);
                     result.Add(estimation);
                 }
                 catch (Exception e)

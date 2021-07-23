@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.InnerRing.Services.Audit;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Tests;
 using Neo.Wallets;
 using static Neo.FileStorage.Morph.Event.MorphEvent;
@@ -35,7 +35,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             var clientCache = new RpcClientCache() { wallet = wallet };
             processor = new AuditContractProcessor()
             {
-                MorphCli = morphInvoker,
+                MorphInvoker = morphInvoker,
                 ClientCache = clientCache,
                 TaskManager = auditTaskManager,
                 State = state,

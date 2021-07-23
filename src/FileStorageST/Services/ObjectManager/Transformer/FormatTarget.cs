@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using Neo.FileStorage.API.Session;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSVersion = Neo.FileStorage.API.Refs.Version;
 

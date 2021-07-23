@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 
 namespace Neo.FileStorage.Placement
 {

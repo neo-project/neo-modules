@@ -21,12 +21,12 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public override HandlerInfo[] ListenerHandlers()
         {
-            ScriptHashWithType scriptHashWithType = new ScriptHashWithType()
+            ScriptHashWithType scriptHashWithType = new()
             {
                 Type = PutReputationNotification,
                 ScriptHashValue = ReputationContractHash
             };
-            HandlerInfo handler = new HandlerInfo()
+            HandlerInfo handler = new()
             {
                 ScriptHashWithType = scriptHashWithType,
                 Handler = HandlePutReputation
@@ -36,12 +36,12 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public override ParserInfo[] ListenerParsers()
         {
-            ScriptHashWithType scriptHashWithType = new ScriptHashWithType()
+            ScriptHashWithType scriptHashWithType = new()
             {
                 Type = PutReputationNotification,
                 ScriptHashValue = ReputationContractHash
             };
-            ParserInfo parser = new ParserInfo()
+            ParserInfo parser = new()
             {
                 ScriptHashWithType = scriptHashWithType,
                 Parser = ReputationPutEvent.ParseReputationPutEvent,
@@ -52,7 +52,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         public void HandlePutReputation(ContractEvent morphEvent)
         {
             ReputationPutEvent reputationPutEvent = (ReputationPutEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:reputation put,peer_id:{0}", reputationPutEvent.PeerID.ToHexString()));
+            Utility.Log(Name, LogLevel.Info, $"notification:type:reputation put, peer_id={reputationPutEvent.PeerID.ToHexString()}");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessPut(reputationPutEvent)) });
         }
 
@@ -66,7 +66,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             var currentEpoch = State.EpochCounter();
             if (reputationPutEvent.Epoch >= currentEpoch)
             {
-                Utility.Log(Name, LogLevel.Info, string.Format("ignore reputation value, trust_epoch:{0},local_epoch:{1}", reputationPutEvent.Epoch, currentEpoch));
+                Utility.Log(Name, LogLevel.Info, $"ignore reputation value, trust_epoch={reputationPutEvent.Epoch}, local_epoch={currentEpoch}");
                 return;
             }
             if (!API.Cryptography.SignExtension.VerifyMessagePart(reputationPutEvent.Trust.Signature, reputationPutEvent.Trust.Body))
@@ -80,16 +80,16 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Info, $"ignore reputation value, reason:wrong manager,error:{e}");
+                Utility.Log(Name, LogLevel.Info, $"ignore reputation value, reason:wrong manager, error:{e}");
                 return;
             }
             try
             {
-                MorphCli.PutReputation(reputationPutEvent.Epoch, reputationPutEvent.PeerID, reputationPutEvent.Trust.ToByteArray());
+                MorphInvoker.PutReputation(reputationPutEvent.Epoch, reputationPutEvent.PeerID, reputationPutEvent.Trust.ToByteArray());
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Info, string.Format("can't send approval tx for reputation value,peer_id:{0},error:{1}", reputationPutEvent.PeerID.ToHexString(), e.Message));
+                Utility.Log(Name, LogLevel.Info, $"can't send approval tx for reputation value, peer_id={reputationPutEvent.PeerID.ToHexString()}, error={e}");
             }
         }
 

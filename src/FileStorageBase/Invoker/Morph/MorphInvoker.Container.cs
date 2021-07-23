@@ -12,7 +12,7 @@ using Array = Neo.VM.Types.Array;
 using FSContainer = Neo.FileStorage.API.Container.Container;
 using GByteString = Google.Protobuf.ByteString;
 
-namespace Neo.FileStorage.Morph.Invoker
+namespace Neo.FileStorage.Invoker.Morph
 {
     public partial class MorphInvoker
     {
@@ -28,27 +28,27 @@ namespace Neo.FileStorage.Morph.Invoker
         private const string StartEstimationMethod = "startContainerEstimation";
         private const string StopEstimationMethod = "stopContainerEstimation";
 
-        public bool PutContainer(FSContainer cnr, Signature sig, SessionToken token)
+        public void PutContainer(FSContainer cnr, Signature sig, SessionToken token)
         {
-            return Invoke(out _, ContainerContractHash, PutMethod, SideChainFee, cnr.ToByteArray(), sig.Sign.ToByteArray(), sig.Key.ToByteArray(), token.ToByteArray());
+            Invoke(ContainerContractHash, PutMethod, SideChainFee, cnr.ToByteArray(), sig.Sign.ToByteArray(), sig.Key.ToByteArray(), token.ToByteArray());
         }
 
-        public bool SetEACL(EACLTable eacl, Signature sig, SessionToken token)
+        public void SetEACL(EACLTable eacl, Signature sig, SessionToken token)
         {
-            return Invoke(out _, ContainerContractHash, SetEACLMethod, SideChainFee, eacl.ToByteArray(), sig.Key.ToByteArray(), sig.Sign.ToByteArray(), token.ToByteArray());
+            Invoke(ContainerContractHash, SetEACLMethod, SideChainFee, eacl.ToByteArray(), sig.Key.ToByteArray(), sig.Sign.ToByteArray(), token.ToByteArray());
         }
 
-        public bool DeleteContainer(ContainerID cid, byte[] sig, SessionToken token)
+        public void DeleteContainer(ContainerID cid, byte[] sig, SessionToken token)
         {
-            return Invoke(out _, ContainerContractHash, DeleteMethod, SideChainFee, cid.Value.ToByteArray(), sig, token.ToByteArray());
+            Invoke(ContainerContractHash, DeleteMethod, SideChainFee, cid.Value.ToByteArray(), sig, token.ToByteArray());
         }
 
         public EAclWithSignature GetEACL(ContainerID containerID)
         {
             InvokeResult result = TestInvoke(ContainerContractHash, EACLMethod, containerID.Value.ToByteArray());
-            if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (EACL)");
+            if (result.State != VM.VMState.HALT) throw new Exception($"could not invoke method ({EACLMethod})");
             Array array = (Array)result.ResultStack[0];
-            if (array.Count != 4) throw new InvalidOperationException($"unexpected eacl stack item count {EACLMethod}: {array.Count}");
+            if (array.Count != 4) throw new InvalidOperationException($"unexpected eacl stack item count, count={array.Count}");
             return new()
             {
                 Table = EACLTable.Parser.ParseFrom(array[0].GetSpan().ToArray()),
@@ -57,16 +57,16 @@ namespace Neo.FileStorage.Morph.Invoker
                     Key = GByteString.CopyFrom(array[2].GetSpan().ToArray()),
                     Sign = GByteString.CopyFrom(array[1].GetSpan().ToArray()),
                 },
-                SessionToken = array[3] is VM.Types.Null ? null : SessionToken.Parser.ParseFrom(array[3].GetSpan().ToArray())
+                SessionToken = array[3] is Null ? null : SessionToken.Parser.ParseFrom(array[3].GetSpan().ToArray())
             };
         }
 
         public ContainerWithSignature GetContainer(ContainerID containerID)
         {
             InvokeResult result = TestInvoke(ContainerContractHash, GetMethod, containerID.Value.ToByteArray());
-            if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (Get)");
+            if (result.State != VM.VMState.HALT) throw new Exception($"could not invoke method ({GetMethod})");
             Array array = (Array)result.ResultStack[0];
-            if (array.Count != 4) throw new InvalidOperationException($"unexpected container stack item count: {array.Count}");
+            if (array.Count != 4) throw new InvalidOperationException($"unexpected container stack item, count={array.Count}");
             ContainerWithSignature cnr = new()
             {
                 Container = FSContainer.Parser.ParseFrom(array[0].GetSpan().ToArray()),
@@ -75,7 +75,7 @@ namespace Neo.FileStorage.Morph.Invoker
                     Sign = GByteString.CopyFrom(array[1].GetSpan().ToArray()),
                     Key = GByteString.CopyFrom(array[2].GetSpan().ToArray()),
                 },
-                SessionToken = array[3] is VM.Types.Null ? null : SessionToken.Parser.ParseFrom(array[3].GetSpan().ToArray())
+                SessionToken = array[3] is Null ? null : SessionToken.Parser.ParseFrom(array[3].GetSpan().ToArray())
             };
             return cnr;
         }
@@ -83,7 +83,7 @@ namespace Neo.FileStorage.Morph.Invoker
         public List<ContainerID> ListContainers(OwnerID ownerID)
         {
             InvokeResult result = TestInvoke(ContainerContractHash, ListMethod, ownerID.Value.ToByteArray());
-            if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (List)");
+            if (result.State != VM.VMState.HALT) throw new Exception($"could not invoke method ({ListMethod})");
             if (result.ResultStack[0] is Null) return new List<ContainerID>();
             Array array = (Array)result.ResultStack[0];
             IEnumerator<StackItem> enumerator = array.GetEnumerator();
@@ -95,15 +95,15 @@ namespace Neo.FileStorage.Morph.Invoker
             return resultArray.Select(p => ContainerID.FromSha256Bytes(p)).ToList();
         }
 
-        public bool AnnounceLoad(Announcement announcement, byte[] key)
+        public void AnnounceLoad(Announcement announcement, byte[] key)
         {
-            return Invoke(out _, ContainerContractHash, PutSizeMethod, SideChainFee, announcement.Epoch, announcement.ContainerId.Value.ToByteArray(), announcement.UsedSpace, key);
+            Invoke(ContainerContractHash, PutSizeMethod, SideChainFee, announcement.Epoch, announcement.ContainerId.Value.ToByteArray(), announcement.UsedSpace, key);
         }
 
-        public Estimations InvokeGetContainerSize(ContainerID containerID)
+        public Estimations GetContainerSize(ContainerID containerID)
         {
             InvokeResult result = TestInvoke(ContainerContractHash, GetSizeMethod, containerID.Value.ToByteArray());
-            if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (GetContainerSize)");
+            if (result.State != VM.VMState.HALT) throw new Exception($"could not invoke method ({GetSizeMethod})");
             Array prms = (Array)result.ResultStack[0];
             Estimations es = new();
             es.ContainerID = ContainerID.FromSha256Bytes(prms[0].GetSpan().ToArray());
@@ -124,7 +124,7 @@ namespace Neo.FileStorage.Morph.Invoker
         public List<byte[]> ListSizes(ulong epoch)
         {
             InvokeResult result = TestInvoke(ContainerContractHash, ListSizesMethod, epoch);
-            if (result.State != VM.VMState.HALT) throw new Exception("could not invoke method (ListSizes)");
+            if (result.State != VM.VMState.HALT) throw new Exception($"could not invoke method ({ListSizesMethod})");
             if (result.ResultStack[0] is Null) return new List<byte[]>();
             Array prms = (Array)result.ResultStack[0];
             List<byte[]> ids = new();
@@ -136,24 +136,24 @@ namespace Neo.FileStorage.Morph.Invoker
             return ids;
         }
 
-        public bool StartEstimation(long epoch)
+        public void StartEstimation(long epoch)
         {
-            return Invoke(out _, ContainerContractHash, StartEstimationMethod, SideChainFee, epoch);
+            Invoke(ContainerContractHash, StartEstimationMethod, SideChainFee, epoch);
         }
 
-        public bool StopEstimation(long epoch)
+        public void StopEstimation(long epoch)
         {
-            return Invoke(out _, ContainerContractHash, StopEstimationMethod, SideChainFee, epoch);
+            Invoke(ContainerContractHash, StopEstimationMethod, SideChainFee, epoch);
         }
 
-        public bool RegisterContainer(byte[] key, byte[] container, byte[] signature, byte[] token)
+        public void RegisterContainer(byte[] key, byte[] container, byte[] signature, byte[] token)
         {
-            return Invoke(out _, ContainerContractHash, PutMethod, SideChainFee, container, signature, key, token);
+            Invoke(ContainerContractHash, PutMethod, SideChainFee, container, signature, key, token);
         }
 
-        public bool RemoveContainer(byte[] containerID, byte[] signature, byte[] token)
+        public void RemoveContainer(byte[] containerID, byte[] signature, byte[] token)
         {
-            return Invoke(out _, ContainerContractHash, DeleteMethod, SideChainFee, containerID, signature, token);
+            Invoke(ContainerContractHash, DeleteMethod, SideChainFee, containerID, signature, token);
         }
     }
 }

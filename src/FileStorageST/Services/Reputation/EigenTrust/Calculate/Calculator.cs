@@ -1,7 +1,7 @@
 using System;
 using Akka.Actor;
 using Neo.FileStorage.API.Reputation;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Storage.Services.Reputaion.Common.Route;
 using Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Storage.Consumers;
 using Neo.FileStorage.Storage.Services.Reputaion.Intermediate;

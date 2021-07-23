@@ -1,6 +1,6 @@
 using System;
 
-namespace Neo.FileStorage.Morph.Invoker
+namespace Neo.FileStorage.Invoker.Morph
 {
     public partial class MorphInvoker
     {
@@ -15,6 +15,12 @@ namespace Neo.FileStorage.Morph.Invoker
         public readonly byte[] WithdrawFeeConfig = Utility.StrictUTF8.GetBytes("WithdrawFee");
 
         private const string ConfigMethod = "config";
+        private const string SetConfigMethod = "setConfig";
+
+        public void SetConfig(byte[] Id, byte[] key, byte[] value)
+        {
+            Invoke(NetMapContractHash, SetConfigMethod, SideChainFee, Id, key, value);
+        }
 
         private ulong ReadUInt64Config(byte[] key)
         {

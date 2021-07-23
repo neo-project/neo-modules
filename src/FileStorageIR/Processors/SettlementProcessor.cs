@@ -10,8 +10,8 @@ using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Morph.Event;
-using Neo.FileStorage.Morph.Invoker;
 using Neo.IO;
 using static Neo.FileStorage.InnerRing.Events.MorphEvent;
 using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor.IncomeSettlementContext;
@@ -37,7 +37,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             AuditStartEvent auditEvent = (AuditStartEvent)morphEvent;
             var epoch = auditEvent.epoch;
-            Utility.Log(Name, LogLevel.Info, string.Format("new audit settlement event,epoch:{0}", epoch));
+            Utility.Log(Name, LogLevel.Info, $"new audit settlement event, epoch={epoch}");
             if (epoch == 0)
             {
                 Utility.Log(Name, LogLevel.Info, "ignore genesis epoch");
@@ -56,13 +56,13 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore income collection event");
                 return;
             }
-            Utility.Log(Name, LogLevel.Info, string.Format("start basic income collection,epoch:{0}", epoch));
+            Utility.Log(Name, LogLevel.Info, $"start basic income collection, epoch={epoch}");
             if (incomeContexts.TryGetValue(epoch, out _))
             {
-                Utility.Log(Name, LogLevel.Error, string.Format("income context already exists,epoch:{0}", epoch));
+                Utility.Log(Name, LogLevel.Error, $"income context already exists, epoch={epoch}");
                 return;
             }
-            IncomeSettlementContext incomeCtx = new IncomeSettlementContext() { settlementDeps = basicIncome, epoch = epoch };
+            IncomeSettlementContext incomeCtx = new() { settlementDeps = basicIncome, epoch = epoch };
             incomeCtx.bankOwner = incomeCtx.BankOwnerID();
             incomeContexts[epoch] = incomeCtx;
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => incomeCtx.Collect()) });
@@ -77,12 +77,12 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore income distribution event");
                 return;
             }
-            Utility.Log(Name, LogLevel.Info, string.Format("start basic income distribution,epoch:{0}", epoch));
+            Utility.Log(Name, LogLevel.Info, $"start basic income distribution, epoch={epoch}");
             var flag = incomeContexts.TryGetValue(epoch, out var incomeCtx);
             incomeContexts.Remove(epoch);
             if (!flag)
             {
-                Utility.Log(Name, LogLevel.Info, string.Format("income context distribution does not exists,epoch:{0}", epoch));
+                Utility.Log(Name, LogLevel.Info, $"income context distribution does not exists, epoch={epoch}");
                 return;
             }
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => incomeCtx.Distribute()) });
@@ -98,8 +98,8 @@ namespace Neo.FileStorage.InnerRing.Processors
 
             public OwnerID BankOwnerID()
             {
-                OwnerID ownerID = new OwnerID();
-                UInt160 account = new UInt160(new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+                OwnerID ownerID = new();
+                UInt160 account = new(new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
                 ownerID.Value = ByteString.CopyFrom(Cryptography.Base58.Decode(Cryptography.Base58.Base58CheckEncode(account.ToArray())));
                 return ownerID;
             }
@@ -120,7 +120,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                         }
                         catch
                         {
-                            Utility.Log("IncomeSettlementContext", LogLevel.Info, string.Format("can't fetch container info,epoch:{0},container_id:{1}", epoch, item.ContainerID.ToByteString()));
+                            Utility.Log("IncomeSettlementContext", LogLevel.Info, $"can't fetch container info, epoch={epoch}, container_id={item.ContainerID.ToBase58String()}");
                             continue;
                         }
                         NodeInfo[] cnrNodes = null;
@@ -130,7 +130,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                         }
                         catch
                         {
-                            Utility.Log("IncomeSettlementContext", LogLevel.Info, string.Format("can't fetch container info,epoch:{0},container_id:{1}", epoch, item.ContainerID.ToByteString()));
+                            Utility.Log("IncomeSettlementContext", LogLevel.Info, $"can't fetch container info, epoch={epoch}, container_id={item.ContainerID.ToBase58String()}");
                             continue;
                         }
                         ulong avg = AvgEstimation(item);
@@ -156,7 +156,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 BigInteger bigRate = rate;
                 ulong total = size * (ulong)ln;
-                BigInteger price = new BigInteger(total);
+                BigInteger price = new(total);
                 price = BigInteger.Multiply(price, bigRate);
                 price = BigInteger.Divide(price, bigGB);
                 if (price.CompareTo(bigZero) == 0)
@@ -272,7 +272,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public class Calculator
         {
-            private SettlementDeps settlementDeps;
+            private readonly SettlementDeps settlementDeps;
 
             public Calculator(SettlementDeps settlementDeps)
             {
@@ -281,14 +281,12 @@ namespace Neo.FileStorage.InnerRing.Processors
 
             public void Calculate(ulong epoch)
             {
-                Utility.Log("Calculator", LogLevel.Info, string.Format("current epoch,{0}", epoch));
                 if (epoch == 0)
                 {
                     Utility.Log("Calculator", LogLevel.Info, "settlements are ignored for zero epoch");
                     return;
                 }
-                Utility.Log("Calculator", LogLevel.Info, "calculate audit settlements");
-                Utility.Log("Calculator", LogLevel.Debug, "getting results for the previous epoch");
+                Utility.Log("Calculator", LogLevel.Info, $"calculate audit settlements, epoch={epoch}");
                 List<DataAuditResult> auditResults;
                 try
                 {
@@ -304,7 +302,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log("Calculator", LogLevel.Debug, "no audit results in previous epoch");
                     return;
                 }
-                Utility.Log("Calculator", LogLevel.Debug, string.Format("processing audit results,number:{0}", auditResults.Count));
+                Utility.Log("Calculator", LogLevel.Debug, $"processing audit results, number={auditResults.Count}");
                 var table = new TransferTable();
                 foreach (var auditResult in auditResults)
                 {
@@ -321,7 +319,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
             public void ProcessResult(SingleResultCtx ctx)
             {
-                Utility.Log("Calculator", LogLevel.Debug, string.Format("cid:{0},audit epoch:{1}", ctx.auditResult.ContainerId.ToBase58String(), ctx.auditResult.AuditEpoch));
+                Utility.Log("Calculator", LogLevel.Debug, $"cid={ctx.auditResult.ContainerId.ToBase58String()}, audit_epoch={ctx.auditResult.AuditEpoch}");
                 Utility.Log("Calculator", LogLevel.Debug, "reading information about the container");
                 if (!ReadContainerInfo(ctx)) return;
                 Utility.Log("Calculator", LogLevel.Debug, "building placement");
@@ -342,7 +340,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 }
                 catch (Exception e)
                 {
-                    Utility.Log("Calculator", LogLevel.Error, string.Format("could not get container info,error:{0}", e.Message));
+                    Utility.Log("Calculator", LogLevel.Error, $"could not get container info, error={e}");
                     return false;
                 }
                 return true;
@@ -359,7 +357,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 }
                 catch (Exception e)
                 {
-                    Utility.Log("Calculator", LogLevel.Error, string.Format("could not get container nodes,error:{0}", e));
+                    Utility.Log("Calculator", LogLevel.Error, $"could not get container nodes, error={e}");
                     return false;
                 }
             }
@@ -403,7 +401,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     return false;
                 }
                 ulong sumPassSGSize = 0;
-                API.Refs.Address address = new API.Refs.Address();
+                API.Refs.Address address = new();
                 address.ContainerId = ctx.auditResult.ContainerId;
                 foreach (var sgID in ctx.auditResult.PassSg)
                 {
@@ -415,7 +413,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     }
                     catch
                     {
-                        Utility.Log("Calculator", LogLevel.Debug, string.Format("could not get SG info,id:{0}", sgID));
+                        Utility.Log("Calculator", LogLevel.Debug, $"could not get SG info, id={sgID}");
                         return false;
                     }
                 }
@@ -440,11 +438,11 @@ namespace Neo.FileStorage.InnerRing.Processors
                     }
                     catch (Exception e)
                     {
-                        Utility.Log("Calculator", LogLevel.Error, string.Format("could not resolve public key of the storage node,key:{0},error:{1}", item.Key, e.Message));
+                        Utility.Log("Calculator", LogLevel.Error, $"could not resolve public key of the storage node, key={item.Key}, error={e}");
                         return false;
                     }
                     var price = item.Value.Price();
-                    Utility.Log("Calculator", LogLevel.Debug, string.Format("calculating storage node salary for audit (GASe-12),sum SG size:{0},price:{1}", ctx.sumSGSize, price));
+                    Utility.Log("Calculator", LogLevel.Debug, $"calculating storage node salary for audit (GASe-12) sum SG, size={ctx.sumSGSize}, price={price}");
                     var fee = BigInteger.Multiply(price, ctx.sumSGSize);
                     fee = BigInteger.Divide(fee, BigInteger.One);
                     if (fee.CompareTo(BigInteger.Zero) == 0) fee = BigInteger.Add(fee, BigInteger.One);
@@ -472,12 +470,13 @@ namespace Neo.FileStorage.InnerRing.Processors
 
     public interface NodeInfo
     {
-        public BigInteger Price();
-        public byte[] PublicKey();
+        BigInteger Price();
+        byte[] PublicKey();
     }
+
     public class BasicNodeInfoWrapper : NodeInfo
     {
-        private byte[] n;
+        private readonly byte[] n;
 
         public BasicNodeInfoWrapper(byte[] n)
         {
@@ -494,9 +493,10 @@ namespace Neo.FileStorage.InnerRing.Processors
             return n;
         }
     }
+
     public class NormalNodeInfoWrapper : NodeInfo
     {
-        private Node ni;
+        private readonly Node ni;
 
         public NormalNodeInfoWrapper(Node ni)
         {

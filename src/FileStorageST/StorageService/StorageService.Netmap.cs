@@ -46,8 +46,7 @@ namespace Neo.FileStorage.Storage
                         ni.State = NodeInfo.Types.State.Online;
                         try
                         {
-                            var r = morphInvoker.AddPeer(ni);
-                            if (!r) throw new InvalidOperationException("add peer return false");
+                            morphInvoker.AddPeer(ni);
                         }
                         catch (Exception exp)
                         {

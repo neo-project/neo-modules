@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using Google.Protobuf;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Reputation;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Storage.Services.Reputaion.EigenTrust;
 
 namespace Neo.FileStorage.Storage.Services.Reputaion.Intermediate

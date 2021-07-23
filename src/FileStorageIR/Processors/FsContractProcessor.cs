@@ -30,7 +30,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         private ulong mintEmitThreshold => Settings.Default.MintEmitThreshold;
         private long gasBalanceThreshold => Settings.Default.GasBalanceThreshold;
         private long mintEmitValue = Settings.Default.MintEmitValue;
-        private LRUCache<string, ulong> mintEmitCache;
+        private readonly LRUCache<string, ulong> mintEmitCache;
 
         public Fixed8ConverterUtil Convert;
 
@@ -41,27 +41,27 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public override HandlerInfo[] ListenerHandlers()
         {
-            HandlerInfo depositHandler = new HandlerInfo();
+            HandlerInfo depositHandler = new();
             depositHandler.ScriptHashWithType = new ScriptHashWithType() { Type = DepositNotification, ScriptHashValue = FsContractHash };
             depositHandler.Handler = HandleDeposit;
 
-            HandlerInfo withdrwaHandler = new HandlerInfo();
+            HandlerInfo withdrwaHandler = new();
             withdrwaHandler.ScriptHashWithType = new ScriptHashWithType() { Type = WithdrawNotification, ScriptHashValue = FsContractHash };
             withdrwaHandler.Handler = HandleWithdraw;
 
-            HandlerInfo chequeHandler = new HandlerInfo();
+            HandlerInfo chequeHandler = new();
             chequeHandler.ScriptHashWithType = new ScriptHashWithType() { Type = ChequeNotification, ScriptHashValue = FsContractHash };
             chequeHandler.Handler = HandleCheque;
 
-            HandlerInfo configHandler = new HandlerInfo();
+            HandlerInfo configHandler = new();
             configHandler.ScriptHashWithType = new ScriptHashWithType() { Type = ConfigNotification, ScriptHashValue = FsContractHash };
             configHandler.Handler = HandleConfig;
 
-            HandlerInfo bindHandler = new HandlerInfo();
+            HandlerInfo bindHandler = new();
             bindHandler.ScriptHashWithType = new ScriptHashWithType() { Type = BindNotification, ScriptHashValue = FsContractHash };
             bindHandler.Handler = HandleBind;
 
-            HandlerInfo unbindHandler = new HandlerInfo();
+            HandlerInfo unbindHandler = new();
             unbindHandler.ScriptHashWithType = new ScriptHashWithType() { Type = UnBindNotification, ScriptHashValue = FsContractHash };
             unbindHandler.Handler = HandleUnBind;
 
@@ -70,33 +70,27 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public override ParserInfo[] ListenerParsers()
         {
-            //deposit event
-            ParserInfo depositParser = new ParserInfo();
+            ParserInfo depositParser = new();
             depositParser.ScriptHashWithType = new ScriptHashWithType() { Type = DepositNotification, ScriptHashValue = FsContractHash };
             depositParser.Parser = DepositEvent.ParseDepositEvent;
 
-            //withdraw event
-            ParserInfo withdrawParser = new ParserInfo();
+            ParserInfo withdrawParser = new();
             withdrawParser.ScriptHashWithType = new ScriptHashWithType() { Type = WithdrawNotification, ScriptHashValue = FsContractHash };
             withdrawParser.Parser = WithdrawEvent.ParseWithdrawEvent;
 
-            //cheque event
-            ParserInfo chequeParser = new ParserInfo();
+            ParserInfo chequeParser = new();
             chequeParser.ScriptHashWithType = new ScriptHashWithType() { Type = ChequeNotification, ScriptHashValue = FsContractHash };
             chequeParser.Parser = ChequeEvent.ParseChequeEvent;
 
-            //config event
-            ParserInfo configParser = new ParserInfo();
+            ParserInfo configParser = new();
             configParser.ScriptHashWithType = new ScriptHashWithType() { Type = ConfigNotification, ScriptHashValue = FsContractHash };
             configParser.Parser = ConfigEvent.ParseConfigEvent;
 
-            //bind event
-            ParserInfo bindParser = new ParserInfo();
+            ParserInfo bindParser = new();
             bindParser.ScriptHashWithType = new ScriptHashWithType() { Type = BindNotification, ScriptHashValue = FsContractHash };
             bindParser.Parser = BindEvent.ParseBindEvent;
 
-            //unbind event
-            ParserInfo unbindParser = new ParserInfo();
+            ParserInfo unbindParser = new();
             unbindParser.ScriptHashWithType = new ScriptHashWithType() { Type = UnBindNotification, ScriptHashValue = FsContractHash };
             unbindParser.Parser = BindEvent.ParseBindEvent;
             return new ParserInfo[] { depositParser, withdrawParser, chequeParser, configParser, bindParser, unbindParser };
@@ -105,42 +99,42 @@ namespace Neo.FileStorage.InnerRing.Processors
         public void HandleDeposit(ContractEvent morphEvent)
         {
             DepositEvent depositeEvent = (DepositEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:deposit,id:{0}", depositeEvent.Id.ToHexString()));
+            Utility.Log(Name, LogLevel.Info, $"event, type=deposit, id={depositeEvent.Id}");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessDeposit(depositeEvent)) });
         }
 
         public void HandleWithdraw(ContractEvent morphEvent)
         {
             WithdrawEvent withdrawEvent = (WithdrawEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:withdraw,id:{0}", withdrawEvent.Id.ToHexString()));
+            Utility.Log(Name, LogLevel.Info, $"event, type=withdraw, id={withdrawEvent.Id}");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessWithdraw(withdrawEvent)) });
         }
 
         public void HandleCheque(ContractEvent morphEvent)
         {
             ChequeEvent chequeEvent = (ChequeEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:cheque,value:{0}", chequeEvent.Id.ToHexString()));
+            Utility.Log(Name, LogLevel.Info, $"event, type=cheque, value={chequeEvent.Id}");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessCheque(chequeEvent)) });
         }
 
         public void HandleConfig(ContractEvent morphEvent)
         {
             ConfigEvent configEvent = (ConfigEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:setConfig,key:{0},value:{1}", configEvent.Key.ToHexString(), configEvent.Value.ToHexString()));
+            Utility.Log(Name, LogLevel.Info, $"event, type=setConfig, key={configEvent.Key}, value={configEvent.Value}");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessConfig(configEvent)) });
         }
 
         public void HandleBind(ContractEvent morphEvent)
         {
             BindEvent bindEvent = (BindEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, "notification:type:bind");
+            Utility.Log(Name, LogLevel.Info, "event, type=bind");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessBind(bindEvent, true)) });
         }
 
         public void HandleUnBind(ContractEvent morphEvent)
         {
             BindEvent bindEvent = (BindEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, "notification:type:unbind");
+            Utility.Log(Name, LogLevel.Info, "event, type=unbind");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessBind(bindEvent, false)) });
         }
 
@@ -153,11 +147,11 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                MorphCli.Mint(depositeEvent.To.ToArray(), Convert.ToBalancePrecision(depositeEvent.Amount), System.Text.Encoding.UTF8.GetBytes(TxLogPrefix).Concat(depositeEvent.Id).ToArray());
+                MorphInvoker.Mint(depositeEvent.To.ToArray(), Convert.ToBalanceDecimals(depositeEvent.Amount), Utility.StrictUTF8.GetBytes(TxLogPrefix).Concat(depositeEvent.Id).ToArray());
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Error, string.Format("can't transfer assets to balance contract,{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, $"can't transfer assets to balance contract, error={e}");
             }
 
             var curEpoch = State.EpochCounter();
@@ -166,31 +160,31 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 if (mintEmitCache.TryGet(receiver.ToString(), out ulong value) && ((value + mintEmitThreshold) >= curEpoch))
                 {
-                    Utility.Log(Name, LogLevel.Warning, string.Format("double mint emission declined,receiver:{0},last_emission:{1},current_epoch:{2}", receiver.ToString(), value.ToString(), curEpoch.ToString()));
+                    Utility.Log(Name, LogLevel.Warning, $"double mint emission declined, receiver={receiver}, last_emission={value}, current_epoch={curEpoch}");
                     return;
                 }
                 long balance;
                 try
                 {
-                    balance = MorphCli.GasBalance();
+                    balance = MorphInvoker.GasBalance();
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(Name, LogLevel.Warning, string.Format("can't get gas balance of the node,error:{0}", e.Message));
+                    Utility.Log(Name, LogLevel.Warning, $"can't get gas balance of the node, error={e}");
                     return;
                 }
                 if (balance < gasBalanceThreshold)
                 {
-                    Utility.Log(Name, LogLevel.Warning, string.Format("gas balance threshold has been reached,balance:{0},threshold:{1}", balance, gasBalanceThreshold));
+                    Utility.Log(Name, LogLevel.Warning, $"gas balance threshold has been reached, balance={balance}, threshold={gasBalanceThreshold}");
                     return;
                 }
                 try
                 {
-                    MorphCli.TransferGas(depositeEvent.To, mintEmitValue);
+                    MorphInvoker.TransferGas(depositeEvent.To, mintEmitValue);
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(Name, LogLevel.Error, string.Format("can't transfer native gas to receiver,{0}", e.Message));
+                    Utility.Log(Name, LogLevel.Error, $"can't transfer native gas to receiver, error={e}");
                 }
                 mintEmitCache.Add(receiver.ToString(), curEpoch);
             }
@@ -208,24 +202,24 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Error, "tx id size is less than script hash size");
                 return;
             }
-            UInt160 lockeAccount = null;
+            UInt160 lockeAccount;
             try
             {
                 lockeAccount = new UInt160(withdrawEvent.Id.Take(UInt160.Length).ToArray());
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Error, string.Format("can't create lock account,{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, $"can't create lock account, error={e}");
                 return;
             }
             try
             {
                 ulong curEpoch = State.EpochCounter();
-                MorphCli.LockAsset(withdrawEvent.Id, withdrawEvent.UserAccount, lockeAccount, Convert.ToBalancePrecision(withdrawEvent.Amount), curEpoch + LockAccountLifetime);
+                MorphInvoker.LockAsset(withdrawEvent.Id, withdrawEvent.UserAccount, lockeAccount, Convert.ToBalanceDecimals(withdrawEvent.Amount), curEpoch + LockAccountLifetime);
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Error, string.Format("can't lock assets for withdraw,{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, $"can't lock assets for withdraw, error={e}");
             }
         }
 
@@ -238,11 +232,11 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                MorphCli.Burn(chequeEvent.LockAccount.ToArray(), Convert.ToBalancePrecision(chequeEvent.Amount), System.Text.Encoding.UTF8.GetBytes(TxLogPrefix).Concat(chequeEvent.Id).ToArray());
+                MorphInvoker.Burn(chequeEvent.LockAccount.ToArray(), Convert.ToBalanceDecimals(chequeEvent.Amount), System.Text.Encoding.UTF8.GetBytes(TxLogPrefix).Concat(chequeEvent.Id).ToArray());
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Error, string.Format("can't transfer assets to fed contract,{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, $"can't transfer assets to fed contract, error={e}");
             }
         }
 
@@ -255,11 +249,11 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             try
             {
-                MorphCli.SetConfig(configEvent.Id, configEvent.Key, configEvent.Value);
+                MorphInvoker.SetConfig(configEvent.Id, configEvent.Key, configEvent.Value);
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Error, string.Format("can't relay set config event,{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, $"can't relay set config event, error={e}");
             }
         }
 
@@ -273,9 +267,9 @@ namespace Neo.FileStorage.InnerRing.Processors
             try
             {
                 if (bind)
-                    MorphCli.AddKeys(bindEvent.UserAccount, bindEvent.Keys);
+                    MorphInvoker.AddKeys(bindEvent.UserAccount, bindEvent.Keys);
                 else
-                    MorphCli.RemoveKeys(bindEvent.UserAccount, bindEvent.Keys);
+                    MorphInvoker.RemoveKeys(bindEvent.UserAccount, bindEvent.Keys);
             }
             catch
             {

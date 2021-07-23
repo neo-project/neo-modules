@@ -50,7 +50,7 @@ namespace Neo.FileStorage.InnerRing.Utils
 
         public Fixed8ConverterUtil(uint precision)
         {
-            SetBalancePrecision(precision);
+            SetBalanceDecimals(precision);
         }
 
         public long ToFixed8(long n)
@@ -58,12 +58,12 @@ namespace Neo.FileStorage.InnerRing.Utils
             return (long)ToBasePrecision(new BigInteger(n));
         }
 
-        public long ToBalancePrecision(long n)
+        public long ToBalanceDecimals(long n)
         {
             return (long)ToTargetPrecision(new BigInteger(n));
         }
 
-        public void SetBalancePrecision(uint precision)
+        public void SetBalanceDecimals(uint precision)
         {
             var exp = (int)precision - Fixed8Precision;
             if (exp < 0)

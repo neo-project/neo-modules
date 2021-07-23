@@ -7,7 +7,7 @@ using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Reputation;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.InnerRing.Processors;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Tests;
 using Neo.IO;
 using Neo.Wallets;
@@ -37,7 +37,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             state = new TestState() { alphabetIndex = 1 };
             processor = new ReputationContractProcessor()
             {
-                MorphCli = morphInvoker,
+                MorphInvoker = morphInvoker,
                 State = state,
                 WorkPool = actor
             };

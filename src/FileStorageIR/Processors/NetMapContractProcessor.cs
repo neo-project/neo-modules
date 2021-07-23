@@ -33,15 +33,15 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public override HandlerInfo[] ListenerHandlers()
         {
-            HandlerInfo newEpochHandler = new HandlerInfo();
+            HandlerInfo newEpochHandler = new();
             newEpochHandler.ScriptHashWithType = new ScriptHashWithType() { Type = NewEpochNotification, ScriptHashValue = NetmapContractHash };
             newEpochHandler.Handler = HandleNewEpoch;
 
-            HandlerInfo addPeerHandler = new HandlerInfo();
+            HandlerInfo addPeerHandler = new();
             addPeerHandler.ScriptHashWithType = new ScriptHashWithType() { Type = AddPeerNotification, ScriptHashValue = NetmapContractHash };
             addPeerHandler.Handler = HandleAddPeer;
 
-            HandlerInfo updatePeerStateHandler = new HandlerInfo();
+            HandlerInfo updatePeerStateHandler = new();
             updatePeerStateHandler.ScriptHashWithType = new ScriptHashWithType() { Type = UpdatePeerStateNotification, ScriptHashValue = NetmapContractHash };
             updatePeerStateHandler.Handler = HandleUpdateState;
 
@@ -50,46 +50,45 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public override ParserInfo[] ListenerParsers()
         {
-            ParserInfo newEpochParser = new ParserInfo();
+            ParserInfo newEpochParser = new();
             newEpochParser.ScriptHashWithType = new ScriptHashWithType() { Type = NewEpochNotification, ScriptHashValue = NetmapContractHash };
             newEpochParser.Parser = NewEpochEvent.ParseNewEpochEvent;
 
-            ParserInfo addPeerParser = new ParserInfo();
+            ParserInfo addPeerParser = new();
             addPeerParser.ScriptHashWithType = new ScriptHashWithType() { Type = AddPeerNotification, ScriptHashValue = NetmapContractHash };
             addPeerParser.Parser = AddPeerEvent.ParseAddPeerEvent;
 
-            ParserInfo updatePeerParser = new ParserInfo();
+            ParserInfo updatePeerParser = new();
             updatePeerParser.ScriptHashWithType = new ScriptHashWithType() { Type = UpdatePeerStateNotification, ScriptHashValue = NetmapContractHash };
             updatePeerParser.Parser = UpdatePeerEvent.ParseUpdatePeerEvent;
 
             return new ParserInfo[] { newEpochParser, addPeerParser, updatePeerParser };
         }
 
-        public void HandleNewEpochTick(ContractEvent timersEvent)
+        public void HandleNewEpochTick()
         {
-            NewEpochTickEvent newEpochTickEvent = (NewEpochTickEvent)timersEvent;
-            Utility.Log(Name, LogLevel.Info, "tick:type:epoch");
-            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessNewEpochTick(newEpochTickEvent)) });
+            Utility.Log(Name, LogLevel.Info, "event, type=epoch");
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessNewEpochTick()) });
         }
 
         public void HandleNewEpoch(ContractEvent morphEvent)
         {
             NewEpochEvent newEpochEvent = (NewEpochEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:new epoch,value:{0}", newEpochEvent.EpochNumber.ToString()));
+            Utility.Log(Name, LogLevel.Info, $"event, type=new_epoch, value={newEpochEvent.EpochNumber}");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessNewEpoch(newEpochEvent)) });
         }
 
         public void HandleAddPeer(ContractEvent morphEvent)
         {
             AddPeerEvent addPeerEvent = (AddPeerEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, "notification:type:add peer");
+            Utility.Log(Name, LogLevel.Info, "event, type=add_peer");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessAddPeer(addPeerEvent)) });
         }
 
         public void HandleUpdateState(ContractEvent morphEvent)
         {
             UpdatePeerEvent updateStateEvent = (UpdatePeerEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, string.Format("notification:type:update peer state,key:{0}", updateStateEvent.PublicKey.EncodePoint(true).ToHexString()));
+            Utility.Log(Name, LogLevel.Info, $"event, type=update_peer_state, key={updateStateEvent.PublicKey.EncodePoint(true).ToHexString()}");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessUpdateState(updateStateEvent)) });
         }
 
@@ -101,7 +100,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 return;
             }
             NetmapCleanupTickEvent netmapCleanupTickEvent = (NetmapCleanupTickEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, "tick:type:netmap cleaner");
+            Utility.Log(Name, LogLevel.Info, "event: type=netmap_cleaner");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessNetmapCleanupTick(netmapCleanupTickEvent)) });
         }
 
@@ -123,26 +122,26 @@ namespace Neo.FileStorage.InnerRing.Processors
                     }
                     catch
                     {
-                        Utility.Log(Name, LogLevel.Warning, string.Format("can't decode public key of netmap node,key:{0}", s));
+                        Utility.Log(Name, LogLevel.Warning, $"can't decode public key of netmap node, key={s}");
                     }
-                    Utility.Log(Name, LogLevel.Info, string.Format("vote to remove node from netmap,{0}", s));
+                    Utility.Log(Name, LogLevel.Info, $"vote to remove node from netmap, key={s}");
                     try
                     {
-                        MorphCli.UpdatePeerState(API.Netmap.NodeInfo.Types.State.Offline, key.EncodePoint(true));
+                        MorphInvoker.UpdatePeerState(API.Netmap.NodeInfo.Types.State.Offline, key.EncodePoint(true));
                     }
                     catch (Exception e)
                     {
-                        Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.UpdateState,{0}", e.Message));
+                        Utility.Log(Name, LogLevel.Error, $"can't invoke netmap.UpdateState, error={e}");
                     }
                 });
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Warning, string.Format("can't iterate on netmap cleaner cache.{0}", e.Message));
+                Utility.Log(Name, LogLevel.Warning, $"can't iterate on netmap cleaner cache, error={e}");
             }
         }
 
-        public void ProcessNewEpochTick(NewEpochTickEvent timersEvent)
+        public void ProcessNewEpochTick()
         {
             if (!State.IsAlphabet())
             {
@@ -150,14 +149,14 @@ namespace Neo.FileStorage.InnerRing.Processors
                 return;
             }
             ulong nextEpoch = State.EpochCounter() + 1;
-            Utility.Log(Name, LogLevel.Info, string.Format("next epoch,{0}", nextEpoch));
+            Utility.Log(Name, LogLevel.Info, $"next epoch, {nextEpoch}");
             try
             {
-                MorphCli.NewEpoch(nextEpoch);
+                MorphInvoker.NewEpoch(nextEpoch);
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.NewEpoch,{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, $"can't invoke netmap.NewEpoch, error={e}");
             }
         }
 
@@ -168,22 +167,22 @@ namespace Neo.FileStorage.InnerRing.Processors
             API.Netmap.NodeInfo[] snapshot;
             try
             {
-                snapshot = MorphCli.NetMap();
+                snapshot = MorphInvoker.NetMap();
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Info, string.Format("can't get netmap snapshot to perform cleanup,{0}", e.Message));
+                Utility.Log(Name, LogLevel.Info, $"can't get netmap snapshot to perform cleanup, error={e}");
                 return;
             }
             if (newEpochEvent.EpochNumber > 0)
             {
                 try
                 {
-                    MorphCli.StartEstimation((long)newEpochEvent.EpochNumber);
+                    MorphInvoker.StartEstimation((long)newEpochEvent.EpochNumber);
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(Name, LogLevel.Warning, string.Format("can't start container size estimation,epoch:{0},error:{1}", newEpochEvent.EpochNumber, e.Message));
+                    Utility.Log(Name, LogLevel.Warning, $"can't start container size estimation, epoch={newEpochEvent.EpochNumber}, error={e}");
                 }
             }
             NetmapSnapshot.Update(snapshot, newEpochEvent.EpochNumber);
@@ -216,7 +215,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Warning, string.Format("could not verify and update information about network map candidate,error:{0}", e.Message));
+                Utility.Log(Name, LogLevel.Warning, $"could not verify and update information about network map candidate, error={e}");
                 return;
             }
             RepeatedField<API.Netmap.NodeInfo.Types.Attribute> attributes = nodeInfo.Attributes;
@@ -232,14 +231,14 @@ namespace Neo.FileStorage.InnerRing.Processors
             var key = nodeInfo.PublicKey.ToByteArray().ToHexString();
             if (!NetmapSnapshot.Touch(key, State.EpochCounter()))
             {
-                Utility.Log(Name, LogLevel.Info, string.Format("approving network map candidate,{0}", key));
+                Utility.Log(Name, LogLevel.Info, $"approving network map candidate, key={key}");
                 try
                 {
-                    MorphCli.ApprovePeer(addPeerEvent.Node);
+                    MorphInvoker.ApprovePeer(addPeerEvent.Node);
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.AddPeer:{0}", e.Message));
+                    Utility.Log(Name, LogLevel.Error, $"can't invoke netmap.AddPeer, error={e}");
                 }
             }
         }
@@ -253,26 +252,26 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             if (updateStateEvent.Status != (uint)API.Netmap.NodeInfo.Types.State.Offline)
             {
-                Utility.Log(Name, LogLevel.Warning, string.Format("node proposes unknown state:key:{0},status:{1}", updateStateEvent.PublicKey.EncodePoint(true).ToHexString(), updateStateEvent.Status.ToString()));
+                Utility.Log(Name, LogLevel.Warning, $"node proposes unknown state, ke={updateStateEvent.PublicKey.EncodePoint(true).ToHexString()}, status={updateStateEvent.Status}");
                 return;
             }
             NetmapSnapshot.Flag(updateStateEvent.PublicKey.ToString());
             try
             {
-                MorphCli.UpdatePeerState((API.Netmap.NodeInfo.Types.State)updateStateEvent.Status, updateStateEvent.PublicKey.EncodePoint(true));
+                MorphInvoker.UpdatePeerState((API.Netmap.NodeInfo.Types.State)updateStateEvent.Status, updateStateEvent.PublicKey.EncodePoint(true));
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Error, string.Format("can't invoke netmap.UpdatePeer,{0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, $"can't invoke netmap.UpdatePeer, error={e}");
             }
         }
     }
     public class CleanupTable
     {
-        private object lockObject = new();
+        private readonly object lockObject = new();
         private Dictionary<string, EpochStamp> lastAccess = new();
         private bool enabled;
-        private ulong threshold;
+        private readonly ulong threshold;
 
         public bool Enabled { get => enabled; set => enabled = value; }
 
@@ -407,7 +406,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                         throw new Exception("missing required attribute in DB record");
                     continue;
                 }
-                var a = new API.Netmap.NodeInfo.Types.Attribute();
+                API.Netmap.NodeInfo.Types.Attribute a = new();
                 a.Key = attr.Key;
                 a.Value = attrVal;
                 tAttr[attr.Key] = a;
@@ -421,7 +420,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public Dictionary<string, API.Netmap.NodeInfo.Types.Attribute> UniqueAttributes(IEnumerator<API.Netmap.NodeInfo.Types.Attribute> attributes)
         {
-            Dictionary<string, API.Netmap.NodeInfo.Types.Attribute> tAttr = new Dictionary<string, API.Netmap.NodeInfo.Types.Attribute>();
+            Dictionary<string, API.Netmap.NodeInfo.Types.Attribute> tAttr = new();
             while (attributes.MoveNext())
             {
                 var attr = attributes.Current;

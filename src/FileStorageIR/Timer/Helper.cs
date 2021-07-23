@@ -1,7 +1,7 @@
 using System;
 using Neo.FileStorage.InnerRing.Processors;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Morph.Event;
-using Neo.FileStorage.Morph.Invoker;
 using Neo.FileStorage.Morph.Listen;
 using static Neo.FileStorage.InnerRing.Events.MorphEvent;
 using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
@@ -12,7 +12,7 @@ namespace Neo.FileStorage.InnerRing.Timer
     {
         public static BlockTimer NewEpochTimer(EpochTimerArgs args)
         {
-            BlockTimer epochTimer = new BlockTimer(BlockTimer.StaticBlockMeter(Settings.Default.EpochDuration), () => { args.processor.HandleNewEpochTick(new NewEpochTickEvent()); });
+            BlockTimer epochTimer = new BlockTimer(BlockTimer.StaticBlockMeter(Settings.Default.EpochDuration), () => { args.processor.HandleNewEpochTick(); });
             epochTimer.Delta(
                 args.stopEstimationDMul,
                 args.stopEstimationDDiv,
@@ -45,7 +45,7 @@ namespace Neo.FileStorage.InnerRing.Timer
 
         public static BlockTimer NewEmissionTimer(EmitTimerArgs args)
         {
-            return new BlockTimer(BlockTimer.StaticBlockMeter(Settings.Default.AlphabetDuration), () => { args.processor.HandleGasEmission(new NewAlphabetEmitTickEvent()); });
+            return new BlockTimer(BlockTimer.StaticBlockMeter(Settings.Default.AlphabetDuration), () => { args.processor.HandleGasEmission(); });
         }
 
         public class EmitTimerArgs

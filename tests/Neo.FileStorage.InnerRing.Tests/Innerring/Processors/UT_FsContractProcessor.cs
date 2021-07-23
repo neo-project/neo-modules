@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.InnerRing.Utils;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Tests;
 using Neo.IO;
 using Neo.Wallets;
@@ -36,7 +36,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             state = new TestState() { alphabetIndex = 1 };
             processor = new FsContractProcessor()
             {
-                MorphCli = morphInvoker,
+                MorphInvoker = morphInvoker,
                 State = state,
                 Convert = new Fixed8ConverterUtil(),
                 WorkPool = actor

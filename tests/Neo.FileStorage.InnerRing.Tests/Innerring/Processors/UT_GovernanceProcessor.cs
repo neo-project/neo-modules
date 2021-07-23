@@ -13,7 +13,7 @@ using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.InnerRing.Processors;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Tests;
 using Neo.IO;
 using Neo.Wallets;
@@ -45,8 +45,8 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             state = new TestState() { alphabetIndex = 1 };
             processor = new GovernanceProcessor()
             {
-                MorphCli = morphInvoker,
-                MainCli = mainInvoker,
+                MorphInvoker = morphInvoker,
+                MainInvoker = mainInvoker,
                 ProtocolSettings = system.Settings,
                 State = state,
                 WorkPool = actor

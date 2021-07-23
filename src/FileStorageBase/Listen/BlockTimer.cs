@@ -7,15 +7,15 @@ namespace Neo.FileStorage.Morph.Listen
     {
         public class DeltaCfg { public bool pulse; }
         private bool rolledBack;
-        private Func<uint> dur;
+        private readonly Func<uint> dur;
         private uint baseDur;
-        private uint mul;
-        private uint div;
+        private readonly uint mul;
+        private readonly uint div;
         private uint cur;
         private uint tgt;
-        private Action h;
-        private List<BlockTimer> ps;
-        private DeltaCfg deltaCfg;
+        private readonly Action h;
+        private readonly List<BlockTimer> ps;
+        private readonly DeltaCfg deltaCfg;
 
         public BlockTimer(Func<uint> dur, Action h, uint pmul = 1, uint pdiv = 1)
         {
@@ -51,6 +51,7 @@ namespace Neo.FileStorage.Morph.Listen
             baseDur = d;
             OnReset();
         }
+
         private void OnReset()
         {
             var mul = this.mul;

@@ -23,22 +23,21 @@ namespace Neo.FileStorage.InnerRing.Processors
         public override string Name => "AuditContractProcessor";
         public int SearchTimeout => Settings.Default.SearchTimeout;
         public IActorRef TaskManager;
-        public CancellationTokenSource prevAuditCanceler = new CancellationTokenSource();
+        public CancellationTokenSource prevAuditCanceler = new();
         public IFSClientCache ClientCache;
 
         public void HandleNewAuditRound(ContractEvent morphEvent)
         {
             StartEvent startEvent = (StartEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, string.Format("new round of audit,epoch:{0}", startEvent.epoch));
+            Utility.Log(Name, LogLevel.Info, $"new round of audit, epoch={startEvent.epoch}");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new System.Threading.Tasks.Task(() => ProcessStartAudit(startEvent.epoch)) });
         }
 
         public void ProcessStartAudit(ulong epoch)
         {
-            Utility.Log(Name, LogLevel.Info, string.Format("epoch:{0}", epoch));
             prevAuditCanceler.Cancel();
             int skipped = (int)TaskManager.Ask(new ResetMessage()).Result;
-            if (skipped > 0) Utility.Log(Name, LogLevel.Info, string.Format("some tasks from previous epoch are skipped,amount{0}", skipped));
+            if (skipped > 0) Utility.Log(Name, LogLevel.Info, $"some tasks from previous epoch are skipped, amount={skipped}");
             ContainerID[] containers;
             try
             {
@@ -46,18 +45,18 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Error, string.Format("container selection failure,error {0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, $"container selection failure, error={e}");
                 return;
             }
-            Utility.Log(Name, LogLevel.Info, string.Format("select containers for audit,amount {0}", containers.Length));
+            Utility.Log(Name, LogLevel.Info, $"select containers for audit, amount={containers.Length}");
             NetMap nm;
             try
             {
-                nm = MorphCli.GetNetMapByDiff(0);
+                nm = MorphInvoker.GetNetMapByDiff(0);
             }
             catch (Exception e)
             {
-                Utility.Log(Name, LogLevel.Error, string.Format("can't fetch network map,error {0}", e.Message));
+                Utility.Log(Name, LogLevel.Error, $"can't fetch network map, error={e}");
                 return;
             }
             for (int i = 0; i < containers.Length; i++)
@@ -65,11 +64,11 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Container cnr;
                 try
                 {
-                    cnr = MorphCli.GetContainer(containers[i]).Container;
+                    cnr = MorphInvoker.GetContainer(containers[i]).Container;
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(Name, LogLevel.Error, string.Format("can't get container info, ignore,cid:{0},error:{1}", containers[i], e.Message));
+                    Utility.Log(Name, LogLevel.Error, $"can't get container info, ignore, cid={containers[i]}, error={e}");
                     continue;
                 }
                 var pivot = containers[i].Value.ToByteArray();
@@ -80,13 +79,13 @@ namespace Neo.FileStorage.InnerRing.Processors
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(Name, LogLevel.Error, string.Format("can't build placement for container, ignore,cid:{0},error:{1}", containers[i], e.Message));
+                    Utility.Log(Name, LogLevel.Error, $"can't build placement for container, ignore, cid={containers[i]}, error={e}");
                     continue;
                 }
                 var n = nodes.Flatten().ToArray();
                 n = n.OrderBy(c => Guid.NewGuid()).ToArray();
                 var storageGroups = FindStorageGroups(containers[i], n);
-                Utility.Log(Name, LogLevel.Info, string.Format("select storage groups for audit,cid:{0},amount:{1}", containers[i], storageGroups.Length));
+                Utility.Log(Name, LogLevel.Info, $"select storage groups for audit, cid={containers[i]}, count={storageGroups.Length}");
 
                 prevAuditCanceler = new CancellationTokenSource();
                 AuditTask auditTask = new()
@@ -103,14 +102,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     ContainerNodes = nodes,
                     Netmap = nm
                 };
-                try
-                {
-                    TaskManager.Tell(auditTask);
-                }
-                catch (Exception e)
-                {
-                    Utility.Log(Name, LogLevel.Info, string.Format("could not push audit task,errot:{0}", e.Message));
-                }
+                TaskManager.Tell(auditTask);
             }
         }
 
@@ -119,24 +111,23 @@ namespace Neo.FileStorage.InnerRing.Processors
             List<ContainerID> containers;
             try
             {
-                containers = MorphCli.ListContainers(new OwnerID());
+                containers = MorphInvoker.ListContainers(new OwnerID());
             }
             catch (Exception e)
             {
-                throw new Exception(string.Format("can't get list of containers to start audit,error {0}", e.Message));
+                throw new InvalidOperationException($"can't get list of containers to start audit, error={e}");
             }
-            Utility.Log(Name, LogLevel.Info, string.Format("container listing finished,total amount {0}", containers.Count));
+            Utility.Log(Name, LogLevel.Info, $"container listing finished, total_amount={containers.Count}");
             containers.Sort((x, y) => x.ToBase58String().CompareTo(y.ToBase58String()));
             var ind = State.InnerRingIndex();
             var irSize = State.InnerRingSize();
-            if (ind < 0 || ind >= irSize) throw new Exception("node is not in the inner ring list");
+            if (ind < 0 || ind >= irSize) throw new InvalidOperationException("node is not in the inner ring list");
             return Select(containers.ToArray(), epoch, (ulong)ind, (ulong)irSize);
         }
 
         private ContainerID[] Select(ContainerID[] containIds, ulong epoch, ulong index, ulong size)
         {
-            if (index >= size) return null;
-            ulong a = 0;
+            ulong a;
             ulong b = 0;
             ulong ln = (ulong)containIds.Length;
             ulong pivot = ln % size;
@@ -158,15 +149,14 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         private ObjectID[] FindStorageGroups(ContainerID cid, Node[] shuffled)
         {
-            List<ObjectID> sg = new List<ObjectID>();
+            List<ObjectID> sg = new();
             for (int i = 0; i < shuffled.Length; i++)
             {
-                Dictionary<string, string> pairs = new Dictionary<string, string>();
-                pairs.Add("cid", cid.ToBase58String());
-                pairs.Add("address", shuffled[i].Info.Address);
-                pairs.Add("try", i.ToString());
-                pairs.Add("total_tries", shuffled.Length.ToString());
-                Utility.Log(Name, LogLevel.Info, pairs.ToString());
+                string pairs = $"cid={cid.ToBase58String()},";
+                pairs += $" address={shuffled[i].Info.Address},";
+                pairs += $" try={i},";
+                pairs += $" total_tries={shuffled}";
+                Utility.Log(Name, LogLevel.Info, pairs);
                 Network.Address address;
                 try
                 {
@@ -174,7 +164,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(Name, LogLevel.Warning, string.Format("can't parse remote address,error {0}", e.Message));
+                    Utility.Log(Name, LogLevel.Warning, $"can't parse remote address, error={e}");
                     continue;
                 };
                 IFSClient cli;
@@ -184,7 +174,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(Name, LogLevel.Warning, string.Format("can't setup remote connection,error {0}", e.Message));
+                    Utility.Log(Name, LogLevel.Warning, $"can't setup remote connection, error={e}");
                     continue;
                 };
                 SearchFilters searchFilters = new();
@@ -193,14 +183,14 @@ namespace Neo.FileStorage.InnerRing.Processors
                 {
                     var source = new CancellationTokenSource();
                     source.CancelAfter(TimeSpan.FromMinutes(1));
-                    var key = MorphCli.Wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
+                    var key = MorphInvoker.Wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
                     List<ObjectID> result = cli.SearchObject(cid, searchFilters, new CallOptions() { Key = key }, context: source.Token).Result;
                     sg.AddRange(result);
                     break;
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(Name, LogLevel.Warning, string.Format("error in storage group search,error {0}", e.Message));
+                    Utility.Log(Name, LogLevel.Warning, $"error in storage group search, error={e}");
                     continue;
                 }
             }

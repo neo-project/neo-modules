@@ -1,8 +1,7 @@
 using Neo.VM;
 using Neo.VM.Types;
-using Neo.Wallets;
 
-namespace Neo.FileStorage.Morph.Invoker
+namespace Neo.FileStorage.Invoker
 {
     public class InvokeResult
     {

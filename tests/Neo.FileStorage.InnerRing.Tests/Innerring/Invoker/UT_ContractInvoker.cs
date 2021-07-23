@@ -8,7 +8,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.InnerRing.Invoker;
-using Neo.FileStorage.Morph.Invoker;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.IO;
 using Neo.Wallets;
 using Container = Neo.FileStorage.API.Container.Container;
@@ -53,34 +53,31 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
         [TestMethod]
         public void InvokeMintTest()
         {
-            bool result = morphInvoker.Mint(TestBlockchain.NetmapContractHash.ToArray(), 0, new byte[] { 0x01 });
+            morphInvoker.Mint(TestBlockchain.NetmapContractHash.ToArray(), 0, new byte[] { 0x01 });
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 
         [TestMethod]
         public void InvokeBurnTest()
         {
-            bool result = morphInvoker.Burn(TestBlockchain.NetmapContractHash.ToArray(), 0, new byte[] { 0x01 });
+            morphInvoker.Burn(TestBlockchain.NetmapContractHash.ToArray(), 0, new byte[] { 0x01 });
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 
         [TestMethod]
         public void InvokeLockAssetTest()
         {
-            bool result = morphInvoker.LockAsset(new byte[] { 0x01 }, UInt160.Zero, UInt160.Zero, 0, 100);
+            morphInvoker.LockAsset(new byte[] { 0x01 }, UInt160.Zero, UInt160.Zero, 0, 100);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 
         [TestMethod]
-        public void InvokeBalancePrecisionTest()
+        public void InvokeBalanceDecimalsTest()
         {
-            uint result = morphInvoker.BalancePrecision();
+            uint result = morphInvoker.BalanceDecimals();
             Assert.AreEqual(result, (uint)12);
         }
 
@@ -99,9 +96,8 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
                 PlacementPolicy = new PlacementPolicy()
             };
             byte[] sig = Cryptography.Crypto.Sign(container.ToByteArray(), key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            bool result = morphInvoker.RegisterContainer(key.PublicKey.ToArray(), container.ToByteArray(), sig, null);
+            morphInvoker.RegisterContainer(key.PublicKey.ToArray(), container.ToByteArray(), sig, null);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 
@@ -112,9 +108,8 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
             KeyPair key = accounts.ToArray()[0].GetKey();
             var containerId = "fc780e98b7970002a80fbbeb60f9ed6cf44d5696588ea32e4338ceaeda4adddc".HexToBytes();
             var sig = Cryptography.Crypto.Sign(containerId, key.PrivateKey, key.PublicKey.EncodePoint(false)[1..]);
-            var result = morphInvoker.RemoveContainer(containerId, sig, null);
+            morphInvoker.RemoveContainer(containerId, sig, null);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 
@@ -128,9 +123,8 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
         [TestMethod]
         public void InvokeSetNewEpochTest()
         {
-            bool result = morphInvoker.NewEpoch(100);
+            morphInvoker.NewEpoch(100);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 
@@ -145,31 +139,27 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
                 Address = API.Cryptography.KeyExtension.PublicKeyToAddress(key.PublicKey.ToArray()),
                 State = NodeInfo.Types.State.Online
             };
-            bool result = morphInvoker.ApprovePeer(nodeInfo.ToByteArray());
+            morphInvoker.ApprovePeer(nodeInfo.ToByteArray());
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
-            result = morphInvoker.UpdatePeerState(NodeInfo.Types.State.Offline, key.PublicKey.EncodePoint(true));
+            morphInvoker.UpdatePeerState(NodeInfo.Types.State.Offline, key.PublicKey.EncodePoint(true));
             tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 
         [TestMethod]
         public void InvokeSetConfigTest()
         {
-            bool result = morphInvoker.SetConfig(new byte[] { 0x01 }, Utility.StrictUTF8.GetBytes("ContainerFee"), BitConverter.GetBytes(0));
+            morphInvoker.SetConfig(new byte[] { 0x01 }, Utility.StrictUTF8.GetBytes("ContainerFee"), BitConverter.GetBytes(0));
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 
         [TestMethod]
         public void InvokeSetInnerRingTest()
         {
-            bool result = morphInvoker.SetInnerRing(wallet.GetAccounts().Select(p => p.GetKey().PublicKey).ToArray());
+            morphInvoker.SetInnerRing(wallet.GetAccounts().Select(p => p.GetKey().PublicKey).ToArray());
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 
@@ -183,18 +173,16 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
         [TestMethod]
         public void InvokeAlphabetEmitTest()
         {
-            bool result = morphInvoker.AlphabetEmit(1);
+            morphInvoker.AlphabetEmit(1);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 
         [TestMethod]
         public void InvokeAlphabetVoteTest()
         {
-            bool result = morphInvoker.AlphabetVote(0, 1, wallet.GetAccounts().Select(p => p.GetKey().PublicKey).ToArray());
+            morphInvoker.AlphabetVote(0, 1, wallet.GetAccounts().Select(p => p.GetKey().PublicKey).ToArray());
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 
@@ -202,9 +190,8 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
         public void InvokeCashOutChequeTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            bool result = mainInvoker.CashOutCheque(new byte[] { 0x01 }, 1, accounts.ToArray()[0].ScriptHash, accounts.ToArray()[0].ScriptHash);
+            mainInvoker.CashOutCheque(new byte[] { 0x01 }, 1, accounts.ToArray()[0].ScriptHash, accounts.ToArray()[0].ScriptHash);
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
 
@@ -229,9 +216,8 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
         public void InvokeAlphabetUpdateTest()
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
-            bool result = mainInvoker.AlphabetUpdate(new byte[1] { 0x01 }, accounts.Select(p => p.GetKey().PublicKey).ToArray());
+            mainInvoker.AlphabetUpdate(new byte[1] { 0x01 }, accounts.Select(p => p.GetKey().PublicKey).ToArray());
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
-            Assert.AreEqual(result, true);
             Assert.IsNotNull(tx);
         }
     }
