@@ -32,7 +32,7 @@ namespace FileStorageCLI
         {
             if (NoWallet()) return;
             UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
-            if (CheckAccount(account)) return;
+            if (!CheckAccount(account)) return;
             var host = Settings.Default.host;
             ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
             using (var client = new Client(key, host))
@@ -45,11 +45,12 @@ namespace FileStorageCLI
         }
 
         [ConsoleCommand("fs account withdraw", Category = "FileStorageService", Description = "Withdraw account balance")]
-        private void OnAccountWithdraw(int amount, string paccount = null)
+        private void OnAccountWithdraw(string pamount, string paccount = null)
         {
             if (NoWallet()) return;
             UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
-            if (CheckAccount(account)) return;
+            if (!CheckAccount(account)) return;
+            var amount = int.Parse(pamount);
             if (amount < 0)
             {
                 Console.WriteLine("Amount cannot be negative");
@@ -105,11 +106,12 @@ namespace FileStorageCLI
         }
 
         [ConsoleCommand("fs account deposite", Category = "FileStorageService", Description = "Deposite account balance")]
-        private void OnAccountDeposite(int amount, string paccount = null)
+        private void OnAccountDeposite(string pamount, string paccount = null)
         {
             if (NoWallet()) return;
             UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
-            if (CheckAccount(account)) return;
+            if (!CheckAccount(account)) return;
+            var amount = int.Parse(pamount);
             if (amount < 0)
             {
                 Console.WriteLine("Amount cannot be negative");

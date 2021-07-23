@@ -16,7 +16,9 @@ namespace FileStorageCLI
 
         private Settings(IConfigurationSection section)
         {
-            uploadPath = section.GetValue("uploadPath",@"./upload/");
+            host = section.GetValue("host", "http://192.168.130.71:8080");
+            fsContractHash = UInt160.Parse(section.GetSection("FsContractHash").Value);
+            uploadPath = section.GetValue("uploadPath", @"./upload/");
             downloadPath = section.GetValue("downloadPath", @"./downloadPath/");
         }
 
