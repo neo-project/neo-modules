@@ -58,7 +58,7 @@ namespace FileStorageCLI
         }
 
         [ConsoleCommand("fs object delete", Category = "FileStorageService", Description = "Delete a object")]
-        private void OnDeleteObject(string containerId, string objectId, string paccount = null)
+        private void OnDeleteObject(string containerId, string pobjectIds, string paccount = null)
         {
             if (NoWallet()) return;
             UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
@@ -68,16 +68,19 @@ namespace FileStorageCLI
             using (var client = new Client(key, host))
             {
                 var cid = ContainerID.FromBase58String(containerId);
-                var oid = ObjectID.FromBase58String(objectId);
-                Address address = new Address(cid, oid);
-                var source1 = new CancellationTokenSource();
-                source1.CancelAfter(TimeSpan.FromMinutes(1));
-                var session = client.CreateSession(ulong.MaxValue, context: source1.Token).Result;
-                source1.Cancel();
-                var source2 = new CancellationTokenSource();
-                source2.CancelAfter(TimeSpan.FromMinutes(1));
-                var objId = client.DeleteObject(address, new CallOptions { Ttl = 2, Session = session }, source2.Token).Result;
-                Console.WriteLine($"The object delete request has been submitted, please confirm in the next block,ObjectID:{objId}");
+                string[] objectIds = pobjectIds.Split("_");
+                foreach (var objectId in objectIds) {
+                    var oid = ObjectID.FromBase58String(objectId);
+                    Address address = new Address(cid, oid);
+                    var source1 = new CancellationTokenSource();
+                    source1.CancelAfter(TimeSpan.FromMinutes(1));
+                    var session = client.CreateSession(ulong.MaxValue, context: source1.Token).Result;
+                    source1.Cancel();
+                    var source2 = new CancellationTokenSource();
+                    source2.CancelAfter(TimeSpan.FromMinutes(1));
+                    var objId = client.DeleteObject(address, new CallOptions { Ttl = 2, Session = session }, source2.Token).Result;
+                    Console.WriteLine($"The object delete request has been submitted, please confirm in the next block,ObjectID:{objId}");
+                }
             }
         }
 
@@ -116,11 +119,12 @@ namespace FileStorageCLI
         }
 
         [ConsoleCommand("fs storagegroup object put", Category = "FileStorageService", Description = "Put a storage object")]
-        private void OnStorageGroupObject(string containerId, string[] objectIds, string paccount = null)
+        private void OnStorageGroupObject(string containerId, string pobjectIds, string paccount = null)
         {
             if (NoWallet()) return;
             UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!CheckAccount(account)) return;
+            string[] objectIds = pobjectIds.Split("_");
             var host = Settings.Default.host;
             ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
             using (var client = new Client(key, host))

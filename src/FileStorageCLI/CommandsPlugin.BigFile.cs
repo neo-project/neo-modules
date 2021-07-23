@@ -41,13 +41,15 @@ namespace FileStorageCLI
                 PackCount = (int)(FileLength / PackSize);
             //upload subobjects
             var subObjectIDs = new ObjectID[PackCount];
+            var completedTaskCount = 0;
             var tasks = new Task[10];
             for (int index = 0; index < 10; index++)
             {
                 var task = new Task(() =>
                 {
                     int i = 0;
-                    while (index * i < subObjectIDs.Length) {
+                    while (index * i < subObjectIDs.Length)
+                    {
                         byte[] data = GetFile(filePath, index * i * PackSize, PackSize, FileLength);
                         using (var client = new Client(key, host))
                         {
@@ -68,7 +70,7 @@ namespace FileStorageCLI
                             var source2 = new CancellationTokenSource();
                             source2.CancelAfter(TimeSpan.FromMinutes(1));
                             var objId = client.PutObject(obj, new CallOptions { Ttl = 2, Session = session }, source2.Token).Result;
-                            Console.WriteLine($"The object put request has been submitted, please confirm in the next block,ObjectID:{objId.ToBase58String()}");
+                            Console.WriteLine($"The object put request has been submitted, please confirm in the next block,ObjectID:{objId.ToBase58String()},degree of completion:{Interlocked.Increment(ref completedTaskCount)}/{PackCount}");
                             subObjectIDs[index * i] = objId;
                         }
                         i++;
@@ -147,6 +149,7 @@ namespace FileStorageCLI
             var subObjectIDs = new List<ObjectID>();
             var cid = ContainerID.FromBase58String(containerId);
             //download storagegroup object
+            var totalDataSize = 0ul;
             using (var client = new Client(key, host))
             {
                 var oid = ObjectID.FromBase58String(objectId);
@@ -163,8 +166,9 @@ namespace FileStorageCLI
                     return;
                 }
                 var sg = StorageGroup.Parser.ParseFrom(obj.Payload.ToByteArray());
+                totalDataSize = sg.ValidationDataSize;
                 Console.WriteLine($"Download storage group successfully");
-                Console.WriteLine($"File objects size: {sg.ValidationDataSize}");
+                Console.WriteLine($"File objects size: {totalDataSize}");
                 Console.WriteLine($"File subobject list:");
                 foreach (var m in sg.Members)
                 {
@@ -175,13 +179,15 @@ namespace FileStorageCLI
             var downloadTempPath = Settings.Default.downloadPath + objectId + "/";
             if (!Directory.Exists(downloadTempPath)) Directory.CreateDirectory(downloadTempPath);
             Console.WriteLine("Start file subobjects download");
+            var receivedDataSize = 0uL;
             var tasks = new Task[10];
             for (int index = 0; index < 10; index++)
             {
                 var task = new Task(() =>
                {
                    int i = 1;
-                   while (index * i < subObjectIDs.Count) {
+                   while (index * i < subObjectIDs.Count)
+                   {
                        string tempfilepath = downloadTempPath + "QS_" + subObjectIDs[index * i].ToBase58String();
                        using (FileStream tempstream = new FileStream(tempfilepath, FileMode.Create, FileAccess.Write, FileShare.Write))
                        {
@@ -200,7 +206,7 @@ namespace FileStorageCLI
                                tempstream.Flush();
                                tempstream.Close();
                                tempstream.Dispose();
-                               Console.WriteLine($"Download subobject successfully,objectId:{oid.ToBase58String()}");
+                               Console.WriteLine($"Download subobject successfully,objectId:{oid.ToBase58String()},degree of completion:{Interlocked.Add(ref receivedDataSize, (ulong)payload.Length)}/{totalDataSize}");
                            }
                        }
                        i++;
