@@ -1,12 +1,9 @@
-using Neo.FileStorage.Morph.Event;
+using Neo.FileStorage.Listen.Event;
 
 namespace Neo.FileStorage.InnerRing.Timer
 {
-    public class TimerTickEvent
+    public class NetmapCleanupTickEvent : ContractEvent
     {
-        public class NetmapCleanupTickEvent : ContractEvent
-        {
-            public ulong Epoch;
-        }
+        public ulong Epoch;
     }
 }

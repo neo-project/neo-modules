@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using Akka.Actor;
 using Neo.FileStorage.API.Client;
@@ -11,20 +12,31 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.InnerRing.Services.Audit;
-using Neo.FileStorage.Morph.Event;
+using Neo.FileStorage.Listen.Event;
+using Neo.FileStorage.Listen.Event.Morph;
 using static Neo.FileStorage.InnerRing.Services.Audit.Manager;
-using static Neo.FileStorage.Morph.Event.MorphEvent;
 using static Neo.FileStorage.Utils.WorkerPool;
 
 namespace Neo.FileStorage.InnerRing.Processors
 {
-    public class AuditContractProcessor : BaseProcessor
+    public class AuditContractProcessor : BaseProcessor, IDisposable
     {
         public override string Name => "AuditContractProcessor";
         public int SearchTimeout => Settings.Default.SearchTimeout;
         public IActorRef TaskManager;
         public CancellationTokenSource prevAuditCanceler = new();
         public IFSClientCache ClientCache;
+        private ECDsa key;
+
+        private ECDsa Key
+        {
+            get
+            {
+                if (key is null)
+                    key = MorphInvoker.Wallet.GetAccounts().First().GetKey().PrivateKey.LoadPrivateKey();
+                return key;
+            }
+        }
 
         public void HandleNewAuditRound(ContractEvent morphEvent)
         {
@@ -36,6 +48,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         public void ProcessStartAudit(ulong epoch)
         {
             prevAuditCanceler.Cancel();
+            prevAuditCanceler.Dispose();
             int skipped = (int)TaskManager.Ask(new ResetMessage()).Result;
             if (skipped > 0) Utility.Log(Name, LogLevel.Info, $"some tasks from previous epoch are skipped, amount={skipped}");
             ContainerID[] containers;
@@ -82,8 +95,8 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Error, $"can't build placement for container, ignore, cid={containers[i]}, error={e}");
                     continue;
                 }
-                var n = nodes.Flatten().ToArray();
-                n = n.OrderBy(c => Guid.NewGuid()).ToArray();
+                Random rand = new();
+                var n = nodes.Flatten().OrderBy(c => rand.Next()).ToArray();
                 var storageGroups = FindStorageGroups(containers[i], n);
                 Utility.Log(Name, LogLevel.Info, $"select storage groups for audit, cid={containers[i]}, count={storageGroups.Length}");
 
@@ -117,7 +130,6 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 throw new InvalidOperationException($"can't get list of containers to start audit, error={e}");
             }
-            Utility.Log(Name, LogLevel.Info, $"container listing finished, total_amount={containers.Count}");
             containers.Sort((x, y) => x.ToBase58String().CompareTo(y.ToBase58String()));
             var ind = State.InnerRingIndex();
             var irSize = State.InnerRingSize();
@@ -183,8 +195,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 {
                     var source = new CancellationTokenSource();
                     source.CancelAfter(TimeSpan.FromMinutes(1));
-                    var key = MorphInvoker.Wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
-                    List<ObjectID> result = cli.SearchObject(cid, searchFilters, new CallOptions() { Key = key }, context: source.Token).Result;
+                    List<ObjectID> result = cli.SearchObject(cid, searchFilters, new CallOptions() { Key = Key }, context: source.Token).Result;
                     sg.AddRange(result);
                     break;
                 }
@@ -195,6 +206,13 @@ namespace Neo.FileStorage.InnerRing.Processors
                 }
             }
             return sg.ToArray();
+        }
+
+        public void Dispose()
+        {
+            prevAuditCanceler?.Cancel();
+            prevAuditCanceler?.Dispose();
+            key?.Dispose();
         }
     }
 }

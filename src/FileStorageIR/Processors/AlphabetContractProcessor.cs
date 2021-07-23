@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Neo.Cryptography.ECC;
 using Neo.FileStorage.API.Cryptography;
-using Neo.FileStorage.Morph.Event;
-using Neo.SmartContract;
 using Neo.Wallets;
 using static Neo.FileStorage.Utils.WorkerPool;
 using static Neo.Wallets.Helper;
@@ -77,7 +75,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Warning, $"can't convert node public key to address, error={e}");
                     continue;
                 }
-                UInt160 scriptHash = Contract.CreateSignatureRedeemScript(key).ToScriptHash();
+                UInt160 scriptHash = key.ToScriptHash();
                 try
                 {
                     MorphInvoker.TransferGas(scriptHash, gasPerNode);

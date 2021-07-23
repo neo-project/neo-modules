@@ -63,6 +63,7 @@ namespace Neo.FileStorage.InnerRing.Services.Audit.Auditor
                 }
                 catch (Exception e)
                 {
+                    Utility.Log(nameof(Auditor), LogLevel.Debug, $"CheckStorageGroupPoR, could not build placement, error={e}");
                     continue;
                 }
                 var random = new Random();

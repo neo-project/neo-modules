@@ -15,19 +15,19 @@ namespace Neo.FileStorage.Invoker.Morph
         private const string AddKeysMethod = "addKey";
         private const string RemoveKeysMethod = "removeKey";
 
-        public ECPoint[] AccountKeys(byte[] owner)
+        public List<byte[]> AccountKeys(byte[] owner)
         {
             InvokeResult result = TestInvoke(FsIdContractHash, KeyListingMethod, owner);
             if (result.State != VM.VMState.HALT) throw new Exception($"could not perform test invocation ({KeyListingMethod})");
             if (result.ResultStack.Length != 1) throw new Exception();
             VM.Types.Array items = (VM.Types.Array)result.ResultStack[0];
             IEnumerator<StackItem> itemsEnumerator = items.GetEnumerator();
-            List<ECPoint> lists = new();
+            List<byte[]> lists = new();
             while (itemsEnumerator.MoveNext())
             {
-                lists.Add(itemsEnumerator.Current.GetSpan().AsSerializable<ECPoint>());
+                lists.Add(itemsEnumerator.Current.GetSpan().ToArray());
             }
-            return lists.ToArray();
+            return lists;
         }
 
         public void AddKeys(UInt160 owner, ECPoint[] keys)

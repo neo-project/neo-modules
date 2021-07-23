@@ -6,7 +6,7 @@ using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Tests;
 using Neo.Wallets;
-using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
+using Neo.FileStorage.InnerRing.Timer;
 
 namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
 {

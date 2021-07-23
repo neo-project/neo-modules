@@ -8,16 +8,15 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.InnerRing.Services.Audit;
+using Neo.FileStorage.InnerRing.Timer;
+using Neo.FileStorage.InnerRing.Utils.Locode;
 using Neo.FileStorage.InnerRing.Utils.Locode.Db;
 using Neo.FileStorage.Invoker.Morph;
-using Neo.FileStorage.Morph.Event;
-using Neo.FileStorage.Tests;
+using Neo.FileStorage.Listen.Event;
+using Neo.FileStorage.Listen.Event.Morph;
 using Neo.FileStorage.Utils;
 using Neo.IO;
 using Neo.Wallets;
-using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor;
-using static Neo.FileStorage.InnerRing.Timer.TimerTickEvent;
-using static Neo.FileStorage.Morph.Event.MorphEvent;
 
 namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
 {
@@ -94,10 +93,12 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
                 HandleAlphabetSync = governanceProcessor.HandleAlphabetSync,
             };
         }
+
         public Action<ContractEvent> OnlyActiveEventHandler(Action<ContractEvent> f)
         {
             return (ContractEvent morphEvent) => { if (state.IsActive()) f(morphEvent); };
         }
+
         public Action<ContractEvent> OnlyAlphabetEventHandler(Action<ContractEvent> f)
         {
             return (ContractEvent morphEvent) => { if (state.IsAlphabet()) f(morphEvent); };
@@ -115,7 +116,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
         public void HandleNewEpochTest()
         {
             StorageDB targetDb = new("./Config/Data_LOCODE");
-            var locodeValidator = new Validator(targetDb);
+            var locodeValidator = new LocodeValidator(targetDb);
             processor.NodeValidator = locodeValidator;
             processor.HandleNewEpoch(new NewEpochEvent());
             var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;

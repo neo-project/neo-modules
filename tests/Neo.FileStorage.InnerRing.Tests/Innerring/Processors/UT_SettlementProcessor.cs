@@ -1,14 +1,11 @@
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.FileStorage.InnerRing;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Invoker.Morph;
-using Neo.FileStorage.Tests;
 using Neo.Wallets;
-using static Neo.FileStorage.InnerRing.Events.MorphEvent;
-using static Neo.FileStorage.InnerRing.Processors.SettlementProcessor;
+using Neo.FileStorage.InnerRing.Events;
 
 namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
 {

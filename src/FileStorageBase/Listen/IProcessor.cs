@@ -1,6 +1,4 @@
-using Neo.FileStorage.Morph.Event;
-
-namespace Neo.FileStorage.Morph.Listen
+namespace Neo.FileStorage.Listen
 {
     public interface IProcessor
     {

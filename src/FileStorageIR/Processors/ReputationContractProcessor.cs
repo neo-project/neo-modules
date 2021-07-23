@@ -4,11 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Google.Protobuf;
+using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Reputation;
-using Neo.FileStorage.Morph.Event;
-using Neo.FileStorage.Morph.Listen;
+using Neo.FileStorage.Listen;
+using Neo.FileStorage.Listen.Event;
+using Neo.FileStorage.Listen.Event.Morph;
 using Neo.FileStorage.Reputation;
-using static Neo.FileStorage.Morph.Event.MorphEvent;
 using static Neo.FileStorage.Utils.WorkerPool;
 
 namespace Neo.FileStorage.InnerRing.Processors
@@ -52,7 +53,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         public void HandlePutReputation(ContractEvent morphEvent)
         {
             ReputationPutEvent reputationPutEvent = (ReputationPutEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, $"notification:type:reputation put, peer_id={reputationPutEvent.PeerID.ToHexString()}");
+            Utility.Log(Name, LogLevel.Info, $"event, type=reputation_put, peer_id={reputationPutEvent.PeerID.ToHexString()}");
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => ProcessPut(reputationPutEvent)) });
         }
 
@@ -69,7 +70,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, $"ignore reputation value, trust_epoch={reputationPutEvent.Epoch}, local_epoch={currentEpoch}");
                 return;
             }
-            if (!API.Cryptography.SignExtension.VerifyMessagePart(reputationPutEvent.Trust.Signature, reputationPutEvent.Trust.Body))
+            if (!reputationPutEvent.Trust.Signature.VerifyMessagePart(reputationPutEvent.Trust.Body))
             {
                 Utility.Log(Name, LogLevel.Info, "ignore reputation value, reason:invalid signature");
                 return;
@@ -101,7 +102,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 if (mng.PublicKey.ToByteArray().SequenceEqual(m.ToByteArray()))
                     return;
             }
-            throw new Exception("got manager that is incorrect for peer");
+            throw new InvalidOperationException("got manager that is incorrect for peer");
         }
     }
 }
