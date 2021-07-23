@@ -77,11 +77,11 @@ namespace Neo.FileStorage.InnerRing.Processors
                 }
                 try
                 {
-                    MorphCli.TransferGas(key.EncodePoint(true).ToScriptHash(), gasPerNode);
+                    MorphCli.TransferGas(Contract.CreateSignatureRedeemScript(key).ToScriptHash(), gasPerNode);
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(Name, LogLevel.Warning, string.Format("can't transfer gas,receiver:{0},amount:{1},error:{2}", key.EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion), gasPerNode, e));
+                    Utility.Log(Name, LogLevel.Warning, string.Format("can't transfer gas,receiver:{0},amount:{1},error:{2}", Contract.CreateSignatureRedeemScript(key).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion), gasPerNode, e));
                 }
             }
         }

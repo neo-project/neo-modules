@@ -4,5 +4,14 @@
     <PackageId>Neo.FileStorage.Commands</PackageId>
     <RootNamespace>Neo.FileStorage.Commands</RootNamespace>
   </PropertyGroup>
-
+  <ItemGroup>
+    <PackageReference Include="NeoFS.API" Version="0.0.59" />
+    <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="FileStorageCLI\config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
 </Project>
