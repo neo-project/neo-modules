@@ -23,7 +23,7 @@ namespace FileStorageCLI
         private void OnPutObject(string containerId, string pdata, string paccount = null)
         {
             if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
+            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!CheckAccount(account)) return;
             var data = UTF8Encoding.UTF8.GetBytes(pdata);
             if (data.Length > 2048)
@@ -53,7 +53,7 @@ namespace FileStorageCLI
                 var source2 = new CancellationTokenSource();
                 source2.CancelAfter(TimeSpan.FromMinutes(1));
                 var objId = client.PutObject(obj, new CallOptions { Ttl = 2, Session = session }, source2.Token).Result;
-                Console.WriteLine($"The object put request has been submitted, please confirm in the next block,ObjectID:{objId.ToBase58String()}");
+                Console.WriteLine($"The object put successfully, ObjectID:{objId.ToBase58String()}");
             }
         }
 
@@ -61,7 +61,7 @@ namespace FileStorageCLI
         private void OnDeleteObject(string containerId, string pobjectIds, string paccount = null)
         {
             if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
+            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!CheckAccount(account)) return;
             var host = Settings.Default.host;
             ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
@@ -69,7 +69,8 @@ namespace FileStorageCLI
             {
                 var cid = ContainerID.FromBase58String(containerId);
                 string[] objectIds = pobjectIds.Split("_");
-                foreach (var objectId in objectIds) {
+                foreach (var objectId in objectIds)
+                {
                     var oid = ObjectID.FromBase58String(objectId);
                     Address address = new Address(cid, oid);
                     var source1 = new CancellationTokenSource();
@@ -79,7 +80,7 @@ namespace FileStorageCLI
                     var source2 = new CancellationTokenSource();
                     source2.CancelAfter(TimeSpan.FromMinutes(1));
                     var objId = client.DeleteObject(address, new CallOptions { Ttl = 2, Session = session }, source2.Token).Result;
-                    Console.WriteLine($"The object delete request has been submitted, please confirm in the next block,ObjectID:{objId}");
+                    Console.WriteLine($"The object delete successfully,ObjectID:{objId}");
                 }
             }
         }
@@ -89,7 +90,7 @@ namespace FileStorageCLI
         private void OnGetObject(string containerId, string objectId, string paccount = null)
         {
             if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
+            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!CheckAccount(account)) return;
             var host = Settings.Default.host;
             ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
@@ -122,7 +123,7 @@ namespace FileStorageCLI
         private void OnStorageGroupObject(string containerId, string pobjectIds, string paccount = null)
         {
             if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
+            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!CheckAccount(account)) return;
             string[] objectIds = pobjectIds.Split("_");
             var host = Settings.Default.host;
@@ -175,7 +176,7 @@ namespace FileStorageCLI
                 var source2 = new CancellationTokenSource();
                 source2.CancelAfter(TimeSpan.FromMinutes(1));
                 var o = client.PutObject(obj, new CallOptions { Ttl = 2, Session = session }, source2.Token).Result;
-                Console.WriteLine($"The storagegroup object put request has been submitted, please confirm in the next block,ObjectID:{o.ToBase58String()}");
+                Console.WriteLine($"The storagegroup object put successfully,ObjectID:{o.ToBase58String()}");
             }
         }
     }

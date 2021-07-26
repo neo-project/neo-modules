@@ -36,7 +36,7 @@ namespace FileStorageCLI
         private void WalletProvider_WalletChanged(object sender, Wallet wallet)
         {
             walletProvider.WalletChanged -= WalletProvider_WalletChanged;
-            currentWallet = wallet;
+            currentWallet = walletProvider.GetWallet();
         }
 
         private bool NoWallet()
