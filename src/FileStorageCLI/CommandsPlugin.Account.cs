@@ -31,7 +31,7 @@ namespace FileStorageCLI
         private void OnAccountBalance(string paccount = null)
         {
             if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
+            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!CheckAccount(account)) return;
             var host = Settings.Default.host;
             ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
@@ -40,7 +40,7 @@ namespace FileStorageCLI
                 var source = new CancellationTokenSource();
                 source.CancelAfter(10000);
                 Neo.FileStorage.API.Accounting.Decimal result = client.GetBalance(context: source.Token).Result;
-                Console.WriteLine($"Fs current account :{account}, balance:{result}");
+                Console.WriteLine($"Fs current account :{account}, balance:{(result.Value == 0 ? 0 : result)}");
             }
         }
 
@@ -48,7 +48,7 @@ namespace FileStorageCLI
         private void OnAccountWithdraw(string pamount, string paccount = null)
         {
             if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
+            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!CheckAccount(account)) return;
             var amount = int.Parse(pamount);
             if (amount < 0)
@@ -109,7 +109,7 @@ namespace FileStorageCLI
         private void OnAccountDeposite(string pamount, string paccount = null)
         {
             if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
+            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!CheckAccount(account)) return;
             var amount = int.Parse(pamount);
             if (amount < 0)

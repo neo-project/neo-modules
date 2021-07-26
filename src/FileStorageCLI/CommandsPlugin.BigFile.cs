@@ -24,7 +24,7 @@ namespace FileStorageCLI
         private void OnUploadFile(string containerId, string fileName, string paccount = null)
         {
             if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
+            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!CheckAccount(account)) return;
             var host = Settings.Default.host;
             ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
@@ -141,7 +141,7 @@ namespace FileStorageCLI
         private void OnDownloadFile(string containerId, string objectId, string fileName, string paccount = null)
         {
             if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
+            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!CheckAccount(account)) return;
             var host = Settings.Default.host;
             var downloadPath = Settings.Default.downloadPath;

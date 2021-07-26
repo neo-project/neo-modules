@@ -23,7 +23,7 @@ namespace FileStorageCLI
         private void OnPutContainer(string paccount = null)
         {
             if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
+            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!CheckAccount(account)) return;
             var host = Settings.Default.host;
             ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
@@ -55,7 +55,7 @@ namespace FileStorageCLI
         private void OnDeleteContainer(string containerId, string paccount = null)
         {
             if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
+            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!CheckAccount(account)) return;
             var host = Settings.Default.host;
             ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
@@ -73,7 +73,7 @@ namespace FileStorageCLI
         private void OnGetContainer(string containerId, string paccount = null)
         {
             if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
+            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!CheckAccount(account)) return;
             var host = Settings.Default.host;
             ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
@@ -90,7 +90,7 @@ namespace FileStorageCLI
         private void OnListContainer(string paccount)
         {
             if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().ToArray()[0].ScriptHash : UInt160.Parse(paccount);
+            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!CheckAccount(account)) return;
             var host = Settings.Default.host;
             ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
