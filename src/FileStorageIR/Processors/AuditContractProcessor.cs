@@ -105,8 +105,8 @@ namespace Neo.FileStorage.InnerRing.Processors
                 {
                     Reporter = new EpochAuditReporter()
                     {
-                        epoch = epoch,
-                        reporter = State
+                        Epoch = epoch,
+                        Reporter = State
                     },
                     Cancellation = prevAuditCanceler.Token,
                     ContainerID = containers[i],

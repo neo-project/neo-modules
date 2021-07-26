@@ -4,13 +4,13 @@ namespace Neo.FileStorage.InnerRing.Processors
 {
     public class EpochAuditReporter : IReporter
     {
-        public ulong epoch;
-        public IReporter reporter;
+        public ulong Epoch;
+        public IReporter Reporter;
 
         public void WriteReport(Report report)
         {
-            report.SetEpoch(epoch);
-            reporter.WriteReport(report);
+            report.SetEpoch(Epoch);
+            Reporter.WriteReport(report);
         }
     }
 }

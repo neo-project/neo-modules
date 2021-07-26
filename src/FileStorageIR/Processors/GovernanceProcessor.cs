@@ -4,10 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Neo.Cryptography.ECC;
+using Neo.FileStorage.InnerRing.Events;
 using Neo.FileStorage.Listen;
 using Neo.FileStorage.Listen.Event;
 using Neo.SmartContract.Native;
-using Neo.FileStorage.InnerRing.Events;
 using static Neo.FileStorage.Utils.WorkerPool;
 
 namespace Neo.FileStorage.InnerRing.Processors
@@ -41,7 +41,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 type = "sync";
             else if (morphEvent is DesignateEvent designateEvent)
             {
-                if (designateEvent.role != (byte)Role.NeoFSAlphabetNode) return;
+                if (designateEvent.Role != (byte)Role.NeoFSAlphabetNode) return;
                 type = "designation";
             }
             else

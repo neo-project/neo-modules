@@ -77,8 +77,8 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             var auditSettlementCalc = new Calculator(auditCalcDeps);
             var settlementProcessor = new SettlementProcessor()
             {
-                basicIncome = basicSettlementDeps,
-                auditProc = auditSettlementCalc,
+                BasicIncome = basicSettlementDeps,
+                AuditProc = auditSettlementCalc,
                 State = state,
                 WorkPool = actor
             };

@@ -144,8 +144,8 @@ namespace Neo.FileStorage.InnerRing
             var auditSettlementCalc = new Calculator(auditCalcDeps);
             settlementProcessor = new SettlementProcessor()
             {
-                basicIncome = basicSettlementDeps,
-                auditProc = auditSettlementCalc,
+                BasicIncome = basicSettlementDeps,
+                AuditProc = auditSettlementCalc,
                 State = this,
                 WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("Settlement Processor", Settings.Default.SettlementWorkersSize)),
             };

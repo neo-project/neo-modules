@@ -66,6 +66,4 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public abstract void Transfer(OwnerID sender, OwnerID recipient, long amount);
     }
-
-
 }
