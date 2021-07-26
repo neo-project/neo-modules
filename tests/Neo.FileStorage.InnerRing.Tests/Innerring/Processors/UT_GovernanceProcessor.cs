@@ -1,25 +1,14 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading;
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Cryptography.ECC;
-using Neo.FileStorage.API.Acl;
-using Neo.FileStorage.API.Container;
-using Neo.FileStorage.API.Cryptography;
-using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Invoker.Morph;
-using Neo.FileStorage.Tests;
-using Neo.IO;
 using Neo.Wallets;
-using Neo.Wallets.NEP6;
-using static Neo.FileStorage.InnerRing.Events.MorphEvent;
-using static Neo.FileStorage.Morph.Event.MorphEvent;
+using Neo.FileStorage.InnerRing.Events;
 
 namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
 {

@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.Morph.Event;
+using Neo.FileStorage.Listen.Event.Morph;
 using Neo.FileStorage.Storage.Services.Netmap;
 
 namespace Neo.FileStorage.Storage
@@ -17,17 +17,17 @@ namespace Neo.FileStorage.Storage
         private NetmapServiceImpl InitializeNetmap()
         {
             startEpoch = morphInvoker.Epoch();
-            netmapProcessor.AddEpochParser(MorphEvent.NewEpochEvent.ParseNewEpochEvent);
+            netmapProcessor.AddEpochParser(NewEpochEvent.ParseNewEpochEvent);
             netmapProcessor.AddEpochHandler(p =>
             {
-                if (p is MorphEvent.NewEpochEvent e)
+                if (p is NewEpochEvent e)
                 {
                     Interlocked.Exchange(ref CurrentEpoch, e.EpochNumber);
                 }
             });
             netmapProcessor.AddEpochHandler(p =>
             {
-                if (p is MorphEvent.NewEpochEvent e)
+                if (p is NewEpochEvent e)
                 {
                     var ni = NetmapLocalNodeInfo(e.EpochNumber);
                     if (ni is null)
@@ -37,7 +37,7 @@ namespace Neo.FileStorage.Storage
             });
             netmapProcessor.AddEpochHandler(p =>
             {
-                if (p is MorphEvent.NewEpochEvent e)
+                if (p is NewEpochEvent e)
                 {
                     if (0 < Interlocked.Read(ref reBoostrapTurnedOff)) return;
                     if ((e.EpochNumber - startEpoch) % reBootstrapInterval == 0)

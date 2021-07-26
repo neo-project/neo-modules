@@ -2,7 +2,7 @@ using System;
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.FileStorage.Morph.Listen;
+using Neo.FileStorage.Listen;
 
 namespace Neo.FileStorage.Tests.Morph.Listen
 {

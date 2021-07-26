@@ -7,8 +7,8 @@ using Akka.Actor;
 using Google.Protobuf;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.Invoker.Morph;
-using Neo.FileStorage.Morph.Event;
-using Neo.FileStorage.Morph.Listen;
+using Neo.FileStorage.Listen;
+using Neo.FileStorage.Listen.Event.Morph;
 using Neo.FileStorage.Storage.gRPC;
 using Neo.FileStorage.Storage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Storage.LocalObjectStorage.Shards;
@@ -86,7 +86,7 @@ namespace Neo.FileStorage.Storage
                 var shard = new Shard(shardSettings, system.ActorSystem.ActorOf(WorkerPool.Props($"Shard{i}", 2)), localStorage.ProcessExpiredTomstones);
                 netmapProcessor.AddEpochHandler(p =>
                 {
-                    if (p is MorphEvent.NewEpochEvent e)
+                    if (p is NewEpochEvent e)
                     {
                         shard.OnNewEpoch(e.EpochNumber);
                     }

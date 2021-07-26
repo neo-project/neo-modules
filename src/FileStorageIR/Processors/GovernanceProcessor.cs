@@ -4,12 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Neo.Cryptography.ECC;
-using Neo.FileStorage.Morph.Event;
-using Neo.FileStorage.Morph.Listen;
-using Neo.SmartContract;
+using Neo.FileStorage.Listen;
+using Neo.FileStorage.Listen.Event;
 using Neo.SmartContract.Native;
-using Neo.Wallets;
-using static Neo.FileStorage.InnerRing.Events.MorphEvent;
+using Neo.FileStorage.InnerRing.Events;
 using static Neo.FileStorage.Utils.WorkerPool;
 
 namespace Neo.FileStorage.InnerRing.Processors
@@ -127,7 +125,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 return;
             }
             var epoch = State.EpochCounter();
-            var id = System.Text.Encoding.UTF8.GetBytes(AlphabetUpdateIDPrefix).Concat(BitConverter.GetBytes(epoch)).ToArray();
+            var id = Utility.StrictUTF8.GetBytes(AlphabetUpdateIDPrefix).Concat(BitConverter.GetBytes(epoch)).ToArray();
             try
             {
                 MainInvoker.AlphabetUpdate(id, newAlphabet);
@@ -146,13 +144,13 @@ namespace Neo.FileStorage.InnerRing.Processors
             if (mainnet.Length < ln) throw new InvalidOperationException($"alphabet list in mainnet is too short,expecting {ln} keys");
             var hmap = new Dictionary<string, bool>();
             var result = new List<ECPoint>();
-            foreach (var node in sidechain) hmap[node.EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion)] = false;
+            foreach (var node in sidechain) hmap[node.ToAddress(ProtocolSettings.AddressVersion)] = false;
             var newNodes = 0;
             var newNodeLimit = (ln - 1) / 3;
             for (int i = 0; i < mainnet.Length; i++)
             {
                 if (result.Count == ln) break;
-                var mainnetAddr = mainnet[i].EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion);
+                var mainnetAddr = mainnet[i].ToAddress(ProtocolSettings.AddressVersion);
                 if (!hmap.TryGetValue(mainnetAddr, out _))
                 {
                     if (newNodes == newNodeLimit) continue;
@@ -165,7 +163,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             foreach (var node in sidechain)
             {
                 if (result.Count == ln) break;
-                if (!hmap[node.EncodePoint(true).ToScriptHash().ToAddress(ProtocolSettings.AddressVersion)]) result.Add(node);
+                if (!hmap[node.ToAddress(ProtocolSettings.AddressVersion)]) result.Add(node);
             }
             result.Sort();
             return result.ToArray();

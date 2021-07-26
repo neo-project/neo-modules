@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.InnerRing.Utils;
-using Neo.FileStorage.Morph.Event;
-using Neo.FileStorage.Morph.Listen;
+using Neo.FileStorage.Listen;
+using Neo.FileStorage.Listen.Event;
+using Neo.FileStorage.Listen.Event.Morph;
 using Neo.IO;
-using static Neo.FileStorage.Morph.Event.MorphEvent;
 using static Neo.FileStorage.Utils.WorkerPool;
 
 namespace Neo.FileStorage.InnerRing.Processors

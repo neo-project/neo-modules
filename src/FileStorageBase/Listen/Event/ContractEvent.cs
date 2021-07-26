@@ -1,4 +1,4 @@
-namespace Neo.FileStorage.Morph.Event
+namespace Neo.FileStorage.Listen.Event
 {
     public abstract class ContractEvent { }
 }

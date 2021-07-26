@@ -7,10 +7,10 @@ using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.InnerRing.Utils;
 using Neo.FileStorage.Invoker.Morph;
+using Neo.FileStorage.Listen.Event.Morph;
 using Neo.FileStorage.Tests;
 using Neo.IO;
 using Neo.Wallets;
-using static Neo.FileStorage.Morph.Event.MorphEvent;
 
 namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
 {

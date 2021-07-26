@@ -1,4 +1,4 @@
-namespace Neo.FileStorage.Morph.Listen
+namespace Neo.FileStorage.Listen
 {
     public class ScriptHashWithType
     {

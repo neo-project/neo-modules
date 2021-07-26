@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Cryptography.ECC;
-using Neo.FileStorage.Morph.Event;
+using Neo.FileStorage.Listen.Event;
+using Neo.FileStorage.Listen.Event.Morph;
 using Neo.IO;
-using static Neo.FileStorage.Morph.Event.MorphEvent;
 using Array = Neo.VM.Types.Array;
 
 namespace Neo.FileStorage.Tests.Morph.Event

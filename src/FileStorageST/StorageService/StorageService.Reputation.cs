@@ -3,8 +3,8 @@ using Akka.Actor;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.Invoker.Morph;
-using Neo.FileStorage.Morph.Event;
-using Neo.FileStorage.Morph.Listen;
+using Neo.FileStorage.Listen;
+using Neo.FileStorage.Listen.Event.Morph;
 using Neo.FileStorage.Reputation;
 using Neo.FileStorage.Storage.Cache;
 using Neo.FileStorage.Storage.Services.Reputaion.Common;
@@ -127,7 +127,7 @@ namespace Neo.FileStorage.Storage
             };
             netmapProcessor.AddEpochHandler(p =>
             {
-                if (p is MorphEvent.NewEpochEvent e)
+                if (p is NewEpochEvent e)
                 {
                     localTrustController.Report(e.EpochNumber);
                 }
