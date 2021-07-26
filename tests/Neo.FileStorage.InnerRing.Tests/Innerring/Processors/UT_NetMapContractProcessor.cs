@@ -68,7 +68,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             var auditCalcDeps = new AuditSettlementDeps()
             {
                 Invoker = morphInvoker,
-                clientCache = clientCache,
+                ClientCache = clientCache,
             };
             var basicSettlementDeps = new BasicIncomeSettlementDeps()
             {

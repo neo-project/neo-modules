@@ -47,18 +47,18 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 ProcessResult(new SingleResultCtx()
                 {
-                    auditResult = auditResult,
-                    txTable = table,
-                    auditFee = Settings.Default.AuditFee
+                    AuditResult = auditResult,
+                    TxTable = table,
+                    AuditFee = Settings.Default.AuditFee
                 });
             }
             Utility.Log("Calculator", LogLevel.Debug, "processing transfers");
-            TransferTable.TransferAssets(settlementDeps, table, System.Text.Encoding.UTF8.GetBytes("settlement-audit"));
+            TransferTable.TransferAssets(settlementDeps, table, Utility.StrictUTF8.GetBytes("settlement-audit"));
         }
 
         public void ProcessResult(SingleResultCtx ctx)
         {
-            Utility.Log("Calculator", LogLevel.Debug, $"cid={ctx.auditResult.ContainerId.ToBase58String()}, audit_epoch={ctx.auditResult.AuditEpoch}");
+            Utility.Log("Calculator", LogLevel.Debug, $"cid={ctx.AuditResult.ContainerId.ToBase58String()}, audit_epoch={ctx.AuditResult.AuditEpoch}");
             Utility.Log("Calculator", LogLevel.Debug, "reading information about the container");
             if (!ReadContainerInfo(ctx)) return;
             Utility.Log("Calculator", LogLevel.Debug, "building placement");
@@ -75,7 +75,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             try
             {
-                ctx.cnrInfo = settlementDeps.ContainerInfo(ctx.auditResult.ContainerId);
+                ctx.Container = settlementDeps.ContainerInfo(ctx.AuditResult.ContainerId);
             }
             catch (Exception e)
             {
@@ -89,8 +89,8 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             try
             {
-                ctx.cnrNodes = settlementDeps.ContainerNodes(ctx.eAudit, ctx.auditResult.ContainerId);
-                var empty = ctx.cnrNodes.Length == 0;
+                ctx.ContainerNodes = settlementDeps.ContainerNodes(ctx.Epoch, ctx.AuditResult.ContainerId);
+                var empty = ctx.ContainerNodes.Length == 0;
                 Utility.Log("Calculator", LogLevel.Debug, "empty list of container nodes");
                 return !empty;
             }
@@ -103,14 +103,14 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public bool CollectPassNodes(SingleResultCtx ctx)
         {
-            ctx.passNodes = new Dictionary<string, Node>();
+            ctx.PassedNodes = new Dictionary<string, Node>();
             bool loopflag = false;
-            foreach (var cnrNode in ctx.cnrNodes)
+            foreach (var cnrNode in ctx.ContainerNodes)
             {
-                foreach (var passNode in ctx.auditResult.PassNodes)
+                foreach (var passNode in ctx.AuditResult.PassNodes)
                 {
                     if (!cnrNode.PublicKey.SequenceEqual(passNode.ToByteArray())) continue;
-                    foreach (var failNode in ctx.auditResult.FailNodes)
+                    foreach (var failNode in ctx.AuditResult.FailNodes)
                     {
                         if (cnrNode.PublicKey.SequenceEqual(failNode.ToByteArray()))
                         {
@@ -119,10 +119,10 @@ namespace Neo.FileStorage.InnerRing.Processors
                         }
                     }
                     if (loopflag) break;
-                    ctx.passNodes[passNode.ToByteArray().ToHexString()] = cnrNode;
+                    ctx.PassedNodes[passNode.ToByteArray().ToHexString()] = cnrNode;
                 }
             }
-            if (ctx.passNodes.Count == 0)
+            if (ctx.PassedNodes.Count == 0)
             {
                 Utility.Log("Calculator", LogLevel.Error, "none of the container nodes passed the audit");
                 return false;
@@ -132,7 +132,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public bool SumSGSizes(SingleResultCtx ctx)
         {
-            var passedSG = ctx.auditResult.PassSg;
+            var passedSG = ctx.AuditResult.PassSg;
             if (passedSG.Count == 0)
             {
                 Utility.Log("Calculator", LogLevel.Debug, "empty list of passed SG");
@@ -140,8 +140,8 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             ulong sumPassSGSize = 0;
             Address address = new();
-            address.ContainerId = ctx.auditResult.ContainerId;
-            foreach (var sgID in ctx.auditResult.PassSg)
+            address.ContainerId = ctx.AuditResult.ContainerId;
+            foreach (var sgID in ctx.AuditResult.PassSg)
             {
                 try
                 {
@@ -160,14 +160,14 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log("Calculator", LogLevel.Debug, "zero sum SG size");
                 return false;
             }
-            ctx.sumSGSize = sumPassSGSize;
+            ctx.SumSGSize = sumPassSGSize;
             return true;
         }
 
         public bool FillTransferTable(SingleResultCtx ctx)
         {
-            var cnrOwner = ctx.cnrInfo.OwnerId;
-            foreach (var item in ctx.passNodes)
+            var cnrOwner = ctx.Container.OwnerId;
+            foreach (var item in ctx.PassedNodes)
             {
                 OwnerID ownerID;
                 try
@@ -180,14 +180,14 @@ namespace Neo.FileStorage.InnerRing.Processors
                     return false;
                 }
                 var price = item.Value.Price;
-                Utility.Log("Calculator", LogLevel.Debug, $"calculating storage node salary for audit (GASe-12) sum SG, size={ctx.sumSGSize}, price={price}");
-                var fee = BigInteger.Multiply(price, ctx.sumSGSize);
+                Utility.Log("Calculator", LogLevel.Debug, $"calculating storage node salary for audit (GASe-12) sum SG, size={ctx.SumSGSize}, price={price}");
+                var fee = BigInteger.Multiply(price, ctx.SumSGSize);
                 fee = BigInteger.Divide(fee, BigInteger.One);
                 if (fee.CompareTo(BigInteger.Zero) == 0) fee = BigInteger.Add(fee, BigInteger.One);
-                ctx.txTable.Transfer(new TransferTx() { from = cnrOwner, to = ownerID, amount = fee });
+                ctx.TxTable.Transfer(new TransferTx() { From = cnrOwner, To = ownerID, Amount = fee });
             }
-            var auditIR = ctx.auditResult.PublicKey.ToByteArray().PublicKeyToOwnerID();
-            ctx.txTable.Transfer(new TransferTx() { from = cnrOwner, to = auditIR, amount = ctx.auditFee });
+            var auditIR = ctx.AuditResult.PublicKey.ToByteArray().PublicKeyToOwnerID();
+            ctx.TxTable.Transfer(new TransferTx() { From = cnrOwner, To = auditIR, Amount = ctx.AuditFee });
             return false;
         }
     }

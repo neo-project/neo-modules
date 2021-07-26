@@ -10,9 +10,10 @@ namespace Neo.FileStorage.InnerRing.Processors
     public class BasicIncomeSettlementDeps : SettlementDeps
     {
         public ulong BasicRate => Settings.Default.BasicIncomeRate;
-        public override void Transfer(OwnerID sender, OwnerID recipient, long amount, byte[] details)
+
+        public override void Transfer(OwnerID sender, OwnerID recipient, long amount)
         {
-            transfer(sender, recipient, amount, System.Text.Encoding.UTF8.GetBytes("settlement-basic-income"));
+            Transfer(sender, recipient, amount, Utility.StrictUTF8.GetBytes("settlement-basic-income"));
         }
 
         public BigInteger Balance(OwnerID id)

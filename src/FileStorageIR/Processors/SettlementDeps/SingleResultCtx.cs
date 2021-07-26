@@ -9,14 +9,14 @@ namespace Neo.FileStorage.InnerRing.Processors
 {
     public class SingleResultCtx
     {
-        public ulong eAudit;
-        public DataAuditResult auditResult;
-        public ContainerID cid;
-        public TransferTable txTable;
-        public Container cnrInfo;
-        public Node[] cnrNodes;
-        public Dictionary<string, Node> passNodes = new();
-        public BigInteger sumSGSize;
-        public BigInteger auditFee;
+        public ulong Epoch;
+        public DataAuditResult AuditResult;
+        public ContainerID ContainerID;
+        public TransferTable TxTable;
+        public Container Container;
+        public Node[] ContainerNodes;
+        public Dictionary<string, Node> PassedNodes = new();
+        public BigInteger SumSGSize;
+        public BigInteger AuditFee;
     }
 }

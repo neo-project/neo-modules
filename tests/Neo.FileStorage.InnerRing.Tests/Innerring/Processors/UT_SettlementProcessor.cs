@@ -1,11 +1,11 @@
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neo.FileStorage.InnerRing.Events;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Invoker.Morph;
 using Neo.Wallets;
-using Neo.FileStorage.InnerRing.Events;
 
 namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
 {
@@ -33,7 +33,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             var auditCalcDeps = new AuditSettlementDeps()
             {
                 Invoker = morphInvoker,
-                clientCache = clientCache,
+                ClientCache = clientCache,
             };
             var basicSettlementDeps = new BasicIncomeSettlementDeps()
             {

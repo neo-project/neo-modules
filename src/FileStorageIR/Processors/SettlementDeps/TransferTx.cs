@@ -5,8 +5,8 @@ namespace Neo.FileStorage.InnerRing.Processors
 {
     public class TransferTx
     {
-        public OwnerID from;
-        public OwnerID to;
-        public BigInteger amount;
+        public OwnerID From;
+        public OwnerID To;
+        public BigInteger Amount;
     }
 }

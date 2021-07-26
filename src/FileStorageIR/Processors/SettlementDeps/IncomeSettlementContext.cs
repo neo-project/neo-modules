@@ -13,56 +13,57 @@ namespace Neo.FileStorage.InnerRing.Processors
 {
     public class IncomeSettlementContext
     {
+        private static readonly UInt160 BankAccount = new(new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
+        private readonly OwnerID bankOwner;
         private readonly object lockObject = new();
-        public BasicIncomeSettlementDeps settlementDeps;
-        public ulong epoch;
-        public OwnerID bankOwner;
         private readonly NodeSizeTable distributeTable = new();
+        public BasicIncomeSettlementDeps SettlementDeps { get; init; }
+        public ulong Epoch { get; init; }
 
-        public OwnerID BankOwnerID()
+        public IncomeSettlementContext()
         {
-            OwnerID ownerID = new();
-            UInt160 account = new(new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 });
-            ownerID.Value = ByteString.CopyFrom(Cryptography.Base58.Decode(Cryptography.Base58.Base58CheckEncode(account.ToArray())));
-            return ownerID;
+            bankOwner = new()
+            {
+                Value = ByteString.CopyFrom(Cryptography.Base58.Decode(Cryptography.Base58.Base58CheckEncode(BankAccount.ToArray()))),
+            };
         }
 
         public void Collect()
         {
             lock (lockObject)
             {
-                var cachedRate = settlementDeps.BasicRate;
-                var cnrEstimations = settlementDeps.Estimations(epoch);
+                var cachedRate = SettlementDeps.BasicRate;
+                var cnrEstimations = SettlementDeps.Estimations(Epoch);
                 var txTable = new TransferTable();
                 foreach (var item in cnrEstimations)
                 {
                     OwnerID owner = null;
                     try
                     {
-                        owner = settlementDeps.ContainerInfo(item.ContainerID).OwnerId;
+                        owner = SettlementDeps.ContainerInfo(item.ContainerID).OwnerId;
                     }
                     catch
                     {
-                        Utility.Log("IncomeSettlementContext", LogLevel.Info, $"can't fetch container info, epoch={epoch}, container_id={item.ContainerID.ToBase58String()}");
+                        Utility.Log("IncomeSettlementContext", LogLevel.Info, $"can't fetch container info, Epoch={Epoch}, container_id={item.ContainerID.ToBase58String()}");
                         continue;
                     }
                     Node[] cnrNodes = null;
                     try
                     {
-                        cnrNodes = settlementDeps.ContainerNodes(epoch, item.ContainerID);
+                        cnrNodes = SettlementDeps.ContainerNodes(Epoch, item.ContainerID);
                     }
                     catch
                     {
-                        Utility.Log("IncomeSettlementContext", LogLevel.Info, $"can't fetch container info, epoch={epoch}, container_id={item.ContainerID.ToBase58String()}");
+                        Utility.Log("IncomeSettlementContext", LogLevel.Info, $"can't fetch container info, Epoch={Epoch}, container_id={item.ContainerID.ToBase58String()}");
                         continue;
                     }
                     ulong avg = AvgEstimation(item);
                     BigInteger total = CalculateBasicSum(avg, cachedRate, cnrNodes.Length);
                     foreach (var node in cnrNodes)
                         distributeTable.Put(node.PublicKey, avg);
-                    txTable.Transfer(new TransferTx() { from = owner, to = BankOwnerID(), amount = total });
+                    txTable.Transfer(new TransferTx() { From = owner, To = bankOwner, Amount = total });
                 }
-                TransferTable.TransferAssets(settlementDeps, txTable, Utility.StrictUTF8.GetBytes("settlement-basincome"));
+                TransferTable.TransferAssets(SettlementDeps, txTable, Utility.StrictUTF8.GetBytes("settlement-basincome"));
             }
         }
 
@@ -92,14 +93,14 @@ namespace Neo.FileStorage.InnerRing.Processors
             lock (lockObject)
             {
                 var txTable = new TransferTable();
-                BigInteger bankBalance = settlementDeps.Balance(bankOwner);
+                BigInteger bankBalance = SettlementDeps.Balance(bankOwner);
                 BigInteger total = distributeTable.Total();
                 distributeTable.Iterate((byte[] key, BigInteger n) =>
                 {
                     var nodeOwner = key.PublicKeyToOwnerID();
-                    txTable.Transfer(new TransferTx() { from = bankOwner, to = nodeOwner, amount = NormalizedValue(n, total, bankBalance) });
+                    txTable.Transfer(new TransferTx() { From = bankOwner, To = nodeOwner, Amount = NormalizedValue(n, total, bankBalance) });
                 });
-                TransferTable.TransferAssets(settlementDeps, txTable, Utility.StrictUTF8.GetBytes("settlement-basincome"));
+                TransferTable.TransferAssets(SettlementDeps, txTable, Utility.StrictUTF8.GetBytes("settlement-basincome"));
             }
         }
 

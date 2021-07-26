@@ -14,7 +14,7 @@ namespace Neo.FileStorage.InnerRing.Processors
     public abstract class SettlementDeps
     {
         public MorphInvoker Invoker;
-        public RpcClientCache clientCache;
+        public RpcClientCache ClientCache;
 
         public List<DataAuditResult> AuditResultsForEpoch(ulong epoch)
         {
@@ -52,10 +52,10 @@ namespace Neo.FileStorage.InnerRing.Processors
         public StorageGroup SGInfo(Address address)
         {
             BuildContainer(0, address.ContainerId, out var cn, out var nm);
-            return clientCache.GetStorageGroup(new CancellationToken(), address, nm, cn);
+            return ClientCache.GetStorageGroup(new CancellationToken(), address, nm, cn);
         }
 
-        public void transfer(OwnerID sender, OwnerID recipient, long amount, byte[] details)
+        public void Transfer(OwnerID sender, OwnerID recipient, long amount, byte[] details)
         {
             Utility.Log("SettlementDeps", LogLevel.Info, $"sender:{sender.ToBase58String()},recipient:{recipient.ToBase58String()},amount (GASe-12):{amount},details:{Utility.StrictUTF8.GetString(details)}");
             var from = new UInt160(Cryptography.Base58.Base58CheckDecode(Cryptography.Base58.Encode(sender.Value.ToByteArray())).Skip(1).ToArray());
@@ -64,7 +64,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             Utility.Log("SettlementDeps", LogLevel.Info, "transfer transaction for audit was successfully sent");
         }
 
-        public abstract void Transfer(OwnerID sender, OwnerID recipient, long amount, byte[] details);
+        public abstract void Transfer(OwnerID sender, OwnerID recipient, long amount);
     }
 
 

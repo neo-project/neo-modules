@@ -11,15 +11,15 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void Transfer(TransferTx tx)
         {
-            var from = tx.from.ToBase58String();
-            var to = tx.to.ToBase58String();
+            var from = tx.From.ToBase58String();
+            var to = tx.To.ToBase58String();
             if (from == to) return;
             if (!txs.TryGetValue(from, out var m))
             {
                 if (txs.TryGetValue(to, out m))
                 {
                     to = from;
-                    tx.amount = BigInteger.Negate(tx.amount);
+                    tx.Amount = BigInteger.Negate(tx.Amount);
                 }
                 else
                 {
@@ -32,7 +32,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 m[to] = tx;
                 return;
             }
-            tgt.amount += tx.amount;
+            tgt.Amount += tx.Amount;
         }
 
         public void Iterate(Action<TransferTx> f)
@@ -46,16 +46,16 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             t.Iterate((TransferTx tx) =>
             {
-                var sign = tx.amount.Sign;
+                var sign = tx.Amount.Sign;
                 if (sign == 0) return;
                 if (sign < 0)
                 {
-                    OwnerID temp = tx.from;
-                    tx.from = tx.to;
-                    tx.to = temp;
-                    tx.amount = BigInteger.Negate(tx.amount);
+                    OwnerID temp = tx.From;
+                    tx.From = tx.To;
+                    tx.To = temp;
+                    tx.Amount = BigInteger.Negate(tx.Amount);
                 }
-                e.Transfer(tx.from, tx.to, (long)tx.amount, details);
+                e.Transfer(tx.From, tx.To, (long)tx.Amount, details);
             });
         }
     }

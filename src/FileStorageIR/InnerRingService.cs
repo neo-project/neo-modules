@@ -135,7 +135,7 @@ namespace Neo.FileStorage.InnerRing
             var auditCalcDeps = new AuditSettlementDeps()
             {
                 Invoker = morphClient,
-                clientCache = clientCache,
+                ClientCache = clientCache,
             };
             var basicSettlementDeps = new BasicIncomeSettlementDeps()
             {

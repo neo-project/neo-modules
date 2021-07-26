@@ -53,8 +53,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Error, $"income context already exists, epoch={epoch}");
                 return;
             }
-            IncomeSettlementContext incomeCtx = new() { settlementDeps = basicIncome, epoch = epoch };
-            incomeCtx.bankOwner = incomeCtx.BankOwnerID();
+            IncomeSettlementContext incomeCtx = new() { SettlementDeps = basicIncome, Epoch = epoch };
             incomeContexts[epoch] = incomeCtx;
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => incomeCtx.Collect()) });
         }
