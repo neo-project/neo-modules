@@ -40,7 +40,7 @@ namespace FileStorageCLI
                 var source = new CancellationTokenSource();
                 source.CancelAfter(10000);
                 Neo.Cryptography.ECC.ECPoint pk = Neo.Cryptography.ECC.ECPoint.Parse(paccount, Neo.Cryptography.ECC.ECCurve.Secp256r1);
-                OwnerID ownerID = pk.EncodePoint(true).PublicKeyToOwnerID();
+                OwnerID ownerID = OwnerID.FromScriptHash(pk.EncodePoint(true).PublicKeyToScriptHash());
                 Neo.FileStorage.API.Accounting.Decimal result = client.GetBalance(ownerID, context: source.Token).Result;
                 Console.WriteLine($"Fs current account :{Contract.CreateSignatureRedeemScript(pk).ToScriptHash()}, balance:{(result.Value == 0 ? 0 : result)}");
             }
