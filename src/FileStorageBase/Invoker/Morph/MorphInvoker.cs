@@ -10,9 +10,6 @@ namespace Neo.FileStorage.Invoker.Morph
     /// </summary>
     public partial class MorphInvoker : ContractInvoker, INetmapSource
     {
-        public Wallet Wallet { get; init; }
-        public NeoSystem NeoSystem { get; init; }
-        public IActorRef Blockchain { get; init; }
         public long SideChainFee { get; init; }
         public UInt160[] AlphabetContractHash { get; init; }
         public UInt160 AuditContractHash { get; init; }

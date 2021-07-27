@@ -4,6 +4,8 @@ using System.Numerics;
 using Google.Protobuf;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Invoker.Morph;
+using Neo.IO;
+using Neo.Wallets;
 
 namespace Neo.FileStorage.InnerRing.Processors
 {
@@ -18,7 +20,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public BigInteger Balance(OwnerID id)
         {
-            return Invoker.BalanceOf(id.ToByteArray());
+            return Invoker.BalanceOf(id.ToScriptHash().ToArray());
         }
 
         public Estimations[] Estimations(ulong epoch)

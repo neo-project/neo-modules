@@ -5,6 +5,7 @@ using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.InnerRing.Invoker;
@@ -86,7 +87,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.ToArray().PublicKeyToScriptHash());
             Container container = new Container()
             {
                 Version = new API.Refs.Version(),
@@ -136,7 +137,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
             var nodeInfo = new NodeInfo()
             {
                 PublicKey = ByteString.CopyFrom(key.PublicKey.ToArray()),
-                Address = API.Cryptography.KeyExtension.PublicKeyToAddress(key.PublicKey.ToArray()),
+                Address = "",
                 State = NodeInfo.Types.State.Online
             };
             morphInvoker.ApprovePeer(nodeInfo.ToByteArray());

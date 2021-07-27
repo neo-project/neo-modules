@@ -65,7 +65,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         {
             var key = wallet.GetAccounts().ToArray()[0].GetKey().PublicKey;
             NodeInfo nodeInfo = new NodeInfo();
-            nodeInfo.Address = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToAddress(key.ToArray());
+            nodeInfo.Address = "";
             nodeInfo.PublicKey = ByteString.CopyFrom(key.ToArray());
             invoker.AddPeer(nodeInfo);
         }
@@ -121,8 +121,8 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair kp = accounts.ToArray()[0].GetKey();
             ECDsa key = kp.PrivateKey.LoadPrivateKey();
-            OwnerID owner = key.ToOwnerID();
-            Container container = new Container()
+            OwnerID owner = OwnerID.FromScriptHash(kp.PublicKey.EncodePoint(true).PublicKeyToScriptHash());
+            Container container = new()
             {
                 Version = new API.Refs.Version(),
                 BasicAcl = 0,
@@ -153,8 +153,8 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair kp = accounts.ToArray()[0].GetKey();
             ECDsa key = kp.PrivateKey.LoadPrivateKey();
-            OwnerID ownerId = key.ToOwnerID();
-            Container container = new Container()
+            OwnerID ownerId = OwnerID.FromScriptHash(kp.PublicKey.EncodePoint(true).PublicKeyToScriptHash());
+            Container container = new()
             {
                 Version = new API.Refs.Version(),
                 BasicAcl = 0,
@@ -185,8 +185,8 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair kp = accounts.ToArray()[0].GetKey();
             ECDsa key = kp.PrivateKey.LoadPrivateKey();
-            OwnerID ownerId = key.ToOwnerID();
-            Container container = new Container()
+            OwnerID ownerId = OwnerID.FromScriptHash(kp.PublicKey.EncodePoint(true).PublicKeyToScriptHash());
+            Container container = new()
             {
                 Version = new API.Refs.Version(),
                 BasicAcl = 0,
@@ -194,7 +194,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 OwnerId = ownerId,
                 PlacementPolicy = new PlacementPolicy()
             };
-            API.Acl.EACLTable eACLTable = new API.Acl.EACLTable()
+            API.Acl.EACLTable eACLTable = new()
             {
                 ContainerId = container.CalCulateAndGetId,
                 Version = new API.Refs.Version(),
@@ -222,16 +222,16 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            Neo.FileStorage.API.Refs.OwnerID ownerId = Neo.FileStorage.API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
-            Container container = new Container()
+            OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.EncodePoint(true).PublicKeyToScriptHash());
+            Container container = new()
             {
-                Version = new Neo.FileStorage.API.Refs.Version(),
+                Version = new API.Refs.Version(),
                 BasicAcl = 0,
                 Nonce = ByteString.CopyFrom(new byte[16], 0, 16),
                 OwnerId = ownerId,
                 PlacementPolicy = new PlacementPolicy()
             };
-            API.Acl.EACLTable eACLTable = new API.Acl.EACLTable()
+            API.Acl.EACLTable eACLTable = new()
             {
                 ContainerId = container.CalCulateAndGetId,
                 Version = new API.Refs.Version(),
@@ -248,8 +248,8 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            API.Refs.OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
-            Container container = new Container()
+            OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.EncodePoint(true).PublicKeyToScriptHash());
+            Container container = new()
             {
                 Version = new API.Refs.Version(),
                 BasicAcl = 0,
@@ -266,8 +266,8 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            API.Refs.OwnerID ownerId = KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
-            Container container = new Container()
+            OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.EncodePoint(true).PublicKeyToScriptHash());
+            Container container = new()
             {
                 Version = new API.Refs.Version(),
                 BasicAcl = 0,

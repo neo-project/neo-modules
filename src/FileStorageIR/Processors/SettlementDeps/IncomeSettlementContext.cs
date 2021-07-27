@@ -2,12 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Google.Protobuf;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Invoker.Morph;
-using Neo.IO;
 
 namespace Neo.FileStorage.InnerRing.Processors
 {
@@ -22,10 +20,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public IncomeSettlementContext()
         {
-            bankOwner = new()
-            {
-                Value = ByteString.CopyFrom(Cryptography.Base58.Decode(Cryptography.Base58.Base58CheckEncode(BankAccount.ToArray()))),
-            };
+            bankOwner = OwnerID.FromScriptHash(BankAccount);
         }
 
         public void Collect()
@@ -97,7 +92,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 BigInteger total = distributeTable.Total();
                 distributeTable.Iterate((byte[] key, BigInteger n) =>
                 {
-                    var nodeOwner = key.PublicKeyToOwnerID();
+                    var nodeOwner = OwnerID.FromScriptHash(key.PublicKeyToScriptHash());
                     txTable.Transfer(new TransferTx() { From = bankOwner, To = nodeOwner, Amount = NormalizedValue(n, total, bankBalance) });
                 });
                 TransferTable.TransferAssets(SettlementDeps, txTable, Utility.StrictUTF8.GetBytes("settlement-basincome"));

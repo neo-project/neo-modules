@@ -91,7 +91,7 @@ namespace Neo.FileStorage.Listen.Event.Morph
         public static ConfigEvent ParseConfigEvent(VM.Types.Array eventParams)
         {
             var configEvent = new ConfigEvent();
-            if (eventParams.Count != 3) throw new Exception();
+            if (eventParams.Count != 3) throw new FormatException();
             configEvent.Id = eventParams[0].GetSpan().ToArray();
             configEvent.Key = eventParams[1].GetSpan().ToArray();
             configEvent.Value = eventParams[2].GetSpan().ToArray();
@@ -106,7 +106,7 @@ namespace Neo.FileStorage.Listen.Event.Morph
         public static UpdateInnerRingEvent ParseUpdateInnerRingEvent(VM.Types.Array eventParams)
         {
             var updateInnerRingEvent = new UpdateInnerRingEvent();
-            if (eventParams.Count != 1) throw new Exception();
+            if (eventParams.Count != 1) throw new FormatException();
 
             List<ECPoint> keys = new List<ECPoint>();
             var irKeys = ((VM.Types.Array)eventParams[0]).GetEnumerator();

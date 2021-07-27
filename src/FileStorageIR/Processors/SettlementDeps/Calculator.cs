@@ -172,7 +172,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 OwnerID ownerID;
                 try
                 {
-                    ownerID = item.Value.PublicKey.PublicKeyToOwnerID();
+                    ownerID = OwnerID.FromScriptHash(item.Value.PublicKey.PublicKeyToScriptHash());
                 }
                 catch (Exception e)
                 {
@@ -186,7 +186,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 if (fee.CompareTo(BigInteger.Zero) == 0) fee = BigInteger.Add(fee, BigInteger.One);
                 ctx.TxTable.Transfer(new TransferTx() { From = cnrOwner, To = ownerID, Amount = fee });
             }
-            var auditIR = ctx.AuditResult.PublicKey.ToByteArray().PublicKeyToOwnerID();
+            var auditIR = OwnerID.FromScriptHash(ctx.AuditResult.PublicKey.ToByteArray().PublicKeyToScriptHash());
             ctx.TxTable.Transfer(new TransferTx() { From = cnrOwner, To = auditIR, Amount = ctx.AuditFee });
             return false;
         }

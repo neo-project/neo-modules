@@ -1,6 +1,4 @@
 using System;
-using Neo.Cryptography.ECC;
-using Neo.IO;
 
 namespace Neo.FileStorage.Listen.Event.Morph
 {
@@ -8,7 +6,7 @@ namespace Neo.FileStorage.Listen.Event.Morph
     {
         public byte[] ContainerID;
         public byte[] Signature;
-        public byte[] token;
+        public byte[] Token;
 
         public static ContainerDeleteEvent ParseContainerDeleteEvent(VM.Types.Array eventParams)
         {
@@ -16,7 +14,7 @@ namespace Neo.FileStorage.Listen.Event.Morph
             if (eventParams.Count != 3) throw new FormatException();
             containerDeleteEvent.ContainerID = eventParams[0].GetSpan().ToArray();
             containerDeleteEvent.Signature = eventParams[1].GetSpan().ToArray();
-            containerDeleteEvent.token = eventParams[2] is VM.Types.Null ? null : eventParams[2].GetSpan().ToArray();
+            containerDeleteEvent.Token = eventParams[2] is VM.Types.Null ? null : eventParams[2].GetSpan().ToArray();
             return containerDeleteEvent;
         }
     }
@@ -26,7 +24,7 @@ namespace Neo.FileStorage.Listen.Event.Morph
         public byte[] RawContainer;
         public byte[] Signature;
         public byte[] PublicKey;
-        public byte[] token;
+        public byte[] Token;
 
         public static ContainerPutEvent ParseContainerPutEvent(VM.Types.Array eventParams)
         {
@@ -35,7 +33,7 @@ namespace Neo.FileStorage.Listen.Event.Morph
             containerPutEvent.RawContainer = eventParams[0].GetSpan().ToArray();
             containerPutEvent.Signature = eventParams[1].GetSpan().ToArray();
             containerPutEvent.PublicKey = eventParams[2].GetSpan().ToArray();
-            containerPutEvent.token = eventParams[3] is VM.Types.Null ? null : eventParams[3].GetSpan().ToArray();
+            containerPutEvent.Token = eventParams[3] is VM.Types.Null ? null : eventParams[3].GetSpan().ToArray();
             return containerPutEvent;
         }
     }

@@ -2,6 +2,6 @@ namespace Neo.FileStorage.Listen.Event.Morph
 {
     public class StartEvent : ContractEvent
     {
-        public ulong epoch;
+        public ulong Epoch;
     }
 }

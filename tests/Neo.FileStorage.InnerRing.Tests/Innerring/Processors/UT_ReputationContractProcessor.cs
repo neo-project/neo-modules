@@ -1,14 +1,17 @@
+using System.Collections.Generic;
 using System.Linq;
 using Akka.Actor;
 using Akka.TestKit.Xunit2;
 using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Cryptography;
+using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Reputation;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Listen.Event.Morph;
+using Neo.FileStorage.Reputation;
 using Neo.IO;
 using Neo.Wallets;
 
@@ -17,6 +20,16 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
     [TestClass]
     public class UT_ReputationContractProcessor : TestKit
     {
+        private class TestNetmapSource : INetmapSource
+        {
+            public List<Node> Nodes = new();
+
+            public NetMap GetNetMapByEpoch(ulong epoch)
+            {
+                return new NetMap(Nodes);
+            }
+        }
+
         private NeoSystem system;
         private ReputationContractProcessor processor;
         private MorphInvoker morphInvoker;
@@ -38,7 +51,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             {
                 MorphInvoker = morphInvoker,
                 State = state,
-                WorkPool = actor
+                WorkPool = actor,
             };
         }
 
@@ -61,6 +74,12 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
         {
             byte[] privateKey = wallet.GetAccounts().Select(p => p.GetKey().PrivateKey).ToArray()[0].ToArray();
             byte[] publicKey = wallet.GetAccounts().Select(p => p.GetKey().PublicKey).ToArray()[0].ToArray();
+            var netmapSource = new TestNetmapSource();
+            netmapSource.Nodes.Add(new Node(0, new NodeInfo
+            {
+                PublicKey = ByteString.CopyFrom(publicKey),
+            }));
+            processor.ManagerBuilder = new() { NetmapSource = netmapSource };
             GlobalTrust gt = new()
             {
                 Body = new()

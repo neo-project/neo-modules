@@ -22,7 +22,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="NeoFS.API" Version="0.0.59" />
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
     <PackageReference Include="ZstdNet" Version="1.4.5" />
   </ItemGroup>

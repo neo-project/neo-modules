@@ -1,6 +1,7 @@
 using Google.Protobuf;
 using Neo.FileStorage.API.Accounting;
 using Neo.FileStorage.Invoker.Morph;
+using Neo.IO;
 
 namespace Neo.FileStorage.Storage.Services.Accounting
 {
@@ -10,7 +11,7 @@ namespace Neo.FileStorage.Storage.Services.Accounting
 
         public BalanceResponse Balance(BalanceRequest request)
         {
-            long balance = MorphInvoker.BalanceOf(request.Body.OwnerId.ToByteArray());
+            long balance = MorphInvoker.BalanceOf(request.Body.OwnerId.ToScriptHash().ToArray());
             var resp = new BalanceResponse
             {
                 Body = new BalanceResponse.Types.Body

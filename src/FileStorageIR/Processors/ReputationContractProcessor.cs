@@ -18,7 +18,7 @@ namespace Neo.FileStorage.InnerRing.Processors
     {
         public override string Name => "ReputationContractProcessor";
         private const string PutReputationNotification = "reputationPut";
-        public ManagerBuilder mngBuilder;
+        public ManagerBuilder ManagerBuilder;
 
         public override HandlerInfo[] ListenerHandlers()
         {
@@ -96,10 +96,10 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void CheckManagers(ulong epoch, PeerID mng, PeerID peer)
         {
-            List<API.Netmap.NodeInfo> mm = mngBuilder.BuilderManagers(epoch, peer);
+            List<API.Netmap.NodeInfo> mm = ManagerBuilder.BuilderManagers(epoch, peer);
             foreach (var m in mm)
             {
-                if (mng.PublicKey.ToByteArray().SequenceEqual(m.ToByteArray()))
+                if (mng.PublicKey.ToByteArray().SequenceEqual(m.PublicKey.ToByteArray()))
                     return;
             }
             throw new InvalidOperationException("got manager that is incorrect for peer");

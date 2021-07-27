@@ -24,7 +24,6 @@ namespace Neo.FileStorage.InnerRing
     /// </summary>
     public partial class InnerRingPlugin : Plugin, IPersistencePlugin
     {
-        public event EventHandler<Wallet> WalletChanged;
         public const string MorphChainConfig = "morph.json";
         public const string ChainDataFileName = "morph.acc";
         public override string Name => "innerRingService";
@@ -33,7 +32,6 @@ namespace Neo.FileStorage.InnerRing
         public NeoSystem MainSystem;
         public NeoSystem MorphSystem;
         private IActorRef innerRingService;
-        private IWalletProvider walletProvider;
         private MorphChainSettings morphSettings;
         private ProtocolSettings morphProtocolSettings;
 
@@ -52,7 +50,6 @@ namespace Neo.FileStorage.InnerRing
                 morphProtocolSettings = ProtocolSettings.Load(config_path);
                 MorphSystem = new(morphProtocolSettings, morphSettings.Storage.Engine, morphSettings.Storage.Path);
                 LocalNode = MorphSystem.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
-                MainSystem.ServiceAdded += NeoSystem_ServiceAdded;
                 Task.Run(async () =>
                 {
                     using (IEnumerator<Block> blocksBeingImported = GetBlocksFromFile(MorphSystem).GetEnumerator())
@@ -114,26 +111,7 @@ namespace Neo.FileStorage.InnerRing
             }
         }
 
-        private void NeoSystem_ServiceAdded(object sender, object service)
-        {
-            if (service is IWalletProvider)
-            {
-                walletProvider = service as IWalletProvider;
-                MainSystem.ServiceAdded -= NeoSystem_ServiceAdded;
-                if (Settings.Default.AutoStart)
-                {
-                    walletProvider.WalletChanged += WalletProvider_WalletChanged;
-                }
-            }
-        }
-
-        private void WalletProvider_WalletChanged(object sender, Wallet wallet)
-        {
-            walletProvider.WalletChanged -= WalletProvider_WalletChanged;
-            Start(wallet);
-        }
-
-        private void Start(Wallet wallet)
+        private void Start()
         {
             if (MainSystem is null || MorphSystem is null) throw new InvalidOperationException("Neo system not initialized");
             if (innerRingService is not null) throw new InvalidOperationException("InnerRing service already started");

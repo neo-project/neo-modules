@@ -24,7 +24,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         public override string Name => "AuditContractProcessor";
         public int SearchTimeout => Settings.Default.SearchTimeout;
         public IActorRef TaskManager;
-        public CancellationTokenSource prevAuditCanceler = new();
+        public CancellationTokenSource PrevAuditCanceler = new();
         public IFSClientCache ClientCache;
         private ECDsa key;
 
@@ -41,14 +41,14 @@ namespace Neo.FileStorage.InnerRing.Processors
         public void HandleNewAuditRound(ContractEvent morphEvent)
         {
             StartEvent startEvent = (StartEvent)morphEvent;
-            Utility.Log(Name, LogLevel.Info, $"new round of audit, epoch={startEvent.epoch}");
-            WorkPool.Tell(new NewTask() { Process = Name, Task = new System.Threading.Tasks.Task(() => ProcessStartAudit(startEvent.epoch)) });
+            Utility.Log(Name, LogLevel.Info, $"new round of audit, epoch={startEvent.Epoch}");
+            WorkPool.Tell(new NewTask() { Process = Name, Task = new System.Threading.Tasks.Task(() => ProcessStartAudit(startEvent.Epoch)) });
         }
 
         public void ProcessStartAudit(ulong epoch)
         {
-            prevAuditCanceler.Cancel();
-            prevAuditCanceler.Dispose();
+            PrevAuditCanceler.Cancel();
+            PrevAuditCanceler.Dispose();
             int skipped = (int)TaskManager.Ask(new ResetMessage()).Result;
             if (skipped > 0) Utility.Log(Name, LogLevel.Info, $"some tasks from previous epoch are skipped, amount={skipped}");
             ContainerID[] containers;
@@ -100,7 +100,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 var storageGroups = FindStorageGroups(containers[i], n);
                 Utility.Log(Name, LogLevel.Info, $"select storage groups for audit, cid={containers[i]}, count={storageGroups.Length}");
 
-                prevAuditCanceler = new CancellationTokenSource();
+                PrevAuditCanceler = new CancellationTokenSource();
                 AuditTask auditTask = new()
                 {
                     Reporter = new EpochAuditReporter()
@@ -108,7 +108,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                         Epoch = epoch,
                         Reporter = State
                     },
-                    Cancellation = prevAuditCanceler.Token,
+                    Cancellation = PrevAuditCanceler.Token,
                     ContainerID = containers[i],
                     SGList = storageGroups.ToList(),
                     Container = cnr,
@@ -210,8 +210,8 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void Dispose()
         {
-            prevAuditCanceler?.Cancel();
-            prevAuditCanceler?.Dispose();
+            PrevAuditCanceler?.Cancel();
+            PrevAuditCanceler?.Dispose();
             key?.Dispose();
         }
     }

@@ -164,7 +164,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl.EAcl
                 headers.Add(new XHeader
                 {
                     Key = Filter.FilterObjectOwnerID,
-                    Value = obj.OwnerId.ToBase58String(),
+                    Value = obj.OwnerId.ToAddress(),
                 });
                 headers.Add(new XHeader
                 {

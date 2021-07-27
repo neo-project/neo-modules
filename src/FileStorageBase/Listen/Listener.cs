@@ -22,9 +22,9 @@ namespace Neo.FileStorage.Listen
         private bool started;
 
         public class BindProcessorEvent { public IProcessor Processor; };
-        public class BindBlockHandlerEvent { public Action<Block> handler; };
-        public class NewContractEvent { public NotifyEventArgs notify; };
-        public class NewBlockEvent { public Block block; };
+        public class BindBlockHandlerEvent { public Action<Block> Handler; };
+        public class NewContractEvent { public NotifyEventArgs Notify; };
+        public class NewBlockEvent { public Block Block; };
         public class Start { };
         public class Stop { };
 
@@ -119,16 +119,16 @@ namespace Neo.FileStorage.Listen
                     BindProcessor(bindMorphProcessor.Processor);
                     break;
                 case BindBlockHandlerEvent bindBlockHandler:
-                    RegisterBlockHandler(bindBlockHandler.handler);
+                    RegisterBlockHandler(bindBlockHandler.Handler);
                     break;
                 case NewContractEvent contractEvent:
-                    ParseAndHandle(contractEvent.notify);
+                    ParseAndHandle(contractEvent.Notify);
                     break;
                 case NewBlockEvent blockEvent:
                     if (started)
                     {
                         foreach (var blockHandler in blockHandlers)
-                            blockHandler(blockEvent.block);
+                            blockHandler(blockEvent.Block);
                     }
                     break;
                 default:
