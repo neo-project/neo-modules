@@ -40,7 +40,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             mainInvoker = TestBlockchain.CreateTestMainInvoker(system, actor, wallet);
             morphInvoker = TestBlockchain.CreateTestMorphInvoker(system, actor, wallet);
             state = new TestState() { alphabetIndex = 1, isAlphabet = true, isActive = true, epoch = 1, actor = this.TestActor };
-            var clientCache = new RpcClientCache() { wallet = wallet };
+            var clientCache = new RpcClientCache() { Wallet = wallet };
             var auditTaskManager = system.ActorSystem.ActorOf(Manager.Props(Settings.Default.QueueCapacity,
             system.ActorSystem.ActorOf(WorkerPool.Props("AuditManager", Settings.Default.AuditTaskPoolSize)), () =>
             {

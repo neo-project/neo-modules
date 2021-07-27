@@ -60,7 +60,7 @@ namespace Neo.FileStorage.Tests.InnerRing
             wallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             NotifyEventArgs notify = new(tx, UInt160.Zero, "test", new VM.Types.Array() { new VM.Types.Boolean(true) });
-            innerring.Tell(new ContractEvent() { notify = notify });
+            innerring.Tell(new ContractEvent() { Notify = notify });
             ExpectMsg<Transaction>();
             innerring.Tell(new Stop());
         }

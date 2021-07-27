@@ -116,7 +116,7 @@ namespace Neo.FileStorage.InnerRing
             morphEventListener = side.ActorSystem.ActorOf(Listener.Props("MorphEventListener"));
             mainEventListener = main.ActorSystem.ActorOf(Listener.Props("MainEventListener"));
             statusIndex = new InnerRingIndexer(morphInvoker, Settings.Default.IndexerTimeout);
-            clientCache = new RpcClientCache() { wallet = sideWallet };
+            clientCache = new RpcClientCache() { Wallet = sideWallet };
             auditTaskManager = side.ActorSystem.ActorOf(Manager.Props(Settings.Default.QueueCapacity,
             side.ActorSystem.ActorOf(WorkerPool.Props("AuditManager", Settings.Default.AuditTaskPoolSize)), () =>
             {

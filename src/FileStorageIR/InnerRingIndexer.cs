@@ -6,7 +6,7 @@ namespace Neo.FileStorage.InnerRing
 {
     public class InnerRingIndexer
     {
-        private readonly Object lockObject = new();
+        private readonly object lockObject = new();
         private readonly Indexes ind = new();
         private DateTime lastAccess = DateTime.Now;
         private readonly MorphInvoker morphInvoker;
@@ -25,9 +25,9 @@ namespace Neo.FileStorage.InnerRing
                 if (DateTime.Now.Subtract(lastAccess) < timeout) return ind;
                 var key = morphInvoker.Wallet.GetAccounts().ToArray()[0].GetKey().PublicKey;
                 morphInvoker.InnerRingIndex(key, out int innerRingIndex, out int innerRingSize);
-                ind.innerRingIndex = innerRingIndex;
-                ind.innerRingSize = innerRingSize;
-                ind.alphabetIndex = morphInvoker.AlphabetIndex(key);
+                ind.InnerRingIndex = innerRingIndex;
+                ind.InnerRingSize = innerRingSize;
+                ind.AlphabetIndex = morphInvoker.AlphabetIndex(key);
                 lastAccess = DateTime.Now;
                 return ind;
             }
@@ -36,26 +36,26 @@ namespace Neo.FileStorage.InnerRing
         public int InnerRingIndex()
         {
             Indexes ind = Update();
-            return ind.innerRingIndex;
+            return ind.InnerRingIndex;
         }
 
         public int InnerRingSize()
         {
             Indexes ind = Update();
-            return ind.innerRingSize;
+            return ind.InnerRingSize;
         }
 
         public int AlphabetIndex()
         {
             Indexes ind = Update();
-            return ind.alphabetIndex;
+            return ind.AlphabetIndex;
         }
 
         public class Indexes
         {
-            public int innerRingIndex;
-            public int innerRingSize;
-            public int alphabetIndex;
+            public int InnerRingIndex;
+            public int InnerRingSize;
+            public int AlphabetIndex;
         }
 
     }

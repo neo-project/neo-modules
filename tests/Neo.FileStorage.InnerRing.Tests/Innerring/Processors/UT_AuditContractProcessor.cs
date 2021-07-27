@@ -32,7 +32,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             morphInvoker = TestBlockchain.CreateTestMorphInvoker(system, actor, wallet);
             state = new TestState() { alphabetIndex = 1, innerRingIndex = 0, innerRingSize = 1 };
             var auditTaskManager = system.ActorSystem.ActorOf(FakeAuditTaskManager.Props(TestActor));
-            var clientCache = new RpcClientCache() { wallet = wallet };
+            var clientCache = new RpcClientCache() { Wallet = wallet };
             processor = new AuditContractProcessor()
             {
                 MorphInvoker = morphInvoker,
