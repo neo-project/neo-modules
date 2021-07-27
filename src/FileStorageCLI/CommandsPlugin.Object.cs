@@ -1,19 +1,19 @@
-using Neo.Plugins;
-using Neo.ConsoleService;
 using System;
-using Neo;
-using System.Linq;
-using Neo.FileStorage.API.Cryptography;
-using System.Security.Cryptography;
-using Neo.FileStorage.API.Client;
-using System.Threading;
-using Neo.FileStorage.API.Refs;
 using System.Collections.Generic;
-using Google.Protobuf;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
-using Neo.FileStorage.API.Object;
-using Neo.FileStorage.API.StorageGroup;
+using System.Threading;
+using Google.Protobuf;
+using Neo;
+using Neo.ConsoleService;
+using Neo.FileStorage.API.Client;
+using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Cryptography.Tz;
+using Neo.FileStorage.API.Object;
+using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.API.StorageGroup;
+using Neo.Plugins;
 
 namespace FileStorageCLI
 {
@@ -40,7 +40,7 @@ namespace FileStorageCLI
                 {
                     Header = new Header
                     {
-                        OwnerId = key.ToOwnerID(),
+                        OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
                         ContainerId = cid,
                     },
                     Payload = ByteString.CopyFrom(data),
@@ -162,7 +162,7 @@ namespace FileStorageCLI
                 {
                     Header = new Header
                     {
-                        OwnerId = key.ToOwnerID(),
+                        OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
                         ContainerId = cid,
                         ObjectType = ObjectType.StorageGroup,
                     },

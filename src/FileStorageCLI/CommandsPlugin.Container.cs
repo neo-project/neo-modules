@@ -1,18 +1,18 @@
-using Neo.Plugins;
-using Neo.ConsoleService;
 using System;
-using Neo;
-using System.Linq;
-using Neo.FileStorage.API.Cryptography;
-using System.Security.Cryptography;
-using Neo.FileStorage.API.Client;
-using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.API.Container;
-using Neo.FileStorage.API.Acl;
-using System.Threading;
-using Neo.FileStorage.API.Refs;
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Threading;
 using Google.Protobuf;
+using Neo;
+using Neo.ConsoleService;
+using Neo.FileStorage.API.Acl;
+using Neo.FileStorage.API.Client;
+using Neo.FileStorage.API.Container;
+using Neo.FileStorage.API.Cryptography;
+using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.API.Refs;
+using Neo.Plugins;
 
 namespace FileStorageCLI
 {
@@ -34,7 +34,7 @@ namespace FileStorageCLI
                 var container = new Container
                 {
                     Version = Neo.FileStorage.API.Refs.Version.SDKVersion(),
-                    OwnerId = key.ToOwnerID(),
+                    OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
                     Nonce = Guid.NewGuid().ToByteString(),
                     BasicAcl = (uint)BasicAcl.PublicBasicRule,
                     PlacementPolicy = policy,
@@ -96,7 +96,7 @@ namespace FileStorageCLI
             ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
             using (var client = new Client(key, host))
             {
-                var ownerID = key.ToOwnerID();
+                var ownerID = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash());
                 var source = new CancellationTokenSource();
                 List<ContainerID> containerLists = client.ListContainers(ownerID, context: source.Token).Result;
                 Console.WriteLine($"Container list:");
