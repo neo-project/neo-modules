@@ -104,7 +104,7 @@ namespace Neo.FileStorage.InnerRing
         [ConsoleCommand("fs start ir", Category = "FileStorageService", Description = "Start as inner ring node")]
         private void OnStartIR()
         {
-            Start(walletProvider.GetWallet());
+            Start();
         }
 
         [ConsoleCommand("fs generate", Category = "FileStorageService", Description = "generate UN/LOCODE database for NeoFS using specified paths")]

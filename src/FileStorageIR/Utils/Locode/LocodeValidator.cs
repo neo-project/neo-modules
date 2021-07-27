@@ -10,8 +10,9 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode
     {
         public class AttrDescriptor
         {
-            public Func<(Key, Record), string> converter;
-            public bool optional;
+            public Func<(Key, Record), string> Converter;
+            public bool Optional;
+
             public static string CountryCodeValue((Key, Record) record)
             {
                 return string.Concat<char>(record.Item1.CountryCode.Symbols());
@@ -56,16 +57,16 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode
             this.dB = dB;
             this.mAttr = new Dictionary<string, AttrDescriptor>()
                 {
-                    { Node.AttributeCountryCode,new AttrDescriptor(){ converter=AttrDescriptor.CountryCodeValue} },
-                    { Node.AttributeCountry,new AttrDescriptor(){ converter=AttrDescriptor.CountryValue} },
-                    { Node.AttributeLocation,new AttrDescriptor(){ converter=AttrDescriptor.LocationValue} },
-                    { Node.AttributeSubDivCode,new AttrDescriptor(){ converter=AttrDescriptor.SubDivCodeValue,optional=true} },
-                    { Node.AttributeSubDiv,new AttrDescriptor(){ converter=AttrDescriptor.SubDivValue,optional=true} },
-                    { Node.AttributeContinent,new AttrDescriptor(){ converter=AttrDescriptor.ContinentValue} },
+                    { Node.AttributeCountryCode,new AttrDescriptor(){ Converter=AttrDescriptor.CountryCodeValue} },
+                    { Node.AttributeCountry,new AttrDescriptor(){ Converter=AttrDescriptor.CountryValue} },
+                    { Node.AttributeLocation,new AttrDescriptor(){ Converter=AttrDescriptor.LocationValue} },
+                    { Node.AttributeSubDivCode,new AttrDescriptor(){ Converter=AttrDescriptor.SubDivCodeValue, Optional=true} },
+                    { Node.AttributeSubDiv,new AttrDescriptor(){ Converter=AttrDescriptor.SubDivValue, Optional=true} },
+                    { Node.AttributeContinent,new AttrDescriptor(){ Converter=AttrDescriptor.ContinentValue} },
                 };
         }
 
-        public void VerifyAndUpdate(API.Netmap.NodeInfo n)
+        public void VerifyAndUpdate(NodeInfo n)
         {
             var tAttr = UniqueAttributes(n.Attributes.GetEnumerator());
             if (!tAttr.TryGetValue(Node.AttributeUNLOCODE, out var attrLocode)) return;
@@ -73,28 +74,28 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode
             (Key, Record) record = dB.Get(lc);
             foreach (var attr in mAttr)
             {
-                var attrVal = attr.Value.converter(record);
+                var attrVal = attr.Value.Converter(record);
                 if (attrVal == "")
                 {
-                    if (!attr.Value.optional)
+                    if (!attr.Value.Optional)
                         throw new Exception("missing required attribute in DB record");
                     continue;
                 }
-                API.Netmap.NodeInfo.Types.Attribute a = new();
+                NodeInfo.Types.Attribute a = new();
                 a.Key = attr.Key;
                 a.Value = attrVal;
                 tAttr[attr.Key] = a;
             }
-            var ass = new List<API.Netmap.NodeInfo.Types.Attribute>();
+            var ass = new List<NodeInfo.Types.Attribute>();
             foreach (var item in tAttr)
                 ass.Add(item.Value);
             n.Attributes.Clear();
             n.Attributes.AddRange(ass);
         }
 
-        public Dictionary<string, API.Netmap.NodeInfo.Types.Attribute> UniqueAttributes(IEnumerator<API.Netmap.NodeInfo.Types.Attribute> attributes)
+        public Dictionary<string, NodeInfo.Types.Attribute> UniqueAttributes(IEnumerator<NodeInfo.Types.Attribute> attributes)
         {
-            Dictionary<string, API.Netmap.NodeInfo.Types.Attribute> tAttr = new();
+            Dictionary<string, NodeInfo.Types.Attribute> tAttr = new();
             while (attributes.MoveNext())
             {
                 var attr = attributes.Current;

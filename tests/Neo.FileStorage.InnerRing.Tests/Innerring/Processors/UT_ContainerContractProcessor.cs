@@ -51,7 +51,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.ToArray().PublicKeyToScriptHash());
             Container container = new Container()
             {
                 Version = new API.Refs.Version(),
@@ -90,7 +90,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             state.isAlphabet = true;
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.ToArray().PublicKeyToScriptHash());
             Container container = new Container()
             {
                 Version = API.Refs.Version.SDKVersion(),
@@ -105,7 +105,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
                 PublicKey = key.PublicKey.ToArray(),
                 Signature = sig,
                 RawContainer = container.ToByteArray(),
-                token = null
+                Token = null
             });
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.IsNotNull(tx);
@@ -116,7 +116,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
                 PublicKey = key.PublicKey.ToArray(),
                 Signature = sig,
                 RawContainer = container.ToByteArray(),
-                token = null
+                Token = null
             });
             ExpectNoMsg();
         }
@@ -128,12 +128,12 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
             var containerId = "fc780e98b7970002a80fbbeb60f9ed6cf44d5696588ea32e4338ceaeda4adddc".HexToBytes();
-            var sig = key.PrivateKey.LoadPrivateKey().SignData(ContainerID.FromSha256Bytes(containerId).Sha256Checksum().Sum.ToByteArray());
+            var sig = key.PrivateKey.LoadPrivateKey().SignRFC6979(containerId);
             processor.ProcessContainerDelete(new ContainerDeleteEvent()
             {
                 ContainerID = containerId,
                 Signature = sig,
-                token = null
+                Token = null
             });
             var tx = ExpectMsg<ProcessorFakeActor.OperationResult1>().tx;
             Assert.IsNotNull(tx);
@@ -166,7 +166,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            OwnerID ownerId = API.Cryptography.KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.ToArray().PublicKeyToScriptHash());
             Container container = new Container()
             {
                 Version = new API.Refs.Version()
@@ -182,10 +182,10 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             Action action = () => processor.CheckFormat(container);
             //wrong nonce
             container.Nonce = ByteString.CopyFrom(new byte[15], 0, 15);
-            Assert.ThrowsException<Exception>(action);
+            Assert.ThrowsException<FormatException>(action);
             //no placementpolicy
             container.PlacementPolicy = null;
-            Assert.ThrowsException<Exception>(action);
+            Assert.ThrowsException<FormatException>(action);
         }
     }
 }

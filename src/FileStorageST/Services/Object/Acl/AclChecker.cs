@@ -185,7 +185,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
                 return false;
             if (!info.BasicAcl.Sticky())
                 return false;
-            return info.SenderKey.PublicKeyToOwnerID().Value == owner.Value;
+            return OwnerID.FromScriptHash(info.SenderKey.PublicKeyToScriptHash()).Equals(owner);
         }
 
         private bool IsValidBearer(RequestInfo info)
@@ -198,10 +198,10 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
             if (!info.Bearer.Signature.VerifyMessagePart(info.Bearer.Body))
                 return false;
             var tokenIssueKey = info.Bearer.Signature.Key.ToByteArray();
-            if (info.Owner.Value != tokenIssueKey.PublicKeyToOwnerID().Value)
+            if (!info.Owner.Equals(OwnerID.FromScriptHash(tokenIssueKey.PublicKeyToScriptHash())))
                 return false;
             var tokenOwnerField = info.Bearer.Body.OwnerId;
-            if (tokenOwnerField.Value != info.SenderKey.PublicKeyToOwnerID().Value)
+            if (!tokenOwnerField.Equals(OwnerID.FromScriptHash(info.SenderKey.PublicKeyToScriptHash())))
                 return false;
             return true;
         }

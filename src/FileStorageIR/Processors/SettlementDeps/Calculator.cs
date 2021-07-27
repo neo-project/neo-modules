@@ -58,7 +58,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessResult(SingleResultCtx ctx)
         {
-            Utility.Log("Calculator", LogLevel.Debug, $"cid={ctx.AuditResult.ContainerId.ToBase58String()}, audit_epoch={ctx.AuditResult.AuditEpoch}");
+            Utility.Log("Calculator", LogLevel.Debug, $"cid={ctx.ContainerId.ToBase58String()}, audit_epoch={ctx.Epoch}");
             Utility.Log("Calculator", LogLevel.Debug, "reading information about the container");
             if (!ReadContainerInfo(ctx)) return;
             Utility.Log("Calculator", LogLevel.Debug, "building placement");
@@ -75,7 +75,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             try
             {
-                ctx.Container = settlementDeps.ContainerInfo(ctx.AuditResult.ContainerId);
+                ctx.Container = settlementDeps.ContainerInfo(ctx.ContainerId);
             }
             catch (Exception e)
             {
@@ -89,7 +89,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             try
             {
-                ctx.ContainerNodes = settlementDeps.ContainerNodes(ctx.Epoch, ctx.AuditResult.ContainerId);
+                ctx.ContainerNodes = settlementDeps.ContainerNodes(ctx.Epoch, ctx.ContainerId);
                 var empty = ctx.ContainerNodes.Length == 0;
                 Utility.Log("Calculator", LogLevel.Debug, "empty list of container nodes");
                 return !empty;
@@ -140,7 +140,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             ulong sumPassSGSize = 0;
             Address address = new();
-            address.ContainerId = ctx.AuditResult.ContainerId;
+            address.ContainerId = ctx.ContainerId;
             foreach (var sgID in ctx.AuditResult.PassSg)
             {
                 try
@@ -172,7 +172,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 OwnerID ownerID;
                 try
                 {
-                    ownerID = item.Value.PublicKey.PublicKeyToOwnerID();
+                    ownerID = OwnerID.FromScriptHash(item.Value.PublicKey.PublicKeyToScriptHash());
                 }
                 catch (Exception e)
                 {
@@ -186,7 +186,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 if (fee.CompareTo(BigInteger.Zero) == 0) fee = BigInteger.Add(fee, BigInteger.One);
                 ctx.TxTable.Transfer(new TransferTx() { From = cnrOwner, To = ownerID, Amount = fee });
             }
-            var auditIR = ctx.AuditResult.PublicKey.ToByteArray().PublicKeyToOwnerID();
+            var auditIR = OwnerID.FromScriptHash(ctx.AuditResult.PublicKey.ToByteArray().PublicKeyToScriptHash());
             ctx.TxTable.Transfer(new TransferTx() { From = cnrOwner, To = auditIR, Amount = ctx.AuditFee });
             return false;
         }

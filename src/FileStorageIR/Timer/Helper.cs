@@ -1,9 +1,9 @@
 using System;
+using Neo.FileStorage.InnerRing.Events;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Listen;
 using Neo.FileStorage.Listen.Event;
-using Neo.FileStorage.InnerRing.Events;
 
 namespace Neo.FileStorage.InnerRing.Timer
 {
@@ -28,7 +28,7 @@ namespace Neo.FileStorage.InnerRing.Timer
                 {
                     ulong epochN = args.epoch.EpochCounter();
                     if (epochN == 0) return;
-                    args.collectBasicIncome.handler(new BasicIncomeCollectEvent() { epoch = epochN - 1 });
+                    args.collectBasicIncome.handler(new BasicIncomeCollectEvent() { Epoch = epochN - 1 });
                 });
             epochTimer.Delta(
                 args.distributeBasicIncome.durationMul,
@@ -37,7 +37,7 @@ namespace Neo.FileStorage.InnerRing.Timer
                 {
                     ulong epochN = args.epoch.EpochCounter();
                     if (epochN == 0) return;
-                    args.distributeBasicIncome.handler(new BasicIncomeDistributeEvent() { epoch = epochN - 1 });
+                    args.distributeBasicIncome.handler(new BasicIncomeDistributeEvent() { Epoch = epochN - 1 });
                 });
             return epochTimer;
         }

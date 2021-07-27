@@ -1,17 +1,12 @@
 using System.Collections.Generic;
-using Akka.Actor;
 using Neo.Cryptography.ECC;
 using Neo.FileStorage.Invoker;
 using Neo.SmartContract;
-using Neo.Wallets;
 
 namespace Neo.FileStorage.InnerRing.Invoker
 {
     public partial class MainInvoker : ContractInvoker
     {
-        public Wallet Wallet { get; init; }
-        public NeoSystem NeoSystem { get; init; }
-        public IActorRef Blockchain { get; init; }
         public long MainChainFee { get; init; }
         public UInt160 FsContractHash { get; init; }
 

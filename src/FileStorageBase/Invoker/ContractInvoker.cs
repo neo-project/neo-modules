@@ -14,9 +14,9 @@ namespace Neo.FileStorage.Invoker
 {
     public abstract class ContractInvoker
     {
-        Wallet Wallet { get; }
-        NeoSystem NeoSystem { get; }
-        IActorRef Blockchain { get; }
+        public Wallet Wallet { get; init; }
+        public NeoSystem NeoSystem { get; init; }
+        public IActorRef Blockchain { get; init; }
 
         protected void Invoke(UInt160 contractHash, string method, long fee, params object[] args)
         {

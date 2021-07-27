@@ -47,7 +47,7 @@ namespace Neo.FileStorage.Core.Object
             var key = obj.Signature.Key;
 
             if (token is null || !token.Body.SessionKey.Equals(key))
-                return obj.OwnerId.Equals(key.ToByteArray().PublicKeyToOwnerID());
+                return obj.OwnerId.Equals(OwnerID.FromScriptHash(key.ToByteArray().PublicKeyToScriptHash()));
 
             // TODO: perform token verification
             return true;

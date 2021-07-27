@@ -57,15 +57,10 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void Transfer(OwnerID sender, OwnerID recipient, long amount, byte[] details)
         {
-            Utility.Log("SettlementDeps", LogLevel.Info, $"sender:{sender.ToBase58String()},recipient:{recipient.ToBase58String()},amount (GASe-12):{amount},details:{Utility.StrictUTF8.GetString(details)}");
-            var from = new UInt160(Cryptography.Base58.Base58CheckDecode(Cryptography.Base58.Encode(sender.Value.ToByteArray())).Skip(1).ToArray());
-            var to = new UInt160(Cryptography.Base58.Base58CheckDecode(Cryptography.Base58.Encode(recipient.Value.ToByteArray())).Skip(1).ToArray());
-            Invoker.TransferX(from.ToArray(), to.ToArray(), amount, details);
-            Utility.Log("SettlementDeps", LogLevel.Info, "transfer transaction for audit was successfully sent");
+            Utility.Log("SettlementDeps", LogLevel.Info, $"sender:{sender.ToAddress()},recipient:{recipient.ToAddress()},amount (GASe-12):{amount},details:{Utility.StrictUTF8.GetString(details)}");
+            Invoker.TransferX(sender.ToScriptHash().ToArray(), recipient.ToScriptHash().ToArray(), amount, details);
         }
 
         public abstract void Transfer(OwnerID sender, OwnerID recipient, long amount);
     }
-
-
 }

@@ -14,10 +14,6 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
     {
         private class TestInvoker : ContractInvoker
         {
-            public Wallet Wallet { get; init; }
-            public NeoSystem NeoSystem { get; init; }
-            public IActorRef Blockchain { get; init; }
-
             public void InvokeW(UInt160 contractHash, string method, long fee, params object[] args)
             {
                 Invoke(contractHash, method, fee, args);

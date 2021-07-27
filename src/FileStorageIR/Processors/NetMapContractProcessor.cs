@@ -179,8 +179,8 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
             NetmapSnapshot.Update(snapshot, newEpochEvent.EpochNumber);
             HandleCleanupTick(new NetmapCleanupTickEvent() { Epoch = newEpochEvent.EpochNumber });
-            HandleNewAudit(new StartEvent() { epoch = newEpochEvent.EpochNumber });
-            HandleAuditSettlements(new AuditStartEvent() { epoch = newEpochEvent.EpochNumber });
+            HandleNewAudit(new StartEvent() { Epoch = newEpochEvent.EpochNumber });
+            HandleAuditSettlements(new AuditStartEvent() { Epoch = newEpochEvent.EpochNumber });
             HandleAlphabetSync(new SyncEvent());
         }
 

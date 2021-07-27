@@ -8,7 +8,7 @@ namespace Neo.FileStorage.InnerRing.Processors
     {
         public static string ToAddress(this ECPoint p, byte version)
         {
-            return Contract.CreateSignatureRedeemScript(p).ToScriptHash().ToAddress(version);
+            return p.ToScriptHash().ToAddress(version);
         }
 
         public static UInt160 ToScriptHash(this ECPoint p)

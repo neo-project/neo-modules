@@ -20,7 +20,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
             Role role;
             bool is_inner = false;
             byte[] public_key = RequestOwner(info);
-            OwnerID owner = public_key.PublicKeyToOwnerID();
+            OwnerID owner = OwnerID.FromScriptHash(public_key.PublicKeyToScriptHash());
             if (owner.Equals(container.OwnerId))
                 role = Role.User;
             else if (is_inner = IsInnerRingKey(public_key))
@@ -48,7 +48,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
             if (!token.Signature.VerifyMessagePart(token.Body)) throw new InvalidOperationException($"{nameof(OwnerFromToken)} invalid session token signature");
             var tokenIssueKey = token.Signature.Key.ToByteArray();
             var tokenOwner = token.Body.OwnerId;
-            if (!tokenIssueKey.PublicKeyToOwnerID().Equals(tokenOwner)) throw new InvalidOperationException($"{nameof(OwnerFromToken)} invalid session token owner");
+            if (!OwnerID.FromScriptHash(tokenIssueKey.PublicKeyToScriptHash()).Equals(tokenOwner)) throw new InvalidOperationException($"{nameof(OwnerFromToken)} invalid session token owner");
             return tokenIssueKey;
         }
 

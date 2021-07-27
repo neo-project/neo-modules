@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Neo.Cryptography.ECC;
-using Neo.FileStorage.API.Cryptography;
 using Neo.Wallets;
 using static Neo.FileStorage.Utils.WorkerPool;
 using static Neo.Wallets.Helper;

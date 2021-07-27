@@ -126,7 +126,7 @@ namespace Neo.FileStorage.Storage
             listener.Tell(new Listener.BindProcessorEvent { Processor = containerProcessor });
             listener.Tell(new Listener.BindBlockHandlerEvent
             {
-                handler = block =>
+                Handler = block =>
                 {
                     TickBlockTimers();
                 }
@@ -193,7 +193,7 @@ namespace Neo.FileStorage.Storage
         public void OnPersisted(Block block, DataCache _2, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (listener is null) return;
-            listener.Tell(new Listener.NewBlockEvent { block = block });
+            listener.Tell(new Listener.NewBlockEvent { Block = block });
             foreach (var appExec in applicationExecutedList)
             {
                 Transaction tx = appExec.Transaction;
@@ -205,7 +205,7 @@ namespace Neo.FileStorage.Storage
                 {
                     var contract = notify.ScriptHash;
                     if (Settings.Default.Contracts.Contains(contract))
-                        listener.Tell(new Listener.NewContractEvent() { notify = notify });
+                        listener.Tell(new Listener.NewContractEvent() { Notify = notify });
                 }
             }
         }

@@ -77,8 +77,8 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             var auditSettlementCalc = new Calculator(auditCalcDeps);
             var settlementProcessor = new SettlementProcessor()
             {
-                basicIncome = basicSettlementDeps,
-                auditProc = auditSettlementCalc,
+                BasicIncome = basicSettlementDeps,
+                AuditProc = auditSettlementCalc,
                 State = state,
                 WorkPool = actor
             };
@@ -190,7 +190,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             var nodeInfo = new API.Netmap.NodeInfo()
             {
                 PublicKey = ByteString.CopyFrom(key.PublicKey.ToArray()),
-                Address = API.Cryptography.KeyExtension.PublicKeyToAddress(key.PublicKey.ToArray()),
+                Address = "",
                 State = API.Netmap.NodeInfo.Types.State.Online
             };
             processor.ProcessAddPeer(new AddPeerEvent()
@@ -207,7 +207,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             var nodeInfo = new API.Netmap.NodeInfo()
             {
                 PublicKey = ByteString.CopyFrom(key.PublicKey.ToArray()),
-                Address = API.Cryptography.KeyExtension.PublicKeyToAddress(key.PublicKey.ToArray()),
+                Address = "",
                 State = API.Netmap.NodeInfo.Types.State.Online
             };
             processor.ProcessUpdateState(new UpdatePeerEvent()

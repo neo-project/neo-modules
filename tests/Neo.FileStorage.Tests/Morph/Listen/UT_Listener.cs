@@ -55,7 +55,7 @@ namespace Neo.FileStorage.Tests.Morph.Listen
             listener.Tell(new Listener.Start());
             listener.Tell(new Listener.NewContractEvent()
             {
-                notify = notify
+                Notify = notify
             });
             ExpectNoMsg();
             listener.Tell(new Listener.Stop());
@@ -67,7 +67,7 @@ namespace Neo.FileStorage.Tests.Morph.Listen
             //send normal notify 
             listener.Tell(new Listener.NewContractEvent()
             {
-                notify = notify
+                Notify = notify
             });
             var result = (TestContractEvent)ExpectMsg<ContractEvent>();
             Assert.IsNotNull(result);
@@ -80,14 +80,14 @@ namespace Neo.FileStorage.Tests.Morph.Listen
             NotifyEventArgs notify_no_state = new(tx, UInt160.Zero, "test", new VM.Types.Array());
             listener.Tell(new Listener.NewContractEvent()
             {
-                notify = notify_no_state
+                Notify = notify_no_state
             });
             ExpectNoMsg();
             //send notify with no parser
             NotifyEventArgs notify_no_parser = new(tx, wallet.GetAccounts().ToArray()[0].ScriptHash, "test", new VM.Types.Array { new VM.Types.Boolean(true) });
             listener.Tell(new Listener.NewContractEvent()
             {
-                notify = notify_no_parser
+                Notify = notify_no_parser
             });
             ExpectNoMsg();
             //send notify with no handler
@@ -99,14 +99,14 @@ namespace Neo.FileStorage.Tests.Morph.Listen
             NotifyEventArgs notify_no_handler = new(tx, UInt160.Zero, "test with no handler", new VM.Types.Array { new VM.Types.Boolean(true) });
             listener.Tell(new Listener.NewContractEvent()
             {
-                notify = notify_no_handler
+                Notify = notify_no_handler
             });
             ExpectNoMsg();
             //send wrong format notify
             NotifyEventArgs notify_wrong_format = new(tx, UInt160.Zero, "test", new VM.Types.Array { new VM.Types.Boolean(true), new VM.Types.Boolean(true) });
             listener.Tell(new Listener.NewContractEvent()
             {
-                notify = notify_wrong_format
+                Notify = notify_wrong_format
             });
             ExpectNoMsg();
             //stop

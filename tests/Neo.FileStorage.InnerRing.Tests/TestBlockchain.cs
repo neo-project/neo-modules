@@ -9,6 +9,7 @@ using Neo.Cryptography.ECC;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.Invoker;
 using Neo.FileStorage.Invoker.Morph;
@@ -242,7 +243,7 @@ namespace Neo.FileStorage.InnerRing.Tests
             script = NativeContract.RoleManagement.Hash.MakeScript("designateAsRole", Role.NeoFSAlphabetNode, ToParameter(accounts.Select(p => p.GetKey().PublicKey.ToArray()).ToArray()));
             ExecuteScript(snapshot, "FakeIR", script, NativeContract.NEO.GetCommitteeAddress(snapshot));
             NodeInfo nodeInfo = new NodeInfo();
-            nodeInfo.Address = API.Cryptography.KeyExtension.PublicKeyToAddress(accounts.ToArray()[0].GetKey().PublicKey.ToArray());
+            nodeInfo.Address = "";
             nodeInfo.PublicKey = ByteString.CopyFrom(accounts.ToArray()[0].GetKey().PublicKey.ToArray());
             var rawNodeInfo = nodeInfo.ToByteArray();
             script = NetmapContractHash.MakeScript("addPeer", rawNodeInfo);
@@ -252,7 +253,7 @@ namespace Neo.FileStorage.InnerRing.Tests
             }
             //Fake container
             KeyPair key = accounts.ToArray()[0].GetKey();
-            API.Refs.OwnerID ownerId = KeyExtension.PublicKeyToOwnerID(key.PublicKey.ToArray());
+            API.Refs.OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.ToArray().PublicKeyToScriptHash());
             Container container = new Container()
             {
                 Version = new API.Refs.Version(),
@@ -438,7 +439,7 @@ namespace Neo.FileStorage.InnerRing.Tests
 
         public override string Name => "MyWallet";
 
-        public override Version Version => Version.Parse("0.0.1");
+        public override System.Version Version => System.Version.Parse("0.0.1");
 
         Dictionary<UInt160, WalletAccount> accounts = new Dictionary<UInt160, WalletAccount>();
 

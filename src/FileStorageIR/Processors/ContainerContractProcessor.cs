@@ -108,11 +108,11 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Error, $"container with incorrect format detected, error={e}");
             }
             SessionToken token = null;
-            if (putEvent.token != null && putEvent.token.Any())
+            if (putEvent.Token != null && putEvent.Token.Any())
             {
                 try
                 {
-                    token = SessionToken.Parser.ParseFrom(putEvent.token);
+                    token = SessionToken.Parser.ParseFrom(putEvent.Token);
                     CheckTokenContext(token, (ContainerSessionContext c) => { return c.Verb == ContainerSessionContext.Types.Verb.Put; });
                 }
                 catch (Exception e)
@@ -134,7 +134,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             CheckKeyOwnership(cnr, putEvent.PublicKey);
             try
             {
-                MorphInvoker.RegisterContainer(putEvent.PublicKey, putEvent.RawContainer, putEvent.Signature, putEvent.token);
+                MorphInvoker.RegisterContainer(putEvent.PublicKey, putEvent.RawContainer, putEvent.Signature, putEvent.Token);
             }
             catch (Exception e)
             {
@@ -154,9 +154,9 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 var cnr = MorphInvoker.GetContainer(ContainerID.FromSha256Bytes(deleteEvent.ContainerID));
                 SessionToken token = null;
-                if (deleteEvent.token != null && deleteEvent.token.Any())
+                if (deleteEvent.Token != null && deleteEvent.Token.Any())
                 {
-                    token = SessionToken.Parser.ParseFrom(deleteEvent.token);
+                    token = SessionToken.Parser.ParseFrom(deleteEvent.Token);
                     var containerId = ContainerID.FromSha256Bytes(deleteEvent.ContainerID);
                     CheckTokenContextWithCID(token, containerId, (ContainerSessionContext c) => { return c.Verb == ContainerSessionContext.Types.Verb.Delete; });
                     var key = token.Body.SessionKey.ToByteArray();
@@ -168,10 +168,9 @@ namespace Neo.FileStorage.InnerRing.Processors
                     var keys = MorphInvoker.AccountKeys(cnr.Container.OwnerId.Value.ToByteArray());
                     checkKeys.AddRange(keys);
                 }
-                var cidHash = deleteEvent.ContainerID.Sha256();
                 var sig = deleteEvent.Signature;
-                if (!checkKeys.Any(p => p.LoadPublicKey().VerifyData(cidHash, sig, HashAlgorithmName.SHA256))) throw new InvalidOperationException("signature verification failed on all owner keys");
-                MorphInvoker.RemoveContainer(deleteEvent.ContainerID, deleteEvent.Signature, deleteEvent.token);
+                if (!checkKeys.Any(p => p.LoadPublicKey().VerifyData(deleteEvent.ContainerID, sig, HashAlgorithmName.SHA256))) throw new InvalidOperationException("signature verification failed on all owner keys");
+                MorphInvoker.RemoveContainer(deleteEvent.ContainerID, deleteEvent.Signature, deleteEvent.Token);
             }
             catch (Exception e)
             {
@@ -226,7 +225,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 CheckKeyOwnershipWithToken(ownerIDSource, key, token);
                 return;
             }
-            if (ownerIDSource.Container.OwnerId.Equals(key.PublicKeyToOwnerID())) return;
+            if (ownerIDSource.Container.OwnerId.Equals(OwnerID.FromScriptHash(key.PublicKeyToScriptHash()))) return;
             var ownerKeys = MorphInvoker.AccountKeys(ownerIDSource.Container.OwnerId.Value.ToByteArray());
             if (ownerKeys is null) throw new FormatException("could not received owner keys");
             if (!ownerKeys.Any(p => p.Equals(key))) throw new FormatException($"key {key.ToHexString()} is not tied to the owner of the container");

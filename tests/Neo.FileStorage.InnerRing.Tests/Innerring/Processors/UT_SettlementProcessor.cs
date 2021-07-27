@@ -42,8 +42,8 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             var auditSettlementCalc = new Calculator(auditCalcDeps);
             processor = new SettlementProcessor()
             {
-                basicIncome = basicSettlementDeps,
-                auditProc = auditSettlementCalc,
+                BasicIncome = basicSettlementDeps,
+                AuditProc = auditSettlementCalc,
                 State = state,
                 WorkPool = actor
             };
@@ -62,7 +62,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
         [TestMethod]
         public void HandleAuditEventTest()
         {
-            processor.HandleAuditEvent(new AuditStartEvent() { epoch = 1 });
+            processor.HandleAuditEvent(new AuditStartEvent() { Epoch = 1 });
             var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;
             Assert.IsNotNull(nt);
         }
@@ -71,7 +71,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
         public void HandleIncomeCollectionEventTest()
         {
             state.isAlphabet = true;
-            processor.HandleIncomeCollectionEvent(new BasicIncomeCollectEvent() { epoch = 1 });
+            processor.HandleIncomeCollectionEvent(new BasicIncomeCollectEvent() { Epoch = 1 });
             var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;
             Assert.IsNotNull(nt);
         }
@@ -80,7 +80,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
         public void HandleIncomeDistributionEventTest()
         {
             state.isAlphabet = true;
-            processor.HandleIncomeDistributionEvent(new BasicIncomeDistributeEvent() { epoch = 1 });
+            processor.HandleIncomeDistributionEvent(new BasicIncomeDistributeEvent() { Epoch = 1 });
             ExpectNoMsg();
         }
 

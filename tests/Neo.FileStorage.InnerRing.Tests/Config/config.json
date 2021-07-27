@@ -69,7 +69,7 @@
       }
     },
     "NetmapCleaner": {
-      "Eenabled": true,
+      "Enabled": true,
       "Threshold": 3
     },
     "IsSender": false,

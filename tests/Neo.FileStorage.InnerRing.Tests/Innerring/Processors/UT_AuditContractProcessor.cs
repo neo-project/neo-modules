@@ -46,7 +46,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
         [TestMethod]
         public void HandleNewAuditRoundTest()
         {
-            processor.HandleNewAuditRound(new StartEvent() { epoch = 1 });
+            processor.HandleNewAuditRound(new StartEvent() { Epoch = 1 });
             var nt = ExpectMsg<ProcessorFakeActor.OperationResult2>().nt;
             Assert.IsNotNull(nt);
         }

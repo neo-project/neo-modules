@@ -23,7 +23,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((NewEpochEvent)@event).EpochNumber, (ulong)1);
             array.Add(1);
             Action action = () => NewEpochEvent.ParseNewEpochEvent(array);
-            Assert.ThrowsException<Exception>(action);
+            Assert.ThrowsException<FormatException>(action);
         }
 
         [TestMethod]
@@ -36,7 +36,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((AddPeerEvent)@event).Node.ToString(), new byte[] { 0x01 }.ToString());
             array.Add(1);
             Action action = () => AddPeerEvent.ParseAddPeerEvent(array);
-            Assert.ThrowsException<Exception>(action);
+            Assert.ThrowsException<FormatException>(action);
         }
 
         [TestMethod]
@@ -51,7 +51,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((UpdatePeerEvent)@event).Status, (uint)1);
             array.Add(1);
             Action action = () => UpdatePeerEvent.ParseUpdatePeerEvent(array);
-            Assert.ThrowsException<Exception>(action);
+            Assert.ThrowsException<FormatException>(action);
         }
 
         [TestMethod]
@@ -72,7 +72,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((LockEvent)@event).Util, (long)1);
             array.Add(1);
             Action action = () => LockEvent.ParseLockEvent(array);
-            Assert.ThrowsException<Exception>(action);
+            Assert.ThrowsException<FormatException>(action);
         }
 
         [TestMethod]
@@ -90,7 +90,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((ContainerPutEvent)@event).PublicKey.ToHexString(), TestBlockchain.wallet.GetAccounts().ToArray()[0].GetKey().PublicKey.ToString());
             array.Add(1);
             Action action = () => ContainerPutEvent.ParseContainerPutEvent(array);
-            Assert.ThrowsException<Exception>(action);
+            Assert.ThrowsException<FormatException>(action);
         }
 
         [TestMethod]
@@ -106,7 +106,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((ContainerDeleteEvent)@event).Signature.ToHexString(), new byte[] { 0x01 }.ToHexString());
             array.Add(1);
             Action action = () => ContainerDeleteEvent.ParseContainerDeleteEvent(array);
-            Assert.ThrowsException<Exception>(action);
+            Assert.ThrowsException<FormatException>(action);
         }
 
         [TestMethod]
@@ -127,7 +127,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((BindEvent)@event).Keys.Length, 7);
             array.Add(1);
             Action action = () => BindEvent.ParseBindEvent(array);
-            Assert.ThrowsException<Exception>(action);
+            Assert.ThrowsException<FormatException>(action);
         }
 
         [TestMethod]
@@ -146,7 +146,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((ChequeEvent)@event).LockAccount, UInt160.Zero);
             array.Add(1);
             Action action = () => ChequeEvent.ParseChequeEvent(array);
-            Assert.ThrowsException<Exception>(action);
+            Assert.ThrowsException<FormatException>(action);
         }
 
         [TestMethod]
@@ -165,7 +165,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((DepositEvent)@event).To, UInt160.Zero);
             array.Add(1);
             Action action = () => DepositEvent.ParseDepositEvent(array);
-            Assert.ThrowsException<Exception>(action);
+            Assert.ThrowsException<FormatException>(action);
         }
 
         [TestMethod]
@@ -182,7 +182,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((WithdrawEvent)@event).Amount, (long)1);
             array.Add(1);
             Action action = () => WithdrawEvent.ParseWithdrawEvent(array);
-            Assert.ThrowsException<Exception>(action);
+            Assert.ThrowsException<FormatException>(action);
         }
 
         [TestMethod]
@@ -199,7 +199,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((ConfigEvent)@event).Value.ToHexString(), new byte[] { 0x03 }.ToHexString());
             array.Add(1);
             Action action = () => ConfigEvent.ParseConfigEvent(array);
-            Assert.ThrowsException<Exception>(action);
+            Assert.ThrowsException<FormatException>(action);
         }
 
         [TestMethod]
@@ -218,7 +218,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
             Assert.AreEqual(((UpdateInnerRingEvent)@event).Keys.Length, 7);
             array.Add(1);
             Action action = () => UpdateInnerRingEvent.ParseUpdateInnerRingEvent(array);
-            Assert.ThrowsException<Exception>(action);
+            Assert.ThrowsException<FormatException>(action);
         }
     }
 }

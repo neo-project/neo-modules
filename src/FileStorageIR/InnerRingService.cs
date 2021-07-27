@@ -144,8 +144,8 @@ namespace Neo.FileStorage.InnerRing
             var auditSettlementCalc = new Calculator(auditCalcDeps);
             settlementProcessor = new SettlementProcessor()
             {
-                basicIncome = basicSettlementDeps,
-                auditProc = auditSettlementCalc,
+                BasicIncome = basicSettlementDeps,
+                AuditProc = auditSettlementCalc,
                 State = this,
                 WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("Settlement Processor", Settings.Default.SettlementWorkersSize)),
             };
@@ -204,7 +204,7 @@ namespace Neo.FileStorage.InnerRing
             {
                 MorphInvoker = morphClient,
                 State = this,
-                mngBuilder = new ManagerBuilder() { NetmapSource = morphClient },
+                ManagerBuilder = new ManagerBuilder() { NetmapSource = morphClient },
                 WorkPool = side.ActorSystem.ActorOf(WorkerPool.Props("AlphabetContract Processor", Settings.Default.AlphabetContractWorkersSize))
             };
             morphEventListener.Tell(new Listener.BindProcessorEvent() { Processor = fsContractProcessor });
@@ -294,7 +294,7 @@ namespace Neo.FileStorage.InnerRing
                 VoteForSidechainValidator(Settings.Default.validators);
                 morphEventListener.Tell(new Listener.BindBlockHandlerEvent()
                 {
-                    handler = (Block b) =>
+                    Handler = (Block b) =>
                     {
                         Utility.Log("MorphEventListener", LogLevel.Debug, $"new block,index:{b.Index}");
                         TickTimers();
@@ -334,14 +334,14 @@ namespace Neo.FileStorage.InnerRing
 
         private void OnContractEvent(NotifyEventArgs notify, bool flag)
         {
-            if (flag) mainEventListener.Tell(new Listener.NewContractEvent() { notify = notify });
-            else morphEventListener.Tell(new Listener.NewContractEvent() { notify = notify });
+            if (flag) mainEventListener.Tell(new Listener.NewContractEvent() { Notify = notify });
+            else morphEventListener.Tell(new Listener.NewContractEvent() { Notify = notify });
         }
 
         private void OnBlockEvent(Block block, bool flag)
         {
-            if (flag) mainEventListener.Tell(new Listener.NewBlockEvent() { block = block });
-            else morphEventListener.Tell(new Listener.NewBlockEvent() { block = block });
+            if (flag) mainEventListener.Tell(new Listener.NewBlockEvent() { Block = block });
+            else morphEventListener.Tell(new Listener.NewBlockEvent() { Block = block });
         }
 
         public ulong EpochCounter()

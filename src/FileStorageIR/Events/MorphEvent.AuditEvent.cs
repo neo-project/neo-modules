@@ -4,7 +4,7 @@ namespace Neo.FileStorage.InnerRing.Events
 {
     public class AuditStartEvent : ContractEvent
     {
-        public ulong epoch;
+        public ulong Epoch;
     }
 
     public class BasicIncomeCollectEvent : AuditStartEvent { }

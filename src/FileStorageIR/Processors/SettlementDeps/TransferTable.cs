@@ -11,8 +11,8 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void Transfer(TransferTx tx)
         {
-            var from = tx.From.ToBase58String();
-            var to = tx.To.ToBase58String();
+            var from = tx.From.ToAddress();
+            var to = tx.To.ToAddress();
             if (from == to) return;
             if (!txs.TryGetValue(from, out var m))
             {

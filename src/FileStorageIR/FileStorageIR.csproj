@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="27.0.3" />
-    <PackageReference Include="NeoFS.API" Version="0.0.59" />
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
     <PackageReference Include="NetTopologySuite" Version="2.2.0" />
     <PackageReference Include="NetTopologySuite.Features" Version="2.1.0" />

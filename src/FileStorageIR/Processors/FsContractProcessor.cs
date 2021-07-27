@@ -25,18 +25,18 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         private const string TxLogPrefix = "mainnet:";
         private const ulong LockAccountLifetime = 20;
-        private object lockObj = new object();
-        private int mintEmitCacheSize => Settings.Default.MintEmitCacheSize;
-        private ulong mintEmitThreshold => Settings.Default.MintEmitThreshold;
-        private long gasBalanceThreshold => Settings.Default.GasBalanceThreshold;
-        private long mintEmitValue = Settings.Default.MintEmitValue;
+        private readonly object lockObj = new object();
+        private int MintEmitCacheSize => Settings.Default.MintEmitCacheSize;
+        private ulong MintEmitThreshold => Settings.Default.MintEmitThreshold;
+        private long GasBalanceThreshold => Settings.Default.GasBalanceThreshold;
+        private long MintEmitValue = Settings.Default.MintEmitValue;
         private readonly LRUCache<string, ulong> mintEmitCache;
 
         public Fixed8ConverterUtil Convert;
 
         public FsContractProcessor()
         {
-            mintEmitCache = new LRUCache<string, ulong>(mintEmitCacheSize);
+            mintEmitCache = new LRUCache<string, ulong>(MintEmitCacheSize);
         }
 
         public override HandlerInfo[] ListenerHandlers()
@@ -158,7 +158,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             var receiver = depositeEvent.To;
             lock (lockObj)
             {
-                if (mintEmitCache.TryGet(receiver.ToString(), out ulong value) && ((value + mintEmitThreshold) >= curEpoch))
+                if (mintEmitCache.TryGet(receiver.ToString(), out ulong value) && ((value + MintEmitThreshold) >= curEpoch))
                 {
                     Utility.Log(Name, LogLevel.Warning, $"double mint emission declined, receiver={receiver}, last_emission={value}, current_epoch={curEpoch}");
                     return;
@@ -173,14 +173,14 @@ namespace Neo.FileStorage.InnerRing.Processors
                     Utility.Log(Name, LogLevel.Warning, $"can't get gas balance of the node, error={e}");
                     return;
                 }
-                if (balance < gasBalanceThreshold)
+                if (balance < GasBalanceThreshold)
                 {
-                    Utility.Log(Name, LogLevel.Warning, $"gas balance threshold has been reached, balance={balance}, threshold={gasBalanceThreshold}");
+                    Utility.Log(Name, LogLevel.Warning, $"gas balance threshold has been reached, balance={balance}, threshold={GasBalanceThreshold}");
                     return;
                 }
                 try
                 {
-                    MorphInvoker.TransferGas(depositeEvent.To, mintEmitValue);
+                    MorphInvoker.TransferGas(depositeEvent.To, MintEmitValue);
                 }
                 catch (Exception e)
                 {

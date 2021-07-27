@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
-using Neo.FileStorage.API.Reputation;
-using Neo.IO;
 using Neo.SmartContract;
 using Neo.VM.Types;
 using ECPoint = Neo.Cryptography.ECC.ECPoint;

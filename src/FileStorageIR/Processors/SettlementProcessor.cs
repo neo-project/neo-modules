@@ -14,20 +14,20 @@ namespace Neo.FileStorage.InnerRing.Processors
     {
         public override string Name => "SettlementProcessor";
         private readonly Dictionary<ulong, IncomeSettlementContext> incomeContexts = new();
-        public BasicIncomeSettlementDeps basicIncome;
-        public Calculator auditProc;
+        public BasicIncomeSettlementDeps BasicIncome;
+        public Calculator AuditProc;
 
         public void Handle(ulong epoch)
         {
             Utility.Log(Name, LogLevel.Info, "process audit settlements");
-            auditProc.Calculate(epoch);
+            AuditProc.Calculate(epoch);
             Utility.Log(Name, LogLevel.Info, "audit processing finished");
         }
 
         public void HandleAuditEvent(ContractEvent morphEvent)
         {
             AuditStartEvent auditEvent = (AuditStartEvent)morphEvent;
-            var epoch = auditEvent.epoch;
+            var epoch = auditEvent.Epoch;
             Utility.Log(Name, LogLevel.Info, $"new audit settlement event, epoch={epoch}");
             if (epoch == 0)
             {
@@ -40,8 +40,8 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void HandleIncomeCollectionEvent(ContractEvent morphEvent)
         {
-            BasicIncomeCollectEvent basicIncomeCollectEvent = (BasicIncomeCollectEvent)morphEvent;
-            var epoch = basicIncomeCollectEvent.epoch;
+            BasicIncomeCollectEvent BasicIncomeCollectEvent = (BasicIncomeCollectEvent)morphEvent;
+            var epoch = BasicIncomeCollectEvent.Epoch;
             if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore income collection event");
@@ -53,15 +53,15 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Error, $"income context already exists, epoch={epoch}");
                 return;
             }
-            IncomeSettlementContext incomeCtx = new() { SettlementDeps = basicIncome, Epoch = epoch };
+            IncomeSettlementContext incomeCtx = new() { SettlementDeps = BasicIncome, Epoch = epoch };
             incomeContexts[epoch] = incomeCtx;
             WorkPool.Tell(new NewTask() { Process = Name, Task = new Task(() => incomeCtx.Collect()) });
         }
 
         public void HandleIncomeDistributionEvent(ContractEvent morphEvent)
         {
-            BasicIncomeDistributeEvent basicIncomeDistributeEvent = (BasicIncomeDistributeEvent)morphEvent;
-            var epoch = basicIncomeDistributeEvent.epoch;
+            BasicIncomeDistributeEvent BasicIncomeDistributeEvent = (BasicIncomeDistributeEvent)morphEvent;
+            var epoch = BasicIncomeDistributeEvent.Epoch;
             if (!State.IsAlphabet())
             {
                 Utility.Log(Name, LogLevel.Info, "non alphabet mode, ignore income distribution event");
