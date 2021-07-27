@@ -42,15 +42,17 @@ namespace FileStorageCLI
             //upload subobjects
             var subObjectIDs = new ObjectID[PackCount];
             var completedTaskCount = 0;
-            var tasks = new Task[10];
-            for (int index = 0; index < 10; index++)
+            var taskCounts = 10;
+            var tasks = new Task[taskCounts];
+            for (int index = 0; index < taskCounts; index++)
             {
+                var threadIndex = index;
                 var task = new Task(() =>
                 {
                     int i = 0;
-                    while (index * i < subObjectIDs.Length)
+                    while (threadIndex + i * taskCounts < subObjectIDs.Length)
                     {
-                        byte[] data = GetFile(filePath, index * i * PackSize, PackSize, FileLength);
+                        byte[] data = GetFile(filePath, (threadIndex + i * taskCounts) * PackSize, PackSize, FileLength);
                         using (var client = new Client(key, host))
                         {
                             var obj = new Neo.FileStorage.API.Object.Object
@@ -71,7 +73,7 @@ namespace FileStorageCLI
                             source2.CancelAfter(TimeSpan.FromMinutes(1));
                             var objId = client.PutObject(obj, new CallOptions { Ttl = 2, Session = session }, source2.Token).Result;
                             Console.WriteLine($"The object put request has been submitted, please confirm in the next block,ObjectID:{objId.ToBase58String()},degree of completion:{Interlocked.Increment(ref completedTaskCount)}/{PackCount}");
-                            subObjectIDs[index * i] = objId;
+                            subObjectIDs[threadIndex + i * taskCounts] = objId;
                         }
                         i++;
                     }
@@ -180,20 +182,22 @@ namespace FileStorageCLI
             if (!Directory.Exists(downloadTempPath)) Directory.CreateDirectory(downloadTempPath);
             Console.WriteLine("Start file subobjects download");
             var receivedDataSize = 0uL;
-            var tasks = new Task[10];
-            for (int index = 0; index < 10; index++)
+            var taskCounts = 10;
+            var tasks = new Task[taskCounts];
+            for (int index = 0; index < taskCounts; index++)
             {
+                var threadIndex = index;
                 var task = new Task(() =>
                {
-                   int i = 1;
-                   while (index * i < subObjectIDs.Count)
+                   int i = 0;
+                   while (threadIndex + i * taskCounts < subObjectIDs.Count)
                    {
-                       string tempfilepath = downloadTempPath + "QS_" + subObjectIDs[index * i].ToBase58String();
+                       string tempfilepath = downloadTempPath + "QS_" + subObjectIDs[threadIndex + i * taskCounts].ToBase58String();
                        using (FileStream tempstream = new FileStream(tempfilepath, FileMode.Create, FileAccess.Write, FileShare.Write))
                        {
                            using (var client = new Client(key, host))
                            {
-                               var oid = subObjectIDs[index * i];
+                               var oid = subObjectIDs[index + i * taskCounts];
                                var source = new CancellationTokenSource();
                                source.CancelAfter(TimeSpan.FromMinutes(1));
                                var obj = client.GetObject(new()
@@ -296,13 +300,19 @@ namespace FileStorageCLI
         {
             using (FileStream ServerStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 1024 * 80, true))
             {
-                byte[] buffer = new byte[length];
-                ServerStream.Position = start;
-                //ServerStream.Seek(start, SeekOrigin.Begin);
+                byte[] buffer;
+                //ServerStream.Position = start;
+                ServerStream.Seek(start, SeekOrigin.Begin);
                 if (totalLength - start < length)
+                {
+                    buffer = new byte[totalLength - start];
                     ServerStream.Read(buffer, 0, (int)(totalLength - start));
+                }
                 else
+                {
+                    buffer = new byte[length];
                     ServerStream.Read(buffer, 0, length);
+                }
                 return buffer;
             }
         }

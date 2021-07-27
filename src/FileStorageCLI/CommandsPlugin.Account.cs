@@ -28,10 +28,10 @@ namespace FileStorageCLI
     public partial class CommandsPlugin : Plugin
     {
         [ConsoleCommand("fs account balance", Category = "FileStorageService", Description = "Show account balance")]
-        private void OnAccountBalance(string paccount = null)
+        private void OnAccountBalance(string paccount)
         {
             if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
+            UInt160 account = currentWallet.GetAccounts().Where(p => !p.WatchOnly)?.ToArray()[0].ScriptHash;
             if (!CheckAccount(account)) return;
             var host = Settings.Default.host;
             ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
@@ -39,8 +39,10 @@ namespace FileStorageCLI
             {
                 var source = new CancellationTokenSource();
                 source.CancelAfter(10000);
-                Neo.FileStorage.API.Accounting.Decimal result = client.GetBalance(context: source.Token).Result;
-                Console.WriteLine($"Fs current account :{account}, balance:{(result.Value == 0 ? 0 : result)}");
+                Neo.Cryptography.ECC.ECPoint pk = Neo.Cryptography.ECC.ECPoint.Parse(paccount, Neo.Cryptography.ECC.ECCurve.Secp256r1);
+                OwnerID ownerID = pk.EncodePoint(true).PublicKeyToOwnerID();
+                Neo.FileStorage.API.Accounting.Decimal result = client.GetBalance(ownerID, context: source.Token).Result;
+                Console.WriteLine($"Fs current account :{Contract.CreateSignatureRedeemScript(pk).ToScriptHash()}, balance:{(result.Value == 0 ? 0 : result)}");
             }
         }
 
@@ -51,7 +53,7 @@ namespace FileStorageCLI
             UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!CheckAccount(account)) return;
             var amount = int.Parse(pamount);
-            if (amount < 0)
+            if (amount <= 0)
             {
                 Console.WriteLine("Amount cannot be negative");
                 return;

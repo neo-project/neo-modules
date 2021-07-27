@@ -25,12 +25,12 @@ namespace FileStorageCLI
             if (NoWallet()) return;
             UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!CheckAccount(account)) return;
-            var data = UTF8Encoding.UTF8.GetBytes(pdata);
-            if (data.Length > 2048)
+            if (pdata.Length > 2048|| pdata.Length<1024)
             {
-                Console.WriteLine("The data is too big");
+                Console.WriteLine("The data length out of range");
                 return;
             }
+            var data = UTF8Encoding.UTF8.GetBytes(pdata);
             var host = Settings.Default.host;
             ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
             using (var client = new Client(key, host))

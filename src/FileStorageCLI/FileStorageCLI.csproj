@@ -5,7 +5,7 @@
     <RootNamespace>Neo.FileStorage.Commands</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="NeoFS.API" Version="0.0.59" />
+    <PackageReference Include="NeoFS.API" Version="0.0.63" />
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
   </ItemGroup>
   <ItemGroup>
