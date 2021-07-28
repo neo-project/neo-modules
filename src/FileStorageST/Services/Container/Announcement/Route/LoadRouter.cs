@@ -1,7 +1,7 @@
-using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.Storage.Services.Container.Announcement.Route.Placement;
 using System;
 using System.Threading;
+using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.Storage.Services.Container.Announcement.Route.Placement;
 
 namespace Neo.FileStorage.Storage.Services.Container.Announcement.Route
 {
@@ -21,7 +21,7 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement.Route
             };
         }
 
-        public LoadWriter InitWriter(RouteContext context)
+        public IWriter InitWriter(RouteContext context)
         {
             return new LoadWriter()
             {

@@ -72,6 +72,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
         {
             timer?.Dispose();
             source?.Cancel();
+            source?.Dispose();
             prevGroup?.Wait();
             blobStorage?.Dispose();
             metabase?.Dispose();
@@ -327,6 +328,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
         {
             source?.Cancel();
             prevGroup?.Wait();
+            source?.Dispose();
             source = new();
             Task t1 = new(() =>
             {

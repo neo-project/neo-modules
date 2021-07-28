@@ -16,7 +16,7 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement
 
         public List<List<Node>> BuildPlacement(ulong epoch, ContainerID cid)
         {
-            byte[] pivot = Concat(StrictUTF8.GetBytes(PivotPrefix + epoch));
+            byte[] pivot = StrictUTF8.GetBytes(PivotPrefix + epoch);
             var nm = MorphInvoker.GetNetMapByEpoch(epoch);
             var container = MorphInvoker.GetContainer(cid)?.Container;
             var nodes = nm.GetContainerNodes(container.PlacementPolicy, cid.Value.ToByteArray());
