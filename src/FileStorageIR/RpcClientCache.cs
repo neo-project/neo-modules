@@ -18,17 +18,17 @@ namespace Neo.FileStorage.InnerRing
 {
     public class RpcClientCache : IFSClientCache, IContainerCommunicator
     {
-        public ClientCache clientCache = new();
-        public Wallet wallet;
+        public ClientCache ClientCache = new();
+        public Wallet Wallet;
 
         public void Dispose()
         {
-            clientCache.Dispose();
+            ClientCache.Dispose();
         }
 
         public IFSClient Get(Network.Address address)
         {
-            return clientCache.Get(address);
+            return ClientCache.Get(address);
         }
 
         public StorageGroup GetStorageGroup(AuditTask task, ObjectID id)
@@ -43,14 +43,7 @@ namespace Neo.FileStorage.InnerRing
         public StorageGroup GetStorageGroup(CancellationToken cancellation, Address sgAddress, NetMap netMap, List<List<Node>> containerNodes)
         {
             List<List<Node>> nodes;
-            try
-            {
-                nodes = NetworkMapBuilder.BuildObjectPlacement(netMap, containerNodes, sgAddress.ObjectId);
-            }
-            catch (Exception e)
-            {
-                throw new Exception(string.Format("can't build object placement: {0}", e.Message));
-            }
+            nodes = NetworkMapBuilder.BuildObjectPlacement(netMap, containerNodes, sgAddress.ObjectId);
             foreach (var node in nodes.Flatten())
             {
                 Network.Address addr;
@@ -76,9 +69,9 @@ namespace Neo.FileStorage.InnerRing
                 API.Object.Object obj;
                 try
                 {
-                    var source = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
+                    using var source = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
                     source.CancelAfter(TimeSpan.FromMinutes(1));
-                    var key = wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
+                    var key = Wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
                     obj = cli.GetObject(sgAddress, false, new CallOptions() { Key = key }, context: source.Token).Result;
                 }
                 catch (Exception e)
@@ -86,15 +79,7 @@ namespace Neo.FileStorage.InnerRing
                     Utility.Log("RpcClientCache", LogLevel.Warning, string.Format("can't get storage group object,error:{0}", e.Message));
                     continue;
                 }
-                StorageGroup sg;
-                try
-                {
-                    sg = StorageGroup.Parser.ParseFrom(obj.Payload);
-                }
-                catch (Exception e)
-                {
-                    throw new Exception(string.Format("can't parse storage group payload: {0}", e.Message));
-                }
+                StorageGroup sg = StorageGroup.Parser.ParseFrom(obj.Payload);
                 return sg;
             }
             throw new Exception("object not found");
@@ -109,30 +94,14 @@ namespace Neo.FileStorage.InnerRing
                 ContainerId = task.ContainerID,
                 ObjectId = id
             };
-            Network.Address addr;
-            try
-            {
-                addr = Network.Address.FromString(node.NetworkAddress);
-            }
-            catch (Exception e)
-            {
-                throw new Exception(string.Format("can't parse remote address {0}: {1}", node.NetworkAddress, e.Message));
-            }
-            IFSClient client;
-            try
-            {
-                client = Get(addr);
-            }
-            catch (Exception e)
-            {
-                throw new Exception(string.Format("can't setup remote connection with {0}: {1}", addr, e.Message));
-            }
+            Network.Address addr = Network.Address.FromString(node.NetworkAddress);
+            IFSClient client = Get(addr);
             API.Object.Object head;
             try
             {
-                var source = CancellationTokenSource.CreateLinkedTokenSource(task.Cancellation);
+                using var source = CancellationTokenSource.CreateLinkedTokenSource(task.Cancellation);
                 source.CancelAfter(TimeSpan.FromMinutes(1));
-                var key = wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
+                var key = Wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
                 head = client.GetObjectHeader(objAddress, raw, options: new CallOptions() { Key = key }, context: source.Token).Result;
             }
             catch (Exception e)
@@ -170,9 +139,9 @@ namespace Neo.FileStorage.InnerRing
             List<byte[]> result;
             try
             {
-                var source = new CancellationTokenSource();
+                using var source = new CancellationTokenSource();
                 source.CancelAfter(TimeSpan.FromMinutes(1));
-                var key = wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
+                var key = Wallet.GetAccounts().ToArray()[0].GetKey().PrivateKey.LoadPrivateKey();
                 result = cli.GetObjectPayloadRangeHash(objAddress, new List<V2Range> { rng }, ChecksumType.Tz, null, new() { Ttl = 1, Key = key }, source.Token).Result;
             }
             catch (Exception e)

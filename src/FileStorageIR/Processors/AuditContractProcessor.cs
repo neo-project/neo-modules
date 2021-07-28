@@ -193,7 +193,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 searchFilters.AddTypeFilter(MatchType.StringEqual, ObjectType.StorageGroup);
                 try
                 {
-                    var source = new CancellationTokenSource();
+                    using var source = new CancellationTokenSource();
                     source.CancelAfter(TimeSpan.FromMinutes(1));
                     List<ObjectID> result = cli.SearchObject(cid, searchFilters, new CallOptions() { Key = Key }, context: source.Token).Result;
                     sg.AddRange(result);

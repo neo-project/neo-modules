@@ -1,9 +1,5 @@
-using System;
 using Neo.FileStorage.InnerRing.Events;
-using Neo.FileStorage.InnerRing.Processors;
-using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Listen;
-using Neo.FileStorage.Listen.Event;
 
 namespace Neo.FileStorage.InnerRing.Timer
 {
@@ -11,67 +7,40 @@ namespace Neo.FileStorage.InnerRing.Timer
     {
         public static BlockTimer NewEpochTimer(EpochTimerArgs args)
         {
-            BlockTimer epochTimer = new BlockTimer(BlockTimer.StaticBlockMeter(Settings.Default.EpochDuration), () => { args.processor.HandleNewEpochTick(); });
+            BlockTimer epochTimer = new BlockTimer(BlockTimer.StaticBlockMeter(Settings.Default.EpochDuration), () => { args.Processor.HandleNewEpochTick(); });
             epochTimer.Delta(
-                args.stopEstimationDMul,
-                args.stopEstimationDDiv,
+                args.StopEstimationDMul,
+                args.StopEstimationDDiv,
                 () =>
                 {
-                    long epochN = (long)args.epoch.EpochCounter();
+                    long epochN = (long)args.EpochState.EpochCounter();
                     if (epochN == 0) return;
-                    args.client.StopEstimation(epochN - 1);
+                    args.MorphInvoker.StopEstimation(epochN - 1);
                 });
             epochTimer.Delta(
-                args.collectBasicIncome.durationMul,
-                args.collectBasicIncome.durationDiv,
+                args.CollectBasicIncome.DurationMul,
+                args.CollectBasicIncome.DurationDiv,
                 () =>
                 {
-                    ulong epochN = args.epoch.EpochCounter();
+                    ulong epochN = args.EpochState.EpochCounter();
                     if (epochN == 0) return;
-                    args.collectBasicIncome.handler(new BasicIncomeCollectEvent() { Epoch = epochN - 1 });
+                    args.CollectBasicIncome.Handler(new BasicIncomeCollectEvent() { Epoch = epochN - 1 });
                 });
             epochTimer.Delta(
-                args.distributeBasicIncome.durationMul,
-                args.distributeBasicIncome.durationDiv,
+                args.DistributeBasicIncome.DurationMul,
+                args.DistributeBasicIncome.DurationDiv,
                 () =>
                 {
-                    ulong epochN = args.epoch.EpochCounter();
+                    ulong epochN = args.EpochState.EpochCounter();
                     if (epochN == 0) return;
-                    args.distributeBasicIncome.handler(new BasicIncomeDistributeEvent() { Epoch = epochN - 1 });
+                    args.DistributeBasicIncome.Handler(new BasicIncomeDistributeEvent() { Epoch = epochN - 1 });
                 });
             return epochTimer;
         }
 
         public static BlockTimer NewEmissionTimer(EmitTimerArgs args)
         {
-            return new BlockTimer(BlockTimer.StaticBlockMeter(Settings.Default.AlphabetDuration), () => { args.processor.HandleGasEmission(); });
-        }
-
-        public class EmitTimerArgs
-        {
-            public NeoSystem context;
-            public AlphabetContractProcessor processor;
-            public uint epochDuration;
-        }
-
-        public class EpochTimerArgs
-        {
-            public NeoSystem context;
-            public NetMapContractProcessor processor;
-            public MorphInvoker client;
-            public IState epoch;
-            public uint epochDuration;
-            public uint stopEstimationDMul;
-            public uint stopEstimationDDiv;
-            public SubEpochEventHandler collectBasicIncome;
-            public SubEpochEventHandler distributeBasicIncome;
-        }
-
-        public class SubEpochEventHandler
-        {
-            public Action<ContractEvent> handler;
-            public uint durationMul;
-            public uint durationDiv;
+            return new BlockTimer(BlockTimer.StaticBlockMeter(Settings.Default.AlphabetDuration), () => { args.Processor.HandleGasEmission(); });
         }
     }
 }

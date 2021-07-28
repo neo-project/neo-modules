@@ -51,7 +51,7 @@ namespace Neo.FileStorage.InnerRing
         [ConsoleCommand("fs show state", Category = "FileStorageService", Description = "Show side chain node height and connection")]
         private void OnNodeHeight()
         {
-            var cancel = new CancellationTokenSource();
+            using var cancel = new CancellationTokenSource();
 
             Console.CursorVisible = false;
             Console.Clear();

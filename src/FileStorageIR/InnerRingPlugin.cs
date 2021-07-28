@@ -14,7 +14,6 @@ using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.Plugins;
 using Neo.SmartContract.Native;
-using Neo.Wallets;
 
 namespace Neo.FileStorage.InnerRing
 {
@@ -93,7 +92,7 @@ namespace Neo.FileStorage.InnerRing
                 flag = false;
             else
                 return;
-            if (!flag) innerRingService.Tell(new InnerRingService.BlockEvent() { block = block, flag = flag });
+            if (!flag) innerRingService.Tell(new InnerRingService.BlockEvent() { Block = block, Flag = flag });
             foreach (var appExec in applicationExecutedList)
             {
                 Transaction tx = appExec.Transaction;
@@ -106,7 +105,7 @@ namespace Neo.FileStorage.InnerRing
                     var contract = notify.ScriptHash;
                     if (flag && contract != Settings.Default.FsContractHash) continue;
                     if (!flag && !Settings.Default.Contracts.Contains(contract)) continue;
-                    innerRingService.Tell(new InnerRingService.ContractEvent() { notify = notify, flag = flag });
+                    innerRingService.Tell(new InnerRingService.ContractEvent() { Notify = notify, Flag = flag });
                 }
             }
         }
