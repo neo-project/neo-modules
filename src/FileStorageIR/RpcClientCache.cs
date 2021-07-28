@@ -69,7 +69,7 @@ namespace Neo.FileStorage.InnerRing
                 API.Object.Object obj;
                 try
                 {
-                    var source = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
+                    using var source = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
                     source.CancelAfter(TimeSpan.FromMinutes(1));
                     var key = Wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
                     obj = cli.GetObject(sgAddress, false, new CallOptions() { Key = key }, context: source.Token).Result;
@@ -99,7 +99,7 @@ namespace Neo.FileStorage.InnerRing
             API.Object.Object head;
             try
             {
-                var source = CancellationTokenSource.CreateLinkedTokenSource(task.Cancellation);
+                using var source = CancellationTokenSource.CreateLinkedTokenSource(task.Cancellation);
                 source.CancelAfter(TimeSpan.FromMinutes(1));
                 var key = Wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
                 head = client.GetObjectHeader(objAddress, raw, options: new CallOptions() { Key = key }, context: source.Token).Result;
@@ -139,7 +139,7 @@ namespace Neo.FileStorage.InnerRing
             List<byte[]> result;
             try
             {
-                var source = new CancellationTokenSource();
+                using var source = new CancellationTokenSource();
                 source.CancelAfter(TimeSpan.FromMinutes(1));
                 var key = Wallet.GetAccounts().ToArray()[0].GetKey().PrivateKey.LoadPrivateKey();
                 result = cli.GetObjectPayloadRangeHash(objAddress, new List<V2Range> { rng }, ChecksumType.Tz, null, new() { Ttl = 1, Key = key }, source.Token).Result;
