@@ -20,14 +20,15 @@ namespace FileStorageCLI
     public partial class CommandsPlugin : Plugin
     {
         private static string Host => Settings.Default.host;
-        private static string DownloadPath => Settings.Default.downloadPath;
+        private static string DownLoadPath => Settings.Default.downloadPath;
+        private static string UpLoadPath => Settings.Default.uploadPath;
 
         [ConsoleCommand("fs file upload", Category = "FileStorageService", Description = "Upload file")]
         private void OnUploadFile(string containerId, string fileName, string paccount = null)
         {
             if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key, out Neo.Cryptography.ECC.ECPoint pk, out OwnerID ownerID)) return;
             var cid = ContainerID.FromBase58String(containerId);
-            var filePath = Settings.Default.uploadPath + fileName;
+            var filePath = UpLoadPath + fileName;
             FileInfo fileInfo = new FileInfo(filePath);
             var FileLength = fileInfo.Length;
             //data segmentation
@@ -54,7 +55,7 @@ namespace FileStorageCLI
                     while (threadIndex + i * taskCounts < subObjectIDs.Length)
                     {
                         byte[] data = OnGetFileInternal(filePath, (threadIndex + i * taskCounts) * PackSize, PackSize, FileLength);
-                        var obj = OnCreateObjectInternal(cid, OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()), data, ObjectType.Regular);
+                        var obj = OnCreateObjectInternal(cid, ownerID, data, ObjectType.Regular);
                         //check has upload;
                         var objheader = OnGetObjectHeaderInternal(client, cid, obj.ObjectId);
                         if (objheader is not null || objheader is null && OnPutObjectInternal(client, obj, session))
@@ -83,7 +84,7 @@ namespace FileStorageCLI
             using var client = new Client(key, Host);
             var session = OnCreateSessionInternal(client);
             if (session is null) return;
-            var obj = OnCreateStorageGroupObjectInternal(client, OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()), cid, subObjectIDs, session);
+            var obj = OnCreateStorageGroupObjectInternal(client, ownerID, cid, subObjectIDs, session);
             if (OnPutObjectInternal(client, obj, session)) Console.WriteLine("Upload file successfully");
         }
 
@@ -114,7 +115,7 @@ namespace FileStorageCLI
                 Console.WriteLine($"subobjectId:{m.ToBase58String()}");
             }
 
-            var downloadTempPath = DownloadPath + objectId + "/";
+            var downloadTempPath = DownLoadPath + objectId + "/";
             if (!Directory.Exists(downloadTempPath)) Directory.CreateDirectory(downloadTempPath);
             Console.WriteLine("Start file download");
             var receivedDataSize = 0uL;
@@ -193,7 +194,7 @@ namespace FileStorageCLI
                 return;
             }
             //write file
-            string filePath = DownloadPath + fileName;
+            string filePath = DownLoadPath + fileName;
             using (FileStream writestream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Write))
             {
                 for (int index = 0; index < subObjectIDs.Count; index++)
