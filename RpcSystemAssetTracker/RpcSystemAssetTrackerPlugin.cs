@@ -258,11 +258,12 @@ namespace Neo.Plugins
         {
             uint amount = 0;
             uint ustart = startHeight / Blockchain.DecrementInterval;
-            if (ustart < Blockchain.GenerationAmount.Length)
+            if (ustart < Blockchain.GenerationAmount.Length && startHeight < Blockchain.NoBonusHeight)
             {
                 uint istart = startHeight % Blockchain.DecrementInterval;
-                uint uend = endHeight / Blockchain.DecrementInterval;
-                uint iend = endHeight % Blockchain.DecrementInterval;
+                uint bonusEndHeight = Math.Min(endHeight, Blockchain.NoBonusHeight);
+                uint uend = bonusEndHeight / Blockchain.DecrementInterval;
+                uint iend = bonusEndHeight % Blockchain.DecrementInterval;
                 if (uend >= Blockchain.GenerationAmount.Length)
                 {
                     uend = (uint)Blockchain.GenerationAmount.Length;
