@@ -89,20 +89,21 @@ namespace FileStorageCLI
         private void OnAccountDeposite(string pamount, string paccount = null)
         {
             if (!CheckAndParseAccount(paccount, out UInt160 account, out _, out _, out _)) return;
-            var amount = int.Parse(pamount);
-            if (amount < 0)
+            using SnapshotCache snapshot = System.GetSnapshot();
+            AssetDescriptor descriptor = new AssetDescriptor(snapshot, System.Settings, NativeContract.GAS.Hash);
+            if (!BigDecimal.TryParse(pamount, descriptor.Decimals, out BigDecimal decimalAmount) || decimalAmount.Sign <= 0)
             {
-                Console.WriteLine("Amount cannot be negative");
+                Console.WriteLine("Incorrect Amount Format");
                 return;
             }
-            using SnapshotCache snapshot = System.GetSnapshot();
-            if (NativeContract.GAS.BalanceOf(snapshot, account) < amount * NativeContract.GAS.Decimals)
+
+            if (NativeContract.GAS.BalanceOf(snapshot, account) < decimalAmount.Value)
             {
                 Console.WriteLine("Gas insufficient");
                 return;
             }
             var FsContractHash = Settings.Default.fsContractHash;
-            byte[] script = NativeContract.GAS.Hash.MakeScript("transfer", account, FsContractHash, amount, Array.Empty<byte>());
+            byte[] script = NativeContract.GAS.Hash.MakeScript("transfer", account, FsContractHash, decimalAmount.Value, Array.Empty<byte>());
             Transaction tx = new Transaction
             {
                 Version = 0,
@@ -122,7 +123,7 @@ namespace FileStorageCLI
             }
             tx.SystemFee = engine.GasConsumed;
             tx.NetworkFee = currentWallet.CalculateNetworkFee(snapshot, tx);
-            if (NativeContract.GAS.BalanceOf(snapshot, account) < engine.GasConsumed + tx.NetworkFee + amount * NativeContract.GAS.Decimals)
+            if (NativeContract.GAS.BalanceOf(snapshot, account) < engine.GasConsumed + tx.NetworkFee + decimalAmount.Value)
             {
                 Console.WriteLine("Gas insufficient");
                 return;
