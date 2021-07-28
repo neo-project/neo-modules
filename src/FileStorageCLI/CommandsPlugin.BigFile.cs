@@ -57,7 +57,7 @@ namespace FileStorageCLI
                         byte[] data = OnGetFileInternal(filePath, (threadIndex + i * taskCounts) * PackSize, PackSize, FileLength);
                         var obj = OnCreateObjectInternal(cid, ownerID, data, ObjectType.Regular);
                         //check has upload;
-                        var objheader = OnGetObjectHeaderInternal(client, cid, obj.ObjectId);
+                        var objheader = OnGetObjectHeaderInternal(client, cid, obj.ObjectId,false);
                         if (objheader is not null || objheader is null && OnPutObjectInternal(client, obj, session))
                         {
                             Console.WriteLine($"The object put request has been submitted, please confirm in the next block,ObjectID:{obj.ObjectId.ToBase58String()},degree of completion:{Interlocked.Increment(ref completedTaskCount)}/{PackCount}");

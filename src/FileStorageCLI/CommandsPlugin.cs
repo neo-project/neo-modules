@@ -63,7 +63,7 @@ namespace FileStorageCLI
                 return false;
             }
             key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
-            pk = Neo.Cryptography.ECC.ECPoint.Parse(paccount, Neo.Cryptography.ECC.ECCurve.Secp256r1);
+            pk = currentWallet.GetAccount(account).GetKey().PublicKey;
             ownerID = OwnerID.FromScriptHash(pk.EncodePoint(true).PublicKeyToScriptHash());
             return true;
         }

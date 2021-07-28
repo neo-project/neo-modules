@@ -11,7 +11,9 @@ using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
+using static Neo.FileStorage.API.Policy.Helper;
 using Neo.Plugins;
+using System.Linq;
 
 namespace FileStorageCLI
 {
@@ -19,28 +21,25 @@ namespace FileStorageCLI
     {
         ///todo
         [ConsoleCommand("fs container put", Category = "FileStorageService", Description = "Create a container")]
-        private void OnPutContainer(string paccount = null)
+        private void OnPutContainer(string policyString,string basicAcl,string attributesString, string paccount = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key, out _, out _)) return;
+            if (!CheckAndParseAccount(paccount, out _, out ECDsa key, out _, out OwnerID ownerID)) return;
             using var client = new Client(key, Host);
-            var replica = new Replica(2, "");
-            var policy = new PlacementPolicy(2, new Replica[] { replica }, null, null);
+            var policy = ParsePlacementPolicy(policyString);
             var container = new Container
             {
                 Version = Neo.FileStorage.API.Refs.Version.SDKVersion(),
-                OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
+                OwnerId = ownerID,
                 Nonce = Guid.NewGuid().ToByteString(),
-                BasicAcl = (uint)BasicAcl.PublicBasicRule,
+                BasicAcl = uint.Parse(basicAcl),
                 PlacementPolicy = policy,
             };
-            container.Attributes.Add(new Container.Types.Attribute
-            {
-                Key = "CreatedAt",
-                Value = DateTime.UtcNow.ToString(),
-            });
+            Container.Types.Attribute[] attributes = attributesString.Split("_").Select(p => new Container.Types.Attribute() { Key = p.Split("-")[0], Value = p.Split("-")[1] }).ToArray();
+            container.Attributes.Add(attributes);
             var source = new CancellationTokenSource();
             source.CancelAfter(TimeSpan.FromMinutes(1));
             var cid = client.PutContainer(container, context: source.Token).Result;
+            source.Cancel();
             Console.WriteLine($"The container put request has been submitted, please confirm in the next block,ContainerId:{cid.ToBase58String()}");
         }
 

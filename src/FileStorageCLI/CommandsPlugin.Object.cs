@@ -86,17 +86,17 @@ namespace FileStorageCLI
 
         private SessionToken OnCreateSessionInternal(Client client)
         {
+            using var source = new CancellationTokenSource();
+            source.CancelAfter(TimeSpan.FromMinutes(1));
             try
             {
-                using var source = new CancellationTokenSource();
-                source.CancelAfter(TimeSpan.FromMinutes(1));
                 var session = client.CreateSession(ulong.MaxValue, context: source.Token).Result;
-                source.Cancel();
                 return session;
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Create session fail,error:{e}");
+                source.Cancel();
                 return null;
             }
         }
@@ -149,12 +149,12 @@ namespace FileStorageCLI
             return obj;
         }
 
-        private Neo.FileStorage.API.Object.Object OnGetObjectHeaderInternal(Client client, ContainerID cid, ObjectID oid)
+        private Neo.FileStorage.API.Object.Object OnGetObjectHeaderInternal(Client client, ContainerID cid, ObjectID oid, bool logFlag = true)
         {
+            using var source = new CancellationTokenSource();
+            source.CancelAfter(TimeSpan.FromMinutes(1));
             try
             {
-                using var source = new CancellationTokenSource();
-                source.CancelAfter(TimeSpan.FromMinutes(1));
                 var objheader = client.GetObjectHeader(new Address()
                 {
                     ContainerId = cid,
@@ -165,17 +165,18 @@ namespace FileStorageCLI
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Get object header fail,objectId:{oid.ToBase58String()},error:{e}");
+                if (logFlag) Console.WriteLine($"Get object header fail,objectId:{oid.ToBase58String()},error:{e}");
+                source.Cancel();
                 return null;
             }
         }
 
         private Neo.FileStorage.API.Object.Object OnGetObjectInternal(Client client, ContainerID cid, ObjectID oid)
         {
+            using var source = new CancellationTokenSource();
+            source.CancelAfter(TimeSpan.FromMinutes(1));
             try
             {
-                using var source = new CancellationTokenSource();
-                source.CancelAfter(TimeSpan.FromMinutes(1));
                 var obj = client.GetObject(new Address()
                 {
                     ContainerId = cid,
@@ -187,6 +188,7 @@ namespace FileStorageCLI
             catch (Exception e)
             {
                 Console.WriteLine($"Get object fail,objectId:{oid.ToBase58String()},error:{e}");
+                source.Cancel();
                 return null;
             }
         }
@@ -196,10 +198,10 @@ namespace FileStorageCLI
             if (session is null)
                 session = OnCreateSessionInternal(client);
             if (session is null) return false;
+            using var source = new CancellationTokenSource();
+            source.CancelAfter(TimeSpan.FromMinutes(1));
             try
             {
-                using var source = new CancellationTokenSource();
-                source.CancelAfter(TimeSpan.FromMinutes(1));
                 var o = client.PutObject(obj, new CallOptions { Ttl = 2, Session = session }, source.Token).Result;
                 source.Cancel();
                 return true;
@@ -207,6 +209,7 @@ namespace FileStorageCLI
             catch (Exception e)
             {
                 Console.WriteLine($"Object put fail, errot:{e}");
+                source.Cancel();
                 return false;
             }
         }

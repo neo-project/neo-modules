@@ -137,10 +137,10 @@ namespace FileStorageCLI
 
         private bool OnGetBalanceInternal(Client client, OwnerID ownerID, out Neo.FileStorage.API.Accounting.Decimal result)
         {
+            using var source = new CancellationTokenSource();
+            source.CancelAfter(10000);
             try
             {
-                using var source = new CancellationTokenSource();
-                source.CancelAfter(10000);
                 result = client.GetBalance(ownerID, context: source.Token).Result;
                 source.Cancel();
                 return result is not null;
@@ -149,6 +149,7 @@ namespace FileStorageCLI
             {
                 Console.WriteLine($"Fs get account balance fail,error:{e}");
                 result = null;
+                source.Cancel();
                 return false;
             }
         }
