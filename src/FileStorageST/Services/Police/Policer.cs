@@ -36,7 +36,8 @@ namespace Neo.FileStorage.Storage.Services.Police
 
         private void OnTrigger()
         {
-            prevTask.Cancellation.Cancel();
+            prevTask.Source.Cancel();
+            prevTask.Source.Dispose();
             HandleTask();
         }
 
@@ -51,7 +52,7 @@ namespace Neo.FileStorage.Storage.Services.Police
             if (workScope + delta < addrs.Count)
                 workScope += delta;
             prevTask.Undone = addrs.Count;
-            prevTask.Cancellation = new CancellationTokenSource();
+            prevTask.Source = new();
             prevTask.Task = Task.Run(() =>
             {
                 foreach (var addr in addrs)
@@ -59,7 +60,7 @@ namespace Neo.FileStorage.Storage.Services.Police
                     ProcessObject(addr);
                     prevTask.Undone--;
                 }
-            }, prevTask.Cancellation.Token);
+            }, prevTask.Source.Token);
         }
 
         private List<FSAddress> Select(int limit)
@@ -96,12 +97,12 @@ namespace Neo.FileStorage.Storage.Services.Police
                 else if (0 < shortage)
                 {
                     prm.Node = node;
-                    CancellationTokenSource source = new(config.HeadTimeout);
+                    using CancellationTokenSource source = new(config.HeadTimeout);
                     try
                     {
                         _ = config.RemoteHeader.Head(prm, source.Token);
                     }
-                    catch (Exception)
+                    catch
                     {
                         continue;
                     }
@@ -133,6 +134,12 @@ namespace Neo.FileStorage.Storage.Services.Police
             var replicas = policy.Replicas;
             for (int i = 0; i < nodes.Count; i++)
                 ProcessNodes(address, nodes[i], replicas[i].Count);
+        }
+
+        public void Dispose()
+        {
+            prevTask.Source?.Cancel();
+            prevTask.Source?.Dispose();
         }
 
         public static Props Props(Configuration c)

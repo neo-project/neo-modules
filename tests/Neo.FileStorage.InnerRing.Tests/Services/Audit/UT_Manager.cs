@@ -77,7 +77,7 @@ namespace Neo.FileStorage.Tests.Services.Audit
         public void TestSetup()
         {
             ulong interval = 5000;
-            CancellationTokenSource source = new();
+            using CancellationTokenSource source = new();
             IActorRef wp = Sys.ActorOf(WorkerPool.Props("Audit", ManagerCapacity));
             IActorRef fwp = Sys.ActorOf(Props.Create(() => new WorkerPoolWrapper(TestActor, wp)));
             manager = Sys.ActorOf(Manager.Props(ManagerCapacity, fwp, () =>

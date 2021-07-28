@@ -42,7 +42,7 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement
             return resp;
         }
 
-        private void ProcessLoadValue(FSAnnouncement announcement, List<NodeInfo> route, LoadWriter writer)
+        private void ProcessLoadValue(FSAnnouncement announcement, List<NodeInfo> route, IWriter writer)
         {
             if (!Loadbuilder.IsNodeFromContainerKey(announcement.Epoch, announcement.ContainerId, route[0].PublicKey.ToByteArray()))
                 throw new Exception("node outside the container");

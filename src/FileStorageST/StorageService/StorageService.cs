@@ -55,7 +55,6 @@ namespace Neo.FileStorage.Storage
         private Network.Address LocalAddress => Network.Address.FromString(LocalNodeInfo.Address);
         private readonly NetmapProcessor netmapProcessor = new();
         private readonly ContainerProcessor containerProcessor = new();
-        private readonly CancellationTokenSource context = new();
         private readonly List<BlockTimer> blockTimers = new();
         private readonly Server server;
 
@@ -212,12 +211,12 @@ namespace Neo.FileStorage.Storage
 
         public void Dispose()
         {
-            server.Stop();
             HealthStatus = HealthStatus.ShuttingDown;
-            context.Cancel();
             listener.Tell(new Listener.Stop());
-            key?.Dispose();
+            server.Stop();
+            server.Dispose();
             reputationClientCache?.Dispose();
+            key?.Dispose();
             localStorage?.Dispose();
         }
     }

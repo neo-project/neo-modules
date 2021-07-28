@@ -21,15 +21,15 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Control
         {
             if (!ctxs.TryGetValue(epoch, out IterationContextCancellable context))
             {
-                CancellationTokenSource cancel = new();
+                CancellationTokenSource source = new();
                 context = new()
                 {
                     Context = new()
                     {
-                        Cancellation = cancel.Token,
+                        Cancellation = source.Token,
                         Epoch = epoch,
                     },
-                    Cancel = cancel,
+                    Source = source,
                 };
                 ctxs[epoch] = context;
             }

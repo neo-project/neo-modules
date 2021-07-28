@@ -54,7 +54,8 @@ namespace Neo.FileStorage.Storage.Services.Replicate
                 var net_address = task.Nodes[i].NetworkAddress;
                 var node = Network.Address.FromString(net_address);
                 prm.Node = node;
-                config.RemoteSender.PutObject(prm, new CancellationTokenSource(config.PutTimeout).Token);
+                using CancellationTokenSource srouce = new(config.PutTimeout);
+                config.RemoteSender.PutObject(prm, srouce.Token);
                 task.Quantity--;
             }
         }

@@ -9,7 +9,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Local.Control
         public IIteratorProvider LocalTrustStorage { get; init; }
         public IWriterProvider Router { get; init; }
         public byte[] LocalKey { get; init; }
-        private readonly Dictionary<ulong, CancellationTokenSource> cancels = new();
+        private readonly Dictionary<ulong, CancellationTokenSource> sources = new();
 
         public void Report(ulong epoch)
         {
@@ -25,7 +25,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Local.Control
 
         public ReportContext AcquireReport(ulong epoch)
         {
-            if (cancels.ContainsKey(epoch))
+            if (sources.ContainsKey(epoch))
             {
                 return null;
             }
@@ -40,10 +40,11 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Local.Control
 
         public void FreeReport(ulong epoch)
         {
-            if (cancels.TryGetValue(epoch, out CancellationTokenSource source))
+            if (sources.TryGetValue(epoch, out CancellationTokenSource source))
             {
                 source.Cancel();
-                cancels.Remove(epoch);
+                source.Dispose();
+                sources.Remove(epoch);
             }
         }
     }

@@ -114,7 +114,7 @@ namespace Neo.FileStorage.InnerRing.Tests.Services.Audit
             });
             NetMap nm = new(new List<Node> { node1, node2 });
             List<List<Node>> container_nodes = new() { new() { node1, node2 } };
-            CancellationTokenSource source = new();
+            using CancellationTokenSource source = new();
             AuditTask task = new()
             {
                 Cancellation = source.Token,

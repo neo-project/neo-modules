@@ -5,7 +5,7 @@ namespace Neo.FileStorage.Storage.Services.Police
 {
     internal class PoliceTask
     {
-        public CancellationTokenSource Cancellation;
+        public CancellationTokenSource Source;
         public Task Task;
         public int Undone;
     }

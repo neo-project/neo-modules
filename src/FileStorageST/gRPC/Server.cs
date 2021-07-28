@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -6,10 +7,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Neo.FileStorage.Storage.gRPC
 {
-    public class Server
+    public class Server : IDisposable
     {
         private readonly IHostBuilder hostBuilder;
-        private readonly CancellationTokenSource context = new();
+        private readonly CancellationTokenSource source = new();
         private readonly Startup startup = new();
         private readonly int port;
 
@@ -38,15 +39,20 @@ namespace Neo.FileStorage.Storage.gRPC
                     options.ListenAnyIP(port,
                         listenOptions => { listenOptions.Protocols = HttpProtocols.Http2; });
                 });
-                webBuilder.UseStartup(context => startup);
+                webBuilder.UseStartup(source => startup);
             })
             .Build()
-            .RunAsync(context.Token);
+            .RunAsync(source.Token);
         }
 
         public void Stop()
         {
-            context.Cancel();
+            source.Cancel();
+        }
+
+        public void Dispose()
+        {
+            source.Dispose();
         }
     }
 }
