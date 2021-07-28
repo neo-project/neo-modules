@@ -29,7 +29,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Control
                         Cancellation = source.Token,
                         Epoch = epoch,
                     },
-                    Cancel = source,
+                    Source = source,
                 };
                 ctxs[epoch] = context;
             }
