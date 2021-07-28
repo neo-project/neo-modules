@@ -248,7 +248,7 @@ namespace Neo.FileStorage.InnerRing
             }
             catch (Exception e)
             {
-                Utility.Log(nameof(InnerRingService), LogLevel.Debug, "can't read epoch" + e.Message);
+                Utility.Log(nameof(InnerRingService), LogLevel.Debug, "can't read epoch " + e.Message);
                 throw;
             }
             uint BalanceDecimals;
@@ -330,7 +330,6 @@ namespace Neo.FileStorage.InnerRing
         {
             morphEventListener.Tell(new Listener.Stop());
             mainEventListener.Tell(new Listener.Stop());
-            Dispose();
         }
 
         private void OnContractEvent(NotifyEventArgs notify, bool flag)
