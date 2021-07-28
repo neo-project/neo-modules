@@ -12,6 +12,7 @@ using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Cryptography.Tz;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.API.Session;
 using Neo.FileStorage.API.StorageGroup;
 using Neo.Plugins;
 
@@ -22,161 +23,191 @@ namespace FileStorageCLI
         [ConsoleCommand("fs object put", Category = "FileStorageService", Description = "Put a object")]
         private void OnPutObject(string containerId, string pdata, string paccount = null)
         {
-            if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
-            if (!CheckAccount(account)) return;
-            if (pdata.Length > 2048|| pdata.Length<1024)
+            if (!CheckAndParseAccount(paccount, out _, out ECDsa key, out _, out _)) return;
+            if (pdata.Length > 2048 || pdata.Length < 1024)
             {
                 Console.WriteLine("The data length out of range");
                 return;
             }
             var data = UTF8Encoding.UTF8.GetBytes(pdata);
-            var host = Settings.Default.host;
-            ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
-            using (var client = new Client(key, host))
-            {
-                var cid = ContainerID.FromBase58String(containerId);
-                var obj = new Neo.FileStorage.API.Object.Object
-                {
-                    Header = new Header
-                    {
-                        OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
-                        ContainerId = cid,
-                    },
-                    Payload = ByteString.CopyFrom(data),
-                };
-                obj.ObjectId = obj.CalculateID();
-                var source1 = new CancellationTokenSource();
-                source1.CancelAfter(TimeSpan.FromMinutes(1));
-                var session = client.CreateSession(ulong.MaxValue, context: source1.Token).Result;
-                source1.Cancel();
-                var source2 = new CancellationTokenSource();
-                source2.CancelAfter(TimeSpan.FromMinutes(1));
-                var objId = client.PutObject(obj, new CallOptions { Ttl = 2, Session = session }, source2.Token).Result;
-                Console.WriteLine($"The object put successfully, ObjectID:{objId.ToBase58String()}");
-            }
+            using var client = new Client(key, Host);
+            var cid = ContainerID.FromBase58String(containerId);
+            var obj = OnCreateObjectInternal(cid, OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()), data, ObjectType.Regular);
+            if (OnPutObjectInternal(client, obj))
+                Console.WriteLine($"The object put successfully, ObjectID:{obj.ObjectId.ToBase58String()}");
         }
 
         [ConsoleCommand("fs object delete", Category = "FileStorageService", Description = "Delete a object")]
         private void OnDeleteObject(string containerId, string pobjectIds, string paccount = null)
         {
-            if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
-            if (!CheckAccount(account)) return;
-            var host = Settings.Default.host;
-            ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
-            using (var client = new Client(key, host))
+            if (!CheckAndParseAccount(paccount, out _, out ECDsa key, out _, out _)) return;
+            using var client = new Client(key, Host);
+            SessionToken session = OnCreateSessionInternal(client);
+            if (session is null) return;
+            var cid = ContainerID.FromBase58String(containerId);
+            string[] objectIds = pobjectIds.Split("_");
+            foreach (var objectId in objectIds)
             {
-                var cid = ContainerID.FromBase58String(containerId);
-                string[] objectIds = pobjectIds.Split("_");
-                foreach (var objectId in objectIds)
-                {
-                    var oid = ObjectID.FromBase58String(objectId);
-                    Address address = new Address(cid, oid);
-                    var source1 = new CancellationTokenSource();
-                    source1.CancelAfter(TimeSpan.FromMinutes(1));
-                    var session = client.CreateSession(ulong.MaxValue, context: source1.Token).Result;
-                    source1.Cancel();
-                    var source2 = new CancellationTokenSource();
-                    source2.CancelAfter(TimeSpan.FromMinutes(1));
-                    var objId = client.DeleteObject(address, new CallOptions { Ttl = 2, Session = session }, source2.Token).Result;
-                    Console.WriteLine($"The object delete successfully,ObjectID:{objId}");
-                }
+                var oid = ObjectID.FromBase58String(objectId);
+                Address address = new Address(cid, oid);
+                using var source = new CancellationTokenSource();
+                source.CancelAfter(TimeSpan.FromMinutes(1));
+                var objId = client.DeleteObject(address, new CallOptions { Ttl = 2, Session = session }, source.Token).Result;
+                source.Cancel();
+                Console.WriteLine($"The object delete successfully,ObjectID:{objId}");
             }
         }
-
 
         [ConsoleCommand("fs object get", Category = "FileStorageService", Description = "Get a object")]
         private void OnGetObject(string containerId, string objectId, string paccount = null)
         {
-            if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
-            if (!CheckAccount(account)) return;
-            var host = Settings.Default.host;
-            ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
-            using (var client = new Client(key, host))
-            {
-                var cid = ContainerID.FromBase58String(containerId);
-                var oid = ObjectID.FromBase58String(objectId);
-                var source = new CancellationTokenSource();
-                source.CancelAfter(TimeSpan.FromMinutes(1));
-                var obj = client.GetObject(new()
-                {
-                    ContainerId = cid,
-                    ObjectId = oid,
-                }, false, new CallOptions { Ttl = 2 }, source.Token).Result;
-                Console.WriteLine($"Object info:{obj.ToJson()}");
-                /*                Console.WriteLine($"ObjectId:{obj.ObjectId.ToBase58String()}");
-                                Console.WriteLine($"ObjectPayload:{obj.Payload.ToByteArray()}");
-                                if (obj.ObjectType == ObjectType.StorageGroup)
-                                {
-                                    var sg = StorageGroup.Parser.ParseFrom(obj.Payload.ToByteArray());
-                                    Console.WriteLine($"StorageGroup size: {sg.ValidationDataSize}");
-                                    Console.WriteLine($"StorageGroup members:");
-                                    foreach (var m in sg.Members)
-                                        Console.WriteLine(m.ToBase58String());
-                                }*/
-            }
+            if (!CheckAndParseAccount(paccount, out _, out ECDsa key, out _, out _)) return;
+            using var client = new Client(key, Host);
+            var cid = ContainerID.FromBase58String(containerId);
+            var oid = ObjectID.FromBase58String(objectId);
+            var obj = OnGetObjectInternal(client, cid, oid);
+            if (obj is null) return;
+            Console.WriteLine($"Object info:{obj.ToJson()}");
         }
 
         [ConsoleCommand("fs storagegroup object put", Category = "FileStorageService", Description = "Put a storage object")]
         private void OnStorageGroupObject(string containerId, string pobjectIds, string paccount = null)
         {
-            if (NoWallet()) return;
-            UInt160 account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
-            if (!CheckAccount(account)) return;
+            if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key, out Neo.Cryptography.ECC.ECPoint pk, out OwnerID ownerID)) return;
             string[] objectIds = pobjectIds.Split("_");
-            var host = Settings.Default.host;
-            ECDsa key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
-            using (var client = new Client(key, host))
+            using var client = new Client(key, Host);
+            SessionToken session = OnCreateSessionInternal(client);
+            if (session is null) return;
+            var cid = ContainerID.FromBase58String(containerId);
+            List<ObjectID> oids = objectIds.Select(p => ObjectID.FromBase58String(p)).ToList();
+            var obj = OnCreateStorageGroupObjectInternal(client, OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()), cid, oids.ToArray(), session);
+            if (OnPutObjectInternal(client, obj, session)) Console.WriteLine($"The storagegroup object put successfully,ObjectID:{obj.ObjectId.ToBase58String()}");
+        }
+
+        private SessionToken OnCreateSessionInternal(Client client)
+        {
+            try
             {
-                var cid = ContainerID.FromBase58String(containerId);
-                List<ObjectID> oids = objectIds.Select(p => ObjectID.FromBase58String(p)).ToList();
-                byte[] tzh = null;
-                ulong size = 0;
-                foreach (var oid in oids)
+                using var source = new CancellationTokenSource();
+                source.CancelAfter(TimeSpan.FromMinutes(1));
+                var session = client.CreateSession(ulong.MaxValue, context: source.Token).Result;
+                source.Cancel();
+                return session;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Create session fail,error:{e}");
+                return null;
+            }
+        }
+
+        private Neo.FileStorage.API.Object.Object OnCreateStorageGroupObjectInternal(Client client, OwnerID ownerID, ContainerID cid, ObjectID[] oids, SessionToken session = null)
+        {
+            if (session is null)
+                session = OnCreateSessionInternal(client);
+            if (session is null) return null;
+            byte[] tzh = null;
+            ulong size = 0;
+            foreach (var oid in oids)
+            {
+                var oo = OnGetObjectHeaderInternal(client, cid, oid);
+                if (oo is null) return null;
+                if (tzh is null)
+                    tzh = oo.PayloadHomomorphicHash.Sum.ToByteArray();
+                else
+                    tzh = TzHash.Concat(new() { tzh, oo.PayloadHomomorphicHash.Sum.ToByteArray() });
+                size += oo.PayloadSize;
+            }
+            if (!OnGetEpochInternal(client, out var epoch)) return null;
+            StorageGroup sg = new()
+            {
+                ValidationDataSize = size,
+                ValidationHash = new()
                 {
-                    var address = new Address(cid, oid);
-                    var source = new CancellationTokenSource();
-                    source.CancelAfter(TimeSpan.FromMinutes(1));
-                    var oo = client.GetObject(address, false, new CallOptions { Ttl = 2 }, source.Token).Result;
-                    if (tzh is null)
-                        tzh = oo.PayloadHomomorphicHash.Sum.ToByteArray();
-                    else
-                        tzh = TzHash.Concat(new() { tzh, oo.PayloadHomomorphicHash.Sum.ToByteArray() });
-                    size += oo.PayloadSize;
-                }
-                var epoch = client.Epoch().Result;
-                StorageGroup sg = new()
+                    Type = ChecksumType.Tz,
+                    Sum = ByteString.CopyFrom(tzh)
+                },
+                ExpirationEpoch = epoch + 100,
+            };
+            sg.Members.AddRange(oids);
+            return OnCreateObjectInternal(cid, ownerID, sg.ToByteArray(), ObjectType.StorageGroup);
+        }
+
+        private Neo.FileStorage.API.Object.Object OnCreateObjectInternal(ContainerID cid, OwnerID oid, byte[] data, ObjectType objectType)
+        {
+            var obj = new Neo.FileStorage.API.Object.Object
+            {
+                Header = new Header
                 {
-                    ValidationDataSize = size,
-                    ValidationHash = new()
-                    {
-                        Type = ChecksumType.Tz,
-                        Sum = ByteString.CopyFrom(tzh)
-                    },
-                    ExpirationEpoch = epoch + 100,
-                };
-                sg.Members.AddRange(oids);
-                var obj = new Neo.FileStorage.API.Object.Object
+                    OwnerId = oid,
+                    ContainerId = cid,
+                    ObjectType = objectType
+                },
+                Payload = ByteString.CopyFrom(data),
+            };
+            obj.ObjectId = obj.CalculateID();
+            return obj;
+        }
+
+        private Neo.FileStorage.API.Object.Object OnGetObjectHeaderInternal(Client client, ContainerID cid, ObjectID oid)
+        {
+            try
+            {
+                using var source = new CancellationTokenSource();
+                source.CancelAfter(TimeSpan.FromMinutes(1));
+                var objheader = client.GetObjectHeader(new Address()
                 {
-                    Header = new Header
-                    {
-                        OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
-                        ContainerId = cid,
-                        ObjectType = ObjectType.StorageGroup,
-                    },
-                    Payload = ByteString.CopyFrom(sg.ToByteArray()),
-                };
-                obj.ObjectId = obj.CalculateID();
-                var source1 = new CancellationTokenSource();
-                source1.CancelAfter(TimeSpan.FromMinutes(1));
-                var session = client.CreateSession(ulong.MaxValue, context: source1.Token).Result;
-                source1.Cancel();
-                var source2 = new CancellationTokenSource();
-                source2.CancelAfter(TimeSpan.FromMinutes(1));
-                var o = client.PutObject(obj, new CallOptions { Ttl = 2, Session = session }, source2.Token).Result;
-                Console.WriteLine($"The storagegroup object put successfully,ObjectID:{o.ToBase58String()}");
+                    ContainerId = cid,
+                    ObjectId = oid
+                }, options: new CallOptions { Ttl = 2 }, context: source.Token).Result;
+                source.Cancel();
+                return objheader;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Get object header fail,objectId:{oid.ToBase58String()},error:{e}");
+                return null;
+            }
+        }
+
+        private Neo.FileStorage.API.Object.Object OnGetObjectInternal(Client client, ContainerID cid, ObjectID oid)
+        {
+            try
+            {
+                using var source = new CancellationTokenSource();
+                source.CancelAfter(TimeSpan.FromMinutes(1));
+                var obj = client.GetObject(new Address()
+                {
+                    ContainerId = cid,
+                    ObjectId = oid
+                }, options: new CallOptions { Ttl = 2 }, context: source.Token).Result;
+                source.Cancel();
+                return obj;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Get object fail,objectId:{oid.ToBase58String()},error:{e}");
+                return null;
+            }
+        }
+
+        private bool OnPutObjectInternal(Client client, Neo.FileStorage.API.Object.Object obj, SessionToken session = null)
+        {
+            if (session is null)
+                session = OnCreateSessionInternal(client);
+            if (session is null) return false;
+            try
+            {
+                using var source = new CancellationTokenSource();
+                source.CancelAfter(TimeSpan.FromMinutes(1));
+                var o = client.PutObject(obj, new CallOptions { Ttl = 2, Session = session }, source.Token).Result;
+                source.Cancel();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Object put fail, errot:{e}");
+                return false;
             }
         }
     }

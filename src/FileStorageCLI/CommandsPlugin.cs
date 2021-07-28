@@ -2,6 +2,10 @@ using Neo.Plugins;
 using System;
 using Neo.Wallets;
 using Neo;
+using System.Linq;
+using Neo.FileStorage.API.Cryptography;
+using System.Security.Cryptography;
+using Neo.FileStorage.API.Refs;
 
 namespace FileStorageCLI
 {
@@ -35,8 +39,7 @@ namespace FileStorageCLI
 
         private void WalletProvider_WalletChanged(object sender, Wallet wallet)
         {
-            walletProvider.WalletChanged -= WalletProvider_WalletChanged;
-            currentWallet = walletProvider.GetWallet();
+            currentWallet = wallet;
         }
 
         private bool NoWallet()
@@ -46,13 +49,22 @@ namespace FileStorageCLI
             return true;
         }
 
-        private bool CheckAccount(UInt160 account)
+        private bool CheckAndParseAccount(string paccount, out UInt160 account, out ECDsa key, out Neo.Cryptography.ECC.ECPoint pk, out OwnerID ownerID)
         {
+            account = null;
+            pk = null;
+            ownerID = null;
+            key = null;
+            if (NoWallet()) return false;
+            account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
             if (!currentWallet.Contains(account))
             {
                 Console.WriteLine("The specified account does not exist");
                 return false;
             }
+            key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
+            pk = Neo.Cryptography.ECC.ECPoint.Parse(paccount, Neo.Cryptography.ECC.ECCurve.Secp256r1);
+            ownerID = OwnerID.FromScriptHash(pk.EncodePoint(true).PublicKeyToScriptHash());
             return true;
         }
     }
