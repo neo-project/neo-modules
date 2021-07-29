@@ -51,15 +51,17 @@ namespace FileStorageCLI
                 var threadIndex = index;
                 var task = new Task(() =>
                 {
-                    using var client = new Client(key, Host);
+                    using var internalClient = new Client(key, Host);
+                    var internalSession = OnCreateSessionInternal(internalClient);
+                    if (internalSession is null) return;
                     int i = 0;
                     while (threadIndex + i * taskCounts < subObjectIDs.Length)
                     {
                         byte[] data = OnGetFileInternal(filePath, (threadIndex + i * taskCounts) * PackSize, PackSize, FileLength);
                         var obj = OnCreateObjectInternal(cid, key, data, ObjectType.Regular);
                         //check has upload;
-                        var objheader = OnGetObjectHeaderInternal(client, cid, obj.ObjectId, false);
-                        if (objheader is not null || (objheader is null && OnPutObjectInternal(client, obj, session)))
+                        var objheader = OnGetObjectHeaderInternal(internalClient, cid, obj.ObjectId, false);
+                        if (objheader is not null || (objheader is null && OnPutObjectInternal(internalClient, obj, internalSession)))
                         {
                             Console.WriteLine($"The object put request has been submitted,ObjectID:{obj.ObjectId.ToBase58String()},degree of completion:{Interlocked.Increment(ref completedTaskCount)}/{PackCount}");
                             subObjectIDs[threadIndex + i * taskCounts] = obj.ObjectId;
@@ -82,7 +84,7 @@ namespace FileStorageCLI
                 }
             }
             //upload storagegroup object
-            var obj = OnCreateStorageGroupObjectInternal(client, key, cid, subObjectIDs, session);
+            var obj = OnCreateStorageGroupObjectInternal(client, key, cid, subObjectIDs);
             if (OnPutObjectInternal(client, obj, session))
             {
                 Console.WriteLine("File index upload successfully");

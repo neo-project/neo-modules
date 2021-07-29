@@ -60,6 +60,10 @@ namespace FileStorageCLI
                 Console.WriteLine("The specified account does not exist");
                 return false;
             }
+            if (currentWallet.GetAccount(account).WatchOnly) {
+                Console.WriteLine("The specified account can not be WatchOnly");
+                return false;
+            }
             key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
             return true;
         }

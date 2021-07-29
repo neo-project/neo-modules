@@ -81,7 +81,7 @@ namespace FileStorageCLI
             if (session is null) return;
             var cid = ContainerID.FromBase58String(containerId);
             List<ObjectID> oids = objectIds.Select(p => ObjectID.FromBase58String(p)).ToList();
-            var obj = OnCreateStorageGroupObjectInternal(client, key, cid, oids.ToArray(), session);
+            var obj = OnCreateStorageGroupObjectInternal(client, key, cid, oids.ToArray());
             if (OnPutObjectInternal(client, obj, session)) Console.WriteLine($"The storagegroup object put successfully,ObjectID:{obj.ObjectId.ToBase58String()}");
         }
 
@@ -102,11 +102,8 @@ namespace FileStorageCLI
             }
         }
 
-        private Neo.FileStorage.API.Object.Object OnCreateStorageGroupObjectInternal(Client client, ECDsa key, ContainerID cid, ObjectID[] oids, SessionToken session = null)
+        private Neo.FileStorage.API.Object.Object OnCreateStorageGroupObjectInternal(Client client, ECDsa key, ContainerID cid, ObjectID[] oids)
         {
-            if (session is null)
-                session = OnCreateSessionInternal(client);
-            if (session is null) return null;
             byte[] tzh = null;
             ulong size = 0;
             foreach (var oid in oids)
@@ -131,10 +128,10 @@ namespace FileStorageCLI
                 ExpirationEpoch = epoch + 100,
             };
             sg.Members.AddRange(oids);
-            return OnCreateObjectInternal(cid, key, sg.ToByteArray(), ObjectType.StorageGroup, session);
+            return OnCreateObjectInternal(cid, key, sg.ToByteArray(), ObjectType.StorageGroup);
         }
 
-        private Neo.FileStorage.API.Object.Object OnCreateObjectInternal(ContainerID cid, ECDsa key, byte[] data, ObjectType objectType, SessionToken session = null)
+        private Neo.FileStorage.API.Object.Object OnCreateObjectInternal(ContainerID cid, ECDsa key, byte[] data, ObjectType objectType)
         {
             var obj = new Neo.FileStorage.API.Object.Object
             {
@@ -155,7 +152,6 @@ namespace FileStorageCLI
                         Sum = ByteString.CopyFrom(new TzHash().ComputeHash(data)),
                     },
                     PayloadLength = (ulong)data.Length,
-                    SessionToken = session
                 },
                 Payload = ByteString.CopyFrom(data),
             };

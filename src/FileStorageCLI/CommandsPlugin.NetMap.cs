@@ -11,17 +11,17 @@ namespace FileStorageCLI
     public partial class CommandsPlugin : Plugin
     {
         [ConsoleCommand("fs epoch", Category = "FileStorageService", Description = "Get epoch")]
-        private void OnGetEpoch(string paccount = null)
+        private void OnGetEpoch()
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
+            if (!CheckAndParseAccount(null, out _, out ECDsa key)) return;
             using var client = new Client(key, Host);
             if (OnGetEpochInternal(client, out ulong epoch)) Console.WriteLine($"Fs current epoch:{epoch}");
         }
 
         [ConsoleCommand("fs localnodeinfo", Category = "FileStorageService", Description = "Get localnode info")]
-        private void OnGetLocalNodeInfo(string paccount = null)
+        private void OnGetLocalNodeInfo()
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
+            if (!CheckAndParseAccount(null, out _, out ECDsa key)) return;
             using var client = new Client(key, Host);
             var source = new CancellationTokenSource();
             source.CancelAfter(10000);
