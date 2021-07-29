@@ -31,14 +31,14 @@ namespace FileStorageCLI
             var pk = Neo.Cryptography.ECC.ECPoint.Parse(paccount, Neo.Cryptography.ECC.ECCurve.Secp256r1);
             var ownerID = OwnerID.FromScriptHash(pk.EncodePoint(true).PublicKeyToScriptHash());
             using var client = new Client(key, Host);
-            if (OnGetBalanceInternal(client, ownerID, out Neo.FileStorage.API.Accounting.Decimal result))
+            if (OnGetBalanceInternal(client, key, out Neo.FileStorage.API.Accounting.Decimal result))
                 Console.WriteLine($"Fs current account :{Contract.CreateSignatureRedeemScript(pk).ToScriptHash()}, balance:{(result.Value == 0 ? 0 : result)}");
         }
 
         [ConsoleCommand("fs account withdraw", Category = "FileStorageService", Description = "Withdraw account balance")]
         private void OnAccountWithdraw(string pamount, string paccount = null)
         {
-            if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key, out _, out OwnerID ownerID)) return;
+            if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key)) return;
             var amount = int.Parse(pamount);
             if (amount <= 0)
             {
@@ -47,7 +47,7 @@ namespace FileStorageCLI
             }
             using SnapshotCache snapshot = System.GetSnapshot();
             using var client = new Client(key, Host);
-            if (!OnGetBalanceInternal(client, ownerID, out Neo.FileStorage.API.Accounting.Decimal balance)) return;
+            if (!OnGetBalanceInternal(client, key, out Neo.FileStorage.API.Accounting.Decimal balance)) return;
             if (balance.Value < amount * NativeContract.GAS.Decimals)
             {
                 Console.WriteLine($"Fs current account balance is not enough");
@@ -88,7 +88,7 @@ namespace FileStorageCLI
         [ConsoleCommand("fs account deposite", Category = "FileStorageService", Description = "Deposite account balance")]
         private void OnAccountDeposite(string pamount, string paccount = null)
         {
-            if (!CheckAndParseAccount(paccount, out UInt160 account, out _, out _, out _)) return;
+            if (!CheckAndParseAccount(paccount, out UInt160 account, out _)) return;
             using SnapshotCache snapshot = System.GetSnapshot();
             AssetDescriptor descriptor = new AssetDescriptor(snapshot, System.Settings, NativeContract.GAS.Hash);
             if (!BigDecimal.TryParse(pamount, descriptor.Decimals, out BigDecimal decimalAmount) || decimalAmount.Sign <= 0)
@@ -135,8 +135,9 @@ namespace FileStorageCLI
             Console.WriteLine($"The deposite request has been submitted, please confirm in the next block,TxID:{tx.Hash}");
         }
 
-        private bool OnGetBalanceInternal(Client client, OwnerID ownerID, out Neo.FileStorage.API.Accounting.Decimal result)
+        private bool OnGetBalanceInternal(Client client, ECDsa key, out Neo.FileStorage.API.Accounting.Decimal result)
         {
+            OwnerID ownerID = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash());
             using var source = new CancellationTokenSource();
             source.CancelAfter(10000);
             try

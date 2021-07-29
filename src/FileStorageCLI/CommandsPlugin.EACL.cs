@@ -13,7 +13,7 @@ namespace FileStorageCLI
         [ConsoleCommand("fs container eacl get", Category = "FileStorageService", Description = "Get container eacl")]
         private void OnGetContainerEACL(string containerId, string paccount = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key, out _, out _)) return;
+            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
             using var client = new Client(key, Host);
             var cid = ContainerID.FromBase58String(containerId);
             using var source = new CancellationTokenSource();

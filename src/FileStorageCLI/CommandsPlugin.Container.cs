@@ -21,15 +21,15 @@ namespace FileStorageCLI
     {
         ///todo
         [ConsoleCommand("fs container put", Category = "FileStorageService", Description = "Create a container")]
-        private void OnPutContainer(string policyString,string basicAcl,string attributesString, string paccount = null)
+        private void OnPutContainer(string policyString, string basicAcl, string attributesString, string paccount = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key, out _, out OwnerID ownerID)) return;
+            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
             using var client = new Client(key, Host);
             var policy = ParsePlacementPolicy(policyString);
             var container = new Container
             {
                 Version = Neo.FileStorage.API.Refs.Version.SDKVersion(),
-                OwnerId = ownerID,
+                OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
                 Nonce = Guid.NewGuid().ToByteString(),
                 BasicAcl = uint.Parse(basicAcl),
                 PlacementPolicy = policy,
@@ -46,7 +46,7 @@ namespace FileStorageCLI
         [ConsoleCommand("fs container delete", Category = "FileStorageService", Description = "Delete a container")]
         private void OnDeleteContainer(string containerId, string paccount = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key, out _, out _)) return;
+            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
             using var client = new Client(key, Host);
             using var source = new CancellationTokenSource();
             source.CancelAfter(10000);
@@ -58,7 +58,7 @@ namespace FileStorageCLI
         [ConsoleCommand("fs container get", Category = "FileStorageService", Description = "Get container info")]
         private void OnGetContainer(string containerId, string paccount = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key, out _, out _)) return;
+            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
             using var client = new Client(key, Host);
             var cid = ContainerID.FromBase58String(containerId);
             using var source = new CancellationTokenSource();
@@ -70,9 +70,10 @@ namespace FileStorageCLI
         [ConsoleCommand("fs container list", Category = "FileStorageService", Description = "List container")]
         private void OnListContainer(string paccount)
         {
-            if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key, out Neo.Cryptography.ECC.ECPoint pk, out OwnerID ownerID)) return;
+            if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key)) return;
             using var client = new Client(key, Host);
             using var source = new CancellationTokenSource();
+            OwnerID ownerID = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash());
             List<ContainerID> containerLists = client.ListContainers(ownerID, context: source.Token).Result;
             source.Cancel();
             Console.WriteLine($"Container list:");

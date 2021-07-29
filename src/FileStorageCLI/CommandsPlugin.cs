@@ -49,11 +49,9 @@ namespace FileStorageCLI
             return true;
         }
 
-        private bool CheckAndParseAccount(string paccount, out UInt160 account, out ECDsa key, out Neo.Cryptography.ECC.ECPoint pk, out OwnerID ownerID)
+        private bool CheckAndParseAccount(string paccount, out UInt160 account, out ECDsa key)
         {
             account = null;
-            pk = null;
-            ownerID = null;
             key = null;
             if (NoWallet()) return false;
             account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
@@ -63,8 +61,6 @@ namespace FileStorageCLI
                 return false;
             }
             key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
-            pk = currentWallet.GetAccount(account).GetKey().PublicKey;
-            ownerID = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash());
             return true;
         }
     }

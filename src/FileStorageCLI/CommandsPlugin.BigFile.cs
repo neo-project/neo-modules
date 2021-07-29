@@ -26,7 +26,7 @@ namespace FileStorageCLI
         [ConsoleCommand("fs file upload", Category = "FileStorageService", Description = "Upload file")]
         private void OnUploadFile(string containerId, string fileName, string paccount = null)
         {
-            if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key, out Neo.Cryptography.ECC.ECPoint pk, out OwnerID ownerID)) return;
+            if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key)) return;
             var cid = ContainerID.FromBase58String(containerId);
             var filePath = UpLoadPath + fileName;
             FileInfo fileInfo = new FileInfo(filePath);
@@ -56,7 +56,7 @@ namespace FileStorageCLI
                     while (threadIndex + i * taskCounts < subObjectIDs.Length)
                     {
                         byte[] data = OnGetFileInternal(filePath, (threadIndex + i * taskCounts) * PackSize, PackSize, FileLength);
-                        var obj = OnCreateObjectInternal(cid, ownerID, data, ObjectType.Regular);
+                        var obj = OnCreateObjectInternal(cid, key, data, ObjectType.Regular);
                         //check has upload;
                         var objheader = OnGetObjectHeaderInternal(client, cid, obj.ObjectId, false);
                         if (objheader is not null || (objheader is null && OnPutObjectInternal(client, obj, session)))
@@ -65,7 +65,7 @@ namespace FileStorageCLI
                             subObjectIDs[threadIndex + i * taskCounts] = obj.ObjectId;
                         }
                         i++;
-                        Thread.Sleep(1000);
+                        Thread.Sleep(500);
                     }
                 });
                 tasks[index] = task;
@@ -82,8 +82,9 @@ namespace FileStorageCLI
                 }
             }
             //upload storagegroup object
-            var obj = OnCreateStorageGroupObjectInternal(client, ownerID, cid, subObjectIDs, session);
-            if (OnPutObjectInternal(client, obj, session)) {
+            var obj = OnCreateStorageGroupObjectInternal(client, key, cid, subObjectIDs, session);
+            if (OnPutObjectInternal(client, obj, session))
+            {
                 Console.WriteLine("File index upload successfully");
                 Console.WriteLine("Upload file successfully");
             }
@@ -92,7 +93,7 @@ namespace FileStorageCLI
         [ConsoleCommand("fs file download", Category = "FileStorageService", Description = "Download file")]
         private void OnDownloadFile(string containerId, string objectId, string fileName, bool cacheFlag = false, string paccount = null)
         {
-            if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key, out Neo.Cryptography.ECC.ECPoint pk, out OwnerID ownerID)) return;
+            if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key)) return;
             var subObjectIDs = new List<ObjectID>();
             var cid = ContainerID.FromBase58String(containerId);
             //download storagegroup object

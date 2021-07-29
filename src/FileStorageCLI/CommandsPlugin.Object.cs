@@ -24,7 +24,7 @@ namespace FileStorageCLI
         [ConsoleCommand("fs object put", Category = "FileStorageService", Description = "Put a object")]
         private void OnPutObject(string containerId, string pdata, string paccount = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key, out _, out _)) return;
+            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
             if (pdata.Length > 2048 || pdata.Length < 1024)
             {
                 Console.WriteLine("The data length out of range");
@@ -33,7 +33,7 @@ namespace FileStorageCLI
             var data = UTF8Encoding.UTF8.GetBytes(pdata);
             using var client = new Client(key, Host);
             var cid = ContainerID.FromBase58String(containerId);
-            var obj = OnCreateObjectInternal(cid, OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()), data, ObjectType.Regular);
+            var obj = OnCreateObjectInternal(cid, key, data, ObjectType.Regular);
             if (OnPutObjectInternal(client, obj))
                 Console.WriteLine($"The object put successfully, ObjectID:{obj.ObjectId.ToBase58String()}");
         }
@@ -41,7 +41,7 @@ namespace FileStorageCLI
         [ConsoleCommand("fs object delete", Category = "FileStorageService", Description = "Delete a object")]
         private void OnDeleteObject(string containerId, string pobjectIds, string paccount = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key, out _, out _)) return;
+            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
             using var client = new Client(key, Host);
             SessionToken session = OnCreateSessionInternal(client);
             if (session is null) return;
@@ -62,7 +62,7 @@ namespace FileStorageCLI
         [ConsoleCommand("fs object get", Category = "FileStorageService", Description = "Get a object")]
         private void OnGetObject(string containerId, string objectId, string paccount = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key, out _, out _)) return;
+            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
             using var client = new Client(key, Host);
             var cid = ContainerID.FromBase58String(containerId);
             var oid = ObjectID.FromBase58String(objectId);
@@ -74,14 +74,14 @@ namespace FileStorageCLI
         [ConsoleCommand("fs storagegroup object put", Category = "FileStorageService", Description = "Put a storage object")]
         private void OnStorageGroupObject(string containerId, string pobjectIds, string paccount = null)
         {
-            if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key, out Neo.Cryptography.ECC.ECPoint pk, out OwnerID ownerID)) return;
+            if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key)) return;
             string[] objectIds = pobjectIds.Split("_");
             using var client = new Client(key, Host);
             SessionToken session = OnCreateSessionInternal(client);
             if (session is null) return;
             var cid = ContainerID.FromBase58String(containerId);
             List<ObjectID> oids = objectIds.Select(p => ObjectID.FromBase58String(p)).ToList();
-            var obj = OnCreateStorageGroupObjectInternal(client, OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()), cid, oids.ToArray(), session);
+            var obj = OnCreateStorageGroupObjectInternal(client, key, cid, oids.ToArray(), session);
             if (OnPutObjectInternal(client, obj, session)) Console.WriteLine($"The storagegroup object put successfully,ObjectID:{obj.ObjectId.ToBase58String()}");
         }
 
@@ -102,7 +102,7 @@ namespace FileStorageCLI
             }
         }
 
-        private Neo.FileStorage.API.Object.Object OnCreateStorageGroupObjectInternal(Client client, OwnerID ownerID, ContainerID cid, ObjectID[] oids, SessionToken session = null)
+        private Neo.FileStorage.API.Object.Object OnCreateStorageGroupObjectInternal(Client client, ECDsa key, ContainerID cid, ObjectID[] oids, SessionToken session = null)
         {
             if (session is null)
                 session = OnCreateSessionInternal(client);
@@ -131,17 +131,17 @@ namespace FileStorageCLI
                 ExpirationEpoch = epoch + 100,
             };
             sg.Members.AddRange(oids);
-            return OnCreateObjectInternal(cid, ownerID, sg.ToByteArray(), ObjectType.StorageGroup, session);
+            return OnCreateObjectInternal(cid, key, sg.ToByteArray(), ObjectType.StorageGroup, session);
         }
 
-        private Neo.FileStorage.API.Object.Object OnCreateObjectInternal(ContainerID cid, OwnerID oid, byte[] data, ObjectType objectType, SessionToken session = null)
+        private Neo.FileStorage.API.Object.Object OnCreateObjectInternal(ContainerID cid, ECDsa key, byte[] data, ObjectType objectType, SessionToken session = null)
         {
             var obj = new Neo.FileStorage.API.Object.Object
             {
                 Header = new Header
                 {
                     Version = Neo.FileStorage.API.Refs.Version.SDKVersion(),
-                    OwnerId = oid,
+                    OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
                     ContainerId = cid,
                     ObjectType = objectType,
                     PayloadHash = new Checksum
@@ -160,6 +160,7 @@ namespace FileStorageCLI
                 Payload = ByteString.CopyFrom(data),
             };
             obj.ObjectId = obj.CalculateID();
+            obj.Signature = obj.CalculateIDSignature(key);
             return obj;
         }
 
