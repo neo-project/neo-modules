@@ -64,7 +64,7 @@ namespace FileStorageCLI
             }
             key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
             pk = currentWallet.GetAccount(account).GetKey().PublicKey;
-            ownerID = OwnerID.FromScriptHash(pk.EncodePoint(true).PublicKeyToScriptHash());
+            ownerID = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash());
             return true;
         }
     }

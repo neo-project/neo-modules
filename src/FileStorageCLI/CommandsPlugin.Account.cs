@@ -123,7 +123,7 @@ namespace FileStorageCLI
             }
             tx.SystemFee = engine.GasConsumed;
             tx.NetworkFee = currentWallet.CalculateNetworkFee(snapshot, tx);
-            if (NativeContract.GAS.BalanceOf(snapshot, account) < engine.GasConsumed + tx.NetworkFee + decimalAmount.Value)
+            if (NativeContract.GAS.BalanceOf(snapshot, account) < engine.GasConsumed + tx.NetworkFee)
             {
                 Console.WriteLine("Gas insufficient");
                 return;

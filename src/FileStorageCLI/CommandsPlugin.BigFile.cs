@@ -38,6 +38,9 @@ namespace FileStorageCLI
                 PackCount = (int)(FileLength / PackSize) + 1;
             else
                 PackCount = (int)(FileLength / PackSize);
+            using var client = new Client(key, Host);
+            var session = OnCreateSessionInternal(client);
+            if (session is null) return;
             //upload subobjects
             var subObjectIDs = new ObjectID[PackCount];
             var completedTaskCount = 0;
@@ -49,18 +52,16 @@ namespace FileStorageCLI
                 var task = new Task(() =>
                 {
                     using var client = new Client(key, Host);
-                    var session = OnCreateSessionInternal(client);
-                    if (session is null) return;
                     int i = 0;
                     while (threadIndex + i * taskCounts < subObjectIDs.Length)
                     {
                         byte[] data = OnGetFileInternal(filePath, (threadIndex + i * taskCounts) * PackSize, PackSize, FileLength);
                         var obj = OnCreateObjectInternal(cid, ownerID, data, ObjectType.Regular);
                         //check has upload;
-                        var objheader = OnGetObjectHeaderInternal(client, cid, obj.ObjectId,false);
-                        if (objheader is not null || objheader is null && OnPutObjectInternal(client, obj, session))
+                        var objheader = OnGetObjectHeaderInternal(client, cid, obj.ObjectId, false);
+                        if (objheader is not null || (objheader is null && OnPutObjectInternal(client, obj, session)))
                         {
-                            Console.WriteLine($"The object put request has been submitted, please confirm in the next block,ObjectID:{obj.ObjectId.ToBase58String()},degree of completion:{Interlocked.Increment(ref completedTaskCount)}/{PackCount}");
+                            Console.WriteLine($"The object put request has been submitted,ObjectID:{obj.ObjectId.ToBase58String()},degree of completion:{Interlocked.Increment(ref completedTaskCount)}/{PackCount}");
                             subObjectIDs[threadIndex + i * taskCounts] = obj.ObjectId;
                         }
                         i++;
@@ -81,11 +82,11 @@ namespace FileStorageCLI
                 }
             }
             //upload storagegroup object
-            using var client = new Client(key, Host);
-            var session = OnCreateSessionInternal(client);
-            if (session is null) return;
             var obj = OnCreateStorageGroupObjectInternal(client, ownerID, cid, subObjectIDs, session);
-            if (OnPutObjectInternal(client, obj, session)) Console.WriteLine("Upload file successfully");
+            if (OnPutObjectInternal(client, obj, session)) {
+                Console.WriteLine("File index upload successfully");
+                Console.WriteLine("Upload file successfully");
+            }
         }
 
         [ConsoleCommand("fs file download", Category = "FileStorageService", Description = "Download file")]

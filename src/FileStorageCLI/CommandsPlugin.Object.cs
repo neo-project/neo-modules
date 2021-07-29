@@ -7,6 +7,7 @@ using System.Threading;
 using Google.Protobuf;
 using Neo;
 using Neo.ConsoleService;
+using Neo.Cryptography;
 using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Cryptography.Tz;
@@ -130,18 +131,31 @@ namespace FileStorageCLI
                 ExpirationEpoch = epoch + 100,
             };
             sg.Members.AddRange(oids);
-            return OnCreateObjectInternal(cid, ownerID, sg.ToByteArray(), ObjectType.StorageGroup);
+            return OnCreateObjectInternal(cid, ownerID, sg.ToByteArray(), ObjectType.StorageGroup, session);
         }
 
-        private Neo.FileStorage.API.Object.Object OnCreateObjectInternal(ContainerID cid, OwnerID oid, byte[] data, ObjectType objectType)
+        private Neo.FileStorage.API.Object.Object OnCreateObjectInternal(ContainerID cid, OwnerID oid, byte[] data, ObjectType objectType, SessionToken session = null)
         {
             var obj = new Neo.FileStorage.API.Object.Object
             {
                 Header = new Header
                 {
+                    Version = Neo.FileStorage.API.Refs.Version.SDKVersion(),
                     OwnerId = oid,
                     ContainerId = cid,
-                    ObjectType = objectType
+                    ObjectType = objectType,
+                    PayloadHash = new Checksum
+                    {
+                        Type = ChecksumType.Sha256,
+                        Sum = ByteString.CopyFrom(data.Sha256()),
+                    },
+                    HomomorphicHash = new Checksum
+                    {
+                        Type = ChecksumType.Tz,
+                        Sum = ByteString.CopyFrom(new TzHash().ComputeHash(data)),
+                    },
+                    PayloadLength = (ulong)data.Length,
+                    SessionToken = session
                 },
                 Payload = ByteString.CopyFrom(data),
             };
