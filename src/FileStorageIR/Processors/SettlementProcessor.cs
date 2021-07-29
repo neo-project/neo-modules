@@ -1,9 +1,6 @@
-using System;
 using System.Collections.Generic;
-using System.Numerics;
 using System.Threading.Tasks;
 using Akka.Actor;
-using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.InnerRing.Events;
 using Neo.FileStorage.Listen.Event;
 using static Neo.FileStorage.Utils.WorkerPool;
@@ -48,7 +45,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 return;
             }
             Utility.Log(Name, LogLevel.Info, $"start basic income collection, epoch={epoch}");
-            if (incomeContexts.TryGetValue(epoch, out _))
+            if (incomeContexts.ContainsKey(epoch))
             {
                 Utility.Log(Name, LogLevel.Error, $"income context already exists, epoch={epoch}");
                 return;

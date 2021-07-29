@@ -75,24 +75,19 @@ namespace Neo.FileStorage.Listen
         {
             if (started) return;
             if (p.Handler is null) return;
-            if (!parsers.TryGetValue(p.ScriptHashWithType, out _)) return;
-            if (handlers.TryGetValue(p.ScriptHashWithType, out var value)) value.Add(p.Handler);
-            else handlers.Add(p.ScriptHashWithType, new List<Action<ContractEvent>>() { p.Handler });
+            if (!parsers.ContainsKey(p.ScriptHashWithType)) return;
+            if (handlers.TryGetValue(p.ScriptHashWithType, out var value))
+                value.Add(p.Handler);
+            else
+                handlers.Add(p.ScriptHashWithType, new List<Action<ContractEvent>>() { p.Handler });
         }
 
         public void SetParser(ParserInfo p)
         {
 
-            if (p.Parser is null)
-            {
-                return;
-            }
-            if (started)
-            {
-                return;
-            }
-            if (!parsers.TryGetValue(p.ScriptHashWithType, out _))
-                parsers.Add(p.ScriptHashWithType, p.Parser);
+            if (p.Parser is null) return;
+            if (started) return;
+            parsers.TryAdd(p.ScriptHashWithType, p.Parser);
         }
 
         public void RegisterBlockHandler(Action<Block> blockHandler)

@@ -151,12 +151,13 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 if (result.Count == ln) break;
                 var mainnetAddr = mainnet[i].ToAddress(ProtocolSettings.AddressVersion);
-                if (!hmap.TryGetValue(mainnetAddr, out _))
+                if (!hmap.ContainsKey(mainnetAddr))
                 {
                     if (newNodes == newNodeLimit) continue;
                     newNodes++;
                 }
-                else hmap[mainnetAddr] = true;
+                else
+                    hmap[mainnetAddr] = true;
                 result.Add(mainnet[i]);
             }
             if (newNodes == 0) return null;
