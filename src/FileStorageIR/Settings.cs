@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Neo.Cryptography.ECC;
+using Neo.FileStorage.Invoker.Morph;
 
 namespace Neo.FileStorage.InnerRing
 {
     public class Settings
     {
         public static Settings Default { get; private set; }
+        public bool IsDebug;
         public bool AutoStart;
         public string WalletPath;
         public string Password;
@@ -38,7 +40,6 @@ namespace Neo.FileStorage.InnerRing
         public int QueueCapacity;
         public int AuditTaskPoolSize;
 
-        public uint EpochDuration;
         public uint AlphabetDuration;
         public int MintEmitCacheSize;
         public ulong MintEmitThreshold;
@@ -58,15 +59,23 @@ namespace Neo.FileStorage.InnerRing
         public uint CollectBasicIncomeDiv;
         public uint DistributeBasicIncomeMul;
         public uint DistributeBasicIncomeDiv;
-        public ulong BasicIncomeRate;
         public long MainChainFee;
         public long SideChainFee;
-        public long AuditFee;
         public List<UInt160> Contracts = new();
+
+        public MorphInvoker MorphInvoker;
+        private uint DefaultEpochDuration;
+        private ulong DefaultAuditFee;
+        public ulong DefaultBasicIncomeRate;
+
+        public uint EpochDuration => (!IsDebug && (MorphInvoker is not null)) ? MorphInvoker.EpochDuration() : DefaultEpochDuration;
+        public ulong AuditFee => (!IsDebug && (MorphInvoker is not null)) ? MorphInvoker.AuditFee() : DefaultAuditFee;
+        public ulong BasicIncomeRate=>(!IsDebug&&(MorphInvoker is not null))?MorphInvoker.BasicIncomeRate():DefaultBasicIncomeRate;
 
         private Settings(IConfigurationSection section)
         {
             AutoStart = section.GetValue("AutoStart", false);
+            IsDebug = section.GetValue("IsDebug", false);
             WalletPath = section.GetSection("WalletPath").Value;
             Password = section.GetSection("Password").Value;
 
@@ -100,7 +109,7 @@ namespace Neo.FileStorage.InnerRing
             AuditContractWorkersSize = workSizes.GetValue("AuditContract", 10);
 
             IConfigurationSection timers = section.GetSection("Timers");
-            EpochDuration = timers.GetValue("Epoch", 0u);
+            DefaultEpochDuration = timers.GetValue("Epoch", 0u);
             AlphabetDuration = timers.GetValue("Emit", 0u);
             StopEstimationDMul = timers.GetSection("StopEstimation").GetValue("Mul", 1u);
             StopEstimationDDiv = timers.GetSection("StopEstimation").GetValue("Div", 4u);
@@ -135,8 +144,8 @@ namespace Neo.FileStorage.InnerRing
             IndexerTimeout = TimeSpan.FromMilliseconds(indexer.GetValue("CacheTimeout", 15000));
 
             IConfigurationSection settlement = section.GetSection("Settlement");
-            BasicIncomeRate = settlement.GetValue("BasicIncomeRate", 0ul);
-            AuditFee = settlement.GetValue("AuditFee", 0L);
+            DefaultBasicIncomeRate = settlement.GetValue("BasicIncomeRate", 0ul);
+            DefaultAuditFee = settlement.GetValue("AuditFee", 0uL);
 
             IConfigurationSection fee = section.GetSection("Fee");
             MainChainFee = fee.GetValue("MainChain", 200000000L);

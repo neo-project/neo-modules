@@ -22,7 +22,7 @@ namespace FileStorageCLI
     public partial class CommandsPlugin : Plugin
     {
         [ConsoleCommand("fs object put", Category = "FileStorageService", Description = "Put a object")]
-        private void OnPutObject(string containerId, string pdata, string paccount = null)
+        public void OnPutObject(string containerId, string pdata, string paccount = null)
         {
             if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
             if (pdata.Length > 2048 || pdata.Length < 1024)
@@ -69,6 +69,23 @@ namespace FileStorageCLI
             var obj = OnGetObjectInternal(client, cid, oid);
             if (obj is null) return;
             Console.WriteLine($"Object info:{obj.ToJson()}");
+        }
+
+        [ConsoleCommand("fs object list", Category = "FileStorageService", Description = "list object")]
+        private void OnListObject(string containerId,string paccount = null)
+        {
+            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
+            var cid = ContainerID.FromBase58String(containerId);
+            using var client = new Client(key, Host);
+            using var source = new CancellationTokenSource();
+            source.CancelAfter(TimeSpan.FromMinutes(1));
+            var filter = new SearchFilters();
+            filter.AddTypeFilter(MatchType.StringEqual, ObjectType.StorageGroup);
+            filter.AddTypeFilter(MatchType.StringEqual, ObjectType.Regular);
+            List<ObjectID> objs = client.SearchObject(cid, filter, context: source.Token).Result;
+            source.Cancel();
+            Console.WriteLine($"list object,cid:{cid}");
+            objs.ForEach(p => Console.WriteLine($"ObjectId:{p.ToBase58String()}"));
         }
 
         [ConsoleCommand("fs storagegroup object put", Category = "FileStorageService", Description = "Put a storage object")]

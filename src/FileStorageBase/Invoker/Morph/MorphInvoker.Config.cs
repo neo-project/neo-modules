@@ -22,6 +22,13 @@ namespace Neo.FileStorage.Invoker.Morph
             Invoke(NetMapContractHash, SetConfigMethod, SideChainFee, Id, key, value);
         }
 
+        private uint ReadUInt32Config(byte[] key)
+        {
+            InvokeResult result = TestInvoke(NetMapContractHash, ConfigMethod, key);
+            if (result.State != VM.VMState.HALT) throw new Exception($"could not invoke method {nameof(ReadUInt32Config)}");
+            return (uint)result.ResultStack[0].GetInteger();
+        }
+
         private ulong ReadUInt64Config(byte[] key)
         {
             InvokeResult result = TestInvoke(NetMapContractHash, ConfigMethod, key);
@@ -51,9 +58,9 @@ namespace Neo.FileStorage.Invoker.Morph
             return ReadUInt64Config(AuditFeeConfig);
         }
 
-        public ulong EpochDuration()
+        public uint EpochDuration()
         {
-            return ReadUInt64Config(EpochDurationConfig);
+            return ReadUInt32Config(EpochDurationConfig);
         }
 
         public ulong ContainerFee()

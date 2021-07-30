@@ -1,5 +1,6 @@
 {
   "PluginConfiguration": {
+    "IsDebug": true,
     "AutoStart": false,
     "WalletPath": "./wallet.json",
     "Password": "",

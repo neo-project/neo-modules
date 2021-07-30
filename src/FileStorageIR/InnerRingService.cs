@@ -113,6 +113,7 @@ namespace Neo.FileStorage.InnerRing
             }
             else
                 morphInvoker = pMorphInvokerent;
+            Settings.Default.MorphInvoker = morphInvoker;
             morphEventListener = side.ActorSystem.ActorOf(Listener.Props("MorphEventListener"));
             mainEventListener = main.ActorSystem.ActorOf(Listener.Props("MainEventListener"));
             statusIndex = new InnerRingIndexer(morphInvoker, Settings.Default.IndexerTimeout);
