@@ -39,7 +39,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Util
                         ns.Remove(n);
                 }
             }
-            return null;
+            return node_list;
         }
     }
 }

@@ -75,6 +75,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Error, $"can't fetch network map, error={e}");
                 return;
             }
+            PrevAuditCanceler = new CancellationTokenSource();
             for (int i = 0; i < containers.Length; i++)
             {
                 Container cnr;
@@ -103,7 +104,6 @@ namespace Neo.FileStorage.InnerRing.Processors
                 var storageGroups = FindStorageGroups(containers[i], n);
                 Utility.Log(Name, LogLevel.Info, $"select storage groups for audit, cid={containers[i]}, count={storageGroups.Length}");
 
-                PrevAuditCanceler = new CancellationTokenSource();
                 AuditTask auditTask = new()
                 {
                     Reporter = new EpochAuditReporter()
