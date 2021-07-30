@@ -47,8 +47,11 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessStartAudit(ulong epoch)
         {
-            PrevAuditCanceler.Cancel();
-            PrevAuditCanceler.Dispose();
+            if (!PrevAuditCanceler.IsCancellationRequested)
+            {
+                PrevAuditCanceler.Cancel();
+                PrevAuditCanceler.Dispose();
+            }
             int skipped = (int)TaskManager.Ask(new ResetMessage()).Result;
             if (skipped > 0) Utility.Log(Name, LogLevel.Info, $"some tasks from previous epoch are skipped, amount={skipped}");
             ContainerID[] containers;
@@ -210,8 +213,11 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void Dispose()
         {
-            PrevAuditCanceler?.Cancel();
-            PrevAuditCanceler?.Dispose();
+            if (!PrevAuditCanceler.IsCancellationRequested)
+            {
+                PrevAuditCanceler.Cancel();
+                PrevAuditCanceler.Dispose();
+            }
             key?.Dispose();
         }
     }
