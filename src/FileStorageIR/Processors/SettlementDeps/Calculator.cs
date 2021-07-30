@@ -103,7 +103,6 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public bool CollectPassNodes(SingleResultCtx ctx)
         {
-            ctx.PassedNodes = new Dictionary<string, Node>();
             bool loopflag = false;
             foreach (var cnrNode in ctx.ContainerNodes)
             {

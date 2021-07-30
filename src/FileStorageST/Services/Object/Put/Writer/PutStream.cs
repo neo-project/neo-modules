@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Google.Protobuf;
 using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Session;
 using Neo.FileStorage.Core.Object;
-using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Placement;
 using Neo.FileStorage.Storage.Services.Object.Util;
 using Neo.FileStorage.Storage.Services.ObjectManager.Transformer;
@@ -145,12 +145,12 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Writer
             target.WriteChunk(chunk.ToByteArray());
         }
 
-        public async void RelayRequest(IFSClient client)
+        public async Task RelayRequest(IFSClient client)
         {
             if (init is null) return;
             using var stream = await client.Raw().PutObject(init, context: Cancellation);
             foreach (var chunk in chunks)
-                stream.Write(chunk);
+                await stream.Write(chunk);
             await stream.Close();
         }
 
