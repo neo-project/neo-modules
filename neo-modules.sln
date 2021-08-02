@@ -39,19 +39,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Plugins.RpcServer.Tests
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileStorageBase", "src\FileStorageBase\FileStorageBase.csproj", "{122BE7BB-C8E1-4BAB-B7C5-47D90889AE65}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.FileStorage.InnerRing.Tests", "tests\Neo.FileStorage.InnerRing.Tests\Neo.FileStorage.InnerRing.Tests.csproj", "{DFC55918-C5E0-4592-987B-B83D29778576}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.FileStorage.Storage.Tests", "tests\Neo.FileStorage.Storage.Tests\Neo.FileStorage.Storage.Tests.csproj", "{9992CF04-B553-49CF-9955-A8550BF1D1E1}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.FileStorage.Tests", "tests\Neo.FileStorage.Tests\Neo.FileStorage.Tests.csproj", "{21B94042-A13F-4631-A617-CDCB2CCDE60B}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileStorageIR", "src\FileStorageIR\FileStorageIR.csproj", "{01B18535-8836-4ADC-A2AA-C827DE7229AC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileStorageST", "src\FileStorageST\FileStorageST.csproj", "{9E9F3328-E873-489D-B895-90BA154F77EA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileStorageCLI", "src\FileStorageCLI\FileStorageCLI.csproj", "{2E4BCC9C-AC50-4A6B-BED1-5C652393DD85}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileStorageCLITests", "src\FileStorageCLITests\FileStorageCLITests.csproj", "{75EB57FC-A969-4E10-AA3D-D0A04C415064}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.FileStorage.Tests", "tests\Neo.FileStorage.Tests\Neo.FileStorage.Tests.csproj", "{21B94042-A13F-4631-A617-CDCB2CCDE60B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.FileStorage.InnerRing.Tests", "tests\Neo.FileStorage.InnerRing.Tests\Neo.FileStorage.InnerRing.Tests.csproj", "{DFC55918-C5E0-4592-987B-B83D29778576}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.FileStorage.Storage.Tests", "tests\Neo.FileStorage.Storage.Tests\Neo.FileStorage.Storage.Tests.csproj", "{9992CF04-B553-49CF-9955-A8550BF1D1E1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -147,10 +145,6 @@ Global
 		{2E4BCC9C-AC50-4A6B-BED1-5C652393DD85}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2E4BCC9C-AC50-4A6B-BED1-5C652393DD85}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2E4BCC9C-AC50-4A6B-BED1-5C652393DD85}.Release|Any CPU.Build.0 = Release|Any CPU
-		{75EB57FC-A969-4E10-AA3D-D0A04C415064}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{75EB57FC-A969-4E10-AA3D-D0A04C415064}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{75EB57FC-A969-4E10-AA3D-D0A04C415064}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{75EB57FC-A969-4E10-AA3D-D0A04C415064}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
