@@ -64,14 +64,14 @@ namespace Neo.Plugins
         {
             string[] ps = uri.AbsolutePath.Split("/");
             if (ps.Length < 2) throw new FormatException("Invalid neofs url");
-            ContainerID containerID = ContainerID.FromBase58String(ps[0]);
-            ObjectID objectID = ObjectID.FromBase58String(ps[1]);
+            ContainerID containerID = ContainerID.FromString(ps[0]);
+            ObjectID objectID = ObjectID.FromString(ps[1]);
             Address objectAddr = new()
             {
                 ContainerId = containerID,
                 ObjectId = objectID
             };
-            Client client = new(privateKey, host);
+            using Client client = new(privateKey, host);
             var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
             tokenSource.CancelAfter(Settings.Default.NeoFS.Timeout);
             if (ps.Length == 2)
