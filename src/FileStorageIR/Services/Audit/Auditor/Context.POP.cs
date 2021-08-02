@@ -59,10 +59,12 @@ namespace Neo.FileStorage.InnerRing.Services.Audit.Auditor
                 {
                     header = ContainerCommunacator.GetHeader(AuditTask, nodes[i], oid, false);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
+                    Utility.Log(nameof(Context), LogLevel.Debug, $"get header failed, node={nodes[i].NetworkAddress}, e={e}");
                     continue;
                 }
+                Console.WriteLine($"[POP] get object header, address={nodes[i].NetworkAddress}");
                 UpdateHeader(header);
                 ok++;
                 optimal = ok == replicas && i < replicas;
