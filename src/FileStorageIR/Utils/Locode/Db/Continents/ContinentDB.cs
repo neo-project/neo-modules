@@ -9,12 +9,12 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode.Db
     public class ContinentDB
     {
         public string Path { get; init; }
-        private readonly Once once = new();
+        private bool initialized = false;
         private IFeature[] features;
 
         public Continent PointContinent(Point point)
         {
-            once.Do(Init);
+            Init();
             NetTopologySuite.Geometries.Point planarPoint = new(point.Longitude, point.Latitude);
             string continent = null;
             foreach (var feature in features)
@@ -41,10 +41,12 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode.Db
 
         private void Init()
         {
+            if (initialized) return;
             string data = File.ReadAllText(Path);
             var reader = new GeoJsonReader();
             FeatureCollection collection = reader.Read<FeatureCollection>(data);
             features = collection.ToArray();
+            initialized = true;
         }
     }
 }
