@@ -12,7 +12,6 @@ using Neo.FileStorage.InnerRing.Services.Audit;
 using Neo.FileStorage.InnerRing.Services.Audit.Auditor;
 using Neo.FileStorage.Placement;
 using Neo.Wallets;
-using V2Range = Neo.FileStorage.API.Object.Range;
 
 namespace Neo.FileStorage.InnerRing
 {
@@ -40,6 +39,7 @@ namespace Neo.FileStorage.InnerRing
             };
             return GetStorageGroup(task.Cancellation, sgAddress, task.Netmap, task.ContainerNodes);
         }
+
         public StorageGroup GetStorageGroup(CancellationToken cancellation, Address sgAddress, NetMap netMap, List<List<Node>> containerNodes)
         {
             List<List<Node>> nodes;
@@ -102,7 +102,7 @@ namespace Neo.FileStorage.InnerRing
             return client.GetObjectHeader(objAddress, raw, options: new CallOptions() { Key = key }, context: source.Token).Result;
         }
 
-        public byte[] GetRangeHash(AuditTask task, Node node, ObjectID id, Neo.FileStorage.API.Object.Range rng)
+        public byte[] GetRangeHash(AuditTask task, Node node, ObjectID id, API.Object.Range rng)
         {
             Address objAddress = new()
             {
@@ -114,7 +114,7 @@ namespace Neo.FileStorage.InnerRing
             using var source = new CancellationTokenSource();
             source.CancelAfter(TimeSpan.FromMinutes(1));
             var key = Wallet.GetAccounts().ToArray()[0].GetKey().PrivateKey.LoadPrivateKey();
-            List<byte[]> result = cli.GetObjectPayloadRangeHash(objAddress, new List<V2Range> { rng }, ChecksumType.Tz, null, new() { Ttl = 1, Key = key }, source.Token).Result;
+            List<byte[]> result = cli.GetObjectPayloadRangeHash(objAddress, new List<API.Object.Range> { rng }, ChecksumType.Tz, null, new() { Ttl = 1, Key = key }, source.Token).Result;
             return result[0];
         }
     }
