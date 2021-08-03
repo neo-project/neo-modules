@@ -120,13 +120,12 @@ namespace Neo.FileStorage.InnerRing.Services.Audit.Auditor
 
         private List<List<Node>> BuildPlacement(ObjectID oid)
         {
-            if (placementCache.TryGetValue(oid.String(), out List<List<Node>> table))
+            if (!placementCache.TryGetValue(oid.String(), out List<List<Node>> table))
             {
-                return table;
+                table = NetworkMapBuilder.BuildObjectPlacement(AuditTask.Netmap, AuditTask.ContainerNodes, oid);
+                placementCache[oid.String()] = table;
             }
-            var nn = NetworkMapBuilder.BuildObjectPlacement(AuditTask.Netmap, AuditTask.ContainerNodes, oid);
-            placementCache[oid.String()] = nn;
-            return nn;
+            return table;
         }
     }
 }

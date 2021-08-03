@@ -13,7 +13,7 @@ namespace Neo.FileStorage.Cache
         public virtual IFSClient Get(List<Address> addresses)
         {
             var saddrs = string.Join("", addresses.Select(p => p.ToString()));
-            if (clients.TryGetValue(saddrs, out MultiClient mClient))
+            if (!clients.TryGetValue(saddrs, out MultiClient mClient))
             {
                 mClient = new MultiClient(addresses);
                 clients[saddrs] = mClient;
