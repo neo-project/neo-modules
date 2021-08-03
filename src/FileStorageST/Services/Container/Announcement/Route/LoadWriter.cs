@@ -20,7 +20,7 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement.Route
             RouteKey key = new()
             {
                 Epoch = announcement.Epoch,
-                Cid = announcement.ContainerId.ToBase58String(),
+                Cid = announcement.ContainerId.String(),
             };
             bool exists = mRoute.TryGetValue(key, out RouteValue value);
             if (!exists)

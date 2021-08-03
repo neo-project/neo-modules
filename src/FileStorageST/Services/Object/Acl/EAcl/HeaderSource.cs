@@ -197,7 +197,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl.EAcl
             return new()
             {
                 Key = Filter.FilterObjectContainerID,
-                Value = cid.ToBase58String(),
+                Value = cid.String(),
             };
         }
 
@@ -206,7 +206,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl.EAcl
             return new()
             {
                 Key = Filter.FilterObjectID,
-                Value = oid.ToBase58String(),
+                Value = oid.String(),
             };
         }
 

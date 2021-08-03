@@ -39,7 +39,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     }
                     catch
                     {
-                        Utility.Log("IncomeSettlementContext", LogLevel.Info, $"can't fetch container info, Epoch={Epoch}, container_id={item.ContainerID.ToBase58String()}");
+                        Utility.Log("IncomeSettlementContext", LogLevel.Info, $"can't fetch container info, Epoch={Epoch}, container_id={item.ContainerID.String()}");
                         continue;
                     }
                     Node[] cnrNodes = null;
@@ -49,7 +49,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                     }
                     catch
                     {
-                        Utility.Log("IncomeSettlementContext", LogLevel.Info, $"can't fetch container info, Epoch={Epoch}, container_id={item.ContainerID.ToBase58String()}");
+                        Utility.Log("IncomeSettlementContext", LogLevel.Info, $"can't fetch container info, Epoch={Epoch}, container_id={item.ContainerID.String()}");
                         continue;
                     }
                     ulong avg = AvgEstimation(item);

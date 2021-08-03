@@ -26,9 +26,9 @@ namespace Neo.FileStorage.InnerRing
             ClientCache.Dispose();
         }
 
-        public IFSClient Get(Network.Address address)
+        public IFSClient Get(List<Network.Address> addresses)
         {
-            return ClientCache.Get(address);
+            return ClientCache.Get(addresses);
         }
 
         public StorageGroup GetStorageGroup(AuditTask task, ObjectID id)
@@ -46,24 +46,24 @@ namespace Neo.FileStorage.InnerRing
             nodes = NetworkMapBuilder.BuildObjectPlacement(netMap, containerNodes, sgAddress.ObjectId);
             foreach (var node in nodes.Flatten())
             {
-                Network.Address addr;
+                List<Network.Address> addrs;
                 try
                 {
-                    addr = Network.Address.FromString(node.NetworkAddress);
+                    addrs = node.NetworkAddresses.Select(p => Network.Address.FromString(p)).ToList();
                 }
                 catch (Exception e)
                 {
-                    Utility.Log("RpcClientCache", LogLevel.Warning, string.Format("can't parse remote address,address:{0},errot:{1}", node.NetworkAddress, e.Message));
+                    Utility.Log(nameof(RpcClientCache), LogLevel.Warning, $"can't parse remote address, error={e.Message}");
                     continue;
                 }
                 IFSClient cli;
                 try
                 {
-                    cli = Get(addr);
+                    cli = Get(addrs);
                 }
                 catch (Exception e)
                 {
-                    Utility.Log("RpcClientCache", LogLevel.Warning, string.Format("can't setup remote connection,address:{0},errot:{1}", addr, e.Message));
+                    Utility.Log(nameof(RpcClientCache), LogLevel.Warning, $"can't setup remote connection, error={e.Message}");
                     continue;
                 }
                 API.Object.Object obj;
@@ -94,21 +94,12 @@ namespace Neo.FileStorage.InnerRing
                 ContainerId = task.ContainerID,
                 ObjectId = id
             };
-            Network.Address addr = Network.Address.FromString(node.NetworkAddress);
-            IFSClient client = Get(addr);
-            API.Object.Object head;
-            try
-            {
-                using var source = CancellationTokenSource.CreateLinkedTokenSource(task.Cancellation);
-                source.CancelAfter(TimeSpan.FromMinutes(1));
-                var key = Wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
-                head = client.GetObjectHeader(objAddress, raw, options: new CallOptions() { Key = key }, context: source.Token).Result;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(string.Format("object head error: {0}", e.Message));
-            }
-            return head;
+            var addrs = node.NetworkAddresses.Select(p => Network.Address.FromString(p)).ToList();
+            IFSClient client = Get(addrs);
+            using var source = CancellationTokenSource.CreateLinkedTokenSource(task.Cancellation);
+            source.CancelAfter(TimeSpan.FromMinutes(1));
+            var key = Wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
+            return client.GetObjectHeader(objAddress, raw, options: new CallOptions() { Key = key }, context: source.Token).Result;
         }
 
         public byte[] GetRangeHash(AuditTask task, Node node, ObjectID id, Neo.FileStorage.API.Object.Range rng)
@@ -118,36 +109,12 @@ namespace Neo.FileStorage.InnerRing
                 ContainerId = task.ContainerID,
                 ObjectId = id
             };
-            Network.Address addr;
-            try
-            {
-                addr = Network.Address.FromString(node.NetworkAddress);
-            }
-            catch (Exception e)
-            {
-                throw new Exception(string.Format("can't parse remote address,address:{0},error:{1}", node.NetworkAddress, e.Message));
-            }
-            IFSClient cli;
-            try
-            {
-                cli = Get(addr);
-            }
-            catch (Exception e)
-            {
-                throw new Exception(string.Format("can't setup remote connection with {0}:{1}", node.NetworkAddress, e.Message));
-            }
-            List<byte[]> result;
-            try
-            {
-                using var source = new CancellationTokenSource();
-                source.CancelAfter(TimeSpan.FromMinutes(1));
-                var key = Wallet.GetAccounts().ToArray()[0].GetKey().PrivateKey.LoadPrivateKey();
-                result = cli.GetObjectPayloadRangeHash(objAddress, new List<V2Range> { rng }, ChecksumType.Tz, null, new() { Ttl = 1, Key = key }, source.Token).Result;
-            }
-            catch (Exception e)
-            {
-                throw new Exception(string.Format("object rangehash error :{0}", e.Message));
-            }
+            var addrs = node.NetworkAddresses.Select(p => Network.Address.FromString(p)).ToList();
+            IFSClient cli = Get(addrs);
+            using var source = new CancellationTokenSource();
+            source.CancelAfter(TimeSpan.FromMinutes(1));
+            var key = Wallet.GetAccounts().ToArray()[0].GetKey().PrivateKey.LoadPrivateKey();
+            List<byte[]> result = cli.GetObjectPayloadRangeHash(objAddress, new List<V2Range> { rng }, ChecksumType.Tz, null, new() { Ttl = 1, Key = key }, source.Token).Result;
             return result[0];
         }
     }

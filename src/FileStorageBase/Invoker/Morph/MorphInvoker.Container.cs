@@ -92,7 +92,7 @@ namespace Neo.FileStorage.Invoker.Morph
             {
                 resultArray.Add(enumerator.Current.GetSpan().ToArray());
             }
-            return resultArray.Select(p => ContainerID.FromSha256Bytes(p)).ToList();
+            return resultArray.Select(p => ContainerID.FromValue(p)).ToList();
         }
 
         public void AnnounceLoad(Announcement announcement, byte[] key)
@@ -106,7 +106,7 @@ namespace Neo.FileStorage.Invoker.Morph
             if (result.State != VM.VMState.HALT) throw new Exception($"could not invoke method ({GetSizeMethod})");
             Array prms = (Array)result.ResultStack[0];
             Estimations es = new();
-            es.ContainerID = ContainerID.FromSha256Bytes(prms[0].GetSpan().ToArray());
+            es.ContainerID = ContainerID.FromValue(prms[0].GetSpan().ToArray());
             List<Estimation> estimations = new();
             prms = (Array)prms[1];
             foreach (var item in prms)

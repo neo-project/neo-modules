@@ -65,7 +65,6 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         {
             var key = wallet.GetAccounts().ToArray()[0].GetKey().PublicKey;
             NodeInfo nodeInfo = new NodeInfo();
-            nodeInfo.Address = "";
             nodeInfo.PublicKey = ByteString.CopyFrom(key.ToArray());
             invoker.AddPeer(nodeInfo);
         }

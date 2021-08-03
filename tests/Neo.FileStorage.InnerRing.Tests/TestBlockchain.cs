@@ -243,7 +243,6 @@ namespace Neo.FileStorage.InnerRing.Tests
             script = NativeContract.RoleManagement.Hash.MakeScript("designateAsRole", Role.NeoFSAlphabetNode, ToParameter(accounts.Select(p => p.GetKey().PublicKey.ToArray()).ToArray()));
             ExecuteScript(snapshot, "FakeIR", script, NativeContract.NEO.GetCommitteeAddress(snapshot));
             NodeInfo nodeInfo = new NodeInfo();
-            nodeInfo.Address = "";
             nodeInfo.PublicKey = ByteString.CopyFrom(accounts.ToArray()[0].GetKey().PublicKey.ToArray());
             var rawNodeInfo = nodeInfo.ToByteArray();
             script = NetmapContractHash.MakeScript("addPeer", rawNodeInfo);

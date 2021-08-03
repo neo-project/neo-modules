@@ -191,7 +191,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
             switch (filter.MatchType)
             {
                 case MatchType.StringEqual:
-                    AppendObjectID(ObjectID.FromBase58String(filter.Value));
+                    AppendObjectID(ObjectID.FromString(filter.Value));
                     break;
                 default:
                     if (matchers.TryGetValue(filter.MatchType, out Func<string, byte[], string, bool> matcher))
@@ -204,7 +204,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
                                 {
                                     Value = ByteString.CopyFrom(key[^ObjectID.ValueSize..])
                                 };
-                                if (matcher(filter.Key, StrictUTF8.GetBytes(oid.ToBase58String()), filter.Value))
+                                if (matcher(filter.Key, StrictUTF8.GetBytes(oid.String()), filter.Value))
                                 {
                                     AppendObjectID(oid);
                                 }
@@ -321,7 +321,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
                 switch (filter.Key)
                 {
                     case Filter.FilterHeaderContainerID:
-                        cid = ContainerID.FromBase58String(filter.Value);
+                        cid = ContainerID.FromString(filter.Value);
                         break;
                     case Filter.FilterHeaderVersion:
                     case Filter.FilterHeaderCreationEpoch:

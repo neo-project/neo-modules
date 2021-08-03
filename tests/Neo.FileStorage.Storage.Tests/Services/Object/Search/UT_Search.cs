@@ -106,11 +106,10 @@ namespace Neo.FileStorage.Tests.Services.Object.Search
                 List<Node> list = new();
                 for (int j = 0; j < i; j++)
                 {
+                    var ni = new NodeInfo();
+                    ni.Addresses.Add($"/ip4/192.168.0.{i}/tcp/{60000 + j}");
                     list.Add(new Node
-                    (sum + j, new NodeInfo
-                    {
-                        Address = $"/ip4/192.168.0.{i}/tcp/{60000 + j}",
-                    }));
+                    (sum + j, ni));
                 }
                 sum += i;
                 res.Add(list);
@@ -179,7 +178,7 @@ namespace Neo.FileStorage.Tests.Services.Object.Search
             var ids2 = RandomObjectIDs(10);
             c2.AddResult(cid, ids2);
             const ulong epoch = 13;
-            Console.WriteLine($"{ns[0][0].NetworkAddress}, {ns[0][1].NetworkAddress}");
+            Console.WriteLine($"{ns[0][0].NetworkAddresses[0]}, {ns[0][1].NetworkAddresses[0]}");
             var srv = new SearchService
             {
                 LocalStorage = new TestStorage(),
@@ -193,8 +192,8 @@ namespace Neo.FileStorage.Tests.Services.Object.Search
                 {
                     Clients = new()
                     {
-                        { ns[0][0].NetworkAddress, c1 },
-                        { ns[0][1].NetworkAddress, c2 }
+                        { ns[0][0].NetworkAddresses[0], c1 },
+                        { ns[0][1].NetworkAddresses[0], c2 }
                     }
                 }
             };

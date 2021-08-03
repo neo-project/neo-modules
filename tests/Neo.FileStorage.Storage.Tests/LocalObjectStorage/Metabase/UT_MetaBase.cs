@@ -805,7 +805,7 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Metabase
                 Assert.AreEqual(0, mb.Select(cid, fs).Count);
                 //objects with parents
                 fs = new();
-                fs.AddFilter(SearchRequest.Types.Body.Types.Filter.FilterHeaderParent, parent.ObjectId.ToBase58String(), API.Object.MatchType.StringEqual);
+                fs.AddFilter(SearchRequest.Types.Body.Types.Filter.FilterHeaderParent, parent.ObjectId.String(), API.Object.MatchType.StringEqual);
                 list = mb.Select(cid, fs);
                 Assert.AreEqual(2, list.Count);
                 Assert.IsTrue(list.Contains(right.Address));

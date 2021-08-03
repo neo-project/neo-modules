@@ -36,8 +36,8 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
                 byte[] oid = key[^32..];
                 Address address = new()
                 {
-                    ContainerId = ContainerID.FromSha256Bytes(cid),
-                    ObjectId = ObjectID.FromSha256Bytes(oid),
+                    ContainerId = ContainerID.FromValue(cid),
+                    ObjectId = ObjectID.FromValue(oid),
                 };
                 handler(GetObjectType(address), address);
                 return false;

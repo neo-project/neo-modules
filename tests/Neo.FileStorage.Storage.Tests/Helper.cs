@@ -68,12 +68,12 @@ namespace Neo.FileStorage.Storage.Tests
 
         public static ContainerID RandomContainerID()
         {
-            return ContainerID.FromSha256Bytes(RandomSha256());
+            return ContainerID.FromValue(RandomSha256());
         }
 
         public static ObjectID RandomObjectID()
         {
-            return ObjectID.FromSha256Bytes(RandomSha256());
+            return ObjectID.FromValue(RandomSha256());
         }
 
         public static List<ObjectID> RandomObjectIDs(int n)

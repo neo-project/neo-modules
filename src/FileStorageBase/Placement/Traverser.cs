@@ -32,7 +32,7 @@ namespace Neo.FileStorage.Placement
             vectors = ns;
         }
 
-        public List<Network.Address> Next()
+        public List<List<Network.Address>> Next()
         {
             SkipEmptyVectors();
             if (!vectors.Any())
@@ -44,17 +44,19 @@ namespace Neo.FileStorage.Placement
             if (count < 0)
                 count = vectors[0].Count;
 
-            List<Network.Address> addrs = new();
+            List<List<Network.Address>> addrs = new();
 
             for (int i = 0; i < count; i++)
             {
-                Network.Address addr;
+                List<Network.Address> addr;
                 try
                 {
-                    addr = Network.Address.FromString(vectors[0][i].NetworkAddress);
+                    if (!vectors[0][i].NetworkAddresses.Any()) throw new InvalidOperationException("missing network addresses");
+                    addr = vectors[0][i].NetworkAddresses.Select(p => Network.Address.FromString(p)).ToList();
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
+                    Utility.Log(nameof(Traverser), LogLevel.Debug, $"next, meet exception: {e.Message}");
                     return new();
                 }
                 addrs.Add(addr);

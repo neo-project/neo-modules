@@ -20,7 +20,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
             List<Address> result = new();
             db.Iterate(ToMoveItPrefix, (key, value) =>
             {
-                result.Add(new(ContainerID.FromSha256Bytes(key[1..^32]), ObjectID.FromSha256Bytes(key[^32..])));
+                result.Add(new(ContainerID.FromValue(key[1..^32]), ObjectID.FromValue(key[^32..])));
                 return false;
             });
             return result;
