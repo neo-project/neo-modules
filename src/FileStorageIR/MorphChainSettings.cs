@@ -31,7 +31,7 @@ namespace Neo.FileStorage.InnerRing
         public StorageSettings(IConfigurationSection section)
         {
             Engine = section.GetValue("Engine", "LevelDBStore");
-            Path = section.GetValue("Path", "Data_LevelDB_Side");
+            Path = section.GetValue("Path", "Data_LevelDB_Morph");
         }
     }
 
