@@ -70,7 +70,7 @@ namespace Neo.FileStorage.InnerRing
 
         public uint EpochDuration => (!IsDebug && (MorphInvoker is not null)) ? MorphInvoker.EpochDuration() : DefaultEpochDuration;
         public ulong AuditFee => (!IsDebug && (MorphInvoker is not null)) ? MorphInvoker.AuditFee() : DefaultAuditFee;
-        public ulong BasicIncomeRate=>(!IsDebug&&(MorphInvoker is not null))?MorphInvoker.BasicIncomeRate():DefaultBasicIncomeRate;
+        public ulong BasicIncomeRate => (!IsDebug && (MorphInvoker is not null)) ? MorphInvoker.BasicIncomeRate() : DefaultBasicIncomeRate;
 
         private Settings(IConfigurationSection section)
         {
