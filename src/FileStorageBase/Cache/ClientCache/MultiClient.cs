@@ -13,7 +13,6 @@ using Neo.FileStorage.API.Session;
 using Neo.FileStorage.API.Client;
 using UsedSpaceAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types.Announcement;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 
 namespace Neo.FileStorage.Cache
 {
@@ -53,11 +52,12 @@ namespace Neo.FileStorage.Cache
             return client;
         }
 
-        private void IterateClients(Action<Client> handler)
+        private void IterateClients(Action<Client> handler, CancellationToken token)
         {
             string errMsg = "";
             foreach (var address in addresses)
             {
+                if (token.IsCancellationRequested) throw new TaskCanceledException();
                 try
                 {
                     var client = Client(address);
@@ -66,12 +66,22 @@ namespace Neo.FileStorage.Cache
                 }
                 catch (Exception e)
                 {
-                    if (e is TaskCanceledException) throw;
+                    if (e is AggregateException ae)
+                    {
+                        foreach (var ie in ae.InnerExceptions)
+                        {
+                            if (ie is Grpc.Core.RpcException re)
+                            {
+                                if (re.StatusCode == Grpc.Core.StatusCode.Cancelled)
+                                    throw;
+                            }
+                        }
+                    }
                     if (errMsg == "") errMsg = e.Message;
                     continue;
                 }
             }
-            throw new Exception($"{nameof(MultiClient)} handle request failed, error={errMsg}");
+            throw new Exception($"handle request failed, error={errMsg}");
         }
 
         public Task<API.Accounting.Decimal> GetBalance(OwnerID owner, CallOptions options = null, CancellationToken context = default)
@@ -82,7 +92,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     balance = client.GetBalance(owner, options, context).Result;
-                });
+                }, context);
                 return balance;
             }, context);
 
@@ -96,7 +106,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     balance = client.GetBalance(request, deadline, context).Result;
-                });
+                }, context);
                 return balance;
             }, context);
         }
@@ -109,7 +119,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     container = client.GetContainer(cid, options, context).Result;
-                });
+                }, context);
                 return container;
             }, context);
         }
@@ -122,7 +132,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     cid = client.PutContainer(container, options, context).Result;
-                });
+                }, context);
                 return cid;
             }, context);
         }
@@ -134,7 +144,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     client.DeleteContainer(cid, options, context).Wait();
-                });
+                }, context);
             }, context);
         }
 
@@ -146,7 +156,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     cids = client.ListContainers(owner, options, context).Result;
-                });
+                }, context);
                 return cids;
             }, context);
         }
@@ -159,7 +169,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     eacl = client.GetEAcl(cid, options, context).Result;
-                });
+                }, context);
                 return eacl;
             }, context);
         }
@@ -171,7 +181,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     client.SetEACL(eacl, options, context).Wait();
-                });
+                }, context);
             }, context);
         }
 
@@ -182,7 +192,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     client.AnnounceContainerUsedSpace(announcements, options, context).Wait();
-                });
+                }, context);
             }, context);
         }
 
@@ -194,7 +204,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     container = client.GetContainer(request, deadline, context).Result;
-                });
+                }, context);
                 return container;
             }, context);
         }
@@ -207,7 +217,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     cid = client.PutContainer(request, deadline, context).Result;
-                });
+                }, context);
                 return cid;
             }, context);
         }
@@ -219,7 +229,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     client.DeleteContainer(request, deadline, context).Wait();
-                });
+                }, context);
             }, context);
         }
 
@@ -231,7 +241,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     cids = client.ListContainers(request, deadline, context).Result;
-                });
+                }, context);
                 return cids;
             }, context);
         }
@@ -244,7 +254,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     eacl = client.GetEAcl(request, deadline, context).Result;
-                });
+                }, context);
                 return eacl;
             }, context);
         }
@@ -256,7 +266,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     client.SetEACL(request, deadline, context).Wait();
-                });
+                }, context);
             }, context);
         }
 
@@ -267,7 +277,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     client.AnnounceContainerUsedSpace(request, deadline, context).Wait();
-                });
+                }, context);
             }, context);
         }
 
@@ -280,7 +290,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     ni = client.LocalNodeInfo(options, context).Result;
-                });
+                }, context);
                 return ni;
             }, context);
         }
@@ -293,7 +303,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     epoch = client.Epoch(options, context).Result;
-                });
+                }, context);
                 return epoch;
             }, context);
         }
@@ -306,7 +316,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     ni = client.NetworkInfo(options, context).Result;
-                });
+                }, context);
                 return ni;
             }, context);
         }
@@ -319,7 +329,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     ni = client.LocalNodeInfo(request, deadline, context).Result;
-                });
+                }, context);
                 return ni;
             }, context);
         }
@@ -332,7 +342,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     epoch = client.Epoch(request, deadline, context).Result;
-                });
+                }, context);
                 return epoch;
             }, context);
         }
@@ -346,7 +356,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     obj = client.GetObject(address, raw, options, context).Result;
-                });
+                }, context);
                 return obj;
             }, context);
         }
@@ -359,7 +369,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     oid = client.PutObject(obj, options, context).Result;
-                });
+                }, context);
                 return oid;
             }, context);
         }
@@ -372,7 +382,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     address = client.DeleteObject(address, options, context).Result;
-                });
+                }, context);
                 return address;
             }, context);
         }
@@ -385,7 +395,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     header = client.GetObjectHeader(address, minimal, raw, options, context).Result;
-                });
+                }, context);
                 return header;
             }, context);
         }
@@ -398,7 +408,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     data = client.GetObjectPayloadRangeData(address, range, raw, options, context).Result;
-                });
+                }, context);
                 return data;
             }, context);
         }
@@ -411,7 +421,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     hashes = client.GetObjectPayloadRangeHash(address, ranges, type, salt, options, context).Result;
-                });
+                }, context);
                 return hashes;
             }, context);
         }
@@ -424,7 +434,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     oids = client.SearchObject(cid, filters, options, context).Result;
-                });
+                }, context);
                 return oids;
             }, context);
         }
@@ -437,7 +447,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     obj = client.GetObject(request, deadline, context).Result;
-                });
+                }, context);
                 return obj;
             }, context);
         }
@@ -450,7 +460,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     putStream = client.PutObject(init, deadline, context).Result;
-                });
+                }, context);
                 return putStream;
             }, context);
         }
@@ -463,7 +473,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     address = client.DeleteObject(request, deadline, context).Result;
-                });
+                }, context);
                 return address;
             }, context);
         }
@@ -476,7 +486,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     header = client.GetObjectHeader(request, deadline, context).Result;
-                });
+                }, context);
                 return header;
             }, context);
         }
@@ -489,7 +499,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     data = client.GetObjectPayloadRangeData(request, deadline, context).Result;
-                });
+                }, context);
                 return data;
             }, context);
         }
@@ -502,7 +512,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     hashes = client.GetObjectPayloadRangeHash(request, deadline, context).Result;
-                });
+                }, context);
                 return hashes;
             }, context);
         }
@@ -515,7 +525,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     oids = client.SearchObject(request, deadline, context).Result;
-                });
+                }, context);
                 return oids;
             }, context);
         }
@@ -528,7 +538,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     client.AnnounceTrust(epoch, trusts, options, context).Wait();
-                });
+                }, context);
             }, context);
         }
 
@@ -539,7 +549,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     client.AnnounceIntermediateTrust(epoch, iter, trust, options, context).Wait();
-                });
+                }, context);
             }, context);
         }
 
@@ -550,7 +560,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     client.AnnounceTrust(request, deadline, context).Wait();
-                });
+                }, context);
             }, context);
         }
 
@@ -561,10 +571,9 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     client.AnnounceIntermediateTrust(request, deadline, context).Wait();
-                });
+                }, context);
             }, context);
         }
-
 
         public Task<SessionToken> CreateSession(ulong expiration, CallOptions options = null, CancellationToken context = default)
         {
@@ -574,7 +583,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     session = client.CreateSession(expiration, options, context).Result;
-                });
+                }, context);
                 return session;
             }, context);
         }
@@ -587,7 +596,7 @@ namespace Neo.FileStorage.Cache
                 IterateClients(client =>
                 {
                     session = client.CreateSession(request, deadline, context).Result;
-                });
+                }, context);
                 return session;
             }, context);
         }

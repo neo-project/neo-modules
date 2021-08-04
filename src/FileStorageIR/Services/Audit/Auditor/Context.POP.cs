@@ -125,6 +125,7 @@ namespace Neo.FileStorage.InnerRing.Services.Audit.Auditor
                 table = NetworkMapBuilder.BuildObjectPlacement(AuditTask.Netmap, AuditTask.ContainerNodes, oid);
                 placementCache[oid.String()] = table;
             }
+
             return table;
         }
     }
