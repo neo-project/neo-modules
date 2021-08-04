@@ -42,8 +42,7 @@ namespace Neo.FileStorage.InnerRing
 
         public StorageGroup GetStorageGroup(CancellationToken cancellation, Address sgAddress, NetMap netMap, List<List<Node>> containerNodes)
         {
-            List<List<Node>> nodes;
-            nodes = NetworkMapBuilder.BuildObjectPlacement(netMap, containerNodes, sgAddress.ObjectId);
+            List<List<Node>> nodes = NetworkMapBuilder.BuildObjectPlacement(netMap, containerNodes, sgAddress.ObjectId);
             foreach (var node in nodes.Flatten())
             {
                 List<Network.Address> addrs;
@@ -76,7 +75,7 @@ namespace Neo.FileStorage.InnerRing
                 }
                 catch (Exception e)
                 {
-                    Utility.Log("RpcClientCache", LogLevel.Warning, string.Format("can't get storage group object,error:{0}", e.Message));
+                    Utility.Log(nameof(RpcClientCache), LogLevel.Warning, $"can't get storage group object, error={e.Message}");
                     continue;
                 }
                 StorageGroup sg = StorageGroup.Parser.ParseFrom(obj.Payload);
