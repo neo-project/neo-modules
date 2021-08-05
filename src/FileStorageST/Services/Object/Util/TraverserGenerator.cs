@@ -1,7 +1,7 @@
 using System;
 using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Placement;
-using Neo.FileStorage.Storage.Services.Object.Util;
+using System.Collections.Generic;
 using FSAddress = Neo.FileStorage.API.Refs.Address;
 
 namespace Neo.FileStorage.Storage.Services.Object.Util
@@ -9,14 +9,14 @@ namespace Neo.FileStorage.Storage.Services.Object.Util
     public class TraverserGenerator : ITraverserGenerator
     {
         private readonly MorphInvoker morphInvoker;
-        private readonly Network.Address localAddress;
+        private readonly List<Network.Address> localAddresses;
         private readonly int successAfter;
         private readonly bool trackCopies;
 
-        public TraverserGenerator(MorphInvoker invoker, Network.Address address, int successAfter = 0, bool trackCopies = true)
+        public TraverserGenerator(MorphInvoker invoker, List<Network.Address> addresses, int successAfter = 0, bool trackCopies = true)
         {
             morphInvoker = invoker;
-            localAddress = address;
+            localAddresses = addresses;
             this.successAfter = successAfter;
             this.trackCopies = trackCopies;
         }
@@ -33,7 +33,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Util
             {
                 throw new Exception(nameof(TraverserGenerator) + " could not get container");
             }
-            var builder = new RemotePlacementBuilder(morphInvoker, localAddress);
+            var builder = new RemotePlacementBuilder(morphInvoker, localAddresses);
             return new Traverser(builder, container.PlacementPolicy, address, successAfter, trackCopies);
         }
     }

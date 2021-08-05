@@ -42,7 +42,7 @@ namespace Neo.FileStorage.Storage
             }));
             IActorRef policeRef = system.ActorSystem.ActorOf(Policer.Props(new()
             {
-                LocalAddress = LocalAddress,
+                LocalAddresses = LocalAddresses,
                 LocalStorage = localStorage,
                 MorphInvoker = morphInvoker,
                 PlacementBuilder = new NetworkMapBuilder(morphInvoker),
@@ -83,7 +83,7 @@ namespace Neo.FileStorage.Storage
             PutService putService = new()
             {
                 MorphInvoker = morphInvoker,
-                LocalAddress = LocalAddress,
+                LocalAddresses = LocalAddresses,
                 KeyStorage = keyStorage,
                 LocalStorage = localStorage,
                 ObjectInhumer = objInhumer,
@@ -96,7 +96,7 @@ namespace Neo.FileStorage.Storage
                 LocalStorage = localStorage,
                 ClientCache = reputationClientCache,
                 MorphInvoker = morphInvoker,
-                TraverserGenerator = new(morphInvoker, LocalAddress, 1),
+                TraverserGenerator = new(morphInvoker, LocalAddresses, 1),
             };
             SearchService searchService = new()
             {
@@ -104,7 +104,7 @@ namespace Neo.FileStorage.Storage
                 LocalStorage = localStorage,
                 MorphClient = new EpochSource(morphInvoker),
                 ClientCache = new SearchClientCache(reputationClientCache),
-                TraverserGenerator = new TraverserGenerator(morphInvoker, LocalAddress, trackCopies: false),
+                TraverserGenerator = new TraverserGenerator(morphInvoker, LocalAddresses, trackCopies: false),
             };
             return new ObjectServiceImpl
             {

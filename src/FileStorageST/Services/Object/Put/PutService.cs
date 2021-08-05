@@ -1,6 +1,5 @@
 using System.Threading;
-using Neo.FileStorage.API.Object;
-using Neo.FileStorage.Core.Object;
+using System.Collections.Generic;
 using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Network;
 using Neo.FileStorage.Storage.LocalObjectStorage.Engine;
@@ -13,7 +12,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
     public class PutService
     {
         public MorphInvoker MorphInvoker { get; init; }
-        public Address LocalAddress { get; init; }
+        public List<Address> LocalAddresses { get; init; }
         public KeyStorage KeyStorage { get; init; }
         public StorageEngine LocalStorage { get; init; }
         public LocalObjectInhumer ObjectInhumer { get; init; }

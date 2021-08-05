@@ -1,10 +1,10 @@
 using System.Threading;
 using Google.Protobuf;
-using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Storage.Services.Object.Util;
 using Neo.FileStorage.Storage.Services.ObjectManager.Transformer;
 using Neo.FileStorage.Storage.Services.Reputaion.Local.Client;
 using FSObject = Neo.FileStorage.API.Object.Object;
+using System.Collections.Generic;
 
 namespace Neo.FileStorage.Storage.Services.Object.Put
 {
@@ -14,7 +14,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
         public CancellationToken Cancellation { get; init; }
         public KeyStorage KeyStorage { get; init; }
         public PutInitPrm Prm { get; init; }
-        public Network.Address Address { get; init; }
+        public List<Network.Address> Addresses { get; init; }
         public ReputationClientCache ClientCache { get; init; }
 
         private FSObject obj;
@@ -38,7 +38,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
         {
             obj.Payload = ByteString.CopyFrom(payload);
             var key = KeyStorage.GetKey(Prm?.SessionToken);
-            var client = ClientCache.Get(Address);
+            var client = ClientCache.Get(Addresses);
             var id = client.PutObject(obj, Prm.CallOptions.WithTTL(1).WithKey(key), Cancellation).Result;
             return new()
             {

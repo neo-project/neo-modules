@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Akka.Actor;
 using Neo.FileStorage.API.Netmap;
@@ -17,6 +18,7 @@ namespace Neo.FileStorage.Storage.Services.Replicate
             public FSAddress Address;
             public List<Node> Nodes;
         }
+
         private readonly Configuration config;
 
         public Replicator(Configuration c)
@@ -51,9 +53,7 @@ namespace Neo.FileStorage.Storage.Services.Replicate
             };
             for (int i = 0; i < task.Nodes.Count && 0 < task.Quantity; i++)
             {
-                var net_address = task.Nodes[i].NetworkAddress;
-                var node = Network.Address.FromString(net_address);
-                prm.Node = node;
+                prm.Addresses = task.Nodes[i].NetworkAddresses.Select(p => Network.Address.FromString(p)).ToList();
                 using CancellationTokenSource srouce = new(config.PutTimeout);
                 config.RemoteSender.PutObject(prm, srouce.Token);
                 task.Quantity--;

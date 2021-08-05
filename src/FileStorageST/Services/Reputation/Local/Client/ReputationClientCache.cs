@@ -5,6 +5,8 @@ using Neo.FileStorage.Cache;
 using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Storage.Services.Reputaion.Local.Storage;
 using static Neo.Utility;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Neo.FileStorage.Storage.Services.Reputaion.Local.Client
 {
@@ -19,16 +21,16 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Local.Client
             base.Dispose();
         }
 
-        public override IFSClient Get(Network.Address address)
+        public override IFSClient Get(List<Network.Address> addresses)
         {
-            var client = base.Get(address);
+            var client = base.Get(addresses);
             try
             {
                 var nm = MorphInvoker.GetNetMapByDiff(0);
                 foreach (var n in nm.Nodes)
                 {
-                    var ipaddr = Network.Address.FromString(n.NetworkAddress);
-                    if (ipaddr.Equals(address))
+                    var addrs = n.NetworkAddresses.Select(p => Network.Address.FromString(p)).ToList();
+                    if (addrs.Intersect(addresses).Any())
                     {
                         UpdatePrm prm = new(new(n.PublicKey));
                         return new ReputationClient()

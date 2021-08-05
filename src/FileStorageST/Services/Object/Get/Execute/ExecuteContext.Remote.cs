@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using Neo.FileStorage.API.Object;
 
 namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
 {
     public partial class ExecuteContext
     {
-        private bool ProcessNode(Network.Address address)
+        private bool ProcessNode(List<Network.Address> address)
         {
             var client = GetService.ClientCache.Get(address);
             try

@@ -19,7 +19,7 @@ namespace Neo.FileStorage.Storage
         public UInt160 ContainerContractHash;
         public UInt160 ReputationContractHash;
         public List<UInt160> Contracts = new();
-        public string Address;
+        public string[] Addresses;
         public int Port;
         public List<string> Attributes;
         public long SideChainFee;
@@ -38,7 +38,7 @@ namespace Neo.FileStorage.Storage
             Contracts.Add(BalanceContractHash);
             Contracts.Add(ContainerContractHash);
 
-            Address = section.GetValue("Address", DefaultAddress);
+            Addresses = section.GetSection("Addresses").GetChildren().Select(p => p.Value).ToArray();
             Port = section.GetValue("Port", DefaultPort);
             Attributes = section.GetSection("Attributes").GetChildren().Select(p => p.Value).ToList();
             SideChainFee = section.GetValue("SideChainFee", 5000L);

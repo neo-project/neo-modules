@@ -16,21 +16,14 @@ namespace Neo.FileStorage.Storage.Services.Object.Head
         public FSObject Head(RemoteHeadPrm prm, CancellationToken context)
         {
             var key = KeyStorage.GetKey(prm.SessionToken);
-            if (key is null)
-                throw new InvalidOperationException($"{nameof(RemoteHeader)} could not receive private key");
-            var client = ClientCache.Get(prm.Node);
-            if (client is null)
-                throw new InvalidOperationException($"{nameof(RemoteHeader)} could not create SDK client {prm.Node}");
-            var header = client.GetObjectHeader(prm.Address, prm.Short, prm.Raw, new CallOptions
+            var client = ClientCache.Get(prm.Addresses);
+            return client.GetObjectHeader(prm.Address, prm.Short, prm.Raw, new CallOptions
             {
                 Ttl = DefaultHeadTtl,
                 Session = prm.SessionToken,
                 Bearer = prm.BearerToken,
                 Key = key,
             }, context).Result;
-            if (header is null)
-                throw new InvalidOperationException(nameof(RemoteHeader) + $" could not read object payload range from {prm.Node}");
-            return header;
         }
     }
 }

@@ -77,9 +77,9 @@ namespace Neo.FileStorage.Tests.Services.Object.Search
         {
             public Dictionary<string, TestStorage> Clients = new();
 
-            public ISearchClient Get(FileStorage.Network.Address address)
+            public ISearchClient Get(List<Network.Address> addresses)
             {
-                if (Clients.TryGetValue(address.ToString(), out var value))
+                if (Clients.TryGetValue(string.Join("", addresses.Select(p => p.ToString())), out var value))
                 {
                     return value;
                 }

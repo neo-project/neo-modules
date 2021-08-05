@@ -4,13 +4,15 @@ using System.Security.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.Network;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Neo.FileStorage.Storage.Services.Container.Announcement.Route
 {
     public class RemoteLoadAnnounceProvider
     {
         public ECDsa Key { get; init; }
-        public Address LocalAddress { get; init; }
+        public List<Address> LocalAddresses { get; init; }
         public ClientCache ClientCache { get; init; }
         public IWriterProvider DeadEndProvider { get; init; }
 
@@ -18,10 +20,10 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement.Route
         {
             if (info is null)
                 throw new ArgumentNullException(nameof(info));
-            if (LocalAddress.ToString() == info.Address)
+            List<Address> addrs = info.Addresses.Select(p => Address.FromString(p)).ToList();
+            if (addrs.Intersect(LocalAddresses).Any())
                 return new SimpleProvider(new NopLoadWriter());
-            var addr = Network.Address.FromString(info.Address);
-            var client = ClientCache.Get(addr);
+            var client = ClientCache.Get(addrs);
             return new RemoteLoadAnnounceWriterProvider
             {
                 Key = Key,

@@ -15,7 +15,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
             {
                 Cancellation = context,
                 KeyStorage = KeyStorage,
-                Address = prm.Node,
+                Addresses = prm.Addresses,
                 ClientCache = ClientCache,
             };
             t.WriteHeader(prm.Object);

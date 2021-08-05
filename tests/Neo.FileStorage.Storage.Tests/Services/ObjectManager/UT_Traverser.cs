@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Placement;
@@ -38,7 +36,9 @@ namespace Neo.FileStorage.Tests.Services.ObjectManager
                 List<NodeInfo> ns = new();
                 for (int j = 0; j < ss[i]; j++)
                 {
-                    ns.Add(new NodeInfo() { Address = "/ip4/0.0.0.0/tcp/" + num.ToString() });
+                    NodeInfo ni = new();
+                    ni.Addresses.Add("/ip4/0.0.0.0/tcp/" + num.ToString());
+                    ns.Add(ni);
                     num++;
                 }
                 nodes.Add(ns.Select((p, index) => new Node(index, p)).ToList());
@@ -85,7 +85,7 @@ namespace Neo.FileStorage.Tests.Services.ObjectManager
 
                 for (int j = 0; j < nodes[i].Count; j++)
                 {
-                    Assert.AreEqual(addrs[j].ToString(), nodes[i][j].NetworkAddress);
+                    Assert.AreEqual(addrs[j][0].ToString(), nodes[i][j].NetworkAddresses[0]);
                 }
             }
 
@@ -117,7 +117,7 @@ namespace Neo.FileStorage.Tests.Services.ObjectManager
                 tr.Next();
             var ns = tr.Next();
             Assert.AreEqual(1, ns.Count);
-            Assert.AreEqual(nodes[1][0].NetworkAddress, ns[0].ToString());
+            Assert.AreEqual(nodes[1][0].NetworkAddresses[0], ns[0][0].ToString());
         }
 
         [TestMethod]
@@ -149,7 +149,7 @@ namespace Neo.FileStorage.Tests.Services.ObjectManager
                     Assert.AreEqual(replicas[cv], addrs.Count);
                     for (int j = 0; j < addrs.Count; j++)
                     {
-                        Assert.AreEqual(nodes[cv][i + j].NetworkAddress, addrs[j].ToString());
+                        Assert.AreEqual(nodes[cv][i + j].NetworkAddresses[0], addrs[j][0].ToString());
                     }
                 }
                 Assert.IsFalse(tr.Next().Any());
