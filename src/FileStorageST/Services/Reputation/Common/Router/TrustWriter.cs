@@ -20,15 +20,15 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Common.Route
                 if (!route.Any()) route = new() { null };
                 foreach (var remote in route)
                 {
-                    string endpoint = "";
-                    if (remote is not null) endpoint = remote.Address;
-                    if (!servers.TryGetValue(endpoint, out IWriter writer))
+                    string key = "";
+                    if (remote is not null) key = remote.PublicKey.ToBase64();
+                    if (!servers.TryGetValue(key, out IWriter writer))
                     {
                         try
                         {
                             var provider = Router.RemoteWriterProvider.InitRemote(remote);
                             writer = provider.InitWriter(RouteContext);
-                            servers[endpoint] = writer;
+                            servers[key] = writer;
                         }
                         catch (Exception)
                         {

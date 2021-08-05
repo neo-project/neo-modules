@@ -12,7 +12,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
             List<ContainerID> list = new();
             db.Iterate(ContainerPrefix, (key, value) =>
             {
-                list.Add(ContainerID.FromSha256Bytes(key[1..]));
+                list.Add(ContainerID.FromValue(key[1..]));
                 return false;
             });
             return list;

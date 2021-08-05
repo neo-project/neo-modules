@@ -28,7 +28,7 @@ namespace Neo.FileStorage.Storage
                     RemoteProvider = new RemoteLoadAnnounceProvider
                     {
                         Key = key,
-                        LocalAddress = LocalAddress,
+                        LocalAddresses = LocalAddresses,
                         ClientCache = new ClientCache(),
                         DeadEndProvider = new SimpleProvider(loadAccumulator),
                     },
@@ -86,7 +86,7 @@ namespace Neo.FileStorage.Storage
                                     RemoteProvider = new()
                                     {
                                         Key = key,
-                                        LocalAddress = LocalAddress,
+                                        LocalAddresses = LocalAddresses,
                                         ClientCache = new ClientCache(),
                                         DeadEndProvider = new SimpleProvider(loadAccumulator),
                                     },

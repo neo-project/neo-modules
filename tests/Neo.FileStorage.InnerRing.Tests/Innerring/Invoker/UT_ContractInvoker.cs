@@ -137,7 +137,6 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
             var nodeInfo = new NodeInfo()
             {
                 PublicKey = ByteString.CopyFrom(key.PublicKey.ToArray()),
-                Address = "",
                 State = NodeInfo.Types.State.Online
             };
             morphInvoker.ApprovePeer(nodeInfo.ToByteArray());

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Network;
 using Neo.FileStorage.Placement;
@@ -9,12 +10,12 @@ namespace Neo.FileStorage.Storage.Services.Object.Util
     public class LocalPlacementBuilder : IPlacementBuilder
     {
         private readonly IPlacementBuilder builder;
-        private readonly Address localAddress;
+        private readonly List<Address> localAddresses;
 
-        public LocalPlacementBuilder(IPlacementBuilder builder, Address address)
+        public LocalPlacementBuilder(IPlacementBuilder builder, List<Address> addresses)
         {
             this.builder = builder;
-            localAddress = address;
+            localAddresses = addresses;
         }
 
         public List<List<Node>> BuildPlacement(FSAddress address, PlacementPolicy policy)
@@ -24,8 +25,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Util
             {
                 foreach (var n in ns)
                 {
-                    var addr = Address.FromString(n.NetworkAddress);
-                    if (addr == localAddress)
+                    if (localAddresses.Intersect(n.NetworkAddresses.Select(p => Network.Address.FromString(p))).Any())
                         return new List<List<Node>> { new List<Node> { n } };
                 }
             }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Protobuf;
@@ -132,7 +133,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Writer
 
             if (prm.Local)
             {
-                traverser = new Traverser(new LocalPlacementBuilder(builder, PutService.LocalAddress), container.PlacementPolicy, prm.Header.Address, 1);
+                traverser = new Traverser(new LocalPlacementBuilder(builder, PutService.LocalAddresses), container.PlacementPolicy, prm.Header.Address, 1);
                 return;
             }
             traverser = new Traverser(builder, container.PlacementPolicy, prm.Header.Address);
@@ -156,26 +157,26 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Writer
 
         public DistributeTarget NewCommonTarget(PutInitPrm prm)
         {
-            Action<Network.Address> relay = null;
+            Action<List<Network.Address>> relay = null;
             if (prm.Relay is not null)
             {
-                relay = address =>
+                relay = addresses =>
                 {
-                    if (address.Equals(PutService.LocalAddress))
+                    if (PutService.LocalAddresses.Intersect(addresses).Any())
                         return;
-                    var c = PutService.ClientCache.Get(address);
+                    var c = PutService.ClientCache.Get(addresses);
                     prm.Relay(c);
                 };
             }
             return new DistributeTarget
             {
-                LocalAddress = PutService.LocalAddress,
+                LocalAddresses = PutService.LocalAddresses,
                 Traverser = traverser,
                 Relay = relay,
                 ObjectValidator = new ObjectValidator(PutService.ObjectInhumer, PutService.MorphInvoker),
-                NodeTargetInitializer = address =>
+                NodeTargetInitializer = addresses =>
                 {
-                    if (address == PutService.LocalAddress)
+                    if (PutService.LocalAddresses.Intersect(addresses).Any())
                         return new LocalTarget
                         {
                             LocalStorage = PutService.LocalStorage,
@@ -185,7 +186,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Writer
                         Cancellation = Cancellation,
                         KeyStorage = PutService.KeyStorage,
                         Prm = prm,
-                        Address = address,
+                        Addresses = addresses,
                         ClientCache = PutService.ClientCache,
                     };
                 }

@@ -1,5 +1,6 @@
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.Storage.Services.Object.Search.Remote;
+using System.Collections.Generic;
 
 namespace Neo.FileStorage.Storage.Services.Object.Search.Clients
 {
@@ -12,9 +13,9 @@ namespace Neo.FileStorage.Storage.Services.Object.Search.Clients
             clientCache = cache;
         }
 
-        ISearchClient ISearchClientCache.Get(Network.Address address)
+        public ISearchClient Get(List<Network.Address> addresses)
         {
-            return new SearchClient(clientCache.Get(address));
+            return new SearchClient(clientCache.Get(addresses));
         }
     }
 }

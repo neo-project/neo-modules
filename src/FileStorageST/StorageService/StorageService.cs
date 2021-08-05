@@ -52,7 +52,7 @@ namespace Neo.FileStorage.Storage
         private readonly IActorRef listener;
         private readonly StorageEngine localStorage;
         public ProtocolSettings ProtocolSettings => system.Settings;
-        private Network.Address LocalAddress => Network.Address.FromString(LocalNodeInfo.Address);
+        private List<Network.Address> LocalAddresses => LocalNodeInfo.Addresses.Select(p => Network.Address.FromString(p)).ToList();
         private readonly NetmapProcessor netmapProcessor = new();
         private readonly ContainerProcessor containerProcessor = new();
         private readonly List<BlockTimer> blockTimers = new();
@@ -65,9 +65,9 @@ namespace Neo.FileStorage.Storage
             HealthStatus = HealthStatus.Starting;
             LocalNodeInfo = new()
             {
-                Address = Settings.Default.Address,
                 PublicKey = ByteString.CopyFrom(key.PublicKey()),
             };
+            LocalNodeInfo.Addresses.AddRange(Settings.Default.Addresses);
             LocalNodeInfo.Attributes.AddRange(Settings.Default.Attributes.Select(p =>
             {
                 var li = p.Split(":");

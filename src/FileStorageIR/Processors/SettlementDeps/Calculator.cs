@@ -58,7 +58,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessResult(SingleResultCtx ctx)
         {
-            Utility.Log("Calculator", LogLevel.Debug, $"cid={ctx.ContainerId.ToBase58String()}, audit_epoch={ctx.Epoch}");
+            Utility.Log("Calculator", LogLevel.Debug, $"cid={ctx.ContainerId.String()}, audit_epoch={ctx.Epoch}");
             Utility.Log("Calculator", LogLevel.Debug, "reading information about the container");
             if (!ReadContainerInfo(ctx)) return;
             Utility.Log("Calculator", LogLevel.Debug, "building placement");

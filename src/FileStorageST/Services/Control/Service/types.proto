@@ -32,7 +32,7 @@ message NodeInfo {
     bytes public_key = 1 [json_name = "publicKey"];
 
     // Ways to connect to a node.
-    string address = 2 [json_name = "address"];
+    repeated string addresses = 2 [json_name = "addresses"];
 
     // Administrator-defined Attributes of the NeoFS Storage Node.
     //

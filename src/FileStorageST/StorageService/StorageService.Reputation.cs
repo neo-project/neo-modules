@@ -63,7 +63,7 @@ namespace Neo.FileStorage.Storage
             ClientCache clientCache = new();
             RemoteTrustProvider remoteLocalTrustProvider = new()
             {
-                LocalAddress = LocalAddress,
+                LocalAddresses = LocalAddresses,
                 DeadEndProvider = daughterStorageWriterProvider,
                 ClientCache = clientCache,
                 RemoteProvider = new Storage.Services.Reputaion.Local.Remote.RemoteProvider
@@ -73,7 +73,7 @@ namespace Neo.FileStorage.Storage
             };
             RemoteTrustProvider remoteIntermediateTrustProvider = new()
             {
-                LocalAddress = LocalAddress,
+                LocalAddresses = LocalAddresses,
                 DeadEndProvider = consumerStorageWriterProvider,
                 ClientCache = clientCache,
                 RemoteProvider = new Storage.Services.Reputaion.Intermediate.Remote.RemoteProvider

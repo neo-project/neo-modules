@@ -47,8 +47,11 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void ProcessStartAudit(ulong epoch)
         {
-            PrevAuditCanceler.Cancel();
-            PrevAuditCanceler.Dispose();
+            if (!PrevAuditCanceler.IsCancellationRequested)
+            {
+                PrevAuditCanceler.Cancel();
+                PrevAuditCanceler.Dispose();
+            }
             int skipped = (int)TaskManager.Ask(new ResetMessage()).Result;
             if (skipped > 0) Utility.Log(Name, LogLevel.Info, $"some tasks from previous epoch are skipped, amount={skipped}");
             ContainerID[] containers;
@@ -72,6 +75,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Error, $"can't fetch network map, error={e}");
                 return;
             }
+            PrevAuditCanceler = new CancellationTokenSource();
             for (int i = 0; i < containers.Length; i++)
             {
                 Container cnr;
@@ -88,6 +92,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 List<List<Node>> nodes;
                 try
                 {
+                    Console.WriteLine($"container={containers[i]}");
                     nodes = nm.GetContainerNodes(cnr.PlacementPolicy, pivot);
                 }
                 catch (Exception e)
@@ -100,7 +105,6 @@ namespace Neo.FileStorage.InnerRing.Processors
                 var storageGroups = FindStorageGroups(containers[i], n);
                 Utility.Log(Name, LogLevel.Info, $"select storage groups for audit, cid={containers[i]}, count={storageGroups.Length}");
 
-                PrevAuditCanceler = new CancellationTokenSource();
                 AuditTask auditTask = new()
                 {
                     Reporter = new EpochAuditReporter()
@@ -130,7 +134,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 throw new InvalidOperationException($"can't get list of containers to start audit, error={e}");
             }
-            containers.Sort((x, y) => x.ToBase58String().CompareTo(y.ToBase58String()));
+            containers.Sort((x, y) => x.String().CompareTo(y.String()));
             var ind = State.InnerRingIndex();
             var irSize = State.InnerRingSize();
             if (ind < 0 || ind >= irSize) throw new InvalidOperationException("node is not in the inner ring list");
@@ -164,15 +168,15 @@ namespace Neo.FileStorage.InnerRing.Processors
             List<ObjectID> sg = new();
             for (int i = 0; i < shuffled.Length; i++)
             {
-                string pairs = $"cid={cid.ToBase58String()},";
-                pairs += $" address={shuffled[i].Info.Address},";
+                string pairs = $"cid={cid.String()},";
+                pairs += $" key={shuffled[i].PublicKey.ToHexString()},";
                 pairs += $" try={i},";
                 pairs += $" total_tries={shuffled}";
                 Utility.Log(Name, LogLevel.Info, pairs);
-                Network.Address address;
+                List<Network.Address> address;
                 try
                 {
-                    address = Network.Address.FromString(shuffled[i].NetworkAddress);
+                    address = shuffled[i].NetworkAddresses.Select(p => Network.Address.FromString(p)).ToList();
                 }
                 catch (Exception e)
                 {
@@ -210,8 +214,11 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public void Dispose()
         {
-            PrevAuditCanceler?.Cancel();
-            PrevAuditCanceler?.Dispose();
+            if (!PrevAuditCanceler.IsCancellationRequested)
+            {
+                PrevAuditCanceler.Cancel();
+                PrevAuditCanceler.Dispose();
+            }
             key?.Dispose();
         }
     }

@@ -177,7 +177,7 @@ namespace Neo.FileStorage.InnerRing.Services.Audit.Auditor
 
         private byte[] ObjectHomoHash(ObjectID oid)
         {
-            if (HeaderCache.TryGetValue(oid.ToBase58String(), out ShortHeader header))
+            if (HeaderCache.TryGetValue(oid.String(), out ShortHeader header))
             {
                 return header.TzHash;
             }

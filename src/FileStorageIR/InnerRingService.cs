@@ -417,7 +417,7 @@ namespace Neo.FileStorage.InnerRing
 
         public void WriteReport(Report r)
         {
-            IEnumerable<Wallets.WalletAccount> accounts = sideWallet.GetAccounts();
+            IEnumerable<WalletAccount> accounts = sideWallet.GetAccounts();
             DataAuditResult res = r.Result();
             res.PublicKey = ByteString.CopyFrom(accounts.ToArray()[0].GetKey().PublicKey.ToArray());
             morphInvoker.PutAuditResult(res.ToByteArray());

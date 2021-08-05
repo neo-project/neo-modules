@@ -120,7 +120,7 @@ namespace Neo.FileStorage.InnerRing
             {
                 Path = continentsPath
             };
-            StorageDB targetDb = new(targetDBPath);
+            using StorageDB targetDb = new(targetDBPath);
             targetDb.FillDatabase(locodeDB, airportsDB, continentDB);
         }
 
@@ -147,7 +147,7 @@ namespace Neo.FileStorage.InnerRing
             {
                 Path = continentsPath
             };
-            StorageDB targetDb = new(DefaultTargetPath);
+            using StorageDB targetDb = new(DefaultTargetPath);
             targetDb.FillDatabase(locodeDB, airportsDB, continentDB);
         }
     }

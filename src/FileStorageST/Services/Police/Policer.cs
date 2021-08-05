@@ -78,16 +78,16 @@ namespace Neo.FileStorage.Storage.Services.Police
             bool redundantLocalCopy = false;
             for (int i = 0; i < nodes.Count; i++)
             {
-                Network.Address node;
+                List<Network.Address> addrs;
                 try
                 {
-                    node = Network.Address.FromString(nodes[i].NetworkAddress);
+                    addrs = nodes[i].NetworkAddresses.Select(p => Network.Address.FromString(p)).ToList();
                 }
                 catch (Exception)
                 {
                     continue;
                 }
-                if (node.Equals(config.LocalAddress))
+                if (addrs.Intersect(config.LocalAddresses).Any())
                 {
                     if (shortage == 0)
                         redundantLocalCopy = true;
@@ -96,7 +96,7 @@ namespace Neo.FileStorage.Storage.Services.Police
                 }
                 else if (0 < shortage)
                 {
-                    prm.Node = node;
+                    prm.Addresses = addrs;
                     using CancellationTokenSource source = new(config.HeadTimeout);
                     try
                     {

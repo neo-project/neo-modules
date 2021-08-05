@@ -104,12 +104,10 @@ namespace Neo.FileStorage.InnerRing.Tests.Services.Audit
             };
             Node node1 = new(0, new()
             {
-                Address = "localhost",
                 PublicKey = ByteString.CopyFrom(key.PublicKey()),
             });
             Node node2 = new(0, new()
             {
-                Address = "localhost",
                 PublicKey = ByteString.CopyFrom(key.PublicKey().Reverse().ToArray()),
             });
             NetMap nm = new(new List<Node> { node1, node2 });

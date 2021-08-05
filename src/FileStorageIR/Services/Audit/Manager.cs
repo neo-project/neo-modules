@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Neo.FileStorage.InnerRing.Services.Audit.Auditor;
@@ -11,6 +12,7 @@ namespace Neo.FileStorage.InnerRing.Services.Audit
     {
         public const int DefaultCapacity = 100;
         public class ResetMessage { }
+        public class CompleteTask { }
         private readonly int taskQueueCapacity = DefaultCapacity;
         private readonly IContainerCommunicator communicator;
         private readonly ulong maxPDPIntervalMilliseconds;
@@ -40,6 +42,9 @@ namespace Neo.FileStorage.InnerRing.Services.Audit
                 case ResetMessage _:
                     Sender.Tell(Reset());
                     break;
+                case CompleteTask _:
+                    HandleTask();
+                    break;
             }
         }
 
@@ -64,10 +69,11 @@ namespace Neo.FileStorage.InnerRing.Services.Audit
                     PorPool = porPoolGenerator(),
                     PdpPool = pdpPoolGenerator()
                 };
+                var actor = Self;
                 Task t = new(() =>
                 {
                     task.Auditor.Execute();
-                    HandleTask();
+                    actor.Tell(new CompleteTask());
                 });
                 if ((bool)workPool.Ask(new WorkerPool.NewTask() { Process = "AuditManager", Task = t }).Result)
                 {

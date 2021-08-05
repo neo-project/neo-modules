@@ -6,16 +6,17 @@ using Neo.FileStorage.Core.Object;
 using Neo.FileStorage.Placement;
 using Neo.FileStorage.Storage.Services.ObjectManager.Transformer;
 using FSObject = Neo.FileStorage.API.Object.Object;
+using System.Collections.Generic;
 
 namespace Neo.FileStorage.Storage.Services.Object.Put
 {
     public class DistributeTarget : IObjectTarget
     {
-        public Network.Address LocalAddress { get; init; }
+        public List<Network.Address> LocalAddresses { get; init; }
         public Traverser Traverser { get; init; }
         public ObjectValidator ObjectValidator { get; init; }
-        public Func<Network.Address, IObjectTarget> NodeTargetInitializer { get; init; }
-        public Action<Network.Address> Relay;
+        public Func<List<Network.Address>, IObjectTarget> NodeTargetInitializer { get; init; }
+        public Action<List<Network.Address>> Relay;
 
         private FSObject obj;
         private byte[] payload;

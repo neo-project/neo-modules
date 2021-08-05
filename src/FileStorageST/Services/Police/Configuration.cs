@@ -5,6 +5,7 @@ using Neo.FileStorage.Placement;
 using Neo.FileStorage.Storage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Storage.Services.Object.Head;
 using FSAddress = Neo.FileStorage.API.Refs.Address;
+using System.Collections.Generic;
 
 namespace Neo.FileStorage.Storage.Services.Police
 {
@@ -16,7 +17,7 @@ namespace Neo.FileStorage.Storage.Services.Police
         public int ExpandRate { get; init; } = DefaultExpandRate;
         public int WorkScope { get; set; } = DefaultWorkScope;
         public TimeSpan HeadTimeout { get; init; } = DefaultHeadTimeout;
-        public Network.Address LocalAddress { get; init; }
+        public List<Network.Address> LocalAddresses { get; init; }
         public MorphInvoker MorphInvoker { get; init; }
         public IActorRef ReplicatorRef { get; init; }
         public StorageEngine LocalStorage { get; init; }

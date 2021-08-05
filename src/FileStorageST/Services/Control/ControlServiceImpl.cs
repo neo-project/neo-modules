@@ -108,9 +108,9 @@ namespace Neo.FileStorage.Storage.Services.Control
             NodeInfo ni = new()
             {
                 PublicKey = n.PublicKey,
-                Address = n.Address,
                 State = (NetmapStatus)n.State,
             };
+            ni.Addresses.AddRange(n.Addresses);
             ni.Attributes.AddRange(n.Attributes.Select(p => AttributeFromAPI(p)));
             return ni;
         }

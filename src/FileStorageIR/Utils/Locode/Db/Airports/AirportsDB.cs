@@ -13,8 +13,8 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode.Db
     {
         public string AirportsPath { get; init; }
         public string CountriesPath { get; init; }
-        private readonly Once airportsOnce = new();
-        private readonly Once countriesOnce = new();
+        private bool airportsInitilized = false;
+        private bool countriesInitialized = false;
         private readonly Dictionary<string, string> mCountries = new();
         private readonly Dictionary<string, List<Record>> mAirports = new();
 
@@ -121,38 +121,36 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode.Db
 
         public void InitAirports()
         {
-            airportsOnce.Do(() =>
+            if (airportsInitilized) return;
+            InitCountries();
+            ScanRecords<Airport>(AirportsPath, airport =>
             {
-                InitCountries();
-                ScanRecords<Airport>(AirportsPath, airport =>
+                if (mCountries.TryGetValue(airport.Country, out var countryCode))
                 {
-                    if (mCountries.TryGetValue(airport.Country, out var countryCode))
+                    Record record = new()
                     {
-                        Record record = new()
-                        {
-                            City = airport.City,
-                            Country = airport.Country,
-                            Iata = airport.IATA,
-                            Lat = airport.Latitude,
-                            Lng = airport.Longitude,
-                        };
-                        if (mAirports.TryGetValue(countryCode, out var records))
-                            records.Add(record);
-                        else
-                            mAirports[countryCode] = new List<Record>() { record };
-                    }
-                });
+                        City = airport.City,
+                        Country = airport.Country,
+                        Iata = airport.IATA,
+                        Lat = airport.Latitude,
+                        Lng = airport.Longitude,
+                    };
+                    if (mAirports.TryGetValue(countryCode, out var records))
+                        records.Add(record);
+                    else
+                        mAirports[countryCode] = new List<Record>() { record };
+                }
             });
+            airportsInitilized = true;
         }
         public void InitCountries()
         {
-            countriesOnce.Do(() =>
+            if (countriesInitialized) return;
+            ScanRecords<Country>(CountriesPath, country =>
             {
-                ScanRecords<Country>(CountriesPath, country =>
-                {
-                    mCountries[country.Name] = country.ISOCode;
-                });
+                mCountries[country.Name] = country.ISOCode;
             });
+            countriesInitialized = true;
         }
 
         public void ScanRecords<T>(string path, Action<T> handler)

@@ -52,14 +52,14 @@ namespace Neo.FileStorage.InnerRing.Services.Audit.Auditor
 
         private ulong ObjectSize(ObjectID oid)
         {
-            if (HeaderCache.TryGetValue(oid.ToBase58String(), out ShortHeader header))
+            if (HeaderCache.TryGetValue(oid.String(), out ShortHeader header))
                 return header.ObjectSize;
             return 0;
         }
 
         private void UpdateHeader(FSObject header)
         {
-            HeaderCache[header.ObjectId.ToBase58String()] = new ShortHeader
+            HeaderCache[header.ObjectId.String()] = new ShortHeader
             {
                 TzHash = header.Header.HomomorphicHash.Sum.ToByteArray(),
                 ObjectSize = header.PayloadSize,

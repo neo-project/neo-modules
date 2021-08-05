@@ -38,16 +38,16 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
             traverser = GenerateTraverser(Prm.Address);
             while (true)
             {
-                var addrs = traverser.Next();
-                if (!addrs.Any())
+                var addrses = traverser.Next();
+                if (!addrses.Any())
                 {
                     Log("GetExecutor", LogLevel.Debug, " no more nodes, abort placement iteration");
                     return false;
                 }
-                foreach (var addr in addrs)
+                foreach (var addrs in addrses)
                 {
                     if (Cancellation.IsCancellationRequested) throw new OperationCanceledException();
-                    if (ProcessNode(addr))
+                    if (ProcessNode(addrs))
                     {
                         Log(nameof(ExecuteOnContainer), LogLevel.Debug, " completing the operation");
                         return true;

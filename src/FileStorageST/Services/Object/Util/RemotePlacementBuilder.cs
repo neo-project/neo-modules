@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Network;
@@ -10,12 +11,12 @@ namespace Neo.FileStorage.Storage.Services.Object.Util
 {
     public class RemotePlacementBuilder : NetworkMapBuilder
     {
-        private readonly Address localAddress;
+        private readonly List<Address> localAddresses;
 
-        public RemotePlacementBuilder(MorphInvoker invoker, Address address)
+        public RemotePlacementBuilder(MorphInvoker invoker, List<Address> addresses)
         : base(invoker)
         {
-            localAddress = address;
+            localAddresses = addresses;
         }
 
         public override List<List<Node>> BuildPlacement(FSAddress address, PlacementPolicy policy)
@@ -25,21 +26,21 @@ namespace Neo.FileStorage.Storage.Services.Object.Util
             {
                 foreach (var n in ns)
                 {
-                    Address addr;
+                    List<Address> addrs;
                     try
                     {
-                        addr = Address.FromString(n.NetworkAddress);
+                        addrs = n.NetworkAddresses.Select(p => Address.FromString(p)).ToList();
                     }
                     catch (Exception e)
                     {
                         Utility.Log(nameof(RemotePlacementBuilder), LogLevel.Error, e.Message);
                         continue;
                     }
-                    if (addr == localAddress)
+                    if (addrs.Intersect(localAddresses).Any())
                         ns.Remove(n);
                 }
             }
-            return null;
+            return node_list;
         }
     }
 }

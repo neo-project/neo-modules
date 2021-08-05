@@ -72,7 +72,7 @@ namespace FileStorageCLI
         }
 
         [ConsoleCommand("fs object list", Category = "FileStorageService", Description = "list object")]
-        private void OnListObject(string containerId,string paccount = null)
+        private void OnListObject(string containerId, string paccount = null)
         {
             if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
             var cid = ContainerID.FromBase58String(containerId);

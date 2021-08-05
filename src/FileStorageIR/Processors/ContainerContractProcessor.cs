@@ -152,12 +152,12 @@ namespace Neo.FileStorage.InnerRing.Processors
             var checkKeys = new List<byte[]>();
             try
             {
-                var cnr = MorphInvoker.GetContainer(ContainerID.FromSha256Bytes(deleteEvent.ContainerID));
+                var cnr = MorphInvoker.GetContainer(ContainerID.FromValue(deleteEvent.ContainerID));
                 SessionToken token = null;
                 if (deleteEvent.Token != null && deleteEvent.Token.Any())
                 {
                     token = SessionToken.Parser.ParseFrom(deleteEvent.Token);
-                    var containerId = ContainerID.FromSha256Bytes(deleteEvent.ContainerID);
+                    var containerId = ContainerID.FromValue(deleteEvent.ContainerID);
                     CheckTokenContextWithCID(token, containerId, (ContainerSessionContext c) => { return c.Verb == ContainerSessionContext.Types.Verb.Delete; });
                     var key = token.Body.SessionKey.ToByteArray();
                     CheckKeyOwnershipWithToken(cnr, key, token);

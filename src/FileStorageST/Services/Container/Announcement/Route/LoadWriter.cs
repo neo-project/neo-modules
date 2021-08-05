@@ -10,7 +10,7 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement.Route
     public class LoadWriter : IWriter
     {
         public LoadRouter Router;
-        public CancellationToken Cancellation;
+        public CancellationToken Token;
         public RouteContext RouteContext;
         public Dictionary<RouteKey, RouteValue> mRoute = new();
         public Dictionary<string, IWriter> mServers = new();
@@ -20,7 +20,7 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement.Route
             RouteKey key = new()
             {
                 Epoch = announcement.Epoch,
-                Cid = announcement.ContainerId.ToBase58String(),
+                Cid = announcement.ContainerId.String(),
             };
             bool exists = mRoute.TryGetValue(key, out RouteValue value);
             if (!exists)
@@ -37,23 +37,23 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement.Route
             }
             foreach (var remoteInfo in value.Route)
             {
-                string endpoint = "";
+                string pk = "";
                 if (remoteInfo is not null)
-                    endpoint = remoteInfo.Address;
-                exists = mServers.TryGetValue(endpoint, out IWriter remoteWriter);
+                    pk = remoteInfo.PublicKey.ToBase64();
+                exists = mServers.TryGetValue(pk, out IWriter remoteWriter);
                 if (!exists)
                 {
                     try
                     {
                         var provider = Router.RemoteProvider.InitRemote(remoteInfo);
-                        remoteWriter = provider.InitWriter(Cancellation);
+                        remoteWriter = provider.InitWriter(Token);
                     }
                     catch (Exception e)
                     {
                         Log(nameof(LoadWriter), LogLevel.Debug, $"could not initilize writer or provider, error={e.Message}");
                         continue;
                     }
-                    mServers[endpoint] = remoteWriter;
+                    mServers[pk] = remoteWriter;
                 }
                 try
                 {

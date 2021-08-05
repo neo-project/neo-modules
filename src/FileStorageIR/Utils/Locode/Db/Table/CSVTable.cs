@@ -14,7 +14,7 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode
         private readonly string[] paths;
         private readonly string subDivPath;
         private readonly Dictionary<(string, string), string> mSubDiv = new();
-        private readonly Once subDivOnce = new();
+        private bool subDivInitialized = false;
 
         public class SubdivisionCode
         {
@@ -108,13 +108,12 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode
 
         public void InitSubDiv()
         {
-            subDivOnce.Do(() =>
+            if (subDivInitialized) return;
+            ScanRecords<SubdivisionCode>(new string[] { subDivPath }, s =>
             {
-                ScanRecords<SubdivisionCode>(new string[] { subDivPath }, s =>
-                {
-                    mSubDiv[(s.Country, s.Subdivision)] = s.Name;
-                });
+                mSubDiv[(s.Country, s.Subdivision)] = s.Name;
             });
+            subDivInitialized = true;
         }
 
         public void ScanRecords<T>(string[] paths, Action<T> handler)
