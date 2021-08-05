@@ -120,6 +120,7 @@ namespace FileStorageCLI
             if (engine.State != VMState.HALT)
             {
                 Console.WriteLine($"Execution of Withdraw request failed,error:{engine.FaultException}");
+                return;
             }
             tx.SystemFee = engine.GasConsumed;
             tx.NetworkFee = currentWallet.CalculateNetworkFee(snapshot, tx);

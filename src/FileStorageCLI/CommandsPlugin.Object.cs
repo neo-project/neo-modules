@@ -22,7 +22,7 @@ namespace FileStorageCLI
     public partial class CommandsPlugin : Plugin
     {
         [ConsoleCommand("fs object put", Category = "FileStorageService", Description = "Put a object")]
-        public void OnPutObject(string containerId, string pdata, string paccount = null)
+        private void OnPutObject(string containerId, string pdata, string paccount = null)
         {
             if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
             if (pdata.Length > 2048 || pdata.Length < 1024)
@@ -80,8 +80,6 @@ namespace FileStorageCLI
             using var source = new CancellationTokenSource();
             source.CancelAfter(TimeSpan.FromMinutes(1));
             var filter = new SearchFilters();
-            filter.AddTypeFilter(MatchType.StringEqual, ObjectType.StorageGroup);
-            filter.AddTypeFilter(MatchType.StringEqual, ObjectType.Regular);
             List<ObjectID> objs = client.SearchObject(cid, filter, context: source.Token).Result;
             source.Cancel();
             Console.WriteLine($"list object,cid:{cid}");
@@ -241,5 +239,6 @@ namespace FileStorageCLI
                 return false;
             }
         }
+
     }
 }
