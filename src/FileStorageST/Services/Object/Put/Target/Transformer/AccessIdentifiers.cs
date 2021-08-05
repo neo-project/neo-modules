@@ -1,7 +1,7 @@
 using Neo.FileStorage.API.Refs;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
-namespace Neo.FileStorage.Storage.Services.ObjectManager.Transformer
+namespace Neo.FileStorage.Storage.Services.Object.Put.Target
 {
     public class AccessIdentifiers
     {

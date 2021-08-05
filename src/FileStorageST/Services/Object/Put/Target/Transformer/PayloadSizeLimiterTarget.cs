@@ -8,7 +8,7 @@ using FSAttribute = Neo.FileStorage.API.Object.Header.Types.Attribute;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 
-namespace Neo.FileStorage.Storage.Services.ObjectManager.Transformer
+namespace Neo.FileStorage.Storage.Services.Object.Put.Target
 {
     public class PayloadSizeLimiterTarget : IObjectTarget
     {

@@ -4,7 +4,7 @@ using Neo.FileStorage.Invoker.Morph;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSVersion = Neo.FileStorage.API.Refs.Version;
 
-namespace Neo.FileStorage.Storage.Services.ObjectManager.Transformer
+namespace Neo.FileStorage.Storage.Services.Object.Put.Target
 {
     public class FormatTarget : IObjectTarget
     {

@@ -21,7 +21,7 @@ namespace Neo.FileStorage.Storage.Cache
             });
         }
 
-        public NetMap GetNetMap(ulong diff)
+        public NetMap GetNetMapByDiff(ulong diff)
         {
             return GetNetMapByEpoch(storageService.CurrentEpoch - diff);
         }

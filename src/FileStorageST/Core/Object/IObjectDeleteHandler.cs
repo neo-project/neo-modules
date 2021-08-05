@@ -1,6 +1,6 @@
 using Neo.FileStorage.API.Refs;
 
-namespace Neo.FileStorage.Core.Object
+namespace Neo.FileStorage.Storage.Core.Object
 {
     public interface IObjectDeleteHandler
     {

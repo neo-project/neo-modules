@@ -38,9 +38,9 @@
           "SmallSizeLimit": 1048576,
           "Blobovnicza": {
             "Size": 1073741824,
-            "ShallowDepth": 2,
+            "ShallowDepth": 1,
             "ShallowWidth": 2,
-            "OpenCacheSize": 16
+            "OpenCacheSize": 8
           }
         },
         "Metabase": {
@@ -63,9 +63,9 @@
           "SmallSizeLimit": 1048576,
           "Blobovnicza": {
             "Size": 1073741824,
-            "ShallowDepth": 2,
+            "ShallowDepth": 1,
             "ShallowWidth": 2,
-            "OpenCacheSize": 16
+            "OpenCacheSize": 8
           }
         },
         "Metabase": {

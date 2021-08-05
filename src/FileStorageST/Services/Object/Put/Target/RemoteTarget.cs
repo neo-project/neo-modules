@@ -1,12 +1,11 @@
 using System.Threading;
 using Google.Protobuf;
 using Neo.FileStorage.Storage.Services.Object.Util;
-using Neo.FileStorage.Storage.Services.ObjectManager.Transformer;
 using Neo.FileStorage.Storage.Services.Reputaion.Local.Client;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using System.Collections.Generic;
 
-namespace Neo.FileStorage.Storage.Services.Object.Put
+namespace Neo.FileStorage.Storage.Services.Object.Put.Target
 {
     public class RemoteTarget : IObjectTarget
     {

@@ -8,12 +8,13 @@ using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Session;
-using Neo.FileStorage.Core.Object;
+using Neo.FileStorage.Storage.Core.Object;
 using Neo.FileStorage.Placement;
 using Neo.FileStorage.Storage.Services.Object.Util;
-using Neo.FileStorage.Storage.Services.ObjectManager.Transformer;
+using Neo.FileStorage.Storage.Placement;
+using Neo.FileStorage.Storage.Services.Object.Put.Target;
 
-namespace Neo.FileStorage.Storage.Services.Object.Put.Writer
+namespace Neo.FileStorage.Storage.Services.Object.Put
 {
     public class PutStream : IRequestStream
     {

@@ -2,7 +2,7 @@ using System;
 using Akka.Actor;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Cache;
+using Neo.FileStorage.Storage.Cache;
 using Neo.FileStorage.Placement;
 using Neo.FileStorage.Storage.Services.Container.Announcement;
 using Neo.FileStorage.Storage.Services.Object.Acl;

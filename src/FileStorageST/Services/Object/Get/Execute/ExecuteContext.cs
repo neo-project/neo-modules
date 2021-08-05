@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.Placement;
+using Neo.FileStorage.Storage.Placement;
 using Neo.FileStorage.Storage.LocalObjectStorage;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSRange = Neo.FileStorage.API.Object.Range;

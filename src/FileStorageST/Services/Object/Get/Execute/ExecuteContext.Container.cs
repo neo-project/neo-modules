@@ -1,8 +1,7 @@
 using System;
 using System.Linq;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Invoker.Morph;
-using Neo.FileStorage.Placement;
+using Neo.FileStorage.Storage.Placement;
 using static Neo.Utility;
 
 namespace Neo.FileStorage.Storage.Services.Object.Get.Execute

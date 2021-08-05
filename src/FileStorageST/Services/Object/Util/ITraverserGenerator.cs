@@ -1,4 +1,4 @@
-using Neo.FileStorage.Placement;
+using Neo.FileStorage.Storage.Placement;
 using FSAddress = Neo.FileStorage.API.Refs.Address;
 
 namespace Neo.FileStorage.Storage.Services.Object.Util

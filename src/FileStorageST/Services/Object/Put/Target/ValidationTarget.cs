@@ -1,12 +1,11 @@
 using System;
 using Google.Protobuf;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Core.Object;
-using Neo.FileStorage.Storage.Services.ObjectManager.Transformer;
+using Neo.FileStorage.Storage.Core.Object;
 using static Neo.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
-namespace Neo.FileStorage.Storage.Services.Object.Put
+namespace Neo.FileStorage.Storage.Services.Object.Put.Target
 {
     public class ValidationTarget : IObjectTarget
     {

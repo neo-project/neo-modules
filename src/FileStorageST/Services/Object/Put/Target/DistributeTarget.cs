@@ -2,13 +2,12 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Google.Protobuf;
-using Neo.FileStorage.Core.Object;
-using Neo.FileStorage.Placement;
-using Neo.FileStorage.Storage.Services.ObjectManager.Transformer;
+using Neo.FileStorage.Storage.Core.Object;
+using Neo.FileStorage.Storage.Placement;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using System.Collections.Generic;
 
-namespace Neo.FileStorage.Storage.Services.Object.Put
+namespace Neo.FileStorage.Storage.Services.Object.Put.Target
 {
     public class DistributeTarget : IObjectTarget
     {

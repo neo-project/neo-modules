@@ -1,7 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
+using Neo.FileStorage.Cache;
 
-namespace Neo.FileStorage.Cache
+namespace Neo.FileStorage.Storage.Cache
 {
     public class TTLNetworkCache<K, V> where K : IEquatable<K>
     {

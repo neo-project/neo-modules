@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Placement;
+using Neo.FileStorage.Storage.Placement;
 using FSContainer = Neo.FileStorage.API.Container.Container;
 
 namespace Neo.FileStorage.Tests.Services.ObjectManager

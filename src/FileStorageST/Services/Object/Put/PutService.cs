@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Network;
 using Neo.FileStorage.Storage.LocalObjectStorage.Engine;
-using Neo.FileStorage.Storage.Services.Object.Put.Writer;
 using Neo.FileStorage.Storage.Services.Object.Util;
 using Neo.FileStorage.Storage.Services.Reputaion.Local.Client;
 

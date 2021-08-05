@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 
-namespace Neo.FileStorage.Storage.Services.ObjectManager.Transformer
+namespace Neo.FileStorage.Storage.Services.Object.Put.Target
 {
     public sealed class PayloadHasher : IDisposable
     {

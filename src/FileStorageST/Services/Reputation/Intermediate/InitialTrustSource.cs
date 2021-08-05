@@ -10,7 +10,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Intermediate
 
         public double InitialTrust(PeerID peer)
         {
-            var nm = NetmapCache.GetNetMap(1);
+            var nm = NetmapCache.GetNetMapByDiff(1);
             if (!nm.Nodes.Any()) return 0;
             return 1.0 / nm.Nodes.Count;
         }

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Placement;
 
-namespace Neo.FileStorage.Placement
+namespace Neo.FileStorage.Storage.Placement
 {
     public class Traverser
     {

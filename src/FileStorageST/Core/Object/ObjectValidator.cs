@@ -9,7 +9,7 @@ using Neo.FileStorage.API.Tombstone;
 using Neo.FileStorage.Invoker.Morph;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
-namespace Neo.FileStorage.Core.Object
+namespace Neo.FileStorage.Storage.Core.Object
 {
     public class ObjectValidator
     {

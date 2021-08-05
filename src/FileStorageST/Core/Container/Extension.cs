@@ -2,7 +2,7 @@ using System;
 using Neo.FileStorage.API.Refs;
 using V2Container = Neo.FileStorage.API.Container;
 
-namespace Neo.FileStorage.Core.Container
+namespace Neo.FileStorage.Storage.Core.Container
 {
     public static class Extension
     {

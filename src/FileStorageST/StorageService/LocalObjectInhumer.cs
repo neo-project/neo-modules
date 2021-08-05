@@ -1,5 +1,5 @@
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Core.Object;
+using Neo.FileStorage.Storage.Core.Object;
 using Neo.FileStorage.Storage.LocalObjectStorage.Engine;
 
 namespace Neo.FileStorage.Storage

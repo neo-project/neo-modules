@@ -1,9 +1,8 @@
 using Google.Protobuf;
 using Neo.FileStorage.Storage.LocalObjectStorage.Engine;
-using Neo.FileStorage.Storage.Services.ObjectManager.Transformer;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
-namespace Neo.FileStorage.Storage.Services.Object.Put
+namespace Neo.FileStorage.Storage.Services.Object.Put.Target
 {
     public class LocalTarget : IObjectTarget
     {
