@@ -14,7 +14,7 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement
     public class UsedSpaceService
     {
         public ECDsa Key { get; init; }
-        public NodeInfo LocalNodeInfo { get; init; }
+        public ILocalInfoSource LocalInfo { get; init; }
         public LoadRouter Router { get; init; }
         public LoadPlacementBuilder Loadbuilder { get; init; }
         public RouteBuilder RouteBuilder { get; init; }
@@ -27,7 +27,7 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement
                 passed.Add(new() { PublicKey = header.BodySignature.Key });
             }
             passed.Reverse();
-            passed.Add(LocalNodeInfo);
+            passed.Add(LocalInfo.NodeInfo);
 
             var writer = Router.InitWriter(new RouteContext(passed, context));
             foreach (var announcement in request.Body.Announcements)

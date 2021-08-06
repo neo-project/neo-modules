@@ -21,7 +21,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
         public MorphInvoker MorphInvoker { get; init; }
         public StorageEngine LocalStorage { get; init; }
         public EAclValidator EAclValidator { get; init; }
-        public StorageService StorageService { get; init; }
+        public IEpochSource EpochSource { get; init; }
 
         public RequestInfo CheckRequest(IRequest request, Operation op)
         {
@@ -193,7 +193,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
             if (info.Bearer is null || info.Bearer.Body is null && info.Bearer.Signature is null)
                 return true;
 
-            if (!IsValidLifetime(info.Bearer.Body.Lifetime, StorageService.CurrentEpoch))
+            if (!IsValidLifetime(info.Bearer.Body.Lifetime, EpochSource.CurrentEpoch))
                 return false;
             if (!info.Bearer.Signature.VerifyMessagePart(info.Bearer.Body))
                 return false;

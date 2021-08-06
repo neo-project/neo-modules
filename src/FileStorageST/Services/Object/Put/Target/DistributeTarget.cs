@@ -11,7 +11,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
 {
     public class DistributeTarget : IObjectTarget
     {
-        public List<Network.Address> LocalAddresses { get; init; }
+        public ILocalInfoSource LocalAddressesSource { get; init; }
         public Traverser Traverser { get; init; }
         public ObjectValidator ObjectValidator { get; init; }
         public Func<List<Network.Address>, IObjectTarget> NodeTargetInitializer { get; init; }

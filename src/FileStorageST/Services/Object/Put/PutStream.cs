@@ -109,7 +109,11 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
             {
                 target = new ValidationTarget
                 {
-                    ObjectValidator = new ObjectValidator(PutService.ObjectInhumer, PutService.MorphInvoker),
+                    ObjectValidator = new ObjectValidator
+                    {
+                        DeleteHandler = PutService.ObjectInhumer,
+                        EpochSource = PutService.EpochSource,
+                    },
                     Next = NewCommonTarget(prm),
                 };
                 return;
@@ -121,7 +125,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
             {
                 Key = key,
                 SessionToken = prm.SessionToken,
-                MorphInvoker = PutService.MorphInvoker,
+                EpochSource = PutService.EpochSource,
                 Next = NewCommonTarget(prm)
             });
         }
@@ -134,7 +138,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
 
             if (prm.Local)
             {
-                traverser = new Traverser(new LocalPlacementBuilder(builder, PutService.LocalAddresses), container.PlacementPolicy, prm.Header.Address, 1);
+                traverser = new Traverser(new LocalPlacementBuilder(builder, PutService.LocalInfo.Addresses), container.PlacementPolicy, prm.Header.Address, 1);
                 return;
             }
             traverser = new Traverser(builder, container.PlacementPolicy, prm.Header.Address);
@@ -163,7 +167,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
             {
                 relay = addresses =>
                 {
-                    if (PutService.LocalAddresses.Intersect(addresses).Any())
+                    if (PutService.LocalInfo.Addresses.Intersect(addresses).Any())
                         return;
                     var c = PutService.ClientCache.Get(addresses);
                     prm.Relay(c);
@@ -171,13 +175,17 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
             }
             return new DistributeTarget
             {
-                LocalAddresses = PutService.LocalAddresses,
+                LocalAddressesSource = PutService.LocalInfo,
                 Traverser = traverser,
                 Relay = relay,
-                ObjectValidator = new ObjectValidator(PutService.ObjectInhumer, PutService.MorphInvoker),
+                ObjectValidator = new ObjectValidator
+                {
+                    DeleteHandler = PutService.ObjectInhumer,
+                    EpochSource = PutService.EpochSource,
+                },
                 NodeTargetInitializer = addresses =>
                 {
-                    if (PutService.LocalAddresses.Intersect(addresses).Any())
+                    if (PutService.LocalInfo.Addresses.Intersect(addresses).Any())
                         return new LocalTarget
                         {
                             LocalStorage = PutService.LocalStorage,

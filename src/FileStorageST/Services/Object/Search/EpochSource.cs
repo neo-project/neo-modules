@@ -6,14 +6,11 @@ namespace Neo.FileStorage.Storage.Services.Object.Search
     {
         private readonly MorphInvoker morphInvoker;
 
+        public ulong CurrentEpoch => morphInvoker.Epoch();
+
         public EpochSource(MorphInvoker invoker)
         {
             morphInvoker = invoker;
-        }
-
-        ulong IEpochSource.CurrentEpoch()
-        {
-            return morphInvoker.Epoch();
         }
     }
 }

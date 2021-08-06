@@ -27,7 +27,7 @@ namespace Neo.FileStorage.Storage
             KeyStorage keyStorage = new(key, tokenStore);
             reputationClientCache = new()
             {
-                StorageNode = this,
+                EpochSource = this,
                 MorphInvoker = morphInvoker,
                 ReputationStorage = new(),
             };
@@ -42,7 +42,7 @@ namespace Neo.FileStorage.Storage
             }));
             IActorRef policeRef = system.ActorSystem.ActorOf(Policer.Props(new()
             {
-                LocalAddresses = LocalAddresses,
+                LocalInfo = this,
                 LocalStorage = localStorage,
                 MorphInvoker = morphInvoker,
                 PlacementBuilder = new NetworkMapBuilder(morphInvoker),
@@ -83,7 +83,7 @@ namespace Neo.FileStorage.Storage
             PutService putService = new()
             {
                 MorphInvoker = morphInvoker,
-                LocalAddresses = LocalAddresses,
+                LocalInfo = this,
                 KeyStorage = keyStorage,
                 LocalStorage = localStorage,
                 ObjectInhumer = objInhumer,
@@ -96,7 +96,7 @@ namespace Neo.FileStorage.Storage
                 LocalStorage = localStorage,
                 ClientCache = reputationClientCache,
                 MorphInvoker = morphInvoker,
-                TraverserGenerator = new(morphInvoker, LocalAddresses, 1),
+                TraverserGenerator = new(morphInvoker, this, 1),
             };
             SearchService searchService = new()
             {
@@ -104,7 +104,7 @@ namespace Neo.FileStorage.Storage
                 LocalStorage = localStorage,
                 MorphClient = new EpochSource(morphInvoker),
                 ClientCache = new SearchClientCache(reputationClientCache),
-                TraverserGenerator = new TraverserGenerator(morphInvoker, LocalAddresses, trackCopies: false),
+                TraverserGenerator = new TraverserGenerator(morphInvoker, this, trackCopies: false),
             };
             return new ObjectServiceImpl
             {
@@ -114,7 +114,7 @@ namespace Neo.FileStorage.Storage
                     Key = key,
                     ResponseService = new()
                     {
-                        StorageNode = this,
+                        EpochSource = this,
                         SplitService = new()
                         {
                             ObjectService = new()
@@ -124,7 +124,7 @@ namespace Neo.FileStorage.Storage
                                 SearchService = searchService,
                                 DeleteService = new()
                                 {
-                                    MorphInvoker = morphInvoker,
+                                    EpochSource = this,
                                     PutService = putService,
                                     SearchService = searchService,
                                     GetService = getService,

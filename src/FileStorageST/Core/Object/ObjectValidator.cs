@@ -6,21 +6,14 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.StorageGroup;
 using Neo.FileStorage.API.Tombstone;
-using Neo.FileStorage.Invoker.Morph;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Storage.Core.Object
 {
     public class ObjectValidator
     {
-        private readonly IObjectDeleteHandler deleteHandler;
-        private readonly MorphInvoker morphClient;
-
-        public ObjectValidator(IObjectDeleteHandler handler, MorphInvoker client)
-        {
-            deleteHandler = handler;
-            morphClient = client;
-        }
+        public IObjectDeleteHandler DeleteHandler { get; init; }
+        public IEpochSource EpochSource { get; init; }
 
         public bool Validate(FSObject obj)
         {
@@ -58,7 +51,7 @@ namespace Neo.FileStorage.Storage.Core.Object
             try
             {
                 var expire = ExpirationEpochAttributeValue(obj);
-                if (expire < CurrentEpoch()) return false;
+                if (expire < EpochSource.CurrentEpoch) return false;
             }
             catch (Exception e)
             {
@@ -104,8 +97,8 @@ namespace Neo.FileStorage.Storage.Core.Object
                         Address address = new(cid, id);
                         address_list.Add(address);
                     }
-                    if (deleteHandler != null)
-                        deleteHandler.DeleteObjects(address_list.ToArray());
+                    if (DeleteHandler != null)
+                        DeleteHandler.DeleteObjects(address_list.ToArray());
                     break;
                 case ObjectType.StorageGroup:
                     if (!obj.Payload.Any()) return false;
@@ -117,11 +110,6 @@ namespace Neo.FileStorage.Storage.Core.Object
                     break;
             }
             return true;
-        }
-
-        private ulong CurrentEpoch()
-        {
-            return morphClient.Epoch();
         }
     }
 }

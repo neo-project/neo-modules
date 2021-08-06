@@ -14,7 +14,7 @@ namespace Neo.FileStorage.Storage
                     Key = key,
                     ResponseService = new()
                     {
-                        StorageNode = this,
+                        EpochSource = this,
                         AccountingService = new()
                         {
                             MorphInvoker = morphInvoker,

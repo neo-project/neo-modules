@@ -12,7 +12,7 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement.Route
     public class RemoteLoadAnnounceProvider
     {
         public ECDsa Key { get; init; }
-        public List<Address> LocalAddresses { get; init; }
+        public ILocalInfoSource LocalInfo { get; init; }
         public ClientCache ClientCache { get; init; }
         public IWriterProvider DeadEndProvider { get; init; }
 
@@ -21,7 +21,7 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement.Route
             if (info is null)
                 throw new ArgumentNullException(nameof(info));
             List<Address> addrs = info.Addresses.Select(p => Address.FromString(p)).ToList();
-            if (addrs.Intersect(LocalAddresses).Any())
+            if (addrs.Intersect(LocalInfo.Addresses).Any())
                 return new SimpleProvider(new NopLoadWriter());
             var client = ClientCache.Get(addrs);
             return new RemoteLoadAnnounceWriterProvider

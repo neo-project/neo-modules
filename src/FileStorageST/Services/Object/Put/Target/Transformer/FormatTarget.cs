@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using Neo.FileStorage.API.Session;
-using Neo.FileStorage.Invoker.Morph;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSVersion = Neo.FileStorage.API.Refs.Version;
 
@@ -11,7 +10,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
         public ECDsa Key { get; init; }
         public IObjectTarget Next { get; init; }
         public SessionToken SessionToken { get; init; }
-        public MorphInvoker MorphInvoker { get; init; }
+        public IEpochSource EpochSource { get; init; }
 
         private FSObject obj;
         private ulong size;
@@ -29,16 +28,15 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
 
         public AccessIdentifiers Close()
         {
-            var curEpoch = CurrentEpoch();
             obj.Header.Version = FSVersion.SDKVersion();
             obj.Header.PayloadLength = size;
             obj.Header.SessionToken = SessionToken;
-            obj.Header.CreationEpoch = curEpoch;
+            obj.Header.CreationEpoch = EpochSource.CurrentEpoch;
             if (obj.Parent is not null && obj.Parent.Signature is null)
             {
                 var parent = obj.Parent;
                 parent.Header.SessionToken = SessionToken;
-                parent.Header.CreationEpoch = curEpoch;
+                parent.Header.CreationEpoch = EpochSource.CurrentEpoch;
                 parent.Signature = parent.CalculateIDSignature(Key);
                 obj.Header.Split.Parent = parent.CalculateID();
                 obj.Header.Split.ParentSignature = parent.Signature;
@@ -53,11 +51,6 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
                 Parent = obj.ParentId,
                 ParentHeader = obj.Parent,
             };
-        }
-
-        private ulong CurrentEpoch()
-        {
-            return MorphInvoker.Epoch();
         }
     }
 }

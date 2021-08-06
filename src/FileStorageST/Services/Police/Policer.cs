@@ -15,13 +15,13 @@ namespace Neo.FileStorage.Storage.Services.Police
     {
         public class Trigger { }
         private int workScope;
-        private readonly Configuration config;
+        private readonly Args args;
         private readonly PoliceTask prevTask = new();
 
-        public Policer(Configuration c)
+        public Policer(Args a)
         {
-            config = c;
-            workScope = config.WorkScope;
+            args = a;
+            workScope = args.WorkScope;
         }
 
         protected override void OnReceive(object message)
@@ -47,7 +47,7 @@ namespace Neo.FileStorage.Storage.Services.Police
             if (0 < prevTask.Undone)
                 delta = -prevTask.Undone;
             else
-                delta = workScope * config.ExpandRate / 100;
+                delta = workScope * args.ExpandRate / 100;
             var addrs = Select(workScope + delta);
             if (workScope + delta < addrs.Count)
                 workScope += delta;
@@ -65,7 +65,7 @@ namespace Neo.FileStorage.Storage.Services.Police
 
         private List<FSAddress> Select(int limit)
         {
-            var res = config.LocalStorage.List((ulong)limit);
+            var res = args.LocalStorage.List((ulong)limit);
             return res.Take(limit).ToList();
         }
 
@@ -87,7 +87,7 @@ namespace Neo.FileStorage.Storage.Services.Police
                 {
                     continue;
                 }
-                if (addrs.Intersect(config.LocalAddresses).Any())
+                if (addrs.Intersect(args.LocalInfo.Addresses).Any())
                 {
                     if (shortage == 0)
                         redundantLocalCopy = true;
@@ -97,10 +97,10 @@ namespace Neo.FileStorage.Storage.Services.Police
                 else if (0 < shortage)
                 {
                     prm.Addresses = addrs;
-                    using CancellationTokenSource source = new(config.HeadTimeout);
+                    using CancellationTokenSource source = new(args.HeadTimeout);
                     try
                     {
-                        _ = config.RemoteHeader.Head(prm, source.Token);
+                        _ = args.RemoteHeader.Head(prm, source.Token);
                     }
                     catch
                     {
@@ -113,7 +113,7 @@ namespace Neo.FileStorage.Storage.Services.Police
             }
             if (0 < shortage)
             {
-                config.ReplicatorRef.Tell(new Replicator.Task
+                args.ReplicatorRef.Tell(new Replicator.Task
                 {
                     Quantity = shortage,
                     Address = address,
@@ -122,15 +122,15 @@ namespace Neo.FileStorage.Storage.Services.Police
             }
             else if (redundantLocalCopy)
             {
-                config.RedundantCopyCallback(address);
+                args.RedundantCopyCallback(address);
             }
         }
 
         private void ProcessObject(FSAddress address)
         {
-            var container = config.MorphInvoker.GetContainer(address.ContainerId)?.Container;
+            var container = args.MorphInvoker.GetContainer(address.ContainerId)?.Container;
             var policy = container.PlacementPolicy;
-            var nodes = config.PlacementBuilder.BuildPlacement(address, policy);
+            var nodes = args.PlacementBuilder.BuildPlacement(address, policy);
             var replicas = policy.Replicas;
             for (int i = 0; i < nodes.Count; i++)
                 ProcessNodes(address, nodes[i], replicas[i].Count);
@@ -142,7 +142,7 @@ namespace Neo.FileStorage.Storage.Services.Police
             prevTask.Source?.Dispose();
         }
 
-        public static Props Props(Configuration c)
+        public static Props Props(Args c)
         {
             return Akka.Actor.Props.Create(() => new Policer(c));
         }

@@ -25,7 +25,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Search.Execute
         {
             currentEpoch = Prm.NetmapEpoch;
             if (0 < currentEpoch) return;
-            currentEpoch = SearchService.MorphClient.CurrentEpoch();
+            currentEpoch = SearchService.MorphClient.CurrentEpoch;
         }
 
         private Traverser GenerateTraverser(ContainerID cid)

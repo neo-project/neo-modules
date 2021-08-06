@@ -13,7 +13,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Delete
 {
     public class DeleteService
     {
-        public MorphInvoker MorphInvoker { get; init; }
+        public IEpochSource EpochSource { get; init; }
         public PutService PutService { get; init; }
         public SearchService SearchService { get; init; }
         public GetService GetService { get; init; }

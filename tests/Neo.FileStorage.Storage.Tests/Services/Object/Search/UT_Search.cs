@@ -6,6 +6,7 @@ using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Placement;
+using Neo.FileStorage.Storage;
 using Neo.FileStorage.Storage.Placement;
 using Neo.FileStorage.Storage.Services.Object.Search;
 using Neo.FileStorage.Storage.Services.Object.Search.Execute;
@@ -92,10 +93,7 @@ namespace Neo.FileStorage.Tests.Services.Object.Search
         {
             public ulong Epoch;
 
-            ulong IEpochSource.CurrentEpoch()
-            {
-                return Epoch;
-            }
+            public ulong CurrentEpoch => Epoch;
         }
 
         private List<List<Node>> TestNodeMatrix(int[] dim)

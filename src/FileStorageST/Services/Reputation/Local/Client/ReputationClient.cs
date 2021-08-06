@@ -27,7 +27,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Local.Client
         private void SumbmitResult(bool sat)
         {
             Prm.Sat = sat;
-            Prm.Epoch = ClientCache.StorageNode.CurrentEpoch;
+            Prm.Epoch = ClientCache.EpochSource.CurrentEpoch;
             ClientCache.ReputationStorage.Update(Prm);
         }
 
