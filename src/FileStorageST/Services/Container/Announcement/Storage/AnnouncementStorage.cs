@@ -26,13 +26,14 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement.Storage
     /// </summary>
     public class AnnouncementStorage : IWriter
     {
-        private Dictionary<ulong, AnnounceUsedSpaceEstimation> mItems = new();
+        private readonly Dictionary<string, AnnounceUsedSpaceEstimation> mItems = new();
 
         public void Put(FSAnnouncement announcement)
         {
             lock (mItems)
             {
-                bool exists = mItems.TryGetValue(announcement.Epoch, out AnnounceUsedSpaceEstimation estimation);
+                var key = announcement.Epoch.ToString() + announcement.ContainerId.String();
+                bool exists = mItems.TryGetValue(key, out AnnounceUsedSpaceEstimation estimation);
                 if (!exists)
                 {
                     estimation = new()
@@ -40,7 +41,7 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement.Storage
                         Announcement = announcement,
                         Sizes = new(),
                     };
-                    mItems[announcement.Epoch] = estimation;
+                    mItems[key] = estimation;
                 }
                 estimation.Sizes.Add(announcement.UsedSpace);
             }
@@ -52,7 +53,7 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement.Storage
         {
             foreach (var (_, estimation) in mItems)
             {
-                if (estimation.Announcement is not null)
+                if (estimation.Announcement is not null && filter(estimation.Announcement))
                 {
                     estimation.Announcement.UsedSpace = Helper.FinalEstimation(estimation.Sizes);
                     try
@@ -66,7 +67,5 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement.Storage
                 }
             }
         }
-
-
     }
 }
