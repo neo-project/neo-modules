@@ -79,10 +79,8 @@ namespace Neo.FileStorage.InnerRing
                         MaxConnectionsPerAddress = morphSettings.P2P.MaxConnectionsPerAddress
                     });
                 });
-            }
-            else if (system.Settings.Network == MorphSystem.Settings.Network && Settings.Default.AutoStart)
-            {
-                Start();
+                if (Settings.Default.AutoStart)
+                    Start();
             }
         }
 
