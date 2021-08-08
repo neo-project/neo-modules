@@ -80,6 +80,10 @@ namespace Neo.FileStorage.InnerRing
                     });
                 });
             }
+            else if (system.Settings.Network == MorphSystem.Settings.Network && Settings.Default.AutoStart)
+            {
+                Start();
+            }
         }
 
         public void OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
