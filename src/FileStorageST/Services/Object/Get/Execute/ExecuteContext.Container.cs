@@ -24,7 +24,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
         {
             CurrentEpoch = Prm.NetmapEpoch;
             if (0 < CurrentEpoch) return;
-            CurrentEpoch = GetService.MorphInvoker.Epoch();
+            CurrentEpoch = GetService.EpochSource.CurrentEpoch;
         }
 
         private Traverser GenerateTraverser(Address address)
@@ -45,7 +45,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
                 }
                 foreach (var addrs in addrses)
                 {
-                    if (Cancellation.IsCancellationRequested) throw new OperationCanceledException();
+                    if (Token.IsCancellationRequested) throw new OperationCanceledException();
                     if (ProcessNode(addrs))
                     {
                         Log(nameof(ExecuteOnContainer), LogLevel.Debug, " completing the operation");

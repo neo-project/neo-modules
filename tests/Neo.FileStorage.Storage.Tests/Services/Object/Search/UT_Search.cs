@@ -16,7 +16,7 @@ using Neo.FileStorage.Storage.Services.Object.Util;
 using static Neo.FileStorage.Storage.Tests.Helper;
 using FSContainer = Neo.FileStorage.API.Container.Container;
 
-namespace Neo.FileStorage.Tests.Services.Object.Search
+namespace Neo.FileStorage.Storage.Tests.Services.Object.Search
 {
     [TestClass]
     public class UT_Search

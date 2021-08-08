@@ -62,8 +62,8 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
                 ObjectId = oid,
             };
             prm.Local = false;
-            GetService.Get(prm, range, false, Cancellation);
-            var child = writer.Obj;
+            GetService.Get(prm, range, false, Token);
+            var child = writer.Object;
             if (with_header && !child.IsChild())
             {
                 throw new InvalidOperationException("assemble, wrong child header");
@@ -156,8 +156,8 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
             prm.Short = false;
             var writer = new SimpleObjectWriter();
             prm.Writer = writer;
-            GetService.Head(prm, Cancellation);
-            var child = writer.Obj;
+            GetService.Head(prm, Token);
+            var child = writer.Object;
             if (child.ParentId is not null && !child.IsChild())
             {
                 throw new InvalidOperationException("assemble, parent address in child object differs");

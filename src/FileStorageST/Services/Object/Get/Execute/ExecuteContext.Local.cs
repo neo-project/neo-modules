@@ -4,7 +4,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
     {
         private void ExecuteLocal()
         {
-            collectedObject = GetService.LocalStorage.Get(Prm.Address);
+            collectedObject = GetService.LocalStorage.GetObject(this);
             WriteCollectedObject();
         }
     }

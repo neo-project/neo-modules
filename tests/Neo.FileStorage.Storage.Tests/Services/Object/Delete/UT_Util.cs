@@ -4,7 +4,7 @@ using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Refs;
 using System.Collections.Generic;
 
-namespace Neo.FileStorage.Tests.Services.Object.Delete
+namespace Neo.FileStorage.Storage.Tests.Services.Object.Delete
 {
     [TestClass]
     public class UT_Util

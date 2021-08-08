@@ -7,7 +7,7 @@ using V2Container = Neo.FileStorage.API.Container.Container;
 using V2OwnerID = Neo.FileStorage.API.Refs.OwnerID;
 using V2Version = Neo.FileStorage.API.Refs.Version;
 
-namespace Neo.FileStorage.Tests.Core
+namespace Neo.FileStorage.Storage.Tests.Core
 {
     [TestClass]
     public class UT_Fmt

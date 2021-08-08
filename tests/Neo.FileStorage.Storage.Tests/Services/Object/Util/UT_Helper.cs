@@ -4,7 +4,7 @@ using Neo.FileStorage.API.Session;
 using static Neo.FileStorage.Storage.Services.Object.Util.Helper;
 using static Neo.FileStorage.Storage.Tests.Helper;
 
-namespace Neo.FileStorage.Tests.Services.Object.Acl
+namespace Neo.FileStorage.Storage.Tests.Services.Object.Acl
 {
     [TestClass]
     public class UT_Helper

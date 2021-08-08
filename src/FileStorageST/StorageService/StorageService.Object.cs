@@ -2,11 +2,12 @@ using System;
 using Akka.Actor;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Storage.Cache;
 using Neo.FileStorage.Placement;
+using Neo.FileStorage.Storage.Cache;
 using Neo.FileStorage.Storage.Services.Container.Announcement;
 using Neo.FileStorage.Storage.Services.Object.Acl;
 using Neo.FileStorage.Storage.Services.Object.Get;
+using Neo.FileStorage.Storage.Services.Object.Get.Remote;
 using Neo.FileStorage.Storage.Services.Object.Put;
 using Neo.FileStorage.Storage.Services.Object.Search;
 using Neo.FileStorage.Storage.Services.Object.Search.Clients;
@@ -94,8 +95,8 @@ namespace Neo.FileStorage.Storage
                 Assemble = true,
                 KeyStorage = keyStorage,
                 LocalStorage = localStorage,
-                ClientCache = reputationClientCache,
-                MorphInvoker = morphInvoker,
+                ClientCache = new GetClientCache(reputationClientCache),
+                EpochSource = this,
                 TraverserGenerator = new(morphInvoker, this, 1),
             };
             SearchService searchService = new()

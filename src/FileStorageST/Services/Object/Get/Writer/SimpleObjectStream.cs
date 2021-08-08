@@ -6,17 +6,17 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Writer
 {
     public class SimpleObjectWriter : IObjectResponseWriter
     {
-        public FSObject Obj { get; private set; }
+        public FSObject Object { get; private set; } = new();
 
         public void WriteHeader(FSObject obj)
         {
-            Obj = obj;
-            Obj.Payload = ByteString.Empty;
+            Object = obj;
+            Object.Payload = ByteString.Empty;
         }
 
         public void WriteChunk(byte[] chunk)
         {
-            Obj.Payload = Obj.Payload.Concat(ByteString.CopyFrom(chunk));
+            Object.Payload = Object.Payload.Concat(ByteString.CopyFrom(chunk));
         }
     }
 }

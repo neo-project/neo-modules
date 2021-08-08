@@ -4,12 +4,10 @@ using System.Linq;
 using System.Threading;
 using Google.Protobuf;
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.Invoker.Morph;
-using Neo.FileStorage.Storage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Storage.Services.Object.Get.Execute;
+using Neo.FileStorage.Storage.Services.Object.Get.Remote;
 using Neo.FileStorage.Storage.Services.Object.Get.Writer;
 using Neo.FileStorage.Storage.Services.Object.Util;
-using Neo.FileStorage.Storage.Services.Reputaion.Local.Client;
 using FSRange = Neo.FileStorage.API.Object.Range;
 
 
@@ -20,33 +18,33 @@ namespace Neo.FileStorage.Storage.Services.Object.Get
         //Default value should be true
         public bool Assemble { get; init; }
         public KeyStorage KeyStorage { get; init; }
-        public StorageEngine LocalStorage { get; init; }
-        public ReputationClientCache ClientCache { get; init; }
-        public MorphInvoker MorphInvoker { get; init; }
+        public ILocalObjectSource LocalStorage { get; init; }
+        public IGetClientCache ClientCache { get; init; }
+        public IEpochSource EpochSource { get; init; }
         public TraverserGenerator TraverserGenerator { get; init; }
 
-        public void Get(GetPrm prm, CancellationToken cancellation)
+        public void Get(GetPrm prm, CancellationToken token)
         {
-            Get(prm, null, false, cancellation);
+            Get(prm, null, false, token);
         }
 
 
-        public void Head(HeadPrm prm, CancellationToken cancellation)
+        public void Head(HeadPrm prm, CancellationToken token)
         {
-            Get(prm, null, true, cancellation);
+            Get(prm, null, true, token);
         }
 
-        public void GetRange(RangePrm prm, CancellationToken cancellation)
+        public void GetRange(RangePrm prm, CancellationToken token)
         {
-            Get(prm, prm.Range, false, cancellation);
+            Get(prm, prm.Range, false, token);
         }
 
-        public GetRangeHashResponse GetRangeHash(RangeHashPrm prm, CancellationToken cancellation)
+        public GetRangeHashResponse GetRangeHash(RangeHashPrm prm, CancellationToken token)
         {
             List<byte[]> hashes = new();
             foreach (var range in prm.Ranges)
             {
-                if (cancellation.IsCancellationRequested) throw new OperationCanceledException();
+                if (token.IsCancellationRequested) throw new OperationCanceledException();
                 var writer = new RangeHashGenerator(prm.HashType);
                 var range_prm = new RangePrm
                 {
@@ -54,7 +52,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Get
                     Writer = writer,
                 };
                 range_prm.WithGetCommonPrm(prm);
-                Get(range_prm, range, false, cancellation);
+                Get(range_prm, range, false, token);
                 hashes.Add(writer.GetHash());
             }
             GetRangeHashResponse resp = new();
@@ -63,14 +61,14 @@ namespace Neo.FileStorage.Storage.Services.Object.Get
             return resp;
         }
 
-        internal void Get(GetCommonPrm prm, FSRange range, bool head_only, CancellationToken cancellation)
+        internal void Get(GetCommonPrm prm, FSRange range, bool head_only, CancellationToken token)
         {
             RangePrm range_prm = new();
             range_prm.WithGetCommonPrm(prm);
             range_prm.Range = range;
             var executor = new ExecuteContext
             {
-                Cancellation = cancellation,
+                Token = token,
                 Prm = range_prm,
                 Range = range,
                 HeadOnly = head_only,

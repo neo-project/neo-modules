@@ -149,8 +149,9 @@ namespace Neo.FileStorage.Storage.Tests
         {
             return new()
             {
+                Epoch = RandomUInt64(),
                 ContainerId = RandomContainerID(),
-                UsedSpace = RandomUInt64(),
+                UsedSpace = RandomUInt64(1 << 40),
             };
         }
 

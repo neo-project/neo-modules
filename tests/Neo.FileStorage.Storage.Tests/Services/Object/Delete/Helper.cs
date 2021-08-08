@@ -4,7 +4,7 @@ using Neo.FileStorage.API.Refs;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Neo.FileStorage.Tests.Services.Object.Delete
+namespace Neo.FileStorage.Storage.Tests.Services.Object.Delete
 {
     public static class Helper
     {
