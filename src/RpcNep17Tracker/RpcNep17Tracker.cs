@@ -44,7 +44,6 @@ namespace Neo.Plugins
             try
             {
                 RpcServerPlugin.RegisterMethods(this, _network);
-
             }
             catch
             {
