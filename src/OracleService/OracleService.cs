@@ -57,7 +57,14 @@ namespace Neo.Plugins
             if (system.Settings.Network != Settings.Default.Network) return;
             System = system;
             System.ServiceAdded += NeoSystem_ServiceAdded;
-            RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
+            try
+            {
+                RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
+            }
+            catch
+            {
+                Console.WriteLine("Please run `install RpcServer` to install RpcServer Plugin.");
+            }
         }
 
         private void NeoSystem_ServiceAdded(object sender, object service)

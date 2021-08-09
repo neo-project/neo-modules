@@ -41,7 +41,15 @@ namespace Neo.Plugins
             System = system;
             string path = string.Format(_dbPath, system.Settings.Network.ToString("X8"));
             _db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
-            RpcServerPlugin.RegisterMethods(this, _network);
+            try
+            {
+                RpcServerPlugin.RegisterMethods(this, _network);
+
+            }
+            catch
+            {
+                Console.WriteLine("Please run `install RpcServer` to install RpcServer Plugin.");
+            }
         }
 
         protected override void Configure()

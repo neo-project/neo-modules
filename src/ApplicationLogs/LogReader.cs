@@ -30,7 +30,14 @@ namespace Neo.Plugins
         protected override void OnSystemLoaded(NeoSystem system)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
-            RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
+            try
+            {
+                RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
+            }
+            catch
+            {
+                Console.WriteLine("Please run `install RpcServer` to install RpcServer Plugin.");
+            }
         }
 
         [RpcMethod]
