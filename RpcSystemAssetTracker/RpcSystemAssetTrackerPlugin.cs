@@ -35,7 +35,7 @@ namespace Cron.Plugins
         private DataCache<UserSystemAssetTransferKey, UserSystemAssetTransfer> _transfersSent;
         private DataCache<UserSystemAssetTransferKey, UserSystemAssetTransfer> _transfersReceived;
         private WriteBatch _writeBatch;
-        private int _maxResults;
+            //private int _maxResults;
         private uint _lastPersistedBlock;
         private bool _shouldPersistBlock;
         private Cron.IO.Data.LevelDB.Snapshot _levelDbSnapshot;
@@ -130,7 +130,10 @@ namespace Cron.Plugins
             
             if (method == "getaccountstate")
             {
+                UInt160 script_hash = parameters[0].AsString().ToScriptHash();
+                AccountState account = Blockchain.Singleton.Store.GetAccounts().TryGet(script_hash) ?? new AccountState(script_hash);
                 return this.ProcessGetAccountState(parameters);
+                
             }
             
             if (method == "getoutput")
@@ -192,7 +195,7 @@ namespace Cron.Plugins
             using (var snapshot = Blockchain.Singleton.GetSnapshot())
             {
                 var assets = snapshot.Assets.Find();
-
+                var contracts = snapshot.Contracts.Find();
                 foreach (var asset in assets)
                 {
                     var jasset = new JObject();
@@ -250,7 +253,7 @@ namespace Cron.Plugins
                     _lastPersistedBlock = 0;
                 }
             }
-            _maxResults = int.Parse(GetConfiguration().GetSection("MaxResults").Value ?? "0");
+            //_maxResults = int.Parse(GetConfiguration().GetSection("MaxResults").Value ?? "1");
         }
 
         private void ResetBatch()
@@ -557,7 +560,7 @@ namespace Cron.Plugins
                      (startHeight == 0 ? 0 : GetSysFeeAmountForHeight(snapshot.Blocks, startHeight - 1)));
         }
 
-        private bool AddClaims(JArray claimableOutput, ref Fixed8 runningTotal, int maxClaims,
+        private bool AddClaims(JArray claimableOutput, ref Fixed8 runningTotal,
             Snapshot snapshot, DataCache<UInt256, SpentCoinState> storeSpentCoins,
             KeyValuePair<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs> claimableInTx)
         {
@@ -581,8 +584,6 @@ namespace Cron.Plugins
                 utxo["unclaimed"] = (double)(decimal)unclaimed;
                 runningTotal += unclaimed;
                 claimableOutput.Add(utxo);
-                if (claimableOutput.Count > maxClaims)
-                    return false;
             }
 
             return true;
@@ -606,7 +607,7 @@ namespace Cron.Plugins
                 var storeSpentCoins = snapshot.SpentCoins;
                 byte[] prefix = new[] { (byte)1 }.Concat(scriptHash.ToArray()).ToArray();
                 foreach (var claimableInTx in dbCache.Find(prefix))
-                    if (!AddClaims(claimable, ref totalUnclaimed, _maxResults, snapshot, storeSpentCoins,
+                    if (!AddClaims(claimable, ref totalUnclaimed, snapshot, storeSpentCoins,
                         claimableInTx))
                         break;
             }
@@ -700,8 +701,8 @@ namespace Cron.Plugins
                 runningTotal += unspent.Value;
 
                 unspents.Add(utxo);
-                if (unspents.Count > _maxResults)
-                    return false;
+                // if (unspents.Count > _maxResults)
+                //     return false;
             }
             return true;
         }
@@ -718,8 +719,8 @@ namespace Cron.Plugins
                 runningTotal += unspent.Value;
 
                 unspents.Add(utxo);
-                if (unspents.Count > _maxResults)
-                    return false;
+                // if (unspents.Count > _maxResults)
+                //     return false;
             }
 
             return true;
@@ -811,90 +812,42 @@ namespace Cron.Plugins
         private JObject ProcessGetAccountState(JArray _params)
         {
             UInt160 scriptHash = GetScriptHashFromParam(_params[0].AsString());
-            byte startingToken = 0; // 0 = Utility Token (CRON), 1 = Governing Token (CRONIUM)
-            int maxIterations = 2;
-
-            UInt256 th = UInt256.Zero;
-
-            if (_params.Count > 1)
-            {
-                string gh = _params[1].AsString();
-                bool isGoverningToken = (gh == "yes");
-                bool isUtilityToken = (gh == "util");
-                if (isGoverningToken)
-                {
-                    startingToken = 1;
-                    maxIterations = 1;
-                }
-                else if (isUtilityToken)
-                {
-                    startingToken = 0;
-                    maxIterations = 1;
-                }
-
-                if (_params.Count > 2)
-                {
-                    th = ParseTokenHash(_params[2].AsString());
-                    if (th.Equals(Blockchain.UtilityToken.Hash))
-                        th = UInt256.Zero;
-                }
-            }
-
+            var snapshot = Blockchain.Singleton.GetSnapshot();
+            var assets = snapshot.Assets.Find().ToList();
+            var txs = snapshot.Transactions;
             var unspentsCache = new DbCache<UserSystemAssetCoinOutputsKey, UserSystemAssetCoinOutputs>(
                 _db, null, null, SystemAssetUnspentCoinsPrefix);
 
-            string[] nativeAssetNames = {"CRON", "CRONIUM"};
-            UInt256[] nativeAssetIds = {Blockchain.UtilityToken.Hash, Blockchain.GoverningToken.Hash};
-
-            byte tokenId = 255;
-            var snapshot = Blockchain.Singleton.GetSnapshot();
-            var r = snapshot.Assets.Find();
-            var txs = snapshot.Transactions;
-            if (!th.Equals(UInt256.Zero))
-            {
-                tokenId = GetTokenID(r, th, txs);
-                if (tokenId != 255)
-                {
-                    nativeAssetNames[1] = snapshot.Assets.TryGet(th).GetName();
-                    nativeAssetIds[1] = th;
-                }
-                else
-                {
-                    throw new Cron.Network.RPC.RpcException(-7166, "Token not found");
-                }
-            }
-
-            var unclaimedArray = ProcessGetUnclaimedTransactions(scriptHash);
-            
             JObject json = new JObject();
           
             JArray unpsentsArray = new JArray();
             json["unspent"] = unpsentsArray;
-            json["unclaimed"] =  unclaimedArray;
+            json["unclaimed"] =  ProcessGetUnclaimedTransactions(scriptHash);
             json["version"] = "0";
             json["votes"] = new JArray();
             json["frozen"] = false; // TODO : get from blockchain state
             json["script_hash"] = scriptHash.ToString();
-            for (byte tokenIndex = startingToken; maxIterations-- > 0; tokenIndex++)
-            {
-                byte[] prefix = new[] {(tokenId == 255 || tokenIndex == 0 ? tokenIndex : tokenId)}
-                    .Concat(scriptHash.ToArray()).ToArray();
 
+            foreach (var asset in assets)
+            {
+                var th = asset.Key;
+                
+                var  tokenId = GetTokenID(assets, th, txs);
+                byte[] prefix = new[] {tokenId}.Concat(scriptHash.ToArray()).ToArray();
+               
                 var unspents = new JArray();
                 Fixed8 total = new Fixed8(0);
-
-                foreach (var unspentInTx in unspentsCache.Find(prefix))
+                var unpsentsInTxs = unspentsCache.Find(prefix);
+                foreach (var unspentInTx in unpsentsInTxs)
                     if (!AddAccountUnspents(unspents, ref total, unspentInTx))
                         break;
-
-                if (unspents.Count <= 0) continue;
-
+               
                 foreach (var tmp in unspents)
                 {
                     unpsentsArray.Add(tmp);
                 }
-                
             }
+            
             AccountState account = Blockchain.Singleton.Store.GetAccounts().TryGet(scriptHash) ??
                                    new AccountState(scriptHash);
             
@@ -981,7 +934,7 @@ namespace Cron.Plugins
             int resultCount = 0;
             foreach (var pair in transferPairs)
             {
-                if (++resultCount > _maxResults) break;
+                //if (++resultCount > _maxResults) break;
                 JObject transfer = new JObject();
                 transfer["block_index"] = pair.Value.BlockIndex;
                 transfer["timestamp"] = pair.Key.Timestamp;
