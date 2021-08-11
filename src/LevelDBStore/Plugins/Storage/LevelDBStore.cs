@@ -10,22 +10,22 @@ namespace Neo.Plugins.Storage
     {
         public override string Description => "Uses LevelDB to store the blockchain data";
 
-        private List<WeakReference> dbs = new();
+        private Stack<WeakReference> dbs = new();
 
         public IStore GetStore(string path)
         {
             if (Environment.CommandLine.Split(' ').Any(p => p == "/repair" || p == "--repair"))
                 DB.Repair(path, Options.Default);
             IStore store = new Store(path);
-            dbs.Add(new WeakReference(store));
+            dbs.Push(new WeakReference(store));
             return store;
         }
         public override void Dispose()
         {
             base.Dispose();
-            foreach (var a in dbs)
+            while (dbs.Count > 0)
             {
-                IStore store = a.Target as IStore;
+                IStore store = dbs.Pop().Target as IStore;
                 if (store is null) continue;
                 store.Dispose();
             }
