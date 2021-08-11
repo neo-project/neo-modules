@@ -28,12 +28,14 @@ namespace Neo.IO.Data.LevelDB
 
         public void Delete(WriteOptions options, byte[] key)
         {
+            if (handle == IntPtr.Zero) throw new NullReferenceException();
             Native.leveldb_delete(handle, options.handle, key, (UIntPtr)key.Length, out IntPtr error);
             NativeHelper.CheckError(error);
         }
 
         public byte[] Get(ReadOptions options, byte[] key)
         {
+            if (handle == IntPtr.Zero) throw new NullReferenceException();
             IntPtr value = Native.leveldb_get(handle, options.handle, key, (UIntPtr)key.Length, out UIntPtr length, out IntPtr error);
             try
             {
@@ -48,6 +50,7 @@ namespace Neo.IO.Data.LevelDB
 
         public bool Contains(ReadOptions options, byte[] key)
         {
+            if (handle == IntPtr.Zero) throw new NullReferenceException();
             IntPtr value = Native.leveldb_get(handle, options.handle, key, (UIntPtr)key.Length, out _, out IntPtr error);
             NativeHelper.CheckError(error);
 
@@ -62,11 +65,13 @@ namespace Neo.IO.Data.LevelDB
 
         public Snapshot GetSnapshot()
         {
+            if (handle == IntPtr.Zero) throw new NullReferenceException();
             return new Snapshot(handle);
         }
 
         public Iterator NewIterator(ReadOptions options)
         {
+            if (handle == IntPtr.Zero) throw new NullReferenceException();
             return new Iterator(Native.leveldb_create_iterator(handle, options.handle));
         }
 
@@ -84,6 +89,8 @@ namespace Neo.IO.Data.LevelDB
 
         public void Put(WriteOptions options, byte[] key, byte[] value)
         {
+            if (handle == IntPtr.Zero) throw new NullReferenceException();
+
             Native.leveldb_put(handle, options.handle, key, (UIntPtr)key.Length, value, (UIntPtr)value.Length, out IntPtr error);
             NativeHelper.CheckError(error);
         }
@@ -96,6 +103,7 @@ namespace Neo.IO.Data.LevelDB
 
         public void Write(WriteOptions options, WriteBatch write_batch)
         {
+            if (handle == IntPtr.Zero) throw new NullReferenceException();
             Native.leveldb_write(handle, options.handle, write_batch.handle, out IntPtr error);
             NativeHelper.CheckError(error);
         }

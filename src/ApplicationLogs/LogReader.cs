@@ -36,6 +36,7 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject GetApplicationLog(JArray _params)
         {
+            if (db is null) new NullReferenceException();
             UInt256 hash = UInt256.Parse(_params[0].AsString());
             byte[] value = db.Get(ReadOptions.Default, hash.ToArray());
             if (value is null)
@@ -145,7 +146,7 @@ namespace Neo.Plugins
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
-            if (system.Settings.Network != Settings.Default.Network) return;
+            if (db == null || system.Settings.Network != Settings.Default.Network) return;
 
             WriteBatch writeBatch = new WriteBatch();
 
@@ -168,6 +169,13 @@ namespace Neo.Plugins
         static string GetExceptionMessage(Exception exception)
         {
             return exception?.GetBaseException().Message;
+        }
+        public override void Dispose()
+        {
+            base.Dispose();
+            if (db is null) return;
+            db.Dispose();
+            db = null;
         }
     }
 }
