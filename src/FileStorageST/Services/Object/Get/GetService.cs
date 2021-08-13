@@ -15,13 +15,12 @@ namespace Neo.FileStorage.Storage.Services.Object.Get
 {
     public partial class GetService
     {
-        //Default value should be true
-        public bool Assemble { get; init; }
+        public bool Assemble { get; init; } //Default value should be true
         public KeyStorage KeyStorage { get; init; }
         public ILocalObjectSource LocalStorage { get; init; }
         public IGetClientCache ClientCache { get; init; }
         public IEpochSource EpochSource { get; init; }
-        public TraverserGenerator TraverserGenerator { get; init; }
+        public ITraverserGenerator TraverserGenerator { get; init; }
 
         public void Get(GetPrm prm, CancellationToken token)
         {

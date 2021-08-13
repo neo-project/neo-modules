@@ -97,7 +97,7 @@ namespace Neo.FileStorage.Storage
                 LocalStorage = localStorage,
                 ClientCache = new GetClientCache(reputationClientCache),
                 EpochSource = this,
-                TraverserGenerator = new(morphInvoker, this, 1),
+                TraverserGenerator = new TraverserGenerator(morphInvoker, this, 1),
             };
             SearchService searchService = new()
             {

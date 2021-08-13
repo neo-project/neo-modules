@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Storage.LocalObjectStorage;
 using Neo.FileStorage.Storage.LocalObjectStorage.Blobstor;
 
 namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Blobstor
@@ -37,12 +37,12 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Blobstor
                     Assert.IsNotNull(fs.Get(address));
                     Console.WriteLine($"get {address.String()}");
                 }
-                Assert.ThrowsException<ObjectFileNotFoundException>(() => fs.Get(Helper.RandomAddress()));
+                Assert.ThrowsException<ObjectNotFoundException>(() => fs.Get(Helper.RandomAddress()));
                 foreach (var address in addrs)
                 {
                     Assert.IsTrue(0 < fs.Exists(address).Length);
                 }
-                Assert.ThrowsException<ObjectFileNotFoundException>(() => fs.Exists(Helper.RandomAddress()));
+                Assert.ThrowsException<ObjectNotFoundException>(() => fs.Exists(Helper.RandomAddress()));
                 int j = 0;
                 fs.Iterate((address, data) =>
                 {

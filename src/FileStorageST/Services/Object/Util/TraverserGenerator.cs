@@ -1,7 +1,6 @@
 using System;
 using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Storage.Placement;
-using System.Collections.Generic;
 using FSAddress = Neo.FileStorage.API.Refs.Address;
 
 namespace Neo.FileStorage.Storage.Services.Object.Util

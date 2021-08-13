@@ -6,7 +6,6 @@ using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Placement;
-using Neo.FileStorage.Storage;
 using Neo.FileStorage.Storage.Placement;
 using Neo.FileStorage.Storage.Services.Object.Search;
 using Neo.FileStorage.Storage.Services.Object.Search.Execute;
@@ -96,7 +95,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Search
             public ulong CurrentEpoch => Epoch;
         }
 
-        private List<List<Node>> TestNodeMatrix(int[] dim)
+        public List<List<Node>> TestNodeMatrix(int[] dim)
         {
             List<List<Node>> res = new();
             int sum = 0;

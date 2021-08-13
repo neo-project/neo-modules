@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Akka.Util.Extensions;
 using Google.Protobuf;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
@@ -50,11 +49,8 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
                 }
                 catch (SplitInfoException e)
                 {
-                    if (spi is null)
-                    {
-                        spi = new();
-                    }
-                    Helper.MergeSplitInfo(e.SplitInfo, spi);
+                    if (spi is null) spi = new();
+                    spi.MergeFrom(e.SplitInfo);
                     if (spi.Link is not null && spi.LastPart is not null)
                         throw new SplitInfoException(spi);
                     continue;
@@ -79,11 +75,8 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
                 }
                 catch (SplitInfoException e)
                 {
-                    if (spi is null)
-                    {
-                        spi = new();
-                    }
-                    Helper.MergeSplitInfo(e.SplitInfo, spi);
+                    if (spi is null) spi = new();
+                    spi.MergeFrom(e.SplitInfo);
                     if (spi.Link is not null && spi.LastPart is not null)
                         throw new SplitInfoException(spi);
                     continue;
@@ -222,11 +215,8 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
                 }
                 catch (SplitInfoException e)
                 {
-                    if (spi is null)
-                    {
-                        spi = new();
-                    }
-                    Helper.MergeSplitInfo(e.SplitInfo, spi);
+                    if (spi is null) spi = new();
+                    spi.MergeFrom(e.SplitInfo);
                     if (spi.Link is not null && spi.LastPart is not null)
                         throw new SplitInfoException(spi);
                     continue;

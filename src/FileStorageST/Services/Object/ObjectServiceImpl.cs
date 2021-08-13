@@ -16,8 +16,23 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
         {
             return Task.Run(() =>
             {
-                AclChecker.CheckRequest(request, Operation.Delete);
-                return SignService.Delete(request, context.CancellationToken);
+                try
+                {
+                    AclChecker.CheckRequest(request, Operation.Delete);
+                    return SignService.Delete(request, context.CancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw new RpcException(new(StatusCode.Cancelled, "operation cancelled"));
+                }
+                catch (ObjectExcpetion oe)
+                {
+                    throw new RpcException(new(StatusCode.Unknown, oe.Message));
+                }
+                catch (Exception e)
+                {
+                    throw new RpcException(new(StatusCode.Internal, e.Message));
+                }
             }, context.CancellationToken);
         }
 
@@ -25,15 +40,30 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
         {
             return Task.Run(() =>
             {
-                var info = AclChecker.CheckRequest(request, Operation.Get);
-                SignService.Get(request, resp =>
+                try
                 {
-                    if (resp.Body.ObjectPartCase == GetResponse.Types.Body.ObjectPartOneofCase.Init)
+                    var info = AclChecker.CheckRequest(request, Operation.Get);
+                    SignService.Get(request, resp =>
                     {
-                        AclChecker.EAclCheck(info, resp);
-                    }
-                    responseStream.WriteAsync(resp);
-                }, context.CancellationToken);
+                        if (resp.Body.ObjectPartCase == GetResponse.Types.Body.ObjectPartOneofCase.Init)
+                        {
+                            AclChecker.EAclCheck(info, resp);
+                        }
+                        responseStream.WriteAsync(resp);
+                    }, context.CancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw new RpcException(new(StatusCode.Cancelled, "operation cancelled"));
+                }
+                catch (ObjectExcpetion oe)
+                {
+                    throw new RpcException(new(StatusCode.Unknown, oe.Message));
+                }
+                catch (Exception e)
+                {
+                    throw new RpcException(new(StatusCode.Internal, e.Message));
+                }
             }, context.CancellationToken);
         }
 
@@ -41,12 +71,27 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
         {
             return Task.Run(() =>
             {
-                var info = AclChecker.CheckRequest(request, Operation.Getrange);
-                SignService.GetRange(request, resp =>
+                try
                 {
-                    AclChecker.EAclCheck(info, resp);
-                    responseStream.WriteAsync(resp);
-                }, context.CancellationToken);
+                    var info = AclChecker.CheckRequest(request, Operation.Getrange);
+                    SignService.GetRange(request, resp =>
+                    {
+                        AclChecker.EAclCheck(info, resp);
+                        responseStream.WriteAsync(resp);
+                    }, context.CancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw new RpcException(new(StatusCode.Cancelled, "operation cancelled"));
+                }
+                catch (ObjectExcpetion oe)
+                {
+                    throw new RpcException(new(StatusCode.Unknown, oe.Message));
+                }
+                catch (Exception e)
+                {
+                    throw new RpcException(new(StatusCode.Internal, e.Message));
+                }
             }, context.CancellationToken);
         }
 
@@ -54,8 +99,23 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
         {
             return Task.Run(() =>
             {
-                AclChecker.CheckRequest(request, Operation.Getrangehash);
-                return SignService.GetRangeHash(request, context.CancellationToken);
+                try
+                {
+                    AclChecker.CheckRequest(request, Operation.Getrangehash);
+                    return SignService.GetRangeHash(request, context.CancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw new RpcException(new(StatusCode.Cancelled, "operation cancelled"));
+                }
+                catch (ObjectExcpetion oe)
+                {
+                    throw new RpcException(new(StatusCode.Unknown, oe.Message));
+                }
+                catch (Exception e)
+                {
+                    throw new RpcException(new(StatusCode.Internal, e.Message));
+                }
             }, context.CancellationToken);
         }
 
@@ -63,48 +123,93 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
         {
             return Task.Run(() =>
             {
-                var info = AclChecker.CheckRequest(request, Operation.Head);
-                var resp = SignService.Head(request, context.CancellationToken);
-                AclChecker.EAclCheck(info, resp);
-                return resp;
+                try
+                {
+                    var info = AclChecker.CheckRequest(request, Operation.Head);
+                    var resp = SignService.Head(request, context.CancellationToken);
+                    AclChecker.EAclCheck(info, resp);
+                    return resp;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw new RpcException(new(StatusCode.Cancelled, "operation cancelled"));
+                }
+                catch (ObjectExcpetion oe)
+                {
+                    throw new RpcException(new(StatusCode.Unknown, oe.Message));
+                }
+                catch (Exception e)
+                {
+                    throw new RpcException(new(StatusCode.Internal, e.Message));
+                }
             }, context.CancellationToken);
         }
 
         public override async Task<PutResponse> Put(IAsyncStreamReader<PutRequest> requestStream, ServerCallContext context)
         {
-            var next = SignService.Put(context.CancellationToken);
-            RequestInfo info = null;
-            bool init_received = false;
-            while (await requestStream.MoveNext(context.CancellationToken))
+            try
             {
-                var request = requestStream.Current;
-                switch (request.Body.ObjectPartCase)
+                var next = SignService.Put(context.CancellationToken);
+                RequestInfo info = null;
+                bool init_received = false;
+                while (await requestStream.MoveNext(context.CancellationToken))
                 {
-                    case PutRequest.Types.Body.ObjectPartOneofCase.Init:
-                        info = AclChecker.CheckRequest(request, Operation.Put);
-                        init_received = true;
-                        break;
-                    case PutRequest.Types.Body.ObjectPartOneofCase.Chunk:
-                        if (!init_received) throw new InvalidOperationException($"{nameof(ObjectServiceImpl)} {nameof(Put)} missing init");
-                        break;
-                    default:
-                        throw new FormatException($"{nameof(ObjectServiceImpl)} {nameof(Put)} invalid put request");
+                    var request = requestStream.Current;
+                    switch (request.Body.ObjectPartCase)
+                    {
+                        case PutRequest.Types.Body.ObjectPartOneofCase.Init:
+                            info = AclChecker.CheckRequest(request, Operation.Put);
+                            init_received = true;
+                            break;
+                        case PutRequest.Types.Body.ObjectPartOneofCase.Chunk:
+                            if (!init_received) throw new InvalidOperationException($"{nameof(ObjectServiceImpl)} {nameof(Put)} missing init");
+                            break;
+                        default:
+                            throw new FormatException($"{nameof(ObjectServiceImpl)} {nameof(Put)} invalid put request");
+                    }
+                    next.Send(request);
                 }
-                next.Send(request);
+                return (PutResponse)next.Close();
             }
-            return (PutResponse)next.Close();
+            catch (OperationCanceledException)
+            {
+                throw new RpcException(new(StatusCode.Cancelled, "operation cancelled"));
+            }
+            catch (ObjectExcpetion oe)
+            {
+                throw new RpcException(new(StatusCode.Unknown, oe.Message));
+            }
+            catch (Exception e)
+            {
+                throw new RpcException(new(StatusCode.Internal, e.Message));
+            }
         }
 
         public override Task Search(SearchRequest request, IServerStreamWriter<SearchResponse> responseStream, ServerCallContext context)
         {
             return Task.Run(() =>
             {
-                var info = AclChecker.CheckRequest(request, Operation.Search);
-                SignService.Search(request, resp =>
+                try
                 {
-                    AclChecker.EAclCheck(info, resp);
-                    responseStream.WriteAsync(resp);
-                }, context.CancellationToken);
+                    var info = AclChecker.CheckRequest(request, Operation.Search);
+                    SignService.Search(request, resp =>
+                    {
+                        AclChecker.EAclCheck(info, resp);
+                        responseStream.WriteAsync(resp);
+                    }, context.CancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw new RpcException(new(StatusCode.Cancelled, "operation cancelled"));
+                }
+                catch (ObjectExcpetion oe)
+                {
+                    throw new RpcException(new(StatusCode.Unknown, oe.Message));
+                }
+                catch (Exception e)
+                {
+                    throw new RpcException(new(StatusCode.Internal, e.Message));
+                }
             }, context.CancellationToken);
         }
     }

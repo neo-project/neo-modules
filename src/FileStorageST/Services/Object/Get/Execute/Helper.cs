@@ -55,9 +55,14 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
             }
         }
 
-        public static bool IsChild(this FSObject obj)
+        public static bool IsChild(this FSObject obj, ExecuteContext context)
         {
-            return obj.Parent != null && obj.Parent.Address.Equals(obj.Address);
+            return obj.Parent != null && obj.Parent.Address.Equals(context.Prm.Address);
+        }
+
+        public static void MergeSplitInfo()
+        {
+
         }
     }
 }

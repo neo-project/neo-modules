@@ -5,7 +5,6 @@ using Google.Protobuf;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Storage.LocalObjectStorage.Blob;
-using static Neo.FileStorage.Storage.LocalObjectStorage.Helper;
 using static Neo.FileStorage.Storage.LocalObjectStorage.Metabase.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
@@ -84,7 +83,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
             if (old is null)
                 throw new InvalidOperationException("updating split info on object without it");
             SplitInfo osi = SplitInfo.Parser.ParseFrom(old);
-            si = MergeSplitInfo(osi, si);
+            si.MergeFrom(osi);
             db.Put(key, si.ToByteArray());
         }
 

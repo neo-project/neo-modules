@@ -11,7 +11,7 @@ namespace Neo.FileStorage.Storage.Utils
                 throw new ArgumentNullException(nameof(a));
             if (a is null)
                 throw new ArgumentNullException(nameof(b));
-            return ByteString.CopyFrom(Helper.Concat(a.ToByteArray(), b.ToByteArray()));
+            return ByteString.CopyFrom(Neo.Helper.Concat(a.ToByteArray(), b.ToByteArray()));
         }
 
         public static ByteString Range(this ByteString a, ulong left, ulong right)

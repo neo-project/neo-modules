@@ -36,7 +36,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Delete.Execute
                 service.HeadAddress(context, context.Prm.Address);
                 return null;
             }
-            catch (Exception e) when (e is LocalObjectStorage.SplitInfoException se)
+            catch (Exception e) when (e is SplitInfoException se)
             {
                 return se.SplitInfo;
             }

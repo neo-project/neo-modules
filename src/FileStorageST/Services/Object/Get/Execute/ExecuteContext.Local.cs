@@ -1,3 +1,6 @@
+using Neo.FileStorage.API.Object;
+
+
 namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
 {
     public partial class ExecuteContext

@@ -5,7 +5,6 @@ using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Storage.LocalObjectStorage;
 using Neo.FileStorage.Storage.LocalObjectStorage.Blob;
 using Neo.FileStorage.Storage.LocalObjectStorage.Metabase;
 using static Neo.FileStorage.Storage.Tests.Helper;
@@ -138,7 +137,7 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Metabase
                 mb.MoveIt(child.Address);
                 var list = mb.Moveable();
                 Assert.AreEqual(1, list.Count);
-                Assert.ThrowsException<Storage.LocalObjectStorage.SplitInfoException>(() => mb.Delete(parent.Address));
+                Assert.ThrowsException<SplitInfoException>(() => mb.Delete(parent.Address));
                 var ts = RandomObject(cid);
                 mb.Inhume(ts.Address, child.Address);
                 mb.Inhume(ts.Address, child.Address);
@@ -173,7 +172,7 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Metabase
                 child2.SplitId = spi;
                 mb.Put(child1);
                 mb.Put(child2);
-                Assert.ThrowsException<Storage.LocalObjectStorage.SplitInfoException>(() => mb.Exists(parent.Address));
+                Assert.ThrowsException<SplitInfoException>(() => mb.Exists(parent.Address));
                 mb.Delete(child1.Address, child2.Address);
                 Assert.IsFalse(mb.Exists(parent.Address));
             }
@@ -237,7 +236,7 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Metabase
                 child.Parent = parent;
                 child.SplitId = new SplitID();
                 mb.Put(child);
-                Assert.ThrowsException<Storage.LocalObjectStorage.SplitInfoException>(() => mb.Exists(parent.Address));
+                Assert.ThrowsException<SplitInfoException>(() => mb.Exists(parent.Address));
 
                 #region merge split info
                 {
@@ -266,8 +265,8 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Metabase
                     }
                     catch (Exception e)
                     {
-                        Assert.IsTrue(e is FileStorage.Storage.LocalObjectStorage.SplitInfoException);
-                        var spie = e as FileStorage.Storage.LocalObjectStorage.SplitInfoException;
+                        Assert.IsTrue(e is SplitInfoException);
+                        var spie = e as SplitInfoException;
                         Assert.AreEqual(spi1.ToByteArray().ToHexString(), spie.SplitInfo.SplitId.ToByteArray().ToHexString());
                         Assert.AreEqual(child.ObjectId, spie.SplitInfo.LastPart);
                         Assert.AreEqual(link.ObjectId, spie.SplitInfo.Link);
@@ -296,8 +295,8 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Metabase
                     }
                     catch (Exception e)
                     {
-                        Assert.IsTrue(e is Storage.LocalObjectStorage.SplitInfoException);
-                        var spie = e as Storage.LocalObjectStorage.SplitInfoException;
+                        Assert.IsTrue(e is SplitInfoException);
+                        var spie = e as SplitInfoException;
                         Assert.AreEqual(spi2.ToByteArray().ToHexString(), spie.SplitInfo.SplitId.ToByteArray().ToHexString());
                         Assert.AreEqual(child.ObjectId, spie.SplitInfo.LastPart);
                         Assert.AreEqual(link.ObjectId, spie.SplitInfo.Link);
@@ -360,8 +359,8 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Metabase
                 }
                 catch (Exception e)
                 {
-                    Assert.IsTrue(e is Storage.LocalObjectStorage.SplitInfoException);
-                    var sie = e as Storage.LocalObjectStorage.SplitInfoException;
+                    Assert.IsTrue(e is SplitInfoException);
+                    var sie = e as SplitInfoException;
                     Assert.AreEqual(sid.ToByteArray().ToHexString(), sie.SplitInfo.SplitId.ToByteArray().ToHexString());
                     Assert.AreEqual(child.ObjectId, sie.SplitInfo.LastPart);
                 }
