@@ -1,11 +1,11 @@
 {
-    "PluginConfiguration": {
-        "Path": "Data_MPT_{0}",
-        "FullState": false,
-        "Network": 860833102,
-        "AutoVerify": false
-    },
-    "Dependency": [
-        "RpcServer"
-    ]
+  "PluginConfiguration": {
+    "Path": "Data_MPT_{0}",
+    "FullState": false,
+    "Network": 860833102,
+    "AutoVerify": false
+  },
+  "Dependency": [
+    "RpcServer"
+  ]
 }
