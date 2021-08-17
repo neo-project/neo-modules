@@ -96,26 +96,6 @@ namespace Neo.FileStorage.InnerRing.Tests.Util.Locode
         }
 
         [TestMethod]
-        public void TestReadEmptyRecord()
-        {
-            string path = "test.csv";
-            string content = ",\"AD\",,\".ANDORRA\",,,,,,,,";
-            File.WriteAllText(path, content);
-            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                HasHeaderRecord = false,
-            };
-
-            using var reader = new StreamReader(path);
-            using var csv = new CsvReader(reader, config);
-
-            var records = csv.GetRecords<CSVTable.UNLOCODERecord>();
-            var record = records.First();
-            Assert.AreEqual("AD", record.CountryCode);
-            File.Delete(path);
-        }
-
-        [TestMethod]
         public void TestReadUNLOCODE()
         {
             string path = "./Resources/2020-2 UNLOCODE CodeListPart1.csv";
