@@ -28,7 +28,7 @@ namespace Neo.FileStorage.Storage.Cache
         {
             if (cache.TryPeek(key, out ValueWithTime vt))
             {
-                if (vt.Expiration < DateTime.UtcNow)
+                if (DateTime.UtcNow < vt.Expiration)
                 {
                     return vt.Value;
                 }

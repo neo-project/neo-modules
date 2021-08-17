@@ -1,23 +1,21 @@
 using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.Storage.Core;
-using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Reputation;
 
 namespace Neo.FileStorage.Storage.Cache
 {
     public class NetmapCache : INetmapSource
     {
-        public const int NetmapCacheSize = 10;
+        public const int DefaultCapacity = 10;
 
         private readonly IEpochSource epochSource;
         private readonly NetworkCache<ulong, NetMap> cache;
 
-        public NetmapCache(IEpochSource epochSource, MorphInvoker morph)
+        public NetmapCache(int cap, IEpochSource epochSource, INetmapSource netmapSource)
         {
             this.epochSource = epochSource;
-            cache = new(NetmapCacheSize, epoch =>
+            cache = new(cap > 0 ? cap : DefaultCapacity, epoch =>
             {
-                return morph.GetNetMapByEpoch(epoch);
+                return netmapSource.GetNetMapByEpoch(epoch);
             });
         }
 

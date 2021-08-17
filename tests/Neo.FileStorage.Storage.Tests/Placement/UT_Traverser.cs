@@ -7,7 +7,7 @@ using Neo.FileStorage.Placement;
 using Neo.FileStorage.Storage.Placement;
 using FSContainer = Neo.FileStorage.API.Container.Container;
 
-namespace Neo.FileStorage.Storage.Tests.Services.ObjectManager
+namespace Neo.FileStorage.Storage.Tests.Placement
 {
     public class TestBuilder : IPlacementBuilder
     {

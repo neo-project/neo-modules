@@ -10,7 +10,7 @@ using V2Version = Neo.FileStorage.API.Refs.Version;
 namespace Neo.FileStorage.Storage.Tests.Core
 {
     [TestClass]
-    public class UT_Fmt
+    public class UT_Container
     {
         [TestMethod]
         public void TestCheckFormat()

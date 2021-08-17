@@ -30,7 +30,7 @@ namespace Neo.FileStorage.Storage
         private ReputationServiceImpl InitializeReputation()
         {
             IActorRef workPool = system.ActorSystem.ActorOf(WorkerPool.Props("Reputation", DefaultReputationWorkPoolSize));
-            NetmapCache netmapCache = new(this, morphInvoker);
+            NetmapCache netmapCache = new(NetmapCache.DefaultCapacity, this, morphInvoker);
             TrustStorage trustStorage = new();
             DaughtersStorage daughterStorage = new();
             ConsumersStorage consumersStorage = new();

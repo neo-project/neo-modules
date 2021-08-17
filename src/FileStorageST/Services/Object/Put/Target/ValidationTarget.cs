@@ -19,9 +19,10 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
         {
             checksum = header.Header.PayloadHash;
             if (checksum.Type != ChecksumType.Sha256 && checksum.Type != ChecksumType.Tz)
-                throw new InvalidOperationException(nameof(ValidationTarget) + " unsupported paylaod checksum type " + checksum.Type);
-            if (!ObjectValidator.Validate(header))
-                throw new FormatException(nameof(ValidationTarget) + " invalid object");
+                throw new InvalidOperationException("unsupported paylaod checksum type " + checksum.Type);
+            var vr = ObjectValidator.Validate(header);
+            if (vr != VerifyResult.Success)
+                throw new FormatException($"invalid object {vr}");
             Next.WriteHeader(header);
         }
 

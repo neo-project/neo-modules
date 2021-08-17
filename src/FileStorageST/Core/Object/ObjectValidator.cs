@@ -15,23 +15,37 @@ namespace Neo.FileStorage.Storage.Core.Object
         public IObjectDeleteHandler DeleteHandler { get; init; }
         public IEpochSource EpochSource { get; init; }
 
-        public bool Validate(FSObject obj)
+        public VerifyResult Validate(FSObject obj)
         {
             if (obj is null)
-                return false;
+                return VerifyResult.Null;
             else if (obj.ObjectId is null)
-                return false;
-            else if (obj.Header is null || obj.Header.ContainerId is null)
-                return false;
+                return VerifyResult.NoID;
+            else if (obj.Header is null)
+                return VerifyResult.NoHeader;
+            else if (obj.Header.ContainerId is null)
+                return VerifyResult.NoContainerID;
 
-            while (obj != null)
+            for (; obj is not null; obj = obj.Parent)
             {
-                obj = obj.Parent;
-                if (!ValidateSignatureKey(obj)) return false;
-                if (!CheckExpiration(obj)) return false;
-                if (!obj.CheckVerificationFields()) return false;
+                var r = CheckAttributes(obj);
+                if (r != VerifyResult.Success) return r;
+                if (!ValidateSignatureKey(obj)) return VerifyResult.InvalidKey;
+                if (!CheckExpiration(obj)) return VerifyResult.Expiration;
+                if (!obj.CheckVerificationFields()) return VerifyResult.InvalidSignature;
             }
-            return true;
+            return VerifyResult.Success;
+        }
+
+        private VerifyResult CheckAttributes(FSObject obj)
+        {
+            HashSet<string> unique_attrs = new();
+            foreach (var attr in obj.Attributes)
+            {
+                if (!unique_attrs.Add(attr.Key)) return VerifyResult.DuplicateAttribute;
+                if (attr.Value == "") return VerifyResult.EmptyAttributeValue;
+            }
+            return VerifyResult.Success;
         }
 
         private bool ValidateSignatureKey(FSObject obj)
@@ -51,12 +65,11 @@ namespace Neo.FileStorage.Storage.Core.Object
             try
             {
                 var expire = ExpirationEpochAttributeValue(obj);
-                if (expire < EpochSource.CurrentEpoch) return false;
+                if (EpochSource.CurrentEpoch < expire) return false;
             }
-            catch (Exception e)
+            catch (InvalidOperationException e)
             {
                 Utility.Log(nameof(ObjectValidator), LogLevel.Warning, e.Message);
-                return false;
             };
             return true;
         }

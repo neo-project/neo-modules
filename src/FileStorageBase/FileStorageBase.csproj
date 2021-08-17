@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Multiformats.Address" Version="1.1.1" />
-    <PackageReference Include="NeoFS.API" Version="0.0.69" />
+    <PackageReference Include="NeoFS.API" Version="0.0.70" />
   </ItemGroup>
 
   <ItemGroup>
