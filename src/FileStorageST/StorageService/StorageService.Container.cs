@@ -24,11 +24,11 @@ namespace Neo.FileStorage.Storage
                 AnnouncementAccumulator = new SimpleProvider(loadAccumulator),
                 LocalAnnouncementTarget = new LoadRouter
                 {
-                    LocalNodeInfo = LocalNodeInfo,
+                    LocalInfo = this,
                     RemoteProvider = new RemoteLoadAnnounceProvider
                     {
                         Key = key,
-                        LocalAddresses = LocalAddresses,
+                        LocalInfo = this,
                         ClientCache = new ClientCache(),
                         DeadEndProvider = new SimpleProvider(loadAccumulator),
                     },
@@ -73,20 +73,20 @@ namespace Neo.FileStorage.Storage
                     Key = key,
                     ResponseService = new()
                     {
-                        StorageNode = this,
+                        EpochSource = this,
                         ContainerService = new()
                         {
                             MorphInvoker = morphInvoker,
                             UsedSpaceService = new()
                             {
                                 Key = key,
-                                LocalNodeInfo = LocalNodeInfo,
+                                LocalInfo = this,
                                 Router = new()
                                 {
                                     RemoteProvider = new()
                                     {
                                         Key = key,
-                                        LocalAddresses = LocalAddresses,
+                                        LocalInfo = this,
                                         ClientCache = new ClientCache(),
                                         DeadEndProvider = new SimpleProvider(loadAccumulator),
                                     },
@@ -94,7 +94,7 @@ namespace Neo.FileStorage.Storage
                                     {
                                         PlacementBuilder = loadPlacementBuilder
                                     },
-                                    LocalNodeInfo = LocalNodeInfo,
+                                    LocalInfo = this,
                                 },
                                 Loadbuilder = loadPlacementBuilder,
                                 RouteBuilder = new()

@@ -12,7 +12,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Local.Client
 {
     public class ReputationClientCache : ClientCache
     {
-        public StorageService StorageNode { get; init; }
+        public IEpochSource EpochSource { get; init; }
         public MorphInvoker MorphInvoker { get; init; }
         public TrustStorage ReputationStorage { get; init; }
 

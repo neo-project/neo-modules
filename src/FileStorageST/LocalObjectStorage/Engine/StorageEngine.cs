@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Akka.Util.Extensions;
 using Google.Protobuf;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
@@ -10,12 +9,13 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Storage.LocalObjectStorage.Shards;
 using Neo.FileStorage.Storage.Services.Object.Acl.EAcl;
+using Neo.FileStorage.Storage.Services.Object.Get;
 using Neo.FileStorage.Storage.Services.Object.Search;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
 {
-    public sealed class StorageEngine : ILocalHeadSource, ILocalSearchSource, IDisposable
+    public sealed class StorageEngine : ILocalHeadSource, ILocalSearchSource, ILocalObjectSource, IDisposable
     {
         private readonly Dictionary<ShardID, Shard> shards = new();
         private readonly ReaderWriterLockSlim mtx = new();
@@ -49,11 +49,8 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
                 }
                 catch (SplitInfoException e)
                 {
-                    if (spi is null)
-                    {
-                        spi = new();
-                    }
-                    Helper.MergeSplitInfo(e.SplitInfo, spi);
+                    if (spi is null) spi = new();
+                    spi.MergeFrom(e.SplitInfo);
                     if (spi.Link is not null && spi.LastPart is not null)
                         throw new SplitInfoException(spi);
                     continue;
@@ -78,11 +75,8 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
                 }
                 catch (SplitInfoException e)
                 {
-                    if (spi is null)
-                    {
-                        spi = new();
-                    }
-                    Helper.MergeSplitInfo(e.SplitInfo, spi);
+                    if (spi is null) spi = new();
+                    spi.MergeFrom(e.SplitInfo);
                     if (spi.Link is not null && spi.LastPart is not null)
                         throw new SplitInfoException(spi);
                     continue;
@@ -221,11 +215,8 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
                 }
                 catch (SplitInfoException e)
                 {
-                    if (spi is null)
-                    {
-                        spi = new();
-                    }
-                    Helper.MergeSplitInfo(e.SplitInfo, spi);
+                    if (spi is null) spi = new();
+                    spi.MergeFrom(e.SplitInfo);
                     if (spi.Link is not null && spi.LastPart is not null)
                         throw new SplitInfoException(spi);
                     continue;

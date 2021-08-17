@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 
 namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
@@ -84,7 +85,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
         public string Exists(Address address)
         {
             string path = TreePath(address);
-            if (!File.Exists(path)) throw new ObjectFileNotFoundException(nameof(FSTree));
+            if (!File.Exists(path)) throw new ObjectNotFoundException();
             return path;
         }
 

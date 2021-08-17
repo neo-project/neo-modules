@@ -1,8 +1,6 @@
-using System;
 using System.Threading;
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.Placement;
-using Neo.FileStorage.Storage.LocalObjectStorage;
+using Neo.FileStorage.Storage.Placement;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSRange = Neo.FileStorage.API.Object.Range;
 
@@ -10,7 +8,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
 {
     public partial class ExecuteContext
     {
-        public CancellationToken Cancellation { get; init; }
+        public CancellationToken Token { get; init; }
         public RangePrm Prm { get; init; }
         public GetService GetService { get; init; }
         public FSRange Range { get; init; }
@@ -18,7 +16,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
         public ulong CurrentEpoch { get; private set; }
         public bool Assembling { get; private set; }
         private FSObject collectedObject;
-        private SplitInfo splitInfo;
+        private SplitInfo splitInfo = new();
         private Traverser traverser;
         private ulong currentOffset;
 
@@ -32,14 +30,15 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
             {
                 ExecuteLocal();
             }
-            catch (Exception le) when (le is LocalObjectStorage.SplitInfoException se)
+            catch (SplitInfoException se)
             {
-                splitInfo = se.SplitInfo;
+                splitInfo.MergeFrom(se.SplitInfo);
                 if (CanAssemble)
                     Assemble();
-                throw;
+                else
+                    throw;
             }
-            catch (Exception e) when (e is not ObjectAlreadyRemovedException && e is not RangeOutOfBoundsException)
+            catch (ObjectNotFoundException)
             {
                 if (!Prm.Local)
                 {
@@ -47,14 +46,17 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
                     {
                         ExecuteOnContainer();
                     }
-                    catch (Exception re) when (re is API.Object.SplitInfoException se)
+                    catch (SplitInfoException se)
                     {
-                        splitInfo = se.SplitInfo;
+                        splitInfo.MergeFrom(se.SplitInfo);
                         if (CanAssemble)
                             Assemble();
-                        throw;
+                        else
+                            throw;
                     }
                 }
+                else
+                    throw;
             }
         }
 
@@ -68,8 +70,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
         {
             if (ShouldWriteHeader)
             {
-                var cutted = collectedObject.CutPayload();
-                Prm.Writer.WriteHeader(cutted);
+                Prm.Writer.WriteHeader(collectedObject.CutPayload());
             }
             return true;
         }

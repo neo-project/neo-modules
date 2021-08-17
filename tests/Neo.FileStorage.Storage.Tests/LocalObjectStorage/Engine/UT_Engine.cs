@@ -53,12 +53,12 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Engine
                 s2.Put(link);
                 var o = engine.Head(parent.Address, false);
                 Assert.AreEqual(parent.ObjectId, o.ObjectId);
-                Assert.ThrowsException<FileStorage.Storage.LocalObjectStorage.SplitInfoException>(() => engine.Head(parent.Address, true));
+                Assert.ThrowsException<SplitInfoException>(() => engine.Head(parent.Address, true));
                 try
                 {
                     engine.Head(parent.Address, true);
                 }
-                catch (FileStorage.Storage.LocalObjectStorage.SplitInfoException sie)
+                catch (SplitInfoException sie)
                 {
                     Assert.IsTrue(sid.ToByteArray().SequenceEqual(sie.SplitInfo.SplitId.ToByteArray()));
                     Assert.AreEqual(child.ObjectId, sie.SplitInfo.LastPart);

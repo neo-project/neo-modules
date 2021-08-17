@@ -2,11 +2,12 @@ using System;
 using Akka.Actor;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Cache;
 using Neo.FileStorage.Placement;
+using Neo.FileStorage.Storage.Cache;
 using Neo.FileStorage.Storage.Services.Container.Announcement;
 using Neo.FileStorage.Storage.Services.Object.Acl;
 using Neo.FileStorage.Storage.Services.Object.Get;
+using Neo.FileStorage.Storage.Services.Object.Get.Remote;
 using Neo.FileStorage.Storage.Services.Object.Put;
 using Neo.FileStorage.Storage.Services.Object.Search;
 using Neo.FileStorage.Storage.Services.Object.Search.Clients;
@@ -27,7 +28,7 @@ namespace Neo.FileStorage.Storage
             KeyStorage keyStorage = new(key, tokenStore);
             reputationClientCache = new()
             {
-                StorageNode = this,
+                EpochSource = this,
                 MorphInvoker = morphInvoker,
                 ReputationStorage = new(),
             };
@@ -42,7 +43,7 @@ namespace Neo.FileStorage.Storage
             }));
             IActorRef policeRef = system.ActorSystem.ActorOf(Policer.Props(new()
             {
-                LocalAddresses = LocalAddresses,
+                LocalInfo = this,
                 LocalStorage = localStorage,
                 MorphInvoker = morphInvoker,
                 PlacementBuilder = new NetworkMapBuilder(morphInvoker),
@@ -83,7 +84,7 @@ namespace Neo.FileStorage.Storage
             PutService putService = new()
             {
                 MorphInvoker = morphInvoker,
-                LocalAddresses = LocalAddresses,
+                LocalInfo = this,
                 KeyStorage = keyStorage,
                 LocalStorage = localStorage,
                 ObjectInhumer = objInhumer,
@@ -94,9 +95,9 @@ namespace Neo.FileStorage.Storage
                 Assemble = true,
                 KeyStorage = keyStorage,
                 LocalStorage = localStorage,
-                ClientCache = reputationClientCache,
-                MorphInvoker = morphInvoker,
-                TraverserGenerator = new(morphInvoker, LocalAddresses, 1),
+                ClientCache = new GetClientCache(reputationClientCache),
+                EpochSource = this,
+                TraverserGenerator = new TraverserGenerator(morphInvoker, this, 1),
             };
             SearchService searchService = new()
             {
@@ -104,7 +105,7 @@ namespace Neo.FileStorage.Storage
                 LocalStorage = localStorage,
                 MorphClient = new EpochSource(morphInvoker),
                 ClientCache = new SearchClientCache(reputationClientCache),
-                TraverserGenerator = new TraverserGenerator(morphInvoker, LocalAddresses, trackCopies: false),
+                TraverserGenerator = new TraverserGenerator(morphInvoker, this, trackCopies: false),
             };
             return new ObjectServiceImpl
             {
@@ -114,7 +115,7 @@ namespace Neo.FileStorage.Storage
                     Key = key,
                     ResponseService = new()
                     {
-                        StorageNode = this,
+                        EpochSource = this,
                         SplitService = new()
                         {
                             ObjectService = new()
@@ -124,7 +125,7 @@ namespace Neo.FileStorage.Storage
                                 SearchService = searchService,
                                 DeleteService = new()
                                 {
-                                    MorphInvoker = morphInvoker,
+                                    EpochSource = this,
                                     PutService = putService,
                                     SearchService = searchService,
                                     GetService = getService,

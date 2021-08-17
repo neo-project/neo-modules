@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Storage.LocalObjectStorage;
 using Neo.FileStorage.Storage.Services.Object.Get.Writer;
 using Neo.FileStorage.Storage.Utils;
 using static Neo.Utility;
@@ -14,63 +13,6 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
 {
     public partial class ExecuteContext
     {
-        private (ObjectID, List<ObjectID>) InitFromChild(ObjectID oid)
-        {
-            var child = GetChild(oid, null, true);
-            var parent = child.Parent;
-            if (parent is null)
-            {
-                throw new InvalidOperationException("asseble, received child with empty parent");
-            }
-            collectedObject = parent;
-            if (Range is not null)
-            {
-                var seek_len = Range.Length;
-                var seek_off = Range.Offset;
-                var parent_size = parent.PayloadSize;
-                if (parent_size < seek_off + seek_len)
-                {
-                    throw new RangeOutOfBoundsException();
-                }
-                var child_size = child.PayloadSize;
-                currentOffset = parent_size - child_size;
-                ulong from = 0;
-                if (currentOffset < seek_off)
-                    from = seek_off - currentOffset;
-                ulong to = 0;
-                if (currentOffset + from < seek_off + seek_len)
-                    to = seek_off + seek_len - currentOffset;
-                collectedObject.Payload = child.Payload.Range(from, to);
-            }
-            else
-            {
-                collectedObject.Payload = child.Payload;
-            }
-            return (child.PreviousId, child.Children.ToList());
-        }
-
-        private FSObject GetChild(ObjectID oid, FSRange range, bool with_header)
-        {
-            var writer = new SimpleObjectWriter();
-            RangePrm prm = new();
-            prm.WithGetCommonPrm(Prm);
-            prm.Writer = writer;
-            prm.Range = Range;
-            prm.Address = new()
-            {
-                ContainerId = Prm.Address.ContainerId,
-                ObjectId = oid,
-            };
-            prm.Local = false;
-            GetService.Get(prm, range, false, Cancellation);
-            var child = writer.Obj;
-            if (with_header && !child.IsChild())
-            {
-                throw new InvalidOperationException("assemble, wrong child header");
-            }
-            return child;
-        }
-
         private void Assemble()
         {
             Log("GetExecutor", LogLevel.Debug, "trying to assemble the object...");
@@ -114,6 +56,63 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
             }
         }
 
+        private (ObjectID, List<ObjectID>) InitFromChild(ObjectID oid)
+        {
+            var child = GetChild(oid, null, true);
+            var parent = child.Parent;
+            if (parent is null)
+            {
+                throw new InvalidOperationException("assemble, received child with empty parent");
+            }
+            collectedObject = parent;
+            if (Range is not null)
+            {
+                var seek_len = Range.Length;
+                var seek_off = Range.Offset;
+                var parent_size = parent.PayloadSize;
+                if (parent_size < seek_off + seek_len)
+                {
+                    throw new RangeOutOfBoundsException();
+                }
+                var child_size = child.PayloadSize;
+                currentOffset = parent_size - child_size;
+                ulong from = 0;
+                if (currentOffset < seek_off)
+                    from = seek_off - currentOffset;
+                ulong to = 0;
+                if (currentOffset + from < seek_off + seek_len)
+                    to = seek_off + seek_len - currentOffset;
+                collectedObject.Payload = child.Payload.Range(from, to);
+            }
+            else
+            {
+                collectedObject.Payload = child.Payload;
+            }
+            return (child.PreviousId, child.Children.ToList());
+        }
+
+        private FSObject GetChild(ObjectID oid, FSRange range, bool with_header)
+        {
+            var writer = new SimpleObjectWriter();
+            RangePrm prm = new();
+            prm.WithGetCommonPrm(Prm);
+            prm.Writer = writer;
+            prm.Range = Range;
+            prm.Address = new()
+            {
+                ContainerId = Prm.Address.ContainerId,
+                ObjectId = oid,
+            };
+            prm.Local = false;
+            GetService.Get(prm, range, false, Token);
+            var child = writer.Object;
+            if (with_header && !child.IsChild(this))
+            {
+                throw new InvalidOperationException("assemble, wrong child header");
+            }
+            return child;
+        }
+
         private void OvertakePayloadDirectly(List<ObjectID> children, List<FSRange> ranges, bool check_right)
         {
             var with_range = ranges is not null && 0 < ranges.Count && Range != null;
@@ -121,15 +120,8 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
             {
                 FSRange r = null;
                 if (with_range) r = ranges[i];
-                try
-                {
-                    var child = GetChild(children[i], r, !with_range && check_right);
-                    WriteObjectPayload(child);
-                }
-                catch (Exception)
-                {
-                    return;
-                }
+                var child = GetChild(children[i], r, !with_range && check_right);
+                WriteObjectPayload(child);
             }
         }
 
@@ -156,9 +148,9 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
             prm.Short = false;
             var writer = new SimpleObjectWriter();
             prm.Writer = writer;
-            GetService.Head(prm, Cancellation);
-            var child = writer.Obj;
-            if (child.ParentId is not null && !child.IsChild())
+            GetService.Head(prm, Token);
+            var child = writer.Object;
+            if (child.ParentId is not null && !child.IsChild(this))
             {
                 throw new InvalidOperationException("assemble, parent address in child object differs");
             }
@@ -178,15 +170,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
             while (prev != null)
             {
                 if (currentOffset < from) break;
-                FSObject head;
-                try
-                {
-                    head = HeadChild(prev);
-                }
-                catch (Exception)
-                {
-                    return false;
-                }
+                FSObject head = HeadChild(prev);
                 if (Range is not null)
                 {
                     var sz = head.PayloadSize;

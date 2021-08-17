@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Cache;
 using Neo.FileStorage.Storage.LocalObjectStorage.Blob;

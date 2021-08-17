@@ -4,7 +4,7 @@ namespace Neo.FileStorage.Storage.Services.Reputaion.Common.Route
 {
     public class Router : IWriterProvider
     {
-        public NodeInfo LocalNodeInfo { get; init; }
+        public ILocalInfoSource LocalNodeInfoSource { get; init; }
         public IBuilder RouteBuilder { get; init; }
         public IRemoteWriterProvider RemoteWriterProvider { get; init; }
 

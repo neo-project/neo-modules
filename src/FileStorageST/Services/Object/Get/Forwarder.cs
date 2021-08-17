@@ -12,11 +12,11 @@ namespace Neo.FileStorage.Storage.Services.Object.Get
 {
     public class Forwarder
     {
-        private readonly CancellationToken cancellation;
+        private readonly CancellationToken token;
         private readonly ECDsa key;
         private readonly IRequest request;
 
-        public Forwarder(ECDsa key, IRequest req, CancellationToken cancellation)
+        public Forwarder(ECDsa key, IRequest req, CancellationToken t)
         {
             this.key = key;
             request = req;
@@ -25,10 +25,10 @@ namespace Neo.FileStorage.Storage.Services.Object.Get
             meta.Origin = req.MetaHeader;
             request.MetaHeader = meta;
             key.SignRequest(request);
-            this.cancellation = cancellation;
+            token = t;
         }
 
-        public FSObject Forward(IFSRawClient client)
+        public FSObject Forward(IRawObjectClient client)
         {
             switch (request)
             {

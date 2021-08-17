@@ -1,5 +1,6 @@
 
 using Neo.FileStorage.API.Session;
+using Neo.FileStorage.Storage.Core;
 using System;
 using FSVersion = Neo.FileStorage.API.Refs.Version;
 
@@ -7,7 +8,7 @@ namespace Neo.FileStorage.Storage.Services
 {
     public class ResponseService
     {
-        public StorageService StorageNode { get; init; }
+        public IEpochSource EpochSource { get; init; }
 
         public void SetMeta(IResponse response)
         {
@@ -15,7 +16,7 @@ namespace Neo.FileStorage.Storage.Services
             {
                 Version = FSVersion.SDKVersion(),
                 Ttl = 1,// TODO: calculate ttl
-                Epoch = StorageNode.CurrentEpoch,
+                Epoch = EpochSource.CurrentEpoch,
             };
             if (response.MetaHeader is not null)
             {

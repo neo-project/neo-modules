@@ -11,12 +11,12 @@ namespace Neo.FileStorage.Storage.Services.Object.Util
 {
     public class RemotePlacementBuilder : NetworkMapBuilder
     {
-        private readonly List<Address> localAddresses;
+        private readonly ILocalInfoSource localAddressesSource;
 
-        public RemotePlacementBuilder(MorphInvoker invoker, List<Address> addresses)
+        public RemotePlacementBuilder(MorphInvoker invoker, ILocalInfoSource localInfoSource)
         : base(invoker)
         {
-            localAddresses = addresses;
+            localAddressesSource = localInfoSource;
         }
 
         public override List<List<Node>> BuildPlacement(FSAddress address, PlacementPolicy policy)
@@ -36,7 +36,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Util
                         Utility.Log(nameof(RemotePlacementBuilder), LogLevel.Error, e.Message);
                         continue;
                     }
-                    if (addrs.Intersect(localAddresses).Any())
+                    if (addrs.Intersect(localAddressesSource.Addresses).Any())
                         ns.Remove(n);
                 }
             }

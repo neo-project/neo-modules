@@ -22,7 +22,7 @@ namespace Neo.FileStorage.Storage
             {
                 if (p is NewEpochEvent e)
                 {
-                    Interlocked.Exchange(ref CurrentEpoch, e.EpochNumber);
+                    Interlocked.Exchange(ref currentEpoch, e.EpochNumber);
                 }
             });
             netmapProcessor.AddEpochHandler(p =>
@@ -32,7 +32,7 @@ namespace Neo.FileStorage.Storage
                     var ni = NetmapLocalNodeInfo(e.EpochNumber);
                     if (ni is null)
                         Utility.Log(nameof(StorageService), LogLevel.Debug, $"could not update node info, not found in netmap");
-                    Interlocked.Exchange(ref LocalNodeInfo, ni);
+                    Interlocked.Exchange(ref localNodeInfo, ni);
                 }
             });
             netmapProcessor.AddEpochHandler(p =>
@@ -42,8 +42,8 @@ namespace Neo.FileStorage.Storage
                     if (0 < Interlocked.Read(ref reBoostrapTurnedOff)) return;
                     if ((e.EpochNumber - startEpoch) % reBootstrapInterval == 0)
                     {
-                        var ni = LocalNodeInfo.Clone();
-                        ni.State = NodeInfo.Types.State.Online;
+                        var ni = localNodeInfo.Clone();
+                        ni.State = API.Netmap.NodeInfo.Types.State.Online;
                         try
                         {
                             morphInvoker.AddPeer(ni);
@@ -62,10 +62,10 @@ namespace Neo.FileStorage.Storage
                     Key = key,
                     ResponseService = new()
                     {
-                        StorageNode = this,
+                        EpochSource = this,
                         NetmapService = new()
                         {
-                            StorageNode = this,
+                            EpochSource = this,
                         }
                     }
                 }

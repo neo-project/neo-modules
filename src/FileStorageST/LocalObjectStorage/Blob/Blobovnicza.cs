@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using Google.Protobuf;
+using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Database;
 using Neo.FileStorage.Database.LevelDB;
@@ -77,7 +78,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blob
             if (FullSizeLimit < (ulong)filled) throw new BlobFullException();
             var raw = Compressor.Compress(obj.ToByteArray());
             if (ObjSizeLimit < (ulong)raw.Length)
-                throw new ObjectSizeExceedLimitException();
+                throw new SizeExceedLimitException();
             var key = Addresskey(obj.Address);
             dB.Put(key, raw);
             IncSize(raw.Length);

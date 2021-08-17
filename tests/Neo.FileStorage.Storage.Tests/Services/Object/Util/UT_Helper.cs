@@ -1,10 +1,12 @@
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Acl;
+using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Session;
 using static Neo.FileStorage.Storage.Services.Object.Util.Helper;
 using static Neo.FileStorage.Storage.Tests.Helper;
 
-namespace Neo.FileStorage.Tests.Services.Object.Acl
+namespace Neo.FileStorage.Storage.Tests.Services.Object.Acl
 {
     [TestClass]
     public class UT_Helper
@@ -34,6 +36,24 @@ namespace Neo.FileStorage.Tests.Services.Object.Acl
                 Assert.AreEqual(session, OriginalSessionToken(meta));
                 Assert.AreEqual(bearer, OriginalBearerToken(meta));
             }
+        }
+
+        [TestMethod]
+        public void TestMergeSplitInfo()
+        {
+            SplitInfo si = new();
+            SplitInfo other = new()
+            {
+                LastPart = RandomObjectID(),
+                Link = RandomObjectID(),
+                SplitId = new SplitID(),
+            };
+            si.MergeFrom(other);
+            Assert.AreEqual(other.LastPart, si.LastPart);
+            Assert.AreEqual(other.Link, si.Link);
+            Assert.AreEqual(other.SplitId, si.SplitId);
+            si = null;
+            Assert.ThrowsException<NullReferenceException>(() => si.MergeFrom(other));
         }
     }
 }

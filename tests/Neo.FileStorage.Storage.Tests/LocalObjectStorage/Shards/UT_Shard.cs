@@ -4,7 +4,6 @@ using System.Linq;
 using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.Storage.LocalObjectStorage;
 using Neo.FileStorage.Storage.LocalObjectStorage.Shards;
 using static Neo.FileStorage.Storage.Tests.Helper;
 
@@ -61,12 +60,12 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Shards
             o = shard.Get(child.Address);
             Assert.IsNotNull(o);
             Assert.IsTrue(child.ToByteArray().SequenceEqual(o.ToByteArray()));
-            Assert.ThrowsException<Storage.LocalObjectStorage.SplitInfoException>(() => shard.Get(parent.Address));
+            Assert.ThrowsException<SplitInfoException>(() => shard.Get(parent.Address));
             try
             {
                 shard.Get(parent.Address);
             }
-            catch (Storage.LocalObjectStorage.SplitInfoException sie)
+            catch (SplitInfoException sie)
             {
                 Assert.IsNull(sie.SplitInfo.Link);
                 Assert.AreEqual(child.ObjectId, sie.SplitInfo.LastPart);

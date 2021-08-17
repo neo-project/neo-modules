@@ -12,7 +12,7 @@ namespace Neo.FileStorage.Storage
                 Key = key,
                 LocalStorage = localStorage,
                 MorphInvoker = morphInvoker,
-                StorageNode = this,
+                StorageService = this,
             };
         }
     }

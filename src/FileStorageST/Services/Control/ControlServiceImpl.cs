@@ -16,7 +16,7 @@ namespace Neo.FileStorage.Storage.Services.Control
         public ECDsa Key { get; init; }
         public StorageEngine LocalStorage { get; init; }
         public MorphInvoker MorphInvoker { get; init; }
-        public StorageService StorageNode { get; init; }
+        public StorageService StorageService { get; init; }
         private readonly HashSet<byte[]> allowKeys = new();
 
         public override Task<DropObjectsResponse> DropObjects(DropObjectsRequest request, ServerCallContext context)
@@ -48,8 +48,8 @@ namespace Neo.FileStorage.Storage.Services.Control
                 {
                     Body = new HealthCheckResponse.Types.Body
                     {
-                        NetmapStatus = StorageNode.NetmapStatus,
-                        HealthStatus = StorageNode.HealthStatus,
+                        NetmapStatus = (NetmapStatus)StorageService.NodeInfo.State,
+                        HealthStatus = StorageService.HealthStatus,
                     }
                 };
                 Key.SignMessage(resp);
@@ -86,7 +86,7 @@ namespace Neo.FileStorage.Storage.Services.Control
             return Task.Run(() =>
             {
                 if (!IsValidRequest(request)) throw new RpcException(new Status(StatusCode.PermissionDenied, ""));
-                StorageNode.SetStatus(request.Body.Status);
+                StorageService.SetStatus(request.Body.Status);
                 var resp = new SetNetmapStatusResponse
                 {
                     Body = new SetNetmapStatusResponse.Types.Body { }

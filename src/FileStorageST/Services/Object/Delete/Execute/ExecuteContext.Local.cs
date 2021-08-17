@@ -16,7 +16,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Delete.Execute
             ulong ts_lifetime = TombstoneLifetime();
             tombstone = new()
             {
-                ExpirationEpoch = CurrentEpoch() + ts_lifetime,
+                ExpirationEpoch = DeleteService.EpochSource.CurrentEpoch + ts_lifetime,
             };
             AddMembers(new() { Prm.Address.ObjectId });
             FromSplitInfo();
@@ -58,11 +58,6 @@ namespace Neo.FileStorage.Storage.Services.Object.Delete.Execute
         private ulong TombstoneLifetime()
         {
             return 0; // TODO: fix
-        }
-
-        private ulong CurrentEpoch()
-        {
-            return DeleteService.MorphInvoker.Epoch();
         }
     }
 }

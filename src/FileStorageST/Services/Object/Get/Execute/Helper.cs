@@ -1,15 +1,13 @@
 using Google.Protobuf;
-using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Session;
-using Neo.FileStorage.Storage.LocalObjectStorage.Engine;
-using Neo.FileStorage.Storage.Services.Reputaion.Local.Client;
+using Neo.FileStorage.Storage.Services.Object.Get.Remote;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
 {
     public static class Helper
     {
-        public static FSObject GetObject(this IFSClient client, ExecuteContext context)
+        public static FSObject GetObject(this IGetClient client, ExecuteContext context)
         {
             if (!context.Assembling && context.Prm.Forwarder is not null)
                 return context.Prm.Forwarder.Forward(client.Raw());
@@ -23,7 +21,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
                     false,
                     context.Prm.Raw,
                     options,
-                    context.Cancellation).Result;
+                    context.Token).Result;
             }
             if (context.Range is not null)
             {
@@ -31,17 +29,17 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
                     context.Range,
                     context.Prm.Raw,
                     options,
-                    context.Cancellation).Result;
+                    context.Token).Result;
                 return new() { Payload = ByteString.CopyFrom(data) };
             }
             return client.GetObject(
                 context.Prm.Address,
                 context.Prm.Raw,
                 options,
-                context.Cancellation).Result;
+                context.Token).Result;
         }
 
-        public static FSObject GetObject(this StorageEngine engine, ExecuteContext context)
+        public static FSObject GetObject(this ILocalObjectSource engine, ExecuteContext context)
         {
             if (context.HeadOnly)
             {
@@ -57,9 +55,14 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
             }
         }
 
-        public static bool IsChild(this FSObject obj)
+        public static bool IsChild(this FSObject obj, ExecuteContext context)
         {
-            return obj.Parent != null && obj.Parent.Address.Equals(obj.Address);
+            return obj.Parent != null && obj.Parent.Address.Equals(context.Prm.Address);
+        }
+
+        public static void MergeSplitInfo()
+        {
+
         }
     }
 }

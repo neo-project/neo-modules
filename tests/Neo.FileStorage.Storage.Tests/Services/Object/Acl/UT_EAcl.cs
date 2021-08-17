@@ -1,18 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Storage.Services.Object.Acl;
 using Neo.FileStorage.Storage.Services.Object.Acl.EAcl;
 using static Neo.FileStorage.Storage.Tests.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
-namespace Neo.FileStorage.Tests.Services.Object.Acl
+namespace Neo.FileStorage.Storage.Tests.Services.Object.Acl
 {
     [TestClass]
     public class UT_EAcl

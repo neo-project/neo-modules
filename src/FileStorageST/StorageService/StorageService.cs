@@ -36,39 +36,56 @@ using APISessionService = Neo.FileStorage.API.Session.SessionService;
 
 namespace Neo.FileStorage.Storage
 {
-    public sealed partial class StorageService : IDisposable
+    public sealed partial class StorageService : IEpochSource, ILocalInfoSource, IDisposable
     {
         public const int ContainerCacheSize = 100;
         public const int ContainerCacheTTLSeconds = 30;
         public const int EACLCacheSize = 100;
         public const int EACLCacheTTLSeconds = 30;
-        public ulong CurrentEpoch = 0;
-        public API.Netmap.NodeInfo LocalNodeInfo;
-        public NetmapStatus NetmapStatus => (NetmapStatus)LocalNodeInfo.State;
-        public HealthStatus HealthStatus;
+        public ProtocolSettings ProtocolSettings => system.Settings;
+        public ulong CurrentEpoch => currentEpoch;
+        public List<Network.Address> Addresses
+        {
+            get
+            {
+                return localNodeInfo.Addresses.Select(p => FileStorage.Network.Address.FromString(p)).ToList();
+            }
+        }
+
+        public API.Netmap.NodeInfo NodeInfo
+        {
+            get
+            {
+                return localNodeInfo.Clone();
+            }
+        }
+
+        public uint Network => system.Settings.Network;
+        public HealthStatus HealthStatus { get; private set; }
+
+        private API.Netmap.NodeInfo localNodeInfo;
         private readonly ECDsa key;
         private readonly MorphInvoker morphInvoker;
         private readonly NeoSystem system;
         private readonly IActorRef listener;
         private readonly StorageEngine localStorage;
-        public ProtocolSettings ProtocolSettings => system.Settings;
-        private List<Network.Address> LocalAddresses => LocalNodeInfo.Addresses.Select(p => Network.Address.FromString(p)).ToList();
         private readonly NetmapProcessor netmapProcessor = new();
         private readonly ContainerProcessor containerProcessor = new();
         private readonly List<BlockTimer> blockTimers = new();
         private readonly Server server;
+        private ulong currentEpoch;
 
         public StorageService(Wallet wallet, NeoSystem side)
         {
             system = side;
             key = wallet.GetAccounts().First().GetKey().PrivateKey.LoadPrivateKey();
             HealthStatus = HealthStatus.Starting;
-            LocalNodeInfo = new()
+            localNodeInfo = new()
             {
                 PublicKey = ByteString.CopyFrom(key.PublicKey()),
             };
-            LocalNodeInfo.Addresses.AddRange(Settings.Default.Addresses);
-            LocalNodeInfo.Attributes.AddRange(Settings.Default.Attributes.Select(p =>
+            localNodeInfo.Addresses.AddRange(Settings.Default.Addresses);
+            localNodeInfo.Attributes.AddRange(Settings.Default.Attributes.Select(p =>
             {
                 var li = p.Split(":");
                 if (li.Length != 2) throw new FormatException("invalid attributes setting");
@@ -132,7 +149,7 @@ namespace Neo.FileStorage.Storage
             });
             listener.Tell(new Listener.Start());
             InitState();
-            var ni = LocalNodeInfo.Clone();
+            var ni = localNodeInfo.Clone();
             ni.State = API.Netmap.NodeInfo.Types.State.Online;
             morphInvoker.AddPeer(ni);
             StartBlockTimers();
@@ -146,23 +163,23 @@ namespace Neo.FileStorage.Storage
             if (ni is null)
             {
                 Utility.Log(nameof(StorageService), LogLevel.Debug, "could not found node info, offline");
-                LocalNodeInfo.State = API.Netmap.NodeInfo.Types.State.Offline;
+                localNodeInfo.State = API.Netmap.NodeInfo.Types.State.Offline;
                 return;
             }
-            LocalNodeInfo = ni;
-            CurrentEpoch = epoch;
+            localNodeInfo = ni;
+            currentEpoch = epoch;
         }
 
         public void SetStatus(NetmapStatus status)
         {
-            lock (LocalNodeInfo)
+            lock (localNodeInfo)
             {
                 switch (status)
                 {
                     case NetmapStatus.Online:
                         {
                             Interlocked.Exchange(ref reBoostrapTurnedOff, 0);
-                            var ni = LocalNodeInfo.Clone();
+                            var ni = localNodeInfo.Clone();
                             ni.State = API.Netmap.NodeInfo.Types.State.Online;
                             morphInvoker.AddPeer(ni);
                             break;

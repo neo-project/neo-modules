@@ -26,7 +26,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Delete.Execute
             };
             prm.WithCommonPrm(context.Prm);
             service.Head(prm, context.Cancellation);
-            return writer.Obj;
+            return writer.Object;
         }
 
         public static SplitInfo SplitInfo(this GetService service, ExecuteContext context)
@@ -36,7 +36,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Delete.Execute
                 service.HeadAddress(context, context.Prm.Address);
                 return null;
             }
-            catch (Exception e) when (e is LocalObjectStorage.SplitInfoException se)
+            catch (Exception e) when (e is SplitInfoException se)
             {
                 return se.SplitInfo;
             }

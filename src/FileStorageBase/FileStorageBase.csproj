@@ -9,9 +9,9 @@
 
   <ItemGroup>
     <PackageReference Include="Multiformats.Address" Version="1.1.1" />
-    <PackageReference Include="NeoFS.API" Version="3.0.0.1" />
+    <PackageReference Include="NeoFS.API" Version="0.0.69" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\LevelDBStore\LevelDBStore.csproj" />
   </ItemGroup>

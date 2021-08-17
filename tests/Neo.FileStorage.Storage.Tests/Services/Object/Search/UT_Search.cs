@@ -6,6 +6,7 @@ using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Placement;
+using Neo.FileStorage.Storage.Placement;
 using Neo.FileStorage.Storage.Services.Object.Search;
 using Neo.FileStorage.Storage.Services.Object.Search.Execute;
 using Neo.FileStorage.Storage.Services.Object.Search.Remote;
@@ -14,7 +15,7 @@ using Neo.FileStorage.Storage.Services.Object.Util;
 using static Neo.FileStorage.Storage.Tests.Helper;
 using FSContainer = Neo.FileStorage.API.Container.Container;
 
-namespace Neo.FileStorage.Tests.Services.Object.Search
+namespace Neo.FileStorage.Storage.Tests.Services.Object.Search
 {
     [TestClass]
     public class UT_Search
@@ -91,13 +92,10 @@ namespace Neo.FileStorage.Tests.Services.Object.Search
         {
             public ulong Epoch;
 
-            ulong IEpochSource.CurrentEpoch()
-            {
-                return Epoch;
-            }
+            public ulong CurrentEpoch => Epoch;
         }
 
-        private List<List<Node>> TestNodeMatrix(int[] dim)
+        public List<List<Node>> TestNodeMatrix(int[] dim)
         {
             List<List<Node>> res = new();
             int sum = 0;

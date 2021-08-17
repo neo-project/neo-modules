@@ -1,5 +1,5 @@
 using System.Threading;
-using Neo.FileStorage.Placement;
+using Neo.FileStorage.Storage.Placement;
 
 namespace Neo.FileStorage.Storage.Services.Object.Search.Execute
 {

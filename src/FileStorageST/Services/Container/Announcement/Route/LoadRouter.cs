@@ -9,11 +9,11 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement.Route
     {
         public RemoteLoadAnnounceProvider RemoteProvider { get; init; }
         public RouteBuilder RouteBuilder { get; init; }
-        public NodeInfo LocalNodeInfo { get; init; }
+        public ILocalInfoSource LocalInfo { get; init; }
 
         public IWriter InitWriter(CancellationToken cancellation)
         {
-            RouteContext context = new(new() { LocalNodeInfo }, cancellation);
+            RouteContext context = new(new() { LocalInfo.NodeInfo }, cancellation);
             return new LoadWriter()
             {
                 Router = this,

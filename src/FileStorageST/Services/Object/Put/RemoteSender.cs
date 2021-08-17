@@ -1,6 +1,7 @@
 using System.Threading;
 using Neo.FileStorage.Storage.Services.Object.Util;
 using Neo.FileStorage.Storage.Services.Reputaion.Local.Client;
+using Neo.FileStorage.Storage.Services.Object.Put.Target;
 
 namespace Neo.FileStorage.Storage.Services.Object.Put
 {

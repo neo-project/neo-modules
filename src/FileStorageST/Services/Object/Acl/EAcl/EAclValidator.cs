@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Neo.FileStorage.API.Acl;
-using Neo.FileStorage.Core.Container;
+using Neo.FileStorage.Storage.Core.Container;
 using AclAction = Neo.FileStorage.API.Acl.Action;
 
 namespace Neo.FileStorage.Storage.Services.Object.Acl.EAcl

@@ -1,8 +1,8 @@
 using System;
 using System.Linq;
+using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Invoker.Morph;
-using Neo.FileStorage.Placement;
+using Neo.FileStorage.Storage.Placement;
 using static Neo.Utility;
 
 namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
@@ -13,19 +13,23 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
         {
             InitEpoch();
             var depth = Prm.NetmapLookupDepth;
-            while (0 < depth)
+            bool result;
+            while (true)
             {
-                if (ProcessCurrentEpoch()) break;
+                result = ProcessCurrentEpoch();
+                if (result) break;
+                if (depth == 0) break;
                 depth--;
                 CurrentEpoch--;
             }
+            if (!result) throw new ObjectNotFoundException();
         }
 
         private void InitEpoch()
         {
             CurrentEpoch = Prm.NetmapEpoch;
             if (0 < CurrentEpoch) return;
-            CurrentEpoch = GetService.MorphInvoker.Epoch();
+            CurrentEpoch = GetService.EpochSource.CurrentEpoch;
         }
 
         private Traverser GenerateTraverser(Address address)
@@ -46,7 +50,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
                 }
                 foreach (var addrs in addrses)
                 {
-                    if (Cancellation.IsCancellationRequested) throw new OperationCanceledException();
+                    if (Token.IsCancellationRequested) throw new OperationCanceledException();
                     if (ProcessNode(addrs))
                     {
                         Log(nameof(ExecuteOnContainer), LogLevel.Debug, " completing the operation");

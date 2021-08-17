@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Grpc.Core;
 using Neo.FileStorage.API.Object;
 
 namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
@@ -15,7 +16,24 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
                 WriteCollectedObject();
                 return true;
             }
-            catch (Exception e) when (e is not SplitInfoException) //TODO: || is not already removed
+            catch (AggregateException ae)
+            {
+                foreach (var e in ae.InnerExceptions)
+                {
+                    if (e is SplitInfoException se)
+                    {
+                        throw new SplitInfoException(se.SplitInfo);
+                    }
+                    if (e is RpcException re &&
+                        re.StatusCode == StatusCode.Unknown &&
+                        re.Status.Detail == ObjectExcpetion.AlreadyRemovedError)
+                    {
+                        throw new ObjectAlreadyRemovedException();
+                    }
+                }
+                return false;
+            }
+            catch
             {
                 return false;
             }

@@ -1,11 +1,14 @@
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Storage;
 
 namespace Neo.FileStorage.Storage.Services.Netmap
 {
     public class NetmapService
     {
-        public StorageService StorageNode { get; init; } //TODO: if this the best way?
+        public IEpochSource EpochSource { get; init; }
+        public ILocalInfoSource LocalInfoSource { get; init; }
+
         public LocalNodeInfoResponse LocalNodeInfo(LocalNodeInfoRequest _)
         {
             var resp = new LocalNodeInfoResponse()
@@ -13,7 +16,7 @@ namespace Neo.FileStorage.Storage.Services.Netmap
                 Body = new LocalNodeInfoResponse.Types.Body
                 {
                     Version = Version.SDKVersion(),
-                    NodeInfo = StorageNode.LocalNodeInfo,
+                    NodeInfo = LocalInfoSource.NodeInfo,
                 },
             };
             return resp;
@@ -27,8 +30,8 @@ namespace Neo.FileStorage.Storage.Services.Netmap
                 {
                     NetworkInfo = new()
                     {
-                        CurrentEpoch = StorageNode.CurrentEpoch,
-                        MagicNumber = StorageNode.ProtocolSettings.Network,
+                        CurrentEpoch = EpochSource.CurrentEpoch,
+                        MagicNumber = LocalInfoSource.Network,
                     }
                 }
             };
