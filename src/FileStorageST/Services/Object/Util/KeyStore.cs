@@ -1,16 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using Neo.FileStorage.API.Session;
+using Neo.FileStorage.Storage.Services.Session;
 using Neo.FileStorage.Storage.Services.Session.Storage;
 
 namespace Neo.FileStorage.Storage.Services.Object.Util
 {
-    public class KeyStorage
+    public class KeyStore
     {
         private readonly ECDsa key;
-        private readonly TokenStore tokenStore;
+        private readonly ITokenStorage tokenStore;
 
-        public KeyStorage(ECDsa localKey, TokenStore ts)
+        public KeyStore(ECDsa localKey, ITokenStorage ts)
         {
             key = localKey;
             tokenStore = ts;
@@ -20,10 +22,10 @@ namespace Neo.FileStorage.Storage.Services.Object.Util
         {
             if (token != null)
             {
-                var pToken = tokenStore.Get(token.Body.OwnerId, token.Body.Id.ToByteArray());
-                if (pToken == null)
-                    throw new ArgumentException("private token not found, could not get session key");
-                return pToken.SessionKey;
+                var key = tokenStore.Get(token.Body.OwnerId, token.Body.Id.ToByteArray());
+                if (key is null)
+                    throw new KeyNotFoundException("private token not found, could not get session key");
+                return key;
             }
             return key;
         }

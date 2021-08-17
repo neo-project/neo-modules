@@ -25,7 +25,7 @@ namespace Neo.FileStorage.Storage
 
         private ObjectServiceImpl InitializeObject()
         {
-            KeyStorage keyStorage = new(key, tokenStore);
+            KeyStore keyStorage = new(key, tokenStore);
             reputationClientCache = new()
             {
                 EpochSource = this,

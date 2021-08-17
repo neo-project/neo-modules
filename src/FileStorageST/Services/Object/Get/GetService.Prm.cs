@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.Storage.Services.Object.Get.Writer;
-using Neo.FileStorage.Storage.Services.Object.Util;
 
 namespace Neo.FileStorage.Storage.Services.Object.Get
 {

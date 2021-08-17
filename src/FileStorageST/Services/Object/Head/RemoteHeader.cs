@@ -10,7 +10,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Head
     public class RemoteHeader
     {
         public const int DefaultHeadTtl = 1;
-        public KeyStorage KeyStorage { get; init; }
+        public KeyStore KeyStorage { get; init; }
         public ReputationClientCache ClientCache { get; init; }
 
         public FSObject Head(RemoteHeadPrm prm, CancellationToken context)

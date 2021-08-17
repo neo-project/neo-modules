@@ -21,8 +21,8 @@ namespace Neo.FileStorage.Storage.Services.Object.Util
 
         public override List<List<Node>> BuildPlacement(FSAddress address, PlacementPolicy policy)
         {
-            var node_list = base.BuildPlacement(address, policy);
-            foreach (var ns in node_list)
+            var nss = base.BuildPlacement(address, policy);
+            foreach (var ns in nss)
             {
                 foreach (var n in ns)
                 {
@@ -40,7 +40,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Util
                         ns.Remove(n);
                 }
             }
-            return node_list;
+            return nss;
         }
     }
 }

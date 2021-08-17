@@ -14,7 +14,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Search
 {
     public class SearchService
     {
-        public KeyStorage KeyStorage { get; init; }
+        public KeyStore KeyStorage { get; init; }
         public ILocalSearchSource LocalStorage { get; init; }
         public IEpochSource MorphClient { get; init; }
         public ISearchClientCache ClientCache { get; init; }

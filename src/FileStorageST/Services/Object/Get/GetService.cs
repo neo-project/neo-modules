@@ -16,7 +16,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Get
     public partial class GetService
     {
         public bool Assemble { get; init; } //Default value should be true
-        public KeyStorage KeyStorage { get; init; }
+        public KeyStore KeyStorage { get; init; }
         public ILocalObjectSource LocalStorage { get; init; }
         public IGetClientCache ClientCache { get; init; }
         public IEpochSource EpochSource { get; init; }

@@ -11,7 +11,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
     {
 
         public CancellationToken Cancellation { get; init; }
-        public KeyStorage KeyStorage { get; init; }
+        public KeyStore KeyStorage { get; init; }
         public PutInitPrm Prm { get; init; }
         public List<Network.Address> Addresses { get; init; }
         public ReputationClientCache ClientCache { get; init; }

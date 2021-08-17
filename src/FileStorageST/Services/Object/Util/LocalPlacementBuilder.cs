@@ -20,12 +20,12 @@ namespace Neo.FileStorage.Storage.Services.Object.Util
 
         public List<List<Node>> BuildPlacement(FSAddress address, PlacementPolicy policy)
         {
-            var node_list = builder.BuildPlacement(address, policy);
-            foreach (var ns in node_list)
+            var nss = builder.BuildPlacement(address, policy);
+            foreach (var ns in nss)
             {
                 foreach (var n in ns)
                 {
-                    if (localAddresses.Intersect(n.NetworkAddresses.Select(p => Network.Address.FromString(p))).Any())
+                    if (localAddresses.Intersect(n.NetworkAddresses.Select(p => Address.FromString(p))).Any())
                         return new List<List<Node>> { new List<Node> { n } };
                 }
             }

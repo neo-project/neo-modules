@@ -7,7 +7,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
 {
     public class RemoteSender
     {
-        public KeyStorage KeyStorage { get; init; }
+        public KeyStore KeyStorage { get; init; }
         public ReputationClientCache ClientCache { get; init; }
 
         public void PutObject(RemotePutPrm prm, CancellationToken context)

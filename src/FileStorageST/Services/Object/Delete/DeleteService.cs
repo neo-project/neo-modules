@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Storage.Services.Object.Delete.Execute;
 using Neo.FileStorage.Storage.Services.Object.Delete.Writer;
 using Neo.FileStorage.Storage.Services.Object.Get;
@@ -17,7 +16,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Delete
         public PutService PutService { get; init; }
         public SearchService SearchService { get; init; }
         public GetService GetService { get; init; }
-        public KeyStorage KeyStorage { get; init; }
+        public KeyStore KeyStorage { get; init; }
 
         public DeletePrm ToDeletePrm(DeleteRequest request, DeleteResponse response)
         {

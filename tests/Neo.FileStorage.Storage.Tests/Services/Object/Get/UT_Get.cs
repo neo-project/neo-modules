@@ -16,6 +16,7 @@ using Neo.FileStorage.Storage.Services.Object.Get;
 using Neo.FileStorage.Storage.Services.Object.Get.Remote;
 using Neo.FileStorage.Storage.Services.Object.Get.Writer;
 using Neo.FileStorage.Storage.Services.Object.Util;
+using Neo.FileStorage.Storage.Services.Session.Storage;
 using Neo.FileStorage.Storage.Utils;
 using static Neo.FileStorage.Storage.Tests.Helper;
 using FSContainer = Neo.FileStorage.API.Container.Container;
@@ -239,7 +240,7 @@ namespace Neo.FileStorage.Storage.Tests.Sercies.Object.Get
             GetService getService = new()
             {
                 Assemble = true,
-                KeyStorage = new(null, new()),
+                KeyStorage = new KeyStore(null, new TokenStore()),
                 LocalStorage = storage,
             };
             SimpleObjectWriter writer = new();
@@ -291,7 +292,7 @@ namespace Neo.FileStorage.Storage.Tests.Sercies.Object.Get
             GetService getService = new()
             {
                 Assemble = true,
-                KeyStorage = new(null, new()),
+                KeyStorage = new(null, new TokenStore()),
                 LocalStorage = storage,
             };
             SimpleObjectWriter writer = new();
@@ -339,7 +340,7 @@ namespace Neo.FileStorage.Storage.Tests.Sercies.Object.Get
             GetService getService = new()
             {
                 Assemble = true,
-                KeyStorage = new(null, new()),
+                KeyStorage = new(null, new TokenStore()),
                 LocalStorage = storage,
             };
             SimpleObjectWriter writer = new();
@@ -413,7 +414,7 @@ namespace Neo.FileStorage.Storage.Tests.Sercies.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStorage = new(null, new()),
+                KeyStorage = new(null, new TokenStore()),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -493,7 +494,7 @@ namespace Neo.FileStorage.Storage.Tests.Sercies.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStorage = new(null, new()),
+                KeyStorage = new(null, new TokenStore()),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -566,7 +567,7 @@ namespace Neo.FileStorage.Storage.Tests.Sercies.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStorage = new(null, new()),
+                KeyStorage = new(null, new TokenStore()),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -639,7 +640,7 @@ namespace Neo.FileStorage.Storage.Tests.Sercies.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStorage = new(null, new()),
+                KeyStorage = new(null, new TokenStore()),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -729,7 +730,7 @@ namespace Neo.FileStorage.Storage.Tests.Sercies.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStorage = new(null, new()),
+                KeyStorage = new(null, new TokenStore()),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -838,7 +839,7 @@ namespace Neo.FileStorage.Storage.Tests.Sercies.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStorage = new(null, new()),
+                KeyStorage = new(null, new TokenStore()),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -953,7 +954,7 @@ namespace Neo.FileStorage.Storage.Tests.Sercies.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStorage = new(null, new()),
+                KeyStorage = new(null, new TokenStore()),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -1040,7 +1041,7 @@ namespace Neo.FileStorage.Storage.Tests.Sercies.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStorage = new(null, new()),
+                KeyStorage = new(null, new TokenStore()),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -1133,7 +1134,7 @@ namespace Neo.FileStorage.Storage.Tests.Sercies.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStorage = new(null, new()),
+                KeyStorage = new(null, new TokenStore()),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -1249,7 +1250,7 @@ namespace Neo.FileStorage.Storage.Tests.Sercies.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStorage = new(null, new()),
+                KeyStorage = new(null, new TokenStore()),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,

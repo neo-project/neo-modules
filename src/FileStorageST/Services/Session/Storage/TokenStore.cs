@@ -1,22 +1,30 @@
 using Google.Protobuf;
-using Neo.Cryptography;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
-using Neo.IO;
 using Neo.Wallets;
 using System;
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
 
 namespace Neo.FileStorage.Storage.Services.Session.Storage
 {
-    public class TokenStore
+    public class TokenStore : ITokenStorage
     {
+        private class PrivateToken
+        {
+            public ECDsa SessionKey;
+            public ulong Expiration;
+        }
+
         private readonly ConcurrentDictionary<string, PrivateToken> tokens = new();
 
-        public PrivateToken Get(OwnerID owner, byte[] token)
+        public ECDsa Get(OwnerID owner, byte[] token)
         {
-            return tokens[StoreKey(owner, token)];
+            ECDsa key = null;
+            if (tokens.TryGetValue(StoreKey(owner, token), out var p))
+                key = p.SessionKey;
+            return key;
         }
 
         public CreateResponse.Types.Body Create(CreateRequest request)
@@ -26,7 +34,11 @@ namespace Neo.FileStorage.Storage.Services.Session.Storage
             var sk = new byte[64];
             var random = new Random();
             random.NextBytes(sk);
-            tokens[key] = new PrivateToken(sk.LoadPrivateKey(), request.Body.Expiration);
+            tokens[key] = new PrivateToken
+            {
+                SessionKey = sk.LoadPrivateKey(),
+                Expiration = request.Body.Expiration,
+            };
             var keyPair = new KeyPair(sk);
             return new CreateResponse.Types.Body()
             {

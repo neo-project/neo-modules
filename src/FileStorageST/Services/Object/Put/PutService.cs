@@ -11,7 +11,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
         public MorphInvoker MorphInvoker { get; init; }
         public IEpochSource EpochSource { get; init; }
         public ILocalInfoSource LocalInfo { get; init; }
-        public KeyStorage KeyStorage { get; init; }
+        public KeyStore KeyStorage { get; init; }
         public StorageEngine LocalStorage { get; init; }
         public LocalObjectInhumer ObjectInhumer { get; init; }
         public ReputationClientCache ClientCache { get; init; }
