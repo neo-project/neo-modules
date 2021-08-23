@@ -1,5 +1,6 @@
 using Neo.IO;
 using System;
+using System.Collections.Generic;
 
 namespace Neo.Plugins.MPT
 {
@@ -10,9 +11,8 @@ namespace Neo.Plugins.MPT
             get
             {
                 var path = ToNibbles(key.ToArray());
-                if (path.Length == 0) return null;
                 var result = TryGet(ref root, path, out var value);
-                return result ? value.AsSerializable<TValue>() : null;
+                return result ? value.ToArray().AsSerializable<TValue>() : throw new KeyNotFoundException();
             }
         }
 

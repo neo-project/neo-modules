@@ -583,5 +583,41 @@ namespace Neo.Plugins.StateService.Tests
             mpt1.Commit();
             Assert.AreEqual(7, snapshot.Size);
         }
+
+        [TestMethod]
+        public void TestEmptyValueIssue633()
+        {
+            var key = "01".HexToBytes();
+            var snapshot = new TestSnapshot();
+            var mpt = new MPTTrie<TestKey, TestValue>(snapshot, null);
+            mpt.Put(key, Array.Empty<byte>());
+            var val = mpt["01".HexToBytes()];
+            Assert.IsNotNull(val);
+            Assert.AreEqual(0, val.Size);
+            var proofs = mpt.GetProof(key);
+            val = MPTTrie<TestKey, TestValue>.VerifyProof(mpt.Root.Hash, key, proofs);
+            Assert.IsNotNull(val);
+            Assert.AreEqual(0, val.Size);
+        }
+
+        [TestMethod]
+        public void TestEmptyKey()
+        {
+            var key = new TestKey();
+            var snapshot = new TestSnapshot();
+            var mpt = new MPTTrie<TestKey, TestValue>(snapshot, null);
+            mpt.Put(key, "01".HexToBytes());
+            mpt.Commit();
+            Assert.AreEqual(1, snapshot.Size);
+            var val = mpt[key];
+            Assert.IsNotNull(val);
+            Assert.AreEqual("01", val.ToString());
+            mpt.Put(key, "02".HexToBytes());
+            mpt.Commit();
+            Assert.AreEqual(1, snapshot.Size);
+            val = mpt[key];
+            Assert.IsNotNull(val);
+            Assert.AreEqual("02", val.ToString());
+        }
     }
 }
