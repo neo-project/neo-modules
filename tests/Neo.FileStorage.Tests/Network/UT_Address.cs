@@ -65,5 +65,16 @@ namespace Neo.FileStorage.Tests.Network
             Console.WriteLine(addr.ToString());
             Assert.AreEqual(ma2 + ma1, addr.ToString());
         }
+
+        [TestMethod]
+        public void TestEquals()
+        {
+            string addrs = "/ip4/0.0.0.0/tcp/8080";
+            Address addr1 = Address.FromString(addrs);
+            Assert.IsTrue(addr1.Equals(addr1));
+            Address addr2 = Address.FromString(addrs);
+            Assert.IsTrue(addr2.Equals(addr1));
+            Assert.AreEqual(addr2.GetHashCode(), addr1.GetHashCode());
+        }
     }
 }

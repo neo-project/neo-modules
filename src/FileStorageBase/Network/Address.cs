@@ -54,11 +54,22 @@ namespace Neo.FileStorage.Network
             return new Address(m);
         }
 
-        bool IEquatable<Address>.Equals(Address other)
+        public bool Equals(Address other)
         {
             if (other is null) return false;
             return other.ma.Equals(ma);
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj is Address addr)
+                return Equals(addr);
+            return false;
+        }
+
+        public override int GetHashCode() => ma.ToString().GetHashCode();
 
         /// <summary>
         /// multiaddrStringFromHostAddr converts "localhost:8080" to "/dns4/localhost/tcp/8080"
