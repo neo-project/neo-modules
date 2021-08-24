@@ -171,8 +171,8 @@ namespace Neo.Plugins.StateService
                 Id = contract.Id,
                 Key = key,
             };
-            HashSet<byte[]> proof = StateStore.Singleton.GetProof(root_hash, skey);
-            if (proof is null) throw new RpcException(-100, "Unknown value");
+            var result = StateStore.Singleton.TryGetProof(root_hash, skey, out var proof);
+            if (!result) throw new RpcException(-100, "Unknown value");
 
             using MemoryStream ms = new MemoryStream();
             using BinaryWriter writer = new BinaryWriter(ms, Utility.StrictUTF8);

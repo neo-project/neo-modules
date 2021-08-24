@@ -23,10 +23,10 @@ namespace Neo.Plugins.MPT
         {
             var path = ToNibbles(key.ToArray());
             var val = value.ToArray();
-            if (path.Length > MPTNode.MaxKeyLength
-            || val.Length > MPTNode.MaxValueLength
-            || path.Length == 0)
-                return false;
+            if (path.Length == 0 || path.Length > MPTNode.MaxKeyLength)
+                throw new ArgumentException("invalid", nameof(key));
+            if (val.Length > MPTNode.MaxValueLength)
+                throw new ArgumentException("exceed limit", nameof(value));
             var n = MPTNode.NewLeaf(val);
             return Put(ref root, path, n);
         }
