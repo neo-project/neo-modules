@@ -23,7 +23,9 @@ namespace Neo.Plugins.MPT
         {
             var path = ToNibbles(key.ToArray());
             var val = value.ToArray();
-            if (path.Length > MPTNode.MaxKeyLength || val.Length > MPTNode.MaxValueLength)
+            if (path.Length > MPTNode.MaxKeyLength
+            || val.Length > MPTNode.MaxValueLength
+            || path.Length == 0)
                 return false;
             var n = MPTNode.NewLeaf(val);
             return Put(ref root, path, n);
