@@ -28,6 +28,11 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             {
                 return new NetMap(Nodes);
             }
+
+            public NetMap GetNetMapByDiff(ulong diff)
+            {
+                return new NetMap(Nodes);
+            }
         }
 
         private NeoSystem system;

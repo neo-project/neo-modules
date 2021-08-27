@@ -71,7 +71,7 @@ namespace Neo.FileStorage.Invoker.Morph
             return res.Select(p => NodeInfo.Parser.ParseFrom(p)).ToArray();
         }
 
-        public NetMap GetNetMapByDiff(int different)
+        public NetMap GetNetMapByDiff(ulong different)
         {
             InvokeResult result = TestInvoke(NetMapContractHash, SnapshotMethod, different);
             if (result.State != VMState.HALT) throw new Exception($"could not invoke method ({SnapshotMethod})");
