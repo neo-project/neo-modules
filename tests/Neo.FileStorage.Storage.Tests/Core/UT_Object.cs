@@ -13,13 +13,6 @@ namespace Neo.FileStorage.Storage.Tests.Core
     [TestClass]
     public class UT_Object
     {
-        private class TestEpochSource : IEpochSource
-        {
-            public ulong Epoch = 13;
-
-            public ulong CurrentEpoch => Epoch;
-        }
-
         [TestMethod]
         public void TestObjectNull()
         {

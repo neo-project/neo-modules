@@ -88,13 +88,6 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Search
             }
         }
 
-        private class TestEpochSource : IEpochSource
-        {
-            public ulong Epoch;
-
-            public ulong CurrentEpoch => Epoch;
-        }
-
         public List<List<Node>> TestNodeMatrix(int[] dim)
         {
             List<List<Node>> res = new();

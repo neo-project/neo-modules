@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using Google.Protobuf;
+using Neo.FileStorage.API.Cryptography.Tz;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using FSAttribute = Neo.FileStorage.API.Object.Header.Types.Attribute;
@@ -10,24 +12,24 @@ using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Storage.Services.Object.Put.Target
 {
-    public class PayloadSizeLimiterTarget : IObjectTarget
+    public sealed class PayloadSizeLimiterTarget : IObjectTarget
     {
         private readonly ulong maxSize;
-        private readonly IObjectTarget target;
+        private readonly IObjectTarget next;
         private readonly List<ObjectID> previous = new();
         private readonly SplitID splitID;
         private ulong written;
         private FSObject current;
         private FSObject parent;
         private IEnumerable<FSAttribute> parentAttributes;
-        private PayloadHasher[] currentHashers;
-        private PayloadHasher[] parentHashers;
+        private HashAlgorithm[] currentHashers = Array.Empty<HashAlgorithm>();
+        private HashAlgorithm[] parentHashers = Array.Empty<HashAlgorithm>();
 
         public PayloadSizeLimiterTarget(ulong maxSz, IObjectTarget t)
         {
             maxSize = maxSz;
             splitID = new();
-            target = t;
+            next = t;
         }
 
         public void WriteHeader(FSObject obj)
@@ -39,6 +41,12 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
         public AccessIdentifiers Close()
         {
             return Release(true);
+        }
+
+        public void Dispose()
+        {
+            next.Dispose();
+            //Dispose hasher
         }
 
         private void Initialize()
@@ -54,13 +62,27 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
             InitializeCurrent();
         }
 
+        private HashAlgorithm[] NewHasherPair()
+        {
+            var hasher1 = SHA256.Create();
+            hasher1.Initialize();
+            var hasher2 = new TzHash();
+            hasher2.Initialize();
+            return new HashAlgorithm[] { hasher1, hasher2 };
+        }
+
         private void InitializeCurrent()
         {
-            currentHashers = new PayloadHasher[]
+            if (!currentHashers.Any())
             {
-                new(ChecksumType.Sha256),
-                new(ChecksumType.Tz),
-            };
+                parentHashers = NewHasherPair();
+                currentHashers = NewHasherPair();
+            }
+            else
+            {
+                foreach (var hasher in currentHashers)
+                    hasher.Initialize();
+            }
         }
 
         private AccessIdentifiers Release(bool close)
@@ -70,11 +92,11 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
             {
                 Calculatehash(parent, parentHashers);
                 parent.Header.PayloadLength = written;
-                current.Header.Split.Parent = parent.ObjectId;
+                current.Parent = parent;
             }
             Calculatehash(current, currentHashers);
-            target.WriteHeader(current);
-            var ids = target.Close();
+            next.WriteHeader(current);
+            var ids = next.Close();
             previous.Add(ids.Self);
             if (withParent)
             {
@@ -85,24 +107,25 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
             return ids;
         }
 
-        private void Calculatehash(FSObject obj, PayloadHasher[] hashers)
+        private void Calculatehash(FSObject obj, HashAlgorithm[] hashers)
         {
             foreach (var hasher in hashers)
             {
-                switch (hasher.Type)
+                hasher.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+                switch (hasher)
                 {
-                    case ChecksumType.Sha256:
+                    case SHA256 sha256_hasher:
                         obj.PayloadChecksum = new()
                         {
-                            Type = hasher.Type,
-                            Sum = ByteString.CopyFrom(hasher.Sum()),
+                            Type = ChecksumType.Sha256,
+                            Sum = ByteString.CopyFrom(sha256_hasher.Hash),
                         };
                         break;
-                    case ChecksumType.Tz:
+                    case TzHash tz_hasher:
                         obj.PayloadHomomorphicHash = new()
                         {
-                            Type = hasher.Type,
-                            Sum = ByteString.CopyFrom(hasher.Sum()),
+                            Type = ChecksumType.Tz,
+                            Sum = ByteString.CopyFrom(tz_hasher.Hash),
                         };
                         break;
                     default:
@@ -116,7 +139,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
             current = FromObject(current);
             current.Parent = parentHeader;
             current.Children = previous;
-            current.SplitId = parentHeader.SplitId;
+            current.SplitId = splitID;
         }
 
         public void WriteChunk(byte[] chunk)
@@ -133,7 +156,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
             var leftToEdge = maxSize - written % maxSize;
             if (cut > leftToEdge)
                 cut = leftToEdge;
-            Write(chunk);
+            Write(chunk[..(int)cut]);
             written += cut;
             if (len > leftToEdge)
                 WriteChunk(chunk[(int)cut..]);
@@ -142,10 +165,10 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
         private void Write(byte[] chunk)
         {
             foreach (var hasher in currentHashers)
-                hasher.Write(chunk);
+                hasher.TransformBlock(chunk, 0, chunk.Length, null, 0);
             foreach (var hasher in parentHashers)
-                hasher.Write(chunk);
-            target.WriteChunk(chunk);
+                hasher.TransformBlock(chunk, 0, chunk.Length, null, 0);
+            next.WriteChunk(chunk);
         }
 
         private void PrepareFirstChild()
@@ -162,7 +185,6 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
             current = FromObject(parent);
             parent.Header.Split = null;
             parent.Signature = null;
-            parentHashers = currentHashers;
             parent.Header.Attributes.Clear();
             parent.Header.Attributes.AddRange(parentAttributes);
         }
@@ -180,7 +202,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
             };
             r.Attributes.AddRange(obj.Attributes);
             if (obj.SplitId is not null)
-                r.Header.Split.SplitId = obj.SplitId.ToByteString();
+                r.SplitId = obj.SplitId;
             return r;
         }
     }

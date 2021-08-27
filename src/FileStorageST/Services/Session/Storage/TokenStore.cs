@@ -31,7 +31,7 @@ namespace Neo.FileStorage.Storage.Services.Session.Storage
         {
             var gb = Guid.NewGuid().ToByteArray();
             var key = StoreKey(request.Body.OwnerId, gb);
-            var sk = new byte[64];
+            var sk = new byte[32];
             var random = new Random();
             random.NextBytes(sk);
             tokens[key] = new PrivateToken

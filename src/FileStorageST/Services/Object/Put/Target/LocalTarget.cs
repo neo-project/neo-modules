@@ -1,12 +1,11 @@
 using Google.Protobuf;
-using Neo.FileStorage.Storage.LocalObjectStorage.Engine;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Storage.Services.Object.Put.Target
 {
-    public class LocalTarget : IObjectTarget
+    public sealed class LocalTarget : IObjectTarget
     {
-        public StorageEngine LocalStorage { get; init; }
+        public ILocalObjectStore LocalObjectStore { get; init; }
 
         private FSObject obj;
         private byte[] payload;
@@ -28,11 +27,13 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
         public AccessIdentifiers Close()
         {
             obj.Payload = ByteString.CopyFrom(payload);
-            LocalStorage.Put(obj);
+            LocalObjectStore.Put(obj);
             return new()
             {
                 Self = obj.ObjectId,
             };
         }
+
+        public void Dispose() { }
     }
 }

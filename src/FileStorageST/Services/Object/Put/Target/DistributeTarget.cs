@@ -9,11 +9,10 @@ using System.Collections.Generic;
 
 namespace Neo.FileStorage.Storage.Services.Object.Put.Target
 {
-    public class DistributeTarget : IObjectTarget
+    public sealed class DistributeTarget : IObjectTarget
     {
-        public ILocalInfoSource LocalAddressesSource { get; init; }
-        public Traverser Traverser { get; init; }
-        public ObjectValidator ObjectValidator { get; init; }
+        public ITraverser Traverser { get; init; }
+        public IObjectValidator ObjectValidator { get; init; }
         public Func<List<Network.Address>, IObjectTarget> NodeTargetInitializer { get; init; }
         public Action<List<Network.Address>> Relay;
 
@@ -41,16 +40,18 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
                 throw new InvalidOperationException($"{nameof(DistributeTarget)} invalid content");
             while (true)
             {
-                var addrs = Traverser.Next();
-                if (!addrs.Any()) break;
-                var tasks = new Task[addrs.Count];
-                for (int i = 0; i < addrs.Count; i++)
+                var addrss = Traverser.Next();
+                if (!addrss.Any()) break;
+                var tasks = new Task[addrss.Count];
+                for (int i = 0; i < addrss.Count; i++)
                 {
+                    var addrs = addrss[i];
                     tasks[i] = Task.Run(() =>
                     {
                         if (Relay is not null)
-                            Relay(addrs[i]);
-                        var target = NodeTargetInitializer(addrs[i]);
+                            Relay(addrs);
+                        var target = NodeTargetInitializer(addrs);
+                        if (target is null) return;
                         target.WriteHeader(obj);
                         target.Close();
                         Traverser.SubmitSuccess();
@@ -65,5 +66,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
                 Self = obj.ObjectId,
             };
         }
+
+        public void Dispose() { }
     }
 }

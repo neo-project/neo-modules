@@ -7,7 +7,7 @@ using Neo.FileStorage.Placement;
 
 namespace Neo.FileStorage.Storage.Placement
 {
-    public class Traverser
+    public class Traverser : ITraverser
     {
         private readonly List<List<Node>> vectors;
         private readonly List<int> rem;

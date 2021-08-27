@@ -10,7 +10,7 @@ using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Storage.Core.Object
 {
-    public class ObjectValidator
+    public class ObjectValidator : IObjectValidator
     {
         public IObjectDeleteHandler DeleteHandler { get; init; }
         public IEpochSource EpochSource { get; init; }

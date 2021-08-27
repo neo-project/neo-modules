@@ -147,9 +147,10 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
 
         public override async Task<PutResponse> Put(IAsyncStreamReader<PutRequest> requestStream, ServerCallContext context)
         {
+            IRequestStream next = null;
             try
             {
-                var next = SignService.Put(context.CancellationToken);
+                next = SignService.Put(context.CancellationToken);
                 RequestInfo info = null;
                 bool init_received = false;
                 while (await requestStream.MoveNext(context.CancellationToken))
@@ -182,6 +183,10 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
             catch (Exception e)
             {
                 throw new RpcException(new(StatusCode.Internal, e.Message));
+            }
+            finally
+            {
+                next?.Dispose();
             }
         }
 

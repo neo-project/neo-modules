@@ -27,24 +27,24 @@ namespace Neo.FileStorage.Storage.Services
             };
         }
 
-        protected RequestSignStream CreateRequestStreamer(Action<IRequest> sender, Func<IResponse> closer)
+        protected RequestSignStream CreateRequestStreamer(Action<IRequest> sender, Func<IResponse> closer, Action disposer)
         {
             return new()
             {
                 Key = Key,
                 Sender = sender,
                 Closer = closer,
+                Disposer = disposer,
             };
         }
     }
 
-    public class RequestSignStream : IRequestStream
+    public sealed class RequestSignStream : IRequestStream
     {
         public ECDsa Key { get; init; }
-
         public Action<IRequest> Sender { get; init; }
-
         public Func<IResponse> Closer { get; init; }
+        public Action Disposer { get; init; }
 
         public void Send(IRequest request)
         {
@@ -57,6 +57,11 @@ namespace Neo.FileStorage.Storage.Services
             var resp = Closer();
             Key.SignResponse(resp);
             return resp;
+        }
+
+        public void Dispose()
+        {
+            Disposer();
         }
     }
 }

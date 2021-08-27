@@ -119,12 +119,12 @@ namespace Neo.FileStorage.Storage.Tests
                     PayloadHash = new()
                     {
                         Type = ChecksumType.Sha256,
-                        Sum = ByteString.CopyFrom(privateKey.Sha256())
+                        Sum = ByteString.CopyFrom(payload.Sha256())
                     },
                     HomomorphicHash = new()
                     {
                         Type = ChecksumType.Tz,
-                        Sum = ByteString.CopyFrom(new TzHash().ComputeHash(privateKey))
+                        Sum = ByteString.CopyFrom(new TzHash().ComputeHash(payload))
                     }
                 },
                 Signature = new()

@@ -1,20 +1,23 @@
 using System.Threading;
-using Neo.FileStorage.Invoker.Morph;
-using Neo.FileStorage.Storage.LocalObjectStorage.Engine;
+using Neo.FileStorage.Reputation;
+using Neo.FileStorage.Storage.Core;
+using Neo.FileStorage.Storage.Core.Object;
+using Neo.FileStorage.Storage.Services.Object.Put.Remote;
 using Neo.FileStorage.Storage.Services.Object.Util;
-using Neo.FileStorage.Storage.Services.Reputaion.Local.Client;
 
 namespace Neo.FileStorage.Storage.Services.Object.Put
 {
     public class PutService
     {
-        public MorphInvoker MorphInvoker { get; init; }
+        public IMaxObjectSizeSource MaxObjectSizeSource { get; init; }
+        public IContainerSoruce ContainerSoruce { get; init; }
+        public INetmapSource NetmapSource { get; init; }
         public IEpochSource EpochSource { get; init; }
         public ILocalInfoSource LocalInfo { get; init; }
         public KeyStore KeyStorage { get; init; }
-        public StorageEngine LocalStorage { get; init; }
-        public LocalObjectInhumer ObjectInhumer { get; init; }
-        public ReputationClientCache ClientCache { get; init; }
+        public ILocalObjectStore LocalObjectStore { get; init; }
+        public IObjectDeleteHandler ObjectInhumer { get; init; }
+        public IPutClientCache ClientCache { get; init; }
 
         public PutStream Put(CancellationToken cancellation)
         {

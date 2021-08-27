@@ -10,13 +10,6 @@ namespace Neo.FileStorage.Storage.Tests.Cache
     [TestClass]
     public class TestNetmapCache
     {
-        private class TestEpochSource : IEpochSource
-        {
-            public ulong Epoch;
-
-            public ulong CurrentEpoch => Epoch;
-        }
-
         private class TestNetmapSource : INetmapSource
         {
             public readonly Dictionary<ulong, NetMap> NetMaps = new();
@@ -25,6 +18,11 @@ namespace Neo.FileStorage.Storage.Tests.Cache
                 if (NetMaps.TryGetValue(epoch, out var nm))
                     return nm;
                 throw new Exception();
+            }
+
+            public NetMap GetNetMapByDiff(ulong diff)
+            {
+                throw new NotImplementedException();
             }
         }
 

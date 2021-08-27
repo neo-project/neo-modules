@@ -23,7 +23,7 @@ using FSContainer = Neo.FileStorage.API.Container.Container;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSRange = Neo.FileStorage.API.Object.Range;
 
-namespace Neo.FileStorage.Storage.Tests.Sercies.Object.Get
+namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
 {
     [TestClass]
     public class UT_Get
@@ -56,12 +56,6 @@ namespace Neo.FileStorage.Storage.Tests.Sercies.Object.Get
             {
                 return Get(address).CutPayload();
             }
-        }
-
-        private class TestEpochSource : IEpochSource
-        {
-            public ulong Epoch = 0;
-            public ulong CurrentEpoch => Epoch;
         }
 
         private class TestPlacementBuilder : IPlacementBuilder

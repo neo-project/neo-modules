@@ -6,7 +6,6 @@ using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Listen;
 using Neo.FileStorage.Listen.Event.Morph;
 using Neo.FileStorage.Reputation;
-using Neo.FileStorage.Storage.Cache;
 using Neo.FileStorage.Storage.Services.Reputaion.Common;
 using Neo.FileStorage.Storage.Services.Reputaion.Common.Route;
 using Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Calculate;
@@ -30,7 +29,6 @@ namespace Neo.FileStorage.Storage
         private ReputationServiceImpl InitializeReputation()
         {
             IActorRef workPool = system.ActorSystem.ActorOf(WorkerPool.Props("Reputation", DefaultReputationWorkPoolSize));
-            NetmapCache netmapCache = new(NetmapCache.DefaultCapacity, this, morphInvoker);
             TrustStorage trustStorage = new();
             DaughtersStorage daughterStorage = new();
             ConsumersStorage consumersStorage = new();

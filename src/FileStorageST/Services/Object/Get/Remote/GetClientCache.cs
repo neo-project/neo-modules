@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Neo.FileStorage.API.Client;
 using Neo.FileStorage.Cache;
 
 namespace Neo.FileStorage.Storage.Services.Object.Get.Remote

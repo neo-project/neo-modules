@@ -52,7 +52,7 @@ namespace Neo.FileStorage.Storage.Services.Object
         public IRequestStream Put(CancellationToken cancellation)
         {
             var next = SplitService.Put(cancellation);
-            return CreateRequestStream(req => next.Send((PutRequest)req), () => next.Close());
+            return CreateRequestStream(req => next.Send((PutRequest)req), () => next.Close(), () => next.Dispose());
         }
 
         public void Search(SearchRequest request, Action<SearchResponse> handler, CancellationToken cancellation)
@@ -64,7 +64,7 @@ namespace Neo.FileStorage.Storage.Services.Object
         }
     }
 
-    public class PutResponseStream : IRequestStream
+    public sealed class PutResponseStream : IRequestStream
     {
         public RequestResponseStream Stream { get; init; }
 
@@ -76,6 +76,11 @@ namespace Neo.FileStorage.Storage.Services.Object
         public IResponse Close()
         {
             return (PutResponse)Stream.Close();
+        }
+
+        public void Dispose()
+        {
+            Stream.Dispose();
         }
     }
 }

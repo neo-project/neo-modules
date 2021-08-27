@@ -9,6 +9,7 @@ using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Listen;
 using Neo.FileStorage.Listen.Event.Morph;
+using Neo.FileStorage.Storage.Cache;
 using Neo.FileStorage.Storage.gRPC;
 using Neo.FileStorage.Storage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Storage.LocalObjectStorage.Shards;
@@ -73,6 +74,7 @@ namespace Neo.FileStorage.Storage
         private readonly ContainerProcessor containerProcessor = new();
         private readonly List<BlockTimer> blockTimers = new();
         private readonly Server server;
+        private NetmapCache netmapCache;
         private ulong currentEpoch;
 
         public StorageService(Wallet wallet, NeoSystem side)
@@ -122,6 +124,7 @@ namespace Neo.FileStorage.Storage
                 ReputationContractHash = Settings.Default.ReputationContractHash,
             };
             listener = system.ActorSystem.ActorOf(Listener.Props("storage"));
+            netmapCache = new(NetmapCache.DefaultCapacity, this, morphInvoker);
             AccountingServiceImpl accountingService = InitializeAccounting();
             ContainerServiceImpl containerService = InitializeContainer();
             ControlServiceImpl controlService = InitializeControl();

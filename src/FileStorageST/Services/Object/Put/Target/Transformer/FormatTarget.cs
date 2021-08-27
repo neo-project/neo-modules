@@ -5,7 +5,7 @@ using FSVersion = Neo.FileStorage.API.Refs.Version;
 
 namespace Neo.FileStorage.Storage.Services.Object.Put.Target
 {
-    public class FormatTarget : IObjectTarget
+    public sealed class FormatTarget : IObjectTarget
     {
         public ECDsa Key { get; init; }
         public IObjectTarget Next { get; init; }
@@ -18,6 +18,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
         public void WriteHeader(FSObject obj)
         {
             this.obj = obj;
+            size = 0;
         }
 
         public void WriteChunk(byte[] chunk)
@@ -32,11 +33,13 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
             obj.Header.PayloadLength = size;
             obj.Header.SessionToken = SessionToken;
             obj.Header.CreationEpoch = EpochSource.CurrentEpoch;
+            obj.ObjectId = obj.CalculateID();
             if (obj.Parent is not null && obj.Parent.Signature is null)
             {
                 var parent = obj.Parent;
                 parent.Header.SessionToken = SessionToken;
                 parent.Header.CreationEpoch = EpochSource.CurrentEpoch;
+                parent.ObjectId = parent.CalculateID();
                 parent.Signature = parent.CalculateIDSignature(Key);
                 obj.Header.Split.Parent = parent.CalculateID();
                 obj.Header.Split.ParentSignature = parent.Signature;
@@ -51,6 +54,11 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
                 Parent = obj.ParentId,
                 ParentHeader = obj.Parent,
             };
+        }
+
+        public void Dispose()
+        {
+            Next?.Dispose();
         }
     }
 }

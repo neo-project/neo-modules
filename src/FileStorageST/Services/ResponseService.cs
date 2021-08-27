@@ -41,24 +41,24 @@ namespace Neo.FileStorage.Storage.Services
             };
         }
 
-        protected RequestResponseStream CreateRequestStream(Action<IRequest> sender, Func<IResponse> closer)
+        protected RequestResponseStream CreateRequestStream(Action<IRequest> sender, Func<IResponse> closer, Action disposer)
         {
             return new()
             {
                 ResponseService = this,
                 Sender = sender,
                 Closer = closer,
+                Disposer = disposer,
             };
         }
     }
 
-    public class RequestResponseStream : IRequestStream
+    public sealed class RequestResponseStream : IRequestStream
     {
         public ResponseService ResponseService { get; init; }
-
         public Action<IRequest> Sender { get; init; }
-
         public Func<IResponse> Closer { get; init; }
+        public Action Disposer { get; init; }
 
         public void Send(IRequest request)
         {
@@ -70,6 +70,11 @@ namespace Neo.FileStorage.Storage.Services
             var resp = Closer();
             ResponseService.SetMeta(resp);
             return resp;
+        }
+
+        public void Dispose()
+        {
+            Disposer();
         }
     }
 }

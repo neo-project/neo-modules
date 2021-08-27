@@ -55,7 +55,7 @@ namespace Neo.FileStorage.Storage.Services.Object
             var next = ResponseService.Put(cancellation);
             return new PutSignStream
             {
-                Stream = CreateRequestStreamer(request => next.Send((PutRequest)request), () => next.Close()),
+                Stream = CreateRequestStreamer(request => next.Send((PutRequest)request), () => next.Close(), () => next.Dispose()),
             };
         }
 
@@ -68,7 +68,7 @@ namespace Neo.FileStorage.Storage.Services.Object
         }
     }
 
-    public class PutSignStream : IRequestStream
+    public sealed class PutSignStream : IRequestStream
     {
         public RequestSignStream Stream { get; init; }
 
@@ -80,6 +80,11 @@ namespace Neo.FileStorage.Storage.Services.Object
         public IResponse Close()
         {
             return Stream.Close();
+        }
+
+        public void Dispose()
+        {
+            Stream.Dispose();
         }
     }
 }

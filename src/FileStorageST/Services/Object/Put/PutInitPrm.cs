@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Object;
+using Neo.FileStorage.Storage.Services.Object.Put.Remote;
 using Neo.FileStorage.Storage.Services.Object.Util;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
@@ -10,7 +10,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
     public class PutInitPrm : CommonPrm
     {
         public FSObject Header;
-        public Func<IFSClient, Task> Relay;
+        public Func<IPutClient, Task> Relay;
 
         public static PutInitPrm FromRequest(PutRequest request)
         {

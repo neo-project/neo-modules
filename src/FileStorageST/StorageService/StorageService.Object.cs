@@ -2,13 +2,16 @@ using System;
 using Akka.Actor;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Placement;
 using Neo.FileStorage.Storage.Cache;
 using Neo.FileStorage.Storage.Services.Container.Announcement;
+using Neo.FileStorage.Storage.Services.Object;
 using Neo.FileStorage.Storage.Services.Object.Acl;
 using Neo.FileStorage.Storage.Services.Object.Get;
 using Neo.FileStorage.Storage.Services.Object.Get.Remote;
 using Neo.FileStorage.Storage.Services.Object.Put;
+using Neo.FileStorage.Storage.Services.Object.Put.Remote;
 using Neo.FileStorage.Storage.Services.Object.Search;
 using Neo.FileStorage.Storage.Services.Object.Search.Clients;
 using Neo.FileStorage.Storage.Services.Object.Util;
@@ -37,7 +40,7 @@ namespace Neo.FileStorage.Storage
                 RemoteSender = new()
                 {
                     KeyStorage = keyStorage,
-                    ClientCache = reputationClientCache,
+                    ClientCache = new PutClientCache(reputationClientCache),
                 },
                 LocalStorage = localStorage,
             }));
@@ -83,12 +86,15 @@ namespace Neo.FileStorage.Storage
             };
             PutService putService = new()
             {
-                MorphInvoker = morphInvoker,
+                MaxObjectSizeSource = new MaxObjectSizeSource(morphInvoker),
+                ContainerSoruce = new ContainerSource(morphInvoker),
+                LocalObjectStore = localStorage,
+                NetmapSource = netmapCache,
+                EpochSource = this,
                 LocalInfo = this,
                 KeyStorage = keyStorage,
-                LocalStorage = localStorage,
                 ObjectInhumer = objInhumer,
-                ClientCache = reputationClientCache,
+                ClientCache = new PutClientCache(reputationClientCache),
             };
             GetService getService = new()
             {
