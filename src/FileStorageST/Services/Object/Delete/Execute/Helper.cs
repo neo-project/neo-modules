@@ -86,7 +86,11 @@ namespace Neo.FileStorage.Storage.Services.Object.Delete.Execute
 
         public static ObjectID Put(this PutService service, ExecuteContext context, bool broadcast)
         {
-            var streamer = service.Put(context.Cancellation);
+            var streamer = new InnerStream
+            {
+                Token = context.Cancellation,
+                PutService = service,
+            };
             var prm = new PutInitPrm
             {
                 Header = context.TombstoneObject.CutPayload(),
@@ -98,8 +102,8 @@ namespace Neo.FileStorage.Storage.Services.Object.Delete.Execute
             }
             streamer.Init(prm);
             streamer.Chunk(context.TombstoneObject.Payload);
-            var resp = (PutResponse)streamer.Close();
-            return resp.Body.ObjectId;
+            var r = streamer.Close();
+            return r.Parent ?? r.Self;
         }
     }
 }

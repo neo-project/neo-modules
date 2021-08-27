@@ -19,11 +19,15 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
         public IObjectDeleteHandler ObjectInhumer { get; init; }
         public IPutClientCache ClientCache { get; init; }
 
-        public PutStream Put(CancellationToken cancellation)
+        public PutStream Put(CancellationToken token)
         {
             return new PutStream()
             {
-                Cancellation = cancellation,
+                Stream = new()
+                {
+                    Token = token,
+                    PutService = this,
+                },
                 PutService = this,
             };
         }
