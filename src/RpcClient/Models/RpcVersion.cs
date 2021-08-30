@@ -10,6 +10,30 @@ namespace Neo.Network.RPC.Models
             public uint MillisecondsPerBlock { get; set; }
             public uint MaxValidUntilBlockIncrement { get; set; }
             public uint MaxTraceableBlocks { get; set; }
+            public byte AddressVersion { get; set; }
+
+            public JObject ToJson()
+            {
+                JObject json = new();
+                json["network"] = Network;
+                json["msperblock"] = MillisecondsPerBlock;
+                json["maxvaliduntilblockincrement"] = MaxValidUntilBlockIncrement;
+                json["maxtraceableblocks"] = MaxTraceableBlocks;
+                json["addressversion"] = AddressVersion;
+                return json;
+            }
+
+            public static RpcProtocol FromJson(JObject json)
+            {
+                return new()
+                {
+                    Network = (uint)json["network"].AsNumber(),
+                    MillisecondsPerBlock = (uint)json["msperblock"].AsNumber(),
+                    MaxValidUntilBlockIncrement = (uint)json["maxvaliduntilblockincrement"].AsNumber(),
+                    MaxTraceableBlocks = (uint)json["maxtraceableblocks"].AsNumber(),
+                    AddressVersion = (byte)json["addressversion"].AsNumber(),
+                };
+            }
         }
 
         public int TcpPort { get; set; }
@@ -20,7 +44,7 @@ namespace Neo.Network.RPC.Models
 
         public string UserAgent { get; set; }
 
-        public RpcProtocol Protocol { get; } = new();
+        public RpcProtocol Protocol { get; set; } = new();
 
         public JObject ToJson()
         {
@@ -29,29 +53,20 @@ namespace Neo.Network.RPC.Models
             json["wsport"] = WsPort;
             json["nonce"] = Nonce;
             json["useragent"] = UserAgent;
-            json["protocol"] = new JObject();
-            json["protocol"]["network"] = Protocol.Network;
-            json["protocol"]["msperblock"] = Protocol.MillisecondsPerBlock;
-            json["protocol"]["maxvaliduntilblockincrement"] = Protocol.MaxValidUntilBlockIncrement;
-            json["protocol"]["maxtraceableblocks"] = Protocol.MaxTraceableBlocks;
+            json["protocol"] = Protocol.ToJson();
             return json;
         }
 
         public static RpcVersion FromJson(JObject json)
         {
-            RpcVersion v = new()
+            return new()
             {
                 TcpPort = (int)json["tcpport"].AsNumber(),
                 WsPort = (int)json["wsport"].AsNumber(),
                 Nonce = (uint)json["nonce"].AsNumber(),
-                UserAgent = json["useragent"].AsString()
+                UserAgent = json["useragent"].AsString(),
+                Protocol = RpcProtocol.FromJson(json["protocol"])
             };
-
-            v.Protocol.Network = (uint)json["protocol"]["network"].AsNumber();
-            v.Protocol.MillisecondsPerBlock = (uint)json["protocol"]["msperblock"].AsNumber();
-            v.Protocol.MaxValidUntilBlockIncrement = (uint)json["protocol"]["maxvaliduntilblockincrement"].AsNumber();
-            v.Protocol.MaxTraceableBlocks = (uint)json["protocol"]["maxtraceableblocks"].AsNumber();
-            return v;
         }
     }
 }

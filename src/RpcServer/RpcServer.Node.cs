@@ -63,6 +63,7 @@ namespace Neo.Plugins
             json["nonce"] = LocalNode.Nonce;
             json["useragent"] = LocalNode.UserAgent;
 
+            json["protocol"]["addressversion"] = system.Settings.AddressVersion;
             json["protocol"]["network"] = system.Settings.Network;
             json["protocol"]["msperblock"] = system.Settings.MillisecondsPerBlock;
             json["protocol"]["maxtraceableblocks"] = system.Settings.MaxTraceableBlocks;
