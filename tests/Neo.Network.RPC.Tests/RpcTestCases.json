@@ -2471,11 +2471,11 @@
         "nonce": 592651621,
         "useragent": "/Neo:3.0.0-rc1/",
         "protocol": {
-          "addressversion": 0,
           "network": 0,
           "msperblock": 15000,
           "maxvaliduntilblockincrement": 1,
-          "maxtraceableblocks": 1
+          "maxtraceableblocks": 1,
+          "addressversion": 0
         }
       }
     }
