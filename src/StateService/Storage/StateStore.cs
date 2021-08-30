@@ -54,11 +54,13 @@ namespace Neo.Plugins.StateService.Storage
             return new StateSnapshot(store);
         }
 
-        public HashSet<byte[]> GetProof(UInt256 root, StorageKey skey)
+        /// <summary>
+        /// DO NOT WRITE
+        /// </summary>
+        /// <returns></returns>
+        public ISnapshot GetStoreSnapshot()
         {
-            using ISnapshot snapshot = store.GetSnapshot();
-            var trie = new MPTTrie<StorageKey, StorageItem>(snapshot, root);
-            return trie.GetProof(skey);
+            return store.GetSnapshot();
         }
 
         protected override void OnReceive(object message)

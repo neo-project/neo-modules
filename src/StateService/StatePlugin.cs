@@ -171,7 +171,9 @@ namespace Neo.Plugins.StateService
                 Id = contract.Id,
                 Key = key,
             };
-            HashSet<byte[]> proof = StateStore.Singleton.GetProof(root_hash, skey);
+            using ISnapshot store = StateStore.Singleton.GetStoreSnapshot();
+            var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
+            var proof = trie.GetProof(skey);
             if (proof is null) throw new RpcException(-100, "Unknown value");
 
             using MemoryStream ms = new MemoryStream();
@@ -231,6 +233,70 @@ namespace Neo.Plugins.StateService
             var json = new JObject();
             json["localrootindex"] = StateStore.Singleton.LocalRootIndex;
             json["validatedrootindex"] = StateStore.Singleton.ValidatedRootIndex;
+            return json;
+        }
+
+        private ContractState GetHistoricalContractState(MPTTrie<StorageKey, StorageItem> trie, UInt160 script_hash)
+        {
+            const byte prefix = 8;
+            StorageKey skey = new KeyBuilder(NativeContract.ContractManagement.Id, prefix).Add(script_hash);
+            return trie[skey]?.GetInteroperable<ContractState>();
+        }
+
+        [RpcMethod]
+        public JObject GetState(JArray _params)
+        {
+            if (!uint.TryParse(_params[0].AsString(), out uint index))
+            {
+                if (!UInt256.TryParse(_params[0].AsString(), out UInt256 root_hash))
+                    throw new RpcException(-100, "Invalid block hash or index");
+                var header = NativeContract.Ledger.GetHeader(System.StoreView, root_hash);
+                if (header is null)
+                    throw new RpcException(-100, "Unkown block");
+                index = header.Index;
+            }
+            var script_hash = UInt160.Parse(_params[1].AsString());
+            var key = Convert.FromBase64String(_params[2].AsString());
+            var isFind = _params.Count > 3 && _params[3].AsBoolean();
+
+            if (StateStore.Singleton.LocalRootIndex < index)
+                throw new RpcException(-100, "Index exceed current index");
+            if (!Settings.Default.FullState && index < StateStore.Singleton.LocalRootIndex)
+            {
+                throw new RpcException(-100, "Old state not supported");
+            }
+            using var snapshot = StateStore.Singleton.GetSnapshot();
+            var state_root = snapshot.GetStateRoot(index);
+            if (state_root is null) throw new InvalidOperationException("state root not found");
+            using var store = StateStore.Singleton.GetStoreSnapshot();
+            var trie = new MPTTrie<StorageKey, StorageItem>(store, state_root.RootHash);
+
+            var contract = GetHistoricalContractState(trie, script_hash);
+            if (contract is null) throw new RpcException(-100, "Unknown contract");
+            StorageKey skey = new()
+            {
+                Id = contract.Id,
+                Key = key,
+            };
+            if (!isFind)
+                return trie[skey]?.Value is null ? null : Convert.ToBase64String(trie[skey].Value);
+            var max = Settings.Default.MaxFindResultItems;
+            JArray array = new();
+            foreach (var (ikey, ivalue) in trie.Find(skey.ToArray()))
+            {
+                if (max < 0) break;
+                if (0 < max)
+                {
+                    JObject j = new();
+                    j["key"] = Convert.ToBase64String(ikey.Key);
+                    j["value"] = Convert.ToBase64String(ivalue.Value);
+                    array.Add(j);
+                }
+                max--;
+            };
+            JObject json = new();
+            json["array"] = array;
+            json["truncated"] = max < 0;
             return json;
         }
     }
