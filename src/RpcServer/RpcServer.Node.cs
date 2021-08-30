@@ -62,7 +62,11 @@ namespace Neo.Plugins
             json["wsport"] = localNode.ListenerWsPort;
             json["nonce"] = LocalNode.Nonce;
             json["useragent"] = LocalNode.UserAgent;
-            json["network"] = system.Settings.Network;
+
+            json["protocol"]["network"] = system.Settings.Network;
+            json["protocol"]["msperblock"] = system.Settings.MillisecondsPerBlock;
+            json["protocol"]["maxtraceableblocks"] = system.Settings.MaxTraceableBlocks;
+            json["protocol"]["maxvaliduntilblockincrement"] = system.Settings.MaxValidUntilBlockIncrement;
             return json;
         }
 
