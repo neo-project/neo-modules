@@ -5,5 +5,8 @@
     "RecordNullAddressHistory": false,
     "MaxResults": 1000,
     "Network": 860833102
-  }
+  },
+  "Dependency": [
+    "RpcServer"
+  ]
 }
