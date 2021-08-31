@@ -1,6 +1,6 @@
 using System.Threading;
 using Neo.FileStorage.Reputation;
-using Neo.FileStorage.Storage.Core;
+using Neo.FileStorage.Storage.Core.Container;
 using Neo.FileStorage.Storage.Core.Object;
 using Neo.FileStorage.Storage.Services.Object.Put.Remote;
 using Neo.FileStorage.Storage.Services.Object.Util;
@@ -23,7 +23,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
         {
             return new PutStream()
             {
-                Stream = new()
+                InnerStream = new()
                 {
                     Token = token,
                     PutService = this,

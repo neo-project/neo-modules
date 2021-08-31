@@ -6,6 +6,7 @@ using Neo.Cryptography;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Cryptography.Tz;
+using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
@@ -107,7 +108,7 @@ namespace Neo.FileStorage.Storage.Tests
             rng.GetBytes(payload);
             rng.GetBytes(signature);
             ECDsa key = privateKey.LoadPrivateKey();
-            return new()
+            FSObject obj = new()
             {
                 Header = new()
                 {
@@ -127,14 +128,10 @@ namespace Neo.FileStorage.Storage.Tests
                         Sum = ByteString.CopyFrom(new TzHash().ComputeHash(payload))
                     }
                 },
-                Signature = new()
-                {
-                    Key = ByteString.CopyFrom(key.PublicKey()),
-                    Sign = ByteString.CopyFrom(signature)
-                },
-                ObjectId = RandomObjectID(),
                 Payload = ByteString.CopyFrom(payload)
             };
+            obj.SetVerificationFields(key);
+            return obj;
         }
 
         public static ulong RandomUInt64(ulong max = ulong.MaxValue)
@@ -195,6 +192,30 @@ namespace Neo.FileStorage.Storage.Tests
                     Lifetime = RandomBearerTokenLifeTime(),
                 }
             };
+        }
+
+        public static void TestNodeMatrix(int[] dim, out List<List<Node>> nss, out List<List<string>> addrss)
+        {
+            nss = new();
+            addrss = new();
+            int sum = 0;
+            foreach (var i in dim)
+            {
+                List<Node> list = new();
+                List<string> addrs = new();
+                for (int j = 0; j < i; j++)
+                {
+                    var ni = new NodeInfo();
+                    string addr = $"/ip4/192.168.0.{i}/tcp/{60000 + sum + j}";
+                    ni.Addresses.Add(addr);
+                    list.Add(new Node
+                    (sum + j, ni));
+                    addrs.Add(addr);
+                }
+                sum += i;
+                nss.Add(list);
+                addrss.Add(addrs);
+            }
         }
     }
 }

@@ -46,7 +46,10 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
         public void Dispose()
         {
             next.Dispose();
-            //Dispose hasher
+            foreach (var hasher in parentHashers)
+                hasher.Dispose();
+            foreach (var hasher in currentHashers)
+                hasher.Dispose();
         }
 
         private void Initialize()

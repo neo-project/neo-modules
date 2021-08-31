@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Multiformats.Address;
@@ -75,6 +77,17 @@ namespace Neo.FileStorage.Tests.Network
             Address addr2 = Address.FromString(addrs);
             Assert.IsTrue(addr2.Equals(addr1));
             Assert.AreEqual(addr2.GetHashCode(), addr1.GetHashCode());
+        }
+
+        [TestMethod]
+        public void Intersect()
+        {
+            string addrs = "/ip4/0.0.0.0/tcp/8080";
+            Address addr1 = Address.FromString(addrs);
+            Address addr2 = Address.FromString(addrs);
+            var l1 = new List<Address>() { addr1 };
+            var l2 = new List<Address>() { addr2 };
+            Assert.AreEqual(1, l1.Intersect(l2).Count());
         }
     }
 }

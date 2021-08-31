@@ -11,7 +11,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
     public sealed class PutStream : IRequestStream
     {
         public PutService PutService { get; init; }
-        public InnerStream Stream { get; init; }
+        public InnerStream InnerStream { get; init; }
         private PutRequest init;
         private readonly List<PutRequest> chunks = new();
         private bool saveChunks;
@@ -32,13 +32,13 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
             switch (putRequest.Body.ObjectPartCase)
             {
                 case PutRequest.Types.Body.ObjectPartOneofCase.Init:
-                    var init_prm = ToInitPrm(init);
-                    Stream.Init(init_prm);
-                    saveChunks = init.Body.Init.Signature is not null;
+                    var init_prm = ToInitPrm(putRequest);
+                    InnerStream.Init(init_prm);
+                    saveChunks = putRequest.Body.Init.Signature is not null;
                     if (saveChunks)
                     {
-                        payloadSize = init.Body.Init.Header.PayloadLength;
-                        if (Stream.MaxObjectSize < payloadSize)
+                        payloadSize = putRequest.Body.Init.Header.PayloadLength;
+                        if (InnerStream.MaxObjectSize < payloadSize)
                             throw new InvalidOperationException("payload size is greater than the limit");
                         init = putRequest;
                     }
@@ -50,7 +50,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
                         if (payloadSize < writenPayloadSize)
                             throw new InvalidOperationException("wrong payload size");
                     }
-                    Stream.Chunk(putRequest.Body.Chunk);
+                    InnerStream.Chunk(putRequest.Body.Chunk);
                     if (saveChunks)
                         chunks.Add(putRequest);
                     break;
@@ -69,7 +69,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
 
         public IResponse Close()
         {
-            var ids = Stream.Close();
+            var ids = InnerStream.Close();
             return new PutResponse
             {
                 Body = new PutResponse.Types.Body
@@ -81,16 +81,17 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
 
         public void Dispose()
         {
-            Stream?.Dispose();
+            InnerStream?.Dispose();
         }
 
-        public async Task RelayRequest(IPutClient client)
+        public async Task<bool> RelayRequest(IPutClient client)
         {
-            if (init is null) return;
-            using var stream = await client.PutObject(init, context: Stream.Token);
+            if (!saveChunks) return false;
+            using var stream = await client.PutObject(init, context: InnerStream.Token);
             foreach (var chunk in chunks)
                 await stream.Write(chunk);
             await stream.Close();
+            return true;
         }
     }
 }

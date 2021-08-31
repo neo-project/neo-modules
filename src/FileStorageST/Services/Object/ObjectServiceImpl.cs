@@ -25,7 +25,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
                 {
                     throw new RpcException(new(StatusCode.Cancelled, "operation cancelled"));
                 }
-                catch (ObjectExcpetion oe)
+                catch (ObjectException oe)
                 {
                     throw new RpcException(new(StatusCode.Unknown, oe.Message));
                 }
@@ -56,7 +56,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
                 {
                     throw new RpcException(new(StatusCode.Cancelled, "operation cancelled"));
                 }
-                catch (ObjectExcpetion oe)
+                catch (ObjectException oe)
                 {
                     throw new RpcException(new(StatusCode.Unknown, oe.Message));
                 }
@@ -84,7 +84,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
                 {
                     throw new RpcException(new(StatusCode.Cancelled, "operation cancelled"));
                 }
-                catch (ObjectExcpetion oe)
+                catch (ObjectException oe)
                 {
                     throw new RpcException(new(StatusCode.Unknown, oe.Message));
                 }
@@ -108,7 +108,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
                 {
                     throw new RpcException(new(StatusCode.Cancelled, "operation cancelled"));
                 }
-                catch (ObjectExcpetion oe)
+                catch (ObjectException oe)
                 {
                     throw new RpcException(new(StatusCode.Unknown, oe.Message));
                 }
@@ -134,7 +134,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
                 {
                     throw new RpcException(new(StatusCode.Cancelled, "operation cancelled"));
                 }
-                catch (ObjectExcpetion oe)
+                catch (ObjectException oe)
                 {
                     throw new RpcException(new(StatusCode.Unknown, oe.Message));
                 }
@@ -176,13 +176,9 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
             {
                 throw new RpcException(new(StatusCode.Cancelled, "operation cancelled"));
             }
-            catch (ObjectExcpetion oe)
-            {
-                throw new RpcException(new(StatusCode.Unknown, oe.Message));
-            }
             catch (Exception e)
             {
-                throw new RpcException(new(StatusCode.Internal, e.Message));
+                throw new RpcException(new(StatusCode.Unknown, e.Message));
             }
             finally
             {
@@ -207,7 +203,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
                 {
                     throw new RpcException(new(StatusCode.Cancelled, "operation cancelled"));
                 }
-                catch (ObjectExcpetion oe)
+                catch (ObjectException oe)
                 {
                     throw new RpcException(new(StatusCode.Unknown, oe.Message));
                 }

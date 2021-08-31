@@ -26,7 +26,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
                     }
                     if (e is RpcException re &&
                         re.StatusCode == StatusCode.Unknown &&
-                        re.Status.Detail == ObjectExcpetion.AlreadyRemovedError)
+                        re.Status.Detail == ObjectException.AlreadyRemovedError)
                     {
                         throw new ObjectAlreadyRemovedException();
                     }

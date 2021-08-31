@@ -192,7 +192,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
                 throw new NotImplementedException();
             }
 
-            public Task<PutStream> PutObject(PutRequest init, DateTime? deadline = null, CancellationToken context = default)
+            public Task<IClientStream> PutObject(PutRequest init, DateTime? deadline = null, CancellationToken context = default)
             {
                 throw new NotImplementedException();
             }
@@ -200,30 +200,6 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             public Task<List<ObjectID>> SearchObject(SearchRequest request, DateTime? deadline = null, CancellationToken context = default)
             {
                 throw new NotImplementedException();
-            }
-        }
-
-        public void TestNodeMatrix(int[] dim, out List<List<Node>> nss, out List<List<string>> addrss)
-        {
-            nss = new();
-            addrss = new();
-            int sum = 0;
-            foreach (var i in dim)
-            {
-                List<Node> list = new();
-                List<string> addrs = new();
-                for (int j = 0; j < i; j++)
-                {
-                    var ni = new NodeInfo();
-                    string addr = $"/ip4/192.168.0.{i}/tcp/{60000 + sum + j}";
-                    ni.Addresses.Add(addr);
-                    list.Add(new Node
-                    (sum + j, ni));
-                    addrs.Add(addr);
-                }
-                sum += i;
-                nss.Add(list);
-                addrss.Add(addrs);
             }
         }
 
@@ -507,7 +483,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             TestObjectClient c1 = new();
             c1.Results[address] = (null, "");
             TestObjectClient c2 = new();
-            c2.Results[address] = (null, ObjectExcpetion.AlreadyRemovedError);
+            c2.Results[address] = (null, ObjectException.AlreadyRemovedError);
             clientCache.Clients[addrss[0][0]] = c1;
             clientCache.Clients[addrss[0][1]] = c2;
             SimpleObjectWriter writer = new();
@@ -667,7 +643,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             generator.Builders[epoch] = builder;
             TestObjectClient c1 = new();
             c1.Results[address] = (null, "any error");
-            c1.Results[splitAddress] = (null, ObjectExcpetion.NotFoundError);
+            c1.Results[splitAddress] = (null, ObjectException.NotFoundError);
             TestObjectClient c2 = new();
             c2.Results[address] = (null, "");
             c2.Results[splitAddress] = (null, si);
@@ -779,7 +755,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             c2.Results[address] = (null, splitInfo);
             c2.Results[linkAddress] = (linkObj, null);
             c2.Results[child1Address] = (objs[0], null);
-            c2.Results[child2Address] = (null, ObjectExcpetion.NotFoundError);
+            c2.Results[child2Address] = (null, ObjectException.NotFoundError);
             clientCache.Clients[addrss[0][0]] = c1;
             clientCache.Clients[addrss[0][1]] = c2;
             SimpleObjectWriter writer = new();
@@ -979,9 +955,9 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             generator.Container = cnr;
             generator.Builders[epoch] = builder;
             c1.Results[address] = (null, "any error");
-            c1.Results[splitAddress] = (null, ObjectExcpetion.NotFoundError);
+            c1.Results[splitAddress] = (null, ObjectException.NotFoundError);
             c2.Results[address] = (null, splitInfo);
-            c2.Results[splitAddress] = (null, ObjectExcpetion.NotFoundError);
+            c2.Results[splitAddress] = (null, ObjectException.NotFoundError);
             clientCache.Clients[addrss[0][0]] = c1;
             clientCache.Clients[addrss[0][1]] = c2;
             SimpleObjectWriter writer = new();

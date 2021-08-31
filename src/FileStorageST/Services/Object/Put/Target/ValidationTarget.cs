@@ -18,7 +18,6 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
         private ulong payloadSize;
         private ulong writtenPayload = 0;
         private Checksum checksum;
-        private byte[] payload = Array.Empty<byte>();
 
         public void WriteHeader(FSObject header)
         {
@@ -49,7 +48,6 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
             var chunk_len = (ulong)chunk.Length;
             if (payloadSize < writtenPayload + chunk_len)
                 throw new InvalidOperationException("wrong payload size");
-            payload = Concat(payload, chunk);
             Next.WriteChunk(chunk); //TODO: fix this may double payload memory
             writtenPayload += chunk_len;
             if (writtenPayload == payloadSize)

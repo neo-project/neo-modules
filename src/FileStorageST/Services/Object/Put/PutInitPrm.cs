@@ -10,7 +10,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
     public class PutInitPrm : CommonPrm
     {
         public FSObject Header;
-        public Func<IPutClient, Task> Relay;
+        public Func<IPutClient, Task<bool>> Relay;
 
         public static PutInitPrm FromRequest(PutRequest request)
         {

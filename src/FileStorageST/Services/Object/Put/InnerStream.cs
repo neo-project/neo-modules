@@ -79,9 +79,10 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
         private void PrepareInitPrm(PutInitPrm prm)
         {
             var nm = PutService.NetmapSource.GetNetMapByDiff(0);
+            if (nm is null) throw new InvalidOperationException("could not get netmap");
             var container = PutService.ContainerSoruce.GetContainer(prm.Header.ContainerId);
+            if (container is null) throw new InvalidOperationException("could not get container");
             var builder = new NetworkMapBuilder(nm);
-
             if (prm.Local)
             {
                 traverser = new Traverser(new LocalPlacementBuilder(builder, PutService.LocalInfo.Addresses), container.PlacementPolicy, prm.Header.Address, 1);
@@ -92,15 +93,15 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
 
         private DistributeTarget NewCommonTarget(PutInitPrm prm)
         {
-            Action<List<Network.Address>> relay = null;
+            Func<List<Network.Address>, bool> relay = null;
             if (prm.Relay is not null)
             {
                 relay = addresses =>
                 {
                     if (PutService.LocalInfo.Addresses.Intersect(addresses).Any())
-                        return;
+                        return false;
                     var c = PutService.ClientCache.Get(addresses);
-                    prm.Relay(c);
+                    return prm.Relay(c).Result;
                 };
             }
             return new DistributeTarget

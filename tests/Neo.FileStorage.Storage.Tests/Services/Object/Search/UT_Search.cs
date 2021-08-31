@@ -88,26 +88,6 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Search
             }
         }
 
-        public List<List<Node>> TestNodeMatrix(int[] dim)
-        {
-            List<List<Node>> res = new();
-            int sum = 0;
-            foreach (var i in dim)
-            {
-                List<Node> list = new();
-                for (int j = 0; j < i; j++)
-                {
-                    var ni = new NodeInfo();
-                    ni.Addresses.Add($"/ip4/192.168.0.{i}/tcp/{60000 + j}");
-                    list.Add(new Node
-                    (sum + j, ni));
-                }
-                sum += i;
-                res.Add(list);
-            }
-            return res;
-        }
-
         [TestMethod]
         public void TestGetLocallyOk()
         {
@@ -159,7 +139,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Search
             var cid = container.CalCulateAndGetId;
             var address = RandomAddress(cid);
             Console.WriteLine($"{address.String()}");
-            var ns = TestNodeMatrix(new int[] { 2 });
+            TestNodeMatrix(new int[] { 2 }, out var ns, out _);
             var builder = new TestPlacementBuilder();
             builder.Vectors = new() { { cid, ns } };
             var c1 = new TestStorage();

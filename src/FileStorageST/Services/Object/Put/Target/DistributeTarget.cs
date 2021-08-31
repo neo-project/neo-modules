@@ -1,11 +1,13 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Google.Protobuf;
 using Neo.FileStorage.Storage.Core.Object;
 using Neo.FileStorage.Storage.Placement;
-using FSObject = Neo.FileStorage.API.Object.Object;
+using Neo.FileStorage.Storage.Utils;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using static Neo.Helper;
+using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Storage.Services.Object.Put.Target
 {
@@ -14,28 +16,24 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
         public ITraverser Traverser { get; init; }
         public IObjectValidator ObjectValidator { get; init; }
         public Func<List<Network.Address>, IObjectTarget> NodeTargetInitializer { get; init; }
-        public Action<List<Network.Address>> Relay;
+        public Func<List<Network.Address>, bool> Relay;
 
         private FSObject obj;
-        private byte[] payload;
-        private int offset;
+        private byte[] payload = Array.Empty<byte>();
 
         public void WriteHeader(FSObject init)
         {
             obj = init;
-            payload = new byte[obj.PayloadSize];
-            offset = 0;
         }
 
         public void WriteChunk(byte[] chunk)
         {
-            chunk.CopyTo(payload, offset);
-            offset += chunk.Length;
+            payload = Concat(payload, chunk);
         }
 
         public AccessIdentifiers Close()
         {
-            obj.Payload = ByteString.CopyFrom(payload);
+            obj.Payload = obj.Payload.Concat(ByteString.CopyFrom(payload));
             if (!ObjectValidator.ValidateContent(obj))
                 throw new InvalidOperationException($"{nameof(DistributeTarget)} invalid content");
             while (true)
@@ -48,12 +46,20 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
                     var addrs = addrss[i];
                     tasks[i] = Task.Run(() =>
                     {
-                        if (Relay is not null)
-                            Relay(addrs);
-                        var target = NodeTargetInitializer(addrs);
-                        if (target is null) return;
-                        target.WriteHeader(obj);
-                        target.Close();
+                        try
+                        {
+                            if (Relay is null || !Relay(addrs))
+                            {
+                                var target = NodeTargetInitializer(addrs);
+                                target.WriteHeader(obj);
+                                target.Close();
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Utility.Log(nameof(DistributeTarget), LogLevel.Debug, e.Message);
+                            return;
+                        }
                         Traverser.SubmitSuccess();
                     });
                 }

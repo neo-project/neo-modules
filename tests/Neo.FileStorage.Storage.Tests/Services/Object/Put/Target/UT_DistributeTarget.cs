@@ -4,6 +4,7 @@ using Neo.FileStorage.Storage.Services.Object.Put;
 using Neo.FileStorage.Storage.Services.Object.Put.Target;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using static Neo.FileStorage.Storage.Tests.Helper;
 
 namespace Neo.FileStorage.Storage.Tests.Services.Object.Put
@@ -26,7 +27,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Put
 
             public void SubmitSuccess()
             {
-                ++success;
+                Interlocked.Add(ref success, 1);
             }
 
             public bool Success()
@@ -46,8 +47,6 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Put
             };
         }
 
-        private void Relay(List<Network.Address> _) { }
-
         [TestMethod]
         public void Test()
         {
@@ -60,7 +59,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Put
                 Traverser = traverser,
                 ObjectValidator = validator,
                 NodeTargetInitializer = NewTargetInitilizer(localAddresses, next),
-                Relay = Relay,
+                Relay = _ => false,
             };
             traverser.NSSS.Add(new() { localAddresses });
             var obj = RandomObject(1024);
@@ -83,7 +82,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Put
                 Traverser = traverser,
                 ObjectValidator = validator,
                 NodeTargetInitializer = NewTargetInitilizer(localAddresses, next),
-                Relay = Relay,
+                Relay = _ => true,
             };
             traverser.NSSS.Add(new() { localAddresses });
             validator.ContentResult = false;
@@ -106,7 +105,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Put
                 Traverser = traverser,
                 ObjectValidator = validator,
                 NodeTargetInitializer = NewTargetInitilizer(new(), next),
-                Relay = Relay,
+                Relay = _ => throw new Exception(),
             };
             traverser.NSSS.Add(new() { localAddresses });
             var obj = RandomObject(1024);

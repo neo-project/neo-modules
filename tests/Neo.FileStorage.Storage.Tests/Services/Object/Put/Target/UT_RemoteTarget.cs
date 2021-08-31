@@ -11,12 +11,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FSObject = Neo.FileStorage.API.Object.Object;
-using APIPutStream = Neo.FileStorage.API.Client.PutStream;
 using static Neo.FileStorage.Storage.Tests.Helper;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.Storage.Services.Session.Storage;
 using Neo.FileStorage.Storage.Services.Object.Put;
-using Google.Protobuf;
 
 namespace Neo.FileStorage.Storage.Tests.Services.Object.Put
 {
@@ -32,7 +30,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Put
                 return Task.Run(() => obj.ObjectId);
             }
 
-            public Task<APIPutStream> PutObject(PutRequest init, DateTime? deadline = null, CancellationToken context = default)
+            public Task<IClientStream> PutObject(PutRequest init, DateTime? deadline = null, CancellationToken context = default)
             {
                 throw new NotImplementedException();
             }

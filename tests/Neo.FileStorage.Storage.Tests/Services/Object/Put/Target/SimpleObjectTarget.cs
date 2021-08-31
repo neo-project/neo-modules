@@ -1,5 +1,6 @@
 using Google.Protobuf;
 using Neo.FileStorage.Storage.Services.Object.Put;
+using Neo.FileStorage.Storage.Utils;
 using System.Linq;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
@@ -22,7 +23,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Put
 
         public AccessIdentifiers Close()
         {
-            Object.Payload = payload;
+            Object.Payload = Object.Payload.Concat(payload);
             return new()
             {
                 Self = Object.ObjectId,

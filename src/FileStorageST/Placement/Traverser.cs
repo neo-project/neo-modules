@@ -84,8 +84,11 @@ namespace Neo.FileStorage.Storage.Placement
 
         public void SubmitSuccess()
         {
-            if (rem.Count > 0)
-                rem[0]--;
+            lock (rem)
+            {
+                if (rem.Count > 0)
+                    rem[0]--;
+            }
         }
 
         public bool Success()
