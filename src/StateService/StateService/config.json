@@ -6,5 +6,8 @@
     "AutoVerify": false,
     "MaxFindResultItems": 100,
     "MaxPageNumber": 100
-  }
+  },
+  "Dependency": [
+    "RpcServer"
+  ]
 }
