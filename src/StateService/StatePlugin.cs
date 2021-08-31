@@ -243,8 +243,7 @@ namespace Neo.Plugins.StateService
             return trie[skey]?.GetInteroperable<ContractState>();
         }
 
-        [RpcMethod]
-        public JObject GetState(JArray _params)
+        private void PrepareStateParams(JArray _params, out MPTTrie<StorageKey, StorageItem> trie, out StorageKey skey)
         {
             if (!uint.TryParse(_params[0].AsString(), out uint index))
             {
@@ -256,8 +255,7 @@ namespace Neo.Plugins.StateService
                 index = header.Index;
             }
             var script_hash = UInt160.Parse(_params[1].AsString());
-            var key = Convert.FromBase64String(_params[2].AsString());
-            var isFind = _params.Count > 3 && _params[3].AsBoolean();
+            var prefix = Convert.FromBase64String(_params[2].AsString());
 
             if (StateStore.Singleton.LocalRootIndex < index)
                 throw new RpcException(-100, "Index exceed current index");
@@ -269,35 +267,49 @@ namespace Neo.Plugins.StateService
             var state_root = snapshot.GetStateRoot(index);
             if (state_root is null) throw new InvalidOperationException("state root not found");
             using var store = StateStore.Singleton.GetStoreSnapshot();
-            var trie = new MPTTrie<StorageKey, StorageItem>(store, state_root.RootHash);
+            trie = new MPTTrie<StorageKey, StorageItem>(store, state_root.RootHash);
 
             var contract = GetHistoricalContractState(trie, script_hash);
             if (contract is null) throw new RpcException(-100, "Unknown contract");
-            StorageKey skey = new()
+            skey = new()
             {
                 Id = contract.Id,
-                Key = key,
+                Key = prefix,
             };
-            if (!isFind)
-                return trie[skey]?.Value is null ? null : Convert.ToBase64String(trie[skey].Value);
-            var max = Settings.Default.MaxFindResultItems;
+        }
+
+        [RpcMethod]
+        public JObject FindState(JArray _params)
+        {
+            PrepareStateParams(_params, out var trie, out var skey);
+            int pageNumber = 0;
+            if (3 < _params.Count)
+                pageNumber = int.Parse(_params[3].AsString());
+            if (Settings.Default.MaxPageNumber <= pageNumber)
+                throw new RpcException(-100, "Page number exceed limit");
+            var start = Settings.Default.MaxFindResultItems * pageNumber;
             JArray array = new();
+            int i = 0;
             foreach (var (ikey, ivalue) in trie.Find(skey.ToArray()))
             {
-                if (max < 0) break;
-                if (0 < max)
+                if (start + Settings.Default.MaxFindResultItems <= i) break;
+                if (start <= i)
                 {
                     JObject j = new();
                     j["key"] = Convert.ToBase64String(ikey.Key);
                     j["value"] = Convert.ToBase64String(ivalue.Value);
                     array.Add(j);
                 }
-                max--;
+                i++;
             };
-            JObject json = new();
-            json["array"] = array;
-            json["truncated"] = max < 0;
-            return json;
+            return array;
+        }
+
+        [RpcMethod]
+        public JObject GetState(JArray _params)
+        {
+            PrepareStateParams(_params, out var trie, out var skey);
+            return trie[skey]?.Value is null ? null : Convert.ToBase64String(trie[skey].Value);
         }
     }
 }

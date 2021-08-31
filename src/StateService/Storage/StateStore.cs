@@ -54,10 +54,6 @@ namespace Neo.Plugins.StateService.Storage
             return new StateSnapshot(store);
         }
 
-        /// <summary>
-        /// DO NOT WRITE
-        /// </summary>
-        /// <returns></returns>
         public ISnapshot GetStoreSnapshot()
         {
             return store.GetSnapshot();
