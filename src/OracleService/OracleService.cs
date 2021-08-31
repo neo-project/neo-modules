@@ -57,7 +57,7 @@ namespace Neo.Plugins
             if (system.Settings.Network != Settings.Default.Network) return;
             System = system;
             System.ServiceAdded += NeoSystem_ServiceAdded;
-                RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
+            RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
         }
 
         private void NeoSystem_ServiceAdded(object sender, object service)

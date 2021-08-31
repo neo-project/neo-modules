@@ -41,7 +41,7 @@ namespace Neo.Plugins
             System = system;
             string path = string.Format(_dbPath, system.Settings.Network.ToString("X8"));
             _db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
-                RpcServerPlugin.RegisterMethods(this, _network);
+            RpcServerPlugin.RegisterMethods(this, _network);
         }
 
         protected override void Configure()

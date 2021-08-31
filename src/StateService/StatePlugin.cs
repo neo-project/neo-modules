@@ -42,7 +42,7 @@ namespace Neo.Plugins.StateService
             System = system;
             Store = System.ActorSystem.ActorOf(StateStore.Props(this, string.Format(Settings.Default.Path, system.Settings.Network.ToString("X8"))));
             System.ServiceAdded += NeoSystem_ServiceAdded;
-                RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
+            RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
         }
 
         private void NeoSystem_ServiceAdded(object sender, object service)
