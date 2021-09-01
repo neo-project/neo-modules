@@ -46,15 +46,19 @@ Value in base64 string
 #### Params
 |Name|Type|Summary|Required|
 |-|-|-|-|
-|Index/BlockHash|uint/UInt256|specify state|true|
+|RootHash|UInt256|specify state|true|
 |ScriptHash|UInt160|contract script hash|true|
 |Key|base64 string|key|true|
-|IsFind|bool|treat `Key` as prefix when `true`|optional|
 #### Result
-* `Get` result
-  Value in base64 string or `null`
-* `Find` result
-    |Name|Type|Summary|
-    |-|-|-|
-    |array|array|key-value results|
-    |truncated|bool|truncated|
+Value in base64 string or `null`
+
+### FindState
+#### Params
+|Name|Type|Summary|Required|
+|-|-|-|-|
+|RootHash|UInt256|specify state|true|
+|ScriptHash|UInt160|contract script hash|true|
+|Prefix|base64 string|key prefix|true|
+|PageNumber|number|page number, default `0`|optional|
+#### Result
+key-value results in array

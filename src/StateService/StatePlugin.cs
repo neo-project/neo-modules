@@ -245,29 +245,13 @@ namespace Neo.Plugins.StateService
 
         private void PrepareStateParams(JArray _params, out MPTTrie<StorageKey, StorageItem> trie, out StorageKey skey)
         {
-            if (!uint.TryParse(_params[0].AsString(), out uint index))
-            {
-                if (!UInt256.TryParse(_params[0].AsString(), out UInt256 root_hash))
-                    throw new RpcException(-100, "Invalid block hash or index");
-                var header = NativeContract.Ledger.GetHeader(System.StoreView, root_hash);
-                if (header is null)
-                    throw new RpcException(-100, "Unkown block");
-                index = header.Index;
-            }
+            var root_hash = UInt256.Parse(_params[0].AsString());
             var script_hash = UInt160.Parse(_params[1].AsString());
             var prefix = Convert.FromBase64String(_params[2].AsString());
-
-            if (StateStore.Singleton.LocalRootIndex < index)
-                throw new RpcException(-100, "Index exceed current index");
-            if (!Settings.Default.FullState && index < StateStore.Singleton.LocalRootIndex)
-            {
+            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
                 throw new RpcException(-100, "Old state not supported");
-            }
-            using var snapshot = StateStore.Singleton.GetSnapshot();
-            var state_root = snapshot.GetStateRoot(index);
-            if (state_root is null) throw new InvalidOperationException("state root not found");
             using var store = StateStore.Singleton.GetStoreSnapshot();
-            trie = new MPTTrie<StorageKey, StorageItem>(store, state_root.RootHash);
+            trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
 
             var contract = GetHistoricalContractState(trie, script_hash);
             if (contract is null) throw new RpcException(-100, "Unknown contract");
