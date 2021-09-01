@@ -62,22 +62,30 @@ namespace Neo.Plugins.MPT
             return ReadOnlySpan<byte>.Empty;
         }
 
-        public IEnumerable<(TKey Key, TValue Value)> Find(ReadOnlySpan<byte> prefix)
+        public IEnumerable<(TKey Key, TValue Value)> Find(ReadOnlySpan<byte> prefix, byte[] from = null)
         {
             var path = ToNibbles(prefix);
+            if (from is null) from = Array.Empty<byte>();
+            if (from.Any())
+            {
+                if (from.Length < prefix.Length || !from.AsSpan().StartsWith(prefix))
+                    throw new InvalidOperationException("invalid from key");
+                from = ToNibbles(from[prefix.Length..].AsSpan());
+            }
             path = Seek(ref root, path, out MPTNode start).ToArray();
-            return Travers(start, path)
+            return Travers(start, path, from)
                 .Select(p => (FromNibbles(p.Key).AsSerializable<TKey>(), p.Value.AsSerializable<TValue>()));
         }
 
-        private IEnumerable<(byte[] Key, byte[] Value)> Travers(MPTNode node, byte[] path)
+        private IEnumerable<(byte[] Key, byte[] Value)> Travers(MPTNode node, byte[] path, byte[] from)
         {
             if (node is null) yield break;
             switch (node.Type)
             {
                 case NodeType.LeafNode:
                     {
-                        yield return (path, (byte[])node.Value.Clone());
+                        if (!from.Any())
+                            yield return (path, (byte[])node.Value.Clone());
                         break;
                     }
                 case NodeType.Empty:
@@ -87,7 +95,7 @@ namespace Neo.Plugins.MPT
                         var newNode = cache.Resolve(node.Hash);
                         if (newNode is null) throw new InvalidOperationException("Internal error, can't resolve hash when mpt find");
                         node = newNode;
-                        foreach (var item in Travers(node, path))
+                        foreach (var item in Travers(node, path, from))
                             yield return item;
                         break;
                     }
@@ -95,15 +103,25 @@ namespace Neo.Plugins.MPT
                     {
                         for (int i = 0; i < MPTNode.BranchChildCount; i++)
                         {
-                            foreach (var item in Travers(node.Children[i], i == MPTNode.BranchChildCount - 1 ? path : Concat(path, new byte[] { (byte)i })))
-                                yield return item;
+                            if (i == MPTNode.BranchChildCount - 1 && from.Any())
+                                break;
+                            if (!from.Any() || from[0] < i)
+                                foreach (var item in Travers(node.Children[i], i == MPTNode.BranchChildCount - 1 ? path : Concat(path, new byte[] { (byte)i }), Array.Empty<byte>()))
+                                    yield return item;
+                            else if (i == from[0])
+                                foreach (var item in Travers(node.Children[i], i == MPTNode.BranchChildCount - 1 ? path : Concat(path, new byte[] { (byte)i }), from[1..]))
+                                    yield return item;
                         }
                         break;
                     }
                 case NodeType.ExtensionNode:
                     {
-                        foreach (var item in Travers(node.Next, Concat(path, node.Key)))
-                            yield return item;
+                        if (from.AsSpan().StartsWith(node.Key))
+                            foreach (var item in Travers(node.Next, Concat(path, node.Key), from[node.Key.Length..]))
+                                yield return item;
+                        else if (!from.Any() || 0 < node.Key.CompareTo(from))
+                            foreach (var item in Travers(node.Next, Concat(path, node.Key), Array.Empty<byte>()))
+                                yield return item;
                         break;
                     }
             }

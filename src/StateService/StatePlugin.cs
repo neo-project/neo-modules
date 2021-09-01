@@ -272,18 +272,25 @@ namespace Neo.Plugins.StateService
         public JObject FindState(JArray _params)
         {
             PrepareStateParams(_params, out var trie, out var skey);
-            int pageNumber = 0;
-            if (3 < _params.Count)
-                pageNumber = int.Parse(_params[3].AsString());
-            if (Settings.Default.MaxPageNumber <= pageNumber)
-                throw new RpcException(-100, "Page number exceed limit");
-            var start = Settings.Default.MaxFindResultItems * pageNumber;
-            JArray array = new();
-            int i = 0;
-            foreach (var (ikey, ivalue) in trie.Find(skey.ToArray()))
+            StorageKey fkey = new()
             {
-                if (start + Settings.Default.MaxFindResultItems <= i) break;
-                if (start <= i)
+                Id = skey.Id,
+                Key = Array.Empty<byte>(),
+            };
+            if (3 < _params.Count)
+                fkey.Key = Convert.FromBase64String(_params[3].AsString());
+            int count = Settings.Default.MaxFindResultItems;
+            if (4 < _params.Count)
+                count = int.Parse(_params[4].AsString());
+            if (Settings.Default.MaxFindResultItems < count)
+                count = Settings.Default.MaxFindResultItems;
+            JArray array = new();
+            if (count == 0) return array;
+            int i = 0;
+            foreach (var (ikey, ivalue) in trie.Find(skey.ToArray(), fkey.ToArray()))
+            {
+                if (count <= i) break;
+                if (i < count)
                 {
                     JObject j = new();
                     j["key"] = Convert.ToBase64String(ikey.Key);

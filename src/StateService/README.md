@@ -59,6 +59,7 @@ Value in base64 string or `null`
 |RootHash|UInt256|specify state|true|
 |ScriptHash|UInt160|contract script hash|true|
 |Prefix|base64 string|key prefix|true|
-|PageNumber|number|page number, default `0`|optional|
+|From|base64 string|start key, default `Empty`|optional|
+|Count|number|count of results in one request, default `MaxFindResultItems`|optional|
 #### Result
 key-value results in array
