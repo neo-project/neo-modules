@@ -16,6 +16,7 @@ namespace Neo.Plugins
     public class LogReader : Plugin, IPersistencePlugin
     {
         private DB db;
+        private WriteBatch _writeBatch;
 
         public override string Name => "ApplicationLogs";
         public override string Description => "Synchronizes the smart contract log with the NativeContract log (Notify)";
@@ -147,27 +148,42 @@ namespace Neo.Plugins
         {
             if (system.Settings.Network != Settings.Default.Network) return;
 
-            WriteBatch writeBatch = new WriteBatch();
+            ResetBatch();
 
             //processing log for transactions
             foreach (var appExec in applicationExecutedList.Where(p => p.Transaction != null))
             {
                 var txJson = TxLogToJson(appExec);
-                writeBatch.Put(appExec.Transaction.Hash.ToArray(), Neo.Utility.StrictUTF8.GetBytes(txJson.ToString()));
+                Put(appExec.Transaction.Hash.ToArray(), Neo.Utility.StrictUTF8.GetBytes(txJson.ToString()));
             }
 
             //processing log for block
             var blockJson = BlockLogToJson(block, applicationExecutedList);
             if (blockJson != null)
             {
-                writeBatch.Put(block.Hash.ToArray(), Neo.Utility.StrictUTF8.GetBytes(blockJson.ToString()));
+                Put(block.Hash.ToArray(), Neo.Utility.StrictUTF8.GetBytes(blockJson.ToString()));
             }
-            db.Write(WriteOptions.Default, writeBatch);
+        }
+
+        void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
+        {
+            if (system.Settings.Network != Settings.Default.Network) return;
+            db.Write(WriteOptions.Default, _writeBatch);
         }
 
         static string GetExceptionMessage(Exception exception)
         {
             return exception?.GetBaseException().Message;
+        }
+
+        private void ResetBatch()
+        {
+            _writeBatch = new WriteBatch();
+        }
+
+        private void Put(byte[] key, byte[] value)
+        {
+            _writeBatch.Put(key, value);
         }
     }
 }
