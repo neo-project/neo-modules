@@ -2466,6 +2466,7 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
+        "network": 0,
         "tcpport": 20333,
         "wsport": 20334,
         "nonce": 592651621,
@@ -2475,7 +2476,10 @@
           "msperblock": 15000,
           "maxvaliduntilblockincrement": 1,
           "maxtraceableblocks": 1,
-          "addressversion": 0
+          "addressversion": 0,
+          "maxtransactionsperblock": 0,
+          "memorypoolmaxtransactions": 0,
+          "initialgasdistribution": 0
         }
       }
     }

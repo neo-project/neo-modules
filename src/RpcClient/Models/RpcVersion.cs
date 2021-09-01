@@ -11,6 +11,9 @@ namespace Neo.Network.RPC.Models
             public uint MaxValidUntilBlockIncrement { get; set; }
             public uint MaxTraceableBlocks { get; set; }
             public byte AddressVersion { get; set; }
+            public uint MaxTransactionsPerBlock { get; set; }
+            public int MemoryPoolMaxTransactions { get; set; }
+            public ulong InitialGasDistribution { get; set; }
 
             public JObject ToJson()
             {
@@ -20,6 +23,9 @@ namespace Neo.Network.RPC.Models
                 json["maxvaliduntilblockincrement"] = MaxValidUntilBlockIncrement;
                 json["maxtraceableblocks"] = MaxTraceableBlocks;
                 json["addressversion"] = AddressVersion;
+                json["maxtransactionsperblock"] = MaxTransactionsPerBlock;
+                json["memorypoolmaxtransactions"] = MemoryPoolMaxTransactions;
+                json["initialgasdistribution"] = InitialGasDistribution;
                 return json;
             }
 
@@ -32,6 +38,9 @@ namespace Neo.Network.RPC.Models
                     MaxValidUntilBlockIncrement = (uint)json["maxvaliduntilblockincrement"].AsNumber(),
                     MaxTraceableBlocks = (uint)json["maxtraceableblocks"].AsNumber(),
                     AddressVersion = (byte)json["addressversion"].AsNumber(),
+                    MaxTransactionsPerBlock = (uint)json["maxtransactionsperblock"].AsNumber(),
+                    MemoryPoolMaxTransactions = (int)json["memorypoolmaxtransactions"].AsNumber(),
+                    InitialGasDistribution = (ulong)json["initialgasdistribution"].AsNumber(),
                 };
             }
         }
@@ -49,6 +58,7 @@ namespace Neo.Network.RPC.Models
         public JObject ToJson()
         {
             JObject json = new();
+            json["network"] = Protocol.Network; // Obsolete
             json["tcpport"] = TcpPort;
             json["wsport"] = WsPort;
             json["nonce"] = Nonce;

@@ -68,6 +68,9 @@ namespace Neo.Plugins
             json["protocol"]["msperblock"] = system.Settings.MillisecondsPerBlock;
             json["protocol"]["maxtraceableblocks"] = system.Settings.MaxTraceableBlocks;
             json["protocol"]["maxvaliduntilblockincrement"] = system.Settings.MaxValidUntilBlockIncrement;
+            json["protocol"]["maxtransactionsperblock"] = system.Settings.MaxTransactionsPerBlock;
+            json["protocol"]["memorypoolmaxtransactions"] = system.Settings.MemoryPoolMaxTransactions;
+            json["protocol"]["initialgasdistribution"] = system.Settings.InitialGasDistribution;
             return json;
         }
 
