@@ -74,7 +74,13 @@ namespace Neo.Plugins.StateService
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
-            StateStore.Singleton.UpdateLocalStateRoot(block.Index, snapshot.GetChangeSet().Where(p => p.State != TrackState.None).Where(p => p.Key.Id != NativeContract.Ledger.Id).ToList());
+            StateStore.Singleton.UpdateLocalStateRootSnapshot(block.Index, snapshot.GetChangeSet().Where(p => p.State != TrackState.None).Where(p => p.Key.Id != NativeContract.Ledger.Id).ToList());
+        }
+
+        void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
+        {
+            if (system.Settings.Network != Settings.Default.Network) return;
+            StateStore.Singleton.UpdateLocalStateRoot(block.Index);
         }
 
         [ConsoleCommand("start states", Category = "StateService", Description = "Start as a state verifier if wallet is open")]
