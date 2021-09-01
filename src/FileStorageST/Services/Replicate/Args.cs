@@ -4,7 +4,7 @@ using System;
 
 namespace Neo.FileStorage.Storage.Services.Replicate
 {
-    public class Configuration
+    public class Args
     {
         public static readonly TimeSpan DefaultPutTimeout = TimeSpan.FromSeconds(5);
         public TimeSpan PutTimeout { get; init; } = DefaultPutTimeout;

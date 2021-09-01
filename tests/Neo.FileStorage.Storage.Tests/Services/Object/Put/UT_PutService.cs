@@ -57,14 +57,6 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Put
             }
         }
 
-        private class TestLocalInfo : ILocalInfoSource
-        {
-            public List<Network.Address> Addresses { get; set; }
-            public API.Netmap.NodeInfo NodeInfo { get; set; }
-            public uint Network { get; set; }
-            public HealthStatus HealthStatus { get; set; }
-        }
-
         private class TestLocalObjectStore : ILocalObjectStore
         {
             public FSObject Object;

@@ -2,14 +2,15 @@ using System;
 using Akka.Actor;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Invoker.Morph;
+using Neo.FileStorage.Listen.Event.Morph;
 using Neo.FileStorage.Placement;
 using Neo.FileStorage.Storage.Cache;
+using Neo.FileStorage.Storage.Core.Container;
 using Neo.FileStorage.Storage.Services.Container.Announcement;
-using Neo.FileStorage.Storage.Services.Object;
 using Neo.FileStorage.Storage.Services.Object.Acl;
 using Neo.FileStorage.Storage.Services.Object.Get;
 using Neo.FileStorage.Storage.Services.Object.Get.Remote;
+using Neo.FileStorage.Storage.Services.Object.Head;
 using Neo.FileStorage.Storage.Services.Object.Put;
 using Neo.FileStorage.Storage.Services.Object.Put.Remote;
 using Neo.FileStorage.Storage.Services.Object.Search;
@@ -44,13 +45,12 @@ namespace Neo.FileStorage.Storage
                 },
                 LocalStorage = localStorage,
             }));
-            IActorRef policeRef = system.ActorSystem.ActorOf(Policer.Props(new()
+            IActorRef policer = system.ActorSystem.ActorOf(Policer.Props(new()
             {
                 LocalInfo = this,
                 LocalStorage = localStorage,
-                MorphInvoker = morphInvoker,
                 PlacementBuilder = new NetworkMapBuilder(morphInvoker),
-                RemoteHeader = new()
+                RemoteHeader = new RemoteHeader()
                 {
                     KeyStorage = keyStorage,
                     ClientCache = reputationClientCache,
@@ -61,7 +61,13 @@ namespace Neo.FileStorage.Storage
                 },
                 ReplicatorRef = replicator
             }));
-
+            netmapProcessor.AddEpochHandler(p =>
+            {
+                if (p is NewEpochEvent e)
+                {
+                    policer.Tell(new Policer.Trigger());
+                }
+            });
             TTLNetworkCache<ContainerID, FSContainer> containerCache = new(ContainerCacheSize, TimeSpan.FromSeconds(ContainerCacheTTLSeconds), cid =>
             {
                 return morphInvoker.GetContainer(cid)?.Container;

@@ -5,7 +5,6 @@ using System.Linq;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Placement;
-using Neo.IO.Json;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.InnerRing.Services.Audit.Auditor

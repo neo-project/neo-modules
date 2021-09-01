@@ -1,18 +1,44 @@
+using Akka.Actor;
+using Neo.FileStorage.API.Netmap;
+using Neo.FileStorage.Placement;
+using Neo.FileStorage.Storage.Core.Container;
+using Neo.FileStorage.Storage.Services.Object.Head;
+using Neo.FileStorage.Storage.Services.Replicate;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Akka.Actor;
-using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.Storage.Services.Object.Head;
-using Neo.FileStorage.Storage.Services.Replicate;
 using FSAddress = Neo.FileStorage.API.Refs.Address;
 
 namespace Neo.FileStorage.Storage.Services.Police
 {
     public class Policer : UntypedActor
     {
+        public class Args
+        {
+            public const int DefaultWorkScope = 100;
+            public const int DefaultExpandRate = 10;
+            public static readonly TimeSpan DefaultHeadTimeout = TimeSpan.FromSeconds(5);
+            public int ExpandRate { get; init; } = DefaultExpandRate;
+            public int WorkScope { get; set; } = DefaultWorkScope;
+            public TimeSpan HeadTimeout { get; init; } = DefaultHeadTimeout;
+            public ILocalInfoSource LocalInfo { get; init; }
+            public IContainerSoruce ContainerSoruce { get; init; }
+            public IActorRef ReplicatorRef { get; init; }
+            public IObjectListSource LocalStorage { get; init; }
+            public IPlacementBuilder PlacementBuilder { get; init; }
+            public IRemoteHeader RemoteHeader { get; init; }
+            public Action<FSAddress> RedundantCopyCallback { get; init; }
+        }
+
+        private class PoliceTask
+        {
+            public CancellationTokenSource Source;
+            public Task Task;
+            public int Undone;
+        }
+
         public class Trigger { }
         private int workScope;
         private readonly Args args;
@@ -36,8 +62,8 @@ namespace Neo.FileStorage.Storage.Services.Police
 
         private void OnTrigger()
         {
-            prevTask.Source.Cancel();
-            prevTask.Source.Dispose();
+            prevTask.Source?.Cancel();
+            prevTask.Source?.Dispose();
             HandleTask();
         }
 
@@ -53,14 +79,16 @@ namespace Neo.FileStorage.Storage.Services.Police
                 workScope += delta;
             prevTask.Undone = addrs.Count;
             prevTask.Source = new();
+            var token = prevTask.Source.Token;
             prevTask.Task = Task.Run(() =>
             {
                 foreach (var addr in addrs)
                 {
+                    if (token.IsCancellationRequested) return;
                     ProcessObject(addr);
                     prevTask.Undone--;
                 }
-            }, prevTask.Source.Token);
+            }, token);
         }
 
         private List<FSAddress> Select(int limit)
@@ -83,7 +111,7 @@ namespace Neo.FileStorage.Storage.Services.Police
                 {
                     addrs = nodes[i].NetworkAddresses.Select(p => Network.Address.FromString(p)).ToList();
                 }
-                catch (Exception)
+                catch
                 {
                     continue;
                 }
@@ -120,7 +148,7 @@ namespace Neo.FileStorage.Storage.Services.Police
                     Nodes = nodes,
                 });
             }
-            else if (redundantLocalCopy)
+            else if (redundantLocalCopy && args.RedundantCopyCallback is not null)
             {
                 args.RedundantCopyCallback(address);
             }
@@ -128,7 +156,7 @@ namespace Neo.FileStorage.Storage.Services.Police
 
         private void ProcessObject(FSAddress address)
         {
-            var container = args.MorphInvoker.GetContainer(address.ContainerId)?.Container;
+            var container = args.ContainerSoruce.GetContainer(address.ContainerId);
             var policy = container.PlacementPolicy;
             var nodes = args.PlacementBuilder.BuildPlacement(address, policy);
             var replicas = policy.Replicas;

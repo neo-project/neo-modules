@@ -7,7 +7,6 @@ using Google.Protobuf;
 using Grpc.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Client;
-using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Placement;
@@ -55,20 +54,6 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             public FSObject Head(Address address, bool raw)
             {
                 return Get(address).CutPayload();
-            }
-        }
-
-        private class TestPlacementBuilder : IPlacementBuilder
-        {
-            public Dictionary<Address, List<List<Node>>> Vectors = new();
-
-            public List<List<Node>> BuildPlacement(Address address, PlacementPolicy policy)
-            {
-                if (Vectors.TryGetValue(address, out var vector))
-                {
-                    return vector;
-                }
-                throw new InvalidOperationException("vectors for address not found");
             }
         }
 

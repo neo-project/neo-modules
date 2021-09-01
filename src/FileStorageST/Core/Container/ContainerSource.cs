@@ -1,9 +1,8 @@
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Invoker.Morph;
-using Neo.FileStorage.Storage.Core.Container;
 using FSContainer = Neo.FileStorage.API.Container.Container;
 
-namespace Neo.FileStorage.Storage.Services.Object.Put
+namespace Neo.FileStorage.Storage.Core.Container
 {
     public class ContainerSource : IContainerSoruce
     {

@@ -19,11 +19,11 @@ namespace Neo.FileStorage.Storage.Services.Replicate
             public List<Node> Nodes;
         }
 
-        private readonly Configuration config;
+        private readonly Args args;
 
-        public Replicator(Configuration c)
+        public Replicator(Args c)
         {
-            config = c;
+            args = c;
         }
 
         protected override void OnReceive(object message)
@@ -41,7 +41,7 @@ namespace Neo.FileStorage.Storage.Services.Replicate
             FSObject obj;
             try
             {
-                obj = config.LocalStorage.Get(task.Address);
+                obj = args.LocalStorage.Get(task.Address);
             }
             catch (Exception)
             {
@@ -54,13 +54,13 @@ namespace Neo.FileStorage.Storage.Services.Replicate
             for (int i = 0; i < task.Nodes.Count && 0 < task.Quantity; i++)
             {
                 prm.Addresses = task.Nodes[i].NetworkAddresses.Select(p => Network.Address.FromString(p)).ToList();
-                using CancellationTokenSource srouce = new(config.PutTimeout);
-                config.RemoteSender.PutObject(prm, srouce.Token);
+                using CancellationTokenSource srouce = new(args.PutTimeout);
+                args.RemoteSender.PutObject(prm, srouce.Token);
                 task.Quantity--;
             }
         }
 
-        public static Props Props(Configuration c)
+        public static Props Props(Args c)
         {
             return Akka.Actor.Props.Create(() => new Replicator(c));
         }

@@ -7,7 +7,7 @@ using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Storage.Services.Object.Head
 {
-    public class RemoteHeader
+    public class RemoteHeader : IRemoteHeader
     {
         public const int DefaultHeadTtl = 1;
         public KeyStore KeyStorage { get; init; }
