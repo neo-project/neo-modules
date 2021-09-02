@@ -1,12 +1,11 @@
 using System.Threading;
 using Neo.FileStorage.Storage.Services.Object.Util;
-using Neo.FileStorage.Storage.Services.Reputaion.Local.Client;
 using Neo.FileStorage.Storage.Services.Object.Put.Target;
 using Neo.FileStorage.Storage.Services.Object.Put.Remote;
 
-namespace Neo.FileStorage.Storage.Services.Object.Put
+namespace Neo.FileStorage.Storage.Services.Replicate
 {
-    public class RemoteSender
+    public class RemoteSender : IRemoteSender
     {
         public KeyStore KeyStorage { get; init; }
         public IPutClientCache ClientCache { get; init; }

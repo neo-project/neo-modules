@@ -1,10 +1,9 @@
+using Akka.Actor;
+using Neo.FileStorage.API.Netmap;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Akka.Actor;
-using Neo.FileStorage.API.Netmap;
-using Neo.FileStorage.Storage.Services.Object.Put;
 using FSAddress = Neo.FileStorage.API.Refs.Address;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
@@ -12,6 +11,14 @@ namespace Neo.FileStorage.Storage.Services.Replicate
 {
     public class Replicator : UntypedActor
     {
+        public class Args
+        {
+            public static readonly TimeSpan DefaultPutTimeout = TimeSpan.FromSeconds(5);
+            public TimeSpan PutTimeout { get; init; } = DefaultPutTimeout;
+            public IRemoteSender RemoteSender { get; init; }
+            public ILocalObjectSource LocalStorage { get; init; }
+        }
+
         public class Task
         {
             public uint Quantity;
@@ -43,7 +50,7 @@ namespace Neo.FileStorage.Storage.Services.Replicate
             {
                 obj = args.LocalStorage.Get(task.Address);
             }
-            catch (Exception)
+            catch
             {
                 return;
             }

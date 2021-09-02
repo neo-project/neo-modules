@@ -38,7 +38,7 @@ namespace Neo.FileStorage.Storage
             };
             IActorRef replicator = system.ActorSystem.ActorOf(Replicator.Props(new()
             {
-                RemoteSender = new()
+                RemoteSender = new RemoteSender()
                 {
                     KeyStorage = keyStorage,
                     ClientCache = new PutClientCache(reputationClientCache),

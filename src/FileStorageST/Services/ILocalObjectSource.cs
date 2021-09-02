@@ -1,7 +1,7 @@
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 
-namespace Neo.FileStorage.Storage.Services.Object.Get
+namespace Neo.FileStorage.Storage.Services
 {
     public interface ILocalObjectSource
     {

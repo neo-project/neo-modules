@@ -11,6 +11,7 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Placement;
 using Neo.FileStorage.Storage.Placement;
+using Neo.FileStorage.Storage.Services;
 using Neo.FileStorage.Storage.Services.Object.Get;
 using Neo.FileStorage.Storage.Services.Object.Get.Remote;
 using Neo.FileStorage.Storage.Services.Object.Get.Writer;
