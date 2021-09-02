@@ -64,7 +64,6 @@ namespace Neo.FileStorage.InnerRing.Services.Audit.Auditor
                     Utility.Log(nameof(Context), LogLevel.Debug, $"get header failed, node={nodes[i].NetworkAddresses.FirstOrDefault()}, e={e}");
                     continue;
                 }
-                Console.WriteLine($"[POP] get object header, address={nodes[i].NetworkAddresses.FirstOrDefault()}");
                 UpdateHeader(header);
                 ok++;
                 optimal = ok == replicas && i < replicas;

@@ -92,7 +92,6 @@ namespace Neo.FileStorage.InnerRing.Processors
                 List<List<Node>> nodes;
                 try
                 {
-                    Console.WriteLine($"container={containers[i]}");
                     nodes = nm.GetContainerNodes(cnr.PlacementPolicy, pivot);
                 }
                 catch (Exception e)
