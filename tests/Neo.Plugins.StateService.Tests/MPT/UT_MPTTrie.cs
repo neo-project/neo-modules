@@ -584,7 +584,7 @@ namespace Neo.Plugins.StateService.Tests
             mpt1.Commit();
             Assert.AreEqual(7, snapshot.Size);
         }
-        
+
         public void TestEmptyValueIssue633()
         {
             var key = "01".HexToBytes();
@@ -600,7 +600,7 @@ namespace Neo.Plugins.StateService.Tests
             Assert.IsNotNull(val);
             Assert.AreEqual(0, val.Size);
         }
-      
+
         [TestMethod]
         public void TestFindWithFrom()
         {
