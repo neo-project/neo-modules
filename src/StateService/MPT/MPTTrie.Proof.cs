@@ -10,13 +10,12 @@ namespace Neo.Plugins.MPT
 {
     partial class MPTTrie<TKey, TValue>
     {
-        public HashSet<byte[]> GetProof(TKey key)
+        public bool TryGetProof(TKey key, out HashSet<byte[]> proof)
         {
             var path = ToNibbles(key.ToArray());
-            if (path.Length == 0) return null;
-            HashSet<byte[]> set = new HashSet<byte[]>(ByteArrayEqualityComparer.Default);
-            if (!GetProof(ref root, path, set)) return null;
-            return set;
+            if (path.Length == 0) throw new ArgumentException("could not be empty", nameof(key));
+            proof = new HashSet<byte[]>(ByteArrayEqualityComparer.Default);
+            return GetProof(ref root, path, proof);
         }
 
         private bool GetProof(ref MPTNode node, ReadOnlySpan<byte> path, HashSet<byte[]> set)
