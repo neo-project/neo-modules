@@ -177,6 +177,7 @@ namespace Neo.Plugins.StateService
                 Id = contract.Id,
                 Key = key,
             };
+
             using ISnapshot store = StateStore.Singleton.GetStoreSnapshot();
             var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
             var proof = trie.GetProof(skey);
