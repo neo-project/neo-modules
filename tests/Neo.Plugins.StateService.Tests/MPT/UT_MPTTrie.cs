@@ -165,14 +165,14 @@ namespace Neo.Plugins.StateService.Tests
         public void TestTryGet()
         {
             var mpt = new MPTTrie<TestKey, TestValue>(mptdb.GetSnapshot(), root.Hash);
-            Assert.IsNull(mpt[Array.Empty<byte>()]);
+            Assert.ThrowsException<ArgumentException>(() => mpt[Array.Empty<byte>()]);
             Assert.AreEqual("abcd", mpt["ac01".HexToBytes()].ToString());
             Assert.AreEqual("2222", mpt["ac".HexToBytes()].ToString());
-            Assert.IsNull(mpt["ab99".HexToBytes()]);
-            Assert.IsNull(mpt["ac39".HexToBytes()]);
-            Assert.IsNull(mpt["ac02".HexToBytes()]);
-            Assert.IsNull(mpt["ac0100".HexToBytes()]);
-            Assert.IsNull(mpt["ac9910".HexToBytes()]);
+            Assert.ThrowsException<KeyNotFoundException>(() => mpt["ab99".HexToBytes()]);
+            Assert.ThrowsException<KeyNotFoundException>(() => mpt["ac39".HexToBytes()]);
+            Assert.ThrowsException<KeyNotFoundException>(() => mpt["ac02".HexToBytes()]);
+            Assert.ThrowsException<KeyNotFoundException>(() => mpt["ac0100".HexToBytes()]);
+            Assert.ThrowsException<KeyNotFoundException>(() => mpt["ac9910".HexToBytes()]);
             Assert.ThrowsException<InvalidOperationException>(() => mpt["acf1".HexToBytes()]);
         }
 
@@ -188,16 +188,16 @@ namespace Neo.Plugins.StateService.Tests
         {
             var store = new MemoryStore();
             var mpt = new MPTTrie<TestKey, TestValue>(store.GetSnapshot(), null);
-            Assert.IsTrue(mpt.Put("ac01".HexToBytes(), "abcd".HexToBytes()));
-            Assert.IsTrue(mpt.Put("ac".HexToBytes(), "2222".HexToBytes()));
-            Assert.IsTrue(mpt.Put("acae".HexToBytes(), Encoding.ASCII.GetBytes("existing")));
-            Assert.IsTrue(mpt.Put("acf1".HexToBytes(), Encoding.ASCII.GetBytes("missing")));
+            mpt.Put("ac01".HexToBytes(), "abcd".HexToBytes());
+            mpt.Put("ac".HexToBytes(), "2222".HexToBytes());
+            mpt.Put("acae".HexToBytes(), Encoding.ASCII.GetBytes("existing"));
+            mpt.Put("acf1".HexToBytes(), Encoding.ASCII.GetBytes("missing"));
             Assert.AreEqual(root.Hash.ToString(), mpt.Root.Hash.ToString());
-            Assert.IsFalse(mpt.Put(Array.Empty<byte>(), "01".HexToBytes()));
-            Assert.IsFalse(mpt.Put("01".HexToBytes(), Array.Empty<byte>()));
-            Assert.IsFalse(mpt.Put(new byte[MPTNode.MaxKeyLength / 2 + 1], Array.Empty<byte>()));
-            Assert.IsFalse(mpt.Put("01".HexToBytes(), new byte[MPTNode.MaxValueLength + 1]));
-            Assert.IsTrue(mpt.Put("ac01".HexToBytes(), "ab".HexToBytes()));
+            Assert.ThrowsException<ArgumentException>(() => mpt.Put(Array.Empty<byte>(), "01".HexToBytes()));
+            mpt.Put("01".HexToBytes(), Array.Empty<byte>());
+            Assert.ThrowsException<ArgumentException>(() => mpt.Put(new byte[MPTNode.MaxKeyLength / 2 + 1], Array.Empty<byte>()));
+            Assert.ThrowsException<ArgumentException>(() => mpt.Put("01".HexToBytes(), new byte[MPTNode.MaxValueLength + 1]));
+            mpt.Put("ac01".HexToBytes(), "ab".HexToBytes());
         }
 
         [TestMethod]
@@ -213,7 +213,7 @@ namespace Neo.Plugins.StateService.Tests
             var mpt = new MPTTrie<TestKey, TestValue>(mptdb.GetSnapshot(), root.Hash);
             Assert.IsNotNull(mpt["ac".HexToBytes()]);
             Assert.IsFalse(mpt.Delete("0c99".HexToBytes()));
-            Assert.IsFalse(mpt.Delete(Array.Empty<byte>()));
+            Assert.ThrowsException<ArgumentException>(() => mpt.Delete(Array.Empty<byte>()));
             Assert.IsFalse(mpt.Delete("ac20".HexToBytes()));
             Assert.ThrowsException<InvalidOperationException>(() => mpt.Delete("acf1".HexToBytes()));
             Assert.IsTrue(mpt.Delete("ac".HexToBytes()));
@@ -228,8 +228,8 @@ namespace Neo.Plugins.StateService.Tests
             var store = new MemoryStore();
             var snapshot = store.GetSnapshot();
             var mpt1 = new MPTTrie<TestKey, TestValue>(snapshot, null);
-            Assert.IsTrue(mpt1.Put("ac00".HexToBytes(), "abcd".HexToBytes()));
-            Assert.IsTrue(mpt1.Put("ac10".HexToBytes(), "abcd".HexToBytes()));
+            mpt1.Put("ac00".HexToBytes(), "abcd".HexToBytes());
+            mpt1.Put("ac10".HexToBytes(), "abcd".HexToBytes());
             mpt1.Commit();
             snapshot.Commit();
             var snapshot2 = store.GetSnapshot();
@@ -269,8 +269,8 @@ namespace Neo.Plugins.StateService.Tests
             var store = new MemoryStore();
             var snapshot = store.GetSnapshot();
             var mpt = new MPTTrie<TestKey, TestValue>(snapshot, null);
-            Assert.IsTrue(mpt.Put("ac01".HexToBytes(), "abcd".HexToBytes()));
-            Assert.IsTrue(mpt.Put("ac02".HexToBytes(), "abcd".HexToBytes()));
+            mpt.Put("ac01".HexToBytes(), "abcd".HexToBytes());
+            mpt.Put("ac02".HexToBytes(), "abcd".HexToBytes());
             Assert.IsNotNull(mpt["ac01".HexToBytes()]);
             Assert.IsNotNull(mpt["ac02".HexToBytes()]);
             mpt.Delete("ac01".HexToBytes());
@@ -286,9 +286,9 @@ namespace Neo.Plugins.StateService.Tests
         {
             var snapshot = new TestSnapshot();
             var mpt = new MPTTrie<TestKey, TestValue>(snapshot, null);
-            Assert.IsTrue(mpt.Put("ac11".HexToBytes(), "ac11".HexToBytes()));
-            Assert.IsTrue(mpt.Put("ac22".HexToBytes(), "ac22".HexToBytes()));
-            Assert.IsTrue(mpt.Put("ac".HexToBytes(), "ac".HexToBytes()));
+            mpt.Put("ac11".HexToBytes(), "ac11".HexToBytes());
+            mpt.Put("ac22".HexToBytes(), "ac22".HexToBytes());
+            mpt.Put("ac".HexToBytes(), "ac".HexToBytes());
             mpt.Commit();
             Assert.AreEqual(7, snapshot.Size);
             Assert.IsTrue(mpt.Delete("ac11".HexToBytes()));
@@ -320,36 +320,37 @@ namespace Neo.Plugins.StateService.Tests
 
             var mpt = new MPTTrie<TestKey, TestValue>(mptdb.GetSnapshot(), r.Hash);
             Assert.AreEqual(r.Hash.ToString(), mpt.Root.Hash.ToString());
-            HashSet<byte[]> proof = mpt.GetProof("ac01".HexToBytes());
+            var result = mpt.TryGetProof("ac01".HexToBytes(), out var proof);
+            Assert.IsTrue(result);
             Assert.AreEqual(4, proof.Count);
             Assert.IsTrue(proof.Contains(b.ToArrayWithoutReference()));
             Assert.IsTrue(proof.Contains(r.ToArrayWithoutReference()));
             Assert.IsTrue(proof.Contains(e1.ToArrayWithoutReference()));
             Assert.IsTrue(proof.Contains(v1.ToArrayWithoutReference()));
 
-            proof = mpt.GetProof("ac".HexToBytes());
-            Assert.AreEqual(3, proof.Count());
+            result = mpt.TryGetProof("ac".HexToBytes(), out proof);
+            Assert.AreEqual(3, proof.Count);
 
-            proof = mpt.GetProof("ac10".HexToBytes());
-            Assert.IsNull(proof);
+            result = mpt.TryGetProof("ac10".HexToBytes(), out proof);
+            Assert.IsFalse(result);
 
-            proof = mpt.GetProof("acae".HexToBytes());
-            Assert.AreEqual(4, proof.Count());
+            result = mpt.TryGetProof("acae".HexToBytes(), out proof);
+            Assert.AreEqual(4, proof.Count);
 
-            proof = mpt.GetProof(Array.Empty<byte>());
-            Assert.IsNull(proof);
+            Assert.ThrowsException<ArgumentException>(() => mpt.TryGetProof(Array.Empty<byte>(), out proof));
 
-            proof = mpt.GetProof("ac0100".HexToBytes());
-            Assert.IsNull(proof);
+            result = mpt.TryGetProof("ac0100".HexToBytes(), out proof);
+            Assert.IsFalse(result);
 
-            Assert.ThrowsException<InvalidOperationException>(() => mpt.GetProof("acf1".HexToBytes()));
+            Assert.ThrowsException<InvalidOperationException>(() => mpt.TryGetProof("acf1".HexToBytes(), out var proof));
         }
 
         [TestMethod]
         public void TestVerifyProof()
         {
             var mpt = new MPTTrie<TestKey, TestValue>(mptdb.GetSnapshot(), root.Hash);
-            HashSet<byte[]> proof = mpt.GetProof("ac01".HexToBytes());
+            var result = mpt.TryGetProof("ac01".HexToBytes(), out var proof);
+            Assert.IsTrue(result);
             TestValue value = MPTTrie<TestKey, TestValue>.VerifyProof(root.Hash, "ac01".HexToBytes(), proof);
             Assert.IsNotNull(value);
             Assert.AreEqual(value.ToString(), "abcd");
@@ -361,10 +362,8 @@ namespace Neo.Plugins.StateService.Tests
             var store = new MemoryStore();
             var snapshot = store.GetSnapshot();
             var mpt = new MPTTrie<TestKey, TestValue>(snapshot, null);
-            var result = mpt.Put(new byte[] { 0xab }, new byte[] { 0x01 });
-            Assert.IsTrue(result);
-            result = mpt.Put(new byte[] { 0xab, 0xcd }, new byte[] { 0x02 });
-            Assert.IsTrue(result);
+            mpt.Put(new byte[] { 0xab }, new byte[] { 0x01 });
+            mpt.Put(new byte[] { 0xab, 0xcd }, new byte[] { 0x02 });
             Assert.AreEqual("01", mpt[new byte[] { 0xab }].ToArray().ToHexString());
         }
 
@@ -374,14 +373,16 @@ namespace Neo.Plugins.StateService.Tests
             var store = new MemoryStore();
             var snapshot = store.GetSnapshot();
             var mpt1 = new MPTTrie<TestKey, TestValue>(snapshot, null);
-            Assert.IsTrue(mpt1.Put(new byte[] { 0xab, 0xcd }, new byte[] { 0x01 }));
-            Assert.IsTrue(mpt1.Put(new byte[] { 0xab }, new byte[] { 0x02 }));
-            HashSet<byte[]> set1 = mpt1.GetProof(new byte[] { 0xab, 0xcd });
+            mpt1.Put(new byte[] { 0xab, 0xcd }, new byte[] { 0x01 });
+            mpt1.Put(new byte[] { 0xab }, new byte[] { 0x02 });
+            var r = mpt1.TryGetProof(new byte[] { 0xab, 0xcd }, out var set1);
+            Assert.IsTrue(r);
             Assert.AreEqual(4, set1.Count);
             var mpt2 = new MPTTrie<TestKey, TestValue>(snapshot, null);
-            Assert.IsTrue(mpt2.Put(new byte[] { 0xab }, new byte[] { 0x02 }));
-            Assert.IsTrue(mpt2.Put(new byte[] { 0xab, 0xcd }, new byte[] { 0x01 }));
-            HashSet<byte[]> set2 = mpt2.GetProof(new byte[] { 0xab, 0xcd });
+            mpt2.Put(new byte[] { 0xab }, new byte[] { 0x02 });
+            mpt2.Put(new byte[] { 0xab, 0xcd }, new byte[] { 0x01 });
+            r = mpt2.TryGetProof(new byte[] { 0xab, 0xcd }, out var set2);
+            Assert.IsTrue(r);
             Assert.AreEqual(4, set2.Count);
             Assert.AreEqual(mpt1.Root.Hash, mpt2.Root.Hash);
         }
@@ -393,21 +394,21 @@ namespace Neo.Plugins.StateService.Tests
             var snapshot = store.GetSnapshot();
             var mpt1 = new MPTTrie<TestKey, TestValue>(snapshot, null);
             var results = mpt1.Find(ReadOnlySpan<byte>.Empty).ToArray();
-            Assert.AreEqual(0, results.Count());
+            Assert.AreEqual(0, results.Length);
             var mpt2 = new MPTTrie<TestKey, TestValue>(snapshot, null);
-            Assert.IsTrue(mpt2.Put(new byte[] { 0xab, 0xcd, 0xef }, new byte[] { 0x01 }));
-            Assert.IsTrue(mpt2.Put(new byte[] { 0xab, 0xcd, 0xe1 }, new byte[] { 0x02 }));
-            Assert.IsTrue(mpt2.Put(new byte[] { 0xab }, new byte[] { 0x03 }));
+            mpt2.Put(new byte[] { 0xab, 0xcd, 0xef }, new byte[] { 0x01 });
+            mpt2.Put(new byte[] { 0xab, 0xcd, 0xe1 }, new byte[] { 0x02 });
+            mpt2.Put(new byte[] { 0xab }, new byte[] { 0x03 });
             results = mpt2.Find(ReadOnlySpan<byte>.Empty).ToArray();
-            Assert.AreEqual(3, results.Count());
+            Assert.AreEqual(3, results.Length);
             results = mpt2.Find(new byte[] { 0xab }).ToArray();
-            Assert.AreEqual(3, results.Count());
+            Assert.AreEqual(3, results.Length);
             results = mpt2.Find(new byte[] { 0xab, 0xcd }).ToArray();
-            Assert.AreEqual(2, results.Count());
+            Assert.AreEqual(2, results.Length);
             results = mpt2.Find(new byte[] { 0xac }).ToArray();
-            Assert.AreEqual(0, results.Count());
+            Assert.AreEqual(0, results.Length);
             results = mpt2.Find(new byte[] { 0xab, 0xcd, 0xef, 0x00 }).ToArray();
-            Assert.AreEqual(0, results.Count());
+            Assert.AreEqual(0, results.Length);
         }
 
         [TestMethod]
@@ -582,6 +583,23 @@ namespace Neo.Plugins.StateService.Tests
             mpt1.Put("30".HexToBytes(), "03".HexToBytes());
             mpt1.Commit();
             Assert.AreEqual(7, snapshot.Size);
+        }
+
+        [TestMethod]
+        public void TestEmptyValueIssue633()
+        {
+            var key = "01".HexToBytes();
+            var snapshot = new TestSnapshot();
+            var mpt = new MPTTrie<TestKey, TestValue>(snapshot, null);
+            mpt.Put(key, Array.Empty<byte>());
+            var val = mpt["01".HexToBytes()];
+            Assert.IsNotNull(val);
+            Assert.AreEqual(0, val.Size);
+            var r = mpt.TryGetProof(key, out var proof);
+            Assert.IsTrue(r);
+            val = MPTTrie<TestKey, TestValue>.VerifyProof(mpt.Root.Hash, key, proof);
+            Assert.IsNotNull(val);
+            Assert.AreEqual(0, val.Size);
         }
     }
 }
