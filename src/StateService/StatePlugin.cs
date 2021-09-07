@@ -180,8 +180,8 @@ namespace Neo.Plugins.StateService
 
             using ISnapshot store = StateStore.Singleton.GetStoreSnapshot();
             var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
-            var proof = trie.GetProof(skey);
-            if (proof is null) throw new RpcException(-100, "Unknown value");
+            var result = trie.TryGetProof(skey, out var proof);
+            if (!result) throw new RpcException(-100, "Unknown value");
 
             using MemoryStream ms = new MemoryStream();
             using BinaryWriter writer = new BinaryWriter(ms, Utility.StrictUTF8);
