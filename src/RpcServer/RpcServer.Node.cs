@@ -62,7 +62,15 @@ namespace Neo.Plugins
             json["wsport"] = localNode.ListenerWsPort;
             json["nonce"] = LocalNode.Nonce;
             json["useragent"] = LocalNode.UserAgent;
-            json["network"] = system.Settings.Network;
+            json["protocol"] = new JObject();
+            json["protocol"]["addressversion"] = system.Settings.AddressVersion;
+            json["protocol"]["network"] = system.Settings.Network;
+            json["protocol"]["msperblock"] = system.Settings.MillisecondsPerBlock;
+            json["protocol"]["maxtraceableblocks"] = system.Settings.MaxTraceableBlocks;
+            json["protocol"]["maxvaliduntilblockincrement"] = system.Settings.MaxValidUntilBlockIncrement;
+            json["protocol"]["maxtransactionsperblock"] = system.Settings.MaxTransactionsPerBlock;
+            json["protocol"]["memorypoolmaxtransactions"] = system.Settings.MemoryPoolMaxTransactions;
+            json["protocol"]["initialgasdistribution"] = system.Settings.InitialGasDistribution;
             return json;
         }
 
