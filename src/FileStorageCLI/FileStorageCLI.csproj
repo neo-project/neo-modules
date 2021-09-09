@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
-    <PackageReference Include="NeoFS.API" Version="0.0.65" />
+    <PackageReference Include="NeoFS.API" Version="3.0.0.1" />
   </ItemGroup>
   <ItemGroup>
     <None Update="FileStorageCLI\config.json">

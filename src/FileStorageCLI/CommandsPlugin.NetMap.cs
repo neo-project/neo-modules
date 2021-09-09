@@ -14,7 +14,8 @@ namespace FileStorageCLI
         private void OnGetEpoch()
         {
             if (!CheckAndParseAccount(null, out _, out ECDsa key)) return;
-            using var client = new Client(key, Host);
+            using var client = OnCreateClientInternal(key);
+            if (client is null) return;
             if (OnGetEpochInternal(client, out ulong epoch)) Console.WriteLine($"Fs current epoch:{epoch}");
         }
 
@@ -22,16 +23,27 @@ namespace FileStorageCLI
         private void OnGetLocalNodeInfo()
         {
             if (!CheckAndParseAccount(null, out _, out ECDsa key)) return;
-            using var client = new Client(key, Host);
+            using var client = OnCreateClientInternal(key);
+            if (client is null) return;
             var source = new CancellationTokenSource();
             source.CancelAfter(10000);
-            NodeInfo nodeInfo = client.LocalNodeInfo(context: source.Token).Result;
-            source.Cancel();
-            Console.WriteLine($"Fs local node info:{nodeInfo}");
+            try
+            {
+                NodeInfo nodeInfo = client.LocalNodeInfo(context: source.Token).Result;
+                source.Cancel();
+                Console.WriteLine($"Fs local node info:{nodeInfo}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Fs get localnode info fault,error:{e}");
+                source.Cancel();
+            }
         }
 
+        //internal function
         private bool OnGetEpochInternal(Client client, out ulong epoch)
         {
+            epoch = 0;
             try
             {
                 epoch = client.Epoch().Result;
@@ -40,7 +52,6 @@ namespace FileStorageCLI
             catch (Exception e)
             {
                 Console.WriteLine($"Fs get epoch fail,error:{e}");
-                epoch = 0;
                 return false;
             }
         }

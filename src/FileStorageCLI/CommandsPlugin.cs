@@ -5,7 +5,9 @@ using Neo;
 using System.Linq;
 using Neo.FileStorage.API.Cryptography;
 using System.Security.Cryptography;
-using Neo.FileStorage.API.Refs;
+using Neo.FileStorage.API.Client;
+using Neo.FileStorage.API.Session;
+using System.Threading;
 
 namespace FileStorageCLI
 {
@@ -42,6 +44,7 @@ namespace FileStorageCLI
             currentWallet = wallet;
         }
 
+        //check function
         private bool NoWallet()
         {
             if (currentWallet != null) return false;
@@ -54,7 +57,15 @@ namespace FileStorageCLI
             account = null;
             key = null;
             if (NoWallet()) return false;
-            account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : UInt160.Parse(paccount);
+            try
+            {
+                account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : paccount.ToScriptHash(System.Settings.AddressVersion);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"The specified format error:{e}");
+                return false;
+            }
             if (!currentWallet.Contains(account))
             {
                 Console.WriteLine("The specified account does not exist");
@@ -62,11 +73,43 @@ namespace FileStorageCLI
             }
             if (currentWallet.GetAccount(account).WatchOnly)
             {
-                Console.WriteLine("The specified account can not be WatchOnly");
+                Console.WriteLine("The specified account can not be watchonly");
                 return false;
             }
             key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
             return true;
+        }
+
+        //internal function
+        private Client OnCreateClientInternal(ECDsa key)
+        {
+            try
+            {
+                return new Client(key, Settings.Default.Host);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Fs create client fault,error:{e}");
+                return null;
+            }
+        }
+
+        private SessionToken OnCreateSessionInternal(Client client)
+        {
+            using var source = new CancellationTokenSource();
+            source.CancelAfter(TimeSpan.FromMinutes(1));
+            try
+            {
+                var session = client.CreateSession(ulong.MaxValue, context: source.Token).Result;
+                source.Cancel();
+                return session;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Fs create session fault,error:{e}");
+                source.Cancel();
+                return null;
+            }
         }
     }
 }

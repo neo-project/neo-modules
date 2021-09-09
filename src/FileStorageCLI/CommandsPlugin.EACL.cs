@@ -15,13 +15,19 @@ namespace FileStorageCLI
         private void OnGetContainerEACL(string containerId, string paccount = null)
         {
             if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
-            using var client = new Client(key, Host);
-            var cid = ContainerID.FromBase58String(containerId);
+            if (!ParseContainerID(containerId, out ContainerID cid)) return;
+            using var client = OnCreateClientInternal(key);
+            if (client is null) return;
             using var source = new CancellationTokenSource();
             source.CancelAfter(TimeSpan.FromMinutes(1));
-            var eAcl = client.GetEAcl(cid, context: source.Token).Result;
-            source.Cancel();
-            Console.WriteLine($"Container eacl info: cid:{containerId},eacl:{eAcl.Table}");
+            try {
+                var eAcl = client.GetEAcl(cid, context: source.Token).Result;
+                source.Cancel();
+                Console.WriteLine($"Eacl Info: cid:{containerId},eacl:{eAcl.Table}");
+            } catch (Exception e) {
+                source.Cancel();
+                Console.WriteLine($"Fs get eacl fault,error:{e}");
+            }
         }
 
         [ConsoleCommand("fs container eacl set", Category = "FileStorageService", Description = "Set container eacl")]
@@ -29,12 +35,18 @@ namespace FileStorageCLI
         {
             if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
             EACLTable table = EACLTable.Parser.ParseJson(eaclString);
-            using var client = new Client(key, Host);
+            using var client = OnCreateClientInternal(key);
+            if (client is null) return;
             using var source = new CancellationTokenSource();
             source.CancelAfter(TimeSpan.FromMinutes(1));
-            client.SetEACL(table, context: source.Token).Wait();
-            source.Cancel();
-            Console.WriteLine($"The eacl set request has been submitted,please confirm in the next block");
+            try {
+                client.SetEACL(table, context: source.Token).Wait();
+                source.Cancel();
+                Console.WriteLine($"The eacl set request has been submitted,please confirm in the next block");
+            } catch (Exception e) {
+                source.Cancel();
+                Console.WriteLine($"Fs set eacl fault,error:{e}");
+            }
         }
     }
 }

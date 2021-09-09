@@ -15,6 +15,7 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
 using Neo.FileStorage.API.StorageGroup;
+using Neo.IO.Json;
 using Neo.Plugins;
 
 namespace FileStorageCLI
@@ -25,37 +26,40 @@ namespace FileStorageCLI
         private void OnPutObject(string containerId, string pdata, string paccount = null)
         {
             if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
-            if (pdata.Length > 2048 || pdata.Length < 1024)
-            {
-                Console.WriteLine("The data length out of range");
-                return;
-            }
+            if (pdata.Length > 2048 * 1000 || pdata.Length < 1024) throw new Exception("The data length out of range");
             var data = UTF8Encoding.UTF8.GetBytes(pdata);
-            using var client = new Client(key, Host);
-            var cid = ContainerID.FromBase58String(containerId);
+            using var client = OnCreateClientInternal(key);
+            if (client is null) return;
+            if (!ParseContainerID(containerId,out var cid)) return;
             var obj = OnCreateObjectInternal(cid, key, data, ObjectType.Regular);
             if (OnPutObjectInternal(client, obj))
-                Console.WriteLine($"The object put successfully, ObjectID:{obj.ObjectId.ToBase58String()}");
+                Console.WriteLine($"The object put successfully, ObjectID:{obj.ObjectId.String()}");
         }
 
         [ConsoleCommand("fs object delete", Category = "FileStorageService", Description = "Delete a object")]
         private void OnDeleteObject(string containerId, string pobjectIds, string paccount = null)
         {
             if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
-            using var client = new Client(key, Host);
+            using var client = OnCreateClientInternal(key);
+            if (client is null) return;
             SessionToken session = OnCreateSessionInternal(client);
             if (session is null) return;
-            var cid = ContainerID.FromBase58String(containerId);
+            if (!ParseContainerID(containerId, out var cid)) return;
             string[] objectIds = pobjectIds.Split("_");
             foreach (var objectId in objectIds)
             {
-                var oid = ObjectID.FromBase58String(objectId);
+                if (!ParseObjectID(objectId, out var oid)) return;
                 Address address = new Address(cid, oid);
                 using var source = new CancellationTokenSource();
                 source.CancelAfter(TimeSpan.FromMinutes(1));
-                var objId = client.DeleteObject(address, new CallOptions { Ttl = 2, Session = session }, source.Token).Result;
-                source.Cancel();
-                Console.WriteLine($"The object delete successfully,ObjectID:{objId}");
+                try {
+                    var objId = client.DeleteObject(address, new CallOptions { Ttl = 2, Session = session }, source.Token).Result;
+                    source.Cancel();
+                    Console.WriteLine($"The object delete successfully,ObjectID:{objId}");
+                } catch (Exception e) {
+                    source.Cancel();
+                    Console.WriteLine($"The object delete fault,error:{e}");
+                }
             }
         }
 
@@ -63,27 +67,49 @@ namespace FileStorageCLI
         private void OnGetObject(string containerId, string objectId, string paccount = null)
         {
             if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
-            using var client = new Client(key, Host);
-            var cid = ContainerID.FromBase58String(containerId);
-            var oid = ObjectID.FromBase58String(objectId);
+            using var client = OnCreateClientInternal(key);
+            if (client is null) return;
+            if (!ParseContainerID(containerId, out var cid)) return;
+            if (!ParseObjectID(objectId, out var oid)) return;
             var obj = OnGetObjectInternal(client, cid, oid);
             if (obj is null) return;
-            Console.WriteLine($"Object info:{obj.ToJson()}");
+            JArray result = new JArray();
+            result.Add(obj.ToJson());
+            if (obj.ObjectType == ObjectType.StorageGroup)
+            {
+                List<string> subObjectIDs = new List<string>();
+                var sg = StorageGroup.Parser.ParseFrom(obj.Payload.ToByteArray());
+                foreach (var m in sg.Members)
+                {
+                    subObjectIDs.Add(m.String());
+                }
+                string.Join("_", subObjectIDs);
+                JObject @object = new JObject();
+                @object["subIds"] = string.Join("_", subObjectIDs);
+                result.Add(@object);
+            }
+            Console.WriteLine($"Object info:{result}");
         }
 
         [ConsoleCommand("fs object list", Category = "FileStorageService", Description = "list object")]
         private void OnListObject(string containerId, string paccount = null)
         {
             if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
-            var cid = ContainerID.FromBase58String(containerId);
-            using var client = new Client(key, Host);
+            if (!ParseContainerID(containerId, out var cid)) return;
+            using var client = OnCreateClientInternal(key);
+            if (client is null) return;
             using var source = new CancellationTokenSource();
             source.CancelAfter(TimeSpan.FromMinutes(1));
             var filter = new SearchFilters();
-            List<ObjectID> objs = client.SearchObject(cid, filter, context: source.Token).Result;
-            source.Cancel();
-            Console.WriteLine($"list object,cid:{cid}");
-            objs.ForEach(p => Console.WriteLine($"ObjectId:{p.ToBase58String()}"));
+            try {
+                List<ObjectID> objs = client.SearchObject(cid, filter, context: source.Token).Result;
+                source.Cancel();
+                Console.WriteLine($"list object,cid:{cid}");
+                objs.ForEach(p => Console.WriteLine($"ObjectId:{p.String()}"));
+            } catch (Exception e) {
+                Console.WriteLine($"fs get object list fault,error:{e}");
+                source.Cancel();
+            }
         }
 
         [ConsoleCommand("fs storagegroup object put", Category = "FileStorageService", Description = "Put a storage object")]
@@ -91,33 +117,17 @@ namespace FileStorageCLI
         {
             if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key)) return;
             string[] objectIds = pobjectIds.Split("_");
-            using var client = new Client(key, Host);
+            using var client = OnCreateClientInternal(key);
+            if (client is null) return;
             SessionToken session = OnCreateSessionInternal(client);
             if (session is null) return;
-            var cid = ContainerID.FromBase58String(containerId);
-            List<ObjectID> oids = objectIds.Select(p => ObjectID.FromBase58String(p)).ToList();
+            if (!ParseContainerID(containerId, out var cid)) return;
+            List<ObjectID> oids = objectIds.Select(p => ObjectID.FromString(p)).ToList();
             var obj = OnCreateStorageGroupObjectInternal(client, key, cid, oids.ToArray());
-            if (OnPutObjectInternal(client, obj, session)) Console.WriteLine($"The storagegroup object put successfully,ObjectID:{obj.ObjectId.ToBase58String()}");
+            if (OnPutObjectInternal(client, obj, session)) Console.WriteLine($"The storagegroup object put successfully,ObjectID:{obj.ObjectId.String()}");
         }
 
-        private SessionToken OnCreateSessionInternal(Client client)
-        {
-            using var source = new CancellationTokenSource();
-            source.CancelAfter(TimeSpan.FromMinutes(1));
-            try
-            {
-                var session = client.CreateSession(ulong.MaxValue, context: source.Token).Result;
-                return session;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Create session fail,error:{e}");
-                source.Cancel();
-                return null;
-            }
-        }
-
-        private Neo.FileStorage.API.Object.Object OnCreateStorageGroupObjectInternal(Client client, ECDsa key, ContainerID cid, ObjectID[] oids)
+        private Neo.FileStorage.API.Object.Object OnCreateStorageGroupObjectInternal(Client client, ECDsa key, ContainerID cid, ObjectID[] oids, Header.Types.Attribute[] attributes = null)
         {
             byte[] tzh = null;
             ulong size = 0;
@@ -143,10 +153,10 @@ namespace FileStorageCLI
                 ExpirationEpoch = epoch + 100,
             };
             sg.Members.AddRange(oids);
-            return OnCreateObjectInternal(cid, key, sg.ToByteArray(), ObjectType.StorageGroup);
+            return OnCreateObjectInternal(cid, key, sg.ToByteArray(), ObjectType.StorageGroup, attributes);
         }
 
-        private Neo.FileStorage.API.Object.Object OnCreateObjectInternal(ContainerID cid, ECDsa key, byte[] data, ObjectType objectType)
+        private Neo.FileStorage.API.Object.Object OnCreateObjectInternal(ContainerID cid, ECDsa key, byte[] data, ObjectType objectType, Header.Types.Attribute[] attributes = null)
         {
             var obj = new Neo.FileStorage.API.Object.Object
             {
@@ -170,6 +180,7 @@ namespace FileStorageCLI
                 },
                 Payload = ByteString.CopyFrom(data),
             };
+            if (attributes is not null) obj.Header.Attributes.AddRange(attributes);
             obj.ObjectId = obj.CalculateID();
             obj.Signature = obj.CalculateIDSignature(key);
             return obj;
@@ -191,7 +202,7 @@ namespace FileStorageCLI
             }
             catch (Exception e)
             {
-                if (logFlag) Console.WriteLine($"Get object header fail,objectId:{oid.ToBase58String()},error:{e}");
+                if (logFlag) Console.WriteLine($"Fs get object header fault,error:{e}");
                 source.Cancel();
                 return null;
             }
@@ -213,7 +224,7 @@ namespace FileStorageCLI
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Get object fail,objectId:{oid.ToBase58String()},error:{e}");
+                Console.WriteLine($"Fs get object fault,error:{e}");
                 source.Cancel();
                 return null;
             }
@@ -234,7 +245,7 @@ namespace FileStorageCLI
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Object put fail, errot:{e}");
+                Console.WriteLine($"Fs put object fault, error:{e}");
                 source.Cancel();
                 return false;
             }

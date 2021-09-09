@@ -5,11 +5,8 @@ using System.Threading;
 using Google.Protobuf;
 using Neo;
 using Neo.ConsoleService;
-using Neo.FileStorage.API.Acl;
-using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
-using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using static Neo.FileStorage.API.Policy.Helper;
 using Neo.Plugins;
@@ -19,12 +16,12 @@ namespace FileStorageCLI
 {
     public partial class CommandsPlugin : Plugin
     {
-        ///todo
         [ConsoleCommand("fs container put", Category = "FileStorageService", Description = "Create a container")]
         private void OnPutContainer(string policyString, string basicAcl, string attributesString, string paccount = null)
         {
             if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
-            using var client = new Client(key, Host);
+            using var client = OnCreateClientInternal(key);
+            if (client is null) return;
             var policy = ParsePlacementPolicy(policyString);
             var container = new Container
             {
@@ -38,46 +35,104 @@ namespace FileStorageCLI
             container.Attributes.Add(attributes);
             var source = new CancellationTokenSource();
             source.CancelAfter(TimeSpan.FromMinutes(1));
-            var cid = client.PutContainer(container, context: source.Token).Result;
-            source.Cancel();
-            Console.WriteLine($"The container put request has been submitted, please confirm in the next block,ContainerId:{cid.ToBase58String()}");
+            try
+            {
+                var cid = client.PutContainer(container, context: source.Token).Result;
+                source.Cancel();
+                Console.WriteLine($"The container put request has been submitted, please confirm in the next block,ContainerId:{cid.String()}");
+            }
+            catch (Exception e) {
+                Console.WriteLine($"Fs put container fault, error:{e}");
+                source.Cancel();
+            }
         }
 
         [ConsoleCommand("fs container delete", Category = "FileStorageService", Description = "Delete a container")]
         private void OnDeleteContainer(string containerId, string paccount = null)
         {
             if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
-            using var client = new Client(key, Host);
+            using var client = OnCreateClientInternal(key);
+            if (client is null) return;
             using var source = new CancellationTokenSource();
             source.CancelAfter(10000);
-            var cid = ContainerID.FromBase58String(containerId);
-            client.DeleteContainer(cid, context: source.Token).Wait();
-            Console.WriteLine($"The container delete request has been submitted, please confirm in the next block,ContainerId:{containerId}");
+            if (!ParseContainerID(containerId, out var cid)) return;
+            try {
+                client.DeleteContainer(cid, context: source.Token).Wait();
+                Console.WriteLine($"The container delete request has been submitted, please confirm in the next block,ContainerId:{containerId}");
+                source.Cancel();
+            } catch (Exception e) {
+                Console.WriteLine($"Fs delete container fault,error:{e}");
+                source.Cancel();
+            }
         }
 
         [ConsoleCommand("fs container get", Category = "FileStorageService", Description = "Get container info")]
         private void OnGetContainer(string containerId, string paccount = null)
         {
             if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
-            using var client = new Client(key, Host);
-            var cid = ContainerID.FromBase58String(containerId);
+            using var client = OnCreateClientInternal(key);
+            if (client is null) return;
+            if (!ParseContainerID(containerId, out var cid)) return;
             using var source = new CancellationTokenSource();
-            var container = client.GetContainer(cid, context: source.Token).Result;
-            source.Cancel();
-            Console.WriteLine($"Container info:{container.Container.ToJson()}");
+            source.CancelAfter(10000);
+            try {
+                var container = client.GetContainer(cid, context: source.Token).Result;
+                source.Cancel();
+                Console.WriteLine($"Container info:{container.Container.ToJson()}");
+            } catch (Exception e) {
+                source.Cancel();
+                Console.WriteLine($"Fs get container fault,error:{e}");
+            }
         }
 
         [ConsoleCommand("fs container list", Category = "FileStorageService", Description = "List container")]
         private void OnListContainer(string paccount)
         {
             if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key)) return;
-            using var client = new Client(key, Host);
+            using var client = OnCreateClientInternal(key);
+            if (client is null) return;
             using var source = new CancellationTokenSource();
+            source.CancelAfter(10000);
             OwnerID ownerID = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash());
-            List<ContainerID> containerLists = client.ListContainers(ownerID, context: source.Token).Result;
-            source.Cancel();
-            Console.WriteLine($"Container list:");
-            containerLists.ForEach(p => Console.WriteLine($"ContainerID:{p.ToBase58String()}"));
+            try {
+                List<ContainerID> containerLists = client.ListContainers(ownerID, context: source.Token).Result;
+                source.Cancel();
+                Console.WriteLine($"Container list:");
+                containerLists.ForEach(p => Console.WriteLine($"ContainerID:{p.String()}"));
+            } catch (Exception e) {
+                source.Cancel();
+                Console.WriteLine($"Fs get container list fault,error:{e}");
+            }
+        }
+
+        private bool ParseContainerID(string containerId, out ContainerID cid)
+        {
+            cid = null;
+            try
+            {
+                cid = ContainerID.FromString(containerId);
+                return true;
+            }
+            catch
+            {
+                Console.WriteLine($"Parse ContainerId falut");
+                return false;
+            }
+        }
+
+        private bool ParseObjectID(string objectId, out ObjectID oid)
+        {
+            oid = null;
+            try
+            {
+                oid = ObjectID.FromString(objectId);
+                return true;
+            }
+            catch
+            {
+                Console.WriteLine($"Parse ObjectId falut");
+                return false;
+            }
         }
     }
 }

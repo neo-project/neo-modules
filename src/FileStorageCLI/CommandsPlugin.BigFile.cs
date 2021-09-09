@@ -14,22 +14,25 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.StorageGroup;
 using Neo.Plugins;
+using System.Diagnostics;
+using System.Text;
+using Neo.IO.Json;
 
 namespace FileStorageCLI
 {
     public partial class CommandsPlugin : Plugin
     {
-        private static string Host => Settings.Default.host;
-        private static string DownLoadPath => Settings.Default.downloadPath;
-        private static string UpLoadPath => Settings.Default.uploadPath;
+        private static Process UploadProcess;
+        private static Process DownloadProcess;
 
         [ConsoleCommand("fs file upload", Category = "FileStorageService", Description = "Upload file")]
-        private void OnUploadFile(string containerId, string fileName, string paccount = null)
+        private void OnUploadFile(string containerId, string filePath, string paccount = null,bool again=false)
         {
+            Stopwatch stopWatch = new Stopwatch();
             if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key)) return;
-            var cid = ContainerID.FromBase58String(containerId);
-            var filePath = UpLoadPath + fileName;
+            if (!ParseContainerID(containerId, out var cid)) return;
             FileInfo fileInfo = new FileInfo(filePath);
+            if (!fileInfo.Exists) throw new Exception($"The specified file does not exist");
             var FileLength = fileInfo.Length;
             //data segmentation
             long PackCount = 0;
@@ -38,12 +41,28 @@ namespace FileStorageCLI
                 PackCount = (int)(FileLength / PackSize) + 1;
             else
                 PackCount = (int)(FileLength / PackSize);
-            using var client = new Client(key, Host);
+            using var client = OnCreateClientInternal(key);
+            if (client is null) return;
             var session = OnCreateSessionInternal(client);
             if (session is null) return;
             //upload subobjects
-            var subObjectIDs = new ObjectID[PackCount];
-            var completedTaskCount = 0;
+            String timeStamp = null;
+            Header.Types.Attribute[] attributes = null;
+            if (UploadProcess is null || !again)
+            {
+                timeStamp = DateTime.Now.ToString();
+                var subObjectIDs = new ObjectID[PackCount];
+                attributes = new Header.Types.Attribute[] {
+                               new Header.Types.Attribute() { Key = Header.Types.Attribute.AttributeFileName, Value =  fileInfo.Name },
+                               new Header.Types.Attribute() { Key = Header.Types.Attribute.AttributeTimestamp, Value = timeStamp }
+                        };
+                UploadProcess = new Process(containerId, null, fileInfo.Name, filePath, (ulong)FileLength, timeStamp, PackCount);
+            }
+            else {
+                UploadProcess.Rest();
+                timeStamp = UploadProcess.TimeStamp;
+            }
+
             var taskCounts = 10;
             var tasks = new Task[taskCounts];
             for (int index = 0; index < taskCounts; index++)
@@ -51,21 +70,22 @@ namespace FileStorageCLI
                 var threadIndex = index;
                 var task = new Task(() =>
                 {
-                    using var internalClient = new Client(key, Host);
+                    using var internalClient = OnCreateClientInternal(key);
+                    if (internalClient is null) return;
                     var internalSession = OnCreateSessionInternal(internalClient);
                     if (internalSession is null) return;
                     int i = 0;
-                    while (threadIndex + i * taskCounts < subObjectIDs.Length)
+                    while (threadIndex + i * taskCounts < UploadProcess.SubObjectIds.Length)
                     {
-                        byte[] data = OnGetFileInternal(filePath, (threadIndex + i * taskCounts) * PackSize, PackSize, FileLength);
-                        var obj = OnCreateObjectInternal(cid, key, data, ObjectType.Regular);
-                        //check has upload;
-                        var objheader = OnGetObjectHeaderInternal(internalClient, cid, obj.ObjectId, false);
-                        if (objheader is not null || (objheader is null && OnPutObjectInternal(internalClient, obj, internalSession)))
+                        byte[] data = OnGetFileInternal(filePath, ((long)threadIndex + (long)i * (long)taskCounts) * (long)PackSize, PackSize, FileLength);
+                        Neo.FileStorage.API.Object.Object obj = OnCreateObjectInternal(cid, key, data, ObjectType.Regular, attributes);
+                        //check has upload;                        
+                        if (UploadProcess.SubObjectIds[threadIndex + i * taskCounts] is not null || OnPutObjectInternal(internalClient, obj, internalSession))
                         {
-                            Console.WriteLine($"The object put request has been submitted,ObjectID:{obj.ObjectId.ToBase58String()},degree of completion:{Interlocked.Increment(ref completedTaskCount)}/{PackCount}");
-                            subObjectIDs[threadIndex + i * taskCounts] = obj.ObjectId;
+                            UploadProcess.SubObjectIds[threadIndex + i * taskCounts] = obj.ObjectId;
+                            Console.WriteLine($"The object put request has been submitted,ObjectID:{obj.ObjectId.String()},degree of completion:{UploadProcess.Add((ulong)obj.Header.PayloadLength)}/{FileLength}");
                         }
+                        else break;
                         i++;
                         Thread.Sleep(500);
                     }
@@ -75,112 +95,146 @@ namespace FileStorageCLI
             }
             Task.WaitAll(tasks);
             //check failed task
-            for (int i = 0; i < subObjectIDs.Length; i++)
+            for (int i = 0; i < UploadProcess.SubObjectIds.Length; i++)
             {
-                if (subObjectIDs[i] is null)
+                if (UploadProcess.SubObjectIds[i] is null)
                 {
-                    Console.WriteLine("Some data upload fault.Please upload again.");
+                    Console.WriteLine("Fs file upload fault.Please upload again.");
                     return;
                 }
             }
             //upload storagegroup object
-            var obj = OnCreateStorageGroupObjectInternal(client, key, cid, subObjectIDs);
+            var obj = OnCreateStorageGroupObjectInternal(client, key, cid, UploadProcess.SubObjectIds, attributes);
             if (OnPutObjectInternal(client, obj, session))
             {
-                Console.WriteLine("File index upload successfully");
-                Console.WriteLine("Upload file successfully");
+                UploadProcess.ObjectId=obj.ObjectId.String();
+                OnWriteFileInternal(new FileInfo(filePath).Directory.FullName + "\\" + $"{obj.ObjectId.String()}_{timeStamp}.seed", UTF8Encoding.UTF8.GetBytes($"{cid.String()}_{obj.ObjectId.String()}"));
+                UploadProcess.TimeSpent = stopWatch.Elapsed;
+                Console.WriteLine("Fs file upload successfully");
+                Console.WriteLine($"Fs upload info:{UploadProcess.ToJson()}");
+                return;
             }
         }
 
         [ConsoleCommand("fs file download", Category = "FileStorageService", Description = "Download file")]
-        private void OnDownloadFile(string containerId, string objectId, string fileName, bool cacheFlag = false, string paccount = null)
+        private void OnDownloadFile(string containerId, string objectId, string filePath,string paccount = null,bool again=false)
         {
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
             if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key)) return;
-            var subObjectIDs = new List<ObjectID>();
-            var cid = ContainerID.FromBase58String(containerId);
-            //download storagegroup object
+            if (!ParseContainerID(containerId, out var cid)) return;
+            if (!ParseObjectID(objectId, out var oid)) return;
+            using var client = OnCreateClientInternal(key);
+            if (client is null) return;
+            Process downloadProcess = null;
             var totalDataSize = 0ul;
-            using var client = new Client(key, Host);
-            var oid = ObjectID.FromBase58String(objectId);
-            var obj = OnGetObjectInternal(client, cid, oid);
-            if (obj is null || obj.ObjectType != ObjectType.StorageGroup)
+            string timestamp = null;
+            string FileName = null;
+            if (downloadProcess is null || !again)
             {
-                Console.WriteLine("Missing file index, please provide the correct objectid");
-                return;
+                timestamp = DateTime.Now.ToString();
+                var subObjectIDs = new List<ObjectID>();
+                Neo.FileStorage.API.Object.Object obj = OnGetObjectInternal(client, cid, oid);
+                if (obj is null || obj.ObjectType != ObjectType.StorageGroup) throw new Exception($"Fs can not find file index, please provide the correct objectid");
+                var sg = StorageGroup.Parser.ParseFrom(obj.Payload.ToByteArray());
+                totalDataSize = sg.ValidationDataSize;
+                Console.WriteLine($"Download file index successfully");
+                Console.WriteLine($"File objects size: {totalDataSize}");
+                Console.WriteLine($"File subobject list:");
+                foreach (var m in sg.Members)
+                {
+                    subObjectIDs.Add(m);
+                    Console.WriteLine($"subobjectId:{m.String()}");
+                }
+                obj.Attributes.ForEach(p =>
+                {
+                    if (p.Key == Header.Types.Attribute.AttributeFileName) FileName = p.Value;
+                });
+                downloadProcess = new Process(containerId, objectId, FileName, filePath, totalDataSize, timestamp, subObjectIDs.Count);
+                downloadProcess.SubObjectIds = subObjectIDs.ToArray();
             }
-            var sg = StorageGroup.Parser.ParseFrom(obj.Payload.ToByteArray());
-            totalDataSize = sg.ValidationDataSize;
-            Console.WriteLine($"Download file index successfully");
-            Console.WriteLine($"File objects size: {totalDataSize}");
-            Console.WriteLine($"File subobject list:");
-            foreach (var m in sg.Members)
+            else {
+                downloadProcess.Rest();
+                timestamp = DownloadProcess.TimeStamp;
+            }
+            DirectoryInfo parentDirectory = null;
+            if (!Directory.Exists(filePath)) parentDirectory = Directory.CreateDirectory(filePath);
+            else parentDirectory = new DirectoryInfo(filePath);
+            var childrenDirectorys = parentDirectory.GetDirectories().Where(p => p.Name == downloadProcess.TimeStamp).ToList();
+            DirectoryInfo workDirectory = null;
+            if (childrenDirectorys.Count > 0)
             {
-                subObjectIDs.Add(m);
-                Console.WriteLine($"subobjectId:{m.ToBase58String()}");
+                workDirectory = childrenDirectorys.First();
             }
-
-            var downloadTempPath = DownLoadPath + objectId + "/";
-            if (!Directory.Exists(downloadTempPath)) Directory.CreateDirectory(downloadTempPath);
-            Console.WriteLine("Start file download");
-            var receivedDataSize = 0uL;
+            else
+            {
+                workDirectory = parentDirectory.CreateSubdirectory(downloadProcess.TimeStamp);
+            }
             var taskCounts = 10;
             var tasks = new Task[taskCounts];
             for (int index = 0; index < taskCounts; index++)
             {
                 var threadIndex = index;
                 var task = new Task(() =>
-               {
-                   using var client = new Client(key, Host);
-                   int i = 0;
-                   while (threadIndex + i * taskCounts < subObjectIDs.Count)
-                   {
-                       string tempfilepath = downloadTempPath + "QS_" + subObjectIDs[threadIndex + i * taskCounts].ToBase58String();
-                       FileInfo tempfile = new FileInfo(tempfilepath);
-                       if (tempfile.Exists)
-                       {
-                           using FileStream tempstream = new FileStream(tempfilepath, FileMode.Open);
-                           byte[] downedData = new byte[tempstream.Length];
-                           tempstream.Read(downedData, 0, downedData.Length);
-                           var oid = subObjectIDs[threadIndex + i * taskCounts];
-                           var objheader = OnGetObjectHeaderInternal(client, cid, oid);
-                           if (objheader is null) continue;
-                           if (downedData.Sha256().SequenceEqual(objheader.PayloadChecksum.Sum.ToByteArray()))
-                           {
-                               Console.WriteLine($"Download subobject successfully,objectId:{oid.ToBase58String()},degree of completion:{Interlocked.Add(ref receivedDataSize, (ulong)downedData.Length)}/{totalDataSize}");
-                               continue;
-                           }
-                           else
-                               tempfile.Delete();
-                       }
-                       else
-                       {
-                           using FileStream tempstream = new FileStream(tempfilepath, FileMode.Create, FileAccess.Write, FileShare.Write);
-                           var oid = subObjectIDs[threadIndex + i * taskCounts];
-                           var obj = OnGetObjectInternal(client, cid, oid);
-                           if (obj is null) return;
-                           var payload = obj.Payload.ToByteArray();
-                           tempstream.Write(payload, 0, payload.Length);
-                           tempstream.Flush();
-                           tempstream.Close();
-                           tempstream.Dispose();
-                           Console.WriteLine($"Download subobject successfully,objectId:{oid.ToBase58String()},degree of completion:{Interlocked.Add(ref receivedDataSize, (ulong)payload.Length)}/{totalDataSize}");
-                       }
-                       i++;
-                   }
-               });
+                {
+                    try
+                    {
+                        using var internalClient = OnCreateClientInternal(key);
+                        if (internalClient is null) return;
+                        int i = 0;
+                        while (threadIndex + i * taskCounts < downloadProcess.SubObjectIds.Length)
+                        {
+                            var oid = downloadProcess.SubObjectIds[threadIndex + i * taskCounts];
+                            string tempfilepath = workDirectory.FullName + "\\QS_" + downloadProcess.SubObjectIds[threadIndex + i * taskCounts].String();
+                            FileInfo tempfile = new FileInfo(tempfilepath);
+                            if (tempfile.Exists)
+                            {
+                                using FileStream tempreadstream = new FileStream(tempfilepath, FileMode.Open);
+                                byte[] downedData = new byte[tempreadstream.Length];
+                                tempreadstream.Read(downedData, 0, downedData.Length);
+                                var objheader = OnGetObjectHeaderInternal(internalClient, cid, oid);
+                                if (objheader is null) return;
+                                if (downedData.Sha256().SequenceEqual(objheader.PayloadChecksum.Sum.ToByteArray()))
+                                {
+                                    Console.WriteLine($"Download subobject successfully,objectId:{oid.String()},degree of completion:{Interlocked.Add(ref downloadProcess.Current, (ulong)downedData.Length)}/{totalDataSize}");
+                                    i++;
+                                    continue;
+                                }
+                                else
+                                {
+                                    tempreadstream.Dispose();
+                                    tempfile.Delete();
+                                }
+                            }
+                            using FileStream tempstream = new FileStream(tempfilepath, FileMode.Create, FileAccess.Write, FileShare.Write);
+                            var obj = OnGetObjectInternal(internalClient, cid, oid);
+                            if (obj is null) return;
+                            var payload = obj.Payload.ToByteArray();
+                            tempstream.Write(payload, 0, payload.Length);
+                            tempstream.Flush();
+                            tempstream.Close();
+                            tempstream.Dispose();
+                            Console.WriteLine($"Download subobject successfully,objectId:{oid.String()},degree of completion:{Interlocked.Add(ref downloadProcess.Current, (ulong)payload.Length)}/{totalDataSize}");
+                            i++;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Fs download task fault,threadIndex:{threadIndex},error:{e}");
+                    }
+                });
                 tasks[index] = task;
                 task.Start();
             }
             Task.WaitAll(tasks);
             //check failed task
-            DirectoryInfo tempDownLoadDir = new DirectoryInfo(downloadTempPath);
             List<ObjectID> Comparefiles = new List<ObjectID>();
-            for (int i = 0; i < subObjectIDs.Count; i++)
+            for (int i = 0; i < downloadProcess.SubObjectIds.Length; i++)
             {
                 bool hasfile = false;
-                foreach (FileInfo Tempfile in tempDownLoadDir.GetFiles())
+                foreach (FileInfo Tempfile in workDirectory.GetFiles())
                 {
-                    if (Tempfile.Name.Split('_')[1] == subObjectIDs[i].ToBase58String())
+                    if (Tempfile.Name.Split('_')[1] == downloadProcess.SubObjectIds[i].String())
                     {
                         hasfile = true;
                         break;
@@ -188,36 +242,37 @@ namespace FileStorageCLI
                 }
                 if (hasfile == false)
                 {
-                    Comparefiles.Add(subObjectIDs[i]);
+                    Comparefiles.Add(downloadProcess.SubObjectIds[i]);
                 }
             }
             if (Comparefiles.Count > 0)
             {
-                Console.WriteLine($"Some data is missing, please download again");
-                if (!cacheFlag) tempDownLoadDir.Delete(true);
+                Console.WriteLine($"Fs download data is missing, please download again");
                 return;
             }
             //write file
-            string filePath = DownLoadPath + fileName;
-            using (FileStream writestream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Write))
+            string downPath = workDirectory.FullName + "\\" + downloadProcess.FileName;
+            using (FileStream writestream = new FileStream(downPath, FileMode.Create, FileAccess.Write, FileShare.Write))
             {
-                for (int index = 0; index < subObjectIDs.Count; index++)
+                for (int index = 0; index < downloadProcess.SubObjectIds.Length; index++)
                 {
-                    string tempfilepath = downloadTempPath + "QS_" + subObjectIDs[index].ToBase58String();
+                    string tempfilepath = workDirectory.FullName + "\\QS_" + downloadProcess.SubObjectIds[index].String();
                     FileInfo Tempfile = new FileInfo(tempfilepath);
                     using FileStream readTempStream = new FileStream(Tempfile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                     long onefileLength = Tempfile.Length;
                     byte[] buffer = new byte[Convert.ToInt32(onefileLength)];
                     readTempStream.Read(buffer, 0, Convert.ToInt32(onefileLength));
                     writestream.Write(buffer, 0, Convert.ToInt32(onefileLength));
+                    readTempStream.Dispose();
                 }
                 writestream.Flush();
                 writestream.Close();
                 writestream.Dispose();
             }
             //delete temp file
-            tempDownLoadDir.Delete(true);
+            workDirectory.GetFiles().Where(p => p.Name != downloadProcess.FileName).ToList().ForEach(p => p.Delete());
             Console.WriteLine("Download file successfully");
+            downloadProcess.TimeSpent = stopWatch.Elapsed;
         }
 
         private byte[] OnGetFileInternal(string filePath, long start, int length, long totalLength)
@@ -237,6 +292,67 @@ namespace FileStorageCLI
                 ServerStream.Read(buffer, 0, length);
             }
             return buffer;
+        }
+
+        private void OnWriteFileInternal(string filePath, byte[] data)
+        {
+            using (FileStream writestream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Write))
+            {
+                writestream.Write(data, 0, data.Length);
+                writestream.Flush();
+                writestream.Close();
+                writestream.Dispose();
+            }
+        }
+
+        private class Process
+        {
+            public string ContainerId;
+            public string ObjectId;
+            public string FileName;
+            public string FilePath;
+            public string TimeStamp;
+            public ulong Current;
+            public ulong Total;
+            public ObjectID[] SubObjectIds;
+            public TimeSpan TimeSpent;
+
+            public Process(string cid, string oid, string fileName, string filePath, ulong total, string timestamp, long count)
+            {
+                ContainerId = cid;
+                ObjectId = oid;
+                FileName = fileName;
+                FilePath = filePath;
+                Current = 0;
+                Total = total;
+                TimeStamp = timestamp;
+                SubObjectIds = new ObjectID[count];
+            }
+
+            public void Rest()
+            {
+                Current = 0;
+            }
+
+            public ulong Add(ulong completed)
+            {
+                return Interlocked.Add(ref Current, completed);
+            }
+
+            public JObject ToJson()
+            {
+                return new JObject
+                {
+                    ["containerId"] = ContainerId,
+                    ["objectId"] = ObjectId,
+                    ["fileName"] = FileName,
+                    ["filePath"] = FilePath,
+                    ["timeStamp"] = TimeStamp,
+                    ["current"] = Current,
+                    ["total"] = Total,
+                    ["finish"] = TimeSpent.ToString()
+                };
+            }
         }
     }
 }
