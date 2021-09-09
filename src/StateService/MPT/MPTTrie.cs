@@ -6,7 +6,7 @@ namespace Neo.Plugins.MPT
 {
     public partial class MPTTrie<TKey, TValue>
         where TKey : notnull, ISerializable, new()
-        where TValue : class, ISerializable, new()
+        where TValue : notnull, ISerializable, new()
     {
         private const byte Prefix = 0xf0;
         private readonly bool full;
@@ -17,7 +17,7 @@ namespace Neo.Plugins.MPT
 
         public MPTTrie(ISnapshot store, UInt256 root, bool full_state = false)
         {
-            this.store = store ?? throw new ArgumentNullException();
+            this.store = store ?? throw new ArgumentNullException(nameof(store));
             this.cache = new MPTCache(store, Prefix);
             this.root = root is null ? new MPTNode() : MPTNode.NewHash(root);
             this.full = full_state;
