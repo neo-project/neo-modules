@@ -52,11 +52,6 @@ namespace FileStorageCLI
             if (UploadProcess is null || !again)
             {
                 timeStamp = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
-                var subObjectIDs = new ObjectID[PackCount];
-                attributes = new Header.Types.Attribute[] {
-                               new Header.Types.Attribute() { Key = Header.Types.Attribute.AttributeFileName, Value =  fileInfo.Name },
-                               new Header.Types.Attribute() { Key = Header.Types.Attribute.AttributeTimestamp, Value = timeStamp }
-                        };
                 UploadProcess = new Process(containerId, null, fileInfo.Name, filePath, (ulong)FileLength, timeStamp, PackCount);
             }
             else
@@ -64,7 +59,10 @@ namespace FileStorageCLI
                 UploadProcess.Rest();
                 timeStamp = UploadProcess.TimeStamp;
             }
-
+            attributes = new Header.Types.Attribute[] {
+                               new Header.Types.Attribute() { Key = Header.Types.Attribute.AttributeFileName, Value =  fileInfo.Name },
+                               new Header.Types.Attribute() { Key = Header.Types.Attribute.AttributeTimestamp, Value = timeStamp }
+                        };
             var taskCounts = 10;
             var tasks = new Task[taskCounts];
             for (int index = 0; index < taskCounts; index++)
@@ -278,11 +276,18 @@ namespace FileStorageCLI
             DownloadProcess.TimeSpent = stopWatch.Elapsed;
         }
 
+        [ConsoleCommand("fs file download by seed", Category = "FileStorageService", Description = "Download file")]
+        private void OnDownloadFileBySeed(string filePath, string paccount = null, bool again = false) {
+            FileInfo file = new FileInfo(filePath);
+            if (!file.Exists) throw new Exception($"The specified file does not exist");
+            var seed=UTF8Encoding.UTF8.GetString(OnGetFileInternal(filePath, 0, (int)file.Length, file.Length));
+            OnDownloadFile(seed.Split("_")[0],seed.Split("_")[1],file.Directory.FullName,paccount,again);
+        }
+
         private byte[] OnGetFileInternal(string filePath, long start, int length, long totalLength)
         {
             using FileStream ServerStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 1024 * 80, true);
             byte[] buffer;
-            //ServerStream.Position = start;
             ServerStream.Seek(start, SeekOrigin.Begin);
             if (totalLength - start < length)
             {
