@@ -1,8 +1,6 @@
 {
   "PluginConfiguration": {
     "host": "http://192.168.130.71:8080",
-    "fsContractHash": "0x970460362a412f251cae676609e9ed250ff8af50",
-    "uploadPath": "./upload/",
-    "downloadPath": "./downloadPath/"
+    "fsContractHash": "0x970460362a412f251cae676609e9ed250ff8af50"
   }
 }
