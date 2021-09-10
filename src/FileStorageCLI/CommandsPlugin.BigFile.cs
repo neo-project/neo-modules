@@ -57,6 +57,7 @@ namespace FileStorageCLI
             }
             else
             {
+                if (UploadProcess.ContainerId != containerId || UploadProcess.FilePath != filePath) throw new ArgumentException();
                 UploadProcess.Rest();
                 timeStamp = UploadProcess.TimeStamp;
             }
@@ -155,6 +156,7 @@ namespace FileStorageCLI
             }
             else
             {
+                if (DownloadProcess.ContainerId != containerId || DownloadProcess.ObjectId != objectId) throw new ArgumentException();
                 DownloadProcess.Rest();
                 totalDataSize = DownloadProcess.Total;
                 timestamp = CommandsPlugin.DownloadProcess.TimeStamp;
