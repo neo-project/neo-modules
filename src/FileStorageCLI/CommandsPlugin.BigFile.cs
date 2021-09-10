@@ -30,6 +30,7 @@ namespace FileStorageCLI
         private void OnUploadFile(string containerId, string filePath, string paccount = null, bool again = false)
         {
             Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
             if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key)) return;
             if (!ParseContainerID(containerId, out var cid)) return;
             FileInfo fileInfo = new FileInfo(filePath);
@@ -276,12 +277,13 @@ namespace FileStorageCLI
             DownloadProcess.TimeSpent = stopWatch.Elapsed;
         }
 
-        [ConsoleCommand("fs file download by seed", Category = "FileStorageService", Description = "Download file")]
-        private void OnDownloadFileBySeed(string filePath, string paccount = null, bool again = false) {
+        [ConsoleCommand("fs file fastdownload", Category = "FileStorageService", Description = "Download file")]
+        private void OnDownloadFileBySeed(string filePath, string paccount = null, bool again = false)
+        {
             FileInfo file = new FileInfo(filePath);
             if (!file.Exists) throw new Exception($"The specified file does not exist");
-            var seed=UTF8Encoding.UTF8.GetString(OnGetFileInternal(filePath, 0, (int)file.Length, file.Length));
-            OnDownloadFile(seed.Split("_")[0],seed.Split("_")[1],file.Directory.FullName,paccount,again);
+            var seed = UTF8Encoding.UTF8.GetString(OnGetFileInternal(filePath, 0, (int)file.Length, file.Length));
+            OnDownloadFile(seed.Split("_")[0], seed.Split("_")[1], file.Directory.FullName, paccount, again);
         }
 
         private byte[] OnGetFileInternal(string filePath, long start, int length, long totalLength)
