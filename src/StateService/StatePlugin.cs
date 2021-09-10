@@ -250,45 +250,40 @@ namespace Neo.Plugins.StateService
             return trie[skey]?.GetInteroperable<ContractState>();
         }
 
-        private void PrepareStateParams(JArray _params, out MPTTrie<StorageKey, StorageItem> trie, out StorageKey skey)
+        [RpcMethod]
+        public JObject FindState(JArray _params)
         {
             var root_hash = UInt256.Parse(_params[0].AsString());
             var script_hash = UInt160.Parse(_params[1].AsString());
             var prefix = Convert.FromBase64String(_params[2].AsString());
-            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
-                throw new RpcException(-100, "Old state not supported");
-            using var store = StateStore.Singleton.GetStoreSnapshot();
-            trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
-
-            var contract = GetHistoricalContractState(trie, script_hash);
-            if (contract is null) throw new RpcException(-100, "Unknown contract");
-            skey = new()
-            {
-                Id = contract.Id,
-                Key = prefix,
-            };
-        }
-
-        [RpcMethod]
-        public JObject FindState(JArray _params)
-        {
-            PrepareStateParams(_params, out var trie, out var skey);
-            StorageKey fkey = new()
-            {
-                Id = skey.Id,
-                Key = Array.Empty<byte>(),
-            };
+            byte[] key = Array.Empty<byte>();
             if (3 < _params.Count)
-                fkey.Key = Convert.FromBase64String(_params[3].AsString());
+                key = Convert.FromBase64String(_params[3].AsString());
             int count = Settings.Default.MaxFindResultItems;
             if (4 < _params.Count)
                 count = int.Parse(_params[4].AsString());
             if (Settings.Default.MaxFindResultItems < count)
                 count = Settings.Default.MaxFindResultItems;
+            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
+                throw new RpcException(-100, "Old state not supported");
+            using var store = StateStore.Singleton.GetStoreSnapshot();
+            var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
+            var contract = GetHistoricalContractState(trie, script_hash);
+            if (contract is null) throw new RpcException(-100, "Unknown contract");
+            StorageKey pkey = new()
+            {
+                Id = contract.Id,
+                Key = prefix,
+            };
+            StorageKey fkey = new()
+            {
+                Id = pkey.Id,
+                Key = key,
+            };
             JArray array = new();
             if (count == 0) return array;
             int i = 0;
-            foreach (var (ikey, ivalue) in trie.Find(skey.ToArray(), fkey.ToArray()))
+            foreach (var (ikey, ivalue) in trie.Find(pkey.ToArray(), 0 < key.Length ? fkey.ToArray() : null))
             {
                 if (count <= i) break;
                 if (i < count)
@@ -306,8 +301,22 @@ namespace Neo.Plugins.StateService
         [RpcMethod]
         public JObject GetState(JArray _params)
         {
-            PrepareStateParams(_params, out var trie, out var skey);
-            return trie[skey]?.Value is null ? null : Convert.ToBase64String(trie[skey].Value);
+            var root_hash = UInt256.Parse(_params[0].AsString());
+            var script_hash = UInt160.Parse(_params[1].AsString());
+            var key = Convert.FromBase64String(_params[2].AsString());
+            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
+                throw new RpcException(-100, "Old state not supported");
+            using var store = StateStore.Singleton.GetStoreSnapshot();
+            var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
+
+            var contract = GetHistoricalContractState(trie, script_hash);
+            if (contract is null) throw new RpcException(-100, "Unknown contract");
+            StorageKey skey = new()
+            {
+                Id = contract.Id,
+                Key = key,
+            };
+            return Convert.ToBase64String(trie[skey].Value);
         }
     }
 }

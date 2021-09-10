@@ -66,9 +66,9 @@ namespace Neo.Plugins.MPT
         {
             var path = ToNibbles(prefix);
             if (from is null) from = Array.Empty<byte>();
-            if (from.Any())
+            if (0 < from.Length)
             {
-                if (from.Length < prefix.Length || !from.AsSpan().StartsWith(prefix))
+                if (!from.AsSpan().StartsWith(prefix))
                     throw new InvalidOperationException("invalid from key");
                 from = ToNibbles(from[prefix.Length..].AsSpan());
             }
@@ -84,7 +84,7 @@ namespace Neo.Plugins.MPT
             {
                 case NodeType.LeafNode:
                     {
-                        if (!from.Any())
+                        if (from.Length == 0)
                             yield return (path, (byte[])node.Value.Clone());
                         break;
                     }
@@ -103,9 +103,9 @@ namespace Neo.Plugins.MPT
                     {
                         for (int i = 0; i < MPTNode.BranchChildCount; i++)
                         {
-                            if (i == MPTNode.BranchChildCount - 1 && from.Any())
+                            if (i == MPTNode.BranchChildCount - 1 && 0 < from.Length)
                                 break;
-                            if (!from.Any() || from[0] < i)
+                            if (0 == from.Length || from[0] < i)
                                 foreach (var item in Travers(node.Children[i], i == MPTNode.BranchChildCount - 1 ? path : Concat(path, new byte[] { (byte)i }), Array.Empty<byte>()))
                                     yield return item;
                             else if (i == from[0])
@@ -119,7 +119,7 @@ namespace Neo.Plugins.MPT
                         if (from.AsSpan().StartsWith(node.Key))
                             foreach (var item in Travers(node.Next, Concat(path, node.Key), from[node.Key.Length..]))
                                 yield return item;
-                        else if (!from.Any() || 0 < node.Key.CompareTo(from))
+                        else if (0 == from.Length || 0 < node.Key.CompareTo(from))
                             foreach (var item in Travers(node.Next, Concat(path, node.Key), Array.Empty<byte>()))
                                 yield return item;
                         break;

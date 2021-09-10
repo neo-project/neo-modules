@@ -585,6 +585,7 @@ namespace Neo.Plugins.StateService.Tests
             Assert.AreEqual(7, snapshot.Size);
         }
 
+        [TestMethod]
         public void TestEmptyValueIssue633()
         {
             var key = "01".HexToBytes();
