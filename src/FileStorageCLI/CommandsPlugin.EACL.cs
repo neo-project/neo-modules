@@ -12,9 +12,9 @@ namespace FileStorageCLI
     public partial class CommandsPlugin : Plugin
     {
         [ConsoleCommand("fs container eacl get", Category = "FileStorageService", Description = "Get container eacl")]
-        private void OnGetContainerEACL(string containerId, string paccount = null)
+        private void OnGetContainerEACL(string containerId, string paddress = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
+            if (!CheckAndParseAccount(paddress, out _, out ECDsa key)) return;
             if (!ParseContainerID(containerId, out ContainerID cid)) return;
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
@@ -31,9 +31,9 @@ namespace FileStorageCLI
         }
 
         [ConsoleCommand("fs container eacl set", Category = "FileStorageService", Description = "Set container eacl")]
-        private void OnSetContainerEACL(string eaclString, string paccount = null)
+        private void OnSetContainerEACL(string eaclString, string paddress = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
+            if (!CheckAndParseAccount(paddress, out _, out ECDsa key)) return;
             EACLTable table = EACLTable.Parser.ParseJson(eaclString);
             using var client = OnCreateClientInternal(key);
             if (client is null) return;

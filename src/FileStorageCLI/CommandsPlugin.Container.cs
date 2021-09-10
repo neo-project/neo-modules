@@ -17,9 +17,9 @@ namespace FileStorageCLI
     public partial class CommandsPlugin : Plugin
     {
         [ConsoleCommand("fs container put", Category = "FileStorageService", Description = "Create a container")]
-        private void OnPutContainer(string policyString, string basicAcl, string attributesString, string paccount = null)
+        private void OnPutContainer(string policyString, string basicAcl, string attributesString, string paddress = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
+            if (!CheckAndParseAccount(paddress, out _, out ECDsa key)) return;
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
             var policy = ParsePlacementPolicy(policyString);
@@ -48,9 +48,9 @@ namespace FileStorageCLI
         }
 
         [ConsoleCommand("fs container delete", Category = "FileStorageService", Description = "Delete a container")]
-        private void OnDeleteContainer(string containerId, string paccount = null)
+        private void OnDeleteContainer(string containerId, string paddress = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
+            if (!CheckAndParseAccount(paddress, out _, out ECDsa key)) return;
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
             using var source = new CancellationTokenSource();
@@ -67,9 +67,9 @@ namespace FileStorageCLI
         }
 
         [ConsoleCommand("fs container get", Category = "FileStorageService", Description = "Get container info")]
-        private void OnGetContainer(string containerId, string paccount = null)
+        private void OnGetContainer(string containerId, string paddress = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
+            if (!CheckAndParseAccount(paddress, out _, out ECDsa key)) return;
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
             if (!ParseContainerID(containerId, out var cid)) return;
@@ -86,9 +86,9 @@ namespace FileStorageCLI
         }
 
         [ConsoleCommand("fs container list", Category = "FileStorageService", Description = "List container")]
-        private void OnListContainer(string paccount)
+        private void OnListContainer(string paddress)
         {
-            if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key)) return;
+            if (!CheckAndParseAccount(paddress, out UInt160 account, out ECDsa key)) return;
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
             using var source = new CancellationTokenSource();

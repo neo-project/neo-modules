@@ -27,11 +27,11 @@ namespace FileStorageCLI
         private static Process DownloadProcess;
 
         [ConsoleCommand("fs file upload", Category = "FileStorageService", Description = "Upload file")]
-        private void OnUploadFile(string containerId, string filePath, string paccount = null, bool again = false)
+        private void OnUploadFile(string containerId, string filePath, string paddress = null, bool again = false)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
-            if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key)) return;
+            if (!CheckAndParseAccount(paddress, out UInt160 account, out ECDsa key)) return;
             if (!ParseContainerID(containerId, out var cid)) return;
             FileInfo fileInfo = new FileInfo(filePath);
             if (!fileInfo.Exists) throw new Exception($"The specified file does not exist");
@@ -57,7 +57,7 @@ namespace FileStorageCLI
             }
             else
             {
-                if (UploadProcess.ContainerId != containerId || UploadProcess.FilePath != filePath) throw new ArgumentException();
+                if (UploadProcess.ContainerId != containerId || UploadProcess.FilePath != filePath) throw new Exception($"The new task doesn't match with the last failed one");
                 UploadProcess.Rest();
                 timeStamp = UploadProcess.TimeStamp;
             }
@@ -119,11 +119,11 @@ namespace FileStorageCLI
         }
 
         [ConsoleCommand("fs file download", Category = "FileStorageService", Description = "Download file")]
-        private void OnDownloadFile(string containerId, string objectId, string filePath, string paccount = null, bool again = false)
+        private void OnDownloadFile(string containerId, string objectId, string filePath, string paddress = null, bool again = false)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
-            if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key)) return;
+            if (!CheckAndParseAccount(paddress, out UInt160 account, out ECDsa key)) return;
             if (!ParseContainerID(containerId, out var cid)) return;
             if (!ParseObjectID(objectId, out var oid)) return;
             using var client = OnCreateClientInternal(key);
@@ -156,7 +156,7 @@ namespace FileStorageCLI
             }
             else
             {
-                if (DownloadProcess.ContainerId != containerId || DownloadProcess.ObjectId != objectId) throw new ArgumentException();
+                if (DownloadProcess.ContainerId != containerId || DownloadProcess.ObjectId != objectId) throw new Exception($"The new task doesn't match with the last failed one");
                 DownloadProcess.Rest();
                 totalDataSize = DownloadProcess.Total;
                 timestamp = CommandsPlugin.DownloadProcess.TimeStamp;
@@ -280,12 +280,12 @@ namespace FileStorageCLI
         }
 
         [ConsoleCommand("fs file fastdownload", Category = "FileStorageService", Description = "Download file")]
-        private void OnDownloadFileBySeed(string filePath, string paccount = null, bool again = false)
+        private void OnDownloadFileBySeed(string filePath, string paddress = null, bool again = false)
         {
             FileInfo file = new FileInfo(filePath);
             if (!file.Exists) throw new Exception($"The specified file does not exist");
             var seed = UTF8Encoding.UTF8.GetString(OnGetFileInternal(filePath, 0, (int)file.Length, file.Length));
-            OnDownloadFile(seed.Split("_")[0], seed.Split("_")[1], file.Directory.FullName, paccount, again);
+            OnDownloadFile(seed.Split("_")[0], seed.Split("_")[1], file.Directory.FullName, paddress, again);
         }
 
         private byte[] OnGetFileInternal(string filePath, long start, int length, long totalLength)

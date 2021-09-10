@@ -23,9 +23,9 @@ namespace FileStorageCLI
     public partial class CommandsPlugin : Plugin
     {
         [ConsoleCommand("fs object put", Category = "FileStorageService", Description = "Put a object")]
-        private void OnPutObject(string containerId, string pdata, string paccount = null)
+        private void OnPutObject(string containerId, string pdata, string paddress = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
+            if (!CheckAndParseAccount(paddress, out _, out ECDsa key)) return;
             if (pdata.Length > 2048 * 1000 || pdata.Length < 1024) throw new Exception("The data length out of range");
             var data = UTF8Encoding.UTF8.GetBytes(pdata);
             using var client = OnCreateClientInternal(key);
@@ -37,9 +37,9 @@ namespace FileStorageCLI
         }
 
         [ConsoleCommand("fs object delete", Category = "FileStorageService", Description = "Delete a object")]
-        private void OnDeleteObject(string containerId, string pobjectIds, string paccount = null)
+        private void OnDeleteObject(string containerId, string pobjectIds, string paddress = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
+            if (!CheckAndParseAccount(paddress, out _, out ECDsa key)) return;
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
             SessionToken session = OnCreateSessionInternal(client);
@@ -64,9 +64,9 @@ namespace FileStorageCLI
         }
 
         [ConsoleCommand("fs object get", Category = "FileStorageService", Description = "Get a object")]
-        private void OnGetObject(string containerId, string objectId, string paccount = null)
+        private void OnGetObject(string containerId, string objectId, string paddress = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
+            if (!CheckAndParseAccount(paddress, out _, out ECDsa key)) return;
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
             if (!ParseContainerID(containerId, out var cid)) return;
@@ -92,9 +92,9 @@ namespace FileStorageCLI
         }
 
         [ConsoleCommand("fs object list", Category = "FileStorageService", Description = "list object")]
-        private void OnListObject(string containerId, string paccount = null)
+        private void OnListObject(string containerId, string paddress = null)
         {
-            if (!CheckAndParseAccount(paccount, out _, out ECDsa key)) return;
+            if (!CheckAndParseAccount(paddress, out _, out ECDsa key)) return;
             if (!ParseContainerID(containerId, out var cid)) return;
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
@@ -113,9 +113,9 @@ namespace FileStorageCLI
         }
 
         [ConsoleCommand("fs storagegroup object put", Category = "FileStorageService", Description = "Put a storage object")]
-        private void OnStorageGroupObject(string containerId, string pobjectIds, string paccount = null)
+        private void OnStorageGroupObject(string containerId, string pobjectIds, string paddress = null)
         {
-            if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key)) return;
+            if (!CheckAndParseAccount(paddress, out UInt160 account, out ECDsa key)) return;
             string[] objectIds = pobjectIds.Split("_");
             using var client = OnCreateClientInternal(key);
             if (client is null) return;

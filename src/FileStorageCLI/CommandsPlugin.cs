@@ -52,14 +52,14 @@ namespace FileStorageCLI
             return true;
         }
 
-        private bool CheckAndParseAccount(string paccount, out UInt160 account, out ECDsa key)
+        private bool CheckAndParseAccount(string paddress, out UInt160 account, out ECDsa key)
         {
             account = null;
             key = null;
             if (NoWallet()) return false;
             try
             {
-                account = paccount is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : paccount.ToScriptHash(System.Settings.AddressVersion);
+                account = paddress is null ? currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash : paddress.ToScriptHash(System.Settings.AddressVersion);
             }
             catch (Exception e)
             {

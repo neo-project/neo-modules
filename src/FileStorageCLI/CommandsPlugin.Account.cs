@@ -23,22 +23,22 @@ namespace FileStorageCLI
         private static UInt160 FsContractHash => Settings.Default.FsContractHash;
 
         [ConsoleCommand("fs account balance", Category = "FileStorageService", Description = "Show account balance")]
-        private void OnAccountBalance(string paccount)
+        private void OnAccountBalance(string paddress)
         {
             if (NoWallet()) return;
             var account = currentWallet.GetAccounts().Where(p => !p.WatchOnly).ToArray()[0].ScriptHash;
             var key = currentWallet.GetAccount(account).GetKey().Export().LoadWif();
-            var ownerID = OwnerID.FromScriptHash(paccount.ToScriptHash(System.Settings.AddressVersion));
+            var ownerID = OwnerID.FromScriptHash(paddress.ToScriptHash(System.Settings.AddressVersion));
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
             if (OnGetBalanceInternal(client, key, out Neo.FileStorage.API.Accounting.Decimal result))
-                Console.WriteLine($"Fs account :{paccount}, balance:{(result.Value == 0 ? 0 : result)}");
+                Console.WriteLine($"Fs account :{paddress}, balance:{(result.Value == 0 ? 0 : result)}");
         }
 
         [ConsoleCommand("fs account withdraw", Category = "FileStorageService", Description = "Withdraw account balance")]
-        private void OnAccountWithdraw(string pamount, string paccount = null)
+        private void OnAccountWithdraw(string pamount, string paddress = null)
         {
-            if (!CheckAndParseAccount(paccount, out UInt160 account, out ECDsa key)) return;
+            if (!CheckAndParseAccount(paddress, out UInt160 account, out ECDsa key)) return;
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
             if (!OnGetBalanceInternal(client, key, out Neo.FileStorage.API.Accounting.Decimal balance)) return;
@@ -51,17 +51,17 @@ namespace FileStorageCLI
                 Console.WriteLine($"The withdraw request has been submitted, please confirm in the next block,TxID:{tx.Hash}");
         }
 
-        [ConsoleCommand("fs account deposite", Category = "FileStorageService", Description = "Deposite account balance")]
-        private void OnAccountDeposite(string pamount, string paccount = null)
+        [ConsoleCommand("fs account deposit", Category = "FileStorageService", Description = "Deposite account balance")]
+        private void OnAccountDeposit(string pamount, string paddress = null)
         {
-            if (!CheckAndParseAccount(paccount, out UInt160 account, out _)) return;
+            if (!CheckAndParseAccount(paddress, out UInt160 account, out _)) return;
             using SnapshotCache snapshot = System.GetSnapshot();
             AssetDescriptor descriptor = new AssetDescriptor(snapshot, System.Settings, NativeContract.GAS.Hash);
             if (!BigDecimal.TryParse(pamount, descriptor.Decimals, out BigDecimal decimalAmount) || decimalAmount.Sign <= 0) throw new Exception($"Incorrect amount format");
             if (NativeContract.GAS.BalanceOf(snapshot, account) < decimalAmount.Value) throw new Exception($"Fs account balance is not enough");
             byte[] script = NativeContract.GAS.Hash.MakeScript("transfer", account, FsContractHash, decimalAmount.Value, Array.Empty<byte>());
             if (OnMakeTransactionInternal(script, snapshot, account, out var tx))
-                Console.WriteLine($"The deposite request has been submitted, please confirm in the next block,TxID:{tx.Hash}");
+                Console.WriteLine($"The deposit request has been submitted, please confirm in the next block,TxID:{tx.Hash}");
         }
 
         //internal function
