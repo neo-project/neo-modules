@@ -24,11 +24,14 @@ namespace FileStorageCLI
             if (client is null) return;
             using var source = new CancellationTokenSource();
             source.CancelAfter(TimeSpan.FromMinutes(1));
-            try {
+            try
+            {
                 var eAcl = client.GetEAcl(cid, context: source.Token).Result;
                 source.Cancel();
                 Console.WriteLine($"Eacl Info: cid:{containerId},eacl:{eAcl.Table}");
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 source.Cancel();
                 Console.WriteLine($"Fs get eacl fault,error:{e}");
             }
@@ -48,11 +51,14 @@ namespace FileStorageCLI
             if (client is null) return;
             using var source = new CancellationTokenSource();
             source.CancelAfter(TimeSpan.FromMinutes(1));
-            try {
+            try
+            {
                 client.SetEACL(table, context: source.Token).Wait();
                 source.Cancel();
                 Console.WriteLine($"The eacl set request has been submitted,please confirm in the next block");
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 source.Cancel();
                 Console.WriteLine($"Fs set eacl fault,error:{e}");
             }

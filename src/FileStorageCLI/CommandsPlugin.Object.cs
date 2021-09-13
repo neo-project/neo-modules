@@ -36,7 +36,7 @@ namespace FileStorageCLI
             var data = UTF8Encoding.UTF8.GetBytes(pdata);
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
-            if (!ParseContainerID(containerId,out var cid)) return;
+            if (!ParseContainerID(containerId, out var cid)) return;
             var obj = OnCreateObjectInternal(cid, key, data, ObjectType.Regular);
             if (OnPutObjectInternal(client, obj))
                 Console.WriteLine($"The object put successfully, ObjectID:{obj.ObjectId.String()}");
@@ -64,11 +64,14 @@ namespace FileStorageCLI
                 Address address = new Address(cid, oid);
                 using var source = new CancellationTokenSource();
                 source.CancelAfter(TimeSpan.FromMinutes(1));
-                try {
+                try
+                {
                     var objId = client.DeleteObject(address, new CallOptions { Ttl = 2, Session = session }, source.Token).Result;
                     source.Cancel();
                     Console.WriteLine($"The object delete successfully,ObjectID:{objId}");
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     source.Cancel();
                     Console.WriteLine($"The object delete fault,error:{e}");
                 }
@@ -124,12 +127,15 @@ namespace FileStorageCLI
             using var source = new CancellationTokenSource();
             source.CancelAfter(TimeSpan.FromMinutes(1));
             var filter = new SearchFilters();
-            try {
+            try
+            {
                 List<ObjectID> objs = client.SearchObject(cid, filter, context: source.Token).Result;
                 source.Cancel();
                 Console.WriteLine($"list object,cid:{cid}");
                 objs.ForEach(p => Console.WriteLine($"ObjectId:{p.String()}"));
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 Console.WriteLine($"fs get object list fault,error:{e}");
                 source.Cancel();
             }
