@@ -26,6 +26,13 @@ namespace FileStorageCLI
         private static Process UploadProcess;
         private static Process DownloadProcess;
 
+        /// <summary>
+        /// User can invoke this command to upload a bigfile.
+        /// </summary>
+        /// <param name="containerId">containerId</param>
+        /// <param name="filePath">filePath</param>
+        /// <param name="paddress">account address(The first account of the wallet,default)</param>
+        /// <param name="again">whether to recover the last task</param>
         [ConsoleCommand("fs file upload", Category = "FileStorageService", Description = "Upload file")]
         private void OnUploadFile(string containerId, string filePath, string paddress = null, bool again = false)
         {
@@ -118,6 +125,14 @@ namespace FileStorageCLI
             }
         }
 
+        /// <summary>
+        /// User can invoke this command to download a bigfile.
+        /// </summary>
+        /// <param name="containerId">containerId</param>
+        /// <param name="objectId">objectId</param>
+        /// <param name="filePath">download path</param>
+        /// <param name="paddress">account address(The first account of the wallet,default)</param>
+        /// <param name="again">whether to recover the last task</param>
         [ConsoleCommand("fs file download", Category = "FileStorageService", Description = "Download file")]
         private void OnDownloadFile(string containerId, string objectId, string filePath, string paddress = null, bool again = false)
         {
@@ -279,6 +294,12 @@ namespace FileStorageCLI
             DownloadProcess.TimeSpent = stopWatch.Elapsed;
         }
 
+        /// <summary>
+        /// User can invoke this command to download a bigfile by seed file.
+        /// </summary>
+        /// <param name="filePath">seed file path</param>
+        /// <param name="paddress">account address(The first account of the wallet,default)</param>
+        /// <param name="again">whether to recover the last task</param>
         [ConsoleCommand("fs file fastdownload", Category = "FileStorageService", Description = "Download file")]
         private void OnDownloadFileBySeed(string filePath, string paddress = null, bool again = false)
         {

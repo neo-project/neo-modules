@@ -22,6 +22,12 @@ namespace FileStorageCLI
 {
     public partial class CommandsPlugin : Plugin
     {
+        /// <summary>
+        /// User can invoke this command to create a object.
+        /// </summary>
+        /// <param name="containerId">containerId</param>
+        /// <param name="pdata">data,size [1K,2M]</param>
+        /// <param name="paddress">account address(The first account of the wallet,default)</param>
         [ConsoleCommand("fs object put", Category = "FileStorageService", Description = "Put a object")]
         private void OnPutObject(string containerId, string pdata, string paddress = null)
         {
@@ -36,6 +42,12 @@ namespace FileStorageCLI
                 Console.WriteLine($"The object put successfully, ObjectID:{obj.ObjectId.String()}");
         }
 
+        /// <summary>
+        /// User can invoke this command to delete a object.
+        /// </summary>
+        /// <param name="containerId">containerId</param>
+        /// <param name="pobjectIds">pobjectIds,support batch delete,split by "_"</param>
+        /// <param name="paddress">account address(The first account of the wallet,default)</param>
         [ConsoleCommand("fs object delete", Category = "FileStorageService", Description = "Delete a object")]
         private void OnDeleteObject(string containerId, string pobjectIds, string paddress = null)
         {
@@ -63,6 +75,12 @@ namespace FileStorageCLI
             }
         }
 
+        /// <summary>
+        /// User can invoke this command to query object.
+        /// </summary>
+        /// <param name="containerId">containerId</param>
+        /// <param name="objectId">objectId</param>
+        /// <param name="paddress">account address(The first account of the wallet,default)</param>
         [ConsoleCommand("fs object get", Category = "FileStorageService", Description = "Get a object")]
         private void OnGetObject(string containerId, string objectId, string paddress = null)
         {
@@ -91,6 +109,11 @@ namespace FileStorageCLI
             Console.WriteLine($"Object info:{result}");
         }
 
+        /// <summary>
+        /// User can invoke this command to get all object of a container.
+        /// </summary>
+        /// <param name="containerId">containerId</param>
+        /// <param name="paddress">account address(The first account of the wallet,default)</param>
         [ConsoleCommand("fs object list", Category = "FileStorageService", Description = "list object")]
         private void OnListObject(string containerId, string paddress = null)
         {
@@ -112,6 +135,12 @@ namespace FileStorageCLI
             }
         }
 
+        /// <summary>
+        /// User can invoke this command to create a storagegroup object.
+        /// </summary>
+        /// <param name="containerId">containerId</param>
+        /// <param name="pobjectIds">subobjectIds,split "_"</param>
+        /// <param name="paddress">account address(The first account of the wallet,default)</param>
         [ConsoleCommand("fs storagegroup object put", Category = "FileStorageService", Description = "Put a storage object")]
         private void OnStorageGroupObject(string containerId, string pobjectIds, string paddress = null)
         {
@@ -127,6 +156,7 @@ namespace FileStorageCLI
             if (OnPutObjectInternal(client, obj, session)) Console.WriteLine($"The storagegroup object put successfully,ObjectID:{obj.ObjectId.String()}");
         }
 
+        //internal function
         private Neo.FileStorage.API.Object.Object OnCreateStorageGroupObjectInternal(Client client, ECDsa key, ContainerID cid, ObjectID[] oids, Header.Types.Attribute[] attributes = null)
         {
             byte[] tzh = null;

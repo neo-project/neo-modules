@@ -22,6 +22,10 @@ namespace FileStorageCLI
     {
         private static UInt160 FsContractHash => Settings.Default.FsContractHash;
 
+        /// <summary>
+        /// User can invoke this command to query the account balance in fs.
+        /// </summary>
+        /// <param name="paddress">account address</param>
         [ConsoleCommand("fs account balance", Category = "FileStorageService", Description = "Show account balance")]
         private void OnAccountBalance(string paddress)
         {
@@ -35,6 +39,11 @@ namespace FileStorageCLI
                 Console.WriteLine($"Fs account :{paddress}, balance:{(result.Value == 0 ? 0 : result)}");
         }
 
+        /// <summary>
+        /// User can invoke this command to withdraw asset.
+        /// </summary>
+        /// <param name="pamount">amount</param>
+        /// <param name="paddress">account address(The first account of the wallet,default)</param>
         [ConsoleCommand("fs account withdraw", Category = "FileStorageService", Description = "Withdraw account balance")]
         private void OnAccountWithdraw(string pamount, string paddress = null)
         {
@@ -51,6 +60,11 @@ namespace FileStorageCLI
                 Console.WriteLine($"The withdraw request has been submitted, please confirm in the next block,TxID:{tx.Hash}");
         }
 
+        /// <summary>
+        /// User can invoke this command to deposit asset.
+        /// </summary>
+        /// <param name="pamount">amount</param>
+        /// <param name="paddress">account address(The first account of the wallet,default)</param>
         [ConsoleCommand("fs account deposit", Category = "FileStorageService", Description = "Deposite account balance")]
         private void OnAccountDeposit(string pamount, string paddress = null)
         {

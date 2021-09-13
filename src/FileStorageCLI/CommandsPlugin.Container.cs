@@ -16,6 +16,13 @@ namespace FileStorageCLI
 {
     public partial class CommandsPlugin : Plugin
     {
+        /// <summary>
+        /// User can invoke this command to create container in Fs.
+        /// </summary>
+        /// <param name="policyString">policy</param>
+        /// <param name="basicAcl">basic-acl</param>
+        /// <param name="attributesString">attribute,format:< <key1> - <value1> _ <key2> - <value2> ></param>
+        /// <param name="paddress">account address(The first account of the wallet,default)</param>
         [ConsoleCommand("fs container put", Category = "FileStorageService", Description = "Create a container")]
         private void OnPutContainer(string policyString, string basicAcl, string attributesString, string paddress = null)
         {
@@ -41,12 +48,18 @@ namespace FileStorageCLI
                 source.Cancel();
                 Console.WriteLine($"The container put request has been submitted, please confirm in the next block,ContainerId:{cid.String()}");
             }
-            catch (Exception e) {
+            catch (Exception e)
+            {
                 Console.WriteLine($"Fs put container fault, error:{e}");
                 source.Cancel();
             }
         }
 
+        /// <summary>
+        /// User can invoke this command to delete container.
+        /// </summary>
+        /// <param name="containerId">containerId</param>
+        /// <param name="paddress">account address(The first account of the wallet,default)</param>
         [ConsoleCommand("fs container delete", Category = "FileStorageService", Description = "Delete a container")]
         private void OnDeleteContainer(string containerId, string paddress = null)
         {
@@ -56,16 +69,24 @@ namespace FileStorageCLI
             using var source = new CancellationTokenSource();
             source.CancelAfter(10000);
             if (!ParseContainerID(containerId, out var cid)) return;
-            try {
+            try
+            {
                 client.DeleteContainer(cid, context: source.Token).Wait();
                 Console.WriteLine($"The container delete request has been submitted, please confirm in the next block,ContainerId:{containerId}");
                 source.Cancel();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 Console.WriteLine($"Fs delete container fault,error:{e}");
                 source.Cancel();
             }
         }
 
+        /// <summary>
+        /// User can invoke this command to query container info.
+        /// </summary>
+        /// <param name="containerId">containerId</param>
+        /// <param name="paddress">account address(The first account of the wallet,default)</param>
         [ConsoleCommand("fs container get", Category = "FileStorageService", Description = "Get container info")]
         private void OnGetContainer(string containerId, string paddress = null)
         {
@@ -75,16 +96,23 @@ namespace FileStorageCLI
             if (!ParseContainerID(containerId, out var cid)) return;
             using var source = new CancellationTokenSource();
             source.CancelAfter(10000);
-            try {
+            try
+            {
                 var container = client.GetContainer(cid, context: source.Token).Result;
                 source.Cancel();
                 Console.WriteLine($"Container info:{container.Container.ToJson()}");
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 source.Cancel();
                 Console.WriteLine($"Fs get container fault,error:{e}");
             }
         }
 
+        /// <summary>
+        /// User can invoke this command to get all containerids belong to account.
+        /// </summary>
+        /// <param name="paddress">account address</param>
         [ConsoleCommand("fs container list", Category = "FileStorageService", Description = "List container")]
         private void OnListContainer(string paddress)
         {
@@ -94,17 +122,21 @@ namespace FileStorageCLI
             using var source = new CancellationTokenSource();
             source.CancelAfter(10000);
             OwnerID ownerID = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash());
-            try {
+            try
+            {
                 List<ContainerID> containerLists = client.ListContainers(ownerID, context: source.Token).Result;
                 source.Cancel();
                 Console.WriteLine($"Container list:");
                 containerLists.ForEach(p => Console.WriteLine($"ContainerID:{p.String()}"));
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 source.Cancel();
                 Console.WriteLine($"Fs get container list fault,error:{e}");
             }
         }
 
+        // internal function
         private bool ParseContainerID(string containerId, out ContainerID cid)
         {
             cid = null;

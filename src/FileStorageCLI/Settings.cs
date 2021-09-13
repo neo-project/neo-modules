@@ -11,7 +11,7 @@ namespace FileStorageCLI
 
         private Settings(IConfigurationSection section)
         {
-            Host = section.GetValue("host", "http://192.168.130.71:8080");
+            Host = section.GetValue("Host", "http://192.168.130.71:8080");
             FsContractHash = UInt160.Parse(section.GetSection("FsContractHash").Value);
         }
 

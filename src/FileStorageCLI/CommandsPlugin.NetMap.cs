@@ -10,6 +10,9 @@ namespace FileStorageCLI
 {
     public partial class CommandsPlugin : Plugin
     {
+        /// <summary>
+        /// User can invoke this command to get epoch.
+        /// </summary>
         [ConsoleCommand("fs epoch", Category = "FileStorageService", Description = "Get epoch")]
         private void OnGetEpoch()
         {
@@ -19,6 +22,9 @@ namespace FileStorageCLI
             if (OnGetEpochInternal(client, out ulong epoch)) Console.WriteLine($"Fs current epoch:{epoch}");
         }
 
+        /// <summary>
+        /// User can invoke this command to get local node info.
+        /// </summary>
         [ConsoleCommand("fs localnodeinfo", Category = "FileStorageService", Description = "Get localnode info")]
         private void OnGetLocalNodeInfo()
         {

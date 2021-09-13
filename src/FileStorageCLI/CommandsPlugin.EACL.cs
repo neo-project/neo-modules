@@ -2,7 +2,6 @@ using Neo.Plugins;
 using Neo.ConsoleService;
 using System;
 using System.Security.Cryptography;
-using Neo.FileStorage.API.Client;
 using System.Threading;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Acl;
@@ -11,6 +10,11 @@ namespace FileStorageCLI
 {
     public partial class CommandsPlugin : Plugin
     {
+        /// <summary>
+        /// User can invoke this command to query eacl of container.
+        /// </summary>
+        /// <param name="containerId">containerId</param>
+        /// <param name="paddress">account address(The first account of the wallet,default)</param>
         [ConsoleCommand("fs container eacl get", Category = "FileStorageService", Description = "Get container eacl")]
         private void OnGetContainerEACL(string containerId, string paddress = null)
         {
@@ -30,6 +34,11 @@ namespace FileStorageCLI
             }
         }
 
+        /// <summary>
+        /// User can invoke this command to set eacl of container.
+        /// </summary>
+        /// <param name="eaclString">eacl,json</param>
+        /// <param name="paddress">account address(The first account of the wallet,default)</param>
         [ConsoleCommand("fs container eacl set", Category = "FileStorageService", Description = "Set container eacl")]
         private void OnSetContainerEACL(string eaclString, string paddress = null)
         {
