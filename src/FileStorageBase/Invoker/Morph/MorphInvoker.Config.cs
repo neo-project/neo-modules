@@ -25,21 +25,18 @@ namespace Neo.FileStorage.Invoker.Morph
         private uint ReadUInt32Config(byte[] key)
         {
             InvokeResult result = TestInvoke(NetMapContractHash, ConfigMethod, key);
-            if (result.State != VM.VMState.HALT) throw new Exception($"could not invoke method {nameof(ReadUInt32Config)}");
             return (uint)result.ResultStack[0].GetInteger();
         }
 
         private ulong ReadUInt64Config(byte[] key)
         {
             InvokeResult result = TestInvoke(NetMapContractHash, ConfigMethod, key);
-            if (result.State != VM.VMState.HALT) throw new Exception($"could not invoke method {nameof(ReadUInt64Config)}");
             return (ulong)result.ResultStack[0].GetInteger();
         }
 
         private string ReadStringConfig(byte[] key)
         {
             InvokeResult result = TestInvoke(NetMapContractHash, ConfigMethod, key);
-            if (result.State != VM.VMState.HALT) throw new Exception($"could not invoke method {nameof(ReadStringConfig)}");
             return result.ResultStack[0].GetString();
         }
 

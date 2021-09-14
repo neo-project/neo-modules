@@ -20,8 +20,7 @@ namespace Neo.FileStorage.Invoker.Morph
         public List<GlobalTrust> GetReputation(ulong epoch, byte[] peerID)
         {
             InvokeResult result = TestInvoke(ReputationContractHash, ReputationGetMethod, 0, epoch, peerID);
-            if (result.State != VM.VMState.HALT) throw new Exception($"could not perform test invocation ({ReputationGetMethod})");
-            if (result.ResultStack.Length != 1) throw new Exception();
+            if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
             VM.Types.Array items = (VM.Types.Array)result.ResultStack[0];
             IEnumerator<StackItem> itemsEnumerator = items.GetEnumerator();
             List<GlobalTrust> lists = new();
@@ -35,8 +34,7 @@ namespace Neo.FileStorage.Invoker.Morph
         public List<GlobalTrust> GetReputationByID(byte[] id)
         {
             InvokeResult result = TestInvoke(ReputationContractHash, ReputationGetByIDMethod, id);
-            if (result.State != VM.VMState.HALT) throw new Exception($"could not perform test invocation ({ReputationGetByIDMethod})");
-            if (result.ResultStack.Length != 1) throw new Exception();
+            if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
             VM.Types.Array items = (VM.Types.Array)result.ResultStack[0];
             IEnumerator<StackItem> itemsEnumerator = items.GetEnumerator();
             List<GlobalTrust> lists = new();
@@ -50,8 +48,7 @@ namespace Neo.FileStorage.Invoker.Morph
         public List<byte[]> ListReputationByEpoch(long epoch)
         {
             InvokeResult result = TestInvoke(ReputationContractHash, ReputationListByEpochMethod, epoch);
-            if (result.State != VM.VMState.HALT) throw new Exception($"could not perform test invocation ({ReputationListByEpochMethod})");
-            if (result.ResultStack.Length != 1) throw new Exception();
+            if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
             VM.Types.Array items = (VM.Types.Array)result.ResultStack[0];
             IEnumerator<StackItem> itemsEnumerator = items.GetEnumerator();
             List<byte[]> ids = new();

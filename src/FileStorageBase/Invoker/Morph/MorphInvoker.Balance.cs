@@ -14,14 +14,12 @@ namespace Neo.FileStorage.Invoker.Morph
         public long BalanceOf(byte[] holder)
         {
             InvokeResult result = TestInvoke(BalanceContractHash, BalanceOfMethod, holder);
-            if (result.State != VM.VMState.HALT) throw new Exception($"could not perform test invocation ({BalanceOfMethod})");
             return (long)result.ResultStack[0].GetInteger();
         }
 
         public uint BalanceDecimals()
         {
             InvokeResult result = TestInvoke(BalanceContractHash, DecimalsMethod);
-            if (result.State != VM.VMState.HALT) throw new Exception($"could not perform test invocation ({DecimalsMethod})");
             return (uint)result.ResultStack[0].GetInteger();
         }
 

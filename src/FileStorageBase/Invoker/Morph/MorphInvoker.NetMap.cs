@@ -34,7 +34,6 @@ namespace Neo.FileStorage.Invoker.Morph
         public ulong Epoch()
         {
             InvokeResult result = TestInvoke(NetMapContractHash, EpochMethod);
-            if (result.State != VMState.HALT) throw new Exception($"could not invoke method ({EpochMethod})");
             return (ulong)result.ResultStack[0].GetInteger();
         }
 
@@ -51,8 +50,7 @@ namespace Neo.FileStorage.Invoker.Morph
         public NodeInfo[] NetMap()
         {
             InvokeResult result = TestInvoke(NetMapContractHash, NetMapMethod);
-            if (result.State != VMState.HALT) throw new Exception($"could not invoke method ({NetMapMethod})");
-            if (result.ResultStack.Length != 1) throw new Exception($"unexpected stack item, count={result.ResultStack.Length}");
+            if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
             if (result.ResultStack[0] is VM.Types.Null) return System.Array.Empty<NodeInfo>();
             Array peers = (Array)result.ResultStack[0];
             IEnumerator<StackItem> peersEnumerator = peers.GetEnumerator();
@@ -74,15 +72,14 @@ namespace Neo.FileStorage.Invoker.Morph
         public NetMap GetNetMapByDiff(int different)
         {
             InvokeResult result = TestInvoke(NetMapContractHash, SnapshotMethod, different);
-            if (result.State != VMState.HALT) throw new Exception($"could not invoke method ({SnapshotMethod})");
-            if (result.ResultStack.Length != 1) throw new Exception($"unexpected stack item, count={result.ResultStack.Length}");
+            if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
             Array peers = (Array)result.ResultStack[0];
             IEnumerator<StackItem> peersEnumerator = peers.GetEnumerator();
             List<byte[]> res = new();
             while (peersEnumerator.MoveNext())
             {
                 Array peer = (Array)peersEnumerator.Current;
-                if (peer.Count != 1) throw new Exception($"unexpected stack item count peer info, expected={1}, actual={peer.Count}");
+                if (peer.Count != 1) throw new InvalidOperationException($"unexpected stack item count peer info, expected={1}, actual={peer.Count}");
                 IEnumerator<StackItem> peerEnumerator = peer.GetEnumerator();
                 while (peerEnumerator.MoveNext())
                 {
@@ -95,15 +92,14 @@ namespace Neo.FileStorage.Invoker.Morph
         public NetMap GetNetMapByEpoch(ulong epoch)
         {
             InvokeResult result = TestInvoke(NetMapContractHash, EpochSnapshotMethod, epoch);
-            if (result.State != VM.VMState.HALT) throw new Exception($"could not invoke method ({EpochSnapshotMethod})");
-            if (result.ResultStack.Length != 1) throw new Exception($"unexpected stack item, count={result.ResultStack.Length}");
+            if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
             Array peers = (Array)result.ResultStack[0];
             IEnumerator<StackItem> peersEnumerator = peers.GetEnumerator();
             List<byte[]> res = new();
             while (peersEnumerator.MoveNext())
             {
                 Array peer = (Array)peersEnumerator.Current;
-                if (peer.Count != 1) throw new Exception($"unexpected stack item count peer info, expected={1}, actual={peer.Count}");
+                if (peer.Count != 1) throw new InvalidOperationException($"unexpected stack item count peer info, expected={1}, actual={peer.Count}");
                 IEnumerator<StackItem> peerEnumerator = peer.GetEnumerator();
                 while (peerEnumerator.MoveNext())
                 {

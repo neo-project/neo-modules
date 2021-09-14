@@ -15,7 +15,6 @@ namespace Neo.FileStorage.Invoker.Morph
         public List<byte[]> AccountKeys(byte[] owner)
         {
             InvokeResult result = TestInvoke(FsIdContractHash, KeyListingMethod, owner);
-            if (result.State != VM.VMState.HALT) throw new Exception($"could not perform test invocation ({KeyListingMethod})");
             if (result.ResultStack.Length != 1) throw new Exception();
             VM.Types.Array items = (VM.Types.Array)result.ResultStack[0];
             IEnumerator<StackItem> itemsEnumerator = items.GetEnumerator();

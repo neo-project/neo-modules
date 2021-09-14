@@ -1,5 +1,6 @@
 using Neo.VM;
 using Neo.VM.Types;
+using System;
 
 namespace Neo.FileStorage.Invoker
 {
@@ -8,6 +9,8 @@ namespace Neo.FileStorage.Invoker
         public VMState State;
         public long GasConsumed;
         public byte[] Script;
+        public Exception FaultException;
+        public StackItem UncaughtException;
         public StackItem[] ResultStack;
 
         public override string ToString()

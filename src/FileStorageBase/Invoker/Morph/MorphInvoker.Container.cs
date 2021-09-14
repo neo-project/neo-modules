@@ -30,12 +30,12 @@ namespace Neo.FileStorage.Invoker.Morph
 
         public void PutContainer(FSContainer cnr, Signature sig, SessionToken token)
         {
-            Invoke(ContainerContractHash, PutMethod, SideChainFee, cnr.ToByteArray(), sig.Sign.ToByteArray(), sig.Key.ToByteArray(), token.ToByteArray());
+            Invoke(ContainerContractHash, PutMethod, SideChainFee, cnr.ToByteArray(), sig.Sign.ToByteArray(), sig.Key.ToByteArray(), token?.ToByteArray() ?? System.Array.Empty<byte>());
         }
 
         public void SetEACL(EACLTable eacl, Signature sig, SessionToken token)
         {
-            Invoke(ContainerContractHash, SetEACLMethod, SideChainFee, eacl.ToByteArray(), sig.Key.ToByteArray(), sig.Sign.ToByteArray(), token.ToByteArray());
+            Invoke(ContainerContractHash, SetEACLMethod, SideChainFee, eacl.ToByteArray(), sig.Sign.ToByteArray(), sig.Key.ToByteArray(), token?.ToByteArray() ?? System.Array.Empty<byte>());
         }
 
         public void DeleteContainer(ContainerID cid, byte[] sig, SessionToken token)
@@ -46,9 +46,9 @@ namespace Neo.FileStorage.Invoker.Morph
         public EAclWithSignature GetEACL(ContainerID containerID)
         {
             InvokeResult result = TestInvoke(ContainerContractHash, EACLMethod, containerID.Value.ToByteArray());
-            if (result.State != VM.VMState.HALT) throw new Exception($"could not invoke method ({EACLMethod})");
             Array array = (Array)result.ResultStack[0];
             if (array.Count != 4) throw new InvalidOperationException($"unexpected eacl stack item count, count={array.Count}");
+            if (array[0].GetSpan().IsEmpty) throw new InvalidOperationException($"extended ACL table is not set for this container");
             return new()
             {
                 Table = EACLTable.Parser.ParseFrom(array[0].GetSpan().ToArray()),
@@ -64,9 +64,9 @@ namespace Neo.FileStorage.Invoker.Morph
         public ContainerWithSignature GetContainer(ContainerID containerID)
         {
             InvokeResult result = TestInvoke(ContainerContractHash, GetMethod, containerID.Value.ToByteArray());
-            if (result.State != VM.VMState.HALT) throw new Exception($"could not invoke method ({GetMethod})");
             Array array = (Array)result.ResultStack[0];
             if (array.Count != 4) throw new InvalidOperationException($"unexpected container stack item, count={array.Count}");
+            if (array[0].GetSpan().IsEmpty) throw new InvalidOperationException("container not found");
             ContainerWithSignature cnr = new()
             {
                 Container = FSContainer.Parser.ParseFrom(array[0].GetSpan().ToArray()),
@@ -83,7 +83,6 @@ namespace Neo.FileStorage.Invoker.Morph
         public List<ContainerID> ListContainers(OwnerID ownerID)
         {
             InvokeResult result = TestInvoke(ContainerContractHash, ListMethod, ownerID.Value.ToByteArray());
-            if (result.State != VM.VMState.HALT) throw new Exception($"could not invoke method ({ListMethod})");
             if (result.ResultStack[0] is Null) return new List<ContainerID>();
             Array array = (Array)result.ResultStack[0];
             IEnumerator<StackItem> enumerator = array.GetEnumerator();
@@ -103,7 +102,6 @@ namespace Neo.FileStorage.Invoker.Morph
         public Estimations GetContainerSize(ContainerID containerID)
         {
             InvokeResult result = TestInvoke(ContainerContractHash, GetSizeMethod, containerID.Value.ToByteArray());
-            if (result.State != VM.VMState.HALT) throw new Exception($"could not invoke method ({GetSizeMethod})");
             Array prms = (Array)result.ResultStack[0];
             Estimations es = new();
             es.ContainerID = ContainerID.FromValue(prms[0].GetSpan().ToArray());
@@ -124,7 +122,6 @@ namespace Neo.FileStorage.Invoker.Morph
         public List<byte[]> ListSizes(ulong epoch)
         {
             InvokeResult result = TestInvoke(ContainerContractHash, ListSizesMethod, epoch);
-            if (result.State != VM.VMState.HALT) throw new Exception($"could not invoke method ({ListSizesMethod})");
             if (result.ResultStack[0] is Null) return new List<byte[]>();
             Array prms = (Array)result.ResultStack[0];
             List<byte[]> ids = new();

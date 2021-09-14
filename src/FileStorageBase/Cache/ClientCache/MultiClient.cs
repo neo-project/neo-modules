@@ -452,11 +452,11 @@ namespace Neo.FileStorage.Cache
             }, context);
         }
 
-        public Task<PutStream> PutObject(API.Object.PutRequest init, DateTime? deadline = null, CancellationToken context = default)
+        public Task<IClientStream> PutObject(API.Object.PutRequest init, DateTime? deadline = null, CancellationToken context = default)
         {
             return Task.Run(() =>
             {
-                PutStream putStream = null;
+                IClientStream putStream = null;
                 IterateClients(client =>
                 {
                     putStream = client.PutObject(init, deadline, context).Result;
