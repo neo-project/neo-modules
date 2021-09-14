@@ -7,6 +7,7 @@ namespace Neo.Network.RPC.Models
         public class RpcProtocol
         {
             public uint Network { get; set; }
+            public int ValidatorsCount { get; set; }
             public uint MillisecondsPerBlock { get; set; }
             public uint MaxValidUntilBlockIncrement { get; set; }
             public uint MaxTraceableBlocks { get; set; }
@@ -19,6 +20,7 @@ namespace Neo.Network.RPC.Models
             {
                 JObject json = new();
                 json["network"] = Network;
+                json["validatorscount"] = ValidatorsCount;
                 json["msperblock"] = MillisecondsPerBlock;
                 json["maxvaliduntilblockincrement"] = MaxValidUntilBlockIncrement;
                 json["maxtraceableblocks"] = MaxTraceableBlocks;
@@ -34,6 +36,7 @@ namespace Neo.Network.RPC.Models
                 return new()
                 {
                     Network = (uint)json["network"].AsNumber(),
+                    ValidatorsCount = (int)json["validatorscount"].AsNumber(),
                     MillisecondsPerBlock = (uint)json["msperblock"].AsNumber(),
                     MaxValidUntilBlockIncrement = (uint)json["maxvaliduntilblockincrement"].AsNumber(),
                     MaxTraceableBlocks = (uint)json["maxtraceableblocks"].AsNumber(),
