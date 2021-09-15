@@ -1,0 +1,6 @@
+{
+  "PluginConfiguration": {
+    "Host": "http://st01.testnet.fs.neo.org:8080",
+    "FsContractHash": "0xb65d8243ac63983206d17e5221af0653a7266fa1"
+  }
+}

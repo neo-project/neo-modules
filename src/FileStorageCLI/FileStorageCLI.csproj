@@ -9,6 +9,14 @@
     <PackageReference Include="NeoFS.API" Version="3.0.0.1" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="FileStorageCLI\config.mainnet.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Update="FileStorageCLI\config.testnet.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
     <None Update="FileStorageCLI\config.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
