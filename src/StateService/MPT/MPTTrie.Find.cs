@@ -101,16 +101,27 @@ namespace Neo.Plugins.MPT
                     }
                 case NodeType.BranchNode:
                     {
-                        for (int i = 0; i < MPTNode.BranchChildCount; i++)
+                        if (0 < from.Length)
                         {
-                            if (i == MPTNode.BranchChildCount - 1 && 0 < from.Length)
-                                break;
-                            if (0 == from.Length || from[0] < i)
-                                foreach (var item in Travers(node.Children[i], i == MPTNode.BranchChildCount - 1 ? path : Concat(path, new byte[] { (byte)i }), Array.Empty<byte>()))
+                            for (int i = 0; i < MPTNode.BranchChildCount - 1; i++)
+                            {
+                                if (from[0] < i)
+                                    foreach (var item in Travers(node.Children[i], Concat(path, new byte[] { (byte)i }), Array.Empty<byte>()))
+                                        yield return item;
+                                else if (i == from[0])
+                                    foreach (var item in Travers(node.Children[i], Concat(path, new byte[] { (byte)i }), from[1..]))
+                                        yield return item;
+                            }
+                        }
+                        else
+                        {
+                            foreach (var item in Travers(node.Children[MPTNode.BranchChildCount - 1], path, Array.Empty<byte>()))
+                                yield return item;
+                            for (int i = 0; i < MPTNode.BranchChildCount - 1; i++)
+                            {
+                                foreach (var item in Travers(node.Children[i], Concat(path, new byte[] { (byte)i }), Array.Empty<byte>()))
                                     yield return item;
-                            else if (i == from[0])
-                                foreach (var item in Travers(node.Children[i], i == MPTNode.BranchChildCount - 1 ? path : Concat(path, new byte[] { (byte)i }), from[1..]))
-                                    yield return item;
+                            }
                         }
                         break;
                     }
