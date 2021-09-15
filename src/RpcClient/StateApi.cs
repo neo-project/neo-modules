@@ -18,14 +18,14 @@ namespace Neo.Network.RPC
 
         public async Task<byte[]> GetProofAsync(UInt256 rootHash, UInt160 scriptHash, byte[] key)
         {
-            var result = await rpcClient.RpcSendAsync(RpcClient.GetRpcName(), 
+            var result = await rpcClient.RpcSendAsync(RpcClient.GetRpcName(),
                 rootHash.ToString(), scriptHash.ToString(), Convert.ToBase64String(key)).ConfigureAwait(false);
             return Convert.FromBase64String(result.AsString());
         }
 
         public async Task<byte[]> VerifyProofAsync(UInt256 rootHash, byte[] proofBytes)
         {
-            var result = await rpcClient.RpcSendAsync(RpcClient.GetRpcName(), 
+            var result = await rpcClient.RpcSendAsync(RpcClient.GetRpcName(),
                 rootHash.ToString(), Convert.ToBase64String(proofBytes)).ConfigureAwait(false);
 
             return Convert.FromBase64String(result.AsString());
@@ -59,14 +59,14 @@ namespace Neo.Network.RPC
 
             var result = (JArray)await rpcClient.RpcSendAsync(RpcClient.GetRpcName(), @params).ConfigureAwait(false);
             return result.Select(j => (
-                    Convert.FromBase64String(j["key"].AsString()), 
+                    Convert.FromBase64String(j["key"].AsString()),
                     Convert.FromBase64String(j["value"].AsString())
                 )).ToArray();
         }
 
         public async Task<byte[]> GetStateAsync(UInt256 rootHash, UInt160 scriptHash, byte[] key)
         {
-            var result = await rpcClient.RpcSendAsync(RpcClient.GetRpcName(), 
+            var result = await rpcClient.RpcSendAsync(RpcClient.GetRpcName(),
                 rootHash.ToString(), scriptHash.ToString(), Convert.ToBase64String(key)).ConfigureAwait(false);
             return Convert.FromBase64String(result.AsString());
         }
