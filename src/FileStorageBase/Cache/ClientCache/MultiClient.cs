@@ -95,7 +95,6 @@ namespace Neo.FileStorage.Cache
                 }, context);
                 return balance;
             }, context);
-
         }
 
         public Task<API.Accounting.Decimal> GetBalance(BalanceRequest request, DateTime? deadline = null, CancellationToken context = default)
@@ -529,7 +528,6 @@ namespace Neo.FileStorage.Cache
                 return oids;
             }, context);
         }
-
 
         public Task AnnounceTrust(ulong epoch, List<Trust> trusts, CallOptions options = null, CancellationToken context = default)
         {

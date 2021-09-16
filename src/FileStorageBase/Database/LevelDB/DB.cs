@@ -14,7 +14,7 @@ namespace Neo.FileStorage.Database.LevelDB
 
         public void Dispose()
         {
-            db?.Dispose();
+            db.Dispose();
         }
 
         public byte[] Get(byte[] key)
