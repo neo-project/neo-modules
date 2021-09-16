@@ -41,7 +41,7 @@ namespace Neo.Network.RPC
 
         static uint? ToNullableUint(JObject json) => (json == null) ? (uint?)null : (uint?)json.AsNumber();
 
-        public async Task<(byte[] key, byte[] value)[]> FindStateAsync(UInt256 rootHash, UInt160 scriptHash, byte[] prefix, byte[] from = null, int? count = null)
+        public static JObject[] MakeFindStatesParams(UInt256 rootHash, UInt160 scriptHash, byte[] prefix, byte[] from = null, int? count = null)
         {
             var paramCount = from == null ? 3 : count == null ? 4 : 5;
             var @params = new JObject[paramCount];
@@ -56,7 +56,12 @@ namespace Neo.Network.RPC
                     @params[4] = count.Value;
                 }
             }
+            return @params;
+        }
 
+        public async Task<(byte[] key, byte[] value)[]> FindStatesAsync(UInt256 rootHash, UInt160 scriptHash, byte[] prefix, byte[] from = null, int? count = null)
+        {
+            var @params = MakeFindStatesParams(rootHash, scriptHash, prefix, from, count);
             var result = (JArray)await rpcClient.RpcSendAsync(RpcClient.GetRpcName(), @params).ConfigureAwait(false);
             return result.Select(j => (
                     Convert.FromBase64String(j["key"].AsString()),
