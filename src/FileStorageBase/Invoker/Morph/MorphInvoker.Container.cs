@@ -54,8 +54,8 @@ namespace Neo.FileStorage.Invoker.Morph
                 Table = EACLTable.Parser.ParseFrom(array[0].GetSpan().ToArray()),
                 Signature = new()
                 {
-                    Key = GByteString.CopyFrom(array[2].GetSpan().ToArray()),
                     Sign = GByteString.CopyFrom(array[1].GetSpan().ToArray()),
+                    Key = GByteString.CopyFrom(array[2].GetSpan().ToArray())
                 },
                 SessionToken = array[3] is Null ? null : SessionToken.Parser.ParseFrom(array[3].GetSpan().ToArray())
             };
@@ -73,7 +73,7 @@ namespace Neo.FileStorage.Invoker.Morph
                 Signature = new()
                 {
                     Sign = GByteString.CopyFrom(array[1].GetSpan().ToArray()),
-                    Key = GByteString.CopyFrom(array[2].GetSpan().ToArray()),
+                    Key = GByteString.CopyFrom(array[2].GetSpan().ToArray())
                 },
                 SessionToken = array[3] is Null ? null : SessionToken.Parser.ParseFrom(array[3].GetSpan().ToArray())
             };
