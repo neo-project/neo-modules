@@ -59,14 +59,12 @@ namespace Neo.Network.RPC
             return @params;
         }
 
-        public async Task<(byte[] key, byte[] value)[]> FindStatesAsync(UInt256 rootHash, UInt160 scriptHash, byte[] prefix, byte[] from = null, int? count = null)
+        public async Task<RpcFoundStates> FindStatesAsync(UInt256 rootHash, UInt160 scriptHash, byte[] prefix, byte[] from = null, int? count = null)
         {
             var @params = MakeFindStatesParams(rootHash, scriptHash, prefix, from, count);
-            var result = (JArray)await rpcClient.RpcSendAsync(RpcClient.GetRpcName(), @params).ConfigureAwait(false);
-            return result.Select(j => (
-                    Convert.FromBase64String(j["key"].AsString()),
-                    Convert.FromBase64String(j["value"].AsString())
-                )).ToArray();
+            var result = await rpcClient.RpcSendAsync(RpcClient.GetRpcName(), @params).ConfigureAwait(false);
+
+            return RpcFoundStates.FromJson(result);
         }
 
         public async Task<byte[]> GetStateAsync(UInt256 rootHash, UInt160 scriptHash, byte[] key)
