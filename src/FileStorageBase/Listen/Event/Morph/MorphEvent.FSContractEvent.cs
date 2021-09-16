@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Neo.Cryptography.ECC;
 using Neo.IO;
+using Neo.VM.Types;
 
 namespace Neo.FileStorage.Listen.Event.Morph
 {
@@ -16,11 +17,9 @@ namespace Neo.FileStorage.Listen.Event.Morph
             if (eventParams.Count != 2) throw new FormatException();
             bindEvent.UserAccount = eventParams[0].GetSpan().AsSerializable<UInt160>();
             List<ECPoint> keys = new();
-            var bindKeys = ((VM.Types.Array)eventParams[1]).GetEnumerator();
-            while (bindKeys.MoveNext())
+            foreach (StackItem bindKey in (VM.Types.Array)eventParams[1])
             {
-                var key = bindKeys.Current.GetSpan().AsSerializable<ECPoint>();
-                keys.Add(key);
+                keys.Add(bindKey.GetSpan().AsSerializable<ECPoint>());
             }
             bindEvent.Keys = keys.ToArray();
             return bindEvent;
@@ -108,12 +107,10 @@ namespace Neo.FileStorage.Listen.Event.Morph
             var updateInnerRingEvent = new UpdateInnerRingEvent();
             if (eventParams.Count != 1) throw new FormatException();
 
-            List<ECPoint> keys = new List<ECPoint>();
-            var irKeys = ((VM.Types.Array)eventParams[0]).GetEnumerator();
-            while (irKeys.MoveNext())
+            List<ECPoint> keys = new();
+            foreach (StackItem irKey in (VM.Types.Array)eventParams[0])
             {
-                var key = irKeys.Current.GetSpan().AsSerializable<ECPoint>();
-                keys.Add(key);
+                keys.Add(irKey.GetSpan().AsSerializable<ECPoint>());
             }
             updateInnerRingEvent.Keys = keys.ToArray();
             return updateInnerRingEvent;
