@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Neo.IO.Json;
 using Neo.Network.RPC.Models;
@@ -43,7 +46,7 @@ namespace Neo.Network.RPC
 
         public static JObject[] MakeFindStatesParams(UInt256 rootHash, UInt160 scriptHash, ReadOnlySpan<byte> prefix, ReadOnlySpan<byte> from = default, int? count = null)
         {
-            var paramCount = from.Length > 0 ? 3 : count == null ? 4 : 5;
+            var paramCount = from.Length == 0 ? 3 : count == null ? 4 : 5;
             var @params = new JObject[paramCount];
             @params[0] = rootHash.ToString();
             @params[1] = scriptHash.ToString();
@@ -65,6 +68,22 @@ namespace Neo.Network.RPC
             var result = await rpcClient.RpcSendAsync(RpcClient.GetRpcName(), @params).ConfigureAwait(false);
 
             return RpcFoundStates.FromJson(result);
+        }
+
+        public async IAsyncEnumerable<(byte[] key, byte[] value)> EnumerateFindStatesAsync(UInt256 rootHash, UInt160 scriptHash, ReadOnlyMemory<byte> prefix, int? pageSize = null)
+        {
+            var from = Array.Empty<byte>();
+            while (true)
+            {
+                var foundStates = await FindStatesAsync(rootHash, scriptHash, prefix, from, pageSize).ConfigureAwait(false);
+                var states = foundStates.States;
+                for (var i = from == null ? 0 : 1; i < states.Length; i++)
+                {
+                    yield return (states[i].key, states[i].value);
+                }
+                if (!foundStates.Truncated) break;
+                from = states[states.Length - 1].key;
+            }
         }
 
         public async Task<byte[]> GetStateAsync(UInt256 rootHash, UInt160 scriptHash, byte[] key)
