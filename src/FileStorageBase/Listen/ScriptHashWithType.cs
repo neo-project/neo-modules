@@ -1,3 +1,5 @@
+using System;
+
 namespace Neo.FileStorage.Listen
 {
     public class ScriptHashWithType
@@ -15,7 +17,7 @@ namespace Neo.FileStorage.Listen
 
         public override int GetHashCode()
         {
-            return ScriptHashValue.GetHashCode() + Type.GetHashCode();
+            return HashCode.Combine(ScriptHashValue.GetHashCode(), Type.GetHashCode());
         }
     }
 }
