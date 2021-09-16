@@ -251,7 +251,7 @@ namespace Neo.Plugins.StateService
         }
 
         [RpcMethod]
-        public JObject FindState(JArray _params)
+        public JObject FindStates(JArray _params)
         {
             var root_hash = UInt256.Parse(_params[0].AsString());
             var script_hash = UInt160.Parse(_params[1].AsString());

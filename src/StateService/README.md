@@ -52,7 +52,7 @@ Value in base64 string
 #### Result
 Value in base64 string or `null`
 
-### FindState
+### FindStates
 #### Params
 |Name|Type|Summary|Required|
 |-|-|-|-|
