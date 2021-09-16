@@ -85,11 +85,10 @@ namespace Neo.FileStorage.Invoker.Morph
             InvokeResult result = TestInvoke(ContainerContractHash, ListMethod, ownerID.Value.ToByteArray());
             if (result.ResultStack[0] is Null) return new List<ContainerID>();
             Array array = (Array)result.ResultStack[0];
-            IEnumerator<StackItem> enumerator = array.GetEnumerator();
             List<byte[]> resultArray = new();
-            while (enumerator.MoveNext())
+            foreach (StackItem current in array)
             {
-                resultArray.Add(enumerator.Current.GetSpan().ToArray());
+                resultArray.Add(current.GetSpan().ToArray());
             }
             return resultArray.Select(p => ContainerID.FromValue(p)).ToList();
         }

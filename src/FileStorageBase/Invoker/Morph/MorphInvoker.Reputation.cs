@@ -22,11 +22,10 @@ namespace Neo.FileStorage.Invoker.Morph
             InvokeResult result = TestInvoke(ReputationContractHash, ReputationGetMethod, 0, epoch, peerID);
             if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
             VM.Types.Array items = (VM.Types.Array)result.ResultStack[0];
-            IEnumerator<StackItem> itemsEnumerator = items.GetEnumerator();
             List<GlobalTrust> lists = new();
-            while (itemsEnumerator.MoveNext())
+            foreach (StackItem current in items)
             {
-                lists.Add(GlobalTrust.Parser.ParseFrom(itemsEnumerator.Current.GetSpan().ToArray()));
+                lists.Add(GlobalTrust.Parser.ParseFrom(current.GetSpan().ToArray()));
             }
             return lists;
         }
@@ -36,11 +35,10 @@ namespace Neo.FileStorage.Invoker.Morph
             InvokeResult result = TestInvoke(ReputationContractHash, ReputationGetByIDMethod, id);
             if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
             VM.Types.Array items = (VM.Types.Array)result.ResultStack[0];
-            IEnumerator<StackItem> itemsEnumerator = items.GetEnumerator();
             List<GlobalTrust> lists = new();
-            while (itemsEnumerator.MoveNext())
+            foreach (StackItem current in items)
             {
-                lists.Add(GlobalTrust.Parser.ParseFrom(itemsEnumerator.Current.GetSpan().ToArray()));
+                lists.Add(GlobalTrust.Parser.ParseFrom(current.GetSpan().ToArray()));
             }
             return lists;
         }
@@ -50,11 +48,10 @@ namespace Neo.FileStorage.Invoker.Morph
             InvokeResult result = TestInvoke(ReputationContractHash, ReputationListByEpochMethod, epoch);
             if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
             VM.Types.Array items = (VM.Types.Array)result.ResultStack[0];
-            IEnumerator<StackItem> itemsEnumerator = items.GetEnumerator();
             List<byte[]> ids = new();
-            while (itemsEnumerator.MoveNext())
+            foreach (StackItem current in items)
             {
-                ids.Add(itemsEnumerator.Current.GetSpan().ToArray());
+                ids.Add(current.GetSpan().ToArray());
             }
             return ids;
         }

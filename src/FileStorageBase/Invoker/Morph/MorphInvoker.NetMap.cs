@@ -6,7 +6,6 @@ using Neo.Cryptography.ECC;
 using Neo.FileStorage.API.Netmap;
 using Neo.IO;
 using Neo.SmartContract;
-using Neo.VM;
 using Neo.VM.Types;
 using static Neo.FileStorage.API.Netmap.Helper;
 using Array = Neo.VM.Types.Array;
@@ -23,8 +22,6 @@ namespace Neo.FileStorage.Invoker.Morph
         private const string NetMapMethod = "netmap";
         private const string EpochSnapshotMethod = "snapshotByEpoch";
         private const string SetInnerRingMethod = "updateInnerRing";
-
-        private const long ExtraFee = 0;
 
         public void AddPeer(NodeInfo info)
         {
