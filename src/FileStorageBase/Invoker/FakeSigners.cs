@@ -4,7 +4,6 @@ using Neo.IO;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 
-
 namespace Neo.FileStorage.Invoker
 {
     public class FakeSigners : IVerifiable

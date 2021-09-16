@@ -14,5 +14,4 @@ namespace Neo.FileStorage.Invoker.Morph
         public ContainerID ContainerID;
         public List<Estimation> AllEstimation;
     }
-
 }

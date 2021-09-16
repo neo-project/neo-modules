@@ -15,7 +15,6 @@ namespace Neo.FileStorage.Invoker.Morph
         private const string ListByCIDResultsMethod = "listByCID";
         private const string ListByNodeResultsMethod = "listByNode";
 
-
         public void PutAuditResult(byte[] rawResult)
         {
             Invoke(AuditContractHash, PutResultMethod, SideChainFee, rawResult);
