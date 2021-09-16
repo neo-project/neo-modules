@@ -54,7 +54,7 @@ namespace Neo.FileStorage.Cache
 
         private void IterateClients(Action<Client> handler, CancellationToken token)
         {
-            string errMsg = "";
+            Exception lastErr = null;
             foreach (var address in addresses)
             {
                 if (token.IsCancellationRequested) throw new TaskCanceledException();
@@ -70,18 +70,19 @@ namespace Neo.FileStorage.Cache
                     {
                         foreach (var ie in ae.InnerExceptions)
                         {
-                            if (ie is Grpc.Core.RpcException re)
-                            {
-                                if (re.StatusCode == Grpc.Core.StatusCode.Cancelled)
-                                    throw;
-                            }
+                            if (ie is Grpc.Core.RpcException re && re.StatusCode == Grpc.Core.StatusCode.Cancelled)
+                                throw;
+                            lastErr = ie;
                         }
                     }
-                    if (errMsg == "") errMsg = e.Message;
+                    else
+                        lastErr = e;
                     continue;
                 }
             }
-            throw new Exception($"handle request failed, error={errMsg}");
+            if (lastErr is not null)
+                throw lastErr;
+            throw new InvalidOperationException($"handle request failed");
         }
 
         public Task<API.Accounting.Decimal> GetBalance(OwnerID owner, CallOptions options = null, CancellationToken context = default)

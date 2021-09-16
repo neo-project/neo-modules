@@ -35,39 +35,37 @@ namespace Neo.FileStorage.Listen
 
         public void ParseAndHandle(NotifyEventArgs notify)
         {
-            if (started)
+            if (!started) return;
+            if (notify.State is null)
             {
-                if (notify.State is null)
-                {
-                    Utility.Log(nameof(Listener), LogLevel.Warning, $"stack item is not an array type, listener={name}, notify={notify.ParseToJson()}");
-                    return;
-                }
-                Utility.Log(nameof(Listener), LogLevel.Info, $"listener={name}, event_type={notify.EventName}");
-                var keyEvent = new ScriptHashWithType() { Type = notify.EventName, ScriptHashValue = notify.ScriptHash };
-                if (!parsers.TryGetValue(keyEvent, out var parser))
-                {
-                    Utility.Log(nameof(Listener), LogLevel.Warning, $"event parser not set, listener={name}, script_hash={notify.ScriptHash}");
-                    return;
-                }
-                ContractEvent contractEvent = null;
-                try
-                {
-                    contractEvent = parser(notify.State);
-                }
-                catch (Exception e)
-                {
-                    Utility.Log(nameof(Listener), LogLevel.Warning, $"could not parse notification, error={e}");
-                    return;
-                }
-                if (!handlers.TryGetValue(keyEvent, out var handlersArray) || !handlersArray.Any())
-                {
-                    Utility.Log(nameof(Listener), LogLevel.Warning, $"handlers for parsed notification event were not registered, listener={name}, event={contractEvent}");
-                    return;
-                }
-                foreach (var handler in handlersArray)
-                {
-                    handler(contractEvent);
-                }
+                Utility.Log(nameof(Listener), LogLevel.Warning, $"stack item is not an array type, listener={name}, notify={notify.ParseToJson()}");
+                return;
+            }
+            Utility.Log(nameof(Listener), LogLevel.Info, $"listener={name}, event_type={notify.EventName}");
+            var keyEvent = new ScriptHashWithType() { Type = notify.EventName, ScriptHashValue = notify.ScriptHash };
+            if (!parsers.TryGetValue(keyEvent, out var parser))
+            {
+                Utility.Log(nameof(Listener), LogLevel.Warning, $"event parser not set, listener={name}, script_hash={notify.ScriptHash}");
+                return;
+            }
+            ContractEvent contractEvent = null;
+            try
+            {
+                contractEvent = parser(notify.State);
+            }
+            catch (Exception e)
+            {
+                Utility.Log(nameof(Listener), LogLevel.Warning, $"could not parse notification, error={e}");
+                return;
+            }
+            if (!handlers.TryGetValue(keyEvent, out var handlersArray) || !handlersArray.Any())
+            {
+                Utility.Log(nameof(Listener), LogLevel.Warning, $"handlers for parsed notification event were not registered, listener={name}, event={contractEvent}");
+                return;
+            }
+            foreach (var handler in handlersArray)
+            {
+                handler(contractEvent);
             }
         }
 
@@ -132,12 +130,12 @@ namespace Neo.FileStorage.Listen
 
         public void OnStart()
         {
-            if (!started) started = !started;
+            started = true;
         }
 
         public void OnStop()
         {
-            if (started) started = !started;
+            started = false;
         }
 
         public void BindProcessor(IProcessor processor)
