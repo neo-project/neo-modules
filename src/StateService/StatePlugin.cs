@@ -254,6 +254,8 @@ namespace Neo.Plugins.StateService
         public JObject FindStates(JArray _params)
         {
             var root_hash = UInt256.Parse(_params[0].AsString());
+            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
+                throw new RpcException(-100, "Old state not supported");
             var script_hash = UInt160.Parse(_params[1].AsString());
             var prefix = Convert.FromBase64String(_params[2].AsString());
             byte[] key = Array.Empty<byte>();
@@ -264,8 +266,6 @@ namespace Neo.Plugins.StateService
                 count = int.Parse(_params[4].AsString());
             if (Settings.Default.MaxFindResultItems < count)
                 count = Settings.Default.MaxFindResultItems;
-            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
-                throw new RpcException(-100, "Old state not supported");
             using var store = StateStore.Singleton.GetStoreSnapshot();
             var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
             var contract = GetHistoricalContractState(trie, script_hash);
@@ -280,32 +280,34 @@ namespace Neo.Plugins.StateService
                 Id = pkey.Id,
                 Key = key,
             };
-            JArray array = new();
-            if (count == 0) return array;
+            JObject json = new();
+            JArray jarr = new();
             int i = 0;
             foreach (var (ikey, ivalue) in trie.Find(pkey.ToArray(), 0 < key.Length ? fkey.ToArray() : null))
             {
-                if (count <= i) break;
+                if (count < i) break;
                 if (i < count)
                 {
                     JObject j = new();
                     j["key"] = Convert.ToBase64String(ikey.Key);
                     j["value"] = Convert.ToBase64String(ivalue.Value);
-                    array.Add(j);
+                    jarr.Add(j);
                 }
                 i++;
             };
-            return array;
+            json["truncated"] = count < i;
+            json["array"] = jarr;
+            return json;
         }
 
         [RpcMethod]
         public JObject GetState(JArray _params)
         {
             var root_hash = UInt256.Parse(_params[0].AsString());
-            var script_hash = UInt160.Parse(_params[1].AsString());
-            var key = Convert.FromBase64String(_params[2].AsString());
             if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
                 throw new RpcException(-100, "Old state not supported");
+            var script_hash = UInt160.Parse(_params[1].AsString());
+            var key = Convert.FromBase64String(_params[2].AsString());
             using var store = StateStore.Singleton.GetStoreSnapshot();
             var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
 
