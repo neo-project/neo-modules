@@ -84,7 +84,6 @@ namespace Neo.FileStorage.Listen
 
         public void SetParser(ParserInfo p)
         {
-
             if (p.Parser is null) return;
             if (started) return;
             parsers.TryAdd(p.ScriptHashWithType, p.Parser);
