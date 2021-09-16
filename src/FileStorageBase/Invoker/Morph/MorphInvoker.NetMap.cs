@@ -53,16 +53,13 @@ namespace Neo.FileStorage.Invoker.Morph
             if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
             if (result.ResultStack[0] is VM.Types.Null) return System.Array.Empty<NodeInfo>();
             Array peers = (Array)result.ResultStack[0];
-            IEnumerator<StackItem> peersEnumerator = peers.GetEnumerator();
             List<byte[]> res = new();
-            while (peersEnumerator.MoveNext())
+            foreach (Array peer in peers)
             {
-                Array peer = (Array)peersEnumerator.Current;
                 if (peer.Count != 1) throw new Exception($"unexpected stack item count peer info, expected={1}, actual={peer.Count}");
-                IEnumerator<StackItem> peerEnumerator = peer.GetEnumerator();
-                while (peerEnumerator.MoveNext())
+                foreach (StackItem current in peer)
                 {
-                    res.Add(peerEnumerator.Current.GetSpan().ToArray());
+                    res.Add(current.GetSpan().ToArray());
                 }
             }
 
@@ -74,16 +71,13 @@ namespace Neo.FileStorage.Invoker.Morph
             InvokeResult result = TestInvoke(NetMapContractHash, SnapshotMethod, different);
             if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
             Array peers = (Array)result.ResultStack[0];
-            IEnumerator<StackItem> peersEnumerator = peers.GetEnumerator();
             List<byte[]> res = new();
-            while (peersEnumerator.MoveNext())
+            foreach (Array peer in peers)
             {
-                Array peer = (Array)peersEnumerator.Current;
                 if (peer.Count != 1) throw new InvalidOperationException($"unexpected stack item count peer info, expected={1}, actual={peer.Count}");
-                IEnumerator<StackItem> peerEnumerator = peer.GetEnumerator();
-                while (peerEnumerator.MoveNext())
+                foreach (StackItem current in peer)
                 {
-                    res.Add(peerEnumerator.Current.GetSpan().ToArray());
+                    res.Add(current.GetSpan().ToArray());
                 }
             }
             return new(res.Select(p => NodeInfo.Parser.ParseFrom(p)).ToList().InfoToNodes());
@@ -94,16 +88,13 @@ namespace Neo.FileStorage.Invoker.Morph
             InvokeResult result = TestInvoke(NetMapContractHash, EpochSnapshotMethod, epoch);
             if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
             Array peers = (Array)result.ResultStack[0];
-            IEnumerator<StackItem> peersEnumerator = peers.GetEnumerator();
             List<byte[]> res = new();
-            while (peersEnumerator.MoveNext())
+            foreach (Array peer in peers)
             {
-                Array peer = (Array)peersEnumerator.Current;
                 if (peer.Count != 1) throw new InvalidOperationException($"unexpected stack item count peer info, expected={1}, actual={peer.Count}");
-                IEnumerator<StackItem> peerEnumerator = peer.GetEnumerator();
-                while (peerEnumerator.MoveNext())
+                foreach (StackItem current in peer)
                 {
-                    res.Add(peerEnumerator.Current.GetSpan().ToArray());
+                    res.Add(current.GetSpan().ToArray());
                 }
             }
             return new(res.Select(p => NodeInfo.Parser.ParseFrom(p)).ToList().InfoToNodes());
