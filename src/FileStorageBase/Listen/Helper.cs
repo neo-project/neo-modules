@@ -11,8 +11,9 @@ namespace Neo.FileStorage.Listen
     {
         public static string ParseToString(this IDictionary<string, string> parameters)
         {
+            if (parameters.Count == 0) return string.Empty;
             IEnumerator<KeyValuePair<string, string>> dem = parameters.GetEnumerator();
-            StringBuilder query = new("");
+            StringBuilder query = new();
             while (dem.MoveNext())
             {
                 string key = dem.Current.Key;
@@ -22,8 +23,7 @@ namespace Neo.FileStorage.Listen
                     query.Append(key).Append('=').Append(value).Append('&');
                 }
             }
-            string content = query.ToString().Substring(0, query.Length - 1);
-            return content;
+            return query.ToString().Substring(0, query.Length - 1);
         }
 
         public static JObject ParseToJson(this NotifyEventArgs notify)
