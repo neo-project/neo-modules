@@ -76,8 +76,8 @@ namespace Neo.Network.RPC
             while (true)
             {
                 var foundStates = await FindStatesAsync(rootHash, scriptHash, prefix, from, pageSize).ConfigureAwait(false);
-                var states = foundStates.States;
-                for (var i = from == null ? 0 : 1; i < states.Length; i++)
+                var states = foundStates.Results;
+                for (var i = 0; i < states.Length; i++)
                 {
                     yield return (states[i].key, states[i].value);
                 }
