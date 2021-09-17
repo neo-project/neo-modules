@@ -8,7 +8,7 @@ namespace Neo.FileStorage.InnerRing
     {
         private readonly object lockObject = new();
         private readonly Indexes ind = new();
-        private DateTime lastAccess = DateTime.Now;
+        private DateTime lastAccess = DateTime.UtcNow;
         private readonly MorphInvoker morphInvoker;
         private readonly TimeSpan timeout;
 
@@ -22,13 +22,13 @@ namespace Neo.FileStorage.InnerRing
         {
             lock (lockObject)
             {
-                if (DateTime.Now.Subtract(lastAccess) < timeout) return ind;
+                if (DateTime.UtcNow.Subtract(lastAccess) < timeout) return ind;
                 var key = morphInvoker.Wallet.GetAccounts().ToArray()[0].GetKey().PublicKey;
                 morphInvoker.InnerRingIndex(key, out int innerRingIndex, out int innerRingSize);
                 ind.InnerRingIndex = innerRingIndex;
                 ind.InnerRingSize = innerRingSize;
                 ind.AlphabetIndex = morphInvoker.AlphabetIndex(key);
-                lastAccess = DateTime.Now;
+                lastAccess = DateTime.UtcNow;
                 return ind;
             }
         }
@@ -57,6 +57,5 @@ namespace Neo.FileStorage.InnerRing
             public int InnerRingSize;
             public int AlphabetIndex;
         }
-
     }
 }
