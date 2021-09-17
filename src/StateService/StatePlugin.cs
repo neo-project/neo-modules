@@ -295,8 +295,16 @@ namespace Neo.Plugins.StateService
                 }
                 i++;
             };
+            if (0 < jarr.Count)
+            {
+                json["firstProof"] = GetProof(root_hash, script_hash, Convert.FromBase64String(jarr.First()["key"].AsString()));
+            }
+            if (1 < jarr.Count)
+            {
+                json["lastProof"] = GetProof(root_hash, script_hash, Convert.FromBase64String(jarr.Last()["key"].AsString()));
+            }
             json["truncated"] = count < i;
-            json["array"] = jarr;
+            json["results"] = jarr;
             return json;
         }
 

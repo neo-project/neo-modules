@@ -62,4 +62,9 @@ Value in base64 string or `null`
 |From|base64 string|start key, default `Empty`|optional|
 |Count|number|count of results in one request, default `MaxFindResultItems`|optional|
 #### Result
-key-value results in array
+|Name|Type|Summary|
+|-|-|-|
+|firstProof|string|proof of first value in results|
+|lastProof|string|proof of last value in results|
+|truncated|bool|whether the results is truncated because of limitation|
+|results|array|key-values found|
