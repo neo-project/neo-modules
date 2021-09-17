@@ -616,6 +616,8 @@ namespace Neo.Plugins.StateService.Tests
             Assert.AreEqual(1, r.Count);
             r = mpt.Find("aa".HexToBytes(), "aa60".HexToBytes()).ToList();
             Assert.AreEqual(0, r.Count);
+            r = mpt.Find("aa".HexToBytes(), "aa10".HexToBytes()).ToList();
+            Assert.AreEqual(1, r.Count);//without from key
         }
     }
 }

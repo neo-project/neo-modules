@@ -65,26 +65,29 @@ namespace Neo.Plugins.MPT
         public IEnumerable<(TKey Key, TValue Value)> Find(ReadOnlySpan<byte> prefix, byte[] from = null)
         {
             var path = ToNibbles(prefix);
+            int offset = 0;
             if (from is null) from = Array.Empty<byte>();
             if (0 < from.Length)
             {
                 if (!from.AsSpan().StartsWith(prefix))
                     throw new InvalidOperationException("invalid from key");
-                from = ToNibbles(from[prefix.Length..].AsSpan());
+                offset = prefix.Length * 2;
+                from = ToNibbles(from.AsSpan());
             }
             path = Seek(ref root, path, out MPTNode start).ToArray();
-            return Travers(start, path, from)
+            return Travers(start, path, from, offset)
                 .Select(p => (FromNibbles(p.Key).AsSerializable<TKey>(), p.Value.AsSerializable<TValue>()));
         }
 
-        private IEnumerable<(byte[] Key, byte[] Value)> Travers(MPTNode node, byte[] path, byte[] from)
+        private IEnumerable<(byte[] Key, byte[] Value)> Travers(MPTNode node, byte[] path, byte[] from, int offset)
         {
             if (node is null) yield break;
+            if (offset < 0) throw new InvalidOperationException("invalid offset");
             switch (node.Type)
             {
                 case NodeType.LeafNode:
                     {
-                        if (from.Length == 0)
+                        if (from.Length <= offset && !path.SequenceEqual(from))
                             yield return (path, (byte[])node.Value.Clone());
                         break;
                     }
@@ -95,31 +98,31 @@ namespace Neo.Plugins.MPT
                         var newNode = cache.Resolve(node.Hash);
                         if (newNode is null) throw new InvalidOperationException("Internal error, can't resolve hash when mpt find");
                         node = newNode;
-                        foreach (var item in Travers(node, path, from))
+                        foreach (var item in Travers(node, path, from, offset))
                             yield return item;
                         break;
                     }
                 case NodeType.BranchNode:
                     {
-                        if (0 < from.Length)
+                        if (offset < from.Length)
                         {
                             for (int i = 0; i < MPTNode.BranchChildCount - 1; i++)
                             {
-                                if (from[0] < i)
-                                    foreach (var item in Travers(node.Children[i], Concat(path, new byte[] { (byte)i }), Array.Empty<byte>()))
+                                if (from[offset] < i)
+                                    foreach (var item in Travers(node.Children[i], Concat(path, new byte[] { (byte)i }), from, from.Length))
                                         yield return item;
-                                else if (i == from[0])
-                                    foreach (var item in Travers(node.Children[i], Concat(path, new byte[] { (byte)i }), from[1..]))
+                                else if (i == from[offset])
+                                    foreach (var item in Travers(node.Children[i], Concat(path, new byte[] { (byte)i }), from, offset + 1))
                                         yield return item;
                             }
                         }
                         else
                         {
-                            foreach (var item in Travers(node.Children[MPTNode.BranchChildCount - 1], path, Array.Empty<byte>()))
+                            foreach (var item in Travers(node.Children[MPTNode.BranchChildCount - 1], path, from, offset))
                                 yield return item;
                             for (int i = 0; i < MPTNode.BranchChildCount - 1; i++)
                             {
-                                foreach (var item in Travers(node.Children[i], Concat(path, new byte[] { (byte)i }), Array.Empty<byte>()))
+                                foreach (var item in Travers(node.Children[i], Concat(path, new byte[] { (byte)i }), from, offset))
                                     yield return item;
                             }
                         }
@@ -127,11 +130,11 @@ namespace Neo.Plugins.MPT
                     }
                 case NodeType.ExtensionNode:
                     {
-                        if (from.AsSpan().StartsWith(node.Key))
-                            foreach (var item in Travers(node.Next, Concat(path, node.Key), from[node.Key.Length..]))
+                        if (offset < from.Length && from.AsSpan()[offset..].StartsWith(node.Key))
+                            foreach (var item in Travers(node.Next, Concat(path, node.Key), from, offset + node.Key.Length))
                                 yield return item;
-                        else if (0 == from.Length || 0 < node.Key.CompareTo(from))
-                            foreach (var item in Travers(node.Next, Concat(path, node.Key), Array.Empty<byte>()))
+                        else if (from.Length <= offset || 0 < node.Key.CompareTo(from[offset..]))
+                            foreach (var item in Travers(node.Next, Concat(path, node.Key), from, from.Length))
                                 yield return item;
                         break;
                     }
