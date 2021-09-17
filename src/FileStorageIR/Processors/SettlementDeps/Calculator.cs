@@ -4,7 +4,6 @@ using System.Linq;
 using System.Numerics;
 using Neo.FileStorage.API.Audit;
 using Neo.FileStorage.API.Cryptography;
-using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 
 namespace Neo.FileStorage.InnerRing.Processors
