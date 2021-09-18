@@ -46,7 +46,7 @@ namespace Neo.FileStorage.Cache
         {
             if (!clients.TryGetValue(address, out var client))
             {
-                client = new(null, "http://" + address.ToHostAddressString());
+                client = new(null, address.ToRpcAddressString());
                 clients[address] = client;
             }
             return client;

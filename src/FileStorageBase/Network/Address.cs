@@ -1,43 +1,40 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using Multiformats.Address;
-using Multiformats.Address.Net;
+using Multiformats.Address.Protocols;
 
 namespace Neo.FileStorage.Network
 {
     public class Address : IEquatable<Address>
     {
         public const string L4Protocol = "tcp";
+        public static readonly Dictionary<string, string> SubstituteProtocols = new() { { "tls", "https" } };
         private readonly Multiaddress ma;
 
         public Address() { }
 
         public Address(Multiaddress m)
         {
+            RpcSupportedCheck(m);
             ma = m;
-        }
-
-        public Address Encapsulate(Address other)
-        {
-            return new(ma.Encapsulate(other.ma));
-        }
-
-        public Address Decapsulate(Address other)
-        {
-            return new(ma.Decapsulate(other.ma));
-        }
-
-        public string ToIPAddressString()
-        {
-            return ma.ToEndPoint().ToString();
         }
 
         public string ToHostAddressString()
         {
             return DialArgs(ma);
+        }
+
+        public string ToRpcAddressString()
+        {
+            string host = ToHostAddressString();
+            if (ma.Protocols.Exists(p => p is HTTPS))
+                return "https://" + host;
+            else
+                return "http://" + host;
         }
 
         public static Address FromString(string s)
@@ -47,11 +44,25 @@ namespace Neo.FileStorage.Network
             {
                 m = Multiaddress.Decode(s);
             }
-            catch (Exception)
+            catch (NotSupportedException nse)
             {
-                m = Multiaddress.Decode(MultiAddrStringFromHostAddr(s));
+                if (SubstituteProtocols.TryGetValue(nse.Message, out string sub))
+                {
+                    m = Multiaddress.Decode(s.Replace(nse.Message, sub));
+                    return new Address(m);
+                }
+                else
+                {
+                    m = Multiaddress.Decode(MultiAddrStringFromHostAddr(s));
+                }
             }
             return new Address(m);
+        }
+
+        private static void RpcSupportedCheck(Multiaddress ma)
+        {
+            if (!ma.Protocols.Any(p => p is HTTPS || p is TCP || p is HTTP))
+                throw new NotSupportedException("no rpc supported protocols");
         }
 
         public bool Equals(Address other)
@@ -92,19 +103,12 @@ namespace Neo.FileStorage.Network
             return string.Join('/', prefix, s, L4Protocol, port);
         }
 
-        /// <summary>
-        /// IPAddrFromMultiaddr converts "/dns4/localhost/tcp/8080" to "192.168.0.1:8080".
-        /// </summary>
-        /// <param name="multiaddr"></param>
-        /// <returns></returns>
-        public static string IPAddrFromMultiaddr(string multiaddr)
-        {
-            return FromString(multiaddr).ToIPAddressString();
-        }
-
         public override string ToString()
         {
-            return ma.ToString();
+            string str = ma.ToString();
+            foreach (var (inuse, deprecated) in SubstituteProtocols)
+                str = str.Replace(deprecated, inuse);
+            return str;
         }
 
         private string DialArgs(Multiaddress ma)
