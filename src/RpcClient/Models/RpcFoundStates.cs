@@ -27,7 +27,7 @@ namespace Neo.Network.RPC.Models
             };
         }
 
-        static byte[] ProofFromJson(JObject json) 
+        static byte[] ProofFromJson(JObject json)
             => json == null ? null : Convert.FromBase64String(json.AsString());
     }
 }
