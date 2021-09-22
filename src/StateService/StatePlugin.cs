@@ -247,7 +247,7 @@ namespace Neo.Plugins.StateService
         {
             const byte prefix = 8;
             StorageKey skey = new KeyBuilder(NativeContract.ContractManagement.Id, prefix).Add(script_hash);
-            return trie[skey]?.GetInteroperable<ContractState>();
+            return trie.TryGetValue(skey, out var value) ? value.GetInteroperable<ContractState>() : null;
         }
 
         [RpcMethod]
