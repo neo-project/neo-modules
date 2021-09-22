@@ -20,14 +20,24 @@ using System.IO;
 using Neo.IO.Json;
 using Neo.Wallets;
 using System.Buffers.Binary;
+using SQLitePCL;
 
 namespace RpcNep11Tracker
 {
+    record TransferRecord(UInt160 asset, UInt160 from, UInt160 to, ByteString tokenId, BigInteger amount);
+
     public partial class RpcNep11Tracker : Plugin, IPersistencePlugin
     {
         private const byte Nep11BalancePrefix = 0xf8;
         private const byte Nep11TransferSentPrefix = 0xf9;
         private const byte Nep11TransferReceivedPrefix = 0xfa;
+        private readonly HashSet<string> _properties = new HashSet<string>
+        {
+            "name",
+            "description",
+            "image",
+            "tokenURI"
+        };
         private bool _shouldTrackHistory;
         private uint _maxResults;
 
@@ -37,6 +47,9 @@ namespace RpcNep11Tracker
         private WriteBatch _writeBatch;
         private Snapshot _levelDbSnapshot;
         private NeoSystem neoSystem;
+
+        private uint _currentHeight;
+        private Block _currentBlock;
 
         public override string Description => "Enquiries NEP-11 balances and transaction history of accounts through RPC";
 
@@ -55,7 +68,6 @@ namespace RpcNep11Tracker
         {
             _dbPath = GetConfiguration().GetSection("DBPath").Value ?? "Nep11BalanceData";
             _shouldTrackHistory = (GetConfiguration().GetSection("TrackHistory").Value ?? true.ToString()) != false.ToString();
-            //_recordNullAddressHistory = (GetConfiguration().GetSection("RecordNullAddressHistory").Value ?? false.ToString()) != false.ToString();
             _maxResults = uint.Parse(GetConfiguration().GetSection("MaxResults").Value ?? "1000");
             _network = uint.Parse(GetConfiguration().GetSection("Network").Value ?? "5195086");
         }
@@ -72,10 +84,13 @@ namespace RpcNep11Tracker
         {
             if (system.Settings.Network != _network) return;
             // Start freshly with a new DBCache for each block.
+            _currentHeight = block.Index;
+            _currentBlock = block;
+
             ResetBatch();
-            var balanceChanges = new Dictionary<Nep11BalanceKey, Nep11Balance>();
 
             ushort transferIndex = 0;
+            var transfers = new List<TransferRecord>();
             foreach (Blockchain.ApplicationExecuted appExecuted in applicationExecutedList)
             {
                 // Executions that fault won't modify storage, so we can skip them.
@@ -84,43 +99,62 @@ namespace RpcNep11Tracker
                 {
                     if (!(notifyEventArgs?.State is VmArray stateItems) || stateItems.Count == 0)
                         continue;
-                    HandleNotification(snapshot, notifyEventArgs.ScriptContainer, notifyEventArgs.ScriptHash, notifyEventArgs.EventName,
-                        stateItems, balanceChanges, ref transferIndex);
+                    HandleNotification(snapshot, notifyEventArgs.ScriptContainer, notifyEventArgs.ScriptHash, notifyEventArgs.EventName, stateItems, transfers, ref transferIndex);
                 }
             }
 
-            foreach (var balanceChanged in balanceChanges)
-            {
-                // get guarantee accurate balances by calling balanceOf for keys that changed.
-                byte[] script;
-                var asset = NativeContract.ContractManagement.GetContract(snapshot, balanceChanged.Key.AssetScriptHash);
-                var balanceMethod = asset.Manifest.Abi.Methods.FirstOrDefault(m => m.Name == "balanceOf");
-                var isDivisible = balanceMethod.Parameters.Length == 2;
-                using (ScriptBuilder sb = new ScriptBuilder())
-                {
-                    if (isDivisible)
-                    {
-                        script = sb.EmitDynamicCall(balanceChanged.Key.AssetScriptHash, "balanceOf", balanceChanged.Key.UserScriptHash.ToArray(), balanceChanged.Key.Token).ToArray();
-                    }
-                    else
-                    {
-                        script = sb.EmitDynamicCall(balanceChanged.Key.AssetScriptHash, "balanceOf", balanceChanged.Key.UserScriptHash.ToArray()).ToArray();
-                    }
-                }
+            var contracts = new Dictionary<UInt160, (bool isDivisible, ContractState state)>();
 
-                using (ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, settings: system.Settings))
+            foreach (var transferRecord in transfers)
+            {
+                if (!contracts.ContainsKey(transferRecord.asset))
                 {
-                    if (engine.State.HasFlag(VMState.FAULT)) continue;
-                    if (engine.ResultStack.Count <= 0) continue;
-                    balanceChanged.Value.Balance = engine.ResultStack.Pop().GetInteger();
+                    var state = NativeContract.ContractManagement.GetContract(snapshot, transferRecord.asset);
+                    var balanceMethod = state.Manifest.Abi.Methods.FirstOrDefault(m => m.Name == "balanceOf");
+                    if (balanceMethod == null)
+                    {
+                        Log($"{state.Hash} is not nft!", LogLevel.Warning);
+                        continue;
+                    }
+                    var isDivisible = balanceMethod.Parameters.Length == 2;
+                    contracts[transferRecord.asset] = (isDivisible, state);
                 }
-                balanceChanged.Value.LastUpdatedBlock = block.Index;
-                if (balanceChanged.Value.Balance.IsZero)
+                var asset = contracts[transferRecord.asset];
+                if (asset.isDivisible)
                 {
-                    Delete(Nep11BalancePrefix, balanceChanged.Key);
-                    continue;
+                    SaveDivisibleNFT(transferRecord, snapshot);
                 }
-                Put(Nep11BalancePrefix, balanceChanged.Key, balanceChanged.Value);
+                else
+                {
+                    SaveNFT(transferRecord);
+                }
+            }
+        }
+
+        private void SaveDivisibleNFT(TransferRecord record, DataCache snapshot)
+        {
+            using ScriptBuilder sb = new ScriptBuilder();
+            sb.EmitDynamicCall(record.asset, "balanceOf", record.from, record.tokenId);
+            sb.EmitDynamicCall(record.asset, "balanceOf", record.to, record.tokenId);
+            using ApplicationEngine engine = ApplicationEngine.Run(sb.ToArray(), snapshot, settings: neoSystem.Settings);
+            if (engine.State.HasFlag(VMState.FAULT) || engine.ResultStack.Count != 2)
+            {
+                return;
+            }
+            Put(Nep11BalancePrefix, new Nep11BalanceKey(record.to, record.asset, record.tokenId), new Nep11Balance() { Balance = engine.ResultStack.Pop().GetInteger(), LastUpdatedBlock = _currentHeight });
+            Put(Nep11BalancePrefix, new Nep11BalanceKey(record.from, record.asset, record.tokenId), new Nep11Balance() { Balance = engine.ResultStack.Pop().GetInteger(), LastUpdatedBlock = _currentHeight });
+        }
+
+        private void SaveNFT(TransferRecord record)
+        {
+            if (record.from != UInt160.Zero)
+            {
+                Delete(Nep11BalancePrefix, new Nep11BalanceKey(record.from, record.asset, record.tokenId));
+            }
+
+            if (record.to != UInt160.Zero)
+            {
+                Put(Nep11BalancePrefix, new Nep11BalanceKey(record.to, record.asset, record.tokenId), new Nep11Balance() { Balance = 1, LastUpdatedBlock = _currentHeight });
             }
         }
 
@@ -138,8 +172,7 @@ namespace RpcNep11Tracker
 
 
 
-
-        private void HandleNotification(DataCache snapshot, IVerifiable scriptContainer, UInt160 scriptHash, string eventName, VmArray stateItems, Dictionary<Nep11BalanceKey, Nep11Balance> balanceChanges, ref ushort transferIndex)
+        private void HandleNotification(DataCache snapshot, IVerifiable scriptContainer, UInt160 scriptHash, string eventName, VmArray stateItems, List<TransferRecord> transfers, ref ushort transferIndex)
         {
             if (eventName != "Transfer") return;
             if (stateItems.Count != 4) return;
@@ -169,19 +202,8 @@ namespace RpcNep11Tracker
             var from = UInt160.Zero;
             var to = UInt160.Zero;
             var tokenId = tokenIdItem as ByteString;
-            if (fromBytes != null)
-            {
-                from = new UInt160(fromBytes);
-                var fromKey = new Nep11BalanceKey(from, scriptHash, tokenId);
-                if (!balanceChanges.ContainsKey(fromKey)) balanceChanges.Add(fromKey, new Nep11Balance());
-            }
 
-            if (toBytes != null)
-            {
-                to = new UInt160(toBytes);
-                var toKey = new Nep11BalanceKey(to, scriptHash, tokenId);
-                if (!balanceChanges.ContainsKey(toKey)) balanceChanges.Add(toKey, new Nep11Balance());
-            }
+            transfers.Add(new TransferRecord(scriptHash, from, to, tokenId, amountItem.GetInteger()));
             if (scriptContainer is Transaction transaction)
             {
                 RecordTransferHistory(snapshot, scriptHash, from, to, tokenId, amountItem.GetInteger(), transaction.Hash, ref transferIndex);
@@ -189,23 +211,19 @@ namespace RpcNep11Tracker
         }
 
 
+
         private void RecordTransferHistory(DataCache snapshot, UInt160 contractHash, UInt160 from, UInt160 to, ByteString tokenId, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
         {
             if (!_shouldTrackHistory) return;
-
-            UInt256 hash = NativeContract.Ledger.CurrentHash(snapshot);
-            uint height = NativeContract.Ledger.CurrentIndex(snapshot);
-            TrimmedBlock block = NativeContract.Ledger.GetTrimmedBlock(snapshot, hash);
-
             if (from != UInt160.Zero)
             {
                 Put(Nep11TransferSentPrefix,
-                    new Nep11TransferKey(from, block.Header.Timestamp, contractHash, tokenId, transferIndex),
+                    new Nep11TransferKey(from, _currentBlock.Header.Timestamp, contractHash, tokenId, transferIndex),
                     new Nep11Transfer
                     {
                         Amount = amount,
                         UserScriptHash = to,
-                        BlockIndex = height,
+                        BlockIndex = _currentHeight,
                         TxHash = txHash
                     });
             }
@@ -213,12 +231,12 @@ namespace RpcNep11Tracker
             if (to != UInt160.Zero)
             {
                 Put(Nep11TransferReceivedPrefix,
-                    new Nep11TransferKey(to, block.Header.Timestamp, contractHash, tokenId, transferIndex),
+                    new Nep11TransferKey(to, _currentBlock.Header.Timestamp, contractHash, tokenId, transferIndex),
                     new Nep11Transfer
                     {
                         Amount = amount,
                         UserScriptHash = from,
-                        BlockIndex = height,
+                        BlockIndex = _currentHeight,
                         TxHash = txHash
                     });
             }
@@ -284,30 +302,60 @@ namespace RpcNep11Tracker
             json["balance"] = balances;
             json["address"] = userScriptHash.ToAddress(neoSystem.Settings.AddressVersion);
 
-            using (Iterator it = _db.NewIterator(ReadOptions.Default))
+            using Iterator it = _db.NewIterator(ReadOptions.Default);
+            byte[] prefix = Key(Nep11BalancePrefix, userScriptHash);
+            for (it.Seek(prefix); it.Valid(); it.Next())
             {
-                byte[] prefix = Key(Nep11BalancePrefix, userScriptHash);
-                for (it.Seek(prefix); it.Valid(); it.Next())
+                ReadOnlySpan<byte> key_bytes = it.Key();
+                if (!key_bytes.StartsWith(prefix)) break;
+                var key = key_bytes[1..].AsSerializable<Nep11BalanceKey>();
+                if (NativeContract.ContractManagement.GetContract(neoSystem.StoreView, key.AssetScriptHash) is null)
+                    continue;
+                var value = it.Value().AsSerializable<Nep11Balance>();
+                balances.Add(new JObject
                 {
-                    ReadOnlySpan<byte> key_bytes = it.Key();
-                    if (!key_bytes.StartsWith(prefix)) break;
-                    var key = key_bytes[1..].AsSerializable<Nep11BalanceKey>();
-                    if (NativeContract.ContractManagement.GetContract(neoSystem.StoreView, key.AssetScriptHash) is null)
-                        continue;
-                    var value = it.Value().AsSerializable<Nep11Balance>();
-                    balances.Add(new JObject
-                    {
-                        ["assethash"] = key.AssetScriptHash.ToString(),
-                        ["tokenId"] = key.Token.GetSpan().ToHexString(),
-                        ["amount"] = value.Balance.ToString(),
-                        ["lastupdatedblock"] = value.LastUpdatedBlock
-                    });
-                }
+                    ["assethash"] = key.AssetScriptHash.ToString(),
+                    ["tokenId"] = key.Token.GetSpan().ToHexString(),
+                    ["amount"] = value.Balance.ToString(),
+                    ["lastupdatedblock"] = value.LastUpdatedBlock
+                });
             }
-
             return json;
         }
 
+
+        [RpcMethod]
+        public JObject GetNep11Properties(JArray _params)
+        {
+            UInt160 nep11Hash = GetScriptHashFromParam(_params[0].AsString());
+            var tokenId = _params[1].AsString().HexToBytes();
+
+            using var sb = new ScriptBuilder();
+            sb.EmitDynamicCall(nep11Hash, "properties", CallFlags.ReadOnly, tokenId);
+            using var snapshot = neoSystem.GetSnapshot();
+
+            using var engine = ApplicationEngine.Run(sb.ToArray(), snapshot, settings: neoSystem.Settings);
+            JObject json = new JObject();
+
+            if (engine.State == VMState.HALT)
+            {
+                var map = engine.ResultStack.Pop<Map>();
+                foreach (var keyValue in map)
+                {
+                    if (keyValue.Value is CompoundType) continue;
+                    var key = keyValue.Key.GetString();
+                    if (_properties.Contains(key))
+                    {
+                        json[key] = keyValue.Value.GetString();
+                    }
+                    else
+                    {
+                        json[key] = keyValue.Value.IsNull ? null : keyValue.Value.GetSpan().ToBase64();
+                    }
+                }
+            }
+            return json;
+        }
         private UInt160 GetScriptHashFromParam(string addressOrScriptHash)
         {
             return addressOrScriptHash.Length < 40 ?
@@ -341,7 +389,7 @@ namespace RpcNep11Tracker
                 JObject transfer = new JObject();
                 transfer["timestamp"] = key.TimestampMS;
                 transfer["assethash"] = key.AssetScriptHash.ToString();
-                transfer["tokenId"] = key.Token.GetSpan().ToHexString().ToString();
+                transfer["tokenId"] = key.Token.GetSpan().ToHexString();
                 transfer["transferaddress"] = value.UserScriptHash == UInt160.Zero ? null : value.UserScriptHash.ToAddress(neoSystem.Settings.AddressVersion);
                 transfer["amount"] = value.Amount.ToString();
                 transfer["blockindex"] = value.BlockIndex;

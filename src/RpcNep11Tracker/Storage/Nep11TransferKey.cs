@@ -19,7 +19,7 @@ namespace Neo.Plugins.Storage
             UInt160.Length +    //UserScriptHash
             sizeof(ulong) +     //TimestampMS
             UInt160.Length +    //AssetScriptHash
-            Token.GetSpan().Length +
+            Token.GetVarSize() +
             sizeof(ushort);     //BlockXferNotificationIndex
 
         public Nep11TransferKey() : this(new UInt160(), 0, new UInt160(), ByteString.Empty, 0)
@@ -82,12 +82,21 @@ namespace Neo.Plugins.Storage
 
         public void Serialize(BinaryWriter writer)
         {
-            writer.Write(UserScriptHash);
-            if (BitConverter.IsLittleEndian) writer.Write(BinaryPrimitives.ReverseEndianness(TimestampMS));
-            else writer.Write(TimestampMS);
-            writer.Write(AssetScriptHash);
-            writer.WriteVarBytes(Token.GetSpan());
-            writer.Write(BlockXferNotificationIndex);
+            try
+            {
+                writer.Write(UserScriptHash);
+                if (BitConverter.IsLittleEndian) writer.Write(BinaryPrimitives.ReverseEndianness(TimestampMS));
+                else writer.Write(TimestampMS);
+                writer.Write(AssetScriptHash);
+                writer.WriteVarBytes(Token.GetSpan());
+                writer.Write(BlockXferNotificationIndex);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+
         }
 
         public void Deserialize(BinaryReader reader)
@@ -97,6 +106,7 @@ namespace Neo.Plugins.Storage
             else TimestampMS = reader.ReadUInt64();
             ((ISerializable)AssetScriptHash).Deserialize(reader);
             Token = reader.ReadVarBytes();
+
             BlockXferNotificationIndex = reader.ReadUInt16();
         }
     }

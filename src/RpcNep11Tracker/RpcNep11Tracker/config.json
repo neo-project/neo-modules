@@ -1,0 +1,11 @@
+{
+  "PluginConfiguration": {
+    "DBPath": "Nep11BalanceData",
+    "TrackHistory": true,
+    "MaxResults": 1000,
+    "Network": 877933390
+  },
+  "Dependency": [
+    "RpcServer"
+  ]
+}

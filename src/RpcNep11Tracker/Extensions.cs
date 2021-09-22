@@ -16,6 +16,20 @@ namespace Neo.Plugins
             return !item.IsNull;
         }
 
+
+        public static string ToBase64(this ReadOnlySpan<byte> item)
+        {
+            return item == null ? String.Empty : Convert.ToBase64String(item);
+        }
+
+
+        public static int GetVarSize(this ByteString item)
+        {
+            var length = item.GetSpan().Length;
+            return IO.Helper.GetVarSize(length) + length;
+        }
+
+
         public static IEnumerable<(TKey, TValue)> FindRange<TKey, TValue>(this DB db, byte[] startKeyBytes, byte[] endKeyBytes)
             where TKey : IEquatable<TKey>, ISerializable, new()
             where TValue : class, ISerializable, new()
