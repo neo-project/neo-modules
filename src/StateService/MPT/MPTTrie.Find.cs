@@ -74,6 +74,8 @@ namespace Neo.Plugins.MPT
                 offset = prefix.Length * 2;
                 from = ToNibbles(from.AsSpan());
             }
+            if (path.Length > MPTNode.MaxKeyLength || from.Length > MPTNode.MaxKeyLength)
+                throw new ArgumentException("exceeds limit");
             path = Seek(ref root, path, out MPTNode start).ToArray();
             return Travers(start, path, from, offset)
                 .Select(p => (FromNibbles(p.Key).AsSerializable<TKey>(), p.Value.AsSerializable<TValue>()));
