@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using System.Web;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.SmartContract;
@@ -20,7 +21,7 @@ namespace Neo.FileStorage.Listen
                 string value = dem.Current.Value;
                 if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(value))
                 {
-                    query.Append(key).Append('=').Append(value).Append('&');
+                    query.Append(HttpUtility.UrlEncode(key)).Append('=').Append(HttpUtility.UrlEncode(value)).Append('&');
                 }
             }
             return query.ToString().Substring(0, query.Length - 1);
