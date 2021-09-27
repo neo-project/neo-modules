@@ -30,7 +30,7 @@ namespace Neo.Plugins.MPT
                 throw new ArgumentException("exceeds limit", nameof(key));
             var result = TryGet(ref root, path, out var val);
             if (result)
-                val.ToArray().AsSerializable<TValue>();
+                value = val.ToArray().AsSerializable<TValue>();
             return result;
         }
 
