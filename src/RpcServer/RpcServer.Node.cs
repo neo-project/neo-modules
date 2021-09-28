@@ -65,6 +65,7 @@ namespace Neo.Plugins
             json["protocol"] = new JObject();
             json["protocol"]["addressversion"] = system.Settings.AddressVersion;
             json["protocol"]["network"] = system.Settings.Network;
+            json["protocol"]["validatorscount"] = system.Settings.ValidatorsCount;
             json["protocol"]["msperblock"] = system.Settings.MillisecondsPerBlock;
             json["protocol"]["maxtraceableblocks"] = system.Settings.MaxTraceableBlocks;
             json["protocol"]["maxvaliduntilblockincrement"] = system.Settings.MaxValidUntilBlockIncrement;
