@@ -9,11 +9,11 @@ using Neo.Network.RPC.Models;
 
 namespace Neo.Network.RPC
 {
-    public class StateAPI 
+    public class StateAPI
     {
         private readonly RpcClient rpcClient;
 
-        public StateAPI(RpcClient rpc) 
+        public StateAPI(RpcClient rpc)
         {
             this.rpcClient = rpc;
         }
