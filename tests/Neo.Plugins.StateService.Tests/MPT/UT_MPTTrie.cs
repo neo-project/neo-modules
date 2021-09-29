@@ -601,5 +601,23 @@ namespace Neo.Plugins.StateService.Tests
             Assert.IsNotNull(val);
             Assert.AreEqual(0, val.Size);
         }
+
+        [TestMethod]
+        public void TestFindWithFrom()
+        {
+            var snapshot = new TestSnapshot();
+            var mpt = new MPTTrie<TestKey, TestValue>(snapshot, null);
+            mpt.Put("aa".HexToBytes(), "02".HexToBytes());
+            mpt.Put("aa10".HexToBytes(), "03".HexToBytes());
+            mpt.Put("aa50".HexToBytes(), "04".HexToBytes());
+            var r = mpt.Find("aa".HexToBytes()).ToList();
+            Assert.AreEqual(3, r.Count);
+            r = mpt.Find("aa".HexToBytes(), "aa30".HexToBytes()).ToList();
+            Assert.AreEqual(1, r.Count);
+            r = mpt.Find("aa".HexToBytes(), "aa60".HexToBytes()).ToList();
+            Assert.AreEqual(0, r.Count);
+            r = mpt.Find("aa".HexToBytes(), "aa10".HexToBytes()).ToList();
+            Assert.AreEqual(1, r.Count);//without from key
+        }
     }
 }

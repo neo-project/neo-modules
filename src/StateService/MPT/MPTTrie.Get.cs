@@ -11,7 +11,10 @@ namespace Neo.Plugins.MPT
             get
             {
                 var path = ToNibbles(key.ToArray());
-                if (path.Length == 0) throw new ArgumentException("could not be empty", nameof(key));
+                if (path.Length == 0)
+                    throw new ArgumentException("could not be empty", nameof(key));
+                if (path.Length > MPTNode.MaxKeyLength)
+                    throw new ArgumentException("exceeds limit", nameof(key));
                 var result = TryGet(ref root, path, out var value);
                 return result ? value.ToArray().AsSerializable<TValue>() : throw new KeyNotFoundException();
             }
@@ -21,10 +24,13 @@ namespace Neo.Plugins.MPT
         {
             value = default;
             var path = ToNibbles(key.ToArray());
-            if (path.Length == 0) throw new ArgumentException("could not be empty", nameof(key));
+            if (path.Length == 0)
+                throw new ArgumentException("could not be empty", nameof(key));
+            if (path.Length > MPTNode.MaxKeyLength)
+                throw new ArgumentException("exceeds limit", nameof(key));
             var result = TryGet(ref root, path, out var val);
             if (result)
-                val.ToArray().AsSerializable<TValue>();
+                value = val.ToArray().AsSerializable<TValue>();
             return result;
         }
 

@@ -13,7 +13,10 @@ namespace Neo.Plugins.MPT
         public bool TryGetProof(TKey key, out HashSet<byte[]> proof)
         {
             var path = ToNibbles(key.ToArray());
-            if (path.Length == 0) throw new ArgumentException("could not be empty", nameof(key));
+            if (path.Length == 0)
+                throw new ArgumentException("could not be empty", nameof(key));
+            if (path.Length > MPTNode.MaxKeyLength)
+                throw new ArgumentException("exceeds limit", nameof(key));
             proof = new HashSet<byte[]>(ByteArrayEqualityComparer.Default);
             return GetProof(ref root, path, proof);
         }

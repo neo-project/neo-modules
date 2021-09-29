@@ -10,7 +10,10 @@ namespace Neo.Plugins.MPT
         public bool Delete(TKey key)
         {
             var path = ToNibbles(key.ToArray());
-            if (path.Length == 0) throw new ArgumentException("could not be empty", nameof(key));
+            if (path.Length == 0)
+                throw new ArgumentException("could not be empty", nameof(key));
+            if (path.Length > MPTNode.MaxKeyLength)
+                throw new ArgumentException("exceeds limit", nameof(key));
             return TryDelete(ref root, path);
         }
 
