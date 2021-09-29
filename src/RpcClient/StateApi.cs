@@ -9,9 +9,14 @@ using Neo.Network.RPC.Models;
 
 namespace Neo.Network.RPC
 {
-    public class StateApi : ContractClient
+    public class StateAPI 
     {
-        public StateApi(RpcClient rpc) : base(rpc) { }
+        private readonly RpcClient rpcClient;
+
+        public StateAPI(RpcClient rpc) 
+        {
+            this.rpcClient = rpc;
+        }
 
         public async Task<RpcStateRoot> GetStateRootAsync(uint index)
         {
@@ -68,22 +73,6 @@ namespace Neo.Network.RPC
             var result = await rpcClient.RpcSendAsync(RpcClient.GetRpcName(), @params).ConfigureAwait(false);
 
             return RpcFoundStates.FromJson(result);
-        }
-
-        public async IAsyncEnumerable<(byte[] key, byte[] value)> EnumerateFindStatesAsync(UInt256 rootHash, UInt160 scriptHash, ReadOnlyMemory<byte> prefix, int? pageSize = null)
-        {
-            var from = Array.Empty<byte>();
-            while (true)
-            {
-                var foundStates = await FindStatesAsync(rootHash, scriptHash, prefix, from, pageSize).ConfigureAwait(false);
-                var states = foundStates.Results;
-                for (var i = 0; i < states.Length; i++)
-                {
-                    yield return (states[i].key, states[i].value);
-                }
-                if (!foundStates.Truncated) break;
-                from = states[states.Length - 1].key;
-            }
         }
 
         public async Task<byte[]> GetStateAsync(UInt256 rootHash, UInt160 scriptHash, byte[] key)
