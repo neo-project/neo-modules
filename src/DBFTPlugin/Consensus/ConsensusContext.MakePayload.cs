@@ -3,15 +3,15 @@ using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.Wallets;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
 using static Neo.Consensus.RecoveryMessage;
 
 namespace Neo.Consensus
 {
-    public partial class ConsensusContext
+    partial class ConsensusContext
     {
-
         public ExtensiblePayload MakeChangeView(ChangeViewReason reason)
         {
             return ChangeViewPayloads[MyIndex] = MakeSignedPayload(new ChangeView
@@ -64,6 +64,7 @@ namespace Neo.Consensus
 
             // Limit Speaker proposal to the limit `MaxTransactionsPerBlock` or all available transactions of the mempool
             txs = txs.Take((int)maxTransactionsPerBlock);
+
             List<UInt256> hashes = new List<UInt256>();
             Transactions = new Dictionary<UInt256, Transaction>();
             VerificationContext = new TransactionVerificationContext();
@@ -91,21 +92,19 @@ namespace Neo.Consensus
             TransactionHashes = hashes.ToArray();
         }
 
-        public ExtensiblePayload MakePrepareRequest(Transaction[] transactions)
+        public ExtensiblePayload MakePrepareRequest()
         {
-            // if in single node mode, get transactoin from mempool
-            if(transactions == null && Validators.Length == 1)
-                EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
-
+            EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
             Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
-
+            Block.Header.Nonce = GetNonce();
             return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
             {
                 Version = Block.Version,
                 PrevHash = Block.PrevHash,
                 Timestamp = Block.Timestamp,
-                TransactionHashes = transactions.Select(p => p.Hash).ToArray()
-            }) ;
+                Nonce = Block.Nonce,
+                TransactionHashes = TransactionHashes
+            });
         }
 
         public ExtensiblePayload MakeRecoveryRequest()
@@ -127,6 +126,7 @@ namespace Neo.Consensus
                     PrevHash = Block.PrevHash,
                     ViewNumber = ViewNumber,
                     Timestamp = Block.Timestamp,
+                    Nonce = Block.Nonce,
                     BlockIndex = Block.Index,
                     TransactionHashes = TransactionHashes
                 };
@@ -152,19 +152,12 @@ namespace Neo.Consensus
             });
         }
 
-        public ExtensiblePayload MakeTXListMessage()
+        private static ulong GetNonce()
         {
-            EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
-
-            return TXListPayloads[MyIndex] = MakeSignedPayload(new TXListMessage
-            {
-                TransactionHashes = TransactionHashes
-            });
-        }
-
-        public ExtensiblePayload MakeTXListRequest() {
-
-            return  MakeSignedPayload(new TXListRequest {});
+            Random _random = new();
+            Span<byte> buffer = stackalloc byte[8];
+            _random.NextBytes(buffer);
+            return BinaryPrimitives.ReadUInt64LittleEndian(buffer);
         }
     }
 }

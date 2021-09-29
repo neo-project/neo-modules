@@ -44,9 +44,7 @@ namespace Neo.Consensus
         private readonly NeoSystem neoSystem;
 
         public ConsensusService(NeoSystem neoSystem, Settings settings, Wallet wallet)
-            : this(neoSystem, settings, new ConsensusContext(neoSystem, settings, wallet))
-        {
-        }
+            : this(neoSystem, settings, new ConsensusContext(neoSystem, settings, wallet)) { }
 
         internal ConsensusService(NeoSystem neoSystem, Settings settings, ConsensusContext context)
         {
@@ -60,52 +58,11 @@ namespace Neo.Consensus
             Context.System.EventStream.Subscribe(Self, typeof(Blockchain.RelayResult));
         }
 
-        private bool AddTransaction(Transaction tx, bool verify)
+        private void OnPersistCompleted(Block block)
         {
-            if (verify)
-            {
-                VerifyResult result = tx.Verify(neoSystem.Settings, context.Snapshot, context.VerificationContext);
-                if (result != VerifyResult.Succeed)
-                {
-                    Log($"Rejected tx: {tx.Hash}, {result}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
-                    RequestChangeView(result == VerifyResult.PolicyFail ? ChangeViewReason.TxRejectedByPolicy : ChangeViewReason.TxInvalid);
-                    return false;
-                }
-            }
-            context.Transactions[tx.Hash] = tx;
-            context.VerificationContext.AddTransaction(tx);
-
-            if(context.IsPrimary)
-            {
-                foreach (ExtensiblePayload payload in context.TXListPayloads)
-                {
-                    var message = context.GetMessage<TXListMessage>(payload);
-
-                    if (message.TransactionHashes.Contains(tx.Hash) && !context.TXListVerification[message.ValidatorIndex].Contains(tx.Hash))
-                    {
-                        context.TXListVerification[message.ValidatorIndex].Append(tx.Hash);
-                        CheckTXLists(message);
-                    }
-                    
-                }
-                    
-            }
-             
-                
-
-            return CheckPrepareResponse();
-        }
-
-        private void ChangeTimer(TimeSpan delay)
-        {
-            clock_started = TimeProvider.Current.UtcNow;
-            expected_delay = delay;
-            timer_token.CancelIfNotNull();
-            timer_token = Context.System.Scheduler.ScheduleTellOnceCancelable(delay, Self, new Timer
-            {
-                Height = context.Block.Index,
-                ViewNumber = context.ViewNumber
-            }, ActorRefs.NoSender);
+            Log($"Persisted {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length} nonce={block.Nonce}");
+            knownHashes.Clear();
+            InitializeConsensus(0);
         }
 
         private void InitializeConsensus(byte viewNumber)
@@ -141,26 +98,6 @@ namespace Neo.Consensus
             }
         }
 
-        private static void Log(string message, LogLevel level = LogLevel.Info)
-        {
-            Utility.Log(nameof(ConsensusService), level, message);
-        }
-
-        // this function increases existing timer (never decreases) with a value proportional to `maxDelayInBlockTimes`*`Blockchain.MillisecondsPerBlock`
-        private void ExtendTimerByFactor(int maxDelayInBlockTimes)
-        {
-            TimeSpan nextDelay = expected_delay - (TimeProvider.Current.UtcNow - clock_started) + TimeSpan.FromMilliseconds(maxDelayInBlockTimes * neoSystem.Settings.MillisecondsPerBlock / (double)context.M);
-            if (!context.WatchOnly && !context.ViewChanging && !context.CommitSent && (nextDelay > TimeSpan.Zero))
-                ChangeTimer(nextDelay);
-        }
-
-        private void OnPersistCompleted(Block block)
-        {
-            Log($"Persisted {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length}");
-            knownHashes.Clear();
-            InitializeConsensus(0);
-        }
-
         protected override void OnReceive(object message)
         {
             if (message is Start)
@@ -188,12 +125,6 @@ namespace Neo.Consensus
                         break;
                 }
             }
-        }
-
-        private void RequestRecovery()
-        {
-            Log($"Sending {nameof(RecoveryRequest)}: height={context.Block.Index} view={context.ViewNumber} nc={context.CountCommitted} nf={context.CountFailed}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeRecoveryRequest() });
         }
 
         private void OnStart()
@@ -252,27 +183,26 @@ namespace Neo.Consensus
             }
         }
 
-        private void OnTransaction(Transaction transaction)
+        private void SendPrepareRequest()
         {
-            if (!context.IsBackup || context.NotAcceptingPayloadsDueToViewChanging || !context.RequestSentOrReceived || context.ResponseSent || context.BlockSent)
-                return;
-            if (context.Transactions.ContainsKey(transaction.Hash)) return;
-            if (!context.TransactionHashes.Contains(transaction.Hash)) return;
-            AddTransaction(transaction, true);
+            Log($"Sending {nameof(PrepareRequest)}: height={context.Block.Index} view={context.ViewNumber}");
+            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest() });
+
+            if (context.Validators.Length == 1)
+                CheckPreparations();
+
+            if (context.TransactionHashes.Length > 0)
+            {
+                foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes))
+                    localNode.Tell(Message.Create(MessageCommand.Inv, payload));
+            }
+            ChangeTimer(TimeSpan.FromMilliseconds((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0)));
         }
 
-        protected override void PostStop()
+        private void RequestRecovery()
         {
-            Log("OnStop");
-            started = false;
-            Context.System.EventStream.Unsubscribe(Self);
-            context.Dispose();
-            base.PostStop();
-        }
-
-        public static Props Props(NeoSystem neoSystem, Settings dbftSettings, Wallet wallet)
-        {
-            return Akka.Actor.Props.Create(() => new ConsensusService(neoSystem, dbftSettings, wallet));
+            Log($"Sending {nameof(RecoveryRequest)}: height={context.Block.Index} view={context.ViewNumber} nc={context.CountCommitted} nf={context.CountFailed}");
+            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeRecoveryRequest() });
         }
 
         private void RequestChangeView(ChangeViewReason reason)
@@ -304,45 +234,69 @@ namespace Neo.Consensus
             return true;
         }
 
-        private void SendTXListRequest()
+        private void OnTransaction(Transaction transaction)
         {
-            // If there is only one validator, skip this step.
-            if (context.Validators.Length == 1)
-            {
-                SendPrepareRequest();
-                CheckPreparations();
+            if (!context.IsBackup || context.NotAcceptingPayloadsDueToViewChanging || !context.RequestSentOrReceived || context.ResponseSent || context.BlockSent)
                 return;
-            }
-                
-
-            Log($"Sending {nameof(TXListRequest)}: height={context.Block.Index} view={context.ViewNumber}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeTXListRequest() });
-
-       
-
-            if (context.TransactionHashes.Length > 0)
-            {
-                foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes))
-                    localNode.Tell(Message.Create(MessageCommand.Inv, payload));
-            }
-            ChangeTimer(TimeSpan.FromMilliseconds((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0)));
-
+            if (context.Transactions.ContainsKey(transaction.Hash)) return;
+            if (!context.TransactionHashes.Contains(transaction.Hash)) return;
+            AddTransaction(transaction, true);
         }
 
-        private void SendPrepareRequest()
+        private bool AddTransaction(Transaction tx, bool verify)
         {
-            Log($"Sending {nameof(PrepareRequest)}: height={context.Block.Index} view={context.ViewNumber}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest() });
-
-            if (context.Validators.Length == 1)
-                CheckPreparations();
-
-            if (context.TransactionHashes.Length > 0)
+            if (verify)
             {
-                foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes))
-                    localNode.Tell(Message.Create(MessageCommand.Inv, payload));
+                VerifyResult result = tx.Verify(neoSystem.Settings, context.Snapshot, context.VerificationContext);
+                if (result != VerifyResult.Succeed)
+                {
+                    Log($"Rejected tx: {tx.Hash}, {result}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
+                    RequestChangeView(result == VerifyResult.PolicyFail ? ChangeViewReason.TxRejectedByPolicy : ChangeViewReason.TxInvalid);
+                    return false;
+                }
             }
-            ChangeTimer(TimeSpan.FromMilliseconds((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0)));
+            context.Transactions[tx.Hash] = tx;
+            context.VerificationContext.AddTransaction(tx);
+            return CheckPrepareResponse();
+        }
+
+        private void ChangeTimer(TimeSpan delay)
+        {
+            clock_started = TimeProvider.Current.UtcNow;
+            expected_delay = delay;
+            timer_token.CancelIfNotNull();
+            timer_token = Context.System.Scheduler.ScheduleTellOnceCancelable(delay, Self, new Timer
+            {
+                Height = context.Block.Index,
+                ViewNumber = context.ViewNumber
+            }, ActorRefs.NoSender);
+        }
+
+        // this function increases existing timer (never decreases) with a value proportional to `maxDelayInBlockTimes`*`Blockchain.MillisecondsPerBlock`
+        private void ExtendTimerByFactor(int maxDelayInBlockTimes)
+        {
+            TimeSpan nextDelay = expected_delay - (TimeProvider.Current.UtcNow - clock_started) + TimeSpan.FromMilliseconds(maxDelayInBlockTimes * neoSystem.Settings.MillisecondsPerBlock / (double)context.M);
+            if (!context.WatchOnly && !context.ViewChanging && !context.CommitSent && (nextDelay > TimeSpan.Zero))
+                ChangeTimer(nextDelay);
+        }
+
+        protected override void PostStop()
+        {
+            Log("OnStop");
+            started = false;
+            Context.System.EventStream.Unsubscribe(Self);
+            context.Dispose();
+            base.PostStop();
+        }
+
+        public static Props Props(NeoSystem neoSystem, Settings dbftSettings, Wallet wallet)
+        {
+            return Akka.Actor.Props.Create(() => new ConsensusService(neoSystem, dbftSettings, wallet));
+        }
+
+        private static void Log(string message, LogLevel level = LogLevel.Info)
+        {
+            Utility.Log(nameof(ConsensusService), level, message);
         }
     }
 }

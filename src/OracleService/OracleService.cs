@@ -28,7 +28,7 @@ namespace Neo.Plugins
 {
     public class OracleService : Plugin, IPersistencePlugin
     {
-        private const int RefreshInterval = 1000 * 60 * 3;
+        private const int RefreshIntervalMilliSeconds = 1000 * 60 * 3;
 
         private Wallet wallet;
         private readonly ConcurrentDictionary<ulong, OracleTask> pendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
@@ -118,7 +118,7 @@ namespace Neo.Plugins
             protocols["https"] = new OracleHttpsProtocol();
             protocols["neofs"] = new OracleNeoFSProtocol(wallet, oracles);
             started = true;
-            timer = new Timer(OnTimer, null, RefreshInterval, Timeout.Infinite);
+            timer = new Timer(OnTimer, null, RefreshIntervalMilliSeconds, Timeout.Infinite);
 
             ProcessRequestsAsync();
         }
@@ -145,31 +145,44 @@ namespace Neo.Plugins
 
         private async void OnTimer(object state)
         {
-            List<ulong> outOfDate = new List<ulong>();
-            foreach (var (id, task) in pendingQueue)
+            try
             {
-                var span = TimeProvider.Current.UtcNow - task.Timestamp;
-                if (span > TimeSpan.FromSeconds(RefreshInterval) && span < TimeSpan.FromSeconds(RefreshInterval * 2))
+                List<ulong> outOfDate = new();
+                List<Task> tasks = new();
+                foreach (var (id, task) in pendingQueue)
                 {
-                    List<Task> tasks = new List<Task>();
-                    foreach (var account in wallet.GetAccounts())
-                        if (task.BackupSigns.TryGetValue(account.GetKey().PublicKey, out byte[] sign))
-                            tasks.Add(SendResponseSignatureAsync(id, sign, account.GetKey()));
-                    await Task.WhenAll(tasks);
-                }
-                else if (span > Settings.Default.MaxTaskTimeout)
-                {
-                    outOfDate.Add(id);
-                }
-            }
-            foreach (ulong requestId in outOfDate)
-                pendingQueue.TryRemove(requestId, out _);
-            foreach (var (key, value) in finishedCache)
-                if (TimeProvider.Current.UtcNow - value > TimeSpan.FromDays(3))
-                    finishedCache.TryRemove(key, out _);
+                    var span = TimeProvider.Current.UtcNow - task.Timestamp;
+                    if (span > Settings.Default.MaxTaskTimeout)
+                    {
+                        outOfDate.Add(id);
+                        continue;
+                    }
 
-            if (!cancelSource.IsCancellationRequested)
-                timer?.Change(RefreshInterval, Timeout.Infinite);
+                    if (span > TimeSpan.FromMilliseconds(RefreshIntervalMilliSeconds))
+                    {
+                        foreach (var account in wallet.GetAccounts())
+                            if (task.BackupSigns.TryGetValue(account.GetKey().PublicKey, out byte[] sign))
+                                tasks.Add(SendResponseSignatureAsync(id, sign, account.GetKey()));
+                    }
+                }
+
+                await Task.WhenAll(tasks);
+
+                foreach (ulong requestId in outOfDate)
+                    pendingQueue.TryRemove(requestId, out _);
+                foreach (var (key, value) in finishedCache)
+                    if (TimeProvider.Current.UtcNow - value > TimeSpan.FromDays(3))
+                        finishedCache.TryRemove(key, out _);
+            }
+            catch (Exception e)
+            {
+                Log(e, LogLevel.Error);
+            }
+            finally
+            {
+                if (!cancelSource.IsCancellationRequested)
+                    timer?.Change(RefreshIntervalMilliSeconds, Timeout.Infinite);
+            }
         }
 
         [RpcMethod]
@@ -234,7 +247,7 @@ namespace Neo.Plugins
 
         private async Task ProcessRequestAsync(DataCache snapshot, OracleRequest req)
         {
-            Log($"Process oracle request: {req}, txid: {req.OriginalTxid}, url: {req.Url}");
+            Log($"Process oracle request txid: {req.OriginalTxid}, url: {req.Url}");
 
             uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
 
@@ -257,9 +270,9 @@ namespace Neo.Plugins
                 }
                 var response = new OracleResponse() { Id = requestId, Code = code, Result = result };
                 var responseTx = CreateResponseTx(snapshot, request, response, oracleNodes, System.Settings);
-                var backupTx = CreateResponseTx(snapshot, request, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() }, oracleNodes, System.Settings);
+                var backupTx = CreateResponseTx(snapshot, request, new OracleResponse() { Code = OracleResponseCode.ConsensusUnreachable, Id = requestId, Result = Array.Empty<byte>() }, oracleNodes, System.Settings, true);
 
-                Log($"Builded response tx:{responseTx.Hash} requestTx:{request.OriginalTxid} requestId: {requestId}");
+                Log($"Builded response tx:{responseTx.Hash}, responseCode:{code}, validUntilBlock:{responseTx.ValidUntilBlock}-{backupTx.ValidUntilBlock}, requestTx:{request.OriginalTxid}, requestId: {requestId}");
 
                 List<Task> tasks = new List<Task>();
                 ECPoint[] oraclePublicKeys = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
@@ -285,6 +298,7 @@ namespace Neo.Plugins
             {
                 using (var snapshot = System.GetSnapshot())
                 {
+                    SyncPendingQueue(snapshot);
                     foreach (var (id, request) in NativeContract.Oracle.GetRequests(snapshot))
                     {
                         if (cancelSource.IsCancellationRequested) break;
@@ -296,6 +310,17 @@ namespace Neo.Plugins
                 await Task.Delay(500);
             }
             stopped = true;
+        }
+
+
+        private void SyncPendingQueue(DataCache snapshot)
+        {
+            var offChainRequests = NativeContract.Oracle.GetRequests(snapshot).ToDictionary(r => r.Item1, r => r.Item2);
+            var onChainRequests = pendingQueue.Keys.Except(offChainRequests.Keys);
+            foreach (var onChainRequest in onChainRequests)
+            {
+                pendingQueue.TryRemove(onChainRequest, out _);
+            }
         }
 
         private async Task<(OracleResponseCode, string)> ProcessUrlAsync(string url)
@@ -314,18 +339,23 @@ namespace Neo.Plugins
             }
         }
 
-        public static Transaction CreateResponseTx(DataCache snapshot, OracleRequest request, OracleResponse response, ECPoint[] oracleNodes, ProtocolSettings settings)
+        public static Transaction CreateResponseTx(DataCache snapshot, OracleRequest request, OracleResponse response, ECPoint[] oracleNodes, ProtocolSettings settings, bool useCurrentHeight = false)
         {
             var requestTx = NativeContract.Ledger.GetTransactionState(snapshot, request.OriginalTxid);
             var n = oracleNodes.Length;
             var m = n - (n - 1) / 3;
             var oracleSignContract = Contract.CreateMultiSigContract(m, oracleNodes);
-
+            uint height = NativeContract.Ledger.CurrentIndex(snapshot);
+            var validUntilBlock = requestTx.BlockIndex + settings.MaxValidUntilBlockIncrement;
+            while (useCurrentHeight && validUntilBlock <= height)
+            {
+                validUntilBlock += settings.MaxValidUntilBlockIncrement;
+            }
             var tx = new Transaction()
             {
                 Version = 0,
                 Nonce = unchecked((uint)response.Id),
-                ValidUntilBlock = requestTx.BlockIndex + settings.MaxValidUntilBlockIncrement,
+                ValidUntilBlock = validUntilBlock,
                 Signers = new[]
                 {
                     new Signer
@@ -459,6 +489,10 @@ namespace Neo.Plugins
         private bool CheckTxSign(DataCache snapshot, Transaction tx, ConcurrentDictionary<ECPoint, byte[]> OracleSigns)
         {
             uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
+            if (tx.ValidUntilBlock <= height)
+            {
+                return false;
+            }
             ECPoint[] oraclesNodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
             int neededThreshold = oraclesNodes.Length - (oraclesNodes.Length - 1) / 3;
             if (OracleSigns.Count >= neededThreshold && tx != null)

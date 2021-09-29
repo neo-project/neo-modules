@@ -20,6 +20,7 @@ namespace Neo.Plugins.StateService.Storage
         private const int MaxCacheCount = 100;
         private readonly Dictionary<uint, StateRoot> cache = new Dictionary<uint, StateRoot>();
         private StateSnapshot currentSnapshot;
+        private StateSnapshot _state_snapshot;
         public UInt256 CurrentLocalRootHash => currentSnapshot.CurrentLocalRootHash();
         public uint? LocalRootIndex => currentSnapshot.CurrentLocalRootIndex();
         public uint? ValidatedRootIndex => currentSnapshot.CurrentValidatedRootIndex();
@@ -54,11 +55,11 @@ namespace Neo.Plugins.StateService.Storage
             return new StateSnapshot(store);
         }
 
-        public HashSet<byte[]> GetProof(UInt256 root, StorageKey skey)
+        public bool TryGetProof(UInt256 root, StorageKey skey, out HashSet<byte[]> proof)
         {
             using ISnapshot snapshot = store.GetSnapshot();
             var trie = new MPTTrie<StorageKey, StorageItem>(snapshot, root);
-            return trie.GetProof(skey);
+            return trie.TryGetProof(skey, out proof);
         }
 
         protected override void OnReceive(object message)
@@ -115,25 +116,25 @@ namespace Neo.Plugins.StateService.Storage
             return true;
         }
 
-        public void UpdateLocalStateRoot(uint height, List<DataCache.Trackable> change_set)
+        public void UpdateLocalStateRootSnapshot(uint height, List<DataCache.Trackable> change_set)
         {
-            using StateSnapshot state_snapshot = Singleton.GetSnapshot();
+            _state_snapshot = Singleton.GetSnapshot();
             foreach (var item in change_set)
             {
                 switch (item.State)
                 {
                     case TrackState.Added:
-                        state_snapshot.Trie.Put(item.Key, item.Item);
+                        _state_snapshot.Trie.Put(item.Key, item.Item);
                         break;
                     case TrackState.Changed:
-                        state_snapshot.Trie.Put(item.Key, item.Item);
+                        _state_snapshot.Trie.Put(item.Key, item.Item);
                         break;
                     case TrackState.Deleted:
-                        state_snapshot.Trie.Delete(item.Key);
+                        _state_snapshot.Trie.Delete(item.Key);
                         break;
                 }
             }
-            UInt256 root_hash = state_snapshot.Trie.Root.Hash;
+            UInt256 root_hash = _state_snapshot.Trie.Root.Hash;
             StateRoot state_root = new StateRoot
             {
                 Version = StateRoot.CurrentVersion,
@@ -141,8 +142,13 @@ namespace Neo.Plugins.StateService.Storage
                 RootHash = root_hash,
                 Witness = null,
             };
-            state_snapshot.AddLocalStateRoot(state_root);
-            state_snapshot.Commit();
+            _state_snapshot.AddLocalStateRoot(state_root);
+        }
+
+        public void UpdateLocalStateRoot(uint height)
+        {
+            _state_snapshot?.Commit();
+            _state_snapshot = null;
             UpdateCurrentSnapshot();
             system.Verifier?.Tell(new VerificationService.BlockPersisted { Index = height });
             CheckValidatedStateRoot(height);

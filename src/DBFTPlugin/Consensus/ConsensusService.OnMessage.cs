@@ -14,9 +14,8 @@ using System.Linq;
 
 namespace Neo.Consensus
 {
-   partial class ConsensusService
+    partial class ConsensusService
     {
-
         private void OnConsensusPayload(ExtensiblePayload payload)
         {
             if (context.BlockSent) return;
@@ -47,20 +46,14 @@ namespace Neo.Consensus
             context.LastSeenMessage[context.Validators[message.ValidatorIndex]] = message.BlockIndex;
             switch (message)
             {
-                case ChangeView view:
-                    OnChangeViewReceived(payload, view);
-                    break;
-                case TXListRequest request:
-                    OnTXListRequestReceived(payload, request);
-                    break;
-                case TXListMessage response:
-                    OnTXListMessageReceived(payload, response);
-                    break;
                 case PrepareRequest request:
                     OnPrepareRequestReceived(payload, request);
                     break;
                 case PrepareResponse response:
                     OnPrepareResponseReceived(payload, response);
+                    break;
+                case ChangeView view:
+                    OnChangeViewReceived(payload, view);
                     break;
                 case Commit commit:
                     OnCommitReceived(payload, commit);
@@ -72,94 +65,6 @@ namespace Neo.Consensus
                     OnRecoveryMessageReceived(recovery);
                     break;
             }
-        }
-
-        private void OnChangeViewReceived(ExtensiblePayload payload, ChangeView message)
-        {
-            if (message.NewViewNumber <= context.ViewNumber)
-                OnRecoveryRequestReceived(payload, message);
-
-            if (context.CommitSent) return;
-
-            var expectedView = context.GetMessage<ChangeView>(context.ChangeViewPayloads[message.ValidatorIndex])?.NewViewNumber ?? 0;
-            if (message.NewViewNumber <= expectedView)
-                return;
-
-            Log($"{nameof(OnChangeViewReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} nv={message.NewViewNumber} reason={message.Reason}");
-            context.ChangeViewPayloads[message.ValidatorIndex] = payload;
-            CheckExpectedView(message.NewViewNumber);
-        }
-
-        private void OnTXListRequestReceived(ExtensiblePayload payload, TXListRequest message) {
-            if (context.TXHashResponseSent || context.NotAcceptingPayloadsDueToViewChanging) return;
-
-            // Timeout extension: TXList request has been received with success
-            // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
-            ExtendTimerByFactor(2);
-
-            Log($"Sending {nameof(TXListRequest)}: height={context.Block.Index} view={context.ViewNumber}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeTXListMessage() });
-
-
-            if (context.TransactionHashes.Length > 0)
-            {
-                foreach (InvPayload ipayload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes))
-                    localNode.Tell(Message.Create(MessageCommand.Inv, ipayload));
-            }
-        }
-
-        private void OnTXListMessageReceived(ExtensiblePayload payload, TXListMessage message) {
-
-            if (context.TXListPayloads[message.ValidatorIndex] != null
-                || context.NotAcceptingPayloadsDueToViewChanging
-                || message.ValidatorIndex != context.Block.PrimaryIndex
-                || message.ViewNumber != context.ViewNumber
-                || message.TransactionHashes.Length > neoSystem.Settings.MaxTransactionsPerBlock)
-                return;
-
-            Log($"{nameof(OnTXListMessageReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} tx={message.TransactionHashes.Length}");
-            
-            if (message.TransactionHashes.Any(p => NativeContract.Ledger.ContainsTransaction(context.Snapshot, p)))
-            {
-                Log($"Invalid TXList response: transaction already exists", LogLevel.Warning);
-                return;
-            }
-
-            context.TXListPayloads[message.ValidatorIndex] = payload;
-
-            if (message.TransactionHashes.Length == 0)
-            {
-                CheckTXLists(message);
-                return;
-            }
-
-            Dictionary<UInt256, Transaction> mempoolVerified = neoSystem.MemPool.GetVerifiedTransactions().ToDictionary(p => p.Hash);
-            List<Transaction> unverified = new List<Transaction>();
-            foreach (UInt256 hash in context.TransactionHashes)
-            {
-                if (mempoolVerified.TryGetValue(hash, out Transaction tx))
-                {
-                    if (!AddTransaction(tx, false))  return;
-                }
-                else
-                {
-                    if (neoSystem.MemPool.TryGetValue(hash, out tx))
-                        unverified.Add(tx);
-                }
-            }
-
-            foreach (Transaction tx in unverified)
-                if (!AddTransaction(tx, true)) return;
-
-            if (context.Transactions.Count < context.TransactionHashes.Length)
-            {
-                UInt256[] hashes = context.TransactionHashes.Where(i => !context.Transactions.ContainsKey(i)).ToArray();
-                taskManager.Tell(new TaskManager.RestartTasks
-                {
-                    Payload = InvPayload.Create(InventoryType.TX, hashes)
-                });
-            }
-
         }
 
         private void OnPrepareRequestReceived(ExtensiblePayload payload, PrepareRequest message)
@@ -174,6 +79,7 @@ namespace Neo.Consensus
                 Log($"Timestamp incorrect: {message.Timestamp}", LogLevel.Warning);
                 return;
             }
+
             if (message.TransactionHashes.Any(p => NativeContract.Ledger.ContainsTransaction(context.Snapshot, p)))
             {
                 Log($"Invalid request: transaction already exists", LogLevel.Warning);
@@ -185,7 +91,9 @@ namespace Neo.Consensus
             ExtendTimerByFactor(2);
 
             context.Block.Header.Timestamp = message.Timestamp;
+            context.Block.Header.Nonce = message.Nonce;
             context.TransactionHashes = message.TransactionHashes;
+
             context.Transactions = new Dictionary<UInt256, Transaction>();
             context.VerificationContext = new TransactionVerificationContext();
             for (int i = 0; i < context.PreparationPayloads.Length; i++)
@@ -233,6 +141,7 @@ namespace Neo.Consensus
                 });
             }
         }
+
         private void OnPrepareResponseReceived(ExtensiblePayload payload, PrepareResponse message)
         {
             if (message.ViewNumber != context.ViewNumber) return;
@@ -249,6 +158,22 @@ namespace Neo.Consensus
             if (context.WatchOnly || context.CommitSent) return;
             if (context.RequestSentOrReceived)
                 CheckPreparations();
+        }
+
+        private void OnChangeViewReceived(ExtensiblePayload payload, ChangeView message)
+        {
+            if (message.NewViewNumber <= context.ViewNumber)
+                OnRecoveryRequestReceived(payload, message);
+
+            if (context.CommitSent) return;
+
+            var expectedView = context.GetMessage<ChangeView>(context.ChangeViewPayloads[message.ValidatorIndex])?.NewViewNumber ?? 0;
+            if (message.NewViewNumber <= expectedView)
+                return;
+
+            Log($"{nameof(OnChangeViewReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} nv={message.NewViewNumber} reason={message.Reason}");
+            context.ChangeViewPayloads[message.ValidatorIndex] = payload;
+            CheckExpectedView(message.NewViewNumber);
         }
 
         private void OnCommitReceived(ExtensiblePayload payload, Commit commit)
@@ -339,6 +264,7 @@ namespace Neo.Consensus
                 isRecovering = false;
             }
         }
+
         private void OnRecoveryRequestReceived(ExtensiblePayload payload, ConsensusMessage message)
         {
             // We keep track of the payload hashes received in this block, and don't respond with recovery
@@ -368,6 +294,5 @@ namespace Neo.Consensus
             }
             localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeRecoveryMessage() });
         }
-
     }
 }

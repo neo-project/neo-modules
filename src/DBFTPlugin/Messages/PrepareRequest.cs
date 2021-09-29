@@ -11,6 +11,7 @@ namespace Neo.Consensus
         public uint Version;
         public UInt256 PrevHash;
         public ulong Timestamp;
+        public ulong Nonce;
         public UInt256[] TransactionHashes;
         public ExtensiblePayload[] TXLists;
 
@@ -18,6 +19,7 @@ namespace Neo.Consensus
             + sizeof(uint)                      //Version
             + UInt256.Length                    //PrevHash
             + sizeof(ulong)                     //Timestamp
+            + sizeof(ulong)                     // Nonce
             + TransactionHashes.GetVarSize();   //TransactionHashes
 
         public PrepareRequest() : base(ConsensusMessageType.PrepareRequest) { }
@@ -28,6 +30,7 @@ namespace Neo.Consensus
             Version = reader.ReadUInt32();
             PrevHash = reader.ReadSerializable<UInt256>();
             Timestamp = reader.ReadUInt64();
+            Nonce = reader.ReadUInt64();
             TransactionHashes = reader.ReadSerializableArray<UInt256>(ushort.MaxValue);
             if (TransactionHashes.Distinct().Count() != TransactionHashes.Length)
                 throw new FormatException();
@@ -45,6 +48,7 @@ namespace Neo.Consensus
             writer.Write(Version);
             writer.Write(PrevHash);
             writer.Write(Timestamp);
+            writer.Write(Nonce);
             writer.Write(TransactionHashes);
         }
     }

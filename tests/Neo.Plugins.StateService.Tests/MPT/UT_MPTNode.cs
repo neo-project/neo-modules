@@ -163,7 +163,6 @@ namespace Neo.Plugins.StateService.Tests
         public void TestNewLeafException()
         {
             Assert.ThrowsException<ArgumentNullException>(() => MPTNode.NewLeaf(null));
-            Assert.ThrowsException<InvalidOperationException>(() => MPTNode.NewLeaf(Array.Empty<byte>()));
         }
 
         [TestMethod]
@@ -192,6 +191,17 @@ namespace Neo.Plugins.StateService.Tests
             Assert.AreEqual(n.Hash, r.Hash);
             Assert.AreEqual(NodeType.HashNode, r.Children[1].Type);
             Assert.AreEqual(l.Hash, r.Children[1].Hash);
+        }
+
+        [TestMethod]
+        public void TestEmptyLeaf()
+        {
+            var leaf = MPTNode.NewLeaf(Array.Empty<byte>());
+            var data = leaf.ToArray();
+            Assert.AreEqual(3, data.Length);
+            var l = data.AsSerializable<MPTNode>();
+            Assert.AreEqual(NodeType.LeafNode, l.Type);
+            Assert.AreEqual(0, l.Value.Length);
         }
     }
 }
