@@ -98,7 +98,7 @@ namespace Neo.FileStorage.InnerRing
             using var source = CancellationTokenSource.CreateLinkedTokenSource(task.Cancellation);
             source.CancelAfter(TimeSpan.FromMinutes(1));
             var key = Wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
-            return client.GetObjectHeader(objAddress, raw, options: new CallOptions() { Key = key }, context: source.Token).Result;
+            return client.GetObjectHeader(objAddress, raw, options: new CallOptions() { Key = key, Ttl = ttl }, context: source.Token).Result;
         }
 
         public byte[] GetRangeHash(AuditTask task, Node node, ObjectID id, API.Object.Range rng)
