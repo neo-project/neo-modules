@@ -111,7 +111,7 @@ namespace Neo.FileStorage.Network
             return str;
         }
 
-        private string DialArgs(Multiaddress ma)
+        private static string DialArgs(Multiaddress ma)
         {
             var res = DialArgsComponents(ma);
             if (res.HostName)
@@ -141,7 +141,7 @@ namespace Neo.FileStorage.Network
             public bool HostName;
         }
 
-        private DialArgsComponentsResult DialArgsComponents(Multiaddress ma)
+        private static DialArgsComponentsResult DialArgsComponents(Multiaddress ma)
         {
             DialArgsComponentsResult res = new();
             foreach (var p in ma.Protocols)

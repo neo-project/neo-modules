@@ -30,7 +30,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public Container ContainerInfo(ContainerID cid)
         {
-            return Invoker.GetContainer(cid)?.Container;
+            return Invoker.GetContainer(cid).Container;
         }
 
         public void BuildContainer(ulong epoch, ContainerID cid, out List<List<Node>> containerNodes, out NetMap netMap)
@@ -39,7 +39,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 netMap = Invoker.GetNetMapByEpoch(epoch);
             else
                 netMap = Invoker.GetNetMapByDiff(0);
-            Container cnr = Invoker.GetContainer(cid)?.Container;
+            Container cnr = Invoker.GetContainer(cid).Container;
             containerNodes = netMap.GetContainerNodes(cnr.PlacementPolicy, cid.Value.ToByteArray());
         }
 
