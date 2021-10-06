@@ -5,6 +5,7 @@ using Neo.FileStorage.Invoker;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
+using System.Linq;
 using Xunit.Sdk;
 
 namespace Neo.FileStorage.Tests.Morph.Invoker
@@ -14,6 +15,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
     {
         private class TestInvoker : ContractInvoker
         {
+            public WalletAccount Default => DefaultAccount;
             public void InvokeW(UInt160 contractHash, string method, long fee, params object[] args)
             {
                 Invoke(contractHash, method, fee, args);
@@ -41,6 +43,12 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 NeoSystem = system,
                 Blockchain = this.TestActor
             };
+        }
+
+        [TestMethod]
+        public void DefaultTest()
+        {
+            Assert.AreEqual(invoker.Default.Address, wallet.GetAccounts().Skip(1).First().Address);
         }
 
         [TestMethod]

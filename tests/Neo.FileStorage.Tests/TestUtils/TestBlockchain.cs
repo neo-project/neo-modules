@@ -61,7 +61,8 @@ namespace Neo.FileStorage.Tests
             {
                 for (int i = 0; i < 7; i++)
                 {
-                    wallet.CreateAccount();
+                    var w = wallet.CreateAccount();
+                    if (i == 1) w.IsDefault = true;
                 }
                 wallet.Save();
             }

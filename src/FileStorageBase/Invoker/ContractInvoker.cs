@@ -18,13 +18,12 @@ namespace Neo.FileStorage.Invoker
         public NeoSystem NeoSystem { get; init; }
         public IActorRef Blockchain { get; init; }
         private WalletAccount account;
-        private WalletAccount DefaultAccount
+        protected WalletAccount DefaultAccount
         {
             get
             {
                 if (account is null)
                 {
-                    WalletAccount first = null;
                     foreach (WalletAccount wa in Wallet.GetAccounts())
                     {
                         if (wa.IsDefault)
@@ -32,9 +31,8 @@ namespace Neo.FileStorage.Invoker
                             account = wa;
                             break;
                         }
-                        if (first == null) first = wa;
+                        if (account == null) account = wa;
                     }
-                    account = first;
                 }
                 return account;
             }
