@@ -2473,6 +2473,7 @@
         "useragent": "/Neo:3.0.0-rc1/",
         "protocol": {
           "network": 0,
+          "validatorscount": 0,
           "msperblock": 15000,
           "maxvaliduntilblockincrement": 1,
           "maxtraceableblocks": 1,
