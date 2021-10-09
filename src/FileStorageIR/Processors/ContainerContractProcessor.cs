@@ -209,7 +209,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
         }
 
-        public void CheckFormat(Container container)
+        public static void CheckFormat(Container container)
         {
             if (container.PlacementPolicy is null) throw new FormatException("placement policy is null");
             if (!API.Refs.Version.IsSupportedVersion(container.Version)) throw new FormatException("incorrect version");
@@ -250,7 +250,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             if (curEpoch < exp) throw new FormatException($"token is expired, exp={exp}, current={curEpoch}");
         }
 
-        public ContainerSessionContext ContextWithVerifiedVerb(SessionToken token, Func<ContainerSessionContext, bool> verbAssert)
+        public static ContainerSessionContext ContextWithVerifiedVerb(SessionToken token, Func<ContainerSessionContext, bool> verbAssert)
         {
             ContainerSessionContext c = token.Body.Container;
             if (c is null) throw new FormatException("wrong session context");

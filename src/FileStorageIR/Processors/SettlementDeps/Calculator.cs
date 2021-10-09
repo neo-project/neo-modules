@@ -100,7 +100,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
         }
 
-        public bool CollectPassNodes(SingleResultCtx ctx)
+        public static bool CollectPassNodes(SingleResultCtx ctx)
         {
             bool loopflag = false;
             foreach (var cnrNode in ctx.ContainerNodes)
@@ -162,7 +162,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             return true;
         }
 
-        public bool FillTransferTable(SingleResultCtx ctx)
+        public static bool FillTransferTable(SingleResultCtx ctx)
         {
             var cnrOwner = ctx.Container.OwnerId;
             foreach (var item in ctx.PassedNodes)

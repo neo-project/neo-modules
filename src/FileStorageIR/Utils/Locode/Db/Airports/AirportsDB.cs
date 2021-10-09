@@ -153,7 +153,7 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode.Db
             countriesInitialized = true;
         }
 
-        public void ScanRecords<T>(string path, Action<T> handler)
+        public static void ScanRecords<T>(string path, Action<T> handler)
         {
             var config = new CsvConfiguration(CultureInfo.InvariantCulture)
             {

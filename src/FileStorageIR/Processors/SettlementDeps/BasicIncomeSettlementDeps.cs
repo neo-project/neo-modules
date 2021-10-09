@@ -11,7 +11,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 {
     public class BasicIncomeSettlementDeps : SettlementDeps
     {
-        public ulong BasicRate => Settings.Default.BasicIncomeRate;
+        public static ulong BasicRate => Settings.Default.BasicIncomeRate;
 
         public override void Transfer(OwnerID sender, OwnerID recipient, long amount)
         {

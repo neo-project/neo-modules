@@ -62,7 +62,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
         }
 
-        public ulong AvgEstimation(Estimations e)
+        public static ulong AvgEstimation(Estimations e)
         {
             ulong avg = 0;
             if (!e.AllEstimation.Any()) return avg;
@@ -71,7 +71,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             return avg / (ulong)e.AllEstimation.Count;
         }
 
-        public BigInteger CalculateBasicSum(ulong size, ulong rate, int ln)
+        public static BigInteger CalculateBasicSum(ulong size, ulong rate, int ln)
         {
             BigInteger bigRate = rate;
             ulong total = size * (ulong)ln;
@@ -99,7 +99,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             }
         }
 
-        public BigInteger NormalizedValue(BigInteger n, BigInteger total, BigInteger limit)
+        public static BigInteger NormalizedValue(BigInteger n, BigInteger total, BigInteger limit)
         {
             if (limit.CompareTo(BaseProcessor.BigZero) == 0) return 0;
             n = BigInteger.Multiply(n, limit);

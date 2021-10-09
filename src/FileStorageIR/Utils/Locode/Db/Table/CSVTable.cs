@@ -116,7 +116,7 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode
             subDivInitialized = true;
         }
 
-        public void ScanRecords<T>(string[] paths, Action<T> handler)
+        public static void ScanRecords<T>(string[] paths, Action<T> handler)
         {
             foreach (string path in paths)
             {

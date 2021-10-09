@@ -135,7 +135,7 @@ namespace Neo.FileStorage.Invoker
             return KeyPosition(key, Committee());
         }
 
-        private int KeyPosition(ECPoint key, ECPoint[] list)
+        private static int KeyPosition(ECPoint key, ECPoint[] list)
         {
             var result = -1;
             for (int i = 0; i < list.Length; i++)

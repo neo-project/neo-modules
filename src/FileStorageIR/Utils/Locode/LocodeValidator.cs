@@ -93,7 +93,7 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode
             n.Attributes.AddRange(ass);
         }
 
-        public Dictionary<string, NodeInfo.Types.Attribute> UniqueAttributes(IEnumerator<NodeInfo.Types.Attribute> attributes)
+        public static Dictionary<string, NodeInfo.Types.Attribute> UniqueAttributes(IEnumerator<NodeInfo.Types.Attribute> attributes)
         {
             Dictionary<string, NodeInfo.Types.Attribute> tAttr = new();
             while (attributes.MoveNext())
