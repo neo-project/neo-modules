@@ -3,7 +3,8 @@
     "Path": "Data_MPT_{0}",
     "FullState": false,
     "Network": 860833102,
-    "AutoVerify": false
+    "AutoVerify": false,
+    "MaxFindResultItems": 100
   },
   "Dependency": [
     "RpcServer"

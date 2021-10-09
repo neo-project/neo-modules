@@ -6,10 +6,6 @@
 
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>D:\Neo.Fork\neo-package\neo-cli\neo-cli\bin\Debug\net5.0\Plugins\</OutputPath>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\LevelDBStore\LevelDBStore.csproj" />
     <ProjectReference Include="..\RpcServer\RpcServer.csproj" />

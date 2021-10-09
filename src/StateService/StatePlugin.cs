@@ -177,7 +177,10 @@ namespace Neo.Plugins.StateService
                 Id = contract.Id,
                 Key = key,
             };
-            var result = StateStore.Singleton.TryGetProof(root_hash, skey, out var proof);
+
+            using ISnapshot store = StateStore.Singleton.GetStoreSnapshot();
+            var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
+            var result = trie.TryGetProof(skey, out var proof);
             if (!result) throw new RpcException(-100, "Unknown value");
 
             using MemoryStream ms = new MemoryStream();
@@ -238,6 +241,92 @@ namespace Neo.Plugins.StateService
             json["localrootindex"] = StateStore.Singleton.LocalRootIndex;
             json["validatedrootindex"] = StateStore.Singleton.ValidatedRootIndex;
             return json;
+        }
+
+        private ContractState GetHistoricalContractState(MPTTrie<StorageKey, StorageItem> trie, UInt160 script_hash)
+        {
+            const byte prefix = 8;
+            StorageKey skey = new KeyBuilder(NativeContract.ContractManagement.Id, prefix).Add(script_hash);
+            return trie.TryGetValue(skey, out var value) ? value.GetInteroperable<ContractState>() : null;
+        }
+
+        [RpcMethod]
+        public JObject FindStates(JArray _params)
+        {
+            var root_hash = UInt256.Parse(_params[0].AsString());
+            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
+                throw new RpcException(-100, "Old state not supported");
+            var script_hash = UInt160.Parse(_params[1].AsString());
+            var prefix = Convert.FromBase64String(_params[2].AsString());
+            byte[] key = Array.Empty<byte>();
+            if (3 < _params.Count)
+                key = Convert.FromBase64String(_params[3].AsString());
+            int count = Settings.Default.MaxFindResultItems;
+            if (4 < _params.Count)
+                count = int.Parse(_params[4].AsString());
+            if (Settings.Default.MaxFindResultItems < count)
+                count = Settings.Default.MaxFindResultItems;
+            using var store = StateStore.Singleton.GetStoreSnapshot();
+            var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
+            var contract = GetHistoricalContractState(trie, script_hash);
+            if (contract is null) throw new RpcException(-100, "Unknown contract");
+            StorageKey pkey = new()
+            {
+                Id = contract.Id,
+                Key = prefix,
+            };
+            StorageKey fkey = new()
+            {
+                Id = pkey.Id,
+                Key = key,
+            };
+            JObject json = new();
+            JArray jarr = new();
+            int i = 0;
+            foreach (var (ikey, ivalue) in trie.Find(pkey.ToArray(), 0 < key.Length ? fkey.ToArray() : null))
+            {
+                if (count < i) break;
+                if (i < count)
+                {
+                    JObject j = new();
+                    j["key"] = Convert.ToBase64String(ikey.Key);
+                    j["value"] = Convert.ToBase64String(ivalue.Value);
+                    jarr.Add(j);
+                }
+                i++;
+            };
+            if (0 < jarr.Count)
+            {
+                json["firstProof"] = GetProof(root_hash, script_hash, Convert.FromBase64String(jarr.First()["key"].AsString()));
+            }
+            if (1 < jarr.Count)
+            {
+                json["lastProof"] = GetProof(root_hash, script_hash, Convert.FromBase64String(jarr.Last()["key"].AsString()));
+            }
+            json["truncated"] = count < i;
+            json["results"] = jarr;
+            return json;
+        }
+
+        [RpcMethod]
+        public JObject GetState(JArray _params)
+        {
+            var root_hash = UInt256.Parse(_params[0].AsString());
+            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
+                throw new RpcException(-100, "Old state not supported");
+            var script_hash = UInt160.Parse(_params[1].AsString());
+            var key = Convert.FromBase64String(_params[2].AsString());
+            using var store = StateStore.Singleton.GetStoreSnapshot();
+            var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
+
+            var contract = GetHistoricalContractState(trie, script_hash);
+            if (contract is null) throw new RpcException(-100, "Unknown contract");
+            StorageKey skey = new()
+            {
+                Id = contract.Id,
+                Key = key,
+            };
+            return Convert.ToBase64String(trie[skey].Value);
         }
     }
 }
