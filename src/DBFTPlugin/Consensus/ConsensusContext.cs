@@ -29,6 +29,7 @@ namespace Neo.Consensus
         public UInt256[] TransactionHashes;
         public Dictionary<UInt256, Transaction> Transactions;
         public ExtensiblePayload[] PreparationPayloads;
+        public ExtensiblePayload[] TxlistsPayloads;
         public ExtensiblePayload[] CommitPayloads;
         public ExtensiblePayload[] ChangeViewPayloads;
         public ExtensiblePayload[] LastChangeViewPayloads;
@@ -78,6 +79,7 @@ namespace Neo.Consensus
         }
 
         #region Consensus States
+        public bool TxListSent => TxlistsPayloads[Block.PrimaryIndex] != null;
         public bool RequestSentOrReceived => PreparationPayloads[Block.PrimaryIndex] != null;
         public bool ResponseSent => !WatchOnly && PreparationPayloads[MyIndex] != null;
         public bool CommitSent => !WatchOnly && CommitPayloads[MyIndex] != null;

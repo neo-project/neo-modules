@@ -46,6 +46,9 @@ namespace Neo.Consensus
             context.LastSeenMessage[context.Validators[message.ValidatorIndex]] = message.BlockIndex;
             switch (message)
             {
+                case TxListMessage txList:
+
+                    break;
                 case PrepareRequest request:
                     OnPrepareRequestReceived(payload, request);
                     break;
@@ -65,6 +68,23 @@ namespace Neo.Consensus
                     OnRecoveryMessageReceived(recovery);
                     break;
             }
+        }
+
+        private void OnTxListMessageReceived(ExtensiblePayload payload, TxListMessage message)
+        {
+            if (message.ViewNumber != context.ViewNumber) return;
+
+            if (context.TxlistsPayloads[message.ValidatorIndex] != null || context.NotAcceptingPayloadsDueToViewChanging) return;
+
+            // Timeout extension: prepare response has been received with success
+            // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
+            ExtendTimerByFactor(2);
+
+            Log($"{nameof(OnTxListMessageReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex}");
+            context.TxlistsPayloads[message.ValidatorIndex] = payload;
+            if (context.WatchOnly || context.CommitSent) return;
+            if (context.TxListSent && context.IsPrimary)
+                CheckPreparations();
         }
 
         private void OnPrepareRequestReceived(ExtensiblePayload payload, PrepareRequest message)

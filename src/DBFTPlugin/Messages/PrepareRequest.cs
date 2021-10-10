@@ -13,13 +13,16 @@ namespace Neo.Consensus
         public ulong Timestamp;
         public ulong Nonce;
         public UInt256[] TransactionHashes;
+
+        // We need the lists to verify the authenticity of the final list
+        //  Size of the lists should be > 2f
         public ExtensiblePayload[] TXLists;
 
         public override int Size => base.Size
             + sizeof(uint)                      //Version
             + UInt256.Length                    //PrevHash
             + sizeof(ulong)                     //Timestamp
-            + sizeof(ulong)                     // Nonce
+            + sizeof(ulong)                     //Nonce
             + TransactionHashes.GetVarSize();   //TransactionHashes
 
         public PrepareRequest() : base(ConsensusMessageType.PrepareRequest) { }

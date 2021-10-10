@@ -9,6 +9,24 @@ namespace Neo.Consensus
 {
     partial class ConsensusService
     {
+        /// <summary>
+        /// Need over 2f transaction lists
+        /// valid transaction should exists in over 2f lists
+        /// order are based on the time
+        /// </summary>
+        private void CheckTxLists()
+        {
+            /// TODO: check the transactions
+            if (context.TxlistsPayloads.Count(p => p != null) >= context.M && context.TransactionHashes.All(p => context.Transactions.ContainsKey(p)))
+            {
+                // Update the hashes
+
+
+
+                SendPrepareRequest();
+            }
+        }
+
         private bool CheckPrepareResponse()
         {
             if (context.TransactionHashes.Length == context.Transactions.Count)
