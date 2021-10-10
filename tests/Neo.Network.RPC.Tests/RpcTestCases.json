@@ -361,6 +361,7 @@
         "nef": {
           "magic": 860243278,
           "compiler": "neo-core-v3.0",
+          "source": "",
           "tokens": [],
           "script": "APxBGvd7Zw==",
           "checksum": 3155977747
@@ -482,6 +483,7 @@
         "nef": {
           "magic": 860243278,
           "compiler": "neo-core-v3.0",
+          "source": "",
           "tokens": [],
           "script": "APxBGvd7Zw==",
           "checksum": 3155977747
@@ -603,6 +605,7 @@
         "nef": {
           "magic": 860243278,
           "compiler": "neo-core-v3.0",
+          "source": "",
           "tokens": [],
           "script": "AP1BGvd7Zw==",
           "checksum": 3921333105
@@ -820,6 +823,7 @@
         "nef": {
           "magic": 860243278,
           "compiler": "neo-core-v3.0",
+          "source": "",
           "tokens": [],
           "script": "AP1BGvd7Zw==",
           "checksum": 3921333105
@@ -1037,6 +1041,7 @@
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
+            "source": "",
             "tokens": [],
             "script": "D0Ea93tn",
             "checksum": 3516775561
@@ -1206,6 +1211,7 @@
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
+            "source": "",
             "tokens": [],
             "script": "AP5BGvd7Zw==",
             "checksum": 3395482975
@@ -1303,6 +1309,7 @@
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
+            "source": "",
             "tokens": [],
             "script": "AP1BGvd7Zw==",
             "checksum": 3921333105
@@ -1507,6 +1514,7 @@
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
+            "source": "",
             "tokens": [],
             "script": "APxBGvd7Zw==",
             "checksum": 3155977747
@@ -1615,6 +1623,7 @@
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
+            "source": "",
             "tokens": [],
             "script": "APtBGvd7Zw==",
             "checksum": 1136340263
@@ -1796,6 +1805,7 @@
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
+            "source": "",
             "tokens": [],
             "script": "APpBGvd7Zw==",
             "checksum": 3289425910
@@ -1859,6 +1869,7 @@
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
+            "source": "",
             "tokens": [],
             "script": "APlBGvd7Zw==",
             "checksum": 3902663397
@@ -1967,6 +1978,7 @@
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
+            "source": "",
             "tokens": [],
             "script": "APhBGvd7Zw==",
             "checksum": 3740064217
