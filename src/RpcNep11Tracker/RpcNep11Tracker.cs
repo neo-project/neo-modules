@@ -171,7 +171,6 @@ namespace RpcNep11Tracker
         }
 
 
-
         private void HandleNotification(DataCache snapshot, IVerifiable scriptContainer, UInt160 scriptHash, string eventName, VmArray stateItems, List<TransferRecord> transfers, ref ushort transferIndex)
         {
             if (eventName != "Transfer") return;
@@ -199,8 +198,8 @@ namespace RpcNep11Tracker
                 return;
             if (fromBytes == null && toBytes == null) return;
 
-            var from = UInt160.Zero;
-            var to = UInt160.Zero;
+            var from = fromBytes == null ? UInt160.Zero : new UInt160(fromBytes);
+            var to = toBytes == null ? UInt160.Zero : new UInt160(toBytes);
             var tokenId = tokenIdItem as ByteString;
 
             transfers.Add(new TransferRecord(scriptHash, from, to, tokenId, amountItem.GetInteger()));
