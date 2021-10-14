@@ -163,18 +163,11 @@ namespace Neo.Plugins.StateService
                 return state_root.ToJson();
         }
 
-        private string GetProof(UInt256 root_hash, UInt160 script_hash, byte[] key)
+        private string GetProof(UInt256 root_hash, int contract_id, byte[] key)
         {
-            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
-            {
-                throw new RpcException(-100, "Old state not supported");
-            }
-            var snapshot = System.StoreView;
-            var contract = NativeContract.ContractManagement.GetContract(snapshot, script_hash);
-            if (contract is null) throw new RpcException(-100, "Unknown contract");
             StorageKey skey = new StorageKey
             {
-                Id = contract.Id,
+                Id = contract_id,
                 Key = key,
             };
 
@@ -183,8 +176,8 @@ namespace Neo.Plugins.StateService
             var result = trie.TryGetProof(skey, out var proof);
             if (!result) throw new RpcException(-100, "Unknown value");
 
-            using MemoryStream ms = new MemoryStream();
-            using BinaryWriter writer = new BinaryWriter(ms, Utility.StrictUTF8);
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms, Utility.StrictUTF8);
 
             writer.WriteVarBytes(skey.ToArray());
             writer.WriteVarInt(proof.Count);
@@ -195,6 +188,18 @@ namespace Neo.Plugins.StateService
             writer.Flush();
 
             return Convert.ToBase64String(ms.ToArray());
+        }
+
+        private string GetProof(UInt256 root_hash, UInt160 script_hash, byte[] key)
+        {
+            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
+            {
+                throw new RpcException(-100, "Old state not supported");
+            }
+            var snapshot = System.StoreView;
+            var contract = NativeContract.ContractManagement.GetContract(snapshot, script_hash);
+            if (contract is null) throw new RpcException(-100, "Unknown contract");
+            return GetProof(root_hash, contract.Id, key);
         }
 
         [RpcMethod]
@@ -297,11 +302,11 @@ namespace Neo.Plugins.StateService
             };
             if (0 < jarr.Count)
             {
-                json["firstProof"] = GetProof(root_hash, script_hash, Convert.FromBase64String(jarr.First()["key"].AsString()));
+                json["firstProof"] = GetProof(root_hash, contract.Id, Convert.FromBase64String(jarr.First()["key"].AsString()));
             }
             if (1 < jarr.Count)
             {
-                json["lastProof"] = GetProof(root_hash, script_hash, Convert.FromBase64String(jarr.Last()["key"].AsString()));
+                json["lastProof"] = GetProof(root_hash, contract.Id, Convert.FromBase64String(jarr.Last()["key"].AsString()));
             }
             json["truncated"] = count < i;
             json["results"] = jarr;
