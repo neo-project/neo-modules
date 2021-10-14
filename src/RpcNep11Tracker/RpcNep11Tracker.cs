@@ -110,13 +110,14 @@ namespace RpcNep11Tracker
                 if (!contracts.ContainsKey(transferRecord.asset))
                 {
                     var state = NativeContract.ContractManagement.GetContract(snapshot, transferRecord.asset);
-                    var balanceMethod = state.Manifest.Abi.Methods.FirstOrDefault(m => m.Name == "balanceOf");
-                    if (balanceMethod == null)
+                    var balanceMethod = state.Manifest.Abi.GetMethod("balanceOf", 1);
+                    var balanceMethod2 = state.Manifest.Abi.GetMethod("balanceOf", 2);
+                    if (balanceMethod == null && balanceMethod2 == null)
                     {
                         Log($"{state.Hash} is not nft!", LogLevel.Warning);
                         continue;
                     }
-                    var isDivisible = balanceMethod.Parameters.Length == 2;
+                    var isDivisible = balanceMethod2 != null;
                     contracts[transferRecord.asset] = (isDivisible, state);
                 }
                 var asset = contracts[transferRecord.asset];
