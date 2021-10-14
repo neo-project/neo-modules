@@ -76,7 +76,25 @@ namespace Neo.Plugins.MPT
             if (path.Length > MPTNode.MaxKeyLength || from.Length > MPTNode.MaxKeyLength)
                 throw new ArgumentException("exceeds limit");
             path = Seek(ref root, path, out MPTNode start).ToArray();
-            offset = path.Length;
+            if (from.Length > 0)
+            {
+                for (int i = 0; i < from.Length && i < path.Length; i++)
+                {
+                    if (path[i] < from[i]) return Enumerable.Empty<(TKey Key, TValue Value)>();
+                    if (path[i] > from[i])
+                    {
+                        offset = from.Length;
+                        break;
+                    }
+                }
+                if (offset == 0)
+                {
+                    if (from.Length > path.Length)
+                        offset = path.Length;
+                    else
+                        offset = from.Length;
+                }
+            }
             return Travers(start, path, from, offset)
                 .Select(p => (FromNibbles(p.Key).AsSerializable<TKey>(), p.Value.AsSerializable<TValue>()));
         }
