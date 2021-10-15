@@ -10,8 +10,10 @@ using Neo.VM;
 using Neo.VM.Types;
 using Neo.Wallets;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Array = System.Array;
 
 namespace Neo.Plugins
 {
@@ -57,6 +59,78 @@ namespace Neo.Plugins
             {
                 throw new NotImplementedException();
             }
+        }
+
+        private JObject GetInvokeResultDetails(byte[] script, Signers signers = null)
+        {
+            Transaction tx = signers == null ? null : new Transaction
+            {
+                Signers = signers.GetSigners(),
+                Attributes = System.Array.Empty<TransactionAttribute>(),
+                Witnesses = signers.Witnesses,
+            };
+
+
+            var block = CreateDummyBlock(system.StoreView, system.Settings);
+            using ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Application, tx, system.StoreView, settings: system.Settings, persistingBlock: block, gas: settings.MaxGasInvoke);
+            engine.LoadScript((Script)script, -1);
+
+            var contracts = new HashSet<UInt160>();
+            Debugger debugger = new Debugger(engine);
+            var state = VMState.NONE;
+
+            while (state != VMState.HALT && state != VMState.FAULT)
+            {
+                state = debugger.StepInto();
+                if (engine.CurrentScriptHash != null && engine.CurrentScriptHash != engine.EntryScriptHash)
+                {
+                    contracts.Add(engine.CurrentScriptHash);
+                }
+            }
+
+            JObject json = new();
+            json["script"] = Convert.ToBase64String(script);
+            json["invokedcontracts"] = new JArray(contracts.Select(c => (JString)c.ToString()));
+            json["state"] = engine.State;
+            json["gasconsumed"] = engine.GasConsumed.ToString();
+            json["exception"] = GetExceptionMessage(engine.FaultException);
+            try
+            {
+                json["stack"] = new JArray(engine.ResultStack.Select(p => ToJson(p, settings.MaxIteratorResultItems)));
+            }
+            catch (InvalidOperationException)
+            {
+                json["stack"] = "error: invalid operation";
+            }
+            if (engine.State != VMState.FAULT)
+            {
+                ProcessInvokeWithWallet(json, signers);
+            }
+            return json;
+        }
+
+        private static Block CreateDummyBlock(DataCache snapshot, ProtocolSettings settings)
+        {
+            UInt256 hash = NativeContract.Ledger.CurrentHash(snapshot);
+            Block currentBlock = NativeContract.Ledger.GetBlock(snapshot, hash);
+            return new Block
+            {
+                Header = new Header
+                {
+                    Version = 0,
+                    PrevHash = hash,
+                    MerkleRoot = new UInt256(),
+                    Timestamp = currentBlock.Timestamp + settings.MillisecondsPerBlock,
+                    Index = currentBlock.Index + 1,
+                    NextConsensus = currentBlock.NextConsensus,
+                    Witness = new Witness
+                    {
+                        InvocationScript = Array.Empty<byte>(),
+                        VerificationScript = Array.Empty<byte>()
+                    },
+                },
+                Transactions = Array.Empty<Transaction>()
+            };
         }
 
         private JObject GetInvokeResult(byte[] script, Signers signers = null)
@@ -158,6 +232,30 @@ namespace Neo.Plugins
             byte[] script = Convert.FromBase64String(_params[0].AsString());
             Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], system.Settings) : null;
             return GetInvokeResult(script, signers);
+        }
+
+        [RpcMethod]
+        protected virtual JObject InvokeFunctionDetails(JArray _params)
+        {
+            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
+            string operation = _params[1].AsString();
+            ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : System.Array.Empty<ContractParameter>();
+            Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
+
+            byte[] script;
+            using (ScriptBuilder sb = new())
+            {
+                script = sb.EmitDynamicCall(script_hash, operation, args).ToArray();
+            }
+            return GetInvokeResultDetails(script, signers);
+        }
+
+        [RpcMethod]
+        protected virtual JObject InvokeScriptDetails(JArray _params)
+        {
+            byte[] script = Convert.FromBase64String(_params[0].AsString());
+            Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], system.Settings) : null;
+            return GetInvokeResultDetails(script, signers);
         }
 
         [RpcMethod]
