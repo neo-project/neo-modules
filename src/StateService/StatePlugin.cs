@@ -163,16 +163,13 @@ namespace Neo.Plugins.StateService
                 return state_root.ToJson();
         }
 
-        private string GetProof(UInt256 root_hash, int contract_id, byte[] key)
+        private string GetProof(MPTTrie<StorageKey, StorageItem> trie, int contract_id, byte[] key)
         {
             StorageKey skey = new StorageKey
             {
                 Id = contract_id,
                 Key = key,
             };
-
-            using ISnapshot store = StateStore.Singleton.GetStoreSnapshot();
-            var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
             var result = trie.TryGetProof(skey, out var proof);
             if (!result) throw new RpcException(-100, "Unknown value");
 
@@ -196,10 +193,11 @@ namespace Neo.Plugins.StateService
             {
                 throw new RpcException(-100, "Old state not supported");
             }
-            var snapshot = System.StoreView;
-            var contract = NativeContract.ContractManagement.GetContract(snapshot, script_hash);
+            using var store = StateStore.Singleton.GetStoreSnapshot();
+            var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
+            var contract = GetHistoricalContractState(trie, script_hash);
             if (contract is null) throw new RpcException(-100, "Unknown contract");
-            return GetProof(root_hash, contract.Id, key);
+            return GetProof(trie, contract.Id, key);
         }
 
         [RpcMethod]
@@ -215,8 +213,8 @@ namespace Neo.Plugins.StateService
         {
             var proofs = new HashSet<byte[]>();
 
-            using MemoryStream ms = new MemoryStream(proof, false);
-            using BinaryReader reader = new BinaryReader(ms, Utility.StrictUTF8);
+            using MemoryStream ms = new(proof, false);
+            using BinaryReader reader = new(ms, Utility.StrictUTF8);
 
             var key = reader.ReadVarBytes(MPTNode.MaxKeyLength);
             var count = reader.ReadVarInt();
@@ -302,11 +300,11 @@ namespace Neo.Plugins.StateService
             };
             if (0 < jarr.Count)
             {
-                json["firstProof"] = GetProof(root_hash, contract.Id, Convert.FromBase64String(jarr.First()["key"].AsString()));
+                json["firstProof"] = GetProof(trie, contract.Id, Convert.FromBase64String(jarr.First()["key"].AsString()));
             }
             if (1 < jarr.Count)
             {
-                json["lastProof"] = GetProof(root_hash, contract.Id, Convert.FromBase64String(jarr.Last()["key"].AsString()));
+                json["lastProof"] = GetProof(trie, contract.Id, Convert.FromBase64String(jarr.Last()["key"].AsString()));
             }
             json["truncated"] = count < i;
             json["results"] = jarr;
