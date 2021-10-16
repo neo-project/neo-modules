@@ -89,10 +89,7 @@ namespace Neo.Plugins.MPT
                 }
                 if (offset == 0)
                 {
-                    if (from.Length > path.Length)
-                        offset = path.Length;
-                    else
-                        offset = from.Length;
+                    offset = Math.Min(path.Length, from.Length);
                 }
             }
             return Travers(start, path, from, offset)
