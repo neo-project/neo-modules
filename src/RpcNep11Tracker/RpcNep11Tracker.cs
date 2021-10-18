@@ -298,11 +298,12 @@ namespace RpcNep11Tracker
 
             JObject json = new JObject();
             JArray balances = new JArray();
-            json["balance"] = balances;
             json["address"] = userScriptHash.ToAddress(neoSystem.Settings.AddressVersion);
+            json["balance"] = balances;
 
             using Iterator it = _db.NewIterator(ReadOptions.Default);
             byte[] prefix = Key(Nep11BalancePrefix, userScriptHash);
+            var map = new Dictionary<UInt160, List<(string tokenid, string amount, uint height)>>();
             for (it.Seek(prefix); it.Valid(); it.Next())
             {
                 ReadOnlySpan<byte> key_bytes = it.Key();
@@ -311,12 +312,23 @@ namespace RpcNep11Tracker
                 if (NativeContract.ContractManagement.GetContract(neoSystem.StoreView, key.AssetScriptHash) is null)
                     continue;
                 var value = it.Value().AsSerializable<Nep11Balance>();
-                balances.Add(new JObject
+                if (!map.ContainsKey(key.AssetScriptHash))
                 {
-                    ["assethash"] = key.AssetScriptHash.ToString(),
-                    ["tokenid"] = key.Token.GetSpan().ToHexString(),
-                    ["amount"] = value.Balance.ToString(),
-                    ["lastupdatedblock"] = value.LastUpdatedBlock
+                    map[key.AssetScriptHash] = new List<(string, string, uint)>();
+                }
+                map[key.AssetScriptHash].Add((key.Token.GetSpan().ToHexString(), value.Balance.ToString(), value.LastUpdatedBlock));
+            }
+            foreach (var key in map.Keys)
+            {
+                balances.Add(new JObject()
+                {
+                    ["assethash"] = key.ToString(),
+                    ["tokens"] = new JArray(map[key].Select(v => new JObject()
+                    {
+                        ["tokenid"] = v.tokenid,
+                        ["amount"] = v.amount,
+                        ["lastupdatedblock"] = v.height
+                    })),
                 });
             }
             return json;
