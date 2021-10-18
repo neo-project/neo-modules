@@ -285,8 +285,8 @@ namespace RpcNep11Tracker
             JArray transfersReceived = new JArray();
             json["received"] = transfersReceived;
             json["address"] = userScriptHash.ToAddress(neoSystem.Settings.AddressVersion);
-            AddTransfers(Nep11TransferSentPrefix, userScriptHash, startTime, endTime, transfersSent);
-            AddTransfers(Nep11TransferReceivedPrefix, userScriptHash, startTime, endTime, transfersReceived);
+            AddTransfers(Nep11TransferSentPrefix, userScriptHash, startTime, endTime, transfersSent, true);
+            AddTransfers(Nep11TransferReceivedPrefix, userScriptHash, startTime, endTime, transfersReceived, false);
             return json;
         }
 
@@ -374,7 +374,7 @@ namespace RpcNep11Tracker
         }
 
         private void AddTransfers(byte dbPrefix, UInt160 userScriptHash, ulong startTime, ulong endTime,
-         JArray parentJArray)
+         JArray parentJArray, bool isSent)
         {
             var prefix = new[] { dbPrefix }.Concat(userScriptHash.ToArray()).ToArray();
             byte[] startTimeBytes, endTimeBytes;
@@ -407,7 +407,7 @@ namespace RpcNep11Tracker
                 transfer["timestamp"] = key.TimestampMS;
                 transfer["assethash"] = key.AssetScriptHash.ToString();
                 transfer["tokenid"] = key.Token.GetSpan().ToHexString();
-                transfer["transferaddress"] = value.UserScriptHash == UInt160.Zero ? null : value.UserScriptHash.ToAddress(neoSystem.Settings.AddressVersion);
+                transfer[isSent ? "toaddress" : "fromaddress"] = value.UserScriptHash == UInt160.Zero ? null : value.UserScriptHash.ToAddress(neoSystem.Settings.AddressVersion);
                 transfer["amount"] = value.Amount.ToString();
                 transfer["blockindex"] = value.BlockIndex;
                 transfer["transfernotifyindex"] = key.BlockXferNotificationIndex;
