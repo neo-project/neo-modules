@@ -20,7 +20,6 @@ using System.IO;
 using Neo.IO.Json;
 using Neo.Wallets;
 using System.Buffers.Binary;
-using SQLitePCL;
 
 namespace RpcNep11Tracker
 {
@@ -315,7 +314,7 @@ namespace RpcNep11Tracker
                 balances.Add(new JObject
                 {
                     ["assethash"] = key.AssetScriptHash.ToString(),
-                    ["tokenId"] = key.Token.GetSpan().ToHexString(),
+                    ["tokenid"] = key.Token.GetSpan().ToHexString(),
                     ["amount"] = value.Balance.ToString(),
                     ["lastupdatedblock"] = value.LastUpdatedBlock
                 });
@@ -383,13 +382,19 @@ namespace RpcNep11Tracker
                 prefix.Concat(endTimeBytes).ToArray());
 
             int resultCount = 0;
+            var unsortList = new List<(Nep11TransferKey key, Nep11Transfer value)>();
             foreach (var (key, value) in transferPairs)
             {
                 if (++resultCount > _maxResults) break;
+                unsortList.Add((key, value));
+            }
+
+            foreach (var (key, value) in unsortList.OrderByDescending(l => l.key.TimestampMS))
+            {
                 JObject transfer = new JObject();
                 transfer["timestamp"] = key.TimestampMS;
                 transfer["assethash"] = key.AssetScriptHash.ToString();
-                transfer["tokenId"] = key.Token.GetSpan().ToHexString();
+                transfer["tokenid"] = key.Token.GetSpan().ToHexString();
                 transfer["transferaddress"] = value.UserScriptHash == UInt160.Zero ? null : value.UserScriptHash.ToAddress(neoSystem.Settings.AddressVersion);
                 transfer["amount"] = value.Amount.ToString();
                 transfer["blockindex"] = value.BlockIndex;
