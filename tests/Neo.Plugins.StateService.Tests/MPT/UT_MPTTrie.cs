@@ -617,7 +617,22 @@ namespace Neo.Plugins.StateService.Tests
             r = mpt.Find("aa".HexToBytes(), "aa60".HexToBytes()).ToList();
             Assert.AreEqual(0, r.Count);
             r = mpt.Find("aa".HexToBytes(), "aa10".HexToBytes()).ToList();
-            Assert.AreEqual(1, r.Count);//without from key
+            Assert.AreEqual(1, r.Count);
+        }
+
+        [TestMethod]
+        public void TestFindStatesIssue652()
+        {
+            var snapshot = new TestSnapshot();
+            var mpt = new MPTTrie<TestKey, TestValue>(snapshot, null);
+            mpt.Put("abc1".HexToBytes(), "01".HexToBytes());
+            mpt.Put("abc3".HexToBytes(), "02".HexToBytes());
+            var r = mpt.Find("ab".HexToBytes(), "abd2".HexToBytes()).ToList();
+            Assert.AreEqual(0, r.Count);
+            r = mpt.Find("ab".HexToBytes(), "abb2".HexToBytes()).ToList();
+            Assert.AreEqual(2, r.Count);
+            r = mpt.Find("ab".HexToBytes(), "abc2".HexToBytes()).ToList();
+            Assert.AreEqual(1, r.Count);
         }
     }
 }
