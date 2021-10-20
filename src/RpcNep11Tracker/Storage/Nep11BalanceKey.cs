@@ -66,9 +66,7 @@ namespace Neo.Plugins.Storage
         {
             unchecked
             {
-                var hashCode = UserScriptHash.GetHashCode();
-                hashCode = (hashCode * 397) ^ AssetScriptHash.GetHashCode();
-                hashCode = (hashCode * 397) ^ Token.GetHashCode();
+                var hashCode = HashCode.Combine(UserScriptHash.GetHashCode(), AssetScriptHash.GetHashCode(), Token.GetHashCode());
                 return hashCode;
             }
         }

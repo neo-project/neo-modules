@@ -198,14 +198,14 @@ namespace RpcNep11Tracker
             if (tokenIdItem.IsNull || tokenIdItem is not ByteString)
                 return;
 
-
             byte[] fromBytes = fromItem.IsNull ? null : fromItem.GetSpan().ToArray();
             if (fromBytes != null && fromBytes.Length != UInt160.Length)
                 return;
             byte[] toBytes = toItem.IsNull ? null : toItem.GetSpan().ToArray();
             if (toBytes != null && toBytes.Length != UInt160.Length)
                 return;
-            if (fromBytes == null && toBytes == null) return;
+            if (fromBytes == null && toBytes == null)
+                return;
 
             var from = fromBytes == null ? UInt160.Zero : new UInt160(fromBytes);
             var to = toBytes == null ? UInt160.Zero : new UInt160(toBytes);
@@ -217,7 +217,6 @@ namespace RpcNep11Tracker
                 RecordTransferHistory(snapshot, scriptHash, from, to, tokenId, amountItem.GetInteger(), transaction.Hash, ref transferIndex);
             }
         }
-
 
 
         private void RecordTransferHistory(DataCache snapshot, UInt160 contractHash, UInt160 from, UInt160 to, ByteString tokenId, BigInteger amount, UInt256 txHash, ref ushort transferIndex)
@@ -250,9 +249,6 @@ namespace RpcNep11Tracker
             }
             transferIndex++;
         }
-
-
-
 
         private static byte[] Key(byte prefix, ISerializable key)
         {
@@ -313,6 +309,7 @@ namespace RpcNep11Tracker
             using Iterator it = _db.NewIterator(ReadOptions.Default);
             byte[] prefix = Key(Nep11BalancePrefix, userScriptHash);
             var map = new Dictionary<UInt160, List<(string tokenid, string amount, uint height)>>();
+            int count = 0;
             for (it.Seek(prefix); it.Valid(); it.Next())
             {
                 ReadOnlySpan<byte> key_bytes = it.Key();
@@ -326,6 +323,11 @@ namespace RpcNep11Tracker
                     map[key.AssetScriptHash] = new List<(string, string, uint)>();
                 }
                 map[key.AssetScriptHash].Add((key.Token.GetSpan().ToHexString(), value.Balance.ToString(), value.LastUpdatedBlock));
+                count++;
+                if (count >= _maxResults)
+                {
+                    break;
+                }
             }
             foreach (var key in map.Keys)
             {

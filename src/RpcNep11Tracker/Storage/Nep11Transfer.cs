@@ -44,7 +44,7 @@ namespace Neo.Plugins.Storage
             UserScriptHash = reader.ReadSerializable<UInt160>();
             BlockIndex = reader.ReadUInt32();
             TxHash = reader.ReadSerializable<UInt256>();
-            Amount = new BigInteger(reader.ReadVarBytes(512));
+            Amount = new BigInteger(reader.ReadVarBytes(32));
         }
     }
 }
