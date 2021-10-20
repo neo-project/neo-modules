@@ -1,10 +1,10 @@
 using Akka.Actor;
 using Neo.ConsoleService;
+using Neo.Cryptography.MPT;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
-using Neo.Plugins.MPT;
 using Neo.Plugins.StateService.Network;
 using Neo.Plugins.StateService.Storage;
 using Neo.Plugins.StateService.Verification;

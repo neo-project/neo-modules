@@ -2,7 +2,7 @@ using Neo.IO;
 using Neo.Persistence;
 using System;
 
-namespace Neo.Plugins.MPT
+namespace Neo.Cryptography.MPT
 {
     public partial class MPTTrie<TKey, TValue>
         where TKey : notnull, ISerializable, new()

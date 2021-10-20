@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Neo.Plugins.StateService.Tests
+namespace Neo.Cryptography.MPT.Tests
 {
     public static class Helper
     {

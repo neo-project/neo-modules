@@ -1,9 +1,8 @@
-using Neo.Cryptography;
 using Neo.IO;
 using System;
 using System.IO;
 
-namespace Neo.Plugins.MPT
+namespace Neo.Cryptography.MPT
 {
     public partial class MPTNode : ISerializable
     {

@@ -1,9 +1,9 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Plugins.MPT;
 using Neo.IO;
 using Neo.Persistence;
 using System.Text;
-namespace Neo.Plugins.StateService.Tests
+
+namespace Neo.Cryptography.MPT.Tests
 {
 
     [TestClass]

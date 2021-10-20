@@ -1,6 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Cryptography;
-using Neo.Plugins.MPT;
+using Neo.Cryptography.MPT;
 using Neo.IO;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Neo.Plugins.StateService.Tests
+namespace Neo.Cryptography.MPT.Tests
 {
 
     [TestClass]

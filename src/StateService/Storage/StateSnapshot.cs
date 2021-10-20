@@ -1,6 +1,6 @@
+using Neo.Cryptography.MPT;
 using Neo.IO;
 using Neo.Persistence;
-using Neo.Plugins.MPT;
 using Neo.Plugins.StateService.Network;
 using Neo.SmartContract;
 using System;

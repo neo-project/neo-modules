@@ -1,8 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Neo.Cryptography.MPT;
 using Neo.IO;
 using Neo.Persistence;
-using Neo.Plugins.MPT;
-using Neo.Plugins.StateService.IO;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +9,7 @@ using System.Linq;
 using System.Text;
 using static Neo.Helper;
 
-namespace Neo.Plugins.StateService.Tests
+namespace Neo.Cryptography.MPT.Tests
 {
     public class TestKey : ISerializable
     {

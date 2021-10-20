@@ -3,7 +3,7 @@ using Neo.Persistence;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Neo.Plugins.MPT
+namespace Neo.Cryptography.MPT
 {
     public class MPTCache
     {

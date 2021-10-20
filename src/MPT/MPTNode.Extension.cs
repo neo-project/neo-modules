@@ -3,7 +3,7 @@ using Neo.SmartContract;
 using System;
 using System.IO;
 
-namespace Neo.Plugins.MPT
+namespace Neo.Cryptography.MPT
 {
     partial class MPTNode
     {
