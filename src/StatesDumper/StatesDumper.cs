@@ -35,8 +35,16 @@ namespace Neo.Plugins
         [ConsoleCommand("dump storage", Category = "Storage", Description = "You can specify the key or use null to get the corresponding information from the storage")]
         private void OnDumpStorage(uint network, UInt160 key = null)
         {
+            if (!systems.ContainsKey(network)) throw new InvalidOperationException("invalid network");
             string path = $"dump_{network:x8}.json";
-            var states = systems[network].StoreView.Find(key?.ToArray());
+            byte[] prefix = null;
+            if (key is not null)
+            {
+                var contract = NativeContract.ContractManagement.GetContract(systems[network].StoreView, key);
+                if (contract is null) throw new InvalidOperationException("contract not found");
+                prefix = BitConverter.GetBytes(contract.Id);
+            }
+            var states = systems[network].StoreView.Find(prefix);
             JArray array = new JArray(states.Where(p => !Settings.Default.Exclude.Contains(p.Key.Id)).Select(p => new JObject
             {
                 ["key"] = Convert.ToBase64String(p.Key.ToArray()),
@@ -44,6 +52,7 @@ namespace Neo.Plugins
             }));
             File.WriteAllText(path, array.ToString());
             Console.WriteLine($"States ({array.Count}) have been dumped into file {path}");
+            return;
         }
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
