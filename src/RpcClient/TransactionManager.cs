@@ -58,6 +58,12 @@ namespace Neo.Network.RPC
             return factory.MakeTransactionAsync(script, signers, attributes);
         }
 
+        public static Task<TransactionManager> MakeTransactionAsync(RpcClient rpcClient, byte[] script, long systemFee, Signer[] signers = null, TransactionAttribute[] attributes = null)
+        {
+            var factory = new TransactionManagerFactory(rpcClient);
+            return factory.MakeTransactionAsync(script, systemFee, signers, attributes);
+        }
+
         /// <summary>
         /// Add Signature
         /// </summary>
