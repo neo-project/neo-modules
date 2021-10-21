@@ -52,7 +52,6 @@ namespace Neo.Plugins
             }));
             File.WriteAllText(path, array.ToString());
             Console.WriteLine($"States ({array.Count}) have been dumped into file {path}");
-            return;
         }
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
