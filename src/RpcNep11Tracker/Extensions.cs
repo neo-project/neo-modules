@@ -8,13 +8,13 @@
 //  modifications are permitted.
 
 using Neo.IO;
-using Neo.IO.Data.LevelDB;
 using Neo.VM.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Neo.Persistence;
 
 namespace Neo.Plugins
 {
@@ -36,11 +36,28 @@ namespace Neo.Plugins
             return IO.Helper.GetVarSize(length) + length;
         }
 
-        public static IEnumerable<(TKey, TValue)> FindRange<TKey, TValue>(this DB db, byte[] startKeyBytes, byte[] endKeyBytes)
+        public static IEnumerable<(TKey, TValue)> FindPrefix<TKey, TValue>(this IStore db, byte[] prefix)
             where TKey : IEquatable<TKey>, ISerializable, new()
             where TValue : class, ISerializable, new()
         {
-            return db.FindRange(ReadOptions.Default, startKeyBytes, endKeyBytes, (k, v) => (k.AsSerializable<TKey>(1), v.AsSerializable<TValue>()));
+            foreach (var (key, value) in db.Seek(prefix, SeekDirection.Forward))
+            {
+                if (!key.AsSpan().StartsWith(prefix)) break;
+                yield return (key.AsSerializable<TKey>(1), value.AsSerializable<TValue>());
+            }
+
+
+        }
+
+        public static IEnumerable<(TKey, TValue)> FindRange<TKey, TValue>(this IStore db, byte[] startKey, byte[] endKey)
+            where TKey : IEquatable<TKey>, ISerializable, new()
+            where TValue : class, ISerializable, new()
+        {
+            foreach (var (key, value) in db.Seek(startKey, SeekDirection.Forward))
+            {
+                if (key.AsSpan().SequenceCompareTo(endKey) > 0) break;
+                yield return (key.AsSerializable<TKey>(1), value.AsSerializable<TValue>());
+            }
         }
     }
 }

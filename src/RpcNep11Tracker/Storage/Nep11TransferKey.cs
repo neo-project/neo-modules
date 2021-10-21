@@ -22,20 +22,20 @@ namespace Neo.Plugins.Storage
         public readonly UInt160 AssetScriptHash;
         public ByteString Token;
 
-        public ushort BlockXferNotificationIndex { get; private set; }
+        public uint BlockXferNotificationIndex { get; private set; }
 
         public int Size =>
             UInt160.Length +    //UserScriptHash
             sizeof(ulong) +     //TimestampMS
             UInt160.Length +    //AssetScriptHash
             Token.GetVarSize() +
-            sizeof(ushort);     //BlockXferNotificationIndex
+            sizeof(uint);     //BlockXferNotificationIndex
 
         public Nep11TransferKey() : this(new UInt160(), 0, new UInt160(), ByteString.Empty, 0)
         {
         }
 
-        public Nep11TransferKey(UInt160 userScriptHash, ulong timestamp, UInt160 assetScriptHash, ByteString tokenId, ushort xferIndex)
+        public Nep11TransferKey(UInt160 userScriptHash, ulong timestamp, UInt160 assetScriptHash, ByteString tokenId, uint xferIndex)
         {
             if (userScriptHash is null || assetScriptHash is null || tokenId == null)
                 throw new ArgumentNullException();
