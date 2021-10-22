@@ -32,15 +32,15 @@ namespace Neo.Plugins
         /// <summary>
         /// Process "dump storage" command
         /// </summary>
-        [ConsoleCommand("dump storage", Category = "Storage", Description = "You can specify the key or use null to get the corresponding information from the storage")]
-        private void OnDumpStorage(uint network, UInt160 key = null)
+        [ConsoleCommand("dump storage", Category = "Storage", Description = "You can specify the contract script hash or use null to get the corresponding information from the storage")]
+        private void OnDumpStorage(uint network, UInt160 contractHash = null)
         {
             if (!systems.ContainsKey(network)) throw new InvalidOperationException("invalid network");
             string path = $"dump_{network:x8}.json";
             byte[] prefix = null;
-            if (key is not null)
+            if (contractHash is not null)
             {
-                var contract = NativeContract.ContractManagement.GetContract(systems[network].StoreView, key);
+                var contract = NativeContract.ContractManagement.GetContract(systems[network].StoreView, contractHash);
                 if (contract is null) throw new InvalidOperationException("contract not found");
                 prefix = BitConverter.GetBytes(contract.Id);
             }
