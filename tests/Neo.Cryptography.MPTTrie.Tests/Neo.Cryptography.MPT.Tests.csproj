@@ -5,6 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MPT\MPT.csproj" />
+    <ProjectReference Include="..\..\src\MPTTrie\MPTTrie.csproj" />
   </ItemGroup>
 </Project>

@@ -2,9 +2,9 @@ using Neo.IO;
 using System;
 using System.IO;
 
-namespace Neo.Cryptography.MPT
+namespace Neo.Cryptography.MPTTrie
 {
-    public partial class MPTNode : ISerializable
+    public partial class Node : ISerializable
     {
         private NodeType type;
         private UInt256 hash;
@@ -30,12 +30,12 @@ namespace Neo.Cryptography.MPT
                     case NodeType.Empty:
                         return size;
                     default:
-                        throw new InvalidOperationException($"{nameof(MPTNode)} Cannt get size, unsupport type");
+                        throw new InvalidOperationException($"{nameof(Node)} Cannt get size, unsupport type");
                 };
             }
         }
 
-        public MPTNode()
+        public Node()
         {
             type = NodeType.Empty;
         }
@@ -59,7 +59,7 @@ namespace Neo.Cryptography.MPT
                     case NodeType.Empty:
                         return Size;
                     default:
-                        throw new InvalidOperationException(nameof(MPTNode));
+                        throw new InvalidOperationException(nameof(Node));
                 }
             }
         }
@@ -151,14 +151,14 @@ namespace Neo.Cryptography.MPT
             }
         }
 
-        private MPTNode CloneAsChild()
+        private Node CloneAsChild()
         {
             switch (type)
             {
                 case NodeType.BranchNode:
                 case NodeType.ExtensionNode:
                 case NodeType.LeafNode:
-                    return new MPTNode
+                    return new Node
                     {
                         type = NodeType.HashNode,
                         hash = Hash,
@@ -171,16 +171,16 @@ namespace Neo.Cryptography.MPT
             }
         }
 
-        public MPTNode Clone()
+        public Node Clone()
         {
             switch (type)
             {
                 case NodeType.BranchNode:
-                    var n = new MPTNode
+                    var n = new Node
                     {
                         type = type,
                         Reference = Reference,
-                        Children = new MPTNode[BranchChildCount],
+                        Children = new Node[BranchChildCount],
                     };
                     for (int i = 0; i < BranchChildCount; i++)
                     {
@@ -188,7 +188,7 @@ namespace Neo.Cryptography.MPT
                     }
                     return n;
                 case NodeType.ExtensionNode:
-                    return new MPTNode
+                    return new Node
                     {
                         type = type,
                         Key = (byte[])Key.Clone(),
@@ -196,7 +196,7 @@ namespace Neo.Cryptography.MPT
                         Reference = Reference,
                     };
                 case NodeType.LeafNode:
-                    return new MPTNode
+                    return new Node
                     {
                         type = type,
                         Value = (byte[])Value.Clone(),
@@ -210,7 +210,7 @@ namespace Neo.Cryptography.MPT
             }
         }
 
-        public void FromReplica(MPTNode n)
+        public void FromReplica(Node n)
         {
             using MemoryStream ms = new MemoryStream(n.ToArray());
             using BinaryReader reader = new BinaryReader(ms, Utility.StrictUTF8, true);

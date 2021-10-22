@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Neo.Cryptography.MPT.Tests
+namespace Neo.Cryptography.MPTTrie.Tests
 {
     public static class Helper
     {
