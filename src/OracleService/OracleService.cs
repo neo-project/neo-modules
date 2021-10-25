@@ -35,8 +35,8 @@ namespace Neo.Plugins
         private readonly ConcurrentDictionary<ulong, DateTime> finishedCache = new ConcurrentDictionary<ulong, DateTime>();
         private Timer timer;
         private readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
-        private bool started = false;
-        private bool stopped = false;
+        private bool autoStart = false;
+        private OracleStatus status = OracleStatus.UnStart;
         private IWalletProvider walletProvider;
         private int counter;
         private NeoSystem System;
@@ -66,6 +66,7 @@ namespace Neo.Plugins
             {
                 walletProvider = service as IWalletProvider;
                 System.ServiceAdded -= NeoSystem_ServiceAdded;
+                autoStart = Settings.Default.AutoStart;
                 if (Settings.Default.AutoStart)
                 {
                     walletProvider.WalletChanged += WalletProvider_WalletChanged;
@@ -82,7 +83,7 @@ namespace Neo.Plugins
         public override void Dispose()
         {
             OnStop();
-            while (!stopped)
+            while (status != OracleStatus.Stop)
                 Thread.Sleep(100);
             foreach (var p in protocols)
                 p.Value.Dispose();
@@ -96,7 +97,7 @@ namespace Neo.Plugins
 
         public void Start(Wallet wallet)
         {
-            if (started) return;
+            if (status == OracleStatus.Running) return;
 
             if (wallet is null)
             {
@@ -117,9 +118,9 @@ namespace Neo.Plugins
             this.wallet = wallet;
             protocols["https"] = new OracleHttpsProtocol();
             protocols["neofs"] = new OracleNeoFSProtocol(wallet, oracles);
-            started = true;
+            status = OracleStatus.Running;
             timer = new Timer(OnTimer, null, RefreshIntervalMilliSeconds, Timeout.Infinite);
-
+            Console.WriteLine($"Oracle started");
             ProcessRequestsAsync();
         }
 
@@ -132,13 +133,25 @@ namespace Neo.Plugins
                 timer.Dispose();
                 timer = null;
             }
-            stopped = true;
+            status = OracleStatus.Stop;
+        }
+
+
+        [ConsoleCommand("show oracle", Category = "Oracle", Description = "Show oracle status")]
+        private void OnShow()
+        {
+            Console.WriteLine($"Oracle status:{status}");
         }
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
-            if (stopped || !started) return;
+
+            if (autoStart && status == OracleStatus.UnStart)
+            {
+                OnStart();
+            }
+            if (status != OracleStatus.Running) return;
             if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles) || !CheckOracleAccount(wallet, oracles))
                 OnStop();
         }
@@ -188,7 +201,7 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject SubmitOracleResponse(JArray _params)
         {
-            if (stopped || !started) throw new InvalidOperationException();
+            if (status != OracleStatus.Running) throw new InvalidOperationException();
             ECPoint oraclePub = ECPoint.DecodePoint(Convert.FromBase64String(_params[0].AsString()), ECCurve.Secp256r1);
             ulong requestId = (ulong)_params[1].AsNumber();
             byte[] txSign = Convert.FromBase64String(_params[2].AsString());
@@ -309,7 +322,8 @@ namespace Neo.Plugins
                 if (cancelSource.IsCancellationRequested) break;
                 await Task.Delay(500);
             }
-            stopped = true;
+
+            status = OracleStatus.Stop;
         }
 
 
@@ -544,6 +558,13 @@ namespace Neo.Plugins
             public ConcurrentDictionary<ECPoint, byte[]> Signs;
             public ConcurrentDictionary<ECPoint, byte[]> BackupSigns;
             public readonly DateTime Timestamp = TimeProvider.Current.UtcNow;
+        }
+
+        enum OracleStatus
+        {
+            UnStart,
+            Stop,
+            Running,
         }
     }
 }
