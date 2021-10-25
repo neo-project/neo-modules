@@ -47,13 +47,11 @@ namespace RpcNep11Tracker
         };
         private bool _shouldTrackHistory;
         private uint _maxResults;
-
         private uint _network;
         private string _dbPath;
         private IStore _db;
         private ISnapshot _levelDbSnapshot;
         private NeoSystem neoSystem;
-
         private uint _currentHeight;
         private Block _currentBlock;
 
@@ -68,8 +66,6 @@ namespace RpcNep11Tracker
             RpcServerPlugin.RegisterMethods(this, _network);
         }
 
-
-
         protected override void Configure()
         {
             _dbPath = GetConfiguration().GetSection("DBPath").Value ?? "Nep11BalanceData";
@@ -83,7 +79,6 @@ namespace RpcNep11Tracker
             _levelDbSnapshot?.Dispose();
             _levelDbSnapshot = _db.GetSnapshot();
         }
-
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
@@ -165,7 +160,6 @@ namespace RpcNep11Tracker
             }
         }
 
-
         void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
         {
             if (system.Settings.Network != _network) return;
@@ -176,7 +170,6 @@ namespace RpcNep11Tracker
         {
             return true;
         }
-
 
         private void HandleNotification(DataCache snapshot, IVerifiable scriptContainer, UInt160 scriptHash, string eventName, VmArray stateItems, List<TransferRecord> transfers, ref uint transferIndex)
         {
@@ -215,7 +208,6 @@ namespace RpcNep11Tracker
                 RecordTransferHistory(snapshot, scriptHash, from, to, tokenId, amountItem.GetInteger(), transaction.Hash, ref transferIndex);
             }
         }
-
 
         private void RecordTransferHistory(DataCache snapshot, UInt160 contractHash, UInt160 from, UInt160 to, ByteString tokenId, BigInteger amount, UInt256 txHash, ref uint transferIndex)
         {
@@ -293,7 +285,6 @@ namespace RpcNep11Tracker
             return json;
         }
 
-
         [RpcMethod]
         public JObject GetNep11Balances(JArray _params)
         {
@@ -338,7 +329,6 @@ namespace RpcNep11Tracker
             return json;
         }
 
-
         [RpcMethod]
         public JObject GetNep11Properties(JArray _params)
         {
@@ -371,6 +361,7 @@ namespace RpcNep11Tracker
             }
             return json;
         }
+
         private UInt160 GetScriptHashFromParam(string addressOrScriptHash)
         {
             return addressOrScriptHash.Length < 40 ?
