@@ -90,7 +90,7 @@ namespace Neo.Plugins
         [ConsoleCommand("start oracle", Category = "Oracle", Description = "Start oracle service")]
         private void OnStart()
         {
-            Start(walletProvider.GetWallet());
+            Start(walletProvider?.GetWallet());
         }
 
         public void Start(Wallet wallet)
