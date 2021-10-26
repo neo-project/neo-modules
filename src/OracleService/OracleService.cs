@@ -35,7 +35,6 @@ namespace Neo.Plugins
         private readonly ConcurrentDictionary<ulong, DateTime> finishedCache = new ConcurrentDictionary<ulong, DateTime>();
         private Timer timer;
         private readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
-        private bool autoStart = false;
         private OracleStatus status = OracleStatus.UnStart;
         private IWalletProvider walletProvider;
         private int counter;
@@ -66,7 +65,6 @@ namespace Neo.Plugins
             {
                 walletProvider = service as IWalletProvider;
                 System.ServiceAdded -= NeoSystem_ServiceAdded;
-                autoStart = Settings.Default.AutoStart;
                 if (Settings.Default.AutoStart)
                 {
                     walletProvider.WalletChanged += WalletProvider_WalletChanged;
@@ -147,7 +145,7 @@ namespace Neo.Plugins
         {
             if (system.Settings.Network != Settings.Default.Network) return;
 
-            if (autoStart && status == OracleStatus.UnStart)
+            if (Settings.Default.AutoStart && status == OracleStatus.UnStart)
             {
                 OnStart();
             }
