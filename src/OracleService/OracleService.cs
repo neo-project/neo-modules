@@ -137,7 +137,7 @@ namespace Neo.Plugins
         [ConsoleCommand("show oracle", Category = "Oracle", Description = "Show oracle status")]
         private void OnShow()
         {
-            Console.WriteLine($"Oracle status:{status}");
+            Console.WriteLine($"Oracle status: {status}");
         }
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
