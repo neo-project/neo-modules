@@ -134,7 +134,6 @@ namespace Neo.Plugins
             status = OracleStatus.Stop;
         }
 
-
         [ConsoleCommand("show oracle", Category = "Oracle", Description = "Show oracle status")]
         private void OnShow()
         {
