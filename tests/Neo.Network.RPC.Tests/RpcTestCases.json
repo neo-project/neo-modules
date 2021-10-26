@@ -3066,6 +3066,7 @@
             "trigger": "OnPersist",
             "vmstate": "HALT",
             "gasconsumed": "2031260",
+            "exception": null,
             "stack": [],
             "notifications": [
               {
@@ -3114,6 +3115,7 @@
             "trigger": "PostPersist",
             "vmstate": "HALT",
             "gasconsumed": "2031260",
+            "exception": null,
             "stack": [],
             "notifications": [
               {
@@ -3160,6 +3162,7 @@
             "trigger": "OnPersist",
             "vmstate": "HALT",
             "gasconsumed": "2031260",
+            "exception": null,
             "stack": [],
             "notifications": [
               {
