@@ -26,8 +26,13 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<TransactionManager> MakeTransactionAsync(byte[] script, Signer[] signers = null, TransactionAttribute[] attributes = null)
         {
-            uint blockCount = await rpcClient.GetBlockCountAsync().ConfigureAwait(false) - 1;
             RpcInvokeResult invokeResult = await rpcClient.InvokeScriptAsync(script, signers).ConfigureAwait(false);
+            return await MakeTransactionAsync(script, invokeResult.GasConsumed, signers, attributes).ConfigureAwait(false);
+        }
+
+        public async Task<TransactionManager> MakeTransactionAsync(byte[] script, long systemFee, Signer[] signers = null, TransactionAttribute[] attributes = null)
+        {
+            uint blockCount = await rpcClient.GetBlockCountAsync().ConfigureAwait(false) - 1;
 
             var tx = new Transaction
             {
@@ -36,7 +41,7 @@ namespace Neo.Network.RPC
                 Script = script,
                 Signers = signers ?? Array.Empty<Signer>(),
                 ValidUntilBlock = blockCount - 1 + rpcClient.protocolSettings.MaxValidUntilBlockIncrement,
-                SystemFee = invokeResult.GasConsumed,
+                SystemFee = systemFee,
                 Attributes = attributes ?? Array.Empty<TransactionAttribute>(),
             };
 
