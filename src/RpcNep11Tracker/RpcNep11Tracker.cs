@@ -110,6 +110,7 @@ namespace RpcNep11Tracker
                 if (!contracts.ContainsKey(transferRecord.asset))
                 {
                     var state = NativeContract.ContractManagement.GetContract(snapshot, transferRecord.asset);
+                    if (!state.Manifest.SupportedStandards.Contains("NEP-11")) continue;
                     var balanceMethod = state.Manifest.Abi.GetMethod("balanceOf", 1);
                     var balanceMethod2 = state.Manifest.Abi.GetMethod("balanceOf", 2);
                     if (balanceMethod == null && balanceMethod2 == null)
