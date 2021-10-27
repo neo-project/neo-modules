@@ -35,7 +35,7 @@ namespace Neo.Plugins
         private readonly ConcurrentDictionary<ulong, DateTime> finishedCache = new ConcurrentDictionary<ulong, DateTime>();
         private Timer timer;
         private readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
-        private OracleStatus status = OracleStatus.UnStart;
+        private OracleStatus status = OracleStatus.Unstarted;
         private IWalletProvider walletProvider;
         private int counter;
         private NeoSystem System;
@@ -81,7 +81,7 @@ namespace Neo.Plugins
         public override void Dispose()
         {
             OnStop();
-            while (status != OracleStatus.Stop)
+            while (status != OracleStatus.Stopped)
                 Thread.Sleep(100);
             foreach (var p in protocols)
                 p.Value.Dispose();
@@ -131,7 +131,7 @@ namespace Neo.Plugins
                 timer.Dispose();
                 timer = null;
             }
-            status = OracleStatus.Stop;
+            status = OracleStatus.Stopped;
         }
 
         [ConsoleCommand("oracle status", Category = "Oracle", Description = "Show oracle status")]
@@ -144,7 +144,7 @@ namespace Neo.Plugins
         {
             if (system.Settings.Network != Settings.Default.Network) return;
 
-            if (Settings.Default.AutoStart && status == OracleStatus.UnStart)
+            if (Settings.Default.AutoStart && status == OracleStatus.Unstarted)
             {
                 OnStart();
             }
@@ -320,7 +320,7 @@ namespace Neo.Plugins
                 await Task.Delay(500);
             }
 
-            status = OracleStatus.Stop;
+            status = OracleStatus.Stopped;
         }
 
 
@@ -559,9 +559,9 @@ namespace Neo.Plugins
 
         enum OracleStatus
         {
-            UnStart,
-            Stop,
+            Unstarted,
             Running,
+            Stopped,
         }
     }
 }
