@@ -79,7 +79,7 @@ namespace Neo.Consensus
         }
 
         #region Consensus States
-        public bool TxListSent => TxlistsPayloads[Block.PrimaryIndex] != null;
+        public bool TxListRequestSent => TxlistsPayloads[Block.PrimaryIndex] != null;
         public bool RequestSentOrReceived => PreparationPayloads[Block.PrimaryIndex] != null;
         public bool ResponseSent => !WatchOnly && PreparationPayloads[MyIndex] != null;
         public bool CommitSent => !WatchOnly && CommitPayloads[MyIndex] != null;

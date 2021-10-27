@@ -3,6 +3,7 @@ using Neo.IO;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Neo.Consensus
@@ -16,15 +17,69 @@ namespace Neo.Consensus
         /// </summary>
         private void CheckTxLists()
         {
-            /// TODO: check the transactions
-            if (context.TxlistsPayloads.Count(p => p != null) >= context.M && context.TransactionHashes.All(p => context.Transactions.ContainsKey(p)))
+            // check for the primary
+            if (context.TxListRequestSent && context.IsPrimary)
             {
-                // Update the hashes
+                /// TODO: check the transactions
+                if (context.TxlistsPayloads.Count(p => p != null) >= context.M && context.TransactionHashes.All(p => context.Transactions.ContainsKey(p)))
+                {
+                    tempTXs = new();
+                    candidateTXs = new();
+
+                    // 1. Get transaction that exists in more than 2f lists
+                    foreach (var payload in context.TxlistsPayloads)
+                    {
+                        var list = context.GetMessage<TxListMessage>(payload);
+                        for (int i = 0; i < list.Size; i++)
+                        {
+                            var hash = list.TransactionHashes[i];
+                            if (!tempTXs.ContainsKey(hash))
+                                tempTXs.Add(hash, new Tuple<int, int[]>(0, new int[] { i }));
+                            else
+                            {
+                                var tuple = tempTXs[hash];
+                                List<int> index = new List<int>(tuple.Item2);
+                                index.Add(i);
+                                tempTXs[hash] = new Tuple<int, int[]>(tuple.Item1 + 1, index.ToArray());
+                                // this is a valid transaction now
+                                if (tuple.Item1 + 1 >= context.M)
+                                {
+                                    // Here, what if the primary does not have this transaction?
+                                    // TODO:
+                                    candidateTXHashs.Add(hash, index.ToArray());
+                                    candidateTXs.Add(context.Transactions[hash]);
+                                }
+                            }
+                        }
+                    }
+
+                    // 2. Order the transactions according to the transaction fee
+                    candidateTXs.OrderBy(p => p.NetworkFee + p.SystemFee);
+
+                    // 3. Only keep the max n transactions
 
 
 
-                SendPrepareRequest();
+                    // 4. Reorder these transaction according to the index
+
+                    // 5. Randomize those with same transaction fee and index
+
+                    // 6. Pack those transactions in a new transaction list
+
+                    // 7. broadcast the new transaction list along with lists from other CNs
+
+
+
+                    // Update the hashes
+                    SendPrepareRequest();
+                }
             }
+            if (!context.TxListRequestSent && !context.IsPrimary)
+            {
+
+            }
+
+
         }
 
         private bool CheckPrepareResponse()
