@@ -54,6 +54,7 @@ namespace RpcNep11Tracker
         private NeoSystem neoSystem;
         private uint _currentHeight;
         private Block _currentBlock;
+        private Dictionary<UInt160, ContractState> _assetCache = new Dictionary<UInt160, ContractState>();
 
         public override string Description => "Enquiries NEP-11 balances and transaction history of accounts through RPC";
 
@@ -78,6 +79,16 @@ namespace RpcNep11Tracker
         {
             _levelDbSnapshot?.Dispose();
             _levelDbSnapshot = _db.GetSnapshot();
+            _assetCache.Clear();
+        }
+
+        private ContractState GetContract(DataCache snapshot, UInt160 asset)
+        {
+            if (!_assetCache.ContainsKey(asset))
+            {
+                _assetCache[asset] = NativeContract.ContractManagement.GetContract(snapshot, asset);
+            }
+            return _assetCache[asset];
         }
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
@@ -99,6 +110,8 @@ namespace RpcNep11Tracker
                 {
                     if (!(notifyEventArgs?.State is VmArray stateItems) || stateItems.Count == 0)
                         continue;
+                    var contract = GetContract(snapshot, notifyEventArgs.ScriptHash);
+                    if (contract?.Manifest.SupportedStandards.Contains("NEP-11") == false) continue;
                     HandleNotification(snapshot, notifyEventArgs.ScriptContainer, notifyEventArgs.ScriptHash, notifyEventArgs.EventName, stateItems, transfers, ref transferIndex);
                 }
             }
@@ -109,8 +122,7 @@ namespace RpcNep11Tracker
             {
                 if (!contracts.ContainsKey(transferRecord.asset))
                 {
-                    var state = NativeContract.ContractManagement.GetContract(snapshot, transferRecord.asset);
-                    if (!state.Manifest.SupportedStandards.Contains("NEP-11")) continue;
+                    var state = GetContract(snapshot, transferRecord.asset);
                     var balanceMethod = state.Manifest.Abi.GetMethod("balanceOf", 1);
                     var balanceMethod2 = state.Manifest.Abi.GetMethod("balanceOf", 2);
                     if (balanceMethod == null && balanceMethod2 == null)
