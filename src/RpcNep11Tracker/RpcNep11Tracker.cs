@@ -111,7 +111,7 @@ namespace RpcNep11Tracker
                     if (!(notifyEventArgs?.State is VmArray stateItems) || stateItems.Count == 0)
                         continue;
                     var contract = GetContract(snapshot, notifyEventArgs.ScriptHash);
-                    if (contract?.Manifest.SupportedStandards.Contains("NEP-11") == false) continue;
+                    if (contract?.Manifest.SupportedStandards.Contains("NEP-11", StringComparer.OrdinalIgnoreCase) == false) continue;
                     HandleNotification(snapshot, notifyEventArgs.ScriptContainer, notifyEventArgs.ScriptHash, notifyEventArgs.EventName, stateItems, transfers, ref transferIndex);
                 }
             }
