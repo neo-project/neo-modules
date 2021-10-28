@@ -1,4 +1,3 @@
-
 namespace Neo.Cryptography.MPTTrie
 {
     public enum NodeType : byte

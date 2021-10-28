@@ -1,5 +1,4 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Cryptography.MPTTrie;
 using Neo.IO;
 using Neo.Persistence;
 using System;

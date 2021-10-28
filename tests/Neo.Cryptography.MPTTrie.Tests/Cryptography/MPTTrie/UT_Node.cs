@@ -1,6 +1,4 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Cryptography;
-using Neo.Cryptography.MPTTrie;
 using Neo.IO;
 using System;
 using System.Collections.Generic;
