@@ -58,8 +58,14 @@ namespace Neo.Consensus
 
                     // 3. Only keep the max n transactions
                     context.EnsureMaxBlockLimitation(candidateTXs);
-                    // 4. Reorder these transactions according to the index
 
+                    // 4. Reorder these transactions according to the index
+                    candidateTXs.OrderBy(p =>
+                    {
+                        var index = candidateTXHashs[p.Hash];
+
+                        return p;
+                    });
                     // 5. Randomize those with same transaction fee and index
 
                     // 6. Pack those transactions in a new transaction list
