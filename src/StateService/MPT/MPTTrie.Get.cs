@@ -1,5 +1,6 @@
 using Neo.IO;
 using System;
+using System.Collections.Generic;
 
 namespace Neo.Plugins.MPT
 {
@@ -10,10 +11,27 @@ namespace Neo.Plugins.MPT
             get
             {
                 var path = ToNibbles(key.ToArray());
-                if (path.Length == 0) return null;
+                if (path.Length == 0)
+                    throw new ArgumentException("could not be empty", nameof(key));
+                if (path.Length > MPTNode.MaxKeyLength)
+                    throw new ArgumentException("exceeds limit", nameof(key));
                 var result = TryGet(ref root, path, out var value);
-                return result ? value.AsSerializable<TValue>() : null;
+                return result ? value.ToArray().AsSerializable<TValue>() : throw new KeyNotFoundException();
             }
+        }
+
+        public bool TryGetValue(TKey key, out TValue value)
+        {
+            value = default;
+            var path = ToNibbles(key.ToArray());
+            if (path.Length == 0)
+                throw new ArgumentException("could not be empty", nameof(key));
+            if (path.Length > MPTNode.MaxKeyLength)
+                throw new ArgumentException("exceeds limit", nameof(key));
+            var result = TryGet(ref root, path, out var val);
+            if (result)
+                value = val.ToArray().AsSerializable<TValue>();
+            return result;
         }
 
         private bool TryGet(ref MPTNode node, ReadOnlySpan<byte> path, out ReadOnlySpan<byte> value)

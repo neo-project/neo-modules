@@ -5,14 +5,14 @@ using System.Linq;
 
 namespace Neo.Consensus
 {
-    public class TXListMessage : ConsensusMessage
+    public class TxListMessage : ConsensusMessage
     {
         public UInt256[] TransactionHashes;
 
         public override int Size => base.Size
             + TransactionHashes.GetVarSize();   //TransactionHashes;
 
-        public TXListMessage() : base(ConsensusMessageType.TXListMessage) { }
+        public TxListMessage(ConsensusMessageType type) : base(type) { }
 
         public override void Deserialize(BinaryReader reader)
         {

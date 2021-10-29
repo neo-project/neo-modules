@@ -71,12 +71,13 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0x10fa4a0cb88346a00501a926cb9cbd6bf0cbd858319756c0bffcfb06e8901b92",
-        "size": 462,
+        "hash": "0x6d1556889c92249da88d2fb7729ae82fb2cc1b45dcd9030a40208b72a1d3cb83",
+        "size": 470,
         "version": 0,
         "previousblockhash": "0xaae8867e9086afaf06fd02cc538e88a69b801abd6f9d3ae39ae630e29d5b39e2",
         "merkleroot": "0xe95761f21c733ad53066786af24ee5d613b32bd5aae538df2d611492ec0cae82",
         "time": 1594867377561,
+        "nonce": "FFFFFFFFFFFFFFFF",
         "index": 7,
         "primary": 1,
         "nextconsensus": "NikvsLcNP1jWhrFPrfS3n4spEASgdNYTG2",
@@ -129,12 +130,13 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0x10fa4a0cb88346a00501a926cb9cbd6bf0cbd858319756c0bffcfb06e8901b92",
-        "size": 462,
+        "hash": "0x6d1556889c92249da88d2fb7729ae82fb2cc1b45dcd9030a40208b72a1d3cb83",
+        "size": 470,
         "version": 0,
         "previousblockhash": "0xaae8867e9086afaf06fd02cc538e88a69b801abd6f9d3ae39ae630e29d5b39e2",
         "merkleroot": "0xe95761f21c733ad53066786af24ee5d613b32bd5aae538df2d611492ec0cae82",
         "time": 1594867377561,
+        "nonce": "FFFFFFFFFFFFFFFF",
         "index": 7,
         "primary": 1,
         "nextconsensus": "NikvsLcNP1jWhrFPrfS3n4spEASgdNYTG2",
@@ -257,12 +259,13 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0x3508ada998654b2c3391462a5bfab10eff8ff7dfdb0875eccddd20c019ff9330",
-        "size": 105,
+        "hash": "0xbbf7e191d4947f8a4dc33477902dacd0b047e371a81c18a6df62fe0d541725f5",
+        "size": 113,
         "version": 0,
         "previousblockhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
         "merkleroot": "0x735b68ca1bab490b8fd6166cba4c2ce76e97bedfe4d2df0c333970fc9862bb2b",
         "time": 1468595301000,
+        "nonce": "FFFFFFFFFFFFFFFF",
         "index": 0,
         "primary": 1,
         "nextconsensus": "NZs2zXSPuuv9ZF6TDGSWT1RBmE8rfGj7UW",
@@ -289,12 +292,13 @@
       "jsonrpc": "2.0",
       "id": 1,
       "result": {
-        "hash": "0x3508ada998654b2c3391462a5bfab10eff8ff7dfdb0875eccddd20c019ff9330",
-        "size": 105,
+        "hash": "0xbbf7e191d4947f8a4dc33477902dacd0b047e371a81c18a6df62fe0d541725f5",
+        "size": 113,
         "version": 0,
         "previousblockhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
         "merkleroot": "0x735b68ca1bab490b8fd6166cba4c2ce76e97bedfe4d2df0c333970fc9862bb2b",
         "time": 1468595301000,
+        "nonce": "FFFFFFFFFFFFFFFF",
         "index": 0,
         "primary": 1,
         "nextconsensus": "NZs2zXSPuuv9ZF6TDGSWT1RBmE8rfGj7UW",
@@ -357,6 +361,7 @@
         "nef": {
           "magic": 860243278,
           "compiler": "neo-core-v3.0",
+          "source": "",
           "tokens": [],
           "script": "APxBGvd7Zw==",
           "checksum": 3155977747
@@ -478,6 +483,7 @@
         "nef": {
           "magic": 860243278,
           "compiler": "neo-core-v3.0",
+          "source": "",
           "tokens": [],
           "script": "APxBGvd7Zw==",
           "checksum": 3155977747
@@ -599,6 +605,7 @@
         "nef": {
           "magic": 860243278,
           "compiler": "neo-core-v3.0",
+          "source": "",
           "tokens": [],
           "script": "AP1BGvd7Zw==",
           "checksum": 3921333105
@@ -816,6 +823,7 @@
         "nef": {
           "magic": 860243278,
           "compiler": "neo-core-v3.0",
+          "source": "",
           "tokens": [],
           "script": "AP1BGvd7Zw==",
           "checksum": 3921333105
@@ -1033,6 +1041,7 @@
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
+            "source": "",
             "tokens": [],
             "script": "D0Ea93tn",
             "checksum": 3516775561
@@ -1194,7 +1203,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [ 0 ]
         },
         {
           "id": -2,
@@ -1202,6 +1211,7 @@
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
+            "source": "",
             "tokens": [],
             "script": "AP5BGvd7Zw==",
             "checksum": 3395482975
@@ -1291,7 +1301,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [ 0 ]
         },
         {
           "id": -3,
@@ -1299,6 +1309,7 @@
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
+            "source": "",
             "tokens": [],
             "script": "AP1BGvd7Zw==",
             "checksum": 3921333105
@@ -1495,7 +1506,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [ 0 ]
         },
         {
           "id": -4,
@@ -1503,6 +1514,7 @@
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
+            "source": "",
             "tokens": [],
             "script": "APxBGvd7Zw==",
             "checksum": 3155977747
@@ -1603,7 +1615,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [ 0 ]
         },
         {
           "id": -5,
@@ -1611,6 +1623,7 @@
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
+            "source": "",
             "tokens": [],
             "script": "APtBGvd7Zw==",
             "checksum": 1136340263
@@ -1784,7 +1797,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [ 0 ]
         },
         {
           "id": -6,
@@ -1792,6 +1805,7 @@
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
+            "source": "",
             "tokens": [],
             "script": "APpBGvd7Zw==",
             "checksum": 3289425910
@@ -1847,7 +1861,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [ 0 ]
         },
         {
           "id": -7,
@@ -1855,6 +1869,7 @@
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
+            "source": "",
             "tokens": [],
             "script": "APlBGvd7Zw==",
             "checksum": 3902663397
@@ -1955,7 +1970,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [ 0 ]
         },
         {
           "id": -8,
@@ -1963,6 +1978,7 @@
           "nef": {
             "magic": 860243278,
             "compiler": "neo-core-v3.0",
+            "source": "",
             "tokens": [],
             "script": "APhBGvd7Zw==",
             "checksum": 3740064217
@@ -2248,7 +2264,7 @@
             "trusts": [],
             "extra": null
           },
-          "activeblockindex": 0
+          "updatehistory": [ 0 ]
         }
       ]
     }
@@ -2466,7 +2482,18 @@
         "tcpport": 20333,
         "wsport": 20334,
         "nonce": 592651621,
-        "useragent": "/Neo:3.0.0-rc1/"
+        "useragent": "/Neo:3.0.0-rc1/",
+        "protocol": {
+          "network": 0,
+          "validatorscount": 0,
+          "msperblock": 15000,
+          "maxvaliduntilblockincrement": 1,
+          "maxtraceableblocks": 1,
+          "addressversion": 0,
+          "maxtransactionsperblock": 0,
+          "memorypoolmaxtransactions": 0,
+          "initialgasdistribution": 0
+        }
       }
     }
   },
@@ -3039,6 +3066,7 @@
             "trigger": "OnPersist",
             "vmstate": "HALT",
             "gasconsumed": "2031260",
+            "exception": null,
             "stack": [],
             "notifications": [
               {
@@ -3087,6 +3115,7 @@
             "trigger": "PostPersist",
             "vmstate": "HALT",
             "gasconsumed": "2031260",
+            "exception": null,
             "stack": [],
             "notifications": [
               {
@@ -3133,6 +3162,7 @@
             "trigger": "OnPersist",
             "vmstate": "HALT",
             "gasconsumed": "2031260",
+            "exception": null,
             "stack": [],
             "notifications": [
               {

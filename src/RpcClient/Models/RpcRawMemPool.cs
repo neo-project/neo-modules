@@ -14,7 +14,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new JObject();
+            JObject json = new();
             json["height"] = Height;
             json["verified"] = new JArray(Verified.Select(p => (JObject)p.ToString()));
             json["unverified"] = new JArray(UnVerified.Select(p => (JObject)p.ToString()));

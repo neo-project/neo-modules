@@ -6,6 +6,7 @@ using Neo.SmartContract.Native;
 using Neo.VM.Types;
 using Neo.Wallets;
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using Array = Neo.VM.Types.Array;
@@ -57,7 +58,7 @@ namespace Neo.Network.RPC
         public static KeyPair GetKeyPair(string key)
         {
             if (string.IsNullOrEmpty(key)) { throw new ArgumentNullException(nameof(key)); }
-            if (key.StartsWith("0x")) { key = key.Substring(2); }
+            if (key.StartsWith("0x")) { key = key[2..]; }
 
             if (key.Length == 52)
             {
@@ -80,7 +81,7 @@ namespace Neo.Network.RPC
         public static UInt160 GetScriptHash(string account, ProtocolSettings protocolSettings)
         {
             if (string.IsNullOrEmpty(account)) { throw new ArgumentNullException(nameof(account)); }
-            if (account.StartsWith("0x")) { account = account.Substring(2); }
+            if (account.StartsWith("0x")) { account = account[2..]; }
 
             if (account.Length == 34)
             {
@@ -142,6 +143,7 @@ namespace Neo.Network.RPC
                 PrevHash = UInt256.Parse(json["previousblockhash"].AsString()),
                 MerkleRoot = UInt256.Parse(json["merkleroot"].AsString()),
                 Timestamp = (ulong)json["time"].AsNumber(),
+                Nonce = Convert.ToUInt64(json["nonce"].AsString(), 16),
                 Index = (uint)json["index"].AsNumber(),
                 PrimaryIndex = (byte)json["primary"].AsNumber(),
                 NextConsensus = json["nextconsensus"].ToScriptHash(protocolSettings),
@@ -179,19 +181,25 @@ namespace Neo.Network.RPC
             {
                 Account = json["account"].ToScriptHash(protocolSettings),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), json["scopes"].AsString()),
-                AllowedContracts = ((JArray)json["allowedContracts"])?.Select(p => p.ToScriptHash(protocolSettings)).ToArray(),
-                AllowedGroups = ((JArray)json["allowedGroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
+                AllowedContracts = ((JArray)json["allowedcontracts"])?.Select(p => p.ToScriptHash(protocolSettings)).ToArray(),
+                AllowedGroups = ((JArray)json["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
             };
         }
 
         public static TransactionAttribute TransactionAttributeFromJson(JObject json)
         {
             TransactionAttributeType usage = Enum.Parse<TransactionAttributeType>(json["type"].AsString());
-
-            switch (usage)
+            return usage switch
             {
-                default: throw new FormatException();
-            }
+                TransactionAttributeType.HighPriority => new HighPriorityAttribute(),
+                TransactionAttributeType.OracleResponse => new OracleResponse()
+                {
+                    Id = (ulong)json["id"].AsNumber(),
+                    Code = Enum.Parse<OracleResponseCode>(json["code"].AsString()),
+                    Result = Convert.FromBase64String(json["result"].AsString()),
+                },
+                _ => throw new FormatException(),
+            };
         }
 
         public static Witness WitnessFromJson(JObject json)
@@ -215,19 +223,19 @@ namespace Neo.Network.RPC
                 case StackItemType.ByteString:
                     return new ByteString(Convert.FromBase64String(json["value"].AsString()));
                 case StackItemType.Integer:
-                    return new Integer(new BigInteger(json["value"].AsNumber()));
+                    return BigInteger.Parse(json["value"].AsString());
                 case StackItemType.Array:
-                    Array array = new Array();
+                    Array array = new();
                     foreach (var item in (JArray)json["value"])
                         array.Add(StackItemFromJson(item));
                     return array;
                 case StackItemType.Struct:
-                    Struct @struct = new Struct();
+                    Struct @struct = new();
                     foreach (var item in (JArray)json["value"])
                         @struct.Add(StackItemFromJson(item));
                     return @struct;
                 case StackItemType.Map:
-                    Map map = new Map();
+                    Map map = new();
                     foreach (var item in (JArray)json["value"])
                     {
                         PrimitiveType key = (PrimitiveType)StackItemFromJson(item["key"]);
@@ -237,7 +245,7 @@ namespace Neo.Network.RPC
                 case StackItemType.Pointer:
                     return new Pointer(null, (int)json["value"].AsNumber());
                 case StackItemType.InteropInterface:
-                    return new InteropInterface(new object()); // See https://github.com/neo-project/neo/blob/master/src/neo/VM/Helper.cs#L194
+                    return new InteropInterface(new object());
             }
             return json["value"] is null ? StackItem.Null : json["value"].AsString();
         }

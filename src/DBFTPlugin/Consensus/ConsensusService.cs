@@ -24,6 +24,9 @@ namespace Neo.Consensus
         private DateTime block_received_time;
         private uint block_received_index;
         private bool started = false;
+        private Dictionary<UInt256, Tuple<int, int[]>> tempTXs;
+        private List<Transaction> candidateTXs;
+        private Dictionary<UInt256, int[]> candidateTXHashs;
 
         /// <summary>
         /// This will record the information from last scheduled timer
@@ -44,9 +47,7 @@ namespace Neo.Consensus
         private readonly NeoSystem neoSystem;
 
         public ConsensusService(NeoSystem neoSystem, Settings settings, Wallet wallet)
-            : this(neoSystem, settings, new ConsensusContext(neoSystem, settings, wallet))
-        {
-        }
+            : this(neoSystem, settings, new ConsensusContext(neoSystem, settings, wallet)) { }
 
         internal ConsensusService(NeoSystem neoSystem, Settings settings, ConsensusContext context)
         {
@@ -60,52 +61,11 @@ namespace Neo.Consensus
             Context.System.EventStream.Subscribe(Self, typeof(Blockchain.RelayResult));
         }
 
-        private bool AddTransaction(Transaction tx, bool verify)
+        private void OnPersistCompleted(Block block)
         {
-            if (verify)
-            {
-                VerifyResult result = tx.Verify(neoSystem.Settings, context.Snapshot, context.VerificationContext);
-                if (result != VerifyResult.Succeed)
-                {
-                    Log($"Rejected tx: {tx.Hash}, {result}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
-                    RequestChangeView(result == VerifyResult.PolicyFail ? ChangeViewReason.TxRejectedByPolicy : ChangeViewReason.TxInvalid);
-                    return false;
-                }
-            }
-            context.Transactions[tx.Hash] = tx;
-            context.VerificationContext.AddTransaction(tx);
-
-            if(context.IsPrimary)
-            {
-                foreach (ExtensiblePayload payload in context.TXListPayloads)
-                {
-                    var message = context.GetMessage<TXListMessage>(payload);
-
-                    if (message.TransactionHashes.Contains(tx.Hash) && !context.TXListVerification[message.ValidatorIndex].Contains(tx.Hash))
-                    {
-                        context.TXListVerification[message.ValidatorIndex].Append(tx.Hash);
-                        CheckTXLists(message);
-                    }
-                    
-                }
-                    
-            }
-             
-                
-
-            return CheckPrepareResponse();
-        }
-
-        private void ChangeTimer(TimeSpan delay)
-        {
-            clock_started = TimeProvider.Current.UtcNow;
-            expected_delay = delay;
-            timer_token.CancelIfNotNull();
-            timer_token = Context.System.Scheduler.ScheduleTellOnceCancelable(delay, Self, new Timer
-            {
-                Height = context.Block.Index,
-                ViewNumber = context.ViewNumber
-            }, ActorRefs.NoSender);
+            Log($"Persisted {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length} nonce={block.Nonce}");
+            knownHashes.Clear();
+            InitializeConsensus(0);
         }
 
         private void InitializeConsensus(byte viewNumber)
@@ -115,6 +75,7 @@ namespace Neo.Consensus
                 Log($"View changed: view={viewNumber} primary={context.Validators[context.GetPrimaryIndex((byte)(viewNumber - 1u))]}", LogLevel.Warning);
             Log($"Initialize: height={context.Block.Index} view={viewNumber} index={context.MyIndex} role={(context.IsPrimary ? "Primary" : context.WatchOnly ? "WatchOnly" : "Backup")}");
             if (context.WatchOnly) return;
+
             if (context.IsPrimary)
             {
                 if (isRecovering)
@@ -139,26 +100,6 @@ namespace Neo.Consensus
             {
                 ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock << (viewNumber + 1)));
             }
-        }
-
-        private static void Log(string message, LogLevel level = LogLevel.Info)
-        {
-            Utility.Log(nameof(ConsensusService), level, message);
-        }
-
-        // this function increases existing timer (never decreases) with a value proportional to `maxDelayInBlockTimes`*`Blockchain.MillisecondsPerBlock`
-        private void ExtendTimerByFactor(int maxDelayInBlockTimes)
-        {
-            TimeSpan nextDelay = expected_delay - (TimeProvider.Current.UtcNow - clock_started) + TimeSpan.FromMilliseconds(maxDelayInBlockTimes * neoSystem.Settings.MillisecondsPerBlock / (double)context.M);
-            if (!context.WatchOnly && !context.ViewChanging && !context.CommitSent && (nextDelay > TimeSpan.Zero))
-                ChangeTimer(nextDelay);
-        }
-
-        private void OnPersistCompleted(Block block)
-        {
-            Log($"Persisted {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length}");
-            knownHashes.Clear();
-            InitializeConsensus(0);
         }
 
         protected override void OnReceive(object message)
@@ -190,12 +131,6 @@ namespace Neo.Consensus
             }
         }
 
-        private void RequestRecovery()
-        {
-            Log($"Sending {nameof(RecoveryRequest)}: height={context.Block.Index} view={context.ViewNumber} nc={context.CountCommitted} nf={context.CountFailed}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeRecoveryRequest() });
-        }
-
         private void OnStart()
         {
             Log("OnStart");
@@ -225,9 +160,15 @@ namespace Neo.Consensus
         {
             if (context.WatchOnly || context.BlockSent) return;
             if (timer.Height != context.Block.Index || timer.ViewNumber != context.ViewNumber) return;
+
+            // Start the consensus
             if (context.IsPrimary && !context.RequestSentOrReceived)
             {
-                SendPrepareRequest();
+                // No Anti-MEV in test mode
+                if (context.Validators.Length == 1)
+                    SendPrepareRequest();
+                else
+                    SendTxListRequest();
             }
             else if ((context.IsPrimary && context.RequestSentOrReceived) || context.IsBackup)
             {
@@ -252,6 +193,14 @@ namespace Neo.Consensus
             }
         }
 
+        private bool ReverifyAndProcessPayload(ExtensiblePayload payload)
+        {
+            RelayResult relayResult = blockchain.Ask<RelayResult>(new Blockchain.Reverify { Inventories = new IInventory[] { payload } }).Result;
+            if (relayResult.Result != VerifyResult.Succeed) return false;
+            OnConsensusPayload(payload);
+            return true;
+        }
+
         private void OnTransaction(Transaction transaction)
         {
             if (!context.IsBackup || context.NotAcceptingPayloadsDueToViewChanging || !context.RequestSentOrReceived || context.ResponseSent || context.BlockSent)
@@ -259,6 +208,43 @@ namespace Neo.Consensus
             if (context.Transactions.ContainsKey(transaction.Hash)) return;
             if (!context.TransactionHashes.Contains(transaction.Hash)) return;
             AddTransaction(transaction, true);
+        }
+
+        private bool AddTransaction(Transaction tx, bool verify)
+        {
+            if (verify)
+            {
+                VerifyResult result = tx.Verify(neoSystem.Settings, context.Snapshot, context.VerificationContext);
+                if (result != VerifyResult.Succeed)
+                {
+                    Log($"Rejected tx: {tx.Hash}, {result}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
+                    RequestChangeView(result == VerifyResult.PolicyFail ? ChangeViewReason.TxRejectedByPolicy : ChangeViewReason.TxInvalid);
+                    return false;
+                }
+            }
+            context.Transactions[tx.Hash] = tx;
+            context.VerificationContext.AddTransaction(tx);
+            return CheckPrepareResponse();
+        }
+
+        private void ChangeTimer(TimeSpan delay)
+        {
+            clock_started = TimeProvider.Current.UtcNow;
+            expected_delay = delay;
+            timer_token.CancelIfNotNull();
+            timer_token = Context.System.Scheduler.ScheduleTellOnceCancelable(delay, Self, new Timer
+            {
+                Height = context.Block.Index,
+                ViewNumber = context.ViewNumber
+            }, ActorRefs.NoSender);
+        }
+
+        // this function increases existing timer (never decreases) with a value proportional to `maxDelayInBlockTimes`*`Blockchain.MillisecondsPerBlock`
+        private void ExtendTimerByFactor(int maxDelayInBlockTimes)
+        {
+            TimeSpan nextDelay = expected_delay - (TimeProvider.Current.UtcNow - clock_started) + TimeSpan.FromMilliseconds(maxDelayInBlockTimes * neoSystem.Settings.MillisecondsPerBlock / (double)context.M);
+            if (!context.WatchOnly && !context.ViewChanging && !context.CommitSent && (nextDelay > TimeSpan.Zero))
+                ChangeTimer(nextDelay);
         }
 
         protected override void PostStop()
@@ -275,74 +261,9 @@ namespace Neo.Consensus
             return Akka.Actor.Props.Create(() => new ConsensusService(neoSystem, dbftSettings, wallet));
         }
 
-        private void RequestChangeView(ChangeViewReason reason)
+        private static void Log(string message, LogLevel level = LogLevel.Info)
         {
-            if (context.WatchOnly) return;
-            // Request for next view is always one view more than the current context.ViewNumber
-            // Nodes will not contribute for changing to a view higher than (context.ViewNumber+1), unless they are recovered
-            // The latter may happen by nodes in higher views with, at least, `M` proofs
-            byte expectedView = context.ViewNumber;
-            expectedView++;
-            ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock << (expectedView + 1)));
-            if ((context.CountCommitted + context.CountFailed) > context.F)
-            {
-                RequestRecovery();
-            }
-            else
-            {
-                Log($"Sending {nameof(ChangeView)}: height={context.Block.Index} view={context.ViewNumber} nv={expectedView} nc={context.CountCommitted} nf={context.CountFailed} reason={reason}");
-                localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeChangeView(reason) });
-                CheckExpectedView(expectedView);
-            }
-        }
-
-        private bool ReverifyAndProcessPayload(ExtensiblePayload payload)
-        {
-            RelayResult relayResult = blockchain.Ask<RelayResult>(new Blockchain.Reverify { Inventories = new IInventory[] { payload } }).Result;
-            if (relayResult.Result != VerifyResult.Succeed) return false;
-            OnConsensusPayload(payload);
-            return true;
-        }
-
-        private void SendTXListRequest()
-        {
-            // If there is only one validator, skip this step.
-            if (context.Validators.Length == 1)
-            {
-                SendPrepareRequest();
-                CheckPreparations();
-                return;
-            }
-                
-
-            Log($"Sending {nameof(TXListRequest)}: height={context.Block.Index} view={context.ViewNumber}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeTXListRequest() });
-
-       
-
-            if (context.TransactionHashes.Length > 0)
-            {
-                foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes))
-                    localNode.Tell(Message.Create(MessageCommand.Inv, payload));
-            }
-            ChangeTimer(TimeSpan.FromMilliseconds((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0)));
-
-        }
-
-        private void SendPrepareRequest()
-        {
-            Log($"Sending {nameof(PrepareRequest)}: height={context.Block.Index} view={context.ViewNumber}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest() });
-
-            if (context.Validators.Length == 1)
-                CheckPreparations();
-
-            if (context.TransactionHashes.Length > 0)
-            {
-                foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes))
-                    localNode.Tell(Message.Create(MessageCommand.Inv, payload));
-            }
-            ChangeTimer(TimeSpan.FromMilliseconds((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0)));
+            Utility.Log(nameof(ConsensusService), level, message);
         }
     }
 }

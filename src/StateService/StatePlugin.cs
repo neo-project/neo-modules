@@ -74,7 +74,13 @@ namespace Neo.Plugins.StateService
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
-            StateStore.Singleton.UpdateLocalStateRoot(block.Index, snapshot.GetChangeSet().Where(p => p.State != TrackState.None).Where(p => p.Key.Id != NativeContract.Ledger.Id).ToList());
+            StateStore.Singleton.UpdateLocalStateRootSnapshot(block.Index, snapshot.GetChangeSet().Where(p => p.State != TrackState.None).Where(p => p.Key.Id != NativeContract.Ledger.Id).ToList());
+        }
+
+        void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
+        {
+            if (system.Settings.Network != Settings.Default.Network) return;
+            StateStore.Singleton.UpdateLocalStateRoot(block.Index);
         }
 
         [ConsoleCommand("start states", Category = "StateService", Description = "Start as a state verifier if wallet is open")]
@@ -157,25 +163,18 @@ namespace Neo.Plugins.StateService
                 return state_root.ToJson();
         }
 
-        private string GetProof(UInt256 root_hash, UInt160 script_hash, byte[] key)
+        private string GetProof(MPTTrie<StorageKey, StorageItem> trie, int contract_id, byte[] key)
         {
-            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
-            {
-                throw new RpcException(-100, "Old state not supported");
-            }
-            var snapshot = System.StoreView;
-            var contract = NativeContract.ContractManagement.GetContract(snapshot, script_hash);
-            if (contract is null) throw new RpcException(-100, "Unknown contract");
             StorageKey skey = new StorageKey
             {
-                Id = contract.Id,
+                Id = contract_id,
                 Key = key,
             };
-            HashSet<byte[]> proof = StateStore.Singleton.GetProof(root_hash, skey);
-            if (proof is null) throw new RpcException(-100, "Unknown value");
+            var result = trie.TryGetProof(skey, out var proof);
+            if (!result) throw new RpcException(-100, "Unknown value");
 
-            using MemoryStream ms = new MemoryStream();
-            using BinaryWriter writer = new BinaryWriter(ms, Utility.StrictUTF8);
+            using MemoryStream ms = new();
+            using BinaryWriter writer = new(ms, Utility.StrictUTF8);
 
             writer.WriteVarBytes(skey.ToArray());
             writer.WriteVarInt(proof.Count);
@@ -186,6 +185,19 @@ namespace Neo.Plugins.StateService
             writer.Flush();
 
             return Convert.ToBase64String(ms.ToArray());
+        }
+
+        private string GetProof(UInt256 root_hash, UInt160 script_hash, byte[] key)
+        {
+            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
+            {
+                throw new RpcException(-100, "Old state not supported");
+            }
+            using var store = StateStore.Singleton.GetStoreSnapshot();
+            var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
+            var contract = GetHistoricalContractState(trie, script_hash);
+            if (contract is null) throw new RpcException(-100, "Unknown contract");
+            return GetProof(trie, contract.Id, key);
         }
 
         [RpcMethod]
@@ -201,8 +213,8 @@ namespace Neo.Plugins.StateService
         {
             var proofs = new HashSet<byte[]>();
 
-            using MemoryStream ms = new MemoryStream(proof, false);
-            using BinaryReader reader = new BinaryReader(ms, Utility.StrictUTF8);
+            using MemoryStream ms = new(proof, false);
+            using BinaryReader reader = new(ms, Utility.StrictUTF8);
 
             var key = reader.ReadVarBytes(MPTNode.MaxKeyLength);
             var count = reader.ReadVarInt();
@@ -232,6 +244,92 @@ namespace Neo.Plugins.StateService
             json["localrootindex"] = StateStore.Singleton.LocalRootIndex;
             json["validatedrootindex"] = StateStore.Singleton.ValidatedRootIndex;
             return json;
+        }
+
+        private ContractState GetHistoricalContractState(MPTTrie<StorageKey, StorageItem> trie, UInt160 script_hash)
+        {
+            const byte prefix = 8;
+            StorageKey skey = new KeyBuilder(NativeContract.ContractManagement.Id, prefix).Add(script_hash);
+            return trie.TryGetValue(skey, out var value) ? value.GetInteroperable<ContractState>() : null;
+        }
+
+        [RpcMethod]
+        public JObject FindStates(JArray _params)
+        {
+            var root_hash = UInt256.Parse(_params[0].AsString());
+            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
+                throw new RpcException(-100, "Old state not supported");
+            var script_hash = UInt160.Parse(_params[1].AsString());
+            var prefix = Convert.FromBase64String(_params[2].AsString());
+            byte[] key = Array.Empty<byte>();
+            if (3 < _params.Count)
+                key = Convert.FromBase64String(_params[3].AsString());
+            int count = Settings.Default.MaxFindResultItems;
+            if (4 < _params.Count)
+                count = int.Parse(_params[4].AsString());
+            if (Settings.Default.MaxFindResultItems < count)
+                count = Settings.Default.MaxFindResultItems;
+            using var store = StateStore.Singleton.GetStoreSnapshot();
+            var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
+            var contract = GetHistoricalContractState(trie, script_hash);
+            if (contract is null) throw new RpcException(-100, "Unknown contract");
+            StorageKey pkey = new()
+            {
+                Id = contract.Id,
+                Key = prefix,
+            };
+            StorageKey fkey = new()
+            {
+                Id = pkey.Id,
+                Key = key,
+            };
+            JObject json = new();
+            JArray jarr = new();
+            int i = 0;
+            foreach (var (ikey, ivalue) in trie.Find(pkey.ToArray(), 0 < key.Length ? fkey.ToArray() : null))
+            {
+                if (count < i) break;
+                if (i < count)
+                {
+                    JObject j = new();
+                    j["key"] = Convert.ToBase64String(ikey.Key);
+                    j["value"] = Convert.ToBase64String(ivalue.Value);
+                    jarr.Add(j);
+                }
+                i++;
+            };
+            if (0 < jarr.Count)
+            {
+                json["firstProof"] = GetProof(trie, contract.Id, Convert.FromBase64String(jarr.First()["key"].AsString()));
+            }
+            if (1 < jarr.Count)
+            {
+                json["lastProof"] = GetProof(trie, contract.Id, Convert.FromBase64String(jarr.Last()["key"].AsString()));
+            }
+            json["truncated"] = count < i;
+            json["results"] = jarr;
+            return json;
+        }
+
+        [RpcMethod]
+        public JObject GetState(JArray _params)
+        {
+            var root_hash = UInt256.Parse(_params[0].AsString());
+            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
+                throw new RpcException(-100, "Old state not supported");
+            var script_hash = UInt160.Parse(_params[1].AsString());
+            var key = Convert.FromBase64String(_params[2].AsString());
+            using var store = StateStore.Singleton.GetStoreSnapshot();
+            var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
+
+            var contract = GetHistoricalContractState(trie, script_hash);
+            if (contract is null) throw new RpcException(-100, "Unknown contract");
+            StorageKey skey = new()
+            {
+                Id = contract.Id,
+                Key = key,
+            };
+            return Convert.ToBase64String(trie[skey].Value);
         }
     }
 }

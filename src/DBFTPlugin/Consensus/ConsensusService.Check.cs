@@ -3,47 +3,83 @@ using Neo.IO;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+
 namespace Neo.Consensus
 {
     partial class ConsensusService
     {
-
-        private bool CheckTXLists(TXListMessage message)
+        /// <summary>
+        /// Need over 2f transaction lists
+        /// valid transaction should exists in over 2f lists
+        /// order are based on the time
+        /// </summary>
+        private void CheckTxLists()
         {
-            // If the all the tranactions in the list is confirmed, then mark the list as valid.
-            if(message.TransactionHashes.Length == context.TXListVerification[message.ValidatorIndex].Length)
+            // check for the primary
+            if (context.TxListRequestSent && context.IsPrimary)
             {
-                context.ValidTXListPayloads[message.ValidatorIndex] = context.TXListPayloads[message.ValidatorIndex];
-            }
-
-            if (context.ValidTXListPayloads.Count(p => context.GetMessage(p)?.ViewNumber == context.ViewNumber) > context.F)
-            {
-
-                /// TODO: Generate the final TXList based on the valid TXList Payloads.
-                foreach (ExtensiblePayload payload in context.ValidTXListPayloads)
+                /// TODO: check the transactions
+                if (context.TxlistsPayloads.Count(p => p != null) >= context.M && context.TransactionHashes.All(p => context.Transactions.ContainsKey(p)))
                 {
-                    TXListMessage response = (TXListMessage)context.GetMessage(payload);
+                    tempTXs = new();
+                    candidateTXs = new();
 
-                    var transactions = context.ValidTXListPayloads
-                        .Where(p => p != null)
-                        .Select(p => context.GetMessage<TXListMessage>(p).TransactionHashes)
-                        .Cast<UInt256>()
-                        .ToList()
-                        .Distinct()
-                        .Where(p => context.Transactions.ContainsKey(p))
-                        .Select(p => context.Transactions[p])
-                        .OrderByDescending(p => p.NetworkFee + p.SystemFee)
-                        .ToArray();
+                    // 1. Get transaction that exists in more than 2f lists
+                    foreach (var payload in context.TxlistsPayloads)
+                    {
+                        var list = context.GetMessage<TxListMessage>(payload);
+                        for (int i = 0; i < list.Size; i++)
+                        {
+                            var hash = list.TransactionHashes[i];
+                            if (!tempTXs.ContainsKey(hash))
+                                tempTXs.Add(hash, new Tuple<int, int[]>(0, new int[] { i }));
+                            else
+                            {
+                                var tuple = tempTXs[hash];
+                                List<int> index = new List<int>(tuple.Item2);
+                                index.Add(i);
+                                tempTXs[hash] = new Tuple<int, int[]>(tuple.Item1 + 1, index.ToArray());
+                                // this is a valid transaction now
+                                if (tuple.Item1 + 1 >= context.M)
+                                {
+                                    // Here, what if the primary does not have this transaction?
+                                    // TODO:
+                                    candidateTXHashs.Add(hash, index.ToArray());
+                                    candidateTXs.Add(context.Transactions[hash]);
+                                }
+                            }
+                        }
+                    }
+
+                    // 2. Order the transactions according to the transaction fee
+                    candidateTXs.OrderBy(p => p.NetworkFee + p.SystemFee);
+
+                    // 3. Only keep the max n transactions
 
 
-                    context.MakePrepareRequest(transactions);
+
+                    // 4. Reorder these transaction according to the index
+
+                    // 5. Randomize those with same transaction fee and index
+
+                    // 6. Pack those transactions in a new transaction list
+
+                    // 7. broadcast the new transaction list along with lists from other CNs
+
+
+
+                    // Update the hashes
+                    SendPrepareRequest();
                 }
+            }
+            if (!context.TxListRequestSent && !context.IsPrimary)
+            {
 
-                    return true;
             }
 
-            return false;
+
         }
 
         private bool CheckPrepareResponse()

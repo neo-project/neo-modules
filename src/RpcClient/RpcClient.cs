@@ -6,6 +6,7 @@ using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -66,13 +67,18 @@ namespace Neo.Network.RPC
         }
         #endregion
 
-        public async Task<RpcResponse> SendAsync(RpcRequest request)
+        static RpcRequest AsRpcRequest(string method, params JObject[] paraArgs)
         {
-            if (disposedValue) throw new ObjectDisposedException(nameof(RpcClient));
-
-            var requestJson = request.ToJson().ToString();
-            using var result = await httpClient.PostAsync(baseAddress, new StringContent(requestJson, Encoding.UTF8)).ConfigureAwait(false);
-            var content = await result.Content.ReadAsStringAsync();
+            return new RpcRequest
+            {
+                Id = 1,
+                JsonRpc = "2.0",
+                Method = method,
+                Params = paraArgs
+            };
+        }
+        static RpcResponse AsRpcResponse(string content)
+        {
             var response = RpcResponse.FromJson(JObject.Parse(content));
             response.RawResponse = content;
 
@@ -84,16 +90,46 @@ namespace Neo.Network.RPC
             return response;
         }
 
+        HttpRequestMessage AsHttpRequest(RpcRequest request)
+        {
+            var requestJson = request.ToJson().ToString();
+            return new HttpRequestMessage(HttpMethod.Post, baseAddress)
+            {
+                Content = new StringContent(requestJson, Neo.Utility.StrictUTF8)
+            };
+        }
+
+        public RpcResponse Send(RpcRequest request)
+        {
+            if (disposedValue) throw new ObjectDisposedException(nameof(RpcClient));
+
+            using var requestMsg = AsHttpRequest(request);
+            using var responseMsg = httpClient.Send(requestMsg);
+            using var contentStream = responseMsg.Content.ReadAsStream();
+            using var contentReader = new StreamReader(contentStream);
+            return AsRpcResponse(contentReader.ReadToEnd());
+        }
+
+        public async Task<RpcResponse> SendAsync(RpcRequest request)
+        {
+            if (disposedValue) throw new ObjectDisposedException(nameof(RpcClient));
+
+            using var requestMsg = AsHttpRequest(request);
+            using var responseMsg = await httpClient.SendAsync(requestMsg).ConfigureAwait(false);
+            var content = await responseMsg.Content.ReadAsStringAsync();
+            return AsRpcResponse(content);
+        }
+
+        public virtual JObject RpcSend(string method, params JObject[] paraArgs)
+        {
+            var request = AsRpcRequest(method, paraArgs);
+            var response = Send(request);
+            return response.Result;
+        }
+
         public virtual async Task<JObject> RpcSendAsync(string method, params JObject[] paraArgs)
         {
-            var request = new RpcRequest
-            {
-                Id = 1,
-                JsonRpc = "2.0",
-                Method = method,
-                Params = paraArgs
-            };
-
+            var request = AsRpcRequest(method, paraArgs);
             var response = await SendAsync(request).ConfigureAwait(false);
             return response.Result;
         }
@@ -383,10 +419,10 @@ namespace Neo.Network.RPC
         /// </summary>
         public async Task<RpcInvokeResult> InvokeFunctionAsync(string scriptHash, string operation, RpcStack[] stacks, params Signer[] signer)
         {
-            List<JObject> parameters = new List<JObject> { scriptHash.AsScriptHash(), operation, stacks.Select(p => p.ToJson()).ToArray() };
+            List<JObject> parameters = new() { scriptHash.AsScriptHash(), operation, stacks.Select(p => p.ToJson()).ToArray() };
             if (signer.Length > 0)
             {
-                parameters.Add(signer.Select(p => (JObject)p.ToJson()).ToArray());
+                parameters.Add(signer.Select(p => p.ToJson()).ToArray());
             }
             var result = await RpcSendAsync(GetRpcName(), parameters.ToArray()).ConfigureAwait(false);
             return RpcInvokeResult.FromJson(result);
@@ -398,7 +434,7 @@ namespace Neo.Network.RPC
         /// </summary>
         public async Task<RpcInvokeResult> InvokeScriptAsync(byte[] script, params Signer[] signers)
         {
-            List<JObject> parameters = new List<JObject> { Convert.ToBase64String(script) };
+            List<JObject> parameters = new() { Convert.ToBase64String(script) };
             if (signers.Length > 0)
             {
                 parameters.Add(signers.Select(p => p.ToJson()).ToArray());

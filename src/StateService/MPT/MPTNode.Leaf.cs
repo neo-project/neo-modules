@@ -12,8 +12,7 @@ namespace Neo.Plugins.MPT
 
         public static MPTNode NewLeaf(byte[] value)
         {
-            if (value is null) throw new ArgumentNullException(nameof(NewLeaf));
-            if (value.Length == 0) throw new InvalidOperationException(nameof(NewLeaf));
+            if (value is null) throw new ArgumentNullException(nameof(value));
             var n = new MPTNode
             {
                 type = NodeType.LeafNode,

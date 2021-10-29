@@ -13,7 +13,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new JObject();
+            JObject json = new();
             json["unconnected"] = new JArray(Unconnected.Select(p => p.ToJson()));
             json["bad"] = new JArray(Bad.Select(p => p.ToJson()));
             json["connected"] = new JArray(Connected.Select(p => p.ToJson()));
@@ -39,7 +39,7 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new JObject();
+            JObject json = new();
             json["address"] = Address;
             json["port"] = Port;
             return json;

@@ -8,6 +8,7 @@ namespace Neo.Plugins.StateService
         public bool FullState { get; }
         public uint Network { get; }
         public bool AutoVerify { get; }
+        public int MaxFindResultItems { get; }
 
         public static Settings Default { get; private set; }
 
@@ -17,6 +18,7 @@ namespace Neo.Plugins.StateService
             FullState = section.GetValue("FullState", false);
             Network = section.GetValue("Network", 5195086u);
             AutoVerify = section.GetValue("AutoVerify", false);
+            MaxFindResultItems = section.GetValue("MaxFindResultItems", 100);
         }
 
         public static void Load(IConfigurationSection section)

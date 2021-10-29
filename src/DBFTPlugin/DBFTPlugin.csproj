@@ -24,10 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Messages\" />
     <Folder Include="Messages\RecoveryMessage\" />
     <Folder Include="Types\" />
-    <Folder Include="Consensus\" />
-    <Folder Include="Messages\TXListMessage\" />
   </ItemGroup>
 </Project>

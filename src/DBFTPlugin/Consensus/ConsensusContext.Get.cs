@@ -1,17 +1,14 @@
-using Neo.IO;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.Wallets;
-using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using static Neo.Consensus.RecoveryMessage;
 
 namespace Neo.Consensus
 {
-    partial class ConsensusContext : IDisposable, ISerializable
+    partial class ConsensusContext
     {
-        
         public ConsensusMessage GetMessage(ExtensiblePayload payload)
         {
             if (payload is null) return null;
@@ -70,7 +67,6 @@ namespace Neo.Consensus
             return Contract.CreateSignatureRedeemScript(Validators[index]).ToScriptHash();
         }
 
-
         /// <summary>
         /// Return the expected block size
         /// </summary>
@@ -99,6 +95,7 @@ namespace Neo.Consensus
                 UInt256.Length +    // PrevHash
                 UInt256.Length +    // MerkleRoot
                 sizeof(ulong) +     // Timestamp
+                sizeof(ulong) +     // Nonce
                 sizeof(uint) +      // Index
                 sizeof(byte) +      // PrimaryIndex
                 UInt160.Length +    // NextConsensus

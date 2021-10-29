@@ -3,7 +3,7 @@
     "RecoveryLogs": "ConsensusState",
     "IgnoreRecoveryLogs": false,
     "AutoStart": false,
-    "Network": 5195086,
+    "Network": 860833102,
     "MaxBlockSize": 262144,
     "MaxBlockSystemFee": 900000000000
   }

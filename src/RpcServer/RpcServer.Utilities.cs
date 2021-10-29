@@ -1,6 +1,3 @@
-#pragma warning disable IDE0051
-#pragma warning disable IDE0060
-
 using Neo.IO.Json;
 using Neo.Wallets;
 using System.Linq;
@@ -29,7 +26,7 @@ namespace Neo.Plugins
         protected virtual JObject ValidateAddress(JArray _params)
         {
             string address = _params[0].AsString();
-            JObject json = new JObject();
+            JObject json = new();
             UInt160 scriptHash;
             try
             {
