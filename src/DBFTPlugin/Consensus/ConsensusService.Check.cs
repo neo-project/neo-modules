@@ -86,7 +86,7 @@ namespace Neo.Consensus
                             .OrderByDescending(p => p.Value)
                             .Take(len - context.F)
                             .ToList()
-                            .Average(pair => pair.Value);
+                            .Average(pair => index[pair.Key]);
                     }).ToArray();
                     // 5. Randomize those with same transaction fee and index
 
