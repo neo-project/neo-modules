@@ -38,7 +38,7 @@ namespace Neo.Consensus
                             else
                             {
                                 var tuple = tempTXs[hash];
-                                List<int> index = new List<int>(tuple.Item2);
+                                List<int> index = new(tuple.Item2);
                                 index.Add(i);
                                 tempTXs[hash] = new Tuple<int, int[]>(tuple.Item1 + 1, index.ToArray());
                                 // this is a valid transaction now
@@ -57,10 +57,8 @@ namespace Neo.Consensus
                     candidateTXs.OrderBy(p => p.NetworkFee + p.SystemFee);
 
                     // 3. Only keep the max n transactions
-
-
-
-                    // 4. Reorder these transaction according to the index
+                    context.EnsureMaxBlockLimitation(candidateTXs);
+                    // 4. Reorder these transactions according to the index
 
                     // 5. Randomize those with same transaction fee and index
 
