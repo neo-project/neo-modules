@@ -54,18 +54,40 @@ namespace Neo.Consensus
                     }
 
                     // 2. Order the transactions according to the transaction fee
-                    candidateTXs.OrderBy(p => p.NetworkFee + p.SystemFee);
+                    var feeOrderedTXs = candidateTXs.OrderBy(p => p.NetworkFee + p.SystemFee).ToArray();
 
                     // 3. Only keep the max n transactions
                     context.EnsureMaxBlockLimitation(candidateTXs);
 
                     // 4. Reorder these transactions according to the index
-                    candidateTXs.OrderBy(p =>
+                    var indexOrderedTxs = feeOrderedTXs.OrderBy(p =>
                     {
                         var index = candidateTXHashs[p.Hash];
+                        var len = index.Length;
+                        int[,] matrices = new int[len, len];
+                        Dictionary<int, int> outliers = new();
 
-                        return p;
-                    });
+                        // Find f outlier values
+                        for (int i = 0; i < len; i++)
+                        {
+                            for (int j = len - 1; j < len; j++)
+                            {
+                                outliers[i] += matrices[i, j];
+                            }
+                            for (int k = i + 1; k < len; k++)
+                            {
+                                var outlier = Math.Abs(index[i] - index[k]);
+                                matrices[i, k] = outlier;
+                                outliers[i] += outlier;
+                            }
+                        }
+
+                        return outliers.ToList()
+                            .OrderByDescending(p => p.Value)
+                            .Take(len - context.F)
+                            .ToList()
+                            .Average(pair => pair.Value);
+                    }).ToArray();
                     // 5. Randomize those with same transaction fee and index
 
                     // 6. Pack those transactions in a new transaction list
