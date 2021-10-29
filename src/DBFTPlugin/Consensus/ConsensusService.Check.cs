@@ -64,7 +64,7 @@ namespace Neo.Consensus
                     {
                         var index = candidateTXHashs[p.Hash];
                         var len = index.Length;
-                        int[,] matrices = new int[len, len];
+                        int[,] densities = new int[len, len];
                         Dictionary<int, int> outliers = new();
 
                         // Find f outlier values
@@ -72,12 +72,12 @@ namespace Neo.Consensus
                         {
                             for (int j = len - 1; j < len; j++)
                             {
-                                outliers[i] += matrices[i, j];
+                                outliers[i] += densities[i, j];
                             }
                             for (int k = i + 1; k < len; k++)
                             {
                                 var outlier = Math.Abs(index[i] - index[k]);
-                                matrices[i, k] = outlier;
+                                densities[i, k] = outlier;
                                 outliers[i] += outlier;
                             }
                         }
