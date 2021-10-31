@@ -38,7 +38,7 @@ namespace Neo.Consensus
                             else
                             {
                                 var tuple = tempTXs[hash];
-                                List<int> index = new(tuple.Item2) {0};
+                                List<int> index = new(tuple.Item2) { 0 };
                                 tempTXs[hash] = new Tuple<int, int[]>(tuple.Item1 + 1, index.ToArray());
                                 // this is a valid transaction now
                                 if (tuple.Item1 + 1 >= context.M)
