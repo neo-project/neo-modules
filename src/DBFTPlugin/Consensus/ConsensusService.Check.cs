@@ -25,7 +25,7 @@ namespace Neo.Consensus
                 {
                     tempTXs = new();
                     candidateTXs = new();
-
+                    candidateTXHashs = new();
                     // 1. Get transaction that exists in more than 2f lists
                     foreach (var payload in context.TxlistsPayloads)
                     {
@@ -38,8 +38,7 @@ namespace Neo.Consensus
                             else
                             {
                                 var tuple = tempTXs[hash];
-                                List<int> index = new(tuple.Item2);
-                                index.Add(i);
+                                List<int> index = new(tuple.Item2) {0};
                                 tempTXs[hash] = new Tuple<int, int[]>(tuple.Item1 + 1, index.ToArray());
                                 // this is a valid transaction now
                                 if (tuple.Item1 + 1 >= context.M)
@@ -89,6 +88,7 @@ namespace Neo.Consensus
                             .Average(pair => index[pair.Key]);
                     }).ToArray();
                     // 5. Randomize those with same transaction fee and index
+                    // TODO: leave it for future work
 
                     // 6. Pack those transactions in a new transaction list
 
