@@ -27,4 +27,8 @@
     <Folder Include="Messages\RecoveryMessage\" />
     <Folder Include="Types\" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cortex.Cryptography.Bls\Cortex.Cryptography.Bls.csproj" />
+  </ItemGroup>
 </Project>

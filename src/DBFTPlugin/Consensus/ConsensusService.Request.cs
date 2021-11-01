@@ -31,10 +31,10 @@ namespace Neo.Consensus
             ChangeTimer(TimeSpan.FromMilliseconds((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0)));
         }
 
-        private void SendPrepareRequest()
+        private void SendPrepareRequest(UInt256[] txs)
         {
             Log($"Sending {nameof(PrepareRequest)}: height={context.Block.Index} view={context.ViewNumber}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest() });
+            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest(txs) });
 
             if (context.Validators.Length == 1)
                 CheckPreparations();

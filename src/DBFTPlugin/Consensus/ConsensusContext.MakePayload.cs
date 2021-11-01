@@ -31,7 +31,7 @@ namespace Neo.Consensus
             });
         }
 
-        public ExtensiblePayload MakePrepareRequest()
+        public ExtensiblePayload MakePrepareRequest(UInt256[] txs)
         {
             EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
             Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
@@ -42,7 +42,7 @@ namespace Neo.Consensus
                 PrevHash = Block.PrevHash,
                 Timestamp = Block.Timestamp,
                 Nonce = Block.Nonce,
-                TransactionHashes = TransactionHashes
+                TransactionHashes = txs,
             });
         }
 

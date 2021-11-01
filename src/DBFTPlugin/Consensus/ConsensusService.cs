@@ -166,7 +166,7 @@ namespace Neo.Consensus
             {
                 // No Anti-MEV in test mode
                 if (context.Validators.Length == 1)
-                    SendPrepareRequest();
+                    SendPrepareRequest(context.TransactionHashes);
                 else
                     SendTxListRequest();
             }

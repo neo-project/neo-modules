@@ -90,14 +90,18 @@ namespace Neo.Consensus
                     // 5. Randomize those with same transaction fee and index
                     // TODO: leave it for future work
 
+                    Dictionary<UInt256, Transaction> txs = new();
+                    context.Transactions.Clear();
                     // 6. Pack those transactions in a new transaction list
-
+                    foreach (var v in indexOrderedTxs)
+                    {
+                        context.Transactions .Add(v.Hash, v);
+                    }
+                    context.TransactionHashes = context.Transactions.Select(p => p.Key).ToArray();
                     // 7. broadcast the new transaction list along with lists from other CNs
 
-
-
                     // Update the hashes
-                    SendPrepareRequest();
+                    SendPrepareRequest(context.TransactionHashes);
                 }
             }
             if (!context.TxListRequestSent && !context.IsPrimary)
