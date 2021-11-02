@@ -24,9 +24,6 @@ namespace Neo.Consensus
         private DateTime block_received_time;
         private uint block_received_index;
         private bool started = false;
-        private Dictionary<UInt256, Tuple<int, int[]>> tempTXs;
-        private List<Transaction> candidateTXs;
-        private Dictionary<UInt256, int[]> candidateTXHashs;
 
         /// <summary>
         /// This will record the information from last scheduled timer

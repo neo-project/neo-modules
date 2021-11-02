@@ -127,7 +127,6 @@ namespace Neo.Consensus
         }
 
 
-
         public ExtensiblePayload MakeRecoveryRequest()
         {
             return MakeSignedPayload(new RecoveryRequest

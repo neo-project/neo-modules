@@ -5,6 +5,7 @@ using Neo.Network.P2P.Payloads;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace Neo.Consensus
 {
@@ -20,96 +21,18 @@ namespace Neo.Consensus
             // check for the primary
             if (context.TxListRequestSent && context.IsPrimary)
             {
-                /// TODO: check the transactions
-                if (context.TxlistsPayloads.Count(p => p != null) >= context.M && context.TransactionHashes.All(p => context.Transactions.ContainsKey(p)))
+                if (context.TxlistsPayloads.Count(p => p != null) >= context.M
+                    && context.TransactionHashes.All(p => context.Transactions.ContainsKey(p)))
                 {
-                    tempTXs = new();
-                    candidateTXs = new();
-                    candidateTXHashs = new();
-                    // 1. Get transaction that exists in more than 2f lists
-                    foreach (var payload in context.TxlistsPayloads)
-                    {
-                        var list = context.GetMessage<TxListMessage>(payload);
-                        for (int i = 0; i < list.Size; i++)
-                        {
-                            var hash = list.TransactionHashes[i];
-                            if (!tempTXs.ContainsKey(hash))
-                                tempTXs.Add(hash, new Tuple<int, int[]>(0, new int[] { i }));
-                            else
-                            {
-                                var tuple = tempTXs[hash];
-                                List<int> index = new(tuple.Item2) { 0 };
-                                tempTXs[hash] = new Tuple<int, int[]>(tuple.Item1 + 1, index.ToArray());
-                                // this is a valid transaction now
-                                if (tuple.Item1 + 1 >= context.M)
-                                {
-                                    // Here, what if the primary does not have this transaction?
-                                    // TODO:
-                                    candidateTXHashs.Add(hash, index.ToArray());
-                                    candidateTXs.Add(context.Transactions[hash]);
-                                }
-                            }
-                        }
-                    }
-
-                    // 2. Order the transactions according to the transaction fee
-                    var feeOrderedTXs = candidateTXs.OrderBy(p => p.NetworkFee + p.SystemFee).ToArray();
-
-                    // 3. Only keep the max n transactions
-                    context.EnsureMaxBlockLimitation(candidateTXs);
-
-                    // 4. Reorder these transactions according to the index
-                    var indexOrderedTxs = feeOrderedTXs.OrderBy(p =>
-                    {
-                        var index = candidateTXHashs[p.Hash];
-                        var len = index.Length;
-                        int[,] densities = new int[len, len];
-                        Dictionary<int, int> outliers = new();
-
-                        // Find f outlier values
-                        for (int i = 0; i < len; i++)
-                        {
-                            for (int j = len - 1; j < len; j++)
-                            {
-                                outliers[i] += densities[i, j];
-                            }
-                            for (int k = i + 1; k < len; k++)
-                            {
-                                var outlier = Math.Abs(index[i] - index[k]);
-                                densities[i, k] = outlier;
-                                outliers[i] += outlier;
-                            }
-                        }
-
-                        return outliers.ToList()
-                            .OrderByDescending(p => p.Value)
-                            .Take(len - context.F)
-                            .ToList()
-                            .Average(pair => index[pair.Key]);
-                    }).ToArray();
-                    // 5. Randomize those with same transaction fee and index
-                    // TODO: leave it for future work
-
-                    Dictionary<UInt256, Transaction> txs = new();
-                    context.Transactions.Clear();
-                    // 6. Pack those transactions in a new transaction list
-                    foreach (var v in indexOrderedTxs)
-                    {
-                        context.Transactions .Add(v.Hash, v);
-                    }
-                    context.TransactionHashes = context.Transactions.Select(p => p.Key).ToArray();
-                    // 7. broadcast the new transaction list along with lists from other CNs
-
+                    var list = AggregateTxLists(context.TxlistsPayloads);
                     // Update the hashes
-                    SendPrepareRequest(context.TransactionHashes);
+                    SendPrepareRequest(list);
                 }
             }
             if (!context.TxListRequestSent && !context.IsPrimary)
             {
 
             }
-
-
         }
 
         private bool CheckPrepareResponse()
@@ -189,6 +112,92 @@ namespace Neo.Consensus
                 ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock));
                 CheckCommits();
             }
+        }
+
+        /// <summary>
+        /// Calculate the final transaction list from the given lists
+        /// </summary>
+        /// <param name="TxlistsPayloads">transaction lists from peer nodes</param>
+        /// <returns>the final list</returns>
+        private UInt256[] AggregateTxLists(ExtensiblePayload[] TxlistsPayloads)
+        {
+            Dictionary<UInt256, Tuple<int, int[]>> tempTXs = new();
+            List<Transaction> candidateTXs = new();
+            Dictionary<UInt256, int[]> candidateTxHashs = new();
+            // 1. Get transaction that exists in more than 2f lists
+            foreach (var payload in context.TxlistsPayloads)
+            {
+                var list = context.GetMessage<TxListMessage>(payload);
+                for (int i = 0; i < list.Size; i++)
+                {
+                    var hash = list.TransactionHashes[i];
+                    if (!tempTXs.ContainsKey(hash))
+                        tempTXs.Add(hash, new Tuple<int, int[]>(0, new int[] { i }));
+                    else
+                    {
+                        var tuple = tempTXs[hash];
+                        List<int> index = new(tuple.Item2) { 0 };
+                        tempTXs[hash] = new Tuple<int, int[]>(tuple.Item1 + 1, index.ToArray());
+                        // this is a valid transaction now
+                        if (tuple.Item1 + 1 >= context.M)
+                        {
+                            // Here, what if the primary does not have this transaction?
+                            // TODO:
+                            candidateTxHashs.Add(hash, index.ToArray());
+                            candidateTXs.Add(context.Transactions[hash]);
+                        }
+                    }
+                }
+            }
+
+            // 2. Order the transactions according to the transaction fee
+            var feeOrderedTXs = candidateTXs.OrderBy(p => p.NetworkFee + p.SystemFee).ToArray();
+
+            // 3. Only keep the max n transactions
+            context.EnsureMaxBlockLimitation(candidateTXs);
+
+            // 4. Reorder these transactions according to the index
+            var indexOrderedTxs = feeOrderedTXs.OrderBy(p =>
+            {
+                var index = candidateTxHashs[p.Hash];
+                var len = index.Length;
+                var densities = new int[len, len];
+                Dictionary<int, int> outliers = new();
+
+                // Find f outlier values
+                for (int i = 0; i < len; i++)
+                {
+                    for (int j = len - 1; j < len; j++)
+                    {
+                        outliers[i] += densities[i, j];
+                    }
+                    for (int k = i + 1; k < len; k++)
+                    {
+                        var outlier = Math.Abs(index[i] - index[k]);
+                        densities[i, k] = outlier;
+                        outliers[i] += outlier;
+                    }
+                }
+
+                return outliers.ToList()
+                    .OrderByDescending(p => p.Value)
+                    .Take(len - context.F)
+                    .ToList()
+                    .Average(pair => index[pair.Key]);
+            }).ToArray();
+            // 5. Randomize those with same transaction fee and index
+            // TODO: leave it for future work
+
+            Dictionary<UInt256, Transaction> txs = new();
+            context.Transactions.Clear();
+            // 6. Pack those transactions in a new transaction list
+            foreach (var v in indexOrderedTxs)
+            {
+                context.Transactions.Add(v.Hash, v);
+            }
+            context.TransactionHashes = context.Transactions.Select(p => p.Key).ToArray();
+            // 7. broadcast the new transaction list along with lists from other CNs
+            return context.TransactionHashes;
         }
     }
 }

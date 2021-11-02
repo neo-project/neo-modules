@@ -87,14 +87,32 @@ namespace Neo.Consensus
             CheckTxLists();
         }
 
+        /// <summary>
+        /// Received the prepare request from the primary
+        /// then:
+        ///    1. verify the authenticity of the request
+        ///    2. verify the transaction list in the request
+        ///    3. verify the transactions in the request
+        ///    4. send response to the cn network
+        ///
+        /// </summary>
+        /// <param name="payload">the payload of the prepare request</param>
+        /// <param name="message">prepare request message</param>
         private void OnPrepareRequestReceived(ExtensiblePayload payload, PrepareRequest message)
         {
             if (context.RequestSentOrReceived || context.NotAcceptingPayloadsDueToViewChanging) return;
             if (message.ValidatorIndex != context.Block.PrimaryIndex || message.ViewNumber != context.ViewNumber) return;
             if (message.Version != context.Block.Version || message.PrevHash != context.Block.PrevHash) return;
             if (message.TransactionHashes.Length > neoSystem.Settings.MaxTransactionsPerBlock) return;
-            Log($"{nameof(OnPrepareRequestReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} tx={message.TransactionHashes.Length}");
-            if (message.Timestamp <= context.PrevHeader.Timestamp || message.Timestamp > TimeProvider.Current.UtcNow.AddMilliseconds(8 * neoSystem.Settings.MillisecondsPerBlock).ToTimestampMS())
+
+            Log($"{nameof(OnPrepareRequestReceived)}: " +
+                $"height={message.BlockIndex} " +
+                $"view={message.ViewNumber} " +
+                $"index={message.ValidatorIndex} " +
+                $"tx={message.TransactionHashes.Length}");
+
+            if (message.Timestamp <= context.PrevHeader.Timestamp
+                || message.Timestamp > TimeProvider.Current.UtcNow.AddMilliseconds(8 * neoSystem.Settings.MillisecondsPerBlock).ToTimestampMS())
             {
                 Log($"Timestamp incorrect: {message.Timestamp}", LogLevel.Warning);
                 return;
@@ -113,14 +131,16 @@ namespace Neo.Consensus
             context.Block.Header.Timestamp = message.Timestamp;
             context.Block.Header.Nonce = message.Nonce;
             context.TransactionHashes = message.TransactionHashes;
-
             context.Transactions = new Dictionary<UInt256, Transaction>();
             context.VerificationContext = new TransactionVerificationContext();
+
             for (int i = 0; i < context.PreparationPayloads.Length; i++)
-                if (context.PreparationPayloads[i] != null)
-                    if (!context.GetMessage<PrepareResponse>(context.PreparationPayloads[i]).PreparationHash.Equals(payload.Hash))
-                        context.PreparationPayloads[i] = null;
+                if (context.PreparationPayloads[i] is not null
+                    && !context.GetMessage<PrepareResponse>(context.PreparationPayloads[i]).PreparationHash.Equals(payload.Hash))
+                    context.PreparationPayloads[i] = null;
+
             context.PreparationPayloads[message.ValidatorIndex] = payload;
+
             byte[] hashData = context.EnsureHeader().GetSignData(neoSystem.Settings.Network);
             for (int i = 0; i < context.CommitPayloads.Length; i++)
                 if (context.GetMessage(context.CommitPayloads[i])?.ViewNumber == context.ViewNumber)
@@ -173,7 +193,11 @@ namespace Neo.Consensus
             // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
             ExtendTimerByFactor(2);
 
-            Log($"{nameof(OnPrepareResponseReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex}");
+            Log($"{nameof(OnPrepareResponseReceived)}: " +
+                $"height={message.BlockIndex} " +
+                $"view={message.ViewNumber} " +
+                $"index={message.ValidatorIndex}");
+
             context.PreparationPayloads[message.ValidatorIndex] = payload;
             if (context.WatchOnly || context.CommitSent) return;
             if (context.RequestSentOrReceived)
@@ -191,7 +215,13 @@ namespace Neo.Consensus
             if (message.NewViewNumber <= expectedView)
                 return;
 
-            Log($"{nameof(OnChangeViewReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} nv={message.NewViewNumber} reason={message.Reason}");
+            Log($"{nameof(OnChangeViewReceived)}: " +
+                $"height={message.BlockIndex} " +
+                $"view={message.ViewNumber} " +
+                $"index={message.ValidatorIndex} " +
+                $"nv={message.NewViewNumber} " +
+                $"reason={message.Reason}");
+
             context.ChangeViewPayloads[message.ValidatorIndex] = payload;
             CheckExpectedView(message.NewViewNumber);
         }
@@ -202,7 +232,11 @@ namespace Neo.Consensus
             if (existingCommitPayload != null)
             {
                 if (existingCommitPayload.Hash != payload.Hash)
-                    Log($"Rejected {nameof(Commit)}: height={commit.BlockIndex} index={commit.ValidatorIndex} view={commit.ViewNumber} existingView={context.GetMessage(existingCommitPayload).ViewNumber}", LogLevel.Warning);
+                    Log($"Rejected {nameof(Commit)}: " +
+                        $"height={commit.BlockIndex} " +
+                        $"index={commit.ValidatorIndex} " +
+                        $"view={commit.ViewNumber} " +
+                        $"existingView={context.GetMessage(existingCommitPayload).ViewNumber}", LogLevel.Warning);
                 return;
             }
 
@@ -212,7 +246,12 @@ namespace Neo.Consensus
 
             if (commit.ViewNumber == context.ViewNumber)
             {
-                Log($"{nameof(OnCommitReceived)}: height={commit.BlockIndex} view={commit.ViewNumber} index={commit.ValidatorIndex} nc={context.CountCommitted} nf={context.CountFailed}");
+                Log($"{nameof(OnCommitReceived)}: " +
+                    $"height={commit.BlockIndex} " +
+                    $"view={commit.ViewNumber} " +
+                    $"index={commit.ValidatorIndex} " +
+                    $"nc={context.CountCommitted} " +
+                    $"nf={context.CountFailed}");
 
                 byte[] hashData = context.EnsureHeader()?.GetSignData(neoSystem.Settings.Network);
                 if (hashData == null)
@@ -240,7 +279,10 @@ namespace Neo.Consensus
             int validChangeViews = 0, totalChangeViews = 0, validPrepReq = 0, totalPrepReq = 0;
             int validPrepResponses = 0, totalPrepResponses = 0, validCommits = 0, totalCommits = 0;
 
-            Log($"{nameof(OnRecoveryMessageReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex}");
+            Log($"{nameof(OnRecoveryMessageReceived)}: " +
+                $"height={message.BlockIndex} " +
+                $"view={message.ViewNumber} " +
+                $"index={message.ValidatorIndex}");
             try
             {
                 if (message.ViewNumber > context.ViewNumber)
@@ -280,7 +322,11 @@ namespace Neo.Consensus
             }
             finally
             {
-                Log($"Recovery finished: (valid/total) ChgView: {validChangeViews}/{totalChangeViews} PrepReq: {validPrepReq}/{totalPrepReq} PrepResp: {validPrepResponses}/{totalPrepResponses} Commits: {validCommits}/{totalCommits}");
+                Log($"Recovery finished: (valid/total) " +
+                    $"ChgView: {validChangeViews}/{totalChangeViews} " +
+                    $"PrepReq: {validPrepReq}/{totalPrepReq} " +
+                    $"PrepResp: {validPrepResponses}/{totalPrepResponses} " +
+                    $"Commits: {validCommits}/{totalCommits}");
                 isRecovering = false;
             }
         }
@@ -295,7 +341,10 @@ namespace Neo.Consensus
             // additional recovery message response.
             if (!knownHashes.Add(payload.Hash)) return;
 
-            Log($"{nameof(OnRecoveryRequestReceived)}: height={message.BlockIndex} index={message.ValidatorIndex} view={message.ViewNumber}");
+            Log($"{nameof(OnRecoveryRequestReceived)}: " +
+                $"height={message.BlockIndex} " +
+                $"index={message.ValidatorIndex} " +
+                $"view={message.ViewNumber}");
             if (context.WatchOnly) return;
             if (!context.CommitSent)
             {

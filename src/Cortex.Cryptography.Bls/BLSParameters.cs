@@ -1,4 +1,4 @@
-﻿namespace Cortex.Cryptography
+namespace Cortex.Cryptography
 {
     public struct BLSParameters
     {
