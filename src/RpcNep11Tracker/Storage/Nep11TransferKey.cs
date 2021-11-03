@@ -105,7 +105,6 @@ namespace Neo.Plugins.Storage
                 Console.WriteLine(e);
                 throw;
             }
-
         }
 
         public void Deserialize(BinaryReader reader)

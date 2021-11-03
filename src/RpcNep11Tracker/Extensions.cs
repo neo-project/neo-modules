@@ -8,13 +8,10 @@
 //  modifications are permitted.
 
 using Neo.IO;
+using Neo.Persistence;
 using Neo.VM.Types;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Neo.Persistence;
 
 namespace Neo.Plugins
 {
@@ -45,7 +42,6 @@ namespace Neo.Plugins
                 if (!key.AsSpan().StartsWith(prefix)) break;
                 yield return (key.AsSerializable<TKey>(1), value.AsSerializable<TValue>());
             }
-
 
         }
 
