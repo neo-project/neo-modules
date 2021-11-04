@@ -1,0 +1,13 @@
+{
+	"PluginConfiguration": {
+		"Nep17Path": "Nep17BalanceData",
+		"Nep11Path": "Nep11BalanceData",
+		"TrackHistory": true,
+		"RecordNullAddressHistory": false,
+		"MaxResults": 1000,
+		"Network": 860833102
+	},
+	"Dependency": [
+		"RpcServer"
+	]
+}
