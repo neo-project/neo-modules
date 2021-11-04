@@ -15,6 +15,7 @@ using Neo.Plugins.Storage;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
+using Neo.VM.Types;
 using Neo.Wallets;
 using static System.IO.Path;
 
@@ -198,7 +199,9 @@ namespace Neo.Plugins
                 {
                     if (engine.State.HasFlag(VMState.FAULT)) continue;
                     if (engine.ResultStack.Count <= 0) continue;
-                    nep17BalancePair.Value.Balance = engine.ResultStack.Pop().GetInteger();
+                    var balance = engine.ResultStack.Pop();
+                    if (balance is not Integer) continue;
+                    nep17BalancePair.Value.Balance = balance.GetInteger();
                 }
                 nep17BalancePair.Value.LastUpdatedBlock = block.Index;
                 if (nep17BalancePair.Value.Balance.IsZero)

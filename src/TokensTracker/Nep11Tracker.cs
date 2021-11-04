@@ -147,8 +147,15 @@ namespace Neo.Plugins
                 Console.WriteLine($"Fault:{record.from},{record.to},{record.tokenId.GetSpan().ToHexString()}");
                 return;
             }
-            Put(Nep11BalancePrefix, new Nep11BalanceKey(record.to, record.asset, record.tokenId), new TokenBalance() { Balance = engine.ResultStack.Pop().GetInteger(), LastUpdatedBlock = _currentHeight });
-            Put(Nep11BalancePrefix, new Nep11BalanceKey(record.from, record.asset, record.tokenId), new TokenBalance() { Balance = engine.ResultStack.Pop().GetInteger(), LastUpdatedBlock = _currentHeight });
+            var toBalance = engine.ResultStack.Pop();
+            var fromBalance = engine.ResultStack.Pop();
+            if (toBalance is not Integer || fromBalance is not Integer)
+            {
+                Console.WriteLine($"Balance Fault:{record.from},{record.to},{record.tokenId.GetSpan().ToHexString()}");
+                return;
+            }
+            Put(Nep11BalancePrefix, new Nep11BalanceKey(record.to, record.asset, record.tokenId), new TokenBalance() { Balance = toBalance.GetInteger(), LastUpdatedBlock = _currentHeight });
+            Put(Nep11BalancePrefix, new Nep11BalanceKey(record.from, record.asset, record.tokenId), new TokenBalance() { Balance = fromBalance.GetInteger(), LastUpdatedBlock = _currentHeight });
         }
 
         private void SaveNFT(TransferRecord record)
