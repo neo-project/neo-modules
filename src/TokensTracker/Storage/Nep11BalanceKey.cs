@@ -14,7 +14,7 @@ namespace Neo.Plugins.Storage
         public readonly UInt160 UserScriptHash;
         public readonly UInt160 AssetScriptHash;
         public ByteString Token;
-        public int Size => 20 + 20 + Token.GetVarSize();
+        public int Size => UInt160.Length + UInt160.Length + Token.GetVarSize();
 
         public Nep11BalanceKey() : this(new UInt160(), new UInt160(), ByteString.Empty)
         {
