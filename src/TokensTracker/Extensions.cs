@@ -4,6 +4,7 @@ using Neo.VM.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -24,6 +25,12 @@ namespace Neo.Plugins
         public static int GetVarSize(this ByteString item)
         {
             var length = item.GetSpan().Length;
+            return IO.Helper.GetVarSize(length) + length;
+        }
+
+        public static int GetVarSize(this BigInteger item)
+        {
+            var length = item.GetByteCount();
             return IO.Helper.GetVarSize(length) + length;
         }
 

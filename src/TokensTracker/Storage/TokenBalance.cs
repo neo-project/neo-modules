@@ -15,7 +15,7 @@ namespace Neo.Plugins.Storage
         public uint LastUpdatedBlock;
 
         int ISerializable.Size =>
-            Balance.GetByteCount() +    // Balance
+            Balance.GetVarSize() +    // Balance
             sizeof(uint);               // LastUpdatedBlock
 
         void ISerializable.Serialize(BinaryWriter writer)
