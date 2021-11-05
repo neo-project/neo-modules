@@ -13,7 +13,7 @@ namespace Neo.Plugins.Storage
         public readonly UInt160 UserScriptHash;
         public readonly UInt160 AssetScriptHash;
 
-        public int Size => 20 + 20;
+        public int Size => UInt160.Length + UInt160.Length;
 
         public Nep17BalanceKey() : this(new UInt160(), new UInt160())
         {
