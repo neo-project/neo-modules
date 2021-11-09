@@ -62,6 +62,7 @@ namespace Neo.Plugins
         {
             _levelDbSnapshot?.Dispose();
             _levelDbSnapshot = _db.GetSnapshot();
+            _assetCache.Clear();
         }
 
         private ContractState GetContract(DataCache snapshot, UInt160 asset)
