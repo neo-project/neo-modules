@@ -1,23 +1,23 @@
 using System.IO;
 
-namespace Neo.Plugins.MPT
+namespace Neo.Cryptography.MPTTrie
 {
-    partial class MPTNode
+    partial class Node
     {
         public const int BranchChildCount = 17;
-        public MPTNode[] Children;
+        public Node[] Children;
 
-        public static MPTNode NewBranch()
+        public static Node NewBranch()
         {
-            var n = new MPTNode
+            var n = new Node
             {
                 type = NodeType.BranchNode,
                 Reference = 1,
-                Children = new MPTNode[BranchChildCount],
+                Children = new Node[BranchChildCount],
             };
             for (int i = 0; i < BranchChildCount; i++)
             {
-                n.Children[i] = new MPTNode();
+                n.Children[i] = new Node();
             }
             return n;
         }
@@ -45,10 +45,10 @@ namespace Neo.Plugins.MPT
 
         private void DeserializeBranch(BinaryReader reader)
         {
-            Children = new MPTNode[BranchChildCount];
+            Children = new Node[BranchChildCount];
             for (int i = 0; i < BranchChildCount; i++)
             {
-                var n = new MPTNode();
+                var n = new Node();
                 n.Deserialize(reader);
                 Children[i] = n;
             }

@@ -1,9 +1,9 @@
 using Neo.IO;
 using System;
 
-namespace Neo.Plugins.MPT
+namespace Neo.Cryptography.MPTTrie
 {
-    partial class MPTTrie<TKey, TValue>
+    partial class Trie<TKey, TValue>
     {
         private static ReadOnlySpan<byte> CommonPrefix(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
         {
@@ -23,15 +23,15 @@ namespace Neo.Plugins.MPT
         {
             var path = ToNibbles(key.ToArray());
             var val = value.ToArray();
-            if (path.Length == 0 || path.Length > MPTNode.MaxKeyLength)
+            if (path.Length == 0 || path.Length > Node.MaxKeyLength)
                 throw new ArgumentException("invalid", nameof(key));
-            if (val.Length > MPTNode.MaxValueLength)
+            if (val.Length > Node.MaxValueLength)
                 throw new ArgumentException("exceed limit", nameof(value));
-            var n = MPTNode.NewLeaf(val);
+            var n = Node.NewLeaf(val);
             Put(ref root, path, n);
         }
 
-        private void Put(ref MPTNode node, ReadOnlySpan<byte> path, MPTNode val)
+        private void Put(ref Node node, ReadOnlySpan<byte> path, Node val)
         {
             switch (node.Type)
             {
@@ -44,8 +44,8 @@ namespace Neo.Plugins.MPT
                             cache.PutNode(node);
                             return;
                         }
-                        var branch = MPTNode.NewBranch();
-                        branch.Children[MPTNode.BranchChildCount - 1] = node;
+                        var branch = Node.NewBranch();
+                        branch.Children[Node.BranchChildCount - 1] = node;
                         Put(ref branch.Children[path[0]], path[1..], val);
                         cache.PutNode(branch);
                         node = branch;
@@ -66,22 +66,22 @@ namespace Neo.Plugins.MPT
                         var prefix = CommonPrefix(node.Key, path);
                         var pathRemain = path[prefix.Length..];
                         var keyRemain = node.Key.AsSpan(prefix.Length);
-                        var child = MPTNode.NewBranch();
-                        MPTNode grandChild = new MPTNode();
+                        var child = Node.NewBranch();
+                        Node grandChild = new Node();
                         if (keyRemain.Length == 1)
                         {
                             child.Children[keyRemain[0]] = node.Next;
                         }
                         else
                         {
-                            var exNode = MPTNode.NewExtension(keyRemain[1..].ToArray(), node.Next);
+                            var exNode = Node.NewExtension(keyRemain[1..].ToArray(), node.Next);
                             cache.PutNode(exNode);
                             child.Children[keyRemain[0]] = exNode;
                         }
                         if (pathRemain.IsEmpty)
                         {
                             Put(ref grandChild, pathRemain, val);
-                            child.Children[MPTNode.BranchChildCount - 1] = grandChild;
+                            child.Children[Node.BranchChildCount - 1] = grandChild;
                         }
                         else
                         {
@@ -91,7 +91,7 @@ namespace Neo.Plugins.MPT
                         cache.PutNode(child);
                         if (prefix.Length > 0)
                         {
-                            var exNode = MPTNode.NewExtension(prefix.ToArray(), child);
+                            var exNode = Node.NewExtension(prefix.ToArray(), child);
                             cache.PutNode(exNode);
                             node = exNode;
                         }
@@ -106,7 +106,7 @@ namespace Neo.Plugins.MPT
                         var oldHash = node.Hash;
                         if (path.IsEmpty)
                         {
-                            Put(ref node.Children[MPTNode.BranchChildCount - 1], path, val);
+                            Put(ref node.Children[Node.BranchChildCount - 1], path, val);
                         }
                         else
                         {
@@ -119,14 +119,14 @@ namespace Neo.Plugins.MPT
                     }
                 case NodeType.Empty:
                     {
-                        MPTNode newNode;
+                        Node newNode;
                         if (path.IsEmpty)
                         {
                             newNode = val;
                         }
                         else
                         {
-                            newNode = MPTNode.NewExtension(path.ToArray(), val);
+                            newNode = Node.NewExtension(path.ToArray(), val);
                             cache.PutNode(newNode);
                         }
                         node = newNode;
@@ -135,7 +135,7 @@ namespace Neo.Plugins.MPT
                     }
                 case NodeType.HashNode:
                     {
-                        MPTNode newNode = cache.Resolve(node.Hash);
+                        Node newNode = cache.Resolve(node.Hash);
                         if (newNode is null) throw new InvalidOperationException("Internal error, can't resolve hash when mpt put");
                         node = newNode;
                         Put(ref node, path, val);
