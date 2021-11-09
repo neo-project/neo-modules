@@ -35,6 +35,8 @@ namespace Neo.Plugins
         private IStore _db;
         private ISnapshot _levelDbSnapshot;
         private NeoSystem neoSystem;
+        private Dictionary<UInt160, ContractState> _assetCache = new();
+
 
         public override string Description => "Enquiries NEP-17 balances and transaction history of accounts through RPC";
 
@@ -60,6 +62,15 @@ namespace Neo.Plugins
         {
             _levelDbSnapshot?.Dispose();
             _levelDbSnapshot = _db.GetSnapshot();
+        }
+
+        private ContractState GetContract(DataCache snapshot, UInt160 asset)
+        {
+            if (!_assetCache.ContainsKey(asset))
+            {
+                _assetCache[asset] = NativeContract.ContractManagement.GetContract(snapshot, asset);
+            }
+            return _assetCache[asset];
         }
 
         private static byte[] Key(byte prefix, ISerializable key)
@@ -180,6 +191,8 @@ namespace Neo.Plugins
                 {
                     if (!(notifyEventArgs?.State is VM.Types.Array stateItems) || stateItems.Count == 0)
                         continue;
+                    var contract = GetContract(snapshot, notifyEventArgs.ScriptHash);
+                    if (contract?.Manifest.SupportedStandards.Contains("NEP-17") == false) continue;
                     HandleNotification(snapshot, notifyEventArgs.ScriptContainer, notifyEventArgs.ScriptHash, notifyEventArgs.EventName,
                         stateItems, nep17BalancesChanged, ref transferIndex);
                 }
