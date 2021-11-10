@@ -179,7 +179,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
                 OwnerId = ownerId,
                 PlacementPolicy = new API.Netmap.PlacementPolicy()
             };
-            Action action = () => processor.CheckFormat(container);
+            Action action = () => ContainerContractProcessor.CheckFormat(container);
             //wrong nonce
             container.Nonce = ByteString.CopyFrom(new byte[15], 0, 15);
             Assert.ThrowsException<FormatException>(action);
