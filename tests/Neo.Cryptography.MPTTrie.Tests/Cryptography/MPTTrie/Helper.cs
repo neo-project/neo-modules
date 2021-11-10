@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Neo.Plugins.StateService.Tests
+namespace Neo.Cryptography.MPTTrie.Tests
 {
     public static class Helper
     {

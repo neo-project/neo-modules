@@ -1,24 +1,24 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Plugins.MPT;
 using Neo.IO;
 using Neo.Persistence;
 using System.Text;
-namespace Neo.Plugins.StateService.Tests
+
+namespace Neo.Cryptography.MPTTrie.Tests
 {
 
     [TestClass]
-    public class UT_MPTCache
+    public class UT_Cache
     {
         private readonly byte Prefix = 0xf0;
 
         [TestMethod]
         public void TestResolveLeaf()
         {
-            var n = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
+            var n = Node.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
             var store = new MemoryStore();
             store.Put(n.Hash.ToKey(), n.ToArray());
             var snapshot = store.GetSnapshot();
-            var cache = new MPTCache(snapshot, Prefix);
+            var cache = new Cache(snapshot, Prefix);
             var resolved = cache.Resolve(n.Hash);
             Assert.AreEqual(n.Hash, resolved.Hash);
             Assert.AreEqual(n.Value.ToHexString(), resolved.Value.ToHexString());
@@ -27,14 +27,14 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestResolveBranch()
         {
-            var l = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
-            var b = MPTNode.NewBranch();
+            var l = Node.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
+            var b = Node.NewBranch();
             b.Children[1] = l;
             var store = new MemoryStore();
             store.Put(b.Hash.ToKey(), b.ToArray());
             store.Put(l.Hash.ToKey(), l.ToArray());
             var snapshot = store.GetSnapshot();
-            var cache = new MPTCache(snapshot, Prefix);
+            var cache = new Cache(snapshot, Prefix);
             var resolved_b = cache.Resolve(b.Hash);
             Assert.AreEqual(b.Hash, resolved_b.Hash);
             Assert.AreEqual(l.Hash, resolved_b.Children[1].Hash);
@@ -45,11 +45,11 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestResolveExtension()
         {
-            var e = MPTNode.NewExtension(new byte[] { 0x01 }, new MPTNode());
+            var e = Node.NewExtension(new byte[] { 0x01 }, new Node());
             var store = new MemoryStore();
             store.Put(e.Hash.ToKey(), e.ToArray());
             var snapshot = store.GetSnapshot();
-            var cache = new MPTCache(snapshot, Prefix);
+            var cache = new Cache(snapshot, Prefix);
             var re = cache.Resolve(e.Hash);
             Assert.AreEqual(e.Hash, re.Hash);
             Assert.AreEqual(e.Key.ToHexString(), re.Key.ToHexString());
@@ -59,12 +59,12 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestGetAndChangedBranch()
         {
-            var l = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
-            var b = MPTNode.NewBranch();
+            var l = Node.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
+            var b = Node.NewBranch();
             var store = new MemoryStore();
             store.Put(b.Hash.ToKey(), b.ToArray());
             var snapshot = store.GetSnapshot();
-            var cache = new MPTCache(snapshot, Prefix);
+            var cache = new Cache(snapshot, Prefix);
             var resolved_b = cache.Resolve(b.Hash);
             Assert.AreEqual(resolved_b.Hash, b.Hash);
             foreach (var n in resolved_b.Children)
@@ -84,11 +84,11 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestGetAndChangedExtension()
         {
-            var e = MPTNode.NewExtension(new byte[] { 0x01 }, new MPTNode());
+            var e = Node.NewExtension(new byte[] { 0x01 }, new Node());
             var store = new MemoryStore();
             store.Put(e.Hash.ToKey(), e.ToArray());
             var snapshot = store.GetSnapshot();
-            var cache = new MPTCache(snapshot, Prefix);
+            var cache = new Cache(snapshot, Prefix);
             var re = cache.Resolve(e.Hash);
             Assert.AreEqual(e.Hash, re.Hash);
             Assert.AreEqual(e.Key.ToHexString(), re.Key.ToHexString());
@@ -104,11 +104,11 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestGetAndChangedLeaf()
         {
-            var l = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
+            var l = Node.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
             var store = new MemoryStore();
             store.Put(l.Hash.ToKey(), l.ToArray());
             var snapshot = store.GetSnapshot();
-            var cache = new MPTCache(snapshot, Prefix);
+            var cache = new Cache(snapshot, Prefix);
             var rl = cache.Resolve(l.Hash);
             Assert.AreEqual(l.Hash, rl.Hash);
             Assert.AreEqual("leaf", Encoding.ASCII.GetString(rl.Value));
@@ -122,12 +122,12 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestPutAndChangedBranch()
         {
-            var l = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
-            var b = MPTNode.NewBranch();
+            var l = Node.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
+            var b = Node.NewBranch();
             var h = b.Hash;
             var store = new MemoryStore();
             var snapshot = store.GetSnapshot();
-            var cache = new MPTCache(snapshot, Prefix);
+            var cache = new Cache(snapshot, Prefix);
             cache.PutNode(b);
             var rb = cache.Resolve(h);
             Assert.AreEqual(h, rb.Hash);
@@ -148,11 +148,11 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestPutAndChangedExtension()
         {
-            var e = MPTNode.NewExtension(new byte[] { 0x01 }, new MPTNode());
+            var e = Node.NewExtension(new byte[] { 0x01 }, new Node());
             var h = e.Hash;
             var store = new MemoryStore();
             var snapshot = store.GetSnapshot();
-            var cache = new MPTCache(snapshot, Prefix);
+            var cache = new Cache(snapshot, Prefix);
             cache.PutNode(e);
             var re = cache.Resolve(e.Hash);
             Assert.AreEqual(e.Hash, re.Hash);
@@ -170,11 +170,11 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestPutAndChangedLeaf()
         {
-            var l = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
+            var l = Node.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
             var h = l.Hash;
             var store = new MemoryStore();
             var snapshot = store.GetSnapshot();
-            var cache = new MPTCache(snapshot, Prefix);
+            var cache = new Cache(snapshot, Prefix);
             cache.PutNode(l);
             var rl = cache.Resolve(l.Hash);
             Assert.AreEqual(h, rl.Hash);
@@ -189,20 +189,20 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestReference1()
         {
-            var l = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
+            var l = Node.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
             var store = new MemoryStore();
             var snapshot = store.GetSnapshot();
-            var cache = new MPTCache(snapshot, Prefix);
+            var cache = new Cache(snapshot, Prefix);
             cache.PutNode(l);
             cache.Commit();
             snapshot.Commit();
             var snapshot1 = store.GetSnapshot();
-            var cache1 = new MPTCache(snapshot1, Prefix);
+            var cache1 = new Cache(snapshot1, Prefix);
             cache1.PutNode(l);
             cache1.Commit();
             snapshot1.Commit();
             var snapshot2 = store.GetSnapshot();
-            var cache2 = new MPTCache(snapshot2, Prefix);
+            var cache2 = new Cache(snapshot2, Prefix);
             var rl = cache2.Resolve(l.Hash);
             Assert.AreEqual(2, rl.Reference);
         }
@@ -210,10 +210,10 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestReference2()
         {
-            var l = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
+            var l = Node.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
             var store = new MemoryStore();
             var snapshot = store.GetSnapshot();
-            var cache = new MPTCache(snapshot, Prefix);
+            var cache = new Cache(snapshot, Prefix);
             cache.PutNode(l);
             cache.PutNode(l);
             cache.DeleteNode(l.Hash);

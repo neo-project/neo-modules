@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Neo.Plugins.StateService.IO
+namespace Neo.IO
 {
     public class ByteArrayEqualityComparer : IEqualityComparer<byte[]>
     {

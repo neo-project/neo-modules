@@ -2,9 +2,9 @@ using Neo.IO;
 using System;
 using System.Collections.Generic;
 
-namespace Neo.Plugins.MPT
+namespace Neo.Cryptography.MPTTrie
 {
-    partial class MPTTrie<TKey, TValue>
+    partial class Trie<TKey, TValue>
     {
         public TValue this[TKey key]
         {
@@ -13,7 +13,7 @@ namespace Neo.Plugins.MPT
                 var path = ToNibbles(key.ToArray());
                 if (path.Length == 0)
                     throw new ArgumentException("could not be empty", nameof(key));
-                if (path.Length > MPTNode.MaxKeyLength)
+                if (path.Length > Node.MaxKeyLength)
                     throw new ArgumentException("exceeds limit", nameof(key));
                 var result = TryGet(ref root, path, out var value);
                 return result ? value.ToArray().AsSerializable<TValue>() : throw new KeyNotFoundException();
@@ -26,7 +26,7 @@ namespace Neo.Plugins.MPT
             var path = ToNibbles(key.ToArray());
             if (path.Length == 0)
                 throw new ArgumentException("could not be empty", nameof(key));
-            if (path.Length > MPTNode.MaxKeyLength)
+            if (path.Length > Node.MaxKeyLength)
                 throw new ArgumentException("exceeds limit", nameof(key));
             var result = TryGet(ref root, path, out var val);
             if (result)
@@ -34,7 +34,7 @@ namespace Neo.Plugins.MPT
             return result;
         }
 
-        private bool TryGet(ref MPTNode node, ReadOnlySpan<byte> path, out ReadOnlySpan<byte> value)
+        private bool TryGet(ref Node node, ReadOnlySpan<byte> path, out ReadOnlySpan<byte> value)
         {
             switch (node.Type)
             {
@@ -60,7 +60,7 @@ namespace Neo.Plugins.MPT
                     {
                         if (path.IsEmpty)
                         {
-                            return TryGet(ref node.Children[MPTNode.BranchChildCount - 1], path, out value);
+                            return TryGet(ref node.Children[Node.BranchChildCount - 1], path, out value);
                         }
                         return TryGet(ref node.Children[path[0]], path[1..], out value);
                     }

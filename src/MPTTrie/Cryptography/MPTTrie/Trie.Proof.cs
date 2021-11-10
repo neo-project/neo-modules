@@ -1,27 +1,25 @@
-using Neo.Cryptography;
 using Neo.IO;
 using Neo.Persistence;
-using Neo.Plugins.StateService.IO;
 using System;
 using System.Collections.Generic;
 using static Neo.Helper;
 
-namespace Neo.Plugins.MPT
+namespace Neo.Cryptography.MPTTrie
 {
-    partial class MPTTrie<TKey, TValue>
+    partial class Trie<TKey, TValue>
     {
         public bool TryGetProof(TKey key, out HashSet<byte[]> proof)
         {
             var path = ToNibbles(key.ToArray());
             if (path.Length == 0)
                 throw new ArgumentException("could not be empty", nameof(key));
-            if (path.Length > MPTNode.MaxKeyLength)
+            if (path.Length > Node.MaxKeyLength)
                 throw new ArgumentException("exceeds limit", nameof(key));
             proof = new HashSet<byte[]>(ByteArrayEqualityComparer.Default);
             return GetProof(ref root, path, proof);
         }
 
-        private bool GetProof(ref MPTNode node, ReadOnlySpan<byte> path, HashSet<byte[]> set)
+        private bool GetProof(ref Node node, ReadOnlySpan<byte> path, HashSet<byte[]> set)
         {
             switch (node.Type)
             {
@@ -48,7 +46,7 @@ namespace Neo.Plugins.MPT
                         set.Add(node.ToArrayWithoutReference());
                         if (path.IsEmpty)
                         {
-                            return GetProof(ref node.Children[MPTNode.BranchChildCount - 1], path, set);
+                            return GetProof(ref node.Children[Node.BranchChildCount - 1], path, set);
                         }
                         return GetProof(ref node.Children[path[0]], path[1..], set);
                     }
@@ -79,7 +77,7 @@ namespace Neo.Plugins.MPT
             foreach (byte[] data in proof)
                 memoryStore.Put(Key(Crypto.Hash256(data)), Concat(data, new byte[] { 1 }));
             using ISnapshot snapshot = memoryStore.GetSnapshot();
-            var trie = new MPTTrie<TKey, TValue>(snapshot, root, false);
+            var trie = new Trie<TKey, TValue>(snapshot, root, false);
             return trie[key];
         }
     }

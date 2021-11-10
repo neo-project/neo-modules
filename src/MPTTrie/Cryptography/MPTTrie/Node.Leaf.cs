@@ -3,17 +3,17 @@ using Neo.SmartContract;
 using System;
 using System.IO;
 
-namespace Neo.Plugins.MPT
+namespace Neo.Cryptography.MPTTrie
 {
-    partial class MPTNode
+    partial class Node
     {
         public const int MaxValueLength = 3 + ApplicationEngine.MaxStorageValueSize + sizeof(bool);
         public byte[] Value;
 
-        public static MPTNode NewLeaf(byte[] value)
+        public static Node NewLeaf(byte[] value)
         {
             if (value is null) throw new ArgumentNullException(nameof(value));
-            var n = new MPTNode
+            var n = new Node
             {
                 type = NodeType.LeafNode,
                 Value = value,

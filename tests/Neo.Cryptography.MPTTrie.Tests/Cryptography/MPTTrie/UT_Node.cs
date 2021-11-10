@@ -1,6 +1,4 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Cryptography;
-using Neo.Plugins.MPT;
 using Neo.IO;
 using System;
 using System.Collections.Generic;
@@ -8,13 +6,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Neo.Plugins.StateService.Tests
+namespace Neo.Cryptography.MPTTrie.Tests
 {
 
     [TestClass]
-    public class UT_MPTNode
+    public class UT_Node
     {
-        private byte[] NodeToArrayAsChild(MPTNode n)
+        private byte[] NodeToArrayAsChild(Node n)
         {
             using var ms = new MemoryStream();
             using var writer = new BinaryWriter(ms, Neo.Utility.StrictUTF8, true);
@@ -27,7 +25,7 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestHashSerialize()
         {
-            var n = MPTNode.NewHash(UInt256.Zero);
+            var n = Node.NewHash(UInt256.Zero);
             var expect = "030000000000000000000000000000000000000000000000000000000000000000";
             Assert.AreEqual(expect, n.ToArray().ToHexString());
             Assert.AreEqual(expect, NodeToArrayAsChild(n).ToHexString());
@@ -36,7 +34,7 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestEmptySerialize()
         {
-            var n = new MPTNode();
+            var n = new Node();
             var expect = "04";
             Assert.AreEqual(expect, n.ToArray().ToHexString());
             Assert.AreEqual(expect, NodeToArrayAsChild(n).ToHexString());
@@ -45,7 +43,7 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestLeafSerialize()
         {
-            var n = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
+            var n = Node.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
             var expect = "02" + "04" + Encoding.ASCII.GetBytes("leaf").ToHexString();
             Assert.AreEqual(expect, n.ToArrayWithoutReference().ToHexString());
             expect += "01";
@@ -56,7 +54,7 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestLeafSerializeAsChild()
         {
-            var l = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
+            var l = Node.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
             var expect = "03" + Crypto.Hash256(new byte[] { 0x02, 0x04 }.Concat(Encoding.ASCII.GetBytes("leaf")).ToArray()).ToHexString();
             Assert.AreEqual(expect, NodeToArrayAsChild(l).ToHexString());
         }
@@ -64,7 +62,7 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestExtensionSerialize()
         {
-            var e = MPTNode.NewExtension("010a".HexToBytes(), new MPTNode());
+            var e = Node.NewExtension("010a".HexToBytes(), new Node());
             var expect = "01" + "02" + "010a" + "04";
             Assert.AreEqual(expect, e.ToArrayWithoutReference().ToHexString());
             expect += "01";
@@ -75,7 +73,7 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestExtensionSerializeAsChild()
         {
-            var e = MPTNode.NewExtension("010a".HexToBytes(), new MPTNode());
+            var e = Node.NewExtension("010a".HexToBytes(), new Node());
             var expect = "03" + Crypto.Hash256(new byte[] { 0x01, 0x02, 0x01, 0x0a, 0x04
              }).ToHexString();
             Assert.AreEqual(expect, NodeToArrayAsChild(e).ToHexString());
@@ -84,11 +82,11 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestBranchSerialize()
         {
-            var n = MPTNode.NewBranch();
-            n.Children[1] = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf1"));
-            n.Children[10] = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leafa"));
+            var n = Node.NewBranch();
+            n.Children[1] = Node.NewLeaf(Encoding.ASCII.GetBytes("leaf1"));
+            n.Children[10] = Node.NewLeaf(Encoding.ASCII.GetBytes("leafa"));
             var expect = "00";
-            for (int i = 0; i < MPTNode.BranchChildCount; i++)
+            for (int i = 0; i < Node.BranchChildCount; i++)
             {
                 if (i == 1)
                     expect += "03" + Crypto.Hash256(new byte[] { 0x02, 0x05 }.Concat(Encoding.ASCII.GetBytes("leaf1")).ToArray()).ToHexString();
@@ -105,10 +103,10 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestBranchSerializeAsChild()
         {
-            var n = MPTNode.NewBranch();
+            var n = Node.NewBranch();
             var data = new List<byte>();
             data.Add(0x00);
-            for (int i = 0; i < MPTNode.BranchChildCount; i++)
+            for (int i = 0; i < Node.BranchChildCount; i++)
             {
                 data.Add(0x04);
             }
@@ -119,8 +117,8 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestCloneBranch()
         {
-            var l = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
-            var n = MPTNode.NewBranch();
+            var l = Node.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
+            var n = Node.NewBranch();
             var n1 = n.Clone();
             n1.Children[0] = l;
             Assert.IsTrue(n.Children[0].IsEmpty);
@@ -129,8 +127,8 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestCloneExtension()
         {
-            var l = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
-            var n = MPTNode.NewExtension(new byte[] { 0x01 }, new MPTNode());
+            var l = Node.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
+            var n = Node.NewExtension(new byte[] { 0x01 }, new Node());
             var n1 = n.Clone();
             n1.Next = l;
             Assert.IsTrue(n.Next.IsEmpty);
@@ -139,7 +137,7 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestCloneLeaf()
         {
-            var l = MPTNode.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
+            var l = Node.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
             var n = l.Clone();
             n.Value = Encoding.ASCII.GetBytes("value");
             Assert.AreEqual("leaf", Encoding.ASCII.GetString(l.Value));
@@ -148,45 +146,45 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestNewExtensionException()
         {
-            Assert.ThrowsException<ArgumentNullException>(() => MPTNode.NewExtension(null, new MPTNode()));
-            Assert.ThrowsException<ArgumentNullException>(() => MPTNode.NewExtension(new byte[] { 0x01 }, null));
-            Assert.ThrowsException<InvalidOperationException>(() => MPTNode.NewExtension(Array.Empty<byte>(), new MPTNode()));
+            Assert.ThrowsException<ArgumentNullException>(() => Node.NewExtension(null, new Node()));
+            Assert.ThrowsException<ArgumentNullException>(() => Node.NewExtension(new byte[] { 0x01 }, null));
+            Assert.ThrowsException<InvalidOperationException>(() => Node.NewExtension(Array.Empty<byte>(), new Node()));
         }
 
         [TestMethod]
         public void TestNewHashException()
         {
-            Assert.ThrowsException<ArgumentNullException>(() => MPTNode.NewHash(null));
+            Assert.ThrowsException<ArgumentNullException>(() => Node.NewHash(null));
         }
 
         [TestMethod]
         public void TestNewLeafException()
         {
-            Assert.ThrowsException<ArgumentNullException>(() => MPTNode.NewLeaf(null));
+            Assert.ThrowsException<ArgumentNullException>(() => Node.NewLeaf(null));
         }
 
         [TestMethod]
         public void TestSize()
         {
-            var n = new MPTNode();
+            var n = new Node();
             Assert.AreEqual(1, n.Size);
-            n = MPTNode.NewBranch();
+            n = Node.NewBranch();
             Assert.AreEqual(19, n.Size);
-            n = MPTNode.NewExtension(new byte[] { 0x00 }, new MPTNode());
+            n = Node.NewExtension(new byte[] { 0x00 }, new Node());
             Assert.AreEqual(5, n.Size);
-            n = MPTNode.NewLeaf(new byte[] { 0x00 });
+            n = Node.NewLeaf(new byte[] { 0x00 });
             Assert.AreEqual(4, n.Size);
-            n = MPTNode.NewHash(UInt256.Zero);
+            n = Node.NewHash(UInt256.Zero);
             Assert.AreEqual(33, n.Size);
         }
 
         [TestMethod]
         public void TestFromReplica()
         {
-            var l = MPTNode.NewLeaf(new byte[] { 0x00 });
-            var n = MPTNode.NewBranch();
+            var l = Node.NewLeaf(new byte[] { 0x00 });
+            var n = Node.NewBranch();
             n.Children[1] = l;
-            var r = new MPTNode();
+            var r = new Node();
             r.FromReplica(n);
             Assert.AreEqual(n.Hash, r.Hash);
             Assert.AreEqual(NodeType.HashNode, r.Children[1].Type);
@@ -196,10 +194,10 @@ namespace Neo.Plugins.StateService.Tests
         [TestMethod]
         public void TestEmptyLeaf()
         {
-            var leaf = MPTNode.NewLeaf(Array.Empty<byte>());
+            var leaf = Node.NewLeaf(Array.Empty<byte>());
             var data = leaf.ToArray();
             Assert.AreEqual(3, data.Length);
-            var l = data.AsSerializable<MPTNode>();
+            var l = data.AsSerializable<Node>();
             Assert.AreEqual(NodeType.LeafNode, l.Type);
             Assert.AreEqual(0, l.Value.Length);
         }

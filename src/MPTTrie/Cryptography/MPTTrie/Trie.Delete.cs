@@ -3,21 +3,21 @@ using System;
 using System.Collections.Generic;
 using static Neo.Helper;
 
-namespace Neo.Plugins.MPT
+namespace Neo.Cryptography.MPTTrie
 {
-    partial class MPTTrie<TKey, TValue>
+    partial class Trie<TKey, TValue>
     {
         public bool Delete(TKey key)
         {
             var path = ToNibbles(key.ToArray());
             if (path.Length == 0)
                 throw new ArgumentException("could not be empty", nameof(key));
-            if (path.Length > MPTNode.MaxKeyLength)
+            if (path.Length > Node.MaxKeyLength)
                 throw new ArgumentException("exceeds limit", nameof(key));
             return TryDelete(ref root, path);
         }
 
-        private bool TryDelete(ref MPTNode node, ReadOnlySpan<byte> path)
+        private bool TryDelete(ref Node node, ReadOnlySpan<byte> path)
         {
             switch (node.Type)
             {
@@ -26,7 +26,7 @@ namespace Neo.Plugins.MPT
                         if (path.IsEmpty)
                         {
                             if (!full) cache.DeleteNode(node.Hash);
-                            node = new MPTNode();
+                            node = new Node();
                             return true;
                         }
                         return false;
@@ -62,7 +62,7 @@ namespace Neo.Plugins.MPT
                         var oldHash = node.Hash;
                         if (path.IsEmpty)
                         {
-                            result = TryDelete(ref node.Children[MPTNode.BranchChildCount - 1], path);
+                            result = TryDelete(ref node.Children[Node.BranchChildCount - 1], path);
                         }
                         else
                         {
@@ -70,8 +70,8 @@ namespace Neo.Plugins.MPT
                         }
                         if (!result) return false;
                         if (!full) cache.DeleteNode(oldHash);
-                        List<byte> childrenIndexes = new List<byte>(MPTNode.BranchChildCount);
-                        for (int i = 0; i < MPTNode.BranchChildCount; i++)
+                        List<byte> childrenIndexes = new List<byte>(Node.BranchChildCount);
+                        for (int i = 0; i < Node.BranchChildCount; i++)
                         {
                             if (node.Children[i].IsEmpty) continue;
                             childrenIndexes.Add((byte)i);
@@ -84,7 +84,7 @@ namespace Neo.Plugins.MPT
                         }
                         var lastChildIndex = childrenIndexes[0];
                         var lastChild = node.Children[lastChildIndex];
-                        if (lastChildIndex == MPTNode.BranchChildCount - 1)
+                        if (lastChildIndex == Node.BranchChildCount - 1)
                         {
                             node = lastChild;
                             return true;
@@ -103,7 +103,7 @@ namespace Neo.Plugins.MPT
                             node = lastChild;
                             return true;
                         }
-                        node = MPTNode.NewExtension(childrenIndexes.ToArray(), lastChild);
+                        node = Node.NewExtension(childrenIndexes.ToArray(), lastChild);
                         cache.PutNode(node);
                         return true;
                     }

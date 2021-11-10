@@ -2,24 +2,24 @@ using Neo.IO;
 using Neo.Persistence;
 using System;
 
-namespace Neo.Plugins.MPT
+namespace Neo.Cryptography.MPTTrie
 {
-    public partial class MPTTrie<TKey, TValue>
+    public partial class Trie<TKey, TValue>
         where TKey : notnull, ISerializable, new()
         where TValue : notnull, ISerializable, new()
     {
         private const byte Prefix = 0xf0;
         private readonly bool full;
         private readonly ISnapshot store;
-        private MPTNode root;
-        private readonly MPTCache cache;
-        public MPTNode Root => root;
+        private Node root;
+        private readonly Cache cache;
+        public Node Root => root;
 
-        public MPTTrie(ISnapshot store, UInt256 root, bool full_state = false)
+        public Trie(ISnapshot store, UInt256 root, bool full_state = false)
         {
             this.store = store ?? throw new ArgumentNullException(nameof(store));
-            this.cache = new MPTCache(store, Prefix);
-            this.root = root is null ? new MPTNode() : MPTNode.NewHash(root);
+            this.cache = new Cache(store, Prefix);
+            this.root = root is null ? new Node() : Node.NewHash(root);
             this.full = full_state;
         }
 
