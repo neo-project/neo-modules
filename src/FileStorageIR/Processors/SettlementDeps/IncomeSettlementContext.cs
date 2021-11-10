@@ -27,7 +27,7 @@ namespace Neo.FileStorage.InnerRing.Processors
         {
             lock (lockObject)
             {
-                var cachedRate = SettlementDeps.BasicRate;
+                var cachedRate = BasicIncomeSettlementDeps.BasicRate;
                 var cnrEstimations = SettlementDeps.Estimations(Epoch);
                 var txTable = new TransferTable();
                 foreach (var item in cnrEstimations)
