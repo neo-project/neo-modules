@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <PackageId>Neo.Plugins.TokensTracker</PackageId>
+    <RootNamespace>Neo.Plugins</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,7 +11,8 @@
 
   <ItemGroup>
     <None Update="TokensTracker\config.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
 
