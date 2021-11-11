@@ -1,9 +1,3 @@
-using System;
-using System.Buffers.Binary;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Numerics;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Ledger;
@@ -15,6 +9,12 @@ using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.VM.Types;
 using Neo.Wallets;
+using System;
+using System.Buffers.Binary;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Numerics;
 using static System.IO.Path;
 using VmArray = Neo.VM.Types.Array;
 
@@ -32,6 +32,7 @@ namespace Neo.Plugins
         private const byte Nep17BalancePrefix = 0xe8;
         private const byte Nep17TransferSentPrefix = 0xe9;
         private const byte Nep17TransferReceivedPrefix = 0xea;
+
         private readonly HashSet<string> _properties = new()
         {
             "name",
@@ -49,6 +50,7 @@ namespace Neo.Plugins
         private uint _currentHeight;
         private Block _currentBlock;
         private Dictionary<UInt160, ContractState> _assetCache = new();
+        private readonly List<TrackerBase> trackers = new();
 
         public override string Description => "Enquiries NEP-11 balances and transaction history of accounts through RPC";
 
@@ -58,7 +60,10 @@ namespace Neo.Plugins
             neoSystem = system;
             string path = string.Format(_dbPath, neoSystem.Settings.Network.ToString("X8"));
             _db = neoSystem.LoadStore(GetFullPath(path));
-            RpcServerPlugin.RegisterMethods(this, _network);
+            trackers.Add(new Nep11Tracker());
+            trackers.Add(new Nep17Tracker());
+            foreach (TrackerBase tracker in trackers)
+                RpcServerPlugin.RegisterMethods(tracker, _network);
         }
 
         protected override void Configure()
