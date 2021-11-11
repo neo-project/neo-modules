@@ -35,7 +35,7 @@ namespace Neo.Plugins
         }
 
         public static IEnumerable<(TKey, TValue)> FindPrefix<TKey, TValue>(this IStore db, byte[] prefix)
-            where TKey : IEquatable<TKey>, ISerializable, new()
+            where TKey : ISerializable, new()
             where TValue : class, ISerializable, new()
         {
             foreach (var (key, value) in db.Seek(prefix, SeekDirection.Forward))
@@ -46,7 +46,7 @@ namespace Neo.Plugins
         }
 
         public static IEnumerable<(TKey, TValue)> FindRange<TKey, TValue>(this IStore db, byte[] startKey, byte[] endKey)
-            where TKey : IEquatable<TKey>, ISerializable, new()
+            where TKey : ISerializable, new()
             where TValue : class, ISerializable, new()
         {
             foreach (var (key, value) in db.Seek(startKey, SeekDirection.Forward))

@@ -9,31 +9,14 @@ using System.Threading.Tasks;
 
 namespace Neo.Plugins.Storage
 {
-    public class Nep17TransferKey : IComparable<Nep17TransferKey>, IEquatable<Nep17TransferKey>, ISerializable
+    public class Nep17TransferKey : TokenTransferKey, IComparable<Nep17TransferKey>, IEquatable<Nep17TransferKey>, ISerializable
     {
-        public readonly UInt160 UserScriptHash;
-        public ulong TimestampMS { get; private set; }
-        public readonly UInt160 AssetScriptHash;
-        public ushort BlockXferNotificationIndex { get; private set; }
-
-        public int Size =>
-            UInt160.Length +    //UserScriptHash
-            sizeof(ulong) +     //TimestampMS
-            UInt160.Length +    //AssetScriptHash
-            sizeof(ushort);     //BlockXferNotificationIndex
-
-        public Nep17TransferKey() : this(new UInt160(), 0, new UInt160(), 0)
+        public Nep17TransferKey() : base(new UInt160(), 0, new UInt160(), 0)
         {
         }
 
-        public Nep17TransferKey(UInt160 userScriptHash, ulong timestamp, UInt160 assetScriptHash, ushort xferIndex)
+        public Nep17TransferKey(UInt160 userScriptHash, ulong timestamp, UInt160 assetScriptHash, uint xferIndex) : base(userScriptHash, timestamp, assetScriptHash, xferIndex)
         {
-            if (userScriptHash is null || assetScriptHash is null)
-                throw new ArgumentNullException();
-            UserScriptHash = userScriptHash;
-            TimestampMS = timestamp;
-            AssetScriptHash = assetScriptHash;
-            BlockXferNotificationIndex = xferIndex;
         }
 
         public int CompareTo(Nep17TransferKey other)
@@ -73,24 +56,6 @@ namespace Neo.Plugins.Storage
                 hashCode = (hashCode * 397) ^ BlockXferNotificationIndex.GetHashCode();
                 return hashCode;
             }
-        }
-
-        public void Serialize(BinaryWriter writer)
-        {
-            writer.Write(UserScriptHash);
-            if (BitConverter.IsLittleEndian) writer.Write(BinaryPrimitives.ReverseEndianness(TimestampMS));
-            else writer.Write(TimestampMS);
-            writer.Write(AssetScriptHash);
-            writer.Write(BlockXferNotificationIndex);
-        }
-
-        public void Deserialize(BinaryReader reader)
-        {
-            ((ISerializable)UserScriptHash).Deserialize(reader);
-            if (BitConverter.IsLittleEndian) TimestampMS = BinaryPrimitives.ReverseEndianness(reader.ReadUInt64());
-            else TimestampMS = reader.ReadUInt64();
-            ((ISerializable)AssetScriptHash).Deserialize(reader);
-            BlockXferNotificationIndex = reader.ReadUInt16();
         }
     }
 }
