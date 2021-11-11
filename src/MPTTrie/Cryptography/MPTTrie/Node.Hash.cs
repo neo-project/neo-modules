@@ -2,14 +2,14 @@ using Neo.IO;
 using System;
 using System.IO;
 
-namespace Neo.Plugins.MPT
+namespace Neo.Cryptography.MPTTrie
 {
-    partial class MPTNode
+    partial class Node
     {
-        public static MPTNode NewHash(UInt256 hash)
+        public static Node NewHash(UInt256 hash)
         {
             if (hash is null) throw new ArgumentNullException(nameof(NewHash));
-            var n = new MPTNode
+            var n = new Node
             {
                 type = NodeType.HashNode,
                 hash = hash,

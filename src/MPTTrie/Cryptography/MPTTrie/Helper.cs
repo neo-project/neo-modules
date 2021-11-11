@@ -1,6 +1,6 @@
 using System;
 
-namespace Neo.Plugins.MPT
+namespace Neo.Cryptography.MPTTrie
 {
     public static class Helper
     {
