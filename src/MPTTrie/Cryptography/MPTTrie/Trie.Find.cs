@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using static Neo.Helper;
 
-namespace Neo.Plugins.MPT
+namespace Neo.Cryptography.MPTTrie
 {
-    partial class MPTTrie<TKey, TValue>
+    partial class Trie<TKey, TValue>
     {
-        private ReadOnlySpan<byte> Seek(ref MPTNode node, ReadOnlySpan<byte> path, out MPTNode start)
+        private ReadOnlySpan<byte> Seek(ref Node node, ReadOnlySpan<byte> path, out Node start)
         {
             switch (node.Type)
             {
@@ -73,15 +73,30 @@ namespace Neo.Plugins.MPT
                     throw new InvalidOperationException("invalid from key");
                 from = ToNibbles(from.AsSpan());
             }
-            if (path.Length > MPTNode.MaxKeyLength || from.Length > MPTNode.MaxKeyLength)
+            if (path.Length > Node.MaxKeyLength || from.Length > Node.MaxKeyLength)
                 throw new ArgumentException("exceeds limit");
-            path = Seek(ref root, path, out MPTNode start).ToArray();
-            offset = path.Length;
+            path = Seek(ref root, path, out Node start).ToArray();
+            if (from.Length > 0)
+            {
+                for (int i = 0; i < from.Length && i < path.Length; i++)
+                {
+                    if (path[i] < from[i]) return Enumerable.Empty<(TKey Key, TValue Value)>();
+                    if (path[i] > from[i])
+                    {
+                        offset = from.Length;
+                        break;
+                    }
+                }
+                if (offset == 0)
+                {
+                    offset = Math.Min(path.Length, from.Length);
+                }
+            }
             return Travers(start, path, from, offset)
                 .Select(p => (FromNibbles(p.Key).AsSerializable<TKey>(), p.Value.AsSerializable<TValue>()));
         }
 
-        private IEnumerable<(byte[] Key, byte[] Value)> Travers(MPTNode node, byte[] path, byte[] from, int offset)
+        private IEnumerable<(byte[] Key, byte[] Value)> Travers(Node node, byte[] path, byte[] from, int offset)
         {
             if (node is null) yield break;
             if (offset < 0) throw new InvalidOperationException("invalid offset");
@@ -108,7 +123,7 @@ namespace Neo.Plugins.MPT
                     {
                         if (offset < from.Length)
                         {
-                            for (int i = 0; i < MPTNode.BranchChildCount - 1; i++)
+                            for (int i = 0; i < Node.BranchChildCount - 1; i++)
                             {
                                 if (from[offset] < i)
                                     foreach (var item in Travers(node.Children[i], Concat(path, new byte[] { (byte)i }), from, from.Length))
@@ -120,9 +135,9 @@ namespace Neo.Plugins.MPT
                         }
                         else
                         {
-                            foreach (var item in Travers(node.Children[MPTNode.BranchChildCount - 1], path, from, offset))
+                            foreach (var item in Travers(node.Children[Node.BranchChildCount - 1], path, from, offset))
                                 yield return item;
-                            for (int i = 0; i < MPTNode.BranchChildCount - 1; i++)
+                            for (int i = 0; i < Node.BranchChildCount - 1; i++)
                             {
                                 foreach (var item in Travers(node.Children[i], Concat(path, new byte[] { (byte)i }), from, offset))
                                     yield return item;

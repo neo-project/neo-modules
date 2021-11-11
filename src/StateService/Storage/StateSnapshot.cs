@@ -1,6 +1,6 @@
+using Neo.Cryptography.MPTTrie;
 using Neo.IO;
 using Neo.Persistence;
-using Neo.Plugins.MPT;
 using Neo.Plugins.StateService.Network;
 using Neo.SmartContract;
 using System;
@@ -10,12 +10,12 @@ namespace Neo.Plugins.StateService.Storage
     class StateSnapshot : IDisposable
     {
         private readonly ISnapshot snapshot;
-        public MPTTrie<StorageKey, StorageItem> Trie;
+        public Trie<StorageKey, StorageItem> Trie;
 
         public StateSnapshot(IStore store)
         {
             snapshot = store.GetSnapshot();
-            Trie = new MPTTrie<StorageKey, StorageItem>(snapshot, CurrentLocalRootHash(), Settings.Default.FullState);
+            Trie = new Trie<StorageKey, StorageItem>(snapshot, CurrentLocalRootHash(), Settings.Default.FullState);
         }
 
         public StateRoot GetStateRoot(uint index)
