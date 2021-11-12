@@ -3,9 +3,9 @@ using Neo.Persistence;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Neo.Plugins.MPT
+namespace Neo.Cryptography.MPTTrie
 {
-    public class MPTCache
+    public class Cache
     {
         private enum TrackState : byte
         {
@@ -17,7 +17,7 @@ namespace Neo.Plugins.MPT
 
         private class Trackable
         {
-            public MPTNode Node;
+            public Node Node;
             public TrackState State;
         }
 
@@ -25,7 +25,7 @@ namespace Neo.Plugins.MPT
         private readonly byte prefix;
         private readonly Dictionary<UInt256, Trackable> cache = new Dictionary<UInt256, Trackable>();
 
-        public MPTCache(ISnapshot store, byte prefix)
+        public Cache(ISnapshot store, byte prefix)
         {
             this.store = store;
             this.prefix = prefix;
@@ -43,13 +43,13 @@ namespace Neo.Plugins.MPT
             return buffer;
         }
 
-        public MPTNode Resolve(UInt256 hash)
+        public Node Resolve(UInt256 hash)
         {
             if (cache.TryGetValue(hash, out Trackable t))
             {
                 return t.Node?.Clone();
             }
-            var n = store.TryGet(Key(hash))?.AsSerializable<MPTNode>();
+            var n = store.TryGet(Key(hash))?.AsSerializable<Node>();
             cache.Add(hash, new Trackable
             {
                 Node = n,
@@ -58,7 +58,7 @@ namespace Neo.Plugins.MPT
             return n?.Clone();
         }
 
-        public void PutNode(MPTNode np)
+        public void PutNode(Node np)
         {
             var n = Resolve(np.Hash);
             if (n is null)
