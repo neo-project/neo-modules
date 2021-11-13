@@ -2,8 +2,8 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <VersionPrefix>3.0.3</VersionPrefix>
-    <TargetFramework>net5.0</TargetFramework>
+    <VersionPrefix>3.1.0</VersionPrefix>
+    <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Neo.Plugins</RootNamespace>
     <Authors>The Neo Project</Authors>
     <PackageTags>NEO;Blockchain</PackageTags>
@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neo" Version="3.0.3" />
+    <PackageReference Include="Neo" Version="3.1.0" />
   </ItemGroup>
 
 </Project>

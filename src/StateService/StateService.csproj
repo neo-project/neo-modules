@@ -15,8 +15,11 @@
 
   <ItemGroup>
     <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
-    <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MPTTrie\MPTTrie.csproj" />
+    <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
   </ItemGroup>
 
 </Project>
