@@ -6,7 +6,6 @@ using Neo.Persistence;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.AspNetCore.Identity;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Plugins.Storage;
