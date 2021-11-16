@@ -75,7 +75,10 @@ namespace Neo.Plugins
             json["exception"] = GetExceptionMessage(engine.FaultException);
             if (useDiagnostic)
             {
-                json["invokedcontracts"] = new JArray(engine.Diagnostic.InvocationTree.GetItems().ToHashSet().Select(v => (JString)v.ToString()));
+                json["diagnostics"] = new JObject()
+                {
+                    ["invokedcontracts"] = engine.Diagnostic.InvocationTree.GetItems().Distinct().Select(v => (JString)v.ToString()).ToArray()
+                };
             }
             try
             {
