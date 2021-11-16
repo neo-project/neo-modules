@@ -31,7 +31,8 @@ namespace Neo.Plugins
 
         private static readonly HttpClient httpClient = new()
         {
-            Timeout = TimeSpan.FromSeconds(5)
+            Timeout = TimeSpan.FromSeconds(5),
+            MaxResponseContentBufferSize = ushort.MaxValue
         };
 
         private Wallet wallet;
