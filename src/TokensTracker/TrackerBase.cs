@@ -124,12 +124,12 @@ namespace Neo.Plugins
             return null;
         }
 
-        protected JObject ToJson(TokenTransferKey key, TokenTransfer value, bool isSent)
+        protected JObject ToJson(TokenTransferKey key, TokenTransfer value)
         {
             JObject transfer = new JObject();
             transfer["timestamp"] = key.TimestampMS;
             transfer["assethash"] = key.AssetScriptHash.ToString();
-            transfer[isSent ? "toaddress" : "fromaddress"] = value.UserScriptHash == UInt160.Zero ? null : value.UserScriptHash.ToAddress(_neoSystem.Settings.AddressVersion);
+            transfer["transferaddress"] = value.UserScriptHash == UInt160.Zero ? null : value.UserScriptHash.ToAddress(_neoSystem.Settings.AddressVersion);
             transfer["amount"] = value.Amount.ToString();
             transfer["blockindex"] = value.BlockIndex;
             transfer["transfernotifyindex"] = key.BlockXferNotificationIndex;

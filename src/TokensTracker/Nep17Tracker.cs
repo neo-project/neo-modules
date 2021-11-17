@@ -182,7 +182,7 @@ namespace Neo.Plugins
             var transferPairs = QueryTransfers<Nep17TransferKey, TokenTransfer>(dbPrefix, userScriptHash, startTime, endTime).Take((int)_maxResults).ToList();
             foreach (var (key, value) in transferPairs.OrderByDescending(l => l.key.TimestampMS))
             {
-                parentJArray.Add(ToJson(key, value, dbPrefix == Nep17TransferSentPrefix));
+                parentJArray.Add(ToJson(key, value));
             }
         }
 
