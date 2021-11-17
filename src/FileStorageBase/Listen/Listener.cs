@@ -42,7 +42,7 @@ namespace Neo.FileStorage.Listen
                 return;
             }
             Utility.Log(nameof(Listener), LogLevel.Info, $"listener={name}, event_type={notify.EventName}");
-            var keyEvent = new ScriptHashWithType() { Type = notify.EventName, ScriptHashValue = notify.ScriptHash };
+            ScriptHashWithType keyEvent = new() { Type = notify.EventName, ScriptHashValue = notify.ScriptHash };
             if (!parsers.TryGetValue(keyEvent, out var parser))
             {
                 Utility.Log(nameof(Listener), LogLevel.Warning, $"event parser not set, listener={name}, script_hash={notify.ScriptHash}");
