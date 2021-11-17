@@ -152,40 +152,40 @@ namespace Neo.FileStorage.Network
                         {
                             switch (p)
                             {
-                                case Multiformats.Address.Protocols.IP4 ip4:
+                                case IP4 ip4:
                                     {
                                         res.Network = "ip4";
                                         res.IP = ip4.Value.ToString();
                                         continue;
                                     }
-                                case Multiformats.Address.Protocols.IP6 ip6:
+                                case IP6 ip6:
                                     {
                                         res.Network = "ip6";
                                         res.IP = ip6.Value.ToString();
                                         continue;
                                     }
-                                case Multiformats.Address.Protocols.DNS dns:
+                                case DNS dns:
                                     {
                                         res.Network = "ip";
                                         res.IP = dns.Value.ToString();
                                         res.HostName = true;
                                         continue;
                                     }
-                                case Multiformats.Address.Protocols.DNS4 dns4:
+                                case DNS4 dns4:
                                     {
                                         res.Network = "ip4";
                                         res.IP = dns4.Value.ToString();
                                         res.HostName = true;
                                         continue;
                                     }
-                                case Multiformats.Address.Protocols.DNS6 dns6:
+                                case DNS6 dns6:
                                     {
                                         res.Network = "ip6";
                                         res.IP = dns6.Value.ToString();
                                         res.HostName = true;
                                         continue;
                                     }
-                                case Multiformats.Address.Protocols.Unix unix:
+                                case Unix unix:
                                     {
                                         res.Network = "unix";
                                         res.IP = unix.Value.ToString();
@@ -198,14 +198,9 @@ namespace Neo.FileStorage.Network
                         {
                             switch (p)
                             {
-                                case Multiformats.Address.Protocols.UDP:
-                                    res.Network = "udp";
-                                    break;
-                                case Multiformats.Address.Protocols.TCP:
-                                    res.Network = "tcp";
-                                    break;
-                                default:
-                                    return res;
+                                case UDP: res.Network = "udp"; break;
+                                case TCP: res.Network = "tcp"; break;
+                                default: return res;
                             }
                             res.Port = p.Value.ToString();
                             break;
@@ -214,14 +209,9 @@ namespace Neo.FileStorage.Network
                         {
                             switch (p)
                             {
-                                case Multiformats.Address.Protocols.UDP:
-                                    res.Network = "udp4";
-                                    break;
-                                case Multiformats.Address.Protocols.TCP:
-                                    res.Network = "tcp4";
-                                    break;
-                                default:
-                                    return res;
+                                case UDP: res.Network = "udp4"; break;
+                                case TCP: res.Network = "tcp4"; break;
+                                default: return res;
                             }
                             res.Port = p.Value.ToString();
                             break;
@@ -230,14 +220,9 @@ namespace Neo.FileStorage.Network
                         {
                             switch (p)
                             {
-                                case Multiformats.Address.Protocols.UDP:
-                                    res.Network = "udp6";
-                                    break;
-                                case Multiformats.Address.Protocols.TCP:
-                                    res.Network = "tcp6";
-                                    break;
-                                default:
-                                    return res;
+                                case UDP: res.Network = "udp6"; break;
+                                case TCP: res.Network = "tcp6"; break;
+                                default: return res;
                             }
                             res.Port = p.Value.ToString();
                             break;
