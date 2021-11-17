@@ -1,21 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Neo;
-using Neo.Cryptography;
 using Neo.ConsoleService;
+using Neo.Cryptography;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.StorageGroup;
-using Neo.Plugins;
-using System.Diagnostics;
-using System.Text;
 using Neo.IO.Json;
+using Neo.Plugins;
 using IO = System.IO.Path;
 
 namespace FileStorageCLI
@@ -36,11 +35,11 @@ namespace FileStorageCLI
         [ConsoleCommand("fs file upload", Category = "FileStorageService", Description = "Upload file")]
         private void OnUploadFile(string containerId, string filePath, string paddress = null, bool again = false)
         {
-            Stopwatch stopWatch = new Stopwatch();
+            Stopwatch stopWatch = new();
             stopWatch.Start();
             if (!CheckAndParseAccount(paddress, out UInt160 account, out ECDsa key)) return;
             if (!ParseContainerID(containerId, out var cid)) return;
-            FileInfo fileInfo = new FileInfo(filePath);
+            FileInfo fileInfo = new(filePath);
             if (!fileInfo.Exists) throw new Exception($"The specified file does not exist");
             var FileLength = fileInfo.Length;
             //data segmentation
@@ -55,7 +54,7 @@ namespace FileStorageCLI
             var session = OnCreateSessionInternal(client);
             if (session is null) return;
             //upload subobjects
-            String timeStamp = null;
+            string timeStamp = null;
             Header.Types.Attribute[] attributes = null;
             if (UploadProcess is null || !again)
             {
@@ -136,14 +135,14 @@ namespace FileStorageCLI
         [ConsoleCommand("fs file download", Category = "FileStorageService", Description = "Download file")]
         private void OnDownloadFile(string containerId, string objectId, string filePath, string paddress = null, bool again = false)
         {
-            Stopwatch stopWatch = new Stopwatch();
+            Stopwatch stopWatch = new();
             stopWatch.Start();
             if (!CheckAndParseAccount(paddress, out UInt160 account, out ECDsa key)) return;
             if (!ParseContainerID(containerId, out var cid)) return;
             if (!ParseObjectID(objectId, out var oid)) return;
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
-            var totalDataSize = 0ul;
+            ulong totalDataSize = 0;
             string timestamp = null;
             string FileName = null;
             if (DownloadProcess is null || !again)
@@ -166,15 +165,17 @@ namespace FileStorageCLI
                 {
                     if (p.Key == Header.Types.Attribute.AttributeFileName) FileName = p.Value;
                 });
-                DownloadProcess = new Process(containerId, objectId, FileName, filePath, totalDataSize, timestamp, subObjectIDs.Count);
-                DownloadProcess.SubObjectIds = subObjectIDs.ToArray();
+                DownloadProcess = new Process(containerId, objectId, FileName, filePath, totalDataSize, timestamp, subObjectIDs.Count)
+                {
+                    SubObjectIds = subObjectIDs.ToArray()
+                };
             }
             else
             {
                 if (DownloadProcess.ContainerId != containerId || DownloadProcess.ObjectId != objectId) throw new Exception($"The new task doesn't match with the last failed one");
                 DownloadProcess.Rest();
                 totalDataSize = DownloadProcess.Total;
-                timestamp = CommandsPlugin.DownloadProcess.TimeStamp;
+                timestamp = DownloadProcess.TimeStamp;
             }
             DirectoryInfo parentDirectory = null;
             if (!Directory.Exists(filePath)) parentDirectory = Directory.CreateDirectory(filePath);
@@ -208,7 +209,7 @@ namespace FileStorageCLI
                             FileInfo tempfile = new FileInfo(tempfilepath);
                             if (tempfile.Exists)
                             {
-                                using FileStream tempreadstream = new FileStream(tempfilepath, FileMode.Open);
+                                using FileStream tempreadstream = new(tempfilepath, FileMode.Open);
                                 byte[] downedData = new byte[tempreadstream.Length];
                                 tempreadstream.Read(downedData, 0, downedData.Length);
                                 var objheader = OnGetObjectHeaderInternal(internalClient, cid, oid);
@@ -225,7 +226,7 @@ namespace FileStorageCLI
                                     tempfile.Delete();
                                 }
                             }
-                            using FileStream tempstream = new FileStream(tempfilepath, FileMode.Create, FileAccess.Write, FileShare.Write);
+                            using FileStream tempstream = new(tempfilepath, FileMode.Create, FileAccess.Write, FileShare.Write);
                             var obj = OnGetObjectInternal(internalClient, cid, oid);
                             if (obj is null) return;
                             var payload = obj.Payload.ToByteArray();
@@ -247,7 +248,7 @@ namespace FileStorageCLI
             }
             Task.WaitAll(tasks);
             //check failed task
-            List<ObjectID> Comparefiles = new List<ObjectID>();
+            List<ObjectID> Comparefiles = new();
             for (int i = 0; i < DownloadProcess.SubObjectIds.Length; i++)
             {
                 bool hasfile = false;
@@ -271,13 +272,13 @@ namespace FileStorageCLI
             }
             //write file
             string downPath = workDirectory.FullName + DirectorySeparatorChar + DownloadProcess.FileName;
-            using (FileStream writestream = new FileStream(downPath, FileMode.Create, FileAccess.Write, FileShare.Write))
+            using (FileStream writestream = new(downPath, FileMode.Create, FileAccess.Write, FileShare.Write))
             {
                 for (int index = 0; index < DownloadProcess.SubObjectIds.Length; index++)
                 {
                     string tempfilepath = workDirectory.FullName + DirectorySeparatorChar + "QS_" + DownloadProcess.SubObjectIds[index].String();
-                    FileInfo Tempfile = new FileInfo(tempfilepath);
-                    using FileStream readTempStream = new FileStream(Tempfile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    FileInfo Tempfile = new(tempfilepath);
+                    using FileStream readTempStream = new(Tempfile.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                     long onefileLength = Tempfile.Length;
                     byte[] buffer = new byte[Convert.ToInt32(onefileLength)];
                     readTempStream.Read(buffer, 0, Convert.ToInt32(onefileLength));
@@ -329,7 +330,7 @@ namespace FileStorageCLI
 
         private void OnWriteFileInternal(string filePath, byte[] data)
         {
-            using (FileStream writestream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Write))
+            using (FileStream writestream = new(filePath, FileMode.Create, FileAccess.Write, FileShare.Write))
             {
                 writestream.Write(data, 0, data.Length);
                 writestream.Flush();
