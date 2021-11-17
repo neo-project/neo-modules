@@ -25,7 +25,7 @@ namespace Neo.FileStorage.InnerRing
     {
         public const string MorphChainConfig = "morph.json";
         public const string ChainDataFileName = "morph.acc";
-        public override string Name => "innerRingService";
+        public override string Name => "FileStorageIR";
         public override string Description => "Provide distributed file storage inner ring service";
 
         public NeoSystem MainSystem;
