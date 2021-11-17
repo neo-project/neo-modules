@@ -51,8 +51,7 @@ namespace FileStorageCLI
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
             if (!OnGetBalanceInternal(client, key, out Neo.FileStorage.API.Accounting.Decimal balance)) return;
-            var amount = int.Parse(pamount);
-            if (amount <= 0) throw new Exception($"Fs withdraw amount can not be negative");
+            if (!int.TryParse(pamount, out int amount) || amount <= 0) throw new Exception($"Fs withdraw amount can not be negative");
             using SnapshotCache snapshot = System.GetSnapshot();
             if (balance.Value < amount * NativeContract.GAS.Decimals) throw new Exception($"Fs account balance is not enough");
             byte[] script = FsContractHash.MakeScript("withdraw", account, amount);
@@ -83,8 +82,8 @@ namespace FileStorageCLI
         {
             result = null;
             OwnerID ownerID = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash());
-            using var source = new CancellationTokenSource();
-            source.CancelAfter(10000);
+            using CancellationTokenSource source = new();
+            source.CancelAfter(TimeSpan.FromMinutes(1));
             try
             {
                 result = client.GetBalance(ownerID, context: source.Token).Result;
@@ -110,7 +109,7 @@ namespace FileStorageCLI
                 Signers = new Signer[] { new Signer() { Account = account, Scopes = WitnessScope.Global } },
                 Attributes = Array.Empty<TransactionAttribute>(),
             };
-            var data = new ContractParametersContext(snapshot, tx, System.Settings.Network);
+            ContractParametersContext data = new(snapshot, tx, System.Settings.Network);
             currentWallet.Sign(data);
             tx.Witnesses = data.GetWitnesses();
             ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, tx, null, System.Settings);

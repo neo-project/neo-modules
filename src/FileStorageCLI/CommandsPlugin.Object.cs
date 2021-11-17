@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using Google.Protobuf;
 using Neo;
@@ -61,8 +60,8 @@ namespace FileStorageCLI
             foreach (var objectId in objectIds)
             {
                 if (!ParseObjectID(objectId, out var oid)) return;
-                Address address = new Address(cid, oid);
-                using var source = new CancellationTokenSource();
+                Address address = new(cid, oid);
+                using CancellationTokenSource source = new();
                 source.CancelAfter(TimeSpan.FromMinutes(1));
                 try
                 {
@@ -94,18 +93,18 @@ namespace FileStorageCLI
             if (!ParseObjectID(objectId, out var oid)) return;
             var obj = OnGetObjectInternal(client, cid, oid);
             if (obj is null) return;
-            JArray result = new JArray();
+            JArray result = new();
             result.Add(obj.ToJson());
             if (obj.ObjectType == ObjectType.StorageGroup)
             {
-                List<string> subObjectIDs = new List<string>();
+                List<string> subObjectIDs = new();
                 var sg = StorageGroup.Parser.ParseFrom(obj.Payload.ToByteArray());
                 foreach (var m in sg.Members)
                 {
                     subObjectIDs.Add(m.String());
                 }
                 string.Join("_", subObjectIDs);
-                JObject @object = new JObject();
+                JObject @object = new();
                 @object["subIds"] = string.Join("_", subObjectIDs);
                 result.Add(@object);
             }
@@ -124,7 +123,7 @@ namespace FileStorageCLI
             if (!ParseContainerID(containerId, out var cid)) return;
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
-            using var source = new CancellationTokenSource();
+            using CancellationTokenSource source = new();
             source.CancelAfter(TimeSpan.FromMinutes(1));
             var filter = new SearchFilters();
             try
@@ -224,7 +223,7 @@ namespace FileStorageCLI
 
         private Neo.FileStorage.API.Object.Object OnGetObjectHeaderInternal(Client client, ContainerID cid, ObjectID oid, bool logFlag = true)
         {
-            using var source = new CancellationTokenSource();
+            using CancellationTokenSource source = new();
             source.CancelAfter(TimeSpan.FromMinutes(1));
             try
             {
@@ -246,7 +245,7 @@ namespace FileStorageCLI
 
         private Neo.FileStorage.API.Object.Object OnGetObjectInternal(Client client, ContainerID cid, ObjectID oid)
         {
-            using var source = new CancellationTokenSource();
+            using CancellationTokenSource source = new();
             source.CancelAfter(TimeSpan.FromMinutes(1));
             try
             {
@@ -271,7 +270,7 @@ namespace FileStorageCLI
             if (session is null)
                 session = OnCreateSessionInternal(client);
             if (session is null) return false;
-            using var source = new CancellationTokenSource();
+            using CancellationTokenSource source = new();
             source.CancelAfter(TimeSpan.FromMinutes(1));
             try
             {
@@ -286,6 +285,5 @@ namespace FileStorageCLI
                 return false;
             }
         }
-
     }
 }

@@ -1,10 +1,10 @@
-using Neo.Plugins;
-using Neo.ConsoleService;
 using System;
 using System.Security.Cryptography;
 using System.Threading;
-using Neo.FileStorage.API.Refs;
+using Neo.ConsoleService;
 using Neo.FileStorage.API.Acl;
+using Neo.FileStorage.API.Refs;
+using Neo.Plugins;
 
 namespace FileStorageCLI
 {
@@ -22,7 +22,7 @@ namespace FileStorageCLI
             if (!ParseContainerID(containerId, out ContainerID cid)) return;
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
-            using var source = new CancellationTokenSource();
+            using CancellationTokenSource source = new();
             source.CancelAfter(TimeSpan.FromMinutes(1));
             try
             {
@@ -49,7 +49,7 @@ namespace FileStorageCLI
             EACLTable table = EACLTable.Parser.ParseJson(eaclString);
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
-            using var source = new CancellationTokenSource();
+            using CancellationTokenSource source = new();
             source.CancelAfter(TimeSpan.FromMinutes(1));
             try
             {

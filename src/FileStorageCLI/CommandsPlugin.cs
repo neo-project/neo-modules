@@ -1,13 +1,13 @@
-using Neo.Plugins;
 using System;
-using Neo.Wallets;
-using Neo;
 using System.Linq;
-using Neo.FileStorage.API.Cryptography;
 using System.Security.Cryptography;
-using Neo.FileStorage.API.Client;
-using Neo.FileStorage.API.Session;
 using System.Threading;
+using Neo;
+using Neo.FileStorage.API.Client;
+using Neo.FileStorage.API.Cryptography;
+using Neo.FileStorage.API.Session;
+using Neo.Plugins;
+using Neo.Wallets;
 
 namespace FileStorageCLI
 {
@@ -96,7 +96,7 @@ namespace FileStorageCLI
 
         private SessionToken OnCreateSessionInternal(Client client)
         {
-            using var source = new CancellationTokenSource();
+            using CancellationTokenSource source = new();
             source.CancelAfter(TimeSpan.FromMinutes(1));
             try
             {

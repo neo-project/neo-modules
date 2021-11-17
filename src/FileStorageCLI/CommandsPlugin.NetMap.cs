@@ -1,10 +1,10 @@
-using Neo.Plugins;
-using Neo.ConsoleService;
 using System;
 using System.Security.Cryptography;
+using System.Threading;
+using Neo.ConsoleService;
 using Neo.FileStorage.API.Client;
 using Neo.FileStorage.API.Netmap;
-using System.Threading;
+using Neo.Plugins;
 
 namespace FileStorageCLI
 {
@@ -31,7 +31,7 @@ namespace FileStorageCLI
             if (!CheckAndParseAccount(null, out _, out ECDsa key)) return;
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
-            var source = new CancellationTokenSource();
+            using CancellationTokenSource source = new();
             source.CancelAfter(10000);
             try
             {

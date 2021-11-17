@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using Google.Protobuf;
@@ -8,9 +9,8 @@ using Neo.ConsoleService;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Refs;
-using static Neo.FileStorage.API.Policy.Helper;
 using Neo.Plugins;
-using System.Linq;
+using static Neo.FileStorage.API.Policy.Helper;
 
 namespace FileStorageCLI
 {
@@ -30,7 +30,7 @@ namespace FileStorageCLI
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
             var policy = ParsePlacementPolicy(policyString);
-            var container = new Container
+            Container container = new()
             {
                 Version = Neo.FileStorage.API.Refs.Version.SDKVersion(),
                 OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
@@ -40,7 +40,7 @@ namespace FileStorageCLI
             };
             Container.Types.Attribute[] attributes = attributesString.Split("_").Select(p => new Container.Types.Attribute() { Key = p.Split("-")[0], Value = p.Split("-")[1] }).ToArray();
             container.Attributes.Add(attributes);
-            var source = new CancellationTokenSource();
+            using CancellationTokenSource source = new();
             source.CancelAfter(TimeSpan.FromMinutes(1));
             try
             {
@@ -66,8 +66,8 @@ namespace FileStorageCLI
             if (!CheckAndParseAccount(paddress, out _, out ECDsa key)) return;
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
-            using var source = new CancellationTokenSource();
-            source.CancelAfter(10000);
+            using CancellationTokenSource source = new();
+            source.CancelAfter(TimeSpan.FromMinutes(1));
             if (!ParseContainerID(containerId, out var cid)) return;
             try
             {
@@ -94,8 +94,8 @@ namespace FileStorageCLI
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
             if (!ParseContainerID(containerId, out var cid)) return;
-            using var source = new CancellationTokenSource();
-            source.CancelAfter(10000);
+            using CancellationTokenSource source = new();
+            source.CancelAfter(TimeSpan.FromMinutes(1));
             try
             {
                 var container = client.GetContainer(cid, context: source.Token).Result;
@@ -119,8 +119,8 @@ namespace FileStorageCLI
             if (!CheckAndParseAccount(paddress, out UInt160 account, out ECDsa key)) return;
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
-            using var source = new CancellationTokenSource();
-            source.CancelAfter(10000);
+            using CancellationTokenSource source = new();
+            source.CancelAfter(TimeSpan.FromMinutes(1));
             OwnerID ownerID = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash());
             try
             {
