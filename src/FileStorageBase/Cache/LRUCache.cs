@@ -154,7 +154,6 @@ namespace Neo.FileStorage.Cache
             return true;
         }
 
-
         public bool Contains(K key)
         {
             cacheLock.EnterReadLock();
