@@ -33,7 +33,7 @@ namespace FileStorageCLI
         {
             if (!CheckAndParseAccount(paddress, out _, out ECDsa key)) return;
             if (pdata.Length > 2048 * 1000 || pdata.Length < 1024) throw new Exception("The data length out of range");
-            var data = UTF8Encoding.UTF8.GetBytes(pdata);
+            var data = Utility.StrictUTF8.GetBytes(pdata);
             using var client = OnCreateClientInternal(key);
             if (client is null) return;
             if (!ParseContainerID(containerId, out var cid)) return;
