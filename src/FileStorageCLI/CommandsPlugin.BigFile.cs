@@ -117,7 +117,7 @@ namespace FileStorageCLI
             if (OnPutObjectInternal(client, obj, session))
             {
                 UploadProcess.ObjectId = obj.ObjectId.String();
-                OnWriteFileInternal(new FileInfo(filePath).Directory.FullName + DirectorySeparatorChar + $"{obj.ObjectId.String()}_{timeStamp}.seed", UTF8Encoding.UTF8.GetBytes($"{cid.String()}_{obj.ObjectId.String()}"));
+                OnWriteFileInternal(new FileInfo(filePath).Directory.FullName + DirectorySeparatorChar + $"{obj.ObjectId.String()}_{timeStamp}.seed", Utility.StrictUTF8.GetBytes($"{cid.String()}_{obj.ObjectId.String()}"));
                 UploadProcess.TimeSpent = stopWatch.Elapsed;
                 Console.WriteLine("Fs file upload successfully");
                 Console.WriteLine($"Fs upload info:{UploadProcess.ToJson()}");
@@ -303,15 +303,15 @@ namespace FileStorageCLI
         [ConsoleCommand("fs file fastdownload", Category = "FileStorageService", Description = "Download file")]
         private void OnDownloadFileBySeed(string filePath, string paddress = null, bool again = false)
         {
-            FileInfo file = new FileInfo(filePath);
+            FileInfo file = new(filePath);
             if (!file.Exists) throw new Exception($"The specified file does not exist");
-            var seed = UTF8Encoding.UTF8.GetString(OnGetFileInternal(filePath, 0, (int)file.Length, file.Length));
+            var seed = Utility.StrictUTF8.GetString(OnGetFileInternal(filePath, 0, (int)file.Length, file.Length));
             OnDownloadFile(seed.Split("_")[0], seed.Split("_")[1], file.Directory.FullName, paddress, again);
         }
 
         private byte[] OnGetFileInternal(string filePath, long start, int length, long totalLength)
         {
-            using FileStream ServerStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 1024 * 80, true);
+            using FileStream ServerStream = new(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 1024 * 80, true);
             byte[] buffer;
             ServerStream.Seek(start, SeekOrigin.Begin);
             if (totalLength - start < length)
