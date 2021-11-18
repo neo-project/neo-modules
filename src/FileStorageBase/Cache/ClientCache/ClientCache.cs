@@ -10,7 +10,7 @@ namespace Neo.FileStorage.Cache
     {
         private readonly ConcurrentDictionary<string, MultiClient> clients = new();
 
-        public virtual IFSClient Get(List<Address> addresses)
+        public virtual IFSClient Get(IEnumerable<Address> addresses)
         {
             var saddrs = string.Join("\n", addresses.Select(p => p.ToString()));
             if (!clients.TryGetValue(saddrs, out MultiClient mClient))

@@ -7,6 +7,6 @@ namespace Neo.FileStorage.Cache
 {
     public interface IFSClientCache : IDisposable
     {
-        IFSClient Get(List<Address> address);
+        IFSClient Get(IEnumerable<Address> address);
     }
 }

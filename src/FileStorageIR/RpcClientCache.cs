@@ -25,7 +25,7 @@ namespace Neo.FileStorage.InnerRing
             ClientCache.Dispose();
         }
 
-        public IFSClient Get(List<Network.Address> addresses)
+        public IFSClient Get(IEnumerable<Network.Address> addresses)
         {
             return ClientCache.Get(addresses);
         }

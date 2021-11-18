@@ -13,6 +13,7 @@ using Neo.FileStorage.API.Session;
 using Neo.FileStorage.API.Client;
 using UsedSpaceAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types.Announcement;
 using System.Collections.Concurrent;
+using System.Linq;
 
 namespace Neo.FileStorage.Cache
 {
@@ -21,9 +22,9 @@ namespace Neo.FileStorage.Cache
         private readonly List<Network.Address> addresses;
         private readonly ConcurrentDictionary<Network.Address, Client> clients = new();
 
-        public MultiClient(List<Network.Address> addrs)
+        public MultiClient(IEnumerable<Network.Address> addrs)
         {
-            addresses = addrs;
+            addresses = addrs.ToList();
         }
 
         public void Dispose()
