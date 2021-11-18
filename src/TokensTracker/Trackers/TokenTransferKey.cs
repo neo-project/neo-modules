@@ -1,13 +1,9 @@
+using Neo.IO;
 using System;
 using System.Buffers.Binary;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Neo.IO;
 
-namespace Neo.Plugins.Storage
+namespace Neo.Plugins.Trackers
 {
     public class TokenTransferKey : ISerializable
     {

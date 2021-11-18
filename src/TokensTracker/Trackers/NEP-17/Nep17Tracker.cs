@@ -1,20 +1,19 @@
-using System;
+using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using Neo.IO.Json;
-using Neo.Plugins.Storage;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.VM.Types;
 using Neo.Wallets;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using Array = Neo.VM.Types.Array;
 
-namespace Neo.Plugins
+namespace Neo.Plugins.Trackers.NEP_17
 {
     record BalanceChangeRecord(UInt160 user, UInt160 asset);
 

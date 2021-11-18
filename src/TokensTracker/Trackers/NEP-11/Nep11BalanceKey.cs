@@ -1,13 +1,9 @@
 using Neo.IO;
 using Neo.VM.Types;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Neo.Plugins.Storage
+namespace Neo.Plugins.Trackers.NEP_11
 {
     public class Nep11BalanceKey : IComparable<Nep11BalanceKey>, IEquatable<Nep11BalanceKey>, ISerializable
     {

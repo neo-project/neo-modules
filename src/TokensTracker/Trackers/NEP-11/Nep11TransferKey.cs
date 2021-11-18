@@ -1,10 +1,9 @@
 using Neo.IO;
 using Neo.VM.Types;
 using System;
-using System.Buffers.Binary;
 using System.IO;
 
-namespace Neo.Plugins.Storage
+namespace Neo.Plugins.Trackers.NEP_11
 {
     public class Nep11TransferKey : TokenTransferKey, IComparable<Nep11TransferKey>, IEquatable<Nep11TransferKey>
     {
