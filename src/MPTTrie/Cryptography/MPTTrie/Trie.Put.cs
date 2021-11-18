@@ -67,7 +67,7 @@ namespace Neo.Cryptography.MPTTrie
                         var pathRemain = path[prefix.Length..];
                         var keyRemain = node.Key.AsSpan(prefix.Length);
                         var child = Node.NewBranch();
-                        Node grandChild = new Node();
+                        Node grandChild = new();
                         if (keyRemain.Length == 1)
                         {
                             child.Children[keyRemain[0]] = node.Next;

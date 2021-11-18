@@ -16,7 +16,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
         [TestMethod]
         public void ParseNewEpochEventTest()
         {
-            Array array = new Array();
+            Array array = new();
             array.Add((ulong)1);
             ContractEvent @event = NewEpochEvent.ParseNewEpochEvent(array);
             Assert.IsTrue(@event is NewEpochEvent);
@@ -29,8 +29,10 @@ namespace Neo.FileStorage.Tests.Morph.Event
         [TestMethod]
         public void ParseAddPeerEventTest()
         {
-            Array array = new Array();
-            array.Add(new byte[] { 0x01 });
+            Array array = new()
+            {
+                new byte[] { 0x01 }
+            };
             ContractEvent @event = AddPeerEvent.ParseAddPeerEvent(array);
             Assert.IsTrue(@event is AddPeerEvent);
             Assert.AreEqual(((AddPeerEvent)@event).Node.ToString(), new byte[] { 0x01 }.ToString());
@@ -42,7 +44,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
         [TestMethod]
         public void ParseUpdatePeerEventTest()
         {
-            Array array = new Array();
+            Array array = new();
             array.Add(1);
             array.Add(TestBlockchain.wallet.GetAccounts().ToArray()[0].GetKey().PublicKey.ToArray());
             ContractEvent @event = UpdatePeerEvent.ParseUpdatePeerEvent(array);
@@ -57,7 +59,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
         [TestMethod]
         public void ParseLockEventTest()
         {
-            Array array = new Array();
+            Array array = new();
             array.Add(new byte[] { 0x01 });
             array.Add(UInt160.Zero.ToArray());
             array.Add(UInt160.Zero.ToArray());
@@ -78,11 +80,13 @@ namespace Neo.FileStorage.Tests.Morph.Event
         [TestMethod]
         public void ParseContainerPutEventTest()
         {
-            Array array = new Array();
-            array.Add(new byte[] { 0x01 });
-            array.Add(new byte[] { 0x01 });
-            array.Add(TestBlockchain.wallet.GetAccounts().ToArray()[0].GetKey().PublicKey.ToArray());
-            array.Add(VM.Types.Null.Null);
+            Array array = new()
+            {
+                new byte[] { 0x01 },
+                new byte[] { 0x01 },
+                TestBlockchain.wallet.GetAccounts().ToArray()[0].GetKey().PublicKey.ToArray(),
+                VM.Types.Null.Null
+            };
             ContractEvent @event = ContainerPutEvent.ParseContainerPutEvent(array);
             Assert.IsTrue(@event is ContainerPutEvent);
             Assert.AreEqual(((ContainerPutEvent)@event).RawContainer.ToString(), new byte[] { 0x01 }.ToString());
@@ -96,10 +100,12 @@ namespace Neo.FileStorage.Tests.Morph.Event
         [TestMethod]
         public void ParseContainerDeleteEventTest()
         {
-            Array array = new Array();
-            array.Add(new byte[] { 0x01 });
-            array.Add(new byte[] { 0x01 });
-            array.Add(VM.Types.Null.Null);
+            Array array = new()
+            {
+                new byte[] { 0x01 },
+                new byte[] { 0x01 },
+                VM.Types.StackItem.Null
+            };
             ContractEvent @event = ContainerDeleteEvent.ParseContainerDeleteEvent(array);
             Assert.IsTrue(@event is ContainerDeleteEvent);
             Assert.AreEqual(((ContainerDeleteEvent)@event).ContainerID.ToHexString(), new byte[] { 0x01 }.ToHexString());
@@ -113,14 +119,16 @@ namespace Neo.FileStorage.Tests.Morph.Event
         public void ParseBindEventTest()
         {
             List<ECPoint> keys = TestBlockchain.wallet.GetAccounts().ToArray().Select(p => p.GetKey().PublicKey).ToList();
-            Array ecpints = new Array();
+            Array ecpints = new();
             foreach (ECPoint item in keys)
             {
                 ecpints.Add(item.ToArray());
             }
-            Array array = new Array();
-            array.Add(UInt160.Zero.ToArray());
-            array.Add(ecpints);
+            Array array = new()
+            {
+                UInt160.Zero.ToArray(),
+                ecpints
+            };
             ContractEvent @event = BindEvent.ParseBindEvent(array);
             Assert.IsTrue(@event is BindEvent);
             Assert.AreEqual(((BindEvent)@event).UserAccount, UInt160.Zero);
@@ -133,7 +141,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
         [TestMethod]
         public void ParseChequeEventTest()
         {
-            Array array = new Array();
+            Array array = new();
             array.Add(new byte[] { 0x01 });
             array.Add(UInt160.Zero.ToArray());
             array.Add(1);
@@ -152,7 +160,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
         [TestMethod]
         public void ParseDepositEventTest()
         {
-            Array array = new Array();
+            Array array = new();
             array.Add(UInt160.Zero.ToArray());
             array.Add(1);
             array.Add(UInt160.Zero.ToArray());
@@ -171,7 +179,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
         [TestMethod]
         public void ParseWithdrawEventTest()
         {
-            Array array = new Array();
+            Array array = new();
             array.Add(UInt160.Zero.ToArray());
             array.Add(1);
             array.Add(new byte[] { 0x01 });
@@ -188,7 +196,7 @@ namespace Neo.FileStorage.Tests.Morph.Event
         [TestMethod]
         public void ParseConfigEventTest()
         {
-            Array array = new Array();
+            Array array = new();
             array.Add(new byte[] { 0x01 });
             array.Add(new byte[] { 0x02 });
             array.Add(new byte[] { 0x03 });
@@ -206,12 +214,12 @@ namespace Neo.FileStorage.Tests.Morph.Event
         public void ParseUpdateInnerRingTest()
         {
             List<ECPoint> keys = TestBlockchain.wallet.GetAccounts().ToArray().Select(p => p.GetKey().PublicKey).ToList();
-            Array ecpints = new Array();
+            Array ecpints = new();
             foreach (ECPoint item in keys)
             {
                 ecpints.Add(item.ToArray());
             }
-            Array array = new Array();
+            Array array = new();
             array.Add(ecpints);
             ContractEvent @event = UpdateInnerRingEvent.ParseUpdateInnerRingEvent(array);
             Assert.IsTrue(@event is UpdateInnerRingEvent);

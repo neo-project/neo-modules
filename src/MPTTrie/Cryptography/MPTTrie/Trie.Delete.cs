@@ -70,7 +70,7 @@ namespace Neo.Cryptography.MPTTrie
                         }
                         if (!result) return false;
                         if (!full) cache.DeleteNode(oldHash);
-                        List<byte> childrenIndexes = new List<byte>(Node.BranchChildCount);
+                        List<byte> childrenIndexes = new(Node.BranchChildCount);
                         for (int i = 0; i < Node.BranchChildCount; i++)
                         {
                             if (node.Children[i].IsEmpty) continue;

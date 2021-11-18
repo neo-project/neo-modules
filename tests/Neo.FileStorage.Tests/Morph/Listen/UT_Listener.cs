@@ -91,7 +91,7 @@ namespace Neo.FileStorage.Tests.Morph.Listen
             });
             ExpectNoMsg();
             //send notify with no handler
-            JArray obj_no_handler = new JArray();
+            JArray obj_no_handler = new();
             obj_no_handler.Add(tx.ToArray().ToHexString());
             obj_no_handler.Add(UInt160.Zero.ToArray().Reverse().ToArray().ToHexString());
             obj_no_handler.Add("test with no handler");
@@ -116,7 +116,7 @@ namespace Neo.FileStorage.Tests.Morph.Listen
         public ParserInfo[] ListenerParsers()
         {
             //both handler and parser
-            ParserInfo parserInfo1 = new ParserInfo()
+            ParserInfo parserInfo1 = new()
             {
                 ScriptHashWithType = new ScriptHashWithType()
                 {
@@ -126,7 +126,7 @@ namespace Neo.FileStorage.Tests.Morph.Listen
                 Parser = ParseContractEvent
             };
             //parser is null
-            ParserInfo parserInfo2 = new ParserInfo()
+            ParserInfo parserInfo2 = new()
             {
                 ScriptHashWithType = new ScriptHashWithType()
                 {
@@ -136,7 +136,7 @@ namespace Neo.FileStorage.Tests.Morph.Listen
                 Parser = null
             };
             //parser with no handler
-            ParserInfo parserInfo3 = new ParserInfo()
+            ParserInfo parserInfo3 = new()
             {
                 ScriptHashWithType = new ScriptHashWithType()
                 {
@@ -151,7 +151,7 @@ namespace Neo.FileStorage.Tests.Morph.Listen
         public HandlerInfo[] ListenerHandlers()
         {
             //both handler and parser
-            HandlerInfo handlerInfo1 = new HandlerInfo()
+            HandlerInfo handlerInfo1 = new()
             {
                 ScriptHashWithType = new ScriptHashWithType()
                 {
@@ -161,7 +161,7 @@ namespace Neo.FileStorage.Tests.Morph.Listen
                 Handler = F
             };
             //no handler
-            HandlerInfo handlerInfo2 = new HandlerInfo()
+            HandlerInfo handlerInfo2 = new()
             {
                 ScriptHashWithType = new ScriptHashWithType()
                 {
@@ -171,7 +171,7 @@ namespace Neo.FileStorage.Tests.Morph.Listen
                 Handler = null
             };
             //no parser
-            HandlerInfo handlerInfo3 = new HandlerInfo()
+            HandlerInfo handlerInfo3 = new()
             {
                 ScriptHashWithType = new ScriptHashWithType()
                 {
@@ -181,7 +181,7 @@ namespace Neo.FileStorage.Tests.Morph.Listen
                 Handler = F
             };
             //double handler
-            HandlerInfo handlerInfo4 = new HandlerInfo()
+            HandlerInfo handlerInfo4 = new()
             {
                 ScriptHashWithType = new ScriptHashWithType()
                 {
@@ -206,13 +206,13 @@ namespace Neo.FileStorage.Tests.Morph.Listen
             TestActor.Tell(testEvent);
         }
 
-        public ContractEvent ParseContractEvent(VM.Types.Array eventParams)
+        public static ContractEvent ParseContractEvent(VM.Types.Array eventParams)
         {
             if (eventParams.Count != 1) throw new Exception();
             return new TestContractEvent();
         }
 
-        public string GetName()
+        public static string GetName()
         {
             return "Listener test"; ;
         }

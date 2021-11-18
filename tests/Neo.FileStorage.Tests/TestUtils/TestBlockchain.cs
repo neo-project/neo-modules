@@ -37,7 +37,7 @@ namespace Neo.FileStorage.Tests
         public static UInt160 NetmapContractHash { get; private set; }
         public static UInt160 ProcessContractHash { get; private set; }
         public static UInt160 ProxyContractHash { get; private set; }
-        public static UInt160[] AlphabetContractHash = new UInt160[0];
+        public static UInt160[] AlphabetContractHash = System.Array.Empty<UInt160>();
         public static readonly List<UInt160> Contracts = new();
         public static readonly NeoSystem TheNeoSystem;
         public static NEP6Wallet wallet;
@@ -70,7 +70,7 @@ namespace Neo.FileStorage.Tests
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             UInt160 from = Contract.GetBFTAddress(TheNeoSystem.Settings.StandbyValidators);
             UInt160 to = accounts.ToArray()[0].ScriptHash;
-            FakeSigners signers = new FakeSigners(from);
+            FakeSigners signers = new(from);
             byte[] script = NativeContract.GAS.Hash.MakeScript("transfer", from, to, 500_00000000, null);
             using var snapshot = TheNeoSystem.GetSnapshot();
             ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, container: signers, null, TheNeoSystem.Settings, 0, 2000000000);
@@ -237,8 +237,10 @@ namespace Neo.FileStorage.Tests
             //Fake IR
             script = NativeContract.RoleManagement.Hash.MakeScript("designateAsRole", Role.NeoFSAlphabetNode, ToParameter(accounts.Select(p => p.GetKey().PublicKey.ToArray()).ToArray()));
             ExecuteScript(snapshot, "FakeIR", script, NativeContract.NEO.GetCommitteeAddress(snapshot));
-            NodeInfo nodeInfo = new NodeInfo();
-            nodeInfo.PublicKey = ByteString.CopyFrom(accounts.ToArray()[0].GetKey().PublicKey.ToArray());
+            NodeInfo nodeInfo = new()
+            {
+                PublicKey = ByteString.CopyFrom(accounts.ToArray()[0].GetKey().PublicKey.ToArray())
+            };
             var rawNodeInfo = nodeInfo.ToByteArray();
             script = NetmapContractHash.MakeScript("addPeer", rawNodeInfo);
             for (int i = 0; i < accounts.Count(); i++)
@@ -248,7 +250,7 @@ namespace Neo.FileStorage.Tests
             //Fake container
             KeyPair key = accounts.ToArray()[0].GetKey();
             API.Refs.OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.ToArray().PublicKeyToScriptHash());
-            Container container = new Container()
+            Container container = new()
             {
                 Version = new API.Refs.Version(),
                 BasicAcl = 0,
@@ -265,7 +267,7 @@ namespace Neo.FileStorage.Tests
             }
             Console.WriteLine("FakeContainerID:" + containerId.ToHexString());
             //Fake eacl
-            API.Acl.EACLTable eACLTable = new API.Acl.EACLTable()
+            API.Acl.EACLTable eACLTable = new()
             {
                 ContainerId = container.CalCulateAndGetId,
                 Version = new API.Refs.Version(),
@@ -309,25 +311,6 @@ namespace Neo.FileStorage.Tests
             }
         }
 
-        private static byte[] MakeScript(UInt160 scriptHash, string operation, byte[][] args)
-        {
-            using (ScriptBuilder sb = new ScriptBuilder())
-            {
-                for (int i = args.Length - 1; i >= 0; i--)
-                {
-                    sb.EmitPush(args[i]);
-                }
-                sb.EmitPush(args.Length);
-                sb.Emit(OpCode.PACK);
-                sb.EmitPush(1);
-                sb.Emit(OpCode.PACK);
-                sb.EmitPush(operation);
-                sb.EmitPush(scriptHash);
-                sb.EmitSysCall(ApplicationEngine.System_Contract_Call);
-                return sb.ToArray();
-            }
-        }
-
         public static ContractParameter ToParameter(byte[][] args)
         {
             var array = new ContractParameter(ContractParameterType.Array);
@@ -354,10 +337,10 @@ namespace Neo.FileStorage.Tests
             {
                 nef = stream.ReadSerializable<NefFile>();
             }
-            ScriptBuilder sb = new ScriptBuilder();
+            ScriptBuilder sb = new();
             sb.EmitDynamicCall(NativeContract.ContractManagement.Hash, "deploy", nef.ToArray(), manifest.ToJson().ToString(), data);
-            Random rand = new Random();
-            Transaction tx = new Transaction
+            Random rand = new();
+            Transaction tx = new()
             {
                 Version = 0,
                 Nonce = (uint)rand.Next(),
@@ -382,7 +365,7 @@ namespace Neo.FileStorage.Tests
 
         private static void ExecuteScript(DataCache snapshot, string functionName, byte[] script, UInt160 sender)
         {
-            FakeSigners signers = new FakeSigners(sender);
+            FakeSigners signers = new(sender);
             ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, container: signers, TheNeoSystem.GenesisBlock, TheNeoSystem.Settings, 0, 2000000000);
             var faultMessage = engine.FaultException?.ToString();
             var innerMessage = engine.FaultException?.InnerException?.ToString();
@@ -407,7 +390,7 @@ namespace Neo.FileStorage.Tests
 
         public override System.Version Version => System.Version.Parse("0.0.1");
 
-        Dictionary<UInt160, WalletAccount> accounts = new Dictionary<UInt160, WalletAccount>();
+        readonly Dictionary<UInt160, WalletAccount> accounts = new();
 
         public MyWallet(string path) : base(path, ProtocolSettings.Default)
         {
@@ -430,13 +413,13 @@ namespace Neo.FileStorage.Tests
 
         public override WalletAccount CreateAccount(byte[] privateKey)
         {
-            KeyPair key = new KeyPair(privateKey);
-            Contract contract = new Contract
+            KeyPair key = new(privateKey);
+            Contract contract = new()
             {
                 Script = Contract.CreateSignatureRedeemScript(key.PublicKey),
                 ParameterList = new[] { ContractParameterType.Signature }
             };
-            MyWalletAccount account = new MyWalletAccount(contract.ScriptHash);
+            MyWalletAccount account = new(contract.ScriptHash);
             account.SetKey(key);
             account.Contract = contract;
             AddAccount(account);
@@ -445,7 +428,7 @@ namespace Neo.FileStorage.Tests
 
         public override WalletAccount CreateAccount(Contract contract, KeyPair key = null)
         {
-            MyWalletAccount account = new MyWalletAccount(contract.ScriptHash)
+            MyWalletAccount account = new(contract.ScriptHash)
             {
                 Contract = contract
             };
@@ -456,7 +439,7 @@ namespace Neo.FileStorage.Tests
 
         public override WalletAccount CreateAccount(UInt160 scriptHash)
         {
-            MyWalletAccount account = new MyWalletAccount(scriptHash);
+            MyWalletAccount account = new(scriptHash);
             AddAccount(account);
             return account;
         }

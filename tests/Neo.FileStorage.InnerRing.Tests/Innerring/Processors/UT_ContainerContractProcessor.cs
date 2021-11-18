@@ -8,11 +8,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.InnerRing.Invoker;
 using Neo.FileStorage.InnerRing.Processors;
 using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Listen.Event.Morph;
-using Neo.FileStorage.Tests;
 using Neo.IO;
 using Neo.Wallets;
 
@@ -24,7 +22,6 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
         private NeoSystem system;
         private ContainerContractProcessor processor;
         private MorphInvoker morphInvoker;
-        private MainInvoker mainInvoker;
         private Wallet wallet;
         private IActorRef actor;
         private TestState state;
@@ -35,7 +32,6 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             system = TestBlockchain.TheNeoSystem;
             wallet = TestBlockchain.wallet;
             actor = this.ActorOf(Props.Create(() => new ProcessorFakeActor()));
-            mainInvoker = TestBlockchain.CreateTestMainInvoker(system, actor, wallet);
             morphInvoker = TestBlockchain.CreateTestMorphInvoker(system, actor, wallet);
             state = new TestState() { alphabetIndex = 1 };
             processor = new ContainerContractProcessor()
@@ -52,7 +48,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
             OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.ToArray().PublicKeyToScriptHash());
-            Container container = new Container()
+            Container container = new()
             {
                 Version = new API.Refs.Version(),
                 BasicAcl = 0,
@@ -91,7 +87,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
             OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.ToArray().PublicKeyToScriptHash());
-            Container container = new Container()
+            Container container = new()
             {
                 Version = API.Refs.Version.SDKVersion(),
                 BasicAcl = 0,
@@ -167,7 +163,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
             OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.ToArray().PublicKeyToScriptHash());
-            Container container = new Container()
+            Container container = new()
             {
                 Version = new API.Refs.Version()
                 {

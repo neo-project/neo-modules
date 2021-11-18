@@ -78,7 +78,7 @@ namespace Neo.FileStorage.InnerRing.Tests
                 return;
             }
             var epoch = EpochCounter();
-            for (int i = 0; i < FileStorage.InnerRing.Settings.Default.AlphabetContractHash.Length; i++)
+            for (int i = 0; i < Settings.Default.AlphabetContractHash.Length; i++)
             {
                 try
                 {
@@ -86,7 +86,7 @@ namespace Neo.FileStorage.InnerRing.Tests
                 }
                 catch
                 {
-                    Utility.Log(Name, LogLevel.Info, string.Format("can't invoke vote method in alphabet contract,alphabet_index:{0},epoch:{1}}", i, epoch));
+                    Utility.Log(Name, LogLevel.Info, $"can't invoke vote method in alphabet contract,alphabet_index:{i},epoch:{epoch}");
                 }
             }
         }

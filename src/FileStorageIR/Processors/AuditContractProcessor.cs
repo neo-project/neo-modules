@@ -140,7 +140,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             return Select(containers.ToArray(), epoch, (ulong)ind, (ulong)irSize);
         }
 
-        private ContainerID[] Select(ContainerID[] containIds, ulong epoch, ulong index, ulong size)
+        private static ContainerID[] Select(ContainerID[] containIds, ulong epoch, ulong index, ulong size)
         {
             ulong a;
             ulong b = 0;

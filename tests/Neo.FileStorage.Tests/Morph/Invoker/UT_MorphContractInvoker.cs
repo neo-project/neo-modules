@@ -64,8 +64,10 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
         public void InvokeAddPeerTest()
         {
             var key = wallet.GetAccounts().ToArray()[0].GetKey().PublicKey;
-            NodeInfo nodeInfo = new NodeInfo();
-            nodeInfo.PublicKey = ByteString.CopyFrom(key.ToArray());
+            NodeInfo nodeInfo = new()
+            {
+                PublicKey = ByteString.CopyFrom(key.ToArray())
+            };
             invoker.AddPeer(nodeInfo);
         }
 
@@ -236,7 +238,7 @@ namespace Neo.FileStorage.Tests.Morph.Invoker
                 Version = new API.Refs.Version(),
             };
             eACLTable.Records.Add(new API.Acl.EACLRecord());
-            byte[] sig = key.PrivateKey.LoadPrivateKey().SignRFC6979(eACLTable.ToByteArray());
+            _ = key.PrivateKey.LoadPrivateKey().SignRFC6979(eACLTable.ToByteArray());
             EAclWithSignature result = invoker.GetEACL(container.CalCulateAndGetId);
             Assert.IsNotNull(result);
             Assert.AreEqual(result.Table.ToByteArray().ToHexString(), eACLTable.ToByteArray().ToHexString());

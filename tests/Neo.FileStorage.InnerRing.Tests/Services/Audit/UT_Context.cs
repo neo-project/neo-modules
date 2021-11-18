@@ -7,7 +7,6 @@ using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Audit;
-using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Cryptography.Tz;
 using Neo.FileStorage.API.Netmap;
@@ -154,7 +153,7 @@ namespace Neo.FileStorage.InnerRing.Tests.Services.Audit
         [TestMethod]
         public void AuditResultSerialize()
         {
-            var r = DataAuditResult.Parser.ParseFrom(new byte[0]);
+            var r = DataAuditResult.Parser.ParseFrom(Array.Empty<byte>());
             Assert.IsNotNull(r);
             Assert.IsNull(r.ContainerId);
         }

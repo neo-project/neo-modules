@@ -64,8 +64,8 @@ namespace Neo.FileStorage.InnerRing
         public List<UInt160> Contracts = new();
 
         public MorphInvoker MorphInvoker;
-        private uint DefaultEpochDuration;
-        private ulong DefaultAuditFee;
+        private readonly uint DefaultEpochDuration;
+        private readonly ulong DefaultAuditFee;
         public ulong DefaultBasicIncomeRate;
 
         public uint EpochDuration => (!IsDebug && (MorphInvoker is not null)) ? MorphInvoker.EpochDuration() : DefaultEpochDuration;

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -6,13 +5,9 @@ using System.Linq;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.FileStorage.Database;
-using Neo.FileStorage.Database.LevelDB;
 using Neo.FileStorage.InnerRing.Utils.Locode;
 using Neo.FileStorage.InnerRing.Utils.Locode.Column;
 using Neo.FileStorage.InnerRing.Utils.Locode.Db;
-using Neo.FileStorage.Utils;
-using Neo.IO;
 
 namespace Neo.FileStorage.InnerRing.Tests.Util.Locode
 {
@@ -87,12 +82,10 @@ namespace Neo.FileStorage.InnerRing.Tests.Util.Locode
             {
                 HasHeaderRecord = false,
             };
-            using (var reader = new StreamReader("./Resources/countries.dat"))
-            using (var csv = new CsvReader(reader, config))
-            {
-                var records = csv.GetRecords<AirportsDB.Country>();
-                Assert.AreEqual(records.Count(), 261);
-            }
+            using var reader = new StreamReader("./Resources/countries.dat");
+            using var csv = new CsvReader(reader, config);
+            var records = csv.GetRecords<AirportsDB.Country>();
+            Assert.AreEqual(records.Count(), 261);
         }
 
         [TestMethod]
