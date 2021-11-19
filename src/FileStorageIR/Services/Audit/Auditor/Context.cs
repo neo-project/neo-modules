@@ -16,7 +16,7 @@ namespace Neo.FileStorage.InnerRing.Services.Audit.Auditor
         public AuditTask AuditTask;
         public IActorRef PorPool { get; init; }
         public IActorRef PdpPool { get; init; }
-        public ulong MaxPDPInterval;//MillisecondsTimeout
+        public uint MaxPDPInterval;//MillisecondsTimeout
         private Report report;
         private readonly ConcurrentDictionary<string, ShortHeader> HeaderCache = new();
         private readonly List<GamePair> pairs = new();

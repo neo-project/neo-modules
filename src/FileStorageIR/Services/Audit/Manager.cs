@@ -15,13 +15,13 @@ namespace Neo.FileStorage.InnerRing.Services.Audit
         public class CompleteTask { }
         private readonly int taskQueueCapacity = DefaultCapacity;
         private readonly IContainerCommunicator communicator;
-        private readonly ulong maxPDPIntervalMilliseconds;
+        private readonly uint maxPDPIntervalMilliseconds;
         private readonly Queue<AuditTask> taskQueue;
         private readonly IActorRef workPool;
         private readonly Func<IActorRef> porPoolGenerator;
         private readonly Func<IActorRef> pdpPoolGenerator;
 
-        public Manager(int capacity, IActorRef wp, Func<IActorRef> por_pool_generator, Func<IActorRef> pdp_pool_generator, IContainerCommunicator container_communicator, ulong max_pdp_interval)
+        public Manager(int capacity, IActorRef wp, Func<IActorRef> por_pool_generator, Func<IActorRef> pdp_pool_generator, IContainerCommunicator container_communicator, uint max_pdp_interval)
         {
             taskQueueCapacity = capacity;
             taskQueue = new Queue<AuditTask>(taskQueueCapacity);
@@ -89,7 +89,7 @@ namespace Neo.FileStorage.InnerRing.Services.Audit
             return count;
         }
 
-        public static Props Props(int capacity, IActorRef wp, Func<IActorRef> por_pool_generator, Func<IActorRef> pdp_pool_generator, IContainerCommunicator container_communicator, ulong max_pdp_interval)
+        public static Props Props(int capacity, IActorRef wp, Func<IActorRef> por_pool_generator, Func<IActorRef> pdp_pool_generator, IContainerCommunicator container_communicator, uint max_pdp_interval)
         {
             return Akka.Actor.Props.Create(() => new Manager(capacity, wp, por_pool_generator, pdp_pool_generator, container_communicator, max_pdp_interval));
         }

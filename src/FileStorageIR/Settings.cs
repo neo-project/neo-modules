@@ -36,7 +36,7 @@ namespace Neo.FileStorage.InnerRing
 
         public int PdpPoolSize;
         public int PorPoolSize;
-        public ulong MaxPDPSleepInterval;
+        public uint MaxPDPSleepInterval;
         public int QueueCapacity;
         public int AuditTaskPoolSize;
 
@@ -136,7 +136,7 @@ namespace Neo.FileStorage.InnerRing
             RangeTimeout = audit.GetSection("Timeout").GetValue("RangeHash", 5000);
             PdpPoolSize = audit.GetSection("POR").GetValue("PoolSize", 10);
             PorPoolSize = audit.GetSection("PDP").GetValue("PoolSize", 10);
-            MaxPDPSleepInterval = audit.GetSection("PDP").GetValue("MaxSleepInterval", 5000ul);
+            MaxPDPSleepInterval = audit.GetSection("PDP").GetValue("MaxSleepInterval", 5000u);
             QueueCapacity = audit.GetSection("Task").GetValue("QueueCapacity", 100);
             AuditTaskPoolSize = audit.GetSection("Task").GetValue("PoolSize", 10);
 

@@ -83,7 +83,7 @@ namespace Neo.FileStorage.Tests.Services.Audit
         [TestInitialize]
         public void TestSetup()
         {
-            ulong interval = 5000;
+            const uint interval = 5000;
             IActorRef wp = Sys.ActorOf(WorkerPool.Props("Audit", ManagerCapacity));
             IActorRef mw = Sys.ActorOf(Props.Create(() => new Middleware(TestActor, wp)));
             manager = Sys.ActorOf(Manager.Props(ManagerCapacity, mw, () =>

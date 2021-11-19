@@ -90,7 +90,7 @@ namespace Neo.FileStorage.InnerRing.Services.Audit.Auditor
             pair.Hashes1 = new List<byte[]>(pair.Range1.Count);
             foreach (var range in pair.Range1)
             {
-                Thread.Sleep((int)RandomUInt64(MaxPDPInterval));
+                Thread.Sleep((int)RandomUInt32(MaxPDPInterval));
                 try
                 {
                     var hash = ContainerCommunacator.GetRangeHash(AuditTask, pair.N1, pair.Id, range);
@@ -105,7 +105,7 @@ namespace Neo.FileStorage.InnerRing.Services.Audit.Auditor
             pair.Hashes2 = new List<byte[]>(pair.Range2.Count);
             foreach (var range in pair.Range2)
             {
-                Thread.Sleep((int)RandomUInt64(MaxPDPInterval));
+                Thread.Sleep((int)RandomUInt32(MaxPDPInterval));
                 try
                 {
                     var hash = ContainerCommunacator.GetRangeHash(AuditTask, pair.N2, pair.Id, range);

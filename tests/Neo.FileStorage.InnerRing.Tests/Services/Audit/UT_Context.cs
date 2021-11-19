@@ -68,7 +68,7 @@ namespace Neo.FileStorage.InnerRing.Tests.Services.Audit
         {
             var key = "L4kWTNckyaWn2QdUrACCJR1qJNgFFGhTCy63ERk7ZK3NvBoXap6t".LoadWif();
             int cap = 3;
-            ulong max_pdp_internal = 3000;
+            const uint max_pdp_internal = 3000;
             FSContainer container = new()
             {
                 Version = API.Refs.Version.SDKVersion(),
