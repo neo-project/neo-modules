@@ -3,7 +3,6 @@ using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
-using Neo.Plugins.Trackers.NEP_11;
 using Neo.VM.Types;
 using Neo.Wallets;
 using System;
@@ -11,10 +10,13 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using Array = Neo.VM.Types.Array;
 
 namespace Neo.Plugins.Trackers
 {
+    record TransferRecord(UInt160 asset, UInt160 from, UInt160 to, ByteString tokenId, BigInteger amount);
+
     abstract class TrackerBase
     {
         protected bool _shouldTrackHistory;
@@ -113,15 +115,12 @@ namespace Neo.Plugins.Trackers
 
             var from = fromBytes == null ? UInt160.Zero : new UInt160(fromBytes);
             var to = toBytes == null ? UInt160.Zero : new UInt160(toBytes);
-            if (stateItems.Count == 3)
+            return stateItems.Count switch
             {
-                return new TransferRecord(asset, from, to, null, amountItem.GetInteger());
-            }
-            if (stateItems.Count == 4 && (stateItems[3] is ByteString tokenId))
-            {
-                return new TransferRecord(asset, from, to, tokenId, amountItem.GetInteger());
-            }
-            return null;
+                3 => new TransferRecord(asset, @from, to, null, amountItem.GetInteger()),
+                4 when (stateItems[3] is ByteString tokenId) => new TransferRecord(asset, @from, to, tokenId, amountItem.GetInteger()),
+                _ => null
+            };
         }
 
         protected JObject ToJson(TokenTransferKey key, TokenTransfer value)

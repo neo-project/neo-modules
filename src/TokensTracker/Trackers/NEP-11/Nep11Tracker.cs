@@ -15,8 +15,6 @@ using Array = Neo.VM.Types.Array;
 
 namespace Neo.Plugins.Trackers.NEP_11
 {
-    record TransferRecord(UInt160 asset, UInt160 from, UInt160 to, ByteString tokenId, BigInteger amount);
-
     class Nep11Tracker : TrackerBase
     {
         private const byte Nep11BalancePrefix = 0xf8;
