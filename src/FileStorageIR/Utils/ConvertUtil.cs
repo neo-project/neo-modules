@@ -9,7 +9,7 @@ namespace Neo.FileStorage.InnerRing.Utils
         public uint TargetPrecision;
         public BigInteger Factor;
 
-        private BigInteger Convert(BigInteger n, BigInteger factor, bool decreasePrecision)
+        private static BigInteger Convert(BigInteger n, BigInteger factor, bool decreasePrecision)
         {
             if (decreasePrecision)
                 return BigInteger.Divide(n, factor);

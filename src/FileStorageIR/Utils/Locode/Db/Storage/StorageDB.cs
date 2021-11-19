@@ -41,7 +41,7 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode.Db
             _db.Put(Key(PreLocode, key), record.ToArray());
         }
 
-        private byte[] Key(byte prefix, ISerializable key)
+        private static byte[] Key(byte prefix, ISerializable key)
         {
             byte[] buffer = new byte[key.Size + 1];
             using (MemoryStream ms = new(buffer, true))
@@ -57,7 +57,7 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode.Db
         {
             table.IterateAll(tableRecord =>
             {
-                if (tableRecord.LOCODE.LocationCode() == "")
+                if (tableRecord.LOCODE.LocationCode == "")
                     return;
                 Key dbKey = new(tableRecord.LOCODE);
                 Record dbRecord = new(tableRecord);

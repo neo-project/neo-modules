@@ -1,31 +1,29 @@
 using System;
-using Akka.Util.Internal;
 
 namespace Neo.FileStorage.InnerRing.Utils.Locode.Column
 {
     public class LOCODE
     {
-        private string[] values = new string[2];
+        public readonly string CountryCode;
+        public readonly string LocationCode;
 
-        public LOCODE(string[] values)
+        public LOCODE(string countryCode, string locationCode)
         {
-            this.values = values;
+            this.CountryCode = countryCode;
+            this.LocationCode = locationCode;
         }
-
-        public string CountryCode() { return values[0]; }
-        public string LocationCode() { return values[1]; }
 
         public static LOCODE FromString(string s)
         {
             string locationSeparator = " ";
             string[] words = s.Split(locationSeparator);
             if (words.Length != 1 && words.Length != 2) throw new FormatException("invalid string format in UN/Locode");
-            return new LOCODE(words);
+            return new LOCODE(words[0], words[1]);
         }
 
         public override string ToString()
         {
-            return values.Join(" ");
+            return CountryCode + " " + LocationCode;
         }
     }
 }

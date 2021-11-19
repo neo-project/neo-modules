@@ -88,10 +88,10 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode.Db
         public AirportRecord Get(LocodeRecord locodeRecord)
         {
             InitAirports();
-            List<Record> records = mAirports[locodeRecord.LOCODE.CountryCode()];
+            List<Record> records = mAirports[locodeRecord.LOCODE.CountryCode];
             foreach (var record in records)
             {
-                if (locodeRecord.LOCODE.LocationCode() != record.Iata && locodeRecord.NameWoDiacritics != record.City) continue;
+                if (locodeRecord.LOCODE.LocationCode != record.Iata && locodeRecord.NameWoDiacritics != record.City) continue;
                 return new()
                 {
                     CountryName = record.Country,

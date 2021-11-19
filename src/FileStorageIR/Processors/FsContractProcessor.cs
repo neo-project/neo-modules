@@ -25,11 +25,11 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         private const string TxLogPrefix = "mainnet:";
         private const ulong LockAccountLifetime = 20;
-        private readonly object lockObj = new object();
-        private int MintEmitCacheSize => Settings.Default.MintEmitCacheSize;
-        private ulong MintEmitThreshold => Settings.Default.MintEmitThreshold;
-        private long GasBalanceThreshold => Settings.Default.GasBalanceThreshold;
-        private long MintEmitValue = Settings.Default.MintEmitValue;
+        private readonly object lockObj = new();
+        private static int MintEmitCacheSize => Settings.Default.MintEmitCacheSize;
+        private static ulong MintEmitThreshold => Settings.Default.MintEmitThreshold;
+        private static long GasBalanceThreshold => Settings.Default.GasBalanceThreshold;
+        private readonly long MintEmitValue = Settings.Default.MintEmitValue;
         private readonly LRUCache<string, ulong> mintEmitCache;
 
         public Fixed8ConverterUtil Convert;

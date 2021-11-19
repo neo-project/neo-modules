@@ -7,7 +7,7 @@ namespace Neo.FileStorage.InnerRing.Timer
     {
         public static BlockTimer NewEpochTimer(EpochTimerArgs args)
         {
-            BlockTimer epochTimer = new BlockTimer(BlockTimer.StaticBlockMeter(Settings.Default.EpochDuration), () => { args.Processor.HandleNewEpochTick(); });
+            BlockTimer epochTimer = new(BlockTimer.StaticBlockMeter(Settings.Default.EpochDuration), () => { args.Processor.HandleNewEpochTick(); });
             epochTimer.Delta(
                 args.StopEstimationDMul,
                 args.StopEstimationDDiv,

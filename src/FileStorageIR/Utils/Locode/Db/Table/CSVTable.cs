@@ -84,7 +84,7 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode
                 LocodeRecord lr = new()
                 {
                     Ch = ur.Ch,
-                    LOCODE = new(new string[] { ur.CountryCode, ur.LocationCode }),
+                    LOCODE = new(ur.CountryCode, ur.LocationCode),
                     Name = ur.Name,
                     NameWoDiacritics = ur.NameWoDiacritics,
                     SubDiv = ur.SubDiv,

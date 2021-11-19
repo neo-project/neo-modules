@@ -120,7 +120,7 @@ namespace Neo.FileStorage.InnerRing
             innerRingService.Tell(new InnerRingService.Start() { });
         }
 
-        private IEnumerable<Block> GetBlocksFromFile(NeoSystem system)
+        private static IEnumerable<Block> GetBlocksFromFile(NeoSystem system)
         {
             string pathAcc = ChainDataFileName;
             if (File.Exists(pathAcc))
@@ -160,7 +160,7 @@ namespace Neo.FileStorage.InnerRing
             }
         }
 
-        private IEnumerable<Block> GetBlocks(NeoSystem system, Stream stream, bool read_start = false)
+        private static IEnumerable<Block> GetBlocks(NeoSystem system, Stream stream, bool read_start = false)
         {
             using BinaryReader r = new(stream);
             uint start = read_start ? r.ReadUInt32() : 0;

@@ -170,7 +170,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             return result.ToArray();
         }
 
-        private ECPoint[] UpdateInnerRing(ECPoint[] innerRing, ECPoint[] before, ECPoint[] after)
+        private static ECPoint[] UpdateInnerRing(ECPoint[] innerRing, ECPoint[] before, ECPoint[] after)
         {
             if (before.Length != after.Length) throw new InvalidOperationException("old and new alphabet lists have different length");
             var result = new List<ECPoint>();

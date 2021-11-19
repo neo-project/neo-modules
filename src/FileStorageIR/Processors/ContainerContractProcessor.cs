@@ -258,12 +258,12 @@ namespace Neo.FileStorage.InnerRing.Processors
             return c;
         }
 
-        public void CheckTokenContext(SessionToken token, Func<ContainerSessionContext, bool> verbAssert)
+        public static void CheckTokenContext(SessionToken token, Func<ContainerSessionContext, bool> verbAssert)
         {
             ContextWithVerifiedVerb(token, verbAssert);
         }
 
-        public void CheckTokenContextWithCID(SessionToken token, ContainerID id, Func<ContainerSessionContext, bool> verbAssert)
+        public static void CheckTokenContextWithCID(SessionToken token, ContainerID id, Func<ContainerSessionContext, bool> verbAssert)
         {
             var c = ContextWithVerifiedVerb(token, verbAssert);
             var tokCID = c.ContainerId;

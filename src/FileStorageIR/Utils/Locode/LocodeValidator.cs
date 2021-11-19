@@ -49,8 +49,8 @@ namespace Neo.FileStorage.InnerRing.Utils.Locode
             }
         }
 
-        private Dictionary<string, AttrDescriptor> mAttr;
-        private StorageDB dB;
+        private readonly Dictionary<string, AttrDescriptor> mAttr;
+        private readonly StorageDB dB;
 
         public LocodeValidator(StorageDB dB)
         {

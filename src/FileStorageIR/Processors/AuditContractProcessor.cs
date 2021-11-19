@@ -22,7 +22,7 @@ namespace Neo.FileStorage.InnerRing.Processors
     public class AuditContractProcessor : BaseProcessor, IDisposable
     {
         public override string Name => "AuditContractProcessor";
-        public int SearchTimeout => Settings.Default.SearchTimeout;
+        public static int SearchTimeout => Settings.Default.SearchTimeout;
         public IActorRef TaskManager;
         public CancellationTokenSource PrevAuditCanceler = new();
         public IFSClientCache ClientCache;

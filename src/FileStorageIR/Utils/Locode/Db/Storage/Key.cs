@@ -13,8 +13,8 @@ namespace Neo.FileStorage.InnerRing.Utils
 
         public Key(LOCODE lc)
         {
-            CountryCode = CountryCode.CountryCodeFromString(lc.CountryCode());
-            LocationCode = LocationCode.LocationCodeFromString(lc.LocationCode());
+            CountryCode = CountryCode.CountryCodeFromString(lc.CountryCode);
+            LocationCode = LocationCode.LocationCodeFromString(lc.LocationCode);
         }
 
         public int Size => CountryCode.CountryCodeLen + LocationCode.LocationCodeLen;

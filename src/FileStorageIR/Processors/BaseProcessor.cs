@@ -13,13 +13,13 @@ namespace Neo.FileStorage.InnerRing.Processors
         public static readonly BigInteger BigOne = new(1);
 
         public virtual string Name => "BaseProcessor";
-        public UInt160 ContainerContractHash => Settings.Default.ContainerContractHash;
-        public UInt160 FsContractHash => Settings.Default.FsContractHash;
-        public UInt160 BalanceContractHash => Settings.Default.BalanceContractHash;
-        public UInt160 NetmapContractHash => Settings.Default.NetmapContractHash;
-        public UInt160 FsIdContractHash => Settings.Default.FsIdContractHash;
-        public UInt160 AuditContractHash => Settings.Default.AuditContractHash;
-        public UInt160 ReputationContractHash => Settings.Default.AuditContractHash;
+        public static UInt160 ContainerContractHash => Settings.Default.ContainerContractHash;
+        public static UInt160 FsContractHash => Settings.Default.FsContractHash;
+        public static UInt160 BalanceContractHash => Settings.Default.BalanceContractHash;
+        public static UInt160 NetmapContractHash => Settings.Default.NetmapContractHash;
+        public static UInt160 FsIdContractHash => Settings.Default.FsIdContractHash;
+        public static UInt160 AuditContractHash => Settings.Default.AuditContractHash;
+        public static UInt160 ReputationContractHash => Settings.Default.AuditContractHash;
 
         public MainInvoker MainInvoker;
         public MorphInvoker MorphInvoker;
