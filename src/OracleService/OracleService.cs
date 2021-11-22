@@ -17,9 +17,8 @@ using Neo.Wallets;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,6 +28,12 @@ namespace Neo.Plugins
     public class OracleService : Plugin, IPersistencePlugin
     {
         private const int RefreshIntervalMilliSeconds = 1000 * 60 * 3;
+
+        private static readonly HttpClient httpClient = new()
+        {
+            Timeout = TimeSpan.FromSeconds(5),
+            MaxResponseContentBufferSize = ushort.MaxValue
+        };
 
         private Wallet wallet;
         private readonly ConcurrentDictionary<ulong, OracleTask> pendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
@@ -225,18 +230,8 @@ namespace Neo.Plugins
         {
             try
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.Method = "POST";
-                request.ContentType = "application/json";
-                request.Timeout = 5000;
-                using (StreamWriter dataStream = new StreamWriter(await request.GetRequestStreamAsync()))
-                {
-                    await dataStream.WriteAsync(content);
-                }
-                HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync();
-                if (response.ContentLength > ushort.MaxValue) throw new Exception("The response it's bigger than allowed");
-                StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-                await reader.ReadToEndAsync();
+                using HttpResponseMessage response = await httpClient.PostAsync(url, new StringContent(content, Encoding.UTF8, "application/json"));
+                response.EnsureSuccessStatusCode();
             }
             catch (Exception e)
             {

@@ -31,6 +31,7 @@ namespace Neo.Plugins
             public override WalletAccount CreateAccount(byte[] privateKey) => null;
             public override WalletAccount CreateAccount(Contract contract, KeyPair key = null) => null;
             public override WalletAccount CreateAccount(UInt160 scriptHash) => null;
+            public override void Delete() { }
             public override bool DeleteAccount(UInt160 scriptHash) => false;
             public override WalletAccount GetAccount(UInt160 scriptHash) => null;
             public override IEnumerable<WalletAccount> GetAccounts() => Array.Empty<WalletAccount>();
