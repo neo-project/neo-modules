@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
+using Google.Protobuf;
 using Google.Protobuf.Collections;
 using Neo.Cryptography.ECC;
 using Neo.FileStorage.InnerRing.Events;
@@ -226,7 +227,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 Utility.Log(Name, LogLevel.Info, $"approving network map candidate, key={key}");
                 try
                 {
-                    MorphInvoker.ApprovePeer(addPeerEvent.Node);
+                    MorphInvoker.ApprovePeer(nodeInfo.ToByteArray());
                 }
                 catch (Exception e)
                 {
