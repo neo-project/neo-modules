@@ -12,6 +12,7 @@ using Neo.Wallets;
 using System;
 using System.IO;
 using System.Linq;
+using Neo.IO.Caching;
 
 namespace Neo.Plugins
 {
@@ -77,7 +78,7 @@ namespace Neo.Plugins
             {
                 json["diagnostics"] = new JObject()
                 {
-                    ["invokedcontracts"] = engine.Diagnostic.InvocationTree.GetItems().Distinct().Select(v => (JString)v.ToString()).ToArray()
+                    ["invokedcontracts"] = ToJson(engine.Diagnostic.InvocationTree.Root)
                 };
             }
             try
@@ -91,6 +92,17 @@ namespace Neo.Plugins
             if (engine.State != VMState.FAULT)
             {
                 ProcessInvokeWithWallet(json, signers);
+            }
+            return json;
+        }
+
+        private static JObject ToJson(TreeNode<UInt160> node)
+        {
+            JObject json = new();
+            json["hash"] = node.Item.ToString();
+            if (node.Children.Any())
+            {
+                json["call"] = new JArray(node.Children.Select(ToJson));
             }
             return json;
         }
