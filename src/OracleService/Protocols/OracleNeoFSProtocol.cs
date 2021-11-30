@@ -60,7 +60,7 @@ namespace Neo.Plugins
         /// <param name="host">Client host.</param>
         /// <param name="cancellation">Cancellation token object.</param>
         /// <returns>Returns neofs object.</returns>
-        private Task<string> GetAsync(Uri uri, string host, CancellationToken cancellation)
+        private async Task<string> GetAsync(Uri uri, string host, CancellationToken cancellation)
         {
             string[] ps = uri.AbsolutePath.Split("/");
             if (ps.Length < 2) throw new FormatException("Invalid neofs url");
@@ -75,14 +75,14 @@ namespace Neo.Plugins
             var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
             tokenSource.CancelAfter(Settings.Default.NeoFS.Timeout);
             if (ps.Length == 2)
-                return GetPayloadAsync(client, objectAddr, tokenSource.Token);
-            return ps[2] switch
+                return await GetPayloadAsync(client, objectAddr, tokenSource.Token);
+            return await (ps[2] switch
             {
                 "range" => GetRangeAsync(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
                 "header" => GetHeaderAsync(client, objectAddr, tokenSource.Token),
                 "hash" => GetHashAsync(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
                 _ => throw new Exception("invalid command")
-            };
+            });
         }
 
         private static async Task<string> GetPayloadAsync(Client client, Address addr, CancellationToken cancellation)
