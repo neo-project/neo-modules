@@ -11,7 +11,7 @@ namespace Neo.Plugins.Trackers
 
         int ISerializable.Size =>
             Balance.GetVarSize() +    // Balance
-            sizeof(uint);               // LastUpdatedBlock
+            sizeof(uint);             // LastUpdatedBlock
 
         void ISerializable.Serialize(BinaryWriter writer)
         {

@@ -42,14 +42,7 @@ namespace Neo.Plugins.Trackers.NEP_17
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                var hashCode = UserScriptHash.GetHashCode();
-                hashCode = (hashCode * 397) ^ TimestampMS.GetHashCode();
-                hashCode = (hashCode * 397) ^ AssetScriptHash.GetHashCode();
-                hashCode = (hashCode * 397) ^ BlockXferNotificationIndex.GetHashCode();
-                return hashCode;
-            }
+            return HashCode.Combine(UserScriptHash.GetHashCode(), TimestampMS.GetHashCode(), AssetScriptHash.GetHashCode(), BlockXferNotificationIndex.GetHashCode());
         }
     }
 }

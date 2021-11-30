@@ -51,29 +51,13 @@ namespace Neo.Plugins.Trackers.NEP_11
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                var hashCode = UserScriptHash.GetHashCode();
-                hashCode = (hashCode * 397) ^ TimestampMS.GetHashCode();
-                hashCode = (hashCode * 397) ^ AssetScriptHash.GetHashCode();
-                hashCode = (hashCode * 397) ^ BlockXferNotificationIndex.GetHashCode();
-                hashCode = (hashCode * 397) ^ Token.GetHashCode();
-                return hashCode;
-            }
+            return HashCode.Combine(UserScriptHash.GetHashCode(), TimestampMS.GetHashCode(), AssetScriptHash.GetHashCode(), BlockXferNotificationIndex.GetHashCode(), Token.GetHashCode());
         }
 
         public override void Serialize(BinaryWriter writer)
         {
-            try
-            {
-                base.Serialize(writer);
-                writer.WriteVarBytes(Token.GetSpan());
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            base.Serialize(writer);
+            writer.WriteVarBytes(Token.GetSpan());
         }
 
         public override void Deserialize(BinaryReader reader)

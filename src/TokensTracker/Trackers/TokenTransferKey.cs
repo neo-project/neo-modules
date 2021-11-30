@@ -12,7 +12,6 @@ namespace Neo.Plugins.Trackers
         public UInt160 AssetScriptHash { get; protected set; }
         public uint BlockXferNotificationIndex { get; protected set; }
 
-
         public TokenTransferKey(UInt160 userScriptHash, ulong timestamp, UInt160 assetScriptHash, uint xferIndex)
         {
             if (userScriptHash is null || assetScriptHash is null)
@@ -42,6 +41,6 @@ namespace Neo.Plugins.Trackers
               UInt160.Length +    //UserScriptHash
               sizeof(ulong) +     //TimestampMS
               UInt160.Length +    //AssetScriptHash
-              sizeof(uint);     //BlockXferNotificationIndex
+              sizeof(uint);       //BlockXferNotificationIndex
     }
 }

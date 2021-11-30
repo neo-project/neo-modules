@@ -46,12 +46,7 @@ namespace Neo.Plugins.Trackers.NEP_17
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                var hashCode = UserScriptHash.GetHashCode();
-                hashCode = (hashCode * 397) ^ AssetScriptHash.GetHashCode();
-                return hashCode;
-            }
+            return HashCode.Combine(UserScriptHash.GetHashCode(), AssetScriptHash.GetHashCode());
         }
 
         public void Serialize(BinaryWriter writer)

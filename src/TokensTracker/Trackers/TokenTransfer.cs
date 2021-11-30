@@ -15,7 +15,7 @@ namespace Neo.Plugins.Trackers
             UInt160.Length +        // UserScriptHash
             sizeof(uint) +          // BlockIndex
             UInt256.Length +        // TxHash
-            Amount.GetVarSize();  // Amount
+            Amount.GetVarSize();    // Amount
 
         void ISerializable.Serialize(BinaryWriter writer)
         {
