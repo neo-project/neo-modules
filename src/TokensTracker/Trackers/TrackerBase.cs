@@ -1,3 +1,9 @@
+using System;
+using System.Buffers.Binary;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Numerics;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Ledger;
@@ -5,12 +11,6 @@ using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.VM.Types;
 using Neo.Wallets;
-using System;
-using System.Buffers.Binary;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Numerics;
 using Array = Neo.VM.Types.Array;
 
 namespace Neo.Plugins.Trackers
@@ -69,8 +69,8 @@ namespace Neo.Plugins.Trackers
         protected static byte[] Key(byte prefix, ISerializable key)
         {
             byte[] buffer = new byte[key.Size + 1];
-            using (MemoryStream ms = new MemoryStream(buffer, true))
-            using (BinaryWriter writer = new BinaryWriter(ms))
+            using (MemoryStream ms = new(buffer, true))
+            using (BinaryWriter writer = new(ms))
             {
                 writer.Write(prefix);
                 key.Serialize(writer);
@@ -125,7 +125,7 @@ namespace Neo.Plugins.Trackers
 
         protected JObject ToJson(TokenTransferKey key, TokenTransfer value)
         {
-            JObject transfer = new JObject();
+            JObject transfer = new();
             transfer["timestamp"] = key.TimestampMS;
             transfer["assethash"] = key.AssetScriptHash.ToString();
             transfer["transferaddress"] = value.UserScriptHash == UInt160.Zero ? null : value.UserScriptHash.ToAddress(_neoSystem.Settings.AddressVersion);

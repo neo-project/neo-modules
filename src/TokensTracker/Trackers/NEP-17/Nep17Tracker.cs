@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
@@ -7,15 +11,11 @@ using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.VM.Types;
 using Neo.Wallets;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
 using Array = Neo.VM.Types.Array;
 
 namespace Neo.Plugins.Trackers.NEP_17
 {
-    record BalanceChangeRecord(UInt160 user, UInt160 asset);
+    record BalanceChangeRecord(UInt160 User, UInt160 Asset);
 
     class Nep17Tracker : TrackerBase
     {
@@ -42,7 +42,7 @@ namespace Neo.Plugins.Trackers.NEP_17
                 if (appExecuted.VMState.HasFlag(VMState.FAULT)) continue;
                 foreach (var notifyEventArgs in appExecuted.Notifications)
                 {
-                    if (notifyEventArgs.EventName != "Transfer" || !(notifyEventArgs?.State is Array stateItems) || stateItems.Count == 0)
+                    if (notifyEventArgs.EventName != "Transfer" || notifyEventArgs?.State is not Array stateItems || stateItems.Count == 0)
                         continue;
                     var contract = NativeContract.ContractManagement.GetContract(snapshot, notifyEventArgs.ScriptHash);
                     if (contract?.Manifest.SupportedStandards.Contains("NEP-17") == true)
@@ -99,21 +99,21 @@ namespace Neo.Plugins.Trackers.NEP_17
 
         private void SaveNep17Balance(BalanceChangeRecord balanceChanged, DataCache snapshot)
         {
-            var key = new Nep17BalanceKey(balanceChanged.user, balanceChanged.asset);
-            using ScriptBuilder sb = new ScriptBuilder();
-            sb.EmitDynamicCall(balanceChanged.asset, "balanceOf", balanceChanged.user);
+            var key = new Nep17BalanceKey(balanceChanged.User, balanceChanged.Asset);
+            using ScriptBuilder sb = new();
+            sb.EmitDynamicCall(balanceChanged.Asset, "balanceOf", balanceChanged.User);
             using ApplicationEngine engine = ApplicationEngine.Run(sb.ToArray(), snapshot, settings: _neoSystem.Settings);
 
             if (engine.State.HasFlag(VMState.FAULT) || engine.ResultStack.Count == 0)
             {
-                Console.WriteLine($"Fault:{balanceChanged.user} get {balanceChanged.asset} balance fault", LogLevel.Warning);
+                Console.WriteLine($"Fault:{balanceChanged.User} get {balanceChanged.Asset} balance fault", LogLevel.Warning);
                 return;
             }
 
             var balanceItem = engine.ResultStack.Pop();
             if (balanceItem is not Integer)
             {
-                Console.WriteLine($"Fault:{balanceChanged.user} get {balanceChanged.asset} balance not number", LogLevel.Warning);
+                Console.WriteLine($"Fault:{balanceChanged.User} get {balanceChanged.Asset} balance not number", LogLevel.Warning);
                 return;
             }
 
@@ -141,11 +141,11 @@ namespace Neo.Plugins.Trackers.NEP_17
 
             if (endTime < startTime) throw new RpcException(-32602, "Invalid params");
 
-            JObject json = new JObject();
+            JObject json = new();
             json["address"] = userScriptHash.ToAddress(_neoSystem.Settings.AddressVersion);
-            JArray transfersSent = new JArray();
+            JArray transfersSent = new();
             json["sent"] = transfersSent;
-            JArray transfersReceived = new JArray();
+            JArray transfersReceived = new();
             json["received"] = transfersReceived;
             AddNep17Transfers(Nep17TransferSentPrefix, userScriptHash, startTime, endTime, transfersSent);
             AddNep17Transfers(Nep17TransferReceivedPrefix, userScriptHash, startTime, endTime, transfersReceived);
@@ -157,8 +157,8 @@ namespace Neo.Plugins.Trackers.NEP_17
         {
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
 
-            JObject json = new JObject();
-            JArray balances = new JArray();
+            JObject json = new();
+            JArray balances = new();
             json["address"] = userScriptHash.ToAddress(_neoSystem.Settings.AddressVersion);
             json["balance"] = balances;
 

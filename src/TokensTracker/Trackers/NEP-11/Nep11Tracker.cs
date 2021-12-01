@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
@@ -7,10 +11,6 @@ using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.VM.Types;
 using Neo.Wallets;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
 using Array = Neo.VM.Types.Array;
 
 namespace Neo.Plugins.Trackers.NEP_11
@@ -40,14 +40,14 @@ namespace Neo.Plugins.Trackers.NEP_11
             _currentBlock = block;
             _currentHeight = block.Index;
             uint nep11TransferIndex = 0;
-            var transfers = new List<TransferRecord>();
+            List<TransferRecord> transfers = new();
             foreach (Blockchain.ApplicationExecuted appExecuted in applicationExecutedList)
             {
                 // Executions that fault won't modify storage, so we can skip them.
                 if (appExecuted.VMState.HasFlag(VMState.FAULT)) continue;
                 foreach (var notifyEventArgs in appExecuted.Notifications)
                 {
-                    if (notifyEventArgs.EventName != "Transfer" || !(notifyEventArgs?.State is Array stateItems) ||
+                    if (notifyEventArgs.EventName != "Transfer" || notifyEventArgs?.State is not Array stateItems ||
                         stateItems.Count == 0)
                         continue;
                     var contract = NativeContract.ContractManagement.GetContract(snapshot, notifyEventArgs.ScriptHash);
@@ -101,7 +101,7 @@ namespace Neo.Plugins.Trackers.NEP_11
 
         private void SaveDivisibleNFTBalance(TransferRecord record, DataCache snapshot)
         {
-            using ScriptBuilder sb = new ScriptBuilder();
+            using ScriptBuilder sb = new();
             sb.EmitDynamicCall(record.asset, "balanceOf", record.from, record.tokenId);
             sb.EmitDynamicCall(record.asset, "balanceOf", record.to, record.tokenId);
             using ApplicationEngine engine = ApplicationEngine.Run(sb.ToArray(), snapshot, settings: _neoSystem.Settings);
@@ -193,11 +193,11 @@ namespace Neo.Plugins.Trackers.NEP_11
 
             if (endTime < startTime) throw new RpcException(-32602, "Invalid params");
 
-            JObject json = new JObject();
+            JObject json = new();
             json["address"] = userScriptHash.ToAddress(_neoSystem.Settings.AddressVersion);
-            JArray transfersSent = new JArray();
+            JArray transfersSent = new();
             json["sent"] = transfersSent;
-            JArray transfersReceived = new JArray();
+            JArray transfersReceived = new();
             json["received"] = transfersReceived;
             AddNep11Transfers(Nep11TransferSentPrefix, userScriptHash, startTime, endTime, transfersSent);
             AddNep11Transfers(Nep11TransferReceivedPrefix, userScriptHash, startTime, endTime, transfersReceived);
@@ -209,8 +209,8 @@ namespace Neo.Plugins.Trackers.NEP_11
         {
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
 
-            JObject json = new JObject();
-            JArray balances = new JArray();
+            JObject json = new();
+            JArray balances = new();
             json["address"] = userScriptHash.ToAddress(_neoSystem.Settings.AddressVersion);
             json["balance"] = balances;
 
@@ -254,12 +254,12 @@ namespace Neo.Plugins.Trackers.NEP_11
             UInt160 nep11Hash = GetScriptHashFromParam(_params[0].AsString());
             var tokenId = _params[1].AsString().HexToBytes();
 
-            using var sb = new ScriptBuilder();
+            using ScriptBuilder sb = new();
             sb.EmitDynamicCall(nep11Hash, "properties", CallFlags.ReadOnly, tokenId);
             using var snapshot = _neoSystem.GetSnapshot();
 
             using var engine = ApplicationEngine.Run(sb.ToArray(), snapshot, settings: _neoSystem.Settings);
-            JObject json = new JObject();
+            JObject json = new();
 
             if (engine.State == VMState.HALT)
             {

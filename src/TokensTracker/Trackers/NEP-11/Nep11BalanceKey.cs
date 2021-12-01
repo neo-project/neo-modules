@@ -1,7 +1,7 @@
-using Neo.IO;
-using Neo.VM.Types;
 using System;
 using System.IO;
+using Neo.IO;
+using Neo.VM.Types;
 
 namespace Neo.Plugins.Trackers.NEP_11
 {
@@ -38,7 +38,7 @@ namespace Neo.Plugins.Trackers.NEP_11
 
         public bool Equals(Nep11BalanceKey other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return UserScriptHash.Equals(other.UserScriptHash) && AssetScriptHash.Equals(AssetScriptHash) && Token.Equals(other.Token);
         }

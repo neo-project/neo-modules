@@ -1,12 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Numerics;
 using Neo.IO;
 using Neo.Persistence;
 using Neo.VM.Types;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Neo.Plugins
 {
