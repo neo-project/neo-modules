@@ -21,7 +21,7 @@ namespace Neo.Plugins.Trackers
 
         void ISerializable.Deserialize(BinaryReader reader)
         {
-            Balance = new BigInteger(reader.ReadVarBytes(512));
+            Balance = new BigInteger(reader.ReadVarBytes(32));
             LastUpdatedBlock = reader.ReadUInt32();
         }
     }

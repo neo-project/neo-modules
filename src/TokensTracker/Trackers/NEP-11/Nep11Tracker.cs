@@ -53,8 +53,16 @@ namespace Neo.Plugins.Trackers.NEP_11
                     var contract = NativeContract.ContractManagement.GetContract(snapshot, notifyEventArgs.ScriptHash);
                     if (contract?.Manifest.SupportedStandards.Contains("NEP-11") == true)
                     {
-                        HandleNotificationNep11(notifyEventArgs.ScriptContainer, notifyEventArgs.ScriptHash, stateItems,
+                        try
+                        {
+                            HandleNotificationNep11(notifyEventArgs.ScriptContainer, notifyEventArgs.ScriptHash, stateItems,
                             transfers, ref nep11TransferIndex);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                            throw;
+                        }
                     }
 
                 }
