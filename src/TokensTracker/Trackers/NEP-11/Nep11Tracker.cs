@@ -55,8 +55,7 @@ namespace Neo.Plugins.Trackers.NEP_11
                     {
                         try
                         {
-                            HandleNotificationNep11(notifyEventArgs.ScriptContainer, notifyEventArgs.ScriptHash, stateItems,
-                            transfers, ref nep11TransferIndex);
+                            HandleNotificationNep11(notifyEventArgs.ScriptContainer, notifyEventArgs.ScriptHash, stateItems, transfers, ref nep11TransferIndex);
                         }
                         catch (Exception e)
                         {
