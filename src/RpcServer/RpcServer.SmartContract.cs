@@ -87,6 +87,7 @@ namespace Neo.Plugins
                 json["diagnostics"] = new JObject()
                 {
                     ["invokedcontracts"] = ToJson(engine.Diagnostic.InvocationTree.Root)
+                    ["storagechanges"] = ToJson(engine.Snapshot.GetChangeSet())
                 };
             }
             try
@@ -111,6 +112,16 @@ namespace Neo.Plugins
             if (node.Children.Any())
             {
                 json["call"] = new JArray(node.Children.Select(ToJson));
+            }
+            return json;
+        }
+
+        private static JObject ToJson(System.Collections.Generic.IEnumerable<DataCache.Trackable> changes)
+        {
+            JArray json = new();
+            foreach (var entry in changes)
+            {
+                json[entry.Key.ToArray().ToHexString()] = Convert.ToBase64String(entry.Item.Value);
             }
             return json;
         }
