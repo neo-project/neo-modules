@@ -1,17 +1,17 @@
-using Neo.IO;
 using System.IO;
 using System.Numerics;
+using Neo.IO;
 
-namespace Neo.Plugins
+namespace Neo.Plugins.Trackers
 {
-    public class Nep17Balance : ISerializable
+    public class TokenBalance : ISerializable
     {
         public BigInteger Balance;
         public uint LastUpdatedBlock;
 
         int ISerializable.Size =>
-            Balance.GetByteCount() +    // Balance
-            sizeof(uint);               // LastUpdatedBlock
+            Balance.GetVarSize() +    // Balance
+            sizeof(uint);             // LastUpdatedBlock
 
         void ISerializable.Serialize(BinaryWriter writer)
         {
@@ -21,7 +21,7 @@ namespace Neo.Plugins
 
         void ISerializable.Deserialize(BinaryReader reader)
         {
-            Balance = new BigInteger(reader.ReadVarBytes(512));
+            Balance = new BigInteger(reader.ReadVarBytes(32));
             LastUpdatedBlock = reader.ReadUInt32();
         }
     }
