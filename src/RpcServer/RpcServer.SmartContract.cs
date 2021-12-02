@@ -74,6 +74,14 @@ namespace Neo.Plugins
             json["state"] = engine.State;
             json["gasconsumed"] = engine.GasConsumed.ToString();
             json["exception"] = GetExceptionMessage(engine.FaultException);
+            json["notifications"] = new JArray(engine.Notifications.Select(n =>
+              {
+                  var obj = new JObject();
+                  obj["event"] = n.EventName;
+                  obj["contract"] = n.ScriptHash.ToString();
+                  obj["parameters"] = ToJson(n.State, settings.MaxIteratorResultItems);
+                  return obj;
+              }));
             if (useDiagnostic)
             {
                 json["diagnostics"] = new JObject()
