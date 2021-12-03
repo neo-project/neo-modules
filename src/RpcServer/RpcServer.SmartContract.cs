@@ -118,12 +118,17 @@ namespace Neo.Plugins
 
         private static JObject ToJson(System.Collections.Generic.IEnumerable<DataCache.Trackable> changes)
         {
-            JArray json = new();
+            JArray array = new();
             foreach (var entry in changes)
             {
-                json[entry.Key.ToArray().ToHexString()] = Convert.ToBase64String(entry.Item.Value);
+                array.Add(new JObject
+                {
+                    ["state"] = entry.State.ToString(),
+                    ["key"] = Convert.ToBase64String(entry.Key.ToArray()),
+                    ["value"] = Convert.ToBase64String(entry.Item.Value.ToArray())
+                });
             }
-            return json;
+            return array;
         }
 
         private static JObject ToJson(StackItem item, int max)
