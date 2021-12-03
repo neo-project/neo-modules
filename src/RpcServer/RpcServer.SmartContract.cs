@@ -77,9 +77,9 @@ namespace Neo.Plugins
             json["notifications"] = new JArray(engine.Notifications.Select(n =>
               {
                   var obj = new JObject();
-                  obj["event"] = n.EventName;
+                  obj["eventname"] = n.EventName;
                   obj["contract"] = n.ScriptHash.ToString();
-                  obj["parameters"] = ToJson(n.State, settings.MaxIteratorResultItems);
+                  obj["state"] = ToJson(n.State, settings.MaxIteratorResultItems);
                   return obj;
               }));
             if (useDiagnostic)
