@@ -86,7 +86,7 @@ namespace Neo.Plugins
             {
                 json["diagnostics"] = new JObject()
                 {
-                    ["invokedcontracts"] = ToJson(engine.Diagnostic.InvocationTree.Root)
+                    ["invokedcontracts"] = ToJson(engine.Diagnostic.InvocationTree.Root),
                     ["storagechanges"] = ToJson(engine.Snapshot.GetChangeSet())
                 };
             }
