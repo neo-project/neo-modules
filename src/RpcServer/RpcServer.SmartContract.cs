@@ -157,7 +157,7 @@ namespace Neo.Plugins
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"]?.AsString()),
                 AllowedContracts = ((JArray)u["allowedcontracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray(),
                 AllowedGroups = ((JArray)u["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray(),
-                Rules = ((JArray)u["rules"])?.Select(ToWitnessRule).ToArray(),
+                Rules = ((JArray)u["rules"])?.Select(WitnessRule.FromJson).ToArray(),
             }).ToArray())
             {
                 Witnesses = _params
@@ -179,47 +179,6 @@ namespace Neo.Plugins
             _ = IO.Helper.ToByteArray(ret.GetSigners()).AsSerializableArray<Signer>();
 
             return ret;
-        }
-
-        private static WitnessRule ToWitnessRule(JObject json)
-        {
-            var rule = new WitnessRule();
-            rule.Action = (WitnessRuleAction)Enum.Parse(typeof(WitnessRuleAction), json["action"].AsString());
-            rule.Condition = ToWitnessCondition(json["condition"]);
-            return rule;
-        }
-
-        private static WitnessCondition ToWitnessCondition(JObject json)
-        {
-            if (Enum.TryParse(json["type"].GetString(), out WitnessConditionType t))
-            {
-                switch (t)
-                {
-                    case WitnessConditionType.CalledByEntry:
-                        return new CalledByEntryCondition();
-                    case WitnessConditionType.CalledByContract:
-                        return new CalledByContractCondition() { Hash = UInt160.Parse(json["hash"].AsString()) };
-                    case WitnessConditionType.CalledByGroup:
-                        return new CalledByGroupCondition() { Group = ECPoint.Parse(json["group"].AsString(), ECCurve.Secp256r1) };
-                    case WitnessConditionType.ScriptHash:
-                        return new ScriptHashCondition() { Hash = UInt160.Parse(json["hash"].AsString()) };
-                    case WitnessConditionType.Group:
-                        return new GroupCondition() { Group = ECPoint.Parse(json["group"].AsString(), ECCurve.Secp256r1) };
-                    case WitnessConditionType.Boolean:
-                        return new BooleanCondition() { Expression = json["expression"].GetBoolean() };
-                    case WitnessConditionType.Not:
-                        return new NotCondition() { Expression = ToWitnessCondition(json["expression"]) };
-                    case WitnessConditionType.Or:
-                        var or = new OrCondition();
-                        or.Expressions = ((JArray)json["expressions"]).Select(ToWitnessCondition).ToArray();
-                        return or;
-                    case WitnessConditionType.And:
-                        var and = new AndCondition();
-                        and.Expressions = ((JArray)json["expressions"]).Select(ToWitnessCondition).ToArray();
-                        return and;
-                }
-            }
-            throw new Exception("Unknown WitnessConditionType type!");
         }
 
         [RpcMethod]
