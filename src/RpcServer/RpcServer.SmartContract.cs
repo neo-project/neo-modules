@@ -22,6 +22,7 @@ using Neo.Wallets;
 using System;
 using System.IO;
 using System.Linq;
+using Neo.IO.Caching;
 
 namespace Neo.Plugins
 {
@@ -69,7 +70,7 @@ namespace Neo.Plugins
             }
         }
 
-        private JObject GetInvokeResult(byte[] script, Signers signers = null)
+        private JObject GetInvokeResult(byte[] script, Signers signers = null, bool useDiagnostic = false)
         {
             Transaction tx = signers == null ? null : new Transaction
             {
@@ -77,12 +78,28 @@ namespace Neo.Plugins
                 Attributes = System.Array.Empty<TransactionAttribute>(),
                 Witnesses = signers.Witnesses,
             };
-            using ApplicationEngine engine = ApplicationEngine.Run(script, system.StoreView, container: tx, settings: system.Settings, gas: settings.MaxGasInvoke);
+            using ApplicationEngine engine = ApplicationEngine.Run(script, system.StoreView, container: tx, settings: system.Settings, gas: settings.MaxGasInvoke, diagnostic: useDiagnostic ? new Diagnostic() : null);
             JObject json = new();
             json["script"] = Convert.ToBase64String(script);
             json["state"] = engine.State;
             json["gasconsumed"] = engine.GasConsumed.ToString();
             json["exception"] = GetExceptionMessage(engine.FaultException);
+            json["notifications"] = new JArray(engine.Notifications.Select(n =>
+              {
+                  var obj = new JObject();
+                  obj["eventname"] = n.EventName;
+                  obj["contract"] = n.ScriptHash.ToString();
+                  obj["state"] = ToJson(n.State, settings.MaxIteratorResultItems);
+                  return obj;
+              }));
+            if (useDiagnostic)
+            {
+                json["diagnostics"] = new JObject()
+                {
+                    ["invokedcontracts"] = ToJson(engine.Diagnostic.InvocationTree.Root),
+                    ["storagechanges"] = ToJson(engine.Snapshot.GetChangeSet())
+                };
+            }
             try
             {
                 json["stack"] = new JArray(engine.ResultStack.Select(p => ToJson(p, settings.MaxIteratorResultItems)));
@@ -96,6 +113,32 @@ namespace Neo.Plugins
                 ProcessInvokeWithWallet(json, signers);
             }
             return json;
+        }
+
+        private static JObject ToJson(TreeNode<UInt160> node)
+        {
+            JObject json = new();
+            json["hash"] = node.Item.ToString();
+            if (node.Children.Any())
+            {
+                json["call"] = new JArray(node.Children.Select(ToJson));
+            }
+            return json;
+        }
+
+        private static JObject ToJson(System.Collections.Generic.IEnumerable<DataCache.Trackable> changes)
+        {
+            JArray array = new();
+            foreach (var entry in changes)
+            {
+                array.Add(new JObject
+                {
+                    ["state"] = entry.State.ToString(),
+                    ["key"] = Convert.ToBase64String(entry.Key.ToArray()),
+                    ["value"] = Convert.ToBase64String(entry.Item.Value.ToArray())
+                });
+            }
+            return array;
         }
 
         private static JObject ToJson(StackItem item, int max)
@@ -153,13 +196,14 @@ namespace Neo.Plugins
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : System.Array.Empty<ContractParameter>();
             Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
+            bool useDiagnostic = _params.Count >= 5 && _params[4].GetBoolean();
 
             byte[] script;
             using (ScriptBuilder sb = new())
             {
                 script = sb.EmitDynamicCall(script_hash, operation, args).ToArray();
             }
-            return GetInvokeResult(script, signers);
+            return GetInvokeResult(script, signers, useDiagnostic);
         }
 
         [RpcMethod]
@@ -167,7 +211,8 @@ namespace Neo.Plugins
         {
             byte[] script = Convert.FromBase64String(_params[0].AsString());
             Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], system.Settings) : null;
-            return GetInvokeResult(script, signers);
+            bool useDiagnostic = _params.Count >= 3 && _params[2].GetBoolean();
+            return GetInvokeResult(script, signers, useDiagnostic);
         }
 
         [RpcMethod]
