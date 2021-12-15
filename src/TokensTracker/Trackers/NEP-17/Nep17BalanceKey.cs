@@ -2,14 +2,14 @@ using System;
 using System.IO;
 using Neo.IO;
 
-namespace Neo.Plugins
+namespace Neo.Plugins.Trackers.NEP_17
 {
     public class Nep17BalanceKey : IComparable<Nep17BalanceKey>, IEquatable<Nep17BalanceKey>, ISerializable
     {
         public readonly UInt160 UserScriptHash;
         public readonly UInt160 AssetScriptHash;
 
-        public int Size => 20 + 20;
+        public int Size => UInt160.Length + UInt160.Length;
 
         public Nep17BalanceKey() : this(new UInt160(), new UInt160())
         {
@@ -34,7 +34,7 @@ namespace Neo.Plugins
 
         public bool Equals(Nep17BalanceKey other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return UserScriptHash.Equals(other.UserScriptHash) && AssetScriptHash.Equals(AssetScriptHash);
         }
@@ -46,12 +46,7 @@ namespace Neo.Plugins
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                var hashCode = UserScriptHash.GetHashCode();
-                hashCode = (hashCode * 397) ^ AssetScriptHash.GetHashCode();
-                return hashCode;
-            }
+            return HashCode.Combine(UserScriptHash.GetHashCode(), AssetScriptHash.GetHashCode());
         }
 
         public void Serialize(BinaryWriter writer)
