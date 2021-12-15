@@ -23,6 +23,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Neo.IO.Caching;
+using Neo.Network.P2P.Payloads.Conditions;
 
 namespace Neo.Plugins
 {
@@ -165,7 +166,8 @@ namespace Neo.Plugins
                 Account = AddressToScriptHash(u["account"].AsString(), settings.AddressVersion),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"]?.AsString()),
                 AllowedContracts = ((JArray)u["allowedcontracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray(),
-                AllowedGroups = ((JArray)u["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
+                AllowedGroups = ((JArray)u["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray(),
+                Rules = ((JArray)u["rules"])?.Select(WitnessRule.FromJson).ToArray(),
             }).ToArray())
             {
                 Witnesses = _params
