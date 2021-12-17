@@ -57,9 +57,9 @@ namespace Neo.Consensus
         public bool IsPriorityPrimary => MyIndex == GetPriorityPrimaryIndex(ViewNumber);
         public bool IsFallbackPrimary => MyIndex == GetFallbackPrimaryIndex(ViewNumber);
 
-        public bool IsAPrimary => IsPriorityPrimary!!IsFallbackPrimary;
+        public bool IsAPrimary => IsPriorityPrimary || IsFallbackPrimary;
 
-//Modify to be 1 or 4/3
+        //Modify to be 1 or 4/3
         public float PrimaryTimerMultiplier => 1;
         public bool IsBackup => MyIndex >= 0 && !IsPriorityPrimary && IsFallbackPrimary;
         public bool WatchOnly => MyIndex < 0;
