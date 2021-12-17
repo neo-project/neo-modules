@@ -110,19 +110,19 @@ namespace Neo.Consensus
             this.store = neoSystem.LoadStore(settings.RecoveryLogs);
         }
 
-        public Block CreateBlock(uint i)
+        public Block CreateBlock(uint pOrF)
         {
-            EnsureHeader(i);
+            EnsureHeader(pOrF);
             Contract contract = Contract.CreateMultiSigContract(M, Validators);
-            ContractParametersContext sc = new ContractParametersContext(neoSystem.StoreView, Block.Header, dbftSettings.Network);
+            ContractParametersContext sc = new ContractParametersContext(neoSystem.StoreView, Block[pOrF].Header, dbftSettings.Network);
             for (int i = 0, j = 0; i < Validators.Length && j < M; i++)
             {
-                if (GetMessage(CommitPayloads[i])?.ViewNumber != ViewNumber) continue;
-                sc.AddSignature(contract, Validators[i], GetMessage<Commit>(CommitPayloads[i]).Signature);
+                if (GetMessage(CommitPayloads[pOrF][i])?.ViewNumber != ViewNumber) continue;
+                sc.AddSignature(contract, Validators[i], GetMessage<Commit>(CommitPayloads[pOrF][i]).Signature);
                 j++;
             }
-            Block.Header.Witness = sc.GetWitnesses()[0];
-            Block.Transactions = TransactionHashes.Select(p => Transactions[p]).ToArray();
+            Block[pOrF].Header.Witness = sc.GetWitnesses()[0];
+            Block[pOrF].Transactions = TransactionHashes[pOrF].Select(p => Transactions[pOrF][p]).ToArray();
             return Block;
         }
 
