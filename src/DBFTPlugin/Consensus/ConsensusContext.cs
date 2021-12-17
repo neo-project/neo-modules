@@ -27,7 +27,7 @@ namespace Neo.Consensus
         public ECPoint[] Validators;
         public int MyIndex;
         public UInt256[][] TransactionHashes = new UInt256[2][];
-        public Dictionary<UInt256, Transaction>[] Transactions = new Dictionary<UInt256, Transaction>[2];
+        public Dictionary<UInt256, Transaction>[] Transactions = new ExtensiblePayload[2][];
         public ExtensiblePayload[][] PreparationPayloads = new ExtensiblePayload[2][];
         public ExtensiblePayload[][] PreCommitPayloads = new ExtensiblePayload[2][];
         public ExtensiblePayload[][] CommitPayloads = new ExtensiblePayload[2][];
@@ -197,8 +197,6 @@ namespace Neo.Consensus
                                 NativeContract.NEO.GetNextBlockValidators(Snapshot, neoSystem.Settings.ValidatorsCount))
                         }
                     };
-
-                    CommitPayloads[i] = new ExtensiblePayload[Validators.Length];
                 }
                 var pv = Validators;
                 Validators = NativeContract.NEO.GetNextBlockValidators(Snapshot, neoSystem.Settings.ValidatorsCount);
@@ -219,6 +217,8 @@ namespace Neo.Consensus
                     }
                 }
                 MyIndex = -1;
+                for (uint i = 0; i <= 1; i++)
+                    CommitPayloads[i] = new ExtensiblePayload[Validators.Length];
                 ChangeViewPayloads = new ExtensiblePayload[Validators.Length];
                 LastChangeViewPayloads = new ExtensiblePayload[Validators.Length];
                 if (ValidatorsChanged || LastSeenMessage is null)
@@ -252,6 +252,7 @@ namespace Neo.Consensus
                     else
                         LastChangeViewPayloads[i] = null;
             }
+
             ViewNumber = viewNumber;
             for (uint i = 0; i <= 1; i++)
             {
@@ -339,6 +340,11 @@ namespace Neo.Consensus
             writer.Write(ViewNumber);
             writer.WriteNullableArray(ChangeViewPayloads);
             writer.WriteNullableArray(LastChangeViewPayloads);
+        }
+
+        private static void Log(string message, LogLevel level = LogLevel.Info)
+        {
+            Utility.Log(nameof(ConsensusService), level, message);
         }
     }
 }
