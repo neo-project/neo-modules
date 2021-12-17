@@ -72,15 +72,16 @@ namespace Neo.Consensus
                 Log($"View changed: view={viewNumber} primary={context.Validators[context.GetPrimaryIndex((byte)(viewNumber - 1u))]}", LogLevel.Warning);
             Log($"Initialize: height={context.Block.Index} view={viewNumber} index={context.MyIndex} role={(context.IsPrimary ? "Primary" : context.WatchOnly ? "WatchOnly" : "Backup")}");
             if (context.WatchOnly) return;
-            if (context.IsPrimary)
+            if (context.IsAPrimary)
             {
                 if (isRecovering)
                 {
-                    ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock << (viewNumber + 1)));
+                    ChangeTimer(TimeSpan.FromMilliseconds(context.PrimaryTimerMultiplier * (neoSystem.Settings.MillisecondsPerBlock << (viewNumber + 1))));
                 }
                 else
                 {
-                    TimeSpan span = neoSystem.Settings.TimePerBlock;
+                    // If both Primaries already expired move to Zero or take the difference
+                    TimeSpan span = TimeSpan.FromMilliseconds(context.PrimaryTimerMultiplier * neoSystem.Settings.MillisecondsPerBlock);
                     if (block_received_index + 1 == context.Block.Index)
                     {
                         var diff = TimeProvider.Current.UtcNow - block_received_time;
@@ -156,11 +157,11 @@ namespace Neo.Consensus
         {
             if (context.WatchOnly || context.BlockSent) return;
             if (timer.Height != context.Block.Index || timer.ViewNumber != context.ViewNumber) return;
-            if (context.IsPrimary && !context.RequestSentOrReceived)
+            if (context.IsAPrimary && !context.RequestSentOrReceived)
             {
                 SendPrepareRequest();
             }
-            else if ((context.IsPrimary && context.RequestSentOrReceived) || context.IsBackup)
+            else if ((context.IsAPrimary && context.RequestSentOrReceived) || context.IsBackup)
             {
                 if (context.CommitSent)
                 {
@@ -185,7 +186,7 @@ namespace Neo.Consensus
 
         private void SendPrepareRequest()
         {
-            Log($"Sending {nameof(PrepareRequest)}: height={context.Block.Index} view={context.ViewNumber}");
+            Log($"Sending {nameof(PrepareRequest)}: height={context.Block.Index} view={context.ViewNumber} P1={context.IsPriorityPrimary} P2={context.IsFallbackPrimary}");
             localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest() });
 
             if (context.Validators.Length == 1)
@@ -196,7 +197,13 @@ namespace Neo.Consensus
                 foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes))
                     localNode.Tell(Message.Create(MessageCommand.Inv, payload));
             }
-            ChangeTimer(TimeSpan.FromMilliseconds((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0)));
+            //Multiplier for Primary P1 or FellBeck P2
+            float multiplier = 1;
+            if (context.IsFallbackPrimary)
+                multiplier = 4 / 3;
+            // TODO Change to context.Multiplier
+
+            ChangeTimer(TimeSpan.FromMilliseconds(multiplier * ((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0))));
         }
 
         private void RequestRecovery()
@@ -239,25 +246,32 @@ namespace Neo.Consensus
             if (!context.IsBackup || context.NotAcceptingPayloadsDueToViewChanging || !context.RequestSentOrReceived || context.ResponseSent || context.BlockSent)
                 return;
             if (context.Transactions.ContainsKey(transaction.Hash)) return;
-            if (!context.TransactionHashes.Contains(transaction.Hash)) return;
+            if (!context.TransactionHashes[0].Contains(transaction.Hash) && !context.TransactionHashes[1].Contains(transaction.Hash)) return;
             AddTransaction(transaction, true);
         }
 
         private bool AddTransaction(Transaction tx, bool verify)
         {
-            if (verify)
-            {
-                VerifyResult result = tx.Verify(neoSystem.Settings, context.Snapshot, context.VerificationContext);
-                if (result != VerifyResult.Succeed)
+            bool returnValue = false;
+            for (uint i = 0; i <= 1; i++)
+                if (context.TransactionHashes[i].Contains(tx.Hash))
                 {
-                    Log($"Rejected tx: {tx.Hash}, {result}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
-                    RequestChangeView(result == VerifyResult.PolicyFail ? ChangeViewReason.TxRejectedByPolicy : ChangeViewReason.TxInvalid);
-                    return false;
+                    if (verify)
+                    {
+                        VerifyResult result = tx.Verify(neoSystem.Settings, context.Snapshot, context.VerificationContext[i]);
+                        if (result != VerifyResult.Succeed)
+                        {
+                            Log($"Rejected tx: {tx.Hash}, {result}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
+                            RequestChangeView(result == VerifyResult.PolicyFail ? ChangeViewReason.TxRejectedByPolicy : ChangeViewReason.TxInvalid);
+                            return false;
+                        }
+                    }
+
+                    context.Transactions[i][tx.Hash] = tx;
+                    context.VerificationContext[i].AddTransaction(tx);
+                    returnValue = returnValue || CheckPrepareResponse(i);
                 }
-            }
-            context.Transactions[tx.Hash] = tx;
-            context.VerificationContext.AddTransaction(tx);
-            return CheckPrepareResponse();
+            return returnValue;
         }
 
         private void ChangeTimer(TimeSpan delay)

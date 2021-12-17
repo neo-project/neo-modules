@@ -9,13 +9,13 @@ namespace Neo.Consensus
 {
     partial class ConsensusService
     {
-        private bool CheckPrepareResponse()
+        private bool CheckPrepareResponse(uint i)
         {
-            if (context.TransactionHashes.Length == context.Transactions.Count)
+            if (context.TransactionHashes[i].Length == context.Transactions.Count)
             {
                 // if we are the primary for this view, but acting as a backup because we recovered our own
                 // previously sent prepare request, then we don't want to send a prepare response.
-                if (context.IsPrimary || context.WatchOnly) return true;
+                if (context.IsAPrimary || context.WatchOnly) return true;
 
                 // Check maximum block size via Native Contract policy
                 if (context.GetExpectedBlockSize() > dbftSettings.MaxBlockSize)
@@ -37,21 +37,36 @@ namespace Neo.Consensus
                 ExtendTimerByFactor(2);
 
                 Log($"Sending {nameof(PrepareResponse)}");
-                localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareResponse() });
-                CheckPreparations();
+                localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareResponse(i) });
+                CheckPreparations(i);
             }
             return true;
         }
 
-        private void CheckCommits()
+        private void CheckPreCommits(uint i, bool forced = false)
         {
-            if (context.CommitPayloads.Count(p => context.GetMessage(p)?.ViewNumber == context.ViewNumber) >= context.M && context.TransactionHashes.All(p => context.Transactions.ContainsKey(p)))
+            if (forced || context.PreCommitPayloads[i].Count(p => p != null) >= context.M && context.TransactionHashes[i].All(p => context.Transactions.ContainsKey(p)))
+            {
+                ExtensiblePayload payload = context.MakeCommit(i);
+                Log($"Sending {nameof(Commit)} to pOrF={i}");
+                context.Save();
+                localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
+                // Set timer, so we will resend the commit in case of a networking issue
+                ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock));
+                CheckCommits(i);
+            }
+        }
+
+        private void CheckCommits(uint i)
+        {
+            if (context.CommitPayloads[i].Count(p => context.GetMessage(p)?.ViewNumber == context.ViewNumber) >= context.M && context.TransactionHashes.All(p => context.Transactions.ContainsKey(p)))
             {
                 block_received_index = context.Block.Index;
                 block_received_time = TimeProvider.Current.UtcNow;
                 Block block = context.CreateBlock();
-                Log($"Sending {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length}");
+                Log($"Sending {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length} to pOrF={i}");
                 blockchain.Tell(block);
+                return;
             }
         }
 
@@ -74,17 +89,26 @@ namespace Neo.Consensus
             }
         }
 
-        private void CheckPreparations()
+        private void CheckPreparations(uint i)
         {
-            if (context.PreparationPayloads.Count(p => p != null) >= context.M && context.TransactionHashes.All(p => context.Transactions.ContainsKey(p)))
+            int thresholdForPrep = context.F + 1;
+            if (i == 1)
+                thresholdForPrep = context.M;
+
+            if (context.PreparationPayloads[i].Count(p => p != null) >= thresholdForPrep && context.TransactionHashes.All(p => context.Transactions.ContainsKey(p)))
             {
-                ExtensiblePayload payload = context.MakeCommit();
-                Log($"Sending {nameof(Commit)}");
+                ExtensiblePayload payload = context.MakePreCommit(i);
+                Log($"Sending {nameof(PreCommit)} pOrF={i}");
                 context.Save();
                 localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
                 // Set timer, so we will resend the commit in case of a networking issue
                 ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock));
-                CheckCommits();
+                CheckPreCommits(i);
+
+                // Speed-up path to also send commit
+                if (i == 0 && context.PreparationPayloads[0].Count(p => p != null) >= context.M)
+                    CheckPreCommits(0, true);
+                return;
             }
         }
     }

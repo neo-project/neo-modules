@@ -22,14 +22,15 @@ namespace Neo.Consensus
         /// </summary>
         private static readonly byte[] ConsensusStateKey = { 0xf4 };
 
-        public Block Block;
+        public Block[] Block;
         public byte ViewNumber;
         public ECPoint[] Validators;
         public int MyIndex;
-        public UInt256[] TransactionHashes;
-        public Dictionary<UInt256, Transaction> Transactions;
-        public ExtensiblePayload[] PreparationPayloads;
-        public ExtensiblePayload[] CommitPayloads;
+        public UInt256[][] TransactionHashes;
+        public Dictionary<UInt256, Transaction>[] Transactions;
+        public ExtensiblePayload[][] PreparationPayloads;
+        public ExtensiblePayload[][] PreCommitPayloads;
+        public ExtensiblePayload[][] CommitPayloads;
         public ExtensiblePayload[] ChangeViewPayloads;
         public ExtensiblePayload[] LastChangeViewPayloads;
         // LastSeenMessage array stores the height of the last seen message, for each validator.
@@ -39,7 +40,7 @@ namespace Neo.Consensus
         /// <summary>
         /// Store all verified unsorted transactions' senders' fee currently in the consensus context.
         /// </summary>
-        public TransactionVerificationContext VerificationContext = new();
+        public TransactionVerificationContext[] VerificationContext = new();
 
         public SnapshotCache Snapshot { get; private set; }
         private KeyPair keyPair;
@@ -52,8 +53,15 @@ namespace Neo.Consensus
 
         public int F => (Validators.Length - 1) / 3;
         public int M => Validators.Length - F;
-        public bool IsPrimary => MyIndex == Block.PrimaryIndex;
-        public bool IsBackup => MyIndex >= 0 && MyIndex != Block.PrimaryIndex;
+
+        public bool IsPriorityPrimary => MyIndex ==  GetPriorityPrimaryIndex(ViewNumber);
+        public bool IsFallbackPrimary => MyIndex == GetFallbackPrimaryIndex(ViewNumber);
+
+        public bool IsAPrimary => IsPriorityPrimary !!IsFallbackPrimary;
+
+//Modify to be 1 or 4/3
+        public float PrimaryTimerMultiplier => 1;
+        public bool IsBackup => MyIndex >= 0 && !IsPriorityPrimary && IsFallbackPrimary;
         public bool WatchOnly => MyIndex < 0;
         public Header PrevHeader => NativeContract.Ledger.GetHeader(Snapshot, Block.PrevHash);
         public int CountCommitted => CommitPayloads.Count(p => p != null);
@@ -241,7 +249,7 @@ namespace Neo.Consensus
                         LastChangeViewPayloads[i] = null;
             }
             ViewNumber = viewNumber;
-            Block.Header.PrimaryIndex = GetPrimaryIndex(viewNumber);
+            Block.Header.PrimaryIndex = GetPriorityPrimaryIndex(viewNumber);
             Block.Header.MerkleRoot = null;
             Block.Header.Timestamp = 0;
             Block.Header.Nonce = 0;

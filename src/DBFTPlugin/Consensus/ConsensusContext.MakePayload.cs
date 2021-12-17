@@ -21,11 +21,12 @@ namespace Neo.Consensus
             });
         }
 
-        public ExtensiblePayload MakeCommit()
+        public ExtensiblePayload MakeCommit(uint i)
         {
-            return CommitPayloads[MyIndex] ?? (CommitPayloads[MyIndex] = MakeSignedPayload(new Commit
+            return CommitPayloads[i][MyIndex] ?? (CommitPayloads[i][MyIndex] = MakeSignedPayload(new Commit
             {
-                Signature = EnsureHeader().Sign(keyPair, neoSystem.Settings.Network)
+                Signature = EnsureHeader().Sign(keyPair, neoSystem.Settings.Network),
+                Id = i
             }));
         }
 
@@ -58,7 +59,7 @@ namespace Neo.Consensus
         /// Prevent that block exceed the max size
         /// </summary>
         /// <param name="txs">Ordered transactions</param>
-        internal void EnsureMaxBlockLimitation(IEnumerable<Transaction> txs)
+        internal void EnsureMaxBlockLimitation(IEnumerable<Transaction> txs, uint i)
         {
             uint maxTransactionsPerBlock = neoSystem.Settings.MaxTransactionsPerBlock;
 
@@ -66,8 +67,8 @@ namespace Neo.Consensus
             txs = txs.Take((int)maxTransactionsPerBlock);
 
             List<UInt256> hashes = new List<UInt256>();
-            Transactions = new Dictionary<UInt256, Transaction>();
-            VerificationContext = new TransactionVerificationContext();
+            Transactions[i] = new Dictionary<UInt256, Transaction>();
+            VerificationContext[i] = new TransactionVerificationContext();
 
             // Expected block size
             var blockSize = GetExpectedBlockSizeWithoutTransactions(txs.Count());
@@ -85,25 +86,26 @@ namespace Neo.Consensus
                 if (blockSystemFee > dbftSettings.MaxBlockSystemFee) break;
 
                 hashes.Add(tx.Hash);
-                Transactions.Add(tx.Hash, tx);
-                VerificationContext.AddTransaction(tx);
+                Transactions[i].Add(tx.Hash, tx);
+                VerificationContext[i].AddTransaction(tx);
             }
 
-            TransactionHashes = hashes.ToArray();
+            TransactionHashes[i] = hashes.ToArray();
         }
 
-        public ExtensiblePayload MakePrepareRequest()
+        public ExtensiblePayload MakePrepareRequest(uint i)
         {
-            EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
-            Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
-            Block.Header.Nonce = GetNonce();
-            return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
+            EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions(), i);
+            Block[i].Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
+            Block[i].Header.Nonce = GetNonce();
+
+            return PreparationPayloads[i][MyIndex] = MakeSignedPayload(new PrepareRequest
             {
-                Version = Block.Version,
-                PrevHash = Block.PrevHash,
-                Timestamp = Block.Timestamp,
-                Nonce = Block.Nonce,
-                TransactionHashes = TransactionHashes
+                Version = Block[i].Version,
+                PrevHash = Block[i].PrevHash,
+                Timestamp = Block[i].Timestamp,
+                Nonce = Block[i].Nonce,
+                TransactionHashes = TransactionHashes[i]
             });
         }
 
@@ -144,11 +146,23 @@ namespace Neo.Consensus
             });
         }
 
-        public ExtensiblePayload MakePrepareResponse()
+        public ExtensiblePayload MakePrepareResponse(uint i)
         {
-            return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareResponse
+            return PreparationPayloads[i][MyIndex] = MakeSignedPayload(new PrepareResponse
             {
-                PreparationHash = PreparationPayloads[Block.PrimaryIndex].Hash
+                PreparationHash = PreparationPayloads[i][Block[i].PrimaryIndex].Hash,
+                Id = i
+            });
+        }
+
+
+
+        public ExtensiblePayload MakePreCommit(uint i)
+        {
+            return PreCommitPayloads[MyIndex] = MakeSignedPayload(new PreCommit
+            {
+                PreparationHash = PreparationPayloads[Block[i].PrimaryIndex].Hash,
+                Id = i
             });
         }
 

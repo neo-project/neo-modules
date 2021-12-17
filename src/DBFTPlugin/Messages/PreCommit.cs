@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Neo.Consensus
 {
-    public class PrepareResponse : ConsensusMessage
+    public class PreCommit : ConsensusMessage
     {
         public UInt256 PreparationHash;
 
@@ -11,7 +11,7 @@ namespace Neo.Consensus
         public uint Id;
         public override int Size => base.Size + PreparationHash.Size;
 
-        public PrepareResponse() : base(ConsensusMessageType.PrepareResponse) { }
+        public PreCommit() : base(ConsensusMessageType.PreCommit) { }
 
         public override void Deserialize(BinaryReader reader)
         {

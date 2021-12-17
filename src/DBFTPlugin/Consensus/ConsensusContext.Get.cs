@@ -56,9 +56,16 @@ namespace Neo.Consensus
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte GetPrimaryIndex(byte viewNumber)
+        public byte GetPriorityPrimaryIndex(byte viewNumber)
         {
             int p = ((int)Block.Index - viewNumber) % Validators.Length;
+            return p >= 0 ? (byte)p : (byte)(p + Validators.Length);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public byte GetFallbackPrimaryIndex(byte viewNumber)
+        {
+            int p = ((int)Block.Index - viewNumber + 1) % Validators.Length;
             return p >= 0 ? (byte)p : (byte)(p + Validators.Length);
         }
 

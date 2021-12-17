@@ -70,17 +70,21 @@ namespace Neo.Consensus
         private void OnPrepareRequestReceived(ExtensiblePayload payload, PrepareRequest message)
         {
             if (context.RequestSentOrReceived || context.NotAcceptingPayloadsDueToViewChanging) return;
+            // Add verification for Fallback
             if (message.ValidatorIndex != context.Block.PrimaryIndex || message.ViewNumber != context.ViewNumber) return;
             if (message.Version != context.Block.Version || message.PrevHash != context.Block.PrevHash) return;
             if (message.TransactionHashes.Length > neoSystem.Settings.MaxTransactionsPerBlock) return;
-            Log($"{nameof(OnPrepareRequestReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} tx={message.TransactionHashes.Length}");
+            uint pOrF = Convert.ToUInt32(message.ValidatorIndex == context.GetPriorityPrimaryIndex(context.ViewNumber));
+
+
+            Log($"{nameof(OnPrepareRequestReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} tx={message.TransactionHashes.Length} priority={message.ValidatorIndex == context.GetPriorityPrimaryIndex(context.ViewNumber)} fallback={message.ValidatorIndex == context.GetFallbackPrimaryIndex(context.ViewNumber)}");
             if (message.Timestamp <= context.PrevHeader.Timestamp || message.Timestamp > TimeProvider.Current.UtcNow.AddMilliseconds(8 * neoSystem.Settings.MillisecondsPerBlock).ToTimestampMS())
             {
                 Log($"Timestamp incorrect: {message.Timestamp}", LogLevel.Warning);
                 return;
             }
 
-            if (message.TransactionHashes.Any(p => NativeContract.Ledger.ContainsTransaction(context.Snapshot, p)))
+            if (message.TransactionHashes[pOrF].Any(p => NativeContract.Ledger.ContainsTransaction(context.Snapshot, p)))
             {
                 Log($"Invalid request: transaction already exists", LogLevel.Warning);
                 return;
@@ -90,33 +94,34 @@ namespace Neo.Consensus
             // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
             ExtendTimerByFactor(2);
 
-            context.Block.Header.Timestamp = message.Timestamp;
-            context.Block.Header.Nonce = message.Nonce;
-            context.TransactionHashes = message.TransactionHashes;
+            context.Block[pOrF].Header.Timestamp = message.Timestamp;
+            context.Block[pOrF].Header.Nonce = message.Nonce;
+            context.TransactionHashes[pOrF] = message.TransactionHashes;
 
             context.Transactions = new Dictionary<UInt256, Transaction>();
             context.VerificationContext = new TransactionVerificationContext();
-            for (int i = 0; i < context.PreparationPayloads.Length; i++)
-                if (context.PreparationPayloads[i] != null)
-                    if (!context.GetMessage<PrepareResponse>(context.PreparationPayloads[i]).PreparationHash.Equals(payload.Hash))
-                        context.PreparationPayloads[i] = null;
-            context.PreparationPayloads[message.ValidatorIndex] = payload;
+            for (int i = 0; i < context.PreparationPayloads[pOrF].Length; i++)
+                if (context.PreparationPayloads[pOrF][i] != null)
+                    if (!context.GetMessage<PrepareResponse>(context.PreparationPayloads[pOrF][i]).PreparationHash.Equals(payload.Hash))
+                        context.PreparationPayloads[pOrF][i] = null;
+            context.PreparationPayloads[pOrF][message.ValidatorIndex] = payload;
             byte[] hashData = context.EnsureHeader().GetSignData(neoSystem.Settings.Network);
-            for (int i = 0; i < context.CommitPayloads.Length; i++)
-                if (context.GetMessage(context.CommitPayloads[i])?.ViewNumber == context.ViewNumber)
-                    if (!Crypto.VerifySignature(hashData, context.GetMessage<Commit>(context.CommitPayloads[i]).Signature, context.Validators[i]))
-                        context.CommitPayloads[i] = null;
+            for (int i = 0; i < context.CommitPayloads[pOrF].Length; i++)
+                if (context.GetMessage(context.CommitPayloads[pOrF][i])?.ViewNumber == context.ViewNumber)
+                    if (!Crypto.VerifySignature(hashData, context.GetMessage<Commit>(context.CommitPayloads[pOrF][i]).Signature, context.Validators[i]))
+                        context.CommitPayloads[pOrF][i] = null;
 
-            if (context.TransactionHashes.Length == 0)
+            if (context.TransactionHashes[pOrF].Length == 0)
             {
                 // There are no tx so we should act like if all the transactions were filled
-                CheckPrepareResponse();
+                CheckPrepareResponse(pOrF);
                 return;
             }
 
             Dictionary<UInt256, Transaction> mempoolVerified = neoSystem.MemPool.GetVerifiedTransactions().ToDictionary(p => p.Hash);
             List<Transaction> unverified = new List<Transaction>();
-            foreach (UInt256 hash in context.TransactionHashes)
+            //Cash previous asked TX Hashes
+            foreach (UInt256 hash in context.TransactionHashes[pOrF])
             {
                 if (mempoolVerified.TryGetValue(hash, out Transaction tx))
                 {
@@ -132,9 +137,9 @@ namespace Neo.Consensus
             foreach (Transaction tx in unverified)
                 if (!AddTransaction(tx, true))
                     return;
-            if (context.Transactions.Count < context.TransactionHashes.Length)
+            if (context.Transactions.Count < context.TransactionHashes[pOrF].Length)
             {
-                UInt256[] hashes = context.TransactionHashes.Where(i => !context.Transactions.ContainsKey(i)).ToArray();
+                UInt256[] hashes = context.TransactionHashes[pOrF].Where(i => !context.Transactions.ContainsKey(i)).ToArray();
                 taskManager.Tell(new TaskManager.RestartTasks
                 {
                     Payload = InvPayload.Create(InventoryType.TX, hashes)
