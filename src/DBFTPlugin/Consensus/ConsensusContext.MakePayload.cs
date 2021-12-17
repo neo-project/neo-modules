@@ -155,8 +155,6 @@ namespace Neo.Consensus
             });
         }
 
-
-
         public ExtensiblePayload MakePreCommit(uint i)
         {
             return PreCommitPayloads[MyIndex] = MakeSignedPayload(new PreCommit
