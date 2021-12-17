@@ -69,8 +69,9 @@ namespace Neo.Consensus
         {
             context.Reset(viewNumber);
             if (viewNumber > 0)
-                Log($"View changed: view={viewNumber} primary={context.Validators[context.GetPrimaryIndex((byte)(viewNumber - 1u))]}", LogLevel.Warning);
-            Log($"Initialize: height={context.Block.Index} view={viewNumber} index={context.MyIndex} role={(context.IsPrimary ? "Primary" : context.WatchOnly ? "WatchOnly" : "Backup")}");
+                Log($"View changed: view={viewNumber} primary={context.Validators[context.GetPriorityPrimaryIndex((byte)(viewNumber - 1u))]}", LogLevel.Warning);
+            uint blockCurrentIndex = context.Block[0].Index;                 
+            Log($"Initialize: height={blockCurrentIndex} view={viewNumber} index={context.MyIndex} role={(context.IsPriorityPrimary ? "PrimaryP1" : context.IsFallbackPrimary ? "PrimaryP2"  : context.WatchOnly ? "WatchOnly" : "Backup")}");
             if (context.WatchOnly) return;
             if (context.IsAPrimary)
             {
@@ -82,7 +83,7 @@ namespace Neo.Consensus
                 {
                     // If both Primaries already expired move to Zero or take the difference
                     TimeSpan span = TimeSpan.FromMilliseconds(context.PrimaryTimerMultiplier * neoSystem.Settings.MillisecondsPerBlock);
-                    if (block_received_index + 1 == context.Block.Index)
+                    if (block_received_index + 1 == blockCurrentIndex)
                     {
                         var diff = TimeProvider.Current.UtcNow - block_received_time;
                         if (diff >= span)
@@ -134,16 +135,18 @@ namespace Neo.Consensus
             started = true;
             if (!dbftSettings.IgnoreRecoveryLogs && context.Load())
             {
-                if (context.Transactions != null)
+                // For Now, only checking Transactions for Priority 
+                // Fallback works only for viewnumber 0 and this will not really make a difference
+                if (context.Transactions[0] != null)
                 {
                     blockchain.Ask<Blockchain.FillCompleted>(new Blockchain.FillMemoryPool
                     {
-                        Transactions = context.Transactions.Values
+                        Transactions = context.Transactions[0].Values
                     }).Wait();
                 }
                 if (context.CommitSent)
                 {
-                    CheckPreparations();
+                    CheckPreparations(0);
                     return;
                 }
             }
