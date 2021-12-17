@@ -33,11 +33,11 @@ namespace Neo.Consensus
                 return;
             }
             if (!message.Verify(neoSystem.Settings)) return;
-            if (message.BlockIndex != context.Block.Index)
+            if (message.BlockIndex != context.Block[0].Index)
             {
                 if (context.Block.Index < message.BlockIndex)
                 {
-                    Log($"Chain is behind: expected={message.BlockIndex} current={context.Block.Index - 1}", LogLevel.Warning);
+                    Log($"Chain is behind: expected={message.BlockIndex} current={context.Block[0].Index - 1}", LogLevel.Warning);
                 }
                 return;
             }
