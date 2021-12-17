@@ -78,7 +78,7 @@ namespace Neo.Consensus
             if (message.ValidatorIndex != context.Block[pOrF].PrimaryIndex || message.ViewNumber != context.ViewNumber) return;
             if (message.Version != context.Block[pOrF].Version || message.PrevHash != context.Block[pOrF].PrevHash) return;
             if (message.TransactionHashes.Length > neoSystem.Settings.MaxTransactionsPerBlock) return;
-            
+
             Log($"{nameof(OnPrepareRequestReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} tx={message.TransactionHashes.Length} priority={message.ValidatorIndex == context.GetPriorityPrimaryIndex(context.ViewNumber)} fallback={message.ValidatorIndex == context.GetFallbackPrimaryIndex(context.ViewNumber)}");
             if (message.Timestamp <= context.PrevHeader.Timestamp || message.Timestamp > TimeProvider.Current.UtcNow.AddMilliseconds(8 * neoSystem.Settings.MillisecondsPerBlock).ToTimestampMS())
             {
