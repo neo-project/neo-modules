@@ -22,15 +22,15 @@ namespace Neo.Consensus
         /// </summary>
         private static readonly byte[] ConsensusStateKey = { 0xf4 };
 
-        public Block[] Block;
+        public Block[] Block = new Block[2];
         public byte ViewNumber;
         public ECPoint[] Validators;
         public int MyIndex;
-        public UInt256[][] TransactionHashes;
-        public Dictionary<UInt256, Transaction>[] Transactions;
-        public ExtensiblePayload[][] PreparationPayloads;
-        public ExtensiblePayload[][] PreCommitPayloads;
-        public ExtensiblePayload[][] CommitPayloads;
+        public UInt256[][] TransactionHashes = new UInt256[2][];
+        public Dictionary<UInt256, Transaction>[] Transactions = new Dictionary<UInt256, Transaction>[2];
+        public ExtensiblePayload[][] PreparationPayloads = new ExtensiblePayload[2][];
+        public ExtensiblePayload[][] PreCommitPayloads = new ExtensiblePayload[2][];
+        public ExtensiblePayload[][] CommitPayloads = new ExtensiblePayload[2][];
         public ExtensiblePayload[] ChangeViewPayloads;
         public ExtensiblePayload[] LastChangeViewPayloads;
         // LastSeenMessage array stores the height of the last seen message, for each validator.
@@ -40,7 +40,7 @@ namespace Neo.Consensus
         /// <summary>
         /// Store all verified unsorted transactions' senders' fee currently in the consensus context.
         /// </summary>
-        public TransactionVerificationContext[] VerificationContext = new();
+        public TransactionVerificationContext[] VerificationContext = new TransactionVerificationContext[2];
 
         public SnapshotCache Snapshot { get; private set; }
         private KeyPair keyPair;

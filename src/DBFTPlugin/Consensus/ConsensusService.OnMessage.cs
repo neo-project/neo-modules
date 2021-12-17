@@ -101,8 +101,8 @@ namespace Neo.Consensus
             context.Block[pOrF].Header.Nonce = message.Nonce;
             context.TransactionHashes[pOrF] = message.TransactionHashes;
 
-            context.Transactions = new Dictionary<UInt256, Transaction>();
-            context.VerificationContext = new TransactionVerificationContext();
+            context.Transactions[pOrF] = new Dictionary<UInt256, Transaction>();
+            context.VerificationContext[pOrF] = new TransactionVerificationContext();
             for (int i = 0; i < context.PreparationPayloads[pOrF].Length; i++)
                 if (context.PreparationPayloads[pOrF][i] != null)
                     if (!context.GetMessage<PrepareResponse>(context.PreparationPayloads[pOrF][i]).PreparationHash.Equals(payload.Hash))
