@@ -57,7 +57,7 @@ namespace Neo.Consensus
                     break;
                 case PreCommit precommit:
                     OnPreCommitReceived(payload, precommit);
-                    break;                    
+                    break;
                 case Commit commit:
                     OnCommitReceived(payload, commit);
                     break;
