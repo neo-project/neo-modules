@@ -110,9 +110,9 @@ namespace Neo.Consensus
             this.store = neoSystem.LoadStore(settings.RecoveryLogs);
         }
 
-        public Block CreateBlock()
+        public Block CreateBlock(uint i)
         {
-            EnsureHeader();
+            EnsureHeader(i);
             Contract contract = Contract.CreateMultiSigContract(M, Validators);
             ContractParametersContext sc = new ContractParametersContext(neoSystem.StoreView, Block.Header, dbftSettings.Network);
             for (int i = 0, j = 0; i < Validators.Length && j < M; i++)
@@ -150,10 +150,10 @@ namespace Neo.Consensus
             Snapshot?.Dispose();
         }
 
-        public Block EnsureHeader()
+        public Block EnsureHeader(uint i)
         {
-            if (TransactionHashes == null) return null;
-            Block.Header.MerkleRoot ??= MerkleTree.ComputeRoot(TransactionHashes);
+            if (TransactionHashes[i] == null) return null;
+            Block[i].Header.MerkleRoot ??= MerkleTree.ComputeRoot(TransactionHashes);
             return Block;
         }
 

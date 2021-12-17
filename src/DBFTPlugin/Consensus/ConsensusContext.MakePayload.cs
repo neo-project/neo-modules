@@ -25,7 +25,7 @@ namespace Neo.Consensus
         {
             return CommitPayloads[i][MyIndex] ?? (CommitPayloads[i][MyIndex] = MakeSignedPayload(new Commit
             {
-                Signature = EnsureHeader().Sign(keyPair, neoSystem.Settings.Network),
+                Signature = EnsureHeader(i).Sign(keyPair, neoSystem.Settings.Network),
                 Id = i
             }));
         }

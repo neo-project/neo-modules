@@ -63,8 +63,8 @@ namespace Neo.Consensus
             {
                 block_received_index = context.Block.Index;
                 block_received_time = TimeProvider.Current.UtcNow;
-                Block block = context.CreateBlock();
-                Log($"Sending {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length} to pOrF={i}");
+                Block block = context.CreateBlock(i);
+                Log($"Sending {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length} Id={i}");
                 blockchain.Tell(block);
                 return;
             }
