@@ -63,14 +63,14 @@ namespace Neo.Consensus
         public float PrimaryTimerMultiplier => 1;
         public bool IsBackup => MyIndex >= 0 && !IsPriorityPrimary && IsFallbackPrimary;
         public bool WatchOnly => MyIndex < 0;
-        public Header PrevHeader => NativeContract.Ledger.GetHeader(Snapshot, Block.PrevHash);
+        public Header PrevHeader => NativeContract.Ledger.GetHeader(Snapshot, Block[0].PrevHash);
         public int CountCommitted => CommitPayloads.Count(p => p != null);
         public int CountFailed
         {
             get
             {
                 if (LastSeenMessage == null) return 0;
-                return Validators.Count(p => !LastSeenMessage.TryGetValue(p, out var value) || value < (Block.Index - 1));
+                return Validators.Count(p => !LastSeenMessage.TryGetValue(p, out var value) || value < (Block[0].Index - 1));
             }
         }
         public bool ValidatorsChanged
@@ -86,10 +86,10 @@ namespace Neo.Consensus
         }
 
         #region Consensus States
-        public bool RequestSentOrReceived => PreparationPayloads[Block.PrimaryIndex] != null;
-        public bool ResponseSent => !WatchOnly && PreparationPayloads[MyIndex] != null;
-        public bool CommitSent => !WatchOnly && CommitPayloads[MyIndex] != null;
-        public bool BlockSent => Block.Transactions != null;
+        public bool RequestSentOrReceived => (PreparationPayloads[0][Block[0].PrimaryIndex] != null || PreparationPayloads[1][Block[0].PrimaryIndex] != null);
+        public bool ResponseSent => !WatchOnly && (PreparationPayloads[0][MyIndex] != null || PreparationPayloads[1][MyIndex] != null);
+        public bool CommitSent => !WatchOnly && (CommitPayloads[0][MyIndex] != null || CommitPayloads[1][MyIndex] != null);
+        public bool BlockSent => (Block[0].Transactions != null || Block[1].Transactions != null);
         public bool ViewChanging => !WatchOnly && GetMessage<ChangeView>(ChangeViewPayloads[MyIndex])?.NewViewNumber > ViewNumber;
         public bool NotAcceptingPayloadsDueToViewChanging => ViewChanging && !MoreThanFNodesCommittedOrLost;
         // A possible attack can happen if the last node to commit is malicious and either sends change view after his
@@ -110,20 +110,20 @@ namespace Neo.Consensus
             this.store = neoSystem.LoadStore(settings.RecoveryLogs);
         }
 
-        public Block CreateBlock(uint pOrF)
+        public Block CreateBlock(uint ii)
         {
-            EnsureHeader(pOrF);
+            EnsureHeader(ii);
             Contract contract = Contract.CreateMultiSigContract(M, Validators);
-            ContractParametersContext sc = new ContractParametersContext(neoSystem.StoreView, Block[pOrF].Header, dbftSettings.Network);
+            ContractParametersContext sc = new ContractParametersContext(neoSystem.StoreView, Block[ii].Header, dbftSettings.Network);
             for (int i = 0, j = 0; i < Validators.Length && j < M; i++)
             {
-                if (GetMessage(CommitPayloads[pOrF][i])?.ViewNumber != ViewNumber) continue;
-                sc.AddSignature(contract, Validators[i], GetMessage<Commit>(CommitPayloads[pOrF][i]).Signature);
+                if (GetMessage(CommitPayloads[ii][i])?.ViewNumber != ViewNumber) continue;
+                sc.AddSignature(contract, Validators[i], GetMessage<Commit>(CommitPayloads[ii][i]).Signature);
                 j++;
             }
-            Block[pOrF].Header.Witness = sc.GetWitnesses()[0];
-            Block[pOrF].Transactions = TransactionHashes[pOrF].Select(p => Transactions[pOrF][p]).ToArray();
-            return Block;
+            Block[ii].Header.Witness = sc.GetWitnesses()[0];
+            Block[ii].Transactions = TransactionHashes[ii].Select(p => Transactions[ii][p]).ToArray();
+            return Block[ii];
         }
 
         public ExtensiblePayload CreatePayload(ConsensusMessage message, byte[] invocationScript = null)
@@ -153,8 +153,8 @@ namespace Neo.Consensus
         public Block EnsureHeader(uint i)
         {
             if (TransactionHashes[i] == null) return null;
-            Block[i].Header.MerkleRoot ??= MerkleTree.ComputeRoot(TransactionHashes);
-            return Block;
+            Block[i].Header.MerkleRoot ??= MerkleTree.ComputeRoot(TransactionHashes[i]);
+            return Block[i];
         }
 
         public bool Load()
@@ -309,7 +309,7 @@ namespace Neo.Consensus
                 VerificationContext[i] = new TransactionVerificationContext();
                 if (Transactions[i] != null)
                 {
-                    foreach (Transaction tx in Transactions.Values)
+                    foreach (Transaction tx in Transactions[i].Values)
                         VerificationContext[i].AddTransaction(tx);
                 }
             }

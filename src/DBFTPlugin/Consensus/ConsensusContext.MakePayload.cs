@@ -32,7 +32,7 @@ namespace Neo.Consensus
 
         private ExtensiblePayload MakeSignedPayload(ConsensusMessage message)
         {
-            message.BlockIndex = Block.Index;
+            message.BlockIndex = Block[0].Index;
             message.ValidatorIndex = (byte)MyIndex;
             message.ViewNumber = ViewNumber;
             ExtensiblePayload payload = CreatePayload(message, null);
@@ -124,13 +124,13 @@ namespace Neo.Consensus
             {
                 prepareRequestMessage = new PrepareRequest
                 {
-                    Version = Block.Version,
-                    PrevHash = Block.PrevHash,
+                    Version = Block[0].Version,
+                    PrevHash = Block[0].PrevHash,
                     ViewNumber = ViewNumber,
-                    Timestamp = Block.Timestamp,
-                    Nonce = Block.Nonce,
-                    BlockIndex = Block.Index,
-                    TransactionHashes = TransactionHashes
+                    Timestamp = Block[0].Timestamp,
+                    Nonce = Block[0].Nonce,
+                    BlockIndex = Block[0].Index,
+                    TransactionHashes = TransactionHashes[0]
                 };
             }
             return MakeSignedPayload(new RecoveryMessage
@@ -138,10 +138,10 @@ namespace Neo.Consensus
                 ChangeViewMessages = LastChangeViewPayloads.Where(p => p != null).Select(p => GetChangeViewPayloadCompact(p)).Take(M).ToDictionary(p => p.ValidatorIndex),
                 PrepareRequestMessage = prepareRequestMessage,
                 // We only need a PreparationHash set if we don't have the PrepareRequest information.
-                PreparationHash = TransactionHashes == null ? PreparationPayloads.Where(p => p != null).GroupBy(p => GetMessage<PrepareResponse>(p).PreparationHash, (k, g) => new { Hash = k, Count = g.Count() }).OrderByDescending(p => p.Count).Select(p => p.Hash).FirstOrDefault() : null,
-                PreparationMessages = PreparationPayloads.Where(p => p != null).Select(p => GetPreparationPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex),
+                PreparationHash = TransactionHashes[0] == null ? PreparationPayloads[0].Where(p => p != null).GroupBy(p => GetMessage<PrepareResponse>(p).PreparationHash, (k, g) => new { Hash = k, Count = g.Count() }).OrderByDescending(p => p.Count).Select(p => p.Hash).FirstOrDefault() : null,
+                PreparationMessages = PreparationPayloads[0].Where(p => p != null).Select(p => GetPreparationPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex),
                 CommitMessages = CommitSent
-                    ? CommitPayloads.Where(p => p != null).Select(p => GetCommitPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex)
+                    ? CommitPayloads[0].Where(p => p != null).Select(p => GetCommitPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex)
                     : new Dictionary<byte, CommitPayloadCompact>()
             });
         }
@@ -157,9 +157,9 @@ namespace Neo.Consensus
 
         public ExtensiblePayload MakePreCommit(uint i)
         {
-            return PreCommitPayloads[MyIndex] = MakeSignedPayload(new PreCommit
+            return PreCommitPayloads[i][MyIndex] = MakeSignedPayload(new PreCommit
             {
-                PreparationHash = PreparationPayloads[Block[i].PrimaryIndex].Hash,
+                PreparationHash = PreCommitPayloads[i][Block[i].PrimaryIndex].Hash,
                 Id = i
             });
         }

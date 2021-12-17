@@ -35,7 +35,7 @@ namespace Neo.Consensus
             if (!message.Verify(neoSystem.Settings)) return;
             if (message.BlockIndex != context.Block[0].Index)
             {
-                if (context.Block.Index < message.BlockIndex)
+                if (context.Block[0].Index < message.BlockIndex)
                 {
                     Log($"Chain is behind: expected={message.BlockIndex} current={context.Block[0].Index - 1}", LogLevel.Warning);
                 }
@@ -73,13 +73,12 @@ namespace Neo.Consensus
         private void OnPrepareRequestReceived(ExtensiblePayload payload, PrepareRequest message)
         {
             if (context.RequestSentOrReceived || context.NotAcceptingPayloadsDueToViewChanging) return;
-            // Add verification for Fallback
-            if (message.ValidatorIndex != context.Block.PrimaryIndex || message.ViewNumber != context.ViewNumber) return;
-            if (message.Version != context.Block.Version || message.PrevHash != context.Block.PrevHash) return;
-            if (message.TransactionHashes.Length > neoSystem.Settings.MaxTransactionsPerBlock) return;
             uint pOrF = Convert.ToUInt32(message.ValidatorIndex == context.GetPriorityPrimaryIndex(context.ViewNumber));
-
-
+            // Add verification for Fallback
+            if (message.ValidatorIndex != context.Block[pOrF].PrimaryIndex || message.ViewNumber != context.ViewNumber) return;
+            if (message.Version != context.Block[pOrF].Version || message.PrevHash != context.Block[pOrF].PrevHash) return;
+            if (message.TransactionHashes.Length > neoSystem.Settings.MaxTransactionsPerBlock) return;
+            
             Log($"{nameof(OnPrepareRequestReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} tx={message.TransactionHashes.Length} priority={message.ValidatorIndex == context.GetPriorityPrimaryIndex(context.ViewNumber)} fallback={message.ValidatorIndex == context.GetFallbackPrimaryIndex(context.ViewNumber)}");
             if (message.Timestamp <= context.PrevHeader.Timestamp || message.Timestamp > TimeProvider.Current.UtcNow.AddMilliseconds(8 * neoSystem.Settings.MillisecondsPerBlock).ToTimestampMS())
             {
@@ -87,7 +86,7 @@ namespace Neo.Consensus
                 return;
             }
 
-            if (message.TransactionHashes[pOrF].Any(p => NativeContract.Ledger.ContainsTransaction(context.Snapshot, p)))
+            if (message.TransactionHashes.Any(p => NativeContract.Ledger.ContainsTransaction(context.Snapshot, p)))
             {
                 Log($"Invalid request: transaction already exists", LogLevel.Warning);
                 return;
@@ -140,9 +139,9 @@ namespace Neo.Consensus
             foreach (Transaction tx in unverified)
                 if (!AddTransaction(tx, true))
                     return;
-            if (context.Transactions.Count < context.TransactionHashes[pOrF].Length)
+            if (context.Transactions[pOrF].Count < context.TransactionHashes[pOrF].Length)
             {
-                UInt256[] hashes = context.TransactionHashes[pOrF].Where(i => !context.Transactions.ContainsKey(i)).ToArray();
+                UInt256[] hashes = context.TransactionHashes[pOrF].Where(i => !context.Transactions[pOrF].ContainsKey(i)).ToArray();
                 taskManager.Tell(new TaskManager.RestartTasks
                 {
                     Payload = InvPayload.Create(InventoryType.TX, hashes)
@@ -263,8 +262,11 @@ namespace Neo.Consensus
                             totalPrepReq = 1;
                             if (ReverifyAndProcessPayload(prepareRequestPayload)) validPrepReq++;
                         }
-                        else if (context.IsPrimary)
-                            SendPrepareRequest();
+                        else if (context.IsPriorityPrimary || (context.IsFallbackPrimary && message.ViewNumber == 0))
+                        {
+                            uint pOrF = Convert.ToUInt32(context.IsPriorityPrimary);
+                            SendPrepareRequest(pOrF);
+                        }
                     }
                     ExtensiblePayload[] prepareResponsePayloads = message.GetPrepareResponsePayloads(context);
                     totalPrepResponses = prepareResponsePayloads.Length;

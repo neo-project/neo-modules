@@ -11,23 +11,23 @@ namespace Neo.Consensus
     {
         private bool CheckPrepareResponse(uint i)
         {
-            if (context.TransactionHashes[i].Length == context.Transactions.Count)
+            if (context.TransactionHashes[i].Length == context.Transactions[i].Count)
             {
                 // if we are the primary for this view, but acting as a backup because we recovered our own
                 // previously sent prepare request, then we don't want to send a prepare response.
                 if (context.IsAPrimary || context.WatchOnly) return true;
 
                 // Check maximum block size via Native Contract policy
-                if (context.GetExpectedBlockSize() > dbftSettings.MaxBlockSize)
+                if (context.GetExpectedBlockSize(i) > dbftSettings.MaxBlockSize)
                 {
-                    Log($"Rejected block: {context.Block.Index} The size exceed the policy", LogLevel.Warning);
+                    Log($"Rejected block: {context.Block[i].Index} The size exceed the policy", LogLevel.Warning);
                     RequestChangeView(ChangeViewReason.BlockRejectedByPolicy);
                     return false;
                 }
                 // Check maximum block system fee via Native Contract policy
-                if (context.GetExpectedBlockSystemFee() > dbftSettings.MaxBlockSystemFee)
+                if (context.GetExpectedBlockSystemFee(i) > dbftSettings.MaxBlockSystemFee)
                 {
-                    Log($"Rejected block: {context.Block.Index} The system fee exceed the policy", LogLevel.Warning);
+                    Log($"Rejected block: {context.Block[i].Index} The system fee exceed the policy", LogLevel.Warning);
                     RequestChangeView(ChangeViewReason.BlockRejectedByPolicy);
                     return false;
                 }
@@ -45,7 +45,7 @@ namespace Neo.Consensus
 
         private void CheckPreCommits(uint i, bool forced = false)
         {
-            if (forced || context.PreCommitPayloads[i].Count(p => p != null) >= context.M && context.TransactionHashes[i].All(p => context.Transactions.ContainsKey(p)))
+            if (forced || context.PreCommitPayloads[i].Count(p => p != null) >= context.M && context.TransactionHashes[i].All(p => context.Transactions[i].ContainsKey(p)))
             {
                 ExtensiblePayload payload = context.MakeCommit(i);
                 Log($"Sending {nameof(Commit)} to pOrF={i}");
@@ -59,9 +59,9 @@ namespace Neo.Consensus
 
         private void CheckCommits(uint i)
         {
-            if (context.CommitPayloads[i].Count(p => context.GetMessage(p)?.ViewNumber == context.ViewNumber) >= context.M && context.TransactionHashes.All(p => context.Transactions.ContainsKey(p)))
+            if (context.CommitPayloads[i].Count(p => context.GetMessage(p)?.ViewNumber == context.ViewNumber) >= context.M && context.TransactionHashes[i].All(p => context.Transactions[i].ContainsKey(p)))
             {
-                block_received_index = context.Block.Index;
+                block_received_index = context.Block[i].Index;
                 block_received_time = TimeProvider.Current.UtcNow;
                 Block block = context.CreateBlock(i);
                 Log($"Sending {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length} Id={i}");
@@ -95,7 +95,7 @@ namespace Neo.Consensus
             if (i == 1)
                 thresholdForPrep = context.M;
 
-            if (context.PreparationPayloads[i].Count(p => p != null) >= thresholdForPrep && context.TransactionHashes.All(p => context.Transactions.ContainsKey(p)))
+            if (context.PreparationPayloads[i].Count(p => p != null) >= thresholdForPrep && context.TransactionHashes[i].All(p => context.Transactions[i].ContainsKey(p)))
             {
                 ExtensiblePayload payload = context.MakePreCommit(i);
                 Log($"Sending {nameof(PreCommit)} pOrF={i}");

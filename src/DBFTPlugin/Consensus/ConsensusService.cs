@@ -158,11 +158,12 @@ namespace Neo.Consensus
 
         private void OnTimer(Timer timer)
         {
+            uint pOrF = Convert.ToUInt32(context.IsPriorityPrimary);
             if (context.WatchOnly || context.BlockSent) return;
-            if (timer.Height != context.Block.Index || timer.ViewNumber != context.ViewNumber) return;
+            if (timer.Height != context.Block[pOrF].Index || timer.ViewNumber != context.ViewNumber) return;
             if (context.IsAPrimary && !context.RequestSentOrReceived)
             {
-                SendPrepareRequest();
+                SendPrepareRequest(pOrF);
             }
             else if ((context.IsAPrimary && context.RequestSentOrReceived) || context.IsBackup)
             {
@@ -177,7 +178,7 @@ namespace Neo.Consensus
                 {
                     var reason = ChangeViewReason.Timeout;
 
-                    if (context.Block != null && context.TransactionHashes?.Length > context.Transactions?.Count)
+                    if (context.Block[pOrF] != null && context.TransactionHashes[pOrF]?.Length > context.Transactions[pOrF]?.Count)
                     {
                         reason = ChangeViewReason.TxNotFound;
                     }
@@ -187,17 +188,17 @@ namespace Neo.Consensus
             }
         }
 
-        private void SendPrepareRequest()
+        private void SendPrepareRequest(uint i)
         {
-            Log($"Sending {nameof(PrepareRequest)}: height={context.Block.Index} view={context.ViewNumber} P1={context.IsPriorityPrimary} P2={context.IsFallbackPrimary}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest() });
+            Log($"Sending {nameof(PrepareRequest)}: height={context.Block[i].Index} view={context.ViewNumber} Id={i}");
+            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest(i) });
 
             if (context.Validators.Length == 1)
-                CheckPreparations();
+                CheckPreparations(i);
 
-            if (context.TransactionHashes.Length > 0)
+            if (context.TransactionHashes[i].Length > 0)
             {
-                foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes))
+                foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes[i]))
                     localNode.Tell(Message.Create(MessageCommand.Inv, payload));
             }
             //Multiplier for Primary P1 or FellBeck P2
@@ -211,7 +212,7 @@ namespace Neo.Consensus
 
         private void RequestRecovery()
         {
-            Log($"Sending {nameof(RecoveryRequest)}: height={context.Block.Index} view={context.ViewNumber} nc={context.CountCommitted} nf={context.CountFailed}");
+            Log($"Sending {nameof(RecoveryRequest)}: height={context.Block[0].Index} view={context.ViewNumber} nc={context.CountCommitted} nf={context.CountFailed}");
             localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeRecoveryRequest() });
         }
 
@@ -230,7 +231,7 @@ namespace Neo.Consensus
             }
             else
             {
-                Log($"Sending {nameof(ChangeView)}: height={context.Block.Index} view={context.ViewNumber} nv={expectedView} nc={context.CountCommitted} nf={context.CountFailed} reason={reason}");
+                Log($"Sending {nameof(ChangeView)}: height={context.Block[0].Index} view={context.ViewNumber} nv={expectedView} nc={context.CountCommitted} nf={context.CountFailed} reason={reason}");
                 localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeChangeView(reason) });
                 CheckExpectedView(expectedView);
             }
@@ -248,7 +249,7 @@ namespace Neo.Consensus
         {
             if (!context.IsBackup || context.NotAcceptingPayloadsDueToViewChanging || !context.RequestSentOrReceived || context.ResponseSent || context.BlockSent)
                 return;
-            if (context.Transactions.ContainsKey(transaction.Hash)) return;
+            if (context.Transactions[0].ContainsKey(transaction.Hash) || context.Transactions[1].ContainsKey(transaction.Hash)) return;
             if (!context.TransactionHashes[0].Contains(transaction.Hash) && !context.TransactionHashes[1].Contains(transaction.Hash)) return;
             AddTransaction(transaction, true);
         }
@@ -284,7 +285,7 @@ namespace Neo.Consensus
             timer_token.CancelIfNotNull();
             timer_token = Context.System.Scheduler.ScheduleTellOnceCancelable(delay, Self, new Timer
             {
-                Height = context.Block.Index,
+                Height = context.Block[0].Index,
                 ViewNumber = context.ViewNumber
             }, ActorRefs.NoSender);
         }

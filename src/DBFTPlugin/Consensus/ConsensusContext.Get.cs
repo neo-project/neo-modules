@@ -58,14 +58,14 @@ namespace Neo.Consensus
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte GetPriorityPrimaryIndex(byte viewNumber)
         {
-            int p = ((int)Block.Index - viewNumber) % Validators.Length;
+            int p = ((int)Block[0].Index - viewNumber) % Validators.Length;
             return p >= 0 ? (byte)p : (byte)(p + Validators.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte GetFallbackPrimaryIndex(byte viewNumber)
         {
-            int p = ((int)Block.Index - viewNumber + 1) % Validators.Length;
+            int p = ((int)Block[0].Index - viewNumber + 1) % Validators.Length;
             return p >= 0 ? (byte)p : (byte)(p + Validators.Length);
         }
 
@@ -77,18 +77,18 @@ namespace Neo.Consensus
         /// <summary>
         /// Return the expected block size
         /// </summary>
-        public int GetExpectedBlockSize()
+        public int GetExpectedBlockSize(uint i)
         {
-            return GetExpectedBlockSizeWithoutTransactions(Transactions.Count) + // Base size
-                Transactions.Values.Sum(u => u.Size);   // Sum Txs
+            return GetExpectedBlockSizeWithoutTransactions(Transactions[i].Count) + // Base size
+                Transactions[i].Values.Sum(u => u.Size);   // Sum Txs
         }
 
         /// <summary>
         /// Return the expected block system fee
         /// </summary>
-        public long GetExpectedBlockSystemFee()
+        public long GetExpectedBlockSystemFee(uint i)
         {
-            return Transactions.Values.Sum(u => u.SystemFee);  // Sum Txs
+            return Transactions[i].Values.Sum(u => u.SystemFee);  // Sum Txs
         }
 
         /// <summary>
