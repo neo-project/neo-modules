@@ -7,7 +7,7 @@ namespace Neo.FileStorage.Storage.Core.Container
     public static class Helper
     {
         public const string ContainerNotFoundError = "container not found";
-        
+
         public static bool CheckFormat(this FSContainer container)
         {
             if (container.PlacementPolicy is null) return false;
