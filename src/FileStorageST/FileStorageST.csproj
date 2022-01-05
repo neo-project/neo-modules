@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>Neo.FileStorage.Storage</PackageId>
+    <RootNamespace>Neo.FileStorage.Storage</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="FileStorageST\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Neo.ConsoleService" Version="1.0.0" />
+    <PackageReference Include="ZstdNet" Version="1.3.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FileStorageBase\FileStorageBase.csproj" />
+  </ItemGroup>
+
+</Project>

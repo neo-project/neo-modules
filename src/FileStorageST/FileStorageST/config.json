@@ -1,0 +1,80 @@
+{
+  "PluginConfiguration": {
+    "AutoStart": false,
+    "BootstrapInterval": 2,
+    "Addresses": [
+      "/ip4/0.0.0.0/tcp/8080"
+    ],
+    "Port": 8080,
+    "SslCert": "",
+    "SslCertPassword": "",
+    "Attributes": [
+      "Capacity: 0",
+      "Price: 22",
+      "UN-LOCODE: CN SGH"
+    ],
+    "TombstoneLifetime": 5,
+    "SideChainFee": 5000,
+    "Administrators": [
+      "02cd5a5547119e24feaa7c2a0f37b8c9366216bab7054de0065c9be42084003c8a"
+    ],
+    "Replicate": {
+      "Timeout": 5
+    },
+    "Shards": [
+      {
+        "UseWriteCache": true,
+        "RemoveBatchSize": 100,
+        "RemoverInterval": 60000,
+        "WriteCache": {
+          "Path": "./Data/Shard_0/Data_WriteCache",
+          "MaxCacheSize": 1073741824,
+          "MaxMemorySize": 1073741824,
+          "MaxObjectSize": 67108864,
+          "SmallObjectSize": 32768,
+          "MaxDBSize": 0
+        },
+        "BlobStorage": {
+          "Path": "./Data/Shard_0/Data_BlobStorage",
+          "Compress": true,
+          "ShallowDepth": 4,
+          "SmallSizeLimit": 1048576,
+          "Blobovnicza": {
+            "Size": 1073741824,
+            "ShallowDepth": 1,
+            "ShallowWidth": 2,
+            "OpenCacheSize": 8
+          }
+        },
+        "Metabase": {
+          "Path": "./Data/Shard_0/Data_Metabase"
+        }
+      },
+      {
+        "UseWriteCache": false,
+        "WriteCache": {
+          "Path": "./Data/Shard_1/Data_WriteCache",
+          "MaxMemorySize": 1073741824,
+          "MaxObjectSize": 67108864,
+          "SmallObjectSize": 32768,
+          "MaxDbSize": 0
+        },
+        "BlobStorage": {
+          "Path": "./Data/Shard_1/Data_BlobStorage",
+          "Compress": true,
+          "ShallowDepth": 4,
+          "SmallSizeLimit": 1048576,
+          "Blobovnicza": {
+            "Size": 1073741824,
+            "ShallowDepth": 1,
+            "ShallowWidth": 2,
+            "OpenCacheSize": 8
+          }
+        },
+        "Metabase": {
+          "Path": "./Data/Shard_1/Data_Metabase"
+        }
+      }
+    ]
+  }
+}
