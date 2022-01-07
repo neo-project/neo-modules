@@ -19,7 +19,6 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
         public void WriteHeader(FSObject obj)
         {
             this.obj = obj;
-            size += (ulong)obj.Payload.Length;
         }
 
         public void WriteChunk(byte[] chunk)
