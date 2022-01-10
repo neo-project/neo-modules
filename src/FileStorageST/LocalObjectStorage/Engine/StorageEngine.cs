@@ -144,14 +144,10 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
                 if (addresses is null) { continue; }
                 foreach (var address in addresses)
                 {
-                    if (!result.Contains(address))
+                    if (result.Add(address))
                     {
-                        result.Add(address);
                         limit--;
-                        if (limit == 0)
-                        {
-                            return result.ToList();
-                        }
+                        if (limit == 0) return result.ToList();
                     }
                 }
             }

@@ -1,5 +1,4 @@
 using Neo.FileStorage.API.Reputation;
-using Neo.FileStorage.Storage.Services.Reputaion.EigenTrust;
 using Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Storage.Consumers;
 using Neo.FileStorage.Storage.Services.Reputaion.EigenTrust.Storage.Daughters;
 using System;

@@ -6,7 +6,6 @@ using Neo.FileStorage.Storage.Services.Reputaion.Common.Route;
 using Neo.FileStorage.Storage.Services.Reputaion.EigenTrust;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 
 namespace Neo.FileStorage.Storage.Services.Reputaion.Service

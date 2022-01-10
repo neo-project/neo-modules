@@ -178,9 +178,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
             {
                 var addresses = metabase.Select(containerId, filters);
                 if (addresses?.Count > 0)
-                {
                     result.AddRange(addresses);
-                }
             }
             return result;
         }

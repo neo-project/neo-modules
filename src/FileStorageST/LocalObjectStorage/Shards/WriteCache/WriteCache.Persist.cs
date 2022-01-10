@@ -62,9 +62,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
         private void AddToFlushQueue(ObjectInfo[] objs, int metaIndex)
         {
             for (int i = 0; i < objs.Length; i++)
-            {
                 flushQueue.Enqueue((objs[i], i < metaIndex));
-            }
         }
     }
 }

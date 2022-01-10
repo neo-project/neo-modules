@@ -12,7 +12,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
 
         public void WriteHeader(FSObject header)
         {
-            obj = header;
+            obj = header.Clone();
         }
 
         public void WriteChunk(byte[] chunk)
