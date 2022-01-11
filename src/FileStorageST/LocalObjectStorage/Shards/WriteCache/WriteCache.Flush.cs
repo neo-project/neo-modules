@@ -11,7 +11,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
         {
             int i = 0;
             List<ObjectInfo> toFlush = new();
-            db.Iterate(Array.Empty<byte>(), (key, value) => //TODO: lastKey
+            db.Iterate(Array.Empty<byte>(), (key, value) =>
              {
                  ObjectInfo oi = new()
                  {
