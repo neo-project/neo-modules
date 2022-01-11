@@ -197,6 +197,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
                     }
                     if (!next.Send(request)) break;
                 }
+                while (await requestStream.MoveNext(context.CancellationToken)) { }
                 var resp = (PutResponse)next.Close();
                 return resp;
             }

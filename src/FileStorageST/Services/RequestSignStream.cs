@@ -15,10 +15,11 @@ namespace Neo.FileStorage.Storage.Services
         public Action<IRequest> Sender { get; init; }
         public Func<IResponse> Closer { get; init; }
         public Action Disposer { get; init; }
-        private Exception sendError;
+        private Exception error;
 
         public bool Send(IRequest request)
         {
+            if (error is not null) return false;
             StatusSupported = IsStatusSupported(request);
             try
             {
@@ -30,7 +31,7 @@ namespace Neo.FileStorage.Storage.Services
             catch (Exception e)
             {
                 if (!StatusSupported) throw;
-                sendError = e;
+                error = e;
                 return false;
             }
         }
@@ -38,10 +39,10 @@ namespace Neo.FileStorage.Storage.Services
         public IResponse Close()
         {
             IResponse resp;
-            if (sendError is not null)
+            if (error is not null)
             {
                 resp = BlankResp();
-                resp.SetStatus(sendError);
+                resp.SetStatus(error);
             }
             else
             {

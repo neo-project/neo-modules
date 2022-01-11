@@ -1,6 +1,5 @@
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Object;
-using Neo.FileStorage.API.Session;
 using Neo.FileStorage.API.Status;
 using System;
 using System.Threading;
@@ -89,26 +88,6 @@ namespace Neo.FileStorage.Storage.Services.Object
             {
                 handler((SearchResponse)resp);
             }), cancellation);
-        }
-    }
-
-    public sealed class PutSignStream : IRequestStream
-    {
-        public RequestSignStream Stream { get; init; }
-
-        public bool Send(IRequest request)
-        {
-            return Stream.Send(request);
-        }
-
-        public IResponse Close()
-        {
-            return Stream.Close();
-        }
-
-        public void Dispose()
-        {
-            Stream.Dispose();
         }
     }
 }

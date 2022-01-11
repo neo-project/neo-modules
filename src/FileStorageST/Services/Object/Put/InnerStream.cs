@@ -8,7 +8,6 @@ using Neo.FileStorage.Storage.Services.Object.Util;
 using System;
 using System.Linq;
 using System.Threading;
-using static Neo.FileStorage.Network.Helper;
 
 namespace Neo.FileStorage.Storage.Services.Object.Put
 {
