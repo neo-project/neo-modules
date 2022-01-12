@@ -51,34 +51,6 @@
         "Metabase": {
           "Path": "./Data/Shard_0/Data_Metabase"
         }
-      },
-      {
-        "UseWriteCache": false,
-        "WriteCache": {
-          "Path": "./Data/Shard_1/Data_WriteCache",
-          "MaxMemorySize": 1073741824,
-          "MaxObjectSize": 67108864,
-          "SmallObjectSize": 32768,
-          "MaxDbSize": 0
-        },
-        "BlobStorage": {
-          "Path": "./Data/Shard_1/Data_BlobStorage",
-          "Compress": true,
-          "SmallSizeLimit": 1048576,
-          "FSTree": {
-            "ShallowDepth": 4,
-            "DirectoryNameLength": 2
-          },
-          "Blobovnicza": {
-            "Size": 1073741824,
-            "ShallowDepth": 1,
-            "ShallowWidth": 2,
-            "OpenCacheSize": 8
-          }
-        },
-        "Metabase": {
-          "Path": "./Data/Shard_1/Data_Metabase"
-        }
       }
     ]
   }
