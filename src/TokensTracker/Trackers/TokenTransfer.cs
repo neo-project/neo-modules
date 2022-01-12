@@ -1,10 +1,10 @@
-using Neo.IO;
 using System.IO;
 using System.Numerics;
+using Neo.IO;
 
-namespace Neo.Plugins
+namespace Neo.Plugins.Trackers
 {
-    public class Nep17Transfer : ISerializable
+    public class TokenTransfer : ISerializable
     {
         public UInt160 UserScriptHash;
         public uint BlockIndex;
@@ -15,7 +15,7 @@ namespace Neo.Plugins
             UInt160.Length +        // UserScriptHash
             sizeof(uint) +          // BlockIndex
             UInt256.Length +        // TxHash
-            Amount.GetByteCount();  // Amount
+            Amount.GetVarSize();    // Amount
 
         void ISerializable.Serialize(BinaryWriter writer)
         {
@@ -30,7 +30,7 @@ namespace Neo.Plugins
             UserScriptHash = reader.ReadSerializable<UInt160>();
             BlockIndex = reader.ReadUInt32();
             TxHash = reader.ReadSerializable<UInt256>();
-            Amount = new BigInteger(reader.ReadVarBytes(512));
+            Amount = new BigInteger(reader.ReadVarBytes(32));
         }
     }
 }
