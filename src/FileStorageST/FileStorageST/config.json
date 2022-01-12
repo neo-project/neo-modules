@@ -36,8 +36,11 @@
         "BlobStorage": {
           "Path": "./Data/Shard_0/Data_BlobStorage",
           "Compress": true,
-          "ShallowDepth": 4,
           "SmallSizeLimit": 1048576,
+          "FSTree": {
+            "ShallowDepth": 4,
+            "DirectoryNameLength": 2
+          },
           "Blobovnicza": {
             "Size": 1073741824,
             "ShallowDepth": 1,
@@ -61,8 +64,11 @@
         "BlobStorage": {
           "Path": "./Data/Shard_1/Data_BlobStorage",
           "Compress": true,
-          "ShallowDepth": 4,
           "SmallSizeLimit": 1048576,
+          "FSTree": {
+            "ShallowDepth": 4,
+            "DirectoryNameLength": 2
+          },
           "Blobovnicza": {
             "Size": 1073741824,
             "ShallowDepth": 1,

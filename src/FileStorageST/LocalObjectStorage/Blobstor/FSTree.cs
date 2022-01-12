@@ -12,15 +12,16 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
         public const int DefaultDirNameLength = 1;
         public const int MaxDepth = (32 - 1) / DefaultDirNameLength;
         public const int DefaultShallowDepth = 4;
-        public const string DefaultRootPath = "./Data_FSTree";
+        public const string DefaultPath = "Data_FSTree";
 
-        private int depth;
-        private int dirNameLen;
-        private string rootPath;
+        private readonly int depth;
+        private readonly int dirNameLen;
+        private readonly string rootPath;
 
         public FSTree(string root, int d, int dir_len)
         {
-            depth = MaxDepth < d ? MaxDepth : d;
+            depth = d > MaxDepth ? MaxDepth : d;
+            if (dir_len == 0 || depth * dir_len >= 32) dir_len = DefaultDirNameLength;
             dirNameLen = dir_len * 2;
             rootPath = root;
             if (!Directory.Exists(rootPath))

@@ -150,7 +150,6 @@ namespace Neo.FileStorage.Storage
         public ulong MaxMemorySize;
         public ulong MaxObjectSize;
         public ulong SmallObjectSize;
-
         public static WriteCacheSettings Default { get; private set; }
 
         static WriteCacheSettings()
@@ -180,16 +179,15 @@ namespace Neo.FileStorage.Storage
         }
     }
 
-    public class BlobovniczasSettings
+    public class BlobovniczaSettings
     {
         public ulong Size;
         public int ShallowDepth;
         public int ShallowWidth;
         public int OpenCacheSize;
+        public static BlobovniczaSettings Default { get; private set; }
 
-        public static BlobovniczasSettings Default { get; private set; }
-
-        static BlobovniczasSettings()
+        static BlobovniczaSettings()
         {
             Default = new()
             {
@@ -200,7 +198,7 @@ namespace Neo.FileStorage.Storage
             };
         }
 
-        public static BlobovniczasSettings Load(IConfigurationSection section)
+        public static BlobovniczaSettings Load(IConfigurationSection section)
         {
             return new()
             {
@@ -212,14 +210,39 @@ namespace Neo.FileStorage.Storage
         }
     }
 
+    public class FSTreeSettings
+    {
+        public int ShallowDepth;
+        public int DirectoryNameLength;
+        public static FSTreeSettings Default { get; private set; }
+
+        static FSTreeSettings()
+        {
+            Default = new()
+            {
+                ShallowDepth = FSTree.DefaultShallowDepth,
+                DirectoryNameLength = FSTree.DefaultDirNameLength
+            };
+        }
+
+        public static FSTreeSettings Load(IConfigurationSection section)
+        {
+            FSTreeSettings settings = new()
+            {
+                ShallowDepth = section.GetValue("ShallowDepth", FSTree.DefaultShallowDepth),
+                DirectoryNameLength = section.GetValue("DirectoryNameLength", FSTree.DefaultDirNameLength)
+            };
+            return settings;
+        }
+    }
+
     public class BlobStorageSettings
     {
         public string Path;
         public bool Compress;
-        public int ShallowDepth;
         public ulong SmallSizeLimit;
-        public BlobovniczasSettings BlobovniczasSettings;
-
+        public FSTreeSettings FSTreeSettings;
+        public BlobovniczaSettings BlobovniczaSettings;
         public static BlobStorageSettings Default { get; private set; }
 
         static BlobStorageSettings()
@@ -228,9 +251,9 @@ namespace Neo.FileStorage.Storage
             {
                 Path = $"Data_BlobStorage_{Guid.NewGuid()}",
                 Compress = true,
-                ShallowDepth = FSTree.DefaultShallowDepth,
                 SmallSizeLimit = BlobStorage.DefaultSmallSizeLimit,
-                BlobovniczasSettings = BlobovniczasSettings.Default
+                FSTreeSettings = FSTreeSettings.Default,
+                BlobovniczaSettings = BlobovniczaSettings.Default
             };
         }
 
@@ -240,9 +263,9 @@ namespace Neo.FileStorage.Storage
             {
                 Path = section.GetValue("Path", ""),
                 Compress = section.GetValue("Compress", true),
-                ShallowDepth = section.GetValue("ShallowDepth", FSTree.DefaultShallowDepth),
                 SmallSizeLimit = section.GetValue("SmallSizeLimit", BlobStorage.DefaultSmallSizeLimit),
-                BlobovniczasSettings = BlobovniczasSettings.Load(section.GetSection("Blobovnicza"))
+                FSTreeSettings = FSTreeSettings.Load(section.GetSection("FSTree")),
+                BlobovniczaSettings = BlobovniczaSettings.Load(section.GetSection("Blobovnicza"))
             };
             if (settings.Path == "") throw new FormatException("invalid blobstorage path");
             return settings;
@@ -252,7 +275,6 @@ namespace Neo.FileStorage.Storage
     public class MetabaseSettings
     {
         public string Path;
-
         public static MetabaseSettings Default { get; private set; }
 
         static MetabaseSettings()
@@ -282,7 +304,6 @@ namespace Neo.FileStorage.Storage
         public WriteCacheSettings WriteCacheSettings;
         public BlobStorageSettings BlobStorageSettings;
         public MetabaseSettings MetabaseSettings;
-
         public static ShardSettings Default { get; private set; }
 
         static ShardSettings()
