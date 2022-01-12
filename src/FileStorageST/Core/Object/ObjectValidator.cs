@@ -115,7 +115,7 @@ namespace Neo.FileStorage.Storage.Core.Object
                     }
                     catch (InvalidOperationException)
                     {
-                        Utility.Log(nameof(ObjectValidator), LogLevel.Warning, "object doesn't have expiration attribute");
+                        Utility.Log(nameof(ObjectValidator), LogLevel.Debug, "object doesn't have expiration attribute");
                         return false;
                     }
                     if (exp != tombstone.ExpirationEpoch)

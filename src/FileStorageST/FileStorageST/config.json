@@ -31,8 +31,7 @@
           "MaxCacheSize": 1073741824,
           "MaxMemorySize": 1073741824,
           "MaxObjectSize": 67108864,
-          "SmallObjectSize": 32768,
-          "MaxDBSize": 0
+          "SmallObjectSize": 32768
         },
         "BlobStorage": {
           "Path": "./Data/Shard_0/Data_BlobStorage",
