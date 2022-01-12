@@ -1,8 +1,6 @@
 using Google.Protobuf;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Storage.Services.Object.Put;
-using System;
 
 namespace Neo.FileStorage.Storage.Services.Object.Delete.Execute
 {

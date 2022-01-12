@@ -29,6 +29,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Delete.Execute
             catch (Exception e)
             {
                 Utility.Log(nameof(Delete.Execute), LogLevel.Debug, $"local delete failed, error={e.Message}");
+                throw;
             }
         }
 
