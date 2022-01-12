@@ -17,7 +17,7 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Shards
             ShardSettings settings = ShardSettings.Default;
             settings.UseWriteCache = useCache;
             settings.BlobStorageSettings.Path = testName + "/" + settings.BlobStorageSettings.Path;
-            settings.BlobStorageSettings.BlobovniczasSettings.ShallowWidth = 4;
+            settings.BlobStorageSettings.BlobovniczaSettings.ShallowWidth = 4;
             settings.MetabaseSettings.Path = testName + "/" + settings.MetabaseSettings.Path;
             if (useCache)
             {
