@@ -1,4 +1,6 @@
+using Neo.VM.Types;
 using System;
+using System.Collections.Generic;
 
 namespace Neo.FileStorage.Invoker.Morph
 {
@@ -16,6 +18,7 @@ namespace Neo.FileStorage.Invoker.Morph
 
         private const string ConfigMethod = "config";
         private const string SetConfigMethod = "setConfig";
+        private const string ListConfigMethod = "listConfig";
 
         public void SetConfig(byte[] Id, byte[] key, byte[] value)
         {
@@ -83,6 +86,21 @@ namespace Neo.FileStorage.Invoker.Morph
         public ulong WithdrawFee()
         {
             return ReadUInt64Config(WithdrawFeeConfig);
+        }
+
+        public List<(byte[], byte[])> ListConfigs()
+        {
+            InvokeResult result = TestInvoke(NetMapContractHash, ListConfigMethod);
+            if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
+            var records = (VM.Types.Array)result.ResultStack[0];
+            List<(byte[], byte[])> configs = new();
+            foreach (var record in records)
+            {
+                Map map = (Map)record;
+                foreach (var (key, value) in map)
+                    configs.Add((key.GetSpan().ToArray(), value.GetSpan().ToArray()));
+            }
+            return configs;
         }
     }
 }

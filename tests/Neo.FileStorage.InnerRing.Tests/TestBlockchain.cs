@@ -497,6 +497,11 @@ namespace Neo.FileStorage.InnerRing.Tests
         {
             return true;
         }
+
+        public override void Delete()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class MyWalletAccount : WalletAccount

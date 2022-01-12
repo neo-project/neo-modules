@@ -6,7 +6,6 @@ using Neo.Cryptography.ECC;
 using Neo.FileStorage.API.Netmap;
 using Neo.IO;
 using Neo.SmartContract;
-using Neo.VM.Types;
 using static Neo.FileStorage.API.Netmap.Helper;
 using Array = Neo.VM.Types.Array;
 
@@ -22,6 +21,7 @@ namespace Neo.FileStorage.Invoker.Morph
         private const string NetMapMethod = "netmap";
         private const string EpochSnapshotMethod = "snapshotByEpoch";
         private const string SetInnerRingMethod = "updateInnerRing";
+        private const string InnerRingListMethod = "innerRingList";
 
         public void AddPeer(NodeInfo info)
         {
@@ -30,7 +30,7 @@ namespace Neo.FileStorage.Invoker.Morph
 
         public ulong Epoch()
         {
-            InvokeResult result = TestInvoke(NetMapContractHash, EpochMethod);
+            var result = TestInvoke(NetMapContractHash, EpochMethod);
             return (ulong)result.ResultStack[0].GetInteger();
         }
 
@@ -46,35 +46,35 @@ namespace Neo.FileStorage.Invoker.Morph
 
         public NodeInfo[] NetMap()
         {
-            InvokeResult result = TestInvoke(NetMapContractHash, NetMapMethod);
+            var result = TestInvoke(NetMapContractHash, NetMapMethod);
             if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
             if (result.ResultStack[0] is VM.Types.Null) return System.Array.Empty<NodeInfo>();
-            Array peers = (Array)result.ResultStack[0];
+            var nss = (Array)result.ResultStack[0];
             List<byte[]> res = new();
-            foreach (Array peer in peers)
+            foreach (Array ns in nss)
             {
-                if (peer.Count != 1) throw new Exception($"unexpected stack item count peer info, expected={1}, actual={peer.Count}");
-                foreach (StackItem current in peer)
+                if (ns.Count != 1) throw new InvalidOperationException($"unexpected stack item count peer info, expected={1}, actual={ns.Count}");
+                foreach (var n in ns)
                 {
-                    res.Add(current.GetSpan().ToArray());
+                    res.Add(n.GetSpan().ToArray());
                 }
             }
 
             return res.Select(p => NodeInfo.Parser.ParseFrom(p)).ToArray();
         }
 
-        public NetMap GetNetMapByDiff(int different)
+        public NetMap GetNetMapByDiff(ulong different)
         {
-            InvokeResult result = TestInvoke(NetMapContractHash, SnapshotMethod, different);
+            var result = TestInvoke(NetMapContractHash, SnapshotMethod, different);
             if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
-            Array peers = (Array)result.ResultStack[0];
+            var nss = (Array)result.ResultStack[0];
             List<byte[]> res = new();
-            foreach (Array peer in peers)
+            foreach (Array ns in nss)
             {
-                if (peer.Count != 1) throw new InvalidOperationException($"unexpected stack item count peer info, expected={1}, actual={peer.Count}");
-                foreach (StackItem current in peer)
+                if (ns.Count != 1) throw new InvalidOperationException($"unexpected stack item count peer info, expected={1}, actual={ns.Count}");
+                foreach (var n in ns)
                 {
-                    res.Add(current.GetSpan().ToArray());
+                    res.Add(n.GetSpan().ToArray());
                 }
             }
             return new(res.Select(p => NodeInfo.Parser.ParseFrom(p)).ToList().InfoToNodes());
@@ -82,16 +82,16 @@ namespace Neo.FileStorage.Invoker.Morph
 
         public NetMap GetNetMapByEpoch(ulong epoch)
         {
-            InvokeResult result = TestInvoke(NetMapContractHash, EpochSnapshotMethod, epoch);
+            var result = TestInvoke(NetMapContractHash, EpochSnapshotMethod, epoch);
             if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
-            Array peers = (Array)result.ResultStack[0];
+            var nss = (Array)result.ResultStack[0];
             List<byte[]> res = new();
-            foreach (Array peer in peers)
+            foreach (Array ns in nss)
             {
-                if (peer.Count != 1) throw new InvalidOperationException($"unexpected stack item count peer info, expected={1}, actual={peer.Count}");
-                foreach (StackItem current in peer)
+                if (ns.Count != 1) throw new InvalidOperationException($"unexpected stack item count peer info, expected={1}, actual={ns.Count}");
+                foreach (var n in ns)
                 {
-                    res.Add(current.GetSpan().ToArray());
+                    res.Add(n.GetSpan().ToArray());
                 }
             }
             return new(res.Select(p => NodeInfo.Parser.ParseFrom(p)).ToList().InfoToNodes());
@@ -112,6 +112,23 @@ namespace Neo.FileStorage.Invoker.Morph
             }
             array.Value = list;
             Invoke(NetMapContractHash, SetInnerRingMethod, SideChainFee, array);
+        }
+
+        public List<ECPoint> InnerRingList()
+        {
+            var result = TestInvoke(NetMapContractHash, InnerRingListMethod);
+            if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}, expected={1}");
+            var irNodes = (Array)result.ResultStack[0];
+            List<ECPoint> irs = new();
+            foreach (var n in irNodes)
+            {
+                var m = (Array)n;
+                foreach (var val in m)
+                {
+                    irs.Add(ECPoint.DecodePoint(val.GetSpan().ToArray(), ECCurve.Secp256r1));
+                }
+            }
+            return irs;
         }
     }
 }

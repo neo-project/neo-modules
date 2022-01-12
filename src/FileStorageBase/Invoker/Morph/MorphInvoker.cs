@@ -9,12 +9,27 @@ namespace Neo.FileStorage.Invoker.Morph
     public partial class MorphInvoker : ContractInvoker, INetmapSource
     {
         public long SideChainFee { get; init; }
-        public UInt160[] AlphabetContractHash { get; init; }
-        public UInt160 AuditContractHash { get; init; }
-        public UInt160 BalanceContractHash { get; init; }
-        public UInt160 ContainerContractHash { get; init; }
-        public UInt160 FsIdContractHash { get; init; }
-        public UInt160 NetMapContractHash { get; init; }
-        public UInt160 ReputationContractHash { get; init; }
+
+        private const string AlphabetContractNamePrefix = "alphabet";
+        public const string AuditContractName = "audit";
+        public const string BalanceContractName = "balance";
+        public const string ContainerContractName = "container";
+        public const string NeoFSIDContractName = "neofsid";
+        public const string NetmapContractName = "netmap";
+        public const string ProxyContractName = "proxy";
+        public const string ReputationContractName = "reputation";
+
+        public UInt160[] AlphabetContractHash;
+        public UInt160 AuditContractHash;
+        public UInt160 BalanceContractHash;
+        public UInt160 ContainerContractHash;
+        public UInt160 FsIdContractHash;
+        public UInt160 NetMapContractHash;
+        public UInt160 ReputationContractHash;
+
+        public static string AlphabetContractName(int index)
+        {
+            return $"{AlphabetContractNamePrefix}{index}";
+        }
     }
 }

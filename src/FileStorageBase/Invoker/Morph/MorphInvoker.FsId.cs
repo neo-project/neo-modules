@@ -18,9 +18,9 @@ namespace Neo.FileStorage.Invoker.Morph
             if (result.ResultStack.Length != 1) throw new Exception();
             VM.Types.Array items = (VM.Types.Array)result.ResultStack[0];
             List<byte[]> lists = new();
-            foreach (StackItem current in items)
+            foreach (var item in items)
             {
-                lists.Add(current.GetSpan().ToArray());
+                lists.Add(item.GetSpan().ToArray());
             }
             return lists;
         }

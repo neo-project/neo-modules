@@ -14,15 +14,15 @@ namespace Neo.FileStorage.Reputation
         {
             var nm = NetmapSource.GetNetMapByEpoch(epoch);
             var nodes = nm.Nodes.OrderBy(p => p.ID.Distance(epoch)).ToArray();
-            var pubKey = peer.PublicKey.ToByteArray();
             for (int i = 0; i < nodes.Length; i++)
             {
-                if (nodes[i].PublicKey.SequenceEqual(pubKey))
+                if (nodes[i].PublicKey.SequenceEqual(peer.PublicKey.ToByteArray()))
                 {
-                    if (i + 1 == nodes.Length)
+                    var managerIndex = i + 1;
+                    if (managerIndex == nodes.Length)
                         return new() { nodes[0].Info };
                     else
-                        return new() { nodes[i].Info };
+                        return new() { nodes[managerIndex].Info };
                 }
             }
             return new();

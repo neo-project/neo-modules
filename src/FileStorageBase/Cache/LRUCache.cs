@@ -39,9 +39,15 @@ namespace Neo.FileStorage.Cache
                 if (cache.TryGetValue(key, out Element el))
                 {
                     cacheLock.EnterWriteLock();
-                    list.Remove(el);
-                    list.AddFirst(el);
-                    cacheLock.ExitWriteLock();
+                    try
+                    {
+                        list.Remove(el);
+                        list.AddFirst(el);
+                    }
+                    finally
+                    {
+                        cacheLock.ExitWriteLock();
+                    }
                     value = el.Value;
                     return true;
                 }
@@ -154,6 +160,7 @@ namespace Neo.FileStorage.Cache
             return true;
         }
 
+
         public bool Contains(K key)
         {
             cacheLock.EnterReadLock();
@@ -167,18 +174,20 @@ namespace Neo.FileStorage.Cache
             }
         }
 
-        public IEnumerable<K> Keys()
+        public List<K> Keys()
         {
+            var result = new List<K>();
             cacheLock.EnterReadLock();
             try
             {
                 foreach (var n in list)
-                    yield return n.Key;
+                    result.Add(n.Key);
             }
             finally
             {
                 cacheLock.ExitReadLock();
             }
+            return result;
         }
 
         public void Purge()

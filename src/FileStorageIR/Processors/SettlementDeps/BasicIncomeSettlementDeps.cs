@@ -31,9 +31,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             {
                 try
                 {
-                    ContainerID id = new();
-                    id.Value = ByteString.CopyFrom(estimationID);
-                    Estimations estimation = Invoker.GetContainerSize(id);
+                    Estimations estimation = Invoker.GetContainerSize(estimationID);
                     result.Add(estimation);
                 }
                 catch (Exception e)

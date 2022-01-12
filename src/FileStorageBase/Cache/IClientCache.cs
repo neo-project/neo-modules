@@ -1,12 +1,11 @@
 using System;
 using Neo.FileStorage.API.Client;
-using Neo.FileStorage.Network;
-using System.Collections.Generic;
+using Neo.FileStorage.API.Netmap;
 
 namespace Neo.FileStorage.Cache
 {
     public interface IFSClientCache : IDisposable
     {
-        IFSClient Get(IEnumerable<Address> address);
+        IFSClient Get(NodeInfo node);
     }
 }

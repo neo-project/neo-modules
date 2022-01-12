@@ -14,6 +14,7 @@ namespace Neo.FileStorage.Invoker.Morph
         private const string ListByCIDResultsMethod = "listByCID";
         private const string ListByNodeResultsMethod = "listByNode";
 
+
         public void PutAuditResult(byte[] rawResult)
         {
             Invoke(AuditContractHash, PutResultMethod, SideChainFee, rawResult);
@@ -54,9 +55,9 @@ namespace Neo.FileStorage.Invoker.Morph
             if (result is Null) return new List<byte[]>();
             Array array = (Array)result;
             List<byte[]> resultArray = new();
-            foreach (StackItem current in array)
+            foreach (var item in array)
             {
-                resultArray.Add(current.GetSpan().ToArray());
+                resultArray.Add(item.GetSpan().ToArray());
             }
             return resultArray;
         }

@@ -1,18 +1,18 @@
 using System.Collections.Generic;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
-using Neo.FileStorage.Invoker.Morph;
+using Neo.FileStorage.Reputation;
 
 namespace Neo.FileStorage.Placement
 {
     public class NetworkMapBuilder : IPlacementBuilder
     {
-        private readonly MorphInvoker invoker;
+        private readonly INetmapSource netmapSource;
         private readonly NetMap netMap;
 
-        public NetworkMapBuilder(MorphInvoker invoker)
+        public NetworkMapBuilder(INetmapSource netmapSource)
         {
-            this.invoker = invoker;
+            this.netmapSource = netmapSource;
         }
 
         public NetworkMapBuilder(NetMap nm)
@@ -38,7 +38,7 @@ namespace Neo.FileStorage.Placement
         {
             if (netMap is not null)
                 return netMap;
-            return invoker.GetNetMapByDiff(0);
+            return netmapSource.GetNetMapByDiff(0);
         }
     }
 }

@@ -13,7 +13,6 @@ using Neo.FileStorage.API.Session;
 using Neo.FileStorage.API.Client;
 using UsedSpaceAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types.Announcement;
 using System.Collections.Concurrent;
-using System.Linq;
 
 namespace Neo.FileStorage.Cache
 {
@@ -22,9 +21,9 @@ namespace Neo.FileStorage.Cache
         private readonly List<Network.Address> addresses;
         private readonly ConcurrentDictionary<Network.Address, Client> clients = new();
 
-        public MultiClient(IEnumerable<Network.Address> addrs)
+        public MultiClient(List<Network.Address> addrs)
         {
-            addresses = addrs.ToList();
+            addresses = addrs;
         }
 
         public void Dispose()
@@ -86,519 +85,521 @@ namespace Neo.FileStorage.Cache
             throw new InvalidOperationException($"handle request failed");
         }
 
-        public Task<API.Accounting.Decimal> GetBalance(OwnerID owner, CallOptions options = null, CancellationToken context = default)
+        public Task<API.Accounting.Decimal> GetBalance(OwnerID owner, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 API.Accounting.Decimal balance = null;
                 IterateClients(client =>
                 {
-                    balance = client.GetBalance(owner, options, context).Result;
-                }, context);
+                    balance = client.GetBalance(owner, options, cancellation).Result;
+                }, cancellation);
                 return balance;
-            }, context);
+            }, cancellation);
+
         }
 
-        public Task<API.Accounting.Decimal> GetBalance(BalanceRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task<API.Accounting.Decimal> GetBalance(BalanceRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 API.Accounting.Decimal balance = null;
                 IterateClients(client =>
                 {
-                    balance = client.GetBalance(request, deadline, context).Result;
-                }, context);
+                    balance = client.GetBalance(request, deadline, cancellation).Result;
+                }, cancellation);
                 return balance;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<ContainerWithSignature> GetContainer(ContainerID cid, CallOptions options = null, CancellationToken context = default)
+        public Task<ContainerWithSignature> GetContainer(ContainerID cid, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 ContainerWithSignature container = null;
                 IterateClients(client =>
                 {
-                    container = client.GetContainer(cid, options, context).Result;
-                }, context);
+                    container = client.GetContainer(cid, options, cancellation).Result;
+                }, cancellation);
                 return container;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<ContainerID> PutContainer(Container container, CallOptions options = null, CancellationToken context = default)
+        public Task<ContainerID> PutContainer(Container container, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 ContainerID cid = null;
                 IterateClients(client =>
                 {
-                    cid = client.PutContainer(container, options, context).Result;
-                }, context);
+                    cid = client.PutContainer(container, options, cancellation).Result;
+                }, cancellation);
                 return cid;
-            }, context);
+            }, cancellation);
         }
 
-        public Task DeleteContainer(ContainerID cid, CallOptions options = null, CancellationToken context = default)
+        public Task DeleteContainer(ContainerID cid, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 IterateClients(client =>
                 {
-                    client.DeleteContainer(cid, options, context).Wait();
-                }, context);
-            }, context);
+                    client.DeleteContainer(cid, options, cancellation).Wait();
+                }, cancellation);
+            }, cancellation);
         }
 
-        public Task<List<ContainerID>> ListContainers(OwnerID owner, CallOptions options = null, CancellationToken context = default)
+        public Task<List<ContainerID>> ListContainers(OwnerID owner, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 List<ContainerID> cids = null;
                 IterateClients(client =>
                 {
-                    cids = client.ListContainers(owner, options, context).Result;
-                }, context);
+                    cids = client.ListContainers(owner, options, cancellation).Result;
+                }, cancellation);
                 return cids;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<EAclWithSignature> GetEAcl(ContainerID cid, CallOptions options = null, CancellationToken context = default)
+        public Task<EAclWithSignature> GetEAcl(ContainerID cid, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 EAclWithSignature eacl = null;
                 IterateClients(client =>
                 {
-                    eacl = client.GetEAcl(cid, options, context).Result;
-                }, context);
+                    eacl = client.GetEAcl(cid, options, cancellation).Result;
+                }, cancellation);
                 return eacl;
-            }, context);
+            }, cancellation);
         }
 
-        public Task SetEACL(EACLTable eacl, CallOptions options = null, CancellationToken context = default)
+        public Task SetEACL(EACLTable eacl, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 IterateClients(client =>
                 {
-                    client.SetEACL(eacl, options, context).Wait();
-                }, context);
-            }, context);
+                    client.SetEACL(eacl, options, cancellation).Wait();
+                }, cancellation);
+            }, cancellation);
         }
 
-        public Task AnnounceContainerUsedSpace(List<UsedSpaceAnnouncement> announcements, CallOptions options = null, CancellationToken context = default)
+        public Task AnnounceContainerUsedSpace(List<UsedSpaceAnnouncement> announcements, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 IterateClients(client =>
                 {
-                    client.AnnounceContainerUsedSpace(announcements, options, context).Wait();
-                }, context);
-            }, context);
+                    client.AnnounceContainerUsedSpace(announcements, options, cancellation).Wait();
+                }, cancellation);
+            }, cancellation);
         }
 
-        public Task<ContainerWithSignature> GetContainer(API.Container.GetRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task<ContainerWithSignature> GetContainer(API.Container.GetRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 ContainerWithSignature container = null;
                 IterateClients(client =>
                 {
-                    container = client.GetContainer(request, deadline, context).Result;
-                }, context);
+                    container = client.GetContainer(request, deadline, cancellation).Result;
+                }, cancellation);
                 return container;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<ContainerID> PutContainer(API.Container.PutRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task<ContainerID> PutContainer(API.Container.PutRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 ContainerID cid = null;
                 IterateClients(client =>
                 {
-                    cid = client.PutContainer(request, deadline, context).Result;
-                }, context);
+                    cid = client.PutContainer(request, deadline, cancellation).Result;
+                }, cancellation);
                 return cid;
-            }, context);
+            }, cancellation);
         }
 
-        public Task DeleteContainer(API.Container.DeleteRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task DeleteContainer(API.Container.DeleteRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 IterateClients(client =>
                 {
-                    client.DeleteContainer(request, deadline, context).Wait();
-                }, context);
-            }, context);
+                    client.DeleteContainer(request, deadline, cancellation).Wait();
+                }, cancellation);
+            }, cancellation);
         }
 
-        public Task<List<ContainerID>> ListContainers(ListRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task<List<ContainerID>> ListContainers(ListRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 List<ContainerID> cids = null;
                 IterateClients(client =>
                 {
-                    cids = client.ListContainers(request, deadline, context).Result;
-                }, context);
+                    cids = client.ListContainers(request, deadline, cancellation).Result;
+                }, cancellation);
                 return cids;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<EAclWithSignature> GetEAcl(GetExtendedACLRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task<EAclWithSignature> GetEAcl(GetExtendedACLRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 EAclWithSignature eacl = null;
                 IterateClients(client =>
                 {
-                    eacl = client.GetEAcl(request, deadline, context).Result;
-                }, context);
+                    eacl = client.GetEAcl(request, deadline, cancellation).Result;
+                }, cancellation);
                 return eacl;
-            }, context);
+            }, cancellation);
         }
 
-        public Task SetEACL(SetExtendedACLRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task SetEACL(SetExtendedACLRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 IterateClients(client =>
                 {
-                    client.SetEACL(request, deadline, context).Wait();
-                }, context);
-            }, context);
+                    client.SetEACL(request, deadline, cancellation).Wait();
+                }, cancellation);
+            }, cancellation);
         }
 
-        public Task AnnounceContainerUsedSpace(AnnounceUsedSpaceRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task AnnounceContainerUsedSpace(AnnounceUsedSpaceRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 IterateClients(client =>
                 {
-                    client.AnnounceContainerUsedSpace(request, deadline, context).Wait();
-                }, context);
-            }, context);
+                    client.AnnounceContainerUsedSpace(request, deadline, cancellation).Wait();
+                }, cancellation);
+            }, cancellation);
         }
 
 
-        public Task<NodeInfo> LocalNodeInfo(CallOptions options = null, CancellationToken context = default)
+        public Task<NodeInfo> LocalNodeInfo(CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 NodeInfo ni = null;
                 IterateClients(client =>
                 {
-                    ni = client.LocalNodeInfo(options, context).Result;
-                }, context);
+                    ni = client.LocalNodeInfo(options, cancellation).Result;
+                }, cancellation);
                 return ni;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<ulong> Epoch(CallOptions options = null, CancellationToken context = default)
+        public Task<ulong> Epoch(CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 ulong epoch = 0;
                 IterateClients(client =>
                 {
-                    epoch = client.Epoch(options, context).Result;
-                }, context);
+                    epoch = client.Epoch(options, cancellation).Result;
+                }, cancellation);
                 return epoch;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<NetworkInfo> NetworkInfo(CallOptions options = null, CancellationToken context = default)
+        public Task<NetworkInfo> NetworkInfo(CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 NetworkInfo ni = null;
                 IterateClients(client =>
                 {
-                    ni = client.NetworkInfo(options, context).Result;
-                }, context);
+                    ni = client.NetworkInfo(options, cancellation).Result;
+                }, cancellation);
                 return ni;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<NodeInfo> LocalNodeInfo(LocalNodeInfoRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task<NodeInfo> LocalNodeInfo(LocalNodeInfoRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 NodeInfo ni = null;
                 IterateClients(client =>
                 {
-                    ni = client.LocalNodeInfo(request, deadline, context).Result;
-                }, context);
+                    ni = client.LocalNodeInfo(request, deadline, cancellation).Result;
+                }, cancellation);
                 return ni;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<ulong> Epoch(LocalNodeInfoRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task<ulong> Epoch(LocalNodeInfoRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 ulong epoch = 0;
                 IterateClients(client =>
                 {
-                    epoch = client.Epoch(request, deadline, context).Result;
-                }, context);
+                    epoch = client.Epoch(request, deadline, cancellation).Result;
+                }, cancellation);
                 return epoch;
-            }, context);
+            }, cancellation);
         }
 
 
-        public Task<API.Object.Object> GetObject(Address address, bool raw = false, CallOptions options = null, CancellationToken context = default)
+        public Task<API.Object.Object> GetObject(Address address, bool raw = false, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 API.Object.Object obj = null;
                 IterateClients(client =>
                 {
-                    obj = client.GetObject(address, raw, options, context).Result;
-                }, context);
+                    obj = client.GetObject(address, raw, options, cancellation).Result;
+                }, cancellation);
                 return obj;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<ObjectID> PutObject(API.Object.Object obj, CallOptions options = null, CancellationToken context = default)
+        public Task<ObjectID> PutObject(API.Object.Object obj, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 ObjectID oid = null;
                 IterateClients(client =>
                 {
-                    oid = client.PutObject(obj, options, context).Result;
-                }, context);
+                    oid = client.PutObject(obj, options, cancellation).Result;
+                }, cancellation);
                 return oid;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<Address> DeleteObject(Address address, CallOptions options = null, CancellationToken context = default)
+        public Task<Address> DeleteObject(Address address, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 Address address = null;
                 IterateClients(client =>
                 {
-                    address = client.DeleteObject(address, options, context).Result;
-                }, context);
+                    address = client.DeleteObject(address, options, cancellation).Result;
+                }, cancellation);
                 return address;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<API.Object.Object> GetObjectHeader(Address address, bool minimal = false, bool raw = false, CallOptions options = null, CancellationToken context = default)
+        public Task<API.Object.Object> GetObjectHeader(Address address, bool minimal = false, bool raw = false, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 API.Object.Object header = null;
                 IterateClients(client =>
                 {
-                    header = client.GetObjectHeader(address, minimal, raw, options, context).Result;
-                }, context);
+                    header = client.GetObjectHeader(address, minimal, raw, options, cancellation).Result;
+                }, cancellation);
                 return header;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<byte[]> GetObjectPayloadRangeData(Address address, API.Object.Range range, bool raw = false, CallOptions options = null, CancellationToken context = default)
+        public Task<byte[]> GetObjectPayloadRangeData(Address address, API.Object.Range range, bool raw = false, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 byte[] data = null;
                 IterateClients(client =>
                 {
-                    data = client.GetObjectPayloadRangeData(address, range, raw, options, context).Result;
-                }, context);
+                    data = client.GetObjectPayloadRangeData(address, range, raw, options, cancellation).Result;
+                }, cancellation);
                 return data;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<List<byte[]>> GetObjectPayloadRangeHash(Address address, IEnumerable<API.Object.Range> ranges, ChecksumType type, byte[] salt, CallOptions options = null, CancellationToken context = default)
+        public Task<List<byte[]>> GetObjectPayloadRangeHash(Address address, IEnumerable<API.Object.Range> ranges, ChecksumType type, byte[] salt, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 List<byte[]> hashes = null;
                 IterateClients(client =>
                 {
-                    hashes = client.GetObjectPayloadRangeHash(address, ranges, type, salt, options, context).Result;
-                }, context);
+                    hashes = client.GetObjectPayloadRangeHash(address, ranges, type, salt, options, cancellation).Result;
+                }, cancellation);
                 return hashes;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<List<ObjectID>> SearchObject(ContainerID cid, SearchFilters filters, CallOptions options = null, CancellationToken context = default)
+        public Task<List<ObjectID>> SearchObject(ContainerID cid, SearchFilters filters, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 List<ObjectID> oids = null;
                 IterateClients(client =>
                 {
-                    oids = client.SearchObject(cid, filters, options, context).Result;
-                }, context);
+                    oids = client.SearchObject(cid, filters, options, cancellation).Result;
+                }, cancellation);
                 return oids;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<API.Object.Object> GetObject(API.Object.GetRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task<API.Object.Object> GetObject(API.Object.GetRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 API.Object.Object obj = null;
                 IterateClients(client =>
                 {
-                    obj = client.GetObject(request, deadline, context).Result;
-                }, context);
+                    obj = client.GetObject(request, deadline, cancellation).Result;
+                }, cancellation);
                 return obj;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<IClientStream> PutObject(API.Object.PutRequest init, DateTime? deadline = null, CancellationToken context = default)
+        public Task<IClientStream> PutObject(API.Object.PutRequest init, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 IClientStream putStream = null;
                 IterateClients(client =>
                 {
-                    putStream = client.PutObject(init, deadline, context).Result;
-                }, context);
+                    putStream = client.PutObject(init, deadline, cancellation).Result;
+                }, cancellation);
                 return putStream;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<Address> DeleteObject(API.Object.DeleteRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task<Address> DeleteObject(API.Object.DeleteRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 Address address = null;
                 IterateClients(client =>
                 {
-                    address = client.DeleteObject(request, deadline, context).Result;
-                }, context);
+                    address = client.DeleteObject(request, deadline, cancellation).Result;
+                }, cancellation);
                 return address;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<API.Object.Object> GetObjectHeader(HeadRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task<API.Object.Object> GetObjectHeader(HeadRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 API.Object.Object header = null;
                 IterateClients(client =>
                 {
-                    header = client.GetObjectHeader(request, deadline, context).Result;
-                }, context);
+                    header = client.GetObjectHeader(request, deadline, cancellation).Result;
+                }, cancellation);
                 return header;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<byte[]> GetObjectPayloadRangeData(GetRangeRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task<byte[]> GetObjectPayloadRangeData(GetRangeRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 byte[] data = null;
                 IterateClients(client =>
                 {
-                    data = client.GetObjectPayloadRangeData(request, deadline, context).Result;
-                }, context);
+                    data = client.GetObjectPayloadRangeData(request, deadline, cancellation).Result;
+                }, cancellation);
                 return data;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<List<byte[]>> GetObjectPayloadRangeHash(GetRangeHashRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task<List<byte[]>> GetObjectPayloadRangeHash(GetRangeHashRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 List<byte[]> hashes = null;
                 IterateClients(client =>
                 {
-                    hashes = client.GetObjectPayloadRangeHash(request, deadline, context).Result;
-                }, context);
+                    hashes = client.GetObjectPayloadRangeHash(request, deadline, cancellation).Result;
+                }, cancellation);
                 return hashes;
-            }, context);
+            }, cancellation);
         }
 
-        public Task<List<ObjectID>> SearchObject(SearchRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task<List<ObjectID>> SearchObject(SearchRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 List<ObjectID> oids = null;
                 IterateClients(client =>
                 {
-                    oids = client.SearchObject(request, deadline, context).Result;
-                }, context);
+                    oids = client.SearchObject(request, deadline, cancellation).Result;
+                }, cancellation);
                 return oids;
-            }, context);
+            }, cancellation);
         }
 
-        public Task AnnounceTrust(ulong epoch, List<Trust> trusts, CallOptions options = null, CancellationToken context = default)
+
+        public Task AnnounceTrust(ulong epoch, List<Trust> trusts, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 IterateClients(client =>
                 {
-                    client.AnnounceTrust(epoch, trusts, options, context).Wait();
-                }, context);
-            }, context);
+                    client.AnnounceTrust(epoch, trusts, options, cancellation).Wait();
+                }, cancellation);
+            }, cancellation);
         }
 
-        public Task AnnounceIntermediateTrust(ulong epoch, uint iter, PeerToPeerTrust trust, CallOptions options = null, CancellationToken context = default)
+        public Task AnnounceIntermediateTrust(ulong epoch, uint iter, PeerToPeerTrust trust, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 IterateClients(client =>
                 {
-                    client.AnnounceIntermediateTrust(epoch, iter, trust, options, context).Wait();
-                }, context);
-            }, context);
+                    client.AnnounceIntermediateTrust(epoch, iter, trust, options, cancellation).Wait();
+                }, cancellation);
+            }, cancellation);
         }
 
-        public Task AnnounceTrust(AnnounceLocalTrustRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task AnnounceTrust(AnnounceLocalTrustRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 IterateClients(client =>
                 {
-                    client.AnnounceTrust(request, deadline, context).Wait();
-                }, context);
-            }, context);
+                    client.AnnounceTrust(request, deadline, cancellation).Wait();
+                }, cancellation);
+            }, cancellation);
         }
 
-        public Task AnnounceIntermediateTrust(AnnounceIntermediateResultRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task AnnounceIntermediateTrust(AnnounceIntermediateResultRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 IterateClients(client =>
                 {
-                    client.AnnounceIntermediateTrust(request, deadline, context).Wait();
-                }, context);
-            }, context);
+                    client.AnnounceIntermediateTrust(request, deadline, cancellation).Wait();
+                }, cancellation);
+            }, cancellation);
         }
 
-        public Task<SessionToken> CreateSession(ulong expiration, CallOptions options = null, CancellationToken context = default)
-        {
-            return Task.Run(() =>
-            {
-                SessionToken session = null;
-                IterateClients(client =>
-                {
-                    session = client.CreateSession(expiration, options, context).Result;
-                }, context);
-                return session;
-            }, context);
-        }
-
-        public Task<SessionToken> CreateSession(CreateRequest request, DateTime? deadline = null, CancellationToken context = default)
+        public Task<SessionToken> CreateSession(ulong expiration, CallOptions options = null, CancellationToken cancellation = default)
         {
             return Task.Run(() =>
             {
                 SessionToken session = null;
                 IterateClients(client =>
                 {
-                    session = client.CreateSession(request, deadline, context).Result;
-                }, context);
+                    session = client.CreateSession(expiration, options, cancellation).Result;
+                }, cancellation);
                 return session;
-            }, context);
+            }, cancellation);
+        }
+
+        public Task<SessionToken> CreateSession(CreateRequest request, DateTime? deadline = null, CancellationToken cancellation = default)
+        {
+            return Task.Run(() =>
+            {
+                SessionToken session = null;
+                IterateClients(client =>
+                {
+                    session = client.CreateSession(request, deadline, cancellation).Result;
+                }, cancellation);
+                return session;
+            }, cancellation);
         }
     }
 }

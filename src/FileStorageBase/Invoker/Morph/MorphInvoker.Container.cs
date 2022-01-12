@@ -17,6 +17,7 @@ namespace Neo.FileStorage.Invoker.Morph
     public partial class MorphInvoker
     {
         private const string PutMethod = "put";
+        private const string PutNamedMethod = "putNamed";
         private const string DeleteMethod = "delete";
         private const string GetMethod = "get";
         private const string ListMethod = "list";
@@ -30,6 +31,8 @@ namespace Neo.FileStorage.Invoker.Morph
 
         public void PutContainer(FSContainer cnr, Signature sig, SessionToken token)
         {
+            if (cnr.NativeName != "")
+                Invoke(ContainerContractHash, PutNamedMethod, SideChainFee, cnr.ToByteArray(), sig.Sign.ToByteArray(), sig.Key.ToByteArray(), token?.ToByteArray() ?? System.Array.Empty<byte>(), cnr.NativeName, cnr.NativeZone);
             Invoke(ContainerContractHash, PutMethod, SideChainFee, cnr.ToByteArray(), sig.Sign.ToByteArray(), sig.Key.ToByteArray(), token?.ToByteArray() ?? System.Array.Empty<byte>());
         }
 
@@ -40,7 +43,7 @@ namespace Neo.FileStorage.Invoker.Morph
 
         public void DeleteContainer(ContainerID cid, byte[] sig, SessionToken token)
         {
-            Invoke(ContainerContractHash, DeleteMethod, SideChainFee, cid.Value.ToByteArray(), sig, token.ToByteArray());
+            Invoke(ContainerContractHash, DeleteMethod, SideChainFee, cid.Value.ToByteArray(), sig, token?.ToByteArray());
         }
 
         public EAclWithSignature GetEACL(ContainerID containerID)
@@ -86,9 +89,9 @@ namespace Neo.FileStorage.Invoker.Morph
             if (result.ResultStack[0] is Null) return new List<ContainerID>();
             Array array = (Array)result.ResultStack[0];
             List<byte[]> resultArray = new();
-            foreach (StackItem current in array)
+            foreach (var item in array)
             {
-                resultArray.Add(current.GetSpan().ToArray());
+                resultArray.Add(item.GetSpan().ToArray());
             }
             return resultArray.Select(p => ContainerID.FromValue(p)).ToList();
         }
@@ -98,21 +101,24 @@ namespace Neo.FileStorage.Invoker.Morph
             Invoke(ContainerContractHash, PutSizeMethod, SideChainFee, announcement.Epoch, announcement.ContainerId.Value.ToByteArray(), announcement.UsedSpace, key);
         }
 
-        public Estimations GetContainerSize(ContainerID containerID)
+        public Estimations GetContainerSize(byte[] estimationId)
         {
-            InvokeResult result = TestInvoke(ContainerContractHash, GetSizeMethod, containerID.Value.ToByteArray());
+            InvokeResult result = TestInvoke(ContainerContractHash, GetSizeMethod, estimationId);
             Array prms = (Array)result.ResultStack[0];
             Estimations es = new();
             es.ContainerID = ContainerID.FromValue(prms[0].GetSpan().ToArray());
             List<Estimation> estimations = new();
-            prms = (Array)prms[1];
-            foreach (var item in prms)
+            if (prms[1] is not Null)
             {
-                Array array = (Array)item;
-                Estimation e = new();
-                e.Reporter = array[0].GetSpan().ToArray();
-                e.Size = (ulong)array[1].GetInteger();
-                estimations.Add(e);
+                prms = (Array)prms[1];
+                foreach (var item in prms)
+                {
+                    Array array = (Array)item;
+                    Estimation e = new();
+                    e.Reporter = array[0].GetSpan().ToArray();
+                    e.Size = (ulong)array[1].GetInteger();
+                    estimations.Add(e);
+                }
             }
             es.AllEstimation = estimations;
             return es;

@@ -172,20 +172,10 @@ namespace Neo.FileStorage.InnerRing.Processors
                 pairs += $" try={i},";
                 pairs += $" total_tries={shuffled}";
                 Utility.Log(Name, LogLevel.Info, pairs);
-                List<Network.Address> address;
-                try
-                {
-                    address = shuffled[i].NetworkAddresses.Select(p => Network.Address.FromString(p)).ToList();
-                }
-                catch (Exception e)
-                {
-                    Utility.Log(Name, LogLevel.Warning, $"can't parse remote address, error={e}");
-                    continue;
-                };
                 IFSClient cli;
                 try
                 {
-                    cli = ClientCache.Get(address);
+                    cli = ClientCache.Get(shuffled[i].Info);
                 }
                 catch (Exception e)
                 {

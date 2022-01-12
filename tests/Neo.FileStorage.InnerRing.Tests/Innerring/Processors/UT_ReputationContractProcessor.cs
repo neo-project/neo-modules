@@ -24,6 +24,11 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
         {
             public List<Node> Nodes = new();
 
+            public NetMap GetNetMapByDiff(ulong diff)
+            {
+                return new NetMap(Nodes);
+            }
+
             public NetMap GetNetMapByEpoch(ulong epoch)
             {
                 return new NetMap(Nodes);

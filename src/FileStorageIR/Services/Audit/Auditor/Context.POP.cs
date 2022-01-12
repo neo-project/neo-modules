@@ -60,7 +60,7 @@ namespace Neo.FileStorage.InnerRing.Services.Audit.Auditor
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(nameof(Context), LogLevel.Debug, $"get header failed, node={nodes[i].NetworkAddresses.FirstOrDefault()}, e={e}");
+                    Utility.Log(nameof(Context), LogLevel.Debug, $"get header failed, node={nodes[i].Addresses.FirstOrDefault()}, e={e}");
                     continue;
                 }
                 UpdateHeader(header);

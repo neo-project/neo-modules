@@ -25,9 +25,9 @@ namespace Neo.FileStorage.InnerRing
             ClientCache.Dispose();
         }
 
-        public IFSClient Get(IEnumerable<Network.Address> addresses)
+        public IFSClient Get(NodeInfo node)
         {
-            return ClientCache.Get(addresses);
+            return ClientCache.Get(node);
         }
 
         public StorageGroup GetStorageGroup(AuditTask task, ObjectID id)
@@ -45,20 +45,10 @@ namespace Neo.FileStorage.InnerRing
             List<List<Node>> nodes = NetworkMapBuilder.BuildObjectPlacement(netMap, containerNodes, sgAddress.ObjectId);
             foreach (var node in nodes.Flatten())
             {
-                List<Network.Address> addrs;
-                try
-                {
-                    addrs = node.NetworkAddresses.Select(p => Network.Address.FromString(p)).ToList();
-                }
-                catch (Exception e)
-                {
-                    Utility.Log(nameof(RpcClientCache), LogLevel.Warning, $"can't parse remote address, error={e.Message}");
-                    continue;
-                }
                 IFSClient cli;
                 try
                 {
-                    cli = Get(addrs);
+                    cli = Get(node.Info);
                 }
                 catch (Exception e)
                 {
@@ -93,8 +83,7 @@ namespace Neo.FileStorage.InnerRing
                 ContainerId = task.ContainerID,
                 ObjectId = id
             };
-            var addrs = node.NetworkAddresses.Select(p => Network.Address.FromString(p)).ToList();
-            IFSClient client = Get(addrs);
+            IFSClient client = Get(node.Info);
             using var source = CancellationTokenSource.CreateLinkedTokenSource(task.Cancellation);
             source.CancelAfter(TimeSpan.FromMinutes(1));
             var key = Wallet.GetAccounts().ToArray()[0].GetKey().Export().LoadWif();
@@ -108,8 +97,7 @@ namespace Neo.FileStorage.InnerRing
                 ContainerId = task.ContainerID,
                 ObjectId = id
             };
-            var addrs = node.NetworkAddresses.Select(p => Network.Address.FromString(p)).ToList();
-            IFSClient cli = Get(addrs);
+            IFSClient cli = Get(node.Info);
             using var source = new CancellationTokenSource();
             source.CancelAfter(TimeSpan.FromMinutes(1));
             var key = Wallet.GetAccounts().ToArray()[0].GetKey().PrivateKey.LoadPrivateKey();

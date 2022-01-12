@@ -75,8 +75,8 @@ namespace Neo.FileStorage.Invoker
             var result = GetInvokeResult(script, signers);
             if (result.State != VMState.HALT)
             {
-                Utility.Log(nameof(ContractInvoker), LogLevel.Error, $"perform invoke failed, method={method}, error={result.FaultException.Message}");
-                throw new InvalidOperationException($"perform invoke failed, method={method}");
+                Utility.Log(nameof(ContractInvoker), LogLevel.Warning, $"perform invoke failed, method={method}, error={result.FaultException.Message}");
+                throw new InvalidOperationException($"perform {method} failed, error={result.FaultException.Message}");
             }
             return result;
         }
