@@ -8,8 +8,6 @@ namespace Neo.FileStorage.Invoker.Morph
     {
         private const string EmitMethod = "emit";
         private const string VoteMethod = "vote";
-
-
         public void AlphabetEmit(int index)
         {
             Invoke(AlphabetContractHash[index], EmitMethod, 0);

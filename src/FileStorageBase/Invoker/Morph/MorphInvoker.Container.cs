@@ -57,8 +57,8 @@ namespace Neo.FileStorage.Invoker.Morph
                 Table = EACLTable.Parser.ParseFrom(array[0].GetSpan().ToArray()),
                 Signature = new()
                 {
-                    Key = GByteString.CopyFrom(array[2].GetSpan().ToArray()),
                     Sign = GByteString.CopyFrom(array[1].GetSpan().ToArray()),
+                    Key = GByteString.CopyFrom(array[2].GetSpan().ToArray())
                 },
                 SessionToken = array[3] is Null ? null : SessionToken.Parser.ParseFrom(array[3].GetSpan().ToArray())
             };
@@ -76,7 +76,7 @@ namespace Neo.FileStorage.Invoker.Morph
                 Signature = new()
                 {
                     Sign = GByteString.CopyFrom(array[1].GetSpan().ToArray()),
-                    Key = GByteString.CopyFrom(array[2].GetSpan().ToArray()),
+                    Key = GByteString.CopyFrom(array[2].GetSpan().ToArray())
                 },
                 SessionToken = array[3] is Null ? null : SessionToken.Parser.ParseFrom(array[3].GetSpan().ToArray())
             };
@@ -88,11 +88,10 @@ namespace Neo.FileStorage.Invoker.Morph
             InvokeResult result = TestInvoke(ContainerContractHash, ListMethod, ownerID.Value.ToByteArray());
             if (result.ResultStack[0] is Null) return new List<ContainerID>();
             Array array = (Array)result.ResultStack[0];
-            IEnumerator<StackItem> enumerator = array.GetEnumerator();
             List<byte[]> resultArray = new();
-            while (enumerator.MoveNext())
+            foreach (var item in array)
             {
-                resultArray.Add(enumerator.Current.GetSpan().ToArray());
+                resultArray.Add(item.GetSpan().ToArray());
             }
             return resultArray.Select(p => ContainerID.FromValue(p)).ToList();
         }

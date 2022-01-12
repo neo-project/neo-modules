@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Neo.FileStorage.API.Audit;
 using Neo.VM.Types;
@@ -55,11 +54,10 @@ namespace Neo.FileStorage.Invoker.Morph
         {
             if (result is Null) return new List<byte[]>();
             Array array = (Array)result;
-            IEnumerator<StackItem> enumerator = array.GetEnumerator();
             List<byte[]> resultArray = new();
-            while (enumerator.MoveNext())
+            foreach (var item in array)
             {
-                resultArray.Add(enumerator.Current.GetSpan().ToArray());
+                resultArray.Add(item.GetSpan().ToArray());
             }
             return resultArray;
         }

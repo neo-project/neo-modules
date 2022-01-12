@@ -17,11 +17,10 @@ namespace Neo.FileStorage.Invoker.Morph
             InvokeResult result = TestInvoke(FsIdContractHash, KeyListingMethod, owner);
             if (result.ResultStack.Length != 1) throw new Exception();
             VM.Types.Array items = (VM.Types.Array)result.ResultStack[0];
-            IEnumerator<StackItem> itemsEnumerator = items.GetEnumerator();
             List<byte[]> lists = new();
-            while (itemsEnumerator.MoveNext())
+            foreach (var item in items)
             {
-                lists.Add(itemsEnumerator.Current.GetSpan().ToArray());
+                lists.Add(item.GetSpan().ToArray());
             }
             return lists;
         }

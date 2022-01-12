@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using System.Web;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.SmartContract;
@@ -11,19 +12,19 @@ namespace Neo.FileStorage.Listen
     {
         public static string ParseToString(this IDictionary<string, string> parameters)
         {
+            if (parameters.Count == 0) return string.Empty;
             IEnumerator<KeyValuePair<string, string>> dem = parameters.GetEnumerator();
-            StringBuilder query = new("");
+            StringBuilder query = new();
             while (dem.MoveNext())
             {
                 string key = dem.Current.Key;
                 string value = dem.Current.Value;
                 if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(value))
                 {
-                    query.Append(key).Append('=').Append(value).Append('&');
+                    query.Append(HttpUtility.UrlEncode(key)).Append('=').Append(HttpUtility.UrlEncode(value)).Append('&');
                 }
             }
-            string content = query.ToString().Substring(0, query.Length - 1);
-            return content;
+            return query.ToString().Substring(0, query.Length - 1);
         }
 
         public static JObject ParseToJson(this NotifyEventArgs notify)

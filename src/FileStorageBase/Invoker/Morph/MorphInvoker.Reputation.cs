@@ -19,28 +19,26 @@ namespace Neo.FileStorage.Invoker.Morph
 
         public List<GlobalTrust> GetReputation(ulong epoch, byte[] peerID)
         {
-            InvokeResult result = TestInvoke(ReputationContractHash, ReputationGetMethod, 0, epoch, peerID);
+            var result = TestInvoke(ReputationContractHash, ReputationGetMethod, 0, epoch, peerID);
             if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
-            VM.Types.Array items = (VM.Types.Array)result.ResultStack[0];
-            IEnumerator<StackItem> itemsEnumerator = items.GetEnumerator();
+            var items = (VM.Types.Array)result.ResultStack[0];
             List<GlobalTrust> lists = new();
-            while (itemsEnumerator.MoveNext())
+            foreach (var item in items)
             {
-                lists.Add(GlobalTrust.Parser.ParseFrom(itemsEnumerator.Current.GetSpan().ToArray()));
+                lists.Add(GlobalTrust.Parser.ParseFrom(item.GetSpan().ToArray()));
             }
             return lists;
         }
 
         public List<GlobalTrust> GetReputationByID(byte[] id)
         {
-            InvokeResult result = TestInvoke(ReputationContractHash, ReputationGetByIDMethod, id);
+            var result = TestInvoke(ReputationContractHash, ReputationGetByIDMethod, id);
             if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
-            VM.Types.Array items = (VM.Types.Array)result.ResultStack[0];
-            IEnumerator<StackItem> itemsEnumerator = items.GetEnumerator();
+            var items = (VM.Types.Array)result.ResultStack[0];
             List<GlobalTrust> lists = new();
-            while (itemsEnumerator.MoveNext())
+            foreach (var item in items)
             {
-                lists.Add(GlobalTrust.Parser.ParseFrom(itemsEnumerator.Current.GetSpan().ToArray()));
+                lists.Add(GlobalTrust.Parser.ParseFrom(item.GetSpan().ToArray()));
             }
             return lists;
         }
@@ -49,12 +47,11 @@ namespace Neo.FileStorage.Invoker.Morph
         {
             InvokeResult result = TestInvoke(ReputationContractHash, ReputationListByEpochMethod, epoch);
             if (result.ResultStack.Length != 1) throw new InvalidOperationException($"unexpected stack item, count={result.ResultStack.Length}");
-            VM.Types.Array items = (VM.Types.Array)result.ResultStack[0];
-            IEnumerator<StackItem> itemsEnumerator = items.GetEnumerator();
+            var items = (VM.Types.Array)result.ResultStack[0];
             List<byte[]> ids = new();
-            while (itemsEnumerator.MoveNext())
+            foreach (var item in items)
             {
-                ids.Add(itemsEnumerator.Current.GetSpan().ToArray());
+                ids.Add(item.GetSpan().ToArray());
             }
             return ids;
         }

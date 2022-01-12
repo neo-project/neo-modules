@@ -1,3 +1,5 @@
+using System;
+
 namespace Neo.FileStorage.Listen
 {
     public class ScriptHashWithType
@@ -9,13 +11,13 @@ namespace Neo.FileStorage.Listen
         {
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            ScriptHashWithType oth = (ScriptHashWithType)obj;
-            return oth.ScriptHashValue == ScriptHashValue && oth.Type == Type;
+            if (obj is not ScriptHashWithType other) return false;
+            return other.ScriptHashValue == ScriptHashValue && other.Type == Type;
         }
 
         public override int GetHashCode()
         {
-            return ScriptHashValue.GetHashCode() + Type.GetHashCode();
+            return HashCode.Combine(ScriptHashValue.GetHashCode(), Type.GetHashCode());
         }
     }
 }
