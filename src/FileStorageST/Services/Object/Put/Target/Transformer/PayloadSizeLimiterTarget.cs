@@ -115,6 +115,8 @@ namespace Neo.FileStorage.Storage.Services.Object.Put.Target
         {
             if (written > 0 && written % maxSize == 0)
             {
+                if (current.ObjectType != ObjectType.Regular)
+                    throw new InvalidOperationException($"{current.ObjectType} exceeds size limitation");
                 if (written == maxSize)
                     PrepareFirstChild();
                 Release(false);
