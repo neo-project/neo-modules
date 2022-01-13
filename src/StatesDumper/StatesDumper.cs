@@ -51,7 +51,10 @@ namespace Neo.Plugins
                 ["value"] = Convert.ToBase64String(p.Value.ToArray())
             }));
             File.WriteAllText(path, array.ToString());
-            Console.WriteLine($"States ({array.Count}) have been dumped into file {path}");
+            ConsoleHelper.Info("States",
+                $"({array.Count})",
+                " have been dumped into file ",
+                $"{path}");
         }
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
@@ -128,7 +131,7 @@ namespace Neo.Plugins
 
         bool IPersistencePlugin.ShouldThrowExceptionFromCommit(Exception ex)
         {
-            Console.WriteLine($"Error writing States with StatesDumper.{Environment.NewLine}{ex}");
+            ConsoleHelper.Error($"Error writing States with StatesDumper.{Environment.NewLine}{ex}");
             return true;
         }
 
