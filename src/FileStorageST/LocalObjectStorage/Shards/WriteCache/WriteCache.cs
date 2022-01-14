@@ -1,6 +1,6 @@
+using Google.Protobuf;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Cache;
-using Neo.FileStorage.Database;
 using Neo.FileStorage.Database.LevelDB;
 using Neo.FileStorage.Storage.LocalObjectStorage.Blobstor;
 using Neo.FileStorage.Storage.LocalObjectStorage.Metabase;
@@ -9,19 +9,13 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
-using FSObject = Neo.FileStorage.API.Object.Object;
+
+using static Neo.Helper;
 
 namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
 {
     public sealed partial class WriteCache : IDisposable
     {
-        private class ObjectInfo
-        {
-            public FSObject Object;
-            public string SAddress;
-            public byte[] Data;
-        }
-
         public const string DBName = "Data_Cache_Small";
         public const string FileTreeDirName = "FileTree_Cache";
         public const int LRUKeysCount = 256 * 1024 * 8;
@@ -41,14 +35,16 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
         private ulong SmallObjectSize => settings.SmallObjectSize;
         private ulong memorySize = 0;
         private readonly object memorySizeLocker = new(), dbSizeLocker = new();
-        private readonly ConcurrentDictionary<string, ObjectInfo> mem = new();
+        private readonly ConcurrentDictionary<Address, ObjectInfo> mem = new();
         private readonly FSTree fsTree;
-        private IDB db;
-        private readonly LRUCache<string, bool> flushed;
+        private CacheDB db;
+        private readonly LRUCache<Address, bool> flushed;
         private Timer persistTimer;
-        private Timer flushQueueTimer;
+        private Timer flushTimer;
+        private Timer queueTimer;
         private ObjectCounters objCounters;
         private readonly ConcurrentQueue<(ObjectInfo, bool)> flushQueue = new();
+        private static readonly byte[] SequenceKey = new byte[] { 0xFF };
 
         public WriteCache(WriteCacheSettings settings, BlobStorage blobStor, MB mb)
         {
@@ -65,34 +61,29 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
             var full = Path.GetFullPath(Path.Join(path, DBName));
             if (!Directory.Exists(full))
                 Directory.CreateDirectory(full);
-            db = new DB(full);
-            persistTimer = new(OnPersist, null, DefaultInterval, DefaultInterval);
-            flushQueueTimer = new(OnFlushQueue, null, DefaultInterval, DefaultInterval / 2);
+            db = new CacheDB(full);
+            persistTimer = new(Persist, null, DefaultInterval, DefaultInterval);
+            flushTimer = new(Flush, null, DefaultInterval, DefaultInterval);
+            queueTimer = new(FlushQueue, null, DefaultInterval, DefaultInterval);
             objCounters = new(db, fsTree);
             objCounters.Load();
         }
 
-        private void OnPersist(object _)
+        private void Flush(object _)
         {
-            Persist();
             FlushSmallObjects();
             FlushBigObjects();
-        }
-
-        private void OnFlushQueue(object _)
-        {
-            FlushQueue();
         }
 
         private void EvictObjects(int count)
         {
             int sum = flushed.Count + count;
             if (sum < LRUKeysCount) return;
-            List<string> dbKeys = new();
-            List<string> diskKeys = new();
+            List<Address> dbKeys = new();
+            List<Address> diskKeys = new();
             for (int i = 0; i < LRUKeysCount - sum; i++)
             {
-                if (!flushed.RemoveOldest(out (string, bool) removed))
+                if (!flushed.RemoveOldest(out (Address, bool) removed))
                     break;
                 if (removed.Item2)
                     dbKeys.Add(removed.Item1);
@@ -100,28 +91,27 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
                     diskKeys.Add(removed.Item1);
             }
 
-            foreach (var saddress in dbKeys)
+            foreach (var address in dbKeys)
             {
-                var length = db.Get(Utility.StrictUTF8.GetBytes(saddress))?.Length ?? 0;
+                var length = db.Get(address)?.Length ?? 0;
                 if (0 < length)
                 {
-                    db.Delete(Utility.StrictUTF8.GetBytes(saddress));
+                    db.Delete(address);
                     objCounters.DecSmallCount();
-                    Utility.Log(nameof(WriteCache), LogLevel.Debug, $"db DELETE, address={saddress}");
+                    Utility.Log(nameof(WriteCache), LogLevel.Debug, $"db DELETE, address={address.String()}");
                 }
             }
-            foreach (var saddress in diskKeys)
+            foreach (var address in diskKeys)
             {
-                var address = Address.ParseString(saddress);
                 try
                 {
                     fsTree.Delete(address);
                     objCounters.DecBigCount();
-                    Utility.Log(nameof(WriteCache), LogLevel.Debug, $"fs tree DELETE, address={saddress}");
+                    Utility.Log(nameof(WriteCache), LogLevel.Debug, $"fs tree DELETE, address={address.String()}");
                 }
                 catch (Exception e)
                 {
-                    Utility.Log(nameof(WriteCache), LogLevel.Error, $"can't remove from fstree, address={saddress}, error={e.Message}");
+                    Utility.Log(nameof(WriteCache), LogLevel.Error, $"can't remove from fstree, address={address.String()}, error={e.Message}");
                 }
             }
         }
@@ -129,7 +119,8 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
         public void Dispose()
         {
             persistTimer?.Dispose();
-            flushQueueTimer?.Dispose();
+            flushTimer?.Dispose();
+            queueTimer?.Dispose();
             db?.Dispose();
             flushed?.Purge();
         }

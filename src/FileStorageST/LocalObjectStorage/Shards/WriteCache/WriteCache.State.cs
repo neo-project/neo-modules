@@ -12,9 +12,9 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
             public ulong SmallCount;
             public ulong BigCount;
             private readonly FSTree fsTree;
-            private readonly IDB db;
+            private readonly CacheDB db;
 
-            public ObjectCounters(IDB db, FSTree fsTree)
+            public ObjectCounters(CacheDB db, FSTree fsTree)
             {
                 this.db = db;
                 this.fsTree = fsTree;
@@ -22,7 +22,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
 
             public void Load()
             {
-                db.Iterate(Array.Empty<byte>(), (k, v) =>
+                db.Iterate(data =>
                 {
                     SmallCount++;
                     return false;

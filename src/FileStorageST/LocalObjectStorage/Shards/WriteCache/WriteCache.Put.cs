@@ -12,8 +12,6 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
             ObjectInfo oi = new()
             {
                 Object = obj,
-                SAddress = obj.Address.String(),
-                Data = obj.ToByteArray()
             };
             var len = (ulong)oi.Data.Length;
             if (MaxObjectSize < len)
@@ -21,7 +19,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
             if (len < SmallObjectSize && memorySize + len <= MaxMemorySize)
             {
                 Interlocked.Add(ref memorySize, len);
-                mem[obj.Address.String()] = oi;
+                mem[obj.Address] = oi;
                 Utility.Log(nameof(WriteCache), LogLevel.Debug, $"in-mem PUT, address={obj.Address.String()}");
                 return;
             }

@@ -1,6 +1,7 @@
 using Neo.FileStorage.Storage.LocalObjectStorage.Blob;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
 namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
@@ -11,14 +12,13 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
         {
             int i = 0;
             List<ObjectInfo> toFlush = new();
-            db.Iterate(Array.Empty<byte>(), (key, value) =>
+            db.IterateUnflushed(data =>
              {
                  ObjectInfo oi = new()
                  {
-                     Object = FSObject.Parser.ParseFrom(value),
-                     SAddress = Utility.StrictUTF8.GetString(key),
+                     Object = FSObject.Parser.ParseFrom(data),
                  };
-                 if (flushed.TryPeek(oi.SAddress, out _))
+                 if (flushed.TryPeek(oi.Address, out _))
                      return false;
                  toFlush.Add(oi);
                  i++;
@@ -28,9 +28,12 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
             AddToFlushQueue(toFlush.ToArray(), 0);
             EvictObjects(toFlush.Count);
             foreach (var oi in toFlush)
-                flushed.Add(oi.SAddress, true);
+                flushed.Add(oi.Address, true);
             if (toFlush.Count > 0)
+            {
                 Utility.Log(nameof(WriteCache), LogLevel.Debug, $"flushed items from write cache, count={toFlush.Count}");
+                db.Flushed(toFlush.Last().Address);
+            }
         }
 
         private void FlushBigObjects()
@@ -39,9 +42,9 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
             {
                 fsTree.Iterate((address, data) =>
                 {
-                    if (flushed.TryPeek(address.String(), out _)) return;
+                    if (flushed.TryPeek(address, out _)) return;
                     blobStorage.PutRaw(address, data);
-                    flushed.Add(address.String(), false);
+                    flushed.Add(address, false);
                 });
             }
             catch (Exception e)
@@ -50,7 +53,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
             }
         }
 
-        private void FlushQueue()
+        private void FlushQueue(object _)
         {
             while (flushQueue.TryDequeue(out var item))
             {

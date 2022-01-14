@@ -9,15 +9,14 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
     {
         public FSObject Get(Address address)
         {
-            string saddress = address.String();
-            if (mem.TryGetValue(saddress, out ObjectInfo oi))
+            if (mem.TryGetValue(address, out ObjectInfo oi))
             {
                 return oi.Object;
             }
-            byte[] data = db.Get(Utility.StrictUTF8.GetBytes(address.String()));
+            byte[] data = db.Get(address);
             if (data is not null)
             {
-                flushed.TryGet(saddress, out _);
+                flushed.TryGet(address, out _);
                 return FSObject.Parser.ParseFrom(data);
             }
             try
@@ -28,7 +27,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
             {
                 throw new ObjectNotFoundException();
             }
-            flushed.TryGet(saddress, out _);
+            flushed.TryGet(address, out _);
             return FSObject.Parser.ParseFrom(data);
         }
     }

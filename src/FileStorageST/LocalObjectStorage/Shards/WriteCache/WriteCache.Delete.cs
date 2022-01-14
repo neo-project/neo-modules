@@ -8,8 +8,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
         public void Delete(Address address)
         {
             string saddress = address.String();
-            byte[] key = Utility.StrictUTF8.GetBytes(saddress);
-            if (mem.TryRemove(saddress, out var oi))
+            if (mem.TryRemove(address, out var oi))
             {
                 lock (memorySizeLocker)
                 {
@@ -18,10 +17,10 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
                 Utility.Log(nameof(WriteCache), LogLevel.Debug, $"in-mem DELETE, address={saddress}");
                 return;
             }
-            if (db.Contains(key))
+            var data = db.Get(address);
+            if (data is not null)
             {
-                var length = db.Get(key).Length;
-                db.Delete(key);
+                db.Delete(address);
                 objCounters.DecSmallCount();
                 Utility.Log(nameof(WriteCache), LogLevel.Debug, $"db DELETE, address={saddress}");
                 return;

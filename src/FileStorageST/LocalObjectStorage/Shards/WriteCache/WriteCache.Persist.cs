@@ -5,13 +5,13 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
 {
     public sealed partial class WriteCache : IDisposable
     {
-        private void Persist()
+        private void Persist(object _1)
         {
             if (mem.IsEmpty) return;
             var m = mem.Values.OrderBy(p => p.SAddress).ToArray();
             foreach (var obj in m)
             {
-                mem.TryRemove(obj.SAddress, out _);
+                mem.TryRemove(obj.Address, out var _2);
                 lock (memorySizeLocker)
                 {
                     memorySize -= (ulong)obj.Data.Length;
@@ -36,25 +36,31 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
                     break;
                 }
                 cacheSize = newSize;
-                db.Put(Utility.StrictUTF8.GetBytes(objs[i].SAddress), objs[i].Data);
-                objCounters.IncSmallCount();
-                Utility.Log(nameof(WriteCache), LogLevel.Debug, $"db PUT, address={objs[i].SAddress}");
-                flushed.Add(objs[i].SAddress, true);
+                db.Put(objs[i]);
             }
             EvictObjects(overflowIndex);
+            for (int i = 0; i < overflowIndex; i++)
+            {
+                objCounters.IncSmallCount();
+                Utility.Log(nameof(WriteCache), LogLevel.Debug, $"db PUT, address={objs[i].SAddress}");
+            }
+            for (int i = overflowIndex; i < objs.Length; i++)
+                flushed.Add(objs[i].Address, true);
             AddToFlushQueue(objs, overflowIndex);
         }
 
         private void PersistBigObject(ObjectInfo obj)
         {
             var cacheSize = EstimateCacheSize();
+            var metaIndex = 0;
             if (cacheSize + MaxObjectSize <= MaxCacheSize)
             {
                 fsTree.Put(obj.Object.Address, obj.Data);
                 objCounters.IncBigCount();
                 Utility.Log(nameof(WriteCache), LogLevel.Debug, $"fstree PUT, address={obj.SAddress}");
+                metaIndex = 1;
             }
-            AddToFlushQueue(new[] { obj }, 0);
+            AddToFlushQueue(new[] { obj }, metaIndex);
         }
 
         private void AddToFlushQueue(ObjectInfo[] objs, int metaIndex)
