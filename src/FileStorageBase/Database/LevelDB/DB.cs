@@ -1,5 +1,7 @@
-using System;
 using Neo.IO.Data.LevelDB;
+using System;
+using System.Linq;
+using static Neo.Helper;
 
 namespace Neo.FileStorage.Database.LevelDB
 {
@@ -41,6 +43,16 @@ namespace Neo.FileStorage.Database.LevelDB
         {
             using Iterator it = db.NewIterator(ReadOptions.Default);
             for (it.Seek(prefix); it.Valid(); it.Next())
+            {
+                if (!it.Key().AsSpan().StartsWith(prefix)) break;
+                if (handler(it.Key(), it.Value())) break;
+            }
+        }
+
+        public void Iterate(byte[] prefix, byte[] from, Func<byte[], byte[], bool> handler)
+        {
+            using Iterator it = db.NewIterator(ReadOptions.Default);
+            for (it.Seek(Concat(prefix, from)); it.Valid(); it.Next())
             {
                 if (!it.Key().AsSpan().StartsWith(prefix)) break;
                 if (handler(it.Key(), it.Value())) break;

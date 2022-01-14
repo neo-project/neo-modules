@@ -9,5 +9,6 @@ namespace Neo.FileStorage.Database
         void Delete(byte[] key);
         bool Contains(byte[] key);
         void Iterate(byte[] prefix, Func<byte[], byte[], bool> handler);
+        void Iterate(byte[] prefix, byte[] from, Func<byte[], byte[], bool> handler);
     }
 }
