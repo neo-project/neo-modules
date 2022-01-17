@@ -118,7 +118,7 @@ namespace Neo.FileStorage.Storage
             NetmapServiceImpl netmapService = InitializeNetmap();
             ObjectServiceImpl objectService = InitializeObject();
             ReputationServiceImpl reputationService = InitializeReputation();
-            server = new(Settings.Default.Port, Settings.Default.SslCert, Settings.Default.SslCertPassword);
+            server = new(Settings.Default.GrpcSettings);
             server.BindService<APIAccountingService.AccountingServiceBase>(accountingService);
             server.BindService<APIContainerService.ContainerServiceBase>(containerService);
             server.BindService<ControlService.ControlServiceBase>(controlService);

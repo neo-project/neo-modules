@@ -14,7 +14,6 @@ namespace Neo.FileStorage.Storage
 {
     public class Settings
     {
-        public const string DefaultAddress = "/ip4/0.0.0.0/tcp/8080";
         public const int DefaultPort = 8080;
         public static Settings Default { get; private set; }
         public bool AutoStart;
@@ -70,11 +69,9 @@ namespace Neo.FileStorage.Storage
             { MorphInvoker.ContainerContractName, null },
             { MorphInvoker.ReputationContractName, null }
         };
-        public string[] Addresses;
-        public int Port;
-        public string SslCert;
-        public string SslCertPassword;
-        public List<string> Attributes;
+        public GrpcSettings GrpcSettings;
+        private string[] addresses;
+        private List<string> attributes;
         public NodeInfo LocalNodeInfo;
         public long SideChainFee;
         public ulong TombstoneLifetime;
@@ -98,11 +95,15 @@ namespace Neo.FileStorage.Storage
                 if (UInt160.TryParse(contract_section.GetSection("Reputation")?.Value, out var reputationContractHash))
                     ReputationContractHash = reputationContractHash;
             }
-            Addresses = section.GetSection("Addresses").GetChildren().Select(p => p.Value).ToArray();
-            Port = section.GetValue("Port", DefaultPort);
-            SslCert = section.GetValue("SslCert", "");
-            SslCertPassword = section.GetValue("SslCertPassword", "");
-            Attributes = section.GetSection("Attributes").GetChildren().Select(p => p.Value).ToList();
+            var grpc_section = section.GetSection("Grpc");
+            if (grpc_section is null)
+                throw new InvalidOperationException("no grpc settings");
+            GrpcSettings = GrpcSettings.Load(grpc_section);
+            var ni_section = section.GetSection("NodeInfo");
+            if (ni_section is null)
+                throw new InvalidOperationException("no node info settings");
+            addresses = ni_section.GetSection("Addresses").GetChildren().Select(p => p.Value).ToArray();
+            attributes = ni_section.GetSection("Attributes").GetChildren().Select(p => p.Value).ToList();
             SideChainFee = section.GetValue("SideChainFee", 5000L);
             TombstoneLifetime = section.GetValue("TombstoneLifetime", DeleteService.DefaultTomestoneLifetime);
             var admin_section = section.GetSection("Administrators");
@@ -116,11 +117,11 @@ namespace Neo.FileStorage.Storage
             Shards = section.GetSection("Shards").GetChildren().Select(p => ShardSettings.Load(p)).ToList();
             if (Shards.Count == 0) Shards = new List<ShardSettings> { ShardSettings.Default };
             LocalNodeInfo = new();
-            LocalNodeInfo.Addresses.AddRange(Addresses);
+            LocalNodeInfo.Addresses.AddRange(addresses);
             Dictionary<string, string> attrs = new();
             string key, value;
             string[] li;
-            foreach (var attr in Attributes)
+            foreach (var attr in attributes)
             {
                 li = attr.Split(":");
                 if (li.Length != 2) throw new FormatException("Invalid attributes setting");
@@ -140,6 +141,25 @@ namespace Neo.FileStorage.Storage
         public static void Load(IConfigurationSection section)
         {
             Default = new Settings(section);
+        }
+    }
+
+    public class GrpcSettings
+    {
+        public int Port;
+        public string SslCert;
+        public string SslCertPassword;
+        public bool LogEnabled;
+
+        public static GrpcSettings Load(IConfigurationSection section)
+        {
+            return new()
+            {
+                Port = section.GetValue("Port", Settings.DefaultPort),
+                SslCert = section.GetValue("SslCert", ""),
+                SslCertPassword = section.GetValue("SslCertPassword", ""),
+                LogEnabled = section.GetValue("LogEnabled", true),
+            };
         }
     }
 

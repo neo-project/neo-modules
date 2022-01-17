@@ -2,22 +2,27 @@
   "PluginConfiguration": {
     "AutoStart": false,
     "BootstrapInterval": 2,
-    "Addresses": [
-      "/ip4/0.0.0.0/tcp/8080"
-    ],
-    "Port": 8080,
-    "SslCert": "",
-    "SslCertPassword": "",
-    "Attributes": [
-      "Capacity: 0",
-      "Price: 22",
-      "UN-LOCODE: CN SGH"
-    ],
     "TombstoneLifetime": 5,
     "SideChainFee": 5000,
     "Administrators": [
       "02cd5a5547119e24feaa7c2a0f37b8c9366216bab7054de0065c9be42084003c8a"
     ],
+    "Grpc": {
+      "Port": 8080,
+      "SslCert": "",
+      "SslCertPassword": "",
+      "LogEnabled": false
+    },
+    "NodeInfo": {
+      "Attributes": [
+        "Capacity: 0",
+        "Price: 22",
+        "UN-LOCODE: CN SGH"
+      ],
+      "Addresses": [
+        "/ip4/0.0.0.0/tcp/8080"
+      ]
+    },
     "Replicate": {
       "Timeout": 5
     },

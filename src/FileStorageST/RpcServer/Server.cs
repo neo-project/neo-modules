@@ -16,16 +16,17 @@ namespace Neo.FileStorage.Storage.RpcServer
         private readonly string sslCert;
         private readonly string sslCertPassword;
 
-        public Server(int port, string sslCert, string sslCertPassword)
+        public Server(GrpcSettings settings)
         {
-            this.port = port;
-            this.sslCert = sslCert;
-            this.sslCertPassword = sslCertPassword;
+            port = settings.Port;
+            sslCert = settings.SslCert;
+            sslCertPassword = settings.SslCertPassword;
             hostBuilder = Host.CreateDefaultBuilder()
                 .ConfigureLogging(logBuilder =>
                 {
-                    logBuilder.ClearProviders()
-                        .AddProvider(new LoggerProvider());
+                    logBuilder.ClearProviders();
+                    if (settings.LogEnabled)
+                        logBuilder.AddProvider(new LoggerProvider());
                 });
         }
 
