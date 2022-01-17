@@ -61,7 +61,7 @@ namespace Neo.Consensus
 
         //Modify to be 1 or 4/3
         public float PrimaryTimerPriorityMultiplier => 1;
-        public float PrimaryTimerFallBackMultiplier => 4/3;
+        public float PrimaryTimerFallBackMultiplier => 4 / 3;
         public float PrimaryTimerMultiplier => IsPriorityPrimary ? PrimaryTimerPriorityMultiplier : PrimaryTimerFallBackMultiplier;
         public bool IsBackup => MyIndex >= 0 && !IsPriorityPrimary && IsFallbackPrimary;
         public bool WatchOnly => MyIndex < 0;

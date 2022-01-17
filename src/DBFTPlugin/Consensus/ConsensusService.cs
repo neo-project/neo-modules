@@ -196,14 +196,14 @@ namespace Neo.Consensus
             if (context.Validators.Length == 1)
                 CheckPreparations(i);
 
-            Log($"SendPrepareRequest I",LogLevel.Debug);
+            Log($"SendPrepareRequest I", LogLevel.Debug);
 
             if (context.TransactionHashes[i].Length > 0)
             {
                 foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes[i]))
                     localNode.Tell(Message.Create(MessageCommand.Inv, payload));
             }
-            Log($"SendPrepareRequest II",LogLevel.Debug);
+            Log($"SendPrepareRequest II", LogLevel.Debug);
             ChangeTimer(TimeSpan.FromMilliseconds(context.PrimaryTimerMultiplier * ((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0))));
         }
 
