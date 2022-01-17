@@ -188,19 +188,19 @@ namespace Neo.Consensus
             }
         }
 
-        private void SendPrepareRequest(uint i)
+        private void SendPrepareRequest(uint pID)
         {
-            Log($"Sending {nameof(PrepareRequest)}: height={context.Block[i].Index} view={context.ViewNumber} Id={i}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest(i) });
+            Log($"Sending {nameof(PrepareRequest)}: height={context.Block[pID].Index} view={context.ViewNumber} Id={pID}");
+            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest(pID) });
 
             if (context.Validators.Length == 1)
-                CheckPreparations(i);
+                CheckPreparations(pID);
 
             Log($"SendPrepareRequest I", LogLevel.Debug);
 
-            if (context.TransactionHashes[i].Length > 0)
+            if (context.TransactionHashes[pID].Length > 0)
             {
-                foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes[i]))
+                foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes[pID]))
                     localNode.Tell(Message.Create(MessageCommand.Inv, payload));
             }
             Log($"SendPrepareRequest II", LogLevel.Debug);

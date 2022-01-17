@@ -59,7 +59,7 @@ namespace Neo.Consensus
         /// Prevent that block exceed the max size
         /// </summary>
         /// <param name="txs">Ordered transactions</param>
-        internal void EnsureMaxBlockLimitation(IEnumerable<Transaction> txs, uint i)
+        internal void EnsureMaxBlockLimitation(IEnumerable<Transaction> txs, uint pID)
         {
             uint maxTransactionsPerBlock = neoSystem.Settings.MaxTransactionsPerBlock;
 
@@ -67,8 +67,8 @@ namespace Neo.Consensus
             txs = txs.Take((int)maxTransactionsPerBlock);
 
             List<UInt256> hashes = new List<UInt256>();
-            Transactions[i] = new Dictionary<UInt256, Transaction>();
-            VerificationContext[i] = new TransactionVerificationContext();
+            Transactions[pID] = new Dictionary<UInt256, Transaction>();
+            VerificationContext[pID] = new TransactionVerificationContext();
 
             // Expected block size
             var blockSize = GetExpectedBlockSizeWithoutTransactions(txs.Count());
@@ -86,26 +86,27 @@ namespace Neo.Consensus
                 if (blockSystemFee > dbftSettings.MaxBlockSystemFee) break;
 
                 hashes.Add(tx.Hash);
-                Transactions[i].Add(tx.Hash, tx);
-                VerificationContext[i].AddTransaction(tx);
+                Transactions[pID].Add(tx.Hash, tx);
+                VerificationContext[pID].AddTransaction(tx);
             }
 
-            TransactionHashes[i] = hashes.ToArray();
+            TransactionHashes[pID] = hashes.ToArray();
         }
 
-        public ExtensiblePayload MakePrepareRequest(uint i)
+        public ExtensiblePayload MakePrepareRequest(uint pID)
         {
-            EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions(), i);
-            Block[i].Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
-            Block[i].Header.Nonce = GetNonce();
+            Log($"MakePrepareRequest I", LogLevel.Debug);
+            EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions(), pID);
+            Block[pID].Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
+            Block[pID].Header.Nonce = GetNonce();
 
-            return PreparationPayloads[i][MyIndex] = MakeSignedPayload(new PrepareRequest
+            return PreparationPayloads[pID][MyIndex] = MakeSignedPayload(new PrepareRequest
             {
-                Version = Block[i].Version,
-                PrevHash = Block[i].PrevHash,
-                Timestamp = Block[i].Timestamp,
-                Nonce = Block[i].Nonce,
-                TransactionHashes = TransactionHashes[i]
+                Version = Block[pID].Version,
+                PrevHash = Block[pID].PrevHash,
+                Timestamp = Block[pID].Timestamp,
+                Nonce = Block[pID].Nonce,
+                TransactionHashes = TransactionHashes[pID]
             });
         }
 

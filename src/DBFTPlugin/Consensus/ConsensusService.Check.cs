@@ -89,25 +89,26 @@ namespace Neo.Consensus
             }
         }
 
-        private void CheckPreparations(uint i)
+        private void CheckPreparations(uint pID)
         {
-            int thresholdForPrep = context.F + 1;
-            if (i == 1)
-                thresholdForPrep = context.M;
+            int thresholdForPrep = pID == 0 ? context.F + 1 : context.M;
 
-            if (context.PreparationPayloads[i].Count(p => p != null) >= thresholdForPrep && context.TransactionHashes[i].All(p => context.Transactions[i].ContainsKey(p)))
+            if (context.PreparationPayloads[pID].Count(p => p != null) >= thresholdForPrep && context.TransactionHashes[pID].All(p => context.Transactions[pID].ContainsKey(p)))
             {
-                ExtensiblePayload payload = context.MakePreCommit(i);
-                Log($"Sending {nameof(PreCommit)} pOrF={i}");
+                ExtensiblePayload payload = context.MakePreCommit(pID);
+                Log($"Sending {nameof(PreCommit)} pOrF={pID}");
                 context.Save();
                 localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
                 // Set timer, so we will resend the commit in case of a networking issue
                 ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock));
-                CheckPreCommits(i);
+                CheckPreCommits(pID);
 
+                // ==============================================
                 // Speed-up path to also send commit
-                if (i == 0 && context.PreparationPayloads[0].Count(p => p != null) >= context.M)
+                if (pID == 0 && context.PreparationPayloads[0].Count(p => p != null) >= context.M)
                     CheckPreCommits(0, true);
+                // ==============================================                    
+
                 return;
             }
         }
