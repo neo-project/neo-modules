@@ -264,8 +264,8 @@ namespace Neo.Consensus
                         }
                         else if (context.IsPriorityPrimary || (context.IsFallbackPrimary && message.ViewNumber == 0))
                         {
-                            uint pOrF = Convert.ToUInt32(context.IsPriorityPrimary);
-                            SendPrepareRequest(pOrF);
+                            uint pID = Convert.ToUInt32(!context.IsPriorityPrimary);
+                            SendPrepareRequest(pID);
                         }
                     }
                     ExtensiblePayload[] prepareResponsePayloads = message.GetPrepareResponsePayloads(context);

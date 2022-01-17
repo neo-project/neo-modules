@@ -158,12 +158,12 @@ namespace Neo.Consensus
 
         private void OnTimer(Timer timer)
         {
-            uint pOrF = Convert.ToUInt32(context.IsPriorityPrimary);
+            uint pID = Convert.ToUInt32(!context.IsPriorityPrimary);
             if (context.WatchOnly || context.BlockSent) return;
-            if (timer.Height != context.Block[pOrF].Index || timer.ViewNumber != context.ViewNumber) return;
+            if (timer.Height != context.Block[pID].Index || timer.ViewNumber != context.ViewNumber) return;
             if (context.IsAPrimary && !context.RequestSentOrReceived)
             {
-                SendPrepareRequest(pOrF);
+                SendPrepareRequest(pID);
             }
             else if ((context.IsAPrimary && context.RequestSentOrReceived) || context.IsBackup)
             {
@@ -178,7 +178,7 @@ namespace Neo.Consensus
                 {
                     var reason = ChangeViewReason.Timeout;
 
-                    if (context.Block[pOrF] != null && context.TransactionHashes[pOrF]?.Length > context.Transactions[pOrF]?.Count)
+                    if (context.Block[pID] != null && context.TransactionHashes[pID]?.Length > context.Transactions[pID]?.Count)
                     {
                         reason = ChangeViewReason.TxNotFound;
                     }
@@ -196,18 +196,15 @@ namespace Neo.Consensus
             if (context.Validators.Length == 1)
                 CheckPreparations(i);
 
+            Log($"SendPrepareRequest I",LogLevel.Debug);
+
             if (context.TransactionHashes[i].Length > 0)
             {
                 foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes[i]))
                     localNode.Tell(Message.Create(MessageCommand.Inv, payload));
             }
-            //Multiplier for Primary P1 or FellBeck P2
-            float multiplier = 1;
-            if (context.IsFallbackPrimary)
-                multiplier = 4 / 3;
-            // TODO Change to context.Multiplier
-
-            ChangeTimer(TimeSpan.FromMilliseconds(multiplier * ((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0))));
+            Log($"SendPrepareRequest II",LogLevel.Debug);
+            ChangeTimer(TimeSpan.FromMilliseconds(context.PrimaryTimerMultiplier * ((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0))));
         }
 
         private void RequestRecovery()

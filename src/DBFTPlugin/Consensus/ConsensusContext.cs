@@ -27,7 +27,7 @@ namespace Neo.Consensus
         public ECPoint[] Validators;
         public int MyIndex;
         public UInt256[][] TransactionHashes = new UInt256[2][];
-        public Dictionary<UInt256, Transaction>[] Transactions = new Dictionary<UInt256, Transaction>[2];;
+        public Dictionary<UInt256, Transaction>[] Transactions = new Dictionary<UInt256, Transaction>[2];
         public ExtensiblePayload[][] PreparationPayloads = new ExtensiblePayload[2][];
         public ExtensiblePayload[][] PreCommitPayloads = new ExtensiblePayload[2][];
         public ExtensiblePayload[][] CommitPayloads = new ExtensiblePayload[2][];
@@ -60,7 +60,9 @@ namespace Neo.Consensus
         public bool IsAPrimary => IsPriorityPrimary || IsFallbackPrimary;
 
         //Modify to be 1 or 4/3
-        public float PrimaryTimerMultiplier => 1;
+        public float PrimaryTimerPriorityMultiplier => 1;
+        public float PrimaryTimerFallBackMultiplier => 4/3;
+        public float PrimaryTimerMultiplier => IsPriorityPrimary ? PrimaryTimerPriorityMultiplier : PrimaryTimerFallBackMultiplier;
         public bool IsBackup => MyIndex >= 0 && !IsPriorityPrimary && IsFallbackPrimary;
         public bool WatchOnly => MyIndex < 0;
         public Header PrevHeader => NativeContract.Ledger.GetHeader(Snapshot, Block[0].PrevHash);
