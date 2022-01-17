@@ -3,6 +3,7 @@ using Neo.IO;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Neo.Consensus
@@ -85,6 +86,47 @@ namespace Neo.Consensus
                 // Set timer, so we will resend the commit in case of a networking issue
                 ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock));
                 CheckCommits();
+            }
+        }
+
+        private void CheckDKGShareReceives()
+        {
+            if (context.DKGSharePayloads.Count(p => p != null) == context.Validators.Length)
+            {
+                ExtensiblePayload payload = context.MakeDKGConfirm();
+                Log($"Sending {nameof(DKGConfirmMessage)}");
+                context.Save();
+                localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
+                List<byte[]> keys = new List<byte[]>();
+                foreach (var sharePayload in context.DKGSharePayloads)
+                {
+                    var key = context.GetMessage<DKGShareMessage>(sharePayload).keys[context.MyIndex];
+                    var point = context.Validators[context.MyIndex];
+                    var keypair = context.GetWallet(point);
+                    var decKey = Cryptography.Helper.ECDHDeriveKey(keypair.GetKey(),
+                        context.Validators[context.GetMessage<DKGShareMessage>(sharePayload).ValidatorIndex]);
+                    keys.Add(Cryptography.Helper.AES256Decrypt(decKey, key.ToArray()));
+                }
+
+                context.DkgNode.GetAggregatePrivateKey();
+
+                // Set timer, so we will resend the commit in case of a networking issue
+                // ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock));
+                CheckDKGConfirms();
+            }
+        }
+
+        private void CheckDKGConfirms()
+        {
+            if (context.DKGConfirmPayloads.Count(p => p != null) == context.Validators.Length)
+            {
+                // ExtensiblePayload payload = context.MakeDKGConfirm();
+                Log($"DKG Confirmed {nameof(DKGConfirmMessage)}");
+                // context.Save();
+                // localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
+                // // Set timer, so we will resend the commit in case of a networking issue
+                // // ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock));
+                // CheckDKGConfirms();
             }
         }
     }

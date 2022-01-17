@@ -7,8 +7,10 @@ namespace Neo.Consensus
         PrepareRequest = 0x20,
         PrepareResponse = 0x21,
         Commit = 0x30,
-
         RecoveryRequest = 0x40,
         RecoveryMessage = 0x41,
+        DKGShare = 0x51,
+        DKGReceive = 0x52,
+        DKGConfirm = 0x53
     }
 }

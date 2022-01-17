@@ -7,6 +7,8 @@ using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Neo.Consensus.DKG;
+using Neo.VM.Types;
 using static Neo.Ledger.Blockchain;
 
 namespace Neo.Consensus
@@ -24,7 +26,6 @@ namespace Neo.Consensus
         private DateTime block_received_time;
         private uint block_received_index;
         private bool started = false;
-
         /// <summary>
         /// This will record the information from last scheduled timer
         /// </summary>
@@ -187,6 +188,7 @@ namespace Neo.Consensus
         {
             Log($"Sending {nameof(PrepareRequest)}: height={context.Block.Index} view={context.ViewNumber}");
             localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest() });
+            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGShare() });
 
             if (context.Validators.Length == 1)
                 CheckPreparations();

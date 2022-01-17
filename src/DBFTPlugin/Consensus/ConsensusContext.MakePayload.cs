@@ -6,6 +6,9 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
+using Neo.Consensus.DKG;
+using Neo.Cryptography;
+using Neo.Cryptography.ECC;
 using static Neo.Consensus.RecoveryMessage;
 
 namespace Neo.Consensus
@@ -107,6 +110,7 @@ namespace Neo.Consensus
             });
         }
 
+
         public ExtensiblePayload MakeRecoveryRequest()
         {
             return MakeSignedPayload(new RecoveryRequest
@@ -152,6 +156,33 @@ namespace Neo.Consensus
             });
         }
 
+        #region MyRegion
+
+        public ExtensiblePayload MakeDKGShare()
+        {
+            DkgNode = new DKGNode(MyIndex, 7, 4);
+            List<UInt256> encKeys = new List<UInt256>();
+            for (int i = 0; i < DkgNode.blsSecretKeys.Count; i++)
+            {
+                var keypair = wallet.GetAccount(Validators[i]);
+                var encK = DkgNode.blsSecretKeys[i].AES256Encrypt(
+                    Cryptography.Helper.ECDHDeriveKey(keypair.GetKey(), Validators[i]),
+                    new byte[] { 0x00 });
+                encKeys.Add(new UInt256(encK));
+            }
+
+            return DKGSharePayloads[MyIndex] = MakeSignedPayload(new DKGShareMessage
+            {
+                keys = encKeys.ToArray()
+            });
+        }
+
+        public ExtensiblePayload MakeDKGConfirm()
+        {
+            return DKGConfirmPayloads[MyIndex] = MakeSignedPayload(new DKGConfirmMessage());
+        }
+
+
         private static ulong GetNonce()
         {
             Random _random = new();
@@ -159,5 +190,8 @@ namespace Neo.Consensus
             _random.NextBytes(buffer);
             return BinaryPrimitives.ReadUInt64LittleEndian(buffer);
         }
+
+        #endregion DKG
+
     }
 }

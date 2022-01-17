@@ -12,6 +12,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Neo.Consensus.DKG;
+using Neo.VM.Types;
+using Array = System.Array;
 
 namespace Neo.Consensus
 {
@@ -32,6 +35,15 @@ namespace Neo.Consensus
         public ExtensiblePayload[] CommitPayloads;
         public ExtensiblePayload[] ChangeViewPayloads;
         public ExtensiblePayload[] LastChangeViewPayloads;
+
+        #region MyRegion
+        public DKGNode DkgNode;
+        public ExtensiblePayload[] DKGSharePayloads;
+        public ExtensiblePayload[] DKGReceivePayloads;
+        public ExtensiblePayload[] DKGConfirmPayloads;
+        #endregion DKG
+
+
         // LastSeenMessage array stores the height of the last seen message, for each validator.
         // if this node never heard from validator i, LastSeenMessage[i] will be -1.
         public Dictionary<ECPoint, uint> LastSeenMessage { get; private set; }
@@ -49,7 +61,7 @@ namespace Neo.Consensus
         private readonly Wallet wallet;
         private readonly IStore store;
         private Dictionary<UInt256, ConsensusMessage> cachedMessages;
-
+        // public WalletAccount dkgAccount;
         public int F => (Validators.Length - 1) / 3;
         public int M => Validators.Length - F;
         public bool IsPrimary => MyIndex == Block.PrimaryIndex;
@@ -57,6 +69,9 @@ namespace Neo.Consensus
         public bool WatchOnly => MyIndex < 0;
         public Header PrevHeader => NativeContract.Ledger.GetHeader(Snapshot, Block.PrevHash);
         public int CountCommitted => CommitPayloads.Count(p => p != null);
+
+        public WalletAccount GetWallet(ECPoint point) => wallet.GetAccount(point);
+
         public int CountFailed
         {
             get
@@ -92,6 +107,12 @@ namespace Neo.Consensus
         public bool MoreThanFNodesCommittedOrLost => (CountCommitted + CountFailed) > F;
         #endregion
 
+        #region DKG States
+
+        public bool DKGShared => !WatchOnly && DKGSharePayloads[MyIndex] != null;
+
+        #endregion
+
         public int Size => throw new NotImplementedException();
 
         public ConsensusContext(NeoSystem neoSystem, Settings settings, Wallet wallet)
@@ -100,6 +121,7 @@ namespace Neo.Consensus
             this.neoSystem = neoSystem;
             this.dbftSettings = settings;
             this.store = neoSystem.LoadStore(settings.RecoveryLogs);
+            // dkgAccount = this.wallet.CreateAccount();
         }
 
         public Block CreateBlock()
