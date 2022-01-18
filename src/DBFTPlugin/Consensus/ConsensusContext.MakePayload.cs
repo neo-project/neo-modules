@@ -160,7 +160,7 @@ namespace Neo.Consensus
 
         public ExtensiblePayload MakeDKGShare()
         {
-            DkgNode = new DKGNode(MyIndex, 7, 4);
+            DkgNode = new DKGNode(MyIndex, (uint)Validators.Length, (uint)(F+1));
             List<UInt256> encKeys = new List<UInt256>();
             for (int i = 0; i < DkgNode.blsSecretKeys.Count; i++)
             {
