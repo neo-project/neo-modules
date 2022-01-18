@@ -188,8 +188,10 @@ namespace Neo.Consensus
         {
             Log($"Sending {nameof(PrepareRequest)}: height={context.Block.Index} view={context.ViewNumber}");
             localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest() });
+            Log($"Sending {nameof(DKGShareMessage)}: height={context.Block.Index} view={context.ViewNumber}");
             localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGShare() });
-
+            //Log($"Sending {nameof(DKGConfirmMessage)}: height={context.Block.Index} view={context.ViewNumber}");
+            //localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGConfirm() });
             if (context.Validators.Length == 1)
                 CheckPreparations();
 

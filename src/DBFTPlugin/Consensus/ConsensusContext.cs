@@ -36,7 +36,7 @@ namespace Neo.Consensus
         public ExtensiblePayload[] ChangeViewPayloads;
         public ExtensiblePayload[] LastChangeViewPayloads;
 
-        #region MyRegion
+        #region DKG
         public DKGNode DkgNode;
         public ExtensiblePayload[] DKGSharePayloads;
         public ExtensiblePayload[] DKGReceivePayloads;
@@ -270,6 +270,9 @@ namespace Neo.Consensus
             Block.Transactions = null;
             TransactionHashes = null;
             PreparationPayloads = new ExtensiblePayload[Validators.Length];
+            DKGSharePayloads = new ExtensiblePayload[Validators.Length];
+            DKGReceivePayloads = new ExtensiblePayload[Validators.Length];
+            DKGConfirmPayloads = new ExtensiblePayload[Validators.Length];
             if (MyIndex >= 0) LastSeenMessage[Validators[MyIndex]] = Block.Index;
         }
 

@@ -13,7 +13,7 @@ public class DKGNode
 
     //Local secret key to generate shared private keys
     public List<byte[]> blsSecretKeys = new();
-
+    public List<byte[]> dkgSecretKeys = new();
     // Shared private keys from peers to generate aggregated key
     private byte[][] collectedSharedPrivateKeys;
     private byte[][] collectedSharedPublicKeys;
@@ -23,7 +23,7 @@ public class DKGNode
     public byte[] LocalAggregatedPublicKey => GetAggregatedPublicKey();
 
     private byte[][] aggregatedPublicKeysForSignature;
-
+    private uint[][] commonWeightSet;
 
     public int Index { get; } = -1;
 
@@ -32,17 +32,33 @@ public class DKGNode
         Index = index;
         this.n = n;
         this.m = m;
+
+        commonWeightSet = new uint[n][];
+        for (int i = 0; i < this.n; i++)
+        {
+            commonWeightSet[i] = new uint[m];
+            commonWeightSet[i][0] = 1;
+            for (int j = 1; j < m; j++)
+            {
+                commonWeightSet[i][j] = (uint)(commonWeightSet[i][j - 1] * (i + 1));
+            }
+        }
+
+
         var keys = GeneratePrivateKeys(n, m);
 
         foreach (var key in keys)
         {
             blsSecretKeys.Add(key);
         }
-
+        var dkgkeys = GenerateSharedPrivateKeys();
+        foreach (var key in dkgkeys) dkgSecretKeys.Add(key);
         collectedSharedPrivateKeys = new byte[n][];
         collectedSharedPublicKeys = new byte[n][];
 
         aggregatedPublicKeysForSignature = new byte[n][];
+
+
     }
 
     private byte[] GeneratePrivateKeyFromRandom(int bits)
@@ -118,13 +134,14 @@ public class DKGNode
     /// </summary>
     /// <param name="commonWeightSet"></param>
     /// <returns></returns>
-    public byte[][] GenerateSharedPrivateKeys(uint[][] commonWeightSet)
+    public byte[][] GenerateSharedPrivateKeys()
     {
         //Calculate shared private keys
         var sharedPrivateKeys = new byte[n][];
         for (int i = 0; i < n; i++)
         {
-            sharedPrivateKeys[i] = AggregatePrivateKey(this.blsSecretKeys.ToArray(), commonWeightSet[i]);
+            var key = AggregatePrivateKey(this.blsSecretKeys.ToArray(), commonWeightSet[i]);
+            sharedPrivateKeys[i] = key;
         }
 
         return sharedPrivateKeys;

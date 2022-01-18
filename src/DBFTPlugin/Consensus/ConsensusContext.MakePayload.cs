@@ -160,26 +160,34 @@ namespace Neo.Consensus
 
         public ExtensiblePayload MakeDKGShare()
         {
-            DkgNode = new DKGNode(MyIndex, (uint)Validators.Length, (uint)(F+1));
-            List<UInt256> encKeys = new List<UInt256>();
-            for (int i = 0; i < DkgNode.blsSecretKeys.Count; i++)
+            DkgNode = Validators.Length switch
             {
-                var keypair = wallet.GetAccount(Validators[i]);
-                var encK = DkgNode.blsSecretKeys[i].AES256Encrypt(
-                    Cryptography.Helper.ECDHDeriveKey(keypair.GetKey(), Validators[i]),
-                    new byte[] { 0x00 });
+                1 => new DKGNode(MyIndex, 7, 3),
+                _ => new DKGNode(MyIndex, (uint)Validators.Length, (uint)F + 1)
+            };
+
+            List<UInt256> encKeys = new List<UInt256>();
+            for (int i = 0; i < DkgNode.dkgSecretKeys.Count; i++)
+            {
+                var encK = DkgNode.dkgSecretKeys[i].AES256Encrypt(
+                    Cryptography.Helper.ECDHDeriveKey(keyPair, Validators[0]),
+                    new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
                 encKeys.Add(new UInt256(encK));
             }
-
-            return DKGSharePayloads[MyIndex] = MakeSignedPayload(new DKGShareMessage
+            var a = MakeSignedPayload(new DKGShareMessage
             {
                 keys = encKeys.ToArray()
             });
+            DKGSharePayloads[MyIndex] = a;
+            return a;
         }
 
         public ExtensiblePayload MakeDKGConfirm()
         {
-            return DKGConfirmPayloads[MyIndex] = MakeSignedPayload(new DKGConfirmMessage());
+            return DKGConfirmPayloads[MyIndex] = MakeSignedPayload(new DKGConfirmMessage
+            {
+                Signature = EnsureHeader().Sign(keyPair, neoSystem.Settings.Network)
+            });
         }
 
 
