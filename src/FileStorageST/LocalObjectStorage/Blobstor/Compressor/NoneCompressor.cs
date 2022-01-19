@@ -1,4 +1,4 @@
-namespace Neo.FileStorage.Storage.LocalObjectStorage.Blob
+namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
 {
     public sealed class NoneCompressor : ICompressor
     {

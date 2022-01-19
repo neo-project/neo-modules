@@ -260,6 +260,7 @@ namespace Neo.FileStorage.Storage
     {
         public string Path;
         public bool Compress;
+        public string[] CompressExcludeContentTypes;
         public ulong SmallSizeLimit;
         public FSTreeSettings FSTreeSettings;
         public BlobovniczaSettings BlobovniczaSettings;
@@ -271,6 +272,7 @@ namespace Neo.FileStorage.Storage
             {
                 Path = $"Data_BlobStorage_{Guid.NewGuid()}",
                 Compress = true,
+                CompressExcludeContentTypes = new string[] { "video/*", "audio/*" },
                 SmallSizeLimit = BlobStorage.DefaultSmallSizeLimit,
                 FSTreeSettings = FSTreeSettings.Default,
                 BlobovniczaSettings = BlobovniczaSettings.Default
@@ -279,10 +281,12 @@ namespace Neo.FileStorage.Storage
 
         public static BlobStorageSettings Load(IConfigurationSection section)
         {
+            var compress_section = section.GetSection("Compress");
             BlobStorageSettings settings = new()
             {
                 Path = section.GetValue("Path", ""),
-                Compress = section.GetValue("Compress", true),
+                Compress = compress_section?.GetValue("Enable", true) ?? false,
+                CompressExcludeContentTypes = compress_section?.GetSection("ExcludeContentTypes").GetChildren().Select(p => p.Value).ToArray() ?? Array.Empty<string>(),
                 SmallSizeLimit = section.GetValue("SmallSizeLimit", BlobStorage.DefaultSmallSizeLimit),
                 FSTreeSettings = FSTreeSettings.Load(section.GetSection("FSTree")),
                 BlobovniczaSettings = BlobovniczaSettings.Load(section.GetSection("Blobovnicza"))

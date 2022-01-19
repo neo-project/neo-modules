@@ -3,6 +3,7 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Storage.LocalObjectStorage.Blob;
 using System;
+using ZstdNet;
 using FSObject = Neo.FileStorage.API.Object.Object;
 using FSRange = Neo.FileStorage.API.Object.Range;
 
@@ -15,12 +16,14 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
         private readonly ICompressor compressor;
         private readonly FSTree fsTree;
         private readonly BlobovniczaTree blobovniczas;
-        public ulong SmallSizeLimit { get; init; }
+        private readonly ulong smallSizeLimit;
+        private readonly string[] CompressExcludeContentTypes;
 
         public BlobStorage(BlobStorageSettings settings)
         {
-            SmallSizeLimit = settings.SmallSizeLimit;
-            compressor = settings.Compress ? new ZstdCompressor() : null;
+            smallSizeLimit = settings.SmallSizeLimit;
+            compressor = new CompressorWrapper(settings.Compress ? new ZstdCompressor() : new NoneCompressor());
+            CompressExcludeContentTypes = settings.CompressExcludeContentTypes;
             fsTree = new(System.IO.Path.Join(settings.Path, FSTree.DefaultPath), settings.FSTreeSettings.ShallowDepth, settings.FSTreeSettings.DirectoryNameLength);
             blobovniczas = new()
             {
@@ -41,9 +44,29 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
             blobovniczas?.Dispose();
         }
 
+        public bool NeedsToCompress(FSObject obj)
+        {
+            if (compressor is null) return false;
+            if (CompressExcludeContentTypes.Length == 0) return compressor is not null;
+            foreach (var attr in obj.Attributes)
+            {
+                if (attr.Key == Header.Types.Attribute.AttributeContentType)
+                {
+                    foreach (var t in CompressExcludeContentTypes)
+                    {
+                        if (t == "*") return false;
+                        if (t.Length > 0 && t[^1] == '*' && attr.Value.StartsWith(t[..^1])) return false;
+                        if (t.Length > 0 && t[0] == '*' && attr.Value.EndsWith(t[1..])) return false;
+                        if (t.Length > 0 && t == attr.Value) return false;
+                    }
+                }
+            }
+            return true;
+        }
+
         private bool IsBig(byte[] data)
         {
-            return (ulong)data.Length > SmallSizeLimit;
+            return (ulong)data.Length > smallSizeLimit;
         }
 
         private bool ExistsBig(Address address)
@@ -59,20 +82,9 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
             }
         }
 
-        private bool ExistsSmall(Address address)
-        {
-            throw new NotImplementedException("neofs-node not implemented");
-        }
-
-        public bool Exists(Address address)
-        {
-            if (ExistsBig(address)) return true;
-            return ExistsSmall(address);
-        }
-
         public FSObject GetSmall(Address address, BlobovniczaID id = null)
         {
-            return blobovniczas.Get(address, id);
+            return FSObject.Parser.ParseFrom(blobovniczas.Get(address, id));
         }
 
         public FSObject GetBig(Address address)
@@ -84,7 +96,12 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
 
         public byte[] GetRangeSmall(Address address, FSRange range, BlobovniczaID id = null)
         {
-            return blobovniczas.GetRange(address, range, id);
+            var obj = GetSmall(address, id);
+            if (obj.PayloadSize < range.Offset + range.Length)
+                throw new RangeOutOfBoundsException();
+            int start = (int)range.Offset;
+            int end = start + (int)range.Length;
+            return obj.Payload.ToByteArray()[start..end];
         }
 
         public byte[] GetRangeBig(Address address, FSRange range)
@@ -100,14 +117,16 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
         public BlobovniczaID Put(FSObject obj)
         {
             byte[] data = obj.ToByteArray();
-            return PutRaw(obj.Address, data);
+            return PutRaw(obj.Address, data, NeedsToCompress(obj));
         }
 
-        public BlobovniczaID PutRaw(Address address, byte[] data)
+        public BlobovniczaID PutRaw(Address address, byte[] data, bool compress)
         {
-            if (IsBig(data))
-            {
+            var isBig = IsBig(data);
+            if (compress)
                 data = compressor.Compress(data);
+            if (isBig)
+            {
                 fsTree.Put(address, data);
                 return null;
             }
@@ -122,11 +141,6 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
         public void DeleteSmall(Address address, BlobovniczaID id = null)
         {
             blobovniczas.Delete(address, id);
-        }
-
-        public void Iterate()
-        {
-            throw new NotImplementedException(nameof(BlobStorage));
         }
     }
 }

@@ -40,7 +40,13 @@
         },
         "BlobStorage": {
           "Path": "./Data/Shard_0/Data_BlobStorage",
-          "Compress": true,
+          "Compress": {
+            "Enable": true,
+            "ExcludeContentTypes": [
+              "video/*",
+              "audio/*"
+            ]
+          },
           "SmallSizeLimit": 1048576,
           "FSTree": {
             "ShallowDepth": 4,

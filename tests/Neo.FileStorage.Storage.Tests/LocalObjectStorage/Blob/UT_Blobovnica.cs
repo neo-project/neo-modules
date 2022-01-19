@@ -33,14 +33,14 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Blob
         public void TestBlobovnicza()
         {
             string path = "./test_blz2";
-            using Blobovnicza blz = new(path, null);
+            using Blobovnicza blz = new(path);
             blz.Open();
             try
             {
                 Assert.ThrowsException<ObjectNotFoundException>(() => blz.Get(RandomAddress()));
                 FSObject obj = RandomObject(15 * 1 << 10);
                 blz.Put(obj.Address, obj.ToByteArray());
-                FSObject obj_get = blz.Get(obj.Address);
+                var obj_get = FSObject.Parser.ParseFrom(blz.Get(obj.Address));
                 Assert.AreEqual(obj.ObjectId, obj_get.ObjectId);
                 blz.Delete(obj.Address);
                 Assert.ThrowsException<ObjectNotFoundException>(() => blz.Get(obj.Address));

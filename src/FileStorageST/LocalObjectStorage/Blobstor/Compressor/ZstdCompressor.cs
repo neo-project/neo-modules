@@ -1,7 +1,7 @@
 using System;
 using ZstdNet;
 
-namespace Neo.FileStorage.Storage.LocalObjectStorage.Blob
+namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
 {
     public sealed class ZstdCompressor : ICompressor
     {

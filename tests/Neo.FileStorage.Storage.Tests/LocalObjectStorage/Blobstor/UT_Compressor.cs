@@ -1,11 +1,11 @@
-using System;
-using System.Linq;
 using Google.Protobuf;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.FileStorage.Storage.LocalObjectStorage.Blob;
+using Neo.FileStorage.Storage.LocalObjectStorage.Blobstor;
+using System;
+using System.Linq;
 using static Neo.FileStorage.Storage.Tests.Helper;
 
-namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Blob
+namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Blobstor
 {
     [TestClass]
     public class UT_Compressor

@@ -94,7 +94,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
             return id;
         }
 
-        public FSObject Get(Address address, BlobovniczaID id = null)
+        public byte[] Get(Address address, BlobovniczaID id = null)
         {
             if (id is not null)
             {
@@ -102,7 +102,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
                 return blz.Get(address);
             }
             HashSet<string> cache = new();
-            FSObject obj = null;
+            byte[] obj = null;
             bool DoGet(string path)
             {
                 var dir = Path.GetDirectoryName(path);
@@ -181,51 +181,6 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
             };
             if (!IterateLeaves(address, DoDelete))
                 throw new ObjectNotFoundException();
-        }
-
-        public byte[] GetRange(Address address, FSRange range, BlobovniczaID id = null)
-        {
-            if (id is not null)
-            {
-                var blz = OpenBlobovnicza(id.ToString());
-                return blz.GetRange(address, range);
-            }
-            HashSet<string> cache = new();
-            byte[] data = null;
-            bool DoGetRange(string path)
-            {
-                var dir = Path.GetDirectoryName(path);
-                try
-                {
-                    return OperateFromLevel(path, cache.Contains(dir), blz =>
-                    {
-                        try
-                        {
-                            data = blz.GetRange(address, range);
-                        }
-                        catch (Exception e) when (e is not ObjectNotFoundException)
-                        {
-                            Log(nameof(BlobovniczaTree), LogLevel.Debug, "could not read object from active blobovnicza");
-                            return false;
-                        }
-                        return true;
-                    });
-                }
-                catch (ObjectNotFoundException)
-                {
-                    Log(nameof(BlobovniczaTree), LogLevel.Debug, $"could not get object from level, level={path}");
-                    return false;
-                }
-                catch (Exception e)
-                {
-                    Log(nameof(BlobovniczaTree), LogLevel.Debug, $"could not get object from level, level={path}, error={e.Message}");
-                }
-                cache.Add(dir);
-                return false;
-            };
-            IterateLeaves(address, DoGetRange);
-            if (data is null) throw new ObjectNotFoundException();
-            return data;
         }
 
         private bool OperateFromLevel(string path, bool try_active, Func<Blobovnicza, bool> func)
@@ -340,7 +295,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
             {
                 if (opened.TryGet(path, out Blobovnicza b))
                     return b;
-                b = new Blobovnicza(Path.Join(BlzRootPath, path), Compressor)
+                b = new Blobovnicza(Path.Join(BlzRootPath, path))
                 {
                     FullSizeLimit = FullSizeLimit,
                     ObjSizeLimit = SmallSizeLimit,

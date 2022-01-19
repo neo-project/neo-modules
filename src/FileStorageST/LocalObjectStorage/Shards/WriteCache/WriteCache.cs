@@ -1,7 +1,6 @@
 using Google.Protobuf;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Cache;
-using Neo.FileStorage.Database.LevelDB;
 using Neo.FileStorage.Storage.LocalObjectStorage.Blobstor;
 using Neo.FileStorage.Storage.LocalObjectStorage.Metabase;
 using System;
@@ -9,8 +8,6 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
-
-using static Neo.Helper;
 
 namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
 {
@@ -44,7 +41,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
         private Timer queueTimer;
         private ObjectCounters objCounters;
         private readonly ConcurrentQueue<(ObjectInfo, bool)> flushQueue = new();
-        private static readonly byte[] SequenceKey = new byte[] { 0xFF };
+        private readonly ConcurrentDictionary<Address, bool> needCompress = new();
 
         public WriteCache(WriteCacheSettings settings, BlobStorage blobStor, MB mb)
         {

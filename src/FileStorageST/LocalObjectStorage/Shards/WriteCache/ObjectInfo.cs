@@ -2,7 +2,6 @@ using Google.Protobuf;
 using Neo.FileStorage.API.Refs;
 using System;
 using FSObject = Neo.FileStorage.API.Object.Object;
-using static Neo.Helper;
 
 namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
 {

@@ -1,4 +1,3 @@
-using Google.Protobuf;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Database;
@@ -7,7 +6,6 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading;
-using FSObject = Neo.FileStorage.API.Object.Object;
 using FSRange = Neo.FileStorage.API.Object.Range;
 
 namespace Neo.FileStorage.Storage.LocalObjectStorage.Blob
@@ -18,18 +16,16 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blob
         public const ulong DefaultObjSizeLimit = 1 << 20;
         public readonly Func<byte[], byte[]> DefaultCompressor = d => d;
         public string Path { get; private set; }
-        public ICompressor Compressor { get; init; }
         public ulong FullSizeLimit { get; init; }
         public ulong ObjSizeLimit { get; init; }
         private IDB dB;
         private long filled;
 
-        public Blobovnicza(string path, ICompressor compressor = null)
+        public Blobovnicza(string path)
         {
             Path = path;
             FullSizeLimit = DefaultFullSizeLimit;
             ObjSizeLimit = DefaultObjSizeLimit;
-            Compressor = new CompressorWrapper(compressor ?? new NoneCompressor());
         }
 
         public void Open()
@@ -50,25 +46,13 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blob
             return Encoding.UTF8.GetBytes(address.String());
         }
 
-        public FSObject Get(Address address)
+        public byte[] Get(Address address)
         {
             if (address is null)
                 throw new ArgumentNullException(nameof(address));
             var raw = dB.Get(Addresskey(address));
             if (raw is null) throw new ObjectNotFoundException();
-            return FSObject.Parser.ParseFrom(Compressor.Decompress(raw));
-        }
-
-        public byte[] GetRange(Address address, FSRange range)
-        {
-            var obj = Get(address);
-            var from = (int)range.Offset;
-            var to = from + (int)range.Length;
-            if (to < from)
-                throw new ArgumentException("invalid range");
-            else if (obj.Payload.Length < to)
-                throw new RangeOutOfBoundsException();
-            return obj.Payload.ToByteArray()[from..to];
+            return raw;
         }
 
         public void Put(Address address, byte[] data)
@@ -76,12 +60,11 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blob
             if (address is null || data is null)
                 throw new ArgumentNullException();
             if (FullSizeLimit < (ulong)filled) throw new BlobFullException();
-            var raw = Compressor.Compress(data);
-            if (ObjSizeLimit < (ulong)raw.Length)
+            if (ObjSizeLimit < (ulong)data.Length)
                 throw new SizeExceedLimitException();
             var key = Addresskey(address);
-            dB.Put(key, raw);
-            IncSize(raw.Length);
+            dB.Put(key, data);
+            IncSize(data.Length);
         }
 
         public void Delete(Address address)

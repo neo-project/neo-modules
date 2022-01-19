@@ -55,6 +55,8 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
             var metaIndex = 0;
             if (cacheSize + MaxObjectSize <= MaxCacheSize)
             {
+                if (blobStorage.NeedsToCompress(obj.Object))
+                    needCompress[obj.Address] = true;
                 fsTree.Put(obj.Object.Address, obj.Data);
                 objCounters.IncBigCount();
                 Utility.Log(nameof(WriteCache), LogLevel.Debug, $"fstree PUT, address={obj.SAddress}");

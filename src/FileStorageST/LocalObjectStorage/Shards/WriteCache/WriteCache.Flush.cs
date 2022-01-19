@@ -43,7 +43,9 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
                 fsTree.Iterate((address, data) =>
                 {
                     if (flushed.TryPeek(address, out _)) return;
-                    blobStorage.PutRaw(address, data);
+                    var compress = needCompress.ContainsKey(address);
+                    blobStorage.PutRaw(address, data, compress);
+                    if (compress) needCompress.Remove(address, out _);
                     flushed.Add(address, false);
                 });
             }
