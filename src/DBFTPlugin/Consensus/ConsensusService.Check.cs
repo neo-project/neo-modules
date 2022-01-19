@@ -95,7 +95,8 @@ namespace Neo.Consensus
             {
                 ExtensiblePayload payload = context.MakeDKGConfirm();
                 Log($"Sending {nameof(DKGConfirmMessage)}");
-                context.Save();
+                context.DKGConfirmPayloads[context.MyIndex] = payload;
+                //context.Save();
                 localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
                 List<byte[]> keys = new List<byte[]>();
                 foreach (var sharePayload in context.DKGSharePayloads)
