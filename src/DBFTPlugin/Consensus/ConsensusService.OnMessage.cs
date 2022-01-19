@@ -310,6 +310,8 @@ namespace Neo.Consensus
             Log($"{nameof(OnDKGShareReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex}");
             context.DKGSharePayloads[message.ValidatorIndex] ??= payload;
 
+            CheckDKGShareReceives();
+
             if (context.DKGShared) return;
 
             // var expectedView = context.GetMessage<ChangeView>(context.ChangeViewPayloads[message.ValidatorIndex])?.NewViewNumber ?? 0;
