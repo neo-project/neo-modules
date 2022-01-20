@@ -109,7 +109,7 @@ namespace Neo.Consensus
 
         #region DKG States
 
-        public bool DKGShared => !WatchOnly && DKGSharePayloads[MyIndex] != null;
+        public bool DKGShared => DKGSharePayloads[MyIndex] != null;
 
         #endregion
 
