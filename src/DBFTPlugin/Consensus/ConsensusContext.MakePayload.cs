@@ -191,6 +191,12 @@ namespace Neo.Consensus
         }
 
 
+        public ExtensiblePayload MakeDKGTest()
+        {
+            return DKGConfirmPayloads[MyIndex] = MakeSignedPayload(new DKGTestMessage());
+        }
+
+
         private static ulong GetNonce()
         {
             Random _random = new();

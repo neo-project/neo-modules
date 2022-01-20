@@ -70,6 +70,9 @@ namespace Neo.Consensus
                 case DKGConfirmMessage confirmMessage:
                     OnDKGConfirmReceived(payload, confirmMessage);
                     break;
+                case DKGTestMessage testMessage:
+                    OnDKGTestReceived(payload, testMessage);
+                    break;
 
             }
         }
@@ -317,12 +320,18 @@ namespace Neo.Consensus
             // var expectedView = context.GetMessage<ChangeView>(context.ChangeViewPayloads[message.ValidatorIndex])?.NewViewNumber ?? 0;
             // if (message.NewViewNumber <= expectedView)
             //     return;
+            Log($"Sending {nameof(DKGShareMessage)}: height={message.BlockIndex} view={message.ViewNumber} index={context.MyIndex}");
             localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGShare() });
 
             // context.ChangeViewPayloads[message.ValidatorIndex] = payload;
             CheckDKGShareReceives();
         }
 
+        private void OnDKGTestReceived(ExtensiblePayload payload, DKGTestMessage message)
+        {
+            Log($"{nameof(OnDKGTestReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex}");
+            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGTest() });
+        }
         private void OnDKGConfirmReceived(ExtensiblePayload payload, DKGConfirmMessage message)
         {
             context.DKGSharePayloads[message.ValidatorIndex] ??= payload;
