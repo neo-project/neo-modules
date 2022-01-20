@@ -53,6 +53,10 @@ namespace Neo.Consensus
                 Block block = context.CreateBlock();
                 Log($"Sending {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length}");
                 blockchain.Tell(block);
+
+                Log($"Sending {nameof(DKGShareMessage)}: height={context.Block.Index} view={context.ViewNumber}");
+                localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGShare() });
+
             }
         }
 

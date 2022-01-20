@@ -183,9 +183,6 @@ namespace Neo.Consensus
                     RequestChangeView(reason);
                 }
             }
-            Thread.Sleep(1000);
-            Log($"Sending {nameof(DKGShareMessage)}: height={context.Block.Index} view={context.ViewNumber}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGShare() });
         }
 
         private void SendPrepareRequest()
@@ -202,6 +199,7 @@ namespace Neo.Consensus
                     localNode.Tell(Message.Create(MessageCommand.Inv, payload));
             }
             ChangeTimer(TimeSpan.FromMilliseconds((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0)));
+
         }
 
         private void RequestRecovery()
