@@ -7,6 +7,7 @@ using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Neo.Consensus.DKG;
 using Neo.VM.Types;
 using static Neo.Ledger.Blockchain;
@@ -182,16 +183,16 @@ namespace Neo.Consensus
                     RequestChangeView(reason);
                 }
             }
+            Thread.Sleep(1000);
+            Log($"Sending {nameof(DKGShareMessage)}: height={context.Block.Index} view={context.ViewNumber}");
+            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGShare() });
         }
 
         private void SendPrepareRequest()
         {
             Log($"Sending {nameof(PrepareRequest)}: height={context.Block.Index} view={context.ViewNumber}");
             localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest() });
-            Log($"Sending {nameof(DKGShareMessage)}: height={context.Block.Index} view={context.ViewNumber}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGShare() });
-            //Log($"Sending {nameof(DKGConfirmMessage)}: height={context.Block.Index} view={context.ViewNumber}");
-            //localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGConfirm() });
+
             if (context.Validators.Length == 1)
                 CheckPreparations();
 
