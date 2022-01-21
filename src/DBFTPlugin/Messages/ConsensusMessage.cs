@@ -37,7 +37,7 @@ namespace Neo.Consensus
         {
             ConsensusMessageType type = (ConsensusMessageType)data[0];
             Type t = typeof(ConsensusMessage);
-            t = t.Assembly.GetType($"{t.Namespace}.{type}", false);
+            t = t.Assembly.GetType($"{t.Namespace}.{type.ToMessage()}", false);
             if (t is null) throw new FormatException();
             return (ConsensusMessage)data.AsSerializable(t);
         }
