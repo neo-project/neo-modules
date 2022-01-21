@@ -9,9 +9,9 @@ namespace Neo.Consensus
         Commit = 0x30,
         RecoveryRequest = 0x40,
         RecoveryMessage = 0x41,
-        DKGShare = 0x51,
+        DKGShareMessage = 0x51,
         DKGReceive = 0x52,
-        DKGConfirm = 0x53,
-        DKGTest = 0x54
+        DKGConfirmMessage = 0x53,
+        DKGTestMesssage = 0x54
     }
 }

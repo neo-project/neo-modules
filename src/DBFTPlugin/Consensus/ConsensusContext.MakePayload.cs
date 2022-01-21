@@ -160,19 +160,30 @@ namespace Neo.Consensus
 
         public ExtensiblePayload MakeDKGShare()
         {
+
             DkgNode = Validators.Length switch
             {
                 1 => new DKGNode(MyIndex, 7, 3),
                 _ => new DKGNode(MyIndex, (uint)Validators.Length, (uint)F + 1)
             };
-
-            List<UInt256> encKeys = new List<UInt256>();
+            List<byte[]> encKeys = new List<byte[]>();
             for (int i = 0; i < DkgNode.dkgSecretKeys.Count; i++)
             {
-                var encK = DkgNode.dkgSecretKeys[i].AES256Encrypt(
-                    Cryptography.Helper.ECDHDeriveKey(keyPair, Validators[0]),
+                byte[] key;
+                if (Validators.Length == 1)
+                {
+                    key = Cryptography.Helper.ECDHDeriveKey(keyPair, Validators[0]);
+                }
+                else
+                {
+                    key = Cryptography.Helper.ECDHDeriveKey(keyPair, Validators[i]);
+                }
+
+                var encK = DkgNode.dkgSecretKeys[i].AES256Encrypt(key
+                    ,
                     new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
-                encKeys.Add(new UInt256(encK));
+                encKeys.Add(encK);
+                Console.WriteLine($"TargetIndex = {i}, Index = {MyIndex}, Key = {key.ToHexString()}");
             }
             var a = MakeSignedPayload(new DKGShareMessage
             {
@@ -184,16 +195,7 @@ namespace Neo.Consensus
 
         public ExtensiblePayload MakeDKGConfirm()
         {
-            return DKGConfirmPayloads[MyIndex] = MakeSignedPayload(new DKGConfirmMessage
-            {
-                Signature = EnsureHeader().Sign(keyPair, neoSystem.Settings.Network)
-            });
-        }
-
-
-        public ExtensiblePayload MakeDKGTest()
-        {
-            return DKGConfirmPayloads[MyIndex] = MakeSignedPayload(new DKGTestMessage());
+            return DKGConfirmPayloads[MyIndex] = MakeSignedPayload(new DKGConfirmMessage());
         }
 
 

@@ -70,9 +70,6 @@ namespace Neo.Consensus
                 case DKGConfirmMessage confirmMessage:
                     OnDKGConfirmReceived(payload, confirmMessage);
                     break;
-                case DKGTestMessage testMessage:
-                    OnDKGTestReceived(payload, testMessage);
-                    break;
 
             }
         }
@@ -327,14 +324,11 @@ namespace Neo.Consensus
             CheckDKGShareReceives();
         }
 
-        private void OnDKGTestReceived(ExtensiblePayload payload, DKGTestMessage message)
-        {
-            Log($"{nameof(OnDKGTestReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGTest() });
-        }
+
         private void OnDKGConfirmReceived(ExtensiblePayload payload, DKGConfirmMessage message)
         {
-            context.DKGSharePayloads[message.ValidatorIndex] ??= payload;
+            Log($"Received {nameof(DKGConfirmMessage)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex}");
+            context.DKGConfirmPayloads[message.ValidatorIndex] ??= payload;
             CheckDKGConfirms();
         }
     }

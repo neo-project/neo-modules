@@ -98,6 +98,10 @@ namespace Neo.Consensus
             {
                 ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock << (viewNumber + 1)));
             }
+
+            Log($"Sending {nameof(DKGShareMessage)}: height={context.Block.Index} view={context.ViewNumber}");
+            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGShare() });
+
         }
 
         protected override void OnReceive(object message)
@@ -190,8 +194,8 @@ namespace Neo.Consensus
             Log($"Sending {nameof(PrepareRequest)}: height={context.Block.Index} view={context.ViewNumber}");
             localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest() });
 
-            Log($"Sending {nameof(DKGTestMessage)}: height={context.Block.Index} view={context.ViewNumber}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGTest() });
+            //Log($"Sending {nameof(DKGTestMessage)}: height={context.Block.Index} view={context.ViewNumber}");
+            //localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGTest() });
 
             if (context.Validators.Length == 1)
                 CheckPreparations();

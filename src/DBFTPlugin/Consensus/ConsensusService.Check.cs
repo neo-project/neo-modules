@@ -53,10 +53,6 @@ namespace Neo.Consensus
                 Block block = context.CreateBlock();
                 Log($"Sending {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length}");
                 blockchain.Tell(block);
-
-                Log($"Sending {nameof(DKGShareMessage)}: height={context.Block.Index} view={context.ViewNumber}");
-                localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGShare() });
-
             }
         }
 
@@ -95,26 +91,28 @@ namespace Neo.Consensus
 
         private void CheckDKGShareReceives()
         {
+            Log($"Checking {nameof(DKGShareMessage)} DKGSharePayloads = {context.DKGSharePayloads.Count(p => p != null)}, Validators = {context.Validators.Length}");
             if (context.DKGSharePayloads.Count(p => p != null) == context.Validators.Length)
             {
                 ExtensiblePayload payload = context.MakeDKGConfirm();
                 Log($"Sending {nameof(DKGConfirmMessage)}");
-                context.DKGConfirmPayloads[context.MyIndex] = payload;
+                context.DKGConfirmPayloads[context.MyIndex] ??= payload;
                 //context.Save();
                 localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
+
                 List<byte[]> keys = new List<byte[]>();
+                var point = context.Validators[context.MyIndex];
+                var keypair = context.GetWallet(point);
                 foreach (var sharePayload in context.DKGSharePayloads)
                 {
-                    var key = context.GetMessage<DKGShareMessage>(sharePayload).keys[context.MyIndex];
-                    var point = context.Validators[context.MyIndex];
-                    var keypair = context.GetWallet(point);
+                    var message = context.GetMessage<DKGShareMessage>(sharePayload);
+                    var key = message.keys[context.MyIndex];
                     var decKey = Cryptography.Helper.ECDHDeriveKey(keypair.GetKey(),
-                        context.Validators[context.GetMessage<DKGShareMessage>(sharePayload).ValidatorIndex]);
-                    keys.Add(Cryptography.Helper.AES256Decrypt(decKey, key.ToArray()));
+                        context.Validators[message.ValidatorIndex]);
+                    Console.WriteLine($"Index = {context.MyIndex}, ValidatorIndex = {message.ValidatorIndex}, Key = {decKey.ToHexString()}");
+                    keys.Add(Cryptography.Helper.AES256Decrypt(key, decKey));
                 }
-
-                context.DkgNode.GetAggregatePrivateKey();
-
+                context.DkgNode.GetAggregatePrivateKey(keys.ToArray());
                 // Set timer, so we will resend the commit in case of a networking issue
                 // ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock));
                 CheckDKGConfirms();
@@ -123,15 +121,11 @@ namespace Neo.Consensus
 
         private void CheckDKGConfirms()
         {
+            Log($"Checking {nameof(DKGConfirmMessage)} DKGConfirmPayloads = {context.DKGConfirmPayloads.Count(p => p != null)}, Validators = {context.Validators.Length}");
             if (context.DKGConfirmPayloads.Count(p => p != null) == context.Validators.Length)
             {
                 // ExtensiblePayload payload = context.MakeDKGConfirm();
                 Log($"DKG Confirmed {nameof(DKGConfirmMessage)}");
-                // context.Save();
-                // localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
-                // // Set timer, so we will resend the commit in case of a networking issue
-                // // ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock));
-                // CheckDKGConfirms();
             }
         }
     }

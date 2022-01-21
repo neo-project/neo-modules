@@ -147,6 +147,7 @@ public class DKGNode
         return sharedPrivateKeys;
     }
 
+
     public void CollectSharedKeyPair(int index, byte[] sharedPrivateKey, byte[] sharedPublicKey)
     {
         if (this.collectedSharedPrivateKeys[index] != null &&
@@ -180,6 +181,23 @@ public class DKGNode
 
         return AggregatePrivateKey(collectedSharedPrivateKeys.ToArray(), weightSet);
     }
+
+    /// <summary>
+    /// Calculate aggregated privateKeys which are used to construct signatures
+    /// </summary>
+    /// <returns></returns>
+    public byte[] GetAggregatePrivateKey(byte[][] blsKeys)
+    {
+        uint[] weightSet = new uint[n];
+        for (int k = 0; k < n; k++)
+        {
+            weightSet[k] = 1u;
+        }
+
+        return AggregatePrivateKey(blsKeys, weightSet);
+    }
+
+
 
     private byte[][] GetPublishedPubicKeys()
     {
