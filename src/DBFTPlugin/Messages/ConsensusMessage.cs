@@ -36,6 +36,8 @@ namespace Neo.Consensus
         public static ConsensusMessage DeserializeFrom(byte[] data)
         {
             ConsensusMessageType type = (ConsensusMessageType)data[0];
+            if (!Enum.IsDefined(typeof(ConsensusMessageType), type))
+                throw new ArgumentOutOfRangeException(nameof(type));
             Type t = typeof(ConsensusMessage);
             t = t.Assembly.GetType($"{t.Namespace}.{type}", false);
             if (t is null) throw new FormatException();
