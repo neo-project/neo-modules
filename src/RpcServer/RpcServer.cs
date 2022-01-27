@@ -145,7 +145,7 @@ namespace Neo.Plugins
             this.settings = settings;
         }
 
-        private async Task ProcessAsync(HttpContext context)
+        public async Task ProcessAsync(HttpContext context)
         {
             context.Response.Headers["Access-Control-Allow-Origin"] = "*";
             context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST";
