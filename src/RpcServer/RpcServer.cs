@@ -119,7 +119,8 @@ namespace Neo.Plugins
             .Configure(app =>
             {
                 app.UseResponseCompression();
-                app.Run(ProcessAsync);
+                app.Use(next => context => ProcessAsync(context, next));
+                app.Run(InvalidRequestAsync);
             })
             .ConfigureServices(services =>
             {
@@ -145,13 +146,19 @@ namespace Neo.Plugins
             this.settings = settings;
         }
 
-        public async Task ProcessAsync(HttpContext context)
+        public async Task InvalidRequestAsync(HttpContext context)
         {
+            var response = CreateErrorResponse(null, -32600, "Invalid Request");
             context.Response.Headers["Access-Control-Allow-Origin"] = "*";
             context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST";
             context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type";
             context.Response.Headers["Access-Control-Max-Age"] = "31536000";
-            if (context.Request.Method != "GET" && context.Request.Method != "POST") return;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(response.ToString(), Encoding.UTF8);
+        }
+
+        public async Task ProcessAsync(HttpContext context, RequestDelegate next)
+        {
             JObject request = null;
             if (context.Request.Method == "GET")
             {
@@ -183,39 +190,47 @@ namespace Neo.Plugins
                 }
                 catch (FormatException) { }
             }
-            JObject response;
-            if (request == null)
+
+            JObject response = null;
+            if (request != null)
             {
-                response = CreateErrorResponse(null, -32700, "Parse error");
-            }
-            else if (request is JArray array)
-            {
-                if (array.Count == 0)
+                if (request is JArray array)
                 {
-                    response = CreateErrorResponse(request["id"], -32600, "Invalid Request");
+                    if (array.Count > 0)
+                    {
+                        var responses = array.Select(p => ProcessRequest(context, p)).Where(p => p != null).ToArray();
+                        response = responses.Length > 0 ? responses : null;
+                    }
                 }
                 else
                 {
-                    response = array.Select(p => ProcessRequest(context, p)).Where(p => p != null).ToArray();
+                    response = ProcessRequest(context, request);
+                }
+
+                if (response != null)
+                {
+                    context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+                    context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST";
+                    context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type";
+                    context.Response.Headers["Access-Control-Max-Age"] = "31536000";
+                    context.Response.ContentType = "application/json";
+                    await context.Response.WriteAsync(response.ToString(), Encoding.UTF8);
+                }
+                else
+                {
+                    await next(context);
                 }
             }
-            else
-            {
-                response = ProcessRequest(context, request);
-            }
-            if (response == null || (response as JArray)?.Count == 0) return;
-            context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(response.ToString(), Encoding.UTF8);
         }
 
         private JObject ProcessRequest(HttpContext context, JObject request)
         {
+            // return null for any invalid request (missing id/method/params or non JArray params)
             if (!request.ContainsProperty("id")) return null;
-            if (!request.ContainsProperty("method") || !request.ContainsProperty("params") || !(request["params"] is JArray))
-            {
-                return CreateErrorResponse(request["id"], -32600, "Invalid Request");
-            }
-            JObject response = CreateResponse(request["id"]);
+            if (!request.ContainsProperty("method")) return null;
+            if (!request.ContainsProperty("params")) return null;
+            if (request["params"] is not JArray) return null;
+
             try
             {
                 string method = request["method"].AsString();
@@ -223,6 +238,8 @@ namespace Neo.Plugins
                     throw new RpcException(-400, "Access denied");
                 if (!methods.TryGetValue(method, out var func))
                     throw new RpcException(-32601, "Method not found");
+
+                JObject response = CreateResponse(request["id"]);
                 response["result"] = func((JArray)request["params"]);
                 return response;
             }
