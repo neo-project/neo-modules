@@ -43,5 +43,15 @@ namespace Neo.FileStorage.Storage.Services.Session.Storage
         {
             return Convert.ToBase64String(owner.Value.ToByteArray()) + Convert.ToBase64String(token);
         }
+
+        public void RemoveExpired(ulong epoch)
+        {
+            foreach (var (key, token) in tokens)
+            {
+                if (token.Expiration <= epoch)
+                    if (!tokens.TryRemove(key, out _))
+                        Utility.Log(nameof(TokenStore), LogLevel.Debug, $"could not remove expired session token, try next epoch");
+            }
+        }
     }
 }

@@ -1,3 +1,4 @@
+using Neo.FileStorage.Listen.Event.Morph;
 using Neo.FileStorage.Storage.Services.Session;
 using Neo.FileStorage.Storage.Services.Session.Storage;
 using System;
@@ -11,6 +12,13 @@ namespace Neo.FileStorage.Storage
         public SessionServiceImpl InitializeSession()
         {
             tokenStore = new();
+            netmapProcessor.AddEpochHandler(p =>
+            {
+                if (p is NewEpochEvent e)
+                {
+                    tokenStore.RemoveExpired(e.EpochNumber);
+                }
+            });
             return new SessionServiceImpl
             {
                 SignService = new()
