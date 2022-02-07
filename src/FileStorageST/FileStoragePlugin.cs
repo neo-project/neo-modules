@@ -323,7 +323,7 @@ namespace Neo.FileStorage.Storage
             Console.WriteLine($"Container: {container}");
         }
 
-        [ConsoleCommand("fs node map", Category = "FileStorageService", Description = "Show online nodes")]
+        [ConsoleCommand("fs net map", Category = "FileStorageService", Description = "Show net map")]
         private void OnNodeMap()
         {
             var invoker = new MorphInvoker
@@ -341,7 +341,13 @@ namespace Neo.FileStorage.Storage
             var nss = nm.Nodes;
             Console.WriteLine($"Count: {nss.Count}");
             foreach (var n in nss)
-                Console.WriteLine(n.Info);
+            {
+                string location = "";
+                foreach (var attr in n.Attributes)
+                    if (attr.Key == Node.AttributeLocation) location = attr.Value;
+                Console.WriteLine($"{n.Info.PublicKey.ToBase64()} {string.Join(",", n.Addresses)} {location}");
+            }
+
         }
 
         [ConsoleCommand("fs list objects", Category = "FileStorageService", Description = "List all stored objects")]
