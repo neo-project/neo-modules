@@ -10,8 +10,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using static Neo.Utility;
-using FSObject = Neo.FileStorage.API.Object.Object;
-using FSRange = Neo.FileStorage.API.Object.Range;
 
 namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
 {
@@ -25,7 +23,6 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
         public ulong BlzShallowWidth { get; init; }
         public ulong SmallSizeLimit { get; init; }
         public ulong FullSizeLimit { get; init; }
-        public ICompressor Compressor { get; init; }
         public string BlzRootPath { get; init; }
         private readonly int cacheSize;
         private readonly object openedLock = new();

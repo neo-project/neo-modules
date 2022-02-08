@@ -22,7 +22,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
         public bool IsCompressed(byte[] data)
         {
             if (data.Length < ZstdFrameMagic.Length) return false;
-            return data[..ZstdFrameMagic.Length].AsSpan().StartsWith(ZstdFrameMagic);
+            return data.AsSpan().StartsWith(ZstdFrameMagic);
         }
     }
 }

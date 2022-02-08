@@ -13,7 +13,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
 
         public bool IsCompressed(byte[] data)
         {
-            return true;
+            return false;
         }
     }
 }

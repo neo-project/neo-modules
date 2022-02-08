@@ -5,7 +5,6 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Session;
 using Neo.FileStorage.Storage.Services.Object.Util;
 using System;
-using System.Security.Cryptography;
 using System.Threading;
 using FSObject = Neo.FileStorage.API.Object.Object;
 

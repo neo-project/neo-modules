@@ -16,7 +16,8 @@ namespace Neo.FileStorage.Storage.Services
             IResponse resp;
             try
             {
-                if (!request.Verify()) throw new Exception($"{nameof(SignService)} invalid {request.GetType()}");
+                if (!request.Verify())
+                    throw new Exception($"{nameof(SignService)} invalid {request.GetType()}");
                 resp = handler(request);
             }
             catch (Exception e)

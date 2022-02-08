@@ -31,6 +31,7 @@ namespace Neo.FileStorage.Storage.Services.Object
             catch (Exception e)
             {
                 if (!IsStatusSupported(request)) throw;
+                Utility.Log(nameof(ObjectSignService.Get), LogLevel.Debug, e.Message);
                 var resp = new GetResponse();
                 resp.SetStatus(e);
                 Key.Sign(resp);
@@ -50,6 +51,7 @@ namespace Neo.FileStorage.Storage.Services.Object
             catch (Exception e)
             {
                 if (!IsStatusSupported(request)) throw;
+                Utility.Log(nameof(ObjectSignService.GetRange), LogLevel.Debug, e.Message);
                 var resp = new GetRangeResponse();
                 resp.SetStatus(e);
                 Key.Sign(resp);

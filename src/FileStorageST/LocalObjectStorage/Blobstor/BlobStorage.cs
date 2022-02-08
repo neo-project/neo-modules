@@ -22,13 +22,12 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
         public BlobStorage(BlobStorageSettings settings)
         {
             smallSizeLimit = settings.SmallSizeLimit;
-            compressor = new CompressorWrapper(settings.Compress ? new ZstdCompressor() : new NoneCompressor());
+            compressor = settings.Compress ? new ZstdCompressor() : new NoneCompressor();
             CompressExcludeContentTypes = settings.CompressExcludeContentTypes;
             fsTree = new(System.IO.Path.Join(settings.Path, FSTree.DefaultPath), settings.FSTreeSettings.ShallowDepth, settings.FSTreeSettings.DirectoryNameLength);
             blobovniczas = new()
             {
                 BlzRootPath = System.IO.Path.Join(settings.Path, BlobovniczasDir),
-                Compressor = compressor,
                 BlzShallowDepth = (ulong)settings.BlobovniczaSettings.ShallowDepth,
                 BlzShallowWidth = (ulong)settings.BlobovniczaSettings.ShallowWidth
             };
@@ -46,8 +45,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
 
         public bool NeedsToCompress(FSObject obj)
         {
-            if (compressor is null) return false;
-            if (CompressExcludeContentTypes.Length == 0) return compressor is not null;
+            if (CompressExcludeContentTypes.Length == 0) return true;
             foreach (var attr in obj.Attributes)
             {
                 if (attr.Key == Header.Types.Attribute.AttributeContentType)
@@ -84,13 +82,15 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
 
         public FSObject GetSmall(Address address, BlobovniczaID id = null)
         {
-            return FSObject.Parser.ParseFrom(blobovniczas.Get(address, id));
+            byte[] data = blobovniczas.Get(address, id);
+            if (compressor.IsCompressed(data)) data = compressor.Decompress(data);
+            return FSObject.Parser.ParseFrom(data);
         }
 
         public FSObject GetBig(Address address)
         {
             byte[] data = fsTree.Get(address);
-            data = compressor.Decompress(data);
+            if (compressor.IsCompressed(data)) data = compressor.Decompress(data);
             return FSObject.Parser.ParseFrom(data);
         }
 

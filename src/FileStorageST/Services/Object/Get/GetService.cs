@@ -10,7 +10,6 @@ using System.Linq;
 using System.Threading;
 using FSRange = Neo.FileStorage.API.Object.Range;
 
-
 namespace Neo.FileStorage.Storage.Services.Object.Get
 {
     public partial class GetService
