@@ -24,12 +24,14 @@ namespace Neo.Consensus
             {
                 message = context.GetMessage(payload);
             }
-            catch (Exception ex)
+            catch (FormatException)
             {
-                Utility.Log(nameof(ConsensusService), LogLevel.Debug, ex.ToString());
                 return;
             }
-
+            catch (IOException)
+            {
+                return;
+            }
             if (!message.Verify(neoSystem.Settings)) return;
             if (message.BlockIndex != context.Block.Index)
             {
