@@ -298,7 +298,7 @@ namespace Neo.FileStorage.Storage
                 Console.WriteLine("[");
                 foreach (var n in ns)
                 {
-                    Console.WriteLine($" {n.PublicKey.PublicKeyToScriptHash().ToAddress(MorphSystem.Settings.AddressVersion)} {n.Addresses.FirstOrDefault()}");
+                    Console.WriteLine($" {n.PublicKey.PublicKeyToScriptHash().ToAddress(MorphSystem.Settings.AddressVersion)} {string.Join(",", n.Addresses)}");
                 }
                 Console.WriteLine("]");
             }
