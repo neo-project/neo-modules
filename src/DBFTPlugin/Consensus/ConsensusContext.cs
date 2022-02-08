@@ -160,9 +160,8 @@ namespace Neo.Consensus
                 {
                     Deserialize(reader);
                 }
-                catch (Exception exception)
+                catch
                 {
-                    Utility.Log(nameof(ConsensusContext), LogLevel.Debug, exception.ToString());
                     return false;
                 }
                 return true;

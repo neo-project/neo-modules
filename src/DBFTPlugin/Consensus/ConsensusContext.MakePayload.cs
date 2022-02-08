@@ -47,9 +47,8 @@ namespace Neo.Consensus
                 sc = new ContractParametersContext(neoSystem.StoreView, payload, dbftSettings.Network);
                 wallet.Sign(sc);
             }
-            catch (InvalidOperationException exception)
+            catch (InvalidOperationException)
             {
-                Utility.Log(nameof(ConsensusContext), LogLevel.Debug, exception.ToString());
                 return;
             }
             payload.Witness = sc.GetWitnesses()[0];
