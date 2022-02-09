@@ -4,6 +4,7 @@ using Neo.Cryptography;
 using Neo.Cryptography.ECC;
 using Neo.IO;
 using Neo.Ledger;
+using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
@@ -21,19 +22,18 @@ namespace Neo.Plugins
     public class NotaryService : UntypedActor
     {
         public class Start { }
-        private bool started = false;
-        private Wallet wallet;
         private NeoSystem neoSystem;
+        private Wallet wallet;
+        private bool started;
 
         private readonly ConcurrentDictionary<UInt256, NotaryTask> pendingQueue = new ConcurrentDictionary<UInt256, NotaryTask>();
         private readonly List<NotaryRequest> payloadCache = new List<NotaryRequest>();
 
-        public NotaryService(NeoSystem neoSystem,Wallet wallet)
+        public NotaryService(NeoSystem neoSystem, Wallet wallet)
         {
             this.wallet = wallet;
             this.neoSystem = neoSystem;
         }
-
 
         protected override void OnReceive(object message)
         {
@@ -41,7 +41,6 @@ namespace Neo.Plugins
             {
                 if (started) return;
                 OnStart();
-                Console.WriteLine("Notary Service 启动");
             }
             else
             {
@@ -89,7 +88,8 @@ namespace Neo.Plugins
             {
                 var h = item.Key;
                 var r = item.Value;
-                if (!r.isSent) {
+                if (!r.isSent)
+                {
                     if (r.IsMainCompleted() && r.minNotValidBefore > currHeight)
                     {
                         Finalize(r.mainTx);
@@ -132,25 +132,26 @@ namespace Neo.Plugins
                 r = new NotaryTask()
                 {
                     mainTx = payload.MainTransaction,
-                    minNotValidBefore = nvbFallback
+                    minNotValidBefore = nvbFallback,
+                    fallbackTxs = new Transaction[0],
                 };
                 pendingQueue[payload.MainTransaction.Hash] = r;
             }
             if (r.witnessInfo is null && validationErr is null)
                 r.witnessInfo = newInfo;
-            r.fallbackTxs.Append(payload.FallbackTransaction);
+            r.fallbackTxs = r.fallbackTxs.Append(payload.FallbackTransaction).ToArray();
             r.isSent = false;
-            if (exists && r.IsMainCompleted() && validationErr != null)
+            if (exists && r.IsMainCompleted() || validationErr is not null)
                 return;
-            var mainHash = r.mainTx.Hash.ToArray();
+            var mainHash = r.mainTx.GetSignData(neoSystem.Settings.Network);
             for (int i = 0; i < payload.MainTransaction.Witnesses.Length; i++)
             {
-                if (payload.MainTransaction.Witnesses[i].InvocationScript.Length == 0 || r.witnessInfo[i].nSigsLeft == 0 && r.witnessInfo[i].typ == RequestType.Contract)
+                if (payload.MainTransaction.Witnesses[i].InvocationScript.Length == 0 || r.witnessInfo[i].nSigsLeft == 0 && r.witnessInfo[i].typ != RequestType.Contract)
                     continue;
                 switch (r.witnessInfo[i].typ)
                 {
                     case RequestType.Contract:
-                        if (!VerifyWitness(r.mainTx, ProtocolSettings.Default, snapshot, r.mainTx.Signers[i].Account, payload.MainTransaction.Witnesses[i], r.mainTx.NetworkFee, out _))
+                        if (!VerifyWitness(r.mainTx, neoSystem.Settings, snapshot, r.mainTx.Signers[i].Account, payload.MainTransaction.Witnesses[i], r.mainTx.NetworkFee, out _))
                             continue;
                         r.mainTx.Witnesses[i].InvocationScript = payload.MainTransaction.Witnesses[i].InvocationScript;
                         break;
@@ -166,7 +167,7 @@ namespace Neo.Plugins
                             r.witnessInfo[i].sigs = new Dictionary<ECPoint, byte[]>();
                         foreach (var pub in r.witnessInfo[i].pubs)
                         {
-                            if (r.witnessInfo[i].sigs[pub] is not null)
+                            if (r.witnessInfo[i].sigs.TryGetValue(pub, out _))
                                 continue;
                             if (Crypto.VerifySignature(mainHash, payload.MainTransaction.Witnesses[i].InvocationScript.Skip(2).ToArray(), pub))
                             {
@@ -188,7 +189,8 @@ namespace Neo.Plugins
                         break;
                 }
                 var currentHeight = NativeContract.Ledger.CurrentIndex(snapshot);
-                if (r.IsMainCompleted() && r.minNotValidBefore > currentHeight) {
+                if (r.IsMainCompleted() && r.minNotValidBefore > currentHeight)
+                {
                     Finalize(r.mainTx);
                     r.isSent = true;
                 }
@@ -240,7 +242,7 @@ namespace Neo.Plugins
                     };
                     continue;
                 }
-                if (tx.Signers[i].Account.Equals(tx.Witnesses[i].VerificationScript.ToScriptHash()))
+                if (!tx.Signers[i].Account.Equals(tx.Witnesses[i].VerificationScript.ToScriptHash()))
                 {
                     validationErr = string.Format("transaction should have valid verification script for signer {0}", i);
                     witnessInfos = null;
@@ -350,7 +352,7 @@ namespace Neo.Plugins
             var prefix = new byte[] { (byte)OpCode.PUSHDATA1, 64 };
             var notaryWitness = new Witness()
             {
-                InvocationScript = prefix.Concat(tx.Sign(wallet.GetAccounts().ToArray()[0].GetKey(), Settings.Default.Network)).ToArray(),
+                InvocationScript = prefix.Concat(tx.Sign(wallet.GetAccounts().ToArray()[0].GetKey(), neoSystem.Settings.Network)).ToArray(),
                 VerificationScript = new byte[0]
             };
             for (int i = 0; i < tx.Signers.Length; i++)
@@ -367,9 +369,9 @@ namespace Neo.Plugins
             Utility.Log(nameof(NotaryService), level, message);
         }
 
-        public static Props Props(NeoSystem neoSystem,Wallet wallet)
+        public static Props Props(NeoSystem neoSystem, Wallet wallet)
         {
-            return Akka.Actor.Props.Create(() => new NotaryService(neoSystem,wallet));
+            return Akka.Actor.Props.Create(() => new NotaryService(neoSystem, wallet));
         }
 
         public class NotaryTask
