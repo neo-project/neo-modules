@@ -15,8 +15,9 @@ namespace Neo.FileStorage.Storage.Services.Object.Get
         private readonly CancellationToken cancellation;
         private readonly KeyStore keyStore;
         private readonly IRequest request;
+        private bool reSigned;
 
-        public Forwarder(KeyStore ks, IRequest req, CancellationToken cancel)
+        public Forwarder(KeyStore ks, IRequest req, CancellationToken cancellation)
         {
             keyStore = ks;
             request = req;
@@ -24,13 +25,18 @@ namespace Neo.FileStorage.Storage.Services.Object.Get
             meta.Ttl = req.MetaHeader.Ttl - 1;
             meta.Origin = req.MetaHeader;
             request.MetaHeader = meta;
-            cancellation = cancel;
+            reSigned = false;
+            this.cancellation = cancellation;
         }
 
         public FSObject Forward(IRawObjectGetClient client)
         {
-            var key = keyStore.GetKey(null);
-            key.Sign(request);
+            if (!reSigned)
+            {
+                var key = keyStore.GetKey(null);
+                key.Sign(request);
+                reSigned = true;
+            }
             switch (request)
             {
                 case GetRequest getRequest:

@@ -2,7 +2,6 @@ using Grpc.Core;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
 using System;
-using System.Collections.Generic;
 
 namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
 {

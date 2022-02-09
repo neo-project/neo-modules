@@ -1,7 +1,6 @@
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.Storage.Placement;
-using static Neo.FileStorage.Network.Helper;
 using static Neo.Utility;
 
 namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
@@ -23,7 +22,11 @@ namespace Neo.FileStorage.Storage.Services.Object.Get.Execute
             }
             if (!result)
             {
-                if (lastException is not null) throw lastException;
+                if (lastException is not null)
+                {
+                    Log(nameof(Get.Execute), LogLevel.Debug, $"failed executing on container, lastError={lastException.Message}");
+                    throw lastException;
+                }
                 throw new ObjectNotFoundException();
             }
         }
