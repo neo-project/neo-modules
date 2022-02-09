@@ -149,10 +149,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
                 {
                     return writeCache.Head(address);
                 }
-                catch (Exception e)
-                {
-                    if (e is not ObjectNotFoundException) throw;
-                }
+                catch (ObjectNotFoundException) { }
             }
             return metabase.Get(address, raw)?.CutPayload();
         }
@@ -217,10 +214,14 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
 
             if (useWriteCache)
             {
-                var result = writeCache.Get(address);
-                if (result.PayloadSize < range.Offset + range.Length) throw new RangeOutOfBoundsException();
-                obj.Payload = result.Payload.Range(range.Offset, range.Offset + range.Length);
-                return obj;
+                try
+                {
+                    var result = writeCache.Get(address);
+                    if (result.PayloadSize < range.Offset + range.Length) throw new RangeOutOfBoundsException();
+                    obj.Payload = result.Payload.Range(range.Offset, range.Offset + range.Length);
+                    return obj;
+                }
+                catch (ObjectNotFoundException) { }
             }
 
             var isExist = metabase.Exists(address);
