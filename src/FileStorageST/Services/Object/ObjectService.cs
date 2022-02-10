@@ -40,7 +40,7 @@ namespace Neo.FileStorage.Storage.Services.Object
 
         public GetRangeHashResponse GetRangeHash(GetRangeHashRequest request, CancellationToken cancellation)
         {
-            var prm = GetService.ToRangeHashPrm(request);
+            var prm = GetService.ToRangeHashPrm(request, cancellation);
             return GetService.GetRangeHash(prm, cancellation);
         }
 

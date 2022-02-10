@@ -32,9 +32,11 @@ namespace Neo.FileStorage.Storage.Services.Object.Get
             return prm;
         }
 
-        public RangeHashPrm ToRangeHashPrm(GetRangeHashRequest request)
+        public RangeHashPrm ToRangeHashPrm(GetRangeHashRequest request, CancellationToken cancellation)
         {
             var prm = RangeHashPrm.FromRequest(request);
+            if (!prm.Local)
+                prm.Key = KeyStore.GetKey(null);
             return prm;
         }
 
