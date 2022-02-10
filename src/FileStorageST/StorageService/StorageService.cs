@@ -104,6 +104,7 @@ namespace Neo.FileStorage.Storage
                 Wallet = wallet,
                 NeoSystem = system,
                 Blockchain = system.Blockchain,
+                SideChainFee = Settings.Default.SideChainFee,
                 BalanceContractHash = Settings.Default.BalanceContractHash,
                 ContainerContractHash = Settings.Default.ContainerContractHash,
                 NetMapContractHash = Settings.Default.NetmapContractHash,
