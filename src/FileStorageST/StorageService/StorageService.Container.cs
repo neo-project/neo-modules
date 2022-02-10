@@ -8,6 +8,7 @@ using Neo.FileStorage.Storage.Services.Container.Announcement.Control;
 using Neo.FileStorage.Storage.Services.Container.Announcement.Route;
 using Neo.FileStorage.Storage.Services.Container.Announcement.Storage;
 using System;
+using Neo.FileStorage.Storage.Services.Container.Announcement.Route.Placement;
 
 namespace Neo.FileStorage.Storage
 {
@@ -23,6 +24,15 @@ namespace Neo.FileStorage.Storage
             containerCache = new(ContainerService.CacheSize, ContainerService.CacheTTL, morphInvoker);
             eACLCache = new(ContainerService.CacheSize, ContainerService.CacheTTL, morphInvoker);
             ContainerListCache containerListCache = new(ContainerService.CacheSize, ContainerService.CacheTTL, morphInvoker);
+            LoadPlacementBuilder loadBuilder = new()
+            {
+                NetmapSource = netmapCache,
+                ContainerSoruce = containerCache
+            };
+            RouteBuilder routeBuilder = new()
+            {
+                PlacementBuilder = loadBuilder
+            };
             LoadRouter loadRouter = new()
             {
                 LocalInfo = this,
@@ -33,27 +43,20 @@ namespace Neo.FileStorage.Storage
                     ClientCache = clientCache,
                     DeadEndProvider = new SimpleWriteProvider(loadAccumulator),
                 },
-                RouteBuilder = new()
-                {
-                    PlacementBuilder = new()
-                    {
-                        NetmapSource = netmapCache,
-                        ContainerSoruce = containerCache,
-                    }
-                }
+                RouteBuilder = routeBuilder
             };
             Controller controller = new()
             {
                 LocalMetrics = new SimpleIterateProvider(new LocalStorageLoad
                 {
-                    LocalStorage = localStorage,
+                    LocalStorage = localStorage
                 }),
                 AnnouncementAccumulator = new SimpleIterateProvider(loadAccumulator),
                 LocalAnnouncementTarget = loadRouter,
                 ResultReceiver = new SimpleWriteProvider(new MorphLoadWriter
                 {
                     PublicKey = key.PublicKey(),
-                    MorphInvoker = morphInvoker,
+                    MorphInvoker = morphInvoker
                 })
             };
             containerProcessor.AddStartEstimateContainerParser(StartEstimationEvent.ParseStartEstimationEvent);
@@ -90,7 +93,9 @@ namespace Neo.FileStorage.Storage
                             {
                                 Key = key,
                                 LocalInfo = this,
-                                Router = loadRouter
+                                Router = loadRouter,
+                                Loadbuilder = loadBuilder,
+                                RouteBuilder = routeBuilder
                             }
                         }
                     }

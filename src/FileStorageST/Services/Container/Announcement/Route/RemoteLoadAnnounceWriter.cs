@@ -20,7 +20,7 @@ namespace Neo.FileStorage.Storage.Services.Container.Announcement.Route
 
         public void Close()
         {
-            Client.AnnounceContainerUsedSpace(buffer, context: Cancellation);
+            Client.AnnounceContainerUsedSpace(buffer, new CallOptions { Key = Key }, Cancellation);
         }
     }
 }
