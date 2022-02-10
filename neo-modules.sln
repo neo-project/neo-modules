@@ -41,8 +41,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Cryptography.MPTTrie.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotaryService", "src\NotaryService\NotaryService.csproj", "{DC32B4DA-E8AC-4B43-8E7D-2DE77CAAAF95}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neo", "..\..\neo\src\neo\neo.csproj", "{A0E35436-F30E-4B36-B97D-D5C93790EBA7}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -117,10 +115,6 @@ Global
 		{DC32B4DA-E8AC-4B43-8E7D-2DE77CAAAF95}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC32B4DA-E8AC-4B43-8E7D-2DE77CAAAF95}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC32B4DA-E8AC-4B43-8E7D-2DE77CAAAF95}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A0E35436-F30E-4B36-B97D-D5C93790EBA7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A0E35436-F30E-4B36-B97D-D5C93790EBA7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A0E35436-F30E-4B36-B97D-D5C93790EBA7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A0E35436-F30E-4B36-B97D-D5C93790EBA7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
