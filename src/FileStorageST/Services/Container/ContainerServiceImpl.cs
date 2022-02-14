@@ -1,7 +1,10 @@
 using Grpc.Core;
 using Neo.FileStorage.API.Container;
+using Neo.FileStorage.API.Cryptography;
+using Neo.FileStorage.API.Status;
 using System;
 using System.Threading.Tasks;
+using static Neo.FileStorage.Storage.Services.Util.Helper;
 using APIContainerService = Neo.FileStorage.API.Container.ContainerService;
 
 namespace Neo.FileStorage.Storage.Services.Container
@@ -20,7 +23,12 @@ namespace Neo.FileStorage.Storage.Services.Container
                 }
                 catch (Exception e)
                 {
-                    throw new RpcException(new(StatusCode.Unknown, e.Message));
+                    Utility.Log(nameof(ContainerServiceImpl), LogLevel.Debug, e.Message);
+                    if (!IsStatusSupported(request)) throw new RpcException(new(StatusCode.Unknown, e.Message));
+                    var resp = new AnnounceUsedSpaceResponse();
+                    resp.SetStatus(e);
+                    SignService.Key.Sign(resp);
+                    return resp;
                 }
             }, context.CancellationToken);
         }
@@ -35,7 +43,12 @@ namespace Neo.FileStorage.Storage.Services.Container
                 }
                 catch (Exception e)
                 {
-                    throw new RpcException(new(StatusCode.Unknown, e.Message));
+                    Utility.Log(nameof(ContainerServiceImpl), LogLevel.Debug, e.Message);
+                    if (!IsStatusSupported(request)) throw new RpcException(new(StatusCode.Unknown, e.Message));
+                    var resp = new DeleteResponse();
+                    resp.SetStatus(e);
+                    SignService.Key.Sign(resp);
+                    return resp;
                 }
             }, context.CancellationToken);
         }
@@ -50,7 +63,12 @@ namespace Neo.FileStorage.Storage.Services.Container
                 }
                 catch (Exception e)
                 {
-                    throw new RpcException(new(StatusCode.Unknown, e.Message));
+                    Utility.Log(nameof(ContainerServiceImpl), LogLevel.Debug, e.Message);
+                    if (!IsStatusSupported(request)) throw new RpcException(new(StatusCode.Unknown, e.Message));
+                    var resp = new GetResponse();
+                    resp.SetStatus(e);
+                    SignService.Key.Sign(resp);
+                    return resp;
                 }
             }, context.CancellationToken);
         }
@@ -65,7 +83,12 @@ namespace Neo.FileStorage.Storage.Services.Container
                 }
                 catch (Exception e)
                 {
-                    throw new RpcException(new(StatusCode.Unknown, e.Message));
+                    Utility.Log(nameof(ContainerServiceImpl), LogLevel.Debug, e.Message);
+                    if (!IsStatusSupported(request)) throw new RpcException(new(StatusCode.Unknown, e.Message));
+                    var resp = new GetExtendedACLResponse();
+                    resp.SetStatus(e);
+                    SignService.Key.Sign(resp);
+                    return resp;
                 }
             }, context.CancellationToken);
         }
@@ -80,7 +103,12 @@ namespace Neo.FileStorage.Storage.Services.Container
                 }
                 catch (Exception e)
                 {
-                    throw new RpcException(new(StatusCode.Unknown, e.Message));
+                    Utility.Log(nameof(ContainerServiceImpl), LogLevel.Debug, e.Message);
+                    if (!IsStatusSupported(request)) throw new RpcException(new(StatusCode.Unknown, e.Message));
+                    var resp = new ListResponse();
+                    resp.SetStatus(e);
+                    SignService.Key.Sign(resp);
+                    return resp;
                 }
             }, context.CancellationToken);
         }
@@ -95,7 +123,12 @@ namespace Neo.FileStorage.Storage.Services.Container
                 }
                 catch (Exception e)
                 {
-                    throw new RpcException(new(StatusCode.Unknown, e.Message));
+                    Utility.Log(nameof(ContainerServiceImpl), LogLevel.Debug, e.Message);
+                    if (!IsStatusSupported(request)) throw new RpcException(new(StatusCode.Unknown, e.Message));
+                    var resp = new PutResponse();
+                    resp.SetStatus(e);
+                    SignService.Key.Sign(resp);
+                    return resp;
                 }
             }, context.CancellationToken);
         }
@@ -110,7 +143,12 @@ namespace Neo.FileStorage.Storage.Services.Container
                 }
                 catch (Exception e)
                 {
-                    throw new RpcException(new(StatusCode.Unknown, e.Message));
+                    Utility.Log(nameof(ContainerServiceImpl), LogLevel.Debug, e.Message);
+                    if (!IsStatusSupported(request)) throw new RpcException(new(StatusCode.Unknown, e.Message));
+                    var resp = new SetExtendedACLResponse();
+                    resp.SetStatus(e);
+                    SignService.Key.Sign(resp);
+                    return resp;
                 }
             }, context.CancellationToken);
         }
