@@ -65,7 +65,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
                 if (d == depth)
                 {
                     if (!File.Exists(current_path)) throw new InvalidOperationException();
-                    Address address = Address.ParseString(string.Join("", current_paths.Skip(1)).Replace('.', '/'));
+                    Address address = Address.FromString(string.Join("", current_paths.Skip(1)).Replace('.', '/'));
                     byte[] data = File.ReadAllBytes(current_path);
                     handler(address, data);
                 }

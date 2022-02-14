@@ -50,7 +50,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Get
                         Payload = ByteString.CopyFrom(data)
                     };
                 default:
-                    throw new InvalidOperationException($"{nameof(Forwarder)} request type not supported");
+                    throw new InvalidOperationException($"{nameof(Forwarder)} request type not supported, type={request.GetType()}");
             }
         }
     }
