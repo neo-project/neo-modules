@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+using Google.Protobuf;
 using Neo.FileStorage.API.Accounting;
 using Neo.FileStorage.API.Acl;
 using Neo.FileStorage.API.Container;
@@ -11,19 +8,28 @@ using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Reputation;
 using Neo.FileStorage.API.Session;
 using Neo.FileStorage.API.Client;
-using UsedSpaceAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types.Announcement;
+using System;
+using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using static Neo.FileStorage.Network.Helper;
+using UsedSpaceAnnouncement = Neo.FileStorage.API.Container.AnnounceUsedSpaceRequest.Types.Body.Types.Announcement;
 
 namespace Neo.FileStorage.Cache
 {
     public class MultiClient : IFSClient, IFSRawClient
     {
+        public const string ErrWrongPublicKey = "public key is different from the key in the network map";
         private readonly List<Network.Address> addresses;
+        private readonly ByteString publicKey;
         private readonly ConcurrentDictionary<Network.Address, Client> clients = new();
 
-        public MultiClient(List<Network.Address> addrs)
+        public MultiClient(NodeInfo ni)
         {
-            addresses = addrs;
+            addresses = ni.Addresses.ToList().ToNetworkAddresses();
+            publicKey = ni.PublicKey;
         }
 
         public void Dispose()
@@ -42,11 +48,17 @@ namespace Neo.FileStorage.Cache
             return this;
         }
 
+        private void AssertKeyResponseCallback(IResponse resp)
+        {
+            if (!resp.VerifyHeader.BodySignature.Key.Equals(publicKey))
+                throw new InvalidOperationException(ErrWrongPublicKey);
+        }
+
         private Client Client(Network.Address address)
         {
             if (!clients.TryGetValue(address, out var client))
             {
-                client = new(null, address.ToRpcAddressString());
+                client = new Client(null, address.ToRpcAddressString()).WithResponseInfoHandler(AssertKeyResponseCallback);
                 clients[address] = client;
             }
             return client;

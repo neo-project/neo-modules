@@ -1,8 +1,6 @@
 using System.Collections.Concurrent;
 using Neo.FileStorage.API.Client;
-using System.Linq;
 using Neo.FileStorage.API.Netmap;
-using static Neo.FileStorage.Network.Helper;
 
 namespace Neo.FileStorage.Cache
 {
@@ -12,10 +10,10 @@ namespace Neo.FileStorage.Cache
 
         public virtual IFSClient Get(NodeInfo node)
         {
-            var pk = node.PublicKey.ToString();
+            var pk = node.PublicKey.ToBase64();
             if (!clients.TryGetValue(pk, out MultiClient mClient))
             {
-                mClient = new MultiClient(node.Addresses.ToList().ToNetworkAddresses());
+                mClient = new MultiClient(node);
                 clients[pk] = mClient;
             }
             return mClient;
