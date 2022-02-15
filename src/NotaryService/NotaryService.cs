@@ -88,16 +88,16 @@ namespace Neo.Plugins
             {
                 var h = item.Key;
                 var r = item.Value;
-                if (!r.isSent && r.IsMainCompleted() && r.minNotValidBefore > currHeight)
+                if (!r.IsSent && r.IsMainCompleted() && r.MinNotValidBefore > currHeight)
                 {
-                    Finalize(r.mainTx);
-                    r.isSent = true;
+                    Finalize(r.MainTx);
+                    r.IsSent = true;
                     continue;
                 }
-                if (r.minNotValidBefore <= currHeight)
+                if (r.MinNotValidBefore <= currHeight)
                 {
                     var newFallbacks = new List<Transaction>();
-                    foreach (var fb in r.fallbackTxs)
+                    foreach (var fb in r.FallbackTxs)
                     {
                         var nvb = fb.GetAttributes<NotValidBefore>().ToArray()[0].Height;
                         if (nvb <= currHeight) Finalize(fb);
@@ -117,66 +117,66 @@ namespace Neo.Plugins
             var exists = pendingQueue.TryGetValue(payload.MainTransaction.Hash, out NotaryTask r);
             if (exists)
             {
-                foreach (var fb in r.fallbackTxs)
+                foreach (var fb in r.FallbackTxs)
                     if (fb.Hash.Equals(payload.FallbackTransaction.Hash))
                         return;
-                if (nvbFallback < r.minNotValidBefore)
-                    r.minNotValidBefore = nvbFallback;
+                if (nvbFallback < r.MinNotValidBefore)
+                    r.MinNotValidBefore = nvbFallback;
             }
             else
             {
                 r = new NotaryTask()
                 {
-                    mainTx = payload.MainTransaction,
-                    minNotValidBefore = nvbFallback,
-                    fallbackTxs = new Transaction[0],
+                    MainTx = payload.MainTransaction,
+                    MinNotValidBefore = nvbFallback,
+                    FallbackTxs = new Transaction[0],
                 };
                 pendingQueue[payload.MainTransaction.Hash] = r;
             }
-            if (r.witnessInfo is null && validationErr is null)
-                r.witnessInfo = newInfo;
-            r.fallbackTxs = r.fallbackTxs.Append(payload.FallbackTransaction).ToArray();
+            if (r.WitnessInfo is null && validationErr is null)
+                r.WitnessInfo = newInfo;
+            r.FallbackTxs = r.FallbackTxs.Append(payload.FallbackTransaction).ToArray();
             if (exists && r.IsMainCompleted() || validationErr is not null)
                 return;
-            var mainHash = r.mainTx.GetSignData(neoSystem.Settings.Network);
+            var mainHash = r.MainTx.GetSignData(neoSystem.Settings.Network);
             for (int i = 0; i < payload.MainTransaction.Witnesses.Length; i++)
             {
-                if (payload.MainTransaction.Witnesses[i].InvocationScript.Length == 0 || r.witnessInfo[i].nSigsLeft == 0 && r.witnessInfo[i].typ != RequestType.Contract)
+                if (payload.MainTransaction.Witnesses[i].InvocationScript.Length == 0 || r.WitnessInfo[i].NSigsLeft == 0 && r.WitnessInfo[i].Typ != RequestType.Contract)
                     continue;
-                switch (r.witnessInfo[i].typ)
+                switch (r.WitnessInfo[i].Typ)
                 {
                     case RequestType.Contract:
-                        if (!VerifyWitness(r.mainTx, neoSystem.Settings, snapshot, r.mainTx.Signers[i].Account, payload.MainTransaction.Witnesses[i], r.mainTx.NetworkFee, out _))
+                        if (!VerifyWitness(r.MainTx, neoSystem.Settings, snapshot, r.MainTx.Signers[i].Account, payload.MainTransaction.Witnesses[i], r.MainTx.NetworkFee, out _))
                             continue;
-                        r.mainTx.Witnesses[i].InvocationScript = payload.MainTransaction.Witnesses[i].InvocationScript;
+                        r.MainTx.Witnesses[i].InvocationScript = payload.MainTransaction.Witnesses[i].InvocationScript;
                         break;
                     case RequestType.Signature:
-                        if (Crypto.VerifySignature(mainHash, payload.MainTransaction.Witnesses[i].InvocationScript.Skip(2).ToArray(), r.witnessInfo[i].pubs[0]))
+                        if (Crypto.VerifySignature(mainHash, payload.MainTransaction.Witnesses[i].InvocationScript.Skip(2).ToArray(), r.WitnessInfo[i].Pubs[0]))
                         {
-                            r.mainTx.Witnesses[i] = payload.MainTransaction.Witnesses[i];
-                            r.witnessInfo[i].nSigsLeft--;
+                            r.MainTx.Witnesses[i] = payload.MainTransaction.Witnesses[i];
+                            r.WitnessInfo[i].NSigsLeft--;
                         }
                         break;
                     case RequestType.MultiSignature:
-                        if (r.witnessInfo[i].sigs is null)
-                            r.witnessInfo[i].sigs = new Dictionary<ECPoint, byte[]>();
-                        foreach (var pub in r.witnessInfo[i].pubs)
+                        if (r.WitnessInfo[i].Sigs is null)
+                            r.WitnessInfo[i].Sigs = new Dictionary<ECPoint, byte[]>();
+                        foreach (var pub in r.WitnessInfo[i].Pubs)
                         {
-                            if (r.witnessInfo[i].sigs.TryGetValue(pub, out _))
+                            if (r.WitnessInfo[i].Sigs.TryGetValue(pub, out _))
                                 continue;
                             if (Crypto.VerifySignature(mainHash, payload.MainTransaction.Witnesses[i].InvocationScript.Skip(2).ToArray(), pub))
                             {
-                                r.witnessInfo[i].sigs[pub] = payload.MainTransaction.Witnesses[i].InvocationScript;
-                                r.witnessInfo[i].nSigsLeft--;
-                                if (r.witnessInfo[i].nSigsLeft == 0)
+                                r.WitnessInfo[i].Sigs[pub] = payload.MainTransaction.Witnesses[i].InvocationScript;
+                                r.WitnessInfo[i].NSigsLeft--;
+                                if (r.WitnessInfo[i].NSigsLeft == 0)
                                 {
                                     byte[] invScript = new byte[0];
-                                    for (int j = 0; j < r.witnessInfo[i].pubs.Length; j++)
+                                    for (int j = 0; j < r.WitnessInfo[i].Pubs.Length; j++)
                                     {
-                                        if (r.witnessInfo[i].sigs.TryGetValue(r.witnessInfo[i].pubs[j], out var sig))
+                                        if (r.WitnessInfo[i].Sigs.TryGetValue(r.WitnessInfo[i].Pubs[j], out var sig))
                                             invScript = invScript.Concat(sig).ToArray();
                                     }
-                                    r.mainTx.Witnesses[i].InvocationScript = invScript;
+                                    r.MainTx.Witnesses[i].InvocationScript = invScript;
                                 }
                                 break;
                             }
@@ -184,10 +184,10 @@ namespace Neo.Plugins
                         break;
                 }
                 var currentHeight = NativeContract.Ledger.CurrentIndex(snapshot);
-                if (r.IsMainCompleted() && r.minNotValidBefore > currentHeight)
+                if (r.IsMainCompleted() && r.MinNotValidBefore > currentHeight)
                 {
-                    Finalize(r.mainTx);
-                    r.isSent = true;
+                    Finalize(r.MainTx);
+                    r.IsSent = true;
                 }
             }
         }
@@ -196,18 +196,18 @@ namespace Neo.Plugins
         {
             var r = pendingQueue[payload.MainTransaction.Hash];
             if (r is null) return;
-            for (int i = 0; i < r.fallbackTxs.Length; i++)
+            for (int i = 0; i < r.FallbackTxs.Length; i++)
             {
-                var fb = r.fallbackTxs[i];
+                var fb = r.FallbackTxs[i];
                 if (fb.Hash.Equals(payload.FallbackTransaction.Hash))
                 {
-                    var tempList = r.fallbackTxs.ToList();
+                    var tempList = r.FallbackTxs.ToList();
                     tempList.RemoveAt(i);
-                    r.fallbackTxs = tempList.ToArray();
+                    r.FallbackTxs = tempList.ToArray();
                     break;
                 }
             }
-            if (r.fallbackTxs.Length == 0) pendingQueue.Remove(r.mainTx.Hash, out _);
+            if (r.FallbackTxs.Length == 0) pendingQueue.Remove(r.MainTx.Hash, out _);
         }
 
         private void VerifyIncompleteWitnesses(Transaction tx, byte nKeysExpected, out WitnessInfo[] witnessInfos, out string validationErr)
@@ -232,8 +232,8 @@ namespace Neo.Plugins
                 {
                     witnessInfos[i] = new WitnessInfo()
                     {
-                        typ = RequestType.Contract,
-                        nSigsLeft = 0
+                        Typ = RequestType.Contract,
+                        NSigsLeft = 0
                     };
                     continue;
                 }
@@ -256,13 +256,13 @@ namespace Neo.Plugins
                 {
                     witnessInfos[i] = new WitnessInfo()
                     {
-                        typ = RequestType.MultiSignature,
-                        nSigsLeft = (byte)nSigs,
-                        pubs = new ECPoint[pubs.Length],
+                        Typ = RequestType.MultiSignature,
+                        NSigsLeft = (byte)nSigs,
+                        Pubs = new ECPoint[pubs.Length],
                     };
                     for (int j = 0; j < pubs.Length; j++)
                     {
-                        witnessInfos[i].pubs[j] = pubs[j];
+                        witnessInfos[i].Pubs[j] = pubs[j];
                     }
                     nKeysActual += pubs.Length;
                     continue;
@@ -271,9 +271,9 @@ namespace Neo.Plugins
                 {
                     witnessInfos[i] = new WitnessInfo()
                     {
-                        typ = RequestType.Signature,
-                        nSigsLeft = 1,
-                        pubs = new ECPoint[pubs.Length],
+                        Typ = RequestType.Signature,
+                        NSigsLeft = 1,
+                        Pubs = new ECPoint[pubs.Length],
                     };
                     nKeysActual++;
                     continue;
@@ -371,26 +371,26 @@ namespace Neo.Plugins
 
         public class NotaryTask
         {
-            public bool isSent;
-            public Transaction mainTx;
-            public Transaction[] fallbackTxs;
-            public uint minNotValidBefore;
-            public WitnessInfo[] witnessInfo;
+            public bool IsSent;
+            public Transaction MainTx;
+            public Transaction[] FallbackTxs;
+            public uint MinNotValidBefore;
+            public WitnessInfo[] WitnessInfo;
 
             public bool IsMainCompleted()
             {
-                if (witnessInfo is null) return false;
-                foreach (var wi in witnessInfo) if (wi.nSigsLeft != 0) return false;
+                if (WitnessInfo is null) return false;
+                foreach (var wi in WitnessInfo) if (wi.NSigsLeft != 0) return false;
                 return true;
             }
         }
 
         public class WitnessInfo
         {
-            public RequestType typ;
-            public byte nSigsLeft;
-            public ECPoint[] pubs;
-            public Dictionary<ECPoint, byte[]> sigs;
+            public RequestType Typ;
+            public byte NSigsLeft;
+            public ECPoint[] Pubs;
+            public Dictionary<ECPoint, byte[]> Sigs;
         }
 
         public enum RequestType : byte
