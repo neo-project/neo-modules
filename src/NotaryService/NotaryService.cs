@@ -88,23 +88,19 @@ namespace Neo.Plugins
             {
                 var h = item.Key;
                 var r = item.Value;
-                if (!r.isSent)
+                if (!r.isSent && r.IsMainCompleted() && r.minNotValidBefore > currHeight)
                 {
-                    if (r.IsMainCompleted() && r.minNotValidBefore > currHeight)
+                    Finalize(r.mainTx);
+                    r.isSent = true;
+                    continue;
+                }
+                if (r.minNotValidBefore <= currHeight)
+                {
+                    var newFallbacks = new List<Transaction>();
+                    foreach (var fb in r.fallbackTxs)
                     {
-                        Finalize(r.mainTx);
-                        r.isSent = true;
-                        continue;
-                    }
-                    if (r.minNotValidBefore <= currHeight)
-                    {
-                        var newFallbacks = new List<Transaction>();
-                        foreach (var fb in r.fallbackTxs)
-                        {
-                            var nvb = fb.GetAttributes<NotValidBefore>().ToArray()[0].Height;
-                            if (nvb <= currHeight) Finalize(fb);
-                        }
-                        r.isSent = true;
+                        var nvb = fb.GetAttributes<NotValidBefore>().ToArray()[0].Height;
+                        if (nvb <= currHeight) Finalize(fb);
                     }
                 }
             }
@@ -140,7 +136,6 @@ namespace Neo.Plugins
             if (r.witnessInfo is null && validationErr is null)
                 r.witnessInfo = newInfo;
             r.fallbackTxs = r.fallbackTxs.Append(payload.FallbackTransaction).ToArray();
-            r.isSent = false;
             if (exists && r.IsMainCompleted() || validationErr is not null)
                 return;
             var mainHash = r.mainTx.GetSignData(neoSystem.Settings.Network);
