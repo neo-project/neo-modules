@@ -34,11 +34,21 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blob
             if (!Directory.Exists(full))
                 Directory.CreateDirectory(full);
             dB = new DB(full);
+            LoadUsedSpace();
         }
 
         public void Dispose()
         {
             dB?.Dispose();
+        }
+
+        private void LoadUsedSpace()
+        {
+            dB.Iterate(Array.Empty<byte>(), (_, value) =>
+            {
+                IncSize(value.Length);
+                return false;
+            });
         }
 
         private byte[] Addresskey(Address address)
