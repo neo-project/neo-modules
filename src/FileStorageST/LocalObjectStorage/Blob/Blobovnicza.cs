@@ -6,7 +6,6 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading;
-using FSRange = Neo.FileStorage.API.Object.Range;
 
 namespace Neo.FileStorage.Storage.LocalObjectStorage.Blob
 {
@@ -95,6 +94,18 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blob
         private void DecSize(long size)
         {
             Interlocked.Add(ref filled, -size);
+        }
+
+        public override int GetHashCode()
+        {
+            return Path.GetHashCode();
+        }
+
+        public override bool Equals(object other)
+        {
+            if (ReferenceEquals(this, other)) return true;
+            if (other is Blobovnicza blob) return Equals(blob);
+            return false;
         }
 
         public bool Equals(Blobovnicza other)

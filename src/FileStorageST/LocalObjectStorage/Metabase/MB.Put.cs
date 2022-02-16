@@ -26,16 +26,10 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
             }
             if (exist)
             {
-                if (!is_parent && bid is not null)
-                {
-                    UpdateBlobovniczaID(obj.Address, bid);
-                    return;
-                }
                 if (is_parent)
-                {
                     UpdateSplitInfo(obj.Address, si);
-                    return;
-                }
+                else if (bid is not null)
+                    UpdateBlobovniczaID(obj.Address, bid);
                 return;
             }
             if (obj.Parent is not null && !is_parent)

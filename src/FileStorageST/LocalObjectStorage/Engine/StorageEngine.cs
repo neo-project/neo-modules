@@ -92,16 +92,35 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
         public void Put(FSObject obj)
         {
             Utility.Log(nameof(StorageEngine), LogLevel.Debug, $"put object, address={obj.Address.String()}");
+            bool put = false;
+            bool isExist = Exist(obj.Address);
             foreach (var shard in SortedShards(obj.Address))
             {
-                var isExist = shard.Exists(obj.Address);
-                if (isExist)
+                int exist = 0;
+                try
                 {
-                    shard.ToMoveIt(obj.Address);
-                    return;
+                    if (shard.Exists(obj.Address)) exist = 1;
                 }
-                shard.Put(obj);
-                return;
+                catch { exist = 2; }
+                switch (exist)
+                {
+                    case 0:
+                        try
+                        {
+                            if (put) continue;
+                            shard.Put(obj);
+                            if (!isExist) return;
+                            put = true;
+                        }
+                        catch { continue; }
+                        break;
+                    case 1:
+                        if (!put) return;
+                        shard.ToMoveIt(obj.Address);
+                        return;
+                    case 2:
+                        continue;
+                }
             }
         }
 
@@ -187,11 +206,12 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
         {
             foreach (var shard in SortedShards(address))
             {
-                var isExist = shard.Exists(address);
-                if (isExist)
+                try
                 {
-                    return true;
+                    if (shard.Exists(address)) return true;
                 }
+                catch (ObjectAlreadyRemovedException) { throw; }
+                catch { continue; }
             }
             return false;
         }
