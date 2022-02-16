@@ -27,6 +27,20 @@ namespace Neo.FileStorage.Storage.RpcServer
                     logBuilder.ClearProviders();
                     if (settings.LogEnabled)
                         logBuilder.AddProvider(new LoggerProvider());
+                })
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.ConfigureKestrel(options =>
+                    {
+                        options.ListenAnyIP(port,
+                            listenOptions =>
+                            {
+                                listenOptions.Protocols = HttpProtocols.Http2;
+                                if (string.IsNullOrEmpty(sslCert)) return;
+                                listenOptions.UseHttps(sslCert, sslCertPassword);
+                            });
+                    });
+                    webBuilder.UseStartup(cancellationSource => startup);
                 });
         }
 
@@ -37,22 +51,7 @@ namespace Neo.FileStorage.Storage.RpcServer
 
         public void Start()
         {
-            hostBuilder.ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.ConfigureKestrel(options =>
-                {
-                    options.ListenAnyIP(port,
-                        listenOptions =>
-                        {
-                            listenOptions.Protocols = HttpProtocols.Http2;
-                            if (string.IsNullOrEmpty(sslCert)) return;
-                            listenOptions.UseHttps(sslCert, sslCertPassword);
-                        });
-                });
-                webBuilder.UseStartup(cancellationSource => startup);
-            })
-            .Build()
-            .RunAsync(cancellationSource.Token);
+            hostBuilder.Build().Start();
         }
 
         public void Stop()

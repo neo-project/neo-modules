@@ -98,7 +98,6 @@ namespace Neo.FileStorage.Storage
                 localStorage.AddShard(shard);
                 i++;
             }
-            localStorage.Open();
             morphInvoker = new MorphInvoker
             {
                 Wallet = wallet,
@@ -139,18 +138,12 @@ namespace Neo.FileStorage.Storage
             InitState();
             var ni = Settings.Default.LocalNodeInfo.Clone();
             ni.State = API.Netmap.NodeInfo.Types.State.Online;
-            try
-            {
-                morphInvoker.AddPeer(ni);
-            }
-            catch (Exception e)
-            {
-                Utility.Log(nameof(StorageService), LogLevel.Warning, $"could not add peer, error={e.Message}");
-            }
+            morphInvoker.AddPeer(ni);
             StartBlockTimers();
             HealthStatus = HealthStatus.Ready;
             listener.Tell(new Listener.Start());
             server.Start();
+            localStorage.Open();
         }
 
         public void LookupContractsInNNS()

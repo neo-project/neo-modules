@@ -109,7 +109,7 @@ namespace Neo.FileStorage.Storage
             }
             catch (Exception e)
             {
-                Console.WriteLine($"couldn't start storage serivce, error={e}");
+                Console.WriteLine($"couldn't start storage serivce, error={e.Message}");
             }
         }
 
