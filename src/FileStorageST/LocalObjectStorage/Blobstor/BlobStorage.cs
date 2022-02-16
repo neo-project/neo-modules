@@ -29,7 +29,9 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
             {
                 BlzRootPath = System.IO.Path.Join(settings.Path, BlobovniczasDir),
                 BlzShallowDepth = (ulong)settings.BlobovniczaSettings.ShallowDepth,
-                BlzShallowWidth = (ulong)settings.BlobovniczaSettings.ShallowWidth
+                BlzShallowWidth = (ulong)settings.BlobovniczaSettings.ShallowWidth,
+                SmallSizeLimit = smallSizeLimit,
+                FullSizeLimit = settings.BlobovniczaSettings.BlobSize
             };
         }
 

@@ -201,7 +201,7 @@ namespace Neo.FileStorage.Storage
 
     public class BlobovniczaSettings
     {
-        public ulong Size;
+        public ulong BlobSize;
         public int ShallowDepth;
         public int ShallowWidth;
         public int OpenCacheSize;
@@ -211,7 +211,7 @@ namespace Neo.FileStorage.Storage
         {
             Default = new()
             {
-                Size = Blobovnicza.DefaultFullSizeLimit,
+                BlobSize = Blobovnicza.DefaultFullSizeLimit,
                 ShallowDepth = BlobovniczaTree.DefaultBlzShallowDepth,
                 ShallowWidth = BlobovniczaTree.DefaultBlzShallowWidth,
                 OpenCacheSize = BlobovniczaTree.DefaultOpenedCacheSize,
@@ -222,7 +222,7 @@ namespace Neo.FileStorage.Storage
         {
             return new()
             {
-                Size = section.GetValue("Size", Blobovnicza.DefaultFullSizeLimit),
+                BlobSize = section.GetValue("BlobSize", Blobovnicza.DefaultFullSizeLimit),
                 ShallowDepth = section.GetValue("ShallowDepth", BlobovniczaTree.DefaultBlzShallowDepth),
                 ShallowWidth = section.GetValue("ShallowWidth", BlobovniczaTree.DefaultBlzShallowWidth),
                 OpenCacheSize = section.GetValue("OpenCacheSize", BlobovniczaTree.DefaultOpenedCacheSize)
@@ -289,7 +289,7 @@ namespace Neo.FileStorage.Storage
                 CompressExcludeContentTypes = compress_section?.GetSection("ExcludeContentTypes").GetChildren().Select(p => p.Value).ToArray() ?? Array.Empty<string>(),
                 SmallSizeLimit = section.GetValue("SmallSizeLimit", BlobStorage.DefaultSmallSizeLimit),
                 FSTreeSettings = FSTreeSettings.Load(section.GetSection("FSTree")),
-                BlobovniczaSettings = BlobovniczaSettings.Load(section.GetSection("Blobovnicza"))
+                BlobovniczaSettings = BlobovniczaSettings.Load(section.GetSection("Blobovniczas"))
             };
             if (settings.Path == "") throw new FormatException("invalid blobstorage path");
             return settings;

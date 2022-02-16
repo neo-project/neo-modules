@@ -94,6 +94,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
             Utility.Log(nameof(StorageEngine), LogLevel.Debug, $"put object, address={obj.Address.String()}");
             bool put = false;
             bool isExist = Exist(obj.Address);
+            string error = "";
             foreach (var shard in SortedShards(obj.Address))
             {
                 int exist = 0;
@@ -105,14 +106,18 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
                 switch (exist)
                 {
                     case 0:
+                        if (put) continue;
                         try
                         {
-                            if (put) continue;
                             shard.Put(obj);
                             if (!isExist) return;
                             put = true;
                         }
-                        catch { continue; }
+                        catch (Exception e)
+                        {
+                            error = e.Message;
+                            Utility.Log(nameof(StorageEngine), LogLevel.Debug, $"could not put in shard, try another, error={error}");
+                        }
                         break;
                     case 1:
                         if (!put) return;
@@ -122,6 +127,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
                         continue;
                 }
             }
+            if (!put) throw new InvalidOperationException(error);
         }
 
         public void Delete(params Address[] addresses)

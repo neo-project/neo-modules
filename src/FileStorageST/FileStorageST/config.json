@@ -52,8 +52,8 @@
             "ShallowDepth": 4,
             "DirectoryNameLength": 2
           },
-          "Blobovnicza": {
-            "Size": 1073741824,
+          "Blobovniczas": {
+            "BlobSize": 1073741824,
             "ShallowDepth": 1,
             "ShallowWidth": 2,
             "OpenCacheSize": 8

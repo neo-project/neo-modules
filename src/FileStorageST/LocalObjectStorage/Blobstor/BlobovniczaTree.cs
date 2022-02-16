@@ -225,9 +225,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
                     bi.Index++;
                 }
                 else
-                {
-                    bi = new();
-                }
+                    bi = new() { Index = 0 };
                 bi.Blobovnicza = OpenBlobovnicza(Path.Join(path, BitConverter.GetBytes(bi.Index).ToHexString()));
                 if (active.TryGetValue(path, out BlobovniczaWithIndex b) && bi.Blobovnicza.Equals(b.Blobovnicza)) return b;
                 active[path] = bi;
