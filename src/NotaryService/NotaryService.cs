@@ -66,7 +66,7 @@ namespace Neo.Plugins
 
         private void OnNotaryPayload(NotaryRequest payload)
         {
-            if (payloadCache.Count < 100)
+            if (payloadCache.Count < Settings.Default.Capacity)
             {
                 payloadCache.Add(payload);
                 OnNewRequest(payload);
@@ -76,6 +76,7 @@ namespace Neo.Plugins
                 var oldPayload = payloadCache[0];
                 payloadCache.RemoveAt(0);
                 OnRequestRemoval(oldPayload);
+                payloadCache.Add(payload);
                 OnNewRequest(payload);
             }
         }
@@ -162,7 +163,7 @@ namespace Neo.Plugins
                             r.WitnessInfo[i].Sigs = new Dictionary<ECPoint, byte[]>();
                         foreach (var pub in r.WitnessInfo[i].Pubs)
                         {
-                            if (r.WitnessInfo[i].Sigs.TryGetValue(pub, out _))
+                            if (r.WitnessInfo[i].Sigs.ContainsKey(pub))
                                 continue;
                             if (Crypto.VerifySignature(mainHash, payload.MainTransaction.Witnesses[i].InvocationScript.Skip(2).ToArray(), pub))
                             {
@@ -239,7 +240,7 @@ namespace Neo.Plugins
                 }
                 if (!tx.Signers[i].Account.Equals(tx.Witnesses[i].VerificationScript.ToScriptHash()))
                 {
-                    validationErr = string.Format("transaction should have valid verification script for signer {0}", i);
+                    validationErr = $"transaction should have valid verification script for signer {i}";
                     witnessInfos = null;
                     return;
                 }
@@ -258,12 +259,8 @@ namespace Neo.Plugins
                     {
                         Typ = RequestType.MultiSignature,
                         NSigsLeft = (byte)nSigs,
-                        Pubs = new ECPoint[pubs.Length],
+                        Pubs = pubs,
                     };
-                    for (int j = 0; j < pubs.Length; j++)
-                    {
-                        witnessInfos[i].Pubs[j] = pubs[j];
-                    }
                     nKeysActual += pubs.Length;
                     continue;
                 }
