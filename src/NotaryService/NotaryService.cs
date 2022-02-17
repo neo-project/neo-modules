@@ -129,7 +129,7 @@ namespace Neo.Plugins
                 {
                     MainTx = payload.MainTransaction,
                     MinNotValidBefore = nvbFallback,
-                    FallbackTxs = new Transaction[0],
+                    FallbackTxs = Array.Empty<Transaction>(),
                 };
                 pendingQueue[payload.MainTransaction.Hash] = r;
             }
