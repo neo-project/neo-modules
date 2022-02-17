@@ -170,7 +170,7 @@ namespace Neo.Plugins
                                 r.WitnessInfo[i].NSigsLeft--;
                                 if (r.WitnessInfo[i].NSigsLeft == 0)
                                 {
-                                    byte[] invScript = new byte[0];
+                                    byte[] invScript = Array.Empty<byte>();
                                     for (int j = 0; j < r.WitnessInfo[i].Pubs.Length; j++)
                                     {
                                         if (r.WitnessInfo[i].Sigs.TryGetValue(r.WitnessInfo[i].Pubs[j], out var sig))
