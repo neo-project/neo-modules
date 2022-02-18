@@ -57,8 +57,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blob
 
         public byte[] Get(Address address)
         {
-            if (address is null)
-                throw new ArgumentNullException(nameof(address));
+            if (address is null) throw new ArgumentNullException(nameof(address));
             var raw = dB.Get(Addresskey(address));
             if (raw is null) throw new ObjectNotFoundException();
             return raw;
@@ -66,11 +65,10 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blob
 
         public void Put(Address address, byte[] data)
         {
-            if (address is null || data is null)
-                throw new ArgumentNullException();
-            if (FullSizeLimit < (ulong)filled) throw new BlobFullException();
-            if (ObjSizeLimit < (ulong)data.Length)
-                throw new SizeExceedLimitException();
+            if (address is null) throw new ArgumentNullException(nameof(address));
+            if (data is null || data.Length == 0) throw new ArgumentException("invalid " + nameof(data));
+            if (ObjSizeLimit < (ulong)data.Length) throw new SizeExceedLimitException();
+            if (FullSizeLimit < (ulong)(filled + data.Length)) throw new BlobFullException();
             var key = Addresskey(address);
             dB.Put(key, data);
             IncSize(data.Length);
@@ -78,8 +76,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blob
 
         public void Delete(Address address)
         {
-            if (address is null)
-                throw new ArgumentNullException(nameof(address));
+            if (address is null) throw new ArgumentNullException(nameof(address));
             var raw = dB.Get(Addresskey(address));
             if (raw is null) throw new ObjectNotFoundException();
             dB.Delete(Addresskey(address));
