@@ -16,7 +16,7 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Blobstor
                 Path = nameof(TestNeedsToCompress),
                 Compress = compress,
                 CompressExcludeContentTypes = excludeTypes,
-                BlobovniczaSettings = BlobovniczaSettings.Default,
+                BlobovniczasSettings = BlobovniczasSettings.Default,
                 FSTreeSettings = FSTreeSettings.Default,
             });
             Assert.AreEqual(expect, stor.NeedsToCompress(obj));

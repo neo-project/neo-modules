@@ -20,8 +20,8 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Engine
             settings.UseWriteCache = false;
             settings.BlobStorageSettings.Path = root + $"/Data_BlobStorage_{num}";
             settings.BlobStorageSettings.FSTreeSettings.ShallowDepth = 2;
-            settings.BlobStorageSettings.BlobovniczaSettings.ShallowDepth = 2;
-            settings.BlobStorageSettings.BlobovniczaSettings.ShallowWidth = 2;
+            settings.BlobStorageSettings.BlobovniczasSettings.ShallowDepth = 2;
+            settings.BlobStorageSettings.BlobovniczasSettings.ShallowWidth = 2;
             settings.MetabaseSettings.Path = root + $"/Data_Metabase_{num}";
             return new(settings, null, null);
         }

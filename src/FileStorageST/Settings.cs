@@ -199,15 +199,15 @@ namespace Neo.FileStorage.Storage
         }
     }
 
-    public class BlobovniczaSettings
+    public class BlobovniczasSettings
     {
         public ulong BlobSize;
-        public int ShallowDepth;
-        public int ShallowWidth;
-        public int OpenCacheSize;
-        public static BlobovniczaSettings Default { get; private set; }
+        public byte ShallowDepth;
+        public byte ShallowWidth;
+        public byte OpenCacheSize;
+        public static BlobovniczasSettings Default { get; private set; }
 
-        static BlobovniczaSettings()
+        static BlobovniczasSettings()
         {
             Default = new()
             {
@@ -218,7 +218,7 @@ namespace Neo.FileStorage.Storage
             };
         }
 
-        public static BlobovniczaSettings Load(IConfigurationSection section)
+        public static BlobovniczasSettings Load(IConfigurationSection section)
         {
             return new()
             {
@@ -263,7 +263,7 @@ namespace Neo.FileStorage.Storage
         public string[] CompressExcludeContentTypes;
         public ulong SmallSizeLimit;
         public FSTreeSettings FSTreeSettings;
-        public BlobovniczaSettings BlobovniczaSettings;
+        public BlobovniczasSettings BlobovniczasSettings;
         public static BlobStorageSettings Default { get; private set; }
 
         static BlobStorageSettings()
@@ -275,7 +275,7 @@ namespace Neo.FileStorage.Storage
                 CompressExcludeContentTypes = new string[] { "video/*", "audio/*" },
                 SmallSizeLimit = BlobStorage.DefaultSmallSizeLimit,
                 FSTreeSettings = FSTreeSettings.Default,
-                BlobovniczaSettings = BlobovniczaSettings.Default
+                BlobovniczasSettings = BlobovniczasSettings.Default
             };
         }
 
@@ -289,7 +289,7 @@ namespace Neo.FileStorage.Storage
                 CompressExcludeContentTypes = compress_section?.GetSection("ExcludeContentTypes").GetChildren().Select(p => p.Value).ToArray() ?? Array.Empty<string>(),
                 SmallSizeLimit = section.GetValue("SmallSizeLimit", BlobStorage.DefaultSmallSizeLimit),
                 FSTreeSettings = FSTreeSettings.Load(section.GetSection("FSTree")),
-                BlobovniczaSettings = BlobovniczaSettings.Load(section.GetSection("Blobovniczas"))
+                BlobovniczasSettings = BlobovniczasSettings.Load(section.GetSection("Blobovniczas"))
             };
             if (settings.Path == "") throw new FormatException("invalid blobstorage path");
             return settings;

@@ -4,7 +4,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
 {
     internal class BlobovniczaWithIndex
     {
-        public ulong Index;
+        public byte Index;
         public Blobovnicza Blobovnicza;
     }
 }

@@ -15,28 +15,31 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
 {
     public class BlobovniczaTree : IDisposable
     {
-        public const int DefaultOpenedCacheSize = 16;
-        public const int DefaultBlzShallowDepth = 4;
-        public const int DefaultBlzShallowWidth = 4;
+        public const byte MaxBlzShallowDepth = 4;
+        public const byte MaxBlzShallowWidth = 5;
+        public const byte DefaultOpenedCacheSize = 8;
+        public const byte DefaultBlzShallowDepth = 2;
+        public const byte DefaultBlzShallowWidth = 2;
 
-        public ulong BlzShallowDepth { get; init; }
-        public ulong BlzShallowWidth { get; init; }
-        public ulong SmallSizeLimit { get; init; }
-        public ulong FullSizeLimit { get; init; }
-        public string BlzRootPath { get; init; }
-        private readonly int cacheSize;
+        private readonly byte shallowDepth;
+        private readonly byte shallowWidth;
+        private readonly ulong smallSizeLimit;
+        private readonly ulong fullSizeLimit;
+        private readonly string rootPath;
+        private readonly byte cacheSize;
         private readonly object openedLock = new();
         private readonly object activeLock = new();
         private readonly LRUCache<string, Blobovnicza> opened;
         private readonly ConcurrentDictionary<string, BlobovniczaWithIndex> active = new();
 
-        public BlobovniczaTree(int cap = 0)
+        public BlobovniczaTree(string path, BlobovniczasSettings settings, ulong smallSize)
         {
-            BlzShallowDepth = DefaultBlzShallowDepth;
-            BlzShallowWidth = DefaultBlzShallowWidth;
-            SmallSizeLimit = Blobovnicza.DefaultObjSizeLimit;
-            FullSizeLimit = Blobovnicza.DefaultFullSizeLimit;
-            cacheSize = cap == 0 ? DefaultOpenedCacheSize : cap;
+            rootPath = path;
+            shallowDepth = settings.ShallowDepth <= 0 || settings.ShallowDepth > MaxBlzShallowDepth ? DefaultBlzShallowDepth : settings.ShallowDepth;
+            shallowWidth = settings.ShallowWidth <= 0 || settings.ShallowWidth > MaxBlzShallowWidth ? DefaultBlzShallowWidth : settings.ShallowWidth;
+            smallSizeLimit = smallSize;
+            fullSizeLimit = settings.BlobSize;
+            cacheSize = settings.OpenCacheSize == 0 ? DefaultOpenedCacheSize : settings.OpenCacheSize;
             opened = new(cacheSize, OnEvicted);
         }
 
@@ -82,8 +85,8 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
                     UpdateActive(p, bi.Index);
                     return DoPut(p);
                 }
-                id = Path.Join(p, BitConverter.GetBytes(bi.Index).ToHexString());
-                Log(nameof(BlobovniczaTree), LogLevel.Debug, "object successfully saved in active blobovnicza, path:" + p + " addr:" + address.String());
+                id = bi.Blobovnicza.Path;
+                Log(nameof(BlobovniczaTree), LogLevel.Debug, "object successfully saved in active blobovnicza, path:" + bi.Blobovnicza.Path + " addr:" + address.String());
                 return true;
             };
             IterateDeepest(address, DoPut);
@@ -140,7 +143,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
         {
             if (id is not null)
             {
-                Blobovnicza b = OpenBlobovnicza(id.ToString());
+                Blobovnicza b = OpenBlobovnicza(id);
                 b.Delete(address);
                 return;
             }
@@ -191,7 +194,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
             {
                 if (func(bi.Blobovnicza)) return true;
             }
-            ulong index = BitConverter.ToUInt64(Path.GetFileName(path).HexToBytes());
+            int index = byte.Parse(Path.GetFileName(path), System.Globalization.NumberStyles.HexNumber);
             if (bi.Index < index) throw new ObjectNotFoundException();
             Blobovnicza b = OpenBlobovnicza(path);
             if (func(b)) return true;
@@ -203,14 +206,14 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
             return UpdateAndGet(path, null);
         }
 
-        private void UpdateActive(string path, ulong old)
+        private void UpdateActive(string path, byte old)
         {
             Log(nameof(BlobovniczaTree), LogLevel.Debug, "updating active blobovnicza...");
             UpdateAndGet(path, old);
             Log(nameof(BlobovniczaTree), LogLevel.Debug, "active blobovnicza successfully updated");
         }
 
-        private BlobovniczaWithIndex UpdateAndGet(string path, ulong? old)
+        private BlobovniczaWithIndex UpdateAndGet(string path, byte? old)
         {
             lock (activeLock)
             {
@@ -218,7 +221,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
                 if (exist)
                 {
                     if (old is null) return bi;
-                    if (bi.Index == BlzShallowWidth - 1)
+                    if (bi.Index == shallowWidth - 1)
                         throw new InvalidOperationException("no more blobovniczas");
                     if (bi.Index != old)
                         return bi;
@@ -226,7 +229,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
                 }
                 else
                     bi = new() { Index = 0 };
-                bi.Blobovnicza = OpenBlobovnicza(Path.Join(path, BitConverter.GetBytes(bi.Index).ToHexString()));
+                bi.Blobovnicza = OpenBlobovnicza(Path.Join(path, bi.Index.ToString("x2")));
                 if (active.TryGetValue(path, out BlobovniczaWithIndex b) && bi.Blobovnicza.Equals(b.Blobovnicza)) return b;
                 active[path] = bi;
                 opened.Remove(path);
@@ -236,28 +239,30 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
 
         private bool IterateLeaves(Address address, Func<string, bool> func)
         {
-            return IterateSorted(address, new List<string>(), BlzShallowDepth, paths => func(Path.Join(paths.ToArray())));
+            return IterateSorted(address, new List<string>() { rootPath }, shallowDepth, paths => func(Path.Join(paths.ToArray())));
         }
 
         private void IterateDeepest(Address address, Func<string, bool> func)
         {
-            ulong depth = BlzShallowDepth;
-            if (0 < depth) depth--;
-            IterateSorted(address, new List<string>(), depth, paths => func(Path.Join(paths.ToArray())));
+            var depth = shallowDepth - 1;
+            if (depth == 0)
+                func(rootPath);
+            else
+                IterateSorted(address, new List<string>() { rootPath }, depth, paths => func(Path.Join(paths.ToArray())));
         }
 
-        public bool IterateSorted(Address address, List<string> current_path, ulong depth, Func<List<string>, bool> func)
+        public bool IterateSorted(Address address, List<string> current_path, int depth, Func<List<string>, bool> func)
         {
-            List<ulong> indices = IndexSlice(BlzShallowWidth);
+            byte[] indices = IndexSlice(shallowWidth);
             ulong hash = AddressHash(address, Path.Join(current_path.ToArray()));
-            List<ulong> sorted = indices.OrderBy(p => p.Distance(hash)).ToList();
-            bool exec = (ulong)current_path.Count == depth;
-            for (int i = 0; i < sorted.Count; i++)
+            var sorted = indices.OrderBy(p => ((ulong)p).Distance(hash)).ToArray();
+            bool exec = current_path.Count == depth;
+            for (int i = 0; i < sorted.Length; i++)
             {
                 if (i == 0)
-                    current_path.Add(BitConverter.GetBytes(sorted[i]).ToHexString());
+                    current_path.Add(sorted[i].ToString("x2"));
                 else
-                    current_path[^1] = BitConverter.GetBytes(sorted[i]).ToHexString();
+                    current_path[^1] = sorted[i].ToString("x2");
                 if (exec)
                 {
                     if (func(current_path)) return true;
@@ -270,11 +275,11 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
             return false;
         }
 
-        private List<ulong> IndexSlice(ulong number)
+        private byte[] IndexSlice(byte number)
         {
-            List<ulong> s = new();
-            for (ulong i = 0; i < number; i++)
-                s.Add(i);
+            byte[] s = new byte[number];
+            for (byte i = 0; i < number; i++)
+                s[i] = i;
             return s;
         }
 
@@ -290,10 +295,10 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
             {
                 if (opened.TryGet(path, out Blobovnicza b))
                     return b;
-                b = new Blobovnicza(Path.Join(BlzRootPath, path))
+                b = new Blobovnicza(path)
                 {
-                    FullSizeLimit = FullSizeLimit,
-                    ObjSizeLimit = SmallSizeLimit,
+                    FullSizeLimit = fullSizeLimit,
+                    ObjSizeLimit = smallSizeLimit,
                 };
                 b.Open();
                 opened.Add(path, b);

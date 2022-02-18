@@ -19,15 +19,13 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Blobstor
         [TestMethod]
         public void TestBlobovnicas()
         {
-            string path = "./test_blzs";
+            string path = "./UT_Blob.TestBlob";
             int size_limit = 2 << 10;
-            BlobovniczaTree tree = new()
+            using BlobovniczaTree tree = new(path, new()
             {
-                BlzRootPath = path,
-                BlzShallowWidth = 2,
-                BlzShallowDepth = 2,
-                SmallSizeLimit = (ulong)size_limit,
-            };
+                ShallowDepth = 2,
+                ShallowWidth = 2,
+            }, (ulong)size_limit);
             tree.Open();
             try
             {
@@ -59,6 +57,87 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Blobstor
             finally
             {
                 Directory.Delete(path, true);
+            }
+        }
+
+        private void TestCase(byte depth, byte width)
+        {
+            string path = "./UT_TestBlob.TestDir";
+            using BlobovniczaTree tree = new(path, new()
+            {
+                ShallowDepth = depth,
+                ShallowWidth = width,
+            }, 2 << 10);
+            tree.Open();
+            try
+            {
+                var paths = CollectDir(path);
+                PrintPaths(paths);
+                Assert.AreEqual(Math.Pow(width, depth), CountOfLevel(paths, depth, 0));
+                Assert.AreEqual(0, CountOfLevel(paths, depth, 1));
+                var obj = RandomObject(10);
+                tree.Put(obj.Address, obj.ToByteArray());
+                paths = CollectDir(path);
+                PrintPaths(paths);
+                Assert.AreEqual(Math.Pow(width, depth), CountOfLevel(paths, depth, 0));
+                Assert.AreEqual(0, CountOfLevel(paths, depth, 1));
+
+            }
+            finally
+            {
+                tree.Dispose();
+                Directory.Delete(path, true);
+            }
+        }
+
+        public List<string> CollectDir(string path)
+        {
+            List<string> paths = new() { path };
+            for (int i = 0; i < paths.Count; i++)
+            {
+                foreach (var sub in Directory.GetDirectories(paths[i]))
+                {
+                    paths.Add(sub);
+                }
+            }
+            return paths.Skip(1).Select(p => p[(path.Length + 1)..]).ToList();
+        }
+
+        public int CountOfLevel(List<string> paths, int level, int op = 0)
+        {
+            int count = 0;
+            foreach (var p in paths)
+            {
+                switch (op)
+                {
+                    case 0:
+                        if (p.Split("/").Length == level) count++;
+                        break;
+                    case 1:
+                        if (p.Split("/").Length > level) count++;
+                        break;
+                    case 2:
+                        if (p.Split("/").Length < level) count++;
+                        break;
+                }
+
+            }
+            return count;
+        }
+
+        public void PrintPaths(List<string> paths)
+        {
+            foreach (var p in paths)
+                Console.WriteLine(p);
+        }
+
+        [TestMethod]
+        public void TestDirectory()
+        {
+            for (byte i = 1; i < 3; i++)
+            {
+                for (byte j = 1; j < 3; j++)
+                    TestCase(i, j);
             }
         }
     }

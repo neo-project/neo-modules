@@ -25,14 +25,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
             compressor = settings.Compress ? new ZstdCompressor() : new NoneCompressor();
             CompressExcludeContentTypes = settings.CompressExcludeContentTypes;
             fsTree = new(System.IO.Path.Join(settings.Path, FSTree.DefaultPath), settings.FSTreeSettings.ShallowDepth, settings.FSTreeSettings.DirectoryNameLength);
-            blobovniczas = new()
-            {
-                BlzRootPath = System.IO.Path.Join(settings.Path, BlobovniczasDir),
-                BlzShallowDepth = (ulong)settings.BlobovniczaSettings.ShallowDepth,
-                BlzShallowWidth = (ulong)settings.BlobovniczaSettings.ShallowWidth,
-                SmallSizeLimit = smallSizeLimit,
-                FullSizeLimit = settings.BlobovniczaSettings.BlobSize
-            };
+            blobovniczas = new(System.IO.Path.Join(settings.Path, BlobovniczasDir), settings.BlobovniczasSettings, smallSizeLimit);
         }
 
         public void Open()

@@ -32,9 +32,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
             metabase = new(settings.MetabaseSettings.Path);
             workPool = wp;
             if (useWriteCache)
-            {
                 writeCache = new WriteCache(settings.WriteCacheSettings, blobStorage, metabase);
-            }
             expiredTomestonesCallback = expiredCallback;
             removeInteral = settings.RemoverInterval <= 0 ? DefaultRemoveInterval : settings.RemoverInterval;
             removeBatchSize = settings.RemoveBatchSize <= 0 ? DefaultRemoveBatchSize : settings.RemoveBatchSize;
@@ -69,9 +67,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
             foreach (var address in addresses)
             {
                 if (useWriteCache)
-                {
                     writeCache.Delete(address);
-                }
                 if (metabase.IsSmall(address, out var blobovniczaID))
                     smalls[address] = blobovniczaID;
             }
@@ -101,12 +97,6 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
             }
         }
 
-
-        /// <summary>
-        ///  Exists checks if object is presented in shard.
-        /// </summary>
-        /// <param name="address"></param>
-        /// <returns></returns>
         public bool Exists(FSAddress address)
         {
             return metabase.Exists(address);
@@ -120,25 +110,17 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
                 {
                     var result = writeCache.Get(address);
                     if (result != null)
-                    {
                         return result;
-                    }
                 }
                 catch (ObjectNotFoundException) { }
             }
             var isExist = metabase.Exists(address);
             if (!isExist)
-            {
                 throw new ObjectNotFoundException();
-            }
             if (metabase.IsSmall(address, out var blobovniczaID))
-            {
                 return blobStorage.GetSmall(address, blobovniczaID);
-            }
             else
-            {
                 return blobStorage.GetBig(address);
-            }
         }
 
         public FSObject Head(FSAddress address, bool raw)
@@ -158,10 +140,8 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
         public void Inhume(FSAddress tombstone, params FSAddress[] target)
         {
             if (useWriteCache)
-            {
                 foreach (var address in target)
                     writeCache.Delete(address);
-            }
             metabase.Inhume(tombstone, target);
         }
 
@@ -211,7 +191,6 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
         public FSObject GetRange(FSAddress address, API.Object.Range range)
         {
             var obj = new FSObject();
-
             if (useWriteCache)
             {
                 try
@@ -223,11 +202,9 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
                 }
                 catch (ObjectNotFoundException) { }
             }
-
             var isExist = metabase.Exists(address);
             if (!isExist)
                 throw new ObjectNotFoundException();
-
             if (metabase.IsSmall(address, out var blobovniczaID))
             {
                 var small = blobStorage.GetRangeSmall(address, range, blobovniczaID);

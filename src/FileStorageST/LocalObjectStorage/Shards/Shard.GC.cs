@@ -110,9 +110,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
             metabase.IterateGraveYard(g =>
             {
                 if (g.GCMark)
-                {
                     buf.Add(g.Address);
-                }
                 return removeBatchSize <= buf.Count;
             });
             if (buf.Count == 0) return;
