@@ -53,7 +53,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
                 catch (SplitInfoException e)
                 {
                     if (spi is null) spi = new();
-                    spi.MergeFrom(e.SplitInfo);
+                    spi.MergeSplitInfo(e.SplitInfo);
                     if (spi.Link is not null && spi.LastPart is not null)
                         throw new SplitInfoException(spi);
                     continue;
@@ -97,35 +97,28 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
             string error = "";
             foreach (var shard in SortedShards(obj.Address))
             {
-                int exist = 0;
                 try
                 {
-                    if (shard.Exists(obj.Address)) exist = 1;
-                }
-                catch { exist = 2; }
-                switch (exist)
-                {
-                    case 0:
-                        if (put) continue;
-                        try
-                        {
-                            shard.Put(obj);
-                            if (!isExist) return;
-                            put = true;
-                        }
-                        catch (Exception e)
-                        {
-                            error = e.Message;
-                            Utility.Log(nameof(StorageEngine), LogLevel.Debug, $"could not put in shard, try another, error={error}");
-                        }
-                        break;
-                    case 1:
+                    if (shard.Exists(obj.Address))
+                    {
                         if (!put) return;
                         shard.ToMoveIt(obj.Address);
                         return;
-                    case 2:
-                        continue;
+                    };
+                    if (put) continue;
+                    try
+                    {
+                        shard.Put(obj);
+                        if (!isExist) return;
+                        put = true;
+                    }
+                    catch (Exception e)
+                    {
+                        error = e.Message;
+                        Utility.Log(nameof(StorageEngine), LogLevel.Debug, $"could not put in shard, try another, error={error}");
+                    }
                 }
+                catch { continue; }
             }
             if (!put) throw new InvalidOperationException(error);
         }
@@ -136,10 +129,18 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
             {
                 foreach (var shard in SortedShards(address))
                 {
-                    if (shard.Exists(address))
+                    try
                     {
-                        shard.Inhume(null, address);
-                        return;
+                        if (shard.Exists(address))
+                        {
+                            shard.Inhume(null, address);
+                            return;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Utility.Log(nameof(StorageEngine), LogLevel.Debug, $"{nameof(Delete)} could not check object existence, error={e.Message}");
+                        continue;
                     }
                 }
             }
@@ -149,13 +150,8 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
         {
             var result = new HashSet<Address>();
             foreach (var shard in UnsortedShards())
-            {
-                var addresses = shard.Select(cid, filters);
-                if (addresses?.Count > 0)
-                {
-                    addresses.ForEach(a => result.Add(a));
-                }
-            }
+                foreach (var address in shard.Select(cid, filters))
+                    result.Add(address);
             return result.ToList();
         }
 
@@ -165,9 +161,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
             var random = new Random();
             foreach (var shard in UnsortedShards().OrderBy(_ => random.Next()))
             {
-                var addresses = shard.List().OrderBy(_ => random.Next()).ToList();
-                if (addresses is null) { continue; }
-                foreach (var address in addresses)
+                foreach (var address in shard.List().OrderBy(_ => random.Next()))
                 {
                     if (result.Add(address))
                     {
@@ -192,20 +186,10 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
 
         public List<ContainerID> ListContainers()
         {
-            var uniqueIDs = new Dictionary<string, ContainerID>();
+            var ids = new List<ContainerID>();
             foreach (var shard in UnsortedShards())
-            {
-                var containerIds = shard.ListContainers();
-                if (0 < containerIds.Count)
-                {
-                    foreach (var containerId in containerIds)
-                    {
-                        uniqueIDs[containerId.String()] = containerId;
-                    }
-                }
-            }
-
-            return uniqueIDs.Values.ToList();
+                ids = ids.Union(shard.ListContainers()).ToList();
+            return ids;
         }
 
         public bool Exist(Address address)
@@ -243,7 +227,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
                 catch (SplitInfoException e)
                 {
                     if (spi is null) spi = new();
-                    spi.MergeFrom(e.SplitInfo);
+                    spi.MergeSplitInfo(e.SplitInfo);
                     if (spi.Link is not null && spi.LastPart is not null)
                         throw new SplitInfoException(spi);
                     continue;
@@ -333,11 +317,6 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
             }
         }
 
-        /// <summary>
-        /// sort by value-distance * weights
-        /// </summary>
-        /// <param name="address"></param>
-        /// <returns></returns>
         private List<Shard> SortedShards(Address address)
         {
             try

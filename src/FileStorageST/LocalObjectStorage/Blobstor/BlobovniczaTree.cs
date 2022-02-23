@@ -45,7 +45,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
 
         private void OnEvicted(string key, Blobovnicza value)
         {
-            if (active.ContainsKey(Path.GetFullPath(key)))
+            if (active.ContainsKey(key))
                 return;
             value.Dispose();
         }
@@ -117,7 +117,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
                         }
                         catch (Exception e) when (e is not ObjectNotFoundException)
                         {
-                            Log(nameof(BlobovniczaTree), LogLevel.Debug, "could not read object from active blobovnicza");
+                            Log(nameof(BlobovniczaTree), LogLevel.Debug, $"could not read object from active blobovnicza, error={e.Message}");
                             return false;
                         }
                         return true;
@@ -187,13 +187,11 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
         {
             var level_path = Path.GetDirectoryName(path);
             if (opened.TryGet(path, out Blobovnicza blz))
-            {
-                if (func(blz)) return true;
-            }
+                if (func(blz))
+                    return true;
             if (active.TryGetValue(level_path, out BlobovniczaWithIndex bi) && try_active)
-            {
-                if (func(bi.Blobovnicza)) return true;
-            }
+                if (func(bi.Blobovnicza))
+                    return true;
             int index = byte.Parse(Path.GetFileName(path), System.Globalization.NumberStyles.HexNumber);
             if (bi.Index < index) throw new ObjectNotFoundException();
             Blobovnicza b = OpenBlobovnicza(path);
@@ -220,7 +218,8 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
                 bool exist = active.TryGetValue(path, out BlobovniczaWithIndex bi);
                 if (exist)
                 {
-                    if (old is null) return bi;
+                    if (old is null)
+                        return bi;
                     if (bi.Index == shallowWidth - 1)
                         throw new InvalidOperationException("no more blobovniczas");
                     if (bi.Index != old)

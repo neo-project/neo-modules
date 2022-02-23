@@ -1,8 +1,6 @@
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using static Neo.FileStorage.Storage.LocalObjectStorage.Metabase.Helper;
 using FSObject = Neo.FileStorage.API.Object.Object;
 
@@ -22,16 +20,10 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         {
             Dictionary<string, ReferenceNumber> ref_counter = new();
             foreach (Address addr in addresses)
-            {
                 Delete(addr, ref_counter);
-            }
             foreach (ReferenceNumber rn in ref_counter.Values)
-            {
                 if (rn.Current == rn.All)
-                {
                     DeleteObject(rn.Object, true);
-                }
-            }
         }
 
         private void Delete(Address address, Dictionary<string, ReferenceNumber> ref_counter)
@@ -105,9 +97,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
                 }
             }
             else
-            {
                 keys.Add(ParentKey(obj.ContainerId, obj.ObjectId));
-            }
             keys.Add(SmallKey(obj.Address));
             keys.Add(RootKey(obj.Address));
             keys.Add(GraveYardKey(obj.Address));
@@ -131,9 +121,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
             List<byte[]> keys = new();
             keys.Add(OwnerKey(obj.Address, obj.OwnerId));
             foreach (var attr in obj.Attributes)
-            {
                 keys.Add(AttributeKey(obj.Address, attr));
-            }
             return keys;
         }
 

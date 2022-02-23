@@ -38,9 +38,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
                 Put(obj.Parent, bid, psi);
             }
             foreach (var item in UniqueIndexes(obj, si, bid))
-            {
                 db.Put(item.Item1, item.Item2);
-            }
             foreach (var item in ListIndexes(obj))
             {
                 List<ObjectID> list;
@@ -53,13 +51,9 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
                 db.Put(item.Item1, EncodeObjectIDList(list));
             }
             foreach (var key in FakeBucketTreeIndexes(obj))
-            {
                 db.Put(key, ZeroValue);
-            }
             if (obj.ObjectType == ObjectType.Regular && !is_parent)
-            {
                 ChangeContainerSize(obj.ContainerId, obj.PayloadSize, true);
-            }
         }
 
         private void UpdateBlobovniczaID(Address address, BlobovniczaID bid)

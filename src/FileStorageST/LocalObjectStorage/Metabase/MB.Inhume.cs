@@ -26,16 +26,16 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
             foreach (Address address in target)
             {
                 FSObject obj = null;
-                bool error = false;
+                Exception error = null;
                 try
                 {
                     obj = Get(address, false, true);
                 }
-                catch
+                catch (Exception e)
                 {
-                    error = true;
+                    error = e;
                 }
-                if (!error && obj.ObjectType == ObjectType.Regular && tomb is not null)
+                if (error is null && obj.ObjectType == ObjectType.Regular && tomb is not null)
                 {
                     ChangeContainerSize(obj.ContainerId, obj.PayloadSize, false);
                 }

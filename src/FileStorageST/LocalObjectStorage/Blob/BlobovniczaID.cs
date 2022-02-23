@@ -20,6 +20,19 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blob
             return Utility.StrictUTF8.GetString(value);
         }
 
+        public override int GetHashCode()
+        {
+            return value.GetHashCode();
+        }
+
+        public override bool Equals(object other)
+        {
+            if (ReferenceEquals(this, other)) return true;
+            if (other is BlobovniczaID bid)
+                return Equals(bid);
+            return false;
+        }
+
         public bool Equals(BlobovniczaID other)
         {
             if (other is null) return false;

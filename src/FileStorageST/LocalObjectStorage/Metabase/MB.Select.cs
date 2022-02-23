@@ -4,7 +4,6 @@ using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using static Neo.FileStorage.API.Object.ObjectTypeExtension;
 using static Neo.FileStorage.API.Object.SearchRequest.Types.Body.Types;
 using static Neo.FileStorage.Storage.LocalObjectStorage.Metabase.Helper;
@@ -74,13 +73,9 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         private void MarkAddressInCache(Dictionary<Address, int> to, int fnum, Address key)
         {
             if (to.TryGetValue(key, out int value) && value == fnum)
-            {
                 to[key] = value + 1;
-            }
             else if (fnum == 0)
-            {
                 to[key] = 1;
-            }
         }
 
         private void SelectFast(ContainerID cid, Filter filter, Dictionary<Address, int> to, int fnum)
@@ -196,9 +191,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
                     break;
                 default:
                     if (matchers.TryGetValue(filter.MatchType, out Func<string, byte[], string, bool> matcher))
-                    {
                         foreach (var p in KeyPrefixForType(cid, MatchType.StringNotEqual, ""))
-                        {
                             db.Iterate(p, (key, value) =>
                             {
                                 ObjectID oid = new()
@@ -206,13 +199,9 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
                                     Value = ByteString.CopyFrom(key[^ObjectID.ValueSize..])
                                 };
                                 if (matcher(filter.Key, StrictUTF8.GetBytes(oid.String()), filter.Value))
-                                {
                                     AppendObjectID(oid);
-                                }
                                 return false;
                             });
-                        }
-                    }
                     break;
             }
         }
@@ -229,16 +218,12 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
                     break;
                 default:
                     if (matchers.TryGetValue(filter.MatchType, out Func<string, byte[], string, bool> matcher))
-                    {
                         db.Iterate(keyPrefix, (key, value) =>
                         {
                             if (matcher(filter.Key, key[keyPrefix.Length..], filter.Value))
-                            {
                                 list.AddRange(DecodeObjectIDList(value));
-                            }
                             return false;
                         });
-                    }
                     break;
             }
             foreach (var oid in list)
@@ -286,12 +271,8 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
             {
                 case MatchType.StringNotEqual:
                     foreach (var ot in Enum.GetValues<ObjectType>())
-                    {
                         if (ot.String() != value)
-                        {
                             TypePrefix(ot);
-                        }
-                    }
                     break;
                 case MatchType.StringEqual:
                     TypePrefix(value.ToObjectType());
@@ -314,10 +295,8 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         private bool BlindyProcess(SearchFilters filters)
         {
             foreach (var f in filters.Filters)
-            {
                 if (f.MatchType == MatchType.NotPresent && f.Key.StartsWith(Filter.ReservedFilterPrefix))
                     return true;
-            }
             return false;
         }
 

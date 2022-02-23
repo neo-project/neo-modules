@@ -43,7 +43,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blob
 
         private void LoadUsedSpace()
         {
-            dB.Iterate(Array.Empty<byte>(), (_, value) =>
+            dB.Iterate(Array.Empty<byte>(), (key, value) =>
             {
                 IncSize(value.Length);
                 return false;

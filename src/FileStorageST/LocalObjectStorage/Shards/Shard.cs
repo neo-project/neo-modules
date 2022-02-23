@@ -133,7 +133,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
                 }
                 catch (ObjectNotFoundException) { }
             }
-            return metabase.Get(address, raw)?.CutPayload();
+            return metabase.Get(address, raw);
         }
 
 
@@ -152,11 +152,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
             var filters = new SearchFilters();
             filters.AddPhyFilter();
             foreach (var containerId in containerIds)
-            {
-                var addresses = metabase.Select(containerId, filters);
-                if (addresses?.Count > 0)
-                    result.AddRange(addresses);
-            }
+                result.AddRange(metabase.Select(containerId, filters));
             return result;
         }
 
@@ -228,7 +224,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
 
         public ulong WeightValue()
         {
-            return (ulong)new Random().Next();
+            return (ulong)1;//TODO: available used space
         }
     }
 }
