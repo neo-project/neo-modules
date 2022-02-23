@@ -16,7 +16,6 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl.EAcl
             if (unit.Bearer is not null)
                 table = unit.Bearer.Body.EaclTable;
             else
-            {
                 try
                 {
                     table = EAclStorage.GetEACL(unit.ContainerId);
@@ -24,9 +23,8 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl.EAcl
                 catch (Exception e)
                 {
                     Utility.Log(nameof(EAclValidator), LogLevel.Warning, $"couldn't get eacl, using ALLOW, error={e.Message}");
-                    return AclAction.Allow;
+                    throw;
                 }
-            }
             return TableAction(unit, table);
         }
 
@@ -52,9 +50,8 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl.EAcl
                 if (target.Keys.Count > 0)
                 {
                     foreach (var key in target.Keys)
-                    {
-                        if (key.SequenceEqual(unit.Key)) return true;
-                    }
+                        if (key.SequenceEqual(unit.Key))
+                            return true;
                     continue;
                 }
                 if (unit.Role == target.Role) return true;

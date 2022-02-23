@@ -9,7 +9,6 @@ using Neo.FileStorage.Storage.Core.Container;
 using Neo.FileStorage.Storage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Storage.Services.Object.Acl.EAcl;
 using System;
-using System.Linq;
 using static Neo.FileStorage.API.Acl.BearerToken.Types.Body.Types;
 using static Neo.FileStorage.API.Session.ObjectSessionContext.Types;
 using static Neo.FileStorage.API.Session.SessionToken.Types.Body;
@@ -115,7 +114,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
 
         private RequestInfo FindRequestInfo(IRequest request, ContainerID cid, Operation op)
         {
-            var container = ContainerSource.GetContainer(cid)?.Container;
+            var container = ContainerSource.GetContainer(cid).Container;
             var info = new RequestInfo
             {
                 OriginalSessionToken = op == Operation.Put ? request.MetaHeader.SessionToken : GetSessionTokenFromRequest(request, op),
@@ -127,7 +126,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
             };
             var classifiered = Classify(info, cid, container);
             if (classifiered.Item1 == Role.Unspecified)
-                throw new InvalidOperationException(nameof(FindRequestInfo) + " unkown role");
+                throw new InvalidOperationException(nameof(FindRequestInfo) + " unknown role");
             var verb = SourceVerbOfRequest(info, op);
             info.Role = classifiered.Item1;
             info.IsInnerRing = classifiered.Item3;
@@ -174,7 +173,8 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
         public bool EAclCheck(RequestInfo info, IResponse resp)
         {
             if (info.BasicAcl.Final()) return true;
-            if (!info.BasicAcl.BearsAllowed(info.Op)) return false;
+            if (!info.BasicAcl.BearsAllowed(info.Op))
+                info.Bearer = null;
             if (!IsValidBearer(info)) return false;
             var unit = new ValidateUnit
             {
@@ -219,8 +219,8 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
             var tokenIssueKey = info.Bearer.Signature.Key.ToByteArray();
             if (!info.Owner.Equals(OwnerID.FromScriptHash(tokenIssueKey.PublicKeyToScriptHash())))
                 return false;
-            var tokenOwnerField = info.Bearer.Body.OwnerId;
-            if (!tokenOwnerField.Equals(OwnerID.FromScriptHash(info.SenderKey.PublicKeyToScriptHash())))
+            var tokenOwnerField = info.Bearer.Body?.OwnerId;
+            if (tokenOwnerField is not null && !tokenOwnerField.Equals(OwnerID.FromScriptHash(info.SenderKey.PublicKeyToScriptHash())))
                 return false;
             return true;
         }

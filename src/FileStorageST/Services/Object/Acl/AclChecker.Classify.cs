@@ -87,11 +87,9 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
         private bool LookUpKeyInContainer(NetMap nm, byte[] key, ContainerID cid, FSContainer container)
         {
             var nodes = nm.GetContainerNodes(container.PlacementPolicy, cid.Value.ToByteArray());
-            if (nodes is null) throw new InvalidOperationException(nameof(LookUpKeyInContainer) + " cannt get container nodes");
+            if (nodes is null) throw new InvalidOperationException(nameof(LookUpKeyInContainer) + " could not get container nodes");
             var ns = nodes.Flatten();
-            foreach (var n in ns)
-                if (n.PublicKey.SequenceEqual(key)) return true;
-            return false;
+            return ns.Any(p => p.PublicKey.SequenceEqual(key));
         }
 
         private List<byte[]> InnerRingKeys()

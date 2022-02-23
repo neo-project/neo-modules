@@ -31,7 +31,7 @@ namespace Neo.FileStorage.Storage.Services.Netmap
             {
                 CurrentEpoch = EpochSource.CurrentEpoch,
                 MagicNumber = LocalInfoSource.Network,
-                MsPerBlock = LocalInfoSource.ProtocolSettings.Network,
+                MsPerBlock = LocalInfoSource.ProtocolSettings.MillisecondsPerBlock,
                 NetworkConfig = new()
             };
             networkInfo.NetworkConfig.Parameters.AddRange(MorphInvoker.ListConfigs().Select(p => new NetworkConfig.Types.Parameter
