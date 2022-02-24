@@ -27,7 +27,7 @@ namespace Neo.Plugins
         private bool started;
 
         private readonly ConcurrentDictionary<UInt256, NotaryTask> pendingQueue = new ConcurrentDictionary<UInt256, NotaryTask>();
-        private readonly List<NotaryRequest> payloadCache = new List<NotaryRequest>();
+        private readonly Queue<NotaryRequest> payloadCache = new Queue<NotaryRequest>();
 
         public NotaryService(NeoSystem neoSystem, Wallet wallet)
         {
@@ -68,15 +68,14 @@ namespace Neo.Plugins
         {
             if (payloadCache.Count < Settings.Default.Capacity)
             {
-                payloadCache.Add(payload);
+                payloadCache.Enqueue(payload);
                 OnNewRequest(payload);
             }
             else
             {
-                var oldPayload = payloadCache[0];
-                payloadCache.RemoveAt(0);
+                var oldPayload = payloadCache.Dequeue();
                 OnRequestRemoval(oldPayload);
-                payloadCache.Add(payload);
+                payloadCache.Enqueue(payload);
                 OnNewRequest(payload);
             }
         }
@@ -85,10 +84,8 @@ namespace Neo.Plugins
         {
             Log($"Persisted {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length}");
             var currHeight = block.Index;
-            foreach (var item in pendingQueue)
+            foreach (var (_, r) in pendingQueue)
             {
-                var h = item.Key;
-                var r = item.Value;
                 if (!r.IsSent && r.IsMainCompleted() && r.MinNotValidBefore > currHeight)
                 {
                     Finalize(r.MainTx);
@@ -97,7 +94,6 @@ namespace Neo.Plugins
                 }
                 if (r.MinNotValidBefore <= currHeight)
                 {
-                    var newFallbacks = new List<Transaction>();
                     foreach (var fb in r.FallbackTxs)
                     {
                         var nvb = fb.GetAttributes<NotValidBefore>().ToArray()[0].Height;
@@ -118,9 +114,7 @@ namespace Neo.Plugins
             var exists = pendingQueue.TryGetValue(payload.MainTransaction.Hash, out NotaryTask r);
             if (exists)
             {
-                foreach (var fb in r.FallbackTxs)
-                    if (fb.Hash.Equals(payload.FallbackTransaction.Hash))
-                        return;
+                if (r.FallbackTxs.Any(fb => fb.Hash.Equals(payload.FallbackTransaction.Hash))) return;
                 if (nvbFallback < r.MinNotValidBefore)
                     r.MinNotValidBefore = nvbFallback;
             }
@@ -147,7 +141,7 @@ namespace Neo.Plugins
                 switch (r.WitnessInfo[i].Typ)
                 {
                     case RequestType.Contract:
-                        if (!VerifyWitness(r.MainTx, neoSystem.Settings, snapshot, r.MainTx.Signers[i].Account, payload.MainTransaction.Witnesses[i], r.MainTx.NetworkFee, out _))
+                        if (!r.MainTx.VerifyWitness(neoSystem.Settings, snapshot, r.MainTx.Signers[i].Account, payload.MainTransaction.Witnesses[i], r.MainTx.NetworkFee, out _))
                             continue;
                         r.MainTx.Witnesses[i].InvocationScript = payload.MainTransaction.Witnesses[i].InvocationScript;
                         break;
@@ -159,8 +153,7 @@ namespace Neo.Plugins
                         }
                         break;
                     case RequestType.MultiSignature:
-                        if (r.WitnessInfo[i].Sigs is null)
-                            r.WitnessInfo[i].Sigs = new Dictionary<ECPoint, byte[]>();
+                        r.WitnessInfo[i].Sigs ??= new Dictionary<ECPoint, byte[]>();
                         foreach (var pub in r.WitnessInfo[i].Pubs)
                         {
                             if (r.WitnessInfo[i].Sigs.ContainsKey(pub))
@@ -172,9 +165,9 @@ namespace Neo.Plugins
                                 if (r.WitnessInfo[i].NSigsLeft == 0)
                                 {
                                     byte[] invScript = Array.Empty<byte>();
-                                    for (int j = 0; j < r.WitnessInfo[i].Pubs.Length; j++)
+                                    foreach (var t in r.WitnessInfo[i].Pubs)
                                     {
-                                        if (r.WitnessInfo[i].Sigs.TryGetValue(r.WitnessInfo[i].Pubs[j], out var sig))
+                                        if (r.WitnessInfo[i].Sigs.TryGetValue(t, out var sig))
                                             invScript = invScript.Concat(sig).ToArray();
                                     }
                                     r.MainTx.Witnesses[i].InvocationScript = invScript;
@@ -288,57 +281,6 @@ namespace Neo.Plugins
             return;
         }
 
-        private bool VerifyWitness(IVerifiable verifiable, ProtocolSettings settings, DataCache snapshot, UInt160 hash, Witness witness, long gas, out long fee)
-        {
-            fee = 0;
-            Script invocationScript;
-            try
-            {
-                invocationScript = new Script(witness.InvocationScript, true);
-            }
-            catch (BadScriptException)
-            {
-                return false;
-            }
-            using (ApplicationEngine engine = ApplicationEngine.Create(TriggerType.Verification, verifiable, snapshot?.CreateSnapshot(), null, settings, gas))
-            {
-                if (witness.VerificationScript.Length == 0)
-                {
-                    ContractState cs = NativeContract.ContractManagement.GetContract(snapshot, hash);
-                    if (cs is null) return false;
-                    ContractMethodDescriptor md = cs.Manifest.Abi.GetMethod("verify", -1);
-                    if (md?.ReturnType != ContractParameterType.Boolean) return false;
-                    engine.LoadContract(cs, md, CallFlags.ReadOnly);
-                }
-                else
-                {
-                    if (NativeContract.IsNative(hash)) return false;
-                    if (hash != witness.ScriptHash) return false;
-                    Script verificationScript;
-                    try
-                    {
-                        verificationScript = new Script(witness.VerificationScript, true);
-                    }
-                    catch (BadScriptException)
-                    {
-                        return false;
-                    }
-                    engine.LoadScript(verificationScript, initialPosition: 0, configureState: p =>
-                    {
-                        p.CallFlags = CallFlags.ReadOnly;
-                        p.ScriptHash = hash;
-                    });
-                }
-
-                engine.LoadScript(invocationScript, configureState: p => p.CallFlags = CallFlags.None);
-
-                if (engine.Execute() == VMState.FAULT) return false;
-                if (!engine.ResultStack.Peek().GetBoolean()) return false;
-                fee = engine.GasConsumed;
-            }
-            return true;
-        }
-
         private void Finalize(Transaction tx)
         {
             var prefix = new byte[] { (byte)OpCode.PUSHDATA1, 64 };
@@ -376,9 +318,7 @@ namespace Neo.Plugins
 
             public bool IsMainCompleted()
             {
-                if (WitnessInfo is null) return false;
-                foreach (var wi in WitnessInfo) if (wi.NSigsLeft != 0) return false;
-                return true;
+                return WitnessInfo is not null && WitnessInfo.All(wi => wi.NSigsLeft == 0);
             }
         }
 
@@ -392,7 +332,6 @@ namespace Neo.Plugins
 
         public enum RequestType : byte
         {
-            Unknown = 0x00,
             Signature = 0x01,
             MultiSignature = 0x02,
             Contract = 0x03

@@ -68,12 +68,11 @@ namespace Neo.Consensus
                 Console.WriteLine("Please open wallet first!");
                 return;
             }
-            if (!CheckNotaryAvaiblable(System.StoreView, out ECPoint[] notarynodes))
+            if (!CheckNotaryAvailable(System.StoreView, out ECPoint[] notarynodes))
             {
                 Console.WriteLine("The notary service is unavailable");
                 return;
             }
-            Console.WriteLine("notarynodes:" + notarynodes[0].ToString());
             if (!CheckNotaryAccount(wallet, notarynodes))
             {
                 Console.WriteLine("There is no notary account in wallet");
@@ -85,10 +84,9 @@ namespace Neo.Consensus
             System.ActorSystem.EventStream.Subscribe(notary, typeof(Blockchain.RelayResult));
             notary.Tell(new NotaryService.Start());
             started = true;
-            Console.WriteLine($"Notary started");
         }
 
-        private static bool CheckNotaryAvaiblable(DataCache snapshot, out ECPoint[] notarynodes)
+        private static bool CheckNotaryAvailable(DataCache snapshot, out ECPoint[] notarynodes)
         {
             uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
             notarynodes = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Notary, height);
