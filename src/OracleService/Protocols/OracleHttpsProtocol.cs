@@ -12,7 +12,7 @@ namespace Neo.Plugins
 {
     class OracleHttpsProtocol : IOracleProtocol
     {
-        private readonly HttpClient client = new HttpClient();
+        private readonly HttpClient client = new(new HttpClientHandler() { AllowAutoRedirect = false });
 
         public OracleHttpsProtocol()
         {
@@ -40,7 +40,7 @@ namespace Neo.Plugins
 
             if (!Settings.Default.AllowPrivateHost)
             {
-                IPHostEntry entry = await Dns.GetHostEntryAsync(uri.Host);
+                IPHostEntry entry = await Dns.GetHostEntryAsync(uri.Host, cancellation);
                 if (entry.IsInternal())
                     return (OracleResponseCode.Forbidden, null);
             }
@@ -48,7 +48,20 @@ namespace Neo.Plugins
             HttpResponseMessage message;
             try
             {
+            download:
                 message = await client.GetAsync(uri, HttpCompletionOption.ResponseContentRead, cancellation);
+                if (message.StatusCode == HttpStatusCode.NotFound && message.Headers.Location is not null)
+                {
+                    uri = message.Headers.Location;
+                    if (!Settings.Default.AllowPrivateHost)
+                    {
+                        // Follow
+                        IPHostEntry entry = await Dns.GetHostEntryAsync(uri.Host, cancellation);
+                        if (entry.IsInternal())
+                            return (OracleResponseCode.Forbidden, null);
+                    }
+                    goto download;
+                }
             }
             catch
             {
