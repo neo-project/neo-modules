@@ -6,6 +6,7 @@ using Neo.FileStorage.Storage.LocalObjectStorage.Blobstor;
 using Neo.FileStorage.Storage.LocalObjectStorage.Shards;
 using Neo.FileStorage.Storage.Services.Object.Delete;
 using Neo.FileStorage.Storage.Services.Replicate;
+using Neo.FileStorage.Storage.Services.Session.Storage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -150,6 +151,7 @@ namespace Neo.FileStorage.Storage
         public string SslCert;
         public string SslCertPassword;
         public bool LogEnabled;
+        public string SessionStorePath;
 
         public static GrpcSettings Load(IConfigurationSection section)
         {
@@ -159,6 +161,7 @@ namespace Neo.FileStorage.Storage
                 SslCert = section.GetValue("SslCert", ""),
                 SslCertPassword = section.GetValue("SslCertPassword", ""),
                 LogEnabled = section.GetValue("LogEnabled", true),
+                SessionStorePath = section.GetValue("SessionStorePath", TokenStore.DefaultSessionStorePath)
             };
         }
     }

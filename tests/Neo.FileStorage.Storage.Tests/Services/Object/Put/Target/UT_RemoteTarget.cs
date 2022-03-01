@@ -59,7 +59,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Put
         public void Test()
         {
             var source = new CancellationTokenSource();
-            var ts = new TokenStore();
+            var ts = new TokenStore(new TestDB());
             var ks = new KeyStore(RandomPrivatekey().LoadPrivateKey(), ts, null);
             var prm = new PutInitPrm
             {

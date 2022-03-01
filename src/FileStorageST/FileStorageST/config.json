@@ -11,7 +11,8 @@
       "Port": 8080,
       "SslCert": "",
       "SslCertPassword": "",
-      "LogEnabled": false
+      "LogEnabled": false,
+      "SessionStorePath": "./Data_Session"
     },
     "NodeInfo": {
       "Attributes": [

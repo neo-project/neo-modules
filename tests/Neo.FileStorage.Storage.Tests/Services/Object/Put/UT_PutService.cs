@@ -204,7 +204,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Put
             TestLocalInfo localInfo = new();
             localInfo.PublicKey = key.PublicKey();
             TestLocalObjectStore localStore = new();
-            TokenStore ts = new();
+            TokenStore ts = new(new TestDB());
             KeyStore ks = new(key, ts, null);
             TestPutClientCache clientCache = new();
             var work_pool = Sys.ActorOf(WorkerPool.Props(nameof(UT_PutService), 10));
@@ -266,7 +266,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Put
             TestLocalInfo localInfo = new();
             localInfo.PublicKey = key.PublicKey();
             TestLocalObjectStore localStore = new();
-            TokenStore ts = new();
+            TokenStore ts = new(new TestDB());
             KeyStore ks = new(key, ts, null);
             TestPutClientCache clientCache = new();
             var work_pool = Sys.ActorOf(WorkerPool.Props(nameof(UT_PutService), 10));
@@ -326,7 +326,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Put
             TestLocalInfo localInfo = new();
             localInfo.PublicKey = key.PublicKey();
             TestLocalObjectStore localStore = new();
-            TokenStore ts = new();
+            TokenStore ts = new(new TestDB());
             KeyStore ks = new(key, ts, null);
             TestPutClientCache clientCache = new();
             var work_pool = Sys.ActorOf(WorkerPool.Props(nameof(UT_PutService), 10));
@@ -402,7 +402,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Put
             TestLocalInfo localInfo = new();
             localInfo.PublicKey = key.PublicKey();
             TestLocalObjectStore localStore = new();
-            TokenStore ts = new();
+            TokenStore ts = new(new TestDB());
             KeyStore ks = new(key, ts, null);
             TestPutClientCache clientCache = new();
             var work_pool = Sys.ActorOf(WorkerPool.Props(nameof(UT_PutService), 10));

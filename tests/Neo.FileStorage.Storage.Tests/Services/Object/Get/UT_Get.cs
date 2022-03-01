@@ -197,7 +197,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             GetService getService = new()
             {
                 Assemble = true,
-                KeyStore = new KeyStore(null, new TokenStore(), null),
+                KeyStore = new KeyStore(null, new TokenStore(new TestDB()), null),
                 LocalStorage = storage,
             };
             SimpleObjectWriter writer = new();
@@ -249,7 +249,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             GetService getService = new()
             {
                 Assemble = true,
-                KeyStore = new(null, new TokenStore(), null),
+                KeyStore = new(null, new TokenStore(new TestDB()), null),
                 LocalStorage = storage,
             };
             SimpleObjectWriter writer = new();
@@ -297,7 +297,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             GetService getService = new()
             {
                 Assemble = true,
-                KeyStore = new(null, new TokenStore(), null),
+                KeyStore = new(null, new TokenStore(new TestDB()), null),
                 LocalStorage = storage,
             };
             SimpleObjectWriter writer = new();
@@ -371,7 +371,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStore = new(null, new TokenStore(), null),
+                KeyStore = new(null, new TokenStore(new TestDB()), null),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -451,7 +451,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStore = new(null, new TokenStore(), null),
+                KeyStore = new(null, new TokenStore(new TestDB()), null),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -524,7 +524,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStore = new(null, new TokenStore(), null),
+                KeyStore = new(null, new TokenStore(new TestDB()), null),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -597,7 +597,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStore = new(null, new TokenStore(), null),
+                KeyStore = new(null, new TokenStore(new TestDB()), null),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -687,7 +687,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStore = new(null, new TokenStore(), null),
+                KeyStore = new(null, new TokenStore(new TestDB()), null),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -796,7 +796,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStore = new(null, new TokenStore(), null),
+                KeyStore = new(null, new TokenStore(new TestDB()), null),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -911,7 +911,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStore = new(null, new TokenStore(), null),
+                KeyStore = new(null, new TokenStore(new TestDB()), null),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -998,7 +998,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStore = new(null, new TokenStore(), null),
+                KeyStore = new(null, new TokenStore(new TestDB()), null),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -1091,7 +1091,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStore = new(null, new TokenStore(), null),
+                KeyStore = new(null, new TokenStore(new TestDB()), null),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,
@@ -1207,7 +1207,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Get
             {
                 Assemble = true,
                 EpochSource = epochSource,
-                KeyStore = new(null, new TokenStore(), null),
+                KeyStore = new(null, new TokenStore(new TestDB()), null),
                 LocalStorage = storage,
                 ClientCache = clientCache,
                 TraverserGenerator = generator,

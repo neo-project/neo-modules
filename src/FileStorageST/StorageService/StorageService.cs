@@ -250,6 +250,7 @@ namespace Neo.FileStorage.Storage
             server?.Stop();
             server?.Dispose();
             reputationClientCache?.Dispose();
+            tokenDb?.Dispose();
             key?.Dispose();
             localStorage?.Dispose();
         }

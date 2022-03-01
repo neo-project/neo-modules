@@ -1,3 +1,4 @@
+using Neo.FileStorage.Database.LevelDB;
 using Neo.FileStorage.Listen.Event.Morph;
 using Neo.FileStorage.Storage.Services.Session;
 using Neo.FileStorage.Storage.Services.Session.Storage;
@@ -7,11 +8,13 @@ namespace Neo.FileStorage.Storage
 {
     public sealed partial class StorageService : IDisposable
     {
+        private DB tokenDb;
         private TokenStore tokenStore;
 
         public SessionServiceImpl InitializeSession()
         {
-            tokenStore = new();
+            tokenDb = new(Settings.Default.GrpcSettings.SessionStorePath);
+            tokenStore = new(tokenDb);
             netmapProcessor.AddEpochHandler(p =>
             {
                 if (p is NewEpochEvent e)
