@@ -60,7 +60,7 @@ namespace Neo.Plugins
             {
             download:
                 message = await client.GetAsync(uri, HttpCompletionOption.ResponseContentRead, cancellation);
-                if (message.StatusCode == HttpStatusCode.NotFound && message.Headers.Location is not null)
+                if (message.Headers.Location is not null)
                 {
                     uri = message.Headers.Location;
                     if (!Settings.Default.AllowPrivateHost)
