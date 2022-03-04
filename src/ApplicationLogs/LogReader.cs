@@ -16,6 +16,7 @@ using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.VM;
+using Neo.VM.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -81,11 +82,15 @@ namespace Neo.Plugins
             trigger["gasconsumed"] = appExec.GasConsumed.ToString();
             try
             {
-                trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
+                trigger["stack"] = ParseStack(appExec.Stack, Settings.Default.MaxStackSize);
             }
             catch (InvalidOperationException)
             {
                 trigger["stack"] = "error: recursive reference";
+            }
+            catch (Exception ex)
+            {
+                trigger["stack"] = "error: " + ex.Message;
             }
             trigger["notifications"] = appExec.Notifications.Select(q =>
             {
@@ -124,11 +129,15 @@ namespace Neo.Plugins
                     trigger["gasconsumed"] = appExec.GasConsumed.ToString();
                     try
                     {
-                        trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
+                        trigger["stack"] = ParseStack(appExec.Stack, Settings.Default.MaxStackSize);
                     }
                     catch (InvalidOperationException)
                     {
                         trigger["stack"] = "error: recursive reference";
+                    }
+                    catch (Exception ex)
+                    {
+                        trigger["stack"] = "error: " + ex.Message;
                     }
                     trigger["notifications"] = appExec.Notifications.Select(q =>
                     {
@@ -173,6 +182,55 @@ namespace Neo.Plugins
             {
                 Put(block.Hash.ToArray(), Neo.Utility.StrictUTF8.GetBytes(blockJson.ToString()));
             }
+        }
+
+        private static JObject ParseStack(StackItem[] items, int maxSize)
+        {
+            var queue = new Queue<StackItem>(items);
+            while (queue.TryDequeue(out var item))
+            {
+                int size = 0;
+                switch (item)
+                {
+                    case VM.Types.Boolean boolean:
+                        size = (boolean.GetBoolean() ? "true" : "false").Length;
+                        break;
+                    case VM.Types.Buffer _:
+                    case ByteString _:
+                        size = Convert.ToBase64String(item.GetSpan()).Length;
+                        break;
+                    case Integer integer:
+                        size = integer.GetInteger().ToString().Length;
+                        break;
+                    case Pointer pointer:
+                        size = pointer.Position.ToString().Length;
+                        break;
+                    case VM.Types.Array array:
+                        foreach (var stackItem in array)
+                        {
+                            queue.Enqueue(stackItem);
+                        }
+                        break;
+                    case Map map:
+                        foreach (var keyValuePair in map)
+                        {
+                            queue.Enqueue(keyValuePair.Key);
+                            queue.Enqueue(keyValuePair.Value);
+                        }
+                        break;
+                }
+
+                if (size > 0) size += 9; //,'value':y";
+                size += 11 + item.Type.ToString().Length; //"{'type':''}";
+                maxSize -= size;
+
+                if (maxSize < 0)
+                {
+                    throw new Exception("max stack size reached");
+                }
+            }
+
+            return new JArray(items.Select(u => u.ToJson()));
         }
 
         void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
