@@ -197,7 +197,7 @@ namespace Neo.Plugins
                         break;
                     case VM.Types.Buffer _:
                     case ByteString _:
-                        size = Convert.ToBase64String(item.GetSpan()).Length;
+                        size = 2 + Convert.ToBase64String(item.GetSpan()).Length; // "x"
                         break;
                     case Integer integer:
                         size = integer.GetInteger().ToString().Length;
@@ -206,14 +206,17 @@ namespace Neo.Plugins
                         size = pointer.Position.ToString().Length;
                         break;
                     case VM.Types.Array array:
+                        size += 2; // []
                         foreach (var stackItem in array)
                         {
                             queue.Enqueue(stackItem);
                         }
                         break;
                     case Map map:
+                        size += 2; // {}
                         foreach (var keyValuePair in map)
                         {
+                            size += 1; // x:z
                             queue.Enqueue(keyValuePair.Key);
                             queue.Enqueue(keyValuePair.Value);
                         }
