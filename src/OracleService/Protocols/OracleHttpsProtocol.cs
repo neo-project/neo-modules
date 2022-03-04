@@ -58,20 +58,21 @@ namespace Neo.Plugins
             HttpResponseMessage message;
             try
             {
-            download:
-                message = await client.GetAsync(uri, HttpCompletionOption.ResponseContentRead, cancellation);
-                if (message.Headers.Location is not null)
+                do
                 {
-                    uri = message.Headers.Location;
                     if (!Settings.Default.AllowPrivateHost)
                     {
-                        // Follow
-                        IPHostEntry entry = await Dns.GetHostEntryAsync(uri.Host, cancellation);
+                        var entry = await Dns.GetHostEntryAsync(uri.Host, cancellation);
                         if (entry.IsInternal())
                             return (OracleResponseCode.Forbidden, null);
                     }
-                    goto download;
-                }
+                    message = await client.GetAsync(uri, HttpCompletionOption.ResponseContentRead, cancellation);
+                    if (message.Headers.Location is not null)
+                    {
+                        uri = message.Headers.Location;
+                        message = null;
+                    }
+                } while (message == null);
             }
             catch
             {
