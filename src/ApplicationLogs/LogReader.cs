@@ -9,7 +9,9 @@ using Neo.VM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Neo.VM.Types;
 using static System.IO.Path;
+using Array = Neo.VM.Types.Array;
 
 namespace Neo.Plugins
 {
@@ -71,7 +73,7 @@ namespace Neo.Plugins
             trigger["gasconsumed"] = appExec.GasConsumed.ToString();
             try
             {
-                if (appExec.Stack.Length > Settings.Default.MaxStackItems)
+                if (!CheckItems(appExec.Stack, Settings.Default.MaxStackItems))
                 {
                     trigger["stack"] = $"error: too many items {appExec.Stack.Length}";
                 }
@@ -191,6 +193,38 @@ namespace Neo.Plugins
         private void Put(byte[] key, byte[] value)
         {
             _writeBatch.Put(key, value);
+        }
+
+
+
+        private static bool CheckItems(StackItem[] items, int maxCount)
+        {
+            var queue = new Queue<StackItem>(items);
+            while (queue.TryDequeue(out var item))
+            {
+                maxCount--;
+                if (maxCount < 0)
+                {
+                    return false;
+                }
+                switch (item)
+                {
+                    case Array array:
+                        foreach (var stackItem in array)
+                        {
+                            queue.Enqueue(stackItem);
+                        }
+                        break;
+                    case Map map:
+                        foreach (var keyValuePair in map)
+                        {
+                            queue.Enqueue(keyValuePair.Key);
+                            queue.Enqueue(keyValuePair.Value);
+                        }
+                        break;
+                }
+            }
+            return true;
         }
     }
 }
