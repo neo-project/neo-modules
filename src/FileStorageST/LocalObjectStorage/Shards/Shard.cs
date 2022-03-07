@@ -1,4 +1,5 @@
 using Akka.Actor;
+using Akka.Util.Internal;
 using Google.Protobuf;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
@@ -7,6 +8,7 @@ using Neo.FileStorage.Storage.LocalObjectStorage.Blobstor;
 using Neo.FileStorage.Storage.LocalObjectStorage.Metabase;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using FSAddress = Neo.FileStorage.API.Refs.Address;
 using FSObject = Neo.FileStorage.API.Object.Object;
@@ -15,7 +17,6 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
 {
     public partial class Shard : IDisposable
     {
-
         public const bool DefaultUseWriteCache = true;
         public ShardID ID { get; private set; }
         private readonly bool useWriteCache;
@@ -24,15 +25,15 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
         private readonly IActorRef workPool;
         private readonly WriteCache writeCache;
 
-        public Shard(ShardSettings settings, IActorRef wp, Action<List<FSAddress>, CancellationToken> expiredCallback)
+        public Shard(string path, ShardSettings settings, IActorRef wp, Action<List<FSAddress>, CancellationToken> expiredCallback)
         {
             ID = new();
             useWriteCache = settings.UseWriteCache;
-            blobStorage = new(settings.BlobStorageSettings);
-            metabase = new(settings.MetabaseSettings.Path);
+            blobStorage = new(Path.Join(path, BlobStorage.DefaultDirName), settings.BlobStorageSettings);
+            metabase = new(Path.Join(path, MB.DefaultDirName));
             workPool = wp;
             if (useWriteCache)
-                writeCache = new WriteCache(settings.WriteCacheSettings, blobStorage, metabase);
+                writeCache = new WriteCache(Path.Join(path, WriteCache.DefaultDirName), settings.WriteCacheSettings, blobStorage, metabase);
             expiredTomestonesCallback = expiredCallback;
             removeInteral = settings.RemoverInterval <= 0 ? DefaultRemoveInterval : settings.RemoverInterval;
             removeBatchSize = settings.RemoveBatchSize <= 0 ? DefaultRemoveBatchSize : settings.RemoveBatchSize;

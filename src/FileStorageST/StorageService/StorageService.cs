@@ -33,6 +33,7 @@ using APINetmapService = Neo.FileStorage.API.Netmap.NetmapService;
 using APIObjectService = Neo.FileStorage.API.Object.ObjectService;
 using APIReputationService = Neo.FileStorage.API.Reputation.ReputationService;
 using APISessionService = Neo.FileStorage.API.Session.SessionService;
+using System.IO;
 
 namespace Neo.FileStorage.Storage
 {
@@ -40,7 +41,8 @@ namespace Neo.FileStorage.Storage
     {
         public ProtocolSettings ProtocolSettings => system.Settings;
         public ulong CurrentEpoch => currentEpoch;
-        public byte[] PublicKey { get; private set; }
+        public uint Network => system.Settings.Network;
+        public StorageEngine Engine => localStorage;
 
         public API.Netmap.NodeInfo NodeInfo
         {
@@ -51,11 +53,8 @@ namespace Neo.FileStorage.Storage
             }
         }
 
-        public uint Network => system.Settings.Network;
+        public byte[] PublicKey { get; private set; }
         public HealthStatus HealthStatus { get; private set; }
-
-        public StorageEngine Engine => localStorage;
-
         private API.Netmap.NodeInfo localNodeInfo;
         private readonly ECDsa key;
         private readonly MorphInvoker morphInvoker;
@@ -85,9 +84,10 @@ namespace Neo.FileStorage.Storage
             containerProcessor = new(Settings.Default.ContainerContractHash);
             localStorage = new();
             int i = 0;
-            foreach (var shardSettings in Settings.Default.Shards)
+            foreach (var shardSettings in Settings.Default.StorageSettings.Shards)
             {
-                var shard = new Shard(shardSettings, system.ActorSystem.ActorOf(WorkerPool.Props($"Shard{i}", 2)), localStorage.ProcessExpiredTomstones);
+                var name = $"Shard_{i}";
+                var shard = new Shard(Path.Combine(Settings.Default.StorageSettings.Path, name), shardSettings, system.ActorSystem.ActorOf(WorkerPool.Props(name, 2)), localStorage.ProcessExpiredTomstones);
                 netmapProcessor.AddEpochHandler(p =>
                 {
                     if (p is NewEpochEvent e)

@@ -16,16 +16,13 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Shards
         {
             ShardSettings settings = ShardSettings.Default;
             settings.UseWriteCache = useCache;
-            settings.BlobStorageSettings.Path = testName + "/" + settings.BlobStorageSettings.Path;
             settings.BlobStorageSettings.BlobovniczasSettings.ShallowWidth = 4;
-            settings.MetabaseSettings.Path = testName + "/" + settings.MetabaseSettings.Path;
             if (useCache)
             {
                 settings.WriteCacheSettings = WriteCacheSettings.Default;
-                settings.WriteCacheSettings.Path = testName + "/" + settings.WriteCacheSettings.Path;
                 settings.WriteCacheSettings.MaxMemorySize = 0;
             }
-            Shard shard = new(settings, null, null);
+            Shard shard = new(testName, settings, null, null);
             shard.Open();
             return shard;
         }

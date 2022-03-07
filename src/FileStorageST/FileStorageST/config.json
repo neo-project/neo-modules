@@ -27,43 +27,41 @@
     "Replicate": {
       "Timeout": 5
     },
-    "Shards": [
-      {
-        "UseWriteCache": true,
-        "RemoveBatchSize": 100,
-        "RemoverInterval": 60000,
-        "WriteCache": {
-          "Path": "./Data/Shard_0/Data_WriteCache",
-          "MaxCacheSize": 1073741824,
-          "MaxMemorySize": 1073741824,
-          "MaxObjectSize": 67108864,
-          "SmallObjectSize": 32768
-        },
-        "BlobStorage": {
-          "Path": "./Data/Shard_0/Data_BlobStorage",
-          "Compress": {
-            "Enable": true,
-            "ExcludeContentTypes": [
-              "video/*",
-              "audio/*"
-            ]
+    "LocalStorage": {
+      "Path": "./Data",
+      "Shards": [
+        {
+          "UseWriteCache": true,
+          "RemoveBatchSize": 100,
+          "RemoverInterval": 60000,
+          "WriteCache": {
+            "MaxCacheSize": 1073741824,
+            "MaxMemorySize": 1073741824,
+            "MaxObjectSize": 67108864,
+            "SmallObjectSize": 32768
           },
-          "SmallSizeLimit": 1048576,
-          "FSTree": {
-            "ShallowDepth": 4,
-            "DirectoryNameLength": 2
-          },
-          "Blobovniczas": {
-            "BlobSize": 1073741824,
-            "ShallowDepth": 1,
-            "ShallowWidth": 2,
-            "OpenCacheSize": 8
+          "BlobStorage": {
+            "Compress": {
+              "Enable": true,
+              "ExcludeContentTypes": [
+                "video/*",
+                "audio/*"
+              ]
+            },
+            "SmallSizeLimit": 1048576,
+            "FSTree": {
+              "ShallowDepth": 4,
+              "DirectoryNameLength": 2
+            },
+            "Blobovniczas": {
+              "BlobSize": 1073741824,
+              "ShallowDepth": 1,
+              "ShallowWidth": 2,
+              "OpenCacheSize": 8
+            }
           }
-        },
-        "Metabase": {
-          "Path": "./Data/Shard_0/Data_Metabase"
         }
-      }
-    ]
+      ]
+    }
   }
 }

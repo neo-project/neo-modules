@@ -11,9 +11,8 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Blobstor
     {
         private void RunTestCase(FSObject obj, bool compress, string[] excludeTypes, bool expect)
         {
-            var stor = new BlobStorage(new BlobStorageSettings
+            var stor = new BlobStorage(nameof(TestNeedsToCompress), new BlobStorageSettings
             {
-                Path = nameof(TestNeedsToCompress),
                 Compress = compress,
                 CompressExcludeContentTypes = excludeTypes,
                 BlobovniczasSettings = BlobovniczasSettings.Default,

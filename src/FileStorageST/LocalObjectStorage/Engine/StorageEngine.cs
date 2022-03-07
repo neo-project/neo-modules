@@ -20,6 +20,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
 {
     public sealed class StorageEngine : IObjectInhumer, ILocalHeadSource, ILocalSearchSource, ILocalObjectSource, ILocalObjectStore, IObjectListSource, IDisposable
     {
+        public const string DefaultPath = "./Data";
         private readonly Dictionary<ShardID, Shard> shards = new();
         private readonly ReaderWriterLockSlim mtx = new();
 

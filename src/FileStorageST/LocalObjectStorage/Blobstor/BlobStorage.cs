@@ -12,20 +12,20 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Blobstor
     public sealed class BlobStorage : IDisposable
     {
         public const ulong DefaultSmallSizeLimit = 1 << 20;
-        public const string BlobovniczasDir = "Data_Blobovniczas";
+        public const string DefaultDirName = "BlobStorage";
         private readonly ICompressor compressor;
         private readonly FSTree fsTree;
         private readonly BlobovniczaTree blobovniczas;
         private readonly ulong smallSizeLimit;
         private readonly string[] CompressExcludeContentTypes;
 
-        public BlobStorage(BlobStorageSettings settings)
+        public BlobStorage(string path, BlobStorageSettings settings)
         {
             smallSizeLimit = settings.SmallSizeLimit;
             compressor = settings.Compress ? new ZstdCompressor() : new NoneCompressor();
             CompressExcludeContentTypes = settings.CompressExcludeContentTypes;
-            fsTree = new(System.IO.Path.Join(settings.Path, FSTree.DefaultPath), settings.FSTreeSettings.ShallowDepth, settings.FSTreeSettings.DirectoryNameLength);
-            blobovniczas = new(System.IO.Path.Join(settings.Path, BlobovniczasDir), settings.BlobovniczasSettings, smallSizeLimit);
+            fsTree = new(System.IO.Path.Join(path, FSTree.DefaultDirName), settings.FSTreeSettings.ShallowDepth, settings.FSTreeSettings.DirectoryNameLength);
+            blobovniczas = new(System.IO.Path.Join(path, BlobovniczaTree.DefaultDirName), settings.BlobovniczasSettings, smallSizeLimit);
         }
 
         public void Open()

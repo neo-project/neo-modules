@@ -3,6 +3,7 @@ using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.Invoker.Morph;
 using Neo.FileStorage.Storage.LocalObjectStorage.Blob;
 using Neo.FileStorage.Storage.LocalObjectStorage.Blobstor;
+using Neo.FileStorage.Storage.LocalObjectStorage.Engine;
 using Neo.FileStorage.Storage.LocalObjectStorage.Shards;
 using Neo.FileStorage.Storage.Services.Object.Delete;
 using Neo.FileStorage.Storage.Services.Replicate;
@@ -71,13 +72,11 @@ namespace Neo.FileStorage.Storage
             { MorphInvoker.ReputationContractName, null }
         };
         public GrpcSettings GrpcSettings;
-        private string[] addresses;
-        private List<string> attributes;
         public NodeInfo LocalNodeInfo;
         public long SideChainFee;
         public ulong TombstoneLifetime;
         public int ReplicateTimeout;
-        public List<ShardSettings> Shards;
+        public LocalStorageSettings StorageSettings = LocalStorageSettings.Default;
         public List<byte[]> Administrators = new();
 
         private Settings(IConfigurationSection section)
@@ -103,8 +102,6 @@ namespace Neo.FileStorage.Storage
             var ni_section = section.GetSection("NodeInfo");
             if (ni_section is null)
                 throw new InvalidOperationException("no node info settings");
-            addresses = ni_section.GetSection("Addresses").GetChildren().Select(p => p.Value).ToArray();
-            attributes = ni_section.GetSection("Attributes").GetChildren().Select(p => p.Value).ToList();
             SideChainFee = section.GetValue("SideChainFee", 5000L);
             TombstoneLifetime = section.GetValue("TombstoneLifetime", DeleteService.DefaultTomestoneLifetime);
             var admin_section = section.GetSection("Administrators");
@@ -115,8 +112,11 @@ namespace Neo.FileStorage.Storage
                 ReplicateTimeout = replicate.GetValue("Timeout", Replicator.Args.DefaultPutTimeout);
             else
                 ReplicateTimeout = Replicator.Args.DefaultPutTimeout;
-            Shards = section.GetSection("Shards").GetChildren().Select(p => ShardSettings.Load(p)).ToList();
-            if (Shards.Count == 0) Shards = new List<ShardSettings> { ShardSettings.Default };
+            var storage_section = section.GetSection("LocalStorage");
+            if (storage_section is not null)
+                StorageSettings = LocalStorageSettings.Load(storage_section);
+            var addresses = ni_section.GetSection("Addresses").GetChildren().Select(p => p.Value).ToArray();
+            var attributes = ni_section.GetSection("Attributes").GetChildren().Select(p => p.Value).ToList();
             LocalNodeInfo = new();
             LocalNodeInfo.Addresses.AddRange(addresses);
             Dictionary<string, string> attrs = new();
@@ -168,7 +168,6 @@ namespace Neo.FileStorage.Storage
 
     public class WriteCacheSettings
     {
-        public string Path;
         public ulong MaxCacheSize;
         public ulong MaxMemorySize;
         public ulong MaxObjectSize;
@@ -179,7 +178,6 @@ namespace Neo.FileStorage.Storage
         {
             Default = new()
             {
-                Path = $"Data_WriteCache",
                 MaxCacheSize = WriteCache.DefaultMaxCacheSize,
                 MaxMemorySize = WriteCache.DefaultMemorySize,
                 MaxObjectSize = WriteCache.DefaultMaxObjectSize,
@@ -191,13 +189,11 @@ namespace Neo.FileStorage.Storage
         {
             WriteCacheSettings settings = new()
             {
-                Path = section.GetValue("Path", ""),
                 MaxCacheSize = section.GetValue("MaxCacheSize", WriteCache.DefaultMaxCacheSize),
                 MaxMemorySize = section.GetValue("MaxMemorySize", WriteCache.DefaultMemorySize),
                 MaxObjectSize = section.GetValue("MaxObjectSize", WriteCache.DefaultMaxObjectSize),
                 SmallObjectSize = section.GetValue("SmallObjectSize", WriteCache.DefaultSmallObjectSize),
             };
-            if (settings.Path == "") throw new FormatException("invalid writecache path");
             return settings;
         }
     }
@@ -261,7 +257,6 @@ namespace Neo.FileStorage.Storage
 
     public class BlobStorageSettings
     {
-        public string Path;
         public bool Compress;
         public string[] CompressExcludeContentTypes;
         public ulong SmallSizeLimit;
@@ -273,7 +268,6 @@ namespace Neo.FileStorage.Storage
         {
             Default = new()
             {
-                Path = $"Data_BlobStorage_{Guid.NewGuid()}",
                 Compress = true,
                 CompressExcludeContentTypes = new string[] { "video/*", "audio/*" },
                 SmallSizeLimit = BlobStorage.DefaultSmallSizeLimit,
@@ -287,38 +281,12 @@ namespace Neo.FileStorage.Storage
             var compress_section = section.GetSection("Compress");
             BlobStorageSettings settings = new()
             {
-                Path = section.GetValue("Path", ""),
                 Compress = compress_section?.GetValue("Enable", true) ?? false,
                 CompressExcludeContentTypes = compress_section?.GetSection("ExcludeContentTypes").GetChildren().Select(p => p.Value).ToArray() ?? Array.Empty<string>(),
                 SmallSizeLimit = section.GetValue("SmallSizeLimit", BlobStorage.DefaultSmallSizeLimit),
                 FSTreeSettings = FSTreeSettings.Load(section.GetSection("FSTree")),
                 BlobovniczasSettings = BlobovniczasSettings.Load(section.GetSection("Blobovniczas"))
             };
-            if (settings.Path == "") throw new FormatException("invalid blobstorage path");
-            return settings;
-        }
-    }
-
-    public class MetabaseSettings
-    {
-        public string Path;
-        public static MetabaseSettings Default { get; private set; }
-
-        static MetabaseSettings()
-        {
-            Default = new()
-            {
-                Path = $"Data_Metabase{Guid.NewGuid()}"
-            };
-        }
-
-        public static MetabaseSettings Load(IConfigurationSection section)
-        {
-            MetabaseSettings settings = new()
-            {
-                Path = section.GetValue("Path", "")
-            };
-            if (settings.Path == "") throw new FormatException("invalid metabase path");
             return settings;
         }
     }
@@ -330,7 +298,6 @@ namespace Neo.FileStorage.Storage
         public int RemoveBatchSize;
         public WriteCacheSettings WriteCacheSettings;
         public BlobStorageSettings BlobStorageSettings;
-        public MetabaseSettings MetabaseSettings;
         public static ShardSettings Default { get; private set; }
 
         static ShardSettings()
@@ -342,7 +309,6 @@ namespace Neo.FileStorage.Storage
                 RemoveBatchSize = Shard.DefaultRemoveBatchSize,
                 WriteCacheSettings = WriteCacheSettings.Default,
                 BlobStorageSettings = BlobStorageSettings.Default,
-                MetabaseSettings = MetabaseSettings.Default,
             };
         }
 
@@ -355,7 +321,36 @@ namespace Neo.FileStorage.Storage
             settings.RemoverInterval = section.GetValue("RemoverInterval", Shard.DefaultRemoveInterval);
             settings.RemoveBatchSize = section.GetValue("RemoveBatchSize", Shard.DefaultRemoveBatchSize);
             settings.BlobStorageSettings = BlobStorageSettings.Load(section.GetSection("BlobStorage"));
-            settings.MetabaseSettings = MetabaseSettings.Load(section.GetSection("Metabase"));
+            return settings;
+        }
+    }
+
+    public class LocalStorageSettings
+    {
+        public string Path;
+        public List<ShardSettings> Shards;
+        public static LocalStorageSettings Default { get; private set; }
+
+        static LocalStorageSettings()
+        {
+            Default = new()
+            {
+                Path = StorageEngine.DefaultPath,
+                Shards = new() { ShardSettings.Default }
+            };
+        }
+
+        public static LocalStorageSettings Load(IConfigurationSection section)
+        {
+            var settings = new LocalStorageSettings()
+            {
+                Path = section.GetValue("Path", StorageEngine.DefaultPath)
+            };
+            var shard_section = section.GetSection("Shards");
+            if (shard_section is null)
+                settings.Shards = new() { ShardSettings.Default };
+            else
+                settings.Shards = section.GetSection("Shards").GetChildren().Select(p => ShardSettings.Load(p)).ToList();
             return settings;
         }
     }

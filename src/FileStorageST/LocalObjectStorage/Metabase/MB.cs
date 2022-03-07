@@ -13,6 +13,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
 {
     public sealed partial class MB : IDisposable
     {
+        public const string DefaultDirName = "Metabase";
         private readonly byte[] ContainerPrefix = new byte[] { 0x00 };
         private readonly byte[] PrimaryPrefix = new byte[] { 0x01 };
         private readonly byte[] GraveYardPrefix = new byte[] { 0x02 };

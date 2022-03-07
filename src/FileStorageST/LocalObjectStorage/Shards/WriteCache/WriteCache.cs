@@ -13,8 +13,9 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
 {
     public sealed partial class WriteCache : IDisposable
     {
-        public const string DBName = "Data_Cache_Small";
-        public const string FileTreeDirName = "FileTree_Cache";
+        public const string DefaultDirName = "Cache";
+        public const string DBDirName = "DB";
+        public const string FileTreeDirName = "FSTree";
         public const int LRUKeysCount = 256 * 1024 * 8;
         public const int DefaultInterval = 1000;
         public const int FlushBatchSize = 512;
@@ -22,10 +23,11 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
         public const ulong DefaultMemorySize = 1ul << 30;
         public const ulong DefaultMaxObjectSize = 64ul << 20;
         public const ulong DefaultSmallObjectSize = 32ul << 10;
-        private readonly string path;
+
         private readonly BlobStorage blobStorage;
         private readonly MB metabase;
         private WriteCacheSettings settings;
+        private readonly string rootPath;
         private ulong MaxCacheSize => settings.MaxCacheSize;
         private ulong MaxMemorySize => settings.MaxMemorySize;
         private ulong MaxObjectSize => settings.MaxObjectSize;
@@ -43,19 +45,19 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
         private readonly ConcurrentQueue<(ObjectInfo, bool)> flushQueue = new();
         private readonly ConcurrentDictionary<Address, bool> needCompress = new();
 
-        public WriteCache(WriteCacheSettings settings, BlobStorage blobStor, MB mb)
+        public WriteCache(string path, WriteCacheSettings settings, BlobStorage blobStor, MB mb)
         {
-            path = settings.Path;
             this.settings = settings;
+            rootPath = path;
             blobStorage = blobStor;
             metabase = mb;
-            fsTree = new(Path.Join(path, FileTreeDirName), 1, 1);
+            fsTree = new(Path.Join(rootPath, FileTreeDirName), 1, 1);
             flushed = new(LRUKeysCount);
         }
 
         public void Open()
         {
-            var full = Path.GetFullPath(Path.Join(path, DBName));
+            var full = Path.GetFullPath(Path.Join(rootPath, DBDirName));
             if (!Directory.Exists(full))
                 Directory.CreateDirectory(full);
             db = new CacheDB(full);
