@@ -2,16 +2,13 @@ using Akka.Actor;
 using Neo.ConsoleService;
 using Neo.Cryptography.ECC;
 using Neo.Ledger;
-using Neo.Network.P2P;
 using Neo.Persistence;
-using Neo.Plugins;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
 using System;
 using System.Linq;
-using Settings = Neo.Plugins.Settings;
 
-namespace Neo.Consensus
+namespace Neo.Plugins
 {
     public class NotaryPlugin : Plugin
     {
