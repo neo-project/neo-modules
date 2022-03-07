@@ -6,9 +6,7 @@ using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
-using Neo.Persistence;
 using Neo.SmartContract;
-using Neo.SmartContract.Manifest;
 using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
@@ -22,17 +20,18 @@ namespace Neo.Plugins
     public class NotaryService : UntypedActor
     {
         public class Start { }
-        private NeoSystem neoSystem;
-        private Wallet wallet;
+        private readonly NeoSystem neoSystem;
+        private readonly Wallet wallet;
         private bool started;
-
-        private readonly ConcurrentDictionary<UInt256, NotaryTask> pendingQueue = new ConcurrentDictionary<UInt256, NotaryTask>();
-        private readonly Queue<NotaryRequest> payloadCache = new Queue<NotaryRequest>();
+        private readonly NotaryRequestPool pool;
+        private readonly ConcurrentDictionary<UInt256, NotaryTask> pendingQueue = new();
+        private readonly Queue<NotaryRequest> payloadCache = new();
 
         public NotaryService(NeoSystem neoSystem, Wallet wallet)
         {
             this.wallet = wallet;
             this.neoSystem = neoSystem;
+            pool = new(neoSystem, Settings.Default.Capacity);
         }
 
         protected override void OnReceive(object message)
@@ -66,17 +65,10 @@ namespace Neo.Plugins
 
         private void OnNotaryPayload(NotaryRequest payload)
         {
-            if (payloadCache.Count < Settings.Default.Capacity)
+            if (pool.TryAdd(payload, out var removed))
             {
-                payloadCache.Enqueue(payload);
                 OnNewRequest(payload);
-            }
-            else
-            {
-                var oldPayload = payloadCache.Dequeue();
-                OnRequestRemoval(oldPayload);
-                payloadCache.Enqueue(payload);
-                OnNewRequest(payload);
+                if (removed is not null) OnRequestRemoval(removed);
             }
         }
 
@@ -101,6 +93,8 @@ namespace Neo.Plugins
                     }
                 }
             }
+            foreach (var n in pool.ReVerify(block.Transactions))
+                OnRequestRemoval(n);
         }
 
         private void OnNewRequest(NotaryRequest payload)
