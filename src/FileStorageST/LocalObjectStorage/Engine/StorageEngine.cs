@@ -21,7 +21,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
     public sealed class StorageEngine : IObjectInhumer, ILocalHeadSource, ILocalSearchSource, ILocalObjectSource, ILocalObjectStore, IObjectListSource, IDisposable
     {
         public const string DefaultPath = "./Data";
-        private readonly Dictionary<ShardID, Shard> shards = new();
+        private readonly Dictionary<string, Shard> shards = new();
         private readonly ReaderWriterLockSlim mtx = new();
 
         public void Open()
@@ -328,7 +328,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
                 {
                     Shard = s,
                     Weight = s.WeightValue(),
-                    Distance = Utility.StrictUTF8.GetBytes(s.ID.ToString()).Murmur64(0).Distance(target),
+                    Distance = Utility.StrictUTF8.GetBytes(s.ID).Murmur64(0).Distance(target),
                 });
                 return list.OrderBy(s => s.Sort).Select(s => s.Shard).ToList();
             }

@@ -18,7 +18,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
     public partial class Shard : IDisposable
     {
         public const bool DefaultUseWriteCache = true;
-        public ShardID ID { get; private set; }
+        public string ID { get; private set; }
         private readonly bool useWriteCache;
         private readonly BlobStorage blobStorage;
         private readonly MB metabase;
@@ -27,7 +27,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
 
         public Shard(string path, ShardSettings settings, IActorRef wp, Action<List<FSAddress>, CancellationToken> expiredCallback)
         {
-            ID = new();
+            ID = path;
             useWriteCache = settings.UseWriteCache;
             blobStorage = new(Path.Join(path, BlobStorage.DefaultDirName), settings.BlobStorageSettings);
             metabase = new(Path.Join(path, MB.DefaultDirName));
