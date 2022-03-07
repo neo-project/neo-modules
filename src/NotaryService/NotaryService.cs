@@ -75,6 +75,8 @@ namespace Neo.Plugins
         private void OnPersistCompleted(Block block)
         {
             Log($"Persisted {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length}");
+            foreach (var n in pool.ReVerify(block.Transactions))
+                OnRequestRemoval(n);
             var currHeight = block.Index;
             foreach (var (_, r) in pendingQueue)
             {
@@ -93,8 +95,6 @@ namespace Neo.Plugins
                     }
                 }
             }
-            foreach (var n in pool.ReVerify(block.Transactions))
-                OnRequestRemoval(n);
         }
 
         private void OnNewRequest(NotaryRequest payload)
