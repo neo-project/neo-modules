@@ -25,7 +25,6 @@ namespace Neo.Plugins
         private bool started;
         private readonly NotaryRequestPool pool;
         private readonly ConcurrentDictionary<UInt256, NotaryTask> pendingQueue = new();
-        private readonly Queue<NotaryRequest> payloadCache = new();
 
         public NotaryService(NeoSystem neoSystem, Wallet wallet)
         {
