@@ -103,7 +103,7 @@ namespace Neo.Plugins.Trackers.NEP_11
             using ScriptBuilder sb = new();
             sb.EmitDynamicCall(record.asset, "balanceOf", record.from, record.tokenId);
             sb.EmitDynamicCall(record.asset, "balanceOf", record.to, record.tokenId);
-            using ApplicationEngine engine = ApplicationEngine.Run(sb.ToArray(), snapshot, settings: _neoSystem.Settings);
+            using ApplicationEngine engine = ApplicationEngine.Run(sb.ToArray(), snapshot, settings: _neoSystem.Settings, gas: 1000_0000);
             if (engine.State.HasFlag(VMState.FAULT) || engine.ResultStack.Count != 2)
             {
                 Console.WriteLine($"Fault: from[{record.from}] to[{record.to}] get {record.asset} token [{record.tokenId.GetSpan().ToHexString()}] balance fault", LogLevel.Warning);

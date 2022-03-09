@@ -66,7 +66,6 @@ namespace Neo.Plugins.Trackers.NEP_17
                 try
                 {
                     SaveNep17Balance(balanceChangeRecord, snapshot);
-
                 }
                 catch (Exception e)
                 {
@@ -102,7 +101,7 @@ namespace Neo.Plugins.Trackers.NEP_17
             var key = new Nep17BalanceKey(balanceChanged.User, balanceChanged.Asset);
             using ScriptBuilder sb = new();
             sb.EmitDynamicCall(balanceChanged.Asset, "balanceOf", balanceChanged.User);
-            using ApplicationEngine engine = ApplicationEngine.Run(sb.ToArray(), snapshot, settings: _neoSystem.Settings);
+            using ApplicationEngine engine = ApplicationEngine.Run(sb.ToArray(), snapshot, settings: _neoSystem.Settings, gas: 0500_0000);
 
             if (engine.State.HasFlag(VMState.FAULT) || engine.ResultStack.Count == 0)
             {
