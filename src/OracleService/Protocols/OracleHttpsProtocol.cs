@@ -48,21 +48,15 @@ namespace Neo.Plugins
         {
             Utility.Log(nameof(OracleHttpsProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
 
-            if (!Settings.Default.AllowPrivateHost)
-            {
-                IPHostEntry entry = await Dns.GetHostEntryAsync(uri.Host, cancellation);
-                if (entry.IsInternal())
-                    return (OracleResponseCode.Forbidden, null);
-            }
-
             HttpResponseMessage message;
+
             try
             {
                 do
                 {
                     if (!Settings.Default.AllowPrivateHost)
                     {
-                        var entry = await Dns.GetHostEntryAsync(uri.Host, cancellation);
+                        IPHostEntry entry = await Dns.GetHostEntryAsync(uri.Host, cancellation);
                         if (entry.IsInternal())
                             return (OracleResponseCode.Forbidden, null);
                     }
