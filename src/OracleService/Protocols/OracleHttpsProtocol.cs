@@ -49,7 +49,6 @@ namespace Neo.Plugins
             Utility.Log(nameof(OracleHttpsProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
 
             HttpResponseMessage message;
-
             try
             {
                 do
