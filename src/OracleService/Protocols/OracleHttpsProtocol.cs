@@ -10,6 +10,7 @@
 
 using Neo.Network.P2P.Payloads;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -51,6 +52,7 @@ namespace Neo.Plugins
             HttpResponseMessage message;
             try
             {
+                Stopwatch stopwatch = Stopwatch.StartNew();
                 do
                 {
                     if (!Settings.Default.AllowPrivateHost)
@@ -62,6 +64,9 @@ namespace Neo.Plugins
                     message = await client.GetAsync(uri, HttpCompletionOption.ResponseContentRead, cancellation);
                     if (message.Headers.Location is not null)
                     {
+                        if (stopwatch.Elapsed > client.Timeout)
+                            return (OracleResponseCode.Timeout, null);
+
                         uri = message.Headers.Location;
                         message = null;
                     }
