@@ -82,7 +82,7 @@ namespace Neo.Plugins
             trigger["gasconsumed"] = appExec.GasConsumed.ToString();
             try
             {
-                trigger["stack"] = ParseStack(appExec.Stack, Settings.Default.MaxStackSize);
+                trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.Default.MaxStackSize)).ToArray();
             }
             catch (InvalidOperationException)
             {
@@ -129,7 +129,7 @@ namespace Neo.Plugins
                     trigger["gasconsumed"] = appExec.GasConsumed.ToString();
                     try
                     {
-                        trigger["stack"] = ParseStack(appExec.Stack, Settings.Default.MaxStackSize);
+                        trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.Default.MaxStackSize)).ToArray();
                     }
                     catch (InvalidOperationException)
                     {
@@ -182,58 +182,6 @@ namespace Neo.Plugins
             {
                 Put(block.Hash.ToArray(), Neo.Utility.StrictUTF8.GetBytes(blockJson.ToString()));
             }
-        }
-
-        private static JObject ParseStack(StackItem[] items, int maxSize)
-        {
-            var queue = new Queue<StackItem>(items);
-            while (queue.TryDequeue(out var item))
-            {
-                int size = 0;
-                switch (item)
-                {
-                    case VM.Types.Boolean boolean:
-                        size = (boolean.GetBoolean() ? "true" : "false").Length;
-                        break;
-                    case VM.Types.Buffer _:
-                    case ByteString _:
-                        size = 2 + Convert.ToBase64String(item.GetSpan()).Length; // "x"
-                        break;
-                    case Integer integer:
-                        size = integer.GetInteger().ToString().Length;
-                        break;
-                    case Pointer pointer:
-                        size = pointer.Position.ToString().Length;
-                        break;
-                    case VM.Types.Array array:
-                        size += 2; // []
-                        foreach (var stackItem in array)
-                        {
-                            queue.Enqueue(stackItem);
-                        }
-                        break;
-                    case Map map:
-                        size += 2; // {}
-                        foreach (var keyValuePair in map)
-                        {
-                            size += 1; // x:z
-                            queue.Enqueue(keyValuePair.Key);
-                            queue.Enqueue(keyValuePair.Value);
-                        }
-                        break;
-                }
-
-                if (size > 0) size += 9; //,'value':y";
-                size += 11 + item.Type.ToString().Length; //"{'type':''}";
-                maxSize -= size;
-
-                if (maxSize < 0)
-                {
-                    throw new Exception("max stack size reached");
-                }
-            }
-
-            return new JArray(items.Select(u => u.ToJson()));
         }
 
         void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
