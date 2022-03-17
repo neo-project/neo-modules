@@ -52,7 +52,7 @@ namespace Neo.Plugins
             HttpResponseMessage message;
             try
             {
-                Stopwatch stopwatch = Stopwatch.StartNew();
+                int redirects = 2;
                 do
                 {
                     if (!Settings.Default.AllowPrivateHost)
@@ -64,18 +64,17 @@ namespace Neo.Plugins
                     message = await client.GetAsync(uri, HttpCompletionOption.ResponseContentRead, cancellation);
                     if (message.Headers.Location is not null)
                     {
-                        if (stopwatch.Elapsed > client.Timeout)
-                            return (OracleResponseCode.Timeout, null);
-
                         uri = message.Headers.Location;
                         message = null;
                     }
-                } while (message == null);
+                } while (message == null && redirects-- > 0);
             }
             catch
             {
                 return (OracleResponseCode.Timeout, null);
             }
+            if (message is null)
+                return (OracleResponseCode.Timeout, null);
             if (message.StatusCode == HttpStatusCode.NotFound)
                 return (OracleResponseCode.NotFound, null);
             if (message.StatusCode == HttpStatusCode.Forbidden)
