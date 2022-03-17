@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2021 The Neo Project.
+//
+// The Neo.Plugins.TokensTracker is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -66,7 +76,6 @@ namespace Neo.Plugins.Trackers.NEP_17
                 try
                 {
                     SaveNep17Balance(balanceChangeRecord, snapshot);
-
                 }
                 catch (Exception e)
                 {
@@ -102,7 +111,7 @@ namespace Neo.Plugins.Trackers.NEP_17
             var key = new Nep17BalanceKey(balanceChanged.User, balanceChanged.Asset);
             using ScriptBuilder sb = new();
             sb.EmitDynamicCall(balanceChanged.Asset, "balanceOf", balanceChanged.User);
-            using ApplicationEngine engine = ApplicationEngine.Run(sb.ToArray(), snapshot, settings: _neoSystem.Settings);
+            using ApplicationEngine engine = ApplicationEngine.Run(sb.ToArray(), snapshot, settings: _neoSystem.Settings, gas: 1700_0000);
 
             if (engine.State.HasFlag(VMState.FAULT) || engine.ResultStack.Count == 0)
             {
