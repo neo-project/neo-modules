@@ -61,20 +61,14 @@ namespace Neo.Network.RPC
 
         public static JObject[] MakeFindStatesParams(UInt256 rootHash, UInt160 scriptHash, ReadOnlySpan<byte> prefix, ReadOnlySpan<byte> from = default, int? count = null)
         {
-            var paramCount = from.Length == 0 ? 3 : count == null ? 4 : 5;
-            var @params = new JObject[paramCount];
-            @params[0] = rootHash.ToString();
-            @params[1] = scriptHash.ToString();
-            @params[2] = Convert.ToBase64String(prefix);
-            if (from.Length > 0)
-            {
-                @params[3] = Convert.ToBase64String(from);
-                if (count.HasValue)
-                {
-                    @params[4] = count.Value;
-                }
-            }
-            return @params;
+            JObject[] jobjectArray = new JObject[count.HasValue ? 5 : 4];
+            jobjectArray[0] = (JObject) rootHash.ToString();
+            jobjectArray[1] = (JObject) scriptHash.ToString();
+            jobjectArray[2] = (JObject) Convert.ToBase64String(prefix);
+            jobjectArray[3] = (JObject) Convert.ToBase64String(from);
+            if (count.HasValue)
+                jobjectArray[4] = (JObject) (double) count.Value;
+            return jobjectArray;
         }
 
         public async Task<RpcFoundStates> FindStatesAsync(UInt256 rootHash, UInt160 scriptHash, ReadOnlyMemory<byte> prefix, ReadOnlyMemory<byte> from = default, int? count = null)
