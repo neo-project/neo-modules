@@ -247,7 +247,7 @@ namespace Neo.Consensus
         {
             if (verify)
             {
-                VerifyResult result = tx.Verify(neoSystem.Settings, context.Snapshot, context.VerificationContext);
+                VerifyResult result = tx.Verify(neoSystem.Settings, context.Snapshot, context.VerificationContext, context.Transactions.Values);
                 if (result != VerifyResult.Succeed)
                 {
                     Log($"Rejected tx: {tx.Hash}, {result}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
