@@ -31,7 +31,8 @@ namespace Neo.Plugins
 
         public void RemoveFallback(Transaction tx)
         {
-            if ((signerFee[tx.Sender] -= tx.SystemFee + tx.NetworkFee) == 0)
+            var signer = tx.Signers[1].Account;
+            if ((signerFee[signer] -= tx.SystemFee + tx.NetworkFee) == 0)
                 signerFee.Remove(tx.Sender);
         }
     }
