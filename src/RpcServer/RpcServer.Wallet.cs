@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2021 The Neo Project.
+//
+// The Neo.Network.RPC is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Akka.Actor;
 using Neo.IO;
 using Neo.IO.Json;
@@ -31,6 +41,7 @@ namespace Neo.Plugins
             public override WalletAccount CreateAccount(byte[] privateKey) => null;
             public override WalletAccount CreateAccount(Contract contract, KeyPair key = null) => null;
             public override WalletAccount CreateAccount(UInt160 scriptHash) => null;
+            public override void Delete() { }
             public override bool DeleteAccount(UInt160 scriptHash) => false;
             public override WalletAccount GetAccount(UInt160 scriptHash) => null;
             public override IEnumerable<WalletAccount> GetAccounts() => Array.Empty<WalletAccount>();

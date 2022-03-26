@@ -1,12 +1,20 @@
+// Copyright (C) 2015-2021 The Neo Project.
+//
+// The Neo.Plugins.StateService is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Akka.Actor;
 using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
-using Neo.Plugins.MPT;
 using Neo.Plugins.StateService.Network;
 using Neo.Plugins.StateService.Verification;
-using Neo.SmartContract;
 using System;
 using System.Collections.Generic;
 using System.Threading;

@@ -1,6 +1,16 @@
+// Copyright (C) 2015-2021 The Neo Project.
+//
+// The Neo.Plugins.StateService is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
+using Neo.Cryptography.MPTTrie;
 using Neo.IO;
 using Neo.Persistence;
-using Neo.Plugins.MPT;
 using Neo.Plugins.StateService.Network;
 using Neo.SmartContract;
 using System;
@@ -10,12 +20,12 @@ namespace Neo.Plugins.StateService.Storage
     class StateSnapshot : IDisposable
     {
         private readonly ISnapshot snapshot;
-        public MPTTrie<StorageKey, StorageItem> Trie;
+        public Trie<StorageKey, StorageItem> Trie;
 
         public StateSnapshot(IStore store)
         {
             snapshot = store.GetSnapshot();
-            Trie = new MPTTrie<StorageKey, StorageItem>(snapshot, CurrentLocalRootHash(), Settings.Default.FullState);
+            Trie = new Trie<StorageKey, StorageItem>(snapshot, CurrentLocalRootHash(), Settings.Default.FullState);
         }
 
         public StateRoot GetStateRoot(uint index)

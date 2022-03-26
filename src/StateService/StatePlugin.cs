@@ -1,10 +1,20 @@
+// Copyright (C) 2015-2021 The Neo Project.
+//
+// The Neo.Plugins.StateService is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Akka.Actor;
 using Neo.ConsoleService;
+using Neo.Cryptography.MPTTrie;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
-using Neo.Plugins.MPT;
 using Neo.Plugins.StateService.Network;
 using Neo.Plugins.StateService.Storage;
 using Neo.Plugins.StateService.Verification;
@@ -163,7 +173,7 @@ namespace Neo.Plugins.StateService
                 return state_root.ToJson();
         }
 
-        private string GetProof(MPTTrie<StorageKey, StorageItem> trie, int contract_id, byte[] key)
+        private string GetProof(Trie<StorageKey, StorageItem> trie, int contract_id, byte[] key)
         {
             StorageKey skey = new StorageKey
             {
@@ -194,7 +204,7 @@ namespace Neo.Plugins.StateService
                 throw new RpcException(-100, "Old state not supported");
             }
             using var store = StateStore.Singleton.GetStoreSnapshot();
-            var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
+            var trie = new Trie<StorageKey, StorageItem>(store, root_hash);
             var contract = GetHistoricalContractState(trie, script_hash);
             if (contract is null) throw new RpcException(-100, "Unknown contract");
             return GetProof(trie, contract.Id, key);
@@ -216,7 +226,7 @@ namespace Neo.Plugins.StateService
             using MemoryStream ms = new(proof, false);
             using BinaryReader reader = new(ms, Utility.StrictUTF8);
 
-            var key = reader.ReadVarBytes(MPTNode.MaxKeyLength);
+            var key = reader.ReadVarBytes(Node.MaxKeyLength);
             var count = reader.ReadVarInt();
             for (ulong i = 0; i < count; i++)
             {
@@ -224,7 +234,7 @@ namespace Neo.Plugins.StateService
             }
 
             var skey = key.AsSerializable<StorageKey>();
-            var sitem = MPTTrie<StorageKey, StorageItem>.VerifyProof(root_hash, skey, proofs);
+            var sitem = Trie<StorageKey, StorageItem>.VerifyProof(root_hash, skey, proofs);
             if (sitem is null) throw new RpcException(-100, "Verification failed");
             return Convert.ToBase64String(sitem.Value);
         }
@@ -246,7 +256,7 @@ namespace Neo.Plugins.StateService
             return json;
         }
 
-        private ContractState GetHistoricalContractState(MPTTrie<StorageKey, StorageItem> trie, UInt160 script_hash)
+        private ContractState GetHistoricalContractState(Trie<StorageKey, StorageItem> trie, UInt160 script_hash)
         {
             const byte prefix = 8;
             StorageKey skey = new KeyBuilder(NativeContract.ContractManagement.Id, prefix).Add(script_hash);
@@ -270,7 +280,7 @@ namespace Neo.Plugins.StateService
             if (Settings.Default.MaxFindResultItems < count)
                 count = Settings.Default.MaxFindResultItems;
             using var store = StateStore.Singleton.GetStoreSnapshot();
-            var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
+            var trie = new Trie<StorageKey, StorageItem>(store, root_hash);
             var contract = GetHistoricalContractState(trie, script_hash);
             if (contract is null) throw new RpcException(-100, "Unknown contract");
             StorageKey pkey = new()
@@ -320,7 +330,7 @@ namespace Neo.Plugins.StateService
             var script_hash = UInt160.Parse(_params[1].AsString());
             var key = Convert.FromBase64String(_params[2].AsString());
             using var store = StateStore.Singleton.GetStoreSnapshot();
-            var trie = new MPTTrie<StorageKey, StorageItem>(store, root_hash);
+            var trie = new Trie<StorageKey, StorageItem>(store, root_hash);
 
             var contract = GetHistoricalContractState(trie, script_hash);
             if (contract is null) throw new RpcException(-100, "Unknown contract");
