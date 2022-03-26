@@ -17,9 +17,8 @@ using Neo.Wallets;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,13 +29,18 @@ namespace Neo.Plugins
     {
         private const int RefreshIntervalMilliSeconds = 1000 * 60 * 3;
 
+        private static readonly HttpClient httpClient = new()
+        {
+            Timeout = TimeSpan.FromSeconds(5),
+            MaxResponseContentBufferSize = ushort.MaxValue
+        };
+
         private Wallet wallet;
         private readonly ConcurrentDictionary<ulong, OracleTask> pendingQueue = new ConcurrentDictionary<ulong, OracleTask>();
         private readonly ConcurrentDictionary<ulong, DateTime> finishedCache = new ConcurrentDictionary<ulong, DateTime>();
         private Timer timer;
         private readonly CancellationTokenSource cancelSource = new CancellationTokenSource();
-        private bool started = false;
-        private bool stopped = false;
+        private OracleStatus status = OracleStatus.Unstarted;
         private IWalletProvider walletProvider;
         private int counter;
         private NeoSystem System;
@@ -82,7 +86,7 @@ namespace Neo.Plugins
         public override void Dispose()
         {
             OnStop();
-            while (!stopped)
+            while (status != OracleStatus.Stopped)
                 Thread.Sleep(100);
             foreach (var p in protocols)
                 p.Value.Dispose();
@@ -91,12 +95,12 @@ namespace Neo.Plugins
         [ConsoleCommand("start oracle", Category = "Oracle", Description = "Start oracle service")]
         private void OnStart()
         {
-            Start(walletProvider.GetWallet());
+            Start(walletProvider?.GetWallet());
         }
 
         public void Start(Wallet wallet)
         {
-            if (started) return;
+            if (status == OracleStatus.Running) return;
 
             if (wallet is null)
             {
@@ -117,9 +121,9 @@ namespace Neo.Plugins
             this.wallet = wallet;
             protocols["https"] = new OracleHttpsProtocol();
             protocols["neofs"] = new OracleNeoFSProtocol(wallet, oracles);
-            started = true;
+            status = OracleStatus.Running;
             timer = new Timer(OnTimer, null, RefreshIntervalMilliSeconds, Timeout.Infinite);
-
+            Console.WriteLine($"Oracle started");
             ProcessRequestsAsync();
         }
 
@@ -132,13 +136,24 @@ namespace Neo.Plugins
                 timer.Dispose();
                 timer = null;
             }
-            stopped = true;
+            status = OracleStatus.Stopped;
+        }
+
+        [ConsoleCommand("oracle status", Category = "Oracle", Description = "Show oracle status")]
+        private void OnShow()
+        {
+            Console.WriteLine($"Oracle status: {status}");
         }
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
-            if (stopped || !started) return;
+
+            if (Settings.Default.AutoStart && status == OracleStatus.Unstarted)
+            {
+                OnStart();
+            }
+            if (status != OracleStatus.Running) return;
             if (!CheckOracleAvaiblable(snapshot, out ECPoint[] oracles) || !CheckOracleAccount(wallet, oracles))
                 OnStop();
         }
@@ -188,7 +203,7 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject SubmitOracleResponse(JArray _params)
         {
-            if (stopped || !started) throw new InvalidOperationException();
+            if (status != OracleStatus.Running) throw new InvalidOperationException();
             ECPoint oraclePub = ECPoint.DecodePoint(Convert.FromBase64String(_params[0].AsString()), ECCurve.Secp256r1);
             ulong requestId = (ulong)_params[1].AsNumber();
             byte[] txSign = Convert.FromBase64String(_params[2].AsString());
@@ -215,18 +230,8 @@ namespace Neo.Plugins
         {
             try
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                request.Method = "POST";
-                request.ContentType = "application/json";
-                request.Timeout = 5000;
-                using (StreamWriter dataStream = new StreamWriter(await request.GetRequestStreamAsync()))
-                {
-                    await dataStream.WriteAsync(content);
-                }
-                HttpWebResponse response = (HttpWebResponse)await request.GetResponseAsync();
-                if (response.ContentLength > ushort.MaxValue) throw new Exception("The response it's bigger than allowed");
-                StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-                await reader.ReadToEndAsync();
+                using HttpResponseMessage response = await httpClient.PostAsync(url, new StringContent(content, Encoding.UTF8, "application/json"));
+                response.EnsureSuccessStatusCode();
             }
             catch (Exception e)
             {
@@ -309,7 +314,8 @@ namespace Neo.Plugins
                 if (cancelSource.IsCancellationRequested) break;
                 await Task.Delay(500);
             }
-            stopped = true;
+
+            status = OracleStatus.Stopped;
         }
 
 
@@ -544,6 +550,13 @@ namespace Neo.Plugins
             public ConcurrentDictionary<ECPoint, byte[]> Signs;
             public ConcurrentDictionary<ECPoint, byte[]> BackupSigns;
             public readonly DateTime Timestamp = TimeProvider.Current.UtcNow;
+        }
+
+        enum OracleStatus
+        {
+            Unstarted,
+            Running,
+            Stopped,
         }
     }
 }
