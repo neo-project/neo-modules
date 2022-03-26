@@ -22,7 +22,7 @@ namespace Neo.Plugins
 {
     class OracleHttpsProtocol : IOracleProtocol
     {
-        private readonly HttpClient client = new HttpClient();
+        private readonly HttpClient client = new(new HttpClientHandler() { AllowAutoRedirect = false });
 
         public OracleHttpsProtocol()
         {
@@ -48,17 +48,24 @@ namespace Neo.Plugins
         {
             Utility.Log(nameof(OracleHttpsProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
 
-            if (!Settings.Default.AllowPrivateHost)
-            {
-                IPHostEntry entry = await Dns.GetHostEntryAsync(uri.Host);
-                if (entry.IsInternal())
-                    return (OracleResponseCode.Forbidden, null);
-            }
-
             HttpResponseMessage message;
             try
             {
-                message = await client.GetAsync(uri, HttpCompletionOption.ResponseContentRead, cancellation);
+                do
+                {
+                    if (!Settings.Default.AllowPrivateHost)
+                    {
+                        IPHostEntry entry = await Dns.GetHostEntryAsync(uri.Host, cancellation);
+                        if (entry.IsInternal())
+                            return (OracleResponseCode.Forbidden, null);
+                    }
+                    message = await client.GetAsync(uri, HttpCompletionOption.ResponseContentRead, cancellation);
+                    if (message.Headers.Location is not null)
+                    {
+                        uri = message.Headers.Location;
+                        message = null;
+                    }
+                } while (message == null);
             }
             catch
             {
