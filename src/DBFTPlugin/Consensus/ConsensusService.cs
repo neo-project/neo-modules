@@ -17,6 +17,9 @@ using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using Neo.Consensus.DKG;
+using Neo.VM.Types;
 using static Neo.Ledger.Blockchain;
 
 namespace Neo.Consensus
@@ -34,7 +37,6 @@ namespace Neo.Consensus
         private DateTime block_received_time;
         private uint block_received_index;
         private bool started = false;
-
         /// <summary>
         /// This will record the information from last scheduled timer
         /// </summary>
@@ -106,6 +108,10 @@ namespace Neo.Consensus
             {
                 ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock << (viewNumber + 1)));
             }
+
+            Log($"Sending {nameof(DKGShareMessage)}: height={context.Block.Index} view={context.ViewNumber}");
+            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGShare() });
+
         }
 
         protected override void OnReceive(object message)
@@ -198,6 +204,9 @@ namespace Neo.Consensus
             Log($"Sending {nameof(PrepareRequest)}: height={context.Block.Index} view={context.ViewNumber}");
             localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest() });
 
+            //Log($"Sending {nameof(DKGTestMessage)}: height={context.Block.Index} view={context.ViewNumber}");
+            //localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGTest() });
+
             if (context.Validators.Length == 1)
                 CheckPreparations();
 
@@ -207,6 +216,7 @@ namespace Neo.Consensus
                     localNode.Tell(Message.Create(MessageCommand.Inv, payload));
             }
             ChangeTimer(TimeSpan.FromMilliseconds((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0)));
+
         }
 
         private void RequestRecovery()

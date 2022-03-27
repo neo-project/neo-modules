@@ -72,6 +72,13 @@ namespace Neo.Consensus
                 case RecoveryMessage recovery:
                     OnRecoveryMessageReceived(recovery);
                     break;
+                case DKGShareMessage shareMessage:
+                    OnDKGShareReceived(payload, shareMessage);
+                    break;
+                case DKGConfirmMessage confirmMessage:
+                    OnDKGConfirmReceived(payload, confirmMessage);
+                    break;
+
             }
         }
 
@@ -301,6 +308,36 @@ namespace Neo.Consensus
                 if (!shouldSendRecovery) return;
             }
             localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeRecoveryMessage() });
+        }
+
+
+        private void OnDKGShareReceived(ExtensiblePayload payload, DKGShareMessage message)
+        {
+            // if (message.NewViewNumber <= context.ViewNumber)
+            //     OnRecoveryRequestReceived(payload, message);
+            Log($"{nameof(OnDKGShareReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex}");
+            context.DKGSharePayloads[message.ValidatorIndex] ??= payload;
+
+            CheckDKGShareReceives();
+
+            if (context.DKGShared) return;
+
+            // var expectedView = context.GetMessage<ChangeView>(context.ChangeViewPayloads[message.ValidatorIndex])?.NewViewNumber ?? 0;
+            // if (message.NewViewNumber <= expectedView)
+            //     return;
+            Log($"Sending {nameof(DKGShareMessage)}: height={message.BlockIndex} view={message.ViewNumber} index={context.MyIndex}");
+            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeDKGShare() });
+
+            // context.ChangeViewPayloads[message.ValidatorIndex] = payload;
+            CheckDKGShareReceives();
+        }
+
+
+        private void OnDKGConfirmReceived(ExtensiblePayload payload, DKGConfirmMessage message)
+        {
+            Log($"Received {nameof(DKGConfirmMessage)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex}");
+            context.DKGConfirmPayloads[message.ValidatorIndex] ??= payload;
+            CheckDKGConfirms();
         }
     }
 }

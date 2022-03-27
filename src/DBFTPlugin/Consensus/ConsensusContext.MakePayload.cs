@@ -16,6 +16,9 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
+using Neo.Consensus.DKG;
+using Neo.Cryptography;
+using Neo.Cryptography.ECC;
 using static Neo.Consensus.RecoveryMessage;
 
 namespace Neo.Consensus
@@ -118,6 +121,7 @@ namespace Neo.Consensus
             });
         }
 
+
         public ExtensiblePayload MakeRecoveryRequest()
         {
             return MakeSignedPayload(new RecoveryRequest
@@ -163,6 +167,49 @@ namespace Neo.Consensus
             });
         }
 
+        #region MyRegion
+
+        public ExtensiblePayload MakeDKGShare()
+        {
+
+            DkgNode = Validators.Length switch
+            {
+                1 => new DKGNode(MyIndex, 7, 3),
+                _ => new DKGNode(MyIndex, (uint)Validators.Length, (uint)F + 1)
+            };
+            List<byte[]> encKeys = new List<byte[]>();
+            for (int i = 0; i < DkgNode.dkgSecretKeys.Count; i++)
+            {
+                byte[] key;
+                if (Validators.Length == 1)
+                {
+                    key = Cryptography.Helper.ECDHDeriveKey(keyPair, Validators[0]);
+                }
+                else
+                {
+                    key = Cryptography.Helper.ECDHDeriveKey(keyPair, Validators[i]);
+                }
+
+                var encK = DkgNode.dkgSecretKeys[i].AES256Encrypt(key
+                    ,
+                    new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 });
+                encKeys.Add(encK);
+                Console.WriteLine($"TargetIndex = {i}, Index = {MyIndex}, Key = {key.ToHexString()}");
+            }
+            var a = MakeSignedPayload(new DKGShareMessage
+            {
+                keys = encKeys.ToArray()
+            });
+            DKGSharePayloads[MyIndex] = a;
+            return a;
+        }
+
+        public ExtensiblePayload MakeDKGConfirm()
+        {
+            return DKGConfirmPayloads[MyIndex] = MakeSignedPayload(new DKGConfirmMessage());
+        }
+
+
         private static ulong GetNonce()
         {
             Random _random = new();
@@ -170,5 +217,8 @@ namespace Neo.Consensus
             _random.NextBytes(buffer);
             return BinaryPrimitives.ReadUInt64LittleEndian(buffer);
         }
+
+        #endregion DKG
+
     }
 }

@@ -15,5 +15,15 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
+  
+    <ItemGroup>
+    <Compile Remove="Cortex.Cryptography.Bls\**" />
+    <EmbeddedResource Remove="Cortex.Cryptography.Bls\**" />
+    <None Remove="Cortex.Cryptography.Bls\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cortex.Cryptography.Bls\Cortex.Cryptography.Bls.csproj" />
+  </ItemGroup>
 
 </Project>
