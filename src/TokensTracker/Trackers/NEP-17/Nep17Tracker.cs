@@ -35,6 +35,8 @@ namespace Neo.Plugins.Trackers.NEP_17
         private uint _currentHeight;
         private Block _currentBlock;
 
+        public override string TrackName => nameof(Nep17Tracker);
+
         public Nep17Tracker(IStore db, uint maxResult, bool shouldRecordHistory, NeoSystem system) : base(db, maxResult, shouldRecordHistory, system)
         {
         }
@@ -63,7 +65,7 @@ namespace Neo.Plugins.Trackers.NEP_17
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine(e);
+                            Log(e.ToString(), LogLevel.Error);
                             throw;
                         }
                     }
@@ -79,7 +81,7 @@ namespace Neo.Plugins.Trackers.NEP_17
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    Log(e.ToString(), LogLevel.Error);
                     throw;
                 }
             }
@@ -115,14 +117,14 @@ namespace Neo.Plugins.Trackers.NEP_17
 
             if (engine.State.HasFlag(VMState.FAULT) || engine.ResultStack.Count == 0)
             {
-                Console.WriteLine($"Fault:{balanceChanged.User} get {balanceChanged.Asset} balance fault", LogLevel.Warning);
+                Log($"Fault:{balanceChanged.User} get {balanceChanged.Asset} balance fault", LogLevel.Warning);
                 return;
             }
 
             var balanceItem = engine.ResultStack.Pop();
             if (balanceItem is not Integer)
             {
-                Console.WriteLine($"Fault:{balanceChanged.User} get {balanceChanged.Asset} balance not number", LogLevel.Warning);
+                Log($"Fault:{balanceChanged.User} get {balanceChanged.Asset} balance not number", LogLevel.Warning);
                 return;
             }
 
