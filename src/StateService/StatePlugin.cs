@@ -104,12 +104,12 @@ namespace Neo.Plugins.StateService
         {
             if (Verifier is not null)
             {
-                Console.WriteLine("Already started!");
+                ConsoleHelper.Warning("Already started!");
                 return;
             }
             if (wallet is null)
             {
-                Console.WriteLine("Please open wallet first!");
+                ConsoleHelper.Warning("Please open wallet first!");
                 return;
             }
             Verifier = System.ActorSystem.ActorOf(VerificationService.Props(wallet));
@@ -122,16 +122,19 @@ namespace Neo.Plugins.StateService
             using var snapshot = StateStore.Singleton.GetSnapshot();
             StateRoot state_root = snapshot.GetStateRoot(index);
             if (state_root is null)
-                Console.WriteLine("Unknown state root");
+                ConsoleHelper.Warning("Unknown state root");
             else
-                Console.WriteLine(state_root.ToJson());
+                ConsoleHelper.Info(state_root.ToJson().ToString());
         }
 
         [ConsoleCommand("state height", Category = "StateService", Description = "Get current state root index")]
         private void OnGetStateHeight()
         {
             if (System is null || System.Settings.Network != Settings.Default.Network) throw new InvalidOperationException("Network doesn't match");
-            Console.WriteLine($"LocalRootIndex: {StateStore.Singleton.LocalRootIndex}, ValidatedRootIndex: {StateStore.Singleton.ValidatedRootIndex}");
+            ConsoleHelper.Info("LocalRootIndex: ",
+                $"{StateStore.Singleton.LocalRootIndex}",
+                " ValidatedRootIndex: ",
+                $"{StateStore.Singleton.ValidatedRootIndex}");
         }
 
         [ConsoleCommand("get proof", Category = "StateService", Description = "Get proof of key and contract hash")]
@@ -140,11 +143,11 @@ namespace Neo.Plugins.StateService
             if (System is null || System.Settings.Network != Settings.Default.Network) throw new InvalidOperationException("Network doesn't match");
             try
             {
-                Console.WriteLine(GetProof(root_hash, script_hash, Convert.FromBase64String(key)));
+                ConsoleHelper.Info("Proof: ", GetProof(root_hash, script_hash, Convert.FromBase64String(key)));
             }
             catch (RpcException e)
             {
-                Console.WriteLine(e.Message);
+                ConsoleHelper.Error(e.Message);
             }
         }
 
@@ -153,11 +156,12 @@ namespace Neo.Plugins.StateService
         {
             try
             {
-                Console.WriteLine(VerifyProof(root_hash, Convert.FromBase64String(proof)));
+                ConsoleHelper.Info("Verify Result: ",
+                    VerifyProof(root_hash, Convert.FromBase64String(proof)));
             }
             catch (RpcException e)
             {
-                Console.WriteLine(e.Message);
+                ConsoleHelper.Error(e.Message);
             }
         }
 
