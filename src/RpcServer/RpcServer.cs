@@ -119,7 +119,7 @@ namespace Neo.Plugins
             .Configure(app =>
             {
                 app.UseResponseCompression();
-                app.Use(next => context => ProcessAsync(context, next));
+                app.Use(ProcessAsync);
                 app.Run(InvalidRequestAsync);
             })
             .ConfigureServices(services =>
