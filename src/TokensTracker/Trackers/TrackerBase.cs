@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2021 The Neo Project.
+//
+// The Neo.Plugins.TokensTracker is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
@@ -24,6 +34,7 @@ namespace Neo.Plugins.Trackers
         protected IStore _db;
         private ISnapshot _levelDbSnapshot;
         protected NeoSystem _neoSystem;
+        public abstract string TrackName { get; }
 
         protected TrackerBase(IStore db, uint maxResult, bool shouldTrackHistory, NeoSystem neoSystem)
         {
@@ -140,6 +151,11 @@ namespace Neo.Plugins.Trackers
         {
             return addressOrScriptHash.Length < 40 ?
                 addressOrScriptHash.ToScriptHash(_neoSystem.Settings.AddressVersion) : UInt160.Parse(addressOrScriptHash);
+        }
+
+        public void Log(string message, LogLevel level = LogLevel.Info)
+        {
+            Utility.Log(TrackName, level, message);
         }
     }
 }
