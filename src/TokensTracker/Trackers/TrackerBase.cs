@@ -34,6 +34,7 @@ namespace Neo.Plugins.Trackers
         protected IStore _db;
         private ISnapshot _levelDbSnapshot;
         protected NeoSystem _neoSystem;
+        public abstract string TrackName { get; }
 
         protected TrackerBase(IStore db, uint maxResult, bool shouldTrackHistory, NeoSystem neoSystem)
         {
@@ -150,6 +151,11 @@ namespace Neo.Plugins.Trackers
         {
             return addressOrScriptHash.Length < 40 ?
                 addressOrScriptHash.ToScriptHash(_neoSystem.Settings.AddressVersion) : UInt160.Parse(addressOrScriptHash);
+        }
+
+        public void Log(string message, LogLevel level = LogLevel.Info)
+        {
+            Utility.Log(TrackName, level, message);
         }
     }
 }
