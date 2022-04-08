@@ -389,11 +389,11 @@ namespace Neo.Plugins
             json["exception"] = GetExceptionMessage(engine.FaultException);
             try
             {
-                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson()));
+                json["stack"] = new JArray(engine.ResultStack.Select(p => p.ToJson(settings.MaxStackSize)));
             }
-            catch (InvalidOperationException)
+            catch (Exception ex)
             {
-                json["stack"] = "error: recursive reference";
+                json["exception"] = ex.Message;
             }
             return json;
         }

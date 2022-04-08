@@ -42,6 +42,7 @@ namespace Neo.Plugins
         public long MaxFee { get; init; }
         public int MaxIteratorResultItems { get; init; }
         public string[] DisabledMethods { get; init; }
+        public int MaxStackSize { get; init; }
 
         public static RpcServerSettings Default { get; } = new RpcServerSettings
         {
@@ -55,6 +56,7 @@ namespace Neo.Plugins
             MaxIteratorResultItems = 100,
             DisabledMethods = Array.Empty<string>(),
             MaxConcurrentConnections = 40,
+            MaxStackSize = ushort.MaxValue
         };
 
         public static RpcServerSettings Load(IConfigurationSection section) => new()
@@ -72,6 +74,7 @@ namespace Neo.Plugins
             MaxIteratorResultItems = section.GetValue("MaxIteratorResultItems", Default.MaxIteratorResultItems),
             DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray(),
             MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", Default.MaxConcurrentConnections),
+            MaxStackSize = section.GetValue("MaxStackSize", Default.MaxStackSize)
         };
     }
 }
