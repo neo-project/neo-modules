@@ -83,13 +83,9 @@ namespace Neo.Plugins
             {
                 trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.Default.MaxStackSize)).ToArray();
             }
-            catch (InvalidOperationException)
-            {
-                trigger["stack"] = "error: recursive reference";
-            }
             catch (Exception ex)
             {
-                trigger["stack"] = "error: " + ex.Message;
+                trigger["exception"] = ex.Message;
             }
             trigger["notifications"] = appExec.Notifications.Select(q =>
             {
@@ -130,13 +126,9 @@ namespace Neo.Plugins
                     {
                         trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.Default.MaxStackSize)).ToArray();
                     }
-                    catch (InvalidOperationException)
-                    {
-                        trigger["stack"] = "error: recursive reference";
-                    }
                     catch (Exception ex)
                     {
-                        trigger["stack"] = "error: " + ex.Message;
+                        trigger["exception"] = ex.Message;
                     }
                     trigger["notifications"] = appExec.Notifications.Select(q =>
                     {
