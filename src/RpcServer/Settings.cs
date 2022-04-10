@@ -41,8 +41,8 @@ namespace Neo.Plugins
         public long MaxGasInvoke { get; init; }
         public long MaxFee { get; init; }
         public int MaxIteratorResultItems { get; init; }
-        public string[] DisabledMethods { get; init; }
         public int MaxStackSize { get; init; }
+        public string[] DisabledMethods { get; init; }
 
         public static RpcServerSettings Default { get; } = new RpcServerSettings
         {
@@ -54,9 +54,9 @@ namespace Neo.Plugins
             MaxFee = (long)new BigDecimal(0.1M, NativeContract.GAS.Decimals).Value,
             TrustedAuthorities = Array.Empty<string>(),
             MaxIteratorResultItems = 100,
+            MaxStackSize = ushort.MaxValue,
             DisabledMethods = Array.Empty<string>(),
             MaxConcurrentConnections = 40,
-            MaxStackSize = ushort.MaxValue
         };
 
         public static RpcServerSettings Load(IConfigurationSection section) => new()
@@ -72,9 +72,9 @@ namespace Neo.Plugins
             MaxGasInvoke = (long)new BigDecimal(section.GetValue<decimal>("MaxGasInvoke", Default.MaxGasInvoke), NativeContract.GAS.Decimals).Value,
             MaxFee = (long)new BigDecimal(section.GetValue<decimal>("MaxFee", Default.MaxFee), NativeContract.GAS.Decimals).Value,
             MaxIteratorResultItems = section.GetValue("MaxIteratorResultItems", Default.MaxIteratorResultItems),
+            MaxStackSize = section.GetValue("MaxStackSize", Default.MaxStackSize),
             DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray(),
             MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", Default.MaxConcurrentConnections),
-            MaxStackSize = section.GetValue("MaxStackSize", Default.MaxStackSize)
         };
     }
 }
