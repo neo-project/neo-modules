@@ -5,6 +5,6 @@
     "AutoStart": false,
     "Network": 860833102,
     "MaxBlockSize": 2097152,
-    "MaxBlockSystemFee": 300000000000
+    "MaxBlockSystemFee": 200000000000
   }
 }
