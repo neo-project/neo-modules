@@ -17,6 +17,7 @@ namespace Neo.Consensus
         TxNotFound = 0x2,
         TxRejectedByPolicy = 0x3,
         TxInvalid = 0x4,
-        BlockRejectedByPolicy = 0x5
+        BlockRejectedByPolicy = 0x5,
+        TxListInvalid = 0x6,
     }
 }

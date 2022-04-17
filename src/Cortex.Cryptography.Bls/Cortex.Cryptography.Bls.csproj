@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="lib\bls384_256.dll" Link="bls384_256.dll" Pack="true" PackagePath="runtimes\win-x64\native">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="lib\libbls384_256.so" Link="libbls384_256.so" Pack="true" PackagePath="runtimes\linux-x64\native">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="lib\libbls384_256.dylib" Link="libbls384_256.dylib" Pack="true" PackagePath="runtimes\osx-x64\native">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

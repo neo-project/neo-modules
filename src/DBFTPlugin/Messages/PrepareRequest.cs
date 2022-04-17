@@ -9,13 +9,14 @@
 // modifications are permitted.
 
 using Neo.IO;
+using Neo.Network.P2P.Payloads;
 using System;
 using System.IO;
 using System.Linq;
 
 namespace Neo.Consensus
 {
-    public class PrepareRequest : ConsensusMessage
+    public partial class PrepareRequest : ConsensusMessage
     {
         public uint Version;
         public UInt256 PrevHash;
@@ -23,11 +24,15 @@ namespace Neo.Consensus
         public ulong Nonce;
         public UInt256[] TransactionHashes;
 
+        // We need the lists to verify the authenticity of the final list
+        //  Size of the lists should be > 2f
+        public ExtensiblePayload[] TXLists;
+
         public override int Size => base.Size
             + sizeof(uint)                      //Version
             + UInt256.Length                    //PrevHash
             + sizeof(ulong)                     //Timestamp
-            + sizeof(ulong)                     // Nonce
+            + sizeof(ulong)                     //Nonce
             + TransactionHashes.GetVarSize();   //TransactionHashes
 
         public PrepareRequest() : base(ConsensusMessageType.PrepareRequest) { }

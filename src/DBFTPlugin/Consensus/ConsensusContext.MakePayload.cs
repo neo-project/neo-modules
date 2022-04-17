@@ -22,6 +22,40 @@ namespace Neo.Consensus
 {
     partial class ConsensusContext
     {
+
+        public ExtensiblePayload MakeTxListRequest()
+        {
+            EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
+            return TxlistsPayloads[MyIndex] = MakeSignedPayload(new TxListMessage(ConsensusMessageType.TxListRequest)
+            {
+                TransactionHashes = TransactionHashes
+            });
+        }
+
+        public ExtensiblePayload MakeTxListResponse()
+        {
+            EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
+            return TxlistsPayloads[MyIndex] = MakeSignedPayload(new TxListMessage(ConsensusMessageType.TxListResponse)
+            {
+                TransactionHashes = TransactionHashes
+            });
+        }
+
+        public ExtensiblePayload MakePrepareRequest(UInt256[] txs)
+        {
+            EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
+            Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
+            Block.Header.Nonce = GetNonce();
+            return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
+            {
+                Version = Block.Version,
+                PrevHash = Block.PrevHash,
+                Timestamp = Block.Timestamp,
+                Nonce = Block.Nonce,
+                TransactionHashes = txs,
+            });
+        }
+
         public ExtensiblePayload MakeChangeView(ChangeViewReason reason)
         {
             return ChangeViewPayloads[MyIndex] = MakeSignedPayload(new ChangeView
@@ -103,20 +137,6 @@ namespace Neo.Consensus
             TransactionHashes = hashes.ToArray();
         }
 
-        public ExtensiblePayload MakePrepareRequest()
-        {
-            EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
-            Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
-            Block.Header.Nonce = GetNonce();
-            return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
-            {
-                Version = Block.Version,
-                PrevHash = Block.PrevHash,
-                Timestamp = Block.Timestamp,
-                Nonce = Block.Nonce,
-                TransactionHashes = TransactionHashes
-            });
-        }
 
         public ExtensiblePayload MakeRecoveryRequest()
         {

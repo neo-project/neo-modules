@@ -82,6 +82,7 @@ namespace Neo.Consensus
                 Log($"View changed: view={viewNumber} primary={context.Validators[context.GetPrimaryIndex((byte)(viewNumber - 1u))]}", LogLevel.Warning);
             Log($"Initialize: height={context.Block.Index} view={viewNumber} index={context.MyIndex} role={(context.IsPrimary ? "Primary" : context.WatchOnly ? "WatchOnly" : "Backup")}");
             if (context.WatchOnly) return;
+
             if (context.IsPrimary)
             {
                 if (isRecovering)
@@ -166,9 +167,15 @@ namespace Neo.Consensus
         {
             if (context.WatchOnly || context.BlockSent) return;
             if (timer.Height != context.Block.Index || timer.ViewNumber != context.ViewNumber) return;
+
+            // Start the consensus
             if (context.IsPrimary && !context.RequestSentOrReceived)
             {
-                SendPrepareRequest();
+                // No Anti-MEV in test mode
+                if (context.Validators.Length == 1)
+                    SendPrepareRequest(context.TransactionHashes);
+                else
+                    SendTxListRequest();
             }
             else if ((context.IsPrimary && context.RequestSentOrReceived) || context.IsBackup)
             {
@@ -190,49 +197,6 @@ namespace Neo.Consensus
 
                     RequestChangeView(reason);
                 }
-            }
-        }
-
-        private void SendPrepareRequest()
-        {
-            Log($"Sending {nameof(PrepareRequest)}: height={context.Block.Index} view={context.ViewNumber}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest() });
-
-            if (context.Validators.Length == 1)
-                CheckPreparations();
-
-            if (context.TransactionHashes.Length > 0)
-            {
-                foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes))
-                    localNode.Tell(Message.Create(MessageCommand.Inv, payload));
-            }
-            ChangeTimer(TimeSpan.FromMilliseconds((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0)));
-        }
-
-        private void RequestRecovery()
-        {
-            Log($"Sending {nameof(RecoveryRequest)}: height={context.Block.Index} view={context.ViewNumber} nc={context.CountCommitted} nf={context.CountFailed}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeRecoveryRequest() });
-        }
-
-        private void RequestChangeView(ChangeViewReason reason)
-        {
-            if (context.WatchOnly) return;
-            // Request for next view is always one view more than the current context.ViewNumber
-            // Nodes will not contribute for changing to a view higher than (context.ViewNumber+1), unless they are recovered
-            // The latter may happen by nodes in higher views with, at least, `M` proofs
-            byte expectedView = context.ViewNumber;
-            expectedView++;
-            ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock << (expectedView + 1)));
-            if ((context.CountCommitted + context.CountFailed) > context.F)
-            {
-                RequestRecovery();
-            }
-            else
-            {
-                Log($"Sending {nameof(ChangeView)}: height={context.Block.Index} view={context.ViewNumber} nv={expectedView} nc={context.CountCommitted} nf={context.CountFailed} reason={reason}");
-                localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeChangeView(reason) });
-                CheckExpectedView(expectedView);
             }
         }
 
