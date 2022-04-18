@@ -35,7 +35,7 @@ namespace Neo.Consensus
 
         protected override void Configure()
         {
-            if (settings == null) settings = new Settings(GetConfiguration());
+            settings ??= new Settings(GetConfiguration());
         }
 
         protected override void OnSystemLoaded(NeoSystem system)
@@ -47,14 +47,12 @@ namespace Neo.Consensus
 
         private void NeoSystem_ServiceAdded(object sender, object service)
         {
-            if (service is IWalletProvider)
+            if (service is not IWalletProvider provider) return;
+            walletProvider = provider;
+            neoSystem.ServiceAdded -= NeoSystem_ServiceAdded;
+            if (settings.AutoStart)
             {
-                walletProvider = service as IWalletProvider;
-                neoSystem.ServiceAdded -= NeoSystem_ServiceAdded;
-                if (settings.AutoStart)
-                {
-                    walletProvider.WalletChanged += WalletProvider_WalletChanged;
-                }
+                walletProvider.WalletChanged += WalletProvider_WalletChanged;
             }
         }
 

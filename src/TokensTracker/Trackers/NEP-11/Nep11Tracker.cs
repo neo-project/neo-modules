@@ -40,6 +40,7 @@ namespace Neo.Plugins.Trackers.NEP_11
             "tokenURI"
         };
 
+        public override string TrackName => nameof(Nep11Tracker);
 
         public Nep11Tracker(IStore db, uint maxResult, bool shouldRecordHistory, NeoSystem system) : base(db, maxResult, shouldRecordHistory, system)
         {
@@ -69,7 +70,7 @@ namespace Neo.Plugins.Trackers.NEP_11
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine(e);
+                            Log(e.ToString(), LogLevel.Error);
                             throw;
                         }
                     }
@@ -88,7 +89,7 @@ namespace Neo.Plugins.Trackers.NEP_11
                     var balanceMethod2 = state.Manifest.Abi.GetMethod("balanceOf", 2);
                     if (balanceMethod == null && balanceMethod2 == null)
                     {
-                        Console.WriteLine($"{state.Hash} is not nft!", LogLevel.Warning);
+                        Log($"{state.Hash} is not nft!", LogLevel.Warning);
                         continue;
                     }
 
@@ -116,14 +117,14 @@ namespace Neo.Plugins.Trackers.NEP_11
             using ApplicationEngine engine = ApplicationEngine.Run(sb.ToArray(), snapshot, settings: _neoSystem.Settings, gas: 3400_0000);
             if (engine.State.HasFlag(VMState.FAULT) || engine.ResultStack.Count != 2)
             {
-                Console.WriteLine($"Fault: from[{record.from}] to[{record.to}] get {record.asset} token [{record.tokenId.GetSpan().ToHexString()}] balance fault", LogLevel.Warning);
+                Log($"Fault: from[{record.from}] to[{record.to}] get {record.asset} token [{record.tokenId.GetSpan().ToHexString()}] balance fault", LogLevel.Warning);
                 return;
             }
             var toBalance = engine.ResultStack.Pop();
             var fromBalance = engine.ResultStack.Pop();
             if (toBalance is not Integer || fromBalance is not Integer)
             {
-                Console.WriteLine($"Fault: from[{record.from}] to[{record.to}] get {record.asset} token [{record.tokenId.GetSpan().ToHexString()}] balance not number", LogLevel.Warning);
+                Log($"Fault: from[{record.from}] to[{record.to}] get {record.asset} token [{record.tokenId.GetSpan().ToHexString()}] balance not number", LogLevel.Warning);
                 return;
             }
             Put(Nep11BalancePrefix, new Nep11BalanceKey(record.to, record.asset, record.tokenId), new TokenBalance { Balance = toBalance.GetInteger(), LastUpdatedBlock = _currentHeight });

@@ -28,7 +28,7 @@ namespace Neo.Consensus
             AutoStart = section.GetValue("AutoStart", false);
             Network = section.GetValue("Network", 5195086u);
             MaxBlockSize = section.GetValue("MaxBlockSize", 262144u);
-            MaxBlockSystemFee = section.GetValue("MaxBlockSystemFee", 900000000000L);
+            MaxBlockSystemFee = section.GetValue("MaxBlockSystemFee", 150000000000L);
         }
     }
 }
