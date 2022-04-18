@@ -346,7 +346,7 @@ namespace Neo.Plugins
             if (!protocols.TryGetValue(uri.Scheme, out IOracleProtocol protocol))
                 return (OracleResponseCode.ProtocolNotSupported, null);
 
-            using CancellationTokenSource ctsTimeout = new(Settings.Default.Https.Timeout);
+            using CancellationTokenSource ctsTimeout = new(Settings.Default.MaxTaskTimeout);
             using CancellationTokenSource ctsLinked = CancellationTokenSource.CreateLinkedTokenSource(cancelSource.Token, ctsTimeout.Token);
 
             try
