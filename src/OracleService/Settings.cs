@@ -55,7 +55,7 @@ namespace Neo.Plugins
             Network = section.GetValue("Network", 5195086u);
             Nodes = section.GetSection("Nodes").GetChildren().Select(p => new Uri(p.Get<string>(), UriKind.Absolute)).ToArray();
             MaxTaskTimeout = TimeSpan.FromMilliseconds(section.GetValue("MaxTaskTimeout", 432000000));
-            MaxOracleTimeout = TimeSpan.FromMilliseconds(section.GetValue("MaxOracleTimeout", 10000));
+            MaxOracleTimeout = TimeSpan.FromMilliseconds(section.GetValue("MaxOracleTimeout", 15000));
             AllowPrivateHost = section.GetValue("AllowPrivateHost", false);
             AllowedContentTypes = section.GetSection("AllowedContentTypes").GetChildren().Select(p => p.Get<string>()).ToArray();
             Https = new HttpsSettings(section.GetSection("Https"));
