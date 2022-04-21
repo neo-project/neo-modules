@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2021 The Neo Project.
+//
+// The Neo.Plugins.OracleService is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Neo.Network.P2P.Payloads;
 using System;
 using System.Linq;
@@ -12,7 +22,7 @@ namespace Neo.Plugins
 {
     class OracleHttpsProtocol : IOracleProtocol
     {
-        private readonly HttpClient client = new HttpClient();
+        private readonly HttpClient client = new(new HttpClientHandler() { AllowAutoRedirect = false });
 
         public OracleHttpsProtocol()
         {
@@ -38,22 +48,32 @@ namespace Neo.Plugins
         {
             Utility.Log(nameof(OracleHttpsProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
 
-            if (!Settings.Default.AllowPrivateHost)
-            {
-                IPHostEntry entry = await Dns.GetHostEntryAsync(uri.Host);
-                if (entry.IsInternal())
-                    return (OracleResponseCode.Forbidden, null);
-            }
-
             HttpResponseMessage message;
             try
             {
-                message = await client.GetAsync(uri, HttpCompletionOption.ResponseContentRead, cancellation);
+                int redirects = 2;
+                do
+                {
+                    if (!Settings.Default.AllowPrivateHost)
+                    {
+                        IPHostEntry entry = await Dns.GetHostEntryAsync(uri.Host, cancellation);
+                        if (entry.IsInternal())
+                            return (OracleResponseCode.Forbidden, null);
+                    }
+                    message = await client.GetAsync(uri, HttpCompletionOption.ResponseContentRead, cancellation);
+                    if (message.Headers.Location is not null)
+                    {
+                        uri = message.Headers.Location;
+                        message = null;
+                    }
+                } while (message == null && redirects-- > 0);
             }
             catch
             {
                 return (OracleResponseCode.Timeout, null);
             }
+            if (message is null)
+                return (OracleResponseCode.Timeout, null);
             if (message.StatusCode == HttpStatusCode.NotFound)
                 return (OracleResponseCode.NotFound, null);
             if (message.StatusCode == HttpStatusCode.Forbidden)

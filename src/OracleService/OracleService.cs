@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2021 The Neo Project.
+//
+// The Neo.Plugins.OracleService is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Akka.Actor;
 using Akka.Util.Internal;
 using Neo.ConsoleService;
@@ -104,17 +114,17 @@ namespace Neo.Plugins
 
             if (wallet is null)
             {
-                Console.WriteLine("Please open wallet first!");
+                ConsoleHelper.Warning("Please open wallet first!");
                 return;
             }
             if (!CheckOracleAvaiblable(System.StoreView, out ECPoint[] oracles))
             {
-                Console.WriteLine("The oracle service is unavailable");
+                ConsoleHelper.Warning("The oracle service is unavailable");
                 return;
             }
             if (!CheckOracleAccount(wallet, oracles))
             {
-                Console.WriteLine("There is no oracle account in wallet");
+                ConsoleHelper.Warning("There is no oracle account in wallet");
                 return;
             }
 
@@ -123,7 +133,7 @@ namespace Neo.Plugins
             protocols["neofs"] = new OracleNeoFSProtocol(wallet, oracles);
             status = OracleStatus.Running;
             timer = new Timer(OnTimer, null, RefreshIntervalMilliSeconds, Timeout.Infinite);
-            Console.WriteLine($"Oracle started");
+            ConsoleHelper.Info($"Oracle started");
             ProcessRequestsAsync();
         }
 
@@ -142,7 +152,7 @@ namespace Neo.Plugins
         [ConsoleCommand("oracle status", Category = "Oracle", Description = "Show oracle status")]
         private void OnShow()
         {
-            Console.WriteLine($"Oracle status: {status}");
+            ConsoleHelper.Info($"Oracle status: ", $"{status}");
         }
 
         void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
@@ -335,9 +345,13 @@ namespace Neo.Plugins
                 return (OracleResponseCode.Error, null);
             if (!protocols.TryGetValue(uri.Scheme, out IOracleProtocol protocol))
                 return (OracleResponseCode.ProtocolNotSupported, null);
+
+            using CancellationTokenSource ctsTimeout = new(Settings.Default.MaxOracleTimeout);
+            using CancellationTokenSource ctsLinked = CancellationTokenSource.CreateLinkedTokenSource(cancelSource.Token, ctsTimeout.Token);
+
             try
             {
-                return await protocol.ProcessAsync(uri, cancelSource.Token);
+                return await protocol.ProcessAsync(uri, ctsLinked.Token);
             }
             catch
             {

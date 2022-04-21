@@ -1,7 +1,8 @@
 {
   "PluginConfiguration": {
     "Path": "ApplicationLogs_{0}",
-    "Network": 860833102
+    "Network": 860833102,
+    "MaxStackSize": 65535
   },
   "Dependency": [
     "RpcServer"

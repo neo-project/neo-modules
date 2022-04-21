@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2021 The Neo Project.
+//
+// The Neo.Plugins.TokensTracker is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +34,8 @@ namespace Neo.Plugins.Trackers.NEP_17
         private const byte Nep17TransferReceivedPrefix = 0xea;
         private uint _currentHeight;
         private Block _currentBlock;
+
+        public override string TrackName => nameof(Nep17Tracker);
 
         public Nep17Tracker(IStore db, uint maxResult, bool shouldRecordHistory, NeoSystem system) : base(db, maxResult, shouldRecordHistory, system)
         {
@@ -53,7 +65,7 @@ namespace Neo.Plugins.Trackers.NEP_17
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine(e);
+                            Log(e.ToString(), LogLevel.Error);
                             throw;
                         }
                     }
@@ -66,11 +78,10 @@ namespace Neo.Plugins.Trackers.NEP_17
                 try
                 {
                     SaveNep17Balance(balanceChangeRecord, snapshot);
-
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    Log(e.ToString(), LogLevel.Error);
                     throw;
                 }
             }
@@ -102,18 +113,18 @@ namespace Neo.Plugins.Trackers.NEP_17
             var key = new Nep17BalanceKey(balanceChanged.User, balanceChanged.Asset);
             using ScriptBuilder sb = new();
             sb.EmitDynamicCall(balanceChanged.Asset, "balanceOf", balanceChanged.User);
-            using ApplicationEngine engine = ApplicationEngine.Run(sb.ToArray(), snapshot, settings: _neoSystem.Settings);
+            using ApplicationEngine engine = ApplicationEngine.Run(sb.ToArray(), snapshot, settings: _neoSystem.Settings, gas: 1700_0000);
 
             if (engine.State.HasFlag(VMState.FAULT) || engine.ResultStack.Count == 0)
             {
-                Console.WriteLine($"Fault:{balanceChanged.User} get {balanceChanged.Asset} balance fault", LogLevel.Warning);
+                Log($"Fault:{balanceChanged.User} get {balanceChanged.Asset} balance fault", LogLevel.Warning);
                 return;
             }
 
             var balanceItem = engine.ResultStack.Pop();
             if (balanceItem is not Integer)
             {
-                Console.WriteLine($"Fault:{balanceChanged.User} get {balanceChanged.Asset} balance not number", LogLevel.Warning);
+                Log($"Fault:{balanceChanged.User} get {balanceChanged.Asset} balance not number", LogLevel.Warning);
                 return;
             }
 
