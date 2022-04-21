@@ -51,6 +51,7 @@ namespace Neo.Plugins
             HttpResponseMessage message;
             try
             {
+                int redirects = 2;
                 do
                 {
                     if (!Settings.Default.AllowPrivateHost)
@@ -65,12 +66,14 @@ namespace Neo.Plugins
                         uri = message.Headers.Location;
                         message = null;
                     }
-                } while (message == null);
+                } while (message == null && redirects-- > 0);
             }
             catch
             {
                 return (OracleResponseCode.Timeout, null);
             }
+            if (message is null)
+                return (OracleResponseCode.Timeout, null);
             if (message.StatusCode == HttpStatusCode.NotFound)
                 return (OracleResponseCode.NotFound, null);
             if (message.StatusCode == HttpStatusCode.Forbidden)
