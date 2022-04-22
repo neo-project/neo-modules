@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using Neo.IO.Caching;
 using Neo.Network.P2P.Payloads.Conditions;
+using System.Collections.Generic;
 
 namespace Neo.Plugins
 {
