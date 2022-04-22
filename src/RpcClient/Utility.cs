@@ -255,7 +255,7 @@ namespace Neo.Network.RPC
                     return new Pointer(null, (int)json["value"].AsNumber());
                 case StackItemType.InteropInterface:
                     var obj = json["iterator"] is not null
-                        ? LocalIterator.FromJson(json) 
+                        ? LocalIterator.FromJson(json)
                         : new object();
                     return new InteropInterface(obj);
             }

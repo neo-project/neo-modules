@@ -204,10 +204,10 @@ namespace Neo.Plugins
 
         (Signers signers, bool useDiagnostic, uint? iteratorSkip) ParseInvokeParams(IEnumerator<JObject> paramEnum)
         {
-            Signers signers = paramEnum.MoveNext() 
-                ? SignersFromJson((JArray)paramEnum.Current, system.Settings) 
+            Signers signers = paramEnum.MoveNext()
+                ? SignersFromJson((JArray)paramEnum.Current, system.Settings)
                 : null;
-            bool useDiagnostic = paramEnum.MoveNext() 
+            bool useDiagnostic = paramEnum.MoveNext()
                 ? paramEnum.Current.AsBoolean()
                 : false;
             uint? iteratorSkip = paramEnum.MoveNext()
@@ -223,7 +223,7 @@ namespace Neo.Plugins
             string operation = _params[1].AsString();
 
             var paramEnum = _params.Skip(2).GetEnumerator();
-            ContractParameter[] args = paramEnum.MoveNext() 
+            ContractParameter[] args = paramEnum.MoveNext()
                 ? ((JArray)paramEnum.Current).Select(ContractParameter.FromJson).ToArray()
                 : System.Array.Empty<ContractParameter>();
             var (signers, useDiagnostic, iteratorSkip) = ParseInvokeParams(paramEnum);

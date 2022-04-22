@@ -453,7 +453,7 @@ namespace Neo.Network.RPC
         {
             return InvokeScriptAsync(script, null, signers);
         }
-        
+
         /// <summary>
         /// Returns the result after passing a script through the VM.
         /// This RPC call does not affect the blockchain in any way.
