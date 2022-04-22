@@ -185,7 +185,7 @@ namespace Neo.Plugins.StateService
                 Key = key,
             };
             var result = trie.TryGetProof(skey, out var proof);
-            if (!result) throw new RpcException(-100, "Unknown value");
+            if (!result) throw new KeyNotFoundException();
 
             using MemoryStream ms = new();
             using BinaryWriter writer = new(ms, Utility.StrictUTF8);
