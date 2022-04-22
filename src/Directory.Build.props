@@ -17,4 +17,22 @@
     <PackageReference Include="Neo" Version="3.2.1" />
   </ItemGroup>
 
+  <Target Name="CopyFilesAfterBuild" AfterTargets="Build">
+    <ItemGroup>
+      <MySourceFiles Include="$(TargetDir)\*.*"/>
+        </ItemGroup>
+        <Copy
+              SourceFiles="@(MySourceFiles)"
+              DestinationFiles="$(TargetDir)$(ProjectName)\%(RecursiveDir)%(Filename)%(Extension)"/>
+  </Target>
+
+  <Target Name="CopyFilesAfterPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <MySourceFiles Include="$(PublishDir)\*.*"/>
+        </ItemGroup>
+        <Copy
+              SourceFiles="@(MySourceFiles)"
+              DestinationFiles="$(PublishDir)$(ProjectName)\%(RecursiveDir)%(Filename)%(Extension)"/>
+  </Target>
+
 </Project>
