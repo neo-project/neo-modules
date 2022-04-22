@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using Neo.IO.Caching;
 using Neo.Network.P2P.Payloads.Conditions;
+using System.Collections.Generic;
 
 namespace Neo.Plugins
 {
@@ -71,7 +72,7 @@ namespace Neo.Plugins
             }
         }
 
-        private JObject GetInvokeResult(byte[] script, Signers signers = null, bool useDiagnostic = false)
+        private JObject GetInvokeResult(byte[] script, Signers signers, bool useDiagnostic, uint? iteratorSkip)
         {
             Transaction tx = signers == null ? null : new Transaction
             {
@@ -90,7 +91,7 @@ namespace Neo.Plugins
                   var obj = new JObject();
                   obj["eventname"] = n.EventName;
                   obj["contract"] = n.ScriptHash.ToString();
-                  obj["state"] = ToJson(n.State, settings.MaxIteratorResultItems);
+                  obj["state"] = ToJson(n.State, settings.MaxIteratorResultItems, null);
                   return obj;
               }));
             if (useDiagnostic)
@@ -103,7 +104,7 @@ namespace Neo.Plugins
             }
             try
             {
-                json["stack"] = new JArray(engine.ResultStack.Select(p => ToJson(p, settings.MaxIteratorResultItems)));
+                json["stack"] = new JArray(engine.ResultStack.Select(p => ToJson(p, settings.MaxIteratorResultItems, iteratorSkip)));
             }
             catch (InvalidOperationException)
             {
@@ -142,17 +143,27 @@ namespace Neo.Plugins
             return array;
         }
 
-        private static JObject ToJson(StackItem item, int max)
+        private static JObject ToJson(StackItem item, int max, uint? iteratorSkip)
         {
             JObject json = item.ToJson();
             if (item is InteropInterface interopInterface && interopInterface.GetInterface<object>() is IIterator iterator)
             {
                 JArray array = new();
+                if (iteratorSkip.HasValue)
+                {
+                    var count = iteratorSkip.Value;
+                    while (count > 0 && iterator.Next())
+                    {
+                        // do nothing
+                    }
+                }
+
                 while (max > 0 && iterator.Next())
                 {
                     array.Add(iterator.Value().ToJson());
                     max--;
                 }
+
                 json["iterator"] = array;
                 json["truncated"] = iterator.Next();
             }
@@ -191,30 +202,48 @@ namespace Neo.Plugins
             return ret;
         }
 
+        (Signers signers, bool useDiagnostic, uint? iteratorSkip) ParseInvokeParams(IEnumerator<JObject> paramEnum)
+        {
+            Signers signers = paramEnum.MoveNext()
+                ? SignersFromJson((JArray)paramEnum.Current, system.Settings)
+                : null;
+            bool useDiagnostic = paramEnum.MoveNext()
+                ? paramEnum.Current.AsBoolean()
+                : false;
+            uint? iteratorSkip = paramEnum.MoveNext()
+                ? (uint)paramEnum.Current.AsNumber()
+                : null;
+            return (signers, useDiagnostic, iteratorSkip);
+        }
+
         [RpcMethod]
         protected virtual JObject InvokeFunction(JArray _params)
         {
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
-            ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : System.Array.Empty<ContractParameter>();
-            Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
-            bool useDiagnostic = _params.Count >= 5 && _params[4].GetBoolean();
+
+            var paramEnum = _params.Skip(2).GetEnumerator();
+            ContractParameter[] args = paramEnum.MoveNext()
+                ? ((JArray)paramEnum.Current).Select(ContractParameter.FromJson).ToArray()
+                : System.Array.Empty<ContractParameter>();
+            var (signers, useDiagnostic, iteratorSkip) = ParseInvokeParams(paramEnum);
 
             byte[] script;
             using (ScriptBuilder sb = new())
             {
                 script = sb.EmitDynamicCall(script_hash, operation, args).ToArray();
             }
-            return GetInvokeResult(script, signers, useDiagnostic);
+            return GetInvokeResult(script, signers, useDiagnostic, iteratorSkip);
         }
 
         [RpcMethod]
         protected virtual JObject InvokeScript(JArray _params)
         {
             byte[] script = Convert.FromBase64String(_params[0].AsString());
-            Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], system.Settings) : null;
-            bool useDiagnostic = _params.Count >= 3 && _params[2].GetBoolean();
-            return GetInvokeResult(script, signers, useDiagnostic);
+            var paramEnum = _params.Skip(1).GetEnumerator();
+            var (signers, useDiagnostic, iteratorSkip) = ParseInvokeParams(paramEnum);
+
+            return GetInvokeResult(script, signers, useDiagnostic, iteratorSkip);
         }
 
         [RpcMethod]

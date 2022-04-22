@@ -427,12 +427,19 @@ namespace Neo.Network.RPC
         /// Returns the result after calling a smart contract at scripthash with the given operation and parameters.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
-        public async Task<RpcInvokeResult> InvokeFunctionAsync(string scriptHash, string operation, RpcStack[] stacks, params Signer[] signer)
+        public Task<RpcInvokeResult> InvokeFunctionAsync(string scriptHash, string operation, RpcStack[] stacks, params Signer[] signers)
+        {
+            return InvokeFunctionAsync(scriptHash, operation, stacks, null, signers);
+        }
+
+        public async Task<RpcInvokeResult> InvokeFunctionAsync(string scriptHash, string operation, RpcStack[] stacks, uint? invokeSkip, params Signer[] signers)
         {
             List<JObject> parameters = new() { scriptHash.AsScriptHash(), operation, stacks.Select(p => p.ToJson()).ToArray() };
-            if (signer.Length > 0)
+            parameters.Add(new JArray(signers.Length > 0 ? signers.Select(p => p.ToJson()) : Enumerable.Empty<JObject>()));
+            if (invokeSkip.HasValue)
             {
-                parameters.Add(signer.Select(p => p.ToJson()).ToArray());
+                parameters.Add(false);
+                parameters.Add(invokeSkip.Value);
             }
             var result = await RpcSendAsync(GetRpcName(), parameters.ToArray()).ConfigureAwait(false);
             return RpcInvokeResult.FromJson(result);
@@ -442,12 +449,23 @@ namespace Neo.Network.RPC
         /// Returns the result after passing a script through the VM.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
-        public async Task<RpcInvokeResult> InvokeScriptAsync(byte[] script, params Signer[] signers)
+        public Task<RpcInvokeResult> InvokeScriptAsync(byte[] script, params Signer[] signers)
+        {
+            return InvokeScriptAsync(script, null, signers);
+        }
+
+        /// <summary>
+        /// Returns the result after passing a script through the VM.
+        /// This RPC call does not affect the blockchain in any way.
+        /// </summary>
+        public async Task<RpcInvokeResult> InvokeScriptAsync(byte[] script, uint? invokeSkip, params Signer[] signers)
         {
             List<JObject> parameters = new() { Convert.ToBase64String(script) };
-            if (signers.Length > 0)
+            parameters.Add(new JArray(signers.Length > 0 ? signers.Select(p => p.ToJson()) : Enumerable.Empty<JObject>()));
+            if (invokeSkip.HasValue)
             {
-                parameters.Add(signers.Select(p => p.ToJson()).ToArray());
+                parameters.Add(false);
+                parameters.Add(invokeSkip.Value);
             }
             var result = await RpcSendAsync(GetRpcName(), parameters.ToArray()).ConfigureAwait(false);
             return RpcInvokeResult.FromJson(result);
