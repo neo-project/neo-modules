@@ -16,7 +16,6 @@ using Neo.SmartContract.Native;
 using Neo.VM.Types;
 using Neo.Wallets;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using Array = Neo.VM.Types.Array;
@@ -255,7 +254,10 @@ namespace Neo.Network.RPC
                 case StackItemType.Pointer:
                     return new Pointer(null, (int)json["value"].AsNumber());
                 case StackItemType.InteropInterface:
-                    return new InteropInterface(new object());
+                    var obj = json["iterator"] is not null
+                        ? LocalIterator.FromJson(json) 
+                        : new object();
+                    return new InteropInterface(obj);
             }
             return json["value"] is null ? StackItem.Null : json["value"].AsString();
         }
