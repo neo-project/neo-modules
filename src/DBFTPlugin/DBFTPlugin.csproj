@@ -9,11 +9,4 @@
     <PackageReference Include="Neo.ConsoleService" Version="1.2.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="DBFTPlugin\config.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>
