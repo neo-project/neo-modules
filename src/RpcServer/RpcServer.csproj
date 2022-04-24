@@ -4,12 +4,5 @@
     <PackageId>Neo.Plugins.RpcServer</PackageId>
     <RootNamespace>Neo.Plugins</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Update="RpcServer\config.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </None>
-  </ItemGroup>
   
 </Project>

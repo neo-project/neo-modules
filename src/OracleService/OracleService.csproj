@@ -13,11 +13,4 @@
     <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="OracleService\config.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>
