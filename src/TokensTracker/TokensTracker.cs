@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Plugins.TokensTracker is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,15 +8,15 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.Plugins.Trackers;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using static System.IO.Path;
 
 namespace Neo.Plugins
@@ -77,7 +77,7 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
+        void IPersistencePlugin.OnCommit(NeoSystem system, Block block)
         {
             if (system.Settings.Network != _network) return;
             foreach (var tracker in trackers)

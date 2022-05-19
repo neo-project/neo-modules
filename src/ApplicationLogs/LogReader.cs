@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Plugins.ApplicationLogs is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -175,7 +175,7 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
+        void IPersistencePlugin.OnCommit(NeoSystem system, Block block)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
             db.Write(WriteOptions.Default, _writeBatch);

@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -209,29 +209,12 @@ namespace Neo.Plugins
         {
             using var snapshot = system.GetSnapshot();
             var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, system.Settings.ValidatorsCount);
-            var candidates = NativeContract.NEO.GetCandidates(snapshot);
-            if (candidates.Length > 0)
+            return validators.Select(p =>
             {
-                return candidates.Select(p =>
-                {
-                    JObject validator = new();
-                    validator["publickey"] = p.PublicKey.ToString();
-                    validator["votes"] = p.Votes.ToString();
-                    validator["active"] = validators.Contains(p.PublicKey);
-                    return validator;
-                }).ToArray();
-            }
-            else
-            {
-                return validators.Select(p =>
-                {
-                    JObject validator = new();
-                    validator["publickey"] = p.ToString();
-                    validator["votes"] = 0;
-                    validator["active"] = true;
-                    return validator;
-                }).ToArray();
-            }
+                JObject validator = new();
+                validator["publickey"] = p.ToString();
+                return validator;
+            }).ToArray();
         }
 
         [RpcMethod]

@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Plugins.StateService is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -87,7 +87,7 @@ namespace Neo.Plugins.StateService
             StateStore.Singleton.UpdateLocalStateRootSnapshot(block.Index, snapshot.GetChangeSet().Where(p => p.State != TrackState.None).Where(p => p.Key.Id != NativeContract.Ledger.Id).ToList());
         }
 
-        void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
+        void IPersistencePlugin.OnCommit(NeoSystem system, Block block)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
             StateStore.Singleton.UpdateLocalStateRoot(block.Index);
@@ -306,7 +306,7 @@ namespace Neo.Plugins.StateService
                 if (i < count)
                 {
                     JObject j = new();
-                    j["key"] = Convert.ToBase64String(ikey.Key);
+                    j["key"] = Convert.ToBase64String(ikey.Key.Span);
                     j["value"] = Convert.ToBase64String(ivalue.Value);
                     jarr.Add(j);
                 }
