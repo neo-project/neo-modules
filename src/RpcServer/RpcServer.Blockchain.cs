@@ -213,6 +213,7 @@ namespace Neo.Plugins
             {
                 JObject validator = new();
                 validator["publickey"] = p.ToString();
+                validator["votes"] = (int)NativeContract.NEO.GetCandidateVote(snapshot, p);
                 return validator;
             }).ToArray();
         }
