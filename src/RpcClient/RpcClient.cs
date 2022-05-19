@@ -156,7 +156,7 @@ namespace Neo.Network.RPC
                     break;
                 }
             }
-            return new Regex("(.*?)(Hex|Both)?(Async)?").Replace(methodName, "$1").ToLower();
+            return new Regex("(.*?)(Hex|Both)?(Async)?").Replace(methodName, "$1").ToLowerInvariant();
         }
 
         #region Blockchain
