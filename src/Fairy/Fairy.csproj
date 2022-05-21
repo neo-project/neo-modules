@@ -10,11 +10,4 @@
     <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Fairy\config.json">
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		<CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-	</None>
-  </ItemGroup>
-
 </Project>
