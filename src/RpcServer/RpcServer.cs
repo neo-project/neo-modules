@@ -258,9 +258,10 @@ namespace Neo.Plugins
         {
             foreach (MethodInfo method in handler.GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
-                CustomAttributeData attribute = method.CustomAttributes.FirstOrDefault(p => p.AttributeType.Name == nameof(RpcMethodAttribute), null);
+                RpcMethodAttribute attribute = method.GetCustomAttribute<RpcMethodAttribute>();
                 if (attribute is null) continue;
-                methods[method.Name.ToLowerInvariant()] = (Func<JArray, JObject>)method.CreateDelegate(typeof(Func<JArray, JObject>), handler);
+                string name = string.IsNullOrEmpty(attribute.Name) ? method.Name.ToLowerInvariant() : attribute.Name;
+                methods[name] = (Func<JArray, JObject>)method.CreateDelegate(typeof(Func<JArray, JObject>), handler);
             }
         }
     }

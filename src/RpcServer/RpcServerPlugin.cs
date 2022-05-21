@@ -52,15 +52,6 @@ namespace Neo.Plugins
                 }
             }
 
-            if (PluginHooks.Remove(s.Network, out var handerList))
-            {
-                foreach (var handler in (List<object>)handerList)
-                {
-                    server.RegisterMethods(handler);
-                }
-            }
-            PluginHooks.Clear();
-
             server.StartRpcServer();
             servers.TryAdd(s.Network, server);
         }
