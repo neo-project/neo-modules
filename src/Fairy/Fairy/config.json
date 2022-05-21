@@ -1,0 +1,9 @@
+{
+  "PluginConfiguration": {
+    "MaxGasInvoke": 200,
+    "MaxIteratorResultItems": 100,
+  },
+  "Dependency": [
+    "RpcServer"
+  ]
+}
