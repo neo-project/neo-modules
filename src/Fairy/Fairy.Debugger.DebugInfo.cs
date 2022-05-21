@@ -1,7 +1,7 @@
 using Neo.IO.Json;
 using Neo.VM;
-using System.IO.Compression;
 using System.Collections.Concurrent;
+using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -9,20 +9,17 @@ namespace Neo.Plugins
 {
     public partial class Fairy
     {
-        public struct SourceFilenameAndLineNum { public string SourceFilename; public uint LineNum;}
+        public struct SourceFilenameAndLineNum { public string SourceFilename; public uint LineNum; }
         readonly ConcurrentDictionary<UInt160, HashSet<SourceFilenameAndLineNum>> contractScriptHashToSourceLineNums = new();
         readonly ConcurrentDictionary<UInt160, Dictionary<uint, SourceFilenameAndLineNum>> contractScriptHashToInstructionPointerToSourceLineNum = new();
         readonly ConcurrentDictionary<UInt160, HashSet<string>> contractScriptHashToSourceLineFilenames = new();
         readonly ConcurrentDictionary<UInt160, Dictionary<uint, OpCode>> contractScriptHashToInstructionPointerToOpCode = new();
         readonly ConcurrentDictionary<UInt160, JObject> contractScriptHashToNefDbgNfo = new();
-        struct DumpNefPatterns
-        {
-            public Regex opCodeRegex = new Regex(@"^(\d+)\s(.*?)\s?(#\s.*)?$");  // 8039 SYSCALL 62-7D-5B-52 # System.Contract.Call SysCall
-            public Regex sourceCodeRegex = new Regex(@"^#\sCode\s(.*\.cs)\sline\s(\d+):\s""(.*)""$");  // # Code NFTLoan.cs line 523: "ExecutionEngine.Assert((bool)Contract.Call(token, "transfer", CallFlags.All, tenant, Runtime.ExecutingScriptHash, neededAmount, tokenId, TRANSACTION_DATA), "NFT payback failed");"
-            public Regex methodStartRegex = new Regex(@"^# Method\sStart\s(.*)$");  // # Method Start NFTLoan.NFTLoan.FlashBorrowDivisible
-            public Regex methodEndRegex = new Regex(@"^# Method\sEnd\s(.*)$");  // # Method End NFTLoan.NFTLoan.FlashBorrowDivisible
-        }
-        readonly DumpNefPatterns dumpNefPatterns = new();
+
+        private static readonly Regex opCodeRegex = new(@"^(\d+)\s(.*?)\s?(#\s.*)?$");  // 8039 SYSCALL 62-7D-5B-52 # System.Contract.Call SysCall
+        private static readonly Regex sourceCodeRegex = new(@"^#\sCode\s(.*\.cs)\sline\s(\d+):\s""(.*)""$");  // # Code NFTLoan.cs line 523: "ExecutionEngine.Assert((bool)Contract.Call(token, "transfer", CallFlags.All, tenant, Runtime.ExecutingScriptHash, neededAmount, tokenId, TRANSACTION_DATA), "NFT payback failed");"
+        private static readonly Regex methodStartRegex = new(@"^# Method\sStart\s(.*)$");  // # Method Start NFTLoan.NFTLoan.FlashBorrowDivisible
+        private static readonly Regex methodEndRegex = new(@"^# Method\sEnd\s(.*)$");  // # Method End NFTLoan.NFTLoan.FlashBorrowDivisible
 
         public static string Unzip(byte[] zippedBuffer)
         {
@@ -71,25 +68,25 @@ namespace Neo.Plugins
                 // foreach (var field in typeof(DumpNefPatterns).GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
                 //     Console.WriteLine($"{field.Name}: {field.GetValue(dumpNefPatterns)}");
                 Match match;
-                match = dumpNefPatterns.sourceCodeRegex.Match(lines[lineNum]);
+                match = sourceCodeRegex.Match(lines[lineNum]);
                 if (match.Success)
                 {
                     GroupCollection sourceCodeGroups = match.Groups;
                     uint sourceCodeLineNum = uint.Parse(sourceCodeGroups[2].ToString());
-                    match = dumpNefPatterns.opCodeRegex.Match(lines[lineNum + 1]);
+                    match = opCodeRegex.Match(lines[lineNum + 1]);
                     if (match.Success)
                     {
                         GroupCollection opcodeGroups = match.Groups;
                         uint instructionPointer = uint.Parse(opcodeGroups[1].ToString());
                         string filename = sourceCodeGroups[1].ToString();
                         filenames.Add(filename);
-                        SourceFilenameAndLineNum sourceFilenameAndLineNum = new SourceFilenameAndLineNum { SourceFilename=filename, LineNum=sourceCodeLineNum };
+                        SourceFilenameAndLineNum sourceFilenameAndLineNum = new SourceFilenameAndLineNum { SourceFilename = filename, LineNum = sourceCodeLineNum };
                         InstructionPointerToSourceLineNum[instructionPointer] = sourceFilenameAndLineNum;
                         sourceFilenameAndLineNums.Add(sourceFilenameAndLineNum);
                     }
                     continue;
                 }
-                match = dumpNefPatterns.opCodeRegex.Match(lines[lineNum]);
+                match = opCodeRegex.Match(lines[lineNum]);
                 if (match.Success)
                 {
                     GroupCollection opcodeGroups = match.Groups;
