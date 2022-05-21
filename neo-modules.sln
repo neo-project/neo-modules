@@ -1,6 +1,6 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28729.10
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32516.85
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{97E81C78-1637-481F-9485-DA1225E94C23}"
 EndProject
@@ -34,9 +34,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Plugins.RpcServer.Tests
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TokensTracker", "src\TokensTracker\TokensTracker.csproj", "{48CB0583-26CE-48FC-9F53-F7DC6F1727D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MPTTrie", "src\MPTTrie\MPTTrie.csproj", "{D167FA6B-D2A3-4D8A-A65D-686DD06650F6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MPTTrie", "src\MPTTrie\MPTTrie.csproj", "{D167FA6B-D2A3-4D8A-A65D-686DD06650F6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neo.Cryptography.MPTTrie.Tests", "tests\Neo.Cryptography.MPTTrie.Tests\Neo.Cryptography.MPTTrie.Tests.csproj", "{8D2EE375-2E2D-45FE-A4E9-0254D12C7554}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fairy", "src\Fairy\Fairy.csproj", "{C81DDC17-65AB-4265-A5A0-AEA14ACFF490}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Cryptography.MPTTrie.Tests", "tests\Neo.Cryptography.MPTTrie.Tests\Neo.Cryptography.MPTTrie.Tests.csproj", "{8D2EE375-2E2D-45FE-A4E9-0254D12C7554}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -104,6 +106,10 @@ Global
 		{D167FA6B-D2A3-4D8A-A65D-686DD06650F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D167FA6B-D2A3-4D8A-A65D-686DD06650F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D167FA6B-D2A3-4D8A-A65D-686DD06650F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C81DDC17-65AB-4265-A5A0-AEA14ACFF490}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C81DDC17-65AB-4265-A5A0-AEA14ACFF490}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C81DDC17-65AB-4265-A5A0-AEA14ACFF490}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C81DDC17-65AB-4265-A5A0-AEA14ACFF490}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8D2EE375-2E2D-45FE-A4E9-0254D12C7554}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8D2EE375-2E2D-45FE-A4E9-0254D12C7554}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D2EE375-2E2D-45FE-A4E9-0254D12C7554}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -128,6 +134,7 @@ Global
 		{0DDAF738-0FD3-40A7-A433-C514BCDDF542} = {59D802AB-C552-422A-B9C3-64D329FBCDCC}
 		{48CB0583-26CE-48FC-9F53-F7DC6F1727D8} = {97E81C78-1637-481F-9485-DA1225E94C23}
 		{D167FA6B-D2A3-4D8A-A65D-686DD06650F6} = {97E81C78-1637-481F-9485-DA1225E94C23}
+		{C81DDC17-65AB-4265-A5A0-AEA14ACFF490} = {97E81C78-1637-481F-9485-DA1225E94C23}
 		{8D2EE375-2E2D-45FE-A4E9-0254D12C7554} = {59D802AB-C552-422A-B9C3-64D329FBCDCC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
