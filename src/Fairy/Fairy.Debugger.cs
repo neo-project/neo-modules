@@ -12,12 +12,12 @@ namespace Neo.Plugins
     {
         enum BreakReason
         {
-            None=0,
-            AssemblyBreakpoint=1<<0,
-            SourceCodeBreakpoint=1<<1,
-            Call=1<<2,
-            Return=1<<3,
-            SourceCode=1<<4
+            None = 0,
+            AssemblyBreakpoint = 1 << 0,
+            SourceCodeBreakpoint = 1 << 1,
+            Call = 1 << 2,
+            Return = 1 << 3,
+            SourceCode = 1 << 4
         }
 
         [RpcMethod]
@@ -63,7 +63,7 @@ namespace Neo.Plugins
             else
             {
                 ApplicationDebugger oldEngine = debugSessionToEngine[session];
-                newEngine = DebugRun(script, oldEngine.Snapshot.CreateSnapshot(), out breakReason, persistingBlock: CreateDummyBlockWithTimestamp(oldEngine.Snapshot, system.Settings, timestamp: timestamp), container: tx, settings: system.Settings, gas: settings.MaxGasInvoke);
+                newEngine = DebugRun(script, oldEngine.Snapshot.CreateSnapshot(), out breakReason, persistingBlock: Utilities.CreateDummyBlockWithTimestamp(oldEngine.Snapshot, system.Settings, timestamp: timestamp), container: tx, settings: system.Settings, gas: settings.MaxGasInvoke);
             }
             ApplicationDebugger.Log -= CacheLog;
             if (writeSnapshot)
@@ -141,8 +141,8 @@ namespace Neo.Plugins
 
         private ApplicationDebugger DebugRun(byte[] script, DataCache snapshot, out BreakReason breakReason, IVerifiable? container = null, Block? persistingBlock = null, ProtocolSettings? settings = null, int offset = 0, long gas = ApplicationDebugger.TestModeGas, Diagnostic? diagnostic = null)
         {
-            persistingBlock ??= CreateDummyBlockWithTimestamp(snapshot, settings ?? ProtocolSettings.Default, timestamp: 0);
-            ApplicationDebugger engine = ApplicationDebugger.Create(TriggerType.Application, container, snapshot, persistingBlock, settings, gas, diagnostic);
+            persistingBlock ??= Utilities.CreateDummyBlockWithTimestamp(snapshot, settings ?? ProtocolSettings.Default, timestamp: 0);
+            ApplicationDebugger engine = new ApplicationDebugger(TriggerType.Application, container, snapshot, persistingBlock, settings, gas, diagnostic);
             engine.LoadScript(script, initialPosition: offset);
             return Execute(engine, out breakReason);
         }
@@ -161,14 +161,14 @@ namespace Neo.Plugins
                 engine.ExecuteNext();
                 if (engine.CurrentContext.CurrentInstruction.OpCode == OpCode.INITSLOT)
                     engine.ExecuteNext();
-                engine.State = VMState.BREAK;
+                engine.SetState(VMState.BREAK);
                 actualBreakReason |= BreakReason.Call;
                 return engine;
             }
             if ((requiredBreakReason & BreakReason.Return) > 0 && currentOpCode == OpCode.RET)
             {
                 engine.ExecuteNext();
-                engine.State = VMState.BREAK;
+                engine.SetState(VMState.BREAK);
                 actualBreakReason |= BreakReason.Return;
                 return engine;
             }
@@ -183,7 +183,7 @@ namespace Neo.Plugins
                  && contractScriptHashToAssemblyBreakpoints[currentScriptHash]
                     .Contains(currentInstructionPointer))
                 {
-                    engine.State = VMState.BREAK;
+                    engine.SetState(VMState.BREAK);
                     actualBreakReason |= BreakReason.AssemblyBreakpoint;
                     return engine;
                 }
@@ -195,7 +195,7 @@ namespace Neo.Plugins
                  && contractScriptHashToSourceCodeBreakpoints[currentScriptHash]
                     .Contains(contractScriptHashToInstructionPointerToSourceLineNum[currentScriptHash][currentInstructionPointer]))
                 {
-                    engine.State = VMState.BREAK;
+                    engine.SetState(VMState.BREAK);
                     actualBreakReason |= BreakReason.SourceCodeBreakpoint;
                     return engine;
                 }
@@ -207,7 +207,7 @@ namespace Neo.Plugins
                  && contractScriptHashToSourceLineNums[currentScriptHash]
                     .Contains(contractScriptHashToInstructionPointerToSourceLineNum[currentScriptHash][currentInstructionPointer]))
                 {
-                    engine.State = VMState.BREAK;
+                    engine.SetState(VMState.BREAK);
                     actualBreakReason |= BreakReason.SourceCode;
                     return engine;
                 }
@@ -219,7 +219,7 @@ namespace Neo.Plugins
         {
             breakReason = BreakReason.None;
             if (engine.State == VMState.BREAK)
-                engine.State = VMState.NONE;
+                engine.SetState(VMState.NONE);
             while (engine.State == VMState.NONE)
                 engine = ExecuteAndCheck(engine, out breakReason);
             return engine;
@@ -229,7 +229,7 @@ namespace Neo.Plugins
         {
             breakReason = BreakReason.None;
             if (engine.State == VMState.BREAK)
-                engine.State = VMState.NONE;
+                engine.SetState(VMState.NONE);
             while (engine.State == VMState.NONE)
                 engine = ExecuteAndCheck(engine, out breakReason, requiredBreakReason: BreakReason.AssemblyBreakpoint | BreakReason.SourceCodeBreakpoint | BreakReason.Call);
             return engine;
@@ -252,7 +252,7 @@ namespace Neo.Plugins
         {
             breakReason = BreakReason.None;
             if (engine.State == VMState.BREAK)
-                engine.State = VMState.NONE;
+                engine.SetState(VMState.NONE);
             while (engine.State == VMState.NONE)
                 engine = ExecuteAndCheck(engine, out breakReason, requiredBreakReason: BreakReason.AssemblyBreakpoint | BreakReason.SourceCodeBreakpoint | BreakReason.Return);
             return engine;
@@ -275,7 +275,7 @@ namespace Neo.Plugins
         {
             breakReason = BreakReason.None;
             if (engine.State == VMState.BREAK)
-                engine.State = VMState.NONE;
+                engine.SetState(VMState.NONE);
             UInt160 prevScriptHash = engine.CurrentScriptHash;
             int invocationStackCount = engine.InvocationStack.Count;
             while (engine.State == VMState.NONE)
@@ -284,10 +284,10 @@ namespace Neo.Plugins
                 if (engine.State == VMState.BREAK)
                     if ((breakReason & BreakReason.AssemblyBreakpoint) > 0 || (breakReason & BreakReason.SourceCodeBreakpoint) > 0)
                         break;
-                    if ((breakReason & BreakReason.SourceCode) > 0 && engine.InvocationStack.Count == invocationStackCount && engine.CurrentScriptHash == prevScriptHash)
-                        break;
+                if ((breakReason & BreakReason.SourceCode) > 0 && engine.InvocationStack.Count == invocationStackCount && engine.CurrentScriptHash == prevScriptHash)
+                    break;
                 else
-                    engine.State = VMState.NONE;
+                    engine.SetState(VMState.NONE);
             }
             return engine;
         }
@@ -394,7 +394,7 @@ namespace Neo.Plugins
             {
                 string[] nameTypeAndIndex = param.AsString().Split(',');
                 int index = int.Parse(nameTypeAndIndex[2]);
-                returnedJson[nameTypeAndIndex[0]] =  invocationStackItem.StaticFields[index].ToJson();
+                returnedJson[nameTypeAndIndex[0]] = invocationStackItem.StaticFields[index].ToJson();
             }
             if (method != JObject.Null)
             {

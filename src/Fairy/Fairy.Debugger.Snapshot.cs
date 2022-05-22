@@ -5,7 +5,7 @@ namespace Neo.Plugins
 {
     public partial class Fairy
     {
-        readonly ConcurrentDictionary<string, Session> debugSessionToEngine = new();
+        readonly ConcurrentDictionary<string, ApplicationDebugger> debugSessionToEngine = new();
 
         [RpcMethod]
         protected virtual JObject ListDebugSnapshots(JArray _params)
