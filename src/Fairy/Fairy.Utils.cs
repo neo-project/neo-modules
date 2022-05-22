@@ -2,63 +2,15 @@ using Neo.Cryptography.ECC;
 using Neo.IO;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
-using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.SmartContract.Iterators;
-using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.VM.Types;
-using Neo.Wallets;
-using System;
-using System.IO;
-using System.Linq;
 
 namespace Neo.Plugins
 {
     partial class Fairy
     {
-        private class Signers : IVerifiable
-        {
-            private readonly Signer[] _signers;
-            public Witness[] Witnesses { get; set; }
-            public int Size => _signers.Length;
-
-            public Signers(Signer[] signers)
-            {
-                _signers = signers;
-            }
-
-            public void Serialize(BinaryWriter writer)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void Deserialize(BinaryReader reader)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void DeserializeUnsigned(BinaryReader reader)
-            {
-                throw new NotImplementedException();
-            }
-
-            public UInt160[] GetScriptHashesForVerifying(DataCache snapshot)
-            {
-                return _signers.Select(p => p.Account).ToArray();
-            }
-
-            public Signer[] GetSigners()
-            {
-                return _signers;
-            }
-
-            public void SerializeUnsigned(BinaryWriter writer)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
         private JObject GetInvokeResult(byte[] script, Signers signers = null)
         {
             Transaction? tx = signers == null ? null : new Transaction

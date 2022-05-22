@@ -3,11 +3,11 @@ using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
-using Neo.SmartContract.Native;
 using Neo.SmartContract.Manifest;
+using Neo.SmartContract.Native;
 using Neo.VM;
-using System.Numerics;
 using System.Collections.Concurrent;
+using System.Numerics;
 
 namespace Neo.Plugins
 {
@@ -63,7 +63,7 @@ namespace Neo.Plugins
             ApplicationEngine oldEngine = sessionToEngine.GetValueOrDefault(session, BuildSnapshotWithDummyScript());
             DataCache snapshot = oldEngine.Snapshot;
             byte[] script;
-            using(ScriptBuilder sb = new ScriptBuilder())
+            using (ScriptBuilder sb = new ScriptBuilder())
             {
                 sb.EmitDynamicCall(NativeContract.ContractManagement.Hash, "deploy", nef.ToArray(), manifest.ToJson().ToString());
                 script = sb.ToArray();
@@ -73,7 +73,7 @@ namespace Neo.Plugins
             {
                 Transaction tx = fairyWallet.MakeTransaction(snapshot.CreateSnapshot(), script);
                 UInt160 hash = SmartContract.Helper.GetContractHash(tx.Sender, nef.CheckSum, manifest.Name);
-                sessionToEngine[session] = ApplicationEngine.Run(script, snapshot.CreateSnapshot(), persistingBlock: CreateDummyBlockWithTimestamp(oldEngine.Snapshot, system.Settings, timestamp: sessionToTimestamp.GetValueOrDefault(session, (ulong)0)), container: tx, settings: system.Settings, gas: settings.MaxGasInvoke);
+                sessionToEngine[session] = ApplicationEngine.Run(script, snapshot.CreateSnapshot(), persistingBlock: Utilities.CreateDummyBlockWithTimestamp(oldEngine.Snapshot, system.Settings, timestamp: sessionToTimestamp.GetValueOrDefault(session, (ulong)0)), container: tx, settings: system.Settings, gas: settings.MaxGasInvoke);
                 json[session] = hash.ToString();
             }
             catch (InvalidOperationException ex)
@@ -110,13 +110,13 @@ namespace Neo.Plugins
 
             ApplicationEngine oldEngine = sessionToEngine[session];
             ContractState contractState = NativeContract.ContractManagement.GetContract(oldEngine.Snapshot, contract);
-            if(value.Length == 0)
+            if (value.Length == 0)
             {
-                oldEngine.Snapshot.Delete(new StorageKey { Id=contractState.Id, Key=key });
+                oldEngine.Snapshot.Delete(new StorageKey { Id = contractState.Id, Key = key });
             }
             else
             {
-                oldEngine.Snapshot.Add(new StorageKey { Id=contractState.Id, Key=key }, new StorageItem(value));
+                oldEngine.Snapshot.Add(new StorageKey { Id = contractState.Id, Key = key }, new StorageItem(value));
             }
             oldEngine.Snapshot.Commit();
             JObject json = new();
@@ -135,7 +135,7 @@ namespace Neo.Plugins
             ApplicationEngine oldEngine = sessionToEngine[session];
             ContractState contractState = NativeContract.ContractManagement.GetContract(oldEngine.Snapshot, contract);
             JObject json = new();
-            StorageItem item = oldEngine.Snapshot.TryGet(new StorageKey { Id=contractState.Id, Key=key });
+            StorageItem item = oldEngine.Snapshot.TryGet(new StorageKey { Id = contractState.Id, Key = key });
             json[keyBase64] = item == null ? null : Convert.ToBase64String(item.Value);
             return json;
         }
@@ -179,20 +179,21 @@ namespace Neo.Plugins
             {
                 prefixAccount = Native_Prefix_Account;
                 byte[] key = new byte[] { prefixAccount }.Concat(account.ToArray()).ToArray();
-                StorageItem storage = oldEngine.Snapshot.GetAndChange(new StorageKey { Id=contractState.Id, Key=key }, () => new StorageItem(new AccountState()));
+                StorageItem storage = oldEngine.Snapshot.GetAndChange(new StorageKey { Id = contractState.Id, Key = key }, () => new StorageItem(new AccountState()));
                 AccountState state = storage.GetInteroperable<AccountState>();
-                storage = oldEngine.Snapshot.GetAndChange(new StorageKey { Id=contractState.Id, Key=new byte[] { Native_Prefix_TotalSupply } }, () => new StorageItem(BigInteger.Zero));
+                storage = oldEngine.Snapshot.GetAndChange(new StorageKey { Id = contractState.Id, Key = new byte[] { Native_Prefix_TotalSupply } }, () => new StorageItem(BigInteger.Zero));
                 storage.Add(balance - state.Balance);
                 state.Balance = balance;
                 json[Convert.ToBase64String(key)] = Convert.ToBase64String(balanceBytes);
                 return json;
-            }else if (contract == neoScriptHash)
+            }
+            else if (contract == neoScriptHash)
             {
                 prefixAccount = Native_Prefix_Account;
                 byte[] key = new byte[] { prefixAccount }.Concat(account.ToArray()).ToArray();
-                StorageItem storage = oldEngine.Snapshot.GetAndChange(new StorageKey { Id=contractState.Id, Key=key }, () => new StorageItem(new NeoToken.NeoAccountState()));
+                StorageItem storage = oldEngine.Snapshot.GetAndChange(new StorageKey { Id = contractState.Id, Key = key }, () => new StorageItem(new NeoToken.NeoAccountState()));
                 NeoToken.NeoAccountState state = storage.GetInteroperable<NeoToken.NeoAccountState>();
-                storage = oldEngine.Snapshot.GetAndChange(new StorageKey { Id=contractState.Id, Key=new byte[] { Native_Prefix_TotalSupply } }, () => new StorageItem(BigInteger.Zero));
+                storage = oldEngine.Snapshot.GetAndChange(new StorageKey { Id = contractState.Id, Key = new byte[] { Native_Prefix_TotalSupply } }, () => new StorageItem(BigInteger.Zero));
                 storage.Add(balance - state.Balance);
                 state.Balance = balance;
                 json[Convert.ToBase64String(key)] = Convert.ToBase64String(balanceBytes);
@@ -201,36 +202,11 @@ namespace Neo.Plugins
             else
             {
                 byte[] key = new byte[] { prefixAccount }.Concat(account.ToArray()).ToArray();
-                oldEngine.Snapshot.Add(new StorageKey { Id=contractState.Id, Key=key }, new StorageItem(balanceBytes));
+                oldEngine.Snapshot.Add(new StorageKey { Id = contractState.Id, Key = key }, new StorageItem(balanceBytes));
                 json[Convert.ToBase64String(key)] = Convert.ToBase64String(balanceBytes);
                 return json;
             }
         }
-
-        private static Block CreateDummyBlockWithTimestamp(DataCache snapshot, ProtocolSettings settings, ulong timestamp=0)
-        {
-            UInt256 hash = NativeContract.Ledger.CurrentHash(snapshot);
-            Block currentBlock = NativeContract.Ledger.GetBlock(snapshot, hash);
-            return new Block
-            {
-                Header = new Header
-                {
-                    Version = 0,
-                    PrevHash = hash,
-                    MerkleRoot = new UInt256(),
-                    Timestamp = timestamp == 0 ? currentBlock.Timestamp + settings.MillisecondsPerBlock : timestamp,
-                    Index = currentBlock.Index + 1,
-                    NextConsensus = currentBlock.NextConsensus,
-                    Witness = new Witness
-                    {
-                        InvocationScript = Array.Empty<byte>(),
-                        VerificationScript = Array.Empty<byte>()
-                    },
-                },
-                Transactions = Array.Empty<Transaction>()
-            };
-        }
-
 
         private ApplicationEngine BuildSnapshotWithDummyScript(ApplicationEngine engine = null)
         {
@@ -275,7 +251,7 @@ namespace Neo.Plugins
             {
                 oldEngine = sessionToEngine[session];
                 validSnapshotBase = oldEngine.Snapshot;
-                block = CreateDummyBlockWithTimestamp(oldEngine.Snapshot, system.Settings, timestamp: timestamp);
+                block = Utilities.CreateDummyBlockWithTimestamp(oldEngine.Snapshot, system.Settings, timestamp: timestamp);
                 newEngine = ApplicationEngine.Run(script, oldEngine.Snapshot.CreateSnapshot(), persistingBlock: block, container: tx, settings: system.Settings, gas: settings.MaxGasInvoke);
             }
             ApplicationEngine.Log -= CacheLog;
@@ -286,7 +262,7 @@ namespace Neo.Plugins
             json["state"] = newEngine.State;
             json["gasconsumed"] = newEngine.GasConsumed.ToString();
             json["exception"] = GetExceptionMessage(newEngine.FaultException);
-            if(json["exception"] != null)
+            if (json["exception"] != null)
             {
                 string traceback = $"{json["exception"].GetString()}\r\nCallingScriptHash={newEngine.CallingScriptHash}\r\nCurrentScriptHash={newEngine.CurrentScriptHash}\r\nEntryScriptHash={newEngine.EntryScriptHash}\r\n";
                 traceback += newEngine.FaultException.StackTrace;
@@ -294,7 +270,7 @@ namespace Neo.Plugins
                 {
                     traceback += $"\r\nInstructionPointer={context.InstructionPointer}, OpCode {context.CurrentInstruction.OpCode}, Script Length={context.Script.Length}";
                 }
-                if(!logs.IsEmpty)
+                if (!logs.IsEmpty)
                 {
                     traceback += $"\r\n-------Logs-------({logs.Count})";
                 }

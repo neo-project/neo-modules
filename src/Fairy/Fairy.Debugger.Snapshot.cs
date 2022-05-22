@@ -1,23 +1,16 @@
 using Neo.IO.Json;
-using Neo.SmartContract;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
 
 namespace Neo.Plugins
 {
     public partial class Fairy
     {
-        readonly ConcurrentDictionary<string, ApplicationDebugger> debugSessionToEngine = new();
+        readonly ConcurrentDictionary<string, Session> debugSessionToEngine = new();
 
         [RpcMethod]
         protected virtual JObject ListDebugSnapshots(JArray _params)
         {
-            JArray session = new JArray();
-            foreach (string s in debugSessionToEngine.Keys)
-            {
-                session.Add(s);
-            }
-            return session;
+            return debugSessionToEngine.Keys.Select(p => (JString)p).ToArray();
         }
 
         [RpcMethod]
@@ -26,8 +19,9 @@ namespace Neo.Plugins
             JObject json = new();
             foreach (var s in _params)
             {
-                string session = s.AsString();
-                json[session] = debugSessionToEngine.Remove(session, out _);
+                string key = s.AsString();
+                json[key] = debugSessionToEngine.Remove(key, out var session);
+                session?.Dispose();
             }
             return json;
         }
