@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -10,6 +10,7 @@
 
 using Neo.Cryptography.ECC;
 using Neo.IO;
+using Neo.IO.Caching;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -20,98 +21,104 @@ using Neo.VM;
 using Neo.VM.Types;
 using Neo.Wallets;
 using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Linq;
-using Neo.IO.Caching;
-using Neo.Network.P2P.Payloads.Conditions;
+using System.Threading;
 
 namespace Neo.Plugins
 {
     partial class RpcServer
     {
-        private class Signers : IVerifiable
+        private readonly Dictionary<Guid, Session> sessions = new();
+        private Timer timer;
+
+        private void Initialize_SmartContract()
         {
-            private readonly Signer[] _signers;
-            public Witness[] Witnesses { get; set; }
-            public int Size => _signers.Length;
+            timer = new(OnTimer, null, Session.ExpirationTime, Session.ExpirationTime);
+        }
 
-            public Signers(Signer[] signers)
+        private void Dispose_SmartContract()
+        {
+            timer.Dispose();
+            Session[] toBeDestroyed;
+            lock (sessions)
             {
-                _signers = signers;
+                toBeDestroyed = sessions.Values.ToArray();
+                sessions.Clear();
             }
+            foreach (Session session in toBeDestroyed)
+                session.Dispose();
+        }
 
-            public void Serialize(BinaryWriter writer)
+        private void OnTimer(object state)
+        {
+            List<(Guid Id, Session Session)> toBeDestroyed = new();
+            lock (sessions)
             {
-                throw new NotImplementedException();
+                foreach (var (id, session) in sessions)
+                    if (DateTime.UtcNow >= session.Expiration)
+                        toBeDestroyed.Add((id, session));
+                foreach (var (id, _) in toBeDestroyed)
+                    sessions.Remove(id);
             }
-
-            public void Deserialize(BinaryReader reader)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void DeserializeUnsigned(BinaryReader reader)
-            {
-                throw new NotImplementedException();
-            }
-
-            public UInt160[] GetScriptHashesForVerifying(DataCache snapshot)
-            {
-                return _signers.Select(p => p.Account).ToArray();
-            }
-
-            public Signer[] GetSigners()
-            {
-                return _signers;
-            }
-
-            public void SerializeUnsigned(BinaryWriter writer)
-            {
-                throw new NotImplementedException();
-            }
+            foreach (var (_, session) in toBeDestroyed)
+                session.Dispose();
         }
 
         private JObject GetInvokeResult(byte[] script, Signers signers = null, bool useDiagnostic = false)
         {
-            Transaction tx = signers == null ? null : new Transaction
-            {
-                Signers = signers.GetSigners(),
-                Attributes = System.Array.Empty<TransactionAttribute>(),
-                Witnesses = signers.Witnesses,
-            };
-            using ApplicationEngine engine = ApplicationEngine.Run(script, system.StoreView, container: tx, settings: system.Settings, gas: settings.MaxGasInvoke, diagnostic: useDiagnostic ? new Diagnostic() : null);
             JObject json = new();
-            json["script"] = Convert.ToBase64String(script);
-            json["state"] = engine.State;
-            json["gasconsumed"] = engine.GasConsumed.ToString();
-            json["exception"] = GetExceptionMessage(engine.FaultException);
-            json["notifications"] = new JArray(engine.Notifications.Select(n =>
-              {
-                  var obj = new JObject();
-                  obj["eventname"] = n.EventName;
-                  obj["contract"] = n.ScriptHash.ToString();
-                  obj["state"] = ToJson(n.State, settings.MaxIteratorResultItems);
-                  return obj;
-              }));
-            if (useDiagnostic)
-            {
-                json["diagnostics"] = new JObject()
-                {
-                    ["invokedcontracts"] = ToJson(engine.Diagnostic.InvocationTree.Root),
-                    ["storagechanges"] = ToJson(engine.Snapshot.GetChangeSet())
-                };
-            }
+            Session session = new(system, script, signers, settings.MaxGasInvoke, useDiagnostic ? new Diagnostic() : null);
             try
             {
-                json["stack"] = new JArray(engine.ResultStack.Select(p => ToJson(p, settings.MaxIteratorResultItems)));
+                json["script"] = Convert.ToBase64String(script);
+                json["state"] = session.Engine.State;
+                json["gasconsumed"] = session.Engine.GasConsumed.ToString();
+                json["exception"] = GetExceptionMessage(session.Engine.FaultException);
+                json["notifications"] = new JArray(session.Engine.Notifications.Select(n =>
+                {
+                    var obj = new JObject();
+                    obj["eventname"] = n.EventName;
+                    obj["contract"] = n.ScriptHash.ToString();
+                    obj["state"] = ToJson(n.State, session);
+                    return obj;
+                }));
+                if (useDiagnostic)
+                {
+                    json["diagnostics"] = new JObject()
+                    {
+                        ["invokedcontracts"] = ToJson(session.Engine.Diagnostic.InvocationTree.Root),
+                        ["storagechanges"] = ToJson(session.Engine.Snapshot.GetChangeSet())
+                    };
+                }
+                try
+                {
+                    json["stack"] = new JArray(session.Engine.ResultStack.Select(p => ToJson(p, session)));
+                }
+                catch (InvalidOperationException)
+                {
+                    json["stack"] = "error: invalid operation";
+                }
+                if (session.Engine.State != VMState.FAULT)
+                {
+                    ProcessInvokeWithWallet(json, signers);
+                }
             }
-            catch (InvalidOperationException)
+            catch
             {
-                json["stack"] = "error: invalid operation";
+                session.Dispose();
+                throw;
             }
-            if (engine.State != VMState.FAULT)
+            if (session.Iterators.Count == 0)
             {
-                ProcessInvokeWithWallet(json, signers);
+                session.Dispose();
+            }
+            else
+            {
+                Guid id = Guid.NewGuid();
+                json["session"] = id.ToString();
+                lock (sessions)
+                    sessions.Add(id, session);
             }
             return json;
         }
@@ -127,7 +134,7 @@ namespace Neo.Plugins
             return json;
         }
 
-        private static JObject ToJson(System.Collections.Generic.IEnumerable<DataCache.Trackable> changes)
+        private static JObject ToJson(IEnumerable<DataCache.Trackable> changes)
         {
             JArray array = new();
             foreach (var entry in changes)
@@ -142,19 +149,14 @@ namespace Neo.Plugins
             return array;
         }
 
-        private static JObject ToJson(StackItem item, int max)
+        private static JObject ToJson(StackItem item, Session session)
         {
             JObject json = item.ToJson();
             if (item is InteropInterface interopInterface && interopInterface.GetInterface<object>() is IIterator iterator)
             {
-                JArray array = new();
-                while (max > 0 && iterator.Next())
-                {
-                    array.Add(iterator.Value().ToJson());
-                    max--;
-                }
-                json["iterator"] = array;
-                json["truncated"] = iterator.Next();
+                Guid id = Guid.NewGuid();
+                session.Iterators.Add(id, iterator);
+                json["id"] = id.ToString();
             }
             return json;
         }
@@ -215,6 +217,39 @@ namespace Neo.Plugins
             Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], system.Settings) : null;
             bool useDiagnostic = _params.Count >= 3 && _params[2].GetBoolean();
             return GetInvokeResult(script, signers, useDiagnostic);
+        }
+
+        [RpcMethod]
+        protected virtual JObject TraverseIterator(JArray _params)
+        {
+            Guid sid = Guid.Parse(_params[0].GetString());
+            Guid iid = Guid.Parse(_params[1].GetString());
+            int count = _params[2].GetInt32();
+            if (count > settings.MaxIteratorResultItems)
+                throw new ArgumentOutOfRangeException(nameof(count));
+            Session session;
+            lock (sessions)
+            {
+                session = sessions[sid];
+                session.ResetExpiration();
+            }
+            IIterator iterator = session.Iterators[iid];
+            JArray json = new();
+            while (count-- > 0 && iterator.Next())
+                json.Add(iterator.Value().ToJson());
+            return json;
+        }
+
+        [RpcMethod]
+        protected virtual JObject TerminateSession(JArray _params)
+        {
+            Guid sid = Guid.Parse(_params[0].GetString());
+            Session session;
+            bool result;
+            lock (sessions)
+                result = sessions.Remove(sid, out session);
+            if (result) session.Dispose();
+            return result;
         }
 
         [RpcMethod]
