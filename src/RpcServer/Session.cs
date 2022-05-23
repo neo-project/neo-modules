@@ -20,12 +20,10 @@ namespace Neo.Plugins
 {
     class Session : IDisposable
     {
-        public static readonly TimeSpan ExpirationTime = TimeSpan.FromMinutes(5);
-
         public readonly SnapshotCache Snapshot;
         public readonly ApplicationEngine Engine;
         public readonly Dictionary<Guid, IIterator> Iterators = new();
-        public DateTime Expiration;
+        public DateTime StartTime;
 
         public Session(NeoSystem system, byte[] script, Signers signers, long gas, Diagnostic diagnostic)
         {
@@ -49,7 +47,7 @@ namespace Neo.Plugins
 
         public void ResetExpiration()
         {
-            Expiration = DateTime.UtcNow + ExpirationTime;
+            StartTime = DateTime.UtcNow;
         }
 
         public void Dispose()

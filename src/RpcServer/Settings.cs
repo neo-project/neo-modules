@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -17,13 +17,15 @@ using System.Net;
 
 namespace Neo.Plugins
 {
-    class Settings
+    public record Settings
     {
-        public IReadOnlyList<RpcServerSettings> Servers { get; }
+        public IReadOnlyList<RpcServerSettings> Servers { get; init; }
+        public TimeSpan SessionExpirationTime { get; init; }
 
         public Settings(IConfigurationSection section)
         {
             Servers = section.GetSection(nameof(Servers)).GetChildren().Select(p => RpcServerSettings.Load(p)).ToArray();
+            SessionExpirationTime = TimeSpan.FromSeconds(section.GetValue("SessionExpirationTime", 60));
         }
     }
 

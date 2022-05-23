@@ -34,7 +34,7 @@ namespace Neo.Plugins
 
         private void Initialize_SmartContract()
         {
-            timer = new(OnTimer, null, Session.ExpirationTime, Session.ExpirationTime);
+            timer = new(OnTimer, null, globalSettings.SessionExpirationTime, globalSettings.SessionExpirationTime);
         }
 
         private void Dispose_SmartContract()
@@ -56,7 +56,7 @@ namespace Neo.Plugins
             lock (sessions)
             {
                 foreach (var (id, session) in sessions)
-                    if (DateTime.UtcNow >= session.Expiration)
+                    if (DateTime.UtcNow >= session.StartTime + globalSettings.SessionExpirationTime)
                         toBeDestroyed.Add((id, session));
                 foreach (var (id, _) in toBeDestroyed)
                     sessions.Remove(id);

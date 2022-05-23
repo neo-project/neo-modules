@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -42,7 +42,7 @@ namespace Neo.Plugins
             RpcServerSettings s = settings.Servers.FirstOrDefault(p => p.Network == system.Settings.Network);
             if (s is null) return;
 
-            RpcServer server = new(system, s);
+            RpcServer server = new(system, s, settings);
 
             if (handlers.Remove(s.Network, out var list))
             {
