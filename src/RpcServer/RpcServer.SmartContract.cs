@@ -65,10 +65,10 @@ namespace Neo.Plugins
                 session.Dispose();
         }
 
-        private JObject GetInvokeResult(byte[] script, Signers signers = null, bool useDiagnostic = false)
+        private JObject GetInvokeResult(byte[] script, Signer[] signers = null, Witness[] witnesses = null, bool useDiagnostic = false)
         {
             JObject json = new();
-            Session session = new(system, script, signers, settings.MaxGasInvoke, useDiagnostic ? new Diagnostic() : null);
+            Session session = new(system, script, signers, witnesses, settings.MaxGasInvoke, useDiagnostic ? new Diagnostic() : null);
             try
             {
                 json["script"] = Convert.ToBase64String(script);
@@ -161,36 +161,35 @@ namespace Neo.Plugins
             return json;
         }
 
-        private static Signers SignersFromJson(JArray _params, ProtocolSettings settings)
+        private static Signer[] SignersFromJson(JArray _params, ProtocolSettings settings)
         {
-            var ret = new Signers(_params.Select(u => new Signer()
+            var ret = _params.Select(u => new Signer
             {
                 Account = AddressToScriptHash(u["account"].AsString(), settings.AddressVersion),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"]?.AsString()),
                 AllowedContracts = ((JArray)u["allowedcontracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray(),
                 AllowedGroups = ((JArray)u["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray(),
                 Rules = ((JArray)u["rules"])?.Select(WitnessRule.FromJson).ToArray(),
-            }).ToArray())
-            {
-                Witnesses = _params
-                    .Select(u => new
-                    {
-                        Invocation = u["invocation"]?.AsString(),
-                        Verification = u["verification"]?.AsString()
-                    })
-                    .Where(x => x.Invocation != null || x.Verification != null)
-                    .Select(x => new Witness()
-                    {
-                        InvocationScript = Convert.FromBase64String(x.Invocation ?? string.Empty),
-                        VerificationScript = Convert.FromBase64String(x.Verification ?? string.Empty)
-                    }).ToArray()
-            };
+            }).ToArray();
 
             // Validate format
 
-            _ = IO.Helper.ToByteArray(ret.GetSigners()).AsSerializableArray<Signer>();
+            _ = IO.Helper.ToByteArray(ret).AsSerializableArray<Signer>();
 
             return ret;
+        }
+
+        private static Witness[] WitnessesFromJson(JArray _params)
+        {
+            return _params.Select(u => new
+            {
+                Invocation = u["invocation"]?.AsString(),
+                Verification = u["verification"]?.AsString()
+            }).Where(x => x.Invocation != null || x.Verification != null).Select(x => new Witness()
+            {
+                InvocationScript = Convert.FromBase64String(x.Invocation ?? string.Empty),
+                VerificationScript = Convert.FromBase64String(x.Verification ?? string.Empty)
+            }).ToArray();
         }
 
         [RpcMethod]
@@ -199,7 +198,8 @@ namespace Neo.Plugins
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : System.Array.Empty<ContractParameter>();
-            Signers signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
+            Signer[] signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
+            Witness[] witnesses = _params.Count >= 4 ? WitnessesFromJson((JArray)_params[3]) : null;
             bool useDiagnostic = _params.Count >= 5 && _params[4].GetBoolean();
 
             byte[] script;
@@ -207,16 +207,17 @@ namespace Neo.Plugins
             {
                 script = sb.EmitDynamicCall(script_hash, operation, args).ToArray();
             }
-            return GetInvokeResult(script, signers, useDiagnostic);
+            return GetInvokeResult(script, signers, witnesses, useDiagnostic);
         }
 
         [RpcMethod]
         protected virtual JObject InvokeScript(JArray _params)
         {
             byte[] script = Convert.FromBase64String(_params[0].AsString());
-            Signers signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], system.Settings) : null;
+            Signer[] signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], system.Settings) : null;
+            Witness[] witnesses = _params.Count >= 2 ? WitnessesFromJson((JArray)_params[1]) : null;
             bool useDiagnostic = _params.Count >= 3 && _params[2].GetBoolean();
-            return GetInvokeResult(script, signers, useDiagnostic);
+            return GetInvokeResult(script, signers, witnesses, useDiagnostic);
         }
 
         [RpcMethod]

@@ -25,7 +25,7 @@ namespace Neo.Plugins
         public readonly Dictionary<Guid, IIterator> Iterators = new();
         public DateTime StartTime;
 
-        public Session(NeoSystem system, byte[] script, Signers signers, long gas, Diagnostic diagnostic)
+        public Session(NeoSystem system, byte[] script, Signer[] signers, Witness[] witnesses, long gas, Diagnostic diagnostic)
         {
             Random random = new();
             Snapshot = system.GetSnapshot();
@@ -36,10 +36,10 @@ namespace Neo.Plugins
                 ValidUntilBlock = NativeContract.Ledger.CurrentIndex(Snapshot) + system.Settings.MaxValidUntilBlockIncrement,
                 SystemFee = gas,
                 NetworkFee = 1_00000000,
-                Signers = signers.GetSigners(),
+                Signers = signers,
                 Attributes = Array.Empty<TransactionAttribute>(),
                 Script = script,
-                Witnesses = signers.Witnesses
+                Witnesses = witnesses
             };
             Engine = ApplicationEngine.Run(script, Snapshot, container: tx, settings: system.Settings, gas: gas, diagnostic: diagnostic);
             ResetExpiration();
