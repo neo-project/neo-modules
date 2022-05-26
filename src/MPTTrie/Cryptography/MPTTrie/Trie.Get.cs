@@ -52,7 +52,7 @@ namespace Neo.Cryptography.MPTTrie
                     {
                         if (path.IsEmpty)
                         {
-                            value = node.Value;
+                            value = node.Value.Span;
                             return true;
                         }
                         break;
@@ -76,7 +76,7 @@ namespace Neo.Cryptography.MPTTrie
                     }
                 case NodeType.ExtensionNode:
                     {
-                        if (path.StartsWith(node.Key))
+                        if (path.StartsWith(node.Key.Span))
                         {
                             return TryGet(ref node.Next, path[node.Key.Length..], out value);
                         }

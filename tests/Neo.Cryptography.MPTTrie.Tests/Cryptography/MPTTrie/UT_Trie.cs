@@ -12,7 +12,7 @@ namespace Neo.Cryptography.MPTTrie.Tests
 {
     public class TestKey : ISerializable
     {
-        private byte[] key;
+        private ReadOnlyMemory<byte> key;
 
         public int Size => key.Length;
 
@@ -27,17 +27,17 @@ namespace Neo.Cryptography.MPTTrie.Tests
         }
         public void Serialize(BinaryWriter writer)
         {
-            writer.Write(key);
+            writer.Write(key.Span);
         }
 
-        public void Deserialize(BinaryReader reader)
+        public void Deserialize(ref MemoryReader reader)
         {
-            key = reader.ReadBytes((int)(reader.BaseStream.Length - reader.BaseStream.Position));
+            key = reader.ReadToEnd();
         }
 
         public override string ToString()
         {
-            return key.ToHexString();
+            return key.Span.ToHexString();
         }
 
         public static implicit operator TestKey(byte[] key)
@@ -48,7 +48,7 @@ namespace Neo.Cryptography.MPTTrie.Tests
 
     public class TestValue : ISerializable
     {
-        private byte[] value;
+        private ReadOnlyMemory<byte> value;
 
         public int Size => value.Length;
 
@@ -64,17 +64,17 @@ namespace Neo.Cryptography.MPTTrie.Tests
 
         public void Serialize(BinaryWriter writer)
         {
-            writer.Write(value);
+            writer.Write(value.Span);
         }
 
-        public void Deserialize(BinaryReader reader)
+        public void Deserialize(ref MemoryReader reader)
         {
-            value = reader.ReadBytes((int)(reader.BaseStream.Length - reader.BaseStream.Position));
+            value = reader.ReadToEnd();
         }
 
         public override string ToString()
         {
-            return value.ToHexString();
+            return value.Span.ToHexString();
         }
 
         public static implicit operator TestValue(byte[] value)

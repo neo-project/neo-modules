@@ -192,7 +192,7 @@ namespace Neo.Plugins
                 Key = key
             });
             if (item is null) throw new RpcException(-100, "Unknown storage");
-            return Convert.ToBase64String(item.Value);
+            return Convert.ToBase64String(item.Value.Span);
         }
 
         [RpcMethod]

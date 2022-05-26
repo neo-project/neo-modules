@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Plugins.TokensTracker is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,9 +8,9 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Neo.IO;
 using System;
 using System.IO;
-using Neo.IO;
 
 namespace Neo.Plugins.Trackers.NEP_17
 {
@@ -65,10 +65,10 @@ namespace Neo.Plugins.Trackers.NEP_17
             writer.Write(AssetScriptHash);
         }
 
-        public void Deserialize(BinaryReader reader)
+        public void Deserialize(ref MemoryReader reader)
         {
-            ((ISerializable)UserScriptHash).Deserialize(reader);
-            ((ISerializable)AssetScriptHash).Deserialize(reader);
+            ((ISerializable)UserScriptHash).Deserialize(ref reader);
+            ((ISerializable)AssetScriptHash).Deserialize(ref reader);
         }
     }
 }

@@ -240,7 +240,7 @@ namespace Neo.Plugins.StateService
             var skey = key.AsSerializable<StorageKey>();
             var sitem = Trie<StorageKey, StorageItem>.VerifyProof(root_hash, skey, proofs);
             if (sitem is null) throw new RpcException(-100, "Verification failed");
-            return Convert.ToBase64String(sitem.Value);
+            return Convert.ToBase64String(sitem.Value.Span);
         }
 
         [RpcMethod]
@@ -307,7 +307,7 @@ namespace Neo.Plugins.StateService
                 {
                     JObject j = new();
                     j["key"] = Convert.ToBase64String(ikey.Key.Span);
-                    j["value"] = Convert.ToBase64String(ivalue.Value);
+                    j["value"] = Convert.ToBase64String(ivalue.Value.Span);
                     jarr.Add(j);
                 }
                 i++;
@@ -343,7 +343,7 @@ namespace Neo.Plugins.StateService
                 Id = contract.Id,
                 Key = key,
             };
-            return Convert.ToBase64String(trie[skey].Value);
+            return Convert.ToBase64String(trie[skey].Value.Span);
         }
     }
 }

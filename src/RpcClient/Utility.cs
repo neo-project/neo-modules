@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -16,11 +16,9 @@ using Neo.SmartContract.Native;
 using Neo.VM.Types;
 using Neo.Wallets;
 using System;
-using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using Array = Neo.VM.Types.Array;
-using Boolean = Neo.VM.Types.Boolean;
 using Buffer = Neo.VM.Types.Buffer;
 
 namespace Neo.Network.RPC
@@ -227,7 +225,7 @@ namespace Neo.Network.RPC
             switch (type)
             {
                 case StackItemType.Boolean:
-                    return new Boolean(json["value"].AsBoolean());
+                    return json["value"].GetBoolean() ? StackItem.True : StackItem.False;
                 case StackItemType.Buffer:
                     return new Buffer(Convert.FromBase64String(json["value"].AsString()));
                 case StackItemType.ByteString:

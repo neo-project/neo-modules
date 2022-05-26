@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Cryptography.MPT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -54,16 +54,16 @@ namespace Neo.Cryptography.MPTTrie
                         if (path.IsEmpty)
                         {
                             start = node.Next;
-                            return node.Key;
+                            return node.Key.Span;
                         }
-                        if (path.StartsWith(node.Key))
+                        if (path.StartsWith(node.Key.Span))
                         {
-                            return Concat(node.Key, Seek(ref node.Next, path[node.Key.Length..], out start));
+                            return Concat(node.Key.Span, Seek(ref node.Next, path[node.Key.Length..], out start));
                         }
-                        if (node.Key.AsSpan().StartsWith(path))
+                        if (node.Key.Span.StartsWith(path))
                         {
                             start = node.Next;
-                            return node.Key;
+                            return node.Key.Span;
                         }
                         break;
                     }
@@ -103,10 +103,10 @@ namespace Neo.Cryptography.MPTTrie
                 }
             }
             return Travers(start, path, from, offset)
-                .Select(p => (FromNibbles(p.Key).AsSerializable<TKey>(), p.Value.AsSerializable<TValue>()));
+                .Select(p => (FromNibbles(p.Key.Span).AsSerializable<TKey>(), p.Value.AsSerializable<TValue>()));
         }
 
-        private IEnumerable<(byte[] Key, byte[] Value)> Travers(Node node, byte[] path, byte[] from, int offset)
+        private IEnumerable<(ReadOnlyMemory<byte> Key, ReadOnlyMemory<byte> Value)> Travers(Node node, byte[] path, byte[] from, int offset)
         {
             if (node is null) yield break;
             if (offset < 0) throw new InvalidOperationException("invalid offset");
@@ -115,7 +115,7 @@ namespace Neo.Cryptography.MPTTrie
                 case NodeType.LeafNode:
                     {
                         if (from.Length <= offset && !path.SequenceEqual(from))
-                            yield return (path, (byte[])node.Value.Clone());
+                            yield return (path, node.Value);
                         break;
                     }
                 case NodeType.Empty:
@@ -157,11 +157,11 @@ namespace Neo.Cryptography.MPTTrie
                     }
                 case NodeType.ExtensionNode:
                     {
-                        if (offset < from.Length && from.AsSpan()[offset..].StartsWith(node.Key))
-                            foreach (var item in Travers(node.Next, Concat(path, node.Key), from, offset + node.Key.Length))
+                        if (offset < from.Length && from.AsSpan()[offset..].StartsWith(node.Key.Span))
+                            foreach (var item in Travers(node.Next, Concat(path, node.Key.Span), from, offset + node.Key.Length))
                                 yield return item;
-                        else if (from.Length <= offset || 0 < node.Key.CompareTo(from[offset..]))
-                            foreach (var item in Travers(node.Next, Concat(path, node.Key), from, from.Length))
+                        else if (from.Length <= offset || 0 < node.Key.Span.CompareTo(from.AsSpan(offset)))
+                            foreach (var item in Travers(node.Next, Concat(path, node.Key.Span), from, from.Length))
                                 yield return item;
                         break;
                     }

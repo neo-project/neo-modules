@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Consensus.DBFT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -9,6 +9,7 @@
 // modifications are permitted.
 
 using Neo.IO;
+using System;
 using System.IO;
 
 namespace Neo.Consensus
@@ -20,7 +21,7 @@ namespace Neo.Consensus
             public byte ValidatorIndex;
             public byte OriginalViewNumber;
             public ulong Timestamp;
-            public byte[] InvocationScript;
+            public ReadOnlyMemory<byte> InvocationScript;
 
             int ISerializable.Size =>
                 sizeof(byte) +                  //ValidatorIndex
@@ -28,12 +29,12 @@ namespace Neo.Consensus
                 sizeof(ulong) +                 //Timestamp
                 InvocationScript.GetVarSize();  //InvocationScript
 
-            void ISerializable.Deserialize(BinaryReader reader)
+            void ISerializable.Deserialize(ref MemoryReader reader)
             {
                 ValidatorIndex = reader.ReadByte();
                 OriginalViewNumber = reader.ReadByte();
                 Timestamp = reader.ReadUInt64();
-                InvocationScript = reader.ReadVarBytes(1024);
+                InvocationScript = reader.ReadVarMemory(1024);
             }
 
             void ISerializable.Serialize(BinaryWriter writer)
@@ -41,7 +42,7 @@ namespace Neo.Consensus
                 writer.Write(ValidatorIndex);
                 writer.Write(OriginalViewNumber);
                 writer.Write(Timestamp);
-                writer.WriteVarBytes(InvocationScript);
+                writer.WriteVarBytes(InvocationScript.Span);
             }
         }
     }

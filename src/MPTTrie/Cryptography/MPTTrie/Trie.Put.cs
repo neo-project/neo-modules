@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Cryptography.MPT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -63,7 +63,7 @@ namespace Neo.Cryptography.MPTTrie
                     }
                 case NodeType.ExtensionNode:
                     {
-                        if (path.StartsWith(node.Key))
+                        if (path.StartsWith(node.Key.Span))
                         {
                             var oldHash = node.Hash;
                             Put(ref node.Next, path[node.Key.Length..], val);
@@ -73,9 +73,9 @@ namespace Neo.Cryptography.MPTTrie
                             return;
                         }
                         if (!full) cache.DeleteNode(node.Hash);
-                        var prefix = CommonPrefix(node.Key, path);
+                        var prefix = CommonPrefix(node.Key.Span, path);
                         var pathRemain = path[prefix.Length..];
-                        var keyRemain = node.Key.AsSpan(prefix.Length);
+                        var keyRemain = node.Key.Span[prefix.Length..];
                         var child = Node.NewBranch();
                         Node grandChild = new Node();
                         if (keyRemain.Length == 1)

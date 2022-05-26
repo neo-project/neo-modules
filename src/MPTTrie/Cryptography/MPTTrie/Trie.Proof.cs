@@ -62,7 +62,7 @@ namespace Neo.Cryptography.MPTTrie
                     }
                 case NodeType.ExtensionNode:
                     {
-                        if (path.StartsWith(node.Key))
+                        if (path.StartsWith(node.Key.Span))
                         {
                             set.Add(node.ToArrayWithoutReference());
                             return GetProof(ref node.Next, path[node.Key.Length..], set);
