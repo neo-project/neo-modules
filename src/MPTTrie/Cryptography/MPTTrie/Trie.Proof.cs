@@ -10,7 +10,6 @@
 
 using Neo.IO;
 using Neo.Persistence;
-using Neo.SmartContract;
 using System;
 using System.Collections.Generic;
 using static Neo.Helper;
@@ -19,9 +18,9 @@ namespace Neo.Cryptography.MPTTrie
 {
     partial class Trie
     {
-        public bool TryGetProof(StorageKey key, out HashSet<byte[]> proof)
+        public bool TryGetProof(byte[] key, out HashSet<byte[]> proof)
         {
-            var path = ToNibbles(key.ToArray());
+            var path = ToNibbles(key);
             if (path.Length == 0)
                 throw new ArgumentException("could not be empty", nameof(key));
             if (path.Length > Node.MaxKeyLength)
@@ -82,7 +81,7 @@ namespace Neo.Cryptography.MPTTrie
             return buffer;
         }
 
-        public static StorageItem VerifyProof(UInt256 root, StorageKey key, HashSet<byte[]> proof)
+        public static byte[] VerifyProof(UInt256 root, byte[] key, HashSet<byte[]> proof)
         {
             using var memoryStore = new MemoryStore();
             foreach (byte[] data in proof)

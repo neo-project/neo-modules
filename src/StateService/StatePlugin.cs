@@ -22,7 +22,6 @@ using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
 using System;
-using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -185,7 +184,7 @@ namespace Neo.Plugins.StateService
                 Id = contract_id,
                 Key = key,
             };
-            var result = trie.TryGetProof(skey, out var proof);
+            var result = trie.TryGetProof(skey.ToArray(), out var proof);
             if (!result) throw new KeyNotFoundException();
 
             using MemoryStream ms = new();
@@ -238,14 +237,9 @@ namespace Neo.Plugins.StateService
                 proofs.Add(reader.ReadVarBytes());
             }
 
-            var skey = new StorageKey
-            {
-                Id = BinaryPrimitives.ReadInt32LittleEndian(key),
-                Key = key.AsMemory(sizeof(int))
-            };
-            var sitem = Trie.VerifyProof(root_hash, skey, proofs);
-            if (sitem is null) throw new RpcException(-100, "Verification failed");
-            return Convert.ToBase64String(sitem.Value.Span);
+            var value = Trie.VerifyProof(root_hash, key, proofs);
+            if (value is null) throw new RpcException(-100, "Verification failed");
+            return Convert.ToBase64String(value);
         }
 
         [RpcMethod]
@@ -269,7 +263,7 @@ namespace Neo.Plugins.StateService
         {
             const byte prefix = 8;
             StorageKey skey = new KeyBuilder(NativeContract.ContractManagement.Id, prefix).Add(script_hash);
-            return trie.TryGetValue(skey, out var value) ? value.GetInteroperable<ContractState>() : null;
+            return trie.TryGetValue(skey.ToArray(), out var value) ? value.AsSerializable<StorageItem>().GetInteroperable<ContractState>() : null;
         }
 
         [RpcMethod]
@@ -311,8 +305,8 @@ namespace Neo.Plugins.StateService
                 if (i < count)
                 {
                     JObject j = new();
-                    j["key"] = Convert.ToBase64String(ikey.Key.Span);
-                    j["value"] = Convert.ToBase64String(ivalue.Value.Span);
+                    j["key"] = Convert.ToBase64String(ikey.Span);
+                    j["value"] = Convert.ToBase64String(ivalue.Span);
                     jarr.Add(j);
                 }
                 i++;
@@ -348,7 +342,7 @@ namespace Neo.Plugins.StateService
                 Id = contract.Id,
                 Key = key,
             };
-            return Convert.ToBase64String(trie[skey].Value.Span);
+            return Convert.ToBase64String(trie[skey.ToArray()]);
         }
     }
 }

@@ -8,7 +8,6 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.SmartContract;
 using System;
 using System.Collections.Generic;
 using static Neo.Helper;
@@ -17,9 +16,9 @@ namespace Neo.Cryptography.MPTTrie
 {
     partial class Trie
     {
-        public bool Delete(StorageKey key)
+        public bool Delete(byte[] key)
         {
-            var path = ToNibbles(key.ToArray());
+            var path = ToNibbles(key);
             if (path.Length == 0)
                 throw new ArgumentException("could not be empty", nameof(key));
             if (path.Length > Node.MaxKeyLength)

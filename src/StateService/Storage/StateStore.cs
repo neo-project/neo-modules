@@ -130,13 +130,13 @@ namespace Neo.Plugins.StateService.Storage
                 switch (item.State)
                 {
                     case TrackState.Added:
-                        _state_snapshot.Trie.Put(item.Key, item.Item);
+                        _state_snapshot.Trie.Put(item.Key.ToArray(), item.Item.ToArray());
                         break;
                     case TrackState.Changed:
-                        _state_snapshot.Trie.Put(item.Key, item.Item);
+                        _state_snapshot.Trie.Put(item.Key.ToArray(), item.Item.ToArray());
                         break;
                     case TrackState.Deleted:
-                        _state_snapshot.Trie.Delete(item.Key);
+                        _state_snapshot.Trie.Delete(item.Key.ToArray());
                         break;
                 }
             }

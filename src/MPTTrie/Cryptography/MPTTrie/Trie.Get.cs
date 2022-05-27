@@ -8,8 +8,6 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO;
-using Neo.SmartContract;
 using System;
 using System.Collections.Generic;
 
@@ -17,31 +15,31 @@ namespace Neo.Cryptography.MPTTrie
 {
     partial class Trie
     {
-        public StorageItem this[StorageKey key]
+        public byte[] this[byte[] key]
         {
             get
             {
-                var path = ToNibbles(key.ToArray());
+                var path = ToNibbles(key);
                 if (path.Length == 0)
                     throw new ArgumentException("could not be empty", nameof(key));
                 if (path.Length > Node.MaxKeyLength)
                     throw new ArgumentException("exceeds limit", nameof(key));
                 var result = TryGet(ref root, path, out var value);
-                return result ? value.ToArray().AsSerializable<StorageItem>() : throw new KeyNotFoundException();
+                return result ? value.ToArray() : throw new KeyNotFoundException();
             }
         }
 
-        public bool TryGetValue(StorageKey key, out StorageItem value)
+        public bool TryGetValue(byte[] key, out byte[] value)
         {
             value = default;
-            var path = ToNibbles(key.ToArray());
+            var path = ToNibbles(key);
             if (path.Length == 0)
                 throw new ArgumentException("could not be empty", nameof(key));
             if (path.Length > Node.MaxKeyLength)
                 throw new ArgumentException("exceeds limit", nameof(key));
             var result = TryGet(ref root, path, out var val);
             if (result)
-                value = val.ToArray().AsSerializable<StorageItem>();
+                value = val.ToArray();
             return result;
         }
 

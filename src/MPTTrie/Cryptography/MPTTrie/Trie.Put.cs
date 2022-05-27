@@ -8,8 +8,6 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO;
-using Neo.SmartContract;
 using System;
 
 namespace Neo.Cryptography.MPTTrie
@@ -30,10 +28,10 @@ namespace Neo.Cryptography.MPTTrie
             return a[..i];
         }
 
-        public void Put(StorageKey key, StorageItem value)
+        public void Put(byte[] key, byte[] value)
         {
-            var path = ToNibbles(key.ToArray());
-            var val = value.ToArray();
+            var path = ToNibbles(key);
+            var val = value;
             if (path.Length == 0 || path.Length > Node.MaxKeyLength)
                 throw new ArgumentException("invalid", nameof(key));
             if (val.Length > Node.MaxValueLength)
