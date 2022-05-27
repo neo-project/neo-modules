@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Plugins.StateService is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -87,11 +87,11 @@ namespace Neo.Plugins.StateService.Storage
         private void OnStatePayload(ExtensiblePayload payload)
         {
             if (payload.Data.Length == 0) return;
-            if ((MessageType)payload.Data[0] != MessageType.StateRoot) return;
+            if ((MessageType)payload.Data.Span[0] != MessageType.StateRoot) return;
             StateRoot message;
             try
             {
-                message = payload.Data.AsSerializable<StateRoot>(1);
+                message = payload.Data[1..].AsSerializable<StateRoot>();
             }
             catch (FormatException)
             {

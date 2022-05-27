@@ -9,14 +9,16 @@
 // modifications are permitted.
 
 using Neo.IO;
+using Neo.SmartContract;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
 using static Neo.Helper;
 
 namespace Neo.Cryptography.MPTTrie
 {
-    partial class Trie<TKey, TValue>
+    partial class Trie
     {
         private ReadOnlySpan<byte> Seek(ref Node node, ReadOnlySpan<byte> path, out Node start)
         {
@@ -72,7 +74,7 @@ namespace Neo.Cryptography.MPTTrie
             return ReadOnlySpan<byte>.Empty;
         }
 
-        public IEnumerable<(TKey Key, TValue Value)> Find(ReadOnlySpan<byte> prefix, byte[] from = null)
+        public IEnumerable<(StorageKey Key, StorageItem Value)> Find(ReadOnlySpan<byte> prefix, byte[] from = null)
         {
             var path = ToNibbles(prefix);
             int offset = 0;
@@ -90,7 +92,7 @@ namespace Neo.Cryptography.MPTTrie
             {
                 for (int i = 0; i < from.Length && i < path.Length; i++)
                 {
-                    if (path[i] < from[i]) return Enumerable.Empty<(TKey Key, TValue Value)>();
+                    if (path[i] < from[i]) return Enumerable.Empty<(StorageKey, StorageItem)>();
                     if (path[i] > from[i])
                     {
                         offset = from.Length;
@@ -102,8 +104,17 @@ namespace Neo.Cryptography.MPTTrie
                     offset = Math.Min(path.Length, from.Length);
                 }
             }
-            return Travers(start, path, from, offset)
-                .Select(p => (FromNibbles(p.Key.Span).AsSerializable<TKey>(), p.Value.AsSerializable<TValue>()));
+            return Travers(start, path, from, offset).Select(p =>
+            {
+                ReadOnlyMemory<byte> keyBytes = FromNibbles(p.Key.Span);
+                StorageKey key = new()
+                {
+                    Id = BinaryPrimitives.ReadInt32LittleEndian(keyBytes.Span),
+                    Key = keyBytes[sizeof(int)..]
+                };
+                StorageItem value = p.Value.AsSerializable<StorageItem>();
+                return (key, value);
+            });
         }
 
         private IEnumerable<(ReadOnlyMemory<byte> Key, ReadOnlyMemory<byte> Value)> Travers(Node node, byte[] path, byte[] from, int offset)

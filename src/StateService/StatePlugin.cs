@@ -22,6 +22,7 @@ using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -177,7 +178,7 @@ namespace Neo.Plugins.StateService
                 return state_root.ToJson();
         }
 
-        private string GetProof(Trie<StorageKey, StorageItem> trie, int contract_id, byte[] key)
+        private string GetProof(Trie trie, int contract_id, byte[] key)
         {
             StorageKey skey = new StorageKey
             {
@@ -208,7 +209,7 @@ namespace Neo.Plugins.StateService
                 throw new RpcException(-100, "Old state not supported");
             }
             using var store = StateStore.Singleton.GetStoreSnapshot();
-            var trie = new Trie<StorageKey, StorageItem>(store, root_hash);
+            var trie = new Trie(store, root_hash);
             var contract = GetHistoricalContractState(trie, script_hash);
             if (contract is null) throw new RpcException(-100, "Unknown contract");
             return GetProof(trie, contract.Id, key);
@@ -237,8 +238,12 @@ namespace Neo.Plugins.StateService
                 proofs.Add(reader.ReadVarBytes());
             }
 
-            var skey = key.AsSerializable<StorageKey>();
-            var sitem = Trie<StorageKey, StorageItem>.VerifyProof(root_hash, skey, proofs);
+            var skey = new StorageKey
+            {
+                Id = BinaryPrimitives.ReadInt32LittleEndian(key),
+                Key = key.AsMemory(sizeof(int))
+            };
+            var sitem = Trie.VerifyProof(root_hash, skey, proofs);
             if (sitem is null) throw new RpcException(-100, "Verification failed");
             return Convert.ToBase64String(sitem.Value.Span);
         }
@@ -260,7 +265,7 @@ namespace Neo.Plugins.StateService
             return json;
         }
 
-        private ContractState GetHistoricalContractState(Trie<StorageKey, StorageItem> trie, UInt160 script_hash)
+        private ContractState GetHistoricalContractState(Trie trie, UInt160 script_hash)
         {
             const byte prefix = 8;
             StorageKey skey = new KeyBuilder(NativeContract.ContractManagement.Id, prefix).Add(script_hash);
@@ -284,7 +289,7 @@ namespace Neo.Plugins.StateService
             if (Settings.Default.MaxFindResultItems < count)
                 count = Settings.Default.MaxFindResultItems;
             using var store = StateStore.Singleton.GetStoreSnapshot();
-            var trie = new Trie<StorageKey, StorageItem>(store, root_hash);
+            var trie = new Trie(store, root_hash);
             var contract = GetHistoricalContractState(trie, script_hash);
             if (contract is null) throw new RpcException(-100, "Unknown contract");
             StorageKey pkey = new()
@@ -334,7 +339,7 @@ namespace Neo.Plugins.StateService
             var script_hash = UInt160.Parse(_params[1].AsString());
             var key = Convert.FromBase64String(_params[2].AsString());
             using var store = StateStore.Singleton.GetStoreSnapshot();
-            var trie = new Trie<StorageKey, StorageItem>(store, root_hash);
+            var trie = new Trie(store, root_hash);
 
             var contract = GetHistoricalContractState(trie, script_hash);
             if (contract is null) throw new RpcException(-100, "Unknown contract");

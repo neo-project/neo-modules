@@ -8,15 +8,12 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO;
 using Neo.Persistence;
 using System;
 
 namespace Neo.Cryptography.MPTTrie
 {
-    public partial class Trie<TKey, TValue>
-        where TKey : notnull, new()
-        where TValue : notnull, ISerializable, new()
+    public partial class Trie
     {
         private const byte Prefix = 0xf0;
         private readonly bool full;

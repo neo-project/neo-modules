@@ -120,7 +120,7 @@ namespace Neo.Consensus
             for (int i = 0, j = 0; i < Validators.Length && j < M; i++)
             {
                 if (GetMessage(CommitPayloads[i])?.ViewNumber != ViewNumber) continue;
-                sc.AddSignature(contract, Validators[i], GetMessage<Commit>(CommitPayloads[i]).Signature);
+                sc.AddSignature(contract, Validators[i], GetMessage<Commit>(CommitPayloads[i]).Signature.ToArray());
                 j++;
             }
             Block.Header.Witness = sc.GetWitnesses()[0];

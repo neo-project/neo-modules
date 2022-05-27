@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Cryptography.MPT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -9,14 +9,15 @@
 // modifications are permitted.
 
 using Neo.IO;
+using Neo.SmartContract;
 using System;
 using System.Collections.Generic;
 
 namespace Neo.Cryptography.MPTTrie
 {
-    partial class Trie<TKey, TValue>
+    partial class Trie
     {
-        public TValue this[TKey key]
+        public StorageItem this[StorageKey key]
         {
             get
             {
@@ -26,11 +27,11 @@ namespace Neo.Cryptography.MPTTrie
                 if (path.Length > Node.MaxKeyLength)
                     throw new ArgumentException("exceeds limit", nameof(key));
                 var result = TryGet(ref root, path, out var value);
-                return result ? value.ToArray().AsSerializable<TValue>() : throw new KeyNotFoundException();
+                return result ? value.ToArray().AsSerializable<StorageItem>() : throw new KeyNotFoundException();
             }
         }
 
-        public bool TryGetValue(TKey key, out TValue value)
+        public bool TryGetValue(StorageKey key, out StorageItem value)
         {
             value = default;
             var path = ToNibbles(key.ToArray());
@@ -40,7 +41,7 @@ namespace Neo.Cryptography.MPTTrie
                 throw new ArgumentException("exceeds limit", nameof(key));
             var result = TryGet(ref root, path, out var val);
             if (result)
-                value = val.ToArray().AsSerializable<TValue>();
+                value = val.ToArray().AsSerializable<StorageItem>();
             return result;
         }
 

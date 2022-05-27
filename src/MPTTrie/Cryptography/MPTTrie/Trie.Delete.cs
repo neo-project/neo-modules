@@ -8,16 +8,16 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO;
+using Neo.SmartContract;
 using System;
 using System.Collections.Generic;
 using static Neo.Helper;
 
 namespace Neo.Cryptography.MPTTrie
 {
-    partial class Trie<TKey, TValue>
+    partial class Trie
     {
-        public bool Delete(TKey key)
+        public bool Delete(StorageKey key)
         {
             var path = ToNibbles(key.ToArray());
             if (path.Length == 0)

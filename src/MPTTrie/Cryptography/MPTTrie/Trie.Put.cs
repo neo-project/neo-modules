@@ -9,11 +9,12 @@
 // modifications are permitted.
 
 using Neo.IO;
+using Neo.SmartContract;
 using System;
 
 namespace Neo.Cryptography.MPTTrie
 {
-    partial class Trie<TKey, TValue>
+    partial class Trie
     {
         private static ReadOnlySpan<byte> CommonPrefix(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
         {
@@ -29,7 +30,7 @@ namespace Neo.Cryptography.MPTTrie
             return a[..i];
         }
 
-        public void Put(TKey key, TValue value)
+        public void Put(StorageKey key, StorageItem value)
         {
             var path = ToNibbles(key.ToArray());
             var val = value.ToArray();
