@@ -21,7 +21,7 @@ namespace Neo.Cryptography.MPTTrie.Tests
             var cache = new Cache(snapshot, Prefix);
             var resolved = cache.Resolve(n.Hash);
             Assert.AreEqual(n.Hash, resolved.Hash);
-            Assert.AreEqual(n.Value.ToHexString(), resolved.Value.ToHexString());
+            Assert.AreEqual(n.Value.Span.ToHexString(), resolved.Value.Span.ToHexString());
         }
 
         [TestMethod]
@@ -39,7 +39,7 @@ namespace Neo.Cryptography.MPTTrie.Tests
             Assert.AreEqual(b.Hash, resolved_b.Hash);
             Assert.AreEqual(l.Hash, resolved_b.Children[1].Hash);
             var resolved_l = cache.Resolve(l.Hash);
-            Assert.AreEqual(l.Value.ToHexString(), resolved_l.Value.ToHexString());
+            Assert.AreEqual(l.Value.Span.ToHexString(), resolved_l.Value.Span.ToHexString());
         }
 
         [TestMethod]
@@ -52,7 +52,7 @@ namespace Neo.Cryptography.MPTTrie.Tests
             var cache = new Cache(snapshot, Prefix);
             var re = cache.Resolve(e.Hash);
             Assert.AreEqual(e.Hash, re.Hash);
-            Assert.AreEqual(e.Key.ToHexString(), re.Key.ToHexString());
+            Assert.AreEqual(e.Key.Span.ToHexString(), re.Key.Span.ToHexString());
             Assert.IsTrue(re.Next.IsEmpty);
         }
 
@@ -91,13 +91,13 @@ namespace Neo.Cryptography.MPTTrie.Tests
             var cache = new Cache(snapshot, Prefix);
             var re = cache.Resolve(e.Hash);
             Assert.AreEqual(e.Hash, re.Hash);
-            Assert.AreEqual(e.Key.ToHexString(), re.Key.ToHexString());
+            Assert.AreEqual(e.Key.Span.ToHexString(), re.Key.Span.ToHexString());
             Assert.IsTrue(re.Next.IsEmpty);
             re.Key = new byte[] { 0x02 };
             re.SetDirty();
             var re1 = cache.Resolve(e.Hash);
             Assert.AreEqual(e.Hash, re1.Hash);
-            Assert.AreEqual(e.Key.ToHexString(), re1.Key.ToHexString());
+            Assert.AreEqual(e.Key.Span.ToHexString(), re1.Key.Span.ToHexString());
             Assert.IsTrue(re1.Next.IsEmpty);
         }
 
@@ -111,12 +111,12 @@ namespace Neo.Cryptography.MPTTrie.Tests
             var cache = new Cache(snapshot, Prefix);
             var rl = cache.Resolve(l.Hash);
             Assert.AreEqual(l.Hash, rl.Hash);
-            Assert.AreEqual("leaf", Encoding.ASCII.GetString(rl.Value));
+            Assert.AreEqual("leaf", Encoding.ASCII.GetString(rl.Value.Span));
             rl.Value = new byte[] { 0x01 };
             rl.SetDirty();
             var rl1 = cache.Resolve(l.Hash);
             Assert.AreEqual(l.Hash, rl1.Hash);
-            Assert.AreEqual("leaf", Encoding.ASCII.GetString(rl1.Value));
+            Assert.AreEqual("leaf", Encoding.ASCII.GetString(rl1.Value.Span));
         }
 
         [TestMethod]
@@ -156,14 +156,14 @@ namespace Neo.Cryptography.MPTTrie.Tests
             cache.PutNode(e);
             var re = cache.Resolve(e.Hash);
             Assert.AreEqual(e.Hash, re.Hash);
-            Assert.AreEqual(e.Key.ToHexString(), re.Key.ToHexString());
+            Assert.AreEqual(e.Key.Span.ToHexString(), re.Key.Span.ToHexString());
             Assert.IsTrue(re.Next.IsEmpty);
             e.Key = new byte[] { 0x02 };
             e.Next = e;
             e.SetDirty();
             var re1 = cache.Resolve(h);
             Assert.AreEqual(h, re1.Hash);
-            Assert.AreEqual("01", re1.Key.ToHexString());
+            Assert.AreEqual("01", re1.Key.Span.ToHexString());
             Assert.IsTrue(re1.Next.IsEmpty);
         }
 
@@ -178,12 +178,12 @@ namespace Neo.Cryptography.MPTTrie.Tests
             cache.PutNode(l);
             var rl = cache.Resolve(l.Hash);
             Assert.AreEqual(h, rl.Hash);
-            Assert.AreEqual("leaf", Encoding.ASCII.GetString(rl.Value));
+            Assert.AreEqual("leaf", Encoding.ASCII.GetString(rl.Value.Span));
             l.Value = new byte[] { 0x01 };
             l.SetDirty();
             var rl1 = cache.Resolve(h);
             Assert.AreEqual(h, rl1.Hash);
-            Assert.AreEqual("leaf", Encoding.ASCII.GetString(rl1.Value));
+            Assert.AreEqual("leaf", Encoding.ASCII.GetString(rl1.Value.Span));
         }
 
         [TestMethod]
