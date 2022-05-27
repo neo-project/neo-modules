@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -19,14 +19,11 @@ namespace Neo.Network.RPC.Models
 
         public BigInteger Votes { get; set; }
 
-        public bool Active { get; set; }
-
         public JObject ToJson()
         {
             JObject json = new();
             json["publickey"] = PublicKey;
             json["votes"] = Votes.ToString();
-            json["active"] = Active;
             return json;
         }
 
@@ -36,7 +33,6 @@ namespace Neo.Network.RPC.Models
             {
                 PublicKey = json["publickey"].AsString(),
                 Votes = BigInteger.Parse(json["votes"].AsString()),
-                Active = json["active"].AsBoolean()
             };
         }
     }
