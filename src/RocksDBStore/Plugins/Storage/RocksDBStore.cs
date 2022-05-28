@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Plugins.Storage.RocksDBStore is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -12,9 +12,14 @@ using Neo.Persistence;
 
 namespace Neo.Plugins.Storage
 {
-    public class RocksDBStore : Plugin, IStorageProvider
+    public class RocksDBStore : Plugin, IStoreProvider
     {
         public override string Description => "Uses RocksDBStore to store the blockchain data";
+
+        public RocksDBStore()
+        {
+            StoreFactory.RegisterProvider(this);
+        }
 
         /// <summary>
         /// Get store

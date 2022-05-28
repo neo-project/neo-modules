@@ -13,6 +13,7 @@ using Neo.ConsoleService;
 using Neo.Cryptography.MPTTrie;
 using Neo.IO;
 using Neo.IO.Json;
+using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.Plugins.StateService.Network;
@@ -29,7 +30,7 @@ using static Neo.Ledger.Blockchain;
 
 namespace Neo.Plugins.StateService
 {
-    public class StatePlugin : Plugin, IPersistencePlugin
+    public class StatePlugin : Plugin
     {
         public const string StatePayloadCategory = "StateService";
         public override string Name => "StateService";
@@ -40,6 +41,12 @@ namespace Neo.Plugins.StateService
 
         internal static NeoSystem System;
         private IWalletProvider walletProvider;
+
+        public StatePlugin()
+        {
+            Blockchain.Committing += OnCommitting;
+            Blockchain.Committed += OnCommitted;
+        }
 
         protected override void Configure()
         {
@@ -77,17 +84,19 @@ namespace Neo.Plugins.StateService
         public override void Dispose()
         {
             base.Dispose();
+            Blockchain.Committing -= OnCommitting;
+            Blockchain.Committed -= OnCommitted;
             if (Store is not null) System.EnsureStoped(Store);
             if (Verifier is not null) System.EnsureStoped(Verifier);
         }
 
-        void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
+        private void OnCommitting(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
             StateStore.Singleton.UpdateLocalStateRootSnapshot(block.Index, snapshot.GetChangeSet().Where(p => p.State != TrackState.None).Where(p => p.Key.Id != NativeContract.Ledger.Id).ToList());
         }
 
-        void IPersistencePlugin.OnCommit(NeoSystem system, Block block)
+        private void OnCommitted(NeoSystem system, Block block)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
             StateStore.Singleton.UpdateLocalStateRoot(block.Index);

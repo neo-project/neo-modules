@@ -21,7 +21,7 @@ using static System.IO.Path;
 
 namespace Neo.Plugins
 {
-    public class TokensTracker : Plugin, IPersistencePlugin
+    public class TokensTracker : Plugin
     {
         private string _dbPath;
         private bool _shouldTrackHistory;
@@ -33,6 +33,18 @@ namespace Neo.Plugins
         private readonly List<TrackerBase> trackers = new();
 
         public override string Description => "Enquiries balances and transaction history of accounts through RPC";
+
+        public TokensTracker()
+        {
+            Blockchain.Committing += OnCommitting;
+            Blockchain.Committed += OnCommitted;
+        }
+
+        public override void Dispose()
+        {
+            Blockchain.Committing -= OnCommitting;
+            Blockchain.Committed -= OnCommitted;
+        }
 
         protected override void Configure()
         {
@@ -66,7 +78,7 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        private void OnCommitting(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (system.Settings.Network != _network) return;
             // Start freshly with a new DBCache for each block.
@@ -77,18 +89,13 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnCommit(NeoSystem system, Block block)
+        private void OnCommitted(NeoSystem system, Block block)
         {
             if (system.Settings.Network != _network) return;
             foreach (var tracker in trackers)
             {
                 tracker.Commit();
             }
-        }
-
-        bool IPersistencePlugin.ShouldThrowExceptionFromCommit(Exception ex)
-        {
-            return true;
         }
     }
 }
