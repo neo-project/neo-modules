@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Consensus.DBFT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -9,28 +9,29 @@
 // modifications are permitted.
 
 using Neo.IO;
+using System;
 using System.IO;
 
 namespace Neo.Consensus
 {
     public class Commit : ConsensusMessage
     {
-        public byte[] Signature;
+        public ReadOnlyMemory<byte> Signature;
 
         public override int Size => base.Size + Signature.Length;
 
         public Commit() : base(ConsensusMessageType.Commit) { }
 
-        public override void Deserialize(BinaryReader reader)
+        public override void Deserialize(ref MemoryReader reader)
         {
-            base.Deserialize(reader);
-            Signature = reader.ReadFixedBytes(64);
+            base.Deserialize(ref reader);
+            Signature = reader.ReadMemory(64);
         }
 
         public override void Serialize(BinaryWriter writer)
         {
             base.Serialize(writer);
-            writer.Write(Signature);
+            writer.Write(Signature.Span);
         }
     }
 }

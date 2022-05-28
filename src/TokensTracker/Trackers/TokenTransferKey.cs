@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Plugins.TokensTracker is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,10 +8,10 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Neo.IO;
 using System;
 using System.Buffers.Binary;
 using System.IO;
-using Neo.IO;
 
 namespace Neo.Plugins.Trackers
 {
@@ -39,11 +39,11 @@ namespace Neo.Plugins.Trackers
             writer.Write(BlockXferNotificationIndex);
         }
 
-        public virtual void Deserialize(BinaryReader reader)
+        public virtual void Deserialize(ref MemoryReader reader)
         {
-            UserScriptHash.Deserialize(reader);
+            UserScriptHash.Deserialize(ref reader);
             TimestampMS = BitConverter.IsLittleEndian ? BinaryPrimitives.ReverseEndianness(reader.ReadUInt64()) : reader.ReadUInt64();
-            AssetScriptHash.Deserialize(reader);
+            AssetScriptHash.Deserialize(ref reader);
             BlockXferNotificationIndex = reader.ReadUInt32();
         }
 

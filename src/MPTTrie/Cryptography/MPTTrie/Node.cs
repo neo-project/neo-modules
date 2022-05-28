@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Cryptography.MPT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -134,27 +134,27 @@ namespace Neo.Cryptography.MPTTrie
             return ms.ToArray();
         }
 
-        public void Deserialize(BinaryReader reader)
+        public void Deserialize(ref MemoryReader reader)
         {
             type = (NodeType)reader.ReadByte();
             switch (type)
             {
                 case NodeType.BranchNode:
-                    DeserializeBranch(reader);
+                    DeserializeBranch(ref reader);
                     Reference = (int)reader.ReadVarInt();
                     break;
                 case NodeType.ExtensionNode:
-                    DeserializeExtension(reader);
+                    DeserializeExtension(ref reader);
                     Reference = (int)reader.ReadVarInt();
                     break;
                 case NodeType.LeafNode:
-                    DeserializeLeaf(reader);
+                    DeserializeLeaf(ref reader);
                     Reference = (int)reader.ReadVarInt();
                     break;
                 case NodeType.Empty:
                     break;
                 case NodeType.HashNode:
-                    DeserializeHash(reader);
+                    DeserializeHash(ref reader);
                     break;
                 default:
                     throw new FormatException(nameof(Deserialize));
@@ -201,7 +201,7 @@ namespace Neo.Cryptography.MPTTrie
                     return new Node
                     {
                         type = type,
-                        Key = (byte[])Key.Clone(),
+                        Key = Key,
                         Next = Next.CloneAsChild(),
                         Reference = Reference,
                     };
@@ -209,7 +209,7 @@ namespace Neo.Cryptography.MPTTrie
                     return new Node
                     {
                         type = type,
-                        Value = (byte[])Value.Clone(),
+                        Value = Value,
                         Reference = Reference,
                     };
                 case NodeType.HashNode:
@@ -222,10 +222,8 @@ namespace Neo.Cryptography.MPTTrie
 
         public void FromReplica(Node n)
         {
-            using MemoryStream ms = new MemoryStream(n.ToArray());
-            using BinaryReader reader = new BinaryReader(ms, Utility.StrictUTF8, true);
-
-            Deserialize(reader);
+            MemoryReader reader = new(n.ToArray());
+            Deserialize(ref reader);
         }
     }
 }

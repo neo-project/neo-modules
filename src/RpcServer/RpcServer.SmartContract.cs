@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -22,8 +22,6 @@ using Neo.Wallets;
 using System;
 using System.IO;
 using System.Linq;
-using Neo.IO.Caching;
-using Neo.Network.P2P.Payloads.Conditions;
 
 namespace Neo.Plugins
 {
@@ -45,12 +43,12 @@ namespace Neo.Plugins
                 throw new NotImplementedException();
             }
 
-            public void Deserialize(BinaryReader reader)
+            public void Deserialize(ref MemoryReader reader)
             {
                 throw new NotImplementedException();
             }
 
-            public void DeserializeUnsigned(BinaryReader reader)
+            public void DeserializeUnsigned(ref MemoryReader reader)
             {
                 throw new NotImplementedException();
             }
@@ -95,9 +93,10 @@ namespace Neo.Plugins
               }));
             if (useDiagnostic)
             {
+                Diagnostic diagnostic = (Diagnostic)engine.Diagnostic;
                 json["diagnostics"] = new JObject()
                 {
-                    ["invokedcontracts"] = ToJson(engine.Diagnostic.InvocationTree.Root),
+                    ["invokedcontracts"] = ToJson(diagnostic.InvocationTree.Root),
                     ["storagechanges"] = ToJson(engine.Snapshot.GetChangeSet())
                 };
             }
@@ -150,7 +149,7 @@ namespace Neo.Plugins
                 JArray array = new();
                 while (max > 0 && iterator.Next())
                 {
-                    array.Add(iterator.Value().ToJson());
+                    array.Add(iterator.Value(null).ToJson());
                     max--;
                 }
                 json["iterator"] = array;

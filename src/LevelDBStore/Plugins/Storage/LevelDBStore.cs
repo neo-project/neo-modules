@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Plugins.Storage.LevelDBStore is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -15,9 +15,14 @@ using System.Linq;
 
 namespace Neo.Plugins.Storage
 {
-    public class LevelDBStore : Plugin, IStorageProvider
+    public class LevelDBStore : Plugin, IStoreProvider
     {
         public override string Description => "Uses LevelDB to store the blockchain data";
+
+        public LevelDBStore()
+        {
+            StoreFactory.RegisterProvider(this);
+        }
 
         public IStore GetStore(string path)
         {

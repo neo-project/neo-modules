@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Consensus.DBFT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -32,9 +32,9 @@ namespace Neo.Consensus
 
         public PrepareRequest() : base(ConsensusMessageType.PrepareRequest) { }
 
-        public override void Deserialize(BinaryReader reader)
+        public override void Deserialize(ref MemoryReader reader)
         {
-            base.Deserialize(reader);
+            base.Deserialize(ref reader);
             Version = reader.ReadUInt32();
             PrevHash = reader.ReadSerializable<UInt256>();
             Timestamp = reader.ReadUInt64();

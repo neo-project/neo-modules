@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Consensus.DBFT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -16,7 +16,7 @@ using Neo.Wallets;
 
 namespace Neo.Consensus
 {
-    public class DBFTPlugin : Plugin, IP2PPlugin
+    public class DBFTPlugin : Plugin
     {
         private IWalletProvider walletProvider;
         private IActorRef consensus;
@@ -24,14 +24,22 @@ namespace Neo.Consensus
         private NeoSystem neoSystem;
         private Settings settings;
 
-        public DBFTPlugin() { }
+        public override string Description => "Consensus plugin with dBFT algorithm.";
 
-        public DBFTPlugin(Settings settings)
+        public DBFTPlugin()
+        {
+            RemoteNode.MessageReceived += RemoteNode_MessageReceived;
+        }
+
+        public DBFTPlugin(Settings settings) : this()
         {
             this.settings = settings;
         }
 
-        public override string Description => "Consensus plugin with dBFT algorithm.";
+        public override void Dispose()
+        {
+            RemoteNode.MessageReceived -= RemoteNode_MessageReceived;
+        }
 
         protected override void Configure()
         {
@@ -76,7 +84,7 @@ namespace Neo.Consensus
             consensus.Tell(new ConsensusService.Start());
         }
 
-        bool IP2PPlugin.OnP2PMessage(NeoSystem system, Message message)
+        private bool RemoteNode_MessageReceived(NeoSystem system, Message message)
         {
             if (message.Command == MessageCommand.Transaction)
                 consensus?.Tell(message.Payload);

@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Consensus.DBFT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -120,7 +120,7 @@ namespace Neo.Consensus
             for (int i = 0, j = 0; i < Validators.Length && j < M; i++)
             {
                 if (GetMessage(CommitPayloads[i])?.ViewNumber != ViewNumber) continue;
-                sc.AddSignature(contract, Validators[i], GetMessage<Commit>(CommitPayloads[i]).Signature);
+                sc.AddSignature(contract, Validators[i], GetMessage<Commit>(CommitPayloads[i]).Signature.ToArray());
                 j++;
             }
             Block.Header.Witness = sc.GetWitnesses()[0];
@@ -128,7 +128,7 @@ namespace Neo.Consensus
             return Block;
         }
 
-        public ExtensiblePayload CreatePayload(ConsensusMessage message, byte[] invocationScript = null)
+        public ExtensiblePayload CreatePayload(ConsensusMessage message, ReadOnlyMemory<byte> invocationScript = default)
         {
             ExtensiblePayload payload = new ExtensiblePayload
             {
@@ -137,7 +137,7 @@ namespace Neo.Consensus
                 ValidBlockEnd = message.BlockIndex,
                 Sender = GetSender(message.ValidatorIndex),
                 Data = message.ToArray(),
-                Witness = invocationScript is null ? null : new Witness
+                Witness = invocationScript.IsEmpty ? null : new Witness
                 {
                     InvocationScript = invocationScript,
                     VerificationScript = Contract.CreateSignatureRedeemScript(Validators[message.ValidatorIndex])
@@ -163,20 +163,17 @@ namespace Neo.Consensus
         {
             byte[] data = store.TryGet(ConsensusStateKey);
             if (data is null || data.Length == 0) return false;
-            using (MemoryStream ms = new MemoryStream(data, false))
-            using (BinaryReader reader = new BinaryReader(ms))
+            MemoryReader reader = new(data);
+            try
             {
-                try
-                {
-                    Deserialize(reader);
-                }
-                catch (Exception exception)
-                {
-                    Utility.Log(nameof(ConsensusContext), LogLevel.Debug, exception.ToString());
-                    return false;
-                }
-                return true;
+                Deserialize(ref reader);
             }
+            catch (Exception exception)
+            {
+                Utility.Log(nameof(ConsensusContext), LogLevel.Debug, exception.ToString());
+                return false;
+            }
+            return true;
         }
 
         public void Reset(byte viewNumber)
@@ -267,7 +264,7 @@ namespace Neo.Consensus
             store.PutSync(ConsensusStateKey, this.ToArray());
         }
 
-        public void Deserialize(BinaryReader reader)
+        public void Deserialize(ref MemoryReader reader)
         {
             Reset(0);
             if (reader.ReadUInt32() != Block.Version) throw new FormatException();

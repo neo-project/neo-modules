@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Cryptography.MPT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,6 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Neo.IO;
 using System.IO;
 
 namespace Neo.Cryptography.MPTTrie
@@ -53,13 +54,13 @@ namespace Neo.Cryptography.MPTTrie
             }
         }
 
-        private void DeserializeBranch(BinaryReader reader)
+        private void DeserializeBranch(ref MemoryReader reader)
         {
             Children = new Node[BranchChildCount];
             for (int i = 0; i < BranchChildCount; i++)
             {
                 var n = new Node();
-                n.Deserialize(reader);
+                n.Deserialize(ref reader);
                 Children[i] = n;
             }
         }

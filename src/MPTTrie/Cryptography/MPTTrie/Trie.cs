@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Cryptography.MPT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,15 +8,12 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO;
 using Neo.Persistence;
 using System;
 
 namespace Neo.Cryptography.MPTTrie
 {
-    public partial class Trie<TKey, TValue>
-        where TKey : notnull, ISerializable, new()
-        where TValue : notnull, ISerializable, new()
+    public partial class Trie
     {
         private const byte Prefix = 0xf0;
         private readonly bool full;
