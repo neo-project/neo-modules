@@ -24,6 +24,8 @@ namespace Neo.Consensus
         private NeoSystem neoSystem;
         private Settings settings;
 
+        public override string Description => "Consensus plugin with dBFT algorithm.";
+
         public DBFTPlugin()
         {
             RemoteNode.MessageReceived += RemoteNode_MessageReceived;
@@ -34,7 +36,10 @@ namespace Neo.Consensus
             this.settings = settings;
         }
 
-        public override string Description => "Consensus plugin with dBFT algorithm.";
+        public override void Dispose()
+        {
+            RemoteNode.MessageReceived -= RemoteNode_MessageReceived;
+        }
 
         protected override void Configure()
         {
