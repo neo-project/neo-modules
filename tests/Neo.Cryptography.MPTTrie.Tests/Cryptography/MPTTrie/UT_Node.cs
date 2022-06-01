@@ -140,7 +140,7 @@ namespace Neo.Cryptography.MPTTrie.Tests
             var l = Node.NewLeaf(Encoding.ASCII.GetBytes("leaf"));
             var n = l.Clone();
             n.Value = Encoding.ASCII.GetBytes("value");
-            Assert.AreEqual("leaf", Encoding.ASCII.GetString(l.Value));
+            Assert.AreEqual("leaf", Encoding.ASCII.GetString(l.Value.Span));
         }
 
         [TestMethod]

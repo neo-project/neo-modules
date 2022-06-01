@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Cryptography.MPT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,18 +8,17 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO;
 using System;
 using System.Collections.Generic;
 using static Neo.Helper;
 
 namespace Neo.Cryptography.MPTTrie
 {
-    partial class Trie<TKey, TValue>
+    partial class Trie
     {
-        public bool Delete(TKey key)
+        public bool Delete(byte[] key)
         {
-            var path = ToNibbles(key.ToArray());
+            var path = ToNibbles(key);
             if (path.Length == 0)
                 throw new ArgumentException("could not be empty", nameof(key));
             if (path.Length > Node.MaxKeyLength)
@@ -43,7 +42,7 @@ namespace Neo.Cryptography.MPTTrie
                     }
                 case NodeType.ExtensionNode:
                     {
-                        if (path.StartsWith(node.Key))
+                        if (path.StartsWith(node.Key.Span))
                         {
                             var oldHash = node.Hash;
                             var result = TryDelete(ref node.Next, path[node.Key.Length..]);
@@ -57,7 +56,7 @@ namespace Neo.Cryptography.MPTTrie
                             if (node.Next.Type == NodeType.ExtensionNode)
                             {
                                 if (!full) cache.DeleteNode(node.Next.Hash);
-                                node.Key = Concat(node.Key, node.Next.Key);
+                                node.Key = Concat(node.Key.Span, node.Next.Key.Span);
                                 node.Next = node.Next.Next;
                             }
                             node.SetDirty();
@@ -107,7 +106,7 @@ namespace Neo.Cryptography.MPTTrie
                         if (lastChild.Type == NodeType.ExtensionNode)
                         {
                             if (!full) cache.DeleteNode(lastChild.Hash);
-                            lastChild.Key = Concat(childrenIndexes.ToArray(), lastChild.Key);
+                            lastChild.Key = Concat(childrenIndexes.ToArray(), lastChild.Key.Span);
                             lastChild.SetDirty();
                             cache.PutNode(lastChild);
                             node = lastChild;

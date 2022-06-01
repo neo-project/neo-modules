@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Cryptography.MPT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,39 +8,38 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO;
 using System;
 using System.Collections.Generic;
 
 namespace Neo.Cryptography.MPTTrie
 {
-    partial class Trie<TKey, TValue>
+    partial class Trie
     {
-        public TValue this[TKey key]
+        public byte[] this[byte[] key]
         {
             get
             {
-                var path = ToNibbles(key.ToArray());
+                var path = ToNibbles(key);
                 if (path.Length == 0)
                     throw new ArgumentException("could not be empty", nameof(key));
                 if (path.Length > Node.MaxKeyLength)
                     throw new ArgumentException("exceeds limit", nameof(key));
                 var result = TryGet(ref root, path, out var value);
-                return result ? value.ToArray().AsSerializable<TValue>() : throw new KeyNotFoundException();
+                return result ? value.ToArray() : throw new KeyNotFoundException();
             }
         }
 
-        public bool TryGetValue(TKey key, out TValue value)
+        public bool TryGetValue(byte[] key, out byte[] value)
         {
             value = default;
-            var path = ToNibbles(key.ToArray());
+            var path = ToNibbles(key);
             if (path.Length == 0)
                 throw new ArgumentException("could not be empty", nameof(key));
             if (path.Length > Node.MaxKeyLength)
                 throw new ArgumentException("exceeds limit", nameof(key));
             var result = TryGet(ref root, path, out var val);
             if (result)
-                value = val.ToArray().AsSerializable<TValue>();
+                value = val.ToArray();
             return result;
         }
 
@@ -52,7 +51,7 @@ namespace Neo.Cryptography.MPTTrie
                     {
                         if (path.IsEmpty)
                         {
-                            value = node.Value;
+                            value = node.Value.Span;
                             return true;
                         }
                         break;
@@ -76,7 +75,7 @@ namespace Neo.Cryptography.MPTTrie
                     }
                 case NodeType.ExtensionNode:
                     {
-                        if (path.StartsWith(node.Key))
+                        if (path.StartsWith(node.Key.Span))
                         {
                             return TryGet(ref node.Next, path[node.Key.Length..], out value);
                         }

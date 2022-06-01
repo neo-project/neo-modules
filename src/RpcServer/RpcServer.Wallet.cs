@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -18,13 +18,11 @@ using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
-using Neo.Wallets.SQLite;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using static System.IO.Path;
 
 namespace Neo.Plugins
 {
@@ -46,6 +44,7 @@ namespace Neo.Plugins
             public override WalletAccount GetAccount(UInt160 scriptHash) => null;
             public override IEnumerable<WalletAccount> GetAccounts() => Array.Empty<WalletAccount>();
             public override bool VerifyPassword(string password) => false;
+            public override void Save() { }
         }
 
         protected Wallet wallet;
@@ -155,23 +154,8 @@ namespace Neo.Plugins
             string path = _params[0].AsString();
             string password = _params[1].AsString();
             if (!File.Exists(path)) throw new FileNotFoundException();
-            switch (GetExtension(path))
-            {
-                case ".db3":
-                    {
-                        wallet = UserWallet.Open(path, password, system.Settings);
-                        break;
-                    }
-                case ".json":
-                    {
-                        NEP6Wallet nep6wallet = new(path, system.Settings);
-                        nep6wallet.Unlock(password);
-                        wallet = nep6wallet;
-                        break;
-                    }
-                default:
-                    throw new NotSupportedException();
-            }
+            wallet = Wallet.Open(path, password, system.Settings)
+                ?? throw new NotSupportedException();
             return true;
         }
 

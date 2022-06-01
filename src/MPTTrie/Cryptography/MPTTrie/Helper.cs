@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Cryptography.MPT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -14,9 +14,8 @@ namespace Neo.Cryptography.MPTTrie
 {
     public static class Helper
     {
-        public static int CompareTo(this byte[] arr1, byte[] arr2)
+        public static int CompareTo(this ReadOnlySpan<byte> arr1, ReadOnlySpan<byte> arr2)
         {
-            if (arr1 is null || arr2 is null) throw new ArgumentNullException();
             for (int i = 0; i < arr1.Length && i < arr2.Length; i++)
             {
                 var r = arr1[i].CompareTo(arr2[i]);

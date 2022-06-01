@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Cryptography.MPT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,12 +8,11 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO;
 using System;
 
 namespace Neo.Cryptography.MPTTrie
 {
-    partial class Trie<TKey, TValue>
+    partial class Trie
     {
         private static ReadOnlySpan<byte> CommonPrefix(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
         {
@@ -29,10 +28,10 @@ namespace Neo.Cryptography.MPTTrie
             return a[..i];
         }
 
-        public void Put(TKey key, TValue value)
+        public void Put(byte[] key, byte[] value)
         {
-            var path = ToNibbles(key.ToArray());
-            var val = value.ToArray();
+            var path = ToNibbles(key);
+            var val = value;
             if (path.Length == 0 || path.Length > Node.MaxKeyLength)
                 throw new ArgumentException("invalid", nameof(key));
             if (val.Length > Node.MaxValueLength)
@@ -63,7 +62,7 @@ namespace Neo.Cryptography.MPTTrie
                     }
                 case NodeType.ExtensionNode:
                     {
-                        if (path.StartsWith(node.Key))
+                        if (path.StartsWith(node.Key.Span))
                         {
                             var oldHash = node.Hash;
                             Put(ref node.Next, path[node.Key.Length..], val);
@@ -73,9 +72,9 @@ namespace Neo.Cryptography.MPTTrie
                             return;
                         }
                         if (!full) cache.DeleteNode(node.Hash);
-                        var prefix = CommonPrefix(node.Key, path);
+                        var prefix = CommonPrefix(node.Key.Span, path);
                         var pathRemain = path[prefix.Length..];
-                        var keyRemain = node.Key.AsSpan(prefix.Length);
+                        var keyRemain = node.Key.Span[prefix.Length..];
                         var child = Node.NewBranch();
                         Node grandChild = new Node();
                         if (keyRemain.Length == 1)

@@ -10,7 +10,6 @@
 
 using Neo.Cryptography.ECC;
 using Neo.IO;
-using Neo.IO.Caching;
 using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -85,9 +84,10 @@ namespace Neo.Plugins
                 }));
                 if (useDiagnostic)
                 {
+                    Diagnostic diagnostic = (Diagnostic)session.Engine.Diagnostic;
                     json["diagnostics"] = new JObject()
                     {
-                        ["invokedcontracts"] = ToJson(session.Engine.Diagnostic.InvocationTree.Root),
+                        ["invokedcontracts"] = ToJson(diagnostic.InvocationTree.Root),
                         ["storagechanges"] = ToJson(session.Engine.Snapshot.GetChangeSet())
                     };
                 }
@@ -237,7 +237,7 @@ namespace Neo.Plugins
             IIterator iterator = session.Iterators[iid];
             JArray json = new();
             while (count-- > 0 && iterator.Next())
-                json.Add(iterator.Value().ToJson());
+                json.Add(iterator.Value(null).ToJson());
             return json;
         }
 

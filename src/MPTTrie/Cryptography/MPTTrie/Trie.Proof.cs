@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Cryptography.MPT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -16,11 +16,11 @@ using static Neo.Helper;
 
 namespace Neo.Cryptography.MPTTrie
 {
-    partial class Trie<TKey, TValue>
+    partial class Trie
     {
-        public bool TryGetProof(TKey key, out HashSet<byte[]> proof)
+        public bool TryGetProof(byte[] key, out HashSet<byte[]> proof)
         {
-            var path = ToNibbles(key.ToArray());
+            var path = ToNibbles(key);
             if (path.Length == 0)
                 throw new ArgumentException("could not be empty", nameof(key));
             if (path.Length > Node.MaxKeyLength)
@@ -62,7 +62,7 @@ namespace Neo.Cryptography.MPTTrie
                     }
                 case NodeType.ExtensionNode:
                     {
-                        if (path.StartsWith(node.Key))
+                        if (path.StartsWith(node.Key.Span))
                         {
                             set.Add(node.ToArrayWithoutReference());
                             return GetProof(ref node.Next, path[node.Key.Length..], set);
@@ -81,13 +81,13 @@ namespace Neo.Cryptography.MPTTrie
             return buffer;
         }
 
-        public static TValue VerifyProof(UInt256 root, TKey key, HashSet<byte[]> proof)
+        public static byte[] VerifyProof(UInt256 root, byte[] key, HashSet<byte[]> proof)
         {
             using var memoryStore = new MemoryStore();
             foreach (byte[] data in proof)
                 memoryStore.Put(Key(Crypto.Hash256(data)), Concat(data, new byte[] { 1 }));
             using ISnapshot snapshot = memoryStore.GetSnapshot();
-            var trie = new Trie<TKey, TValue>(snapshot, root, false);
+            var trie = new Trie(snapshot, root, false);
             return trie[key];
         }
     }
