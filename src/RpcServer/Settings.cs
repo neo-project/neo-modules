@@ -17,15 +17,13 @@ using System.Net;
 
 namespace Neo.Plugins
 {
-    public record Settings
+    class Settings
     {
         public IReadOnlyList<RpcServerSettings> Servers { get; init; }
-        public TimeSpan SessionExpirationTime { get; init; }
 
         public Settings(IConfigurationSection section)
         {
             Servers = section.GetSection(nameof(Servers)).GetChildren().Select(p => RpcServerSettings.Load(p)).ToArray();
-            SessionExpirationTime = TimeSpan.FromSeconds(section.GetValue("SessionExpirationTime", 60));
         }
     }
 
@@ -45,6 +43,7 @@ namespace Neo.Plugins
         public int MaxIteratorResultItems { get; init; }
         public int MaxStackSize { get; init; }
         public string[] DisabledMethods { get; init; }
+        public TimeSpan SessionExpirationTime { get; init; }
 
         public static RpcServerSettings Default { get; } = new RpcServerSettings
         {
@@ -59,6 +58,7 @@ namespace Neo.Plugins
             MaxStackSize = ushort.MaxValue,
             DisabledMethods = Array.Empty<string>(),
             MaxConcurrentConnections = 40,
+            SessionExpirationTime = TimeSpan.FromSeconds(60),
         };
 
         public static RpcServerSettings Load(IConfigurationSection section) => new()
@@ -77,6 +77,7 @@ namespace Neo.Plugins
             MaxStackSize = section.GetValue("MaxStackSize", Default.MaxStackSize),
             DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray(),
             MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", Default.MaxConcurrentConnections),
+            SessionExpirationTime = TimeSpan.FromSeconds(section.GetValue("SessionExpirationTime", (int)Default.SessionExpirationTime.TotalSeconds))
         };
     }
 }

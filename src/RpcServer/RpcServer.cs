@@ -37,14 +37,12 @@ namespace Neo.Plugins
 
         private IWebHost host;
         private RpcServerSettings settings;
-        private Settings globalSettings;
         private readonly NeoSystem system;
         private readonly LocalNode localNode;
 
-        public RpcServer(NeoSystem system, RpcServerSettings settings, Settings globalSettings)
+        public RpcServer(NeoSystem system, RpcServerSettings settings)
         {
             this.system = system;
-            this.globalSettings = globalSettings;
             this.settings = settings;
             localNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             RegisterMethods(this);
