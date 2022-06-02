@@ -33,12 +33,13 @@ namespace Neo.Plugins
 
         private void Initialize_SmartContract()
         {
-            timer = new(OnTimer, null, settings.SessionExpirationTime, settings.SessionExpirationTime);
+            if (settings.SessionEnabled)
+                timer = new(OnTimer, null, settings.SessionExpirationTime, settings.SessionExpirationTime);
         }
 
         private void Dispose_SmartContract()
         {
-            timer.Dispose();
+            timer?.Dispose();
             Session[] toBeDestroyed;
             lock (sessions)
             {
@@ -109,7 +110,7 @@ namespace Neo.Plugins
                 session.Dispose();
                 throw;
             }
-            if (session.Iterators.Count == 0)
+            if (session.Iterators.Count == 0 || !settings.SessionEnabled)
             {
                 session.Dispose();
             }

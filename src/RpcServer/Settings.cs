@@ -43,6 +43,7 @@ namespace Neo.Plugins
         public int MaxIteratorResultItems { get; init; }
         public int MaxStackSize { get; init; }
         public string[] DisabledMethods { get; init; }
+        public bool SessionEnabled { get; init; }
         public TimeSpan SessionExpirationTime { get; init; }
 
         public static RpcServerSettings Default { get; } = new RpcServerSettings
@@ -58,7 +59,8 @@ namespace Neo.Plugins
             MaxStackSize = ushort.MaxValue,
             DisabledMethods = Array.Empty<string>(),
             MaxConcurrentConnections = 40,
-            SessionExpirationTime = TimeSpan.FromSeconds(60),
+            SessionEnabled = false,
+            SessionExpirationTime = TimeSpan.FromSeconds(60)
         };
 
         public static RpcServerSettings Load(IConfigurationSection section) => new()
@@ -77,6 +79,7 @@ namespace Neo.Plugins
             MaxStackSize = section.GetValue("MaxStackSize", Default.MaxStackSize),
             DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray(),
             MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", Default.MaxConcurrentConnections),
+            SessionEnabled = section.GetValue("SessionEnabled", Default.SessionEnabled),
             SessionExpirationTime = TimeSpan.FromSeconds(section.GetValue("SessionExpirationTime", (int)Default.SessionExpirationTime.TotalSeconds))
         };
     }
