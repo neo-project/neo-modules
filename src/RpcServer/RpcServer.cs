@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -46,6 +46,7 @@ namespace Neo.Plugins
             this.settings = settings;
             localNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             RegisterMethods(this);
+            Initialize_SmartContract();
         }
 
         private bool CheckAuth(HttpContext context)
@@ -93,6 +94,7 @@ namespace Neo.Plugins
 
         public void Dispose()
         {
+            Dispose_SmartContract();
             if (host != null)
             {
                 host.Dispose();
