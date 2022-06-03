@@ -21,6 +21,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -144,18 +145,8 @@ namespace Neo.Network.RPC
             return response.Result;
         }
 
-        public static string GetRpcName()
+        public static string GetRpcName([CallerMemberName] string methodName = null)
         {
-            var methodName = "";
-            for (int i = 1; i < 5; i++)
-            {
-                var method = new System.Diagnostics.StackTrace(true).GetFrame(i).GetMethod();
-                if (method.IsPublic && !method.IsGenericMethod)
-                {
-                    methodName = method.Name;
-                    break;
-                }
-            }
             return new Regex("(.*?)(Hex|Both)?(Async)?").Replace(methodName, "$1").ToLowerInvariant();
         }
 
@@ -457,6 +448,46 @@ namespace Neo.Network.RPC
         {
             var result = await RpcSendAsync(GetRpcName(), address.AsScriptHash()).ConfigureAwait(false);
             return RpcUnclaimedGas.FromJson(result);
+        }
+
+
+
+        /// <summary>
+        /// Returns part results from Iterator.
+        /// This RPC call does not affect the blockchain in any way.
+        /// </summary>
+        public async Task<JArray> TraverseIteratorAsync(string sessionId, string id, int count)
+        {
+            var result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
+            return result as JArray;
+        }
+
+
+        /// <summary>
+        /// Returns all results from Iterator.
+        /// This RPC call does not affect the blockchain in any way.
+        /// </summary>
+        public async IAsyncEnumerable<JObject> TraverseIteratorAllAsync(string sessionId, string id, int count)
+        {
+            var array = await TraverseIteratorAsync(sessionId, id, count);
+            while (array != null && array.Count > 0)
+            {
+                foreach (var jObject in array)
+                {
+                    yield return jObject;
+                }
+                array = await TraverseIteratorAsync(sessionId, id, count);
+            }
+        }
+
+        /// <summary>
+        /// Terminate specified Iterator session.
+        /// This RPC call does not affect the blockchain in any way.
+        /// </summary>
+        public async Task<bool> TerminateSessionAsync(string sessionId)
+        {
+            var result = await RpcSendAsync(GetRpcName(), sessionId).ConfigureAwait(false);
+            return result.GetBoolean();
         }
 
         #endregion SmartContract
