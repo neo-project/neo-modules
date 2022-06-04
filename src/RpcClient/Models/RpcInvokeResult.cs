@@ -30,7 +30,7 @@ namespace Neo.Network.RPC.Models
 
         public string Exception { get; set; }
 
-        public string SessionId { get; set; }
+        public string Session { get; set; }
 
         public JObject ToJson()
         {
@@ -63,7 +63,7 @@ namespace Neo.Network.RPC.Models
             };
             if (json.ContainsProperty("exception"))
                 invokeScriptResult.Exception = json["exception"]?.AsString();
-            if (json.ContainsProperty("session")) invokeScriptResult.SessionId = json["session"]?.AsString();
+            if (json.ContainsProperty("session")) invokeScriptResult.Session = json["session"]?.AsString();
             try
             {
                 invokeScriptResult.Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToArray();
