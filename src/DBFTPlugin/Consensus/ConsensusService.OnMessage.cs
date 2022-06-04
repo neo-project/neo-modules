@@ -287,7 +287,7 @@ namespace Neo.Consensus
             if (!context.CommitSent)
             {
                 bool shouldSendRecovery = false;
-                int allowedRecoveryNodeCount = context.F;
+                int allowedRecoveryNodeCount = context.F + 1;
                 // Limit recoveries to be sent from an upper limit of `f` nodes
                 for (int i = 1; i <= allowedRecoveryNodeCount; i++)
                 {
