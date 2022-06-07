@@ -35,13 +35,13 @@ Alternatively, you can compile from source code by following the below steps:
 - Open it in Visual Studio, select the plugin you want to enable and select `publish` \(compile it using Release configuration\)
 - Create the Plugins folder in neo-cli / neo-gui (where the binary file is located, such as `/neo-cli/bin/Release/netcoreapp3.0/Plugins`)
 - Copy the .dll and the folder with the configuration files into the `Plugins` folder.
-  - Remarkably, you should put the dependency of the plugin in the `Plugins` folder as well. For example, since the `RpcServer` has the package reference on the `Microsoft.AspNetCore.ResponseCompression`, so the corresponding dll file should be put together with the plugin.
+  - Remarkably, you should put the dependency of the plugin in the `Plugins` folder as well. For example, since the `OracleService` has the package reference on the `Google.Protobuf.dll`, so the corresponding dll file should be put together with the plugin.
 
 The resulting folder structure is going to be like this:
 
 ```sh
 ./neo-cli.dll
-./Plugins/ApplicationLogs.dll
+./Plugins/ApplicationsLogs/ApplicationLogs.dll
 ./Plugins/ApplicationsLogs/config.json
 ```
 
