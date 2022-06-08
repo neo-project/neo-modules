@@ -450,8 +450,6 @@ namespace Neo.Network.RPC
             return RpcUnclaimedGas.FromJson(result);
         }
 
-
-
         /// <summary>
         /// Returns part results from Iterator.
         /// This RPC call does not affect the blockchain in any way.
@@ -461,7 +459,6 @@ namespace Neo.Network.RPC
             var result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
             return result as JArray;
         }
-
 
         /// <summary>
         /// Returns all results from Iterator.
