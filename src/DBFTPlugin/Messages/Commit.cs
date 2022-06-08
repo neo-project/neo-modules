@@ -27,15 +27,15 @@ namespace Neo.Consensus
 
         public override void Deserialize(ref MemoryReader reader)
         {
-            base.Deserialize(reader);
-            Signature = reader.ReadFixedBytes(64);
+            base.Deserialize(ref reader);
+            Signature = reader.ReadMemory(64);
             Id = reader.ReadUInt32();
         }
 
         public override void Serialize(BinaryWriter writer)
         {
             base.Serialize(writer);
-            writer.Write(Signature);
+            writer.Write(Signature.Span);
             writer.Write(Id);
         }
     }

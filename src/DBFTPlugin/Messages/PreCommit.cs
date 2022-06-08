@@ -13,9 +13,9 @@ namespace Neo.Consensus
 
         public PreCommit() : base(ConsensusMessageType.PreCommit) { }
 
-        public override void Deserialize(BinaryReader reader)
+        public override void Deserialize(ref MemoryReader reader)
         {
-            base.Deserialize(reader);
+            base.Deserialize(ref reader);
             PreparationHash = reader.ReadSerializable<UInt256>();
             Id = reader.ReadUInt32();
         }

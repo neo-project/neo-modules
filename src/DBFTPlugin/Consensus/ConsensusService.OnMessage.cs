@@ -117,7 +117,7 @@ namespace Neo.Consensus
             byte[] hashData = context.EnsureHeader(pOrF).GetSignData(neoSystem.Settings.Network);
             for (int i = 0; i < context.CommitPayloads[pOrF].Length; i++)
                 if (context.GetMessage(context.CommitPayloads[pOrF][i])?.ViewNumber == context.ViewNumber)
-                    if (!Crypto.VerifySignature(hashData, context.GetMessage<Commit>(context.CommitPayloads[pOrF][i]).Signature, context.Validators[i]))
+                    if (!Crypto.VerifySignature(hashData, context.GetMessage<Commit>(context.CommitPayloads[pOrF][i]).Signature.Span, context.Validators[i]))
                         context.CommitPayloads[pOrF][i] = null;
 
             if (context.TransactionHashes[pOrF].Length == 0)
