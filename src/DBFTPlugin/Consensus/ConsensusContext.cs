@@ -67,16 +67,16 @@ namespace Neo.Consensus
         public bool IsPriorityPrimary => MyIndex == GetPriorityPrimaryIndex(ViewNumber);
         public bool IsFallbackPrimary => MyIndex == GetFallbackPrimaryIndex(ViewNumber);
 
-        public bool IsAPrimary => IsPriorityPrimary || IsFallbackPrimary;
+        public bool IsAPrimary => IsPriorityPrimary || (ViewNumber == 0 && IsFallbackPrimary);
 
         //Modify to be 1 or 4/3
         public float PrimaryTimerPriorityMultiplier => 1;
-        public float PrimaryTimerFallBackMultiplier => 4 / 3;
+        public float PrimaryTimerFallBackMultiplier => (float)4 / 3;
         public float PrimaryTimerMultiplier => IsPriorityPrimary ? PrimaryTimerPriorityMultiplier : PrimaryTimerFallBackMultiplier;
-        public bool IsBackup => MyIndex >= 0 && !IsPriorityPrimary && IsFallbackPrimary;
+        public bool IsBackup => MyIndex >= 0 && !IsPriorityPrimary && !IsFallbackPrimary;
         public bool WatchOnly => MyIndex < 0;
         public Header PrevHeader => NativeContract.Ledger.GetHeader(Snapshot, Block[0].PrevHash);
-        public int CountCommitted => CommitPayloads.Count(p => p != null);
+        public int CountCommitted => CommitPayloads[0].Count(p => p != null);
         public int CountFailed
         {
             get
@@ -98,10 +98,11 @@ namespace Neo.Consensus
         }
 
         #region Consensus States
-        public bool RequestSentOrReceived => (PreparationPayloads[0][GetPriorityPrimaryIndex(ViewNumber)] != null || PreparationPayloads[1][GetFallbackPrimaryIndex(ViewNumber)] != null);
-        public bool ResponseSent => !WatchOnly && (PreparationPayloads[0][MyIndex] != null || PreparationPayloads[1][MyIndex] != null);
-        public bool CommitSent => !WatchOnly && (CommitPayloads[0][MyIndex] != null || CommitPayloads[1][MyIndex] != null);
-        public bool BlockSent => (Block[0].Transactions != null || Block[1].Transactions != null);
+        public bool RequestSentOrReceived => PreparationPayloads[0][GetPriorityPrimaryIndex(ViewNumber)] != null || (ViewNumber == 0 && PreparationPayloads[1][GetFallbackPrimaryIndex(ViewNumber)] != null);
+        public bool ResponseSent => !WatchOnly && (PreparationPayloads[0][MyIndex] != null || (ViewNumber == 0 && PreparationPayloads[1][MyIndex] != null));
+        public bool PreCommitSent => !WatchOnly && (PreCommitPayloads[0][MyIndex] != null || (ViewNumber == 0 && PreCommitPayloads[1][MyIndex] != null));
+        public bool CommitSent => !WatchOnly && (CommitPayloads[0][MyIndex] != null || (ViewNumber == 0 && CommitPayloads[1][MyIndex] != null));
+        public bool BlockSent => Block[0].Transactions != null || (ViewNumber == 0 && Block[1]?.Transactions != null);
         public bool ViewChanging => !WatchOnly && GetMessage<ChangeView>(ChangeViewPayloads[MyIndex])?.NewViewNumber > ViewNumber;
         public bool NotAcceptingPayloadsDueToViewChanging => ViewChanging && !MoreThanFNodesCommittedOrLost;
         // A possible attack can happen if the last node to commit is malicious and either sends change view after his
@@ -228,7 +229,10 @@ namespace Neo.Consensus
                 }
                 MyIndex = -1;
                 for (uint i = 0; i <= 1; i++)
+                {
+                    PreCommitPayloads[i] = new ExtensiblePayload[Validators.Length];
                     CommitPayloads[i] = new ExtensiblePayload[Validators.Length];
+                }
                 ChangeViewPayloads = new ExtensiblePayload[Validators.Length];
                 LastChangeViewPayloads = new ExtensiblePayload[Validators.Length];
                 if (ValidatorsChanged || LastSeenMessage is null)
@@ -266,7 +270,6 @@ namespace Neo.Consensus
             ViewNumber = viewNumber;
             for (uint pID = 0; pID <= 1; pID++)
             {
-                Block[pID].Header.PrimaryIndex = GetPriorityPrimaryIndex(viewNumber);
                 Block[pID].Header.MerkleRoot = null;
                 Block[pID].Header.Timestamp = 0;
                 Block[pID].Header.Nonce = 0;
@@ -275,7 +278,8 @@ namespace Neo.Consensus
                 PreparationPayloads[pID] = new ExtensiblePayload[Validators.Length];
                 if (MyIndex >= 0) LastSeenMessage[Validators[MyIndex]] = Block[pID].Index;
             }
-
+            Block[0].Header.PrimaryIndex = GetPriorityPrimaryIndex(viewNumber);
+            Block[1].Header.PrimaryIndex = GetFallbackPrimaryIndex(viewNumber);
             //=========================================
             // Disable Fallback if viewnumber > 1
             if (viewNumber > 0)
@@ -299,8 +303,10 @@ namespace Neo.Consensus
         public void Deserialize(ref MemoryReader reader)
         {
             Reset(0);
+            ViewNumber = reader.ReadByte();
             for (uint pID = 0; pID <= 1; pID++)
             {
+                if (ViewNumber > 0 && pID > 0) break;
                 if (reader.ReadUInt32() != Block[pID].Version) throw new FormatException();
                 if (reader.ReadUInt32() != Block[pID].Index) throw new InvalidOperationException();
                 Block[pID].Header.Timestamp = reader.ReadUInt64();
@@ -326,8 +332,6 @@ namespace Neo.Consensus
                         VerificationContext[pID].AddTransaction(tx);
                 }
             }
-
-            ViewNumber = reader.ReadByte();
             ChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
             LastChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
 
@@ -335,8 +339,10 @@ namespace Neo.Consensus
 
         public void Serialize(BinaryWriter writer)
         {
+            writer.Write(ViewNumber);
             for (uint i = 0; i <= 1; i++)
             {
+                if (ViewNumber > 0 && i > 0) break;
                 writer.Write(Block[i].Version);
                 writer.Write(Block[i].Index);
                 writer.Write(Block[i].Timestamp);
@@ -349,7 +355,6 @@ namespace Neo.Consensus
                 writer.WriteNullableArray(PreCommitPayloads[i]);
                 writer.WriteNullableArray(CommitPayloads[i]);
             }
-            writer.Write(ViewNumber);
             writer.WriteNullableArray(ChangeViewPayloads);
             writer.WriteNullableArray(LastChangeViewPayloads);
         }

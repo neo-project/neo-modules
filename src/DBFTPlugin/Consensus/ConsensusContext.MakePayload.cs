@@ -106,7 +106,6 @@ namespace Neo.Consensus
 
         public ExtensiblePayload MakePrepareRequest(uint pID)
         {
-            Log($"MakePrepareRequest I", LogLevel.Debug);
             EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions(), pID);
             Block[pID].Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
             Block[pID].Header.Nonce = GetNonce();
@@ -132,7 +131,7 @@ namespace Neo.Consensus
         public ExtensiblePayload MakeRecoveryMessage()
         {
             PrepareRequest prepareRequestMessage = null;
-            if (TransactionHashes != null)
+            if (TransactionHashes[0] != null)
             {
                 prepareRequestMessage = new PrepareRequest
                 {
@@ -171,7 +170,7 @@ namespace Neo.Consensus
         {
             return PreCommitPayloads[i][MyIndex] = MakeSignedPayload(new PreCommit
             {
-                PreparationHash = PreCommitPayloads[i][Block[i].PrimaryIndex].Hash,
+                PreparationHash = PreparationPayloads[i][Block[i].PrimaryIndex].Hash,
                 Id = i
             });
         }

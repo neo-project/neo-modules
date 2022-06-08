@@ -81,7 +81,7 @@ namespace Neo.Consensus
             if (viewNumber > 0)
                 Log($"View changed: view={viewNumber} primary={context.Validators[context.GetPriorityPrimaryIndex((byte)(viewNumber - 1u))]}", LogLevel.Warning);
             uint blockCurrentIndex = context.Block[0].Index;
-            Log($"Initialize: height={blockCurrentIndex} view={viewNumber} index={context.MyIndex} role={(context.IsPriorityPrimary ? "PrimaryP1" : context.IsFallbackPrimary ? "PrimaryP2" : context.WatchOnly ? "WatchOnly" : "Backup")}");
+            Log($"Initialize: height={blockCurrentIndex} view={viewNumber} index={context.MyIndex} role={(context.IsPriorityPrimary ? (viewNumber > 0 ? "Primary" : "PrimaryP1") : (context.IsFallbackPrimary && viewNumber == 0 ? "PrimaryP2" : (context.WatchOnly ? "WatchOnly" : "Backup")))}");
             if (context.WatchOnly) return;
             if (context.IsAPrimary)
             {
@@ -168,7 +168,7 @@ namespace Neo.Consensus
 
         private void OnTimer(Timer timer)
         {
-            uint pID = Convert.ToUInt32(!context.IsPriorityPrimary);
+            uint pID = Convert.ToUInt32(!(context.IsPriorityPrimary || context.ViewNumber > 0));
             if (context.WatchOnly || context.BlockSent) return;
             if (timer.Height != context.Block[pID].Index || timer.ViewNumber != context.ViewNumber) return;
             if (context.IsAPrimary && !context.RequestSentOrReceived)
@@ -206,14 +206,11 @@ namespace Neo.Consensus
             if (context.Validators.Length == 1)
                 CheckPreparations(pID);
 
-            Log($"SendPrepareRequest I", LogLevel.Debug);
-
             if (context.TransactionHashes[pID].Length > 0)
             {
                 foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes[pID]))
                     localNode.Tell(Message.Create(MessageCommand.Inv, payload));
             }
-            Log($"SendPrepareRequest II", LogLevel.Debug);
             ChangeTimer(TimeSpan.FromMilliseconds(context.PrimaryTimerMultiplier * ((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0))));
         }
 

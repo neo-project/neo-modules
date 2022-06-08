@@ -25,7 +25,7 @@ namespace Neo.Consensus
             {
                 // if we are the primary for this view, but acting as a backup because we recovered our own
                 // previously sent prepare request, then we don't want to send a prepare response.
-                if (context.IsAPrimary || context.WatchOnly) return true;
+                if ((i == 0 && context.IsPriorityPrimary) || (i == 1 && context.IsFallbackPrimary) || context.WatchOnly) return true;
 
                 // Check maximum block size via Native Contract policy
                 if (context.GetExpectedBlockSize(i) > dbftSettings.MaxBlockSize)
@@ -101,25 +101,30 @@ namespace Neo.Consensus
 
         private void CheckPreparations(uint pID)
         {
-            int thresholdForPrep = pID == 0 ? context.F + 1 : context.M;
-
-            if (context.PreparationPayloads[pID].Count(p => p != null) >= thresholdForPrep && context.TransactionHashes[pID].All(p => context.Transactions[pID].ContainsKey(p)))
+            if (context.TransactionHashes[pID].All(p => context.Transactions[pID].ContainsKey(p)))
             {
-                ExtensiblePayload payload = context.MakePreCommit(pID);
-                Log($"Sending {nameof(PreCommit)} pOrF={pID}");
-                context.Save();
-                localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
-                // Set timer, so we will resend the commit in case of a networking issue
-                ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock));
-                CheckPreCommits(pID);
-
-                // ==============================================
-                // Speed-up path to also send commit
-                if (pID == 0 && context.PreparationPayloads[0].Count(p => p != null) >= context.M)
+                var preparationsCount = context.PreparationPayloads[pID].Count(p => p != null);
+                if (context.ViewNumber > 0)
+                {
+                    if (preparationsCount >= context.M)
+                        CheckPreCommits(0, true);
+                    return;
+                }
+                if (!context.PreCommitSent
+                    && ((pID == 0 && preparationsCount >= context.F + 1)
+                        || (pID == 1 && preparationsCount >= context.M)))
+                {
+                    ExtensiblePayload payload = context.MakePreCommit(pID);
+                    Log($"Sending {nameof(PreCommit)} pOrF={pID}");
+                    context.Save();
+                    localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
+                    // Set timer, so we will resend the commit in case of a networking issue
+                    ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock));
+                }
+                if (context.ViewNumber == 0 && pID == 0 && preparationsCount >= context.M)
+                {
                     CheckPreCommits(0, true);
-                // ==============================================                    
-
-                return;
+                }
             }
         }
     }

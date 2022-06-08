@@ -80,7 +80,7 @@ namespace Neo.Consensus
         private void OnPrepareRequestReceived(ExtensiblePayload payload, PrepareRequest message)
         {
             if (context.RequestSentOrReceived || context.NotAcceptingPayloadsDueToViewChanging) return;
-            uint pOrF = Convert.ToUInt32(message.ValidatorIndex == context.GetPriorityPrimaryIndex(context.ViewNumber));
+            uint pOrF = message.ValidatorIndex == context.GetPriorityPrimaryIndex(context.ViewNumber) || context.ViewNumber > 0 ? 0u : 1u;
             // Add verification for Fallback
             if (message.ValidatorIndex != context.Block[pOrF].PrimaryIndex || message.ViewNumber != context.ViewNumber) return;
             if (message.Version != context.Block[pOrF].Version || message.PrevHash != context.Block[pOrF].PrevHash) return;
@@ -160,8 +160,14 @@ namespace Neo.Consensus
         {
             if (message.ViewNumber != context.ViewNumber) return;
             if (context.PreparationPayloads[message.Id][message.ValidatorIndex] != null || context.NotAcceptingPayloadsDueToViewChanging) return;
-            if (context.PreparationPayloads[message.Id][context.Block[message.Id].PrimaryIndex] != null && !message.PreparationHash.Equals(context.PreparationPayloads[message.Id][context.Block[message.Id].PrimaryIndex].Hash))
-                return;
+            if (context.RequestSentOrReceived)
+            {
+                // Check if we have joined another consensus process
+                if (context.PreparationPayloads[message.Id][context.Block[message.Id].PrimaryIndex] == null) return;
+                if (!message.PreparationHash.Equals(context.PreparationPayloads[message.Id][context.Block[message.Id].PrimaryIndex].Hash))
+                    return;
+            }
+
 
             // Timeout extension: prepare response has been received with success
             // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
@@ -177,8 +183,8 @@ namespace Neo.Consensus
         private void OnPreCommitReceived(ExtensiblePayload payload, PreCommit message)
         {
             if (message.ViewNumber != context.ViewNumber) return;
-            if (context.PreparationPayloads[message.Id][message.ValidatorIndex] != null || context.NotAcceptingPayloadsDueToViewChanging) return;
-            if (context.PreparationPayloads[message.Id][context.Block[message.Id].PrimaryIndex] != null && !message.PreparationHash.Equals(context.PreparationPayloads[message.Id][context.Block[message.Id].PrimaryIndex].Hash))
+            if (context.PreCommitPayloads[message.Id][message.ValidatorIndex] != null || context.NotAcceptingPayloadsDueToViewChanging) return;
+            if (context.PreCommitPayloads[message.Id][context.Block[message.Id].PrimaryIndex] != null && !message.PreparationHash.Equals(context.PreparationPayloads[message.Id][context.Block[message.Id].PrimaryIndex].Hash))
                 return;
 
             Log($"{nameof(OnPreCommitReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} Id={message.Id}");
