@@ -76,7 +76,7 @@ namespace Neo.Consensus
         public bool IsBackup => MyIndex >= 0 && !IsPriorityPrimary && !IsFallbackPrimary;
         public bool WatchOnly => MyIndex < 0;
         public Header PrevHeader => NativeContract.Ledger.GetHeader(Snapshot, Block[0].PrevHash);
-        public int CountCommitted => CommitPayloads[0].Count(p => p != null);
+        public int CountCommitted => ViewNumber == 0 ? Math.Max(CommitPayloads[0].Count(p => p != null), CommitPayloads[1].Count(p => p != null)) : CommitPayloads[0].Count(p => p != null);
         public int CountFailed
         {
             get
@@ -102,7 +102,7 @@ namespace Neo.Consensus
         public bool ResponseSent => !WatchOnly && (PreparationPayloads[0][MyIndex] != null || (ViewNumber == 0 && PreparationPayloads[1][MyIndex] != null));
         public bool PreCommitSent => !WatchOnly && (PreCommitPayloads[0][MyIndex] != null || (ViewNumber == 0 && PreCommitPayloads[1][MyIndex] != null));
         public bool CommitSent => !WatchOnly && (CommitPayloads[0][MyIndex] != null || (ViewNumber == 0 && CommitPayloads[1][MyIndex] != null));
-        public bool BlockSent => Block[0].Transactions != null || (ViewNumber == 0 && Block[1]?.Transactions != null);
+        public bool BlockSent => Block[0].Transactions != null || Block[1]?.Transactions != null;
         public bool ViewChanging => !WatchOnly && GetMessage<ChangeView>(ChangeViewPayloads[MyIndex])?.NewViewNumber > ViewNumber;
         public bool NotAcceptingPayloadsDueToViewChanging => ViewChanging && !MoreThanFNodesCommittedOrLost;
         // A possible attack can happen if the last node to commit is malicious and either sends change view after his
