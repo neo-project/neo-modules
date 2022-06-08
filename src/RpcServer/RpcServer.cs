@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2021 The Neo Project.
+//
+// The Neo.Network.RPC is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Akka.Actor;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -23,7 +33,7 @@ namespace Neo.Plugins
 {
     public partial class RpcServer : IDisposable
     {
-        private readonly Dictionary<string, Func<JArray, JObject>> methods = new Dictionary<string, Func<JArray, JObject>>();
+        private readonly Dictionary<string, Func<JArray, object>> methods = new();
 
         private IWebHost host;
         private RpcServerSettings settings;
@@ -145,7 +155,7 @@ namespace Neo.Plugins
             this.settings = settings;
         }
 
-        private async Task ProcessAsync(HttpContext context)
+        public async Task ProcessAsync(HttpContext context)
         {
             context.Response.Headers["Access-Control-Allow-Origin"] = "*";
             context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST";
@@ -196,19 +206,21 @@ namespace Neo.Plugins
                 }
                 else
                 {
-                    response = array.Select(p => ProcessRequest(context, p)).Where(p => p != null).ToArray();
+                    var tasks = array.Select(p => ProcessRequestAsync(context, p));
+                    var results = await Task.WhenAll(tasks);
+                    response = results.Where(p => p != null).ToArray();
                 }
             }
             else
             {
-                response = ProcessRequest(context, request);
+                response = await ProcessRequestAsync(context, request);
             }
             if (response == null || (response as JArray)?.Count == 0) return;
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsync(response.ToString(), Encoding.UTF8);
         }
 
-        private JObject ProcessRequest(HttpContext context, JObject request)
+        private async Task<JObject> ProcessRequestAsync(HttpContext context, JObject request)
         {
             if (!request.ContainsProperty("id")) return null;
             if (!request.ContainsProperty("method") || !request.ContainsProperty("params") || !(request["params"] is JArray))
@@ -223,7 +235,12 @@ namespace Neo.Plugins
                     throw new RpcException(-400, "Access denied");
                 if (!methods.TryGetValue(method, out var func))
                     throw new RpcException(-32601, "Method not found");
-                response["result"] = func((JArray)request["params"]);
+                response["result"] = func((JArray)request["params"]) switch
+                {
+                    JObject result => result,
+                    Task<JObject> task => await task,
+                    _ => throw new NotSupportedException()
+                };
                 return response;
             }
             catch (FormatException)
@@ -251,7 +268,7 @@ namespace Neo.Plugins
                 RpcMethodAttribute attribute = method.GetCustomAttribute<RpcMethodAttribute>();
                 if (attribute is null) continue;
                 string name = string.IsNullOrEmpty(attribute.Name) ? method.Name.ToLowerInvariant() : attribute.Name;
-                methods[name] = (Func<JArray, JObject>)method.CreateDelegate(typeof(Func<JArray, JObject>), handler);
+                methods[name] = method.CreateDelegate<Func<JArray, object>>(handler);
             }
         }
     }

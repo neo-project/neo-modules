@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2022 The Neo Project.
+//
+// The Neo.Consensus.DBFT is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Neo.IO;
 using System;
 using System.IO;
@@ -24,7 +34,7 @@ namespace Neo.Consensus
             this.Type = type;
         }
 
-        public virtual void Deserialize(BinaryReader reader)
+        public virtual void Deserialize(ref MemoryReader reader)
         {
             if (Type != (ConsensusMessageType)reader.ReadByte())
                 throw new FormatException();
@@ -33,9 +43,9 @@ namespace Neo.Consensus
             ViewNumber = reader.ReadByte();
         }
 
-        public static ConsensusMessage DeserializeFrom(byte[] data)
+        public static ConsensusMessage DeserializeFrom(ReadOnlyMemory<byte> data)
         {
-            ConsensusMessageType type = (ConsensusMessageType)data[0];
+            ConsensusMessageType type = (ConsensusMessageType)data.Span[0];
             Type t = typeof(ConsensusMessage);
             t = t.Assembly.GetType($"{t.Namespace}.{type}", false);
             if (t is null) throw new FormatException();

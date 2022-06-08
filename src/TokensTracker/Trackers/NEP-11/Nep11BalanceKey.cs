@@ -1,7 +1,17 @@
-using System;
-using System.IO;
+// Copyright (C) 2015-2022 The Neo Project.
+//
+// The Neo.Plugins.TokensTracker is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Neo.IO;
 using Neo.VM.Types;
+using System;
+using System.IO;
 
 namespace Neo.Plugins.Trackers.NEP_11
 {
@@ -60,11 +70,11 @@ namespace Neo.Plugins.Trackers.NEP_11
             writer.WriteVarBytes(Token.GetSpan());
         }
 
-        public void Deserialize(BinaryReader reader)
+        public void Deserialize(ref MemoryReader reader)
         {
-            ((ISerializable)UserScriptHash).Deserialize(reader);
-            ((ISerializable)AssetScriptHash).Deserialize(reader);
-            Token = new ByteString(reader.ReadVarBytes());
+            ((ISerializable)UserScriptHash).Deserialize(ref reader);
+            ((ISerializable)AssetScriptHash).Deserialize(ref reader);
+            Token = reader.ReadVarMemory();
         }
     }
 }

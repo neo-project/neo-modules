@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2022 The Neo Project.
+//
+// The Neo.Consensus.DBFT is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Neo.Cryptography;
 using Neo.Cryptography.ECC;
 using Neo.IO;
@@ -128,7 +138,7 @@ namespace Neo.Consensus
             return Block[pID];
         }
 
-        public ExtensiblePayload CreatePayload(ConsensusMessage message, byte[] invocationScript = null)
+        public ExtensiblePayload CreatePayload(ConsensusMessage message, ReadOnlyMemory<byte> invocationScript = default)
         {
             ExtensiblePayload payload = new ExtensiblePayload
             {
@@ -137,7 +147,7 @@ namespace Neo.Consensus
                 ValidBlockEnd = message.BlockIndex,
                 Sender = GetSender(message.ValidatorIndex),
                 Data = message.ToArray(),
-                Witness = invocationScript is null ? null : new Witness
+                Witness = invocationScript.IsEmpty ? null : new Witness
                 {
                     InvocationScript = invocationScript,
                     VerificationScript = Contract.CreateSignatureRedeemScript(Validators[message.ValidatorIndex])
@@ -163,19 +173,17 @@ namespace Neo.Consensus
         {
             byte[] data = store.TryGet(ConsensusStateKey);
             if (data is null || data.Length == 0) return false;
-            using (MemoryStream ms = new MemoryStream(data, false))
-            using (BinaryReader reader = new BinaryReader(ms))
+            MemoryReader reader = new(data);
+            try
             {
-                try
-                {
-                    Deserialize(reader);
-                }
-                catch
-                {
-                    return false;
-                }
-                return true;
+                Deserialize(ref reader);
             }
+            catch (Exception exception)
+            {
+                Utility.Log(nameof(ConsensusContext), LogLevel.Debug, exception.ToString());
+                return false;
+            }
+            return true;
         }
 
         public void Reset(byte viewNumber)
@@ -288,7 +296,7 @@ namespace Neo.Consensus
             store.PutSync(ConsensusStateKey, this.ToArray());
         }
 
-        public void Deserialize(BinaryReader reader)
+        public void Deserialize(ref MemoryReader reader)
         {
             Reset(0);
             for (uint pID = 0; pID <= 1; pID++)

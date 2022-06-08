@@ -1,4 +1,13 @@
-using Neo.Cryptography;
+// Copyright (C) 2015-2022 The Neo Project.
+//
+// The Neo.Plugins.StateService is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Neo.Cryptography.ECC;
 using Neo.IO;
 using Neo.IO.Json;
@@ -53,9 +62,9 @@ namespace Neo.Plugins.StateService.Network
             UInt256.Length +    //RootHash
             (Witness is null ? 1 : 1 + Witness.Size); //Witness
 
-        void ISerializable.Deserialize(BinaryReader reader)
+        void ISerializable.Deserialize(ref MemoryReader reader)
         {
-            DeserializeUnsigned(reader);
+            DeserializeUnsigned(ref reader);
             Witness[] witnesses = reader.ReadSerializableArray<Witness>(1);
             Witness = witnesses.Length switch
             {
@@ -65,7 +74,7 @@ namespace Neo.Plugins.StateService.Network
             };
         }
 
-        public void DeserializeUnsigned(BinaryReader reader)
+        public void DeserializeUnsigned(ref MemoryReader reader)
         {
             Version = reader.ReadByte();
             Index = reader.ReadUInt32();

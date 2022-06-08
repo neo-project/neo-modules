@@ -9,8 +9,8 @@ namespace Neo.Cryptography.MPTTrie.Tests
         [TestMethod]
         public void TestCompareTo()
         {
-            var arr1 = new byte[] { 0, 1, 2 };
-            var arr2 = new byte[] { 0, 1, 2 };
+            ReadOnlySpan<byte> arr1 = new byte[] { 0, 1, 2 };
+            ReadOnlySpan<byte> arr2 = new byte[] { 0, 1, 2 };
             Assert.AreEqual(0, arr1.CompareTo(arr2));
             arr1 = new byte[] { 0, 1 };
             Assert.AreEqual(-1, arr1.CompareTo(arr2));
@@ -20,8 +20,7 @@ namespace Neo.Cryptography.MPTTrie.Tests
             Assert.AreEqual(-1, arr1.CompareTo(arr2));
             arr1 = new byte[] { 0, 3, 1 };
             Assert.AreEqual(1, arr1.CompareTo(arr2));
-            Assert.AreEqual(0, Array.Empty<byte>().CompareTo(Array.Empty<byte>()));
-            Assert.ThrowsException<ArgumentNullException>(() => arr1.CompareTo(null));
+            Assert.AreEqual(0, ReadOnlySpan<byte>.Empty.CompareTo(ReadOnlySpan<byte>.Empty));
         }
     }
 }

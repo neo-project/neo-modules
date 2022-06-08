@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2022 The Neo Project.
+//
+// The Neo.Plugins.ApplicationLogs is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Neo.IO;
 using Neo.IO.Data.LevelDB;
 using Neo.IO.Json;
@@ -13,13 +23,25 @@ using static System.IO.Path;
 
 namespace Neo.Plugins
 {
-    public class LogReader : Plugin, IPersistencePlugin
+    public class LogReader : Plugin
     {
         private DB db;
         private WriteBatch _writeBatch;
 
         public override string Name => "ApplicationLogs";
         public override string Description => "Synchronizes the smart contract log with the NativeContract log (Notify)";
+
+        public LogReader()
+        {
+            Blockchain.Committing += OnCommitting;
+            Blockchain.Committed += OnCommitted;
+        }
+
+        public override void Dispose()
+        {
+            Blockchain.Committing -= OnCommitting;
+            Blockchain.Committed -= OnCommitted;
+        }
 
         protected override void Configure()
         {
@@ -71,11 +93,11 @@ namespace Neo.Plugins
             trigger["gasconsumed"] = appExec.GasConsumed.ToString();
             try
             {
-                trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
+                trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.Default.MaxStackSize)).ToArray();
             }
-            catch (InvalidOperationException)
+            catch (Exception ex)
             {
-                trigger["stack"] = "error: recursive reference";
+                trigger["exception"] = ex.Message;
             }
             trigger["notifications"] = appExec.Notifications.Select(q =>
             {
@@ -114,11 +136,11 @@ namespace Neo.Plugins
                     trigger["gasconsumed"] = appExec.GasConsumed.ToString();
                     try
                     {
-                        trigger["stack"] = appExec.Stack.Select(q => q.ToJson()).ToArray();
+                        trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.Default.MaxStackSize)).ToArray();
                     }
-                    catch (InvalidOperationException)
+                    catch (Exception ex)
                     {
-                        trigger["stack"] = "error: recursive reference";
+                        trigger["exception"] = ex.Message;
                     }
                     trigger["notifications"] = appExec.Notifications.Select(q =>
                     {
@@ -144,7 +166,7 @@ namespace Neo.Plugins
             return null;
         }
 
-        void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        private void OnCommitting(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
 
@@ -165,7 +187,7 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
+        private void OnCommitted(NeoSystem system, Block block)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
             db.Write(WriteOptions.Default, _writeBatch);

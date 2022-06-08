@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2022 The Neo Project.
+//
+// The Neo.Cryptography.MPT is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Neo.IO;
 using Neo.SmartContract;
 using System;
@@ -8,7 +18,7 @@ namespace Neo.Cryptography.MPTTrie
     partial class Node
     {
         public const int MaxKeyLength = (ApplicationEngine.MaxStorageKeySize + sizeof(int)) * 2;
-        public byte[] Key;
+        public ReadOnlyMemory<byte> Key;
         public Node Next;
 
         public static Node NewExtension(byte[] key, Node next)
@@ -29,15 +39,15 @@ namespace Neo.Cryptography.MPTTrie
 
         private void SerializeExtension(BinaryWriter writer)
         {
-            writer.WriteVarBytes(Key);
+            writer.WriteVarBytes(Key.Span);
             Next.SerializeAsChild(writer);
         }
 
-        private void DeserializeExtension(BinaryReader reader)
+        private void DeserializeExtension(ref MemoryReader reader)
         {
-            Key = reader.ReadVarBytes();
+            Key = reader.ReadVarMemory();
             var n = new Node();
-            n.Deserialize(reader);
+            n.Deserialize(ref reader);
             Next = n;
         }
     }

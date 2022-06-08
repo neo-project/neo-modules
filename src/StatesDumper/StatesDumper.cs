@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2022 The Neo Project.
+//
+// The Neo.Plugins.StatesDumper is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Neo.ConsoleService;
 using Neo.IO;
 using Neo.IO.Json;
@@ -12,12 +22,24 @@ using System.Linq;
 
 namespace Neo.Plugins
 {
-    public class StatesDumper : Plugin, IPersistencePlugin
+    public class StatesDumper : Plugin
     {
         private readonly Dictionary<uint, JArray> bs_cache = new Dictionary<uint, JArray>();
         private readonly Dictionary<uint, NeoSystem> systems = new Dictionary<uint, NeoSystem>();
 
         public override string Description => "Exports Neo-CLI status data";
+
+        public StatesDumper()
+        {
+            Blockchain.Committing += OnCommitting;
+            Blockchain.Committed += OnCommitted;
+        }
+
+        public override void Dispose()
+        {
+            Blockchain.Committing -= OnCommitting;
+            Blockchain.Committed -= OnCommitted;
+        }
 
         protected override void Configure()
         {
@@ -51,10 +73,13 @@ namespace Neo.Plugins
                 ["value"] = Convert.ToBase64String(p.Value.ToArray())
             }));
             File.WriteAllText(path, array.ToString());
-            Console.WriteLine($"States ({array.Count}) have been dumped into file {path}");
+            ConsoleHelper.Info("States",
+                $"({array.Count})",
+                " have been dumped into file ",
+                $"{path}");
         }
 
-        void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        private void OnCommitting(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
                 OnPersistStorage(system.Settings.Network, snapshot);
@@ -106,10 +131,10 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
+        private void OnCommitted(NeoSystem system, Block block)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
-                OnCommitStorage(system.Settings.Network, snapshot);
+                OnCommitStorage(system.Settings.Network, system.StoreView);
         }
 
         void OnCommitStorage(uint network, DataCache snapshot)
@@ -124,12 +149,6 @@ namespace Neo.Plugins
                 File.WriteAllText(path, cache.ToString());
                 cache.Clear();
             }
-        }
-
-        bool IPersistencePlugin.ShouldThrowExceptionFromCommit(Exception ex)
-        {
-            Console.WriteLine($"Error writing States with StatesDumper.{Environment.NewLine}{ex}");
-            return true;
         }
 
         private static string HandlePaths(uint network, uint blockIndex)

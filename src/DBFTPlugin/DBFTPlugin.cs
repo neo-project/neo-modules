@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2022 The Neo Project.
+//
+// The Neo.Consensus.DBFT is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Akka.Actor;
 using Neo.ConsoleService;
 using Neo.Network.P2P;
@@ -6,7 +16,7 @@ using Neo.Wallets;
 
 namespace Neo.Consensus
 {
-    public class DBFTPlugin : Plugin, IP2PPlugin
+    public class DBFTPlugin : Plugin
     {
         private IWalletProvider walletProvider;
         private IActorRef consensus;
@@ -14,18 +24,26 @@ namespace Neo.Consensus
         private NeoSystem neoSystem;
         private Settings settings;
 
-        public DBFTPlugin() { }
+        public override string Description => "Consensus plugin with dBFT algorithm.";
 
-        public DBFTPlugin(Settings settings)
+        public DBFTPlugin()
+        {
+            RemoteNode.MessageReceived += RemoteNode_MessageReceived;
+        }
+
+        public DBFTPlugin(Settings settings) : this()
         {
             this.settings = settings;
         }
 
-        public override string Description => "Consensus plugin with dBFT algorithm.";
+        public override void Dispose()
+        {
+            RemoteNode.MessageReceived -= RemoteNode_MessageReceived;
+        }
 
         protected override void Configure()
         {
-            if (settings == null) settings = new Settings(GetConfiguration());
+            settings ??= new Settings(GetConfiguration());
         }
 
         protected override void OnSystemLoaded(NeoSystem system)
@@ -37,14 +55,12 @@ namespace Neo.Consensus
 
         private void NeoSystem_ServiceAdded(object sender, object service)
         {
-            if (service is IWalletProvider)
+            if (service is not IWalletProvider provider) return;
+            walletProvider = provider;
+            neoSystem.ServiceAdded -= NeoSystem_ServiceAdded;
+            if (settings.AutoStart)
             {
-                walletProvider = service as IWalletProvider;
-                neoSystem.ServiceAdded -= NeoSystem_ServiceAdded;
-                if (settings.AutoStart)
-                {
-                    walletProvider.WalletChanged += WalletProvider_WalletChanged;
-                }
+                walletProvider.WalletChanged += WalletProvider_WalletChanged;
             }
         }
 
@@ -68,7 +84,7 @@ namespace Neo.Consensus
             consensus.Tell(new ConsensusService.Start());
         }
 
-        bool IP2PPlugin.OnP2PMessage(NeoSystem system, Message message)
+        private bool RemoteNode_MessageReceived(NeoSystem system, Message message)
         {
             if (message.Command == MessageCommand.Transaction)
                 consensus?.Tell(message.Payload);

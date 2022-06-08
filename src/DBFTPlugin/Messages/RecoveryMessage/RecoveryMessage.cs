@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2022 The Neo Project.
+//
+// The Neo.Consensus.DBFT is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Neo.IO;
 using Neo.Network.P2P.Payloads;
 using System;
@@ -26,9 +36,9 @@ namespace Neo.Consensus
 
         public RecoveryMessage() : base(ConsensusMessageType.RecoveryMessage) { }
 
-        public override void Deserialize(BinaryReader reader)
+        public override void Deserialize(ref MemoryReader reader)
         {
-            base.Deserialize(reader);
+            base.Deserialize(ref reader);
             ChangeViewMessages = reader.ReadSerializableArray<ChangeViewPayloadCompact>(byte.MaxValue).ToDictionary(p => p.ValidatorIndex);
             if (reader.ReadBoolean())
             {
@@ -38,7 +48,7 @@ namespace Neo.Consensus
             {
                 int preparationHashSize = UInt256.Zero.Size;
                 if (preparationHashSize == (int)reader.ReadVarInt((ulong)preparationHashSize))
-                    PreparationHash = new UInt256(reader.ReadFixedBytes(preparationHashSize));
+                    PreparationHash = new UInt256(reader.ReadMemory(preparationHashSize).Span);
             }
 
             PreparationMessages = reader.ReadSerializableArray<PreparationPayloadCompact>(byte.MaxValue).ToDictionary(p => p.ValidatorIndex);

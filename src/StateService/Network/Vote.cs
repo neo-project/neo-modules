@@ -1,4 +1,15 @@
+// Copyright (C) 2015-2022 The Neo Project.
+//
+// The Neo.Plugins.StateService is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Neo.IO;
+using System;
 using System.IO;
 
 namespace Neo.Plugins.StateService.Network
@@ -7,7 +18,7 @@ namespace Neo.Plugins.StateService.Network
     {
         public int ValidatorIndex;
         public uint RootIndex;
-        public byte[] Signature;
+        public ReadOnlyMemory<byte> Signature;
 
         int ISerializable.Size => sizeof(int) + sizeof(uint) + Signature.GetVarSize();
 
@@ -15,14 +26,14 @@ namespace Neo.Plugins.StateService.Network
         {
             writer.Write(ValidatorIndex);
             writer.Write(RootIndex);
-            writer.WriteVarBytes(Signature);
+            writer.WriteVarBytes(Signature.Span);
         }
 
-        void ISerializable.Deserialize(BinaryReader reader)
+        void ISerializable.Deserialize(ref MemoryReader reader)
         {
             ValidatorIndex = reader.ReadInt32();
             RootIndex = reader.ReadUInt32();
-            Signature = reader.ReadVarBytes(64);
+            Signature = reader.ReadVarMemory(64);
         }
     }
 }

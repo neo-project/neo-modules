@@ -1,8 +1,19 @@
+// Copyright (C) 2015-2022 The Neo Project.
+//
+// The Neo.Plugins.StateService is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Akka.Actor;
 using Neo.ConsoleService;
 using Neo.Cryptography.MPTTrie;
 using Neo.IO;
 using Neo.IO.Json;
+using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.Plugins.StateService.Network;
@@ -19,7 +30,7 @@ using static Neo.Ledger.Blockchain;
 
 namespace Neo.Plugins.StateService
 {
-    public class StatePlugin : Plugin, IPersistencePlugin
+    public class StatePlugin : Plugin
     {
         public const string StatePayloadCategory = "StateService";
         public override string Name => "StateService";
@@ -30,6 +41,12 @@ namespace Neo.Plugins.StateService
 
         internal static NeoSystem System;
         private IWalletProvider walletProvider;
+
+        public StatePlugin()
+        {
+            Blockchain.Committing += OnCommitting;
+            Blockchain.Committed += OnCommitted;
+        }
 
         protected override void Configure()
         {
@@ -67,17 +84,19 @@ namespace Neo.Plugins.StateService
         public override void Dispose()
         {
             base.Dispose();
+            Blockchain.Committing -= OnCommitting;
+            Blockchain.Committed -= OnCommitted;
             if (Store is not null) System.EnsureStoped(Store);
             if (Verifier is not null) System.EnsureStoped(Verifier);
         }
 
-        void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
+        private void OnCommitting(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
             StateStore.Singleton.UpdateLocalStateRootSnapshot(block.Index, snapshot.GetChangeSet().Where(p => p.State != TrackState.None).Where(p => p.Key.Id != NativeContract.Ledger.Id).ToList());
         }
 
-        void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
+        private void OnCommitted(NeoSystem system, Block block)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
             StateStore.Singleton.UpdateLocalStateRoot(block.Index);
@@ -94,12 +113,12 @@ namespace Neo.Plugins.StateService
         {
             if (Verifier is not null)
             {
-                Console.WriteLine("Already started!");
+                ConsoleHelper.Warning("Already started!");
                 return;
             }
             if (wallet is null)
             {
-                Console.WriteLine("Please open wallet first!");
+                ConsoleHelper.Warning("Please open wallet first!");
                 return;
             }
             Verifier = System.ActorSystem.ActorOf(VerificationService.Props(wallet));
@@ -112,16 +131,19 @@ namespace Neo.Plugins.StateService
             using var snapshot = StateStore.Singleton.GetSnapshot();
             StateRoot state_root = snapshot.GetStateRoot(index);
             if (state_root is null)
-                Console.WriteLine("Unknown state root");
+                ConsoleHelper.Warning("Unknown state root");
             else
-                Console.WriteLine(state_root.ToJson());
+                ConsoleHelper.Info(state_root.ToJson().ToString());
         }
 
         [ConsoleCommand("state height", Category = "StateService", Description = "Get current state root index")]
         private void OnGetStateHeight()
         {
             if (System is null || System.Settings.Network != Settings.Default.Network) throw new InvalidOperationException("Network doesn't match");
-            Console.WriteLine($"LocalRootIndex: {StateStore.Singleton.LocalRootIndex}, ValidatedRootIndex: {StateStore.Singleton.ValidatedRootIndex}");
+            ConsoleHelper.Info("LocalRootIndex: ",
+                $"{StateStore.Singleton.LocalRootIndex}",
+                " ValidatedRootIndex: ",
+                $"{StateStore.Singleton.ValidatedRootIndex}");
         }
 
         [ConsoleCommand("get proof", Category = "StateService", Description = "Get proof of key and contract hash")]
@@ -130,11 +152,11 @@ namespace Neo.Plugins.StateService
             if (System is null || System.Settings.Network != Settings.Default.Network) throw new InvalidOperationException("Network doesn't match");
             try
             {
-                Console.WriteLine(GetProof(root_hash, script_hash, Convert.FromBase64String(key)));
+                ConsoleHelper.Info("Proof: ", GetProof(root_hash, script_hash, Convert.FromBase64String(key)));
             }
             catch (RpcException e)
             {
-                Console.WriteLine(e.Message);
+                ConsoleHelper.Error(e.Message);
             }
         }
 
@@ -143,11 +165,12 @@ namespace Neo.Plugins.StateService
         {
             try
             {
-                Console.WriteLine(VerifyProof(root_hash, Convert.FromBase64String(proof)));
+                ConsoleHelper.Info("Verify Result: ",
+                    VerifyProof(root_hash, Convert.FromBase64String(proof)));
             }
             catch (RpcException e)
             {
-                Console.WriteLine(e.Message);
+                ConsoleHelper.Error(e.Message);
             }
         }
 
@@ -163,15 +186,15 @@ namespace Neo.Plugins.StateService
                 return state_root.ToJson();
         }
 
-        private string GetProof(Trie<StorageKey, StorageItem> trie, int contract_id, byte[] key)
+        private string GetProof(Trie trie, int contract_id, byte[] key)
         {
             StorageKey skey = new StorageKey
             {
                 Id = contract_id,
                 Key = key,
             };
-            var result = trie.TryGetProof(skey, out var proof);
-            if (!result) throw new RpcException(-100, "Unknown value");
+            var result = trie.TryGetProof(skey.ToArray(), out var proof);
+            if (!result) throw new KeyNotFoundException();
 
             using MemoryStream ms = new();
             using BinaryWriter writer = new(ms, Utility.StrictUTF8);
@@ -194,7 +217,7 @@ namespace Neo.Plugins.StateService
                 throw new RpcException(-100, "Old state not supported");
             }
             using var store = StateStore.Singleton.GetStoreSnapshot();
-            var trie = new Trie<StorageKey, StorageItem>(store, root_hash);
+            var trie = new Trie(store, root_hash);
             var contract = GetHistoricalContractState(trie, script_hash);
             if (contract is null) throw new RpcException(-100, "Unknown contract");
             return GetProof(trie, contract.Id, key);
@@ -223,10 +246,9 @@ namespace Neo.Plugins.StateService
                 proofs.Add(reader.ReadVarBytes());
             }
 
-            var skey = key.AsSerializable<StorageKey>();
-            var sitem = Trie<StorageKey, StorageItem>.VerifyProof(root_hash, skey, proofs);
-            if (sitem is null) throw new RpcException(-100, "Verification failed");
-            return Convert.ToBase64String(sitem.Value);
+            var value = Trie.VerifyProof(root_hash, key, proofs);
+            if (value is null) throw new RpcException(-100, "Verification failed");
+            return Convert.ToBase64String(value);
         }
 
         [RpcMethod]
@@ -246,11 +268,11 @@ namespace Neo.Plugins.StateService
             return json;
         }
 
-        private ContractState GetHistoricalContractState(Trie<StorageKey, StorageItem> trie, UInt160 script_hash)
+        private ContractState GetHistoricalContractState(Trie trie, UInt160 script_hash)
         {
             const byte prefix = 8;
             StorageKey skey = new KeyBuilder(NativeContract.ContractManagement.Id, prefix).Add(script_hash);
-            return trie.TryGetValue(skey, out var value) ? value.GetInteroperable<ContractState>() : null;
+            return trie.TryGetValue(skey.ToArray(), out var value) ? value.AsSerializable<StorageItem>().GetInteroperable<ContractState>() : null;
         }
 
         [RpcMethod]
@@ -270,7 +292,7 @@ namespace Neo.Plugins.StateService
             if (Settings.Default.MaxFindResultItems < count)
                 count = Settings.Default.MaxFindResultItems;
             using var store = StateStore.Singleton.GetStoreSnapshot();
-            var trie = new Trie<StorageKey, StorageItem>(store, root_hash);
+            var trie = new Trie(store, root_hash);
             var contract = GetHistoricalContractState(trie, script_hash);
             if (contract is null) throw new RpcException(-100, "Unknown contract");
             StorageKey pkey = new()
@@ -292,8 +314,8 @@ namespace Neo.Plugins.StateService
                 if (i < count)
                 {
                     JObject j = new();
-                    j["key"] = Convert.ToBase64String(ikey.Key);
-                    j["value"] = Convert.ToBase64String(ivalue.Value);
+                    j["key"] = Convert.ToBase64String(ikey.Span);
+                    j["value"] = Convert.ToBase64String(ivalue.Span);
                     jarr.Add(j);
                 }
                 i++;
@@ -320,7 +342,7 @@ namespace Neo.Plugins.StateService
             var script_hash = UInt160.Parse(_params[1].AsString());
             var key = Convert.FromBase64String(_params[2].AsString());
             using var store = StateStore.Singleton.GetStoreSnapshot();
-            var trie = new Trie<StorageKey, StorageItem>(store, root_hash);
+            var trie = new Trie(store, root_hash);
 
             var contract = GetHistoricalContractState(trie, script_hash);
             if (contract is null) throw new RpcException(-100, "Unknown contract");
@@ -329,7 +351,7 @@ namespace Neo.Plugins.StateService
                 Id = contract.Id,
                 Key = key,
             };
-            return Convert.ToBase64String(trie[skey].Value);
+            return Convert.ToBase64String(trie[skey.ToArray()]);
         }
     }
 }

@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2021 The Neo Project.
+//
+// The Neo.Network.RPC is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,18 +61,14 @@ namespace Neo.Network.RPC
 
         public static JObject[] MakeFindStatesParams(UInt256 rootHash, UInt160 scriptHash, ReadOnlySpan<byte> prefix, ReadOnlySpan<byte> from = default, int? count = null)
         {
-            var paramCount = from.Length == 0 ? 3 : count == null ? 4 : 5;
-            var @params = new JObject[paramCount];
+            var @params = new JObject[count.HasValue ? 5 : 4];
             @params[0] = rootHash.ToString();
             @params[1] = scriptHash.ToString();
             @params[2] = Convert.ToBase64String(prefix);
-            if (from.Length > 0)
+            @params[3] = Convert.ToBase64String(from);
+            if (count.HasValue)
             {
-                @params[3] = Convert.ToBase64String(from);
-                if (count.HasValue)
-                {
-                    @params[4] = count.Value;
-                }
+                @params[4] = count.Value;
             }
             return @params;
         }

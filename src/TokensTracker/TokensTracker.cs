@@ -1,17 +1,27 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+// Copyright (C) 2015-2022 The Neo Project.
+//
+// The Neo.Plugins.TokensTracker is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Microsoft.Extensions.Configuration;
 using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.Plugins.Trackers;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using static System.IO.Path;
 
 namespace Neo.Plugins
 {
-    public class TokensTracker : Plugin, IPersistencePlugin
+    public class TokensTracker : Plugin
     {
         private string _dbPath;
         private bool _shouldTrackHistory;
@@ -23,6 +33,18 @@ namespace Neo.Plugins
         private readonly List<TrackerBase> trackers = new();
 
         public override string Description => "Enquiries balances and transaction history of accounts through RPC";
+
+        public TokensTracker()
+        {
+            Blockchain.Committing += OnCommitting;
+            Blockchain.Committed += OnCommitted;
+        }
+
+        public override void Dispose()
+        {
+            Blockchain.Committing -= OnCommitting;
+            Blockchain.Committed -= OnCommitted;
+        }
 
         protected override void Configure()
         {
@@ -56,7 +78,7 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnPersist(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        private void OnCommitting(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             if (system.Settings.Network != _network) return;
             // Start freshly with a new DBCache for each block.
@@ -67,18 +89,13 @@ namespace Neo.Plugins
             }
         }
 
-        void IPersistencePlugin.OnCommit(NeoSystem system, Block block, DataCache snapshot)
+        private void OnCommitted(NeoSystem system, Block block)
         {
             if (system.Settings.Network != _network) return;
             foreach (var tracker in trackers)
             {
                 tracker.Commit();
             }
-        }
-
-        bool IPersistencePlugin.ShouldThrowExceptionFromCommit(Exception ex)
-        {
-            return true;
         }
     }
 }

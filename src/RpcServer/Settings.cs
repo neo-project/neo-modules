@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2021 The Neo Project.
+//
+// The Neo.Network.RPC is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Microsoft.Extensions.Configuration;
 using Neo.SmartContract.Native;
 using System;
@@ -31,6 +41,7 @@ namespace Neo.Plugins
         public long MaxGasInvoke { get; init; }
         public long MaxFee { get; init; }
         public int MaxIteratorResultItems { get; init; }
+        public int MaxStackSize { get; init; }
         public string[] DisabledMethods { get; init; }
 
         public static RpcServerSettings Default { get; } = new RpcServerSettings
@@ -43,6 +54,7 @@ namespace Neo.Plugins
             MaxFee = (long)new BigDecimal(0.1M, NativeContract.GAS.Decimals).Value,
             TrustedAuthorities = Array.Empty<string>(),
             MaxIteratorResultItems = 100,
+            MaxStackSize = ushort.MaxValue,
             DisabledMethods = Array.Empty<string>(),
             MaxConcurrentConnections = 40,
         };
@@ -60,6 +72,7 @@ namespace Neo.Plugins
             MaxGasInvoke = (long)new BigDecimal(section.GetValue<decimal>("MaxGasInvoke", Default.MaxGasInvoke), NativeContract.GAS.Decimals).Value,
             MaxFee = (long)new BigDecimal(section.GetValue<decimal>("MaxFee", Default.MaxFee), NativeContract.GAS.Decimals).Value,
             MaxIteratorResultItems = section.GetValue("MaxIteratorResultItems", Default.MaxIteratorResultItems),
+            MaxStackSize = section.GetValue("MaxStackSize", Default.MaxStackSize),
             DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray(),
             MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", Default.MaxConcurrentConnections),
         };

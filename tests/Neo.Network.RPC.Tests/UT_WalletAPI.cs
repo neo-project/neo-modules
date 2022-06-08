@@ -90,7 +90,7 @@ namespace Neo.Network.RPC.Tests
             rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JObject>())).ReturnsAsync(json);
 
             var tranaction = await walletAPI.ClaimGasAsync(keyPair1.Export());
-            Assert.AreEqual(testScript.ToHexString(), tranaction.Script.ToHexString());
+            Assert.AreEqual(testScript.ToHexString(), tranaction.Script.Span.ToHexString());
         }
 
         [TestMethod]
@@ -107,7 +107,7 @@ namespace Neo.Network.RPC.Tests
             rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JObject>())).ReturnsAsync(json);
 
             var tranaction = await walletAPI.TransferAsync(NativeContract.GAS.Hash.ToString(), keyPair1.Export(), UInt160.Zero.ToAddress(client.protocolSettings.AddressVersion), 100);
-            Assert.AreEqual(testScript.ToHexString(), tranaction.Script.ToHexString());
+            Assert.AreEqual(testScript.ToHexString(), tranaction.Script.Span.ToHexString());
         }
 
         [TestMethod]
@@ -129,7 +129,7 @@ namespace Neo.Network.RPC.Tests
             rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JObject>())).ReturnsAsync(json);
 
             var tranaction = await walletAPI.TransferAsync(NativeContract.GAS.Hash, 1, new[] { keyPair1.PublicKey }, new[] { keyPair1 }, UInt160.Zero, NativeContract.GAS.Factor * 100);
-            Assert.AreEqual(testScript.ToHexString(), tranaction.Script.ToHexString());
+            Assert.AreEqual(testScript.ToHexString(), tranaction.Script.Span.ToHexString());
 
             try
             {
@@ -145,7 +145,7 @@ namespace Neo.Network.RPC.Tests
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter { Type = ContractParameterType.Integer, Value = new BigInteger(1_10000000) });
 
             tranaction = await walletAPI.TransferAsync(NativeContract.GAS.Hash, 1, new[] { keyPair1.PublicKey }, new[] { keyPair1 }, UInt160.Zero, NativeContract.GAS.Factor * 100, string.Empty);
-            Assert.AreEqual(testScript.ToHexString(), tranaction.Script.ToHexString());
+            Assert.AreEqual(testScript.ToHexString(), tranaction.Script.Span.ToHexString());
         }
 
         [TestMethod]

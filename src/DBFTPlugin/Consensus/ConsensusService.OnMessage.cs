@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2022 The Neo Project.
+//
+// The Neo.Consensus.DBFT is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Akka.Actor;
 using Neo.Cryptography;
 using Neo.IO;
@@ -9,7 +19,6 @@ using Neo.SmartContract.Native;
 using Neo.Wallets;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace Neo.Consensus
@@ -24,14 +33,12 @@ namespace Neo.Consensus
             {
                 message = context.GetMessage(payload);
             }
-            catch (FormatException)
+            catch (Exception ex)
             {
+                Utility.Log(nameof(ConsensusService), LogLevel.Debug, ex.ToString());
                 return;
             }
-            catch (IOException)
-            {
-                return;
-            }
+
             if (!message.Verify(neoSystem.Settings)) return;
             if (message.BlockIndex != context.Block[0].Index)
             {
@@ -220,7 +227,7 @@ namespace Neo.Consensus
                 {
                     existingCommitPayload = payload;
                 }
-                else if (Crypto.VerifySignature(hashData, commit.Signature, context.Validators[commit.ValidatorIndex]))
+                else if (Crypto.VerifySignature(hashData, commit.Signature.Span, context.Validators[commit.ValidatorIndex]))
                 {
                     existingCommitPayload = payload;
                     CheckCommits(commit.Id);

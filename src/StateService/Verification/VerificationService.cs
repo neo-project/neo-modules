@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2022 The Neo Project.
+//
+// The Neo.Plugins.StateService is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Akka.Actor;
 using Akka.Util.Internal;
 using Neo.IO;
@@ -37,7 +47,7 @@ namespace Neo.Plugins.StateService.Verification
 
         private void OnStateRootVote(Vote vote)
         {
-            if (contexts.TryGetValue(vote.RootIndex, out VerificationContext context) && context.AddSignature(vote.ValidatorIndex, vote.Signature))
+            if (contexts.TryGetValue(vote.RootIndex, out VerificationContext context) && context.AddSignature(vote.ValidatorIndex, vote.Signature.ToArray()))
             {
                 CheckVotes(context);
             }
@@ -106,11 +116,11 @@ namespace Neo.Plugins.StateService.Verification
         private void OnVoteMessage(ExtensiblePayload payload)
         {
             if (payload.Data.Length == 0) return;
-            if ((MessageType)payload.Data[0] != MessageType.Vote) return;
+            if ((MessageType)payload.Data.Span[0] != MessageType.Vote) return;
             Vote message;
             try
             {
-                message = payload.Data.AsSerializable<Vote>(1);
+                message = payload.Data[1..].AsSerializable<Vote>();
             }
             catch (FormatException)
             {
