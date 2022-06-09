@@ -9,6 +9,7 @@
 // modifications are permitted.
 
 using Akka.Actor;
+using Akka.Util.Internal;
 using Neo.Cryptography;
 using Neo.IO;
 using Neo.Ledger;
@@ -184,8 +185,13 @@ namespace Neo.Consensus
         {
             if (message.ViewNumber != context.ViewNumber) return;
             if (context.PreCommitPayloads[message.Id][message.ValidatorIndex] != null || context.NotAcceptingPayloadsDueToViewChanging) return;
-            if (context.PreCommitPayloads[message.Id][context.Block[message.Id].PrimaryIndex] != null && !message.PreparationHash.Equals(context.PreparationPayloads[message.Id][context.Block[message.Id].PrimaryIndex].Hash))
-                return;
+            if (context.RequestSentOrReceived)
+            {
+                // Check if we have joined another consensus process
+                if (context.PreparationPayloads[message.Id][context.Block[message.Id].PrimaryIndex] == null) return;
+                if (!message.PreparationHash.Equals(context.PreparationPayloads[message.Id][context.Block[message.Id].PrimaryIndex].Hash))
+                    return;
+            }
 
             Log($"{nameof(OnPreCommitReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} Id={message.Id}");
             context.PreCommitPayloads[message.Id][message.ValidatorIndex] = payload;
@@ -253,6 +259,7 @@ namespace Neo.Consensus
             isRecovering = true;
             int validChangeViews = 0, totalChangeViews = 0, validPrepReq = 0, totalPrepReq = 0;
             int validPrepResponses = 0, totalPrepResponses = 0, validCommits = 0, totalCommits = 0;
+            int validPreCommits = 0, totalPreCommits = 0;
 
             Log($"{nameof(OnRecoveryMessageReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex}");
             try
@@ -285,6 +292,10 @@ namespace Neo.Consensus
                     totalPrepResponses = prepareResponsePayloads.Length;
                     foreach (ExtensiblePayload prepareResponsePayload in prepareResponsePayloads)
                         if (ReverifyAndProcessPayload(prepareResponsePayload)) validPrepResponses++;
+                    ExtensiblePayload[] preCommitPayloads = message.GetPreCommitPayloads(context);
+                    totalPreCommits = preCommitPayloads.Length;
+                    foreach (ExtensiblePayload preCommitPayload in preCommitPayloads)
+                        if (ReverifyAndProcessPayload(preCommitPayload)) validPreCommits++;
                 }
                 if (message.ViewNumber <= context.ViewNumber)
                 {
@@ -297,7 +308,7 @@ namespace Neo.Consensus
             }
             finally
             {
-                Log($"Recovery finished: (valid/total) ChgView: {validChangeViews}/{totalChangeViews} PrepReq: {validPrepReq}/{totalPrepReq} PrepResp: {validPrepResponses}/{totalPrepResponses} Commits: {validCommits}/{totalCommits}");
+                Log($"Recovery finished: (valid/total) ChgView: {validChangeViews}/{totalChangeViews} PrepReq: {validPrepReq}/{totalPrepReq} PrepResp: {validPrepResponses}/{totalPrepResponses} PreCommits: {validPreCommits}/{totalPreCommits} Commits: {validCommits}/{totalCommits}");
                 isRecovering = false;
             }
         }

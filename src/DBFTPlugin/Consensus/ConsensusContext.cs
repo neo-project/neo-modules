@@ -70,8 +70,8 @@ namespace Neo.Consensus
         public bool IsAPrimary => IsPriorityPrimary || (ViewNumber == 0 && IsFallbackPrimary);
 
         //Modify to be 1 or 4/3
-        public float PrimaryTimerPriorityMultiplier => 1;
-        public float PrimaryTimerFallBackMultiplier => (float)4 / 3;
+        public static float PrimaryTimerPriorityMultiplier => 1;
+        public static float PrimaryTimerFallBackMultiplier => (float)4 / 3;
         public float PrimaryTimerMultiplier => IsPriorityPrimary ? PrimaryTimerPriorityMultiplier : PrimaryTimerFallBackMultiplier;
         public bool IsBackup => MyIndex >= 0 && !IsPriorityPrimary && !IsFallbackPrimary;
         public bool WatchOnly => MyIndex < 0;
@@ -98,7 +98,7 @@ namespace Neo.Consensus
         }
 
         #region Consensus States
-        public bool RequestSentOrReceived => PreparationPayloads[0][GetPriorityPrimaryIndex(ViewNumber)] != null || (ViewNumber == 0 && PreparationPayloads[1][GetFallbackPrimaryIndex(ViewNumber)] != null);
+        public bool RequestSentOrReceived => PreparationPayloads[0][GetPriorityPrimaryIndex(ViewNumber)] != null || (ViewNumber == 0 && PreparationPayloads[1][GetFallbackPrimaryIndex(0)] != null);
         public bool ResponseSent => !WatchOnly && (PreparationPayloads[0][MyIndex] != null || (ViewNumber == 0 && PreparationPayloads[1][MyIndex] != null));
         public bool PreCommitSent => !WatchOnly && (PreCommitPayloads[0][MyIndex] != null || (ViewNumber == 0 && PreCommitPayloads[1][MyIndex] != null));
         public bool CommitSent => !WatchOnly && (CommitPayloads[0][MyIndex] != null || (ViewNumber == 0 && CommitPayloads[1][MyIndex] != null));
@@ -257,6 +257,18 @@ namespace Neo.Consensus
                     break;
                 }
                 cachedMessages = new Dictionary<UInt256, ConsensusMessage>();
+                for (uint pID = 0; pID <= 1; pID++)
+                {
+                    Block[pID].Header.MerkleRoot = null;
+                    Block[pID].Header.Timestamp = 0;
+                    Block[pID].Header.Nonce = 0;
+                    Block[pID].Transactions = null;
+                    TransactionHashes[pID] = null;
+                    PreparationPayloads[pID] = new ExtensiblePayload[Validators.Length];
+                    if (MyIndex >= 0) LastSeenMessage[Validators[MyIndex]] = Block[pID].Index;
+                }
+                Block[0].Header.PrimaryIndex = GetPriorityPrimaryIndex(viewNumber);
+                Block[1].Header.PrimaryIndex = GetFallbackPrimaryIndex(viewNumber);
             }
             else
             {
@@ -265,25 +277,16 @@ namespace Neo.Consensus
                         LastChangeViewPayloads[i] = ChangeViewPayloads[i];
                     else
                         LastChangeViewPayloads[i] = null;
-            }
 
-            ViewNumber = viewNumber;
-            for (uint pID = 0; pID <= 1; pID++)
-            {
-                Block[pID].Header.MerkleRoot = null;
-                Block[pID].Header.Timestamp = 0;
-                Block[pID].Header.Nonce = 0;
-                Block[pID].Transactions = null;
-                TransactionHashes[pID] = null;
-                PreparationPayloads[pID] = new ExtensiblePayload[Validators.Length];
-                if (MyIndex >= 0) LastSeenMessage[Validators[MyIndex]] = Block[pID].Index;
-            }
-            Block[0].Header.PrimaryIndex = GetPriorityPrimaryIndex(viewNumber);
-            Block[1].Header.PrimaryIndex = GetFallbackPrimaryIndex(viewNumber);
-            //=========================================
-            // Disable Fallback if viewnumber > 1
-            if (viewNumber > 0)
-            {
+                Block[0].Header.MerkleRoot = null;
+                Block[0].Header.Timestamp = 0;
+                Block[0].Header.Nonce = 0;
+                Block[0].Transactions = null;
+                TransactionHashes[0] = null;
+                PreparationPayloads[0] = new ExtensiblePayload[Validators.Length];
+                if (MyIndex >= 0) LastSeenMessage[Validators[MyIndex]] = Block[0].Index;
+                Block[0].Header.PrimaryIndex = GetPriorityPrimaryIndex(viewNumber);
+
                 Block[1] = null;
                 TransactionHashes[1] = null;
                 Transactions[1] = null;
@@ -292,7 +295,7 @@ namespace Neo.Consensus
                 PreCommitPayloads[1] = null;
                 CommitPayloads[1] = null;
             }
-            //=========================================
+            ViewNumber = viewNumber;
         }
 
         public void Save()

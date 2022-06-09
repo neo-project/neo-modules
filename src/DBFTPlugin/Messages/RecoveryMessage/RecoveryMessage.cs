@@ -19,12 +19,14 @@ namespace Neo.Consensus
 {
     public partial class RecoveryMessage : ConsensusMessage
     {
+        public uint Id;
         public Dictionary<byte, ChangeViewPayloadCompact> ChangeViewMessages;
         public PrepareRequest PrepareRequestMessage;
         /// The PreparationHash in case the PrepareRequest hasn't been received yet.
         /// This can be null if the PrepareRequest information is present, since it can be derived in that case.
         public UInt256 PreparationHash;
         public Dictionary<byte, PreparationPayloadCompact> PreparationMessages;
+        public Dictionary<byte, PreCommitPayloadCompact> PreCommitMessages;
         public Dictionary<byte, CommitPayloadCompact> CommitMessages;
 
         public override int Size => base.Size
@@ -39,6 +41,7 @@ namespace Neo.Consensus
         public override void Deserialize(ref MemoryReader reader)
         {
             base.Deserialize(ref reader);
+            Id = reader.ReadUInt32();
             ChangeViewMessages = reader.ReadSerializableArray<ChangeViewPayloadCompact>(byte.MaxValue).ToDictionary(p => p.ValidatorIndex);
             if (reader.ReadBoolean())
             {
@@ -52,6 +55,7 @@ namespace Neo.Consensus
             }
 
             PreparationMessages = reader.ReadSerializableArray<PreparationPayloadCompact>(byte.MaxValue).ToDictionary(p => p.ValidatorIndex);
+            PreCommitMessages = reader.ReadSerializableArray<PreCommitPayloadCompact>(byte.MaxValue).ToDictionary(p => p.ValidatorIndex);
             CommitMessages = reader.ReadSerializableArray<CommitPayloadCompact>(byte.MaxValue).ToDictionary(p => p.ValidatorIndex);
         }
 
@@ -82,6 +86,7 @@ namespace Neo.Consensus
                 BlockIndex = BlockIndex,
                 ValidatorIndex = p.ValidatorIndex,
                 ViewNumber = p.ViewNumber,
+                Id = Id,
                 Signature = p.Signature
             }, p.InvocationScript)).ToArray();
         }
@@ -89,27 +94,41 @@ namespace Neo.Consensus
         internal ExtensiblePayload GetPrepareRequestPayload(ConsensusContext context)
         {
             if (PrepareRequestMessage == null) return null;
-            if (!PreparationMessages.TryGetValue(context.Block[0].PrimaryIndex, out PreparationPayloadCompact compact))
+            if (PreparationMessages.TryGetValue(context.Block[Id].PrimaryIndex, out PreparationPayloadCompact compact))
                 return null;
             return context.CreatePayload(PrepareRequestMessage, compact.InvocationScript);
         }
 
         internal ExtensiblePayload[] GetPrepareResponsePayloads(ConsensusContext context)
         {
-            UInt256 preparationHash = PreparationHash ?? context.PreparationPayloads[0][context.Block[0].PrimaryIndex]?.Hash;
+            UInt256 preparationHash = PreparationHash ?? context.PreparationPayloads[Id][context.Block[Id].PrimaryIndex]?.Hash;
             if (preparationHash is null) return Array.Empty<ExtensiblePayload>();
             return PreparationMessages.Values.Where(p => p.ValidatorIndex != context.Block[0].PrimaryIndex).Select(p => context.CreatePayload(new PrepareResponse
             {
                 BlockIndex = BlockIndex,
                 ValidatorIndex = p.ValidatorIndex,
                 ViewNumber = ViewNumber,
-                PreparationHash = preparationHash
+                Id = Id,
+                PreparationHash = preparationHash,
+            }, p.InvocationScript)).ToArray();
+        }
+
+        internal ExtensiblePayload[] GetPreCommitPayloads(ConsensusContext context)
+        {
+            return PreCommitMessages.Values.Select(p => context.CreatePayload(new PreCommit
+            {
+                BlockIndex = BlockIndex,
+                ViewNumber = p.ViewNumber,
+                ValidatorIndex = p.ValidatorIndex,
+                PreparationHash = p.PreparationHash,
+                Id = Id,
             }, p.InvocationScript)).ToArray();
         }
 
         public override void Serialize(BinaryWriter writer)
         {
             base.Serialize(writer);
+            writer.Write(Id);
             writer.Write(ChangeViewMessages.Values.ToArray());
             bool hasPrepareRequestMessage = PrepareRequestMessage != null;
             writer.Write(hasPrepareRequestMessage);
@@ -124,6 +143,7 @@ namespace Neo.Consensus
             }
 
             writer.Write(PreparationMessages.Values.ToArray());
+            writer.Write(PreCommitMessages.Values.ToArray());
             writer.Write(CommitMessages.Values.ToArray());
         }
     }

@@ -44,6 +44,18 @@ namespace Neo.Consensus
             };
         }
 
+        private PreCommitPayloadCompact GetPreCommitPayloadCompact(ExtensiblePayload payload)
+        {
+            PreCommit preCommit = GetMessage<PreCommit>(payload);
+            return new PreCommitPayloadCompact
+            {
+                ViewNumber = preCommit.ViewNumber,
+                ValidatorIndex = preCommit.ValidatorIndex,
+                PreparationHash = preCommit.PreparationHash,
+                InvocationScript = payload.Witness.InvocationScript,
+            };
+        }
+
         private CommitPayloadCompact GetCommitPayloadCompact(ExtensiblePayload payload)
         {
             Commit message = GetMessage<Commit>(payload);

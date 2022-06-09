@@ -8,6 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Microsoft.EntityFrameworkCore;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
@@ -131,28 +132,31 @@ namespace Neo.Consensus
         public ExtensiblePayload MakeRecoveryMessage()
         {
             PrepareRequest prepareRequestMessage = null;
-            if (TransactionHashes[0] != null)
+            uint pID = TransactionHashes[0] != null ? 0u : (TransactionHashes[1] != null ? 1u : 0u);
+            if (TransactionHashes[pID] != null)
             {
                 prepareRequestMessage = new PrepareRequest
                 {
-                    Version = Block[0].Version,
-                    PrevHash = Block[0].PrevHash,
+                    Version = Block[pID].Version,
+                    PrevHash = Block[pID].PrevHash,
                     ViewNumber = ViewNumber,
-                    Timestamp = Block[0].Timestamp,
-                    Nonce = Block[0].Nonce,
-                    BlockIndex = Block[0].Index,
-                    TransactionHashes = TransactionHashes[0]
+                    Timestamp = Block[pID].Timestamp,
+                    Nonce = Block[pID].Nonce,
+                    BlockIndex = Block[pID].Index,
+                    TransactionHashes = TransactionHashes[pID]
                 };
             }
             return MakeSignedPayload(new RecoveryMessage
             {
+                Id = pID,
                 ChangeViewMessages = LastChangeViewPayloads.Where(p => p != null).Select(p => GetChangeViewPayloadCompact(p)).Take(M).ToDictionary(p => p.ValidatorIndex),
                 PrepareRequestMessage = prepareRequestMessage,
                 // We only need a PreparationHash set if we don't have the PrepareRequest information.
-                PreparationHash = TransactionHashes[0] == null ? PreparationPayloads[0].Where(p => p != null).GroupBy(p => GetMessage<PrepareResponse>(p).PreparationHash, (k, g) => new { Hash = k, Count = g.Count() }).OrderByDescending(p => p.Count).Select(p => p.Hash).FirstOrDefault() : null,
-                PreparationMessages = PreparationPayloads[0].Where(p => p != null).Select(p => GetPreparationPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex),
+                PreparationHash = TransactionHashes[pID] == null ? PreparationPayloads[pID].Where(p => p != null).GroupBy(p => GetMessage<PrepareResponse>(p).PreparationHash, (k, g) => new { Hash = k, Count = g.Count() }).OrderByDescending(p => p.Count).Select(p => p.Hash).FirstOrDefault() : null,
+                PreparationMessages = PreparationPayloads[pID].Where(p => p != null).Select(p => GetPreparationPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex),
+                PreCommitMessages = PreCommitPayloads[pID].Where(p => p != null).Select(p => GetPreCommitPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex),
                 CommitMessages = CommitSent
-                    ? CommitPayloads[0].Where(p => p != null).Select(p => GetCommitPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex)
+                    ? CommitPayloads[pID].Where(p => p != null).Select(p => GetCommitPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex)
                     : new Dictionary<byte, CommitPayloadCompact>()
             });
         }

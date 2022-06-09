@@ -120,6 +120,7 @@ namespace Neo.Consensus
                     localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
                     // Set timer, so we will resend the commit in case of a networking issue
                     ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock));
+                    CheckPreCommits(pID);
                 }
                 if (context.ViewNumber == 0 && pID == 0 && preparationsCount >= context.M)
                 {
