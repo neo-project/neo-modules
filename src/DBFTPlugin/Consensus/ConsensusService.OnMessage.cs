@@ -282,7 +282,7 @@ namespace Neo.Consensus
                             totalPrepReq = 1;
                             if (ReverifyAndProcessPayload(prepareRequestPayload)) validPrepReq++;
                         }
-                        else if (context.IsPriorityPrimary || (context.IsFallbackPrimary && message.ViewNumber == 0))
+                        else if (context.IsAPrimary)
                         {
                             uint pID = Convert.ToUInt32(!context.IsPriorityPrimary);
                             SendPrepareRequest(pID);
