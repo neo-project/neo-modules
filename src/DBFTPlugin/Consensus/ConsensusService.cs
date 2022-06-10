@@ -145,18 +145,21 @@ namespace Neo.Consensus
             started = true;
             if (!dbftSettings.IgnoreRecoveryLogs && context.Load())
             {
-                // For Now, only checking Transactions for Priority 
+                // For Now, only checking Transactions for Priority
                 // Fallback works only for viewnumber 0 and this will not really make a difference
-                if (context.Transactions[0] != null)
+                var pId = context.RequestSentOrReceived
+                    ? (context.PreparationPayloads[0][context.Block[0].PrimaryIndex] != null ? 0u : 1u)
+                    : 0u;
+                if (context.Transactions[pId] != null)
                 {
                     blockchain.Ask<Blockchain.FillCompleted>(new Blockchain.FillMemoryPool
                     {
-                        Transactions = context.Transactions[0].Values
+                        Transactions = context.Transactions[pId].Values
                     }).Wait();
                 }
                 if (context.CommitSent)
                 {
-                    CheckPreparations(0);
+                    CheckPreparations(pId);
                     return;
                 }
             }

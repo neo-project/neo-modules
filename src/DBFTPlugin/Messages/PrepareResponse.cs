@@ -9,6 +9,7 @@
 // modifications are permitted.
 
 using Neo.IO;
+using System;
 using System.IO;
 
 namespace Neo.Consensus
@@ -19,7 +20,7 @@ namespace Neo.Consensus
 
         // priority or fallback
         public uint Id;
-        public override int Size => base.Size + PreparationHash.Size;
+        public override int Size => base.Size + PreparationHash.Size + sizeof(uint);
 
         public PrepareResponse() : base(ConsensusMessageType.PrepareResponse) { }
 

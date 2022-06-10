@@ -27,7 +27,6 @@ namespace Neo.Consensus
                 sizeof(byte) +                  //ViewNumber
                 sizeof(byte) +                  //ValidatorIndex
                 UInt256.Length +                //PreparationHash
-                sizeof(uint) +                   //Id
                 InvocationScript.GetVarSize();  //InvocationScript
 
             void ISerializable.Deserialize(ref MemoryReader reader)
