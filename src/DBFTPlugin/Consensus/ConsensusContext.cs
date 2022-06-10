@@ -64,8 +64,8 @@ namespace Neo.Consensus
         public int F => (Validators.Length - 1) / 3;
         public int M => Validators.Length - F;
 
-        public bool IsPriorityPrimary => MyIndex == GetPriorityPrimaryIndex(ViewNumber);
-        public bool IsFallbackPrimary => MyIndex == GetFallbackPrimaryIndex(ViewNumber);
+        public bool IsPriorityPrimary => MyIndex == Block[0].PrimaryIndex;
+        public bool IsFallbackPrimary => ViewNumber == 0 && MyIndex == Block[1].PrimaryIndex;
 
         public bool IsAPrimary => IsPriorityPrimary || (ViewNumber == 0 && IsFallbackPrimary);
 
@@ -265,7 +265,7 @@ namespace Neo.Consensus
                     if (MyIndex >= 0) LastSeenMessage[Validators[MyIndex]] = Block[pID].Index;
                 }
                 Block[0].Header.PrimaryIndex = GetPriorityPrimaryIndex(viewNumber);
-                Block[1].Header.PrimaryIndex = GetFallbackPrimaryIndex(viewNumber);
+                Block[1].Header.PrimaryIndex = GetFallbackPrimaryIndex(viewNumber, Block[0].Header.PrimaryIndex);
             }
             else
             {

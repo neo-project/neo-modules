@@ -85,10 +85,12 @@ namespace Neo.Consensus
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte GetFallbackPrimaryIndex(byte viewNumber)
+        public byte GetFallbackPrimaryIndex(byte viewNumber, byte priorityPrimaryIndex)
         {
-            int p = ((int)Block[0].Index - viewNumber + 1) % Validators.Length;
-            return p >= 0 ? (byte)p : (byte)(p + Validators.Length);
+            if (Validators.Length <= 1) return priorityPrimaryIndex;
+            int p = ((int)Block[0].Index - viewNumber + 1) % (Validators.Length - 1);
+            p = p >= 0 ? (byte)p : (byte)(p + Validators.Length);
+            return p < priorityPrimaryIndex ? (byte)p : (byte)(p + 1);
         }
 
         public UInt160 GetSender(int index)
