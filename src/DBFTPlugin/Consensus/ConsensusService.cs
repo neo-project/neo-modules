@@ -145,8 +145,6 @@ namespace Neo.Consensus
             started = true;
             if (!dbftSettings.IgnoreRecoveryLogs && context.Load())
             {
-                // For Now, only checking Transactions for Priority
-                // Fallback works only for viewnumber 0 and this will not really make a difference
                 var pId = context.RequestSentOrReceived
                     ? (context.PreparationPayloads[0][context.Block[0].PrimaryIndex] != null ? 0u : 1u)
                     : 0u;
