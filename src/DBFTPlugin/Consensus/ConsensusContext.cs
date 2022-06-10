@@ -73,7 +73,7 @@ namespace Neo.Consensus
         public static float PrimaryTimerPriorityMultiplier => 1;
         public static float PrimaryTimerFallBackMultiplier => (float)4 / 3;
         public float PrimaryTimerMultiplier => IsPriorityPrimary ? PrimaryTimerPriorityMultiplier : PrimaryTimerFallBackMultiplier;
-        public bool IsBackup => MyIndex >= 0 && !IsPriorityPrimary && !IsFallbackPrimary;
+        public bool IsBackup => MyIndex >= 0 && !IsPriorityPrimary && (ViewNumber > 0 || !IsFallbackPrimary);
         public bool WatchOnly => MyIndex < 0;
         public Header PrevHeader => NativeContract.Ledger.GetHeader(Snapshot, Block[0].PrevHash);
         public int CountCommitted => ViewNumber == 0 ? Math.Max(CommitPayloads[0].Count(p => p != null), CommitPayloads[1].Count(p => p != null)) : CommitPayloads[0].Count(p => p != null);
@@ -98,7 +98,7 @@ namespace Neo.Consensus
         }
 
         #region Consensus States
-        public bool RequestSentOrReceived => PreparationPayloads[0][GetPriorityPrimaryIndex(ViewNumber)] != null || (ViewNumber == 0 && PreparationPayloads[1][GetFallbackPrimaryIndex(0)] != null);
+        public bool RequestSentOrReceived => PreparationPayloads[0][Block[0].PrimaryIndex] != null || (ViewNumber == 0 && PreparationPayloads[1][Block[1].PrimaryIndex] != null);
         public bool ResponseSent => !WatchOnly && (PreparationPayloads[0][MyIndex] != null || (ViewNumber == 0 && PreparationPayloads[1][MyIndex] != null));
         public bool PreCommitSent => !WatchOnly && (PreCommitPayloads[0][MyIndex] != null || (ViewNumber == 0 && PreCommitPayloads[1][MyIndex] != null));
         public bool CommitSent => !WatchOnly && (CommitPayloads[0][MyIndex] != null || (ViewNumber == 0 && CommitPayloads[1][MyIndex] != null));
@@ -228,11 +228,6 @@ namespace Neo.Consensus
                     }
                 }
                 MyIndex = -1;
-                for (uint i = 0; i <= 1; i++)
-                {
-                    PreCommitPayloads[i] = new ExtensiblePayload[Validators.Length];
-                    CommitPayloads[i] = new ExtensiblePayload[Validators.Length];
-                }
                 ChangeViewPayloads = new ExtensiblePayload[Validators.Length];
                 LastChangeViewPayloads = new ExtensiblePayload[Validators.Length];
                 if (ValidatorsChanged || LastSeenMessage is null)
@@ -265,6 +260,8 @@ namespace Neo.Consensus
                     Block[pID].Transactions = null;
                     TransactionHashes[pID] = null;
                     PreparationPayloads[pID] = new ExtensiblePayload[Validators.Length];
+                    PreCommitPayloads[pID] = new ExtensiblePayload[Validators.Length];
+                    CommitPayloads[pID] = new ExtensiblePayload[Validators.Length];
                     if (MyIndex >= 0) LastSeenMessage[Validators[MyIndex]] = Block[pID].Index;
                 }
                 Block[0].Header.PrimaryIndex = GetPriorityPrimaryIndex(viewNumber);
@@ -284,6 +281,8 @@ namespace Neo.Consensus
                 Block[0].Transactions = null;
                 TransactionHashes[0] = null;
                 PreparationPayloads[0] = new ExtensiblePayload[Validators.Length];
+                PreCommitPayloads[0] = new ExtensiblePayload[Validators.Length];
+                CommitPayloads[0] = new ExtensiblePayload[Validators.Length];
                 if (MyIndex >= 0) LastSeenMessage[Validators[MyIndex]] = Block[0].Index;
                 Block[0].Header.PrimaryIndex = GetPriorityPrimaryIndex(viewNumber);
 

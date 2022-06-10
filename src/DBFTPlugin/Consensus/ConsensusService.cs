@@ -171,12 +171,14 @@ namespace Neo.Consensus
 
         private void OnTimer(Timer timer)
         {
-            uint pID = Convert.ToUInt32(!(context.IsPriorityPrimary || context.ViewNumber > 0));
             if (context.WatchOnly || context.BlockSent) return;
-            if (timer.Height != context.Block[pID].Index || timer.ViewNumber != context.ViewNumber) return;
+            if (timer.Height != context.Block[0].Index || timer.ViewNumber != context.ViewNumber) return;
             if (context.IsAPrimary && !context.RequestSentOrReceived)
             {
-                SendPrepareRequest(pID);
+                if (context.IsPriorityPrimary)
+                    SendPrepareRequest(0);
+                else
+                    SendPrepareRequest(1);
             }
             else if ((context.IsAPrimary && context.RequestSentOrReceived) || context.IsBackup)
             {
@@ -190,10 +192,13 @@ namespace Neo.Consensus
                 else
                 {
                     var reason = ChangeViewReason.Timeout;
-
-                    if (context.Block[pID] != null && context.TransactionHashes[pID]?.Length > context.Transactions[pID]?.Count)
+                    if (context.RequestSentOrReceived)
                     {
-                        reason = ChangeViewReason.TxNotFound;
+                        var pId = context.PreparationPayloads[0][context.Block[0].PrimaryIndex] != null ? 0u : 1u;
+                        if (context.Block[pId] != null && context.TransactionHashes[pId]?.Length > context.Transactions[pId]?.Count)
+                        {
+                            reason = ChangeViewReason.TxNotFound;
+                        }
                     }
 
                     RequestChangeView(reason);
