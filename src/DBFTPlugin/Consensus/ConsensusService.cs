@@ -81,7 +81,7 @@ namespace Neo.Consensus
             if (viewNumber > 0)
                 Log($"View changed: view={viewNumber} primary={context.Validators[context.GetPriorityPrimaryIndex((byte)(viewNumber - 1u))]}", LogLevel.Warning);
             uint blockCurrentIndex = context.Block[0].Index;
-            Log($"Initialize: height={blockCurrentIndex} view={viewNumber} index={context.MyIndex} role={(context.IsPriorityPrimary ? (viewNumber > 0 ? "Primary" : "PrimaryP1") : (context.IsFallbackPrimary && viewNumber == 0 ? "PrimaryP2" : (context.WatchOnly ? "WatchOnly" : "Backup")))}");
+            Log($"Initialize: height={blockCurrentIndex} view={viewNumber} index={context.MyIndex} role={(context.IsPriorityPrimary ? (viewNumber > 0 ? "Primary" : "PrimaryP1") : (context.IsFallbackPrimary ? "PrimaryP2" : (context.WatchOnly ? "WatchOnly" : "Backup")))}");
             if (context.WatchOnly) return;
             if (context.IsAPrimary)
             {

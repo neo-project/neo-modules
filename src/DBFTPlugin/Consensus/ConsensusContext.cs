@@ -67,13 +67,13 @@ namespace Neo.Consensus
         public bool IsPriorityPrimary => MyIndex == Block[0].PrimaryIndex;
         public bool IsFallbackPrimary => ViewNumber == 0 && MyIndex == Block[1].PrimaryIndex;
 
-        public bool IsAPrimary => IsPriorityPrimary || (ViewNumber == 0 && IsFallbackPrimary);
+        public bool IsAPrimary => IsPriorityPrimary || IsFallbackPrimary;
 
         //Modify to be 1 or 4/3
         public static float PrimaryTimerPriorityMultiplier => 1;
         public static float PrimaryTimerFallBackMultiplier => (float)4 / 3;
         public float PrimaryTimerMultiplier => IsPriorityPrimary ? PrimaryTimerPriorityMultiplier : PrimaryTimerFallBackMultiplier;
-        public bool IsBackup => MyIndex >= 0 && !IsPriorityPrimary && (ViewNumber > 0 || !IsFallbackPrimary);
+        public bool IsBackup => MyIndex >= 0 && !IsPriorityPrimary && !IsFallbackPrimary;
         public bool WatchOnly => MyIndex < 0;
         public Header PrevHeader => NativeContract.Ledger.GetHeader(Snapshot, Block[0].PrevHash);
         public int CountCommitted => ViewNumber == 0 ? Math.Max(CommitPayloads[0].Count(p => p != null), CommitPayloads[1].Count(p => p != null)) : CommitPayloads[0].Count(p => p != null);
