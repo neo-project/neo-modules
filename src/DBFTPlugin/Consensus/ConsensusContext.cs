@@ -43,6 +43,8 @@ namespace Neo.Consensus
         public ExtensiblePayload[][] CommitPayloads = new ExtensiblePayload[2][];
         public ExtensiblePayload[] ChangeViewPayloads;
         public ExtensiblePayload[] LastChangeViewPayloads;
+        public UInt256[] LastProposal;
+
         // LastSeenMessage array stores the height of the last seen message, for each validator.
         // if this node never heard from validator i, LastSeenMessage[i] will be -1.
         public Dictionary<ECPoint, uint> LastSeenMessage { get; private set; }
@@ -252,6 +254,7 @@ namespace Neo.Consensus
                     break;
                 }
                 cachedMessages = new Dictionary<UInt256, ConsensusMessage>();
+                LastProposal = Array.Empty<UInt256>();
                 for (uint pID = 0; pID <= 1; pID++)
                 {
                     Block[pID].Header.MerkleRoot = null;

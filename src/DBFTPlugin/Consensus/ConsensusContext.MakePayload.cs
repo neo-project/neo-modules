@@ -105,9 +105,21 @@ namespace Neo.Consensus
             TransactionHashes[pID] = hashes.ToArray();
         }
 
+        internal IEnumerable<Transaction> PickTransactions()
+        {
+            var verifiedTxes = neoSystem.MemPool.GetSortedVerifiedTransactions();
+            if (ViewNumber > 0 && LastProposal.Length > 0)
+            {
+                var txes = verifiedTxes.Where(p => LastProposal.Contains(p.Hash));
+                if (txes.Count() > LastProposal.Length / 2)
+                    return txes;
+            }
+            return verifiedTxes;
+        }
+
         public ExtensiblePayload MakePrepareRequest(uint pID)
         {
-            EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions(), pID);
+            EnsureMaxBlockLimitation(PickTransactions(), pID);
             Block[pID].Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
             Block[pID].Header.Nonce = GetNonce();
 
