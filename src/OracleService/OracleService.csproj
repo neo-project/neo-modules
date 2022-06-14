@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <PackageId>Neo.Plugins.OracleService</PackageId>
+    <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
   </PropertyGroup>
 
   <ItemGroup>
