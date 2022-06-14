@@ -451,29 +451,35 @@ namespace Neo.Network.RPC
         }
 
         /// <summary>
-        /// Returns part results from Iterator.
-        /// This RPC call does not affect the blockchain in any way.
-        /// </summary>
-        public async Task<JArray> TraverseIteratorAsync(string sessionId, string id, int count)
-        {
-            var result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
-            return result as JArray;
-        }
-
-        /// <summary>
         /// Returns all results from Iterator.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
-        public async IAsyncEnumerable<JObject> TraverseIteratorAllAsync(string sessionId, string id, int count)
+        public async IAsyncEnumerable<JObject> TraverseIteratorAsync(string sessionId, string id, int count, bool fetchAll = false)
         {
-            var array = await TraverseIteratorAsync(sessionId, id, count);
-            while (array != null && array.Count > 0)
+            var result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
+            var array = result as JArray;
+            if (fetchAll)
             {
-                foreach (var jObject in array)
+                while (array is { Count: > 0 })
                 {
-                    yield return jObject;
+                    foreach (var jObject in array)
+                    {
+                        yield return jObject;
+                    }
+                    result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
+                    array = result as JArray;
+                    ;
                 }
-                array = await TraverseIteratorAsync(sessionId, id, count);
+            }
+            else
+            {
+                if (array is { Count: > 0 })
+                {
+                    foreach (var jObject in array)
+                    {
+                        yield return jObject;
+                    }
+                }
             }
         }
 
