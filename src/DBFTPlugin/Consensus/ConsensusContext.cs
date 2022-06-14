@@ -264,6 +264,11 @@ namespace Neo.Consensus
             store.PutSync(ConsensusStateKey, this.ToArray());
         }
 
+        public void Delete()
+        {
+            store.Delete(ConsensusStateKey);
+        }
+
         public void Deserialize(ref MemoryReader reader)
         {
             Reset(0);
