@@ -263,7 +263,7 @@ namespace Neo.Network.RPC
             if (item is InteropInterface iop)
             {
                 var json = iop.GetInterface<JObject>();
-                return json != null && json.ContainsProperty("id") ? json["id"]?.AsString() : null;
+                return json["id"]?.GetString();
             }
             return null;
         }
