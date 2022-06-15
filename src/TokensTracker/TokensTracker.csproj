@@ -3,6 +3,7 @@
   <PropertyGroup>
     <PackageId>Neo.Plugins.TokensTracker</PackageId>
     <RootNamespace>Neo.Plugins</RootNamespace>
+    <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
   </PropertyGroup>
 
   <ItemGroup>
