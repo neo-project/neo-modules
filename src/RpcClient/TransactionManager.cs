@@ -62,13 +62,16 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Helper function for one-off TransactionManager creation
         /// </summary>
-        public static Task<TransactionManager> MakeTransactionAsync(RpcClient rpcClient, byte[] script, Signer[] signers = null, TransactionAttribute[] attributes = null)
+        public static Task<TransactionManager> MakeTransactionAsync(RpcClient rpcClient, ReadOnlyMemory<byte> script, Signer[] signers = null, TransactionAttribute[] attributes = null)
         {
             var factory = new TransactionManagerFactory(rpcClient);
             return factory.MakeTransactionAsync(script, signers, attributes);
         }
 
-        public static Task<TransactionManager> MakeTransactionAsync(RpcClient rpcClient, byte[] script, long systemFee, Signer[] signers = null, TransactionAttribute[] attributes = null)
+        /// <summary>
+        /// Helper function for one-off TransactionManager creation
+        /// </summary>
+        public static Task<TransactionManager> MakeTransactionAsync(RpcClient rpcClient, ReadOnlyMemory<byte> script, long systemFee, Signer[] signers = null, TransactionAttribute[] attributes = null)
         {
             var factory = new TransactionManagerFactory(rpcClient);
             return factory.MakeTransactionAsync(script, systemFee, signers, attributes);

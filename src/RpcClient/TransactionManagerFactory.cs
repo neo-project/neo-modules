@@ -32,15 +32,24 @@ namespace Neo.Network.RPC
         /// Create an unsigned Transaction object with given parameters.
         /// </summary>
         /// <param name="script">Transaction Script</param>
+        /// <param name="signers">Transaction Signers</param>
         /// <param name="attributes">Transaction Attributes</param>
         /// <returns></returns>
-        public async Task<TransactionManager> MakeTransactionAsync(byte[] script, Signer[] signers = null, TransactionAttribute[] attributes = null)
+        public async Task<TransactionManager> MakeTransactionAsync(ReadOnlyMemory<byte> script, Signer[] signers = null, TransactionAttribute[] attributes = null)
         {
             RpcInvokeResult invokeResult = await rpcClient.InvokeScriptAsync(script, signers).ConfigureAwait(false);
             return await MakeTransactionAsync(script, invokeResult.GasConsumed, signers, attributes).ConfigureAwait(false);
         }
 
-        public async Task<TransactionManager> MakeTransactionAsync(byte[] script, long systemFee, Signer[] signers = null, TransactionAttribute[] attributes = null)
+        /// <summary>
+        /// Create an unsigned Transaction object with given parameters.
+        /// </summary>
+        /// <param name="script">Transaction Script</param>
+        /// <param name="systemFee">Transaction System Fee</param>
+        /// <param name="signers">Transaction Signers</param>
+        /// <param name="attributes">Transaction Attributes</param>
+        /// <returns></returns>
+        public async Task<TransactionManager> MakeTransactionAsync(ReadOnlyMemory<byte> script, long systemFee, Signer[] signers = null, TransactionAttribute[] attributes = null)
         {
             uint blockCount = await rpcClient.GetBlockCountAsync().ConfigureAwait(false) - 1;
 
