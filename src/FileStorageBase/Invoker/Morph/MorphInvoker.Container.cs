@@ -29,14 +29,14 @@ namespace Neo.FileStorage.Invoker.Morph
         private const string StartEstimationMethod = "startContainerEstimation";
         private const string StopEstimationMethod = "stopContainerEstimation";
 
-        public void PutContainer(FSContainer cnr, Signature sig, SessionToken token)
+        public void PutContainer(FSContainer cnr, SignatureRFC6979 sig, SessionToken token)
         {
             if (cnr.NativeName != "")
                 Invoke(ContainerContractHash, PutNamedMethod, SideChainFee, cnr.ToByteArray(), sig.Sign.ToByteArray(), sig.Key.ToByteArray(), token?.ToByteArray() ?? System.Array.Empty<byte>(), cnr.NativeName, cnr.NativeZone);
             Invoke(ContainerContractHash, PutMethod, SideChainFee, cnr.ToByteArray(), sig.Sign.ToByteArray(), sig.Key.ToByteArray(), token?.ToByteArray() ?? System.Array.Empty<byte>());
         }
 
-        public void SetEACL(EACLTable eacl, Signature sig, SessionToken token)
+        public void SetEACL(EACLTable eacl, SignatureRFC6979 sig, SessionToken token)
         {
             Invoke(ContainerContractHash, SetEACLMethod, SideChainFee, eacl.ToByteArray(), sig.Sign.ToByteArray(), sig.Key.ToByteArray(), token?.ToByteArray() ?? System.Array.Empty<byte>());
         }
