@@ -246,7 +246,7 @@ namespace Neo.FileStorage.Tests
             }
             //Fake container
             KeyPair key = accounts.ToArray()[0].GetKey();
-            API.Refs.OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.ToArray().PublicKeyToScriptHash());
+            API.Refs.OwnerID ownerId = OwnerID.FromPublicKey(key.PublicKey.ToArray());
             Container container = new Container()
             {
                 Version = new API.Refs.Version(),
