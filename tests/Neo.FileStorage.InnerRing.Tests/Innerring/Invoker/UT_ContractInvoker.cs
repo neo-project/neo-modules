@@ -87,7 +87,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Invoker
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.ToArray().PublicKeyToScriptHash());
+            OwnerID ownerId = OwnerID.FromPublicKey(key.PublicKey.ToArray());
             Container container = new Container()
             {
                 Version = new API.Refs.Version(),

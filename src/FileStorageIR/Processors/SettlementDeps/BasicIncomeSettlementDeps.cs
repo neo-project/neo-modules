@@ -20,7 +20,7 @@ namespace Neo.FileStorage.InnerRing.Processors
 
         public BigInteger Balance(OwnerID id)
         {
-            return Invoker.BalanceOf(id.ToScriptHash().ToArray());
+            return Invoker.BalanceOf(id.ToScriptHash());
         }
 
         public Estimations[] Estimations(ulong epoch)

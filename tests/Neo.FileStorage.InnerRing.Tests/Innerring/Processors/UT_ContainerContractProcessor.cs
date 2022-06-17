@@ -47,7 +47,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.ToArray().PublicKeyToScriptHash());
+            OwnerID ownerId = OwnerID.FromPublicKey(key.PublicKey.ToArray());
             Container container = new()
             {
                 Version = new API.Refs.Version(),
@@ -86,7 +86,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
             state.isAlphabet = true;
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.ToArray().PublicKeyToScriptHash());
+            OwnerID ownerId = OwnerID.FromPublicKey(key.PublicKey.ToArray());
             Container container = new()
             {
                 Version = API.Refs.Version.SDKVersion(),
@@ -162,7 +162,7 @@ namespace Neo.FileStorage.InnerRing.Tests.InnerRing.Processors
         {
             IEnumerable<WalletAccount> accounts = wallet.GetAccounts();
             KeyPair key = accounts.ToArray()[0].GetKey();
-            OwnerID ownerId = OwnerID.FromScriptHash(key.PublicKey.ToArray().PublicKeyToScriptHash());
+            OwnerID ownerId = OwnerID.FromPublicKey(key.PublicKey.ToArray());
             Container container = new()
             {
                 Version = new API.Refs.Version()

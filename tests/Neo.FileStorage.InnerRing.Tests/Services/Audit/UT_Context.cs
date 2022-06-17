@@ -72,7 +72,7 @@ namespace Neo.FileStorage.InnerRing.Tests.Services.Audit
             FSContainer container = new()
             {
                 Version = API.Refs.Version.SDKVersion(),
-                OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
+                OwnerId = OwnerID.FromPublicKey(key.PublicKey()),
                 NonceUUID = Guid.NewGuid(),
                 BasicAcl = (uint)BasicAcl.PublicBasicRule,
                 PlacementPolicy = new(2, new Replica[] { new Replica(2, "") }, null, null)
@@ -83,7 +83,7 @@ namespace Neo.FileStorage.InnerRing.Tests.Services.Audit
 
                 Header = new Header
                 {
-                    OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
+                    OwnerId = OwnerID.FromPublicKey(key.PublicKey()),
                     ContainerId = container.CalCulateAndGetId,
                     PayloadLength = (ulong)payload.Length,
                     HomomorphicHash = new()

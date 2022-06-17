@@ -124,7 +124,7 @@ namespace Neo.FileStorage.InnerRing.Processors
             ContainerWithSignature cnr = new()
             {
                 Container = container,
-                Signature = new Signature()
+                Signature = new SignatureRFC6979()
                 {
                     Key = ByteString.CopyFrom(putEvent.PublicKey),
                     Sign = ByteString.CopyFrom(putEvent.Signature)
@@ -188,9 +188,9 @@ namespace Neo.FileStorage.InnerRing.Processors
             try
             {
                 var table = EACLTable.Parser.ParseFrom(setEACLEvent.Table);
-                var signature = Signature.Parser.ParseFrom(setEACLEvent.Signature);
+                var signature = SignatureRFC6979.Parser.ParseFrom(setEACLEvent.SignatureRFC6979);
                 var sessionToken = SessionToken.Parser.ParseFrom(setEACLEvent.Token);
-                if (!setEACLEvent.PublicKey.LoadPublicKey().VerifyHash(table.Sha256Checksum().Sum.ToByteArray(), setEACLEvent.Signature))
+                if (!setEACLEvent.PublicKey.LoadPublicKey().VerifyHash(table.Sha256Checksum().Sum.ToByteArray(), setEACLEvent.SignatureRFC6979))
                 {
                     Utility.Log(Name, LogLevel.Error, "invalid signature");
                     return;
@@ -225,7 +225,7 @@ namespace Neo.FileStorage.InnerRing.Processors
                 CheckKeyOwnershipWithToken(ownerIDSource, key, token);
                 return;
             }
-            if (ownerIDSource.Container.OwnerId.Equals(OwnerID.FromScriptHash(key.PublicKeyToScriptHash()))) return;
+            if (ownerIDSource.Container.OwnerId.Equals(OwnerID.FromPublicKey(key))) return;
             var ownerKeys = MorphInvoker.AccountKeys(ownerIDSource.Container.OwnerId.Value.ToByteArray());
             if (ownerKeys is null) throw new FormatException("could not received owner keys");
             if (!ownerKeys.Any(p => p.Equals(key))) throw new FormatException($"key {key.ToHexString()} is not tied to the owner of the container");
