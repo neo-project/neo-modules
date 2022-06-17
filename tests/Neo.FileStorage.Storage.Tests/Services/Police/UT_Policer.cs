@@ -86,7 +86,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Police
             var container = new Container
             {
                 Version = API.Refs.Version.SDKVersion(),
-                OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
+                OwnerId = OwnerID.FromPublicKey(key.PublicKey()),
                 Nonce = Guid.NewGuid().ToByteString(),
                 BasicAcl = BasicAcl.PublicBasicRule,
                 PlacementPolicy = new(1, new Replica[] { new Replica(2, "") }, null, null),
@@ -131,7 +131,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Police
             var container = new Container
             {
                 Version = API.Refs.Version.SDKVersion(),
-                OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
+                OwnerId = OwnerID.FromPublicKey(key.PublicKey()),
                 Nonce = Guid.NewGuid().ToByteString(),
                 BasicAcl = BasicAcl.PublicBasicRule,
                 PlacementPolicy = new(1, new Replica[] { new Replica(2, "") }, null, null),
@@ -178,7 +178,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Police
             var container = new Container
             {
                 Version = API.Refs.Version.SDKVersion(),
-                OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
+                OwnerId = OwnerID.FromPublicKey(key.PublicKey()),
                 Nonce = Guid.NewGuid().ToByteString(),
                 BasicAcl = BasicAcl.PublicBasicRule,
                 PlacementPolicy = new(1, new Replica[] { new Replica(2, "") }, null, null),

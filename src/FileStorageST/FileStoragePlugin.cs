@@ -234,16 +234,14 @@ namespace Neo.FileStorage.Storage
             invoker.ContainerContractHash = Settings.Default.ContainerContractHash;
             invoker.NetMapContractHash = Settings.Default.NetmapContractHash;
             var epoch = invoker.Epoch() - 1;
-            Console.WriteLine($"Epoch: {epoch}");
             var ids = invoker.ListSizes(epoch);
             foreach (var id in ids)
             {
                 var estimations = invoker.GetContainerSize(id);
-                Console.WriteLine($"ContainerID: {estimations.ContainerID.String()}");
                 if (estimations.AllEstimation.Count > 0)
                 {
                     foreach (var e in estimations.AllEstimation)
-                        Console.WriteLine($"reporter={e.Reporter.PublicKeyToScriptHash().ToAddress(MorphSystem.Settings.AddressVersion)}, size={e.Size}");
+                        Console.WriteLine($"reporter={e.Reporter.PublicKeyToAddress()}, size={e.Size}");
                 }
             }
         }
@@ -298,7 +296,7 @@ namespace Neo.FileStorage.Storage
                 Console.WriteLine("[");
                 foreach (var n in ns)
                 {
-                    Console.WriteLine($" {n.PublicKey.PublicKeyToScriptHash().ToAddress(MorphSystem.Settings.AddressVersion)} {string.Join(",", n.Addresses)}");
+                    Console.WriteLine($" {n.PublicKey.PublicKeyToAddress()} {string.Join(",", n.Addresses)}");
                 }
                 Console.WriteLine("]");
             }

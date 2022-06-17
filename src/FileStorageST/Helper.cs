@@ -80,6 +80,12 @@ namespace Neo.FileStorage.Storage
             if (sig.Key is null || sig.Sign is null) throw new InvalidOperationException("invalid signature");
         }
 
+        public static void SignatureRFC6979Check(SignatureRFC6979 sig)
+        {
+            if (sig is null) throw new InvalidOperationException("signature missing");
+            if (sig.Key is null || sig.Sign is null) throw new InvalidOperationException("invalid signature");
+        }
+
         public static void ContainerCheck(Container container)
         {
             if (container is null) throw new InvalidOperationException("container is missing");

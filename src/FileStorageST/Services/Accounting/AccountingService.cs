@@ -14,7 +14,7 @@ namespace Neo.FileStorage.Storage.Services.Accounting
         {
             var owner = request.Body?.OwnerId;
             OwnerIDCheck(owner);
-            var balance = MorphInvoker.BalanceOf(request.Body.OwnerId.ToScriptHash().ToArray());
+            var balance = MorphInvoker.BalanceOf(owner.ToScriptHash());
             var decimals = MorphInvoker.BalanceDecimals();
             var resp = new BalanceResponse
             {

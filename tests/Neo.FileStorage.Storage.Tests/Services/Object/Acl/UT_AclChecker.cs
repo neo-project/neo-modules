@@ -68,7 +68,7 @@ namespace Neo.FileStorage.Storage.Tests.Services.Object.Acl
                             {
                                 Header = new()
                                 {
-                                    OwnerId = withOwner ? OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()) : null,
+                                    OwnerId = withOwner ? OwnerID.FromPublicKey(key.PublicKey()) : null,
                                 }
                             }
                         }

@@ -10,6 +10,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
+    <None Remove="publish\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,6 +20,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FileStorageBase\FileStorageBase.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="publish\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="publish\**" />
   </ItemGroup>
 
 </Project>

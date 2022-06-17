@@ -20,7 +20,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
             cache = new(size, TimeSpan.FromMilliseconds(ttl), cid =>
              {
                  var result = invoker.GetEACL(cid);
-                 if (!result.Signature.VerifyMessagePart(result.Table))
+                 if (!result.Signature.VerifyRFC6979(result.Table))
                      throw new InvalidOperationException("incorrect signature of eacl from morph client");
                  return result.Table;
              });

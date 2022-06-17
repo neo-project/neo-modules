@@ -97,7 +97,7 @@ namespace Neo.FileStorage.Storage.Tests.Core
         public void TestObjectInvalidKey()
         {
             var key = RandomPrivatekey().LoadPrivateKey();
-            var owner = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash());
+            var owner = OwnerID.FromPublicKey(key.PublicKey());
             FSObject obj = new()
             {
                 Header = new()

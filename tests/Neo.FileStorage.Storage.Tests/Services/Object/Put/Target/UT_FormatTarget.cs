@@ -31,7 +31,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
                 Header = new()
                 {
                     ContainerId = cid,
-                    OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
+                    OwnerId = OwnerID.FromPublicKey(key.PublicKey()),
                 },
                 Payload = ByteString.CopyFrom(payload),
             };
@@ -70,7 +70,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
                 Header = new()
                 {
                     ContainerId = cid,
-                    OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
+                    OwnerId = OwnerID.FromPublicKey(key.PublicKey()),
                 },
                 Payload = ByteString.Empty,
             };
@@ -79,7 +79,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Put
                 Header = new()
                 {
                     ContainerId = cid,
-                    OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
+                    OwnerId = OwnerID.FromPublicKey(key.PublicKey()),
                 },
                 Payload = ByteString.CopyFrom(child_payload),
             };

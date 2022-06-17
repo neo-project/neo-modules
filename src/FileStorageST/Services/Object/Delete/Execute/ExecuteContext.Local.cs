@@ -53,7 +53,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Delete.Execute
             TombstoneObject.Header.OwnerId = Prm.SessionToken?.Body?.OwnerId;
             if (TombstoneObject.Header.OwnerId is null)
             {
-                TombstoneObject.Header.OwnerId = OwnerID.FromScriptHash(DeleteService.LocalInfo.PublicKey.PublicKeyToScriptHash());
+                TombstoneObject.Header.OwnerId = OwnerID.FromPublicKey(DeleteService.LocalInfo.PublicKey);
             }
             TombstoneObject.Header.ObjectType = API.Object.ObjectType.Tombstone;
             TombstoneObject.Payload = payload;

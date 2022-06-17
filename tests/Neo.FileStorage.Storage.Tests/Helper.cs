@@ -36,7 +36,7 @@ namespace Neo.FileStorage.Storage.Tests
         public static OwnerID RandomOwnerID()
         {
             var key = RandomPrivatekey().LoadPrivateKey();
-            return OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash());
+            return OwnerID.FromPublicKey(key.PublicKey());
         }
 
         public static SessionToken.Types.Body.Types.TokenLifetime RandomSessionTokenLifeTime()
@@ -112,7 +112,7 @@ namespace Neo.FileStorage.Storage.Tests
             {
                 Header = new()
                 {
-                    OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
+                    OwnerId = OwnerID.FromPublicKey(key.PublicKey()),
                     ContainerId = cid,
                     Version = API.Refs.Version.SDKVersion(),
                     ObjectType = ObjectType.Regular,
@@ -183,7 +183,7 @@ namespace Neo.FileStorage.Storage.Tests
                 },
                 Body = new()
                 {
-                    OwnerId = OwnerID.FromScriptHash(key.PublicKey().PublicKeyToScriptHash()),
+                    OwnerId = OwnerID.FromPublicKey(key.PublicKey()),
                     EaclTable = new()
                     {
                         ContainerId = RandomContainerID(),

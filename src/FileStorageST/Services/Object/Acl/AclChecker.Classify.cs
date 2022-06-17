@@ -3,7 +3,6 @@ using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.Session;
-using Neo.FileStorage.Invoker.Morph;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,18 +17,18 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
             if (cid is null)
                 throw new ArgumentNullException(nameof(cid));
             Role role;
-            bool is_inner = false;
-            byte[] public_key = RequestOwner(info);
-            OwnerID owner = OwnerID.FromScriptHash(public_key.PublicKeyToScriptHash());
+            var publicKey = RequestOwner(info);
+            var isInner = IsInnerRingKey(publicKey);
+            var owner = OwnerID.FromPublicKey(publicKey);
             if (owner.Equals(container.OwnerId))
                 role = Role.User;
-            else if (is_inner = IsInnerRingKey(public_key))
+            else if (isInner)
                 role = Role.System;
-            else if (IsContainerKey(public_key, cid, container))
+            else if (IsContainerKey(publicKey, cid, container))
                 role = Role.System;
             else
                 role = Role.Others;
-            return (role, public_key, is_inner);
+            return (role, publicKey, isInner);
         }
 
         private byte[] RequestOwner(RequestInfo info)
@@ -49,7 +48,7 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
             if (!token.Signature.VerifyMessagePart(token.Body)) throw new InvalidOperationException($"{nameof(OwnerFromToken)} invalid session token signature");
             var tokenIssueKey = token.Signature.Key.ToByteArray();
             var tokenOwner = token.Body.OwnerId;
-            if (!OwnerID.FromScriptHash(tokenIssueKey.PublicKeyToScriptHash()).Equals(tokenOwner)) throw new InvalidOperationException($"{nameof(OwnerFromToken)} invalid session token owner");
+            if (!OwnerID.FromPublicKey(tokenIssueKey).Equals(tokenOwner)) throw new InvalidOperationException($"{nameof(OwnerFromToken)} invalid session token owner");
             return tokenIssueKey;
         }
 
@@ -73,8 +72,8 @@ namespace Neo.FileStorage.Storage.Services.Object.Acl
             try
             {
                 var nm = NetmapSource.GetNetMapByDiff(0);
-                var is_in = LookUpKeyInContainer(nm, key, cid, container);
-                if (is_in) return true;
+                var isIn = LookUpKeyInContainer(nm, key, cid, container);
+                if (isIn) return true;
                 nm = NetmapSource.GetNetMapByDiff(1);
                 return LookUpKeyInContainer(nm, key, cid, container);
             }

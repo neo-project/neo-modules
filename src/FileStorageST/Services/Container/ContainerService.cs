@@ -31,7 +31,7 @@ namespace Neo.FileStorage.Storage.Services.Container
             var sig = request.Body?.Signature;
             var cid = request.Body?.ContainerId;
             ContainerIDCheck(cid);
-            SignatureCheck(sig);
+            SignatureRFC6979Check(sig);
             var sessionToken = OriginalSessionToken(request.MetaHeader);
             if (sessionToken is not null && sessionToken.Body.ContextCase != SessionToken.Types.Body.ContextOneofCase.Container)
                 throw new InvalidOperationException(SessionTokenError);
@@ -94,7 +94,7 @@ namespace Neo.FileStorage.Storage.Services.Container
             var container = request.Body?.Container;
             var signature = request.Body?.Signature;
             ContainerCheck(container);
-            SignatureCheck(signature);
+            SignatureRFC6979Check(signature);
             var sessionToken = OriginalSessionToken(request.MetaHeader);
             if (sessionToken is not null && sessionToken.Body.ContextCase != SessionToken.Types.Body.ContextOneofCase.Container)
                 throw new InvalidOperationException(SessionTokenError);
@@ -115,7 +115,7 @@ namespace Neo.FileStorage.Storage.Services.Container
             var eacl = request.Body?.Eacl;
             var sig = request.Body?.Signature;
             EACLCheck(eacl);
-            SignatureCheck(sig);
+            SignatureRFC6979Check(sig);
             var sessionToken = OriginalSessionToken(request.MetaHeader);
             if (sessionToken is not null && sessionToken.Body.ContextCase != SessionToken.Types.Body.ContextOneofCase.Container)
                 throw new InvalidOperationException(SessionTokenError);
