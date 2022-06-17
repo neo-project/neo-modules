@@ -9,10 +9,10 @@
 
   <ItemGroup>
     <PackageReference Include="Multiformats.Address" Version="1.1.1" />
+    <PackageReference Include="NeoFS.API" Version="0.0.98" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\neofs-api-csharp\src\Neo.FileStorage.API\Neo.FileStorage.API.csproj" />
     <ProjectReference Include="..\LevelDBStore\LevelDBStore.csproj" />
   </ItemGroup>
 

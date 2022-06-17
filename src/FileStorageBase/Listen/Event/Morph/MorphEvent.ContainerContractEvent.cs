@@ -41,7 +41,7 @@ namespace Neo.FileStorage.Listen.Event.Morph
     public class ContainerSetEACLEvent : ContractEvent
     {
         public byte[] Table;
-        public byte[] Signature;
+        public byte[] SignatureRFC6979;
         public byte[] PublicKey;
         public byte[] Token;
 
@@ -50,7 +50,7 @@ namespace Neo.FileStorage.Listen.Event.Morph
             var containerSetEACLEvent = new ContainerSetEACLEvent();
             if (eventParams.Count != 4) throw new FormatException();
             containerSetEACLEvent.Table = eventParams[0].GetSpan().ToArray();
-            containerSetEACLEvent.Signature = eventParams[1].GetSpan().ToArray();
+            containerSetEACLEvent.SignatureRFC6979 = eventParams[1].GetSpan().ToArray();
             containerSetEACLEvent.PublicKey = eventParams[2].GetSpan().ToArray();
             containerSetEACLEvent.Token = eventParams[3].GetSpan().ToArray();
             return containerSetEACLEvent;
