@@ -1,0 +1,67 @@
+{
+  "PluginConfiguration": {
+    "AutoStart": false,
+    "BootstrapInterval": 2,
+    "TombstoneLifetime": 5,
+    "SideChainFee": 5000,
+    "Administrators": [
+      "02cd5a5547119e24feaa7c2a0f37b8c9366216bab7054de0065c9be42084003c8a"
+    ],
+    "Grpc": {
+      "Port": 8080,
+      "SslCert": "",
+      "SslCertPassword": "",
+      "LogEnabled": false,
+      "SessionStorePath": "./Data_Session"
+    },
+    "NodeInfo": {
+      "Attributes": [
+        "Capacity: 0",
+        "Price: 22",
+        "UN-LOCODE: CN SGH"
+      ],
+      "Addresses": [
+        "/ip4/0.0.0.0/tcp/8080"
+      ]
+    },
+    "Replicate": {
+      "Timeout": 5
+    },
+    "LocalStorage": {
+      "Path": "./Data",
+      "Shards": [
+        {
+          "UseWriteCache": true,
+          "RemoveBatchSize": 100,
+          "RemoverInterval": 60000,
+          "WriteCache": {
+            "MaxCacheSize": 1073741824,
+            "MaxMemorySize": 1073741824,
+            "MaxObjectSize": 67108864,
+            "SmallObjectSize": 32768
+          },
+          "BlobStorage": {
+            "Compress": {
+              "Enable": true,
+              "ExcludeContentTypes": [
+                "video/*",
+                "audio/*"
+              ]
+            },
+            "SmallSizeLimit": 1048576,
+            "FSTree": {
+              "ShallowDepth": 4,
+              "DirectoryNameLength": 2
+            },
+            "Blobovniczas": {
+              "BlobSize": 1073741824,
+              "ShallowDepth": 1,
+              "ShallowWidth": 2,
+              "OpenCacheSize": 8
+            }
+          }
+        }
+      ]
+    }
+  }
+}
