@@ -224,37 +224,34 @@ namespace Neo.Plugins
         protected virtual JObject GetCandidates(JArray _params)
         {
             using var snapshot = system.GetSnapshot();
-            var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, system.Settings.ValidatorsCount);
             byte[] script;
             using (ScriptBuilder sb = new())
             {
                 script = sb.EmitDynamicCall(NativeContract.NEO.Hash, "getCandidates", null).ToArray();
             }
-            Transaction tx = null;
-            using ApplicationEngine engine = ApplicationEngine.Run(script, system.StoreView, container: tx, settings: system.Settings, gas: settings.MaxGasInvoke, diagnostic: null);
+            using ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, settings: system.Settings, gas: settings.MaxGasInvoke);
             JObject json = new();
-            JArray jArray = new();
             try
             {
                 var resultstack = engine.ResultStack.ToArray();
                 if (resultstack.Length > 0)
                 {
+                    JArray jArray = new();
+                    var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, system.Settings.ValidatorsCount);
+
                     foreach (var item in resultstack)
                     {
                         var value = (VM.Types.Array)item;
-
                         foreach (Struct ele in value)
                         {
                             var publickey = ele[0].GetSpan().ToHexString();
-                            var votes = ele[1].GetInteger();
                             json["publickey"] = publickey;
-                            json["votes"] = votes.ToString();
+                            json["votes"] = ele[1].GetInteger().ToString();
                             json["active"] = validators.ToByteArray().ToHexString().Contains(publickey);
                             jArray.Add(json);
                             json = new();
                         }
                         return jArray;
-
                     }
                 }
             }
