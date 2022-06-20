@@ -1,4 +1,5 @@
 using Google.Protobuf;
+using Neo.FileStorage.API.Container;
 using Neo.FileStorage.API.Cryptography;
 using Neo.FileStorage.API.Netmap;
 using Neo.FileStorage.API.Object;
@@ -277,6 +278,58 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Engine
                 try
                 {
                     shard.Inhume(tombstone, address);
+                    ok = true;
+                    if (!root) return true;
+                }
+                catch (Exception e)
+                {
+                    Utility.Log(nameof(StorageEngine), LogLevel.Debug, $"could not inhume address, address={address}, error={e.Message}");
+                    continue;
+                }
+            }
+            return ok;
+        }
+
+        public void Lock(ContainerID cid, ObjectID locker, params ObjectID[] locked)
+        {
+            foreach (var lkd in locked)
+            {
+                if (!LockSingle(cid, locker, lkd, true))
+                    LockSingle(cid, locker, lkd, false);
+            }
+        }
+
+        public bool LockSingle(ContainerID cid, ObjectID locker, ObjectID locked, bool check_exists)
+        {
+            bool root = false;
+            bool ok = false;
+            var address = new Address { ContainerId = cid, ObjectId = locked };
+            foreach (var shard in SortedShards(address))
+            {
+                if (check_exists)
+                {
+                    try
+                    {
+                        if (!shard.Exists(address))
+                            continue;
+                    }
+                    catch (ObjectAlreadyRemovedException)
+                    {
+                        return true;
+                    }
+                    catch (SplitInfoException)
+                    {
+                        root = true;
+                    }
+                    catch (Exception e)
+                    {
+                        Utility.Log(nameof(StorageEngine), LogLevel.Debug, $"could not check exists when inhume, error={e.Message}");
+                        continue;
+                    }
+                }
+                try
+                {
+                    shard.Lock(cid, locker, locked);
                     ok = true;
                     if (!root) return true;
                 }

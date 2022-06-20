@@ -34,7 +34,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
             }
             if (InBucket(Primarykey(address))) return true;
             List<byte[]> keys = new();
-            db.Iterate(Concat(ParentPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray()),
+            db.Iterate(Concat(parentPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray()),
                 (key, _) =>
                 {
                     keys.Add(key);

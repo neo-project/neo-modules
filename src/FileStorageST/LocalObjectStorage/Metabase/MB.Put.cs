@@ -51,7 +51,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
                 db.Put(item.Item1, EncodeObjectIDList(list));
             }
             foreach (var key in FakeBucketTreeIndexes(obj))
-                db.Put(key, ZeroValue);
+                db.Put(key, zeroValue);
             if (obj.ObjectType == ObjectType.Regular && !is_parent)
                 ChangeContainerSize(obj.ContainerId, obj.PayloadSize, true);
         }
@@ -100,16 +100,20 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
             List<(byte[], byte[])> result = new();
             if (si is null)
             {
+                var header = obj.CutPayload().ToByteArray();
                 switch (obj.ObjectType)
                 {
                     case ObjectType.Regular:
-                        result.Add((Primarykey(obj.Address), obj.CutPayload().ToByteArray()));
+                        result.Add((Primarykey(obj.Address), header));
                         break;
                     case ObjectType.Tombstone:
-                        result.Add((TombstoneKey(obj.Address), obj.CutPayload().ToByteArray()));
+                        result.Add((TombstoneKey(obj.Address), header));
                         break;
                     case ObjectType.StorageGroup:
-                        result.Add((StorageGroupKey(obj.Address), obj.CutPayload().ToByteArray()));
+                        result.Add((StorageGroupKey(obj.Address), header));
+                        break;
+                    case ObjectType.Lock:
+                        result.Add((LockerKey(obj.Address), header));
                         break;
                     default:
                         throw new UnknownObjectTypeException();

@@ -217,6 +217,10 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Shards
             throw new ObjectNotFoundException();
         }
 
+        public void Lock(ContainerID cid, ObjectID locker, params ObjectID[] locked)
+        {
+            metabase.Lock(cid, locker, locked);
+        }
 
         public List<FSAddress> Select(ContainerID cid, SearchFilters filter)
         {

@@ -14,20 +14,22 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
     public sealed partial class MB : IDisposable
     {
         public const string DefaultDirName = "Metabase";
-        private readonly byte[] ContainerPrefix = new byte[] { 0x00 };
-        private readonly byte[] PrimaryPrefix = new byte[] { 0x01 };
-        private readonly byte[] GraveYardPrefix = new byte[] { 0x02 };
-        private readonly byte[] TombstonePrefix = new byte[] { 0x03 };
-        private readonly byte[] StorageGroupPrefix = new byte[] { 0x04 };
-        private readonly byte[] RootPrefix = new byte[] { 0x05 };
-        private readonly byte[] ParentPrefix = new byte[] { 0x06 };
-        private readonly byte[] SmallPrefix = new byte[] { 0x07 };
-        private readonly byte[] ToMoveItPrefix = new byte[] { 0x08 };
-        private readonly byte[] PayloadHashPrefix = new byte[] { 0x09 };
-        private readonly byte[] SplitPrefix = new byte[] { 0x0a };
-        private readonly byte[] OwnerPrefix = new byte[] { 0x0b };
-        private readonly byte[] AttributePrefix = new byte[] { 0x0c };
-        private readonly byte[] ZeroValue = new byte[] { 0xFF };
+        private readonly byte[] containerPrefix = new byte[] { 0x00 };
+        private readonly byte[] primaryPrefix = new byte[] { 0x01 };
+        private readonly byte[] graveYardPrefix = new byte[] { 0x02 };
+        private readonly byte[] tombstonePrefix = new byte[] { 0x03 };
+        private readonly byte[] storageGroupPrefix = new byte[] { 0x04 };
+        private readonly byte[] rootPrefix = new byte[] { 0x05 };
+        private readonly byte[] parentPrefix = new byte[] { 0x06 };
+        private readonly byte[] smallPrefix = new byte[] { 0x07 };
+        private readonly byte[] toMoveItPrefix = new byte[] { 0x08 };
+        private readonly byte[] payloadHashPrefix = new byte[] { 0x09 };
+        private readonly byte[] splitPrefix = new byte[] { 0x0a };
+        private readonly byte[] ownerPrefix = new byte[] { 0x0b };
+        private readonly byte[] attributePrefix = new byte[] { 0x0c };
+        private readonly byte[] lockedPrefix = new byte[] { 0x0d };
+        private readonly byte[] lockerPrefix = new byte[] { 0x0e };
+        private readonly byte[] zeroValue = new byte[] { 0xFF };
         private readonly string path;
         private IDB db;
         private readonly Dictionary<MatchType, Func<string, byte[], string, bool>> matchers;
@@ -120,7 +122,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         private byte[] ContainerSizeKey(ContainerID cid)
         {
             if (cid is null) throw new ArgumentNullException(nameof(cid));
-            return Concat(ContainerPrefix, cid.Value.ToByteArray());
+            return Concat(containerPrefix, cid.Value.ToByteArray());
         }
 
         private ContainerID ParseContainerSizeKey(byte[] key)
@@ -135,7 +137,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         private byte[] GraveYardKey(Address address)
         {
             if (address is null) throw new ArgumentNullException(nameof(address));
-            return Concat(GraveYardPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
+            return Concat(graveYardPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
         }
 
         private Address ParseGraveYardKey(byte[] key)
@@ -146,7 +148,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         private byte[] Primarykey(Address address)
         {
             if (address is null) throw new ArgumentNullException(nameof(address));
-            return Concat(PrimaryPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
+            return Concat(primaryPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
         }
 
         private Address ParsePrimaryKey(byte[] key)
@@ -157,7 +159,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         private byte[] TombstoneKey(Address address)
         {
             if (address is null) throw new ArgumentNullException(nameof(address));
-            return Concat(TombstonePrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
+            return Concat(tombstonePrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
         }
 
         private Address ParseTombstoneKey(byte[] key)
@@ -168,7 +170,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         private byte[] StorageGroupKey(Address address)
         {
             if (address is null) throw new ArgumentNullException(nameof(address));
-            return Concat(StorageGroupPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
+            return Concat(storageGroupPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
         }
 
         private Address ParseStorageGroupKey(byte[] key)
@@ -179,7 +181,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         private byte[] RootKey(Address address)
         {
             if (address is null) throw new ArgumentNullException(nameof(address));
-            return Concat(RootPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
+            return Concat(rootPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
         }
 
         private Address ParseRootKey(byte[] key)
@@ -191,7 +193,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         private byte[] ParentKey(ContainerID cid, ObjectID parent)
         {
             if (parent is null || cid is null) throw new ArgumentException();
-            return Concat(ParentPrefix, cid.Value.ToByteArray(), parent.Value.ToByteArray());
+            return Concat(parentPrefix, cid.Value.ToByteArray(), parent.Value.ToByteArray());
         }
 
         private void ParseParentKey(byte[] key, out ContainerID cid, out ObjectID parent)
@@ -204,7 +206,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         private byte[] SmallKey(Address address)
         {
             if (address is null) throw new ArgumentNullException(nameof(address));
-            return Concat(SmallPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
+            return Concat(smallPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
         }
 
         private Address ParseSmallKey(byte[] key)
@@ -215,7 +217,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         private byte[] ToMoveItKey(Address address)
         {
             if (address is null) throw new ArgumentNullException(nameof(address));
-            return Concat(ToMoveItPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
+            return Concat(toMoveItPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
         }
 
         private Address ParseToMoveItKey(byte[] key)
@@ -226,7 +228,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         private byte[] PayloadHashKey(ContainerID cid, Checksum checksum)
         {
             if (cid is null || checksum is null) throw new ArgumentNullException();
-            return Concat(PayloadHashPrefix, cid.Value.ToByteArray(), checksum.Sum.ToByteArray());
+            return Concat(payloadHashPrefix, cid.Value.ToByteArray(), checksum.Sum.ToByteArray());
         }
 
         private void ParsePayloadHashKey(byte[] key, out ContainerID cid, out byte[] sum)
@@ -245,7 +247,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         private byte[] SplitKey(ContainerID cid, SplitID sid)
         {
             if (cid is null || sid is null) throw new ArgumentNullException();
-            return Concat(SplitPrefix, cid.Value.ToByteArray(), sid.ToByteArray());
+            return Concat(splitPrefix, cid.Value.ToByteArray(), sid.ToByteArray());
         }
 
         private void ParseSplitKey(byte[] key, out ContainerID cid, out SplitID sid)
@@ -265,7 +267,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         private byte[] OwnerKey(Address address, OwnerID wid)
         {
             if (address is null || wid is null) throw new ArgumentNullException();
-            return Concat(OwnerPrefix, address.ContainerId.Value.ToByteArray(), wid.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
+            return Concat(ownerPrefix, address.ContainerId.Value.ToByteArray(), wid.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
         }
 
         private void ParseOwnerKey(byte[] key, out Address address, out OwnerID wid)
@@ -297,7 +299,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         private byte[] AttributeKey(Address address, Header.Types.Attribute attr)
         {
             if (address is null || attr is null) throw new ArgumentNullException();
-            return Concat(AttributePrefix, address.ContainerId.Value.ToByteArray(), StrictUTF8.GetBytes(attr.Key), StrictUTF8.GetBytes(attr.Value), address.ObjectId.Value.ToByteArray());
+            return Concat(attributePrefix, address.ContainerId.Value.ToByteArray(), StrictUTF8.GetBytes(attr.Key), StrictUTF8.GetBytes(attr.Value), address.ObjectId.Value.ToByteArray());
         }
 
         private void ParseAttributeKey(byte[] key, out Address address, out byte[] attribute)
@@ -317,6 +319,28 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
                 }
             };
             attribute = key[(1 + ContainerID.ValueSize)..^ObjectID.ValueSize];
+        }
+
+        private byte[] LockedKey(Address address)
+        {
+            if (address is null) throw new ArgumentNullException(nameof(address));
+            return Concat(lockedPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
+        }
+
+        private void ParseLockedKey(byte[] key, out Address address)
+        {
+            address = ParseAddress(key);
+        }
+
+        private byte[] LockerKey(Address address)
+        {
+            if (address is null) throw new ArgumentNullException(nameof(address));
+            return Concat(lockerPrefix, address.ContainerId.Value.ToByteArray(), address.ObjectId.Value.ToByteArray());
+        }
+
+        private void ParseLockerKey(byte[] key, out Address address)
+        {
+            address = ParseAddress(key);
         }
     }
 }

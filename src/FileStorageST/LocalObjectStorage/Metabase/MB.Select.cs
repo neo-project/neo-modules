@@ -47,10 +47,10 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
 
         private void SelectAll(ContainerID cid, Dictionary<Address, int> to)
         {
-            SelectAllFromBucket(cid, Concat(PrimaryPrefix, cid.Value.ToByteArray()), to, 0);
-            SelectAllFromBucket(cid, Concat(TombstonePrefix, cid.Value.ToByteArray()), to, 0);
-            SelectAllFromBucket(cid, Concat(StorageGroupPrefix, cid.Value.ToByteArray()), to, 0);
-            SelectAllFromBucket(cid, Concat(ParentPrefix, cid.Value.ToByteArray()), to, 0);
+            SelectAllFromBucket(cid, Concat(primaryPrefix, cid.Value.ToByteArray()), to, 0);
+            SelectAllFromBucket(cid, Concat(tombstonePrefix, cid.Value.ToByteArray()), to, 0);
+            SelectAllFromBucket(cid, Concat(storageGroupPrefix, cid.Value.ToByteArray()), to, 0);
+            SelectAllFromBucket(cid, Concat(parentPrefix, cid.Value.ToByteArray()), to, 0);
         }
 
         private void SelectAllFromBucket(ContainerID cid, byte[] prefix, Dictionary<Address, int> to, int fnum)
@@ -86,31 +86,31 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
                     SelectObjectID(cid, filter, to, fnum);
                     break;
                 case Filter.FilterHeaderOwnerID:
-                    SelectFromFKBT(cid, Concat(OwnerPrefix, cid.Value.ToByteArray()), filter, to, fnum);
+                    SelectFromFKBT(cid, Concat(ownerPrefix, cid.Value.ToByteArray()), filter, to, fnum);
                     break;
                 case Filter.FilterHeaderPayloadHash:
-                    SelectFromList(cid, Concat(PayloadHashPrefix, cid.Value.ToByteArray()), filter, to, fnum);
+                    SelectFromList(cid, Concat(payloadHashPrefix, cid.Value.ToByteArray()), filter, to, fnum);
                     break;
                 case Filter.FilterHeaderObjectType:
                     foreach (var p in KeyPrefixForType(cid, filter.MatchType, filter.Value))
                         SelectAllFromBucket(cid, p, to, fnum);
                     break;
                 case Filter.FilterHeaderParent:
-                    SelectFromList(cid, Concat(ParentPrefix, cid.Value.ToByteArray()), filter, to, fnum);
+                    SelectFromList(cid, Concat(parentPrefix, cid.Value.ToByteArray()), filter, to, fnum);
                     break;
                 case Filter.FilterHeaderSplitID:
-                    SelectFromList(cid, Concat(SplitPrefix, cid.Value.ToByteArray()), filter, to, fnum);
+                    SelectFromList(cid, Concat(splitPrefix, cid.Value.ToByteArray()), filter, to, fnum);
                     break;
                 case Filter.FilterPropertyRoot:
-                    SelectAllFromBucket(cid, Concat(RootPrefix, cid.Value.ToByteArray()), to, fnum);
+                    SelectAllFromBucket(cid, Concat(rootPrefix, cid.Value.ToByteArray()), to, fnum);
                     break;
                 case Filter.FilterPropertyPhy:
-                    SelectAllFromBucket(cid, Concat(PrimaryPrefix, cid.Value.ToByteArray()), to, fnum);
-                    SelectAllFromBucket(cid, Concat(TombstonePrefix, cid.Value.ToByteArray()), to, fnum);
-                    SelectAllFromBucket(cid, Concat(StorageGroupPrefix, cid.Value.ToByteArray()), to, fnum);
+                    SelectAllFromBucket(cid, Concat(primaryPrefix, cid.Value.ToByteArray()), to, fnum);
+                    SelectAllFromBucket(cid, Concat(tombstonePrefix, cid.Value.ToByteArray()), to, fnum);
+                    SelectAllFromBucket(cid, Concat(storageGroupPrefix, cid.Value.ToByteArray()), to, fnum);
                     break;
                 default:
-                    byte[] attrPrefix = Concat(AttributePrefix, cid.Value.ToByteArray(), StrictUTF8.GetBytes(filter.Key));
+                    byte[] attrPrefix = Concat(attributePrefix, cid.Value.ToByteArray(), StrictUTF8.GetBytes(filter.Key));
                     if (filter.MatchType == MatchType.NotPresent)
                         SelectOutsideFKBT(cid, AllPrefixes(cid), attrPrefix, filter, to, fnum);
                     else
@@ -240,10 +240,10 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         private List<byte[]> AllPrefixes(ContainerID cid)
         {
             List<byte[]> prefixes = new();
-            prefixes.Add(Concat(PrimaryPrefix, cid.Value.ToByteArray()));
-            prefixes.Add(Concat(ParentPrefix, cid.Value.ToByteArray()));
-            prefixes.Add(Concat(TombstonePrefix, cid.Value.ToByteArray()));
-            prefixes.Add(Concat(StorageGroupPrefix, cid.Value.ToByteArray()));
+            prefixes.Add(Concat(primaryPrefix, cid.Value.ToByteArray()));
+            prefixes.Add(Concat(parentPrefix, cid.Value.ToByteArray()));
+            prefixes.Add(Concat(tombstonePrefix, cid.Value.ToByteArray()));
+            prefixes.Add(Concat(storageGroupPrefix, cid.Value.ToByteArray()));
             return prefixes;
         }
 
@@ -255,14 +255,14 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
                 switch (t)
                 {
                     case ObjectType.Regular:
-                        prefixes.Add(Concat(PrimaryPrefix, cid.Value.ToByteArray()));
-                        prefixes.Add(Concat(ParentPrefix, cid.Value.ToByteArray()));
+                        prefixes.Add(Concat(primaryPrefix, cid.Value.ToByteArray()));
+                        prefixes.Add(Concat(parentPrefix, cid.Value.ToByteArray()));
                         break;
                     case ObjectType.Tombstone:
-                        prefixes.Add(Concat(TombstonePrefix, cid.Value.ToByteArray()));
+                        prefixes.Add(Concat(tombstonePrefix, cid.Value.ToByteArray()));
                         break;
                     case ObjectType.StorageGroup:
-                        prefixes.Add(Concat(StorageGroupPrefix, cid.Value.ToByteArray()));
+                        prefixes.Add(Concat(storageGroupPrefix, cid.Value.ToByteArray()));
                         break;
                 }
                 return prefixes;

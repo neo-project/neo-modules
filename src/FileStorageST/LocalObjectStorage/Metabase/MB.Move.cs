@@ -7,7 +7,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
     {
         public void MoveIt(Address address)
         {
-            db.Put(ToMoveItKey(address), ZeroValue);
+            db.Put(ToMoveItKey(address), zeroValue);
         }
 
         public void DoNotMove(Address address)
@@ -18,7 +18,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         public List<Address> Moveable()
         {
             List<Address> result = new();
-            db.Iterate(ToMoveItPrefix, (key, value) =>
+            db.Iterate(toMoveItPrefix, (key, value) =>
             {
                 result.Add(new(ContainerID.FromValue(key[1..^32]), ObjectID.FromValue(key[^32..])));
                 return false;

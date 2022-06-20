@@ -11,7 +11,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
     {
         public void IterateGraveYard(Func<Grave, bool> handler)
         {
-            db.Iterate(GraveYardPrefix, (key, value) =>
+            db.Iterate(graveYardPrefix, (key, value) =>
             {
                 return handler(new()
                 {
@@ -24,7 +24,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         public void IterateExpired(ulong epoch, Action<ObjectType, Address> handler)
         {
             byte[] expired_epoch_key = StrictUTF8.GetBytes(Header.Types.Attribute.SysAttributeExpEpoch);
-            db.Iterate(AttributePrefix, (key, value) =>
+            db.Iterate(attributePrefix, (key, value) =>
             {
                 ParseAttributeKey(key, out var address, out var attribute);
                 if (!attribute.AsSpan().StartsWith(expired_epoch_key)) return false;
@@ -44,7 +44,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
 
         public void IterateCoveredByTombstones(HashSet<Address> tss, Action<Address> func)
         {
-            db.Iterate(GraveYardPrefix, (key, value) =>
+            db.Iterate(graveYardPrefix, (key, value) =>
             {
                 if (value.SequenceEqual(GCMARK))
                     return false;

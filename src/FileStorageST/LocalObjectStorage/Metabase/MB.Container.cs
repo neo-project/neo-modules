@@ -9,19 +9,19 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
         public HashSet<ContainerID> Containers()
         {
             HashSet<ContainerID> cids = new();
-            db.Iterate(PrimaryPrefix, (key, _) =>
+            db.Iterate(primaryPrefix, (key, _) =>
             {
                 var address = ParsePrimaryKey(key);
                 cids.Add(address.ContainerId);
                 return false;
             });
-            db.Iterate(TombstonePrefix, (key, _) =>
+            db.Iterate(tombstonePrefix, (key, _) =>
             {
                 var address = ParseTombstoneKey(key);
                 cids.Add(address.ContainerId);
                 return false;
             });
-            db.Iterate(StorageGroupPrefix, (key, _) =>
+            db.Iterate(storageGroupPrefix, (key, _) =>
             {
                 var address = ParseStorageGroupKey(key);
                 cids.Add(address.ContainerId);

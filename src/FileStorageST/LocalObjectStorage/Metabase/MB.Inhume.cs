@@ -43,7 +43,7 @@ namespace Neo.FileStorage.Storage.LocalObjectStorage.Metabase
                 if (tomb is not null)
                 {
                     bool is_tomb = false;
-                    db.Iterate(GraveYardPrefix, (k, v) =>
+                    db.Iterate(graveYardPrefix, (k, v) =>
                     {
                         is_tomb = target_key.SequenceEqual(v);
                         if (is_tomb) return true;

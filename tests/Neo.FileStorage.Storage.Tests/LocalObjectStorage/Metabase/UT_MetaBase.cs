@@ -1207,5 +1207,27 @@ namespace Neo.FileStorage.Storage.Tests.LocalObjectStorage.Metabase
             Assert.IsTrue(set.Contains(address));
             Assert.IsFalse(set.Add(address));
         }
+
+        [TestMethod]
+        public void TestLock()
+        {
+            string path = "./test_mb_TestLock";
+            try
+            {
+                using MB mb = new(path);
+                mb.Open();
+                var obj = RandomObject();
+                var locker = RandomObjectID();
+                mb.Put(obj);
+                mb.Lock(obj.ContainerId, locker, obj.ObjectId);
+                Assert.IsTrue(mb.IsLocked(obj.ContainerId, obj.ObjectId));
+                mb.FreeLockBy(new Address { ContainerId = obj.ContainerId, ObjectId = locker });
+                Assert.IsFalse(mb.IsLocked(obj.ContainerId, obj.ObjectId));
+            }
+            finally
+            {
+                Directory.Delete(path, true);
+            }
+        }
     }
 }

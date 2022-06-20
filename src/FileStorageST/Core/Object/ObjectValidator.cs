@@ -1,4 +1,4 @@
-using Neo.FileStorage.API.Cryptography;
+using Neo.FileStorage.API.Lock;
 using Neo.FileStorage.API.Object;
 using Neo.FileStorage.API.Refs;
 using Neo.FileStorage.API.StorageGroup;
@@ -14,6 +14,7 @@ namespace Neo.FileStorage.Storage.Core.Object
     public class ObjectValidator : IObjectValidator
     {
         public IObjectInhumer Inhumer { get; init; }
+        public IObjectLocker Locker { get; init; }
         public IEpochSource EpochSource { get; init; }
 
         public VerifyResult Validate(FSObject obj)
@@ -134,11 +135,18 @@ namespace Neo.FileStorage.Storage.Core.Object
                     break;
                 case ObjectType.StorageGroup:
                     if (obj.Payload.Length == 0) return false;
-                    StorageGroup sg = StorageGroup.Parser.ParseFrom(obj.Payload.ToByteArray());
+                    StorageGroup sg = StorageGroup.Parser.ParseFrom(obj.Payload);
                     foreach (var id in sg.Members)
                     {
                         if (id is null) return false;
                     }
+                    break;
+                case ObjectType.Lock:
+                    if (obj.Payload.Length == 0) return false;
+                    if (obj.ContainerId is null) return false;
+                    if (obj.ObjectId is null) return false;
+                    var lockObj = Lock.Parser.ParseFrom(obj.Payload);
+                    Locker.Lock(obj.ContainerId, obj.ObjectId, lockObj.Members.ToArray());
                     break;
             }
             return true;
