@@ -14,6 +14,7 @@ using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
+using Neo.VM;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -442,9 +443,9 @@ namespace Neo.Network.RPC
         /// Returns the result after passing a script through the VM.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
-        public async Task<RpcInvokeResult> InvokeScriptAsync(byte[] script, params Signer[] signers)
+        public async Task<RpcInvokeResult> InvokeScriptAsync(ReadOnlyMemory<byte> script, params Signer[] signers)
         {
-            List<JObject> parameters = new() { Convert.ToBase64String(script) };
+            List<JObject> parameters = new() { Convert.ToBase64String(script.Span) };
             if (signers.Length > 0)
             {
                 parameters.Add(signers.Select(p => p.ToJson()).ToArray());
