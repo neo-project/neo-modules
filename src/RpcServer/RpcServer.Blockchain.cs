@@ -13,6 +13,8 @@ using Neo.IO.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
+using Neo.VM;
+using Neo.VM.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -216,6 +218,48 @@ namespace Neo.Plugins
                 validator["votes"] = (int)NativeContract.NEO.GetCandidateVote(snapshot, p);
                 return validator;
             }).ToArray();
+        }
+
+        [RpcMethod]
+        protected virtual JObject GetCandidates(JArray _params)
+        {
+            using var snapshot = system.GetSnapshot();
+            byte[] script;
+            using (ScriptBuilder sb = new())
+            {
+                script = sb.EmitDynamicCall(NativeContract.NEO.Hash, "getCandidates", null).ToArray();
+            }
+            using ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, settings: system.Settings, gas: settings.MaxGasInvoke);
+            JObject json = new();
+            try
+            {
+                var resultstack = engine.ResultStack.ToArray();
+                if (resultstack.Length > 0)
+                {
+                    JArray jArray = new();
+                    var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, system.Settings.ValidatorsCount);
+
+                    foreach (var item in resultstack)
+                    {
+                        var value = (VM.Types.Array)item;
+                        foreach (Struct ele in value)
+                        {
+                            var publickey = ele[0].GetSpan().ToHexString();
+                            json["publickey"] = publickey;
+                            json["votes"] = ele[1].GetInteger().ToString();
+                            json["active"] = validators.ToByteArray().ToHexString().Contains(publickey);
+                            jArray.Add(json);
+                            json = new();
+                        }
+                        return jArray;
+                    }
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                json["exception"] = "Invalid result.";
+            }
+            return json;
         }
 
         [RpcMethod]
