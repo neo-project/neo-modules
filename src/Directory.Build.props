@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="config.json" Condition="Exists('config.json')">
+    <None Include="config.json" Condition="Exists('config.json') And '$(IncludeSettingsFileOutput)' != 'False'">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>

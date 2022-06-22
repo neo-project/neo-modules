@@ -7,7 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LevelDBStore\LevelDBStore.csproj" />
-    <ProjectReference Include="..\RpcServer\RpcServer.csproj" />
+    <ProjectReference Include="..\RpcServer\RpcServer.csproj" AdditionalProperties="IncludeSettingsFileOutput=False"/>
   </ItemGroup>
 
 </Project>
