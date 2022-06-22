@@ -450,16 +450,23 @@ namespace Neo.Network.RPC
             return RpcUnclaimedGas.FromJson(result);
         }
 
+
         /// <summary>
-        /// Returns all results from Iterator.
+        /// Returns limit <paramref name="count"/>  results from Iterator.
+        /// Return all items if <paramref name="count"/> less than 0.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
-        public async IAsyncEnumerable<JObject> TraverseIteratorAsync(string sessionId, string id, int count, bool fetchAll = false)
+        /// <param name="sessionId"></param>
+        /// <param name="id"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public async IAsyncEnumerable<JObject> TraverseIteratorAsync(string sessionId, string id, int count)
         {
-            var result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
-            var array = result as JArray;
-            if (fetchAll)
+            if (count < 0)
             {
+                count = 100;
+                var result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
+                var array = result as JArray;
                 while (array is { Count: > 0 })
                 {
                     foreach (var jObject in array)
@@ -468,12 +475,12 @@ namespace Neo.Network.RPC
                     }
                     result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
                     array = result as JArray;
-                    ;
                 }
             }
             else
             {
-                if (array is { Count: > 0 })
+                var result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
+                if (result is JArray { Count: > 0 } array)
                 {
                     foreach (var jObject in array)
                     {
