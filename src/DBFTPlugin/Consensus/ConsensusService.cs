@@ -72,8 +72,6 @@ namespace Neo.Consensus
         {
             Log($"Persisted {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length} nonce={block.Nonce}");
             knownHashes.Clear();
-            if (context.Block.Index == block.Index && context.CommitSent)
-                context.Delete();
             InitializeConsensus(0);
         }
 
