@@ -329,7 +329,7 @@ namespace Neo.Plugins.StateService
                 if (i < count)
                 {
                     JObject j = new();
-                    j["key"] = Convert.ToBase64String(ikey.Span);
+                    j["key"] = Convert.ToBase64String(ParseStorageKey(ikey.ToArray()).Key.Span);
                     j["value"] = Convert.ToBase64String(ivalue.Span);
                     jarr.Add(j);
                 }
@@ -337,11 +337,11 @@ namespace Neo.Plugins.StateService
             };
             if (0 < jarr.Count)
             {
-                json["firstProof"] = GetProof(trie, ParseStorageKey(Convert.FromBase64String(jarr.First()["key"].AsString())));
+                json["firstProof"] = GetProof(trie, contract.Id, Convert.FromBase64String(jarr.First()["key"].AsString()));
             }
             if (1 < jarr.Count)
             {
-                json["lastProof"] = GetProof(trie, ParseStorageKey(Convert.FromBase64String(jarr.Last()["key"].AsString())));
+                json["lastProof"] = GetProof(trie, contract.Id, Convert.FromBase64String(jarr.Last()["key"].AsString()));
             }
             json["truncated"] = count < i;
             json["results"] = jarr;
