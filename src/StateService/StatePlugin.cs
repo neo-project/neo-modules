@@ -23,6 +23,7 @@ using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -188,11 +189,16 @@ namespace Neo.Plugins.StateService
 
         private string GetProof(Trie trie, int contract_id, byte[] key)
         {
-            StorageKey skey = new StorageKey
+            StorageKey skey = new()
             {
                 Id = contract_id,
                 Key = key,
             };
+            return GetProof(trie, skey);
+        }
+
+        private string GetProof(Trie trie, StorageKey skey)
+        {
             var result = trie.TryGetProof(skey.ToArray(), out var proof);
             if (!result) throw new KeyNotFoundException();
 
@@ -275,6 +281,15 @@ namespace Neo.Plugins.StateService
             return trie.TryGetValue(skey.ToArray(), out var value) ? value.AsSerializable<StorageItem>().GetInteroperable<ContractState>() : null;
         }
 
+        private StorageKey ParseStorageKey(byte[] data)
+        {
+            return new()
+            {
+                Id = BinaryPrimitives.ReadInt32LittleEndian(data),
+                Key = data.AsMemory(sizeof(int)),
+            };
+        }
+
         [RpcMethod]
         public JObject FindStates(JArray _params)
         {
@@ -322,11 +337,11 @@ namespace Neo.Plugins.StateService
             };
             if (0 < jarr.Count)
             {
-                json["firstProof"] = GetProof(trie, contract.Id, Convert.FromBase64String(jarr.First()["key"].AsString()));
+                json["firstProof"] = GetProof(trie, ParseStorageKey(Convert.FromBase64String(jarr.First()["key"].AsString())));
             }
             if (1 < jarr.Count)
             {
-                json["lastProof"] = GetProof(trie, contract.Id, Convert.FromBase64String(jarr.Last()["key"].AsString()));
+                json["lastProof"] = GetProof(trie, ParseStorageKey(Convert.FromBase64String(jarr.Last()["key"].AsString())));
             }
             json["truncated"] = count < i;
             json["results"] = jarr;
