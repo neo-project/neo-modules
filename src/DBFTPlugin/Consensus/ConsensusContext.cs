@@ -168,6 +168,10 @@ namespace Neo.Consensus
             {
                 Deserialize(ref reader);
             }
+            catch (InvalidOperationException)
+            {
+                return false;
+            }
             catch (Exception exception)
             {
                 Utility.Log(nameof(ConsensusContext), LogLevel.Debug, exception.ToString());
