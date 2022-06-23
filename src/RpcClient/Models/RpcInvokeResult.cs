@@ -30,6 +30,8 @@ namespace Neo.Network.RPC.Models
 
         public string Exception { get; set; }
 
+        public string Session { get; set; }
+
         public JObject ToJson()
         {
             JObject json = new();
@@ -59,8 +61,8 @@ namespace Neo.Network.RPC.Models
                 State = json["state"].TryGetEnum<VMState>(),
                 GasConsumed = long.Parse(json["gasconsumed"].AsString()),
             };
-            if (json.ContainsProperty("exception"))
-                invokeScriptResult.Exception = json["exception"]?.AsString();
+            invokeScriptResult.Exception = json["exception"]?.AsString();
+            invokeScriptResult.Session = json["session"]?.AsString();
             try
             {
                 invokeScriptResult.Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToArray();

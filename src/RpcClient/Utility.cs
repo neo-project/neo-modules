@@ -253,9 +253,19 @@ namespace Neo.Network.RPC
                 case StackItemType.Pointer:
                     return new Pointer(null, (int)json["value"].AsNumber());
                 case StackItemType.InteropInterface:
-                    return new InteropInterface(new object());
+                    return new InteropInterface(json);
             }
             return json["value"] is null ? StackItem.Null : json["value"].AsString();
+        }
+
+        public static string GetIteratorId(this StackItem item)
+        {
+            if (item is InteropInterface iop)
+            {
+                var json = iop.GetInterface<JObject>();
+                return json["id"]?.GetString();
+            }
+            return null;
         }
     }
 }

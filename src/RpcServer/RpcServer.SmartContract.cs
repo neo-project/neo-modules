@@ -157,6 +157,7 @@ namespace Neo.Plugins
             {
                 Guid id = Guid.NewGuid();
                 session.Iterators.Add(id, iterator);
+                json["interface"] = nameof(IIterator);
                 json["id"] = id.ToString();
             }
             return json;
