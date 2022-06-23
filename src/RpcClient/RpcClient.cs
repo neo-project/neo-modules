@@ -451,9 +451,23 @@ namespace Neo.Network.RPC
         }
 
 
+        public async IAsyncEnumerable<JObject> TraverseIteratorAsync(string sessionId, string id)
+        {
+            const int count = 100;
+            while (true)
+            {
+                var result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
+                var array = (JArray)result;
+                foreach (var jObject in array)
+                {
+                    yield return jObject;
+                }
+                if (array.Count < count) break;
+            }
+        }
+
         /// <summary>
-        /// Returns limit <paramref name="count"/>  results from Iterator.
-        /// Return all items if <paramref name="count"/> less than 0.
+        /// Returns limit <paramref name="count"/> results from Iterator.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
         /// <param name="sessionId"></param>
@@ -462,30 +476,12 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async IAsyncEnumerable<JObject> TraverseIteratorAsync(string sessionId, string id, int count)
         {
-            if (count < 0)
+            var result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
+            if (result is JArray { Count: > 0 } array)
             {
-                count = 100;
-                var result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
-                var array = result as JArray;
-                while (array is { Count: > 0 })
+                foreach (var jObject in array)
                 {
-                    foreach (var jObject in array)
-                    {
-                        yield return jObject;
-                    }
-                    result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
-                    array = result as JArray;
-                }
-            }
-            else
-            {
-                var result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
-                if (result is JArray { Count: > 0 } array)
-                {
-                    foreach (var jObject in array)
-                    {
-                        yield return jObject;
-                    }
+                    yield return jObject;
                 }
             }
         }
