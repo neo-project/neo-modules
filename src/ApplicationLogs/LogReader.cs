@@ -117,7 +117,7 @@ namespace Neo.Plugins
             trigger["logs"] = appExec.Logs.Select(q => new JObject
             {
                 ["contract"] = q.ScriptHash.ToString(),
-                ["message"] = q.ToString()
+                ["message"] = q.Message
             }).ToArray();
             txJson["executions"] = new List<JObject>
                 { trigger }.ToArray();
@@ -165,7 +165,7 @@ namespace Neo.Plugins
                     trigger["logs"] = appExec.Logs.Select(q => new JObject
                     {
                         ["contract"] = q.ScriptHash.ToString(),
-                        ["message"] = q.ToString()
+                        ["message"] = q.Message
                     }).ToArray();
 
                     triggerList.Add(trigger);
