@@ -114,14 +114,11 @@ namespace Neo.Plugins
                 }
                 return notification;
             }).ToArray();
-            trigger["logs"] = appExec.Logs.Select(q =>
+            trigger["logs"] = appExec.Logs.Select(q => new JObject
             {
-                JObject log = new JObject();
-                log["contract"] = q.ScriptHash.ToString();
-                log["message"] = q.ToString();
-                return log;
+                ["contract"] = q.ScriptHash.ToString(),
+                ["message"] = q.ToString()
             }).ToArray();
-
             txJson["executions"] = new List<JObject>
                 { trigger }.ToArray();
             return txJson;
@@ -165,12 +162,10 @@ namespace Neo.Plugins
                         }
                         return notification;
                     }).ToArray();
-                    trigger["logs"] = appExec.Logs.Select(q =>
+                    trigger["logs"] = appExec.Logs.Select(q => new JObject
                     {
-                        JObject log = new JObject();
-                        log["contract"] = q.ScriptHash.ToString();
-                        log["message"] = q.ToString();
-                        return log;
+                        ["contract"] = q.ScriptHash.ToString(),
+                        ["message"] = q.ToString()
                     }).ToArray();
 
                     triggerList.Add(trigger);
