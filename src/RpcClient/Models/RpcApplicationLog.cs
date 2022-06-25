@@ -129,10 +129,11 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new();
-            json["contract"] = Contract.ToString();
-            json["message"] = Message;
-            return json;
+            return new JObject
+            {
+                ["contract"] = Contract.ToString(),
+                ["message"] = Message
+            };
         }
 
         public static RpcLogEventArgs FromJson(JObject json, ProtocolSettings protocolSettings)
