@@ -165,6 +165,14 @@ namespace Neo.Plugins
                         }
                         return notification;
                     }).ToArray();
+                    trigger["logs"] = appExec.Logs.Select(q =>
+                    {
+                        JObject log = new JObject();
+                        log["contract"] = q.ScriptHash.ToString();
+                        log["message"] = q.ToString();
+                        return log;
+                    }).ToArray();
+
                     triggerList.Add(trigger);
                 }
                 blockJson["executions"] = triggerList.ToArray();
