@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -61,15 +61,20 @@ namespace Neo.Network.RPC.Models
 
         public List<RpcNotifyEventArgs> Notifications { get; set; }
 
+        public List<RpcLogEventArgs> Logs { get; set; }
+
         public JObject ToJson()
         {
-            JObject json = new();
-            json["trigger"] = Trigger;
-            json["vmstate"] = VMState;
-            json["gasconsumed"] = GasConsumed.ToString();
-            json["exception"] = ExceptionMessage;
-            json["stack"] = Stack.Select(q => q.ToJson()).ToArray();
-            json["notifications"] = Notifications.Select(q => q.ToJson()).ToArray();
+            JObject json = new()
+            {
+                ["trigger"] = Trigger,
+                ["vmstate"] = VMState,
+                ["gasconsumed"] = GasConsumed.ToString(),
+                ["exception"] = ExceptionMessage,
+                ["stack"] = Stack.Select(q => q.ToJson()).ToArray(),
+                ["notifications"] = Notifications.Select(q => q.ToJson()).ToArray(),
+                ["logs"] = Logs.Select(q => q.ToJson()).ToArray()
+            };
             return json;
         }
 
@@ -82,7 +87,8 @@ namespace Neo.Network.RPC.Models
                 GasConsumed = long.Parse(json["gasconsumed"].AsString()),
                 ExceptionMessage = json["exception"]?.AsString(),
                 Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToList(),
-                Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson(p, protocolSettings)).ToList()
+                Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson(p, protocolSettings)).ToList(),
+                Logs = ((JArray)json["logs"]).Select(p => RpcLogEventArgs.FromJson(p, protocolSettings)).ToList()
             };
         }
     }
@@ -111,6 +117,30 @@ namespace Neo.Network.RPC.Models
                 Contract = json["contract"].ToScriptHash(protocolSettings),
                 EventName = json["eventname"].AsString(),
                 State = Utility.StackItemFromJson(json["state"])
+            };
+        }
+    }
+
+    public class RpcLogEventArgs
+    {
+        public UInt160 Contract { get; set; }
+
+        public string Message { get; set; }
+
+        public JObject ToJson()
+        {
+            JObject json = new();
+            json["contract"] = Contract.ToString();
+            json["message"] = Message;
+            return json;
+        }
+
+        public static RpcLogEventArgs FromJson(JObject json, ProtocolSettings protocolSettings)
+        {
+            return new RpcLogEventArgs
+            {
+                Contract = json["contract"].ToScriptHash(protocolSettings),
+                Message = json["message"].AsString()
             };
         }
     }
