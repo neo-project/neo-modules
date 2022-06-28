@@ -31,6 +31,7 @@ namespace Neo.Plugins
         private IStore _db;
         private NeoSystem neoSystem;
         private readonly List<TrackerBase> trackers = new();
+        public static string RpcServer;
 
         public override string Description => "Enquiries balances and transaction history of accounts through RPC";
 
@@ -53,6 +54,7 @@ namespace Neo.Plugins
             _shouldTrackHistory = config.GetValue("TrackHistory", true);
             _maxResults = config.GetValue("MaxResults", 1000u);
             _network = config.GetValue("Network", 860833102u);
+            RpcServer = config.GetValue("RpcServer", "127.0.0.1:10332");
             _enabledTrackers = config.GetSection("EnabledTrackers").GetChildren().Select(p => p.Value).ToArray();
         }
 
