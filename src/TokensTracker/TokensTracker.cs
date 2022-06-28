@@ -54,7 +54,7 @@ namespace Neo.Plugins
             _shouldTrackHistory = config.GetValue("TrackHistory", true);
             _maxResults = config.GetValue("MaxResults", 1000u);
             _network = config.GetValue("Network", 860833102u);
-            RpcServer = config.GetValue("RpcServer", "127.0.0.1:10332");
+            RpcServer = config.GetValue("RpcServer", "http://127.0.0.1:10332");
             _enabledTrackers = config.GetSection("EnabledTrackers").GetChildren().Select(p => p.Value).ToArray();
         }
 

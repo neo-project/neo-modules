@@ -4,7 +4,7 @@
     "TrackHistory": true,
     "MaxResults": 1000,
     "Network": 860833102,
-    "RpcServer": "127.0.0.1:10332",
+    "RpcServer": "http://127.0.0.1:10332",
     "EnabledTrackers": [ "NEP-11", "NEP-17" ]
   },
   "Dependency": [
