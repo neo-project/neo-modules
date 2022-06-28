@@ -250,7 +250,7 @@ namespace Neo.Plugins.Trackers.NEP_11
             {
                 var symbol = api.SymbolAsync(key).Result;
                 var name = api.GetTokenInfoAsync(key).Result.Name;
-                
+
                 balances.Add(new JObject
                 {
                     ["assethash"] = key.ToString(),
@@ -262,7 +262,7 @@ namespace Neo.Plugins.Trackers.NEP_11
                         ["amount"] = v.amount,
                         ["lastupdatedblock"] = v.height
                     })),
-                }) ;
+                });
             }
             return json;
         }

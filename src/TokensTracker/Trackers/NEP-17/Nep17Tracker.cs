@@ -178,7 +178,7 @@ namespace Neo.Plugins.Trackers.NEP_17
             byte[] prefix = Key(Nep17BalancePrefix, userScriptHash);
 
             var api = new Nep17API(new RpcClient(new Uri(TokensTracker.RpcServer)));
-            
+
             foreach (var (key, value) in _db.FindPrefix<Nep17BalanceKey, TokenBalance>(prefix))
             {
                 if (NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key.AssetScriptHash) is null)
