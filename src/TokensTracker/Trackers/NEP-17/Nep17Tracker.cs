@@ -180,25 +180,32 @@ namespace Neo.Plugins.Trackers.NEP_17
                 if (NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key.AssetScriptHash) is null)
                     continue;
 
-                var engine = ApplicationEngine.Run(key.AssetScriptHash.MakeScript("decimals"), _neoSystem.StoreView, settings: _neoSystem.Settings);
-                var decimals = engine.ResultStack.FirstOrDefault().GetInteger();
-                engine = ApplicationEngine.Run(key.AssetScriptHash.MakeScript("symbol"), _neoSystem.StoreView, settings: _neoSystem.Settings);
-                var symbol = engine.ResultStack.FirstOrDefault().GetString();
-                var name = NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key.AssetScriptHash).Manifest.Name;
+                try
+                {
+                    var engine = ApplicationEngine.Run(key.AssetScriptHash.MakeScript("decimals"), _neoSystem.StoreView, settings: _neoSystem.Settings);
+                    var decimals = engine.ResultStack.FirstOrDefault().GetInteger();
+                    engine = ApplicationEngine.Run(key.AssetScriptHash.MakeScript("symbol"), _neoSystem.StoreView, settings: _neoSystem.Settings);
+                    var symbol = engine.ResultStack.FirstOrDefault().GetString();
+                    var name = NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key.AssetScriptHash).Manifest.Name;
 
-                balances.Add(new JObject
+                    balances.Add(new JObject
+                    {
+                        ["assethash"] = key.AssetScriptHash.ToString(),
+                        ["name"] = name,
+                        ["symbol"] = symbol,
+                        ["decimals"] = decimals.ToString(),
+                        ["amount"] = value.Balance.ToString(),
+                        ["lastupdatedblock"] = value.LastUpdatedBlock
+                    });
+                    count++;
+                    if (count >= _maxResults)
+                    {
+                        break;
+                    }
+                }
+                catch (Exception)
                 {
-                    ["assethash"] = key.AssetScriptHash.ToString(),
-                    ["name"] = name,
-                    ["symbol"] = symbol,
-                    ["decimals"] = decimals.ToString(),
-                    ["amount"] = value.Balance.ToString(),
-                    ["lastupdatedblock"] = value.LastUpdatedBlock
-                });
-                count++;
-                if (count >= _maxResults)
-                {
-                    break;
+                    continue;
                 }
             }
             return json;

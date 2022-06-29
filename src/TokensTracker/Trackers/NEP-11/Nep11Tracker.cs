@@ -244,22 +244,29 @@ namespace Neo.Plugins.Trackers.NEP_11
             }
             foreach (var key in map.Keys)
             {
-                var engine = ApplicationEngine.Run(key.MakeScript("symbol"), _neoSystem.StoreView, settings: _neoSystem.Settings);
-                var symbol = engine.ResultStack.FirstOrDefault().GetString();
-                var name = NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key).Manifest.Name;
-
-                balances.Add(new JObject
+                try
                 {
-                    ["assethash"] = key.ToString(),
-                    ["tokens"] = new JArray(map[key].Select(v => new JObject
+                    var engine = ApplicationEngine.Run(key.MakeScript("symbol"), _neoSystem.StoreView, settings: _neoSystem.Settings);
+                    var symbol = engine.ResultStack.FirstOrDefault().GetString();
+                    var name = NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key).Manifest.Name;
+
+                    balances.Add(new JObject
                     {
-                        ["tokenid"] = v.tokenid,
-                        ["name"] = name,
-                        ["symbol"] = symbol,
-                        ["amount"] = v.amount,
-                        ["lastupdatedblock"] = v.height
-                    })),
-                });
+                        ["assethash"] = key.ToString(),
+                        ["tokens"] = new JArray(map[key].Select(v => new JObject
+                        {
+                            ["tokenid"] = v.tokenid,
+                            ["name"] = name,
+                            ["symbol"] = symbol,
+                            ["amount"] = v.amount,
+                            ["lastupdatedblock"] = v.height
+                        })),
+                    });
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
             }
             return json;
         }
