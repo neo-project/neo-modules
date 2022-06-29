@@ -227,7 +227,6 @@ namespace Neo.Plugins.Trackers.NEP_11
             var map = new Dictionary<UInt160, List<(string tokenid, string amount, uint height)>>();
             int count = 0;
             byte[] prefix = Key(Nep11BalancePrefix, userScriptHash);
-
             foreach (var (key, value) in _db.FindPrefix<Nep11BalanceKey, TokenBalance>(prefix))
             {
                 if (NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key.AssetScriptHash) is null)

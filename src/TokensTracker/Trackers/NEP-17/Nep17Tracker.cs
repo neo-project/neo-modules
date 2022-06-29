@@ -175,7 +175,6 @@ namespace Neo.Plugins.Trackers.NEP_17
 
             int count = 0;
             byte[] prefix = Key(Nep17BalancePrefix, userScriptHash);
-
             foreach (var (key, value) in _db.FindPrefix<Nep17BalanceKey, TokenBalance>(prefix))
             {
                 if (NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key.AssetScriptHash) is null)
