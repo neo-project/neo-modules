@@ -244,7 +244,7 @@ namespace Neo.Plugins.Trackers.NEP_11
             }
             foreach (var key in map.Keys)
             {
-                var engine = ApplicationEngine.Run(key.MakeScript("symbol"), _neoSystem.StoreView);
+                var engine = ApplicationEngine.Run(key.MakeScript("symbol"), _neoSystem.StoreView, settings: _neoSystem.Settings);
                 var symbol = engine.ResultStack.FirstOrDefault().GetString();
                 var name = NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key).Manifest.Name;
 
