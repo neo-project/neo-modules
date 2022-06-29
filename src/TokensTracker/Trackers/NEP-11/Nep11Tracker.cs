@@ -15,7 +15,6 @@ using System.Numerics;
 using Neo.IO.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
-using Neo.Network.RPC;
 using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
@@ -229,8 +228,6 @@ namespace Neo.Plugins.Trackers.NEP_11
             int count = 0;
             byte[] prefix = Key(Nep11BalancePrefix, userScriptHash);
 
-            var api = new Nep17API(new RpcClient(new Uri(TokensTracker.RpcServer)));
-
             foreach (var (key, value) in _db.FindPrefix<Nep11BalanceKey, TokenBalance>(prefix))
             {
                 if (NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key.AssetScriptHash) is null)
@@ -248,8 +245,9 @@ namespace Neo.Plugins.Trackers.NEP_11
             }
             foreach (var key in map.Keys)
             {
-                var symbol = api.SymbolAsync(key).Result;
-                var name = api.GetTokenInfoAsync(key).Result.Name;
+                var engine = ApplicationEngine.Run(key.MakeScript("symbol"), _neoSystem.StoreView);
+                var symbol = engine.ResultStack.FirstOrDefault().GetString();
+                var name = NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key).Manifest.Name;
 
                 balances.Add(new JObject
                 {
