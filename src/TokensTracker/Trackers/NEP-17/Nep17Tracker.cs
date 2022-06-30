@@ -182,10 +182,13 @@ namespace Neo.Plugins.Trackers.NEP_17
 
                 try
                 {
-                    var engine = ApplicationEngine.Run(key.AssetScriptHash.MakeScript("decimals"), _neoSystem.StoreView, settings: _neoSystem.Settings);
-                    var decimals = engine.ResultStack.FirstOrDefault().GetInteger();
-                    engine = ApplicationEngine.Run(key.AssetScriptHash.MakeScript("symbol"), _neoSystem.StoreView, settings: _neoSystem.Settings);
-                    var symbol = engine.ResultStack.FirstOrDefault().GetString();
+                    using var script = new ScriptBuilder();
+                    script.EmitDynamicCall(key.AssetScriptHash, "decimals");
+                    script.EmitDynamicCall(key.AssetScriptHash, "symbol");
+
+                    var engine = ApplicationEngine.Run(script.ToArray(), _neoSystem.StoreView, settings: _neoSystem.Settings);
+                    var symbol = engine.ResultStack.Pop().GetString();
+                    var decimals = engine.ResultStack.Pop().GetInteger();
                     var name = NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key.AssetScriptHash).Manifest.Name;
 
                     balances.Add(new JObject
@@ -203,10 +206,7 @@ namespace Neo.Plugins.Trackers.NEP_17
                         break;
                     }
                 }
-                catch (Exception)
-                {
-                    continue;
-                }
+                catch { }
             }
             return json;
         }
