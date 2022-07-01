@@ -19,6 +19,8 @@ using Neo.VM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
+using Akka.Actor;
 using static System.IO.Path;
 
 namespace Neo.Plugins
@@ -30,6 +32,11 @@ namespace Neo.Plugins
 
         public override string Name => "ApplicationLogs";
         public override string Description => "Synchronizes the smart contract log with the NativeContract log (Notify)";
+
+        /// <summary>
+        ///  LogEvents is a list of events that are logged by the smart contract.
+        /// </summary>
+        private readonly Dictionary<UInt256, List<LogEventArgs>> _logEvents = new();
 
         public LogReader()
         {
@@ -54,6 +61,24 @@ namespace Neo.Plugins
         {
             if (system.Settings.Network != Settings.Default.Network) return;
             RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
+
+            // It is possible to have dos attack by sending a lot of transactions.
+            void Ev(object _, LogEventArgs e)
+            {
+                var tx = (Transaction)e.ScriptContainer;
+                if (_logEvents.ContainsKey(tx.Hash))
+                {
+                    _logEvents[tx.Hash].Add(e);
+                }
+                else
+                {
+                    _logEvents[tx.Hash] = new List<LogEventArgs>
+                    {
+                        e
+                    };
+                }
+            }
+            ApplicationEngine.Log += Ev;
         }
 
         [RpcMethod]
@@ -114,11 +139,6 @@ namespace Neo.Plugins
                 }
                 return notification;
             }).ToArray();
-            trigger["logs"] = appExec.Logs.Select(q => new JObject
-            {
-                ["contract"] = q.ScriptHash.ToString(),
-                ["message"] = q.Message
-            }).ToArray();
             txJson["executions"] = new List<JObject>
                 { trigger }.ToArray();
             return txJson;
@@ -162,12 +182,6 @@ namespace Neo.Plugins
                         }
                         return notification;
                     }).ToArray();
-                    trigger["logs"] = appExec.Logs.Select(q => new JObject
-                    {
-                        ["contract"] = q.ScriptHash.ToString(),
-                        ["message"] = q.Message
-                    }).ToArray();
-
                     triggerList.Add(trigger);
                 }
                 blockJson["executions"] = triggerList.ToArray();
@@ -186,10 +200,22 @@ namespace Neo.Plugins
             //processing log for transactions
             foreach (var appExec in applicationExecutedList.Where(p => p.Transaction != null))
             {
+                var tx = appExec.Transaction.Hash;
                 var txJson = TxLogToJson(appExec);
+                if (_logEvents.ContainsKey(tx))
+                {
+                    var logs = _logEvents[tx].Select(q => new JObject
+                    {
+                        ["contract"] = q.ScriptHash.ToString(),
+                        ["message"] = q.Message
+                    }).ToArray();
+
+                    _logEvents.Remove(tx);
+                    txJson["logs"] = logs;
+                }
                 Put(appExec.Transaction.Hash.ToArray(), Neo.Utility.StrictUTF8.GetBytes(txJson.ToString()));
             }
-
+            _logEvents.Clear();
             //processing log for block
             var blockJson = BlockLogToJson(block, applicationExecutedList);
             if (blockJson != null)
