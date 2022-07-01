@@ -19,8 +19,6 @@ using Neo.VM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Policy;
-using Akka.Actor;
 using static System.IO.Path;
 
 namespace Neo.Plugins
