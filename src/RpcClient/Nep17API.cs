@@ -104,9 +104,9 @@ namespace Neo.Network.RPC
             };
         }
 
-        public async Task<RpcNep17TokenInfo> GetTokenInfoAsync(string contractName)
+        public async Task<RpcNep17TokenInfo> GetTokenInfoAsync(string contractHash)
         {
-            var contractState = await rpcClient.GetContractStateAsync(contractName).ConfigureAwait(false);
+            var contractState = await rpcClient.GetContractStateAsync(contractHash).ConfigureAwait(false);
             byte[] script = Concat(
                 contractState.Hash.MakeScript("symbol"),
                 contractState.Hash.MakeScript("decimals"),
