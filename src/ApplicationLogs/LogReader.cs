@@ -63,18 +63,13 @@ namespace Neo.Plugins
             // It is possible to have dos attack by sending a lot of transactions.
             void Ev(object _, LogEventArgs e)
             {
-                var tx = (Transaction)e.ScriptContainer;
-                if (_logEvents.ContainsKey(tx.Hash))
+                if (e.ScriptContainer is not Transaction tx) return;
+                if (!_logEvents.TryGetValue(tx.Hash, out var list))
                 {
-                    _logEvents[tx.Hash].Add(e);
+                    list = new();
+                    _logEvents.Add(tx.Hash, list);
                 }
-                else
-                {
-                    _logEvents[tx.Hash] = new List<LogEventArgs>
-                    {
-                        e
-                    };
-                }
+                list.Add(e);
             }
             ApplicationEngine.Log += Ev;
         }
@@ -137,8 +132,7 @@ namespace Neo.Plugins
                 }
                 return notification;
             }).ToArray();
-            txJson["executions"] = new List<JObject>
-                { trigger }.ToArray();
+            txJson["executions"] = new JArray(trigger);
             return txJson;
         }
 
@@ -198,22 +192,20 @@ namespace Neo.Plugins
             //processing log for transactions
             foreach (var appExec in applicationExecutedList.Where(p => p.Transaction != null))
             {
-                var tx = appExec.Transaction.Hash;
                 var txJson = TxLogToJson(appExec);
-                if (_logEvents.ContainsKey(tx))
+                if (_logEvents.TryGetValue(appExec.Transaction.Hash, out var list))
                 {
-                    var logs = _logEvents[tx].Select(q => new JObject
+                    var logs = list.Select(q => new JObject
                     {
                         ["contract"] = q.ScriptHash.ToString(),
                         ["message"] = q.Message
                     }).ToArray();
-
-                    _logEvents.Remove(tx);
                     txJson["logs"] = logs;
                 }
                 Put(appExec.Transaction.Hash.ToArray(), Neo.Utility.StrictUTF8.GetBytes(txJson.ToString()));
             }
             _logEvents.Clear();
+
             //processing log for block
             var blockJson = BlockLogToJson(block, applicationExecutedList);
             if (blockJson != null)
