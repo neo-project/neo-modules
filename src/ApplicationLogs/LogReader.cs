@@ -132,7 +132,8 @@ namespace Neo.Plugins
                 }
                 return notification;
             }).ToArray();
-            txJson["executions"] = new JArray(trigger);
+
+            txJson["executions"] = new List<JObject>() { trigger }.ToArray();
             return txJson;
         }
 

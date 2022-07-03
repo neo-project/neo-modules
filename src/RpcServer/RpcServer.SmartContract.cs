@@ -83,14 +83,6 @@ namespace Neo.Plugins
                     obj["state"] = ToJson(n.State, session);
                     return obj;
                 }));
-                json["logs"] = new JArray(session.Engine.Notifications.Select(n =>
-                {
-                    var obj = new JObject();
-                    obj["eventname"] = n.EventName;
-                    obj["contract"] = n.ScriptHash.ToString();
-                    obj["state"] = ToJson(n.State, session);
-                    return obj;
-                }));
                 if (useDiagnostic)
                 {
                     Diagnostic diagnostic = (Diagnostic)session.Engine.Diagnostic;
