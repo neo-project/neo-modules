@@ -26,14 +26,14 @@ namespace Neo.Plugins
         private static readonly Dictionary<uint, List<object>> handlers = new();
 
         /// <summary>
-        ///  LogEvents is a list of events that are logged by the smart contract.
-        /// </summary>
-        private static readonly Dictionary<UInt256, List<LogEventArgs>> _logEvents = new();
-
-        /// <summary>
         /// Public interface of _logEvents.
         /// </summary>
-        public static Dictionary<UInt256, List<LogEventArgs>> LogEvents => _logEvents;
+        public static Dictionary<UInt256, Queue<LogEventArgs>> LogEvents { get; } = new();
+
+        /// <summary>
+        /// Maximum number of events to be logged per contract
+        /// </summary>
+        private const int MaxLogEvents = 50;
 
         protected override void Configure()
         {
@@ -66,19 +66,24 @@ namespace Neo.Plugins
             server.StartRpcServer();
             servers.TryAdd(s.Network, server);
 
-            // It is possible to have dos attack by sending a lot of transactions.
+            // It is potentially possible to have dos attack by sending a lot of transactions and logs.
+            // To prevent this, we limit the number of logs to be logged per contract.
+            // If the number of logs is greater than MAX_LOG_EVENTS, we remove the oldest log.
             void Ev(object _, LogEventArgs e)
             {
                 if (e.ScriptContainer is not Transaction tx) return;
-                if (!_logEvents.TryGetValue(tx.Hash, out var list))
+                if (!LogEvents.TryGetValue(tx.Hash, out var _logs))
                 {
-                    list = new List<LogEventArgs>();
-                    _logEvents.Add(tx.Hash, list);
+                    _logs = new Queue<LogEventArgs>();
+                    LogEvents.Add(tx.Hash, _logs);
                 }
-                list.Add(e);
+                if (LogEvents[tx.Hash].Count >= MaxLogEvents)
+                {
+                    _logs.Dequeue();
+                }
+                _logs.Enqueue(e);
             }
             ApplicationEngine.Log += Ev;
-
             Blockchain.Committed += OnCommitted;
         }
 
