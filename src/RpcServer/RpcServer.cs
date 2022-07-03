@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
-using Neo.IO;
 using Neo.IO.Json;
 using Neo.Network.P2P;
 using System;
@@ -48,6 +47,7 @@ namespace Neo.Plugins
             RegisterMethods(this);
             Initialize_SmartContract();
         }
+
 
         private bool CheckAuth(HttpContext context)
         {

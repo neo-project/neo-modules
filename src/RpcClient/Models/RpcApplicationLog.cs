@@ -114,29 +114,4 @@ namespace Neo.Network.RPC.Models
             };
         }
     }
-
-    public class RpcLogEventArgs
-    {
-        public UInt160 Contract { get; set; }
-
-        public string Message { get; set; }
-
-        public JObject ToJson()
-        {
-            return new JObject
-            {
-                ["contract"] = Contract.ToString(),
-                ["message"] = Message
-            };
-        }
-
-        public static RpcLogEventArgs FromJson(JObject json, ProtocolSettings protocolSettings)
-        {
-            return new RpcLogEventArgs
-            {
-                Contract = json["contract"].ToScriptHash(protocolSettings),
-                Message = json["message"].AsString()
-            };
-        }
-    }
 }

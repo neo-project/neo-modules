@@ -25,16 +25,11 @@ namespace Neo.Plugins
 {
     public class LogReader : Plugin
     {
-        private DB db;
+        private DB _db;
         private WriteBatch _writeBatch;
 
         public override string Name => "ApplicationLogs";
         public override string Description => "Synchronizes the smart contract log with the NativeContract log (Notify)";
-
-        /// <summary>
-        ///  LogEvents is a list of events that are logged by the smart contract.
-        /// </summary>
-        private readonly Dictionary<UInt256, List<LogEventArgs>> _logEvents = new();
 
         public LogReader()
         {
@@ -52,33 +47,20 @@ namespace Neo.Plugins
         {
             Settings.Load(GetConfiguration());
             string path = string.Format(Settings.Default.Path, Settings.Default.Network.ToString("X8"));
-            db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
+            _db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
         }
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
             RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
-
-            // It is possible to have dos attack by sending a lot of transactions.
-            void Ev(object _, LogEventArgs e)
-            {
-                if (e.ScriptContainer is not Transaction tx) return;
-                if (!_logEvents.TryGetValue(tx.Hash, out var list))
-                {
-                    list = new List<LogEventArgs>();
-                    _logEvents.Add(tx.Hash, list);
-                }
-                list.Add(e);
-            }
-            ApplicationEngine.Log += Ev;
         }
 
         [RpcMethod]
         public JObject GetApplicationLog(JArray _params)
         {
             UInt256 hash = UInt256.Parse(_params[0].AsString());
-            byte[] value = db.Get(ReadOptions.Default, hash.ToArray());
+            byte[] value = _db.Get(ReadOptions.Default, hash.ToArray());
             if (value is null)
                 throw new RpcException(-100, "Unknown transaction/blockhash");
 
@@ -194,7 +176,7 @@ namespace Neo.Plugins
             foreach (var appExec in applicationExecutedList.Where(p => p.Transaction != null))
             {
                 var txJson = TxLogToJson(appExec);
-                if (_logEvents.TryGetValue(appExec.Transaction.Hash, out var list))
+                if (RpcServerPlugin.LogEvents.TryGetValue(appExec.Transaction.Hash, out var list))
                 {
                     var logs = list.Select(q => new JObject
                     {
@@ -205,7 +187,7 @@ namespace Neo.Plugins
                 }
                 Put(appExec.Transaction.Hash.ToArray(), Neo.Utility.StrictUTF8.GetBytes(txJson.ToString()));
             }
-            _logEvents.Clear();
+            RpcServerPlugin.LogEvents.Clear();
 
             //processing log for block
             var blockJson = BlockLogToJson(block, applicationExecutedList);
@@ -218,7 +200,7 @@ namespace Neo.Plugins
         private void OnCommitted(NeoSystem system, Block block)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
-            db.Write(WriteOptions.Default, _writeBatch);
+            _db.Write(WriteOptions.Default, _writeBatch);
         }
 
         static string GetExceptionMessage(Exception exception)

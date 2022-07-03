@@ -10,6 +10,9 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Neo.Ledger;
+using Neo.Network.P2P.Payloads;
+using Neo.SmartContract;
 
 namespace Neo.Plugins
 {
@@ -22,6 +25,16 @@ namespace Neo.Plugins
         private static readonly Dictionary<uint, RpcServer> servers = new();
         private static readonly Dictionary<uint, List<object>> handlers = new();
 
+        /// <summary>
+        ///  LogEvents is a list of events that are logged by the smart contract.
+        /// </summary>
+        private static readonly Dictionary<UInt256, List<LogEventArgs>> _logEvents = new();
+
+        /// <summary>
+        /// Public interface of _logEvents.
+        /// </summary>
+        public static Dictionary<UInt256, List<LogEventArgs>> LogEvents => _logEvents;
+
         protected override void Configure()
         {
             settings = new Settings(GetConfiguration());
@@ -30,11 +43,9 @@ namespace Neo.Plugins
                     server.UpdateSettings(s);
         }
 
-        public override void Dispose()
+        private void OnCommitted(NeoSystem system, Block block)
         {
-            foreach (var (_, server) in servers)
-                server.Dispose();
-            base.Dispose();
+            LogEvents.Clear();
         }
 
         protected override void OnSystemLoaded(NeoSystem system)
@@ -54,6 +65,29 @@ namespace Neo.Plugins
 
             server.StartRpcServer();
             servers.TryAdd(s.Network, server);
+
+            // It is possible to have dos attack by sending a lot of transactions.
+            void Ev(object _, LogEventArgs e)
+            {
+                if (e.ScriptContainer is not Transaction tx) return;
+                if (!_logEvents.TryGetValue(tx.Hash, out var list))
+                {
+                    list = new List<LogEventArgs>();
+                    _logEvents.Add(tx.Hash, list);
+                }
+                list.Add(e);
+            }
+            ApplicationEngine.Log += Ev;
+
+            Blockchain.Committed += OnCommitted;
+        }
+
+        public override void Dispose()
+        {
+            Blockchain.Committed -= OnCommitted;
+            foreach (var (_, server) in servers)
+                server.Dispose();
+            base.Dispose();
         }
 
         public static void RegisterMethods(object handler, uint network)

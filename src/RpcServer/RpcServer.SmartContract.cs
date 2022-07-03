@@ -121,6 +121,8 @@ namespace Neo.Plugins
                 lock (sessions)
                     sessions.Add(id, session);
             }
+            if (session.Engine.ScriptContainer is Transaction tx && RpcServerPlugin.LogEvents.ContainsKey(tx.Hash))
+                json["logs"] = RpcServerPlugin.LogEvents[tx.Hash].Select(p => p.Message) as JArray;
             return json;
         }
 
@@ -197,7 +199,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JObject InvokeFunction(JArray _params)
         {
-            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
+            UInt160 scriptHash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : System.Array.Empty<ContractParameter>();
             Signer[] signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
@@ -207,7 +209,7 @@ namespace Neo.Plugins
             byte[] script;
             using (ScriptBuilder sb = new())
             {
-                script = sb.EmitDynamicCall(script_hash, operation, args).ToArray();
+                script = sb.EmitDynamicCall(scriptHash, operation, args).ToArray();
             }
             return GetInvokeResult(script, signers, witnesses, useDiagnostic);
         }
@@ -260,20 +262,20 @@ namespace Neo.Plugins
         {
             string address = _params[0].AsString();
             JObject json = new();
-            UInt160 script_hash;
+            UInt160 scriptHash;
             try
             {
-                script_hash = AddressToScriptHash(address, system.Settings.AddressVersion);
+                scriptHash = AddressToScriptHash(address, system.Settings.AddressVersion);
             }
             catch
             {
-                script_hash = null;
+                scriptHash = null;
             }
-            if (script_hash == null)
+            if (scriptHash == null)
                 throw new RpcException(-100, "Invalid address");
             var snapshot = system.StoreView;
-            json["unclaimed"] = NativeContract.NEO.UnclaimedGas(snapshot, script_hash, NativeContract.Ledger.CurrentIndex(snapshot) + 1).ToString();
-            json["address"] = script_hash.ToAddress(system.Settings.AddressVersion);
+            json["unclaimed"] = NativeContract.NEO.UnclaimedGas(snapshot, scriptHash, NativeContract.Ledger.CurrentIndex(snapshot) + 1).ToString();
+            json["address"] = scriptHash.ToAddress(system.Settings.AddressVersion);
             return json;
         }
 
