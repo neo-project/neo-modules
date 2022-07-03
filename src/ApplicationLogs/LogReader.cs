@@ -66,7 +66,7 @@ namespace Neo.Plugins
                 if (e.ScriptContainer is not Transaction tx) return;
                 if (!_logEvents.TryGetValue(tx.Hash, out var list))
                 {
-                    list = new();
+                    list = new List<LogEventArgs>();
                     _logEvents.Add(tx.Hash, list);
                 }
                 list.Add(e);
