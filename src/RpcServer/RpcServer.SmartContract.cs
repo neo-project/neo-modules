@@ -122,7 +122,7 @@ namespace Neo.Plugins
                     sessions.Add(id, session);
             }
             if (session.Engine.ScriptContainer is Transaction tx && RpcServerPlugin.LogEvents.ContainsKey(tx.Hash))
-                json["logs"] = RpcServerPlugin.LogEvents[tx.Hash].Select(p => p.Message) as JArray;
+                json["logs"] = new JArray(RpcServerPlugin.LogEvents[tx.Hash].Select(p => new JString(p.Message)));
             return json;
         }
 

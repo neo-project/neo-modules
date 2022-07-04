@@ -178,7 +178,7 @@ namespace Neo.Plugins
                 var txJson = TxLogToJson(appExec);
                 if (RpcServerPlugin.LogEvents.TryGetValue(appExec.Transaction.Hash, out var list))
                 {
-                    txJson["logs"] = list.Select(q => q.Message) as JArray;
+                    txJson["logs"] = new JArray(list.Select(q => new JString(q.Message)));
                 }
                 Put(appExec.Transaction.Hash.ToArray(), Neo.Utility.StrictUTF8.GetBytes(txJson.ToString()));
             }
