@@ -66,30 +66,32 @@ namespace Neo.Plugins
             server.StartRpcServer();
             servers.TryAdd(s.Network, server);
 
-            // It is potentially possible to have dos attack by sending a lot of transactions and logs.
-            // To prevent this, we limit the number of logs to be logged per contract.
-            // If the number of logs is greater than MAX_LOG_EVENTS, we remove the oldest log.
-            void Ev(object _, LogEventArgs e)
-            {
-                if (e.ScriptContainer is not Transaction tx) return;
-                if (!LogEvents.TryGetValue(tx.Hash, out var _logs))
-                {
-                    _logs = new Queue<LogEventArgs>();
-                    LogEvents.Add(tx.Hash, _logs);
-                }
-                if (LogEvents[tx.Hash].Count >= MaxLogEvents)
-                {
-                    _logs.Dequeue();
-                }
-                _logs.Enqueue(e);
-            }
             ApplicationEngine.Log += Ev;
             Blockchain.Committed += OnCommitted;
+        }
+
+        // It is potentially possible to have dos attack by sending a lot of transactions and logs.
+        // To prevent this, we limit the number of logs to be logged per contract.
+        // If the number of logs is greater than MAX_LOG_EVENTS, we remove the oldest log.
+        private static void Ev(object _, LogEventArgs e)
+        {
+            if (e.ScriptContainer is not Transaction tx) return;
+            if (!LogEvents.TryGetValue(tx.Hash, out var _logs))
+            {
+                _logs = new Queue<LogEventArgs>();
+                LogEvents.Add(tx.Hash, _logs);
+            }
+            if (LogEvents[tx.Hash].Count >= MaxLogEvents)
+            {
+                _logs.Dequeue();
+            }
+            _logs.Enqueue(e);
         }
 
         public override void Dispose()
         {
             Blockchain.Committed -= OnCommitted;
+            ApplicationEngine.Log -= Ev;
             foreach (var (_, server) in servers)
                 server.Dispose();
             base.Dispose();
