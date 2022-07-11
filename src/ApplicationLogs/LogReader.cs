@@ -176,13 +176,13 @@ namespace Neo.Plugins
             foreach (var appExec in applicationExecutedList.Where(p => p.Transaction != null))
             {
                 var txJson = TxLogToJson(appExec);
-                if (RpcServerPlugin.LogEvents.TryGetValue(appExec.Transaction.Hash, out var list))
+                if (RpcServer.LogEvents.TryGetValue(appExec.Transaction.Hash, out var list))
                 {
                     txJson["logs"] = new JArray(list.Select(q => new JString(q.Message)));
                 }
                 Put(appExec.Transaction.Hash.ToArray(), Neo.Utility.StrictUTF8.GetBytes(txJson.ToString()));
             }
-            RpcServerPlugin.LogEvents.Clear();
+            RpcServer.LogEvents.Clear();
 
             //processing log for block
             var blockJson = BlockLogToJson(block, applicationExecutedList);
