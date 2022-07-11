@@ -59,7 +59,7 @@ namespace Neo.Plugins
             RegisterMethods(this);
             Initialize_SmartContract();
 
-            ApplicationEngine.Log += Ev;
+            ApplicationEngine.Log += OnContractLogEvent;
             Blockchain.Committed += OnCommitted;
         }
 
@@ -114,7 +114,7 @@ namespace Neo.Plugins
         // It is potentially possible to have dos attack by sending a lot of transactions and logs.
         // To prevent this, we limit the number of logs to be logged per contract.
         // If the number of logs is greater than MAX_LOG_EVENTS, we remove the oldest log.
-        private static void Ev(object _, LogEventArgs e)
+        private static void OnContractLogEvent(object _, LogEventArgs e)
         {
             if (e.ScriptContainer is not Transaction tx) return;
             if (!LogEvents.TryGetValue(tx.Hash, out var _logs))
@@ -132,7 +132,7 @@ namespace Neo.Plugins
         public void Dispose()
         {
             Blockchain.Committed -= OnCommitted;
-            ApplicationEngine.Log -= Ev;
+            ApplicationEngine.Log -= OnContractLogEvent;
             Dispose_SmartContract();
             if (host != null)
             {
