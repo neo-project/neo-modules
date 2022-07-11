@@ -25,7 +25,7 @@ namespace Neo.Plugins
 {
     public class LogReader : Plugin
     {
-        private DB _db;
+        private DB db;
         private WriteBatch _writeBatch;
 
         public override string Name => "ApplicationLogs";
@@ -47,7 +47,7 @@ namespace Neo.Plugins
         {
             Settings.Load(GetConfiguration());
             string path = string.Format(Settings.Default.Path, Settings.Default.Network.ToString("X8"));
-            _db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
+            db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
         }
 
         protected override void OnSystemLoaded(NeoSystem system)
@@ -60,7 +60,7 @@ namespace Neo.Plugins
         public JObject GetApplicationLog(JArray _params)
         {
             UInt256 hash = UInt256.Parse(_params[0].AsString());
-            byte[] value = _db.Get(ReadOptions.Default, hash.ToArray());
+            byte[] value = db.Get(ReadOptions.Default, hash.ToArray());
             if (value is null)
                 throw new RpcException(-100, "Unknown transaction/blockhash");
 
@@ -195,7 +195,7 @@ namespace Neo.Plugins
         private void OnCommitted(NeoSystem system, Block block)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
-            _db.Write(WriteOptions.Default, _writeBatch);
+            db.Write(WriteOptions.Default, _writeBatch);
         }
 
         static string GetExceptionMessage(Exception exception)
