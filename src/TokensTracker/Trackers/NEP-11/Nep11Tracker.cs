@@ -258,12 +258,12 @@ namespace Neo.Plugins.Trackers.NEP_11
                     balances.Add(new JObject
                     {
                         ["assethash"] = key.ToString(),
+                        ["name"] = name,
+                        ["symbol"] = symbol,
+                        ["decimals"] = decimals.ToString(),
                         ["tokens"] = new JArray(map[key].Select(v => new JObject
                         {
                             ["tokenid"] = v.tokenid,
-                            ["name"] = name,
-                            ["symbol"] = symbol,
-                            ["decimals"] = decimals.ToString(),
                             ["amount"] = v.amount.ToString(),
                             ["lastupdatedblock"] = v.height
                         })),
