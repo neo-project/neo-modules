@@ -10,9 +10,6 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Neo.Ledger;
-using Neo.Network.P2P.Payloads;
-using Neo.SmartContract;
 
 namespace Neo.Plugins
 {
@@ -39,7 +36,6 @@ namespace Neo.Plugins
                 server.Dispose();
             base.Dispose();
         }
-        
         protected override void OnSystemLoaded(NeoSystem system)
         {
             RpcServerSettings s = settings.Servers.FirstOrDefault(p => p.Network == system.Settings.Network);
