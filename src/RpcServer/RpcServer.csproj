@@ -4,9 +4,5 @@
     <PackageId>Neo.Plugins.RpcServer</PackageId>
     <RootNamespace>Neo.Plugins</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\RpcClient\RpcClient.csproj" />
-  </ItemGroup>
   
 </Project>
