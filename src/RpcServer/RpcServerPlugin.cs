@@ -33,6 +33,13 @@ namespace Neo.Plugins
                     server.UpdateSettings(s);
         }
 
+        public override void Dispose()
+        {
+            foreach (var (_, server) in servers)
+                server.Dispose();
+            base.Dispose();
+        }
+        
         protected override void OnSystemLoaded(NeoSystem system)
         {
             RpcServerSettings s = settings.Servers.FirstOrDefault(p => p.Network == system.Settings.Network);
@@ -50,13 +57,6 @@ namespace Neo.Plugins
 
             server.StartRpcServer();
             servers.TryAdd(s.Network, server);
-        }
-
-        public override void Dispose()
-        {
-            foreach (var (_, server) in servers)
-                server.Dispose();
-            base.Dispose();
         }
 
         public static void RegisterMethods(object handler, uint network)
