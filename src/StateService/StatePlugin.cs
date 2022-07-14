@@ -87,8 +87,8 @@ namespace Neo.Plugins.StateService
             base.Dispose();
             Blockchain.Committing -= OnCommitting;
             Blockchain.Committed -= OnCommitted;
-            if (Store is not null) System.EnsureStoped(Store);
-            if (Verifier is not null) System.EnsureStoped(Verifier);
+            if (Store is not null) System.EnsureStopped(Store);
+            if (Verifier is not null) System.EnsureStopped(Verifier);
         }
 
         private void OnCommitting(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
