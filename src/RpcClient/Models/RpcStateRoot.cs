@@ -9,7 +9,7 @@
 // modifications are permitted.
 
 using System.Linq;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
 
 namespace Neo.Network.RPC.Models
@@ -21,7 +21,7 @@ namespace Neo.Network.RPC.Models
         public UInt256 RootHash;
         public Witness Witness;
 
-        public static RpcStateRoot FromJson(JObject json)
+        public static RpcStateRoot FromJson(JToken json)
         {
             return new RpcStateRoot
             {

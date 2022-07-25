@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.SmartContract;
 using System;
 
@@ -16,7 +16,7 @@ namespace Neo.Network.RPC.Models
 {
     class RpcMethodToken
     {
-        public static MethodToken FromJson(JObject json)
+        public static MethodToken FromJson(JToken json)
         {
             return new MethodToken
             {

@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Wallets;
 
 namespace Neo.Network.RPC.Models
@@ -21,7 +21,7 @@ namespace Neo.Network.RPC.Models
 
         public string Value { get; set; }
 
-        public JObject ToJson(ProtocolSettings protocolSettings)
+        public JToken ToJson(ProtocolSettings protocolSettings)
         {
             return new JObject
             {
@@ -31,7 +31,7 @@ namespace Neo.Network.RPC.Models
             };
         }
 
-        public static RpcTransferOut FromJson(JObject json, ProtocolSettings protocolSettings)
+        public static RpcTransferOut FromJson(JToken json, ProtocolSettings protocolSettings)
         {
             return new RpcTransferOut
             {

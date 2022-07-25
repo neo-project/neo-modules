@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using System.Linq;
 
 namespace Neo.Network.RPC.Models
@@ -21,16 +21,16 @@ namespace Neo.Network.RPC.Models
 
         public RpcPeer[] Connected { get; set; }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
-            JObject json = new();
+            var json = new JObject();
             json["unconnected"] = new JArray(Unconnected.Select(p => p.ToJson()));
             json["bad"] = new JArray(Bad.Select(p => p.ToJson()));
             json["connected"] = new JArray(Connected.Select(p => p.ToJson()));
             return json;
         }
 
-        public static RpcPeers FromJson(JObject json)
+        public static RpcPeers FromJson(JToken json)
         {
             return new RpcPeers
             {
@@ -47,15 +47,15 @@ namespace Neo.Network.RPC.Models
 
         public int Port { get; set; }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
-            JObject json = new();
+            var json = new JObject();
             json["address"] = Address;
             json["port"] = Port;
             return json;
         }
 
-        public static RpcPeer FromJson(JObject json)
+        public static RpcPeer FromJson(JToken json)
         {
             return new RpcPeer
             {

@@ -10,7 +10,7 @@
 
 using System;
 using System.Linq;
-using Neo.IO.Json;
+using Neo.Json;
 
 namespace Neo.Network.RPC.Models
 {
@@ -21,7 +21,7 @@ namespace Neo.Network.RPC.Models
         public byte[] FirstProof;
         public byte[] LastProof;
 
-        public static RpcFoundStates FromJson(JObject json)
+        public static RpcFoundStates FromJson(JToken json)
         {
             return new RpcFoundStates
             {
@@ -37,7 +37,7 @@ namespace Neo.Network.RPC.Models
             };
         }
 
-        static byte[] ProofFromJson(JObject json)
+        static byte[] ProofFromJson(JToken json)
             => json == null ? null : Convert.FromBase64String(json.AsString());
     }
 }

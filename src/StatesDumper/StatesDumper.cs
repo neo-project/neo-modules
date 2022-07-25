@@ -10,7 +10,7 @@
 
 using Neo.ConsoleService;
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -96,7 +96,7 @@ namespace Neo.Plugins
                 {
                     if (Settings.Default.Exclude.Contains(trackable.Key.Id))
                         continue;
-                    JObject state = new JObject();
+                    JToken state = new JObject();
                     switch (trackable.State)
                     {
                         case TrackState.Added:
@@ -118,7 +118,7 @@ namespace Neo.Plugins
                     array.Add(state);
                 }
 
-                JObject bs_item = new JObject();
+                JToken bs_item = new JObject();
                 bs_item["block"] = blockIndex;
                 bs_item["size"] = array.Count;
                 bs_item["storage"] = array;

@@ -15,7 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -134,9 +134,9 @@ namespace Neo.Plugins.Trackers
             };
         }
 
-        protected JObject ToJson(TokenTransferKey key, TokenTransfer value)
+        protected JToken ToJson(TokenTransferKey key, TokenTransfer value)
         {
-            JObject transfer = new();
+            var transfer = new JObject();
             transfer["timestamp"] = key.TimestampMS;
             transfer["assethash"] = key.AssetScriptHash.ToString();
             transfer["transferaddress"] = value.UserScriptHash == UInt160.Zero ? null : value.UserScriptHash.ToAddress(_neoSystem.Settings.AddressVersion);

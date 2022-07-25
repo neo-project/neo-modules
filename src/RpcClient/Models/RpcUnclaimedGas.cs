@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 
 namespace Neo.Network.RPC.Models
 {
@@ -18,15 +18,15 @@ namespace Neo.Network.RPC.Models
 
         public string Address { get; set; }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
-            JObject json = new();
+            var json = new JObject();
             json["unclaimed"] = Unclaimed.ToString();
             json["address"] = Address;
             return json;
         }
 
-        public static RpcUnclaimedGas FromJson(JObject json)
+        public static RpcUnclaimedGas FromJson(JToken json)
         {
             return new RpcUnclaimedGas
             {

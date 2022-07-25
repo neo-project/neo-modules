@@ -14,7 +14,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.RPC.Models;
 
 namespace Neo.Network.RPC
@@ -57,11 +57,11 @@ namespace Neo.Network.RPC
             return (localRootIndex, validatedRootIndex);
         }
 
-        static uint? ToNullableUint(JObject json) => (json == null) ? (uint?)null : (uint?)json.AsNumber();
+        static uint? ToNullableUint(JToken json) => (json == null) ? (uint?)null : (uint?)json.AsNumber();
 
-        public static JObject[] MakeFindStatesParams(UInt256 rootHash, UInt160 scriptHash, ReadOnlySpan<byte> prefix, ReadOnlySpan<byte> from = default, int? count = null)
+        public static JToken[] MakeFindStatesParams(UInt256 rootHash, UInt160 scriptHash, ReadOnlySpan<byte> prefix, ReadOnlySpan<byte> from = default, int? count = null)
         {
-            var @params = new JObject[count.HasValue ? 5 : 4];
+            var @params = new JToken[count.HasValue ? 5 : 4];
             @params[0] = rootHash.ToString();
             @params[1] = scriptHash.ToString();
             @params[2] = Convert.ToBase64String(prefix);

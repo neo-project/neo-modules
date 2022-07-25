@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.VM;
 
@@ -26,9 +26,9 @@ namespace Neo.Network.RPC.Models
 
         public VMState? VMState { get; set; }
 
-        public JObject ToJson(ProtocolSettings protocolSettings)
+        public JToken ToJson(ProtocolSettings protocolSettings)
         {
-            JObject json = Utility.TransactionToJson(Transaction, protocolSettings);
+            JToken json = Utility.TransactionToJson(Transaction, protocolSettings);
             if (Confirmations != null)
             {
                 json["blockhash"] = BlockHash.ToString();
@@ -42,7 +42,7 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcTransaction FromJson(JObject json, ProtocolSettings protocolSettings)
+        public static RpcTransaction FromJson(JToken json, ProtocolSettings protocolSettings)
         {
             RpcTransaction transaction = new RpcTransaction
             {
@@ -53,7 +53,7 @@ namespace Neo.Network.RPC.Models
                 transaction.BlockHash = UInt256.Parse(json["blockhash"].AsString());
                 transaction.Confirmations = (uint)json["confirmations"].AsNumber();
                 transaction.BlockTime = (ulong)json["blocktime"].AsNumber();
-                transaction.VMState = json["vmstate"]?.TryGetEnum<VMState>();
+                transaction.VMState = json["vmstate"]?.AsEnum<VMState>();
             }
             return transaction;
         }

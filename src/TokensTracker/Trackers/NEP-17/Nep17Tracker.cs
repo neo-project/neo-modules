@@ -12,7 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -141,7 +141,7 @@ namespace Neo.Plugins.Trackers.NEP_17
 
 
         [RpcMethod]
-        public JObject GetNep17Transfers(JArray _params)
+        public JToken GetNep17Transfers(JArray _params)
         {
             if (!_shouldTrackHistory) throw new RpcException(-32601, "Method not found");
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
@@ -152,7 +152,7 @@ namespace Neo.Plugins.Trackers.NEP_17
 
             if (endTime < startTime) throw new RpcException(-32602, "Invalid params");
 
-            JObject json = new();
+            var json = new JObject();
             json["address"] = userScriptHash.ToAddress(_neoSystem.Settings.AddressVersion);
             JArray transfersSent = new();
             json["sent"] = transfersSent;
@@ -164,11 +164,11 @@ namespace Neo.Plugins.Trackers.NEP_17
         }
 
         [RpcMethod]
-        public JObject GetNep17Balances(JArray _params)
+        public JToken GetNep17Balances(JArray _params)
         {
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
 
-            JObject json = new();
+            var json = new JObject();
             JArray balances = new();
             json["address"] = userScriptHash.ToAddress(_neoSystem.Settings.AddressVersion);
             json["balance"] = balances;

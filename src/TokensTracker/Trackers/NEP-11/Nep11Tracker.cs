@@ -12,7 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -192,7 +192,7 @@ namespace Neo.Plugins.Trackers.NEP_11
 
 
         [RpcMethod]
-        public JObject GetNep11Transfers(JArray _params)
+        public JToken GetNep11Transfers(JArray _params)
         {
             if (!_shouldTrackHistory) throw new RpcException(-32601, "Method not found");
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
@@ -203,7 +203,7 @@ namespace Neo.Plugins.Trackers.NEP_11
 
             if (endTime < startTime) throw new RpcException(-32602, "Invalid params");
 
-            JObject json = new();
+            var json = new JObject();
             json["address"] = userScriptHash.ToAddress(_neoSystem.Settings.AddressVersion);
             JArray transfersSent = new();
             json["sent"] = transfersSent;
@@ -215,7 +215,7 @@ namespace Neo.Plugins.Trackers.NEP_11
         }
 
         [RpcMethod]
-        public JObject GetNep11Balances(JArray _params)
+        public JToken GetNep11Balances(JArray _params)
         {
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
 
@@ -275,7 +275,7 @@ namespace Neo.Plugins.Trackers.NEP_11
         }
 
         [RpcMethod]
-        public JObject GetNep11Properties(JArray _params)
+        public JToken GetNep11Properties(JArray _params)
         {
             UInt160 nep11Hash = GetScriptHashFromParam(_params[0].AsString());
             var tokenId = _params[1].AsString().HexToBytes();
@@ -312,7 +312,7 @@ namespace Neo.Plugins.Trackers.NEP_11
             var transferPairs = QueryTransfers<Nep11TransferKey, TokenTransfer>(dbPrefix, userScriptHash, startTime, endTime).Take((int)_maxResults).ToList();
             foreach (var (key, value) in transferPairs.OrderByDescending(l => l.key.TimestampMS))
             {
-                JObject transfer = ToJson(key, value);
+                JToken transfer = ToJson(key, value);
                 transfer["tokenid"] = key.Token.GetSpan().ToHexString();
                 parentJArray.Add(transfer);
             }

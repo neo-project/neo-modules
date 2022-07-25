@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -22,16 +22,16 @@ namespace Neo.Network.RPC.Models
 
         public List<UInt256> UnVerified { get; set; }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
-            JObject json = new();
+            var json = new JObject();
             json["height"] = Height;
-            json["verified"] = new JArray(Verified.Select(p => (JObject)p.ToString()));
-            json["unverified"] = new JArray(UnVerified.Select(p => (JObject)p.ToString()));
+            json["verified"] = new JArray(Verified.Select(p => (JToken)p.ToString()));
+            json["unverified"] = new JArray(UnVerified.Select(p => (JToken)p.ToString()));
             return json;
         }
 
-        public static RpcRawMemPool FromJson(JObject json)
+        public static RpcRawMemPool FromJson(JToken json)
         {
             return new RpcRawMemPool
             {

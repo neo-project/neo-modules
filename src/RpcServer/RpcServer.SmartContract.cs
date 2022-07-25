@@ -10,7 +10,7 @@
 
 using Neo.Cryptography.ECC;
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
@@ -65,9 +65,9 @@ namespace Neo.Plugins
                 session.Dispose();
         }
 
-        private JObject GetInvokeResult(byte[] script, Signer[] signers = null, Witness[] witnesses = null, bool useDiagnostic = false)
+        private JToken GetInvokeResult(byte[] script, Signer[] signers = null, Witness[] witnesses = null, bool useDiagnostic = false)
         {
-            JObject json = new();
+            var json = new JObject();
             Session session = new(system, script, signers, witnesses, settings.MaxGasInvoke, useDiagnostic ? new Diagnostic() : null);
             try
             {
@@ -124,9 +124,9 @@ namespace Neo.Plugins
             return json;
         }
 
-        private static JObject ToJson(TreeNode<UInt160> node)
+        private static JToken ToJson(TreeNode<UInt160> node)
         {
-            JObject json = new();
+            var json = new JObject();
             json["hash"] = node.Item.ToString();
             if (node.Children.Any())
             {
@@ -135,7 +135,7 @@ namespace Neo.Plugins
             return json;
         }
 
-        private static JObject ToJson(IEnumerable<DataCache.Trackable> changes)
+        private static JToken ToJson(IEnumerable<DataCache.Trackable> changes)
         {
             JArray array = new();
             foreach (var entry in changes)
@@ -150,9 +150,9 @@ namespace Neo.Plugins
             return array;
         }
 
-        private static JObject ToJson(StackItem item, Session session)
+        private static JToken ToJson(StackItem item, Session session)
         {
-            JObject json = item.ToJson();
+            JToken json = item.ToJson();
             if (item is InteropInterface interopInterface && interopInterface.GetInterface<object>() is IIterator iterator)
             {
                 Guid id = Guid.NewGuid();
@@ -171,7 +171,7 @@ namespace Neo.Plugins
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), u["scopes"]?.AsString()),
                 AllowedContracts = ((JArray)u["allowedcontracts"])?.Select(p => UInt160.Parse(p.AsString())).ToArray(),
                 AllowedGroups = ((JArray)u["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray(),
-                Rules = ((JArray)u["rules"])?.Select(WitnessRule.FromJson).ToArray(),
+                Rules = ((JArray)u["rules"])?.Select(r => WitnessRule.FromJson((JObject)r)).ToArray(),
             }).ToArray();
 
             // Validate format
@@ -195,11 +195,11 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject InvokeFunction(JArray _params)
+        protected virtual JToken InvokeFunction(JArray _params)
         {
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
-            ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson(p)).ToArray() : System.Array.Empty<ContractParameter>();
+            ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson((JObject)p)).ToArray() : System.Array.Empty<ContractParameter>();
             Signer[] signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
             Witness[] witnesses = _params.Count >= 4 ? WitnessesFromJson((JArray)_params[3]) : null;
             bool useDiagnostic = _params.Count >= 5 && _params[4].GetBoolean();
@@ -213,7 +213,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject InvokeScript(JArray _params)
+        protected virtual JToken InvokeScript(JArray _params)
         {
             byte[] script = Convert.FromBase64String(_params[0].AsString());
             Signer[] signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], system.Settings) : null;
@@ -223,7 +223,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject TraverseIterator(JArray _params)
+        protected virtual JToken TraverseIterator(JArray _params)
         {
             Guid sid = Guid.Parse(_params[0].GetString());
             Guid iid = Guid.Parse(_params[1].GetString());
@@ -244,7 +244,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject TerminateSession(JArray _params)
+        protected virtual JToken TerminateSession(JArray _params)
         {
             Guid sid = Guid.Parse(_params[0].GetString());
             Session session;
@@ -256,10 +256,10 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetUnclaimedGas(JArray _params)
+        protected virtual JToken GetUnclaimedGas(JArray _params)
         {
             string address = _params[0].AsString();
-            JObject json = new();
+            var json = new JObject();
             UInt160 script_hash;
             try
             {

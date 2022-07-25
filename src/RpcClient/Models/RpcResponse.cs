@@ -8,23 +8,23 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 
 namespace Neo.Network.RPC.Models
 {
     public class RpcResponse
     {
-        public JObject Id { get; set; }
+        public JToken Id { get; set; }
 
         public string JsonRpc { get; set; }
 
         public RpcResponseError Error { get; set; }
 
-        public JObject Result { get; set; }
+        public JToken Result { get; set; }
 
         public string RawResponse { get; set; }
 
-        public static RpcResponse FromJson(JObject json)
+        public static RpcResponse FromJson(JToken json)
         {
             RpcResponse response = new()
             {
@@ -41,9 +41,9 @@ namespace Neo.Network.RPC.Models
             return response;
         }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
-            JObject json = new();
+            var json = new JObject();
             json["id"] = Id;
             json["jsonrpc"] = JsonRpc;
             json["error"] = Error?.ToJson();
@@ -58,9 +58,9 @@ namespace Neo.Network.RPC.Models
 
         public string Message { get; set; }
 
-        public JObject Data { get; set; }
+        public JToken Data { get; set; }
 
-        public static RpcResponseError FromJson(JObject json)
+        public static RpcResponseError FromJson(JToken json)
         {
             return new RpcResponseError
             {
@@ -70,9 +70,9 @@ namespace Neo.Network.RPC.Models
             };
         }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
-            JObject json = new();
+            var json = new JObject();
             json["code"] = Code;
             json["message"] = Message;
             json["data"] = Data;

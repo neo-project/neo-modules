@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 
 namespace Neo.Network.RPC.Models
 {
@@ -22,7 +22,7 @@ namespace Neo.Network.RPC.Models
 
         public bool WatchOnly { get; set; }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
             return new JObject
             {
@@ -33,7 +33,7 @@ namespace Neo.Network.RPC.Models
             };
         }
 
-        public static RpcAccount FromJson(JObject json)
+        public static RpcAccount FromJson(JToken json)
         {
             return new RpcAccount
             {

@@ -1,4 +1,4 @@
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ namespace Neo.Network.RPC.Tests
 {
     internal static class TestUtils
     {
-        public readonly static List<RpcTestCase> RpcTestCases = ((JArray)JObject.Parse(File.ReadAllText("RpcTestCases.json"))).Select(p => RpcTestCase.FromJson(p)).ToList();
+        public readonly static List<RpcTestCase> RpcTestCases = ((JArray)JToken.Parse(File.ReadAllText("RpcTestCases.json"))).Select(p => RpcTestCase.FromJson(p)).ToList();
 
         public static Block GetBlock(int txCount)
         {
@@ -60,7 +60,7 @@ namespace Neo.Network.RPC.Tests
         public RpcRequest Request { get; set; }
         public RpcResponse Response { get; set; }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
             return new JObject
             {
@@ -70,7 +70,7 @@ namespace Neo.Network.RPC.Tests
             };
         }
 
-        public static RpcTestCase FromJson(JObject json)
+        public static RpcTestCase FromJson(JToken json)
         {
             return new RpcTestCase
             {

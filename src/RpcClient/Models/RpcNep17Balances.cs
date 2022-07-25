@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Wallets;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,15 +22,15 @@ namespace Neo.Network.RPC.Models
 
         public List<RpcNep17Balance> Balances { get; set; }
 
-        public JObject ToJson(ProtocolSettings protocolSettings)
+        public JToken ToJson(ProtocolSettings protocolSettings)
         {
-            JObject json = new();
+            var json = new JObject();
             json["balance"] = Balances.Select(p => p.ToJson()).ToArray();
             json["address"] = UserScriptHash.ToAddress(protocolSettings.AddressVersion);
             return json;
         }
 
-        public static RpcNep17Balances FromJson(JObject json, ProtocolSettings protocolSettings)
+        public static RpcNep17Balances FromJson(JToken json, ProtocolSettings protocolSettings)
         {
             RpcNep17Balances nep17Balance = new()
             {
@@ -49,16 +49,16 @@ namespace Neo.Network.RPC.Models
 
         public uint LastUpdatedBlock { get; set; }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
-            JObject json = new();
+            var json = new JObject();
             json["assethash"] = AssetHash.ToString();
             json["amount"] = Amount.ToString();
             json["lastupdatedblock"] = LastUpdatedBlock;
             return json;
         }
 
-        public static RpcNep17Balance FromJson(JObject json, ProtocolSettings protocolSettings)
+        public static RpcNep17Balance FromJson(JToken json, ProtocolSettings protocolSettings)
         {
             RpcNep17Balance balance = new()
             {

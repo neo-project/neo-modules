@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
 using System.Linq;
@@ -23,19 +23,19 @@ namespace Neo.Network.RPC.Models
         public ContractManifest Manifest { get; set; }
         public uint[] UpdateHistory { get; set; }
 
-        public static RpcNativeContract FromJson(JObject json)
+        public static RpcNativeContract FromJson(JToken json)
         {
             return new RpcNativeContract
             {
                 Id = (int)json["id"].AsNumber(),
                 Hash = UInt160.Parse(json["hash"].AsString()),
                 Nef = RpcNefFile.FromJson(json["nef"]),
-                Manifest = ContractManifest.FromJson(json["manifest"]),
-                UpdateHistory = json["updatehistory"].GetArray().Select(u => (uint)u.GetInt32()).ToArray()
+                Manifest = ContractManifest.FromJson((JObject)json["manifest"]),
+                UpdateHistory = ((JArray)json["updatehistory"]).Select(u => (uint)u.GetInt32()).ToArray()
             };
         }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
             return new JObject
             {

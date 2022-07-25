@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using System.Linq;
 
 namespace Neo.Network.RPC.Models
@@ -21,16 +21,16 @@ namespace Neo.Network.RPC.Models
 
         public string[] Interfaces { get; set; }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
-            JObject json = new();
+            var json = new JObject();
             json["name"] = Name;
             json["version"] = Version;
-            json["interfaces"] = new JArray(Interfaces.Select(p => (JObject)p));
+            json["interfaces"] = new JArray(Interfaces.Select(p => (JToken)p));
             return json;
         }
 
-        public static RpcPlugin FromJson(JObject json)
+        public static RpcPlugin FromJson(JToken json)
         {
             return new RpcPlugin
             {

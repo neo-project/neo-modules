@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Wallets;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,16 +24,16 @@ namespace Neo.Network.RPC.Models
 
         public List<RpcNep17Transfer> Received { get; set; }
 
-        public JObject ToJson(ProtocolSettings protocolSettings)
+        public JToken ToJson(ProtocolSettings protocolSettings)
         {
-            JObject json = new();
+            var json = new JObject();
             json["sent"] = Sent.Select(p => p.ToJson(protocolSettings)).ToArray();
             json["received"] = Received.Select(p => p.ToJson(protocolSettings)).ToArray();
             json["address"] = UserScriptHash.ToAddress(protocolSettings.AddressVersion);
             return json;
         }
 
-        public static RpcNep17Transfers FromJson(JObject json, ProtocolSettings protocolSettings)
+        public static RpcNep17Transfers FromJson(JToken json, ProtocolSettings protocolSettings)
         {
             RpcNep17Transfers transfers = new()
             {
@@ -61,9 +61,9 @@ namespace Neo.Network.RPC.Models
 
         public UInt256 TxHash { get; set; }
 
-        public JObject ToJson(ProtocolSettings protocolSettings)
+        public JToken ToJson(ProtocolSettings protocolSettings)
         {
-            JObject json = new();
+            var json = new JObject();
             json["timestamp"] = TimestampMS;
             json["assethash"] = AssetHash.ToString();
             json["transferaddress"] = UserScriptHash?.ToAddress(protocolSettings.AddressVersion);
@@ -74,7 +74,7 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcNep17Transfer FromJson(JObject json, ProtocolSettings protocolSettings)
+        public static RpcNep17Transfer FromJson(JToken json, ProtocolSettings protocolSettings)
         {
             return new RpcNep17Transfer
             {

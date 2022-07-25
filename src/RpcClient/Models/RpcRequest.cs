@@ -8,22 +8,22 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using System.Linq;
 
 namespace Neo.Network.RPC.Models
 {
     public class RpcRequest
     {
-        public JObject Id { get; set; }
+        public JToken Id { get; set; }
 
         public string JsonRpc { get; set; }
 
         public string Method { get; set; }
 
-        public JObject[] Params { get; set; }
+        public JToken[] Params { get; set; }
 
-        public static RpcRequest FromJson(JObject json)
+        public static RpcRequest FromJson(JToken json)
         {
             return new RpcRequest
             {
@@ -34,7 +34,7 @@ namespace Neo.Network.RPC.Models
             };
         }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
             var json = new JObject();
             json["id"] = Id;

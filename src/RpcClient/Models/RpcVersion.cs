@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 
 namespace Neo.Network.RPC.Models
 {
@@ -26,9 +26,9 @@ namespace Neo.Network.RPC.Models
             public int MemoryPoolMaxTransactions { get; set; }
             public ulong InitialGasDistribution { get; set; }
 
-            public JObject ToJson()
+            public JToken ToJson()
             {
-                JObject json = new();
+                var json = new JObject();
                 json["network"] = Network;
                 json["validatorscount"] = ValidatorsCount;
                 json["msperblock"] = MillisecondsPerBlock;
@@ -41,7 +41,7 @@ namespace Neo.Network.RPC.Models
                 return json;
             }
 
-            public static RpcProtocol FromJson(JObject json)
+            public static RpcProtocol FromJson(JToken json)
             {
                 return new()
                 {
@@ -68,9 +68,9 @@ namespace Neo.Network.RPC.Models
 
         public RpcProtocol Protocol { get; set; } = new();
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
-            JObject json = new();
+            var json = new JObject();
             json["network"] = Protocol.Network; // Obsolete
             json["tcpport"] = TcpPort;
             json["wsport"] = WsPort;
@@ -80,7 +80,7 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcVersion FromJson(JObject json)
+        public static RpcVersion FromJson(JToken json)
         {
             return new()
             {

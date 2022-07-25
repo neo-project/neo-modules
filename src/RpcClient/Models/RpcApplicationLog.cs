@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.SmartContract;
 using Neo.VM;
 using Neo.VM.Types;
@@ -25,9 +25,9 @@ namespace Neo.Network.RPC.Models
 
         public List<Execution> Executions { get; set; }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
-            JObject json = new JObject();
+            JToken json = new JObject();
             if (TxId != null)
                 json["txid"] = TxId.ToString();
             if (BlockHash != null)
@@ -36,7 +36,7 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcApplicationLog FromJson(JObject json, ProtocolSettings protocolSettings)
+        public static RpcApplicationLog FromJson(JToken json, ProtocolSettings protocolSettings)
         {
             return new RpcApplicationLog
             {
@@ -61,9 +61,9 @@ namespace Neo.Network.RPC.Models
 
         public List<RpcNotifyEventArgs> Notifications { get; set; }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
-            JObject json = new();
+            var json = new JObject();
             json["trigger"] = Trigger;
             json["vmstate"] = VMState;
             json["gasconsumed"] = GasConsumed.ToString();
@@ -73,12 +73,12 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static Execution FromJson(JObject json, ProtocolSettings protocolSettings)
+        public static Execution FromJson(JToken json, ProtocolSettings protocolSettings)
         {
             return new Execution
             {
-                Trigger = json["trigger"].TryGetEnum<TriggerType>(),
-                VMState = json["vmstate"].TryGetEnum<VMState>(),
+                Trigger = json["trigger"].AsEnum<TriggerType>(),
+                VMState = json["vmstate"].AsEnum<VMState>(),
                 GasConsumed = long.Parse(json["gasconsumed"].AsString()),
                 ExceptionMessage = json["exception"]?.AsString(),
                 Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToList(),
@@ -95,16 +95,16 @@ namespace Neo.Network.RPC.Models
 
         public StackItem State { get; set; }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
-            JObject json = new();
+            var json = new JObject();
             json["contract"] = Contract.ToString();
             json["eventname"] = EventName;
             json["state"] = State.ToJson();
             return json;
         }
 
-        public static RpcNotifyEventArgs FromJson(JObject json, ProtocolSettings protocolSettings)
+        public static RpcNotifyEventArgs FromJson(JToken json, ProtocolSettings protocolSettings)
         {
             return new RpcNotifyEventArgs
             {

@@ -10,7 +10,7 @@
 
 using Akka.Actor;
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
@@ -23,18 +23,18 @@ namespace Neo.Plugins
     partial class RpcServer
     {
         [RpcMethod]
-        protected virtual JObject GetConnectionCount(JArray _params)
+        protected virtual JToken GetConnectionCount(JArray _params)
         {
             return localNode.ConnectedCount;
         }
 
         [RpcMethod]
-        protected virtual JObject GetPeers(JArray _params)
+        protected virtual JToken GetPeers(JArray _params)
         {
-            JObject json = new();
+            var json = new JObject();
             json["unconnected"] = new JArray(localNode.GetUnconnectedPeers().Select(p =>
             {
-                JObject peerJson = new();
+                var peerJson = new JObject();
                 peerJson["address"] = p.Address.ToString();
                 peerJson["port"] = p.Port;
                 return peerJson;
@@ -42,7 +42,7 @@ namespace Neo.Plugins
             json["bad"] = new JArray(); //badpeers has been removed
             json["connected"] = new JArray(localNode.GetRemoteNodes().Select(p =>
             {
-                JObject peerJson = new();
+                var peerJson = new JObject();
                 peerJson["address"] = p.Remote.Address.ToString();
                 peerJson["port"] = p.ListenerTcpPort;
                 return peerJson;
@@ -50,7 +50,7 @@ namespace Neo.Plugins
             return json;
         }
 
-        private static JObject GetRelayResult(VerifyResult reason, UInt256 hash)
+        private static JToken GetRelayResult(VerifyResult reason, UInt256 hash)
         {
             if (reason == VerifyResult.Succeed)
             {
@@ -65,9 +65,9 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetVersion(JArray _params)
+        protected virtual JToken GetVersion(JArray _params)
         {
-            JObject json = new();
+            var json = new JObject();
             json["tcpport"] = localNode.ListenerTcpPort;
             json["wsport"] = localNode.ListenerWsPort;
             json["nonce"] = LocalNode.Nonce;
@@ -86,7 +86,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject SendRawTransaction(JArray _params)
+        protected virtual JToken SendRawTransaction(JArray _params)
         {
             Transaction tx = Convert.FromBase64String(_params[0].AsString()).AsSerializable<Transaction>();
             RelayResult reason = system.Blockchain.Ask<RelayResult>(tx).Result;
@@ -94,7 +94,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject SubmitBlock(JArray _params)
+        protected virtual JToken SubmitBlock(JArray _params)
         {
             Block block = Convert.FromBase64String(_params[0].AsString()).AsSerializable<Block>();
             RelayResult reason = system.Blockchain.Ask<RelayResult>(block).Result;

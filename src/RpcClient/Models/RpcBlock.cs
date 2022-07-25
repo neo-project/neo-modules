@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
 
 namespace Neo.Network.RPC.Models
@@ -21,15 +21,15 @@ namespace Neo.Network.RPC.Models
 
         public UInt256 NextBlockHash { get; set; }
 
-        public JObject ToJson(ProtocolSettings protocolSettings)
+        public JToken ToJson(ProtocolSettings protocolSettings)
         {
-            JObject json = Utility.BlockToJson(Block, protocolSettings);
+            JToken json = Utility.BlockToJson(Block, protocolSettings);
             json["confirmations"] = Confirmations;
             json["nextblockhash"] = NextBlockHash?.ToString();
             return json;
         }
 
-        public static RpcBlock FromJson(JObject json, ProtocolSettings protocolSettings)
+        public static RpcBlock FromJson(JToken json, ProtocolSettings protocolSettings)
         {
             return new RpcBlock
             {

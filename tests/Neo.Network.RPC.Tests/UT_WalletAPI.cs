@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Neo.Cryptography.ECC;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
@@ -87,7 +87,7 @@ namespace Neo.Network.RPC.Tests
 
             var json = new JObject();
             json["hash"] = UInt256.Zero.ToString();
-            rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JObject>())).ReturnsAsync(json);
+            rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JToken>())).ReturnsAsync(json);
 
             var tranaction = await walletAPI.ClaimGasAsync(keyPair1.Export());
             Assert.AreEqual(testScript.ToHexString(), tranaction.Script.Span.ToHexString());
@@ -104,7 +104,7 @@ namespace Neo.Network.RPC.Tests
 
             var json = new JObject();
             json["hash"] = UInt256.Zero.ToString();
-            rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JObject>())).ReturnsAsync(json);
+            rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JToken>())).ReturnsAsync(json);
 
             var tranaction = await walletAPI.TransferAsync(NativeContract.GAS.Hash.ToString(), keyPair1.Export(), UInt160.Zero.ToAddress(client.protocolSettings.AddressVersion), 100);
             Assert.AreEqual(testScript.ToHexString(), tranaction.Script.Span.ToHexString());
@@ -126,7 +126,7 @@ namespace Neo.Network.RPC.Tests
 
             var json = new JObject();
             json["hash"] = UInt256.Zero.ToString();
-            rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JObject>())).ReturnsAsync(json);
+            rpcClientMock.Setup(p => p.RpcSendAsync("sendrawtransaction", It.IsAny<JToken>())).ReturnsAsync(json);
 
             var tranaction = await walletAPI.TransferAsync(NativeContract.GAS.Hash, 1, new[] { keyPair1.PublicKey }, new[] { keyPair1 }, UInt160.Zero, NativeContract.GAS.Factor * 100);
             Assert.AreEqual(testScript.ToHexString(), tranaction.Script.Span.ToHexString());
@@ -152,7 +152,7 @@ namespace Neo.Network.RPC.Tests
         public async Task TestWaitTransaction()
         {
             Transaction transaction = TestUtils.GetTransaction();
-            rpcClientMock.Setup(p => p.RpcSendAsync("getrawtransaction", It.Is<JObject[]>(j => j[0].AsString() == transaction.Hash.ToString())))
+            rpcClientMock.Setup(p => p.RpcSendAsync("getrawtransaction", It.Is<JToken[]>(j => j[0].AsString() == transaction.Hash.ToString())))
                 .ReturnsAsync(new RpcTransaction { Transaction = transaction, VMState = VMState.HALT, BlockHash = UInt256.Zero, BlockTime = 100, Confirmations = 1 }.ToJson(client.protocolSettings));
 
             var tx = await walletAPI.WaitTransactionAsync(transaction);

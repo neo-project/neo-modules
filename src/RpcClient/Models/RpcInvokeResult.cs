@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.VM;
 using Neo.VM.Types;
 using System;
@@ -32,9 +32,9 @@ namespace Neo.Network.RPC.Models
 
         public string Session { get; set; }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
-            JObject json = new();
+            var json = new JObject();
             json["script"] = Script;
             json["state"] = State;
             json["gasconsumed"] = GasConsumed.ToString();
@@ -53,12 +53,12 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcInvokeResult FromJson(JObject json)
+        public static RpcInvokeResult FromJson(JToken json)
         {
             RpcInvokeResult invokeScriptResult = new()
             {
                 Script = json["script"].AsString(),
-                State = json["state"].TryGetEnum<VMState>(),
+                State = json["state"].AsEnum<VMState>(),
                 GasConsumed = long.Parse(json["gasconsumed"].AsString()),
             };
             invokeScriptResult.Exception = json["exception"]?.AsString();
@@ -79,15 +79,15 @@ namespace Neo.Network.RPC.Models
 
         public string Value { get; set; }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
-            JObject json = new();
+            var json = new JObject();
             json["type"] = Type;
             json["value"] = Value;
             return json;
         }
 
-        public static RpcStack FromJson(JObject json)
+        public static RpcStack FromJson(JToken json)
         {
             return new RpcStack
             {

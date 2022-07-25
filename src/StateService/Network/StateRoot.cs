@@ -10,7 +10,7 @@
 
 using Neo.Cryptography.ECC;
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -109,7 +109,7 @@ namespace Neo.Plugins.StateService.Network
             return new UInt160[] { Contract.GetBFTAddress(validators) };
         }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
             var json = new JObject();
             json["version"] = Version;

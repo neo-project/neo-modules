@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
 
@@ -18,12 +18,12 @@ namespace Neo.Network.RPC.Models
     {
         public ContractState ContractState { get; set; }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
             return ContractState.ToJson();
         }
 
-        public static RpcContractState FromJson(JObject json)
+        public static RpcContractState FromJson(JToken json)
         {
             return new RpcContractState
             {
@@ -33,7 +33,7 @@ namespace Neo.Network.RPC.Models
                     UpdateCounter = (ushort)json["updatecounter"].AsNumber(),
                     Hash = UInt160.Parse(json["hash"].AsString()),
                     Nef = RpcNefFile.FromJson(json["nef"]),
-                    Manifest = ContractManifest.FromJson(json["manifest"])
+                    Manifest = ContractManifest.FromJson((JObject)json["manifest"])
                 }
             };
         }

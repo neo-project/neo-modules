@@ -16,7 +16,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P;
 using System;
 using System.Collections.Generic;
@@ -73,9 +73,9 @@ namespace Neo.Plugins
             return authvalues[0] == settings.RpcUser && authvalues[1] == settings.RpcPass;
         }
 
-        private static JObject CreateErrorResponse(JObject id, int code, string message, JObject data = null)
+        private static JToken CreateErrorResponse(JToken id, int code, string message, JToken data = null)
         {
-            JObject response = CreateResponse(id);
+            JToken response = CreateResponse(id);
             response["error"] = new JObject();
             response["error"]["code"] = code;
             response["error"]["message"] = message;
@@ -84,7 +84,7 @@ namespace Neo.Plugins
             return response;
         }
 
-        private static JObject CreateResponse(JObject id)
+        private static JToken CreateResponse(JToken id)
         {
             JObject response = new();
             response["jsonrpc"] = "2.0";
@@ -164,7 +164,7 @@ namespace Neo.Plugins
             context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type";
             context.Response.Headers["Access-Control-Max-Age"] = "31536000";
             if (context.Request.Method != "GET" && context.Request.Method != "POST") return;
-            JObject request = null;
+            JToken request = null;
             if (context.Request.Method == "GET")
             {
                 string jsonrpc = context.Request.Query["jsonrpc"];
@@ -183,7 +183,7 @@ namespace Neo.Plugins
                         request["jsonrpc"] = jsonrpc;
                     request["id"] = id;
                     request["method"] = method;
-                    request["params"] = JObject.Parse(_params);
+                    request["params"] = JToken.Parse(_params);
                 }
             }
             else if (context.Request.Method == "POST")
@@ -191,11 +191,11 @@ namespace Neo.Plugins
                 using StreamReader reader = new(context.Request.Body);
                 try
                 {
-                    request = JObject.Parse(await reader.ReadToEndAsync());
+                    request = JToken.Parse(await reader.ReadToEndAsync());
                 }
                 catch (FormatException) { }
             }
-            JObject response;
+            JToken response;
             if (request == null)
             {
                 response = CreateErrorResponse(null, -32700, "Parse error");
@@ -208,28 +208,28 @@ namespace Neo.Plugins
                 }
                 else
                 {
-                    var tasks = array.Select(p => ProcessRequestAsync(context, p));
+                    var tasks = array.Select(p => ProcessRequestAsync(context, (JObject)p));
                     var results = await Task.WhenAll(tasks);
                     response = results.Where(p => p != null).ToArray();
                 }
             }
             else
             {
-                response = await ProcessRequestAsync(context, request);
+                response = await ProcessRequestAsync(context, (JObject)request);
             }
             if (response == null || (response as JArray)?.Count == 0) return;
             context.Response.ContentType = "application/json";
             await context.Response.WriteAsync(response.ToString(), Encoding.UTF8);
         }
 
-        private async Task<JObject> ProcessRequestAsync(HttpContext context, JObject request)
+        private async Task<JToken> ProcessRequestAsync(HttpContext context, JObject request)
         {
             if (!request.ContainsProperty("id")) return null;
             if (!request.ContainsProperty("method") || !request.ContainsProperty("params") || !(request["params"] is JArray))
             {
                 return CreateErrorResponse(request["id"], -32600, "Invalid Request");
             }
-            JObject response = CreateResponse(request["id"]);
+            JToken response = CreateResponse(request["id"]);
             try
             {
                 string method = request["method"].AsString();
@@ -239,8 +239,8 @@ namespace Neo.Plugins
                     throw new RpcException(-32601, "Method not found");
                 response["result"] = func((JArray)request["params"]) switch
                 {
-                    JObject result => result,
-                    Task<JObject> task => await task,
+                    JToken result => result,
+                    Task<JToken> task => await task,
                     _ => throw new NotSupportedException()
                 };
                 return response;

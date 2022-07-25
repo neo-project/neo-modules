@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using System.Numerics;
 
 namespace Neo.Network.RPC.Models
@@ -19,15 +19,15 @@ namespace Neo.Network.RPC.Models
 
         public BigInteger Votes { get; set; }
 
-        public JObject ToJson()
+        public JToken ToJson()
         {
-            JObject json = new();
+            var json = new JObject();
             json["publickey"] = PublicKey;
             json["votes"] = Votes.ToString();
             return json;
         }
 
-        public static RpcValidator FromJson(JObject json)
+        public static RpcValidator FromJson(JToken json)
         {
             return new RpcValidator
             {

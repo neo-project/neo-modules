@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.SmartContract;
 using System;
 using System.Linq;
@@ -17,7 +17,7 @@ namespace Neo.Network.RPC.Models
 {
     class RpcNefFile
     {
-        public static NefFile FromJson(JObject json)
+        public static NefFile FromJson(JToken json)
         {
             return new NefFile
             {

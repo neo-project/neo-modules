@@ -9,7 +9,7 @@
 // modifications are permitted.
 
 using Neo.Cryptography.ECC;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
@@ -18,6 +18,7 @@ using Neo.Wallets;
 using System;
 using System.Linq;
 using System.Numerics;
+using Neo.Json;
 using Array = Neo.VM.Types.Array;
 using Buffer = Neo.VM.Types.Buffer;
 
@@ -36,14 +37,14 @@ namespace Neo.Network.RPC
             return (numerator, denominator);
         }
 
-        public static UInt160 ToScriptHash(this JObject value, ProtocolSettings protocolSettings)
+        public static UInt160 ToScriptHash(this JToken value, ProtocolSettings protocolSettings)
         {
             var addressOrScriptHash = value.AsString();
 
             return addressOrScriptHash.Length < 40 ?
                 addressOrScriptHash.ToScriptHash(protocolSettings.AddressVersion) : UInt160.Parse(addressOrScriptHash);
         }
-
+        
         public static string AsScriptHash(this string addressOrScriptHash)
         {
             foreach (var native in NativeContract.Contracts)
@@ -127,7 +128,7 @@ namespace Neo.Network.RPC
             return res;
         }
 
-        public static Block BlockFromJson(JObject json, ProtocolSettings protocolSettings)
+        public static Block BlockFromJson(JToken json, ProtocolSettings protocolSettings)
         {
             return new Block()
             {
@@ -136,14 +137,14 @@ namespace Neo.Network.RPC
             };
         }
 
-        public static JObject BlockToJson(Block block, ProtocolSettings protocolSettings)
+        public static JToken BlockToJson(Block block, ProtocolSettings protocolSettings)
         {
-            JObject json = block.ToJson(protocolSettings);
+            JToken json = block.ToJson(protocolSettings);
             json["tx"] = block.Transactions.Select(p => TransactionToJson(p, protocolSettings)).ToArray();
             return json;
         }
 
-        public static Header HeaderFromJson(JObject json, ProtocolSettings protocolSettings)
+        public static Header HeaderFromJson(JToken json, ProtocolSettings protocolSettings)
         {
             return new Header
             {
@@ -159,7 +160,7 @@ namespace Neo.Network.RPC
             };
         }
 
-        public static Transaction TransactionFromJson(JObject json, ProtocolSettings protocolSettings)
+        public static Transaction TransactionFromJson(JToken json, ProtocolSettings protocolSettings)
         {
             return new Transaction
             {
@@ -175,15 +176,15 @@ namespace Neo.Network.RPC
             };
         }
 
-        public static JObject TransactionToJson(Transaction tx, ProtocolSettings protocolSettings)
+        public static JToken TransactionToJson(Transaction tx, ProtocolSettings protocolSettings)
         {
-            JObject json = tx.ToJson(protocolSettings);
+            JToken json = tx.ToJson(protocolSettings);
             json["sysfee"] = tx.SystemFee.ToString();
             json["netfee"] = tx.NetworkFee.ToString();
             return json;
         }
 
-        public static Signer SignerFromJson(JObject json, ProtocolSettings protocolSettings)
+        public static Signer SignerFromJson(JToken json, ProtocolSettings protocolSettings)
         {
             return new Signer
             {
@@ -194,7 +195,7 @@ namespace Neo.Network.RPC
             };
         }
 
-        public static TransactionAttribute TransactionAttributeFromJson(JObject json)
+        public static TransactionAttribute TransactionAttributeFromJson(JToken json)
         {
             TransactionAttributeType usage = Enum.Parse<TransactionAttributeType>(json["type"].AsString());
             return usage switch
@@ -210,7 +211,7 @@ namespace Neo.Network.RPC
             };
         }
 
-        public static Witness WitnessFromJson(JObject json)
+        public static Witness WitnessFromJson(JToken json)
         {
             return new Witness
             {
@@ -218,10 +219,10 @@ namespace Neo.Network.RPC
                 VerificationScript = Convert.FromBase64String(json["verification"].AsString())
             };
         }
-
-        public static StackItem StackItemFromJson(JObject json)
+        
+        public static StackItem StackItemFromJson(JToken json)
         {
-            StackItemType type = json["type"].TryGetEnum<StackItemType>();
+            StackItemType type = json["type"].AsEnum<StackItemType>();
             switch (type)
             {
                 case StackItemType.Boolean:
@@ -262,7 +263,7 @@ namespace Neo.Network.RPC
         {
             if (item is InteropInterface iop)
             {
-                var json = iop.GetInterface<JObject>();
+                var json = iop.GetInterface<JToken>();
                 return json["id"]?.GetString();
             }
             return null;
