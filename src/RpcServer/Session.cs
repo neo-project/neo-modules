@@ -15,6 +15,7 @@ using Neo.SmartContract.Iterators;
 using Neo.SmartContract.Native;
 using System;
 using System.Collections.Generic;
+using Neo.VM;
 
 namespace Neo.Plugins
 {
@@ -34,14 +35,17 @@ namespace Neo.Plugins
                 Version = 0,
                 Nonce = (uint)random.Next(),
                 ValidUntilBlock = NativeContract.Ledger.CurrentIndex(Snapshot) + system.Settings.MaxValidUntilBlockIncrement,
-                SystemFee = gas,
-                NetworkFee = 1_00000000,
                 Signers = signers,
                 Attributes = Array.Empty<TransactionAttribute>(),
                 Script = script,
                 Witnesses = witnesses
             };
             Engine = ApplicationEngine.Run(script, Snapshot, container: tx, settings: system.Settings, gas: gas, diagnostic: diagnostic);
+            if (Engine.State == VMState.HALT && tx != null)
+            {
+                tx.SystemFee = Engine.GasConsumed;
+                Engine = ApplicationEngine.Run(script, Snapshot, container: tx, settings: system.Settings, gas: gas, diagnostic: diagnostic);
+            }
             ResetExpiration();
         }
 
