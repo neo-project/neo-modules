@@ -18,7 +18,6 @@ using Neo.Wallets;
 using System;
 using System.Linq;
 using System.Numerics;
-using Neo.Json;
 using Array = Neo.VM.Types.Array;
 using Buffer = Neo.VM.Types.Buffer;
 
