@@ -44,6 +44,7 @@ namespace Neo.Plugins
             if (Engine.State == VMState.HALT && tx != null)
             {
                 tx.SystemFee = Engine.GasConsumed;
+                tx.NetworkFee = 1_00000000;
                 Engine = ApplicationEngine.Run(script, Snapshot, container: tx, settings: system.Settings, gas: Engine.GasConsumed, diagnostic: diagnostic);
             }
             ResetExpiration();
