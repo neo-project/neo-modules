@@ -34,8 +34,6 @@ namespace Neo.Plugins
                 Version = 0,
                 Nonce = (uint)random.Next(),
                 ValidUntilBlock = NativeContract.Ledger.CurrentIndex(Snapshot) + system.Settings.MaxValidUntilBlockIncrement,
-                SystemFee = gas,
-                NetworkFee = 1_00000000,
                 Signers = signers,
                 Attributes = Array.Empty<TransactionAttribute>(),
                 Script = script,
