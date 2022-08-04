@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <PackageId>Neo.Plugins.OracleService</PackageId>
@@ -7,7 +7,6 @@
   <ItemGroup>
     <PackageReference Include="Neo.ConsoleService" Version="1.2.0" />
     <PackageReference Include="NeoFS.API" Version="3.3.1" />
-    <PackageReference Include="Neo" Version="3.3.1-CI01380" />
   </ItemGroup>
 
   <ItemGroup>
