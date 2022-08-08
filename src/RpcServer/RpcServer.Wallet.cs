@@ -230,6 +230,67 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
+        protected virtual JObject SendWithoutSign(JArray _params)
+        {
+            UInt160 assetId = UInt160.Parse(_params[0].AsString());
+            UInt160 from = AddressToScriptHash(_params[1].AsString(), system.Settings.AddressVersion);
+            UInt160 to = AddressToScriptHash(_params[2].AsString(), system.Settings.AddressVersion);
+            BigInteger amount = BigInteger.Parse(_params[3].AsString());
+            Signer[] signers = _params.Count >= 5 ? ((JArray)_params[4]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
+
+            return SendWithoutSign(assetId, from, to, amount, signers);
+        }
+
+        private JObject SendWithoutSign(UInt160 assetId, UInt160 from, UInt160 to, BigInteger amount, Signer[] signers)
+        {
+            using var snapshot = system.GetSnapshot();
+            var sb = new ScriptBuilder();
+            sb.EmitDynamicCall(assetId, "transfer", from, to, amount, null);
+            sb.Emit(OpCode.ASSERT);
+            var script = sb.ToArray();
+            Random rand = new();
+
+            Transaction tx = new Transaction()
+            {
+                Attributes = Array.Empty<TransactionAttribute>(),
+                Nonce = (uint)rand.Next(),
+                Signers = signers,
+                Script = script,
+                ValidUntilBlock = NativeContract.Ledger.CurrentIndex(snapshot) + system.Settings.MaxValidUntilBlockIncrement,
+            };
+
+            // will try to execute 'transfer' script to check if it works 
+            using (ApplicationEngine engine = ApplicationEngine.Run(script, snapshot.CreateSnapshot(), tx, settings: system.Settings, gas: ApplicationEngine.TestModeGas))
+            {
+                if (engine.State == VMState.FAULT)
+                {
+                    throw new InvalidOperationException($"Failed execution for '{script.ToHexString()}'", engine.FaultException);
+                }
+                tx.SystemFee = engine.GasConsumed;
+            }
+
+            tx.NetworkFee = new DummyWallet(system.Settings).CalculateNetworkFee(system.StoreView, tx);
+
+
+            //Signer[] signers = _params.Count >= 5 ? ((JArray)_params[4]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
+
+            //Transaction tx = wallet.MakeTransaction(snapshot, new[]
+            //{
+            //    new TransferOutput
+            //    {
+            //        AssetId = assetId,
+            //        Value = amount,
+            //        ScriptHash = to
+            //    }
+            //}, from, signers);
+            //if (tx == null)
+            //    throw new RpcException(-300, "Insufficient funds");
+
+            ContractParametersContext transContext = new(snapshot, tx, settings.Network);
+            return transContext.ToJson();
+        }
+
+        [RpcMethod]
         protected virtual JObject SendMany(JArray _params)
         {
             CheckWallet();
