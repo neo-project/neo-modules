@@ -43,7 +43,7 @@ namespace Neo.Network.RPC
             return addressOrScriptHash.Length < 40 ?
                 addressOrScriptHash.ToScriptHash(protocolSettings.AddressVersion) : UInt160.Parse(addressOrScriptHash);
         }
-        
+
         public static string AsScriptHash(this string addressOrScriptHash)
         {
             foreach (var native in NativeContract.Contracts)
@@ -218,7 +218,7 @@ namespace Neo.Network.RPC
                 VerificationScript = Convert.FromBase64String(json["verification"].AsString())
             };
         }
-        
+
         public static StackItem StackItemFromJson(JToken json)
         {
             StackItemType type = json["type"].AsEnum<StackItemType>();

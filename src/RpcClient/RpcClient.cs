@@ -145,7 +145,7 @@ namespace Neo.Network.RPC
             var response = await SendAsync(request).ConfigureAwait(false);
             return response.Result;
         }
-        
+
         public static string GetRpcName([CallerMemberName] string methodName = null)
         {
             return new Regex("(.*?)(Hex|Both)?(Async)?").Replace(methodName, "$1").ToLowerInvariant();
