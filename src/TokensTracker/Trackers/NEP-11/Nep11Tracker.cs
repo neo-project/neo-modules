@@ -224,18 +224,18 @@ namespace Neo.Plugins.Trackers.NEP_11
             json["address"] = userScriptHash.ToAddress(_neoSystem.Settings.AddressVersion);
             json["balance"] = balances;
 
-            var map = new Dictionary<UInt160, List<(string tokenid, string amount, uint height)>>();
+            var map = new Dictionary<UInt160, List<(string tokenid, BigInteger amount, uint height)>>();
             int count = 0;
             byte[] prefix = Key(Nep11BalancePrefix, userScriptHash);
             foreach (var (key, value) in _db.FindPrefix<Nep11BalanceKey, TokenBalance>(prefix))
             {
                 if (NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key.AssetScriptHash) is null)
                     continue;
-                if (!map.ContainsKey(key.AssetScriptHash))
+                if (!map.TryGetValue(key.AssetScriptHash, out var list))
                 {
-                    map[key.AssetScriptHash] = new List<(string, string, uint)>();
+                    map[key.AssetScriptHash] = list = new List<(string, BigInteger, uint)>();
                 }
-                map[key.AssetScriptHash].Add((key.Token.GetSpan().ToHexString(), value.Balance.ToString(), value.LastUpdatedBlock));
+                list.Add((key.Token.GetSpan().ToHexString(), value.Balance, value.LastUpdatedBlock));
                 count++;
                 if (count >= _maxResults)
                 {
@@ -244,16 +244,32 @@ namespace Neo.Plugins.Trackers.NEP_11
             }
             foreach (var key in map.Keys)
             {
-                balances.Add(new JObject
+                try
                 {
-                    ["assethash"] = key.ToString(),
-                    ["tokens"] = new JArray(map[key].Select(v => new JObject
+                    using var script = new ScriptBuilder();
+                    script.EmitDynamicCall(key, "decimals");
+                    script.EmitDynamicCall(key, "symbol");
+
+                    var engine = ApplicationEngine.Run(script.ToArray(), _neoSystem.StoreView, settings: _neoSystem.Settings);
+                    var symbol = engine.ResultStack.Pop().GetString();
+                    var decimals = engine.ResultStack.Pop().GetInteger();
+                    var name = NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key).Manifest.Name;
+
+                    balances.Add(new JObject
                     {
-                        ["tokenid"] = v.tokenid,
-                        ["amount"] = v.amount,
-                        ["lastupdatedblock"] = v.height
-                    })),
-                });
+                        ["assethash"] = key.ToString(),
+                        ["name"] = name,
+                        ["symbol"] = symbol,
+                        ["decimals"] = decimals.ToString(),
+                        ["tokens"] = new JArray(map[key].Select(v => new JObject
+                        {
+                            ["tokenid"] = v.tokenid,
+                            ["amount"] = v.amount.ToString(),
+                            ["lastupdatedblock"] = v.height
+                        })),
+                    });
+                }
+                catch { }
             }
             return json;
         }

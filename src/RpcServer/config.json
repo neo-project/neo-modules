@@ -15,7 +15,9 @@
         "MaxConcurrentConnections": 40,
         "MaxIteratorResultItems": 100,
         "MaxStackSize": 65535,
-        "DisabledMethods": [ "openwallet" ]
+        "DisabledMethods": [ "openwallet" ],
+        "SessionEnabled": false,
+        "SessionExpirationTime": 60
       }
     ]
   }

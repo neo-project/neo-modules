@@ -14,6 +14,7 @@ using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
+using Neo.VM;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,6 +22,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -144,18 +146,8 @@ namespace Neo.Network.RPC
             return response.Result;
         }
 
-        public static string GetRpcName()
+        public static string GetRpcName([CallerMemberName] string methodName = null)
         {
-            var methodName = "";
-            for (int i = 1; i < 5; i++)
-            {
-                var method = new System.Diagnostics.StackTrace(true).GetFrame(i).GetMethod();
-                if (method.IsPublic && !method.IsGenericMethod)
-                {
-                    methodName = method.Name;
-                    break;
-                }
-            }
             return new Regex("(.*?)(Hex|Both)?(Async)?").Replace(methodName, "$1").ToLowerInvariant();
         }
 
@@ -442,9 +434,9 @@ namespace Neo.Network.RPC
         /// Returns the result after passing a script through the VM.
         /// This RPC call does not affect the blockchain in any way.
         /// </summary>
-        public async Task<RpcInvokeResult> InvokeScriptAsync(byte[] script, params Signer[] signers)
+        public async Task<RpcInvokeResult> InvokeScriptAsync(ReadOnlyMemory<byte> script, params Signer[] signers)
         {
-            List<JObject> parameters = new() { Convert.ToBase64String(script) };
+            List<JObject> parameters = new() { Convert.ToBase64String(script.Span) };
             if (signers.Length > 0)
             {
                 parameters.Add(signers.Select(p => p.ToJson()).ToArray());
@@ -457,6 +449,52 @@ namespace Neo.Network.RPC
         {
             var result = await RpcSendAsync(GetRpcName(), address.AsScriptHash()).ConfigureAwait(false);
             return RpcUnclaimedGas.FromJson(result);
+        }
+
+
+        public async IAsyncEnumerable<JObject> TraverseIteratorAsync(string sessionId, string id)
+        {
+            const int count = 100;
+            while (true)
+            {
+                var result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
+                var array = (JArray)result;
+                foreach (var jObject in array)
+                {
+                    yield return jObject;
+                }
+                if (array.Count < count) break;
+            }
+        }
+
+        /// <summary>
+        /// Returns limit <paramref name="count"/> results from Iterator.
+        /// This RPC call does not affect the blockchain in any way.
+        /// </summary>
+        /// <param name="sessionId"></param>
+        /// <param name="id"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public async IAsyncEnumerable<JObject> TraverseIteratorAsync(string sessionId, string id, int count)
+        {
+            var result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
+            if (result is JArray { Count: > 0 } array)
+            {
+                foreach (var jObject in array)
+                {
+                    yield return jObject;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Terminate specified Iterator session.
+        /// This RPC call does not affect the blockchain in any way.
+        /// </summary>
+        public async Task<bool> TerminateSessionAsync(string sessionId)
+        {
+            var result = await RpcSendAsync(GetRpcName(), sessionId).ConfigureAwait(false);
+            return result.GetBoolean();
         }
 
         #endregion SmartContract

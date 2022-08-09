@@ -180,17 +180,33 @@ namespace Neo.Plugins.Trackers.NEP_17
                 if (NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key.AssetScriptHash) is null)
                     continue;
 
-                balances.Add(new JObject
+                try
                 {
-                    ["assethash"] = key.AssetScriptHash.ToString(),
-                    ["amount"] = value.Balance.ToString(),
-                    ["lastupdatedblock"] = value.LastUpdatedBlock
-                });
-                count++;
-                if (count >= _maxResults)
-                {
-                    break;
+                    using var script = new ScriptBuilder();
+                    script.EmitDynamicCall(key.AssetScriptHash, "decimals");
+                    script.EmitDynamicCall(key.AssetScriptHash, "symbol");
+
+                    var engine = ApplicationEngine.Run(script.ToArray(), _neoSystem.StoreView, settings: _neoSystem.Settings);
+                    var symbol = engine.ResultStack.Pop().GetString();
+                    var decimals = engine.ResultStack.Pop().GetInteger();
+                    var name = NativeContract.ContractManagement.GetContract(_neoSystem.StoreView, key.AssetScriptHash).Manifest.Name;
+
+                    balances.Add(new JObject
+                    {
+                        ["assethash"] = key.AssetScriptHash.ToString(),
+                        ["name"] = name,
+                        ["symbol"] = symbol,
+                        ["decimals"] = decimals.ToString(),
+                        ["amount"] = value.Balance.ToString(),
+                        ["lastupdatedblock"] = value.LastUpdatedBlock
+                    });
+                    count++;
+                    if (count >= _maxResults)
+                    {
+                        break;
+                    }
                 }
+                catch { }
             }
             return json;
         }
