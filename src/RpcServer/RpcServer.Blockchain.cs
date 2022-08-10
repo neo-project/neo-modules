@@ -50,7 +50,7 @@ namespace Neo.Plugins
                 throw new RpcException(-100, "Unknown block");
             if (verbose)
             {
-                JToken json = Utility.BlockToJson(block, system.Settings);
+                JObject json = Utility.BlockToJson(block, system.Settings);
                 json["confirmations"] = NativeContract.Ledger.CurrentIndex(snapshot) - block.Index + 1;
                 UInt256 hash = NativeContract.Ledger.GetBlockHash(snapshot, block.Index + 1);
                 if (hash != null)
@@ -106,7 +106,7 @@ namespace Neo.Plugins
 
             if (verbose)
             {
-                JToken json = header.ToJson(system.Settings);
+                JObject json = header.ToJson(system.Settings);
                 json["confirmations"] = NativeContract.Ledger.CurrentIndex(snapshot) - header.Index + 1;
                 UInt256 hash = NativeContract.Ledger.GetBlockHash(snapshot, header.Index + 1);
                 if (hash != null)
@@ -143,7 +143,7 @@ namespace Neo.Plugins
             if (!shouldGetUnverified)
                 return new JArray(system.MemPool.GetVerifiedTransactions().Select(p => (JToken)p.Hash.ToString()));
 
-            var json = new JObject();
+            JObject json = new();
             json["height"] = NativeContract.Ledger.CurrentIndex(system.StoreView);
             system.MemPool.GetVerifiedAndUnverifiedTransactions(
                 out IEnumerable<Transaction> verifiedTransactions,
@@ -165,7 +165,7 @@ namespace Neo.Plugins
             tx ??= state?.Transaction;
             if (tx is null) throw new RpcException(-100, "Unknown transaction");
             if (!verbose) return Convert.ToBase64String(tx.ToArray());
-            JToken json = Utility.TransactionToJson(tx, system.Settings);
+            JObject json = Utility.TransactionToJson(tx, system.Settings);
             if (state is not null)
             {
                 TrimmedBlock block = NativeContract.Ledger.GetTrimmedBlock(snapshot, NativeContract.Ledger.GetBlockHash(snapshot, state.BlockIndex));
@@ -213,7 +213,7 @@ namespace Neo.Plugins
             var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, system.Settings.ValidatorsCount);
             return validators.Select(p =>
             {
-                var validator = new JObject();
+                JObject validator = new();
                 validator["publickey"] = p.ToString();
                 validator["votes"] = (int)NativeContract.NEO.GetCandidateVote(snapshot, p);
                 return validator;
@@ -230,7 +230,7 @@ namespace Neo.Plugins
                 script = sb.EmitDynamicCall(NativeContract.NEO.Hash, "getCandidates", null).ToArray();
             }
             using ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, settings: system.Settings, gas: settings.MaxGasInvoke);
-            var json = new JObject();
+            JObject json = new();
             try
             {
                 var resultstack = engine.ResultStack.ToArray();

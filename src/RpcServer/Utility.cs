@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -17,16 +17,16 @@ namespace Neo.Plugins
 {
     static class Utility
     {
-        public static JToken BlockToJson(Block block, ProtocolSettings settings)
+        public static JObject BlockToJson(Block block, ProtocolSettings settings)
         {
-            JToken json = block.ToJson(settings);
+            JObject json = block.ToJson(settings);
             json["tx"] = block.Transactions.Select(p => TransactionToJson(p, settings)).ToArray();
             return json;
         }
 
-        public static JToken TransactionToJson(Transaction tx, ProtocolSettings settings)
+        public static JObject TransactionToJson(Transaction tx, ProtocolSettings settings)
         {
-            JToken json = tx.ToJson(settings);
+            JObject json = tx.ToJson(settings);
             json["sysfee"] = tx.SystemFee.ToString();
             json["netfee"] = tx.NetworkFee.ToString();
             return json;
