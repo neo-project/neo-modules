@@ -32,7 +32,7 @@ namespace Neo.Plugins
             return json;
         }
 
-        public static JToken NativeContractToJson(this NativeContract contract, ProtocolSettings settings)
+        public static JObject NativeContractToJson(this NativeContract contract, ProtocolSettings settings)
         {
             return new JObject
             {
