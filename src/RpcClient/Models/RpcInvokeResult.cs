@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -32,9 +32,9 @@ namespace Neo.Network.RPC.Models
 
         public string Session { get; set; }
 
-        public JToken ToJson()
+        public JObject ToJson()
         {
-            var json = new JObject();
+            JObject json = new();
             json["script"] = Script;
             json["state"] = State;
             json["gasconsumed"] = GasConsumed.ToString();
@@ -53,12 +53,12 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcInvokeResult FromJson(JToken json)
+        public static RpcInvokeResult FromJson(JObject json)
         {
             RpcInvokeResult invokeScriptResult = new()
             {
                 Script = json["script"].AsString(),
-                State = json["state"].AsEnum<VMState>(),
+                State = json["state"].GetEnum<VMState>(),
                 GasConsumed = long.Parse(json["gasconsumed"].AsString()),
             };
             invokeScriptResult.Exception = json["exception"]?.AsString();
@@ -79,15 +79,15 @@ namespace Neo.Network.RPC.Models
 
         public string Value { get; set; }
 
-        public JToken ToJson()
+        public JObject ToJson()
         {
-            var json = new JObject();
+            JObject json = new();
             json["type"] = Type;
             json["value"] = Value;
             return json;
         }
 
-        public static RpcStack FromJson(JToken json)
+        public static RpcStack FromJson(JObject json)
         {
             return new RpcStack
             {

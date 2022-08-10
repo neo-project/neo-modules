@@ -426,7 +426,7 @@ namespace Neo.Network.RPC
                 parameters.Add(signer.Select(p => p.ToJson()).ToArray());
             }
             var result = await RpcSendAsync(GetRpcName(), parameters.ToArray()).ConfigureAwait(false);
-            return RpcInvokeResult.FromJson(result);
+            return RpcInvokeResult.FromJson((JObject)result);
         }
 
         /// <summary>
@@ -441,7 +441,7 @@ namespace Neo.Network.RPC
                 parameters.Add(signers.Select(p => p.ToJson()).ToArray());
             }
             var result = await RpcSendAsync(GetRpcName(), parameters.ToArray()).ConfigureAwait(false);
-            return RpcInvokeResult.FromJson(result);
+            return RpcInvokeResult.FromJson((JObject)result);
         }
 
         public async Task<RpcUnclaimedGas> GetUnclaimedGasAsync(string address)
