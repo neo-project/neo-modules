@@ -241,10 +241,10 @@ namespace Neo.Network.RPC
         public async Task<ContractState> GetContractStateAsync(string hash)
         {
             var result = await RpcSendAsync(GetRpcName(), hash).ConfigureAwait(false);
-            return ContractStateFromJson(result);
+            return ContractStateFromJson((JObject)result);
         }
 
-        public static ContractState ContractStateFromJson(JToken json)
+        public static ContractState ContractStateFromJson(JObject json)
         {
             return new ContractState
             {
@@ -451,16 +451,16 @@ namespace Neo.Network.RPC
         }
 
 
-        public async IAsyncEnumerable<JToken> TraverseIteratorAsync(string sessionId, string id)
+        public async IAsyncEnumerable<JObject> TraverseIteratorAsync(string sessionId, string id)
         {
             const int count = 100;
             while (true)
             {
                 var result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
                 var array = (JArray)result;
-                foreach (var JToken in array)
+                foreach (JObject jObject in array)
                 {
-                    yield return JToken;
+                    yield return jObject;
                 }
                 if (array.Count < count) break;
             }
@@ -474,14 +474,14 @@ namespace Neo.Network.RPC
         /// <param name="id"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        public async IAsyncEnumerable<JToken> TraverseIteratorAsync(string sessionId, string id, int count)
+        public async IAsyncEnumerable<JObject> TraverseIteratorAsync(string sessionId, string id, int count)
         {
             var result = await RpcSendAsync(GetRpcName(), sessionId, id, count).ConfigureAwait(false);
             if (result is JArray { Count: > 0 } array)
             {
-                foreach (var JToken in array)
+                foreach (JObject jObject in array)
                 {
-                    yield return JToken;
+                    yield return jObject;
                 }
             }
         }
@@ -603,9 +603,9 @@ namespace Neo.Network.RPC
         /// Transfer from the specified address to the destination address.
         /// </summary>
         /// <returns>This function returns Signed Transaction JSON if successful, ContractParametersContext JSON if signing failed.</returns>
-        public async Task<JToken> SendFromAsync(string assetId, string fromAddress, string toAddress, string amount)
+        public async Task<JObject> SendFromAsync(string assetId, string fromAddress, string toAddress, string amount)
         {
-            return await RpcSendAsync(GetRpcName(), assetId.AsScriptHash(), fromAddress.AsScriptHash(),
+            return (JObject)await RpcSendAsync(GetRpcName(), assetId.AsScriptHash(), fromAddress.AsScriptHash(),
                                       toAddress.AsScriptHash(), amount).ConfigureAwait(false);
         }
 
@@ -613,7 +613,7 @@ namespace Neo.Network.RPC
         /// Bulk transfer order, and you can specify a sender address.
         /// </summary>
         /// <returns>This function returns Signed Transaction JSON if successful, ContractParametersContext JSON if signing failed.</returns>
-        public async Task<JToken> SendManyAsync(string fromAddress, IEnumerable<RpcTransferOut> outputs)
+        public async Task<JObject> SendManyAsync(string fromAddress, IEnumerable<RpcTransferOut> outputs)
         {
             var parameters = new List<JToken>();
             if (!string.IsNullOrEmpty(fromAddress))
@@ -622,16 +622,16 @@ namespace Neo.Network.RPC
             }
             parameters.Add(outputs.Select(p => p.ToJson(protocolSettings)).ToArray());
 
-            return await RpcSendAsync(GetRpcName(), paraArgs: parameters.ToArray()).ConfigureAwait(false);
+            return (JObject)await RpcSendAsync(GetRpcName(), paraArgs: parameters.ToArray()).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Transfer asset from the wallet to the destination address.
         /// </summary>
         /// <returns>This function returns Signed Transaction JSON if successful, ContractParametersContext JSON if signing failed.</returns>
-        public async Task<JToken> SendToAddressAsync(string assetId, string address, string amount)
+        public async Task<JObject> SendToAddressAsync(string assetId, string address, string amount)
         {
-            return await RpcSendAsync(GetRpcName(), assetId.AsScriptHash(), address.AsScriptHash(), amount)
+            return (JObject)await RpcSendAsync(GetRpcName(), assetId.AsScriptHash(), address.AsScriptHash(), amount)
                 .ConfigureAwait(false);
         }
 
