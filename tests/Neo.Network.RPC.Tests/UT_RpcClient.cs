@@ -305,7 +305,7 @@ namespace Neo.Network.RPC.Tests
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.InvokeFunctionAsync).ToLower());
             var result = await rpc.InvokeFunctionAsync(test.Request.Params[0].AsString(), test.Request.Params[1].AsString(),
-                ((JArray)test.Request.Params[2]).Select(p => RpcStack.FromJson(p)).ToArray());
+                ((JArray)test.Request.Params[2]).Select(p => RpcStack.FromJson((JObject)p)).ToArray());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
 
             // TODO test verify method
@@ -429,7 +429,7 @@ namespace Neo.Network.RPC.Tests
         public async Task TestSendMany()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendManyAsync).ToLower());
-            var result = await rpc.SendManyAsync(test.Request.Params[0].AsString(), ((JArray)test.Request.Params[1]).Select(p => RpcTransferOut.FromJson(p, rpc.protocolSettings)));
+            var result = await rpc.SendManyAsync(test.Request.Params[0].AsString(), ((JArray)test.Request.Params[1]).Select(p => RpcTransferOut.FromJson((JObject)p, rpc.protocolSettings)));
             Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
         }
 
