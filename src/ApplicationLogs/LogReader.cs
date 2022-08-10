@@ -64,7 +64,7 @@ namespace Neo.Plugins
             if (value is null)
                 throw new RpcException(-100, "Unknown transaction/blockhash");
 
-            var raw = JToken.Parse(Neo.Utility.StrictUTF8.GetString(value));
+            JObject raw = (JObject)JToken.Parse(Neo.Utility.StrictUTF8.GetString(value));
             //Additional optional "trigger" parameter to getapplicationlog for clients to be able to get just one execution result for a block.
             if (_params.Count >= 2 && Enum.TryParse(_params[1].AsString(), true, out TriggerType trigger))
             {
@@ -86,7 +86,7 @@ namespace Neo.Plugins
 
             var txJson = new JObject();
             txJson["txid"] = appExec.Transaction.Hash.ToString();
-            JToken trigger = new JObject();
+            JObject trigger = new JObject();
             trigger["trigger"] = appExec.Trigger;
             trigger["vmstate"] = appExec.VMState;
             trigger["exception"] = GetExceptionMessage(appExec.Exception);
@@ -101,7 +101,7 @@ namespace Neo.Plugins
             }
             trigger["notifications"] = appExec.Notifications.Select(q =>
             {
-                JToken notification = new JObject();
+                JObject notification = new JObject();
                 notification["contract"] = q.ScriptHash.ToString();
                 notification["eventname"] = q.EventName;
                 try
@@ -115,11 +115,11 @@ namespace Neo.Plugins
                 return notification;
             }).ToArray();
 
-            txJson["executions"] = new List<JToken>() { trigger }.ToArray();
+            txJson["executions"] = new[] { trigger };
             return txJson;
         }
 
-        public static JToken BlockLogToJson(Block block, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        public static JObject BlockLogToJson(Block block, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             var blocks = applicationExecutedList.Where(p => p.Transaction is null).ToArray();
             if (blocks.Length > 0)
@@ -127,10 +127,10 @@ namespace Neo.Plugins
                 var blockJson = new JObject();
                 var blockHash = block.Hash.ToArray();
                 blockJson["blockhash"] = block.Hash.ToString();
-                var triggerList = new List<JToken>();
+                var triggerList = new List<JObject>();
                 foreach (var appExec in blocks)
                 {
-                    JToken trigger = new JObject();
+                    JObject trigger = new JObject();
                     trigger["trigger"] = appExec.Trigger;
                     trigger["vmstate"] = appExec.VMState;
                     trigger["gasconsumed"] = appExec.GasConsumed.ToString();
@@ -144,7 +144,7 @@ namespace Neo.Plugins
                     }
                     trigger["notifications"] = appExec.Notifications.Select(q =>
                     {
-                        JToken notification = new JObject();
+                        JObject notification = new JObject();
                         notification["contract"] = q.ScriptHash.ToString();
                         notification["eventname"] = q.EventName;
                         try
