@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,14 +8,10 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 using Neo.Json;
 using Neo.Network.RPC.Models;
+using System;
+using System.Threading.Tasks;
 
 namespace Neo.Network.RPC
 {
@@ -78,7 +74,7 @@ namespace Neo.Network.RPC
             var @params = MakeFindStatesParams(rootHash, scriptHash, prefix.Span, from.Span, count);
             var result = await rpcClient.RpcSendAsync(RpcClient.GetRpcName(), @params).ConfigureAwait(false);
 
-            return RpcFoundStates.FromJson(result);
+            return RpcFoundStates.FromJson((JObject)result);
         }
 
         public async Task<byte[]> GetStateAsync(UInt256 rootHash, UInt160 scriptHash, byte[] key)
