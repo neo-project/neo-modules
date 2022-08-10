@@ -372,7 +372,7 @@ namespace Neo.Network.RPC
         public async Task<RpcPeers> GetPeersAsync()
         {
             var result = await RpcSendAsync(GetRpcName()).ConfigureAwait(false);
-            return RpcPeers.FromJson(result);
+            return RpcPeers.FromJson((JObject)result);
         }
 
         /// <summary>

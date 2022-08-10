@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -21,22 +21,22 @@ namespace Neo.Network.RPC.Models
 
         public RpcPeer[] Connected { get; set; }
 
-        public JToken ToJson()
+        public JObject ToJson()
         {
-            var json = new JObject();
+            JObject json = new();
             json["unconnected"] = new JArray(Unconnected.Select(p => p.ToJson()));
             json["bad"] = new JArray(Bad.Select(p => p.ToJson()));
             json["connected"] = new JArray(Connected.Select(p => p.ToJson()));
             return json;
         }
 
-        public static RpcPeers FromJson(JToken json)
+        public static RpcPeers FromJson(JObject json)
         {
             return new RpcPeers
             {
-                Unconnected = ((JArray)json["unconnected"]).Select(p => RpcPeer.FromJson(p)).ToArray(),
-                Bad = ((JArray)json["bad"]).Select(p => RpcPeer.FromJson(p)).ToArray(),
-                Connected = ((JArray)json["connected"]).Select(p => RpcPeer.FromJson(p)).ToArray()
+                Unconnected = ((JArray)json["unconnected"]).Select(p => RpcPeer.FromJson((JObject)p)).ToArray(),
+                Bad = ((JArray)json["bad"]).Select(p => RpcPeer.FromJson((JObject)p)).ToArray(),
+                Connected = ((JArray)json["connected"]).Select(p => RpcPeer.FromJson((JObject)p)).ToArray()
             };
         }
     }
@@ -47,15 +47,15 @@ namespace Neo.Network.RPC.Models
 
         public int Port { get; set; }
 
-        public JToken ToJson()
+        public JObject ToJson()
         {
-            var json = new JObject();
+            JObject json = new();
             json["address"] = Address;
             json["port"] = Port;
             return json;
         }
 
-        public static RpcPeer FromJson(JToken json)
+        public static RpcPeer FromJson(JObject json)
         {
             return new RpcPeer
             {
