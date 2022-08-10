@@ -22,7 +22,7 @@ namespace Neo.Network.RPC.Models
 
         public bool WatchOnly { get; set; }
 
-        public JToken ToJson()
+        public JObject ToJson()
         {
             return new JObject
             {
@@ -33,7 +33,7 @@ namespace Neo.Network.RPC.Models
             };
         }
 
-        public static RpcAccount FromJson(JToken json)
+        public static RpcAccount FromJson(JObject json)
         {
             return new RpcAccount
             {

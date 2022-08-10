@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -14,7 +14,6 @@ using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
-using Neo.VM;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -578,7 +577,7 @@ namespace Neo.Network.RPC
         public async Task<RpcAccount> ImportPrivKeyAsync(string wif)
         {
             var result = await RpcSendAsync(GetRpcName(), wif).ConfigureAwait(false);
-            return RpcAccount.FromJson(result);
+            return RpcAccount.FromJson((JObject)result);
         }
 
         /// <summary>
@@ -587,7 +586,7 @@ namespace Neo.Network.RPC
         public async Task<List<RpcAccount>> ListAddressAsync()
         {
             var result = await RpcSendAsync(GetRpcName()).ConfigureAwait(false);
-            return ((JArray)result).Select(p => RpcAccount.FromJson(p)).ToList();
+            return ((JArray)result).Select(p => RpcAccount.FromJson((JObject)p)).ToList();
         }
 
         /// <summary>
