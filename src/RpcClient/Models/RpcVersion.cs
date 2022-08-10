@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -26,9 +26,9 @@ namespace Neo.Network.RPC.Models
             public int MemoryPoolMaxTransactions { get; set; }
             public ulong InitialGasDistribution { get; set; }
 
-            public JToken ToJson()
+            public JObject ToJson()
             {
-                var json = new JObject();
+                JObject json = new();
                 json["network"] = Network;
                 json["validatorscount"] = ValidatorsCount;
                 json["msperblock"] = MillisecondsPerBlock;
@@ -41,7 +41,7 @@ namespace Neo.Network.RPC.Models
                 return json;
             }
 
-            public static RpcProtocol FromJson(JToken json)
+            public static RpcProtocol FromJson(JObject json)
             {
                 return new()
                 {
@@ -68,9 +68,9 @@ namespace Neo.Network.RPC.Models
 
         public RpcProtocol Protocol { get; set; } = new();
 
-        public JToken ToJson()
+        public JObject ToJson()
         {
-            var json = new JObject();
+            JObject json = new();
             json["network"] = Protocol.Network; // Obsolete
             json["tcpport"] = TcpPort;
             json["wsport"] = WsPort;
@@ -80,7 +80,7 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcVersion FromJson(JToken json)
+        public static RpcVersion FromJson(JObject json)
         {
             return new()
             {
@@ -88,7 +88,7 @@ namespace Neo.Network.RPC.Models
                 WsPort = (int)json["wsport"].AsNumber(),
                 Nonce = (uint)json["nonce"].AsNumber(),
                 UserAgent = json["useragent"].AsString(),
-                Protocol = RpcProtocol.FromJson(json["protocol"])
+                Protocol = RpcProtocol.FromJson((JObject)json["protocol"])
             };
         }
     }

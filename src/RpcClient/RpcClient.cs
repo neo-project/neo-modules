@@ -381,7 +381,7 @@ namespace Neo.Network.RPC
         public async Task<RpcVersion> GetVersionAsync()
         {
             var result = await RpcSendAsync(GetRpcName()).ConfigureAwait(false);
-            return RpcVersion.FromJson(result);
+            return RpcVersion.FromJson((JObject)result);
         }
 
         /// <summary>
