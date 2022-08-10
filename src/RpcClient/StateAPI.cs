@@ -27,7 +27,7 @@ namespace Neo.Network.RPC
         public async Task<RpcStateRoot> GetStateRootAsync(uint index)
         {
             var result = await rpcClient.RpcSendAsync(RpcClient.GetRpcName(), index).ConfigureAwait(false);
-            return RpcStateRoot.FromJson(result);
+            return RpcStateRoot.FromJson((JObject)result);
         }
 
         public async Task<byte[]> GetProofAsync(UInt256 rootHash, UInt160 scriptHash, byte[] key)
