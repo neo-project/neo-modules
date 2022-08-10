@@ -65,9 +65,9 @@ namespace Neo.Plugins
                 session.Dispose();
         }
 
-        private JToken GetInvokeResult(byte[] script, Signer[] signers = null, Witness[] witnesses = null, bool useDiagnostic = false)
+        private JObject GetInvokeResult(byte[] script, Signer[] signers = null, Witness[] witnesses = null, bool useDiagnostic = false)
         {
-            var json = new JObject();
+            JObject json = new();
             Session session = new(system, script, signers, witnesses, settings.MaxGasInvoke, useDiagnostic ? new Diagnostic() : null);
             try
             {
@@ -124,9 +124,9 @@ namespace Neo.Plugins
             return json;
         }
 
-        private static JToken ToJson(TreeNode<UInt160> node)
+        private static JObject ToJson(TreeNode<UInt160> node)
         {
-            var json = new JObject();
+            JObject json = new();
             json["hash"] = node.Item.ToString();
             if (node.Children.Any())
             {
@@ -135,7 +135,7 @@ namespace Neo.Plugins
             return json;
         }
 
-        private static JToken ToJson(IEnumerable<DataCache.Trackable> changes)
+        private static JArray ToJson(IEnumerable<DataCache.Trackable> changes)
         {
             JArray array = new();
             foreach (var entry in changes)
@@ -150,9 +150,9 @@ namespace Neo.Plugins
             return array;
         }
 
-        private static JToken ToJson(StackItem item, Session session)
+        private static JObject ToJson(StackItem item, Session session)
         {
-            JToken json = item.ToJson();
+            JObject json = item.ToJson();
             if (item is InteropInterface interopInterface && interopInterface.GetInterface<object>() is IIterator iterator)
             {
                 Guid id = Guid.NewGuid();
@@ -259,7 +259,7 @@ namespace Neo.Plugins
         protected virtual JToken GetUnclaimedGas(JArray _params)
         {
             string address = _params[0].AsString();
-            var json = new JObject();
+            JObject json = new();
             UInt160 script_hash;
             try
             {
