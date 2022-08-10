@@ -86,7 +86,7 @@ namespace Neo.Plugins
         {
             CheckWallet();
             UInt160 asset_id = UInt160.Parse(_params[0].AsString());
-            var json = new JObject();
+            JObject json = new();
             json["balance"] = wallet.GetAvailable(system.StoreView, asset_id).Value.ToString();
             return json;
         }
@@ -159,7 +159,7 @@ namespace Neo.Plugins
             return true;
         }
 
-        private void ProcessInvokeWithWallet(JToken result, Signer[] signers = null)
+        private void ProcessInvokeWithWallet(JObject result, Signer[] signers = null)
         {
             if (wallet == null || signers == null || signers.Length == 0) return;
 
@@ -329,7 +329,7 @@ namespace Neo.Plugins
             return GetVerificationResult(script_hash, args, signers, witnesses);
         }
 
-        private JToken GetVerificationResult(UInt160 scriptHash, ContractParameter[] args, Signer[] signers = null, Witness[] witnesses = null)
+        private JObject GetVerificationResult(UInt160 scriptHash, ContractParameter[] args, Signer[] signers = null, Witness[] witnesses = null)
         {
             using var snapshot = system.GetSnapshot();
             var contract = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
@@ -364,7 +364,7 @@ namespace Neo.Plugins
                 tx.Witnesses ??= new Witness[] { new() { InvocationScript = invocationScript } };
                 engine.LoadScript(new Script(invocationScript), configureState: p => p.CallFlags = CallFlags.None);
             }
-            var json = new JObject();
+            JObject json = new();
             json["script"] = Convert.ToBase64String(invocationScript);
             json["state"] = engine.Execute();
             json["gasconsumed"] = engine.GasConsumed.ToString();
@@ -380,7 +380,7 @@ namespace Neo.Plugins
             return json;
         }
 
-        private JToken SignAndRelay(DataCache snapshot, Transaction tx)
+        private JObject SignAndRelay(DataCache snapshot, Transaction tx)
         {
             ContractParametersContext context = new(snapshot, tx, settings.Network);
             wallet.Sign(context);
