@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -18,12 +18,12 @@ namespace Neo.Network.RPC.Models
     {
         public ContractState ContractState { get; set; }
 
-        public JToken ToJson()
+        public JObject ToJson()
         {
             return ContractState.ToJson();
         }
 
-        public static RpcContractState FromJson(JToken json)
+        public static RpcContractState FromJson(JObject json)
         {
             return new RpcContractState
             {
