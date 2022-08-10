@@ -281,7 +281,7 @@ namespace Neo.Network.RPC
         public async Task<RpcRawMemPool> GetRawMempoolBothAsync()
         {
             var result = await RpcSendAsync(GetRpcName(), true).ConfigureAwait(false);
-            return RpcRawMemPool.FromJson(result);
+            return RpcRawMemPool.FromJson((JObject)result);
         }
 
         /// <summary>
