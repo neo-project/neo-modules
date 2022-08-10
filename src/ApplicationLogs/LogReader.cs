@@ -80,7 +80,7 @@ namespace Neo.Plugins
             return raw;
         }
 
-        public static JToken TxLogToJson(Blockchain.ApplicationExecuted appExec)
+        public static JObject TxLogToJson(Blockchain.ApplicationExecuted appExec)
         {
             global::System.Diagnostics.Debug.Assert(appExec.Transaction != null);
 
