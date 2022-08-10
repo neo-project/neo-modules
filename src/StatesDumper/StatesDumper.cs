@@ -96,7 +96,7 @@ namespace Neo.Plugins
                 {
                     if (Settings.Default.Exclude.Contains(trackable.Key.Id))
                         continue;
-                    JToken state = new JObject();
+                    JObject state = new JObject();
                     switch (trackable.State)
                     {
                         case TrackState.Added:
@@ -118,7 +118,7 @@ namespace Neo.Plugins
                     array.Add(state);
                 }
 
-                JToken bs_item = new JObject();
+                JObject bs_item = new JObject();
                 bs_item["block"] = blockIndex;
                 bs_item["size"] = array.Count;
                 bs_item["storage"] = array;
