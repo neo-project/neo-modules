@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -21,15 +21,15 @@ namespace Neo.Network.RPC.Models
 
         public UInt256 NextBlockHash { get; set; }
 
-        public JToken ToJson(ProtocolSettings protocolSettings)
+        public JObject ToJson(ProtocolSettings protocolSettings)
         {
-            JToken json = Utility.BlockToJson(Block, protocolSettings);
+            JObject json = Utility.BlockToJson(Block, protocolSettings);
             json["confirmations"] = Confirmations;
             json["nextblockhash"] = NextBlockHash?.ToString();
             return json;
         }
 
-        public static RpcBlock FromJson(JToken json, ProtocolSettings protocolSettings)
+        public static RpcBlock FromJson(JObject json, ProtocolSettings protocolSettings)
         {
             return new RpcBlock
             {

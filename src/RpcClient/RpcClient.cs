@@ -182,7 +182,7 @@ namespace Neo.Network.RPC
                 ? await RpcSendAsync(GetRpcName(), index, true).ConfigureAwait(false)
                 : await RpcSendAsync(GetRpcName(), hashOrIndex, true).ConfigureAwait(false);
 
-            return RpcBlock.FromJson(result, protocolSettings);
+            return RpcBlock.FromJson((JObject)result, protocolSettings);
         }
 
         /// <summary>

@@ -136,9 +136,9 @@ namespace Neo.Network.RPC
             };
         }
 
-        public static JToken BlockToJson(Block block, ProtocolSettings protocolSettings)
+        public static JObject BlockToJson(Block block, ProtocolSettings protocolSettings)
         {
-            JToken json = block.ToJson(protocolSettings);
+            JObject json = block.ToJson(protocolSettings);
             json["tx"] = block.Transactions.Select(p => TransactionToJson(p, protocolSettings)).ToArray();
             return json;
         }
