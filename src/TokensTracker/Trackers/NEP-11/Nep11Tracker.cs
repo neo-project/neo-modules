@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Plugins.TokensTracker is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,10 +8,6 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
 using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
@@ -21,6 +17,10 @@ using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.VM.Types;
 using Neo.Wallets;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 using Array = Neo.VM.Types.Array;
 
 namespace Neo.Plugins.Trackers.NEP_11
@@ -203,7 +203,7 @@ namespace Neo.Plugins.Trackers.NEP_11
 
             if (endTime < startTime) throw new RpcException(-32602, "Invalid params");
 
-            var json = new JObject();
+            JObject json = new();
             json["address"] = userScriptHash.ToAddress(_neoSystem.Settings.AddressVersion);
             JArray transfersSent = new();
             json["sent"] = transfersSent;
@@ -312,7 +312,7 @@ namespace Neo.Plugins.Trackers.NEP_11
             var transferPairs = QueryTransfers<Nep11TransferKey, TokenTransfer>(dbPrefix, userScriptHash, startTime, endTime).Take((int)_maxResults).ToList();
             foreach (var (key, value) in transferPairs.OrderByDescending(l => l.key.TimestampMS))
             {
-                JToken transfer = ToJson(key, value);
+                JObject transfer = ToJson(key, value);
                 transfer["tokenid"] = key.Token.GetSpan().ToHexString();
                 parentJArray.Add(transfer);
             }
