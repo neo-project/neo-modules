@@ -506,7 +506,7 @@ namespace Neo.Network.RPC
         public async Task<RpcPlugin[]> ListPluginsAsync()
         {
             var result = await RpcSendAsync(GetRpcName()).ConfigureAwait(false);
-            return ((JArray)result).Select(p => RpcPlugin.FromJson(p)).ToArray();
+            return ((JArray)result).Select(p => RpcPlugin.FromJson((JObject)p)).ToArray();
         }
 
         /// <summary>
