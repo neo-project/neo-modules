@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -18,15 +18,15 @@ namespace Neo.Network.RPC.Models
 
         public bool IsValid { get; set; }
 
-        public JToken ToJson()
+        public JObject ToJson()
         {
-            var json = new JObject();
+            JObject json = new();
             json["address"] = Address;
             json["isvalid"] = IsValid;
             return json;
         }
 
-        public static RpcValidateAddressResult FromJson(JToken json)
+        public static RpcValidateAddressResult FromJson(JObject json)
         {
             return new RpcValidateAddressResult
             {

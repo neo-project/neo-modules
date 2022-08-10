@@ -515,7 +515,7 @@ namespace Neo.Network.RPC
         public async Task<RpcValidateAddressResult> ValidateAddressAsync(string address)
         {
             var result = await RpcSendAsync(GetRpcName(), address).ConfigureAwait(false);
-            return RpcValidateAddressResult.FromJson(result);
+            return RpcValidateAddressResult.FromJson((JObject)result);
         }
 
         #endregion Utilities
