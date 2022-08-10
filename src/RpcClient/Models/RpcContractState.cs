@@ -32,7 +32,7 @@ namespace Neo.Network.RPC.Models
                     Id = (int)json["id"].AsNumber(),
                     UpdateCounter = (ushort)json["updatecounter"].AsNumber(),
                     Hash = UInt160.Parse(json["hash"].AsString()),
-                    Nef = RpcNefFile.FromJson(json["nef"]),
+                    Nef = RpcNefFile.FromJson((JObject)json["nef"]),
                     Manifest = ContractManifest.FromJson((JObject)json["manifest"])
                 }
             };

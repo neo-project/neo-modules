@@ -17,7 +17,7 @@ namespace Neo.Network.RPC.Models
 {
     class RpcNefFile
     {
-        public static NefFile FromJson(JToken json)
+        public static NefFile FromJson(JObject json)
         {
             return new NefFile
             {

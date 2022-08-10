@@ -29,7 +29,7 @@ namespace Neo.Network.RPC.Models
             {
                 Id = (int)json["id"].AsNumber(),
                 Hash = UInt160.Parse(json["hash"].AsString()),
-                Nef = RpcNefFile.FromJson(json["nef"]),
+                Nef = RpcNefFile.FromJson((JObject)json["nef"]),
                 Manifest = ContractManifest.FromJson((JObject)json["manifest"]),
                 UpdateHistory = ((JArray)json["updatehistory"]).Select(u => (uint)u.GetInt32()).ToArray()
             };
