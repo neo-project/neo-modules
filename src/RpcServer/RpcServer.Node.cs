@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -31,10 +31,10 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken GetPeers(JArray _params)
         {
-            var json = new JObject();
+            JObject json = new();
             json["unconnected"] = new JArray(localNode.GetUnconnectedPeers().Select(p =>
             {
-                var peerJson = new JObject();
+                JObject peerJson = new();
                 peerJson["address"] = p.Address.ToString();
                 peerJson["port"] = p.Port;
                 return peerJson;
@@ -42,7 +42,7 @@ namespace Neo.Plugins
             json["bad"] = new JArray(); //badpeers has been removed
             json["connected"] = new JArray(localNode.GetRemoteNodes().Select(p =>
             {
-                var peerJson = new JObject();
+                JObject peerJson = new();
                 peerJson["address"] = p.Remote.Address.ToString();
                 peerJson["port"] = p.ListenerTcpPort;
                 return peerJson;
@@ -50,7 +50,7 @@ namespace Neo.Plugins
             return json;
         }
 
-        private static JToken GetRelayResult(VerifyResult reason, UInt256 hash)
+        private static JObject GetRelayResult(VerifyResult reason, UInt256 hash)
         {
             if (reason == VerifyResult.Succeed)
             {
@@ -67,7 +67,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken GetVersion(JArray _params)
         {
-            var json = new JObject();
+            JObject json = new();
             json["tcpport"] = localNode.ListenerTcpPort;
             json["wsport"] = localNode.ListenerWsPort;
             json["nonce"] = LocalNode.Nonce;
