@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -24,7 +24,7 @@ namespace Neo.Network.RPC.Models
 
         public string RawResponse { get; set; }
 
-        public static RpcResponse FromJson(JToken json)
+        public static RpcResponse FromJson(JObject json)
         {
             RpcResponse response = new()
             {
@@ -35,15 +35,15 @@ namespace Neo.Network.RPC.Models
 
             if (json["error"] != null)
             {
-                response.Error = RpcResponseError.FromJson(json["error"]);
+                response.Error = RpcResponseError.FromJson((JObject)json["error"]);
             }
 
             return response;
         }
 
-        public JToken ToJson()
+        public JObject ToJson()
         {
-            var json = new JObject();
+            JObject json = new();
             json["id"] = Id;
             json["jsonrpc"] = JsonRpc;
             json["error"] = Error?.ToJson();
@@ -60,7 +60,7 @@ namespace Neo.Network.RPC.Models
 
         public JToken Data { get; set; }
 
-        public static RpcResponseError FromJson(JToken json)
+        public static RpcResponseError FromJson(JObject json)
         {
             return new RpcResponseError
             {
@@ -70,9 +70,9 @@ namespace Neo.Network.RPC.Models
             };
         }
 
-        public JToken ToJson()
+        public JObject ToJson()
         {
-            var json = new JObject();
+            JObject json = new();
             json["code"] = Code;
             json["message"] = Message;
             json["data"] = Data;
