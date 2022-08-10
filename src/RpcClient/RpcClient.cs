@@ -232,7 +232,7 @@ namespace Neo.Network.RPC
                 ? await RpcSendAsync(GetRpcName(), index, true).ConfigureAwait(false)
                 : await RpcSendAsync(GetRpcName(), hashOrIndex, true).ConfigureAwait(false);
 
-            return RpcBlockHeader.FromJson(result, protocolSettings);
+            return RpcBlockHeader.FromJson((JObject)result, protocolSettings);
         }
 
         /// <summary>
