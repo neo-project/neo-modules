@@ -341,7 +341,7 @@ namespace Neo.Network.RPC
         public async Task<RpcValidator[]> GetNextBlockValidatorsAsync()
         {
             var result = await RpcSendAsync(GetRpcName()).ConfigureAwait(false);
-            return ((JArray)result).Select(p => RpcValidator.FromJson(p)).ToArray();
+            return ((JArray)result).Select(p => RpcValidator.FromJson((JObject)p)).ToArray();
         }
 
         /// <summary>
