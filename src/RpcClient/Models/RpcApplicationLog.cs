@@ -81,7 +81,7 @@ namespace Neo.Network.RPC.Models
                 VMState = json["vmstate"].GetEnum<VMState>(),
                 GasConsumed = long.Parse(json["gasconsumed"].AsString()),
                 ExceptionMessage = json["exception"]?.AsString(),
-                Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToList(),
+                Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson((JObject)p)).ToList(),
                 Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson((JObject)p, protocolSettings)).ToList()
             };
         }
@@ -110,7 +110,7 @@ namespace Neo.Network.RPC.Models
             {
                 Contract = json["contract"].ToScriptHash(protocolSettings),
                 EventName = json["eventname"].AsString(),
-                State = Utility.StackItemFromJson(json["state"])
+                State = Utility.StackItemFromJson((JObject)json["state"])
             };
         }
     }

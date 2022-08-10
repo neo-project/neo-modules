@@ -28,7 +28,7 @@ namespace Neo.Network.RPC.Models
                 Version = (byte)json["version"].AsNumber(),
                 Index = (uint)json["index"].AsNumber(),
                 RootHash = UInt256.Parse(json["roothash"].AsString()),
-                Witness = ((JArray)json["witnesses"]).Select(p => Utility.WitnessFromJson(p)).FirstOrDefault()
+                Witness = ((JArray)json["witnesses"]).Select(p => Utility.WitnessFromJson((JObject)p)).FirstOrDefault()
             };
         }
     }

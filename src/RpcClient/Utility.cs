@@ -127,12 +127,12 @@ namespace Neo.Network.RPC
             return res;
         }
 
-        public static Block BlockFromJson(JToken json, ProtocolSettings protocolSettings)
+        public static Block BlockFromJson(JObject json, ProtocolSettings protocolSettings)
         {
             return new Block()
             {
                 Header = HeaderFromJson(json, protocolSettings),
-                Transactions = ((JArray)json["tx"]).Select(p => TransactionFromJson(p, protocolSettings)).ToArray()
+                Transactions = ((JArray)json["tx"]).Select(p => TransactionFromJson((JObject)p, protocolSettings)).ToArray()
             };
         }
 
@@ -143,7 +143,7 @@ namespace Neo.Network.RPC
             return json;
         }
 
-        public static Header HeaderFromJson(JToken json, ProtocolSettings protocolSettings)
+        public static Header HeaderFromJson(JObject json, ProtocolSettings protocolSettings)
         {
             return new Header
             {
@@ -155,23 +155,23 @@ namespace Neo.Network.RPC
                 Index = (uint)json["index"].AsNumber(),
                 PrimaryIndex = (byte)json["primary"].AsNumber(),
                 NextConsensus = json["nextconsensus"].ToScriptHash(protocolSettings),
-                Witness = ((JArray)json["witnesses"]).Select(p => WitnessFromJson(p)).FirstOrDefault()
+                Witness = ((JArray)json["witnesses"]).Select(p => WitnessFromJson((JObject)p)).FirstOrDefault()
             };
         }
 
-        public static Transaction TransactionFromJson(JToken json, ProtocolSettings protocolSettings)
+        public static Transaction TransactionFromJson(JObject json, ProtocolSettings protocolSettings)
         {
             return new Transaction
             {
                 Version = byte.Parse(json["version"].AsString()),
                 Nonce = uint.Parse(json["nonce"].AsString()),
-                Signers = ((JArray)json["signers"]).Select(p => SignerFromJson(p, protocolSettings)).ToArray(),
+                Signers = ((JArray)json["signers"]).Select(p => SignerFromJson((JObject)p, protocolSettings)).ToArray(),
                 SystemFee = long.Parse(json["sysfee"].AsString()),
                 NetworkFee = long.Parse(json["netfee"].AsString()),
                 ValidUntilBlock = uint.Parse(json["validuntilblock"].AsString()),
-                Attributes = ((JArray)json["attributes"]).Select(p => TransactionAttributeFromJson(p)).ToArray(),
+                Attributes = ((JArray)json["attributes"]).Select(p => TransactionAttributeFromJson((JObject)p)).ToArray(),
                 Script = Convert.FromBase64String(json["script"].AsString()),
-                Witnesses = ((JArray)json["witnesses"]).Select(p => WitnessFromJson(p)).ToArray()
+                Witnesses = ((JArray)json["witnesses"]).Select(p => WitnessFromJson((JObject)p)).ToArray()
             };
         }
 
@@ -183,7 +183,7 @@ namespace Neo.Network.RPC
             return json;
         }
 
-        public static Signer SignerFromJson(JToken json, ProtocolSettings protocolSettings)
+        public static Signer SignerFromJson(JObject json, ProtocolSettings protocolSettings)
         {
             return new Signer
             {
@@ -194,7 +194,7 @@ namespace Neo.Network.RPC
             };
         }
 
-        public static TransactionAttribute TransactionAttributeFromJson(JToken json)
+        public static TransactionAttribute TransactionAttributeFromJson(JObject json)
         {
             TransactionAttributeType usage = Enum.Parse<TransactionAttributeType>(json["type"].AsString());
             return usage switch
@@ -210,7 +210,7 @@ namespace Neo.Network.RPC
             };
         }
 
-        public static Witness WitnessFromJson(JToken json)
+        public static Witness WitnessFromJson(JObject json)
         {
             return new Witness
             {
@@ -219,9 +219,9 @@ namespace Neo.Network.RPC
             };
         }
 
-        public static StackItem StackItemFromJson(JToken json)
+        public static StackItem StackItemFromJson(JObject json)
         {
-            StackItemType type = json["type"].AsEnum<StackItemType>();
+            StackItemType type = json["type"].GetEnum<StackItemType>();
             switch (type)
             {
                 case StackItemType.Boolean:
@@ -234,20 +234,20 @@ namespace Neo.Network.RPC
                     return BigInteger.Parse(json["value"].AsString());
                 case StackItemType.Array:
                     Array array = new();
-                    foreach (var item in (JArray)json["value"])
+                    foreach (JObject item in (JArray)json["value"])
                         array.Add(StackItemFromJson(item));
                     return array;
                 case StackItemType.Struct:
                     Struct @struct = new();
-                    foreach (var item in (JArray)json["value"])
+                    foreach (JObject item in (JArray)json["value"])
                         @struct.Add(StackItemFromJson(item));
                     return @struct;
                 case StackItemType.Map:
                     Map map = new();
                     foreach (var item in (JArray)json["value"])
                     {
-                        PrimitiveType key = (PrimitiveType)StackItemFromJson(item["key"]);
-                        map[key] = StackItemFromJson(item["value"]);
+                        PrimitiveType key = (PrimitiveType)StackItemFromJson((JObject)item["key"]);
+                        map[key] = StackItemFromJson((JObject)item["value"]);
                     }
                     return map;
                 case StackItemType.Pointer:
@@ -262,7 +262,7 @@ namespace Neo.Network.RPC
         {
             if (item is InteropInterface iop)
             {
-                var json = iop.GetInterface<JToken>();
+                var json = iop.GetInterface<JObject>();
                 return json["id"]?.GetString();
             }
             return null;

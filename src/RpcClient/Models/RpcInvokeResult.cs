@@ -65,7 +65,7 @@ namespace Neo.Network.RPC.Models
             invokeScriptResult.Session = json["session"]?.AsString();
             try
             {
-                invokeScriptResult.Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToArray();
+                invokeScriptResult.Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson((JObject)p)).ToArray();
             }
             catch { }
             invokeScriptResult.Tx = json["tx"]?.AsString();
