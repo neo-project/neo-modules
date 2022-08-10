@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract.Native;
 using System.Linq;
@@ -40,7 +40,7 @@ namespace Neo.Plugins
                 ["hash"] = contract.Hash.ToString(),
                 ["nef"] = contract.Nef.ToJson(),
                 ["manifest"] = contract.Manifest.ToJson(),
-                ["updatehistory"] = settings.NativeUpdateHistory[contract.Name].Select(p => (JObject)p).ToArray()
+                ["updatehistory"] = settings.NativeUpdateHistory[contract.Name].Select(p => (JToken)p).ToArray()
             };
         }
     }

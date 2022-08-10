@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,9 +8,9 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System.Linq;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
+using System.Linq;
 
 namespace Neo.Network.RPC.Models
 {
@@ -28,7 +28,7 @@ namespace Neo.Network.RPC.Models
                 Version = (byte)json["version"].AsNumber(),
                 Index = (uint)json["index"].AsNumber(),
                 RootHash = UInt256.Parse(json["roothash"].AsString()),
-                Witness = ((JArray)json["witnesses"]).Select(p => Utility.WitnessFromJson(p)).FirstOrDefault()
+                Witness = ((JArray)json["witnesses"]).Select(p => Utility.WitnessFromJson((JObject)p)).FirstOrDefault()
             };
         }
     }
