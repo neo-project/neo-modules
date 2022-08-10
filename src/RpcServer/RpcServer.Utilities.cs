@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -36,7 +36,7 @@ namespace Neo.Plugins
         protected virtual JToken ValidateAddress(JArray _params)
         {
             string address = _params[0].AsString();
-            var json = new JObject();
+            JObject json = new();
             UInt160 scriptHash;
             try
             {
