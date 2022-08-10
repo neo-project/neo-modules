@@ -262,7 +262,7 @@ namespace Neo.Network.RPC
         public async Task<RpcNativeContract[]> GetNativeContractsAsync()
         {
             var result = await RpcSendAsync(GetRpcName()).ConfigureAwait(false);
-            return ((JArray)result).Select(p => RpcNativeContract.FromJson(p)).ToArray();
+            return ((JArray)result).Select(p => RpcNativeContract.FromJson((JObject)p)).ToArray();
         }
 
         /// <summary>
