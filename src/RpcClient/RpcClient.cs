@@ -672,7 +672,7 @@ namespace Neo.Network.RPC
             endTimestamp ??= DateTime.UtcNow.ToTimestampMS();
             var result = await RpcSendAsync(GetRpcName(), address.AsScriptHash(), startTimestamp, endTimestamp)
                 .ConfigureAwait(false);
-            return RpcNep17Transfers.FromJson(result, protocolSettings);
+            return RpcNep17Transfers.FromJson((JObject)result, protocolSettings);
         }
 
         /// <summary>

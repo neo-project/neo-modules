@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -24,21 +24,21 @@ namespace Neo.Network.RPC.Models
 
         public List<RpcNep17Transfer> Received { get; set; }
 
-        public JToken ToJson(ProtocolSettings protocolSettings)
+        public JObject ToJson(ProtocolSettings protocolSettings)
         {
-            var json = new JObject();
+            JObject json = new();
             json["sent"] = Sent.Select(p => p.ToJson(protocolSettings)).ToArray();
             json["received"] = Received.Select(p => p.ToJson(protocolSettings)).ToArray();
             json["address"] = UserScriptHash.ToAddress(protocolSettings.AddressVersion);
             return json;
         }
 
-        public static RpcNep17Transfers FromJson(JToken json, ProtocolSettings protocolSettings)
+        public static RpcNep17Transfers FromJson(JObject json, ProtocolSettings protocolSettings)
         {
             RpcNep17Transfers transfers = new()
             {
-                Sent = ((JArray)json["sent"]).Select(p => RpcNep17Transfer.FromJson(p, protocolSettings)).ToList(),
-                Received = ((JArray)json["received"]).Select(p => RpcNep17Transfer.FromJson(p, protocolSettings)).ToList(),
+                Sent = ((JArray)json["sent"]).Select(p => RpcNep17Transfer.FromJson((JObject)p, protocolSettings)).ToList(),
+                Received = ((JArray)json["received"]).Select(p => RpcNep17Transfer.FromJson((JObject)p, protocolSettings)).ToList(),
                 UserScriptHash = json["address"].ToScriptHash(protocolSettings)
             };
             return transfers;
@@ -61,9 +61,9 @@ namespace Neo.Network.RPC.Models
 
         public UInt256 TxHash { get; set; }
 
-        public JToken ToJson(ProtocolSettings protocolSettings)
+        public JObject ToJson(ProtocolSettings protocolSettings)
         {
-            var json = new JObject();
+            JObject json = new();
             json["timestamp"] = TimestampMS;
             json["assethash"] = AssetHash.ToString();
             json["transferaddress"] = UserScriptHash?.ToAddress(protocolSettings.AddressVersion);
@@ -74,7 +74,7 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcNep17Transfer FromJson(JToken json, ProtocolSettings protocolSettings)
+        public static RpcNep17Transfer FromJson(JObject json, ProtocolSettings protocolSettings)
         {
             return new RpcNep17Transfer
             {
