@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -26,9 +26,9 @@ namespace Neo.Network.RPC.Models
 
         public VMState? VMState { get; set; }
 
-        public JToken ToJson(ProtocolSettings protocolSettings)
+        public JObject ToJson(ProtocolSettings protocolSettings)
         {
-            JToken json = Utility.TransactionToJson(Transaction, protocolSettings);
+            JObject json = Utility.TransactionToJson(Transaction, protocolSettings);
             if (Confirmations != null)
             {
                 json["blockhash"] = BlockHash.ToString();
@@ -42,7 +42,7 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcTransaction FromJson(JToken json, ProtocolSettings protocolSettings)
+        public static RpcTransaction FromJson(JObject json, ProtocolSettings protocolSettings)
         {
             RpcTransaction transaction = new RpcTransaction
             {
@@ -53,7 +53,7 @@ namespace Neo.Network.RPC.Models
                 transaction.BlockHash = UInt256.Parse(json["blockhash"].AsString());
                 transaction.Confirmations = (uint)json["confirmations"].AsNumber();
                 transaction.BlockTime = (ulong)json["blocktime"].AsNumber();
-                transaction.VMState = json["vmstate"]?.AsEnum<VMState>();
+                transaction.VMState = json["vmstate"]?.GetEnum<VMState>();
             }
             return transaction;
         }

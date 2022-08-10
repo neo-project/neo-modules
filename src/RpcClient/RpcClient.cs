@@ -300,7 +300,7 @@ namespace Neo.Network.RPC
         public async Task<RpcTransaction> GetRawTransactionAsync(string txHash)
         {
             var result = await RpcSendAsync(GetRpcName(), txHash, true).ConfigureAwait(false);
-            return RpcTransaction.FromJson(result, protocolSettings);
+            return RpcTransaction.FromJson((JObject)result, protocolSettings);
         }
 
         /// <summary>

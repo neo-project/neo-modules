@@ -175,9 +175,9 @@ namespace Neo.Network.RPC
             };
         }
 
-        public static JToken TransactionToJson(Transaction tx, ProtocolSettings protocolSettings)
+        public static JObject TransactionToJson(Transaction tx, ProtocolSettings protocolSettings)
         {
-            JToken json = tx.ToJson(protocolSettings);
+            JObject json = tx.ToJson(protocolSettings);
             json["sysfee"] = tx.SystemFee.ToString();
             json["netfee"] = tx.NetworkFee.ToString();
             return json;
