@@ -447,7 +447,7 @@ namespace Neo.Network.RPC
         public async Task<RpcUnclaimedGas> GetUnclaimedGasAsync(string address)
         {
             var result = await RpcSendAsync(GetRpcName(), address.AsScriptHash()).ConfigureAwait(false);
-            return RpcUnclaimedGas.FromJson(result);
+            return RpcUnclaimedGas.FromJson((JObject)result);
         }
 
 
