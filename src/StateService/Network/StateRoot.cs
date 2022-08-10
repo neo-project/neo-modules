@@ -109,7 +109,7 @@ namespace Neo.Plugins.StateService.Network
             return new UInt160[] { Contract.GetBFTAddress(validators) };
         }
 
-        public JToken ToJson()
+        public JObject ToJson()
         {
             var json = new JObject();
             json["version"] = Version;
