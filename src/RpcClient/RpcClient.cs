@@ -646,7 +646,7 @@ namespace Neo.Network.RPC
         public async Task<RpcApplicationLog> GetApplicationLogAsync(string txHash)
         {
             var result = await RpcSendAsync(GetRpcName(), txHash).ConfigureAwait(false);
-            return RpcApplicationLog.FromJson(result, protocolSettings);
+            return RpcApplicationLog.FromJson((JObject)result, protocolSettings);
         }
 
         /// <summary>
@@ -656,7 +656,7 @@ namespace Neo.Network.RPC
         public async Task<RpcApplicationLog> GetApplicationLogAsync(string txHash, TriggerType triggerType)
         {
             var result = await RpcSendAsync(GetRpcName(), txHash, triggerType).ConfigureAwait(false);
-            return RpcApplicationLog.FromJson(result, protocolSettings);
+            return RpcApplicationLog.FromJson((JObject)result, protocolSettings);
         }
 
         /// <summary>

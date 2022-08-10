@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -25,9 +25,9 @@ namespace Neo.Network.RPC.Models
 
         public List<Execution> Executions { get; set; }
 
-        public JToken ToJson()
+        public JObject ToJson()
         {
-            JToken json = new JObject();
+            JObject json = new JObject();
             if (TxId != null)
                 json["txid"] = TxId.ToString();
             if (BlockHash != null)
@@ -36,13 +36,13 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static RpcApplicationLog FromJson(JToken json, ProtocolSettings protocolSettings)
+        public static RpcApplicationLog FromJson(JObject json, ProtocolSettings protocolSettings)
         {
             return new RpcApplicationLog
             {
                 TxId = json["txid"] is null ? null : UInt256.Parse(json["txid"].AsString()),
                 BlockHash = json["blockhash"] is null ? null : UInt256.Parse(json["blockhash"].AsString()),
-                Executions = ((JArray)json["executions"]).Select(p => Execution.FromJson(p, protocolSettings)).ToList(),
+                Executions = ((JArray)json["executions"]).Select(p => Execution.FromJson((JObject)p, protocolSettings)).ToList(),
             };
         }
     }
@@ -61,9 +61,9 @@ namespace Neo.Network.RPC.Models
 
         public List<RpcNotifyEventArgs> Notifications { get; set; }
 
-        public JToken ToJson()
+        public JObject ToJson()
         {
-            var json = new JObject();
+            JObject json = new();
             json["trigger"] = Trigger;
             json["vmstate"] = VMState;
             json["gasconsumed"] = GasConsumed.ToString();
@@ -73,16 +73,16 @@ namespace Neo.Network.RPC.Models
             return json;
         }
 
-        public static Execution FromJson(JToken json, ProtocolSettings protocolSettings)
+        public static Execution FromJson(JObject json, ProtocolSettings protocolSettings)
         {
             return new Execution
             {
-                Trigger = json["trigger"].AsEnum<TriggerType>(),
-                VMState = json["vmstate"].AsEnum<VMState>(),
+                Trigger = json["trigger"].GetEnum<TriggerType>(),
+                VMState = json["vmstate"].GetEnum<VMState>(),
                 GasConsumed = long.Parse(json["gasconsumed"].AsString()),
                 ExceptionMessage = json["exception"]?.AsString(),
                 Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToList(),
-                Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson(p, protocolSettings)).ToList()
+                Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson((JObject)p, protocolSettings)).ToList()
             };
         }
     }
@@ -95,16 +95,16 @@ namespace Neo.Network.RPC.Models
 
         public StackItem State { get; set; }
 
-        public JToken ToJson()
+        public JObject ToJson()
         {
-            var json = new JObject();
+            JObject json = new();
             json["contract"] = Contract.ToString();
             json["eventname"] = EventName;
             json["state"] = State.ToJson();
             return json;
         }
 
-        public static RpcNotifyEventArgs FromJson(JToken json, ProtocolSettings protocolSettings)
+        public static RpcNotifyEventArgs FromJson(JObject json, ProtocolSettings protocolSettings)
         {
             return new RpcNotifyEventArgs
             {
