@@ -683,7 +683,7 @@ namespace Neo.Network.RPC
         {
             var result = await RpcSendAsync(GetRpcName(), address.AsScriptHash())
                 .ConfigureAwait(false);
-            return RpcNep17Balances.FromJson(result, protocolSettings);
+            return RpcNep17Balances.FromJson((JObject)result, protocolSettings);
         }
 
         #endregion Plugins

@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -22,19 +22,19 @@ namespace Neo.Network.RPC.Models
 
         public List<RpcNep17Balance> Balances { get; set; }
 
-        public JToken ToJson(ProtocolSettings protocolSettings)
+        public JObject ToJson(ProtocolSettings protocolSettings)
         {
-            var json = new JObject();
+            JObject json = new();
             json["balance"] = Balances.Select(p => p.ToJson()).ToArray();
             json["address"] = UserScriptHash.ToAddress(protocolSettings.AddressVersion);
             return json;
         }
 
-        public static RpcNep17Balances FromJson(JToken json, ProtocolSettings protocolSettings)
+        public static RpcNep17Balances FromJson(JObject json, ProtocolSettings protocolSettings)
         {
             RpcNep17Balances nep17Balance = new()
             {
-                Balances = ((JArray)json["balance"]).Select(p => RpcNep17Balance.FromJson(p, protocolSettings)).ToList(),
+                Balances = ((JArray)json["balance"]).Select(p => RpcNep17Balance.FromJson((JObject)p, protocolSettings)).ToList(),
                 UserScriptHash = json["address"].ToScriptHash(protocolSettings)
             };
             return nep17Balance;
@@ -49,16 +49,16 @@ namespace Neo.Network.RPC.Models
 
         public uint LastUpdatedBlock { get; set; }
 
-        public JToken ToJson()
+        public JObject ToJson()
         {
-            var json = new JObject();
+            JObject json = new();
             json["assethash"] = AssetHash.ToString();
             json["amount"] = Amount.ToString();
             json["lastupdatedblock"] = LastUpdatedBlock;
             return json;
         }
 
-        public static RpcNep17Balance FromJson(JToken json, ProtocolSettings protocolSettings)
+        public static RpcNep17Balance FromJson(JObject json, ProtocolSettings protocolSettings)
         {
             RpcNep17Balance balance = new()
             {
