@@ -3,7 +3,7 @@ using Moq;
 using Neo.Cryptography;
 using Neo.Cryptography.ECC;
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
@@ -52,7 +52,7 @@ namespace Neo.Network.RPC.Tests
             // calculatenetworkfee
             var networkfee = new JObject();
             networkfee["networkfee"] = 100000000;
-            mockRpc.Setup(p => p.RpcSendAsync("calculatenetworkfee", It.Is<JObject[]>(u => true)))
+            mockRpc.Setup(p => p.RpcSendAsync("calculatenetworkfee", It.Is<JToken[]>(u => true)))
                 .ReturnsAsync(networkfee)
                 .Verifiable();
 
@@ -85,7 +85,7 @@ namespace Neo.Network.RPC.Tests
             // calculatenetworkfee
             var networkfee = new JObject();
             networkfee["networkfee"] = 100000000;
-            mockRpc.Setup(p => p.RpcSendAsync("calculatenetworkfee", It.Is<JObject[]>(u => true)))
+            mockRpc.Setup(p => p.RpcSendAsync("calculatenetworkfee", It.Is<JToken[]>(u => true)))
                 .ReturnsAsync(networkfee)
                 .Verifiable();
 
@@ -118,7 +118,7 @@ namespace Neo.Network.RPC.Tests
                 State = VMState.HALT
             };
 
-            mockClient.Setup(p => p.RpcSendAsync("invokescript", It.Is<JObject[]>(j =>
+            mockClient.Setup(p => p.RpcSendAsync("invokescript", It.Is<JToken[]>(j =>
                 Convert.FromBase64String(j[0].AsString()).SequenceEqual(script))))
                 .ReturnsAsync(result.ToJson())
                 .Verifiable();

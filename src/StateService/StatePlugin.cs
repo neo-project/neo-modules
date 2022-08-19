@@ -12,7 +12,7 @@ using Akka.Actor;
 using Neo.ConsoleService;
 using Neo.Cryptography.MPTTrie;
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -87,8 +87,8 @@ namespace Neo.Plugins.StateService
             base.Dispose();
             Blockchain.Committing -= OnCommitting;
             Blockchain.Committed -= OnCommitted;
-            if (Store is not null) System.EnsureStoped(Store);
-            if (Verifier is not null) System.EnsureStoped(Verifier);
+            if (Store is not null) System.EnsureStopped(Store);
+            if (Verifier is not null) System.EnsureStopped(Verifier);
         }
 
         private void OnCommitting(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<ApplicationExecuted> applicationExecutedList)
@@ -176,7 +176,7 @@ namespace Neo.Plugins.StateService
         }
 
         [RpcMethod]
-        public JObject GetStateRoot(JArray _params)
+        public JToken GetStateRoot(JArray _params)
         {
             uint index = uint.Parse(_params[0].AsString());
             using var snapshot = StateStore.Singleton.GetSnapshot();
@@ -230,7 +230,7 @@ namespace Neo.Plugins.StateService
         }
 
         [RpcMethod]
-        public JObject GetProof(JArray _params)
+        public JToken GetProof(JArray _params)
         {
             UInt256 root_hash = UInt256.Parse(_params[0].AsString());
             UInt160 script_hash = UInt160.Parse(_params[1].AsString());
@@ -258,7 +258,7 @@ namespace Neo.Plugins.StateService
         }
 
         [RpcMethod]
-        public JObject VerifyProof(JArray _params)
+        public JToken VerifyProof(JArray _params)
         {
             UInt256 root_hash = UInt256.Parse(_params[0].AsString());
             byte[] proof_bytes = Convert.FromBase64String(_params[1].AsString());
@@ -266,7 +266,7 @@ namespace Neo.Plugins.StateService
         }
 
         [RpcMethod]
-        public JObject GetStateHeight(JArray _params)
+        public JToken GetStateHeight(JArray _params)
         {
             var json = new JObject();
             json["localrootindex"] = StateStore.Singleton.LocalRootIndex;
@@ -291,7 +291,7 @@ namespace Neo.Plugins.StateService
         }
 
         [RpcMethod]
-        public JObject FindStates(JArray _params)
+        public JToken FindStates(JArray _params)
         {
             var root_hash = UInt256.Parse(_params[0].AsString());
             if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
@@ -349,7 +349,7 @@ namespace Neo.Plugins.StateService
         }
 
         [RpcMethod]
-        public JObject GetState(JArray _params)
+        public JToken GetState(JArray _params)
         {
             var root_hash = UInt256.Parse(_params[0].AsString());
             if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
