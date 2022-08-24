@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 
 namespace Neo.Network.RPC.Models
 {
@@ -88,7 +88,7 @@ namespace Neo.Network.RPC.Models
                 WsPort = (int)json["wsport"].AsNumber(),
                 Nonce = (uint)json["nonce"].AsNumber(),
                 UserAgent = json["useragent"].AsString(),
-                Protocol = RpcProtocol.FromJson(json["protocol"])
+                Protocol = RpcProtocol.FromJson((JObject)json["protocol"])
             };
         }
     }

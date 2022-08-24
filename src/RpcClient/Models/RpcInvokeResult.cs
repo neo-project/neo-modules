@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.VM;
 using Neo.VM.Types;
 using System;
@@ -58,14 +58,14 @@ namespace Neo.Network.RPC.Models
             RpcInvokeResult invokeScriptResult = new()
             {
                 Script = json["script"].AsString(),
-                State = json["state"].TryGetEnum<VMState>(),
+                State = json["state"].GetEnum<VMState>(),
                 GasConsumed = long.Parse(json["gasconsumed"].AsString()),
             };
             invokeScriptResult.Exception = json["exception"]?.AsString();
             invokeScriptResult.Session = json["session"]?.AsString();
             try
             {
-                invokeScriptResult.Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToArray();
+                invokeScriptResult.Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson((JObject)p)).ToArray();
             }
             catch { }
             invokeScriptResult.Tx = json["tx"]?.AsString();

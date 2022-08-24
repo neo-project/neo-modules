@@ -41,11 +41,11 @@ namespace Neo.Plugins
             currentNodeOfInvocationTree = currentNodeOfInvocationTree.Parent;
         }
 
-        public void PostExecuteInstruction()
+        public void PreExecuteInstruction(Instruction instruction)
         {
         }
 
-        public void PreExecuteInstruction()
+        public void PostExecuteInstruction(Instruction instruction)
         {
         }
     }

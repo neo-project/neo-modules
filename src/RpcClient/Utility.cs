@@ -9,7 +9,7 @@
 // modifications are permitted.
 
 using Neo.Cryptography.ECC;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
@@ -36,7 +36,7 @@ namespace Neo.Network.RPC
             return (numerator, denominator);
         }
 
-        public static UInt160 ToScriptHash(this JObject value, ProtocolSettings protocolSettings)
+        public static UInt160 ToScriptHash(this JToken value, ProtocolSettings protocolSettings)
         {
             var addressOrScriptHash = value.AsString();
 
@@ -132,7 +132,7 @@ namespace Neo.Network.RPC
             return new Block()
             {
                 Header = HeaderFromJson(json, protocolSettings),
-                Transactions = ((JArray)json["tx"]).Select(p => TransactionFromJson(p, protocolSettings)).ToArray()
+                Transactions = ((JArray)json["tx"]).Select(p => TransactionFromJson((JObject)p, protocolSettings)).ToArray()
             };
         }
 
@@ -155,7 +155,7 @@ namespace Neo.Network.RPC
                 Index = (uint)json["index"].AsNumber(),
                 PrimaryIndex = (byte)json["primary"].AsNumber(),
                 NextConsensus = json["nextconsensus"].ToScriptHash(protocolSettings),
-                Witness = ((JArray)json["witnesses"]).Select(p => WitnessFromJson(p)).FirstOrDefault()
+                Witness = ((JArray)json["witnesses"]).Select(p => WitnessFromJson((JObject)p)).FirstOrDefault()
             };
         }
 
@@ -165,13 +165,13 @@ namespace Neo.Network.RPC
             {
                 Version = byte.Parse(json["version"].AsString()),
                 Nonce = uint.Parse(json["nonce"].AsString()),
-                Signers = ((JArray)json["signers"]).Select(p => SignerFromJson(p, protocolSettings)).ToArray(),
+                Signers = ((JArray)json["signers"]).Select(p => SignerFromJson((JObject)p, protocolSettings)).ToArray(),
                 SystemFee = long.Parse(json["sysfee"].AsString()),
                 NetworkFee = long.Parse(json["netfee"].AsString()),
                 ValidUntilBlock = uint.Parse(json["validuntilblock"].AsString()),
-                Attributes = ((JArray)json["attributes"]).Select(p => TransactionAttributeFromJson(p)).ToArray(),
+                Attributes = ((JArray)json["attributes"]).Select(p => TransactionAttributeFromJson((JObject)p)).ToArray(),
                 Script = Convert.FromBase64String(json["script"].AsString()),
-                Witnesses = ((JArray)json["witnesses"]).Select(p => WitnessFromJson(p)).ToArray()
+                Witnesses = ((JArray)json["witnesses"]).Select(p => WitnessFromJson((JObject)p)).ToArray()
             };
         }
 
@@ -221,7 +221,7 @@ namespace Neo.Network.RPC
 
         public static StackItem StackItemFromJson(JObject json)
         {
-            StackItemType type = json["type"].TryGetEnum<StackItemType>();
+            StackItemType type = json["type"].GetEnum<StackItemType>();
             switch (type)
             {
                 case StackItemType.Boolean:
@@ -234,20 +234,20 @@ namespace Neo.Network.RPC
                     return BigInteger.Parse(json["value"].AsString());
                 case StackItemType.Array:
                     Array array = new();
-                    foreach (var item in (JArray)json["value"])
+                    foreach (JObject item in (JArray)json["value"])
                         array.Add(StackItemFromJson(item));
                     return array;
                 case StackItemType.Struct:
                     Struct @struct = new();
-                    foreach (var item in (JArray)json["value"])
+                    foreach (JObject item in (JArray)json["value"])
                         @struct.Add(StackItemFromJson(item));
                     return @struct;
                 case StackItemType.Map:
                     Map map = new();
                     foreach (var item in (JArray)json["value"])
                     {
-                        PrimitiveType key = (PrimitiveType)StackItemFromJson(item["key"]);
-                        map[key] = StackItemFromJson(item["value"]);
+                        PrimitiveType key = (PrimitiveType)StackItemFromJson((JObject)item["key"]);
+                        map[key] = StackItemFromJson((JObject)item["value"]);
                     }
                     return map;
                 case StackItemType.Pointer:
