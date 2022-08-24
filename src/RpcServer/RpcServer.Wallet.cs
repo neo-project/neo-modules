@@ -229,6 +229,7 @@ namespace Neo.Plugins
             return SignAndRelay(snapshot, tx);
         }
 
+
         [RpcMethod]
         protected virtual JObject SendWithoutSign(JArray _params)
         {
@@ -238,10 +239,11 @@ namespace Neo.Plugins
             BigInteger amount = BigInteger.Parse(_params[3].AsString());
             Signer[] signers = _params.Count >= 5 ? ((JArray)_params[4]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
 
-            return SendWithoutSign(assetId, from, to, amount, signers);
+            long? networkFee = _params.Count > 5 ? long.Parse(_params[5].AsString()) : null;
+            return SendWithoutSign(assetId, from, to, amount, signers, networkFee);
         }
 
-        private JObject SendWithoutSign(UInt160 assetId, UInt160 from, UInt160 to, BigInteger amount, Signer[] signers)
+        private JObject SendWithoutSign(UInt160 assetId, UInt160 from, UInt160 to, BigInteger amount, Signer[] signers, long? networkFee)
         {
             using var snapshot = system.GetSnapshot();
             var sb = new ScriptBuilder();
@@ -268,8 +270,7 @@ namespace Neo.Plugins
                 }
                 tx.SystemFee = engine.GasConsumed;
             }
-
-            tx.NetworkFee = new DummyWallet(system.Settings).CalculateNetworkFee(system.StoreView, tx);
+            tx.NetworkFee = networkFee?? QuickCalculateNetworkFee(system.StoreView, tx);
 
 
             //Signer[] signers = _params.Count >= 5 ? ((JArray)_params[4]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
@@ -289,6 +290,24 @@ namespace Neo.Plugins
             ContractParametersContext transContext = new(snapshot, tx, settings.Network);
             return transContext.ToJson();
         }
+
+        private long QuickCalculateNetworkFee(DataCache snapshot, Transaction tx)
+        {
+            UInt160[] hashes = tx.GetScriptHashesForVerifying(snapshot);
+
+            // base size for transaction: includes const_header + signers + attributes + script + hashes
+            int size = Transaction.HeaderSize + tx.Signers.GetVarSize() + tx.Attributes.GetVarSize() + tx.Script.GetVarSize() + IO.Helper.GetVarSize(hashes.Length);
+            uint exec_fee_factor = NativeContract.Policy.GetExecFeeFactor(snapshot);
+            long networkFee = 0;
+            foreach (UInt160 hash in hashes)
+            {
+                size += 67 + 81;
+                networkFee += exec_fee_factor * SmartContract.Helper.SignatureContractCost();
+            }
+            networkFee += size * NativeContract.Policy.GetFeePerByte(snapshot);
+            return networkFee;
+        }
+
 
         [RpcMethod]
         protected virtual JObject SendMany(JArray _params)
