@@ -129,7 +129,8 @@ namespace Neo.Plugins.Trackers
             return stateItems.Count switch
             {
                 3 => new TransferRecord(asset, @from, to, null, amountItem.GetInteger()),
-                4 when (stateItems[3] is ByteString tokenId) => new TransferRecord(asset, @from, to, tokenId, amountItem.GetInteger()),
+                4 when stateItems[3] is ByteString tokenId => new TransferRecord(asset, @from, to, tokenId, amountItem.GetInteger()),
+                4 when stateItems[3] is Integer tokenId => new TransferRecord(asset, from, to, tokenId.GetSpan().ToArray(), amountItem.GetInteger()),
                 _ => null
             };
         }
