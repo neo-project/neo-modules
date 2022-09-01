@@ -15,6 +15,9 @@ namespace Neo.Wallets.SQLite;
 
 public class SQLiteWalletFactory : Plugin, IWalletFactory
 {
+    public override string Name => "SQLiteWallet";
+    public override string Description => "A SQLite-based wallet provider that supports wallet files with .db3 suffix.";
+
     public SQLiteWalletFactory()
     {
         Wallet.RegisterFactory(this);
