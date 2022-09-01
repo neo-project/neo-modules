@@ -268,7 +268,7 @@ namespace Neo.Consensus
         {
             bool returnValue = false;
             for (uint i = 0; i <= 1; i++)
-                if (context.TransactionHashes[i].Contains(tx.Hash))
+                if (context.TransactionHashes[i] is not null && context.TransactionHashes[i].Contains(tx.Hash))
                 {
                     if (verify)
                     {
