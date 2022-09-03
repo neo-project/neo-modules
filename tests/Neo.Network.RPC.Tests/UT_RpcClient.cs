@@ -3,7 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Moq.Protected;
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
 using Neo.SmartContract;
@@ -170,7 +170,7 @@ namespace Neo.Network.RPC.Tests
             foreach (var test in tests)
             {
                 var result = await rpc.GetCommitteeAsync();
-                Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => (JObject)p).ToArray()).ToString());
+                Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => (JToken)p).ToArray()).ToString());
             }
         }
 
@@ -201,7 +201,7 @@ namespace Neo.Network.RPC.Tests
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetRawMempoolAsync).ToLower());
             var result = await rpc.GetRawMempoolAsync();
-            Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => (JObject)p).ToArray()).ToString());
+            Assert.AreEqual(test.Response.Result.ToString(), ((JArray)result.Select(p => (JToken)p).ToArray()).ToString());
         }
 
         [TestMethod]
@@ -305,7 +305,7 @@ namespace Neo.Network.RPC.Tests
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.InvokeFunctionAsync).ToLower());
             var result = await rpc.InvokeFunctionAsync(test.Request.Params[0].AsString(), test.Request.Params[1].AsString(),
-                ((JArray)test.Request.Params[2]).Select(p => RpcStack.FromJson(p)).ToArray());
+                ((JArray)test.Request.Params[2]).Select(p => RpcStack.FromJson((JObject)p)).ToArray());
             Assert.AreEqual(test.Response.Result.ToString(), result.ToJson().ToString());
 
             // TODO test verify method
@@ -429,7 +429,7 @@ namespace Neo.Network.RPC.Tests
         public async Task TestSendMany()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.SendManyAsync).ToLower());
-            var result = await rpc.SendManyAsync(test.Request.Params[0].AsString(), ((JArray)test.Request.Params[1]).Select(p => RpcTransferOut.FromJson(p, rpc.protocolSettings)));
+            var result = await rpc.SendManyAsync(test.Request.Params[0].AsString(), ((JArray)test.Request.Params[1]).Select(p => RpcTransferOut.FromJson((JObject)p, rpc.protocolSettings)));
             Assert.AreEqual(test.Response.Result.ToString(), result.ToString());
         }
 

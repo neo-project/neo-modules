@@ -10,7 +10,7 @@
 
 using Akka.Actor;
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
 using Neo.SmartContract;
@@ -56,14 +56,14 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject CloseWallet(JArray _params)
+        protected virtual JToken CloseWallet(JArray _params)
         {
             wallet = null;
             return true;
         }
 
         [RpcMethod]
-        protected virtual JObject DumpPrivKey(JArray _params)
+        protected virtual JToken DumpPrivKey(JArray _params)
         {
             CheckWallet();
             UInt160 scriptHash = AddressToScriptHash(_params[0].AsString(), system.Settings.AddressVersion);
@@ -72,7 +72,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetNewAddress(JArray _params)
+        protected virtual JToken GetNewAddress(JArray _params)
         {
             CheckWallet();
             WalletAccount account = wallet.CreateAccount();
@@ -82,7 +82,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetWalletBalance(JArray _params)
+        protected virtual JToken GetWalletBalance(JArray _params)
         {
             CheckWallet();
             UInt160 asset_id = UInt160.Parse(_params[0].AsString());
@@ -92,7 +92,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject GetWalletUnclaimedGas(JArray _params)
+        protected virtual JToken GetWalletUnclaimedGas(JArray _params)
         {
             CheckWallet();
             BigInteger gas = BigInteger.Zero;
@@ -106,7 +106,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject ImportPrivKey(JArray _params)
+        protected virtual JToken ImportPrivKey(JArray _params)
         {
             CheckWallet();
             string privkey = _params[0].AsString();
@@ -123,7 +123,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject CalculateNetworkFee(JArray _params)
+        protected virtual JToken CalculateNetworkFee(JArray _params)
         {
             byte[] tx = Convert.FromBase64String(_params[0].AsString());
 
@@ -134,7 +134,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject ListAddress(JArray _params)
+        protected virtual JToken ListAddress(JArray _params)
         {
             CheckWallet();
             return wallet.GetAccounts().Select(p =>
@@ -149,7 +149,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject OpenWallet(JArray _params)
+        protected virtual JToken OpenWallet(JArray _params)
         {
             string path = _params[0].AsString();
             string password = _params[1].AsString();
@@ -188,7 +188,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject SendFrom(JArray _params)
+        protected virtual JToken SendFrom(JArray _params)
         {
             CheckWallet();
             UInt160 assetId = UInt160.Parse(_params[0].AsString());
@@ -230,7 +230,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject SendMany(JArray _params)
+        protected virtual JToken SendMany(JArray _params)
         {
             CheckWallet();
             int to_start = 0;
@@ -281,7 +281,7 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject SendToAddress(JArray _params)
+        protected virtual JToken SendToAddress(JArray _params)
         {
             CheckWallet();
             UInt160 assetId = UInt160.Parse(_params[0].AsString());
@@ -320,10 +320,10 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JObject InvokeContractVerify(JArray _params)
+        protected virtual JToken InvokeContractVerify(JArray _params)
         {
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
-            ContractParameter[] args = _params.Count >= 2 ? ((JArray)_params[1]).Select(p => ContractParameter.FromJson(p)).ToArray() : Array.Empty<ContractParameter>();
+            ContractParameter[] args = _params.Count >= 2 ? ((JArray)_params[1]).Select(p => ContractParameter.FromJson((JObject)p)).ToArray() : Array.Empty<ContractParameter>();
             Signer[] signers = _params.Count >= 3 ? SignersFromJson((JArray)_params[2], system.Settings) : null;
             Witness[] witnesses = _params.Count >= 3 ? WitnessesFromJson((JArray)_params[2]) : null;
             return GetVerificationResult(script_hash, args, signers, witnesses);

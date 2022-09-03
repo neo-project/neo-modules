@@ -10,7 +10,7 @@
 
 using Neo.IO;
 using Neo.IO.Data.LevelDB;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
@@ -57,14 +57,14 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        public JObject GetApplicationLog(JArray _params)
+        public JToken GetApplicationLog(JArray _params)
         {
             UInt256 hash = UInt256.Parse(_params[0].AsString());
             byte[] value = db.Get(ReadOptions.Default, hash.ToArray());
             if (value is null)
                 throw new RpcException(-100, "Unknown transaction/blockhash");
 
-            var raw = JObject.Parse(Neo.Utility.StrictUTF8.GetString(value));
+            JObject raw = (JObject)JToken.Parse(Neo.Utility.StrictUTF8.GetString(value));
             //Additional optional "trigger" parameter to getapplicationlog for clients to be able to get just one execution result for a block.
             if (_params.Count >= 2 && Enum.TryParse(_params[1].AsString(), true, out TriggerType trigger))
             {
@@ -115,7 +115,7 @@ namespace Neo.Plugins
                 return notification;
             }).ToArray();
 
-            txJson["executions"] = new List<JObject>() { trigger }.ToArray();
+            txJson["executions"] = new[] { trigger };
             return txJson;
         }
 

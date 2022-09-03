@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2022 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -8,7 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.SmartContract;
 using Neo.VM;
 using Neo.VM.Types;
@@ -42,7 +42,7 @@ namespace Neo.Network.RPC.Models
             {
                 TxId = json["txid"] is null ? null : UInt256.Parse(json["txid"].AsString()),
                 BlockHash = json["blockhash"] is null ? null : UInt256.Parse(json["blockhash"].AsString()),
-                Executions = ((JArray)json["executions"]).Select(p => Execution.FromJson(p, protocolSettings)).ToList(),
+                Executions = ((JArray)json["executions"]).Select(p => Execution.FromJson((JObject)p, protocolSettings)).ToList(),
             };
         }
     }
@@ -77,12 +77,12 @@ namespace Neo.Network.RPC.Models
         {
             return new Execution
             {
-                Trigger = json["trigger"].TryGetEnum<TriggerType>(),
-                VMState = json["vmstate"].TryGetEnum<VMState>(),
+                Trigger = json["trigger"].GetEnum<TriggerType>(),
+                VMState = json["vmstate"].GetEnum<VMState>(),
                 GasConsumed = long.Parse(json["gasconsumed"].AsString()),
                 ExceptionMessage = json["exception"]?.AsString(),
-                Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson(p)).ToList(),
-                Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson(p, protocolSettings)).ToList()
+                Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson((JObject)p)).ToList(),
+                Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson((JObject)p, protocolSettings)).ToList()
             };
         }
     }
@@ -110,7 +110,7 @@ namespace Neo.Network.RPC.Models
             {
                 Contract = json["contract"].ToScriptHash(protocolSettings),
                 EventName = json["eventname"].AsString(),
-                State = Utility.StackItemFromJson(json["state"])
+                State = Utility.StackItemFromJson((JObject)json["state"])
             };
         }
     }
