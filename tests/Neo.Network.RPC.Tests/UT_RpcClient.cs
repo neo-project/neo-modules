@@ -137,7 +137,7 @@ namespace Neo.Network.RPC.Tests
         public async Task TestGetBlockHash()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlockHashAsync).ToLower());
-            var result = await rpc.GetBlockHashAsync((int)test.Request.Params[0].AsNumber());
+            var result = await rpc.GetBlockHashAsync((uint)test.Request.Params[0].AsNumber());
             Assert.AreEqual(test.Response.Result.AsString(), result.ToString());
         }
 

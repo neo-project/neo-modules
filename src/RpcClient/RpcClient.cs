@@ -206,7 +206,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns the hash value of the corresponding block, based on the specified index.
         /// </summary>
-        public async Task<string> GetBlockHashAsync(int index)
+        public async Task<string> GetBlockHashAsync(uint index)
         {
             var result = await RpcSendAsync(GetRpcName(), index).ConfigureAwait(false);
             return result.AsString();
