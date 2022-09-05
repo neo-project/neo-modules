@@ -14,7 +14,7 @@ using Neo.ConsoleService;
 using Neo.Cryptography;
 using Neo.Cryptography.ECC;
 using Neo.IO;
-using Neo.IO.Json;
+using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
@@ -507,7 +507,7 @@ namespace Neo.Plugins
             if (string.IsNullOrEmpty(filterArgs))
                 return Utility.StrictUTF8.GetBytes(input);
 
-            JObject beforeObject = JObject.Parse(input);
+            JToken beforeObject = JToken.Parse(input);
             JArray afterObjects = beforeObject.JsonPath(filterArgs);
             return afterObjects.ToByteArray(false);
         }
