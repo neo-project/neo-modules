@@ -1,6 +1,7 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28729.10
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32819.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{97E81C78-1637-481F-9485-DA1225E94C23}"
 EndProject
@@ -34,9 +35,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Plugins.RpcServer.Tests
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TokensTracker", "src\TokensTracker\TokensTracker.csproj", "{48CB0583-26CE-48FC-9F53-F7DC6F1727D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MPTTrie", "src\MPTTrie\MPTTrie.csproj", "{D167FA6B-D2A3-4D8A-A65D-686DD06650F6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MPTTrie", "src\MPTTrie\MPTTrie.csproj", "{D167FA6B-D2A3-4D8A-A65D-686DD06650F6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neo.Cryptography.MPTTrie.Tests", "tests\Neo.Cryptography.MPTTrie.Tests\Neo.Cryptography.MPTTrie.Tests.csproj", "{8D2EE375-2E2D-45FE-A4E9-0254D12C7554}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neo.Cryptography.MPTTrie.Tests", "tests\Neo.Cryptography.MPTTrie.Tests\Neo.Cryptography.MPTTrie.Tests.csproj", "{8D2EE375-2E2D-45FE-A4E9-0254D12C7554}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQLiteWallet", "src\SQLiteWallet\SQLiteWallet.csproj", "{D121D57A-512E-4F74-ADA1-24482BF5C42B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -108,6 +111,10 @@ Global
 		{8D2EE375-2E2D-45FE-A4E9-0254D12C7554}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D2EE375-2E2D-45FE-A4E9-0254D12C7554}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8D2EE375-2E2D-45FE-A4E9-0254D12C7554}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D121D57A-512E-4F74-ADA1-24482BF5C42B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D121D57A-512E-4F74-ADA1-24482BF5C42B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D121D57A-512E-4F74-ADA1-24482BF5C42B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D121D57A-512E-4F74-ADA1-24482BF5C42B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -129,6 +136,7 @@ Global
 		{48CB0583-26CE-48FC-9F53-F7DC6F1727D8} = {97E81C78-1637-481F-9485-DA1225E94C23}
 		{D167FA6B-D2A3-4D8A-A65D-686DD06650F6} = {97E81C78-1637-481F-9485-DA1225E94C23}
 		{8D2EE375-2E2D-45FE-A4E9-0254D12C7554} = {59D802AB-C552-422A-B9C3-64D329FBCDCC}
+		{D121D57A-512E-4F74-ADA1-24482BF5C42B} = {97E81C78-1637-481F-9485-DA1225E94C23}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {61D3ADE6-BBFC-402D-AB42-1C71C9F9EDE3}
