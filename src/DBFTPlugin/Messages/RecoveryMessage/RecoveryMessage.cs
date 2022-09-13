@@ -94,7 +94,7 @@ namespace Neo.Consensus
         internal ExtensiblePayload GetPrepareRequestPayload(ConsensusContext context)
         {
             if (PrepareRequestMessage == null) return null;
-            if (PreparationMessages.TryGetValue(context.Block[Id].PrimaryIndex, out PreparationPayloadCompact compact))
+            if (!PreparationMessages.TryGetValue(context.Block[Id].PrimaryIndex, out PreparationPayloadCompact compact))
                 return null;
             return context.CreatePayload(PrepareRequestMessage, compact.InvocationScript);
         }
