@@ -9,7 +9,6 @@
 // modifications are permitted.
 
 using Akka.Actor;
-using Akka.Util.Internal;
 using Neo.Cryptography;
 using Neo.IO;
 using Neo.Ledger;
