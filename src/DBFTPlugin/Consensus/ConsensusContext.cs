@@ -78,7 +78,7 @@ namespace Neo.Consensus
         public bool IsBackup => MyIndex >= 0 && !IsPriorityPrimary && !IsFallbackPrimary;
         public bool WatchOnly => MyIndex < 0;
         public Header PrevHeader => NativeContract.Ledger.GetHeader(Snapshot, Block[0].PrevHash);
-        public int CountCommitted => ViewNumber == 0 ? Math.Max(CommitPayloads[0].Count(p => p != null), CommitPayloads[1].Count(p => p != null)) : CommitPayloads[0].Count(p => p != null);
+        public int CountCommitted => CommitPayloads[0].Count(p => p != null) + CommitPayloads[1].Count(p => p != null);
         public int CountFailed
         {
             get
@@ -289,7 +289,6 @@ namespace Neo.Consensus
                 TransactionHashes[0] = null;
                 PreparationPayloads[0] = new ExtensiblePayload[Validators.Length];
                 PreCommitPayloads[0] = new ExtensiblePayload[Validators.Length];
-                CommitPayloads[0] = new ExtensiblePayload[Validators.Length];
                 if (MyIndex >= 0) LastSeenMessage[Validators[MyIndex]] = Block[0].Index;
                 Block[0].Header.PrimaryIndex = GetPriorityPrimaryIndex(viewNumber);
 
@@ -299,7 +298,6 @@ namespace Neo.Consensus
                 VerificationContext[1] = null;
                 PreparationPayloads[1] = null;
                 PreCommitPayloads[1] = null;
-                CommitPayloads[1] = null;
             }
             ViewNumber = viewNumber;
         }
