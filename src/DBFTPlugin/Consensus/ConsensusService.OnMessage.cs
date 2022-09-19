@@ -193,12 +193,12 @@ namespace Neo.Consensus
                 return;
             }
 
-            // Timeout extension: commit has been received with success
-            // around 4*15s/M=60.0s/5=12.0s ~ 80% block time (for M=5)
-            ExtendTimerByFactor(4);
-
             if (commit.ViewNumber == context.ViewNumber)
             {
+                // Timeout extension: commit has been received with success
+                // around 4*15s/M=60.0s/5=12.0s ~ 80% block time (for M=5)
+                ExtendTimerByFactor(4);
+
                 Log($"{nameof(OnCommitReceived)}: height={commit.BlockIndex} view={commit.ViewNumber} index={commit.ValidatorIndex} nc={context.CountCommitted} nf={context.CountFailed}");
 
                 byte[] hashData = context.EnsureHeader()?.GetSignData(neoSystem.Settings.Network);
