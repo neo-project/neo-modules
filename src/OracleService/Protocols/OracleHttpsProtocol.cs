@@ -79,7 +79,7 @@ namespace Neo.Plugins
             if (message.StatusCode == HttpStatusCode.Forbidden)
                 return (OracleResponseCode.Forbidden, null);
             if (!message.IsSuccessStatusCode)
-                return (OracleResponseCode.Error, null);
+                return (OracleResponseCode.Error, message.StatusCode.ToString());
             if (!Settings.Default.AllowedContentTypes.Contains(message.Content.Headers.ContentType.MediaType))
                 return (OracleResponseCode.ContentTypeNotSupported, null);
             return (OracleResponseCode.Success, await message.Content.ReadAsStringAsync(cancellation));
