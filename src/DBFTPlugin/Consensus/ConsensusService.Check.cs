@@ -115,7 +115,7 @@ namespace Neo.Consensus
                         || (pId == 1 && preparationsCount >= context.M)))
                 {
                     ExtensiblePayload payload = context.MakePreCommit(pId);
-                    Log($"Sending {nameof(PreCommit)} pId={pId}");
+                    Log($"Sending {nameof(PreCommit)} to pId={pId}");
                     context.Save();
                     localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
                     // Set timer, so we will resend the commit in case of a networking issue

@@ -80,7 +80,7 @@ namespace Neo.Consensus
         private void OnPrepareRequestReceived(ExtensiblePayload payload, PrepareRequest message)
         {
             if (context.RequestSentOrReceived || context.NotAcceptingPayloadsDueToViewChanging) return;
-            uint pId = message.ValidatorIndex == context.GetPriorityPrimaryIndex(context.ViewNumber) || context.ViewNumber > 0 ? 0u : 1u;
+            uint pId = context.ViewNumber > 0 || message.ValidatorIndex == context.GetPriorityPrimaryIndex(context.ViewNumber) ? 0u : 1u;
             // Add verification for Fallback
             if (message.ValidatorIndex != context.Block[pId].PrimaryIndex || message.ViewNumber != context.ViewNumber) return;
             if (message.Version != context.Block[pId].Version || message.PrevHash != context.Block[pId].PrevHash) return;

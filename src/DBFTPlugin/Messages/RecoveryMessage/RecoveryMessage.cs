@@ -8,12 +8,12 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO;
-using Neo.Network.P2P.Payloads;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Neo.IO;
+using Neo.Network.P2P.Payloads;
 
 namespace Neo.Consensus
 {

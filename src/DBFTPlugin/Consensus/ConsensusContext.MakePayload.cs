@@ -154,6 +154,7 @@ namespace Neo.Consensus
                     Timestamp = Block[pId].Timestamp,
                     Nonce = Block[pId].Nonce,
                     BlockIndex = Block[pId].Index,
+                    ValidatorIndex = Block[pId].PrimaryIndex,
                     TransactionHashes = TransactionHashes[pId]
                 };
             }
