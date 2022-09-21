@@ -8,14 +8,14 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.Ledger;
-using Neo.Network.P2P.Payloads;
-using Neo.SmartContract;
-using Neo.Wallets;
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
+using Neo.Ledger;
+using Neo.Network.P2P.Payloads;
+using Neo.SmartContract;
+using Neo.Wallets;
 using static Neo.Consensus.RecoveryMessage;
 
 namespace Neo.Consensus
@@ -31,12 +31,12 @@ namespace Neo.Consensus
             });
         }
 
-        public ExtensiblePayload MakeCommit(uint i)
+        public ExtensiblePayload MakeCommit(uint pId)
         {
-            return CommitPayloads[i][MyIndex] ?? (CommitPayloads[i][MyIndex] = MakeSignedPayload(new Commit
+            return CommitPayloads[pId][MyIndex] ?? (CommitPayloads[pId][MyIndex] = MakeSignedPayload(new Commit
             {
-                Signature = EnsureHeader(i).Sign(keyPair, neoSystem.Settings.Network),
-                Id = i
+                Signature = EnsureHeader(pId).Sign(keyPair, neoSystem.Settings.Network),
+                Id = pId
             }));
         }
 
@@ -70,16 +70,16 @@ namespace Neo.Consensus
         /// Prevent that block exceed the max size
         /// </summary>
         /// <param name="txs">Ordered transactions</param>
-        internal void EnsureMaxBlockLimitation(IEnumerable<Transaction> txs, uint pID)
+        internal void EnsureMaxBlockLimitation(IEnumerable<Transaction> txs, uint pId)
         {
             uint maxTransactionsPerBlock = neoSystem.Settings.MaxTransactionsPerBlock;
 
             // Limit Speaker proposal to the limit `MaxTransactionsPerBlock` or all available transactions of the mempool
             txs = txs.Take((int)maxTransactionsPerBlock);
 
-            List<UInt256> hashes = new List<UInt256>();
-            Transactions[pID] = new Dictionary<UInt256, Transaction>();
-            VerificationContext[pID] = new TransactionVerificationContext();
+            List<UInt256> hashes = new();
+            Transactions[pId] = new Dictionary<UInt256, Transaction>();
+            VerificationContext[pId] = new TransactionVerificationContext();
 
             // Expected block size
             var blockSize = GetExpectedBlockSizeWithoutTransactions(txs.Count());
@@ -97,11 +97,11 @@ namespace Neo.Consensus
                 if (blockSystemFee > dbftSettings.MaxBlockSystemFee) break;
 
                 hashes.Add(tx.Hash);
-                Transactions[pID].Add(tx.Hash, tx);
-                VerificationContext[pID].AddTransaction(tx);
+                Transactions[pId].Add(tx.Hash, tx);
+                VerificationContext[pId].AddTransaction(tx);
             }
 
-            TransactionHashes[pID] = hashes.ToArray();
+            TransactionHashes[pId] = hashes.ToArray();
         }
 
         internal IEnumerable<Transaction> PickTransactions()
@@ -116,19 +116,19 @@ namespace Neo.Consensus
             return verifiedTxes;
         }
 
-        public ExtensiblePayload MakePrepareRequest(uint pID)
+        public ExtensiblePayload MakePrepareRequest(uint pId)
         {
-            EnsureMaxBlockLimitation(PickTransactions(), pID);
-            Block[pID].Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
-            Block[pID].Header.Nonce = GetNonce();
+            EnsureMaxBlockLimitation(PickTransactions(), pId);
+            Block[pId].Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
+            Block[pId].Header.Nonce = GetNonce();
 
-            return PreparationPayloads[pID][MyIndex] = MakeSignedPayload(new PrepareRequest
+            return PreparationPayloads[pId][MyIndex] = MakeSignedPayload(new PrepareRequest
             {
-                Version = Block[pID].Version,
-                PrevHash = Block[pID].PrevHash,
-                Timestamp = Block[pID].Timestamp,
-                Nonce = Block[pID].Nonce,
-                TransactionHashes = TransactionHashes[pID]
+                Version = Block[pId].Version,
+                PrevHash = Block[pId].PrevHash,
+                Timestamp = Block[pId].Timestamp,
+                Nonce = Block[pId].Nonce,
+                TransactionHashes = TransactionHashes[pId]
             });
         }
 
@@ -143,50 +143,50 @@ namespace Neo.Consensus
         public ExtensiblePayload MakeRecoveryMessage()
         {
             PrepareRequest prepareRequestMessage = null;
-            uint pID = TransactionHashes[0] != null ? 0u : (TransactionHashes[1] != null ? 1u : 0u);
-            if (TransactionHashes[pID] != null)
+            uint pId = TransactionHashes[0] != null ? 0u : (TransactionHashes[1] != null ? 1u : 0u);
+            if (TransactionHashes[pId] != null)
             {
                 prepareRequestMessage = new PrepareRequest
                 {
-                    Version = Block[pID].Version,
-                    PrevHash = Block[pID].PrevHash,
+                    Version = Block[pId].Version,
+                    PrevHash = Block[pId].PrevHash,
                     ViewNumber = ViewNumber,
-                    Timestamp = Block[pID].Timestamp,
-                    Nonce = Block[pID].Nonce,
-                    BlockIndex = Block[pID].Index,
-                    TransactionHashes = TransactionHashes[pID]
+                    Timestamp = Block[pId].Timestamp,
+                    Nonce = Block[pId].Nonce,
+                    BlockIndex = Block[pId].Index,
+                    TransactionHashes = TransactionHashes[pId]
                 };
             }
             return MakeSignedPayload(new RecoveryMessage
             {
-                Id = pID,
+                Id = pId,
                 ChangeViewMessages = LastChangeViewPayloads.Where(p => p != null).Select(p => GetChangeViewPayloadCompact(p)).Take(M).ToDictionary(p => p.ValidatorIndex),
                 PrepareRequestMessage = prepareRequestMessage,
                 // We only need a PreparationHash set if we don't have the PrepareRequest information.
-                PreparationHash = TransactionHashes[pID] == null ? PreparationPayloads[pID].Where(p => p != null).GroupBy(p => GetMessage<PrepareResponse>(p).PreparationHash, (k, g) => new { Hash = k, Count = g.Count() }).OrderByDescending(p => p.Count).Select(p => p.Hash).FirstOrDefault() : null,
-                PreparationMessages = PreparationPayloads[pID].Where(p => p != null).Select(p => GetPreparationPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex),
-                PreCommitMessages = PreCommitPayloads[pID].Where(p => p != null).Select(p => GetPreCommitPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex),
+                PreparationHash = TransactionHashes[pId] == null ? PreparationPayloads[pId].Where(p => p != null).GroupBy(p => GetMessage<PrepareResponse>(p).PreparationHash, (k, g) => new { Hash = k, Count = g.Count() }).OrderByDescending(p => p.Count).Select(p => p.Hash).FirstOrDefault() : null,
+                PreparationMessages = PreparationPayloads[pId].Where(p => p != null).Select(p => GetPreparationPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex),
+                PreCommitMessages = PreCommitPayloads[pId].Where(p => p != null).Select(p => GetPreCommitPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex),
                 CommitMessages = CommitSent
-                    ? CommitPayloads[pID].Where(p => p != null).Select(p => GetCommitPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex)
+                    ? CommitPayloads[pId].Where(p => p != null).Select(p => GetCommitPayloadCompact(p)).ToDictionary(p => p.ValidatorIndex)
                     : new Dictionary<byte, CommitPayloadCompact>()
             });
         }
 
-        public ExtensiblePayload MakePrepareResponse(uint i)
+        public ExtensiblePayload MakePrepareResponse(uint pId)
         {
-            return PreparationPayloads[i][MyIndex] = MakeSignedPayload(new PrepareResponse
+            return PreparationPayloads[pId][MyIndex] = MakeSignedPayload(new PrepareResponse
             {
-                PreparationHash = PreparationPayloads[i][Block[i].PrimaryIndex].Hash,
-                Id = i
+                PreparationHash = PreparationPayloads[pId][Block[pId].PrimaryIndex].Hash,
+                Id = pId
             });
         }
 
-        public ExtensiblePayload MakePreCommit(uint i)
+        public ExtensiblePayload MakePreCommit(uint pId)
         {
-            return PreCommitPayloads[i][MyIndex] = MakeSignedPayload(new PreCommit
+            return PreCommitPayloads[pId][MyIndex] = MakeSignedPayload(new PreCommit
             {
-                PreparationHash = PreparationPayloads[i][Block[i].PrimaryIndex].Hash,
-                Id = i
+                PreparationHash = PreparationPayloads[pId][Block[pId].PrimaryIndex].Hash,
+                Id = pId
             });
         }
 

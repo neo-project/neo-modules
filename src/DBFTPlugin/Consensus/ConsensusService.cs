@@ -8,15 +8,15 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Akka.Actor;
 using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Wallets;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using static Neo.Ledger.Blockchain;
 
 namespace Neo.Consensus
@@ -204,17 +204,17 @@ namespace Neo.Consensus
             }
         }
 
-        private void SendPrepareRequest(uint pID)
+        private void SendPrepareRequest(uint pId)
         {
-            Log($"Sending {nameof(PrepareRequest)}: height={context.Block[pID].Index} view={context.ViewNumber} Id={pID}");
-            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest(pID) });
+            Log($"Sending {nameof(PrepareRequest)}: height={context.Block[pId].Index} view={context.ViewNumber} Id={pId}");
+            localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareRequest(pId) });
 
             if (context.Validators.Length == 1)
-                CheckPreparations(pID);
+                CheckPreparations(pId);
 
-            if (context.TransactionHashes[pID].Length > 0)
+            if (context.TransactionHashes[pId].Length > 0)
             {
-                foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes[pID]))
+                foreach (InvPayload payload in InvPayload.CreateGroup(InventoryType.TX, context.TransactionHashes[pId]))
                     localNode.Tell(Message.Create(MessageCommand.Inv, payload));
             }
             ChangeTimer(TimeSpan.FromMilliseconds(context.PrimaryTimerMultiplier * ((neoSystem.Settings.MillisecondsPerBlock << (context.ViewNumber + 1)) - (context.ViewNumber == 0 ? neoSystem.Settings.MillisecondsPerBlock : 0))));

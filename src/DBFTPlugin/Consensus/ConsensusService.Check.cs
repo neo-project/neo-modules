@@ -8,36 +8,36 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using System;
+using System.Linq;
 using Akka.Actor;
 using Neo.IO;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
-using System;
-using System.Linq;
 
 namespace Neo.Consensus
 {
     partial class ConsensusService
     {
-        private bool CheckPrepareResponse(uint i)
+        private bool CheckPrepareResponse(uint pId)
         {
-            if (context.TransactionHashes[i].Length == context.Transactions[i].Count)
+            if (context.TransactionHashes[pId].Length == context.Transactions[pId].Count)
             {
                 // if we are the primary for this view, but acting as a backup because we recovered our own
                 // previously sent prepare request, then we don't want to send a prepare response.
-                if ((i == 0 && context.IsPriorityPrimary) || (i == 1 && context.IsFallbackPrimary) || context.WatchOnly) return true;
+                if ((pId == 0 && context.IsPriorityPrimary) || (pId == 1 && context.IsFallbackPrimary) || context.WatchOnly) return true;
 
                 // Check maximum block size via Native Contract policy
-                if (context.GetExpectedBlockSize(i) > dbftSettings.MaxBlockSize)
+                if (context.GetExpectedBlockSize(pId) > dbftSettings.MaxBlockSize)
                 {
-                    Log($"Rejected block: {context.Block[i].Index} The size exceed the policy", LogLevel.Warning);
+                    Log($"Rejected block: {context.Block[pId].Index} The size exceed the policy", LogLevel.Warning);
                     RequestChangeView(ChangeViewReason.BlockRejectedByPolicy);
                     return false;
                 }
                 // Check maximum block system fee via Native Contract policy
-                if (context.GetExpectedBlockSystemFee(i) > dbftSettings.MaxBlockSystemFee)
+                if (context.GetExpectedBlockSystemFee(pId) > dbftSettings.MaxBlockSystemFee)
                 {
-                    Log($"Rejected block: {context.Block[i].Index} The system fee exceed the policy", LogLevel.Warning);
+                    Log($"Rejected block: {context.Block[pId].Index} The system fee exceed the policy", LogLevel.Warning);
                     RequestChangeView(ChangeViewReason.BlockRejectedByPolicy);
                     return false;
                 }
@@ -47,34 +47,34 @@ namespace Neo.Consensus
                 ExtendTimerByFactor(2);
 
                 Log($"Sending {nameof(PrepareResponse)}");
-                localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareResponse(i) });
-                CheckPreparations(i);
+                localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareResponse(pId) });
+                CheckPreparations(pId);
             }
             return true;
         }
 
-        private void CheckPreCommits(uint i, bool forced = false)
+        private void CheckPreCommits(uint pId, bool forced = false)
         {
-            if (forced || context.PreCommitPayloads[i].Count(p => p != null) >= context.M && context.TransactionHashes[i].All(p => context.Transactions[i].ContainsKey(p)))
+            if (forced || context.PreCommitPayloads[pId].Count(p => p != null) >= context.M && context.TransactionHashes[pId].All(p => context.Transactions[pId].ContainsKey(p)))
             {
-                ExtensiblePayload payload = context.MakeCommit(i);
-                Log($"Sending {nameof(Commit)} to pOrF={i}");
+                ExtensiblePayload payload = context.MakeCommit(pId);
+                Log($"Sending {nameof(Commit)} to pId={pId}");
                 context.Save();
                 localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
                 // Set timer, so we will resend the commit in case of a networking issue
                 ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock));
-                CheckCommits(i);
+                CheckCommits(pId);
             }
         }
 
-        private void CheckCommits(uint i)
+        private void CheckCommits(uint pId)
         {
-            if (context.CommitPayloads[i].Count(p => context.GetMessage(p)?.ViewNumber == context.ViewNumber) >= context.M && context.TransactionHashes[i].All(p => context.Transactions[i].ContainsKey(p)))
+            if (context.CommitPayloads[pId].Count(p => context.GetMessage(p)?.ViewNumber == context.ViewNumber) >= context.M && context.TransactionHashes[pId].All(p => context.Transactions[pId].ContainsKey(p)))
             {
-                block_received_index = context.Block[i].Index;
+                block_received_index = context.Block[pId].Index;
                 block_received_time = TimeProvider.Current.UtcNow;
-                Block block = context.CreateBlock(i);
-                Log($"Sending {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length} Id={i}");
+                Block block = context.CreateBlock(pId);
+                Log($"Sending {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length} Id={pId}");
                 blockchain.Tell(block);
                 return;
             }
@@ -99,11 +99,11 @@ namespace Neo.Consensus
             }
         }
 
-        private void CheckPreparations(uint pID)
+        private void CheckPreparations(uint pId)
         {
-            if (context.TransactionHashes[pID].All(p => context.Transactions[pID].ContainsKey(p)))
+            if (context.TransactionHashes[pId].All(p => context.Transactions[pId].ContainsKey(p)))
             {
-                var preparationsCount = context.PreparationPayloads[pID].Count(p => p != null);
+                var preparationsCount = context.PreparationPayloads[pId].Count(p => p != null);
                 if (context.ViewNumber > 0)
                 {
                     if (preparationsCount >= context.M)
@@ -111,18 +111,18 @@ namespace Neo.Consensus
                     return;
                 }
                 if (!context.PreCommitSent
-                    && ((pID == 0 && preparationsCount >= context.F + 1)
-                        || (pID == 1 && preparationsCount >= context.M)))
+                    && ((pId == 0 && preparationsCount >= context.F + 1)
+                        || (pId == 1 && preparationsCount >= context.M)))
                 {
-                    ExtensiblePayload payload = context.MakePreCommit(pID);
-                    Log($"Sending {nameof(PreCommit)} pOrF={pID}");
+                    ExtensiblePayload payload = context.MakePreCommit(pId);
+                    Log($"Sending {nameof(PreCommit)} pId={pId}");
                     context.Save();
                     localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
                     // Set timer, so we will resend the commit in case of a networking issue
                     ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock));
-                    CheckPreCommits(pID);
+                    CheckPreCommits(pId);
                 }
-                if (context.ViewNumber == 0 && pID == 0 && preparationsCount >= context.M)
+                if (context.ViewNumber == 0 && pId == 0 && preparationsCount >= context.M)
                 {
                     CheckPreCommits(0, true);
                 }

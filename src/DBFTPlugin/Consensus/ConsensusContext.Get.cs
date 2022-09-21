@@ -8,11 +8,11 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using System.Linq;
+using System.Runtime.CompilerServices;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.Wallets;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using static Neo.Consensus.RecoveryMessage;
 
 namespace Neo.Consensus
@@ -101,18 +101,18 @@ namespace Neo.Consensus
         /// <summary>
         /// Return the expected block size
         /// </summary>
-        public int GetExpectedBlockSize(uint i)
+        public int GetExpectedBlockSize(uint pId)
         {
-            return GetExpectedBlockSizeWithoutTransactions(Transactions[i].Count) + // Base size
-                Transactions[i].Values.Sum(u => u.Size);   // Sum Txs
+            return GetExpectedBlockSizeWithoutTransactions(Transactions[pId].Count) + // Base size
+                Transactions[pId].Values.Sum(u => u.Size);   // Sum Txs
         }
 
         /// <summary>
         /// Return the expected block system fee
         /// </summary>
-        public long GetExpectedBlockSystemFee(uint i)
+        public long GetExpectedBlockSystemFee(uint pId)
         {
-            return Transactions[i].Values.Sum(u => u.SystemFee);  // Sum Txs
+            return Transactions[pId].Values.Sum(u => u.SystemFee);  // Sum Txs
         }
 
         /// <summary>
