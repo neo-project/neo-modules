@@ -145,6 +145,7 @@ namespace Neo.Consensus
             started = true;
             if (!dbftSettings.IgnoreRecoveryLogs && context.Load())
             {
+                // Check if any preparation was obtained and extract the primary ID
                 var pId = context.RequestSentOrReceived
                     ? (context.PreparationPayloads[0][context.Block[0].PrimaryIndex] != null ? 0u : 1u)
                     : 0u;
