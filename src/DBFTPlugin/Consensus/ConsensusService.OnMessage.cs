@@ -174,7 +174,7 @@ namespace Neo.Consensus
             // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
             ExtendTimerByFactor(2);
 
-            Log($"{nameof(OnPrepareResponseReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} Id={message.Id}");
+            Log($"{nameof(OnPrepareResponseReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} pId={message.Id}");
             context.PreparationPayloads[message.Id][message.ValidatorIndex] = payload;
             if (context.WatchOnly || context.CommitSent) return;
             if (context.RequestSentOrReceived)
@@ -193,7 +193,7 @@ namespace Neo.Consensus
                     return;
             }
 
-            Log($"{nameof(OnPreCommitReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} Id={message.Id}");
+            Log($"{nameof(OnPreCommitReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} pId={message.Id}");
             context.PreCommitPayloads[message.Id][message.ValidatorIndex] = payload;
             if (context.WatchOnly || context.CommitSent) return;
             if (context.RequestSentOrReceived)
@@ -222,7 +222,7 @@ namespace Neo.Consensus
             if (existingCommitPayload != null)
             {
                 if (existingCommitPayload.Hash != payload.Hash)
-                    Log($"Rejected {nameof(Commit)}: height={commit.BlockIndex} index={commit.ValidatorIndex} view={commit.ViewNumber} existingView={context.GetMessage(existingCommitPayload).ViewNumber} id={commit.Id}", LogLevel.Warning);
+                    Log($"Rejected {nameof(Commit)}: height={commit.BlockIndex} index={commit.ValidatorIndex} view={commit.ViewNumber} existingView={context.GetMessage(existingCommitPayload).ViewNumber} pId={commit.Id}", LogLevel.Warning);
                 return;
             }
 
@@ -261,7 +261,7 @@ namespace Neo.Consensus
             int validPrepResponses = 0, totalPrepResponses = 0, validCommits = 0, totalCommits = 0;
             int validPreCommits = 0, totalPreCommits = 0;
 
-            Log($"{nameof(OnRecoveryMessageReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex}");
+            Log($"{nameof(OnRecoveryMessageReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} pId={message.Id}");
             try
             {
                 if (message.ViewNumber > context.ViewNumber)
