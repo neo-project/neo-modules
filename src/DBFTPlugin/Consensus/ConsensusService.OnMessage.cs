@@ -160,12 +160,12 @@ namespace Neo.Consensus
         private void OnPrepareResponseReceived(ExtensiblePayload payload, PrepareResponse message)
         {
             if (message.ViewNumber != context.ViewNumber) return;
-            if (context.PreparationPayloads[message.Id][message.ValidatorIndex] != null || context.NotAcceptingPayloadsDueToViewChanging) return;
+            if (context.PreparationPayloads[message.PId][message.ValidatorIndex] != null || context.NotAcceptingPayloadsDueToViewChanging) return;
             if (context.RequestSentOrReceived)
             {
                 // Check if we have joined another consensus process
-                if (context.PreparationPayloads[message.Id][context.Block[message.Id].PrimaryIndex] == null) return;
-                if (!message.PreparationHash.Equals(context.PreparationPayloads[message.Id][context.Block[message.Id].PrimaryIndex].Hash))
+                if (context.PreparationPayloads[message.PId][context.Block[message.PId].PrimaryIndex] == null) return;
+                if (!message.PreparationHash.Equals(context.PreparationPayloads[message.PId][context.Block[message.PId].PrimaryIndex].Hash))
                     return;
             }
 
@@ -174,30 +174,30 @@ namespace Neo.Consensus
             // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
             ExtendTimerByFactor(2);
 
-            Log($"{nameof(OnPrepareResponseReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} pId={message.Id}");
-            context.PreparationPayloads[message.Id][message.ValidatorIndex] = payload;
+            Log($"{nameof(OnPrepareResponseReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} pId={message.PId}");
+            context.PreparationPayloads[message.PId][message.ValidatorIndex] = payload;
             if (context.WatchOnly || context.CommitSent) return;
             if (context.RequestSentOrReceived)
-                CheckPreparations(message.Id);
+                CheckPreparations(message.PId);
         }
 
         private void OnPreCommitReceived(ExtensiblePayload payload, PreCommit message)
         {
             if (message.ViewNumber != context.ViewNumber) return;
-            if (context.PreCommitPayloads[message.Id][message.ValidatorIndex] != null || context.NotAcceptingPayloadsDueToViewChanging) return;
+            if (context.PreCommitPayloads[message.PId][message.ValidatorIndex] != null || context.NotAcceptingPayloadsDueToViewChanging) return;
             if (context.RequestSentOrReceived)
             {
                 // Check if we have joined another consensus process
-                if (context.PreparationPayloads[message.Id][context.Block[message.Id].PrimaryIndex] == null) return;
-                if (!message.PreparationHash.Equals(context.PreparationPayloads[message.Id][context.Block[message.Id].PrimaryIndex].Hash))
+                if (context.PreparationPayloads[message.PId][context.Block[message.PId].PrimaryIndex] == null) return;
+                if (!message.PreparationHash.Equals(context.PreparationPayloads[message.PId][context.Block[message.PId].PrimaryIndex].Hash))
                     return;
             }
 
-            Log($"{nameof(OnPreCommitReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} pId={message.Id}");
-            context.PreCommitPayloads[message.Id][message.ValidatorIndex] = payload;
+            Log($"{nameof(OnPreCommitReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} pId={message.PId}");
+            context.PreCommitPayloads[message.PId][message.ValidatorIndex] = payload;
             if (context.WatchOnly || context.CommitSent) return;
             if (context.RequestSentOrReceived)
-                CheckPreCommits(message.Id);
+                CheckPreCommits(message.PId);
         }
 
         private void OnChangeViewReceived(ExtensiblePayload payload, ChangeView message)
@@ -218,11 +218,11 @@ namespace Neo.Consensus
 
         private void OnCommitReceived(ExtensiblePayload payload, Commit commit)
         {
-            ref ExtensiblePayload existingCommitPayload = ref context.CommitPayloads[commit.Id][commit.ValidatorIndex];
+            ref ExtensiblePayload existingCommitPayload = ref context.CommitPayloads[commit.PId][commit.ValidatorIndex];
             if (existingCommitPayload != null)
             {
                 if (existingCommitPayload.Hash != payload.Hash)
-                    Log($"Rejected {nameof(Commit)}: height={commit.BlockIndex} index={commit.ValidatorIndex} view={commit.ViewNumber} existingView={context.GetMessage(existingCommitPayload).ViewNumber} pId={commit.Id}", LogLevel.Warning);
+                    Log($"Rejected {nameof(Commit)}: height={commit.BlockIndex} index={commit.ValidatorIndex} view={commit.ViewNumber} existingView={context.GetMessage(existingCommitPayload).ViewNumber} pId={commit.PId}", LogLevel.Warning);
                 return;
             }
 
@@ -234,7 +234,7 @@ namespace Neo.Consensus
             {
                 Log($"{nameof(OnCommitReceived)}: height={commit.BlockIndex} view={commit.ViewNumber} index={commit.ValidatorIndex} nc={context.CountCommitted} nf={context.CountFailed}");
 
-                byte[] hashData = context.EnsureHeader(commit.Id)?.GetSignData(neoSystem.Settings.Network);
+                byte[] hashData = context.EnsureHeader(commit.PId)?.GetSignData(neoSystem.Settings.Network);
                 if (hashData == null)
                 {
                     existingCommitPayload = payload;
@@ -242,7 +242,7 @@ namespace Neo.Consensus
                 else if (Crypto.VerifySignature(hashData, commit.Signature.Span, context.Validators[commit.ValidatorIndex]))
                 {
                     existingCommitPayload = payload;
-                    CheckCommits(commit.Id);
+                    CheckCommits(commit.PId);
                 }
                 return;
             }
@@ -261,7 +261,7 @@ namespace Neo.Consensus
             int validPrepResponses = 0, totalPrepResponses = 0, validCommits = 0, totalCommits = 0;
             int validPreCommits = 0, totalPreCommits = 0;
 
-            Log($"{nameof(OnRecoveryMessageReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} pId={message.Id}");
+            Log($"{nameof(OnRecoveryMessageReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} pId={message.PId}");
             try
             {
                 if (message.ViewNumber > context.ViewNumber)

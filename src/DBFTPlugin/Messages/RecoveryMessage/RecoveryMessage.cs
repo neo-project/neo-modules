@@ -19,7 +19,7 @@ namespace Neo.Consensus
 {
     public partial class RecoveryMessage : ConsensusMessage
     {
-        public uint Id;
+        public uint PId;
         public Dictionary<byte, ChangeViewPayloadCompact> ChangeViewMessages;
         public PrepareRequest PrepareRequestMessage;
         /// The PreparationHash in case the PrepareRequest hasn't been received yet.
@@ -41,7 +41,7 @@ namespace Neo.Consensus
         public override void Deserialize(ref MemoryReader reader)
         {
             base.Deserialize(ref reader);
-            Id = reader.ReadUInt32();
+            PId = reader.ReadUInt32();
             ChangeViewMessages = reader.ReadSerializableArray<ChangeViewPayloadCompact>(byte.MaxValue).ToDictionary(p => p.ValidatorIndex);
             if (reader.ReadBoolean())
             {
@@ -86,7 +86,7 @@ namespace Neo.Consensus
                 BlockIndex = BlockIndex,
                 ValidatorIndex = p.ValidatorIndex,
                 ViewNumber = p.ViewNumber,
-                Id = Id,
+                PId = PId,
                 Signature = p.Signature
             }, p.InvocationScript)).ToArray();
         }
@@ -94,21 +94,21 @@ namespace Neo.Consensus
         internal ExtensiblePayload GetPrepareRequestPayload(ConsensusContext context)
         {
             if (PrepareRequestMessage == null) return null;
-            if (!PreparationMessages.TryGetValue(context.Block[Id].PrimaryIndex, out PreparationPayloadCompact compact))
+            if (!PreparationMessages.TryGetValue(context.Block[PId].PrimaryIndex, out PreparationPayloadCompact compact))
                 return null;
             return context.CreatePayload(PrepareRequestMessage, compact.InvocationScript);
         }
 
         internal ExtensiblePayload[] GetPrepareResponsePayloads(ConsensusContext context)
         {
-            UInt256 preparationHash = PreparationHash ?? context.PreparationPayloads[Id][context.Block[Id].PrimaryIndex]?.Hash;
+            UInt256 preparationHash = PreparationHash ?? context.PreparationPayloads[PId][context.Block[PId].PrimaryIndex]?.Hash;
             if (preparationHash is null) return Array.Empty<ExtensiblePayload>();
             return PreparationMessages.Values.Where(p => p.ValidatorIndex != context.Block[0].PrimaryIndex).Select(p => context.CreatePayload(new PrepareResponse
             {
                 BlockIndex = BlockIndex,
                 ValidatorIndex = p.ValidatorIndex,
                 ViewNumber = ViewNumber,
-                Id = Id,
+                PId = PId,
                 PreparationHash = preparationHash,
             }, p.InvocationScript)).ToArray();
         }
@@ -121,14 +121,14 @@ namespace Neo.Consensus
                 ViewNumber = p.ViewNumber,
                 ValidatorIndex = p.ValidatorIndex,
                 PreparationHash = p.PreparationHash,
-                Id = Id,
+                PId = PId,
             }, p.InvocationScript)).ToArray();
         }
 
         public override void Serialize(BinaryWriter writer)
         {
             base.Serialize(writer);
-            writer.Write(Id);
+            writer.Write(PId);
             writer.Write(ChangeViewMessages.Values.ToArray());
             bool hasPrepareRequestMessage = PrepareRequestMessage != null;
             writer.Write(hasPrepareRequestMessage);

@@ -8,9 +8,9 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.IO;
 using System;
 using System.IO;
+using Neo.IO;
 
 namespace Neo.Consensus
 {
@@ -19,7 +19,7 @@ namespace Neo.Consensus
         public ReadOnlyMemory<byte> Signature;
 
         // priority or fallback
-        public uint Id;
+        public uint PId;
 
         public override int Size => base.Size + Signature.Length + sizeof(uint);
 
@@ -29,14 +29,14 @@ namespace Neo.Consensus
         {
             base.Deserialize(ref reader);
             Signature = reader.ReadMemory(64);
-            Id = reader.ReadUInt32();
+            PId = reader.ReadUInt32();
         }
 
         public override void Serialize(BinaryWriter writer)
         {
             base.Serialize(writer);
             writer.Write(Signature.Span);
-            writer.Write(Id);
+            writer.Write(PId);
         }
     }
 }

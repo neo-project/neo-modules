@@ -36,7 +36,7 @@ namespace Neo.Consensus
             return CommitPayloads[pId][MyIndex] ?? (CommitPayloads[pId][MyIndex] = MakeSignedPayload(new Commit
             {
                 Signature = EnsureHeader(pId).Sign(keyPair, neoSystem.Settings.Network),
-                Id = pId
+                PId = pId
             }));
         }
 
@@ -160,7 +160,7 @@ namespace Neo.Consensus
             }
             return MakeSignedPayload(new RecoveryMessage
             {
-                Id = pId,
+                PId = pId,
                 ChangeViewMessages = LastChangeViewPayloads.Where(p => p != null).Select(p => GetChangeViewPayloadCompact(p)).Take(M).ToDictionary(p => p.ValidatorIndex),
                 PrepareRequestMessage = prepareRequestMessage,
                 // We only need a PreparationHash set if we don't have the PrepareRequest information.
@@ -178,7 +178,7 @@ namespace Neo.Consensus
             return PreparationPayloads[pId][MyIndex] = MakeSignedPayload(new PrepareResponse
             {
                 PreparationHash = PreparationPayloads[pId][Block[pId].PrimaryIndex].Hash,
-                Id = pId
+                PId = pId
             });
         }
 
@@ -187,7 +187,7 @@ namespace Neo.Consensus
             return PreCommitPayloads[pId][MyIndex] = MakeSignedPayload(new PreCommit
             {
                 PreparationHash = PreparationPayloads[pId][Block[pId].PrimaryIndex].Hash,
-                Id = pId
+                PId = pId
             });
         }
 
