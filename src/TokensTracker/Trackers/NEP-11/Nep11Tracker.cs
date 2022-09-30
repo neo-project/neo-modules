@@ -117,14 +117,14 @@ namespace Neo.Plugins.Trackers.NEP_11
             using ApplicationEngine engine = ApplicationEngine.Run(sb.ToArray(), snapshot, settings: _neoSystem.Settings, gas: 3400_0000);
             if (engine.State.HasFlag(VMState.FAULT) || engine.ResultStack.Count != 2)
             {
-                Log($"Fault: from[{record.from}] to[{record.to}] get {record.asset} token [{record.tokenId.GetSpan().ToHexString()}] balance fault", LogLevel.Warning);
+                Log($"Fault: from[{record.from}] to[{record.to}] get {record.asset} token [{record.tokenId.ToHexString()}] balance fault", LogLevel.Warning);
                 return;
             }
             var toBalance = engine.ResultStack.Pop();
             var fromBalance = engine.ResultStack.Pop();
             if (toBalance is not Integer || fromBalance is not Integer)
             {
-                Log($"Fault: from[{record.from}] to[{record.to}] get {record.asset} token [{record.tokenId.GetSpan().ToHexString()}] balance not number", LogLevel.Warning);
+                Log($"Fault: from[{record.from}] to[{record.to}] get {record.asset} token [{record.tokenId.ToHexString()}] balance not number", LogLevel.Warning);
                 return;
             }
             Put(Nep11BalancePrefix, new Nep11BalanceKey(record.to, record.asset, record.tokenId), new TokenBalance { Balance = toBalance.GetInteger(), LastUpdatedBlock = _currentHeight });
