@@ -9,7 +9,6 @@
 // modifications are permitted.
 
 using Neo.IO;
-using Neo.IO.Data.LevelDB;
 using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
@@ -25,8 +24,8 @@ namespace Neo.Plugins
 {
     public class LogReader : Plugin
     {
-        private DB db;
-        private WriteBatch _writeBatch;
+        private IStore _db;
+        private ISnapshot _snapshot;
 
         public override string Name => "ApplicationLogs";
         public override string Description => "Synchronizes the smart contract log with the NativeContract log (Notify)";
@@ -46,13 +45,13 @@ namespace Neo.Plugins
         protected override void Configure()
         {
             Settings.Load(GetConfiguration());
-            string path = string.Format(Settings.Default.Path, Settings.Default.Network.ToString("X8"));
-            db = DB.Open(GetFullPath(path), new Options { CreateIfMissing = true });
         }
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
+            string path = string.Format(Settings.Default.Path, Settings.Default.Network.ToString("X8"));
+            _db = system.LoadStore(GetFullPath(path));
             RpcServerPlugin.RegisterMethods(this, Settings.Default.Network);
         }
 
@@ -60,7 +59,7 @@ namespace Neo.Plugins
         public JToken GetApplicationLog(JArray _params)
         {
             UInt256 hash = UInt256.Parse(_params[0].AsString());
-            byte[] value = db.Get(ReadOptions.Default, hash.ToArray());
+            byte[] value = _db.TryGet(hash.ToArray());
             if (value is null)
                 throw new RpcException(-100, "Unknown transaction/blockhash");
 
@@ -190,7 +189,7 @@ namespace Neo.Plugins
         private void OnCommitted(NeoSystem system, Block block)
         {
             if (system.Settings.Network != Settings.Default.Network) return;
-            db.Write(WriteOptions.Default, _writeBatch);
+            _snapshot?.Commit();
         }
 
         static string GetExceptionMessage(Exception exception)
@@ -200,12 +199,13 @@ namespace Neo.Plugins
 
         private void ResetBatch()
         {
-            _writeBatch = new WriteBatch();
+            _snapshot?.Dispose();
+            _snapshot = _db.GetSnapshot();
         }
 
         private void Put(byte[] key, byte[] value)
         {
-            _writeBatch.Put(key, value);
+            _snapshot.Put(key, value);
         }
     }
 }
