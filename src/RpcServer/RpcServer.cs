@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
-using Neo.IO;
 using Neo.Json;
 using Neo.Network.P2P;
 using System;
@@ -46,11 +45,10 @@ namespace Neo.Plugins
         /// Public interface of _logEvents.
         /// </summary>
         public static Dictionary<UInt256, Queue<LogEventArgs>> LogEvents { get; } = new();
-
         /// <summary>
         /// Maximum number of events to be logged per contract
         /// </summary>
-        private const int MaxLogEvents = 50;
+        private static int _maxLogEvents = 20;
 
         public RpcServer(NeoSystem system, RpcServerSettings settings)
         {
@@ -59,7 +57,7 @@ namespace Neo.Plugins
             localNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             RegisterMethods(this);
             Initialize_SmartContract();
-
+            _maxLogEvents = settings.MaxLogEvents;
             ApplicationEngine.Log += OnContractLogEvent;
             Blockchain.Committed += OnCommitted;
         }
@@ -123,7 +121,7 @@ namespace Neo.Plugins
                 _logs = new Queue<LogEventArgs>();
                 LogEvents.Add(tx.Hash, _logs);
             }
-            if (LogEvents[tx.Hash].Count >= MaxLogEvents)
+            if (LogEvents[tx.Hash].Count >= _maxLogEvents)
             {
                 _logs.Dequeue();
             }

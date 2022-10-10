@@ -42,6 +42,7 @@ namespace Neo.Plugins
         public long MaxFee { get; init; }
         public int MaxIteratorResultItems { get; init; }
         public int MaxStackSize { get; init; }
+        public int MaxLogEvents { get; init; }
         public string[] DisabledMethods { get; init; }
         public bool SessionEnabled { get; init; }
         public TimeSpan SessionExpirationTime { get; init; }
@@ -57,6 +58,7 @@ namespace Neo.Plugins
             TrustedAuthorities = Array.Empty<string>(),
             MaxIteratorResultItems = 100,
             MaxStackSize = ushort.MaxValue,
+            MaxLogEvents = 20,
             DisabledMethods = Array.Empty<string>(),
             MaxConcurrentConnections = 40,
             SessionEnabled = false,
@@ -77,6 +79,7 @@ namespace Neo.Plugins
             MaxFee = (long)new BigDecimal(section.GetValue<decimal>("MaxFee", Default.MaxFee), NativeContract.GAS.Decimals).Value,
             MaxIteratorResultItems = section.GetValue("MaxIteratorResultItems", Default.MaxIteratorResultItems),
             MaxStackSize = section.GetValue("MaxStackSize", Default.MaxStackSize),
+            MaxLogEvents = section.GetValue("MaxLogEvents", Default.MaxLogEvents),
             DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray(),
             MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", Default.MaxConcurrentConnections),
             SessionEnabled = section.GetValue("SessionEnabled", Default.SessionEnabled),
