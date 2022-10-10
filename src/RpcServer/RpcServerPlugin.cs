@@ -36,6 +36,7 @@ namespace Neo.Plugins
                 server.Dispose();
             base.Dispose();
         }
+
         protected override void OnSystemLoaded(NeoSystem system)
         {
             RpcServerSettings s = settings.Servers.FirstOrDefault(p => p.Network == system.Settings.Network);
