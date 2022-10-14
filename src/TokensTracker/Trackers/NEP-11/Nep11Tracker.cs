@@ -235,7 +235,7 @@ namespace Neo.Plugins.Trackers.NEP_11
                 {
                     map[key.AssetScriptHash] = list = new List<(string, BigInteger, uint)>();
                 }
-                list.Add((key.Token.GetSpan().ToHexString(), value.Balance, value.LastUpdatedBlock));
+                list.Add((key.Token.GetSpan().ToBase64(), value.Balance, value.LastUpdatedBlock));
                 count++;
                 if (count >= _maxResults)
                 {
@@ -278,7 +278,7 @@ namespace Neo.Plugins.Trackers.NEP_11
         public JToken GetNep11Properties(JArray _params)
         {
             UInt160 nep11Hash = GetScriptHashFromParam(_params[0].AsString());
-            var tokenId = _params[1].AsString().HexToBytes();
+            var tokenId = Convert.FromBase64String(_params[1].AsString());
 
             using ScriptBuilder sb = new();
             sb.EmitDynamicCall(nep11Hash, "properties", CallFlags.ReadOnly, tokenId);
@@ -313,7 +313,7 @@ namespace Neo.Plugins.Trackers.NEP_11
             foreach (var (key, value) in transferPairs.OrderByDescending(l => l.key.TimestampMS))
             {
                 JObject transfer = ToJson(key, value);
-                transfer["tokenid"] = key.Token.GetSpan().ToHexString();
+                transfer["tokenid"] = key.Token.GetSpan().ToBase64();
                 parentJArray.Add(transfer);
             }
         }
