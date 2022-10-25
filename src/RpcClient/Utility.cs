@@ -241,7 +241,7 @@ namespace Neo.Network.RPC
                 case "Boolean":
                     return new BooleanCondition() { Expression = json["expressions"].AsBoolean() };
                 case "Not":
-                    return new NotCondition() { Expression = RuleExpressionFromJson((JObject)json["expressions"], protocolSettings)) };
+                    return new NotCondition() { Expression = RuleExpressionFromJson((JObject)json["expressions"], protocolSettings) };
                 case "Group":
                     return new GroupCondition() { Group = ECPoint.Parse(json["group"].AsString(), ECCurve.Secp256r1) };
                 case "CalledByContract":
