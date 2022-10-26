@@ -11,6 +11,7 @@
 using Neo.Cryptography.ECC;
 using Neo.Json;
 using Neo.Network.P2P.Payloads;
+using Neo.Network.P2P.Payloads.Conditions;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM.Types;
@@ -188,6 +189,7 @@ namespace Neo.Network.RPC
             return new Signer
             {
                 Account = json["account"].ToScriptHash(protocolSettings),
+                Rules = ((JArray)json["rules"])?.Select(p => RuleFromJson((JObject)p, protocolSettings)).ToArray(),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), json["scopes"].AsString()),
                 AllowedContracts = ((JArray)json["allowedcontracts"])?.Select(p => p.ToScriptHash(protocolSettings)).ToArray(),
                 AllowedGroups = ((JArray)json["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
@@ -217,6 +219,42 @@ namespace Neo.Network.RPC
                 InvocationScript = Convert.FromBase64String(json["invocation"].AsString()),
                 VerificationScript = Convert.FromBase64String(json["verification"].AsString())
             };
+        }
+
+        public static WitnessRule RuleFromJson(JObject json, ProtocolSettings protocolSettings)
+        {
+            return new WitnessRule()
+            {
+                Action = Enum.Parse<WitnessRuleAction>(json["action"].AsString()),
+                Condition = RuleExpressionFromJson((JObject)json["condition"], protocolSettings)
+            };
+        }
+
+        public static WitnessCondition RuleExpressionFromJson(JObject json, ProtocolSettings protocolSettings)
+        {
+            switch (json["type"].AsString())
+            {
+                case "Or":
+                    return new OrCondition() { Expressions = ((JArray)json["expressions"])?.Select(p => RuleExpressionFromJson((JObject)p, protocolSettings)).ToArray() };
+                case "And":
+                    return new AndCondition() { Expressions = ((JArray)json["expressions"])?.Select(p => RuleExpressionFromJson((JObject)p, protocolSettings)).ToArray() };
+                case "Boolean":
+                    return new BooleanCondition() { Expression = json["expressions"].AsBoolean() };
+                case "Not":
+                    return new NotCondition() { Expression = RuleExpressionFromJson((JObject)json["expressions"], protocolSettings) };
+                case "Group":
+                    return new GroupCondition() { Group = ECPoint.Parse(json["group"].AsString(), ECCurve.Secp256r1) };
+                case "CalledByContract":
+                    return new CalledByContractCondition() { Hash = json["hash"].ToScriptHash(protocolSettings) };
+                case "ScriptHash":
+                    return new ScriptHashCondition() { Hash = json["hash"].ToScriptHash(protocolSettings) };
+                case "CalledByEntry":
+                    return new CalledByEntryCondition();
+                case "CalledByGroup":
+                    return new CalledByGroupCondition() { Group = ECPoint.Parse(json["group"].AsString(), ECCurve.Secp256r1) };
+            }
+
+            throw new FormatException("Wrong rule's condition type");
         }
 
         public static StackItem StackItemFromJson(JObject json)

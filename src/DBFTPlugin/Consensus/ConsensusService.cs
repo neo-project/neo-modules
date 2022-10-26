@@ -157,7 +157,7 @@ namespace Neo.Consensus
                 }
             }
             InitializeConsensus(0);
-            // Issue a ChangeView with NewViewNumber of 0 to request recovery messages on start-up.
+            // Issue a recovery request on start-up in order to possibly catch up with other nodes
             if (!context.WatchOnly)
                 RequestRecovery();
         }
