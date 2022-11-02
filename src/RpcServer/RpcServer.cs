@@ -225,7 +225,8 @@ namespace Neo.Plugins
         private async Task<JObject> ProcessRequestAsync(HttpContext context, JObject request)
         {
             if (!request.ContainsProperty("id")) return null;
-            if (!request.ContainsProperty("method") || !request.ContainsProperty("params") || !(request["params"] is JArray))
+            JToken @params = request["params"] ?? new JArray();
+            if (!request.ContainsProperty("method") || @params is not JArray)
             {
                 return CreateErrorResponse(request["id"], -32600, "Invalid Request");
             }
@@ -237,7 +238,7 @@ namespace Neo.Plugins
                     throw new RpcException(-400, "Access denied");
                 if (!methods.TryGetValue(method, out var func))
                     throw new RpcException(-32601, "Method not found");
-                response["result"] = func((JArray)request["params"]) switch
+                response["result"] = func((JArray)@params) switch
                 {
                     JToken result => result,
                     Task<JToken> task => await task,
