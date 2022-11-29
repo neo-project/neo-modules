@@ -11,6 +11,7 @@
 using Akka.Actor;
 using Neo.ConsoleService;
 using Neo.Network.P2P;
+using Neo.Network.P2P.Payloads;
 using Neo.Plugins;
 using Neo.Wallets;
 
@@ -87,7 +88,12 @@ namespace Neo.Consensus
         private bool RemoteNode_MessageReceived(NeoSystem system, Message message)
         {
             if (message.Command == MessageCommand.Transaction)
-                consensus?.Tell(message.Payload);
+            {
+                Transaction tx = (Transaction)message.Payload;
+                if (tx.SystemFee > settings.MaxBlockSystemFee)
+                    return false;
+                consensus?.Tell(tx);
+            }
             return true;
         }
     }
