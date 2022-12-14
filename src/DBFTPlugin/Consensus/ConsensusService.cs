@@ -260,7 +260,7 @@ namespace Neo.Consensus
         {
             if (!context.IsBackup || context.NotAcceptingPayloadsDueToViewChanging || !context.RequestSentOrReceived || context.ResponseSent || context.BlockSent)
                 return;
-                
+
             for (uint i = 0; i <= 1; i++)
                 if (context.Transactions[i] is not null && context.Transactions[i].ContainsKey(transaction.Hash))
                     return;
