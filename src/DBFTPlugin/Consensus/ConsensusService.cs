@@ -260,8 +260,16 @@ namespace Neo.Consensus
         {
             if (!context.IsBackup || context.NotAcceptingPayloadsDueToViewChanging || !context.RequestSentOrReceived || context.ResponseSent || context.BlockSent)
                 return;
-            if (context.Transactions[0].ContainsKey(transaction.Hash) || context.Transactions[1].ContainsKey(transaction.Hash)) return;
-            if (!context.TransactionHashes[0].Contains(transaction.Hash) && !context.TransactionHashes[1].Contains(transaction.Hash)) return;
+                
+            for (uint i = 0; i <= 1; i++)
+                if (context.Transactions[i] is not null && context.Transactions[i].ContainsKey(transaction.Hash))
+                    return;
+
+            bool hashNotRequestedByPrimary = context.TransactionHashes[0] is not null && !context.TransactionHashes[0].Contains(transaction.Hash);
+            bool hashNotRequestedByBackup = context.TransactionHashes[1] is not null && !context.TransactionHashes[1].Contains(transaction.Hash);
+
+            if (hashNotRequestedByPrimary && hashNotRequestedByBackup) return;
+
             AddTransaction(transaction, true);
         }
 
