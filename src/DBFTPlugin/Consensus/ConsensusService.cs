@@ -155,6 +155,12 @@ namespace Neo.Consensus
                     CheckPreparations();
                     return;
                 }
+
+                if (context.ViewNumber != 0)
+                {
+                    InitializeConsensus(context.ViewNumber);
+                    return;
+                }
             }
             InitializeConsensus(0);
             // Issue a recovery request on start-up in order to possibly catch up with other nodes
