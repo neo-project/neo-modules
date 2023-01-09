@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2023 The Neo Project.
 //
 // The Neo.Plugins.OracleService is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -79,7 +79,7 @@ namespace Neo.Plugins
             if (message.StatusCode == HttpStatusCode.Forbidden)
                 return (OracleResponseCode.Forbidden, null);
             if (!message.IsSuccessStatusCode)
-                return (OracleResponseCode.Error, null);
+                return (OracleResponseCode.Error, message.StatusCode.ToString());
             if (!Settings.Default.AllowedContentTypes.Contains(message.Content.Headers.ContentType.MediaType))
                 return (OracleResponseCode.ContentTypeNotSupported, null);
             return (OracleResponseCode.Success, await message.Content.ReadAsStringAsync(cancellation));
