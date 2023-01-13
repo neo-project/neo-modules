@@ -27,6 +27,9 @@ namespace Neo.Plugins
         private readonly Dictionary<uint, JArray> bs_cache = new Dictionary<uint, JArray>();
         private readonly Dictionary<uint, NeoSystem> systems = new Dictionary<uint, NeoSystem>();
 
+        private StreamWriter _writer;
+        private JObject _currentBlock;
+
         public override string Description => "Exports Neo-CLI status data";
 
         public StatesDumper()
@@ -81,8 +84,11 @@ namespace Neo.Plugins
 
         private void OnCommitting(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
+            InitFilePath(system.Settings.Network, snapshot);
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
+            {
                 OnPersistStorage(system.Settings.Network, snapshot);
+            }
         }
 
         private void OnPersistStorage(uint network, DataCache snapshot)
@@ -128,13 +134,18 @@ namespace Neo.Plugins
                 }
                 cache.Add(bs_item);
                 bs_cache[network] = cache;
+                _currentBlock = bs_item;
             }
         }
+
 
         private void OnCommitted(NeoSystem system, Block block)
         {
             if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
+            {
                 OnCommitStorage(system.Settings.Network, system.StoreView);
+                OnCommit();
+            }
         }
 
         void OnCommitStorage(uint network, DataCache snapshot)
@@ -162,5 +173,54 @@ namespace Neo.Plugins
             Directory.CreateDirectory(dirPathWithBlock);
             return dirPathWithBlock;
         }
+
+
+        private void InitFilePath(uint network, DataCache snapshot)
+        {
+            uint blockIndex = NativeContract.Ledger.CurrentIndex(snapshot);
+            if (_writer == null
+                || blockIndex % Settings.Default.BlockCacheSize == 0)
+            {
+                string path = GetOrCreatePath(network, blockIndex);
+                var filepart = (blockIndex / Settings.Default.BlockCacheSize) * Settings.Default.BlockCacheSize;
+                path = $"{path}/dump-block-{filepart}.json";
+                if (_writer != null)
+                {
+                    _writer.Dispose();
+                }
+                _writer = new StreamWriter(new FileStream(path, FileMode.Append));
+            }
+        }
+
+        private void OnCommit()
+        {
+            if (_currentBlock != null)
+            {
+                _writer.WriteLine(_currentBlock.ToString());
+                _writer.Flush();
+            }
+        }
+
+        private string _lastCreateDirectory;
+
+        private string GetOrCreatePath(uint network, uint blockIndex)
+        {
+            string dirPathWithBlock = GetDirectoryPath(network, blockIndex);
+            if (_lastCreateDirectory != dirPathWithBlock)
+            {
+                Directory.CreateDirectory(dirPathWithBlock);
+                _lastCreateDirectory = dirPathWithBlock;
+            }
+            return dirPathWithBlock;
+        }
+
+        private string GetDirectoryPath(uint network, uint blockIndex)
+        {
+            //Default Parameter
+            uint storagePerFolder = 10000;
+            uint folder = (blockIndex / storagePerFolder) * storagePerFolder;
+            return $"./Storage_{network}/BlockStorage_{folder}";
+        }
+
     }
 }
