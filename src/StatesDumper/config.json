@@ -3,7 +3,6 @@
     "PersistAction": "StorageChanges",
     "BlockCacheSize": 1000,
     "HeightToBegin": 0,
-    "HeightToStartRealTimeSyncing": -1,
     "Exclude": [ -4 ]
   }
 }
