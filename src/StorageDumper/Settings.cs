@@ -25,14 +25,7 @@ namespace Neo.Plugins
         /// Height to begin storage dump
         /// </summary>
         public uint HeightToBegin { get; }
-        /// <summary>
-        /// Height to begin real-time syncing and dumping on, consequently, dumping every block into a single files
-        /// </summary>
-        public int HeightToStartRealTimeSyncing { get; }
-        /// <summary>
-        /// Persisting actions
-        /// </summary>
-        public PersistActions PersistAction { get; }
+
         public IReadOnlyList<int> Exclude { get; }
 
         public static Settings Default { get; private set; }
@@ -42,8 +35,6 @@ namespace Neo.Plugins
             /// Geting settings for storage changes state dumper
             this.BlockCacheSize = section.GetValue("BlockCacheSize", 1000u);
             this.HeightToBegin = section.GetValue("HeightToBegin", 0u);
-            this.HeightToStartRealTimeSyncing = section.GetValue("HeightToStartRealTimeSyncing", -1);
-            this.PersistAction = section.GetValue("PersistAction", PersistActions.StorageChanges);
             this.Exclude = section.GetSection("Exclude").Exists()
                 ? section.GetSection("Exclude").GetChildren().Select(p => int.Parse(p.Value)).ToArray()
                 : new[] { NativeContract.Ledger.Id };

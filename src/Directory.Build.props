@@ -3,7 +3,7 @@
 
   <PropertyGroup>
     <VersionPrefix>3.5.0</VersionPrefix>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <RootNamespace>Neo.Plugins</RootNamespace>
     <Authors>The Neo Project</Authors>
     <PackageTags>NEO;Blockchain</PackageTags>

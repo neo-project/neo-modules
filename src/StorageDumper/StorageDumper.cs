@@ -22,14 +22,18 @@ using System.Linq;
 
 namespace Neo.Plugins
 {
-    public class StatesDumper : Plugin
+    public class StorageDumper : Plugin
     {
-        private readonly Dictionary<uint, JArray> bs_cache = new Dictionary<uint, JArray>();
         private readonly Dictionary<uint, NeoSystem> systems = new Dictionary<uint, NeoSystem>();
+
+        private StreamWriter _writer;
+        private JObject _currentBlock;
+        private string _lastCreateDirectory;
+
 
         public override string Description => "Exports Neo-CLI status data";
 
-        public StatesDumper()
+        public StorageDumper()
         {
             Blockchain.Committing += OnCommitting;
             Blockchain.Committed += OnCommitted;
@@ -52,13 +56,13 @@ namespace Neo.Plugins
         }
 
         /// <summary>
-        /// Process "dump storage" command
+        /// Process "dump contract-storage" command
         /// </summary>
-        [ConsoleCommand("dump storage", Category = "Storage", Description = "You can specify the contract script hash or use null to get the corresponding information from the storage")]
+        [ConsoleCommand("dump contract-storage", Category = "Storage", Description = "You can specify the contract script hash or use null to get the corresponding information from the storage")]
         private void OnDumpStorage(uint network, UInt160 contractHash = null)
         {
             if (!systems.ContainsKey(network)) throw new InvalidOperationException("invalid network");
-            string path = $"dump_{network:x8}.json";
+            string path = $"dump_{network}.json";
             byte[] prefix = null;
             if (contractHash is not null)
             {
@@ -81,8 +85,8 @@ namespace Neo.Plugins
 
         private void OnCommitting(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
-            if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
-                OnPersistStorage(system.Settings.Network, snapshot);
+            InitFileWriter(system.Settings.Network, snapshot);
+            OnPersistStorage(system.Settings.Network, snapshot);
         }
 
         private void OnPersistStorage(uint network, DataCache snapshot)
@@ -122,45 +126,60 @@ namespace Neo.Plugins
                 bs_item["block"] = blockIndex;
                 bs_item["size"] = array.Count;
                 bs_item["storage"] = array;
-                if (!bs_cache.TryGetValue(network, out JArray cache))
-                {
-                    cache = new JArray();
-                }
-                cache.Add(bs_item);
-                bs_cache[network] = cache;
+                _currentBlock = bs_item;
             }
         }
 
+
         private void OnCommitted(NeoSystem system, Block block)
         {
-            if (Settings.Default.PersistAction.HasFlag(PersistActions.StorageChanges))
-                OnCommitStorage(system.Settings.Network, system.StoreView);
+            OnCommitStorage(system.Settings.Network, system.StoreView);
         }
 
         void OnCommitStorage(uint network, DataCache snapshot)
         {
-            if (!bs_cache.TryGetValue(network, out JArray cache)) return;
-            if (cache.Count == 0) return;
-            uint blockIndex = NativeContract.Ledger.CurrentIndex(snapshot);
-            if ((blockIndex % Settings.Default.BlockCacheSize == 0) || (Settings.Default.HeightToStartRealTimeSyncing != -1 && blockIndex >= Settings.Default.HeightToStartRealTimeSyncing))
+            if (_currentBlock != null)
             {
-                string path = HandlePaths(network, blockIndex);
-                path = $"{path}/dump-block-{blockIndex}.json";
-                File.WriteAllText(path, cache.ToString());
-                cache.Clear();
+                _writer.WriteLine(_currentBlock.ToString());
+                _writer.Flush();
             }
         }
 
-        private static string HandlePaths(uint network, uint blockIndex)
+        private void InitFileWriter(uint network, DataCache snapshot)
+        {
+            uint blockIndex = NativeContract.Ledger.CurrentIndex(snapshot);
+            if (_writer == null
+                || blockIndex % Settings.Default.BlockCacheSize == 0)
+            {
+                string path = GetOrCreateDirectory(network, blockIndex);
+                var filepart = (blockIndex / Settings.Default.BlockCacheSize) * Settings.Default.BlockCacheSize;
+                path = $"{path}/dump-block-{filepart}.dump";
+                if (_writer != null)
+                {
+                    _writer.Dispose();
+                }
+                _writer = new StreamWriter(new FileStream(path, FileMode.Append));
+            }
+        }
+
+        private string GetOrCreateDirectory(uint network, uint blockIndex)
+        {
+            string dirPathWithBlock = GetDirectoryPath(network, blockIndex);
+            if (_lastCreateDirectory != dirPathWithBlock)
+            {
+                Directory.CreateDirectory(dirPathWithBlock);
+                _lastCreateDirectory = dirPathWithBlock;
+            }
+            return dirPathWithBlock;
+        }
+
+        private string GetDirectoryPath(uint network, uint blockIndex)
         {
             //Default Parameter
             uint storagePerFolder = 100000;
-            uint folder = (((blockIndex - 1) / storagePerFolder) + 1) * storagePerFolder;
-            if (blockIndex == 0)
-                folder = 0;
-            string dirPathWithBlock = $"./Storage_{network:x8}/BlockStorage_{folder}";
-            Directory.CreateDirectory(dirPathWithBlock);
-            return dirPathWithBlock;
+            uint folder = (blockIndex / storagePerFolder) * storagePerFolder;
+            return $"./StorageDumper_{network}/BlockStorage_{folder}";
         }
+
     }
 }
