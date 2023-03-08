@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2022 The Neo Project.
+// Copyright (C) 2015-2023 The Neo Project.
 //
 // The Neo.Consensus.DBFT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -93,6 +93,11 @@ namespace Neo.Consensus
         public bool CommitSent => !WatchOnly && CommitPayloads[MyIndex] != null;
         public bool BlockSent => Block.Transactions != null;
         public bool ViewChanging => !WatchOnly && GetMessage<ChangeView>(ChangeViewPayloads[MyIndex])?.NewViewNumber > ViewNumber;
+        // NotAcceptingPayloadsDueToViewChanging imposes nodes to not accept some payloads if View is Changing,
+        // i.e: OnTransaction function will not process any transaction; OnPrepareRequestReceived will also return;
+        // as well as OnPrepareResponseReceived and also similar logic for recovering.
+        // On the other hand, if more than MoreThanFNodesCommittedOrLost is true, we keep accepting those payloads.
+        // This helps the node to still commit, even while almost changing view.
         public bool NotAcceptingPayloadsDueToViewChanging => ViewChanging && !MoreThanFNodesCommittedOrLost;
         // A possible attack can happen if the last node to commit is malicious and either sends change view after his
         // commit to stall nodes in a higher view, or if he refuses to send recovery messages. In addition, if a node
