@@ -11,6 +11,23 @@ namespace Neo.Plugins.Storage.Tests
         private const string path_rocksdb = "Data_RocksDB_UT";
 
         [TestMethod]
+        public void TestMemory()
+        {
+            using var store = new MemoryStore();
+            TestPersistenceDelete(store);
+            // Test all with the same store
+
+            TestStorage(store);
+
+            // Test with different storages
+
+            TestPersistenceWrite(store);
+            TestPersistenceRead(store, true);
+            TestPersistenceDelete(store);
+            TestPersistenceRead(store, false);
+        }
+
+        [TestMethod]
         public void TestLevelDb()
         {
             using var plugin = new LevelDBStore();
