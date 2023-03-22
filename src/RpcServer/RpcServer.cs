@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
-using Neo.IO;
 using Neo.Json;
 using Neo.Network.P2P;
 using System;
@@ -28,6 +27,9 @@ using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using Neo.Ledger;
+using Neo.Network.P2P.Payloads;
+using Neo.SmartContract;
 
 namespace Neo.Plugins
 {
@@ -39,6 +41,14 @@ namespace Neo.Plugins
         private RpcServerSettings settings;
         private readonly NeoSystem system;
         private readonly LocalNode localNode;
+        /// <summary>
+        /// Public interface of _logEvents.
+        /// </summary>
+        public static Dictionary<UInt256, Queue<LogEventArgs>> LogEvents { get; } = new();
+        /// <summary>
+        /// Maximum number of events to be logged per contract
+        /// </summary>
+        private static int _maxLogEvents = 20;
 
         public RpcServer(NeoSystem system, RpcServerSettings settings)
         {
@@ -47,6 +57,14 @@ namespace Neo.Plugins
             localNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             RegisterMethods(this);
             Initialize_SmartContract();
+            _maxLogEvents = settings.MaxLogEvents;
+            ApplicationEngine.Log += OnContractLogEvent;
+            Blockchain.Committed += OnCommitted;
+        }
+
+        private void OnCommitted(NeoSystem system, Block block)
+        {
+            LogEvents.Clear();
         }
 
         private bool CheckAuth(HttpContext context)
@@ -92,8 +110,28 @@ namespace Neo.Plugins
             return response;
         }
 
+        // It is potentially possible to have dos attack by sending a lot of transactions and logs.
+        // To prevent this, we limit the number of logs to be logged per contract.
+        // If the number of logs is greater than MAX_LOG_EVENTS, we remove the oldest log.
+        private static void OnContractLogEvent(object _, LogEventArgs e)
+        {
+            if (e.ScriptContainer is not Transaction tx) return;
+            if (!LogEvents.TryGetValue(tx.Hash, out var _logs))
+            {
+                _logs = new Queue<LogEventArgs>();
+                LogEvents.Add(tx.Hash, _logs);
+            }
+            if (LogEvents[tx.Hash].Count >= _maxLogEvents)
+            {
+                _logs.Dequeue();
+            }
+            _logs.Enqueue(e);
+        }
+
         public void Dispose()
         {
+            Blockchain.Committed -= OnCommitted;
+            ApplicationEngine.Log -= OnContractLogEvent;
             Dispose_SmartContract();
             if (host != null)
             {
