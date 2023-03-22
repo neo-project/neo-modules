@@ -90,6 +90,8 @@ namespace Neo.Plugins.Storage.Tests
                 CollectionAssert.AreEqual(new byte[] { 0x02 }, entries[0].Value);
                 CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x03 }, entries[1].Key);
                 CollectionAssert.AreEqual(new byte[] { 0x03 }, entries[1].Value);
+                CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x04 }, entries[2].Key);
+                CollectionAssert.AreEqual(new byte[] { 0x04 }, entries[2].Value);
 
                 // Seek Backward
 
