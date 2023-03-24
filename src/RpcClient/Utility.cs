@@ -239,7 +239,7 @@ namespace Neo.Network.RPC
                 case "And":
                     return new AndCondition() { Expressions = ((JArray)json["expressions"])?.Select(p => RuleExpressionFromJson((JObject)p, protocolSettings)).ToArray() };
                 case "Boolean":
-                    return new BooleanCondition() { Expression = ((JArray)json["expressions"]).AsBoolean() };
+                    return new BooleanCondition() { Expression = json["expressions"].AsBoolean() };
                 case "Not":
                     return new NotCondition() { Expression = RuleExpressionFromJson((JObject)json["expression"], protocolSettings) };
                 case "Group":
