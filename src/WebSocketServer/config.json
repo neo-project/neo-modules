@@ -1,0 +1,17 @@
+{
+  "PluginConfiguration": {
+    "Servers": [
+      {
+        "Network": 860833102,
+        "BindAddress": "127.0.0.1",
+        "Port": 10334,
+        "SslCert": "",
+        "SslCertPassword": "",
+        "TrustedAuthorities": [],
+        "MaxConcurrentConnections": 40,
+        "SessionEnabled": false,
+        "SessionExpirationTime": 60
+      }
+    ]
+  }
+}
