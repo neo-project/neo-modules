@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,7 +16,7 @@ public class WebSocketServerPlugin : Plugin
     public override string Description => "Enables WebSocket notifications for the node";
 
     private Settings _settings;
-    private static readonly Dictionary<uint, List<BlockWebSocketBehavior>> Handlers = new();
+    private static readonly Dictionary<Guid, BlockWebSocketBehavior> Handlers = new();
     private static WebSocketSharp.Server.WebSocketServer _server;
     private NeoSystem _system;
 
@@ -55,14 +56,8 @@ public class WebSocketServerPlugin : Plugin
         {
             _server.SslConfiguration.ServerCertificate = new System.Security.Cryptography.X509Certificates.X509Certificate2(s.SslCert, s.SslCertPassword);
         }
-        _server.AddWebSocketService<BlockWebSocketBehavior>("/block");
+        _server.AddWebSocketService<BlockWebSocketBehavior>("/block", () => new BlockWebSocketBehavior());
         _server.Start();
-
-        if (!Handlers.Remove(s.Network, out var list)) return;
-        foreach (var unused in list)
-        {
-            _server.AddWebSocketService("/block", () => new BlockWebSocketBehavior());
-        }
     }
 
     [ConsoleCommand("close wss", Category = "wss", Description = "Close Web Socket Server")]
@@ -72,19 +67,38 @@ public class WebSocketServerPlugin : Plugin
         ConsoleHelper.Info("Web Socket Server closed");
     }
 
-    private static void OnCommitted(NeoSystem system, Block block)
+    private static async void OnCommitted(NeoSystem system, Block block)
     {
         using var snapshot = system.GetSnapshot();
         var blockJson = JObject.FromObject(block);
-        SendMessageToClients(system.Settings.Network, blockJson.ToString());
+        await SendMessageToClients(blockJson.ToString());
     }
 
-    private static async Task SendMessageToClients(uint network, string message)
+    private static async Task SendMessageToClients(string message)
     {
-        if (!Handlers.TryGetValue(network, out var list)) return;
-        foreach (var handler in list)
+        var sendTasks = new List<Task>();
+
+        lock (Handlers)
         {
-            await handler.SendPersistedBlockMessage(message);
+            sendTasks.AddRange(Handlers.Values.Select(handler => handler.SendPersistedBlockMessage(message)));
+        }
+
+        await Task.WhenAll(sendTasks);
+    }
+
+    public static void AddClient(Guid clientId, BlockWebSocketBehavior client)
+    {
+        lock (Handlers)
+        {
+            Handlers[clientId] = client;
+        }
+    }
+
+    public static void RemoveClient(Guid clientId)
+    {
+        lock (Handlers)
+        {
+            Handlers.Remove(clientId);
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Neo.Json;
 using WebSocketSharp;
@@ -5,8 +6,32 @@ using WebSocketSharp.Server;
 
 namespace Neo.Plugins.WebSocketServer.Behaviors;
 
-class BlockWebSocketBehavior : WebSocketBehavior
+public class BlockWebSocketBehavior : WebSocketBehavior
 {
+    private Guid ClientId { get; set; }
+
+    public BlockWebSocketBehavior()
+    {
+        ClientId = Guid.NewGuid();
+    }
+
+    protected override void OnOpen()
+    {
+        base.OnOpen();
+        WebSocketServerPlugin.AddClient(ClientId, this);
+    }
+
+    protected override void OnClose(CloseEventArgs e)
+    {
+        base.OnClose(e);
+        WebSocketServerPlugin.RemoveClient(ClientId);
+    }
+
+    // public async Task SendPersistedBlockMessage(string message)
+    // {
+    //     await SendAsync(message, completed => { });
+    // }
+
     protected override void OnMessage(MessageEventArgs e)
     {
         var request = JToken.Parse(e.Data);
@@ -29,5 +54,4 @@ class BlockWebSocketBehavior : WebSocketBehavior
         Send(response.ToString());
         return Task.CompletedTask;
     }
-
 }
