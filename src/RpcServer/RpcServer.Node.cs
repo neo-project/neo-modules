@@ -23,16 +23,16 @@ namespace Neo.Plugins
     partial class RpcServer
     {
         [RpcMethod]
-        protected virtual JToken GetConnectionCount(JArray _params)
+        protected virtual JToken GetConnectionCount(JArray @params)
         {
-            return localNode.ConnectedCount;
+            return _localNode.ConnectedCount;
         }
 
         [RpcMethod]
-        protected virtual JToken GetPeers(JArray _params)
+        protected virtual JToken GetPeers(JArray @params)
         {
             JObject json = new();
-            json["unconnected"] = new JArray(localNode.GetUnconnectedPeers().Select(p =>
+            json["unconnected"] = new JArray(_localNode.GetUnconnectedPeers().Select(p =>
             {
                 JObject peerJson = new();
                 peerJson["address"] = p.Address.ToString();
@@ -40,7 +40,7 @@ namespace Neo.Plugins
                 return peerJson;
             }));
             json["bad"] = new JArray(); //badpeers has been removed
-            json["connected"] = new JArray(localNode.GetRemoteNodes().Select(p =>
+            json["connected"] = new JArray(_localNode.GetRemoteNodes().Select(p =>
             {
                 JObject peerJson = new();
                 peerJson["address"] = p.Remote.Address.ToString();
@@ -65,39 +65,39 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JToken GetVersion(JArray _params)
+        protected virtual JToken GetVersion(JArray @params)
         {
             JObject json = new();
-            json["tcpport"] = localNode.ListenerTcpPort;
-            json["wsport"] = localNode.ListenerWsPort;
+            json["tcpport"] = _localNode.ListenerTcpPort;
+            json["wsport"] = _localNode.ListenerWsPort;
             json["nonce"] = LocalNode.Nonce;
             json["useragent"] = LocalNode.UserAgent;
             json["protocol"] = new JObject();
-            json["protocol"]["addressversion"] = system.Settings.AddressVersion;
-            json["protocol"]["network"] = system.Settings.Network;
-            json["protocol"]["validatorscount"] = system.Settings.ValidatorsCount;
-            json["protocol"]["msperblock"] = system.Settings.MillisecondsPerBlock;
-            json["protocol"]["maxtraceableblocks"] = system.Settings.MaxTraceableBlocks;
-            json["protocol"]["maxvaliduntilblockincrement"] = system.Settings.MaxValidUntilBlockIncrement;
-            json["protocol"]["maxtransactionsperblock"] = system.Settings.MaxTransactionsPerBlock;
-            json["protocol"]["memorypoolmaxtransactions"] = system.Settings.MemoryPoolMaxTransactions;
-            json["protocol"]["initialgasdistribution"] = system.Settings.InitialGasDistribution;
+            json["protocol"]["addressversion"] = _system.Settings.AddressVersion;
+            json["protocol"]["network"] = _system.Settings.Network;
+            json["protocol"]["validatorscount"] = _system.Settings.ValidatorsCount;
+            json["protocol"]["msperblock"] = _system.Settings.MillisecondsPerBlock;
+            json["protocol"]["maxtraceableblocks"] = _system.Settings.MaxTraceableBlocks;
+            json["protocol"]["maxvaliduntilblockincrement"] = _system.Settings.MaxValidUntilBlockIncrement;
+            json["protocol"]["maxtransactionsperblock"] = _system.Settings.MaxTransactionsPerBlock;
+            json["protocol"]["memorypoolmaxtransactions"] = _system.Settings.MemoryPoolMaxTransactions;
+            json["protocol"]["initialgasdistribution"] = _system.Settings.InitialGasDistribution;
             return json;
         }
 
         [RpcMethod]
-        protected virtual JToken SendRawTransaction(JArray _params)
+        protected virtual JToken SendRawTransaction(JArray @params)
         {
-            Transaction tx = Convert.FromBase64String(_params[0].AsString()).AsSerializable<Transaction>();
-            RelayResult reason = system.Blockchain.Ask<RelayResult>(tx).Result;
+            Transaction tx = Convert.FromBase64String(@params[0].AsString()).AsSerializable<Transaction>();
+            RelayResult reason = _system.Blockchain.Ask<RelayResult>(tx).Result;
             return GetRelayResult(reason.Result, tx.Hash);
         }
 
         [RpcMethod]
-        protected virtual JToken SubmitBlock(JArray _params)
+        protected virtual JToken SubmitBlock(JArray @params)
         {
-            Block block = Convert.FromBase64String(_params[0].AsString()).AsSerializable<Block>();
-            RelayResult reason = system.Blockchain.Ask<RelayResult>(block).Result;
+            Block block = Convert.FromBase64String(@params[0].AsString()).AsSerializable<Block>();
+            RelayResult reason = _system.Blockchain.Ask<RelayResult>(block).Result;
             return GetRelayResult(reason.Result, block.Hash);
         }
     }

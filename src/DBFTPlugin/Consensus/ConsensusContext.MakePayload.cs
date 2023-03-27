@@ -35,7 +35,7 @@ namespace Neo.Consensus
         {
             return CommitPayloads[MyIndex] ?? (CommitPayloads[MyIndex] = MakeSignedPayload(new Commit
             {
-                Signature = EnsureHeader().Sign(keyPair, neoSystem.Settings.Network)
+                Signature = EnsureHeader().Sign(_keyPair, _neoSystem.Settings.Network)
             }));
         }
 
@@ -54,8 +54,8 @@ namespace Neo.Consensus
             ContractParametersContext sc;
             try
             {
-                sc = new ContractParametersContext(neoSystem.StoreView, payload, dbftSettings.Network);
-                wallet.Sign(sc);
+                sc = new ContractParametersContext(_neoSystem.StoreView, payload, _dbftSettings.Network);
+                _wallet.Sign(sc);
             }
             catch (InvalidOperationException exception)
             {
@@ -71,7 +71,7 @@ namespace Neo.Consensus
         /// <param name="txs">Ordered transactions</param>
         internal void EnsureMaxBlockLimitation(IEnumerable<Transaction> txs)
         {
-            uint maxTransactionsPerBlock = neoSystem.Settings.MaxTransactionsPerBlock;
+            uint maxTransactionsPerBlock = _neoSystem.Settings.MaxTransactionsPerBlock;
 
             // Limit Speaker proposal to the limit `MaxTransactionsPerBlock` or all available transactions of the mempool
             txs = txs.Take((int)maxTransactionsPerBlock);
@@ -89,11 +89,11 @@ namespace Neo.Consensus
             {
                 // Check if maximum block size has been already exceeded with the current selected set
                 blockSize += tx.Size;
-                if (blockSize > dbftSettings.MaxBlockSize) break;
+                if (blockSize > _dbftSettings.MaxBlockSize) break;
 
                 // Check if maximum block system fee has been already exceeded with the current selected set
                 blockSystemFee += tx.SystemFee;
-                if (blockSystemFee > dbftSettings.MaxBlockSystemFee) break;
+                if (blockSystemFee > _dbftSettings.MaxBlockSystemFee) break;
 
                 hashes.Add(tx.Hash);
                 Transactions.Add(tx.Hash, tx);
@@ -105,7 +105,7 @@ namespace Neo.Consensus
 
         public ExtensiblePayload MakePrepareRequest()
         {
-            EnsureMaxBlockLimitation(neoSystem.MemPool.GetSortedVerifiedTransactions());
+            EnsureMaxBlockLimitation(_neoSystem.MemPool.GetSortedVerifiedTransactions());
             Block.Header.Timestamp = Math.Max(TimeProvider.Current.UtcNow.ToTimestampMS(), PrevHeader.Timestamp + 1);
             Block.Header.Nonce = GetNonce();
             return PreparationPayloads[MyIndex] = MakeSignedPayload(new PrepareRequest
@@ -166,9 +166,9 @@ namespace Neo.Consensus
 
         private static ulong GetNonce()
         {
-            Random _random = new();
+            Random random = new();
             Span<byte> buffer = stackalloc byte[8];
-            _random.NextBytes(buffer);
+            random.NextBytes(buffer);
             return BinaryPrimitives.ReadUInt64LittleEndian(buffer);
         }
     }

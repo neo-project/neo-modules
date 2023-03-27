@@ -21,23 +21,23 @@ namespace Neo.Consensus
     {
         private bool CheckPrepareResponse()
         {
-            if (context.TransactionHashes.Length == context.Transactions.Count)
+            if (_context.TransactionHashes.Length == _context.Transactions.Count)
             {
                 // if we are the primary for this view, but acting as a backup because we recovered our own
                 // previously sent prepare request, then we don't want to send a prepare response.
-                if (context.IsPrimary || context.WatchOnly) return true;
+                if (_context.IsPrimary || _context.WatchOnly) return true;
 
                 // Check maximum block size via Native Contract policy
-                if (context.GetExpectedBlockSize() > dbftSettings.MaxBlockSize)
+                if (_context.GetExpectedBlockSize() > _dbftSettings.MaxBlockSize)
                 {
-                    Log($"Rejected block: {context.Block.Index} The size exceed the policy", LogLevel.Warning);
+                    Log($"Rejected block: {_context.Block.Index} The size exceed the policy", LogLevel.Warning);
                     RequestChangeView(ChangeViewReason.BlockRejectedByPolicy);
                     return false;
                 }
                 // Check maximum block system fee via Native Contract policy
-                if (context.GetExpectedBlockSystemFee() > dbftSettings.MaxBlockSystemFee)
+                if (_context.GetExpectedBlockSystemFee() > _dbftSettings.MaxBlockSystemFee)
                 {
-                    Log($"Rejected block: {context.Block.Index} The system fee exceed the policy", LogLevel.Warning);
+                    Log($"Rejected block: {_context.Block.Index} The system fee exceed the policy", LogLevel.Warning);
                     RequestChangeView(ChangeViewReason.BlockRejectedByPolicy);
                     return false;
                 }
@@ -47,7 +47,7 @@ namespace Neo.Consensus
                 ExtendTimerByFactor(2);
 
                 Log($"Sending {nameof(PrepareResponse)}");
-                localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakePrepareResponse() });
+                _localNode.Tell(new LocalNode.SendDirectly { Inventory = _context.MakePrepareResponse() });
                 CheckPreparations();
             }
             return true;
@@ -55,30 +55,30 @@ namespace Neo.Consensus
 
         private void CheckCommits()
         {
-            if (context.CommitPayloads.Count(p => context.GetMessage(p)?.ViewNumber == context.ViewNumber) >= context.M && context.TransactionHashes.All(p => context.Transactions.ContainsKey(p)))
+            if (_context.CommitPayloads.Count(p => _context.GetMessage(p)?.ViewNumber == _context.ViewNumber) >= _context.M && _context.TransactionHashes.All(p => _context.Transactions.ContainsKey(p)))
             {
-                block_received_index = context.Block.Index;
-                block_received_time = TimeProvider.Current.UtcNow;
-                Block block = context.CreateBlock();
+                _blockReceivedIndex = _context.Block.Index;
+                _blockReceivedTime = TimeProvider.Current.UtcNow;
+                Block block = _context.CreateBlock();
                 Log($"Sending {nameof(Block)}: height={block.Index} hash={block.Hash} tx={block.Transactions.Length}");
-                blockchain.Tell(block);
+                _blockchain.Tell(block);
             }
         }
 
         private void CheckExpectedView(byte viewNumber)
         {
-            if (context.ViewNumber >= viewNumber) return;
-            var messages = context.ChangeViewPayloads.Select(p => context.GetMessage<ChangeView>(p)).ToArray();
+            if (_context.ViewNumber >= viewNumber) return;
+            var messages = _context.ChangeViewPayloads.Select(p => _context.GetMessage<ChangeView>(p)).ToArray();
             // if there are `M` change view payloads with NewViewNumber greater than viewNumber, then, it is safe to move
-            if (messages.Count(p => p != null && p.NewViewNumber >= viewNumber) >= context.M)
+            if (messages.Count(p => p != null && p.NewViewNumber >= viewNumber) >= _context.M)
             {
-                if (!context.WatchOnly)
+                if (!_context.WatchOnly)
                 {
-                    ChangeView message = messages[context.MyIndex];
+                    ChangeView message = messages[_context.MyIndex];
                     // Communicate the network about my agreement to move to `viewNumber`
                     // if my last change view payload, `message`, has NewViewNumber lower than current view to change
                     if (message is null || message.NewViewNumber < viewNumber)
-                        localNode.Tell(new LocalNode.SendDirectly { Inventory = context.MakeChangeView(ChangeViewReason.ChangeAgreement) });
+                        _localNode.Tell(new LocalNode.SendDirectly { Inventory = _context.MakeChangeView(ChangeViewReason.ChangeAgreement) });
                 }
                 InitializeConsensus(viewNumber);
             }
@@ -86,14 +86,14 @@ namespace Neo.Consensus
 
         private void CheckPreparations()
         {
-            if (context.PreparationPayloads.Count(p => p != null) >= context.M && context.TransactionHashes.All(p => context.Transactions.ContainsKey(p)))
+            if (_context.PreparationPayloads.Count(p => p != null) >= _context.M && _context.TransactionHashes.All(p => _context.Transactions.ContainsKey(p)))
             {
-                ExtensiblePayload payload = context.MakeCommit();
+                ExtensiblePayload payload = _context.MakeCommit();
                 Log($"Sending {nameof(Commit)}");
-                context.Save();
-                localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
+                _context.Save();
+                _localNode.Tell(new LocalNode.SendDirectly { Inventory = payload });
                 // Set timer, so we will resend the commit in case of a networking issue
-                ChangeTimer(TimeSpan.FromMilliseconds(neoSystem.Settings.MillisecondsPerBlock));
+                ChangeTimer(TimeSpan.FromMilliseconds(_neoSystem.Settings.MillisecondsPerBlock));
                 CheckCommits();
             }
         }

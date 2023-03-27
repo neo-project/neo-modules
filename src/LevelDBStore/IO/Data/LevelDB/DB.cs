@@ -15,36 +15,36 @@ namespace Neo.IO.Data.LevelDB
 {
     public class DB : IDisposable
     {
-        private IntPtr handle;
+        private IntPtr _handle;
 
         /// <summary>
         /// Return true if haven't got valid handle
         /// </summary>
-        public bool IsDisposed => handle == IntPtr.Zero;
+        public bool IsDisposed => _handle == IntPtr.Zero;
 
         private DB(IntPtr handle)
         {
-            this.handle = handle;
+            this._handle = handle;
         }
 
         public void Dispose()
         {
-            if (handle != IntPtr.Zero)
+            if (_handle != IntPtr.Zero)
             {
-                Native.leveldb_close(handle);
-                handle = IntPtr.Zero;
+                Native.leveldb_close(_handle);
+                _handle = IntPtr.Zero;
             }
         }
 
         public void Delete(WriteOptions options, byte[] key)
         {
-            Native.leveldb_delete(handle, options.handle, key, (UIntPtr)key.Length, out IntPtr error);
+            Native.leveldb_delete(_handle, options.Handle, key, (UIntPtr)key.Length, out IntPtr error);
             NativeHelper.CheckError(error);
         }
 
         public byte[] Get(ReadOptions options, byte[] key)
         {
-            IntPtr value = Native.leveldb_get(handle, options.handle, key, (UIntPtr)key.Length, out UIntPtr length, out IntPtr error);
+            IntPtr value = Native.leveldb_get(_handle, options.Handle, key, (UIntPtr)key.Length, out UIntPtr length, out IntPtr error);
             try
             {
                 NativeHelper.CheckError(error);
@@ -58,7 +58,7 @@ namespace Neo.IO.Data.LevelDB
 
         public bool Contains(ReadOptions options, byte[] key)
         {
-            IntPtr value = Native.leveldb_get(handle, options.handle, key, (UIntPtr)key.Length, out _, out IntPtr error);
+            IntPtr value = Native.leveldb_get(_handle, options.Handle, key, (UIntPtr)key.Length, out _, out IntPtr error);
             NativeHelper.CheckError(error);
 
             if (value != IntPtr.Zero)
@@ -72,12 +72,12 @@ namespace Neo.IO.Data.LevelDB
 
         public Snapshot GetSnapshot()
         {
-            return new Snapshot(handle);
+            return new Snapshot(_handle);
         }
 
         public Iterator NewIterator(ReadOptions options)
         {
-            return new Iterator(Native.leveldb_create_iterator(handle, options.handle));
+            return new Iterator(Native.leveldb_create_iterator(_handle, options.Handle));
         }
 
         public static DB Open(string name)
@@ -87,26 +87,26 @@ namespace Neo.IO.Data.LevelDB
 
         public static DB Open(string name, Options options)
         {
-            IntPtr handle = Native.leveldb_open(options.handle, Path.GetFullPath(name), out IntPtr error);
+            IntPtr handle = Native.leveldb_open(options.Handle, Path.GetFullPath(name), out IntPtr error);
             NativeHelper.CheckError(error);
             return new DB(handle);
         }
 
         public void Put(WriteOptions options, byte[] key, byte[] value)
         {
-            Native.leveldb_put(handle, options.handle, key, (UIntPtr)key.Length, value, (UIntPtr)value.Length, out IntPtr error);
+            Native.leveldb_put(_handle, options.Handle, key, (UIntPtr)key.Length, value, (UIntPtr)value.Length, out IntPtr error);
             NativeHelper.CheckError(error);
         }
 
         public static void Repair(string name, Options options)
         {
-            Native.leveldb_repair_db(options.handle, Path.GetFullPath(name), out IntPtr error);
+            Native.leveldb_repair_db(options.Handle, Path.GetFullPath(name), out IntPtr error);
             NativeHelper.CheckError(error);
         }
 
-        public void Write(WriteOptions options, WriteBatch write_batch)
+        public void Write(WriteOptions options, WriteBatch writeBatch)
         {
-            Native.leveldb_write(handle, options.handle, write_batch.handle, out IntPtr error);
+            Native.leveldb_write(_handle, options.Handle, writeBatch.Handle, out IntPtr error);
             NativeHelper.CheckError(error);
         }
     }

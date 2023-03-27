@@ -17,7 +17,7 @@ namespace Neo.Plugins
     {
         public Tree<UInt160> InvocationTree { get; } = new();
 
-        private TreeNode<UInt160> currentNodeOfInvocationTree = null;
+        private TreeNode<UInt160> _currentNodeOfInvocationTree = null;
 
         public void Initialized(ApplicationEngine engine)
         {
@@ -30,15 +30,15 @@ namespace Neo.Plugins
         public void ContextLoaded(ExecutionContext context)
         {
             var state = context.GetState<ExecutionContextState>();
-            if (currentNodeOfInvocationTree is null)
-                currentNodeOfInvocationTree = InvocationTree.AddRoot(state.ScriptHash);
+            if (_currentNodeOfInvocationTree is null)
+                _currentNodeOfInvocationTree = InvocationTree.AddRoot(state.ScriptHash);
             else
-                currentNodeOfInvocationTree = currentNodeOfInvocationTree.AddChild(state.ScriptHash);
+                _currentNodeOfInvocationTree = _currentNodeOfInvocationTree.AddChild(state.ScriptHash);
         }
 
         public void ContextUnloaded(ExecutionContext context)
         {
-            currentNodeOfInvocationTree = currentNodeOfInvocationTree.Parent;
+            _currentNodeOfInvocationTree = _currentNodeOfInvocationTree.Parent;
         }
 
         public void PreExecuteInstruction(Instruction instruction)

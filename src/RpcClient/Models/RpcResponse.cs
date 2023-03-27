@@ -43,12 +43,13 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new();
-            json["id"] = Id;
-            json["jsonrpc"] = JsonRpc;
-            json["error"] = Error?.ToJson();
-            json["result"] = Result;
-            return json;
+            return new JObject
+            {
+                ["id"] = Id,
+                ["jsonrpc"] = JsonRpc,
+                ["error"] = Error?.ToJson(),
+                ["result"] = Result
+            };
         }
     }
 

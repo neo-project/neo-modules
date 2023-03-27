@@ -29,8 +29,8 @@ namespace Neo.Plugins
         private uint _network;
         private string[] _enabledTrackers;
         private IStore _db;
-        private NeoSystem neoSystem;
-        private readonly List<TrackerBase> trackers = new();
+        private NeoSystem _neoSystem;
+        private readonly List<TrackerBase> _trackers = new();
 
         public override string Description => "Enquiries balances and transaction history of accounts through RPC";
 
@@ -59,20 +59,20 @@ namespace Neo.Plugins
         protected override void OnSystemLoaded(NeoSystem system)
         {
             if (system.Settings.Network != _network) return;
-            neoSystem = system;
-            string path = string.Format(_dbPath, neoSystem.Settings.Network.ToString("X8"));
-            _db = neoSystem.LoadStore(GetFullPath(path));
+            _neoSystem = system;
+            string path = string.Format(_dbPath, _neoSystem.Settings.Network.ToString("X8"));
+            _db = _neoSystem.LoadStore(GetFullPath(path));
             if (_enabledTrackers.Contains("NEP-11"))
-                trackers.Add(new Trackers.NEP_11.Nep11Tracker(_db, _maxResults, _shouldTrackHistory, neoSystem));
+                _trackers.Add(new Trackers.NEP_11.Nep11Tracker(_db, _maxResults, _shouldTrackHistory, _neoSystem));
             if (_enabledTrackers.Contains("NEP-17"))
-                trackers.Add(new Trackers.NEP_17.Nep17Tracker(_db, _maxResults, _shouldTrackHistory, neoSystem));
-            foreach (TrackerBase tracker in trackers)
+                _trackers.Add(new Trackers.NEP_17.Nep17Tracker(_db, _maxResults, _shouldTrackHistory, _neoSystem));
+            foreach (TrackerBase tracker in _trackers)
                 RpcServerPlugin.RegisterMethods(tracker, _network);
         }
 
         private void ResetBatch()
         {
-            foreach (var tracker in trackers)
+            foreach (var tracker in _trackers)
             {
                 tracker.ResetBatch();
             }
@@ -83,7 +83,7 @@ namespace Neo.Plugins
             if (system.Settings.Network != _network) return;
             // Start freshly with a new DBCache for each block.
             ResetBatch();
-            foreach (var tracker in trackers)
+            foreach (var tracker in _trackers)
             {
                 tracker.OnPersist(system, block, snapshot, applicationExecutedList);
             }
@@ -92,7 +92,7 @@ namespace Neo.Plugins
         private void OnCommitted(NeoSystem system, Block block)
         {
             if (system.Settings.Network != _network) return;
-            foreach (var tracker in trackers)
+            foreach (var tracker in _trackers)
             {
                 tracker.Commit();
             }

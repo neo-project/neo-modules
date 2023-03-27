@@ -7,41 +7,41 @@ namespace Neo.Plugins.Storage.Tests
     [TestClass]
     public class StoreTest
     {
-        private const string path_leveldb = "Data_LevelDB_UT";
-        private const string path_rocksdb = "Data_RocksDB_UT";
+        private const string PathLeveldb = "Data_LevelDB_UT";
+        private const string PathRocksdb = "Data_RocksDB_UT";
 
         [TestMethod]
         public void TestLevelDb()
         {
             using var plugin = new LevelDBStore();
-            TestPersistenceDelete(plugin.GetStore(path_leveldb));
+            TestPersistenceDelete(plugin.GetStore(PathLeveldb));
             // Test all with the same store
 
-            TestStorage(plugin.GetStore(path_leveldb));
+            TestStorage(plugin.GetStore(PathLeveldb));
 
             // Test with different storages
 
-            TestPersistenceWrite(plugin.GetStore(path_leveldb));
-            TestPersistenceRead(plugin.GetStore(path_leveldb), true);
-            TestPersistenceDelete(plugin.GetStore(path_leveldb));
-            TestPersistenceRead(plugin.GetStore(path_leveldb), false);
+            TestPersistenceWrite(plugin.GetStore(PathLeveldb));
+            TestPersistenceRead(plugin.GetStore(PathLeveldb), true);
+            TestPersistenceDelete(plugin.GetStore(PathLeveldb));
+            TestPersistenceRead(plugin.GetStore(PathLeveldb), false);
         }
 
         [TestMethod]
         public void TestRocksDb()
         {
             using var plugin = new RocksDBStore();
-            TestPersistenceDelete(plugin.GetStore(path_rocksdb));
+            TestPersistenceDelete(plugin.GetStore(PathRocksdb));
             // Test all with the same store
 
-            TestStorage(plugin.GetStore(path_rocksdb));
+            TestStorage(plugin.GetStore(PathRocksdb));
 
             // Test with different storages
 
-            TestPersistenceWrite(plugin.GetStore(path_rocksdb));
-            TestPersistenceRead(plugin.GetStore(path_rocksdb), true);
-            TestPersistenceDelete(plugin.GetStore(path_rocksdb));
-            TestPersistenceRead(plugin.GetStore(path_rocksdb), false);
+            TestPersistenceWrite(plugin.GetStore(PathRocksdb));
+            TestPersistenceRead(plugin.GetStore(PathRocksdb), true);
+            TestPersistenceDelete(plugin.GetStore(PathRocksdb));
+            TestPersistenceRead(plugin.GetStore(PathRocksdb), false);
         }
 
         /// <summary>

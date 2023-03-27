@@ -52,13 +52,13 @@ namespace Neo.Consensus
         public TransactionVerificationContext VerificationContext = new();
 
         public SnapshotCache Snapshot { get; private set; }
-        private KeyPair keyPair;
+        private KeyPair _keyPair;
         private int _witnessSize;
-        private readonly NeoSystem neoSystem;
-        private readonly Settings dbftSettings;
-        private readonly Wallet wallet;
-        private readonly IStore store;
-        private Dictionary<UInt256, ConsensusMessage> cachedMessages;
+        private readonly NeoSystem _neoSystem;
+        private readonly Settings _dbftSettings;
+        private readonly Wallet _wallet;
+        private readonly IStore _store;
+        private Dictionary<UInt256, ConsensusMessage> _cachedMessages;
 
         public int F => (Validators.Length - 1) / 3;
         public int M => Validators.Length - F;
@@ -111,17 +111,17 @@ namespace Neo.Consensus
 
         public ConsensusContext(NeoSystem neoSystem, Settings settings, Wallet wallet)
         {
-            this.wallet = wallet;
-            this.neoSystem = neoSystem;
-            this.dbftSettings = settings;
-            this.store = neoSystem.LoadStore(settings.RecoveryLogs);
+            this._wallet = wallet;
+            this._neoSystem = neoSystem;
+            this._dbftSettings = settings;
+            this._store = neoSystem.LoadStore(settings.RecoveryLogs);
         }
 
         public Block CreateBlock()
         {
             EnsureHeader();
             Contract contract = Contract.CreateMultiSigContract(M, Validators);
-            ContractParametersContext sc = new ContractParametersContext(neoSystem.StoreView, Block.Header, dbftSettings.Network);
+            ContractParametersContext sc = new ContractParametersContext(_neoSystem.StoreView, Block.Header, _dbftSettings.Network);
             for (int i = 0, j = 0; i < Validators.Length && j < M; i++)
             {
                 if (GetMessage(CommitPayloads[i])?.ViewNumber != ViewNumber) continue;
@@ -148,7 +148,7 @@ namespace Neo.Consensus
                     VerificationScript = Contract.CreateSignatureRedeemScript(Validators[message.ValidatorIndex])
                 }
             };
-            cachedMessages.TryAdd(payload.Hash, message);
+            _cachedMessages.TryAdd(payload.Hash, message);
             return payload;
         }
 
@@ -166,7 +166,7 @@ namespace Neo.Consensus
 
         public bool Load()
         {
-            byte[] data = store.TryGet(ConsensusStateKey);
+            byte[] data = _store.TryGet(ConsensusStateKey);
             if (data is null || data.Length == 0) return false;
             MemoryReader reader = new(data);
             try
@@ -190,7 +190,7 @@ namespace Neo.Consensus
             if (viewNumber == 0)
             {
                 Snapshot?.Dispose();
-                Snapshot = neoSystem.GetSnapshot();
+                Snapshot = _neoSystem.GetSnapshot();
                 uint height = NativeContract.Ledger.CurrentIndex(Snapshot);
                 Block = new Block
                 {
@@ -199,13 +199,13 @@ namespace Neo.Consensus
                         PrevHash = NativeContract.Ledger.CurrentHash(Snapshot),
                         Index = height + 1,
                         NextConsensus = Contract.GetBFTAddress(
-                            NeoToken.ShouldRefreshCommittee(height + 1, neoSystem.Settings.CommitteeMembersCount) ?
-                            NativeContract.NEO.ComputeNextBlockValidators(Snapshot, neoSystem.Settings) :
-                            NativeContract.NEO.GetNextBlockValidators(Snapshot, neoSystem.Settings.ValidatorsCount))
+                            NeoToken.ShouldRefreshCommittee(height + 1, _neoSystem.Settings.CommitteeMembersCount) ?
+                            NativeContract.NEO.ComputeNextBlockValidators(Snapshot, _neoSystem.Settings) :
+                            NativeContract.NEO.GetNextBlockValidators(Snapshot, _neoSystem.Settings.ValidatorsCount))
                     }
                 };
                 var pv = Validators;
-                Validators = NativeContract.NEO.GetNextBlockValidators(Snapshot, neoSystem.Settings.ValidatorsCount);
+                Validators = NativeContract.NEO.GetNextBlockValidators(Snapshot, _neoSystem.Settings.ValidatorsCount);
                 if (_witnessSize == 0 || (pv != null && pv.Length != Validators.Length))
                 {
                     // Compute the expected size of the witness
@@ -228,26 +228,26 @@ namespace Neo.Consensus
                 CommitPayloads = new ExtensiblePayload[Validators.Length];
                 if (ValidatorsChanged || LastSeenMessage is null)
                 {
-                    var previous_last_seen_message = LastSeenMessage;
+                    var previousLastSeenMessage = LastSeenMessage;
                     LastSeenMessage = new Dictionary<ECPoint, uint>();
                     foreach (var validator in Validators)
                     {
-                        if (previous_last_seen_message != null && previous_last_seen_message.TryGetValue(validator, out var value))
+                        if (previousLastSeenMessage != null && previousLastSeenMessage.TryGetValue(validator, out var value))
                             LastSeenMessage[validator] = value;
                         else
                             LastSeenMessage[validator] = height;
                     }
                 }
-                keyPair = null;
+                _keyPair = null;
                 for (int i = 0; i < Validators.Length; i++)
                 {
-                    WalletAccount account = wallet?.GetAccount(Validators[i]);
+                    WalletAccount account = _wallet?.GetAccount(Validators[i]);
                     if (account?.HasKey != true) continue;
                     MyIndex = i;
-                    keyPair = account.GetKey();
+                    _keyPair = account.GetKey();
                     break;
                 }
-                cachedMessages = new Dictionary<UInt256, ConsensusMessage>();
+                _cachedMessages = new Dictionary<UInt256, ConsensusMessage>();
             }
             else
             {
@@ -270,7 +270,7 @@ namespace Neo.Consensus
 
         public void Save()
         {
-            store.PutSync(ConsensusStateKey, this.ToArray());
+            _store.PutSync(ConsensusStateKey, this.ToArray());
         }
 
         public void Deserialize(ref MemoryReader reader)
@@ -287,10 +287,10 @@ namespace Neo.Consensus
             ViewNumber = reader.ReadByte();
             TransactionHashes = reader.ReadSerializableArray<UInt256>(ushort.MaxValue);
             Transaction[] transactions = reader.ReadSerializableArray<Transaction>(ushort.MaxValue);
-            PreparationPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
-            CommitPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
-            ChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
-            LastChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(neoSystem.Settings.ValidatorsCount);
+            PreparationPayloads = reader.ReadNullableArray<ExtensiblePayload>(_neoSystem.Settings.ValidatorsCount);
+            CommitPayloads = reader.ReadNullableArray<ExtensiblePayload>(_neoSystem.Settings.ValidatorsCount);
+            ChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(_neoSystem.Settings.ValidatorsCount);
+            LastChangeViewPayloads = reader.ReadNullableArray<ExtensiblePayload>(_neoSystem.Settings.ValidatorsCount);
             if (TransactionHashes.Length == 0 && !RequestSentOrReceived)
                 TransactionHashes = null;
             Transactions = transactions.Length == 0 && !RequestSentOrReceived ? null : transactions.ToDictionary(p => p.Hash);

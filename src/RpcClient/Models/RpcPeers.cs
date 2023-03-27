@@ -49,10 +49,11 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new();
-            json["address"] = Address;
-            json["port"] = Port;
-            return json;
+            return new JObject
+            {
+                ["address"] = Address,
+                ["port"] = Port
+            };
         }
 
         public static RpcPeer FromJson(JObject json)

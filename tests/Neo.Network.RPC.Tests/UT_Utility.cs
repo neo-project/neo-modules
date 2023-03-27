@@ -9,16 +9,16 @@ namespace Neo.Network.RPC.Tests
     [TestClass]
     public class UT_Utility
     {
-        private KeyPair keyPair;
-        private UInt160 scriptHash;
-        private ProtocolSettings protocolSettings;
+        private KeyPair _keyPair;
+        private UInt160 _scriptHash;
+        private ProtocolSettings _protocolSettings;
 
         [TestInitialize]
         public void TestSetup()
         {
-            keyPair = new KeyPair(Wallet.GetPrivateKeyFromWIF("KyXwTh1hB76RRMquSvnxZrJzQx7h9nQP2PCRL38v6VDb5ip3nf1p"));
-            scriptHash = Contract.CreateSignatureRedeemScript(keyPair.PublicKey).ToScriptHash();
-            protocolSettings = ProtocolSettings.Load("protocol.json");
+            _keyPair = new KeyPair(Wallet.GetPrivateKeyFromWIF("KyXwTh1hB76RRMquSvnxZrJzQx7h9nQP2PCRL38v6VDb5ip3nf1p"));
+            _scriptHash = Contract.CreateSignatureRedeemScript(_keyPair.PublicKey).ToScriptHash();
+            _protocolSettings = ProtocolSettings.Load("protocol.json");
         }
 
         [TestMethod]
@@ -29,30 +29,30 @@ namespace Neo.Network.RPC.Tests
 
             string wif = "KyXwTh1hB76RRMquSvnxZrJzQx7h9nQP2PCRL38v6VDb5ip3nf1p";
             var result = Utility.GetKeyPair(wif);
-            Assert.AreEqual(keyPair, result);
+            Assert.AreEqual(_keyPair, result);
 
-            string privateKey = keyPair.PrivateKey.ToHexString();
+            string privateKey = _keyPair.PrivateKey.ToHexString();
             result = Utility.GetKeyPair(privateKey);
-            Assert.AreEqual(keyPair, result);
+            Assert.AreEqual(_keyPair, result);
         }
 
         [TestMethod]
         public void TestGetScriptHash()
         {
             string nul = null;
-            Assert.ThrowsException<ArgumentNullException>(() => Utility.GetScriptHash(nul, protocolSettings));
+            Assert.ThrowsException<ArgumentNullException>(() => Utility.GetScriptHash(nul, _protocolSettings));
 
-            string addr = scriptHash.ToAddress(protocolSettings.AddressVersion);
-            var result = Utility.GetScriptHash(addr, protocolSettings);
-            Assert.AreEqual(scriptHash, result);
+            string addr = _scriptHash.ToAddress(_protocolSettings.AddressVersion);
+            var result = Utility.GetScriptHash(addr, _protocolSettings);
+            Assert.AreEqual(_scriptHash, result);
 
-            string hash = scriptHash.ToString();
-            result = Utility.GetScriptHash(hash, protocolSettings);
-            Assert.AreEqual(scriptHash, result);
+            string hash = _scriptHash.ToString();
+            result = Utility.GetScriptHash(hash, _protocolSettings);
+            Assert.AreEqual(_scriptHash, result);
 
-            string publicKey = keyPair.PublicKey.ToString();
-            result = Utility.GetScriptHash(publicKey, protocolSettings);
-            Assert.AreEqual(scriptHash, result);
+            string publicKey = _keyPair.PublicKey.ToString();
+            result = Utility.GetScriptHash(publicKey, _protocolSettings);
+            Assert.AreEqual(_scriptHash, result);
         }
 
         [TestMethod]

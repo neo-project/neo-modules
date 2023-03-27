@@ -14,11 +14,11 @@ namespace Neo.Plugins
 {
     class TreeNode<T>
     {
-        private readonly List<TreeNode<T>> children = new();
+        private readonly List<TreeNode<T>> _children = new();
 
         public T Item { get; }
         public TreeNode<T> Parent { get; }
-        public IReadOnlyList<TreeNode<T>> Children => children;
+        public IReadOnlyList<TreeNode<T>> Children => _children;
 
         internal TreeNode(T item, TreeNode<T> parent)
         {
@@ -29,14 +29,14 @@ namespace Neo.Plugins
         public TreeNode<T> AddChild(T item)
         {
             TreeNode<T> child = new(item, this);
-            children.Add(child);
+            _children.Add(child);
             return child;
         }
 
         internal IEnumerable<T> GetItems()
         {
             yield return Item;
-            foreach (var child in children)
+            foreach (var child in _children)
                 foreach (T item in child.GetItems())
                     yield return item;
         }

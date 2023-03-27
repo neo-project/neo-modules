@@ -16,18 +16,18 @@ namespace Neo.Cryptography.MPTTrie
     public partial class Trie
     {
         private const byte Prefix = 0xf0;
-        private readonly bool full;
-        private readonly ISnapshot store;
-        private Node root;
-        private readonly Cache cache;
-        public Node Root => root;
+        private readonly bool _full;
+        private readonly ISnapshot _store;
+        private Node _root;
+        private readonly Cache _cache;
+        public Node Root => _root;
 
-        public Trie(ISnapshot store, UInt256 root, bool full_state = false)
+        public Trie(ISnapshot store, UInt256 root, bool fullState = false)
         {
-            this.store = store ?? throw new ArgumentNullException(nameof(store));
-            this.cache = new Cache(store, Prefix);
-            this.root = root is null ? new Node() : Node.NewHash(root);
-            this.full = full_state;
+            this._store = store ?? throw new ArgumentNullException(nameof(store));
+            this._cache = new Cache(store, Prefix);
+            this._root = root is null ? new Node() : Node.NewHash(root);
+            this._full = fullState;
         }
 
         private static byte[] ToNibbles(ReadOnlySpan<byte> path)
@@ -55,7 +55,7 @@ namespace Neo.Cryptography.MPTTrie
 
         public void Commit()
         {
-            cache.Commit();
+            _cache.Commit();
         }
     }
 }

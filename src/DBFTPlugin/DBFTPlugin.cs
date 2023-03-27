@@ -19,11 +19,11 @@ namespace Neo.Consensus
 {
     public class DBFTPlugin : Plugin
     {
-        private IWalletProvider walletProvider;
-        private IActorRef consensus;
-        private bool started = false;
-        private NeoSystem neoSystem;
-        private Settings settings;
+        private IWalletProvider _walletProvider;
+        private IActorRef _consensus;
+        private bool _started = false;
+        private NeoSystem _neoSystem;
+        private Settings _settings;
 
         public override string Description => "Consensus plugin with dBFT algorithm.";
 
@@ -34,7 +34,7 @@ namespace Neo.Consensus
 
         public DBFTPlugin(Settings settings) : this()
         {
-            this.settings = settings;
+            this._settings = settings;
         }
 
         public override void Dispose()
@@ -44,45 +44,45 @@ namespace Neo.Consensus
 
         protected override void Configure()
         {
-            settings ??= new Settings(GetConfiguration());
+            _settings ??= new Settings(GetConfiguration());
         }
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            if (system.Settings.Network != settings.Network) return;
-            neoSystem = system;
-            neoSystem.ServiceAdded += NeoSystem_ServiceAdded;
+            if (system.Settings.Network != _settings.Network) return;
+            _neoSystem = system;
+            _neoSystem.ServiceAdded += NeoSystem_ServiceAdded;
         }
 
         private void NeoSystem_ServiceAdded(object sender, object service)
         {
             if (service is not IWalletProvider provider) return;
-            walletProvider = provider;
-            neoSystem.ServiceAdded -= NeoSystem_ServiceAdded;
-            if (settings.AutoStart)
+            _walletProvider = provider;
+            _neoSystem.ServiceAdded -= NeoSystem_ServiceAdded;
+            if (_settings.AutoStart)
             {
-                walletProvider.WalletChanged += WalletProvider_WalletChanged;
+                _walletProvider.WalletChanged += WalletProvider_WalletChanged;
             }
         }
 
         private void WalletProvider_WalletChanged(object sender, Wallet wallet)
         {
-            walletProvider.WalletChanged -= WalletProvider_WalletChanged;
+            _walletProvider.WalletChanged -= WalletProvider_WalletChanged;
             Start(wallet);
         }
 
         [ConsoleCommand("start consensus", Category = "Consensus", Description = "Start consensus service (dBFT)")]
         private void OnStart()
         {
-            Start(walletProvider.GetWallet());
+            Start(_walletProvider.GetWallet());
         }
 
         public void Start(Wallet wallet)
         {
-            if (started) return;
-            started = true;
-            consensus = neoSystem.ActorSystem.ActorOf(ConsensusService.Props(neoSystem, settings, wallet));
-            consensus.Tell(new ConsensusService.Start());
+            if (_started) return;
+            _started = true;
+            _consensus = _neoSystem.ActorSystem.ActorOf(ConsensusService.Props(_neoSystem, _settings, wallet));
+            _consensus.Tell(new ConsensusService.Start());
         }
 
         private bool RemoteNode_MessageReceived(NeoSystem system, Message message)
@@ -90,9 +90,9 @@ namespace Neo.Consensus
             if (message.Command == MessageCommand.Transaction)
             {
                 Transaction tx = (Transaction)message.Payload;
-                if (tx.SystemFee > settings.MaxBlockSystemFee)
+                if (tx.SystemFee > _settings.MaxBlockSystemFee)
                     return false;
-                consensus?.Tell(tx);
+                _consensus?.Tell(tx);
             }
             return true;
         }

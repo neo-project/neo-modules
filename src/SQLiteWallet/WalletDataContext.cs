@@ -1,10 +1,10 @@
 // Copyright (C) 2015-2023 The Neo Project.
-// 
-// The Neo.Wallets.SQLite is free software distributed under the MIT software license, 
+//
+// The Neo.Wallets.SQLite is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
-// project or http://www.opensource.org/licenses/mit-license.php 
+// project or http://www.opensource.org/licenses/mit-license.php
 // for more details.
-// 
+//
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
@@ -20,11 +20,11 @@ class WalletDataContext : DbContext
     public DbSet<Contract> Contracts { get; set; }
     public DbSet<Key> Keys { get; set; }
 
-    private readonly string filename;
+    private readonly string _filename;
 
     public WalletDataContext(string filename)
     {
-        this.filename = filename;
+        this._filename = filename;
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -32,7 +32,7 @@ class WalletDataContext : DbContext
         base.OnConfiguring(optionsBuilder);
         SqliteConnectionStringBuilder sb = new()
         {
-            DataSource = filename
+            DataSource = _filename
         };
         optionsBuilder.UseSqlite(sb.ToString());
     }
@@ -42,7 +42,7 @@ class WalletDataContext : DbContext
         base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<Account>().ToTable(nameof(Account));
         modelBuilder.Entity<Account>().HasKey(p => p.PublicKeyHash);
-        modelBuilder.Entity<Account>().Property(p => p.Nep2key).HasColumnType("VarChar").HasMaxLength(byte.MaxValue).IsRequired();
+        modelBuilder.Entity<Account>().Property(p => p.Nep2Key).HasColumnType("VarChar").HasMaxLength(byte.MaxValue).IsRequired();
         modelBuilder.Entity<Account>().Property(p => p.PublicKeyHash).HasColumnType("Binary").HasMaxLength(20).IsRequired();
         modelBuilder.Entity<Address>().ToTable(nameof(Address));
         modelBuilder.Entity<Address>().HasKey(p => p.ScriptHash);

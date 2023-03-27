@@ -17,7 +17,7 @@ namespace Neo.Plugins
     partial class RpcServer
     {
         [RpcMethod]
-        protected virtual JToken ListPlugins(JArray _params)
+        protected virtual JToken ListPlugins(JArray @params)
         {
             return new JArray(Plugin.Plugins
                 .OrderBy(u => u.Name)
@@ -33,14 +33,14 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        protected virtual JToken ValidateAddress(JArray _params)
+        protected virtual JToken ValidateAddress(JArray @params)
         {
-            string address = _params[0].AsString();
+            string address = @params[0].AsString();
             JObject json = new();
             UInt160 scriptHash;
             try
             {
-                scriptHash = address.ToScriptHash(system.Settings.AddressVersion);
+                scriptHash = address.ToScriptHash(_system.Settings.AddressVersion);
             }
             catch
             {

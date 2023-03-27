@@ -32,7 +32,7 @@ namespace Neo.Plugins
 
         private Settings(IConfigurationSection section)
         {
-            /// Geting settings for storage changes state dumper
+            // Getting settings for storage changes state dumper
             this.BlockCacheSize = section.GetValue("BlockCacheSize", 1000u);
             this.HeightToBegin = section.GetValue("HeightToBegin", 0u);
             this.Exclude = section.GetSection("Exclude").Exists()

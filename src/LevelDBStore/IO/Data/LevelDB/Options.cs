@@ -15,13 +15,13 @@ namespace Neo.IO.Data.LevelDB
     public class Options
     {
         public static readonly Options Default = new Options();
-        internal readonly IntPtr handle = Native.leveldb_options_create();
+        internal readonly IntPtr Handle = Native.leveldb_options_create();
 
         public bool CreateIfMissing
         {
             set
             {
-                Native.leveldb_options_set_create_if_missing(handle, value);
+                Native.leveldb_options_set_create_if_missing(Handle, value);
             }
         }
 
@@ -29,7 +29,7 @@ namespace Neo.IO.Data.LevelDB
         {
             set
             {
-                Native.leveldb_options_set_error_if_exists(handle, value);
+                Native.leveldb_options_set_error_if_exists(Handle, value);
             }
         }
 
@@ -37,7 +37,7 @@ namespace Neo.IO.Data.LevelDB
         {
             set
             {
-                Native.leveldb_options_set_paranoid_checks(handle, value);
+                Native.leveldb_options_set_paranoid_checks(Handle, value);
             }
         }
 
@@ -45,7 +45,7 @@ namespace Neo.IO.Data.LevelDB
         {
             set
             {
-                Native.leveldb_options_set_write_buffer_size(handle, (UIntPtr)value);
+                Native.leveldb_options_set_write_buffer_size(Handle, (UIntPtr)value);
             }
         }
 
@@ -53,7 +53,7 @@ namespace Neo.IO.Data.LevelDB
         {
             set
             {
-                Native.leveldb_options_set_max_open_files(handle, value);
+                Native.leveldb_options_set_max_open_files(Handle, value);
             }
         }
 
@@ -61,7 +61,7 @@ namespace Neo.IO.Data.LevelDB
         {
             set
             {
-                Native.leveldb_options_set_block_size(handle, (UIntPtr)value);
+                Native.leveldb_options_set_block_size(Handle, (UIntPtr)value);
             }
         }
 
@@ -69,7 +69,7 @@ namespace Neo.IO.Data.LevelDB
         {
             set
             {
-                Native.leveldb_options_set_block_restart_interval(handle, value);
+                Native.leveldb_options_set_block_restart_interval(Handle, value);
             }
         }
 
@@ -77,7 +77,7 @@ namespace Neo.IO.Data.LevelDB
         {
             set
             {
-                Native.leveldb_options_set_compression(handle, value);
+                Native.leveldb_options_set_compression(Handle, value);
             }
         }
 
@@ -85,13 +85,13 @@ namespace Neo.IO.Data.LevelDB
         {
             set
             {
-                Native.leveldb_options_set_filter_policy(handle, value);
+                Native.leveldb_options_set_filter_policy(Handle, value);
             }
         }
 
         ~Options()
         {
-            Native.leveldb_options_destroy(handle);
+            Native.leveldb_options_destroy(Handle);
         }
     }
 }

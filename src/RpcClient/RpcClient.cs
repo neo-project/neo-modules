@@ -33,42 +33,42 @@ namespace Neo.Network.RPC
     /// </summary>
     public class RpcClient : IDisposable
     {
-        private readonly HttpClient httpClient;
-        private readonly Uri baseAddress;
+        private readonly HttpClient _httpClient;
+        private readonly Uri _baseAddress;
         internal readonly ProtocolSettings protocolSettings;
 
         public RpcClient(Uri url, string rpcUser = default, string rpcPass = default, ProtocolSettings protocolSettings = null)
         {
-            httpClient = new HttpClient();
-            baseAddress = url;
+            _httpClient = new HttpClient();
+            _baseAddress = url;
             if (!string.IsNullOrEmpty(rpcUser) && !string.IsNullOrEmpty(rpcPass))
             {
                 string token = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{rpcUser}:{rpcPass}"));
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", token);
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", token);
             }
             this.protocolSettings = protocolSettings ?? ProtocolSettings.Default;
         }
 
         public RpcClient(HttpClient client, Uri url, ProtocolSettings protocolSettings = null)
         {
-            httpClient = client;
-            baseAddress = url;
+            _httpClient = client;
+            _baseAddress = url;
             this.protocolSettings = protocolSettings ?? ProtocolSettings.Default;
         }
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+        private bool _disposedValue = false; // To detect redundant calls
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (!_disposedValue)
             {
                 if (disposing)
                 {
-                    httpClient.Dispose();
+                    _httpClient.Dispose();
                 }
 
-                disposedValue = true;
+                _disposedValue = true;
             }
         }
 
@@ -105,7 +105,7 @@ namespace Neo.Network.RPC
         HttpRequestMessage AsHttpRequest(RpcRequest request)
         {
             var requestJson = request.ToJson().ToString();
-            return new HttpRequestMessage(HttpMethod.Post, baseAddress)
+            return new HttpRequestMessage(HttpMethod.Post, _baseAddress)
             {
                 Content = new StringContent(requestJson, Neo.Utility.StrictUTF8)
             };
@@ -113,10 +113,10 @@ namespace Neo.Network.RPC
 
         public RpcResponse Send(RpcRequest request, bool throwOnError = true)
         {
-            if (disposedValue) throw new ObjectDisposedException(nameof(RpcClient));
+            if (_disposedValue) throw new ObjectDisposedException(nameof(RpcClient));
 
             using var requestMsg = AsHttpRequest(request);
-            using var responseMsg = httpClient.Send(requestMsg);
+            using var responseMsg = _httpClient.Send(requestMsg);
             using var contentStream = responseMsg.Content.ReadAsStream();
             using var contentReader = new StreamReader(contentStream);
             return AsRpcResponse(contentReader.ReadToEnd(), throwOnError);
@@ -124,10 +124,10 @@ namespace Neo.Network.RPC
 
         public async Task<RpcResponse> SendAsync(RpcRequest request, bool throwOnError = true)
         {
-            if (disposedValue) throw new ObjectDisposedException(nameof(RpcClient));
+            if (_disposedValue) throw new ObjectDisposedException(nameof(RpcClient));
 
             using var requestMsg = AsHttpRequest(request);
-            using var responseMsg = await httpClient.SendAsync(requestMsg).ConfigureAwait(false);
+            using var responseMsg = await _httpClient.SendAsync(requestMsg).ConfigureAwait(false);
             var content = await responseMsg.Content.ReadAsStringAsync();
             return AsRpcResponse(content, throwOnError);
         }

@@ -14,26 +14,26 @@ namespace Neo.IO.Data.LevelDB
 {
     public class WriteBatch
     {
-        internal readonly IntPtr handle = Native.leveldb_writebatch_create();
+        internal readonly IntPtr Handle = Native.leveldb_writebatch_create();
 
         ~WriteBatch()
         {
-            Native.leveldb_writebatch_destroy(handle);
+            Native.leveldb_writebatch_destroy(Handle);
         }
 
         public void Clear()
         {
-            Native.leveldb_writebatch_clear(handle);
+            Native.leveldb_writebatch_clear(Handle);
         }
 
         public void Delete(byte[] key)
         {
-            Native.leveldb_writebatch_delete(handle, key, (UIntPtr)key.Length);
+            Native.leveldb_writebatch_delete(Handle, key, (UIntPtr)key.Length);
         }
 
         public void Put(byte[] key, byte[] value)
         {
-            Native.leveldb_writebatch_put(handle, key, (UIntPtr)key.Length, value, (UIntPtr)value.Length);
+            Native.leveldb_writebatch_put(Handle, key, (UIntPtr)key.Length, value, (UIntPtr)value.Length);
         }
     }
 }

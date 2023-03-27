@@ -34,10 +34,12 @@ namespace Neo.Network.RPC.Models
 
         public JObject ToJson()
         {
-            JObject json = new();
-            json["script"] = Script;
-            json["state"] = State;
-            json["gasconsumed"] = GasConsumed.ToString();
+            JObject json = new()
+            {
+                ["script"] = Script,
+                ["state"] = State,
+                ["gasconsumed"] = GasConsumed.ToString()
+            };
             if (!string.IsNullOrEmpty(Exception))
                 json["exception"] = Exception;
             try

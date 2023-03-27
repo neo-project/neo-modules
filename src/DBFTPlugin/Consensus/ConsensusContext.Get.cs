@@ -22,8 +22,8 @@ namespace Neo.Consensus
         public ConsensusMessage GetMessage(ExtensiblePayload payload)
         {
             if (payload is null) return null;
-            if (!cachedMessages.TryGetValue(payload.Hash, out ConsensusMessage message))
-                cachedMessages.Add(payload.Hash, message = ConsensusMessage.DeserializeFrom(payload.Data));
+            if (!_cachedMessages.TryGetValue(payload.Hash, out ConsensusMessage message))
+                _cachedMessages.Add(payload.Hash, message = ConsensusMessage.DeserializeFrom(payload.Data));
             return message;
         }
 

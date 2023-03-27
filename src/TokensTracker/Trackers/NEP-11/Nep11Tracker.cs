@@ -192,14 +192,14 @@ namespace Neo.Plugins.Trackers.NEP_11
 
 
         [RpcMethod]
-        public JToken GetNep11Transfers(JArray _params)
+        public JToken GetNep11Transfers(JArray @params)
         {
             if (!_shouldTrackHistory) throw new RpcException(-32601, "Method not found");
-            UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
+            UInt160 userScriptHash = GetScriptHashFromParam(@params[0].AsString());
             // If start time not present, default to 1 week of history.
-            ulong startTime = _params.Count > 1 ? (ulong)_params[1].AsNumber() :
+            ulong startTime = @params.Count > 1 ? (ulong)@params[1].AsNumber() :
                 (DateTime.UtcNow - TimeSpan.FromDays(7)).ToTimestampMS();
-            ulong endTime = _params.Count > 2 ? (ulong)_params[2].AsNumber() : DateTime.UtcNow.ToTimestampMS();
+            ulong endTime = @params.Count > 2 ? (ulong)@params[2].AsNumber() : DateTime.UtcNow.ToTimestampMS();
 
             if (endTime < startTime) throw new RpcException(-32602, "Invalid params");
 
@@ -215,9 +215,9 @@ namespace Neo.Plugins.Trackers.NEP_11
         }
 
         [RpcMethod]
-        public JToken GetNep11Balances(JArray _params)
+        public JToken GetNep11Balances(JArray @params)
         {
-            UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
+            UInt160 userScriptHash = GetScriptHashFromParam(@params[0].AsString());
 
             JObject json = new();
             JArray balances = new();
@@ -275,10 +275,10 @@ namespace Neo.Plugins.Trackers.NEP_11
         }
 
         [RpcMethod]
-        public JToken GetNep11Properties(JArray _params)
+        public JToken GetNep11Properties(JArray @params)
         {
-            UInt160 nep11Hash = GetScriptHashFromParam(_params[0].AsString());
-            var tokenId = _params[1].AsString().HexToBytes();
+            UInt160 nep11Hash = GetScriptHashFromParam(@params[0].AsString());
+            var tokenId = @params[1].AsString().HexToBytes();
 
             using ScriptBuilder sb = new();
             sb.EmitDynamicCall(nep11Hash, "properties", CallFlags.ReadOnly, tokenId);

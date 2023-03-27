@@ -19,7 +19,7 @@ namespace Neo.Network.RPC
     /// </summary>
     public class PolicyAPI : ContractClient
     {
-        readonly UInt160 scriptHash = NativeContract.Policy.Hash;
+        readonly UInt160 _scriptHash = NativeContract.Policy.Hash;
 
         /// <summary>
         /// PolicyAPI Constructor
@@ -33,7 +33,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<uint> GetExecFeeFactorAsync()
         {
-            var result = await TestInvokeAsync(scriptHash, "getExecFeeFactor").ConfigureAwait(false);
+            var result = await TestInvokeAsync(_scriptHash, "getExecFeeFactor").ConfigureAwait(false);
             return (uint)result.Stack.Single().GetInteger();
         }
 
@@ -43,7 +43,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<uint> GetStoragePriceAsync()
         {
-            var result = await TestInvokeAsync(scriptHash, "getStoragePrice").ConfigureAwait(false);
+            var result = await TestInvokeAsync(_scriptHash, "getStoragePrice").ConfigureAwait(false);
             return (uint)result.Stack.Single().GetInteger();
         }
 
@@ -53,7 +53,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<long> GetFeePerByteAsync()
         {
-            var result = await TestInvokeAsync(scriptHash, "getFeePerByte").ConfigureAwait(false);
+            var result = await TestInvokeAsync(_scriptHash, "getFeePerByte").ConfigureAwait(false);
             return (long)result.Stack.Single().GetInteger();
         }
 
@@ -63,7 +63,7 @@ namespace Neo.Network.RPC
         /// <returns></returns>
         public async Task<bool> IsBlockedAsync(UInt160 account)
         {
-            var result = await TestInvokeAsync(scriptHash, "isBlocked", new object[] { account }).ConfigureAwait(false);
+            var result = await TestInvokeAsync(_scriptHash, "isBlocked", new object[] { account }).ConfigureAwait(false);
             return result.Stack.Single().GetBoolean();
         }
     }
