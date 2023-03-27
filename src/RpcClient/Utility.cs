@@ -225,14 +225,14 @@ namespace Neo.Network.RPC
             {
                 "Or" => new OrCondition { Expressions = ((JArray)json["expressions"])?.Select(p => RuleExpressionFromJson((JObject)p, protocolSettings)).ToArray() },
                 "And" => new AndCondition { Expressions = ((JArray)json["expressions"])?.Select(p => RuleExpressionFromJson((JObject)p, protocolSettings)).ToArray() },
-                "Boolean" => new BooleanCondition { Expression = json["expressions"].AsBoolean() },
-                "Not" => new NotCondition { Expression = RuleExpressionFromJson((JObject)json["expressions"], protocolSettings) },
+                "Boolean" => new BooleanCondition { Expression = json["expression"].AsBoolean() },
+                "Not" => new NotCondition { Expression = RuleExpressionFromJson((JObject)json["expression"], protocolSettings) },
                 "Group" => new GroupCondition { Group = ECPoint.Parse(json["group"].AsString(), ECCurve.Secp256r1) },
                 "CalledByContract" => new CalledByContractCondition { Hash = json["hash"].ToScriptHash(protocolSettings) },
                 "ScriptHash" => new ScriptHashCondition { Hash = json["hash"].ToScriptHash(protocolSettings) },
                 "CalledByEntry" => new CalledByEntryCondition(),
                 "CalledByGroup" => new CalledByGroupCondition { Group = ECPoint.Parse(json["group"].AsString(), ECCurve.Secp256r1) },
-                _ => throw new FormatException("Wrong rule's condition type")
+                _ => throw new FormatException("Wrong rule's condition type"),
             };
         }
 
