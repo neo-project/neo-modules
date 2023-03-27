@@ -69,12 +69,16 @@ namespace Neo.Network.RPC
             if (string.IsNullOrEmpty(key)) { throw new ArgumentNullException(nameof(key)); }
             if (key.StartsWith("0x")) { key = key[2..]; }
 
-            return key.Length switch
+            if (key.Length == 52)
             {
-                52 => new KeyPair(Wallet.GetPrivateKeyFromWIF(key)),
-                64 => new KeyPair(key.HexToBytes()),
-                _ => throw new FormatException()
-            };
+                return new KeyPair(Wallet.GetPrivateKeyFromWIF(key));
+            }
+            else if (key.Length == 64)
+            {
+                return new KeyPair(key.HexToBytes());
+            }
+
+            throw new FormatException();
         }
 
         /// <summary>
@@ -82,20 +86,27 @@ namespace Neo.Network.RPC
         /// </summary>
         /// <param name="account">account address, scripthash or public key string
         /// Example: address ("Ncm9TEzrp8SSer6Wa3UCSLTRnqzwVhCfuE"), scripthash ("0xb0a31817c80ad5f87b6ed390ecb3f9d312f7ceb8"), public key ("02f9ec1fd0a98796cf75b586772a4ddd41a0af07a1dbdf86a7238f74fb72503575")</param>
-        /// <param name="protocolSettings">The protocol settings</param>
         /// <returns></returns>
         public static UInt160 GetScriptHash(string account, ProtocolSettings protocolSettings)
         {
             if (string.IsNullOrEmpty(account)) { throw new ArgumentNullException(nameof(account)); }
             if (account.StartsWith("0x")) { account = account[2..]; }
 
-            return account.Length switch
+            if (account.Length == 34)
             {
-                34 => account.ToScriptHash(protocolSettings.AddressVersion),
-                40 => UInt160.Parse(account),
-                66 => Contract.CreateSignatureRedeemScript(ECPoint.Parse(account, ECCurve.Secp256r1)).ToScriptHash(),
-                _ => throw new FormatException(),
-            };
+                return Wallets.Helper.ToScriptHash(account, protocolSettings.AddressVersion);
+            }
+            else if (account.Length == 40)
+            {
+                return UInt160.Parse(account);
+            }
+            else if (account.Length == 66)
+            {
+                var pubKey = ECPoint.Parse(account, ECCurve.Secp256r1);
+                return Contract.CreateSignatureRedeemScript(pubKey).ToScriptHash();
+            }
+
+            throw new FormatException();
         }
 
         /// <summary>
@@ -221,19 +232,29 @@ namespace Neo.Network.RPC
 
         public static WitnessCondition RuleExpressionFromJson(JObject json, ProtocolSettings protocolSettings)
         {
-            return json["type"].AsString() switch
+            switch (json["type"].AsString())
             {
-                "Or" => new OrCondition { Expressions = ((JArray)json["expressions"])?.Select(p => RuleExpressionFromJson((JObject)p, protocolSettings)).ToArray() },
-                "And" => new AndCondition { Expressions = ((JArray)json["expressions"])?.Select(p => RuleExpressionFromJson((JObject)p, protocolSettings)).ToArray() },
-                "Boolean" => new BooleanCondition { Expression = json["expression"].AsBoolean() },
-                "Not" => new NotCondition { Expression = RuleExpressionFromJson((JObject)json["expression"], protocolSettings) },
-                "Group" => new GroupCondition { Group = ECPoint.Parse(json["group"].AsString(), ECCurve.Secp256r1) },
-                "CalledByContract" => new CalledByContractCondition { Hash = json["hash"].ToScriptHash(protocolSettings) },
-                "ScriptHash" => new ScriptHashCondition { Hash = json["hash"].ToScriptHash(protocolSettings) },
-                "CalledByEntry" => new CalledByEntryCondition(),
-                "CalledByGroup" => new CalledByGroupCondition { Group = ECPoint.Parse(json["group"].AsString(), ECCurve.Secp256r1) },
-                _ => throw new FormatException("Wrong rule's condition type"),
-            };
+                case "Or":
+                    return new OrCondition() { Expressions = ((JArray)json["expressions"])?.Select(p => RuleExpressionFromJson((JObject)p, protocolSettings)).ToArray() };
+                case "And":
+                    return new AndCondition() { Expressions = ((JArray)json["expressions"])?.Select(p => RuleExpressionFromJson((JObject)p, protocolSettings)).ToArray() };
+                case "Boolean":
+                    return new BooleanCondition() { Expression = json["expressions"].AsBoolean() };
+                case "Not":
+                    return new NotCondition() { Expression = RuleExpressionFromJson((JObject)json["expressions"], protocolSettings) };
+                case "Group":
+                    return new GroupCondition() { Group = ECPoint.Parse(json["group"].AsString(), ECCurve.Secp256r1) };
+                case "CalledByContract":
+                    return new CalledByContractCondition() { Hash = json["hash"].ToScriptHash(protocolSettings) };
+                case "ScriptHash":
+                    return new ScriptHashCondition() { Hash = json["hash"].ToScriptHash(protocolSettings) };
+                case "CalledByEntry":
+                    return new CalledByEntryCondition();
+                case "CalledByGroup":
+                    return new CalledByGroupCondition() { Group = ECPoint.Parse(json["group"].AsString(), ECCurve.Secp256r1) };
+            }
+
+            throw new FormatException("Wrong rule's condition type");
         }
 
         public static StackItem StackItemFromJson(JObject json)
@@ -271,10 +292,8 @@ namespace Neo.Network.RPC
                     return new Pointer(null, (int)json["value"].AsNumber());
                 case StackItemType.InteropInterface:
                     return new InteropInterface(json);
-                case StackItemType.Any:
-                default:
-                    return json["value"]?.AsString() ?? StackItem.Null;
             }
+            return json["value"] is null ? StackItem.Null : json["value"].AsString();
         }
 
         public static string GetIteratorId(this StackItem item)
