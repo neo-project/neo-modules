@@ -239,9 +239,9 @@ namespace Neo.Network.RPC
                 case "And":
                     return new AndCondition() { Expressions = ((JArray)json["expressions"])?.Select(p => RuleExpressionFromJson((JObject)p, protocolSettings)).ToArray() };
                 case "Boolean":
-                    return new BooleanCondition() { Expression = json["expressions"].AsBoolean() };
+                    return new BooleanCondition() { Expression = json["expression"].AsBoolean() };
                 case "Not":
-                    return new NotCondition() { Expression = RuleExpressionFromJson((JObject)json["expressions"], protocolSettings) };
+                    return new NotCondition() { Expression = RuleExpressionFromJson((JObject)json["expression"], protocolSettings) };
                 case "Group":
                     return new GroupCondition() { Group = ECPoint.Parse(json["group"].AsString(), ECCurve.Secp256r1) };
                 case "CalledByContract":
