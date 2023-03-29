@@ -271,7 +271,6 @@ namespace Neo.Network.RPC
                     return new Pointer(null, (int)json["value"].AsNumber());
                 case StackItemType.InteropInterface:
                     return new InteropInterface(json);
-                case StackItemType.Any:
                 default:
                     return json["value"]?.AsString() ?? StackItem.Null;
             }
