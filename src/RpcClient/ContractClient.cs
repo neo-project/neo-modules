@@ -51,7 +51,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Deploy Contract, return signed transaction
         /// </summary>
-        /// <param name="contractScript">contract script</param>
+        /// <param name="nefFile">neo contract executable file</param>
         /// <param name="manifest">contract manifest</param>
         /// <param name="key">sender KeyPair</param>
         /// <returns></returns>
