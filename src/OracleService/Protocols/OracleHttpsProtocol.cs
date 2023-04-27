@@ -22,7 +22,11 @@ namespace Neo.Plugins
 {
     class OracleHttpsProtocol : IOracleProtocol
     {
-        private readonly HttpClient client = new(new HttpClientHandler() { AllowAutoRedirect = false });
+        private readonly HttpClient client = new(new HttpClientHandler() { AllowAutoRedirect = false })
+        {
+            Timeout = TimeSpan.FromSeconds(30),
+            MaxResponseContentBufferSize = ushort.MaxValue
+        };
 
         public OracleHttpsProtocol()
         {
