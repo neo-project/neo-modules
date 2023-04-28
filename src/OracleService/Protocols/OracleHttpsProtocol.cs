@@ -24,7 +24,6 @@ namespace Neo.Plugins
     {
         private readonly HttpClient client = new(new HttpClientHandler() { AllowAutoRedirect = false })
         {
-            Timeout = TimeSpan.FromSeconds(30),
             MaxResponseContentBufferSize = ushort.MaxValue
         };
 
