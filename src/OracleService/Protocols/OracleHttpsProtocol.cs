@@ -24,7 +24,7 @@ namespace Neo.Plugins
     {
         private readonly HttpClient client = new(new HttpClientHandler() { AllowAutoRedirect = false })
         {
-            MaxResponseContentBufferSize = ushort.MaxValue
+            MaxResponseContentBufferSize = OracleResponse.MaxResultSize
         };
 
         public OracleHttpsProtocol()
