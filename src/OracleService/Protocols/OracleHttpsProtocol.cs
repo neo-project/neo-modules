@@ -85,6 +85,8 @@ namespace Neo.Plugins
                 return (OracleResponseCode.Error, message.StatusCode.ToString());
             if (!Settings.Default.AllowedContentTypes.Contains(message.Content.Headers.ContentType.MediaType))
                 return (OracleResponseCode.ContentTypeNotSupported, null);
+            if (!message.Content.Headers.ContentLength.HasValue || message.Content.Headers.ContentLength > OracleResponse.MaxResultSize)
+                return (OracleResponseCode.ResponseTooLarge, null);
             return (OracleResponseCode.Success, await message.Content.ReadAsStringAsync(cancellation));
         }
     }
