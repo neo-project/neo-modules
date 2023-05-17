@@ -70,6 +70,35 @@ namespace Neo.Network.RPC.Tests
         }
 
         [TestMethod]
+        public async Task TestNoThrowErrorResponse()
+        {
+            var test = TestUtils.RpcTestCases.Find(p => p.Name == (nameof(rpc.SendRawTransactionAsync) + "error").ToLower());
+            handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
+            handlerMock.Protected()
+               // Setup the PROTECTED method to mock
+               .Setup<Task<HttpResponseMessage>>(
+                  "SendAsync",
+                  ItExpr.IsAny<HttpRequestMessage>(),
+                  ItExpr.IsAny<CancellationToken>())
+               // prepare the expected response of the mocked http call
+               .ReturnsAsync(new HttpResponseMessage()
+               {
+                   StatusCode = HttpStatusCode.OK,
+                   Content = new StringContent(test.Response.ToJson().ToString()),
+               })
+               .Verifiable();
+
+            var httpClient = new HttpClient(handlerMock.Object);
+            var client = new RpcClient(httpClient, new Uri("http://seed1.neo.org:10331"), null);
+            var response = await client.SendAsync(test.Request, false);
+
+            Assert.IsNull(response.Result);
+            Assert.IsNotNull(response.Error);
+            Assert.AreEqual(-500, response.Error.Code);
+            Assert.AreEqual("InsufficientFunds", response.Error.Message);
+        }
+
+        [TestMethod]
         public void TestConstructorByUrlAndDispose()
         {
             //dummy url for test
@@ -137,7 +166,7 @@ namespace Neo.Network.RPC.Tests
         public async Task TestGetBlockHash()
         {
             var test = TestUtils.RpcTestCases.Find(p => p.Name == nameof(rpc.GetBlockHashAsync).ToLower());
-            var result = await rpc.GetBlockHashAsync((int)test.Request.Params[0].AsNumber());
+            var result = await rpc.GetBlockHashAsync((uint)test.Request.Params[0].AsNumber());
             Assert.AreEqual(test.Response.Result.AsString(), result.ToString());
         }
 

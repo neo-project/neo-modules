@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2022 The Neo Project.
+// Copyright (C) 2015-2023 The Neo Project.
 //
 // The Neo.Plugins.TokensTracker is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -25,7 +25,7 @@ using Array = Neo.VM.Types.Array;
 
 namespace Neo.Plugins.Trackers
 {
-    record TransferRecord(UInt160 asset, UInt160 from, UInt160 to, ByteString tokenId, BigInteger amount);
+    record TransferRecord(UInt160 asset, UInt160 from, UInt160 to, byte[] tokenId, BigInteger amount);
 
     abstract class TrackerBase
     {
@@ -129,7 +129,7 @@ namespace Neo.Plugins.Trackers
             return stateItems.Count switch
             {
                 3 => new TransferRecord(asset, @from, to, null, amountItem.GetInteger()),
-                4 when (stateItems[3] is ByteString tokenId) => new TransferRecord(asset, @from, to, tokenId, amountItem.GetInteger()),
+                4 when (stateItems[3] is ByteString tokenId) => new TransferRecord(asset, @from, to, tokenId.Memory.ToArray(), amountItem.GetInteger()),
                 _ => null
             };
         }

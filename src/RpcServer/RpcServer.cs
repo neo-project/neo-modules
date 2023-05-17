@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2022 The Neo Project.
+// Copyright (C) 2015-2023 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -15,7 +15,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
-using Neo.IO;
 using Neo.Json;
 using Neo.Network.P2P;
 using System;
@@ -225,7 +224,8 @@ namespace Neo.Plugins
         private async Task<JObject> ProcessRequestAsync(HttpContext context, JObject request)
         {
             if (!request.ContainsProperty("id")) return null;
-            if (!request.ContainsProperty("method") || !request.ContainsProperty("params") || !(request["params"] is JArray))
+            JToken @params = request["params"] ?? new JArray();
+            if (!request.ContainsProperty("method") || @params is not JArray)
             {
                 return CreateErrorResponse(request["id"], -32600, "Invalid Request");
             }
@@ -237,7 +237,7 @@ namespace Neo.Plugins
                     throw new RpcException(-400, "Access denied");
                 if (!methods.TryGetValue(method, out var func))
                     throw new RpcException(-32601, "Method not found");
-                response["result"] = func((JArray)request["params"]) switch
+                response["result"] = func((JArray)@params) switch
                 {
                     JToken result => result,
                     Task<JToken> task => await task,

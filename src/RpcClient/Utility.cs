@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2022 The Neo Project.
+// Copyright (C) 2015-2023 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -11,6 +11,7 @@
 using Neo.Cryptography.ECC;
 using Neo.Json;
 using Neo.Network.P2P.Payloads;
+using Neo.Network.P2P.Payloads.Conditions;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM.Types;
@@ -68,16 +69,12 @@ namespace Neo.Network.RPC
             if (string.IsNullOrEmpty(key)) { throw new ArgumentNullException(nameof(key)); }
             if (key.StartsWith("0x")) { key = key[2..]; }
 
-            if (key.Length == 52)
+            return key.Length switch
             {
-                return new KeyPair(Wallet.GetPrivateKeyFromWIF(key));
-            }
-            else if (key.Length == 64)
-            {
-                return new KeyPair(key.HexToBytes());
-            }
-
-            throw new FormatException();
+                52 => new KeyPair(Wallet.GetPrivateKeyFromWIF(key)),
+                64 => new KeyPair(key.HexToBytes()),
+                _ => throw new FormatException()
+            };
         }
 
         /// <summary>
@@ -85,27 +82,20 @@ namespace Neo.Network.RPC
         /// </summary>
         /// <param name="account">account address, scripthash or public key string
         /// Example: address ("Ncm9TEzrp8SSer6Wa3UCSLTRnqzwVhCfuE"), scripthash ("0xb0a31817c80ad5f87b6ed390ecb3f9d312f7ceb8"), public key ("02f9ec1fd0a98796cf75b586772a4ddd41a0af07a1dbdf86a7238f74fb72503575")</param>
+        /// <param name="protocolSettings">The protocol settings</param>
         /// <returns></returns>
         public static UInt160 GetScriptHash(string account, ProtocolSettings protocolSettings)
         {
             if (string.IsNullOrEmpty(account)) { throw new ArgumentNullException(nameof(account)); }
             if (account.StartsWith("0x")) { account = account[2..]; }
 
-            if (account.Length == 34)
+            return account.Length switch
             {
-                return Wallets.Helper.ToScriptHash(account, protocolSettings.AddressVersion);
-            }
-            else if (account.Length == 40)
-            {
-                return UInt160.Parse(account);
-            }
-            else if (account.Length == 66)
-            {
-                var pubKey = ECPoint.Parse(account, ECCurve.Secp256r1);
-                return Contract.CreateSignatureRedeemScript(pubKey).ToScriptHash();
-            }
-
-            throw new FormatException();
+                34 => account.ToScriptHash(protocolSettings.AddressVersion),
+                40 => UInt160.Parse(account),
+                66 => Contract.CreateSignatureRedeemScript(ECPoint.Parse(account, ECCurve.Secp256r1)).ToScriptHash(),
+                _ => throw new FormatException(),
+            };
         }
 
         /// <summary>
@@ -188,6 +178,7 @@ namespace Neo.Network.RPC
             return new Signer
             {
                 Account = json["account"].ToScriptHash(protocolSettings),
+                Rules = ((JArray)json["rules"])?.Select(p => RuleFromJson((JObject)p, protocolSettings)).ToArray(),
                 Scopes = (WitnessScope)Enum.Parse(typeof(WitnessScope), json["scopes"].AsString()),
                 AllowedContracts = ((JArray)json["allowedcontracts"])?.Select(p => p.ToScriptHash(protocolSettings)).ToArray(),
                 AllowedGroups = ((JArray)json["allowedgroups"])?.Select(p => ECPoint.Parse(p.AsString(), ECCurve.Secp256r1)).ToArray()
@@ -216,6 +207,32 @@ namespace Neo.Network.RPC
             {
                 InvocationScript = Convert.FromBase64String(json["invocation"].AsString()),
                 VerificationScript = Convert.FromBase64String(json["verification"].AsString())
+            };
+        }
+
+        public static WitnessRule RuleFromJson(JObject json, ProtocolSettings protocolSettings)
+        {
+            return new WitnessRule()
+            {
+                Action = Enum.Parse<WitnessRuleAction>(json["action"].AsString()),
+                Condition = RuleExpressionFromJson((JObject)json["condition"], protocolSettings)
+            };
+        }
+
+        public static WitnessCondition RuleExpressionFromJson(JObject json, ProtocolSettings protocolSettings)
+        {
+            return json["type"].AsString() switch
+            {
+                "Or" => new OrCondition { Expressions = ((JArray)json["expressions"])?.Select(p => RuleExpressionFromJson((JObject)p, protocolSettings)).ToArray() },
+                "And" => new AndCondition { Expressions = ((JArray)json["expressions"])?.Select(p => RuleExpressionFromJson((JObject)p, protocolSettings)).ToArray() },
+                "Boolean" => new BooleanCondition { Expression = json["expression"].AsBoolean() },
+                "Not" => new NotCondition { Expression = RuleExpressionFromJson((JObject)json["expression"], protocolSettings) },
+                "Group" => new GroupCondition { Group = ECPoint.Parse(json["group"].AsString(), ECCurve.Secp256r1) },
+                "CalledByContract" => new CalledByContractCondition { Hash = json["hash"].ToScriptHash(protocolSettings) },
+                "ScriptHash" => new ScriptHashCondition { Hash = json["hash"].ToScriptHash(protocolSettings) },
+                "CalledByEntry" => new CalledByEntryCondition(),
+                "CalledByGroup" => new CalledByGroupCondition { Group = ECPoint.Parse(json["group"].AsString(), ECCurve.Secp256r1) },
+                _ => throw new FormatException("Wrong rule's condition type"),
             };
         }
 
@@ -254,8 +271,9 @@ namespace Neo.Network.RPC
                     return new Pointer(null, (int)json["value"].AsNumber());
                 case StackItemType.InteropInterface:
                     return new InteropInterface(json);
+                default:
+                    return json["value"]?.AsString() ?? StackItem.Null;
             }
-            return json["value"] is null ? StackItem.Null : json["value"].AsString();
         }
 
         public static string GetIteratorId(this StackItem item)

@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2023 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -51,7 +51,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Deploy Contract, return signed transaction
         /// </summary>
-        /// <param name="contractScript">contract script</param>
+        /// <param name="nefFile">neo contract executable file</param>
         /// <param name="manifest">contract manifest</param>
         /// <param name="key">sender KeyPair</param>
         /// <returns></returns>

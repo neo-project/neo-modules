@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2021 The Neo Project.
+// Copyright (C) 2015-2023 The Neo Project.
 //
 // The Neo.Consensus.DBFT is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -157,7 +157,7 @@ namespace Neo.Consensus
                 }
             }
             InitializeConsensus(0);
-            // Issue a ChangeView with NewViewNumber of 0 to request recovery messages on start-up.
+            // Issue a recovery request on start-up in order to possibly catch up with other nodes
             if (!context.WatchOnly)
                 RequestRecovery();
         }

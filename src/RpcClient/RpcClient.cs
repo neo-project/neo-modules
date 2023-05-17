@@ -1,4 +1,4 @@
-// Copyright (C) 2015-2022 The Neo Project.
+// Copyright (C) 2015-2023 The Neo Project.
 //
 // The Neo.Network.RPC is free software distributed under the MIT software license,
 // see the accompanying file LICENSE in the main directory of the
@@ -88,12 +88,13 @@ namespace Neo.Network.RPC
                 Params = paraArgs
             };
         }
-        static RpcResponse AsRpcResponse(string content)
+
+        static RpcResponse AsRpcResponse(string content, bool throwOnError)
         {
             var response = RpcResponse.FromJson((JObject)JToken.Parse(content));
             response.RawResponse = content;
 
-            if (response.Error != null)
+            if (response.Error != null && throwOnError)
             {
                 throw new RpcException(response.Error.Code, response.Error.Message);
             }
@@ -110,7 +111,7 @@ namespace Neo.Network.RPC
             };
         }
 
-        public RpcResponse Send(RpcRequest request)
+        public RpcResponse Send(RpcRequest request, bool throwOnError = true)
         {
             if (disposedValue) throw new ObjectDisposedException(nameof(RpcClient));
 
@@ -118,17 +119,17 @@ namespace Neo.Network.RPC
             using var responseMsg = httpClient.Send(requestMsg);
             using var contentStream = responseMsg.Content.ReadAsStream();
             using var contentReader = new StreamReader(contentStream);
-            return AsRpcResponse(contentReader.ReadToEnd());
+            return AsRpcResponse(contentReader.ReadToEnd(), throwOnError);
         }
 
-        public async Task<RpcResponse> SendAsync(RpcRequest request)
+        public async Task<RpcResponse> SendAsync(RpcRequest request, bool throwOnError = true)
         {
             if (disposedValue) throw new ObjectDisposedException(nameof(RpcClient));
 
             using var requestMsg = AsHttpRequest(request);
             using var responseMsg = await httpClient.SendAsync(requestMsg).ConfigureAwait(false);
             var content = await responseMsg.Content.ReadAsStringAsync();
-            return AsRpcResponse(content);
+            return AsRpcResponse(content, throwOnError);
         }
 
         public virtual JToken RpcSend(string method, params JToken[] paraArgs)
@@ -206,7 +207,7 @@ namespace Neo.Network.RPC
         /// <summary>
         /// Returns the hash value of the corresponding block, based on the specified index.
         /// </summary>
-        public async Task<string> GetBlockHashAsync(int index)
+        public async Task<string> GetBlockHashAsync(uint index)
         {
             var result = await RpcSendAsync(GetRpcName(), index).ConfigureAwait(false);
             return result.AsString();
