@@ -248,8 +248,6 @@ namespace Neo.Consensus
                             totalPrepReq = 1;
                             if (ReverifyAndProcessPayload(prepareRequestPayload)) validPrepReq++;
                         }
-                        else if (context.IsPrimary)
-                            SendPrepareRequest();
                     }
                     ExtensiblePayload[] prepareResponsePayloads = message.GetPrepareResponsePayloads(context);
                     totalPrepResponses = prepareResponsePayloads.Length;
