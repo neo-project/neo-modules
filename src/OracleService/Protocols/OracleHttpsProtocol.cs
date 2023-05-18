@@ -57,7 +57,7 @@ namespace Neo.Plugins
                 {
                     if (!Settings.Default.AllowPrivateHost)
                     {
-                        IPHostEntry entry = await System.Net.Dns.GetHostEntryAsync(uri.Host, cancellation);
+                        IPHostEntry entry = await Dns.GetHostEntryAsync(uri.Host, cancellation);
                         if (entry.IsInternal())
                             return (OracleResponseCode.Forbidden, null);
                     }
