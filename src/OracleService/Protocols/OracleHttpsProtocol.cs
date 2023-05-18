@@ -24,10 +24,7 @@ namespace Neo.Plugins
 {
     class OracleHttpsProtocol : IOracleProtocol
     {
-        private readonly HttpClient client = new(new HttpClientHandler() { AllowAutoRedirect = false })
-        {
-            MaxResponseContentBufferSize = OracleResponse.MaxResultSize
-        };
+        private readonly HttpClient client = new(new HttpClientHandler() { AllowAutoRedirect = false });
 
         public OracleHttpsProtocol()
         {
