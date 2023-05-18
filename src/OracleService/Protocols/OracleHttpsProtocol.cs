@@ -8,7 +8,6 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Akka.IO;
 using Neo.Network.P2P.Payloads;
 using System;
 using System.Linq;
@@ -58,7 +57,7 @@ namespace Neo.Plugins
                 {
                     if (!Settings.Default.AllowPrivateHost)
                     {
-                        IPHostEntry entry = await Dns.GetHostEntryAsync(uri.Host, cancellation);
+                        IPHostEntry entry = await System.Net.Dns.GetHostEntryAsync(uri.Host, cancellation);
                         if (entry.IsInternal())
                             return (OracleResponseCode.Forbidden, null);
                     }
