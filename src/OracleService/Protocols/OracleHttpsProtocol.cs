@@ -8,6 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Akka.IO;
 using Neo.Network.P2P.Payloads;
 using System;
 using System.Linq;
@@ -15,6 +16,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -85,9 +87,26 @@ namespace Neo.Plugins
                 return (OracleResponseCode.Error, message.StatusCode.ToString());
             if (!Settings.Default.AllowedContentTypes.Contains(message.Content.Headers.ContentType.MediaType))
                 return (OracleResponseCode.ContentTypeNotSupported, null);
-            if (!message.Content.Headers.ContentLength.HasValue || message.Content.Headers.ContentLength > OracleResponse.MaxResultSize)
+            if (message.Content.Headers.ContentLength.HasValue && message.Content.Headers.ContentLength > OracleResponse.MaxResultSize)
                 return (OracleResponseCode.ResponseTooLarge, null);
-            return (OracleResponseCode.Success, await message.Content.ReadAsStringAsync(cancellation));
+
+            byte[] buffer = new byte[OracleResponse.MaxResultSize];
+            var stream = message.Content.ReadAsStream(cancellation);
+            var read = await stream.ReadAsync(buffer, 0, buffer.Length, cancellation);
+            var encoding = GetEncoding(message.Content.Headers);
+
+            return (OracleResponseCode.Success, encoding.GetString(buffer, 0, read));
+        }
+
+        private static Encoding GetEncoding(HttpContentHeaders headers)
+        {
+            Encoding encoding = null;
+            if ((headers.ContentType != null) && (headers.ContentType.CharSet != null))
+            {
+                encoding = Encoding.GetEncoding(headers.ContentType.CharSet);
+            }
+
+            return encoding ?? Encoding.UTF8;
         }
     }
 }
