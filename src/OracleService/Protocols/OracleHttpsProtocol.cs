@@ -86,11 +86,14 @@ namespace Neo.Plugins
             if (message.Content.Headers.ContentLength.HasValue && message.Content.Headers.ContentLength > OracleResponse.MaxResultSize)
                 return (OracleResponseCode.ResponseTooLarge, null);
 
-            byte[] buffer = new byte[OracleResponse.MaxResultSize];
+            byte[] buffer = new byte[OracleResponse.MaxResultSize + 1];
             var stream = message.Content.ReadAsStream(cancellation);
             var read = await stream.ReadAsync(buffer, 0, buffer.Length, cancellation);
-            var encoding = GetEncoding(message.Content.Headers);
 
+            if (read > OracleResponse.MaxResultSize)
+                return (OracleResponseCode.ResponseTooLarge, null);
+
+            var encoding = GetEncoding(message.Content.Headers);
             return (OracleResponseCode.Success, encoding.GetString(buffer, 0, read));
         }
 
