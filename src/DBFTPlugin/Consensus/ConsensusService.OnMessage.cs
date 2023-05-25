@@ -93,6 +93,12 @@ namespace Neo.Consensus
                 return;
             }
 
+            if (message.TransactionHashes.Any(p => NativeContract.Ledger.ContainsConflictHash(context.Snapshot, p)))
+            {
+                Log($"Invalid request: transaction has on-chain conflict", LogLevel.Warning);
+                return;
+            }
+
             // Timeout extension: prepare request has been received with success
             // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
             ExtendTimerByFactor(2);
