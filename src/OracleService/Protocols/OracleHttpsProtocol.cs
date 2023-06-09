@@ -94,7 +94,10 @@ namespace Neo.Plugins
                 return (OracleResponseCode.ResponseTooLarge, null);
 
             var encoding = GetEncoding(message.Content.Headers);
-            return (OracleResponseCode.Success, encoding.GetString(buffer, 0, read));
+            if (!encoding.Equals(Encoding.UTF8))
+                return (OracleResponseCode.ContentTypeNotSupported, null);
+
+            return (OracleResponseCode.Success, Utility.StrictUTF8.GetString(buffer, 0, read));
         }
 
         private static Encoding GetEncoding(HttpContentHeaders headers)
