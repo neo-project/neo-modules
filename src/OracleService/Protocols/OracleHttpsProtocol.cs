@@ -95,7 +95,7 @@ namespace Neo.Plugins
 
             var encoding = GetEncoding(message.Content.Headers);
             if (!encoding.Equals(Encoding.UTF8))
-                return (OracleResponseCode.ContentTypeNotSupported, null);
+                return (OracleResponseCode.Error, null);
 
             return (OracleResponseCode.Success, Utility.StrictUTF8.GetString(buffer, 0, read));
         }
