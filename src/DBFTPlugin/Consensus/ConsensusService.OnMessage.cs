@@ -93,12 +93,6 @@ namespace Neo.Consensus
                 return;
             }
 
-            if (message.TransactionHashes.Any(p => NativeContract.Ledger.ContainsConflictHash(context.Snapshot, p)))
-            {
-                Log($"Invalid request: transaction has on-chain conflict", LogLevel.Warning);
-                return;
-            }
-
             // Timeout extension: prepare request has been received with success
             // around 2*15/M=30.0/5 ~ 40% block time (for M=5)
             ExtendTimerByFactor(2);
@@ -133,13 +127,26 @@ namespace Neo.Consensus
             {
                 if (mempoolVerified.TryGetValue(hash, out Transaction tx))
                 {
+                    if (NativeContract.Ledger.ContainsConflictHash(context.Snapshot, hash, tx.Signers.Select(s => s.Account)))
+                    {
+                        Log($"Invalid request: transaction has on-chain conflict", LogLevel.Warning);
+                        return;
+                    }
+
                     if (!AddTransaction(tx, false))
                         return;
                 }
                 else
                 {
                     if (neoSystem.MemPool.TryGetValue(hash, out tx))
+                    {
+                        if (NativeContract.Ledger.ContainsConflictHash(context.Snapshot, hash, tx.Signers.Select(s => s.Account)))
+                        {
+                            Log($"Invalid request: transaction has on-chain conflict", LogLevel.Warning);
+                            return;
+                        }
                         unverified.Add(tx);
+                    }
                 }
             }
             foreach (Transaction tx in unverified)
