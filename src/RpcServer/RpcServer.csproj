@@ -3,6 +3,8 @@
   <PropertyGroup>
     <PackageId>Neo.Plugins.RpcServer</PackageId>
     <RootNamespace>Neo.Plugins</RootNamespace>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>10</LangVersion>
   </PropertyGroup>
   
 </Project>

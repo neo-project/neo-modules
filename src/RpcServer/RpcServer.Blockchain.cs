@@ -219,7 +219,7 @@ namespace Neo.Plugins
 
             JObject json = new();
             JArray jarr = new();
-            int pageSize = 50;
+            int pageSize = settings.FindStoragePageSize;
             int i = 0;
 
             using (var iter = snapshot.Find(prefix_key).Skip(count: start).GetEnumerator())
