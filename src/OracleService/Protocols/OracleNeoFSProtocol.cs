@@ -8,18 +8,18 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.Cryptography.ECC;
-using Neo.FileStorage.API.Client;
-using Neo.FileStorage.API.Cryptography;
-using Neo.FileStorage.API.Refs;
-using Neo.Network.P2P.Payloads;
-using Neo.Wallets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using Neo.Cryptography.ECC;
+using Neo.FileStorage.API.Client;
+using Neo.FileStorage.API.Cryptography;
+using Neo.FileStorage.API.Refs;
+using Neo.Network.P2P.Payloads;
+using Neo.Wallets;
 using Object = Neo.FileStorage.API.Object.Object;
 using Range = Neo.FileStorage.API.Object.Range;
 
@@ -49,9 +49,9 @@ namespace Neo.Plugins
             Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"Request: {uri.AbsoluteUri}");
             try
             {
-                string res = await GetAsync(uri, Settings.Default.NeoFS.EndPoint, cancellation);
-                Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"NeoFS result: {res}");
-                return (OracleResponseCode.Success, res);
+                (OracleResponseCode code, string data) = await GetAsync(uri, Settings.Default.NeoFS.EndPoint, cancellation);
+                Utility.Log(nameof(OracleNeoFSProtocol), LogLevel.Debug, $"NeoFS result, code: {code}, data: {data}");
+                return (code, data);
             }
             catch (Exception e)
             {
@@ -69,7 +69,7 @@ namespace Neo.Plugins
         /// <param name="host">Client host.</param>
         /// <param name="cancellation">Cancellation token object.</param>
         /// <returns>Returns neofs object.</returns>
-        private async Task<string> GetAsync(Uri uri, string host, CancellationToken cancellation)
+        private async Task<(OracleResponseCode, string)> GetAsync(Uri uri, string host, CancellationToken cancellation)
         {
             string[] ps = uri.AbsolutePath.Split("/");
             if (ps.Length < 2) throw new FormatException("Invalid neofs url");
@@ -84,28 +84,42 @@ namespace Neo.Plugins
             var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
             tokenSource.CancelAfter(Settings.Default.NeoFS.Timeout);
             if (ps.Length == 2)
-                return await GetPayloadAsync(client, objectAddr, tokenSource.Token);
-            return await (ps[2] switch
+                return GetPayload(client, objectAddr, tokenSource.Token);
+            return ps[2] switch
             {
-                "range" => GetRangeAsync(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
-                "header" => GetHeaderAsync(client, objectAddr, tokenSource.Token),
-                "hash" => GetHashAsync(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
+                "range" => await GetRangeAsync(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token),
+                "header" => (OracleResponseCode.Success, await GetHeaderAsync(client, objectAddr, tokenSource.Token)),
+                "hash" => (OracleResponseCode.Success, await GetHashAsync(client, objectAddr, ps.Skip(3).ToArray(), tokenSource.Token)),
                 _ => throw new Exception("invalid command")
-            });
+            };
         }
 
-        private static async Task<string> GetPayloadAsync(Client client, Address addr, CancellationToken cancellation)
+        private static (OracleResponseCode, string) GetPayload(Client client, Address addr, CancellationToken cancellation)
         {
-            Object obj = await client.GetObject(addr, options: new CallOptions { Ttl = 2 }, context: cancellation);
-            return obj.Payload.ToString(Utility.StrictUTF8);
+            var objReader = client.GetObjectInit(addr, options: new CallOptions { Ttl = 2 }, context: cancellation);
+            var obj = objReader.ReadHeader();
+            if (obj.PayloadSize > OracleResponse.MaxResultSize)
+                return (OracleResponseCode.ResponseTooLarge, "");
+            var payload = new byte[obj.PayloadSize];
+            int offset = 0;
+            while (true)
+            {
+                if ((ulong)offset > obj.PayloadSize) return (OracleResponseCode.ResponseTooLarge, "");
+                (byte[] chunk, bool ok) = objReader.ReadChunk();
+                if (!ok) break;
+                Array.Copy(chunk, 0, payload, offset, chunk.Length);
+                offset += chunk.Length;
+            }
+            return (OracleResponseCode.Success, Utility.StrictUTF8.GetString(payload));
         }
 
-        private static async Task<string> GetRangeAsync(Client client, Address addr, string[] ps, CancellationToken cancellation)
+        private static async Task<(OracleResponseCode, string)> GetRangeAsync(Client client, Address addr, string[] ps, CancellationToken cancellation)
         {
             if (ps.Length == 0) throw new FormatException("missing object range (expected 'Offset|Length')");
             Range range = ParseRange(ps[0]);
+            if (range.Length > OracleResponse.MaxResultSize) return (OracleResponseCode.ResponseTooLarge, "");
             var res = await client.GetObjectPayloadRangeData(addr, range, options: new CallOptions { Ttl = 2 }, context: cancellation);
-            return Utility.StrictUTF8.GetString(res);
+            return (OracleResponseCode.Success, Utility.StrictUTF8.GetString(res));
         }
 
         private static async Task<string> GetHeaderAsync(Client client, Address addr, CancellationToken cancellation)
