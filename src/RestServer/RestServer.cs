@@ -1,7 +1,9 @@
+using Akka.Actor;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.DependencyInjection;
+using Neo.Network.P2P;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
@@ -14,6 +16,7 @@ namespace Neo.Plugins.RestServer
 
         private readonly NeoSystem _neosystem;
         private readonly RestServerSettings _settings;
+        private readonly LocalNode _neoLocalNode;
 
         private IWebHost _host;
 
@@ -22,6 +25,7 @@ namespace Neo.Plugins.RestServer
         public RestServer(NeoSystem neoSystem, RestServerSettings settings)
         {
             _neosystem = neoSystem;
+            _neoLocalNode = neoSystem.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             _settings = settings;
         }
 
@@ -43,6 +47,7 @@ namespace Neo.Plugins.RestServer
                 {
                     // dependency injection
                     services.AddSingleton(_neosystem);
+                    services.AddSingleton(_neoLocalNode);
                     services.AddSingleton(_settings);
 
                     // Server configuration
