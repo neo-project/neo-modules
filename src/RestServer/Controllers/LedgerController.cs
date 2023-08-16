@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2023 The Neo Project.
+//
+// The Neo.Plugins.RestServer is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using Microsoft.AspNetCore.Mvc;
 using Neo.SmartContract.Native;
 using Microsoft.AspNetCore.Http;
@@ -32,7 +42,7 @@ namespace Neo.Plugins.Controllers
             //var start = (skip - 1) * take + startIndex;
             //var end = start + take;
             var start = NativeContract.Ledger.CurrentIndex(_neosystem.StoreView) - ((skip - 1) * take);
-            var end =  start - take;
+            var end = start - take;
             var lstOfBlocks = new List<BlockHeaderModel>();
             for (uint i = start; i > end; i--)
             {
@@ -96,7 +106,7 @@ namespace Neo.Plugins.Controllers
             var block = NativeContract.Ledger.GetBlock(_neosystem.StoreView, blockIndex);
             if (block == null) return NotFound();
             if (block.Transactions == null || block.Transactions.Length == 0) return NoContent();
-            return Ok(block.Transactions.Skip((skip -1) * take).Take(take).Select(s => s.ToModel()));
+            return Ok(block.Transactions.Skip((skip - 1) * take).Take(take).Select(s => s.ToModel()));
         }
 
         #endregion
