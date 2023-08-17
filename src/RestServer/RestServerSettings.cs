@@ -24,6 +24,8 @@ namespace Neo.Plugins.RestServer
         public uint Network { get; init; }
         public IPAddress BindAddress { get; init; }
         public uint Port { get; init; }
+        public bool AllowCors { get; init; }
+        public uint StartUpDelay { get; init; }
         public JsonSerializerSettings JsonSerializerSettings { get; init; }
 
         #endregion
@@ -35,6 +37,8 @@ namespace Neo.Plugins.RestServer
             Network = 860833102u,
             BindAddress = IPAddress.None,
             Port = 10339u,
+            AllowCors = true,
+            StartUpDelay = 2000,
             JsonSerializerSettings = new JsonSerializerSettings()
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -66,6 +70,8 @@ namespace Neo.Plugins.RestServer
                 Network = section.GetValue(nameof(Network), Default.Network),
                 BindAddress = IPAddress.Parse(section.GetSection(nameof(BindAddress)).Value),
                 Port = section.GetValue(nameof(Port), Default.Port),
+                AllowCors = section.GetValue(nameof(AllowCors), Default.AllowCors),
+                StartUpDelay = section.GetValue(nameof(StartUpDelay), Default.StartUpDelay),
                 JsonSerializerSettings = Default.JsonSerializerSettings,
             };
 

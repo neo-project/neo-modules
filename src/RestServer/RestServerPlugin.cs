@@ -18,7 +18,7 @@ namespace Neo.Plugins.RestServer
         #region Globals
 
         private RestServerSettings _settings;
-        private RestServer _server;
+        private RestWebServer _server;
 
         #endregion
 
@@ -30,8 +30,19 @@ namespace Neo.Plugins.RestServer
         protected override void OnSystemLoaded(NeoSystem system)
         {
             if (system.Settings.Network != _settings.Network) return;
-            _server = new RestServer(system, _settings);
-            _server.StartRestServer();
+            
+            _server = new RestWebServer(system, _settings);
+            _ = Task.Run(SetupAndStartServer);
         }
+
+        #region MyRegion
+
+        public void SetupAndStartServer()
+        {
+            Thread.Sleep(unchecked((int)_settings.StartUpDelay));
+            _server.Start();
+        }
+
+        #endregion
     }
 }
