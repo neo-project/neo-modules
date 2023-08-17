@@ -11,6 +11,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Neo.Plugins.Helpers;
+using Neo.Plugins.RestServer;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.SmartContract.Native;
 using Newtonsoft.Json.Linq;
@@ -20,14 +21,15 @@ namespace Neo.Plugins.Controllers
     [Route("/api/v1/contracts")]
     public class ContractsController : ControllerBase
     {
-        private const int _max_page_size = 50;
+        private readonly int _max_page_size;
 
         private readonly NeoSystem _neosystem;
 
         public ContractsController(
-            NeoSystem neoSystem)
+            NeoSystem neoSystem, RestServerSettings restsettings)
         {
             _neosystem = neoSystem;
+            _max_page_size = unchecked((int)restsettings.MaxPageSize);
         }
 
         [HttpGet]

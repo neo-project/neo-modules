@@ -26,6 +26,7 @@ namespace Neo.Plugins.RestServer
         public uint Port { get; init; }
         public bool AllowCors { get; init; }
         public uint StartUpDelay { get; init; }
+        public uint MaxPageSize { get; init; }
         public JsonSerializerSettings JsonSerializerSettings { get; init; }
 
         #endregion
@@ -39,6 +40,7 @@ namespace Neo.Plugins.RestServer
             Port = 10339u,
             AllowCors = true,
             StartUpDelay = 2000,
+            MaxPageSize = 50,
             JsonSerializerSettings = new JsonSerializerSettings()
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -72,6 +74,7 @@ namespace Neo.Plugins.RestServer
                 Port = section.GetValue(nameof(Port), Default.Port),
                 AllowCors = section.GetValue(nameof(AllowCors), Default.AllowCors),
                 StartUpDelay = section.GetValue(nameof(StartUpDelay), Default.StartUpDelay),
+                MaxPageSize = section.GetValue(nameof(MaxPageSize), Default.MaxPageSize),
                 JsonSerializerSettings = Default.JsonSerializerSettings,
             };
 

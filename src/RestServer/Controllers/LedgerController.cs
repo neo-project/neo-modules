@@ -13,20 +13,22 @@ using Neo.SmartContract.Native;
 using Microsoft.AspNetCore.Http;
 using Neo.Plugins.RestServer.Models;
 using Neo.Plugins.RestServer.Extensions;
+using Neo.Plugins.RestServer;
 
 namespace Neo.Plugins.Controllers
 {
     [Route("/api/v1/ledger")]
     public class LedgerController : ControllerBase
     {
-        private const int _max_page_size = 50;
+        private readonly int _max_page_size;
 
         private readonly NeoSystem _neosystem;
 
         public LedgerController(
-            NeoSystem neoSystem)
+            NeoSystem neoSystem, RestServerSettings restsettings)
         {
             _neosystem = neoSystem;
+            _max_page_size = unchecked((int)restsettings.MaxPageSize);
         }
 
         #region Blocks
