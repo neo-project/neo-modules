@@ -73,6 +73,9 @@ namespace Neo.Plugins.RestServer
                                     policy.AllowAnyOrigin()
                                     .AllowAnyHeader()
                                     .WithMethods("GET", "POST");
+                                    // The CORS specification states that setting origins to "*" (all origins)
+                                    // is invalid if the Access-Control-Allow-Credentials header is present.
+                                    //.AllowCredentials() 
                                 });
                             });
                         else
