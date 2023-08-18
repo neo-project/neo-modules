@@ -19,17 +19,17 @@ using Newtonsoft.Json.Linq;
 namespace Neo.Plugins.Controllers
 {
     [Route("/api/v1/contracts")]
+    [ApiController]
     public class ContractsController : ControllerBase
     {
-        private readonly int _max_page_size;
-
+        private readonly uint _maxPageSize;
         private readonly NeoSystem _neosystem;
 
         public ContractsController(
-            NeoSystem neoSystem, RestServerSettings restsettings)
+            RestServerSettings restsettings)
         {
-            _neosystem = neoSystem;
-            _max_page_size = unchecked((int)restsettings.MaxPageSize);
+            _neosystem = RestServerPlugin.NeoSystem;
+            _maxPageSize = restsettings.MaxPageSize;
         }
 
         [HttpGet]
@@ -39,7 +39,7 @@ namespace Neo.Plugins.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 1 || take < 1 || take > _max_page_size) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
+            if (skip < 1 || take < 1 || take > _maxPageSize) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
             var contracts = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView);
             if (contracts.Any() == false) return NoContent();
             var contractRequestList = contracts.OrderBy(o => o.Manifest.Name).Skip((skip - 1) * take).Take(take);

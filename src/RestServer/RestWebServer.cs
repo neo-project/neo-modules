@@ -12,36 +12,34 @@ using Akka.Actor;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.DependencyInjection;
 using Neo.ConsoleService;
 using Neo.Network.P2P;
+using Neo.Plugins.Middleware;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Collections.Concurrent;
+using System.IO.Compression;
+using System.Net.Mime;
 using System.Reflection;
 
 namespace Neo.Plugins.RestServer
 {
-    public partial class RestWebServer
+    internal class RestWebServer
     {
         #region Globals
 
-        private static readonly ConcurrentDictionary<Type, object> _diAddons = new();
-
-        private readonly NeoSystem _neosystem;
         private readonly RestServerSettings _settings;
-        private readonly LocalNode _neoLocalNode;
 
         private IWebHost _host;
-        
+
         #endregion
 
         public static bool IsRunning { get; private set; }
 
-        public RestWebServer(NeoSystem neoSystem, RestServerSettings settings)
+        public RestWebServer(RestServerSettings settings)
         {
-            _neosystem = neoSystem;
-            _neoLocalNode = neoSystem.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             _settings = settings;
         }
 
@@ -49,42 +47,62 @@ namespace Neo.Plugins.RestServer
         {
             if (IsRunning) return;
 
-            IsRunning = true;
-            _host = new WebHostBuilder().UseKestrel(options =>
-                options.Listen(_settings.BindAddress, (int)_settings.Port, listenOptions =>
+            _host = new WebHostBuilder()
+                .UseKestrel(options =>
                 {
-
-                }))
-                .Configure(app =>
-                {
-#if DEBUG
-                    app.UseDeveloperExceptionPage();
-#endif
-                    app.UseForwardedHeaders();
-                    app.UseRouting();
-                    app.UseCors();
-                    app.UseMvc(); // need this to map controllers
+                    // Web server configuration
+                    options.AddServerHeader = false;
+                    options.Limits.MaxConcurrentConnections = _settings.MaxConcurrentConnections;
+                    options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(_settings.KeepAliveTimeout);
+                    options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(15);
+                    options.Listen(_settings.BindAddress, unchecked((int)_settings.Port));
                 })
                 .ConfigureServices(services =>
                 {
                     // dependency injection
-                    services.AddSingleton(_neosystem);
-                    services.AddSingleton(_neoLocalNode);
                     services.AddSingleton(_settings);
 
-                    foreach (var addon in _diAddons)
-                        services.AddSingleton(addon.Key, addon.Value);
-
                     // Server configuration
-                    if (_settings.AllowCors)
-                        services.AddCors(options => options.AddDefaultPolicy(policy => policy.AllowAnyOrigin().AllowAnyHeader().WithMethods("GET", "POST")));
+                    if (_settings.EnableCors)
+                    {
+                        if (_settings.AllowCorsUrls.Length == 0)
+                            services.AddCors(options =>
+                            {
+                                options.AddDefaultPolicy(policy =>
+                                {
+                                    policy.AllowAnyOrigin()
+                                    .AllowAnyHeader()
+                                    .WithMethods("GET", "POST");
+                                });
+                            });
+                        else
+                            services.AddCors(options =>
+                            {
+                                options.AddDefaultPolicy(policy =>
+                                {
+                                    policy.WithOrigins(_settings.AllowCorsUrls)
+                                    .AllowAnyHeader()
+                                    .AllowCredentials()
+                                    .WithMethods("GET", "POST");
+                                });
+                            });
+                    }
+
                     services.AddRouting(options => options.LowercaseUrls = options.LowercaseQueryStrings = true);
-                    var controllers = services.AddControllers(options => options.EnableEndpointRouting = false);//.AddApplicationPart(Assembly.GetAssembly(typeof(HomeController)));
+                    services.AddResponseCompression(options =>
+                    {
+                        options.EnableForHttps = false;
+                        options.Providers.Add<GzipCompressionProvider>();
+                        options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Append(MediaTypeNames.Application.Json);
+                    });
+
+                    var controllers = services.AddControllers(options => options.EnableEndpointRouting = false);
 
                     // Load all plugins Controllers
                     foreach (var plugin in Plugin.Plugins)
                         controllers.AddApplicationPart(Assembly.GetAssembly(plugin.GetType()));
 
+                    // Json Binding for http server
                     controllers.AddNewtonsoftJson(options =>
                     {
                         options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
@@ -96,26 +114,23 @@ namespace Neo.Plugins.RestServer
 
                     // Service configuration
                     services.Configure<ForwardedHeadersOptions>(options => options.ForwardedHeaders = ForwardedHeaders.XForwardedFor);
+                    services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.SmallestSize);
+                })
+                .Configure(app =>
+                {
+#if DEBUG
+                    app.UseDeveloperExceptionPage();
+#endif
+                    app.UseForwardedHeaders();
+                    app.UseRouting();
+                    app.UseCors();
+                    app.UseResponseCompression();
+                    app.UseMiddleware<RestServerMiddleware>(_settings);
+                    app.UseMvc();
                 })
                 .Build();
             _host.Start();
+            IsRunning = true;
         }
-
-        #region Static Functions
-
-        public static bool AddSingleton<T>(T service) where T : class
-        {
-            if (IsRunning)
-            {
-                ConsoleHelper.Error("Some plugins services couldn\'t be loaded correctly.");
-                ConsoleHelper.Info("Try increasing StartUpDelay by 1000 in config.json for RestServer");
-                ConsoleHelper.Info("and restart node.");
-                return false;
-            }
-            else
-                return _diAddons.TryAdd(typeof(T), service);
-        }
-
-        #endregion
     }
 }

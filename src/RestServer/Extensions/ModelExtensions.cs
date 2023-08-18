@@ -18,7 +18,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Neo.Plugins.RestServer.Extensions
 {
-    public static class ModelExtensions
+    internal static class ModelExtensions
     {
         public static ExecutionEngineModel ToModel(this ApplicationEngine ae) =>
             new()

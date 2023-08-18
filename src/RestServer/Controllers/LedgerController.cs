@@ -18,17 +18,17 @@ using Neo.Plugins.RestServer;
 namespace Neo.Plugins.Controllers
 {
     [Route("/api/v1/ledger")]
+    [ApiController]
     public class LedgerController : ControllerBase
     {
-        private readonly int _max_page_size;
-
+        private readonly uint _maxPageSize;
         private readonly NeoSystem _neosystem;
 
         public LedgerController(
-            NeoSystem neoSystem, RestServerSettings restsettings)
+            RestServerSettings restsettings)
         {
-            _neosystem = neoSystem;
-            _max_page_size = unchecked((int)restsettings.MaxPageSize);
+            _neosystem = RestServerPlugin.NeoSystem;
+            _maxPageSize = restsettings.MaxPageSize;
         }
 
         #region Blocks
@@ -40,7 +40,7 @@ namespace Neo.Plugins.Controllers
             [FromQuery(Name = "size")]
             uint take = 1)
         {
-            if (skip < 1 || take < 1 || take > _max_page_size) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
+            if (skip < 1 || take < 1 || take > _maxPageSize) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
             //var start = (skip - 1) * take + startIndex;
             //var end = start + take;
             var start = NativeContract.Ledger.CurrentIndex(_neosystem.StoreView) - ((skip - 1) * take);
@@ -104,7 +104,7 @@ namespace Neo.Plugins.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 1 || take < 1 || take > _max_page_size) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
+            if (skip < 1 || take < 1 || take > _maxPageSize) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
             var block = NativeContract.Ledger.GetBlock(_neosystem.StoreView, blockIndex);
             if (block == null) return NotFound();
             if (block.Transactions == null || block.Transactions.Length == 0) return NoContent();
@@ -171,7 +171,7 @@ namespace Neo.Plugins.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 0 || take < 0 || take > _max_page_size) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
+            if (skip < 0 || take < 0 || take > _maxPageSize) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
             if (_neosystem.MemPool.Any() == false) return NoContent();
             return Ok(_neosystem.MemPool.Skip((skip - 1) * take).Take(take).Select(s => s.ToModel()));
         }
@@ -192,7 +192,7 @@ namespace Neo.Plugins.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 0 || take < 0 || take > _max_page_size) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
+            if (skip < 0 || take < 0 || take > _maxPageSize) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
             if (_neosystem.MemPool.Any() == false) return NoContent();
             var vTx = _neosystem.MemPool.GetVerifiedTransactions();
             if (vTx.Any() == false) return NoContent();
@@ -206,7 +206,7 @@ namespace Neo.Plugins.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 0 || take < 0 || take > _max_page_size) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
+            if (skip < 0 || take < 0 || take > _maxPageSize) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
             if (_neosystem.MemPool.Any() == false) return NoContent();
             _neosystem.MemPool.GetVerifiedAndUnverifiedTransactions(out _, out var unVerifiedTransactions);
             if (unVerifiedTransactions.Any() == false) return NoContent();

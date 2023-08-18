@@ -21,7 +21,7 @@ using Neo.Cryptography.ECC;
 
 namespace Neo.Plugins.Helpers
 {
-    public static class ScriptHelper
+    internal static class ScriptHelper
     {
         public static bool InvokeMethod(ProtocolSettings protocolSettings, DataCache snapshot, UInt160 scriptHash, string method, out StackItem[] results, params object[] args)
         {

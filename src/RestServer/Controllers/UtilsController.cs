@@ -9,19 +9,20 @@
 // modifications are permitted.
 
 using Microsoft.AspNetCore.Mvc;
+using Neo.Plugins.RestServer;
 using Neo.Wallets;
 
 namespace Neo.Plugins.Controllers
 {
     [Route("/api/v1/utils")]
+    [ApiController]
     public class UtilsController : ControllerBase
     {
         private readonly NeoSystem _neosystem;
 
-        public UtilsController(
-            NeoSystem neoSystem)
+        public UtilsController()
         {
-            _neosystem = neoSystem;
+            _neosystem = RestServerPlugin.NeoSystem;
         }
 
         [HttpGet("{hash:required}/address")]

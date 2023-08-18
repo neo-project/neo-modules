@@ -24,12 +24,13 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
 
         public override void WriteJson(JsonWriter writer, ECPoint value, JsonSerializer serializer)
         {
-            var o = new JObject()
-            {
-                new JProperty("type", "PublicKey"),
-                new JProperty("value", value.ToString()),
-            };
-            o.WriteTo(writer);
+            //var o = new JObject()
+            //{
+            //    new JProperty("type", "PublicKey"),
+            //    new JProperty("value", value.ToString()),
+            //};
+            //o.WriteTo(writer);
+            writer.WriteValue(Convert.ToHexString(value.EncodePoint(true)));
         }
     }
 }

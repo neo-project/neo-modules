@@ -3,8 +3,13 @@
     "Network": 860833102,
     "BindAddress": "127.0.0.1",
     "Port": 10339,
-    "AllowCors": true,
-    "StartUpDelay": 2000,
-    "MaxPageSize":  50
+    "MaxPageSize": 50,
+    "MaxConcurrentConnections": 40,
+    "EnableBasicAuth": false,
+    "RestUser": "",
+    "RestPass": "",
+    "EnableCors": true,
+    "AllowCorsUrls": [],
+    "DisableUrlPaths": []
   }
 }

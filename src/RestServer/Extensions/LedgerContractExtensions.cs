@@ -19,7 +19,7 @@ using Neo.Plugins.RestServer.Models;
 
 namespace Neo.Plugins.RestServer.Extensions
 {
-    public static class LedgerContractExtensions
+    internal static class LedgerContractExtensions
     {
         private const byte _prefix_block = 5;
         private const byte _prefix_transaction = 11;
@@ -86,50 +86,6 @@ namespace Neo.Plugins.RestServer.Extensions
                     if (index >= page && index < (pageSize + page))
                         yield return value.GetInteroperable<TransactionState>();
                     index++;
-                }
-                else
-                    yield break;
-            }
-        }
-
-        public static IEnumerable<AccountDetails> ListAccounts(this GasToken gasToken, DataCache snapshot)
-        {
-            ArgumentNullException.ThrowIfNull(nameof(snapshot));
-            var kb = new KeyBuilder(gasToken.Id, _prefix_account);
-            var prefixKey = kb.ToArray();
-            foreach (var (key, value) in snapshot.Seek(prefixKey, SeekDirection.Forward))
-            {
-                if (key.ToArray().AsSpan().StartsWith(prefixKey))
-                {
-                    var addressHash = new UInt160(key.ToArray().AsSpan(5));
-                    yield return new AccountDetails()
-                    {
-                        Account = addressHash,
-                        WalletAddress = addressHash.ToAddress(ProtocolSettings.Default.AddressVersion),
-                        Balance = value.GetInteroperable<AccountState>().Balance,
-                    };
-                }
-                else
-                    yield break;
-            }
-        }
-
-        public static IEnumerable<AccountDetails> ListAccounts(this NeoToken neoToken, DataCache snapshot)
-        {
-            ArgumentNullException.ThrowIfNull(nameof(snapshot));
-            var kb = new KeyBuilder(neoToken.Id, _prefix_account);
-            var prefixKey = kb.ToArray();
-            foreach (var (key, value) in snapshot.Seek(prefixKey, SeekDirection.Forward))
-            {
-                if (key.ToArray().AsSpan().StartsWith(prefixKey))
-                {
-                    var addressHash = new UInt160(key.ToArray().AsSpan(5));
-                    yield return new AccountDetails()
-                    {
-                        Account = addressHash,
-                        WalletAddress = addressHash.ToAddress(ProtocolSettings.Default.AddressVersion),
-                        Balance = value.GetInteroperable<AccountState>().Balance,
-                    };
                 }
                 else
                     yield break;

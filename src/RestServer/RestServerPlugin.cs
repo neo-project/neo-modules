@@ -8,6 +8,9 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Akka.Actor;
+using Neo.Network.P2P;
+
 namespace Neo.Plugins.RestServer
 {
     public class RestServerPlugin : Plugin
@@ -22,6 +25,9 @@ namespace Neo.Plugins.RestServer
 
         #endregion
 
+        internal static NeoSystem NeoSystem { get; private set; }
+        internal static LocalNode LocalNode { get; private set; }
+
         protected override void Configure()
         {
             _settings = RestServerSettings.Load(GetConfiguration());
@@ -30,19 +36,11 @@ namespace Neo.Plugins.RestServer
         protected override void OnSystemLoaded(NeoSystem system)
         {
             if (system.Settings.Network != _settings.Network) return;
-            
-            _server = new RestWebServer(system, _settings);
-            _ = Task.Run(SetupAndStartServer);
-        }
 
-        #region MyRegion
-
-        public void SetupAndStartServer()
-        {
-            Thread.Sleep(unchecked((int)_settings.StartUpDelay));
+            NeoSystem = system;
+            LocalNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
+            _server = new RestWebServer(_settings);
             _server.Start();
         }
-
-        #endregion
     }
 }

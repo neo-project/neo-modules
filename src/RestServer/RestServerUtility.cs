@@ -18,7 +18,7 @@ using Buffer = Neo.VM.Types.Buffer;
 
 namespace Neo.Plugins.RestServer
 {
-    public static class RestServerUtility
+    internal static class RestServerUtility
     {
 
         public static StackItem StackItemFromJToken(JToken json)
