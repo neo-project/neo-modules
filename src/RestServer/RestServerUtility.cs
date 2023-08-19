@@ -28,6 +28,22 @@ namespace Neo.Plugins.RestServer
             return address.ToScriptHash(settings.AddressVersion);
         }
 
+        public static bool TryConvertToScriptHash(string address, ProtocolSettings settings, out UInt160 scriptHash)
+        {
+            try
+            {
+                if (UInt160.TryParse(address, out scriptHash) == false)
+                    return true;
+                scriptHash = address.ToScriptHash(settings.AddressVersion);
+                return true;
+            }
+            catch
+            {
+                scriptHash = UInt160.Zero;
+                return false;
+            }
+        }
+
         public static StackItem StackItemFromJToken(JToken json)
         {
             StackItem s = StackItem.Null;

@@ -10,16 +10,10 @@
 
 namespace Neo.Plugins.RestServer.Models.Wallet
 {
-    public enum WalletKeyFormat : byte
-    {
-        WIF = 0,
-        HEX = 1,
-    }
-
     internal class WalletExportKeyModel
     {
-        public string Public { get; set; }
-        public string Private { get; set; }
-        public WalletKeyFormat Format { get; set; }
+        public UInt160 ScriptHash { get; set; }
+        public string Address { get; set; }
+        public string Wif { get; set; }
     }
 }
