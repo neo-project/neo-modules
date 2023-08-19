@@ -18,7 +18,7 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
         {
             //var o = JObject.Load(reader);
             //return UInt160.Parse(o["value"].ToObject<string>());
-            return UInt160.Parse(reader.ReadAsString());
+            return RestServerUtility.ConvertToScriptHash(reader.ReadAsString(), RestServerPlugin.NeoSystem.Settings);
         }
 
         public override void WriteJson(JsonWriter writer, UInt160 value, JsonSerializer serializer)

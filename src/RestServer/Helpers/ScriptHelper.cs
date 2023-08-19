@@ -18,6 +18,8 @@ using Array = System.Array;
 using Newtonsoft.Json.Linq;
 using System.Numerics;
 using Neo.Cryptography.ECC;
+using Neo.Network.P2P.Payloads;
+using System;
 
 namespace Neo.Plugins.RestServer.Helpers
 {
@@ -41,6 +43,23 @@ namespace Neo.Plugins.RestServer.Helpers
             byte[] script = scriptBuilder.ToArray();
             using var engine = ApplicationEngine.Run(script, snapshot, settings: protocolSettings, gas: restSettings.MaxInvokeGas);
             return engine;
+        }
+
+        public static ApplicationEngine InvokeScript(RestServerSettings restSettings, ReadOnlyMemory<byte> script, Signer[] signers = null, Witness[] witnesses = null)
+        {
+            var neosystem = RestServerPlugin.NeoSystem;
+            var snapshot = neosystem.GetSnapshot();
+            Transaction tx = signers == null ? null : new Transaction
+            {
+                Version = 0,
+                Nonce = (uint)Random.Shared.Next(),
+                ValidUntilBlock = NativeContract.Ledger.CurrentIndex(snapshot) + neosystem.Settings.MaxValidUntilBlockIncrement,
+                Signers = signers,
+                Attributes = Array.Empty<TransactionAttribute>(),
+                Script = script,
+                Witnesses = witnesses
+            };
+            return ApplicationEngine.Run(script, snapshot, tx, settings: neosystem.Settings, gas: restSettings.MaxInvokeGas);
         }
 
         public static ContractMethodDescriptor GetContractMethod(DataCache snapshot, UInt160 scriptHash, string method, int pCount)

@@ -33,15 +33,7 @@ namespace Neo.Plugins.RestServer.Middleware
 
             SetServerInfomationHeader(response);
 
-            try
-            {
-                if (_settings.EnableBasicAuthentication && CheckHttpBasicAuthentication(request) == false)
-                {
-                    response.StatusCode = StatusCodes.Status403Forbidden;
-                    return;
-                }
-            }
-            catch (FormatException)
+            if (_settings.EnableBasicAuthentication && CheckHttpBasicAuthentication(request) == false)
             {
                 response.StatusCode = StatusCodes.Status403Forbidden;
                 return;

@@ -201,8 +201,8 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(accounts.ToArray());
         }
 
-        [HttpPost("{session:required}/send")]
-        public IActionResult WalletSendTo(
+        [HttpPost("{session:required}/transfer")]
+        public IActionResult WalletTransferAssets(
             [FromRoute(Name = "session")]
             string session,
             [FromBody]
@@ -211,8 +211,6 @@ namespace Neo.Plugins.RestServer.Controllers
             if (Guid.TryParse(session, out Guid sessionId) == false) return BadRequest();
             if (_walletSessions.ContainsKey(sessionId) == false) return NotFound();
             if (ModelState.IsValid == false) return BadRequest();
-            if (UInt160.TryParse(model.To, out var scriptHash) == false)
-                scriptHash = model.To.ToScriptHash(_neosystem.Settings.AddressVersion);
             var wallet = _walletSessions[sessionId];
             using var snapshot = _neosystem.GetSnapshot();
             var descriptor = new AssetDescriptor(snapshot, _neosystem.Settings, model.AssetId);
@@ -224,7 +222,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 {
                     AssetId = model.AssetId,
                     Value = amount,
-                    ScriptHash = scriptHash,
+                    ScriptHash = model.To,
                 }
             });
             if (tx == null) return BadRequest("Tranasction");

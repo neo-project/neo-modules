@@ -8,7 +8,6 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 
 namespace Neo.Plugins.RestServer.Newtonsoft.Json

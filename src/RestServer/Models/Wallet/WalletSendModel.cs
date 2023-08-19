@@ -15,7 +15,8 @@ namespace Neo.Plugins.RestServer.Models.Wallet
     public class WalletSendModel
     {
         public UInt160 AssetId { get; set; }
-        public string To { get; set; }
+        public UInt160 To { get; set; }
         public BigInteger Amount { get; set; }
+        public byte[] Data { get; set; }
     }
 }

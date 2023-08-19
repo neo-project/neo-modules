@@ -19,7 +19,9 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
         public override ECPoint ReadJson(JsonReader reader, Type objectType, ECPoint existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var o = JObject.Load(reader);
-            return ECPoint.Parse(o["value"].ToObject<string>(), ECCurve.Secp256r1);
+            if (ECPoint.TryParse(o["value"].ToObject<string>(), ECCurve.Secp256r1, out var value))
+                return value;
+            return default;
         }
 
         public override void WriteJson(JsonWriter writer, ECPoint value, JsonSerializer serializer)

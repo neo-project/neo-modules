@@ -15,11 +15,18 @@ using System.Numerics;
 using Array = Neo.VM.Types.Array;
 using Boolean = Neo.VM.Types.Boolean;
 using Buffer = Neo.VM.Types.Buffer;
+using Neo.Wallets;
 
 namespace Neo.Plugins.RestServer
 {
     internal static class RestServerUtility
     {
+        public static UInt160 ConvertToScriptHash(string address, ProtocolSettings settings)
+        {
+            if (UInt160.TryParse(address, out var scriptHash) == false)
+                return scriptHash;
+            return address.ToScriptHash(settings.AddressVersion);
+        }
 
         public static StackItem StackItemFromJToken(JToken json)
         {
