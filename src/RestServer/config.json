@@ -19,6 +19,6 @@
     "EnableDevelopmentMode": false,
     "MaxPageSize": 50,
     "MaxConcurrentConnections": 40,
-    "MaxTransactionFee": 1000000
+    "MaxTransactionFee": 10000000
   }
 }

@@ -19,7 +19,7 @@ using Newtonsoft.Json.Linq;
 using System.Numerics;
 using Neo.Cryptography.ECC;
 
-namespace Neo.Plugins.Helpers
+namespace Neo.Plugins.RestServer.Helpers
 {
     internal static class ScriptHelper
     {

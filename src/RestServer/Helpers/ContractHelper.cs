@@ -1,0 +1,47 @@
+// Copyright (C) 2015-2023 The Neo Project.
+//
+// The Neo.Plugins.RestServer is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
+using Neo.Persistence;
+using Neo.SmartContract;
+using Neo.SmartContract.Manifest;
+using Neo.SmartContract.Native;
+
+namespace Neo.Plugins.RestServer.Helpers
+{
+    public static class ContractHelper
+    {
+        public static ContractParameterDefinition[] GetAbiEventParams(DataCache snapshot, UInt160 scriptHash, string eventName)
+        {
+            var contractState = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
+            if (contractState == null) return Array.Empty<ContractParameterDefinition>();
+            return contractState.Manifest.Abi.Events.SingleOrDefault(s => s.Name.Equals(eventName, StringComparison.OrdinalIgnoreCase))?.Parameters;
+        }
+
+        public static bool IsNep17Supported(DataCache snapshot, UInt160 scriptHash)
+        {
+            var contractState = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
+            if (contractState == null) return false;
+            return IsNep17Supported(contractState);
+        }
+
+        public static bool IsNep11Supported(DataCache snapshot, UInt160 scriptHash)
+        {
+            var contractState = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
+            if (contractState == null) return false;
+            return IsNep11Supported(contractState);
+        }
+
+        public static bool IsNep17Supported(ContractState contractState) =>
+            contractState.Manifest.SupportedStandards.Any(a => a.Equals("NEP-17", StringComparison.OrdinalIgnoreCase));
+
+        public static bool IsNep11Supported(ContractState contractState) =>
+            contractState.Manifest.SupportedStandards.Any(a => a.Equals("NEP-11", StringComparison.OrdinalIgnoreCase));
+    }
+}

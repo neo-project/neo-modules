@@ -11,9 +11,9 @@
 using Akka.Actor;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Neo.Plugins.Models.Wallet;
 using Neo.Plugins.RestServer;
 using Neo.Plugins.RestServer.Extensions;
+using Neo.Plugins.RestServer.Models.Wallet;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
@@ -28,7 +28,7 @@ namespace Neo.Plugins.Controllers
     [ApiController]
     public class WalletController : ControllerBase
     {
-        private static readonly ConcurrentDictionary<Guid, Wallet> _walletSessions;
+        private static readonly ConcurrentDictionary<Guid, Wallet> _walletSessions = new();
 
         private readonly NeoSystem _neosystem;
         private readonly RestServerSettings _settings;

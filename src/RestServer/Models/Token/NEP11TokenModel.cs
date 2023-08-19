@@ -8,14 +8,13 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System.Numerics;
+using Neo.VM.Types;
+using System.Collections.ObjectModel;
 
-namespace Neo.Plugins.RestServer.Models.Wallet
+namespace Neo.Plugins.RestServer.Models.Token
 {
-    public class WalletSendModel
+    internal class NEP11TokenModel : NEP17TokenModel
     {
-        public UInt160 AssetId { get; set; }
-        public string To { get; set; }
-        public BigInteger Amount { get; set; }
+        public ReadOnlyDictionary<string, ReadOnlyDictionary<string, StackItem>> Tokens { get; set; }
     }
 }

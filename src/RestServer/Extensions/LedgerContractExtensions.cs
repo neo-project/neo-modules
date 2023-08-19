@@ -12,8 +12,6 @@ using Neo.Persistence;
 using Neo.SmartContract.Native;
 using Neo.SmartContract;
 using Neo.IO;
-using Neo.Wallets;
-using Neo.Plugins.RestServer.Models;
 
 #pragma warning disable IDE0060
 

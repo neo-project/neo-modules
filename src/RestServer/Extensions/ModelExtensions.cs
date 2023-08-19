@@ -11,6 +11,8 @@
 using Neo.Network.P2P.Payloads;
 using Neo.Network.P2P.Payloads.Conditions;
 using Neo.Plugins.RestServer.Models;
+using Neo.Plugins.RestServer.Models.Token;
+using Neo.Plugins.RestServer.Tokens;
 using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
 using Neo.SmartContract.Native;
@@ -262,6 +264,31 @@ namespace Neo.Plugins.RestServer.Extensions
                 IsGroup = cpd.IsGroup,
                 IsHash = cpd.IsHash,
                 IsWildcard = cpd.IsWildcard,
+            };
+
+        public static NEP17TokenModel ToModel(this NEP17Token token) =>
+            new()
+            {
+                Name = token.TokenName,
+                Symbol = token.Symbol,
+                ScriptHash = token.TokenHash,
+                Decimals = token.Decimals,
+                TotalSupply = token.TotalSupply().Value,
+            };
+
+        public static NEP11TokenModel ToModel(this NEP11Token nep11) =>
+            new()
+            {
+                Name = nep11.Name,
+                ScriptHash = nep11.ScriptHash,
+                Symbol = nep11.Symbol,
+                Decimals = nep11.Decimals,
+                TotalSupply = nep11.TotalSupply().Value,
+                Tokens = nep11.Tokens().Select(s => new
+                {
+                    Key = s,
+                    Value = nep11.Properties(s).AsReadOnly(),
+                }).ToDictionary(key => Convert.ToHexString(key.Key), value => value.Value).AsReadOnly(),
             };
     }
 }

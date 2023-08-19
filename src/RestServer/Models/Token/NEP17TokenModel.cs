@@ -10,12 +10,14 @@
 
 using System.Numerics;
 
-namespace Neo.Plugins.RestServer.Models.Wallet
+namespace Neo.Plugins.RestServer.Models.Token
 {
-    public class WalletSendModel
+    internal class NEP17TokenModel
     {
-        public UInt160 AssetId { get; set; }
-        public string To { get; set; }
-        public BigInteger Amount { get; set; }
+        public string Name { get; set; }
+        public UInt160 ScriptHash { get; set; }
+        public string Symbol { get; set; }
+        public byte Decimals { get; set; }
+        public BigInteger TotalSupply { get; set; }
     }
 }
