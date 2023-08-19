@@ -16,6 +16,8 @@ using Array = Neo.VM.Types.Array;
 using Boolean = Neo.VM.Types.Boolean;
 using Buffer = Neo.VM.Types.Buffer;
 using Neo.Wallets;
+using Neo.Persistence;
+using Neo.Network.P2P.Payloads;
 
 namespace Neo.Plugins.RestServer
 {

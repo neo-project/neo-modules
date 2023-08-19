@@ -11,6 +11,7 @@
 using Akka.Actor;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Neo.Network.P2P.Payloads;
 using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Models.Wallet;
@@ -76,7 +77,8 @@ namespace Neo.Plugins.RestServer.Controllers
             if (_walletSessions.ContainsKey(sessionId) == false) return NotFound(session);
             var wallet = _walletSessions[sessionId];
             var keys = wallet.GetAccounts().Where(p => p.HasKey)
-                .Select(s => new WalletExportKeyModel() {
+                .Select(s => new WalletExportKeyModel()
+                {
                     ScriptHash = s.ScriptHash,
                     Address = s.Address,
                     Wif = s.GetKey().Export()
@@ -241,42 +243,28 @@ namespace Neo.Plugins.RestServer.Controllers
             using var snapshot = _neosystem.GetSnapshot();
             var descriptor = new AssetDescriptor(snapshot, _neosystem.Settings, model.AssetId);
             var amount = new BigDecimal(model.Amount, descriptor.Decimals);
-            if (amount.Sign <= 0) return BadRequest(nameof(model.Amount));
-            var tx = wallet.MakeTransaction(snapshot, new[]
-            {
-                new TransferOutput()
+            if (amount.Sign <= 0) return BadRequest(amount);
+            var signers = model.Signers.Select(s => new Signer() { Scopes = WitnessScope.CalledByEntry, Account = s }).ToArray();
+            var tx = wallet.MakeTransaction(snapshot,
+                new[]
                 {
-                    AssetId = model.AssetId,
-                    Value = amount,
-                    ScriptHash = model.To,
-                }
-            });
-            if (tx == null) return BadRequest("Tranasction");
-            var transContext = new ContractParametersContext(snapshot, tx, _neosystem.Settings.Network);
-            wallet.Sign(transContext);
-            if (transContext.Completed == false)
-                return Content(transContext.ToJson().ToString(), MediaTypeNames.Application.Json);
-            tx.Witnesses = transContext.GetWitnesses();
-            // What if this is completed? Process and sign again?
-            if (tx.Size > 1024)
-            {
-                var calFee = tx.Size * NativeContract.Policy.GetFeePerByte(snapshot) + unchecked((long)NativeContract.GAS.Factor);
-                if (tx.NetworkFee < calFee) tx.NetworkFee = calFee;
-
-            }
-            if (tx.NetworkFee > _settings.MaxTransactionFee) return BadRequest("The necessary fee is more than the MaxTransactionFee, this transaction has failed. Please increase your MaxTransactionFee value.");
-
-            // Why do this again? What if its completed already? Copied from RPC Server...
-            transContext = new ContractParametersContext(snapshot, tx, _neosystem.Settings.Network);
-            wallet.Sign(transContext);
-            if (transContext.Completed == false)
-                return Content(transContext.ToJson().ToString(), MediaTypeNames.Application.Json);
-            else
-            {
-                tx.Witnesses = transContext.GetWitnesses();
-                _neosystem.Blockchain.Tell(tx);
-                return Ok(tx.ToModel());
-            }
+                    new TransferOutput()
+                    {
+                        AssetId = model.AssetId,
+                        Value = amount,
+                        ScriptHash = model.To,
+                        Data = model.Data,
+                    },
+                },
+                model.From, signers);
+            if (tx == null) return BadRequest("Insufficient funds");
+            var totalFees = new BigDecimal((BigInteger)(tx.SystemFee + tx.NetworkFee), NativeContract.GAS.Decimals);
+            var context = new ContractParametersContext(snapshot, tx, _neosystem.Settings.Network);
+            wallet.Sign(context);
+            if (context.Completed == false) return BadRequest();
+            tx.Witnesses = context.GetWitnesses();
+            _neosystem.Blockchain.Tell(tx);
+            return Ok(tx.ToModel());
         }
     }
 }
