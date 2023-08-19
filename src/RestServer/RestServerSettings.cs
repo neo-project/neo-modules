@@ -43,6 +43,7 @@ namespace Neo.Plugins.RestServer
         public long MaxConcurrentConnections { get; init; }
         public long MaxTransactionFee { get; init; }
         public long MaxInvokeGas { get; init; }
+        public uint MaxTransactionSize { get; init; }
         public JsonSerializerSettings JsonSerializerSettings { get; init; }
 
         #endregion
@@ -72,6 +73,7 @@ namespace Neo.Plugins.RestServer
             MaxConcurrentConnections = 40L,
             MaxTransactionFee = 0_10000000L,
             MaxInvokeGas = 0_20000000L,
+            MaxTransactionSize = 1024,
             JsonSerializerSettings = new JsonSerializerSettings()
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -121,6 +123,7 @@ namespace Neo.Plugins.RestServer
                 MaxConcurrentConnections = section.GetValue(nameof(MaxConcurrentConnections), Default.MaxConcurrentConnections),
                 MaxTransactionFee = section.GetValue(nameof(MaxTransactionFee), Default.MaxTransactionFee),
                 MaxInvokeGas = section.GetValue(nameof(MaxInvokeGas), Default.MaxInvokeGas),
+                MaxTransactionSize = section.GetValue(nameof(MaxTransactionSize), Default.MaxTransactionSize),
                 JsonSerializerSettings = Default.JsonSerializerSettings,
             };
 

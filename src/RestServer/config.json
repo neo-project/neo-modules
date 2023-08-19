@@ -20,6 +20,7 @@
     "MaxPageSize": 50,
     "MaxConcurrentConnections": 40,
     "MaxTransactionFee": 10000000,
-    "MaxInvokeGas": 20000000
+    "MaxInvokeGas": 20000000,
+    "MaxTransactionSize": 1024
   }
 }

@@ -12,6 +12,8 @@ using Neo.Persistence;
 using Neo.SmartContract.Native;
 using Neo.SmartContract;
 using Neo.IO;
+using Neo.Wallets;
+using Neo.Plugins.RestServer.Models.Blockchain;
 
 #pragma warning disable IDE0060
 
@@ -84,6 +86,50 @@ namespace Neo.Plugins.RestServer.Extensions
                     if (index >= page && index < (pageSize + page))
                         yield return value.GetInteroperable<TransactionState>();
                     index++;
+                }
+                else
+                    yield break;
+            }
+        }
+
+        public static IEnumerable<AccountDetails> ListAccounts(this GasToken gasToken, DataCache snapshot, ProtocolSettings protocolSettings)
+        {
+            ArgumentNullException.ThrowIfNull(nameof(snapshot));
+            var kb = new KeyBuilder(gasToken.Id, _prefix_account);
+            var prefixKey = kb.ToArray();
+            foreach (var (key, value) in snapshot.Seek(prefixKey, SeekDirection.Forward))
+            {
+                if (key.ToArray().AsSpan().StartsWith(prefixKey))
+                {
+                    var addressHash = new UInt160(key.ToArray().AsSpan(5));
+                    yield return new AccountDetails()
+                    {
+                        Account = addressHash,
+                        WalletAddress = addressHash.ToAddress(protocolSettings.AddressVersion),
+                        Balance = value.GetInteroperable<AccountState>().Balance,
+                    };
+                }
+                else
+                    yield break;
+            }
+        }
+
+        public static IEnumerable<AccountDetails> ListAccounts(this NeoToken neoToken, DataCache snapshot, ProtocolSettings protocolSettings)
+        {
+            ArgumentNullException.ThrowIfNull(nameof(snapshot));
+            var kb = new KeyBuilder(neoToken.Id, _prefix_account);
+            var prefixKey = kb.ToArray();
+            foreach (var (key, value) in snapshot.Seek(prefixKey, SeekDirection.Forward))
+            {
+                if (key.ToArray().AsSpan().StartsWith(prefixKey))
+                {
+                    var addressHash = new UInt160(key.ToArray().AsSpan(5));
+                    yield return new AccountDetails()
+                    {
+                        Account = addressHash,
+                        WalletAddress = addressHash.ToAddress(protocolSettings.AddressVersion),
+                        Balance = value.GetInteroperable<AccountState>().Balance,
+                    };
                 }
                 else
                     yield break;
