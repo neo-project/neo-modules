@@ -42,6 +42,7 @@ namespace Neo.Plugins.RestServer
         public uint MaxPageSize { get; init; }
         public long MaxConcurrentConnections { get; init; }
         public long MaxTransactionFee { get; init; }
+        public long MaxInvokeGas { get; init; }
         public JsonSerializerSettings JsonSerializerSettings { get; init; }
 
         #endregion
@@ -69,7 +70,8 @@ namespace Neo.Plugins.RestServer
             EnableDevelopmentMode = false,
             MaxPageSize = 50u,
             MaxConcurrentConnections = 40L,
-            MaxTransactionFee = 0_01000000,
+            MaxTransactionFee = 0_10000000L,
+            MaxInvokeGas = 0_20000000L,
             JsonSerializerSettings = new JsonSerializerSettings()
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -118,6 +120,7 @@ namespace Neo.Plugins.RestServer
                 MaxPageSize = section.GetValue(nameof(MaxPageSize), Default.MaxPageSize),
                 MaxConcurrentConnections = section.GetValue(nameof(MaxConcurrentConnections), Default.MaxConcurrentConnections),
                 MaxTransactionFee = section.GetValue(nameof(MaxTransactionFee), Default.MaxTransactionFee),
+                MaxInvokeGas = section.GetValue(nameof(MaxInvokeGas), Default.MaxInvokeGas),
                 JsonSerializerSettings = Default.JsonSerializerSettings,
             };
 

@@ -10,26 +10,25 @@
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Neo.Plugins.RestServer;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Helpers;
 using Neo.SmartContract.Native;
 using Newtonsoft.Json.Linq;
 
-namespace Neo.Plugins.Controllers
+namespace Neo.Plugins.RestServer.Controllers
 {
     [Route("/api/v1/contracts")]
     [ApiController]
     public class ContractsController : ControllerBase
     {
-        private readonly uint _maxPageSize;
         private readonly NeoSystem _neosystem;
+        private readonly RestServerSettings _settings;
 
         public ContractsController(
             RestServerSettings restsettings)
         {
             _neosystem = RestServerPlugin.NeoSystem;
-            _maxPageSize = restsettings.MaxPageSize;
+            _settings = restsettings;
         }
 
         [HttpGet]
@@ -39,7 +38,7 @@ namespace Neo.Plugins.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 1 || take < 1 || take > _maxPageSize) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
+            if (skip < 1 || take < 1 || take > _settings.MaxPageSize) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
             var contracts = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView);
             if (contracts.Any() == false) return NoContent();
             var contractRequestList = contracts.OrderBy(o => o.Manifest.Name).Skip((skip - 1) * take).Take(take);
@@ -127,7 +126,7 @@ namespace Neo.Plugins.Controllers
                 var contracts = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, scripthash);
                 if (contracts == null) return NotFound(nameof(hash));
                 if (string.IsNullOrEmpty(method)) return BadRequest(nameof(method));
-                var engine = ScriptHelper.InvokeMethod(_neosystem.Settings, _neosystem.StoreView, contracts.Hash, method, jparams);
+                var engine = ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _neosystem.StoreView, contracts.Hash, method, jparams);
                 if (engine == null) return BadRequest();
                 return Ok(engine.ToModel());
             }

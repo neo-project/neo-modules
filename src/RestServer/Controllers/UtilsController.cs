@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Neo.Plugins.RestServer;
 using Neo.Wallets;
 
-namespace Neo.Plugins.Controllers
+namespace Neo.Plugins.RestServer.Controllers
 {
     [Route("/api/v1/utils")]
     [ApiController]

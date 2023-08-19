@@ -23,23 +23,23 @@ namespace Neo.Plugins.RestServer.Helpers
 {
     internal static class ScriptHelper
     {
-        public static bool InvokeMethod(ProtocolSettings protocolSettings, DataCache snapshot, UInt160 scriptHash, string method, out StackItem[] results, params object[] args)
+        public static bool InvokeMethod(ProtocolSettings protocolSettings, RestServerSettings restSettings, DataCache snapshot, UInt160 scriptHash, string method, out StackItem[] results, params object[] args)
         {
             using var scriptBuilder = new ScriptBuilder();
             scriptBuilder.EmitDynamicCall(scriptHash, method, CallFlags.ReadOnly, args);
             byte[] script = scriptBuilder.ToArray();
-            using var engine = ApplicationEngine.Run(script, snapshot, settings: protocolSettings);
+            using var engine = ApplicationEngine.Run(script, snapshot, settings: protocolSettings, gas: restSettings.MaxInvokeGas);
             results = engine.State == VMState.FAULT ? Array.Empty<StackItem>() : engine.ResultStack.ToArray();
             return engine.State == VMState.HALT;
         }
 
-        public static ApplicationEngine InvokeMethod(ProtocolSettings protocolSettings, DataCache snapshot, UInt160 scriptHash, string method, JToken args)
+        public static ApplicationEngine InvokeMethod(ProtocolSettings protocolSettings, RestServerSettings restSettings, DataCache snapshot, UInt160 scriptHash, string method, JToken args)
         {
             var aparams = ((JArray)args).Select(FromJson).ToArray();
             using var scriptBuilder = new ScriptBuilder();
             scriptBuilder.EmitDynamicCall(scriptHash, method, CallFlags.ReadOnly, aparams);
             byte[] script = scriptBuilder.ToArray();
-            using var engine = ApplicationEngine.Run(script, snapshot, settings: protocolSettings);
+            using var engine = ApplicationEngine.Run(script, snapshot, settings: protocolSettings, gas: restSettings.MaxInvokeGas);
             return engine;
         }
 

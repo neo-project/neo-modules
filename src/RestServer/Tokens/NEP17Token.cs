@@ -25,13 +25,16 @@ namespace Neo.Plugins.RestServer.Tokens
         public byte Decimals { get; init; }
 
         private readonly NeoSystem _neosystem;
+        private readonly RestServerSettings _settings;
         private readonly DataCache _datacache;
 
         public NEP17Token(
             NeoSystem neoSystem,
             UInt160 tokenHash,
+            RestServerSettings settings,
             DataCache snapshot = null)
         {
+            _settings = settings;
             _datacache = snapshot ?? neoSystem.GetSnapshot();
             var contractState = NativeContract.ContractManagement.GetContract(_datacache, tokenHash) ?? throw new ArgumentException(null, nameof(tokenHash));
             if (ContractHelper.IsNep17Supported(contractState) == false) throw new NotSupportedException(nameof(tokenHash));
@@ -42,7 +45,7 @@ namespace Neo.Plugins.RestServer.Tokens
                 sb.EmitDynamicCall(tokenHash, "symbol", CallFlags.ReadOnly);
                 script = sb.ToArray();
             }
-            using var engine = ApplicationEngine.Run(script, _datacache, settings: neoSystem.Settings, gas: 0_30000000L);
+            using var engine = ApplicationEngine.Run(script, _datacache, settings: neoSystem.Settings, gas: settings.MaxInvokeGas);
             if (engine.State != VMState.HALT) throw engine.FaultException;
 
             this._neosystem = neoSystem;
@@ -54,14 +57,14 @@ namespace Neo.Plugins.RestServer.Tokens
 
         public BigDecimal BalanceOf(UInt160 address)
         {
-            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _datacache, TokenHash, "balanceOf", out var result, address))
+            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _datacache, TokenHash, "balanceOf", out var result, address))
                 return new BigDecimal(result[0].GetInteger(), Decimals);
             return new BigDecimal(BigInteger.Zero, Decimals);
         }
 
         public BigDecimal TotalSupply()
         {
-            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _datacache, TokenHash, "totalSupply", out var result))
+            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _datacache, TokenHash, "totalSupply", out var result))
                 return new BigDecimal(result[0].GetInteger(), Decimals);
             return new BigDecimal(BigInteger.Zero, Decimals);
         }

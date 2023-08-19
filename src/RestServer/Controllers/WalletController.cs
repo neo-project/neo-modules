@@ -11,7 +11,6 @@
 using Akka.Actor;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Neo.Plugins.RestServer;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Models.Wallet;
 using Neo.SmartContract;
@@ -22,7 +21,7 @@ using System.Collections.Concurrent;
 using System.Net.Mime;
 using System.Numerics;
 
-namespace Neo.Plugins.Controllers
+namespace Neo.Plugins.RestServer.Controllers
 {
     [Route("/api/v1/wallet")]
     [ApiController]

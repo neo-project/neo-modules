@@ -8,17 +8,13 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System.Numerics;
-
-namespace Neo.Plugins.RestServer.Models
+namespace Neo.Plugins.RestServer.Models.Node
 {
-    public class TokenBalanceModel
+    public class RemoteNodeModel
     {
-        public string Name { get; set; }
-        public UInt160 ScriptHash { get; set; }
-        public string Symbol { get; set; }
-        public byte Decimals { get; set; }
-        public BigInteger Balance { get; set; }
-        public BigInteger TotalSupply { get; set; }
+        public string RemoteAddress { get; set; }
+        public int RemotePort { get; set; }
+        public int ListenTcpPort { get; set; }
+        public uint LastBlockIndex { get; set; }
     }
 }

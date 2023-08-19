@@ -29,15 +29,18 @@ namespace Neo.Plugins.RestServer.Tokens
         private readonly NeoSystem _neosystem;
         private readonly DataCache _snapshot;
         private readonly ContractState _contract;
+        private readonly RestServerSettings _settings;
 
         public NEP11Token(
             NeoSystem neoSystem,
-            UInt160 scriptHash) : this(neoSystem, null, scriptHash) { }
+            UInt160 scriptHash,
+            RestServerSettings settings) : this(neoSystem, null, scriptHash, settings) { }
 
         public NEP11Token(
             NeoSystem neoSystem,
             DataCache snapshot,
-            UInt160 scriptHash)
+            UInt160 scriptHash,
+            RestServerSettings settings)
         {
             ArgumentNullException.ThrowIfNull(neoSystem, nameof(neoSystem));
             ArgumentNullException.ThrowIfNull(scriptHash, nameof(scriptHash));
@@ -46,6 +49,7 @@ namespace Neo.Plugins.RestServer.Tokens
             _contract = NativeContract.ContractManagement.GetContract(_snapshot, scriptHash) ?? throw new ArgumentException(null, nameof(scriptHash));
             Name = _contract.Manifest.Name;
             ScriptHash = scriptHash;
+            _settings = settings;
             Initialize();
         }
 
@@ -57,7 +61,7 @@ namespace Neo.Plugins.RestServer.Tokens
             sb.EmitDynamicCall(_contract.Hash, "symbol", CallFlags.ReadOnly);
             scriptBytes = sb.ToArray();
 
-            using var appEngine = ApplicationEngine.Run(scriptBytes, _snapshot, settings: _neosystem.Settings, gas: 0_50000000L);
+            using var appEngine = ApplicationEngine.Run(scriptBytes, _snapshot, settings: _neosystem.Settings, gas: _settings.MaxInvokeGas);
             if (appEngine.State != VMState.HALT) throw appEngine.FaultException;
 
             Symbol = appEngine.ResultStack.Pop().GetString();
@@ -66,14 +70,14 @@ namespace Neo.Plugins.RestServer.Tokens
 
         public BigDecimal TotalSupply()
         {
-            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _snapshot, ScriptHash, "totalSupply", out var results))
+            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "totalSupply", out var results))
                 return new(results[0].GetInteger(), Decimals);
             return new(BigInteger.Zero, 0);
         }
 
         public BigDecimal BalanceOf(UInt160 address)
         {
-            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _snapshot, ScriptHash, "balanceOf", out var results, address))
+            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "balanceOf", out var results, address))
                 return new(results[0].GetInteger(), Decimals);
             return new(BigInteger.Zero, 0);
         }
@@ -83,14 +87,14 @@ namespace Neo.Plugins.RestServer.Tokens
             if (Decimals == 0) throw new InvalidOperationException();
             ArgumentNullException.ThrowIfNull(tokenId, nameof(tokenId));
             if (tokenId.Length > 64) throw new ArgumentOutOfRangeException(nameof(tokenId));
-            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _snapshot, ScriptHash, "balanceOf", out var results, address, tokenId))
+            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "balanceOf", out var results, address, tokenId))
                 return new(results[0].GetInteger(), Decimals);
             return new(BigInteger.Zero, 0);
         }
 
         public byte[][] TokensOf(UInt160 owner)
         {
-            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _snapshot, ScriptHash, "tokensOf", out var results, owner))
+            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "tokensOf", out var results, owner))
             {
                 if (results[0].GetInterface<object>() is IIterator iterator)
                 {
@@ -110,12 +114,12 @@ namespace Neo.Plugins.RestServer.Tokens
             if (tokenId.Length > 64) throw new ArgumentOutOfRangeException(nameof(tokenId));
             if (Decimals == 0)
             {
-                if (ScriptHelper.InvokeMethod(_neosystem.Settings, _snapshot, ScriptHash, "ownerOf", out var results, tokenId))
+                if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "ownerOf", out var results, tokenId))
                     return new[] { new UInt160(results[0].GetSpan()) };
             }
             else if (Decimals > 0)
             {
-                if (ScriptHelper.InvokeMethod(_neosystem.Settings, _snapshot, ScriptHash, "ownerOf", out var results, tokenId))
+                if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "ownerOf", out var results, tokenId))
                 {
                     if (results[0].GetInterface<object>() is IIterator iterator)
                     {
@@ -134,7 +138,7 @@ namespace Neo.Plugins.RestServer.Tokens
         {
             try
             {
-                if (ScriptHelper.InvokeMethod(_neosystem.Settings, _snapshot, ScriptHash, "tokens", out var results))
+                if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "tokens", out var results))
                 {
                     if (results[0].GetInterface<object>() is IIterator iterator)
                     {
@@ -156,7 +160,7 @@ namespace Neo.Plugins.RestServer.Tokens
         {
             ArgumentNullException.ThrowIfNull(tokenId, nameof(tokenId));
             if (tokenId.Length > 64) throw new ArgumentOutOfRangeException(nameof(tokenId));
-            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _snapshot, ScriptHash, "properties", out var results, tokenId))
+            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "properties", out var results, tokenId))
             {
                 if (results[0] is Map map)
                 {

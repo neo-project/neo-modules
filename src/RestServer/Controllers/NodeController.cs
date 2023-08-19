@@ -11,11 +11,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Neo.IO;
 using Neo.Network.P2P;
-using Neo.Plugins.RestServer;
-using Neo.Plugins.RestServer.Models;
+using Neo.Plugins.RestServer.Models.Node;
 using Neo.SmartContract.Native;
 
-namespace Neo.Plugins.Controllers
+namespace Neo.Plugins.RestServer.Controllers
 {
     [Route("/api/v1/node")]
     [ApiController]
@@ -58,6 +57,24 @@ namespace Neo.Plugins.Controllers
                         LastBlockIndex = s.LastBlockIndex,
                     }),
             });
+        }
+
+        [HttpGet("peers")]
+        public IActionResult GetPeers()
+        {
+            var rNodes = _neolocalnode
+                .GetRemoteNodes()
+                .OrderByDescending(o => o.LastBlockIndex)
+                .ToArray();
+
+            return Ok(rNodes.Select(s =>
+                    new RemoteNodeModel()
+                    {
+                        RemoteAddress = s.Remote.Address.ToString(),
+                        RemotePort = s.Remote.Port,
+                        ListenTcpPort = s.ListenerTcpPort,
+                        LastBlockIndex = s.LastBlockIndex,
+                    }));
         }
     }
 }

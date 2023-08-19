@@ -11,7 +11,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Neo.Plugins.RestServer.Models.Token;
-using Neo.Plugins.RestServer.Models;
 using Neo.Plugins.RestServer.Tokens;
 using Neo.SmartContract.Native;
 using Neo.Plugins.RestServer.Helpers;
@@ -58,7 +57,7 @@ namespace Neo.Plugins.RestServer.Controllers
                     continue;
                 try
                 {
-                    var token = new NEP17Token(_neosystem, contract.Hash);
+                    var token = new NEP17Token(_neosystem, contract.Hash, _settings);
                     listResults.Add(token.ToModel());
                 }
                 catch
@@ -89,7 +88,7 @@ namespace Neo.Plugins.RestServer.Controllers
             if (ContractHelper.IsNep17Supported(contract) == false) return StatusCode(StatusCodes.Status501NotImplemented);
             try
             {
-                var token = new NEP17Token(_neosystem, sAddressHash);
+                var token = new NEP17Token(_neosystem, sAddressHash, _settings);
                 return Ok(new TokenBalanceModel()
                 {
                     Name = token.TokenName,
@@ -133,7 +132,7 @@ namespace Neo.Plugins.RestServer.Controllers
                     continue;
                 try
                 {
-                    var token = new NEP11Token(_neosystem, contract.Hash);
+                    var token = new NEP11Token(_neosystem, contract.Hash, _settings);
                     listResults.Add(token.ToModel());
                 }
                 catch
@@ -164,7 +163,7 @@ namespace Neo.Plugins.RestServer.Controllers
             if (ContractHelper.IsNep11Supported(contract) == false) return StatusCode(StatusCodes.Status501NotImplemented);
             try
             {
-                var token = new NEP11Token(_neosystem, sAddressHash);
+                var token = new NEP11Token(_neosystem, sAddressHash, _settings);
                 return Ok(new TokenBalanceModel()
                 {
                     Name = token.Name,
@@ -202,7 +201,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 {
                     if (ContractHelper.IsNep17Supported(contract))
                     {
-                        var token = new NEP17Token(_neosystem, contract.Hash);
+                        var token = new NEP17Token(_neosystem, contract.Hash, _settings);
                         var balance = token.BalanceOf(addressHash).Value;
                         if (balance == 0) continue;
                         listResults.Add(new()
@@ -217,7 +216,7 @@ namespace Neo.Plugins.RestServer.Controllers
                     }
                     else if (ContractHelper.IsNep11Supported(contract))
                     {
-                        var nft = new NEP11Token(_neosystem, contract.Hash);
+                        var nft = new NEP11Token(_neosystem, contract.Hash, _settings);
                         var balance = nft.BalanceOf(addressHash).Value;
                         if (balance == 0) continue;
                         listResults.Add(new()
