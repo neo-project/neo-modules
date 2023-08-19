@@ -8,20 +8,19 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Akka.Actor;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
-using Neo.ConsoleService;
-using Neo.Network.P2P;
-using Neo.Plugins.Middleware;
+using Neo.Plugins.RestServer.Middleware;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using System.Collections.Concurrent;
 using System.IO.Compression;
+using System.Net;
 using System.Net.Mime;
+using System.Net.Security;
 using System.Reflection;
 
 namespace Neo.Plugins.RestServer
@@ -55,7 +54,24 @@ namespace Neo.Plugins.RestServer
                     options.Limits.MaxConcurrentConnections = _settings.MaxConcurrentConnections;
                     options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(_settings.KeepAliveTimeout);
                     options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(15);
-                    options.Listen(_settings.BindAddress, unchecked((int)_settings.Port));
+                    options.Listen(_settings.BindAddress, unchecked((int)_settings.Port), listenOptions =>
+                    {
+                        if (string.IsNullOrEmpty(_settings.SslCertFile)) return;
+                        listenOptions.UseHttps(_settings.SslCertFile, _settings.SslCertPassword, httpsOptions =>
+                        {
+                            if (_settings.TrustedAuthorities.Length == 0)
+                            {
+                                httpsOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
+                                httpsOptions.ClientCertificateValidation = (cert, chain, err) =>
+                                {
+                                    if (err != SslPolicyErrors.None)
+                                        return false;
+                                    var authority = chain.ChainElements[^1].Certificate;
+                                    return _settings.TrustedAuthorities.Any(a => a.Equals(authority.Thumbprint, StringComparison.OrdinalIgnoreCase));
+                                };
+                            }
+                        });
+                    });
                 })
                 .ConfigureServices(services =>
                 {
@@ -92,12 +108,14 @@ namespace Neo.Plugins.RestServer
                     }
 
                     services.AddRouting(options => options.LowercaseUrls = options.LowercaseQueryStrings = true);
-                    services.AddResponseCompression(options =>
-                    {
-                        options.EnableForHttps = false;
-                        options.Providers.Add<GzipCompressionProvider>();
-                        options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Append(MediaTypeNames.Application.Json);
-                    });
+
+                    if (_settings.EnableCompression)
+                        services.AddResponseCompression(options =>
+                        {
+                            options.EnableForHttps = false;
+                            options.Providers.Add<GzipCompressionProvider>();
+                            options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Append(MediaTypeNames.Application.Json);
+                        });
 
                     var controllers = services.AddControllers(options => options.EnableEndpointRouting = false);
 
@@ -116,18 +134,28 @@ namespace Neo.Plugins.RestServer
                     });
 
                     // Service configuration
-                    services.Configure<ForwardedHeadersOptions>(options => options.ForwardedHeaders = ForwardedHeaders.XForwardedFor);
-                    services.Configure<GzipCompressionProviderOptions>(options => options.Level = CompressionLevel.SmallestSize);
+                    if (_settings.EnableForwardedHeaders)
+                        services.Configure<ForwardedHeadersOptions>(options => options.ForwardedHeaders = ForwardedHeaders.All);
+
+                    if (_settings.EnableCompression)
+                        services.Configure<GzipCompressionProviderOptions>(options => options.Level = _settings.CompressionLevel);
                 })
                 .Configure(app =>
                 {
-#if DEBUG
-                    app.UseDeveloperExceptionPage();
-#endif
-                    app.UseForwardedHeaders();
+                    if (_settings.EnableDevelopmentMode)
+                        app.UseDeveloperExceptionPage();
+
+                    if (_settings.EnableForwardedHeaders)
+                        app.UseForwardedHeaders();
+
                     app.UseRouting();
-                    app.UseCors();
-                    app.UseResponseCompression();
+
+                    if (_settings.EnableCors)
+                        app.UseCors();
+
+                    if (_settings.EnableCompression)
+                        app.UseResponseCompression();
+
                     app.UseMiddleware<RestServerMiddleware>(_settings);
                     app.UseMvc();
                 })

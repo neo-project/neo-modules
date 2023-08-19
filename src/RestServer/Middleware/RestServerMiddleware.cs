@@ -9,12 +9,11 @@
 // modifications are permitted.
 
 using Microsoft.AspNetCore.Http;
-using Neo.Plugins.RestServer;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text;
 
-namespace Neo.Plugins.Middleware
+namespace Neo.Plugins.RestServer.Middleware
 {
     internal class RestServerMiddleware
     {
@@ -35,9 +34,9 @@ namespace Neo.Plugins.Middleware
             SetServerInfomationHeader(response);
 
             if (_settings.DisableUrlPaths.Any(a => request.Path.StartsWithSegments(a, StringComparison.OrdinalIgnoreCase)) ||
-                (_settings.EnableBasicAuth && CheckHttpBasicAuthentication(request) == false))
+                (_settings.EnableBasicAuthentication && CheckHttpBasicAuthentication(request) == false))
             {
-                response.StatusCode = StatusCodes.Status401Unauthorized;
+                response.StatusCode = StatusCodes.Status503ServiceUnavailable;
                 return;
             }
 

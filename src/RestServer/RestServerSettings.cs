@@ -13,6 +13,7 @@ using Neo.Plugins.RestServer.Newtonsoft.Json;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using System.IO.Compression;
 using System.Net;
 
 namespace Neo.Plugins.RestServer
@@ -24,15 +25,23 @@ namespace Neo.Plugins.RestServer
         public uint Network { get; init; }
         public IPAddress BindAddress { get; init; }
         public uint Port { get; init; }
-        public uint MaxPageSize { get; init; }
-        public long MaxConcurrentConnections { get; init; }
         public uint KeepAliveTimeout { get; init; }
-        public bool EnableBasicAuth { get; init; }
+        public string SslCertFile { get; init; }
+        public string SslCertPassword { get; init; }
+        public string[] TrustedAuthorities { get; init; }
+        public bool EnableBasicAuthentication { get; init; }
         public string RestUser { get; init; }
         public string RestPass { get; init; }
         public bool EnableCors { get; init; }
         public string[] AllowCorsUrls { get; init; }
         public string[] DisableUrlPaths { get; init; }
+        public bool EnableCompression { get; init; }
+        public CompressionLevel CompressionLevel { get; init; }
+        public bool EnableForwardedHeaders { get; init; }
+        public bool EnableDevelopmentMode { get; init; }
+        public uint MaxPageSize { get; init; }
+        public long MaxConcurrentConnections { get; init; }
+        public long MaxTransactionFee { get; init; }
         public JsonSerializerSettings JsonSerializerSettings { get; init; }
 
         #endregion
@@ -42,17 +51,25 @@ namespace Neo.Plugins.RestServer
         public static RestServerSettings Default { get; } = new()
         {
             Network = 860833102u,
-            BindAddress = IPAddress.None,
+            BindAddress = IPAddress.Loopback,
             Port = 10339u,
-            MaxPageSize = 50u,
-            MaxConcurrentConnections = 40L,
             KeepAliveTimeout = 2u,
-            EnableBasicAuth = false,
+            SslCertFile = "",
+            SslCertPassword = "",
+            TrustedAuthorities = Array.Empty<string>(),
+            EnableBasicAuthentication = false,
             RestUser = string.Empty,
             RestPass = string.Empty,
             EnableCors = false,
             AllowCorsUrls = Array.Empty<string>(),
             DisableUrlPaths = Array.Empty<string>(),
+            EnableCompression = false,
+            CompressionLevel = CompressionLevel.SmallestSize,
+            EnableForwardedHeaders = false,
+            EnableDevelopmentMode = false,
+            MaxPageSize = 50u,
+            MaxConcurrentConnections = 40L,
+            MaxTransactionFee = 0_01000000,
             JsonSerializerSettings = new JsonSerializerSettings()
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -84,15 +101,23 @@ namespace Neo.Plugins.RestServer
                 Network = section.GetValue(nameof(Network), Default.Network),
                 BindAddress = IPAddress.Parse(section.GetSection(nameof(BindAddress)).Value),
                 Port = section.GetValue(nameof(Port), Default.Port),
-                MaxPageSize = section.GetValue(nameof(MaxPageSize), Default.MaxPageSize),
-                MaxConcurrentConnections = section.GetValue(nameof(MaxConcurrentConnections), Default.MaxConcurrentConnections),
                 KeepAliveTimeout = section.GetValue(nameof(KeepAliveTimeout), Default.KeepAliveTimeout),
-                EnableBasicAuth = section.GetValue(nameof(EnableBasicAuth), Default.EnableBasicAuth),
+                SslCertFile = section.GetValue(nameof(SslCertFile), Default.SslCertFile),
+                SslCertPassword = section.GetValue(nameof(SslCertPassword), Default.SslCertPassword),
+                TrustedAuthorities = section.GetValue(nameof(TrustedAuthorities), Default.TrustedAuthorities),
+                EnableBasicAuthentication = section.GetValue(nameof(EnableBasicAuthentication), Default.EnableBasicAuthentication),
                 RestUser = section.GetValue(nameof(RestUser), Default.RestUser),
                 RestPass = section.GetValue(nameof(RestPass), Default.RestPass),
                 EnableCors = section.GetValue(nameof(EnableCors), Default.EnableCors),
                 AllowCorsUrls = section.GetValue(nameof(AllowCorsUrls), Default.AllowCorsUrls),
                 DisableUrlPaths = section.GetValue(nameof(DisableUrlPaths), Default.DisableUrlPaths),
+                EnableCompression = section.GetValue(nameof(EnableCompression), Default.EnableCompression),
+                CompressionLevel = section.GetValue(nameof(CompressionLevel), Default.CompressionLevel),
+                EnableForwardedHeaders = section.GetValue(nameof(EnableForwardedHeaders), Default.EnableForwardedHeaders),
+                EnableDevelopmentMode = section.GetValue(nameof(EnableDevelopmentMode), Default.EnableDevelopmentMode),
+                MaxPageSize = section.GetValue(nameof(MaxPageSize), Default.MaxPageSize),
+                MaxConcurrentConnections = section.GetValue(nameof(MaxConcurrentConnections), Default.MaxConcurrentConnections),
+                MaxTransactionFee = section.GetValue(nameof(MaxTransactionFee), Default.MaxTransactionFee),
                 JsonSerializerSettings = Default.JsonSerializerSettings,
             };
 

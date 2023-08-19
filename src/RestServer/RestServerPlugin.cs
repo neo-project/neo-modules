@@ -37,10 +37,10 @@ namespace Neo.Plugins.RestServer
         protected override void OnSystemLoaded(NeoSystem system)
         {
             if (system.Settings.Network != _settings.Network) return;
-            if (_settings.EnableCors && _settings.EnableBasicAuth && _settings.AllowCorsUrls.Length == 0)
+            if (_settings.EnableCors && _settings.EnableBasicAuthentication && _settings.AllowCorsUrls.Length == 0)
             {
                 ConsoleHelper.Warning("RestServer: CORS is misconfigured!");
-                ConsoleHelper.Info($"You have {nameof(_settings.EnableCors)} and {nameof(_settings.EnableBasicAuth)} enabled but");
+                ConsoleHelper.Info($"You have {nameof(_settings.EnableCors)} and {nameof(_settings.EnableBasicAuthentication)} enabled but");
                 ConsoleHelper.Info($"{nameof(_settings.AllowCorsUrls)} is empty in config.json for RestServer.");
                 ConsoleHelper.Info("You must add urls origins to the list to have CORS work from");
                 ConsoleHelper.Info($"browser with authentication enabled.");
