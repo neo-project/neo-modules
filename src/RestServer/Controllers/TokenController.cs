@@ -92,8 +92,8 @@ namespace Neo.Plugins.RestServer.Controllers
                 var token = new NEP17Token(_neosystem, sAddressHash, _settings);
                 return Ok(new TokenBalanceModel()
                 {
-                    Name = token.TokenName,
-                    ScriptHash = token.TokenHash,
+                    Name = token.Name,
+                    ScriptHash = token.ScriptHash,
                     Symbol = token.Symbol,
                     Decimals = token.Decimals,
                     Balance = token.BalanceOf(addressHash).Value,
@@ -207,8 +207,8 @@ namespace Neo.Plugins.RestServer.Controllers
                         if (balance == 0) continue;
                         listResults.Add(new()
                         {
-                            Name = token.TokenName,
-                            ScriptHash = token.TokenHash,
+                            Name = token.Name,
+                            ScriptHash = token.ScriptHash,
                             Symbol = token.Symbol,
                             Decimals = token.Decimals,
                             Balance = balance,

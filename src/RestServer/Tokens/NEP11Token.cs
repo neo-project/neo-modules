@@ -47,6 +47,7 @@ namespace Neo.Plugins.RestServer.Tokens
             _neosystem = neoSystem;
             _snapshot = snapshot ?? _neosystem.GetSnapshot();
             _contract = NativeContract.ContractManagement.GetContract(_snapshot, scriptHash) ?? throw new ArgumentException(null, nameof(scriptHash));
+            if (ContractHelper.IsNep11Supported(_contract) == false) throw new NotSupportedException(nameof(scriptHash));
             Name = _contract.Manifest.Name;
             ScriptHash = scriptHash;
             _settings = settings;
@@ -72,14 +73,14 @@ namespace Neo.Plugins.RestServer.Tokens
         {
             if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "totalSupply", out var results))
                 return new(results[0].GetInteger(), Decimals);
-            return new(BigInteger.Zero, 0);
+            return new(BigInteger.Zero, Decimals);
         }
 
         public BigDecimal BalanceOf(UInt160 address)
         {
             if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "balanceOf", out var results, address))
                 return new(results[0].GetInteger(), Decimals);
-            return new(BigInteger.Zero, 0);
+            return new(BigInteger.Zero, Decimals);
         }
 
         public BigDecimal BalanceOf(UInt160 address, byte[] tokenId)
@@ -89,7 +90,7 @@ namespace Neo.Plugins.RestServer.Tokens
             if (tokenId.Length > 64) throw new ArgumentOutOfRangeException(nameof(tokenId));
             if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "balanceOf", out var results, address, tokenId))
                 return new(results[0].GetInteger(), Decimals);
-            return new(BigInteger.Zero, 0);
+            return new(BigInteger.Zero, Decimals);
         }
 
         public byte[][] TokensOf(UInt160 owner)

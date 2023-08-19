@@ -271,9 +271,9 @@ namespace Neo.Plugins.RestServer.Extensions
         public static NEP17TokenModel ToModel(this NEP17Token token) =>
             new()
             {
-                Name = token.TokenName,
+                Name = token.Name,
                 Symbol = token.Symbol,
-                ScriptHash = token.TokenHash,
+                ScriptHash = token.ScriptHash,
                 Decimals = token.Decimals,
                 TotalSupply = token.TotalSupply().Value,
             };

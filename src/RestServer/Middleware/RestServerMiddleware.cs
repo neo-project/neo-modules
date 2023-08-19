@@ -33,10 +33,17 @@ namespace Neo.Plugins.RestServer.Middleware
 
             SetServerInfomationHeader(response);
 
-            if (_settings.DisableRoutes.Any(a => request.Path.StartsWithSegments(a, StringComparison.OrdinalIgnoreCase)) ||
-                (_settings.EnableBasicAuthentication && CheckHttpBasicAuthentication(request) == false))
+            try
             {
-                response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                if (_settings.EnableBasicAuthentication && CheckHttpBasicAuthentication(request) == false)
+                {
+                    response.StatusCode = StatusCodes.Status403Forbidden;
+                    return;
+                }
+            }
+            catch (FormatException)
+            {
+                response.StatusCode = StatusCodes.Status403Forbidden;
                 return;
             }
 

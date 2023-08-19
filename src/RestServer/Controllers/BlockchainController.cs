@@ -17,7 +17,6 @@ using Neo.Network.P2P.Payloads;
 using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.SmartContract.Native;
-using System.Net.NetworkInformation;
 
 namespace Neo.Plugins.RestServer.Controllers
 {

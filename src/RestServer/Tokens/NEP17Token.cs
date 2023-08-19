@@ -19,8 +19,8 @@ namespace Neo.Plugins.RestServer.Tokens
 {
     internal class NEP17Token
     {
-        public UInt160 TokenHash { get; init; }
-        public string TokenName { get; init; }
+        public UInt160 ScriptHash { get; init; }
+        public string Name { get; init; }
         public string Symbol { get; init; }
         public byte Decimals { get; init; }
 
@@ -30,41 +30,41 @@ namespace Neo.Plugins.RestServer.Tokens
 
         public NEP17Token(
             NeoSystem neoSystem,
-            UInt160 tokenHash,
+            UInt160 scriptHash,
             RestServerSettings settings,
             DataCache snapshot = null)
         {
             _settings = settings;
             _datacache = snapshot ?? neoSystem.GetSnapshot();
-            var contractState = NativeContract.ContractManagement.GetContract(_datacache, tokenHash) ?? throw new ArgumentException(null, nameof(tokenHash));
-            if (ContractHelper.IsNep17Supported(contractState) == false) throw new NotSupportedException(nameof(tokenHash));
+            var contractState = NativeContract.ContractManagement.GetContract(_datacache, scriptHash) ?? throw new ArgumentException(null, nameof(scriptHash));
+            if (ContractHelper.IsNep17Supported(contractState) == false) throw new NotSupportedException(nameof(scriptHash));
             byte[] script;
             using (var sb = new ScriptBuilder())
             {
-                sb.EmitDynamicCall(tokenHash, "decimals", CallFlags.ReadOnly);
-                sb.EmitDynamicCall(tokenHash, "symbol", CallFlags.ReadOnly);
+                sb.EmitDynamicCall(scriptHash, "decimals", CallFlags.ReadOnly);
+                sb.EmitDynamicCall(scriptHash, "symbol", CallFlags.ReadOnly);
                 script = sb.ToArray();
             }
             using var engine = ApplicationEngine.Run(script, _datacache, settings: neoSystem.Settings, gas: settings.MaxInvokeGas);
             if (engine.State != VMState.HALT) throw engine.FaultException;
 
-            this._neosystem = neoSystem;
-            this.TokenHash = tokenHash;
-            this.TokenName = contractState.Manifest.Name;
-            this.Symbol = engine.ResultStack.Pop().GetString();
-            this.Decimals = (byte)engine.ResultStack.Pop().GetInteger();
+            _neosystem = neoSystem;
+            ScriptHash = scriptHash;
+            Name = contractState.Manifest.Name;
+            Symbol = engine.ResultStack.Pop().GetString();
+            Decimals = (byte)engine.ResultStack.Pop().GetInteger();
         }
 
         public BigDecimal BalanceOf(UInt160 address)
         {
-            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _datacache, TokenHash, "balanceOf", out var result, address))
+            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _datacache, ScriptHash, "balanceOf", out var result, address))
                 return new BigDecimal(result[0].GetInteger(), Decimals);
             return new BigDecimal(BigInteger.Zero, Decimals);
         }
 
         public BigDecimal TotalSupply()
         {
-            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _datacache, TokenHash, "totalSupply", out var result))
+            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _datacache, ScriptHash, "totalSupply", out var result))
                 return new BigDecimal(result[0].GetInteger(), Decimals);
             return new BigDecimal(BigInteger.Zero, Decimals);
         }
