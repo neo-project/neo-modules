@@ -15,6 +15,7 @@ using Neo.Plugins.RestServer.Tokens;
 using Neo.SmartContract.Native;
 using Neo.Plugins.RestServer.Helpers;
 using Neo.Plugins.RestServer.Extensions;
+using Neo.Plugins.RestServer.Exceptions;
 
 namespace Neo.Plugins.RestServer.Controllers
 {
@@ -29,7 +30,7 @@ namespace Neo.Plugins.RestServer.Controllers
             RestServerSettings settings)
         {
             _settings = settings;
-            _neosystem = RestServerPlugin.NeoSystem;
+            _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
         }
 
         #region NEP-17

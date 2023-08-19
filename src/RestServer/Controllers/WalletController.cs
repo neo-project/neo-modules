@@ -11,6 +11,7 @@
 using Akka.Actor;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Models.Wallet;
 using Neo.SmartContract;
@@ -35,7 +36,7 @@ namespace Neo.Plugins.RestServer.Controllers
         public WalletController(
             RestServerSettings settings)
         {
-            _neosystem = RestServerPlugin.NeoSystem;
+            _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
             _settings = settings;
         }
 
@@ -56,7 +57,7 @@ namespace Neo.Plugins.RestServer.Controllers
             });
         }
 
-        [HttpGet("{session}/close")]
+        [HttpGet("{session:required}/close")]
         public IActionResult CloseWallet(
             [FromRoute(Name = "session")]
             string session)
@@ -67,7 +68,7 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok();
         }
 
-        [HttpGet("{session}/DumpPrivKey/{address}")]
+        [HttpGet("{session:required}/DumpPrivKey/{address}")]
         public IActionResult DumpPrivKey(
             [FromRoute(Name = "session")]
             string session,
@@ -98,7 +99,7 @@ namespace Neo.Plugins.RestServer.Controllers
             });
         }
 
-        [HttpPost("{session}/address/create")]
+        [HttpPost("{session:required}/address/create")]
         public IActionResult CreateNewAddress(
             [FromRoute(Name = "session")]
             string session,
@@ -120,7 +121,7 @@ namespace Neo.Plugins.RestServer.Controllers
             });
         }
 
-        [HttpGet("{session}/balance/{asset}")]
+        [HttpGet("{session:required}/balance/{asset:required}")]
         public IActionResult GetWalletBalance(
             [FromRoute(Name = "session")]
             string session,
@@ -138,7 +139,7 @@ namespace Neo.Plugins.RestServer.Controllers
             });
         }
 
-        [HttpGet("{session}/UnClaimedGas")]
+        [HttpGet("{session:required}/UnClaimedGas")]
         public IActionResult GetUnClaimedGas(
             [FromRoute(Name = "session")]
             string session)
@@ -158,7 +159,7 @@ namespace Neo.Plugins.RestServer.Controllers
             });
         }
 
-        [HttpPost("{session}/import")]
+        [HttpPost("{session:required}/import")]
         public IActionResult ImportPrivateKey(
             [FromRoute(Name = "session")]
             string session,
@@ -180,7 +181,7 @@ namespace Neo.Plugins.RestServer.Controllers
             });
         }
 
-        [HttpGet("{session}/ListAddress")]
+        [HttpGet("{session:required}/ListAddress")]
         public IActionResult ListAddresses(
             [FromRoute(Name = "session")]
             string session)
@@ -200,7 +201,7 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(accounts.ToArray());
         }
 
-        [HttpPost("{session}/send")]
+        [HttpPost("{session:required}/send")]
         public IActionResult WalletSendTo(
             [FromRoute(Name = "session")]
             string session,

@@ -14,8 +14,10 @@ using Microsoft.AspNetCore.Mvc;
 using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
+using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.SmartContract.Native;
+using System.Net.NetworkInformation;
 
 namespace Neo.Plugins.RestServer.Controllers
 {
@@ -29,7 +31,7 @@ namespace Neo.Plugins.RestServer.Controllers
         public BlockchainController(
             RestServerSettings settings)
         {
-            _neosystem = RestServerPlugin.NeoSystem;
+            _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
             _settings = settings;
         }
 

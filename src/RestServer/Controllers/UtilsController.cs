@@ -10,6 +10,7 @@
 
 using Microsoft.AspNetCore.Mvc;
 using Neo.Plugins.RestServer;
+using Neo.Plugins.RestServer.Exceptions;
 using Neo.Wallets;
 
 namespace Neo.Plugins.RestServer.Controllers
@@ -22,7 +23,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         public UtilsController()
         {
-            _neosystem = RestServerPlugin.NeoSystem;
+            _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
         }
 
         [HttpGet("{hash:required}/address")]
@@ -31,7 +32,7 @@ namespace Neo.Plugins.RestServer.Controllers
             string hash)
         {
             if (UInt160.TryParse(hash, out var scripthash) == false) return BadRequest(nameof(hash));
-            return Ok(new { WalletAddress = scripthash.ToAddress(_neosystem.Settings.AddressVersion) });
+            return Ok(new { Address = scripthash.ToAddress(_neosystem.Settings.AddressVersion) });
         }
 
         [HttpGet("{address:required}/scripthash")]
@@ -43,10 +44,30 @@ namespace Neo.Plugins.RestServer.Controllers
             {
                 return Ok(new { ScriptHash = addr.ToScriptHash(_neosystem.Settings.AddressVersion) });
             }
-            catch
+            catch (FormatException)
             {
-                return BadRequest(nameof(addr));
+                return BadRequest("Invalid format");
             }
+        }
+
+        [HttpGet("{address:required}/validate")]
+        public IActionResult ValidateAddress(
+            [FromRoute(Name = "address")]
+            string addr)
+        {
+            UInt160 scriptHash = UInt160.Zero;
+            try
+            {
+                if (UInt160.TryParse(addr, out scriptHash) == false)
+                    scriptHash = addr.ToScriptHash(_neosystem.Settings.AddressVersion);
+
+            }
+            catch (FormatException) { }
+            return Ok(new
+            {
+                Address = addr,
+                IsValid = scriptHash != UInt160.Zero,
+            });
         }
     }
 }

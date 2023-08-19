@@ -13,6 +13,7 @@ using Neo.SmartContract.Native;
 using Microsoft.AspNetCore.Http;
 using Neo.Plugins.RestServer.Models;
 using Neo.Plugins.RestServer.Extensions;
+using Neo.Plugins.RestServer.Exceptions;
 
 namespace Neo.Plugins.RestServer.Controllers
 {
@@ -26,7 +27,7 @@ namespace Neo.Plugins.RestServer.Controllers
         public LedgerController(
             RestServerSettings restsettings)
         {
-            _neosystem = RestServerPlugin.NeoSystem;
+            _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
             _settings = restsettings;
         }
 

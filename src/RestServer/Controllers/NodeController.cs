@@ -11,6 +11,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Neo.IO;
 using Neo.Network.P2P;
+using Neo.Plugins.RestServer.Exceptions;
+using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Models.Node;
 using Neo.SmartContract.Native;
 
@@ -26,7 +28,7 @@ namespace Neo.Plugins.RestServer.Controllers
         public NodeController()
         {
             _neolocalnode = RestServerPlugin.LocalNode;
-            _neosystem = RestServerPlugin.NeoSystem;
+            _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
         }
 
         [HttpGet]
@@ -48,14 +50,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 headerHeight,
                 connectedCount,
                 unconnectedCount,
-                Nodes = rNodes.Select(s =>
-                    new RemoteNodeModel()
-                    {
-                        RemoteAddress = s.Remote.Address.ToString(),
-                        RemotePort = s.Remote.Port,
-                        ListenTcpPort = s.ListenerTcpPort,
-                        LastBlockIndex = s.LastBlockIndex,
-                    }),
+                Nodes = rNodes.Select(s => s.ToModel()),
             });
         }
 
@@ -67,14 +62,24 @@ namespace Neo.Plugins.RestServer.Controllers
                 .OrderByDescending(o => o.LastBlockIndex)
                 .ToArray();
 
-            return Ok(rNodes.Select(s =>
-                    new RemoteNodeModel()
-                    {
-                        RemoteAddress = s.Remote.Address.ToString(),
-                        RemotePort = s.Remote.Port,
-                        ListenTcpPort = s.ListenerTcpPort,
-                        LastBlockIndex = s.LastBlockIndex,
-                    }));
+            return Ok(rNodes.Select(s => s.ToModel()));
         }
+
+        [HttpGet("plugins")]
+        public IActionResult GetPlugins() =>
+            Ok(Plugin.Plugins.Select(s => new
+            {
+                s.Name,
+                Version = s.Version.ToString(3),
+                s.Description,
+                Interfaces = s.GetType().GetInterfaces()
+                    .Select(ss => ss.Name)
+                    .Where(w => w.EndsWith("Plugin"))
+                    .ToArray(),
+            }));
+
+        [HttpGet("settings")]
+        public IActionResult GetSettings() =>
+            Ok(_neosystem.Settings.ToModel());
     }
 }

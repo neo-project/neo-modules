@@ -8,9 +8,11 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.P2P.Payloads.Conditions;
 using Neo.Plugins.RestServer.Models;
+using Neo.Plugins.RestServer.Models.Node;
 using Neo.Plugins.RestServer.Models.Token;
 using Neo.Plugins.RestServer.Tokens;
 using Neo.SmartContract;
@@ -289,6 +291,34 @@ namespace Neo.Plugins.RestServer.Extensions
                     Key = s,
                     Value = nep11.Properties(s).AsReadOnly(),
                 }).ToDictionary(key => Convert.ToHexString(key.Key), value => value.Value).AsReadOnly(),
+            };
+
+        public static ProtocolSettingsModel ToModel(this ProtocolSettings protocolSettings) =>
+            new()
+            {
+                Network = protocolSettings.Network,
+                AddressVersion = protocolSettings.AddressVersion,
+                ValidatorsCount = protocolSettings.ValidatorsCount,
+                MillisecondsPerBlock = protocolSettings.MillisecondsPerBlock,
+                MaxValidUntilBlockIncrement = protocolSettings.MaxValidUntilBlockIncrement,
+                MaxTransactionsPerBlock = protocolSettings.MaxTransactionsPerBlock,
+                MemoryPoolMaxTransactions = protocolSettings.MemoryPoolMaxTransactions,
+                MaxTraceableBlocks = protocolSettings.MaxTraceableBlocks,
+                InitialGasDistribution = protocolSettings.InitialGasDistribution,
+                SeedList = protocolSettings.SeedList,
+                NativeUpdateHistory = protocolSettings.NativeUpdateHistory,
+                Hardforks = protocolSettings.Hardforks,
+                StandbyValidators = protocolSettings.StandbyValidators,
+                StandbyCommittee = protocolSettings.StandbyCommittee,
+            };
+
+        public static RemoteNodeModel ToModel(this RemoteNode remoteNode) =>
+            new()
+            {
+                RemoteAddress = remoteNode.Remote.Address.ToString(),
+                RemotePort = remoteNode.Remote.Port,
+                ListenTcpPort = remoteNode.ListenerTcpPort,
+                LastBlockIndex = remoteNode.LastBlockIndex,
             };
     }
 }

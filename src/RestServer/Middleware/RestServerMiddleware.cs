@@ -33,7 +33,7 @@ namespace Neo.Plugins.RestServer.Middleware
 
             SetServerInfomationHeader(response);
 
-            if (_settings.DisableUrlPaths.Any(a => request.Path.StartsWithSegments(a, StringComparison.OrdinalIgnoreCase)) ||
+            if (_settings.DisableRoutes.Any(a => request.Path.StartsWithSegments(a, StringComparison.OrdinalIgnoreCase)) ||
                 (_settings.EnableBasicAuthentication && CheckHttpBasicAuthentication(request) == false))
             {
                 response.StatusCode = StatusCodes.Status503ServiceUnavailable;

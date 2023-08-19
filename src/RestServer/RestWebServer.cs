@@ -11,13 +11,15 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
 using Neo.Plugins.RestServer.Middleware;
+using Neo.Plugins.RestServer.Providers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using System.IO.Compression;
 using System.Net;
 using System.Net.Mime;
 using System.Net.Security;
@@ -30,7 +32,6 @@ namespace Neo.Plugins.RestServer
         #region Globals
 
         private readonly RestServerSettings _settings;
-
         private IWebHost _host;
 
         #endregion
@@ -81,7 +82,7 @@ namespace Neo.Plugins.RestServer
                     // Server configuration
                     if (_settings.EnableCors)
                     {
-                        if (_settings.AllowCorsUrls.Length == 0)
+                        if (_settings.AllowOrigins.Length == 0)
                             services.AddCors(options =>
                             {
                                 options.AddDefaultPolicy(policy =>
@@ -99,7 +100,7 @@ namespace Neo.Plugins.RestServer
                             {
                                 options.AddDefaultPolicy(policy =>
                                 {
-                                    policy.WithOrigins(_settings.AllowCorsUrls)
+                                    policy.WithOrigins(_settings.AllowOrigins)
                                     .AllowAnyHeader()
                                     .AllowCredentials()
                                     .WithMethods("GET", "POST");
@@ -117,7 +118,14 @@ namespace Neo.Plugins.RestServer
                             options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Append(MediaTypeNames.Application.Json);
                         });
 
-                    var controllers = services.AddControllers(options => options.EnableEndpointRouting = false);
+                    var controllers = services
+                        .AddControllers(options => options.EnableEndpointRouting = false)
+                        .ConfigureApplicationPartManager(manager =>
+                        {
+                            var controllerFeatureProvider = manager.FeatureProviders.Single(p => p.GetType() == typeof(ControllerFeatureProvider));
+                            manager.FeatureProviders.Remove(controllerFeatureProvider);
+                            manager.FeatureProviders.Add(new BlackListControllerFeatureProvider(_settings));
+                        });
 
                     // Load all plugins Controllers
                     foreach (var plugin in Plugin.Plugins)

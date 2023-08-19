@@ -33,8 +33,8 @@ namespace Neo.Plugins.RestServer
         public string RestUser { get; init; }
         public string RestPass { get; init; }
         public bool EnableCors { get; init; }
-        public string[] AllowCorsUrls { get; init; }
-        public string[] DisableUrlPaths { get; init; }
+        public string[] AllowOrigins { get; init; }
+        public string[] DisableControllers { get; init; }
         public bool EnableCompression { get; init; }
         public CompressionLevel CompressionLevel { get; init; }
         public bool EnableForwardedHeaders { get; init; }
@@ -63,8 +63,8 @@ namespace Neo.Plugins.RestServer
             RestUser = string.Empty,
             RestPass = string.Empty,
             EnableCors = false,
-            AllowCorsUrls = Array.Empty<string>(),
-            DisableUrlPaths = Array.Empty<string>(),
+            AllowOrigins = Array.Empty<string>(),
+            DisableControllers = Array.Empty<string>(),
             EnableCompression = false,
             CompressionLevel = CompressionLevel.SmallestSize,
             EnableForwardedHeaders = false,
@@ -113,8 +113,8 @@ namespace Neo.Plugins.RestServer
                 RestUser = section.GetValue(nameof(RestUser), Default.RestUser),
                 RestPass = section.GetValue(nameof(RestPass), Default.RestPass),
                 EnableCors = section.GetValue(nameof(EnableCors), Default.EnableCors),
-                AllowCorsUrls = section.GetValue(nameof(AllowCorsUrls), Default.AllowCorsUrls),
-                DisableUrlPaths = section.GetValue(nameof(DisableUrlPaths), Default.DisableUrlPaths),
+                AllowOrigins = section.GetValue(nameof(AllowOrigins), Default.AllowOrigins),
+                DisableControllers = section.GetValue(nameof(DisableControllers), Default.DisableControllers),
                 EnableCompression = section.GetValue(nameof(EnableCompression), Default.EnableCompression),
                 CompressionLevel = section.GetValue(nameof(CompressionLevel), Default.CompressionLevel),
                 EnableForwardedHeaders = section.GetValue(nameof(EnableForwardedHeaders), Default.EnableForwardedHeaders),

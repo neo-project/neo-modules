@@ -10,6 +10,7 @@
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Helpers;
 using Neo.SmartContract.Native;
@@ -27,7 +28,7 @@ namespace Neo.Plugins.RestServer.Controllers
         public ContractsController(
             RestServerSettings restsettings)
         {
-            _neosystem = RestServerPlugin.NeoSystem;
+            _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
             _settings = restsettings;
         }
 
@@ -130,9 +131,9 @@ namespace Neo.Plugins.RestServer.Controllers
                 if (engine == null) return BadRequest();
                 return Ok(engine.ToModel());
             }
-            catch
+            catch (Exception ex)
             {
-                return Conflict();
+                return Conflict(ex?.InnerException?.Message ?? ex.Message);
             }
         }
     }

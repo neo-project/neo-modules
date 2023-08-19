@@ -11,8 +11,8 @@
     "RestUser": "",
     "RestPass": "",
     "EnableCors": false,
-    "AllowCorsUrls": [], // Example: "http://www.example.com"
-    "DisableUrlPaths": [ "/api/v1/wallet" ], // Disables all route starting with. Example: http://127.0.0.1:10339/api/v1/wallet/open will be disabled as well.
+    "AllowOrigins": [], // Example: "http://www.example.com"
+    "DisableControllers": [ "WalletController" ],
     "EnableCompression": false,
     "CompressionLevel": "SmallestSize", // "Fastest" or "Optimal" or "NoCompression" or "SmallestSize"
     "EnableForwardedHeaders": false,
