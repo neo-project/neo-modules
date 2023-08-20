@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Neo.Network.P2P.Payloads;
 using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Extensions;
+using Neo.Plugins.RestServer.Models.Error;
 using Neo.Plugins.RestServer.Models.Wallet;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
@@ -46,7 +47,8 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromBody]
             WalletOpenModel model)
         {
-            if (ModelState.IsValid == false) return BadRequest();
+            if (ModelState.IsValid == false)
+                return BadRequest();
             if (System.IO.File.Exists(model.Path) == false) return NotFound(model.Path);
             var wallet = Wallet.Open(model.Path, model.Password, _neosystem.Settings);
             if (wallet == null) return Forbid();
@@ -205,6 +207,7 @@ namespace Neo.Plugins.RestServer.Controllers
                     Label = account.Label,
                     WatchOnly = account.WatchOnly,
                 });
+            if (accounts.Any() == false) return NoContent();
             return Ok(accounts.ToArray());
         }
 
@@ -259,6 +262,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 model.From, signers);
             if (tx == null) return BadRequest("Insufficient funds");
             var totalFees = new BigDecimal((BigInteger)(tx.SystemFee + tx.NetworkFee), NativeContract.GAS.Decimals);
+            if (totalFees.Value > _settings.MaxTransactionFee) return BadRequest("MaxTransactionFee");
             var context = new ContractParametersContext(snapshot, tx, _neosystem.Settings.Network);
             wallet.Sign(context);
             if (context.Completed == false) return BadRequest();
