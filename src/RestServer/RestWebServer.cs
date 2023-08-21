@@ -49,6 +49,8 @@ namespace Neo.Plugins.RestServer
         {
             if (IsRunning) return;
 
+            IsRunning = true;
+
             _host = new WebHostBuilder()
                 .UseKestrel(options =>
                 {
@@ -150,6 +152,9 @@ namespace Neo.Plugins.RestServer
                             options.SerializerSettings.Converters.Add(converter);
                     });
 
+                    if (_settings.EnableSwagger)
+                        services.AddSwaggerGen();
+
                     // Service configuration
                     if (_settings.EnableForwardedHeaders)
                         services.Configure<ForwardedHeadersOptions>(options => options.ForwardedHeaders = ForwardedHeaders.All);
@@ -171,6 +176,13 @@ namespace Neo.Plugins.RestServer
                         app.UseResponseCompression();
 
                     app.UseMiddleware<RestServerMiddleware>(_settings);
+
+                    if (_settings.EnableSwagger)
+                    {
+                        app.UseSwagger();
+                        app.UseSwaggerUI(options => options.DefaultModelsExpandDepth(-1));
+                    }
+
                     app.UseExceptionHandler(c => c.Run(async context =>
                     {
                         var exception = context.Features
@@ -188,7 +200,6 @@ namespace Neo.Plugins.RestServer
                 })
                 .Build();
             _host.Start();
-            IsRunning = true;
         }
     }
 }

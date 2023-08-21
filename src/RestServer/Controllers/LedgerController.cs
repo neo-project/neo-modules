@@ -14,10 +14,12 @@ using Microsoft.AspNetCore.Http;
 using Neo.Plugins.RestServer.Models;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Exceptions;
+using System.Net.Mime;
 
 namespace Neo.Plugins.RestServer.Controllers
 {
     [Route("/api/v1/ledger")]
+    [Produces(MediaTypeNames.Application.Json)]
     [ApiController]
     public class LedgerController : ControllerBase
     {
@@ -32,14 +34,18 @@ namespace Neo.Plugins.RestServer.Controllers
 
         #region Accounts
 
-        [HttpGet("gas/accounts")]
+        [HttpGet("gas/accounts", Name = "GetGasAccounts")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult ShowGasAccounts()
         {
             var accounts = NativeContract.GAS.ListAccounts(_neosystem.StoreView, _neosystem.Settings);
             return Ok(accounts.OrderByDescending(o => o.Balance));
         }
 
-        [HttpGet("neo/accounts")]
+        [HttpGet("neo/accounts", Name = "GetNeoAccounts")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult ShowNeoAccounts()
         {
             var accounts = NativeContract.NEO.ListAccounts(_neosystem.StoreView, _neosystem.Settings);
@@ -50,7 +56,10 @@ namespace Neo.Plugins.RestServer.Controllers
 
         #region Blocks
 
-        [HttpGet("blocks")]
+        [HttpGet("blocks", Name = "GetBlocks")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetBlocks(
             [FromQuery(Name = "page")]
             uint skip = 1,
@@ -75,7 +84,9 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(lstOfBlocks);
         }
 
-        [HttpGet("blocks/height")]
+        [HttpGet("blocks/height", Name = "GetBlockHeight")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetCurrentBlock()
         {
             var currentIndex = NativeContract.Ledger.CurrentIndex(_neosystem.StoreView);
@@ -83,37 +94,49 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(block.ToModel());
         }
 
-        [HttpGet("blocks/{index:min(0)}")]
+        [HttpGet("blocks/{index:min(0)}", Name = "GetBlock")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetBlock(
             [FromRoute(Name = "index")]
             uint blockIndex)
         {
             var block = NativeContract.Ledger.GetBlock(_neosystem.StoreView, blockIndex);
-            if (block == null) return NotFound();
+            if (block == null)
+                throw new BlockNotFoundException(blockIndex);
             return Ok(block.ToModel());
         }
 
-        [HttpGet("blocks/{index:min(0)}/header")]
+        [HttpGet("blocks/{index:min(0)}/header", Name = "GetBlockHeader")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetBlockHeader(
             [FromRoute(Name = "index")]
             uint blockIndex)
         {
             var block = NativeContract.Ledger.GetBlock(_neosystem.StoreView, blockIndex);
-            if (block == null) return NotFound();
+            if (block == null)
+                throw new BlockNotFoundException(blockIndex);
             return Ok(block.Header.ToModel());
         }
 
-        [HttpGet("blocks/{index:min(0)}/witness")]
+        [HttpGet("blocks/{index:min(0)}/witness", Name = "GetBlockWitness")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetBlockWitness(
             [FromRoute(Name = "index")]
             uint blockIndex)
         {
             var block = NativeContract.Ledger.GetBlock(_neosystem.StoreView, blockIndex);
-            if (block == null) return NotFound();
+            if (block == null)
+                throw new BlockNotFoundException(blockIndex);
             return Ok(block.Witness.ToModel());
         }
 
-        [HttpGet("blocks/{index:min(0)}/transactions")]
+        [HttpGet("blocks/{index:min(0)}/transactions", Name = "GetBlockTransactions")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetBlockTransactions(
             [FromRoute(Name = "index")]
             uint blockIndex,
@@ -135,18 +158,23 @@ namespace Neo.Plugins.RestServer.Controllers
 
         #region Transactions
 
-        [HttpGet("transactions/{hash:required}")]
+        [HttpGet("transactions/{hash:required}", Name = "GetTransaction")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetTransaction(
             [FromRoute( Name = "hash")]
             UInt256 hash)
         {
             if (NativeContract.Ledger.ContainsTransaction(_neosystem.StoreView, hash) == false) return NotFound();
             var txst = NativeContract.Ledger.GetTransaction(_neosystem.StoreView, hash);
-            if (txst == null) return NotFound();
+            if (txst == null)
+                throw new TransactionNotFoundException(hash);
             return Ok(txst.ToModel());
         }
 
-        [HttpGet("transactions/{hash:required}/witnesses")]
+        [HttpGet("transactions/{hash:required}/witnesses", Name = "GetTransactionWitnesses")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetTransactionWitnesses(
             [FromRoute( Name = "hash")]
             UInt256 hash)
@@ -157,7 +185,9 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(tx.Witnesses.Select(s => s.ToModel()));
         }
 
-        [HttpGet("transactions/{hash:required}/signers")]
+        [HttpGet("transactions/{hash:required}/signers", Name = "GetTransactionSigners")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetTransactionSigners(
             [FromRoute( Name = "hash")]
             UInt256 hash)
@@ -168,7 +198,9 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(tx.Signers.Select(s => s.ToModel()));
         }
 
-        [HttpGet("transactions/{hash:required}/attributes")]
+        [HttpGet("transactions/{hash:required}/attributes", Name = "GetTransactionAttributes")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetTransactionAttributes(
             [FromRoute( Name = "hash")]
             UInt256 hash)
@@ -183,7 +215,9 @@ namespace Neo.Plugins.RestServer.Controllers
 
         #region Memory Pool
 
-        [HttpGet("memorypool")]
+        [HttpGet("memorypool", Name = "GetMemoryPoolTransactions")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetMemoryPool(
             [FromQuery(Name = "page")]
             int skip = 1,
@@ -195,7 +229,9 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(_neosystem.MemPool.Skip((skip - 1) * take).Take(take).Select(s => s.ToModel()));
         }
 
-        [HttpGet("memorypool/count")]
+        [HttpGet("memorypool/count", Name = "GetMemoryPoolCount")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetMemoryPoolCount() =>
             Ok(new
             {
@@ -204,7 +240,10 @@ namespace Neo.Plugins.RestServer.Controllers
                 _neosystem.MemPool.VerifiedCount,
             });
 
-        [HttpGet("memorypool/verified")]
+        [HttpGet("memorypool/verified", Name = "GetMemoryPoolVeridiedTransactions")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetMemoryPoolVerified(
             [FromQuery(Name = "page")]
             int skip = 1,
@@ -218,7 +257,10 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(vTx.Skip((skip - 1) * take).Take(take).Select(s => s.ToModel()));
         }
 
-        [HttpGet("memorypool/unverified")]
+        [HttpGet("memorypool/unverified", Name = "GetMemoryPoolUnveridiedTransactions")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetMemoryPoolUnVerified(
             [FromQuery(Name = "page")]
             int skip = 1,

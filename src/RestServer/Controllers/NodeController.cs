@@ -8,16 +8,19 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Neo.IO;
 using Neo.Network.P2P;
 using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.SmartContract.Native;
+using System.Net.Mime;
 
 namespace Neo.Plugins.RestServer.Controllers
 {
     [Route("/api/v1/node")]
+    [Produces(MediaTypeNames.Application.Json)]
     [ApiController]
     public class NodeController : ControllerBase
     {
@@ -30,7 +33,9 @@ namespace Neo.Plugins.RestServer.Controllers
             _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
         }
 
-        [HttpGet]
+        [HttpGet(Name = "GetNodeInfo")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult Get()
         {
             var rNodes = _neolocalnode
@@ -53,7 +58,9 @@ namespace Neo.Plugins.RestServer.Controllers
             });
         }
 
-        [HttpGet("peers")]
+        [HttpGet("peers", Name = "GetNodeRemotePeers")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetPeers()
         {
             var rNodes = _neolocalnode
@@ -64,7 +71,9 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(rNodes.Select(s => s.ToModel()));
         }
 
-        [HttpGet("plugins")]
+        [HttpGet("plugins", Name = "GetNodePlugins")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetPlugins() =>
             Ok(Plugin.Plugins.Select(s => new
             {
@@ -73,7 +82,9 @@ namespace Neo.Plugins.RestServer.Controllers
                 s.Description,
             }));
 
-        [HttpGet("settings")]
+        [HttpGet("settings", Name = "GetNodeProcotolSettings")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetSettings() =>
             Ok(_neosystem.Settings.ToModel());
     }

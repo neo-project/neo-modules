@@ -8,13 +8,16 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Neo.Plugins.RestServer.Exceptions;
 using Neo.Wallets;
+using System.Net.Mime;
 
 namespace Neo.Plugins.RestServer.Controllers
 {
     [Route("/api/v1/utils")]
+    [Produces(MediaTypeNames.Application.Json)]
     [ApiController]
     public class UtilsController : ControllerBase
     {
@@ -27,7 +30,9 @@ namespace Neo.Plugins.RestServer.Controllers
 
         #region Validation
 
-        [HttpGet("{hash:required}/address")]
+        [HttpGet("{hash:required}/address", Name = "GetAddressByScripthash")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult ScriptHashToWalletAddress(
             [FromRoute(Name = "hash")]
             string hash)
@@ -44,7 +49,9 @@ namespace Neo.Plugins.RestServer.Controllers
             }
         }
 
-        [HttpGet("{address:required}/scripthash")]
+        [HttpGet("{address:required}/scripthash", Name = "GetScripthashByAddress")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult WalletAddressToScriptHash(
             [FromRoute(Name = "address")]
             string addr)
@@ -59,7 +66,9 @@ namespace Neo.Plugins.RestServer.Controllers
             }
         }
 
-        [HttpGet("{address:required}/validate")]
+        [HttpGet("{address:required}/validate", Name = "IsValidAddressOrScriptHash")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult ValidateAddress(
             [FromRoute(Name = "address")]
             string addr)

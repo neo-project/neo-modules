@@ -16,10 +16,12 @@ using Neo.SmartContract.Native;
 using Neo.Plugins.RestServer.Helpers;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Exceptions;
+using System.Net.Mime;
 
 namespace Neo.Plugins.RestServer.Controllers
 {
     [Route("/api/v1/tokens")]
+    [Produces(MediaTypeNames.Application.Json)]
     [ApiController]
     public class TokenController : ControllerBase
     {
@@ -34,7 +36,10 @@ namespace Neo.Plugins.RestServer.Controllers
 
         #region NEP-17
 
-        [HttpGet("nep-17")]
+        [HttpGet("nep-17", Name = "GetNep17Tokens")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetNEP17(
             [FromQuery(Name = "page")]
             int skip = 1,
@@ -63,43 +68,48 @@ namespace Neo.Plugins.RestServer.Controllers
                 {
                 }
             }
+            if (listResults.Any() == false) return NoContent();
             return Ok(listResults);
         }
 
-        [HttpGet("nep-17/count")]
+        [HttpGet("nep-17/count", Name = "GetNep17TokenCount")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetNEP17Count()
         {
             return Ok(new { Count = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView).Count(c => ContractHelper.IsNep17Supported(c)) });
         }
 
-        [HttpGet("nep-17/{scripthash:required}/balanceof/{address:required}")]
+        [HttpGet("nep-17/{scripthash:required}/balanceof/{address:required}", Name = "GetNep17TokenBalanceOf")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetNEP17(
             [FromRoute(Name = "scripthash")]
-            UInt160 sAddressHash,
+            UInt160 tokenAddessOrScripthash,
             [FromRoute(Name = "address")]
-            UInt160 addressHash)
+            UInt160 lookupAddressOrScripthash)
         {
-            var contract = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, sAddressHash);
+            var contract = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, tokenAddessOrScripthash);
             if (contract == null)
-                throw new ContractNotFoundException(sAddressHash);
+                throw new ContractNotFoundException(tokenAddessOrScripthash);
             if (ContractHelper.IsNep17Supported(contract) == false)
-                throw new Nep17NotSupportedException(sAddressHash);
+                throw new Nep17NotSupportedException(tokenAddessOrScripthash);
             try
             {
-                var token = new NEP17Token(_neosystem, sAddressHash, _settings);
+                var token = new NEP17Token(_neosystem, tokenAddessOrScripthash, _settings);
                 return Ok(new TokenBalanceModel()
                 {
                     Name = token.Name,
                     ScriptHash = token.ScriptHash,
                     Symbol = token.Symbol,
                     Decimals = token.Decimals,
-                    Balance = token.BalanceOf(addressHash).Value,
+                    Balance = token.BalanceOf(lookupAddressOrScripthash).Value,
                     TotalSupply = token.TotalSupply().Value,
                 });
             }
             catch
             {
-                throw new Nep17NotSupportedException(sAddressHash);
+                throw new Nep17NotSupportedException(tokenAddessOrScripthash);
             }
         }
 
@@ -107,7 +117,10 @@ namespace Neo.Plugins.RestServer.Controllers
 
         #region NEP-11
 
-        [HttpGet("nep-11")]
+        [HttpGet("nep-11", Name = "GetNep11Tokens")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetNEP11(
             [FromQuery(Name = "page")]
             int skip = 1,
@@ -136,16 +149,21 @@ namespace Neo.Plugins.RestServer.Controllers
                 {
                 }
             }
+            if (listResults.Any() == false) return NoContent();
             return Ok(listResults);
         }
 
-        [HttpGet("nep-11/count")]
+        [HttpGet("nep-11/count", Name = "GetNep11TokenCount")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetNEP11Count()
         {
             return Ok(new { Count = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView).Count(c => ContractHelper.IsNep11Supported(c)) });
         }
 
-        [HttpGet("nep-11/{scripthash:required}/balanceof/{address:required}")]
+        [HttpGet("nep-11/{scripthash:required}/balanceof/{address:required}", Name = "GetNep11TokenBalanceOf")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetNEP11(
             [FromRoute(Name = "scripthash")]
             UInt160 sAddressHash,
@@ -179,10 +197,12 @@ namespace Neo.Plugins.RestServer.Controllers
         #endregion
 
         // Gets every single NEP17/NEP11 on the blockchain balance by address (scriptHash).
-        [HttpGet("balanceof/{address:required}")]
+        [HttpGet("balanceof/{address:required}", Name = "GetAllTokensBalanceOf")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetBalances(
             [FromRoute(Name = "address")]
-            UInt160 addressHash)
+            UInt160 addressOrScripthash)
         {
             var tokenList = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView);
             var validContracts = tokenList
@@ -194,7 +214,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 try
                 {
                     var token = new NEP17Token(_neosystem, contract.Hash, _settings);
-                    var balance = token.BalanceOf(addressHash).Value;
+                    var balance = token.BalanceOf(addressOrScripthash).Value;
                     if (balance == 0) continue;
                     listResults.Add(new()
                     {
@@ -207,7 +227,7 @@ namespace Neo.Plugins.RestServer.Controllers
                     });
 
                     var nft = new NEP11Token(_neosystem, contract.Hash, _settings);
-                    balance = nft.BalanceOf(addressHash).Value;
+                    balance = nft.BalanceOf(addressOrScripthash).Value;
                     if (balance == 0) continue;
                     listResults.Add(new()
                     {

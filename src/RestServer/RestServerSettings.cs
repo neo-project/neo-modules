@@ -38,12 +38,12 @@ namespace Neo.Plugins.RestServer
         public bool EnableCompression { get; init; }
         public CompressionLevel CompressionLevel { get; init; }
         public bool EnableForwardedHeaders { get; init; }
+        public bool EnableSwagger { get; init; }
         public uint MaxPageSize { get; init; }
         public long MaxConcurrentConnections { get; init; }
         public long MaxTransactionFee { get; init; }
         public long MaxInvokeGas { get; init; }
         public uint MaxTransactionSize { get; init; }
-        public uint MaxWalletSessions { get; init; }
         public int WalletTimeout { get; init; }
         public JsonSerializerSettings JsonSerializerSettings { get; init; }
 
@@ -70,12 +70,12 @@ namespace Neo.Plugins.RestServer
             EnableCompression = false,
             CompressionLevel = CompressionLevel.SmallestSize,
             EnableForwardedHeaders = false,
+            EnableSwagger = false,
             MaxPageSize = 50u,
             MaxConcurrentConnections = 40L,
             MaxTransactionFee = 0_10000000L,
             MaxInvokeGas = 0_20000000L,
             MaxTransactionSize = 1024,
-            MaxWalletSessions = 10,
             WalletTimeout = 2,
             JsonSerializerSettings = new JsonSerializerSettings()
             {
@@ -123,12 +123,12 @@ namespace Neo.Plugins.RestServer
                 EnableCompression = section.GetValue(nameof(EnableCompression), Default.EnableCompression),
                 CompressionLevel = section.GetValue(nameof(CompressionLevel), Default.CompressionLevel),
                 EnableForwardedHeaders = section.GetValue(nameof(EnableForwardedHeaders), Default.EnableForwardedHeaders),
+                EnableSwagger = section.GetValue(nameof(EnableSwagger), Default.EnableSwagger),
                 MaxPageSize = section.GetValue(nameof(MaxPageSize), Default.MaxPageSize),
                 MaxConcurrentConnections = section.GetValue(nameof(MaxConcurrentConnections), Default.MaxConcurrentConnections),
                 MaxTransactionFee = section.GetValue(nameof(MaxTransactionFee), Default.MaxTransactionFee),
                 MaxInvokeGas = section.GetValue(nameof(MaxInvokeGas), Default.MaxInvokeGas),
                 MaxTransactionSize = section.GetValue(nameof(MaxTransactionSize), Default.MaxTransactionSize),
-                MaxWalletSessions = section.GetValue(nameof(MaxWalletSessions), Default.MaxWalletSessions),
                 WalletTimeout = section.GetValue(nameof(WalletTimeout), Default.WalletTimeout),
                 JsonSerializerSettings = Default.JsonSerializerSettings,
             };
