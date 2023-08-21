@@ -233,7 +233,6 @@ namespace Neo.Plugins
                         break;
                     }
 
-
                     JObject j = new();
                     j["key"] = Convert.ToBase64String(iter.Current.Key.Key.Span);
                     j["value"] = Convert.ToBase64String(iter.Current.Value.Value.Span);
@@ -241,7 +240,6 @@ namespace Neo.Plugins
                     i++;
                 }
                 json["truncated"] = hasMore;
-
             }
 
             json["next"] = start + i;
