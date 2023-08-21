@@ -8,14 +8,11 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System.Numerics;
-
-namespace Neo.Plugins.RestServer.Models.Blockchain
+namespace Neo.Plugins.RestServer.Exceptions
 {
-    internal class AccountDetails
+    internal class UInt256FormatException : Exception
     {
-        public UInt160 ScriptHash { get; set; }
-        public string Address { get; set; }
-        public BigInteger Balance { get; set; }
+        public UInt256FormatException() { }
+        public UInt256FormatException(string message) : base(message) { }
     }
 }

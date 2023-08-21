@@ -25,11 +25,10 @@ namespace Neo.Plugins.RestServer.Controllers
         private readonly NeoSystem _neosystem;
         private readonly RestServerSettings _settings;
 
-        public ContractsController(
-            RestServerSettings restsettings)
+        public ContractsController()
         {
             _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
-            _settings = restsettings;
+            _settings = RestServerSettings.Current;
         }
 
         [HttpGet]
@@ -39,7 +38,8 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 1 || take < 1 || take > _settings.MaxPageSize) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
+            if (skip < 1 || take < 1 || take > _settings.MaxPageSize)
+                throw new InvalidParameterRangeException();
             var contracts = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView);
             if (contracts.Any() == false) return NoContent();
             var contractRequestList = contracts.OrderBy(o => o.Manifest.Name).Skip((skip - 1) * take).Take(take);
@@ -57,12 +57,12 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpGet("{hash:required}/storage")]
         public IActionResult GetContractStorage(
             [FromRoute(Name = "hash")]
-            string hash)
+            UInt160 scripthash)
         {
-            if (UInt160.TryParse(hash, out var scripthash) == false) return BadRequest(nameof(hash));
             if (NativeContract.IsNative(scripthash)) return NoContent();
             var contract = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, scripthash);
-            if (contract == null) return NotFound(nameof(hash));
+            if (contract == null)
+                throw new ContractNotFoundException(scripthash);
             var contractStorage = contract.GetStorage(_neosystem.StoreView);
             if (contractStorage.Any() == false) return NoContent();
             return Ok(contractStorage.Select(s => new KeyValuePair<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>(s.key.Key, s.value.Value)));
@@ -71,69 +71,69 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpGet("{hash:required}")]
         public IActionResult GetByScriptHash(
             [FromRoute(Name = "hash")]
-            string hash)
+            UInt160 scripthash)
         {
-            if (UInt160.TryParse(hash, out var scripthash) == false) return BadRequest(nameof(hash));
             var contracts = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, scripthash);
-            if (contracts == null) return NotFound(nameof(hash));
+            if (contracts == null)
+                throw new ContractNotFoundException(scripthash);
             return Ok(contracts.ToModel());
         }
 
         [HttpGet("{hash:required}/abi")]
         public IActionResult GetContractAbi(
             [FromRoute(Name = "hash")]
-            string hash)
+            UInt160 scripthash)
         {
-            if (UInt160.TryParse(hash, out var scripthash) == false) return BadRequest(nameof(hash));
             var contracts = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, scripthash);
-            if (contracts == null) return NotFound(nameof(hash));
+            if (contracts == null)
+                throw new ContractNotFoundException(scripthash);
             return Ok(contracts.Manifest.Abi.ToModel());
         }
 
         [HttpGet("{hash:required}/manifest")]
         public IActionResult GetContractManifest(
             [FromRoute(Name = "hash")]
-            string hash)
+            UInt160 scripthash)
         {
-            if (UInt160.TryParse(hash, out var scripthash) == false) return BadRequest(nameof(hash));
             var contracts = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, scripthash);
-            if (contracts == null) return NotFound(nameof(hash));
+            if (contracts == null)
+                throw new ContractNotFoundException(scripthash);
             return Ok(contracts.Manifest.ToModel());
         }
 
         [HttpGet("{hash:required}/nef")]
         public IActionResult GetContractNef(
             [FromRoute(Name = "hash")]
-            string hash)
+            UInt160 scripthash)
         {
-            if (UInt160.TryParse(hash, out var scripthash) == false) return BadRequest(nameof(hash));
             var contracts = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, scripthash);
-            if (contracts == null) return NotFound(nameof(hash));
+            if (contracts == null)
+                throw new ContractNotFoundException(scripthash);
             return Ok(contracts.Nef.ToModel());
         }
 
         [HttpPost("{hash:required}/invoke")]
         public IActionResult InvokeContract(
             [FromRoute(Name = "hash")]
-            string hash,
+            UInt160 scripthash,
             [FromQuery(Name = "method")]
             string method,
             [FromBody]
             JToken jparams)
         {
+            var contracts = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, scripthash);
+            if (contracts == null)
+                throw new ContractNotFoundException(scripthash);
+            if (string.IsNullOrEmpty(method))
+                throw new QueryParameterNotFoundException(nameof(method));
             try
             {
-                if (UInt160.TryParse(hash, out var scripthash) == false) return BadRequest(nameof(hash));
-                var contracts = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, scripthash);
-                if (contracts == null) return NotFound(nameof(hash));
-                if (string.IsNullOrEmpty(method)) return BadRequest(nameof(method));
                 var engine = ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _neosystem.StoreView, contracts.Hash, method, jparams);
-                if (engine == null) return BadRequest();
                 return Ok(engine.ToModel());
             }
             catch (Exception ex)
             {
-                return Conflict(ex?.InnerException?.Message ?? ex.Message);
+                throw ex?.InnerException ?? ex;
             }
         }
     }

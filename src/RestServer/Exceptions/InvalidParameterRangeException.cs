@@ -8,14 +8,11 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System.Numerics;
-
-namespace Neo.Plugins.RestServer.Models.Blockchain
+namespace Neo.Plugins.RestServer.Exceptions
 {
-    internal class AccountDetails
+    internal class InvalidParameterRangeException : Exception
     {
-        public UInt160 ScriptHash { get; set; }
-        public string Address { get; set; }
-        public BigInteger Balance { get; set; }
+        public InvalidParameterRangeException() : base() { }
+        public InvalidParameterRangeException(string message) : base(message) { }
     }
 }

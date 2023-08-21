@@ -13,7 +13,6 @@ using Neo.IO;
 using Neo.Network.P2P;
 using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Extensions;
-using Neo.Plugins.RestServer.Models.Node;
 using Neo.SmartContract.Native;
 
 namespace Neo.Plugins.RestServer.Controllers
@@ -72,10 +71,6 @@ namespace Neo.Plugins.RestServer.Controllers
                 s.Name,
                 Version = s.Version.ToString(3),
                 s.Description,
-                Interfaces = s.GetType().GetInterfaces()
-                    .Select(ss => ss.Name)
-                    .Where(w => w.EndsWith("Plugin"))
-                    .ToArray(),
             }));
 
         [HttpGet("settings")]

@@ -8,21 +8,12 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.Plugins.RestServer.Exceptions;
-
-namespace Neo.Plugins.RestServer.Models.Error
+namespace Neo.Plugins.RestServer.Exceptions
 {
-    internal class NodeExceptionModel : ErrorModel
+    internal class JsonPropertyNullOrEmptyException : Exception
     {
-        public NodeExceptionModel()
-        {
-            Code = RestErrorCodes.NodeException;
-            Name = nameof(RestErrorCodes.NodeException);
-        }
+        public JsonPropertyNullOrEmptyException() : base() { }
 
-        public NodeExceptionModel(string message) : this()
-        {
-            Message = message;
-        }
+        public JsonPropertyNullOrEmptyException(string paramName) : base($"Value cannot be null or empty. (Parameter '{paramName}')") { }
     }
 }

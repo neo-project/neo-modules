@@ -14,14 +14,11 @@ using Microsoft.AspNetCore.Mvc;
 using Neo.Network.P2P.Payloads;
 using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Extensions;
-using Neo.Plugins.RestServer.Models.Error;
 using Neo.Plugins.RestServer.Models.Wallet;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
-using System.Collections.Concurrent;
-using System.Net.Mime;
 using System.Numerics;
 
 namespace Neo.Plugins.RestServer.Controllers
@@ -30,16 +27,15 @@ namespace Neo.Plugins.RestServer.Controllers
     [ApiController]
     public class WalletController : ControllerBase
     {
-        private static readonly ConcurrentDictionary<Guid, Wallet> _walletSessions = new();
+        private static readonly WalletSessionManager _walletSessions = new();
 
         private readonly NeoSystem _neosystem;
         private readonly RestServerSettings _settings;
 
-        public WalletController(
-            RestServerSettings settings)
+        public WalletController()
         {
             _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
-            _settings = settings;
+            _settings = RestServerSettings.Current;
         }
 
         [HttpPost("open")]
@@ -47,13 +43,17 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromBody]
             WalletOpenModel model)
         {
-            if (ModelState.IsValid == false)
-                return BadRequest();
-            if (System.IO.File.Exists(model.Path) == false) return NotFound(model.Path);
+            if (string.IsNullOrEmpty(model.Path))
+                throw new JsonPropertyNullOrEmptyException(nameof(model.Path));
+            if (string.IsNullOrEmpty(model.Password))
+                throw new JsonPropertyNullOrEmptyException(nameof(model.Password));
+            if (System.IO.File.Exists(model.Path) == false)
+                throw new FileNotFoundException(null, model.Path);
             var wallet = Wallet.Open(model.Path, model.Password, _neosystem.Settings);
-            if (wallet == null) return Forbid();
+            if (wallet == null)
+                throw new WalletOpenException($"File '{model.Path}' could not be opened.");
             var sessionId = Guid.NewGuid();
-            _walletSessions[sessionId] = wallet;
+            _walletSessions[sessionId] = new WalletSession(wallet);
             return Ok(new
             {
                 SessionId = sessionId.ToString("n"),
@@ -63,21 +63,22 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpGet("{session:required}/close")]
         public IActionResult CloseWallet(
             [FromRoute(Name = "session")]
-            string session)
+            Guid session)
         {
-            if (Guid.TryParse(session, out Guid sessionId) == false) return BadRequest(session);
-            if (_walletSessions.ContainsKey(sessionId) == false) return NotFound(session);
-            if (_walletSessions.TryRemove(sessionId, out _) == false) return StatusCode(StatusCodes.Status424FailedDependency);
+            if (_walletSessions.ContainsKey(session) == false)
+                throw new KeyNotFoundException(session.ToString("n"));
+            if (_walletSessions.TryRemove(session, out _) == false)
+                throw new WalletSessionException("Failed to remove session.");
             return Ok();
         }
         [HttpGet("{session:required}/export")]
         public IActionResult WalletExport(
             [FromRoute(Name = "session")]
-            string session)
+            Guid session)
         {
-            if (Guid.TryParse(session, out Guid sessionId) == false) return BadRequest(session);
-            if (_walletSessions.ContainsKey(sessionId) == false) return NotFound(session);
-            var wallet = _walletSessions[sessionId];
+            if (_walletSessions.ContainsKey(session) == false)
+                throw new KeyNotFoundException(session.ToString("n"));
+            var wallet = _walletSessions[session].Wallet;
             var keys = wallet.GetAccounts().Where(p => p.HasKey)
                 .Select(s => new WalletExportKeyModel()
                 {
@@ -85,21 +86,19 @@ namespace Neo.Plugins.RestServer.Controllers
                     Address = s.Address,
                     Wif = s.GetKey().Export()
                 }).ToArray();
-            if (keys.Any() == false) return NoContent();
             return Ok(keys);
         }
 
         [HttpGet("{session:required}/export/{address:required}")]
         public IActionResult WalletExportKey(
             [FromRoute(Name = "session")]
-            string session,
+            Guid session,
             [FromRoute(Name = "address")]
-            string address)
+            UInt160 scriptHash)
         {
-            if (Guid.TryParse(session, out Guid sessionId) == false) return BadRequest(session);
-            if (_walletSessions.ContainsKey(sessionId) == false) return NotFound(session);
-            if (RestServerUtility.TryConvertToScriptHash(address, _neosystem.Settings, out var scriptHash) == false) return NotFound(address);
-            var account = _walletSessions[sessionId].GetAccount(scriptHash);
+            if (_walletSessions.ContainsKey(session) == false)
+                throw new KeyNotFoundException(session.ToString("n"));
+            var account = _walletSessions[session].Wallet.GetAccount(scriptHash);
             var key = account.GetKey();
             return Ok(new WalletExportKeyModel
             {
@@ -112,14 +111,13 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpPost("{session:required}/address/create")]
         public IActionResult CreateNewAddress(
             [FromRoute(Name = "session")]
-            string session,
+            Guid session,
             [FromBody]
             WalletCreateAccountModel model)
         {
-            if (Guid.TryParse(session, out Guid sessionId) == false) return BadRequest(session);
-            if (_walletSessions.ContainsKey(sessionId) == false) return NotFound(session);
-            if (ModelState.IsValid == false) return BadRequest();
-            var wallet = _walletSessions[sessionId];
+            if (_walletSessions.ContainsKey(session) == false)
+                throw new KeyNotFoundException(session.ToString("n"));
+            var wallet = _walletSessions[session].Wallet;
             var account = model.PrivateKey == null || model.PrivateKey.Length == 0 ?
                 wallet.CreateAccount() :
                 wallet.CreateAccount(model.PrivateKey);
@@ -127,35 +125,34 @@ namespace Neo.Plugins.RestServer.Controllers
                 nep6.Save();
             return Ok(new
             {
-                AccountAddress = account.Address,
+                account.Address,
             });
         }
 
         [HttpGet("{session:required}/balance/{asset:required}")]
         public IActionResult GetWalletBalance(
             [FromRoute(Name = "session")]
-            string session,
+            Guid session,
             [FromRoute(Name = "asset")]
-            string asset)
+            UInt160 scriptHash)
         {
-            if (Guid.TryParse(session, out Guid sessionId) == false) return BadRequest(session);
-            if (_walletSessions.ContainsKey(sessionId) == false) return NotFound(session);
-            if (RestServerUtility.TryConvertToScriptHash(asset, _neosystem.Settings, out var scriptHash) == false) return NotFound(asset);
-            var balance = _walletSessions[sessionId].GetAvailable(_neosystem.StoreView, scriptHash);
+            if (_walletSessions.ContainsKey(session) == false)
+                throw new KeyNotFoundException(session.ToString("n"));
+            var balance = _walletSessions[session].Wallet.GetAvailable(_neosystem.StoreView, scriptHash);
             return Ok(new
             {
-                Balance = balance.ToString(),
+                balance,
             });
         }
 
         [HttpGet("{session:required}/UnClaimedGas")]
         public IActionResult GetUnClaimedGas(
             [FromRoute(Name = "session")]
-            string session)
+            Guid session)
         {
-            if (Guid.TryParse(session, out Guid sessionId) == false) return BadRequest(session);
-            if (_walletSessions.ContainsKey(sessionId) == false) return NotFound(session);
-            var wallet = _walletSessions[sessionId];
+            if (_walletSessions.ContainsKey(session) == false)
+                throw new KeyNotFoundException(session.ToString("n"));
+            var wallet = _walletSessions[session].Wallet;
             using var snapshot = _neosystem.GetSnapshot();
             uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
             BigInteger gas = BigInteger.Zero;
@@ -163,21 +160,20 @@ namespace Neo.Plugins.RestServer.Controllers
                 gas += NativeContract.NEO.UnclaimedGas(snapshot, account, height);
             return Ok(new
             {
-                Balance = new BigDecimal(gas, NativeContract.GAS.Decimals).ToString(),
-                BalanceValue = gas,
+                Balance = new BigDecimal(gas, NativeContract.GAS.Decimals),
             });
         }
 
         [HttpPost("{session:required}/import")]
         public IActionResult ImportPrivateKey(
             [FromRoute(Name = "session")]
-            string session,
+            Guid session,
+            [FromBody]
             WalletImportKey model)
         {
-            if (Guid.TryParse(session, out Guid sessionId) == false) return BadRequest(session);
-            if (_walletSessions.ContainsKey(sessionId) == false) return NotFound(session);
-            if (ModelState.IsValid == false) return BadRequest();
-            var wallet = _walletSessions[sessionId];
+            if (_walletSessions.ContainsKey(session) == false)
+                throw new KeyNotFoundException(session.ToString("n"));
+            var wallet = _walletSessions[session].Wallet;
             var account = wallet.Import(model.Wif);
             if (wallet is NEP6Wallet nep6)
                 nep6.Save();
@@ -193,11 +189,11 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpGet("{session:required}/ListAddress")]
         public IActionResult ListAddresses(
             [FromRoute(Name = "session")]
-            string session)
+            Guid session)
         {
-            if (Guid.TryParse(session, out Guid sessionId) == false) return BadRequest(session);
-            if (_walletSessions.ContainsKey(sessionId) == false) return NotFound();
-            var wallet = _walletSessions[sessionId];
+            if (_walletSessions.ContainsKey(session) == false)
+                throw new KeyNotFoundException(session.ToString("n"));
+            var wallet = _walletSessions[session].Wallet;
             var accounts = new List<WalletAddressModel>();
             foreach (var account in wallet.GetAccounts())
                 accounts.Add(new WalletAddressModel()
@@ -207,46 +203,44 @@ namespace Neo.Plugins.RestServer.Controllers
                     Label = account.Label,
                     WatchOnly = account.WatchOnly,
                 });
-            if (accounts.Any() == false) return NoContent();
-            return Ok(accounts.ToArray());
+            return Ok(accounts);
         }
 
         [HttpGet("{session:required}/delete/{account:required}")]
         public IActionResult WalletDeleteAccount(
             [FromRoute(Name = "session")]
-            string session,
+            Guid session,
             [FromRoute(Name = "account")]
-            string account)
+            UInt160 scriptHash)
         {
-            if (Guid.TryParse(session, out Guid sessionId) == false) return BadRequest(session);
-            if (_walletSessions.ContainsKey(sessionId) == false) return NotFound(session);
-            if (RestServerUtility.TryConvertToScriptHash(account, _neosystem.Settings, out var scriptHash) == false) return NotFound(account);
-            var wallet = _walletSessions[sessionId];
-            if (wallet.DeleteAccount(scriptHash))
+            if (_walletSessions.ContainsKey(session) == false)
+                throw new KeyNotFoundException(session.ToString("n"));
+            var wallet = _walletSessions[session].Wallet;
+            if (wallet.DeleteAccount(scriptHash) == false)
+                throw new WalletException($"Could not delete '{scriptHash}' account.");
+            else
             {
                 if (wallet is NEP6Wallet wallet6)
-                    wallet.Save();
+                    wallet6.Save();
                 return Ok();
             }
-            else
-                return Conflict(account);
         }
 
         [HttpPost("{session:required}/transfer")]
         public IActionResult WalletTransferAssets(
             [FromRoute(Name = "session")]
-            string session,
+            Guid session,
             [FromBody]
             WalletSendModel model)
         {
-            if (Guid.TryParse(session, out Guid sessionId) == false) return BadRequest();
-            if (_walletSessions.ContainsKey(sessionId) == false) return NotFound();
-            if (ModelState.IsValid == false) return BadRequest();
-            var wallet = _walletSessions[sessionId];
+            if (_walletSessions.ContainsKey(session) == false)
+                throw new KeyNotFoundException(session.ToString("n"));
+            var wallet = _walletSessions[session].Wallet;
             using var snapshot = _neosystem.GetSnapshot();
             var descriptor = new AssetDescriptor(snapshot, _neosystem.Settings, model.AssetId);
             var amount = new BigDecimal(model.Amount, descriptor.Decimals);
-            if (amount.Sign <= 0) return BadRequest(amount);
+            if (amount.Sign <= 0)
+                throw new WalletException($"Invalid Amount.");
             var signers = model.Signers.Select(s => new Signer() { Scopes = WitnessScope.CalledByEntry, Account = s }).ToArray();
             var tx = wallet.MakeTransaction(snapshot,
                 new[]
@@ -260,12 +254,15 @@ namespace Neo.Plugins.RestServer.Controllers
                     },
                 },
                 model.From, signers);
-            if (tx == null) return BadRequest("Insufficient funds");
+            if (tx == null)
+                throw new WalletInsufficientFundsException();
             var totalFees = new BigDecimal((BigInteger)(tx.SystemFee + tx.NetworkFee), NativeContract.GAS.Decimals);
-            if (totalFees.Value > _settings.MaxTransactionFee) return BadRequest("MaxTransactionFee");
+            if (totalFees.Value > _settings.MaxTransactionFee)
+                throw new WalletException("The transaction fees are to much.");
             var context = new ContractParametersContext(snapshot, tx, _neosystem.Settings.Network);
             wallet.Sign(context);
-            if (context.Completed == false) return BadRequest();
+            if (context.Completed == false)
+                throw new WalletException("Transaction could not be completed at this time.");
             tx.Witnesses = context.GetWitnesses();
             _neosystem.Blockchain.Tell(tx);
             return Ok(tx.ToModel());

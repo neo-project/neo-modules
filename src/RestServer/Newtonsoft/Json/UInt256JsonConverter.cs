@@ -8,6 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Neo.Plugins.RestServer.Exceptions;
 using Newtonsoft.Json;
 
 namespace Neo.Plugins.RestServer.Newtonsoft.Json
@@ -18,7 +19,14 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
         {
             //var o = JObject.Load(reader);
             //return UInt256.Parse(o["value"].ToObject<string>());
-            return UInt256.Parse(reader.ReadAsString());
+            try
+            {
+                return UInt256.Parse(reader.ReadAsString());
+            }
+            catch (FormatException)
+            {
+                throw new UInt256FormatException();
+            }
         }
 
         public override void WriteJson(JsonWriter writer, UInt256 value, JsonSerializer serializer)

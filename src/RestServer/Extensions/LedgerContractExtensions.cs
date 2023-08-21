@@ -104,8 +104,8 @@ namespace Neo.Plugins.RestServer.Extensions
                     var addressHash = new UInt160(key.ToArray().AsSpan(5));
                     yield return new AccountDetails()
                     {
-                        Account = addressHash,
-                        WalletAddress = addressHash.ToAddress(protocolSettings.AddressVersion),
+                        ScriptHash = addressHash,
+                        Address = addressHash.ToAddress(protocolSettings.AddressVersion),
                         Balance = value.GetInteroperable<AccountState>().Balance,
                     };
                 }
@@ -126,8 +126,8 @@ namespace Neo.Plugins.RestServer.Extensions
                     var addressHash = new UInt160(key.ToArray().AsSpan(5));
                     yield return new AccountDetails()
                     {
-                        Account = addressHash,
-                        WalletAddress = addressHash.ToAddress(protocolSettings.AddressVersion),
+                        ScriptHash = addressHash,
+                        Address = addressHash.ToAddress(protocolSettings.AddressVersion),
                         Balance = value.GetInteroperable<AccountState>().Balance,
                     };
                 }

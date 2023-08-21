@@ -8,6 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Neo.Plugins.RestServer.Exceptions;
 using Newtonsoft.Json;
 
 namespace Neo.Plugins.RestServer.Newtonsoft.Json
@@ -18,7 +19,15 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
         {
             //var o = JObject.Load(reader);
             //return UInt160.Parse(o["value"].ToObject<string>());
-            return RestServerUtility.ConvertToScriptHash(reader.ReadAsString(), RestServerPlugin.NeoSystem.Settings);
+            try
+            {
+                return RestServerUtility.ConvertToScriptHash(reader.ReadAsString(), RestServerPlugin.NeoSystem.Settings);
+            }
+            catch (FormatException)
+            {
+
+                throw new ScriptHashFormatException();
+            }
         }
 
         public override void WriteJson(JsonWriter writer, UInt160 value, JsonSerializer serializer)

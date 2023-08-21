@@ -9,7 +9,9 @@
 // modifications are permitted.
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -17,10 +19,10 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
 using Neo.Plugins.RestServer.Middleware;
+using Neo.Plugins.RestServer.Models.Error;
 using Neo.Plugins.RestServer.Providers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using System.Net;
 using System.Net.Mime;
 using System.Net.Security;
 using System.Reflection;
@@ -38,9 +40,9 @@ namespace Neo.Plugins.RestServer
 
         public static bool IsRunning { get; private set; }
 
-        public RestWebServer(RestServerSettings settings)
+        public RestWebServer()
         {
-            _settings = settings;
+            _settings = RestServerSettings.Current;
         }
 
         public void Start()
@@ -76,9 +78,6 @@ namespace Neo.Plugins.RestServer
                 })
                 .ConfigureServices(services =>
                 {
-                    // dependency injection
-                    services.AddSingleton(_settings);
-
                     // Server configuration
                     if (_settings.EnableCors)
                     {
@@ -123,8 +122,18 @@ namespace Neo.Plugins.RestServer
                         .ConfigureApplicationPartManager(manager =>
                         {
                             var controllerFeatureProvider = manager.FeatureProviders.Single(p => p.GetType() == typeof(ControllerFeatureProvider));
-                            manager.FeatureProviders.Remove(controllerFeatureProvider);
-                            manager.FeatureProviders.Add(new BlackListControllerFeatureProvider(_settings));
+                            var index = manager.FeatureProviders.IndexOf(controllerFeatureProvider);
+                            manager.FeatureProviders[index] = new BlackListControllerFeatureProvider(_settings);
+                        }).ConfigureApiBehaviorOptions(options =>
+                        {
+                            options.InvalidModelStateResponseFactory = context =>
+                                new BadRequestObjectResult(new ParameterFormatExceptionModel(string.Join(' ', context.ModelState.Keys)))
+                                {
+                                    ContentTypes =
+                                    {
+                                        MediaTypeNames.Application.Json,
+                                    }
+                                };
                         });
 
                     // Load all plugins Controllers
@@ -150,9 +159,6 @@ namespace Neo.Plugins.RestServer
                 })
                 .Configure(app =>
                 {
-                    if (_settings.EnableDevelopmentMode)
-                        app.UseDeveloperExceptionPage();
-
                     if (_settings.EnableForwardedHeaders)
                         app.UseForwardedHeaders();
 
@@ -165,6 +171,19 @@ namespace Neo.Plugins.RestServer
                         app.UseResponseCompression();
 
                     app.UseMiddleware<RestServerMiddleware>(_settings);
+                    app.UseExceptionHandler(c => c.Run(async context =>
+                    {
+                        var exception = context.Features
+                            .Get<IExceptionHandlerPathFeature>()
+                            .Error;
+                        var response = new ErrorModel()
+                        {
+                            Code = exception.HResult,
+                            Name = exception.GetType().Name,
+                            Message = exception.Message,
+                        };
+                        await context.Response.WriteAsJsonAsync(response);
+                    }));
                     app.UseMvc();
                 })
                 .Build();

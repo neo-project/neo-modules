@@ -26,9 +26,9 @@ namespace Neo.Plugins.RestServer.Providers
 
         protected override bool IsController(TypeInfo typeInfo)
         {
-            if (_settings.DisableControllers.Any(a => a.Equals(typeInfo.Name, StringComparison.OrdinalIgnoreCase))) // BlackList
-                return false;
             if (typeInfo.IsDefined(typeof(ApiControllerAttribute)) == false) // Rest API
+                return false;
+            if (_settings.DisableControllers.Any(a => a.Equals(typeInfo.Name, StringComparison.OrdinalIgnoreCase))) // BlackList
                 return false;
             return base.IsController(typeInfo); // Default check
         }

@@ -9,7 +9,6 @@
 // modifications are permitted.
 
 using Microsoft.AspNetCore.Mvc;
-using Neo.Plugins.RestServer;
 using Neo.Plugins.RestServer.Exceptions;
 using Neo.Wallets;
 
@@ -26,13 +25,23 @@ namespace Neo.Plugins.RestServer.Controllers
             _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
         }
 
+        #region Validation
+
         [HttpGet("{hash:required}/address")]
         public IActionResult ScriptHashToWalletAddress(
             [FromRoute(Name = "hash")]
             string hash)
         {
-            if (UInt160.TryParse(hash, out var scripthash) == false) return BadRequest(nameof(hash));
-            return Ok(new { Address = scripthash.ToAddress(_neosystem.Settings.AddressVersion) });
+            try
+            {
+                if (UInt160.TryParse(hash, out var scripthash) == false)
+                    throw new ScriptHashFormatException();
+                return Ok(new { Address = scripthash.ToAddress(_neosystem.Settings.AddressVersion) });
+            }
+            catch (FormatException)
+            {
+                throw new ScriptHashFormatException();
+            }
         }
 
         [HttpGet("{address:required}/scripthash")]
@@ -46,7 +55,7 @@ namespace Neo.Plugins.RestServer.Controllers
             }
             catch (FormatException)
             {
-                return BadRequest("Invalid format");
+                throw new AddressFormatException();
             }
         }
 
@@ -69,5 +78,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 IsValid = scriptHash != UInt160.Zero,
             });
         }
+
+        #endregion
     }
 }

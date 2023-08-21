@@ -38,18 +38,20 @@ namespace Neo.Plugins.RestServer
         public bool EnableCompression { get; init; }
         public CompressionLevel CompressionLevel { get; init; }
         public bool EnableForwardedHeaders { get; init; }
-        public bool EnableDevelopmentMode { get; init; }
         public uint MaxPageSize { get; init; }
         public long MaxConcurrentConnections { get; init; }
         public long MaxTransactionFee { get; init; }
         public long MaxInvokeGas { get; init; }
         public uint MaxTransactionSize { get; init; }
+        public uint MaxWalletSessions { get; init; }
+        public int WalletTimeout { get; init; }
         public JsonSerializerSettings JsonSerializerSettings { get; init; }
 
         #endregion
 
         #region Static Functions
 
+        public static RestServerSettings Current { get; private set; }
         public static RestServerSettings Default { get; } = new()
         {
             Network = 860833102u,
@@ -68,12 +70,13 @@ namespace Neo.Plugins.RestServer
             EnableCompression = false,
             CompressionLevel = CompressionLevel.SmallestSize,
             EnableForwardedHeaders = false,
-            EnableDevelopmentMode = false,
             MaxPageSize = 50u,
             MaxConcurrentConnections = 40L,
             MaxTransactionFee = 0_10000000L,
             MaxInvokeGas = 0_20000000L,
             MaxTransactionSize = 1024,
+            MaxWalletSessions = 10,
+            WalletTimeout = 2,
             JsonSerializerSettings = new JsonSerializerSettings()
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -95,12 +98,14 @@ namespace Neo.Plugins.RestServer
                     new VmNullJsonConverter(),
                     new VmPointerJsonConverter(),
                     new StackItemJsonConverter(),
+                    new BigDecimalJsonConverter(),
+                    new GuidJsonConverter(),
                 },
             },
         };
 
-        public static RestServerSettings Load(IConfigurationSection section) =>
-            new()
+        public static void Load(IConfigurationSection section) =>
+            Current = new()
             {
                 Network = section.GetValue(nameof(Network), Default.Network),
                 BindAddress = IPAddress.Parse(section.GetSection(nameof(BindAddress)).Value),
@@ -108,22 +113,23 @@ namespace Neo.Plugins.RestServer
                 KeepAliveTimeout = section.GetValue(nameof(KeepAliveTimeout), Default.KeepAliveTimeout),
                 SslCertFile = section.GetValue(nameof(SslCertFile), Default.SslCertFile),
                 SslCertPassword = section.GetValue(nameof(SslCertPassword), Default.SslCertPassword),
-                TrustedAuthorities = section.GetValue(nameof(TrustedAuthorities), Default.TrustedAuthorities),
+                TrustedAuthorities = section.GetSection(nameof(TrustedAuthorities))?.Get<string[]>() ?? Default.TrustedAuthorities,
                 EnableBasicAuthentication = section.GetValue(nameof(EnableBasicAuthentication), Default.EnableBasicAuthentication),
                 RestUser = section.GetValue(nameof(RestUser), Default.RestUser),
                 RestPass = section.GetValue(nameof(RestPass), Default.RestPass),
                 EnableCors = section.GetValue(nameof(EnableCors), Default.EnableCors),
-                AllowOrigins = section.GetValue(nameof(AllowOrigins), Default.AllowOrigins),
-                DisableControllers = section.GetValue(nameof(DisableControllers), Default.DisableControllers),
+                AllowOrigins = section.GetSection(nameof(AllowOrigins))?.Get<string[]>() ?? Default.AllowOrigins,
+                DisableControllers = section.GetSection(nameof(DisableControllers))?.Get<string[]>() ?? Default.DisableControllers,
                 EnableCompression = section.GetValue(nameof(EnableCompression), Default.EnableCompression),
                 CompressionLevel = section.GetValue(nameof(CompressionLevel), Default.CompressionLevel),
                 EnableForwardedHeaders = section.GetValue(nameof(EnableForwardedHeaders), Default.EnableForwardedHeaders),
-                EnableDevelopmentMode = section.GetValue(nameof(EnableDevelopmentMode), Default.EnableDevelopmentMode),
                 MaxPageSize = section.GetValue(nameof(MaxPageSize), Default.MaxPageSize),
                 MaxConcurrentConnections = section.GetValue(nameof(MaxConcurrentConnections), Default.MaxConcurrentConnections),
                 MaxTransactionFee = section.GetValue(nameof(MaxTransactionFee), Default.MaxTransactionFee),
                 MaxInvokeGas = section.GetValue(nameof(MaxInvokeGas), Default.MaxInvokeGas),
                 MaxTransactionSize = section.GetValue(nameof(MaxTransactionSize), Default.MaxTransactionSize),
+                MaxWalletSessions = section.GetValue(nameof(MaxWalletSessions), Default.MaxWalletSessions),
+                WalletTimeout = section.GetValue(nameof(WalletTimeout), Default.WalletTimeout),
                 JsonSerializerSettings = Default.JsonSerializerSettings,
             };
 

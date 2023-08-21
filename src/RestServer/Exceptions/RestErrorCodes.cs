@@ -15,20 +15,5 @@ namespace Neo.Plugins.RestServer.Exceptions
         //=========================Rest Codes=========================
         public const int GenericException = 1000;
         public const int ParameterFormatException = 1001;
-        public const int RequestBodyInvalid = 1002;
-        public const int ScriptHashFormat = 1003;
-        //=========================Node Codes=========================
-        public const int NodeException = 2000;
-        //=========================Wallet Codes=======================
-        public const int WalletException = 3000;
-        public const int WalletAmountInvalid = 3001;
-        public const int WalletInsufficientFunds = 3002;
-        public const int WalletSessionNotFound = 3003;
-        public const int WalletReachedMaximumFee = 3004;
-        public const int WalletAddressInvalid = 3005;
-        public const int WalletDeleteAccountFailed = 3006;
-        public const int WalletSessionException = 3007;
-        public const int WalletFileNotFound = 3008;
-        public const int WalletOpenException = 3009;
     }
 }

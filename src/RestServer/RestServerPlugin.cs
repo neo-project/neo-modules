@@ -27,12 +27,17 @@ namespace Neo.Plugins.RestServer
 
         #endregion
 
+        #region Static Globals
+
         internal static NeoSystem NeoSystem { get; private set; }
         internal static LocalNode LocalNode { get; private set; }
 
+        #endregion
+
         protected override void Configure()
         {
-            _settings = RestServerSettings.Load(GetConfiguration());
+            RestServerSettings.Load(GetConfiguration());
+            _settings = RestServerSettings.Current;
         }
 
         protected override void OnSystemLoaded(NeoSystem system)
@@ -51,7 +56,7 @@ namespace Neo.Plugins.RestServer
                 NeoSystem = system;
                 LocalNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
             }
-            _server = new RestWebServer(_settings);
+            _server = new RestWebServer();
             _server.Start();
         }
     }

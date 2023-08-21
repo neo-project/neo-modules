@@ -19,18 +19,17 @@ using Neo.Plugins.RestServer.Exceptions;
 
 namespace Neo.Plugins.RestServer.Controllers
 {
-    [Route("/api/v1/token")]
+    [Route("/api/v1/tokens")]
     [ApiController]
     public class TokenController : ControllerBase
     {
         private readonly RestServerSettings _settings;
         private readonly NeoSystem _neosystem;
 
-        public TokenController(
-            RestServerSettings settings)
+        public TokenController()
         {
-            _settings = settings;
             _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
+            _settings = RestServerSettings.Current;
         }
 
         #region NEP-17
@@ -42,15 +41,14 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 1 || take < 1 || take > _settings.MaxPageSize) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
+            if (skip < 1 || take < 1 || take > _settings.MaxPageSize)
+                throw new InvalidParameterRangeException();
             var tokenList = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView);
-            if (tokenList.Any() == false) return NoContent();
             var vaildContracts = tokenList
                 .Where(w => ContractHelper.IsNep17Supported(w))
                 .OrderBy(o => o.Manifest.Name)
                 .Skip((skip - 1) * take)
                 .Take(take);
-            if (vaildContracts.Any() == false) return NoContent();
             var listResults = new List<NEP17TokenModel>();
             foreach (var contract in vaildContracts)
             {
@@ -65,7 +63,6 @@ namespace Neo.Plugins.RestServer.Controllers
                 {
                 }
             }
-            if (listResults.Any() == false) return NoContent();
             return Ok(listResults);
         }
 
@@ -78,15 +75,15 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpGet("nep-17/{scripthash:required}/balanceof/{address:required}")]
         public IActionResult GetNEP17(
             [FromRoute(Name = "scripthash")]
-            string scriptHash,
+            UInt160 sAddressHash,
             [FromRoute(Name = "address")]
-            string address)
+            UInt160 addressHash)
         {
-            if (UInt160.TryParse(scriptHash, out var sAddressHash) == false) return BadRequest(nameof(scriptHash));
-            if (UInt160.TryParse(address, out var addressHash) == false) return BadRequest(nameof(address));
             var contract = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, sAddressHash);
-            if (contract == null) return NotFound(nameof(scriptHash));
-            if (ContractHelper.IsNep17Supported(contract) == false) return StatusCode(StatusCodes.Status501NotImplemented);
+            if (contract == null)
+                throw new ContractNotFoundException(sAddressHash);
+            if (ContractHelper.IsNep17Supported(contract) == false)
+                throw new Nep17NotSupportedException(sAddressHash);
             try
             {
                 var token = new NEP17Token(_neosystem, sAddressHash, _settings);
@@ -102,7 +99,7 @@ namespace Neo.Plugins.RestServer.Controllers
             }
             catch
             {
-                return StatusCode(StatusCodes.Status501NotImplemented);
+                throw new Nep17NotSupportedException(sAddressHash);
             }
         }
 
@@ -117,15 +114,14 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 1 || take < 1 || take > _settings.MaxPageSize) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
+            if (skip < 1 || take < 1 || take > _settings.MaxPageSize)
+                throw new InvalidParameterRangeException();
             var tokenList = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView);
-            if (tokenList.Any() == false) return NoContent();
             var vaildContracts = tokenList
                 .Where(w => ContractHelper.IsNep11Supported(w))
             .OrderBy(o => o.Manifest.Name)
                 .Skip((skip - 1) * take)
                 .Take(take);
-            if (vaildContracts.Any() == false) return NoContent();
             var listResults = new List<NEP11TokenModel>();
             foreach (var contract in vaildContracts)
             {
@@ -140,7 +136,6 @@ namespace Neo.Plugins.RestServer.Controllers
                 {
                 }
             }
-            if (listResults.Any() == false) return NoContent();
             return Ok(listResults);
         }
 
@@ -153,15 +148,15 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpGet("nep-11/{scripthash:required}/balanceof/{address:required}")]
         public IActionResult GetNEP11(
             [FromRoute(Name = "scripthash")]
-            string scriptHash,
+            UInt160 sAddressHash,
             [FromRoute(Name = "address")]
-            string address)
+            UInt160 addressHash)
         {
-            if (UInt160.TryParse(scriptHash, out var sAddressHash) == false) return BadRequest(nameof(scriptHash));
-            if (UInt160.TryParse(address, out var addressHash) == false) return BadRequest(nameof(address));
             var contract = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, sAddressHash);
-            if (contract == null) return NotFound(nameof(scriptHash));
-            if (ContractHelper.IsNep11Supported(contract) == false) return StatusCode(StatusCodes.Status501NotImplemented);
+            if (contract == null)
+                throw new ContractNotFoundException(sAddressHash);
+            if (ContractHelper.IsNep11Supported(contract) == false)
+                throw new Nep11NotSupportedException(sAddressHash);
             try
             {
                 var token = new NEP11Token(_neosystem, sAddressHash, _settings);
@@ -177,7 +172,7 @@ namespace Neo.Plugins.RestServer.Controllers
             }
             catch
             {
-                return StatusCode(StatusCodes.Status501NotImplemented);
+                throw new Nep11NotSupportedException(sAddressHash);
             }
         }
 
@@ -187,55 +182,47 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpGet("balanceof/{address:required}")]
         public IActionResult GetBalances(
             [FromRoute(Name = "address")]
-            string address)
+            UInt160 addressHash)
         {
-            if (UInt160.TryParse(address, out var addressHash) == false) return BadRequest(nameof(address));
             var tokenList = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView);
-            if (tokenList.Any() == false) return NoContent();
-            var vaildContracts = tokenList
+            var validContracts = tokenList
                 .Where(w => ContractHelper.IsNep17Supported(w) || ContractHelper.IsNep11Supported(w))
                 .OrderBy(o => o.Manifest.Name);
             var listResults = new List<TokenBalanceModel>();
-            foreach (var contract in vaildContracts)
+            foreach (var contract in validContracts)
             {
                 try
                 {
-                    if (ContractHelper.IsNep17Supported(contract))
+                    var token = new NEP17Token(_neosystem, contract.Hash, _settings);
+                    var balance = token.BalanceOf(addressHash).Value;
+                    if (balance == 0) continue;
+                    listResults.Add(new()
                     {
-                        var token = new NEP17Token(_neosystem, contract.Hash, _settings);
-                        var balance = token.BalanceOf(addressHash).Value;
-                        if (balance == 0) continue;
-                        listResults.Add(new()
-                        {
-                            Name = token.Name,
-                            ScriptHash = token.ScriptHash,
-                            Symbol = token.Symbol,
-                            Decimals = token.Decimals,
-                            Balance = balance,
-                            TotalSupply = token.TotalSupply().Value,
-                        });
-                    }
-                    else if (ContractHelper.IsNep11Supported(contract))
+                        Name = token.Name,
+                        ScriptHash = token.ScriptHash,
+                        Symbol = token.Symbol,
+                        Decimals = token.Decimals,
+                        Balance = balance,
+                        TotalSupply = token.TotalSupply().Value,
+                    });
+
+                    var nft = new NEP11Token(_neosystem, contract.Hash, _settings);
+                    balance = nft.BalanceOf(addressHash).Value;
+                    if (balance == 0) continue;
+                    listResults.Add(new()
                     {
-                        var nft = new NEP11Token(_neosystem, contract.Hash, _settings);
-                        var balance = nft.BalanceOf(addressHash).Value;
-                        if (balance == 0) continue;
-                        listResults.Add(new()
-                        {
-                            Name = nft.Name,
-                            ScriptHash = nft.ScriptHash,
-                            Symbol = nft.Symbol,
-                            Balance = balance,
-                            Decimals = nft.Decimals,
-                            TotalSupply = nft.TotalSupply().Value,
-                        });
-                    }
+                        Name = nft.Name,
+                        ScriptHash = nft.ScriptHash,
+                        Symbol = nft.Symbol,
+                        Balance = balance,
+                        Decimals = nft.Decimals,
+                        TotalSupply = nft.TotalSupply().Value,
+                    });
                 }
                 catch
                 {
                 }
             }
-            if (listResults.Any() == false) return NoContent();
             return Ok(listResults);
         }
     }

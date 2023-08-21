@@ -12,7 +12,7 @@ namespace Neo.Plugins.RestServer.Exceptions
 {
     internal class NodeNetworkException : Exception
     {
-        public NodeNetworkException() : base("Network does not match config files.") { }
+        public NodeNetworkException() : base("Network does not match config file's.") { }
         public NodeNetworkException(string message) : base(message) { }
     }
 }

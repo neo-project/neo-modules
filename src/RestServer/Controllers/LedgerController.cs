@@ -24,12 +24,29 @@ namespace Neo.Plugins.RestServer.Controllers
         private readonly NeoSystem _neosystem;
         private readonly RestServerSettings _settings;
 
-        public LedgerController(
-            RestServerSettings restsettings)
+        public LedgerController()
         {
             _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
-            _settings = restsettings;
+            _settings = RestServerSettings.Current;
         }
+
+        #region Accounts
+
+        [HttpGet("gas/accounts")]
+        public IActionResult ShowGasAccounts()
+        {
+            var accounts = NativeContract.GAS.ListAccounts(_neosystem.StoreView, _neosystem.Settings);
+            return Ok(accounts.OrderByDescending(o => o.Balance));
+        }
+
+        [HttpGet("neo/accounts")]
+        public IActionResult ShowNeoAccounts()
+        {
+            var accounts = NativeContract.NEO.ListAccounts(_neosystem.StoreView, _neosystem.Settings);
+            return Ok(accounts.OrderByDescending(o => o.Balance));
+        }
+
+        #endregion
 
         #region Blocks
 
@@ -40,7 +57,8 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromQuery(Name = "size")]
             uint take = 1)
         {
-            if (skip < 1 || take < 1 || take > _settings.MaxPageSize) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
+            if (skip < 1 || take < 1 || take > _settings.MaxPageSize)
+                throw new InvalidParameterRangeException();
             //var start = (skip - 1) * take + startIndex;
             //var end = start + take;
             var start = NativeContract.Ledger.CurrentIndex(_neosystem.StoreView) - ((skip - 1) * take);
@@ -104,9 +122,11 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 1 || take < 1 || take > _settings.MaxPageSize) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
+            if (skip < 1 || take < 1 || take > _settings.MaxPageSize)
+                throw new InvalidParameterRangeException();
             var block = NativeContract.Ledger.GetBlock(_neosystem.StoreView, blockIndex);
-            if (block == null) return NotFound();
+            if (block == null)
+                throw new BlockNotFoundException(blockIndex);
             if (block.Transactions == null || block.Transactions.Length == 0) return NoContent();
             return Ok(block.Transactions.Skip((skip - 1) * take).Take(take).Select(s => s.ToModel()));
         }
@@ -118,9 +138,8 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpGet("transactions/{hash:required}")]
         public IActionResult GetTransaction(
             [FromRoute( Name = "hash")]
-            string txHash)
+            UInt256 hash)
         {
-            if (UInt256.TryParse(txHash, out var hash) == false) return BadRequest();
             if (NativeContract.Ledger.ContainsTransaction(_neosystem.StoreView, hash) == false) return NotFound();
             var txst = NativeContract.Ledger.GetTransaction(_neosystem.StoreView, hash);
             if (txst == null) return NotFound();
@@ -130,10 +149,10 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpGet("transactions/{hash:required}/witnesses")]
         public IActionResult GetTransactionWitnesses(
             [FromRoute( Name = "hash")]
-            string txHash)
+            UInt256 hash)
         {
-            if (UInt256.TryParse(txHash, out var hash) == false) return BadRequest();
-            if (NativeContract.Ledger.ContainsTransaction(_neosystem.StoreView, hash) == false) return NotFound();
+            if (NativeContract.Ledger.ContainsTransaction(_neosystem.StoreView, hash) == false)
+                throw new TransactionNotFoundException(hash);
             var tx = NativeContract.Ledger.GetTransaction(_neosystem.StoreView, hash);
             return Ok(tx.Witnesses.Select(s => s.ToModel()));
         }
@@ -141,10 +160,10 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpGet("transactions/{hash:required}/signers")]
         public IActionResult GetTransactionSigners(
             [FromRoute( Name = "hash")]
-            string txHash)
+            UInt256 hash)
         {
-            if (UInt256.TryParse(txHash, out var hash) == false) return BadRequest();
-            if (NativeContract.Ledger.ContainsTransaction(_neosystem.StoreView, hash) == false) return NotFound();
+            if (NativeContract.Ledger.ContainsTransaction(_neosystem.StoreView, hash) == false)
+                throw new TransactionNotFoundException(hash);
             var tx = NativeContract.Ledger.GetTransaction(_neosystem.StoreView, hash);
             return Ok(tx.Signers.Select(s => s.ToModel()));
         }
@@ -152,10 +171,10 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpGet("transactions/{hash:required}/attributes")]
         public IActionResult GetTransactionAttributes(
             [FromRoute( Name = "hash")]
-            string txHash)
+            UInt256 hash)
         {
-            if (UInt256.TryParse(txHash, out var hash) == false) return BadRequest();
-            if (NativeContract.Ledger.ContainsTransaction(_neosystem.StoreView, hash) == false) return NotFound();
+            if (NativeContract.Ledger.ContainsTransaction(_neosystem.StoreView, hash) == false)
+                throw new TransactionNotFoundException(hash);
             var tx = NativeContract.Ledger.GetTransaction(_neosystem.StoreView, hash);
             return Ok(tx.Attributes.Select(s => s.ToModel()));
         }
@@ -171,8 +190,8 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 0 || take < 0 || take > _settings.MaxPageSize) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
-            if (_neosystem.MemPool.Any() == false) return NoContent();
+            if (skip < 0 || take < 0 || take > _settings.MaxPageSize)
+                throw new InvalidParameterRangeException();
             return Ok(_neosystem.MemPool.Skip((skip - 1) * take).Take(take).Select(s => s.ToModel()));
         }
 
@@ -192,10 +211,10 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 0 || take < 0 || take > _settings.MaxPageSize) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
+            if (skip < 0 || take < 0 || take > _settings.MaxPageSize)
+                throw new InvalidParameterRangeException();
             if (_neosystem.MemPool.Any() == false) return NoContent();
             var vTx = _neosystem.MemPool.GetVerifiedTransactions();
-            if (vTx.Any() == false) return NoContent();
             return Ok(vTx.Skip((skip - 1) * take).Take(take).Select(s => s.ToModel()));
         }
 
@@ -206,10 +225,10 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 0 || take < 0 || take > _settings.MaxPageSize) return StatusCode(StatusCodes.Status416RequestedRangeNotSatisfiable);
+            if (skip < 0 || take < 0 || take > _settings.MaxPageSize)
+                throw new InvalidParameterRangeException();
             if (_neosystem.MemPool.Any() == false) return NoContent();
             _neosystem.MemPool.GetVerifiedAndUnverifiedTransactions(out _, out var unVerifiedTransactions);
-            if (unVerifiedTransactions.Any() == false) return NoContent();
             return Ok(unVerifiedTransactions.Skip((skip - 1) * take).Take(take).Select(s => s.ToModel())
             );
         }

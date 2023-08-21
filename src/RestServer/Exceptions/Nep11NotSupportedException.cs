@@ -8,14 +8,11 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System.Numerics;
-
-namespace Neo.Plugins.RestServer.Models.Blockchain
+namespace Neo.Plugins.RestServer.Exceptions
 {
-    internal class AccountDetails
+    internal class Nep11NotSupportedException : Exception
     {
-        public UInt160 ScriptHash { get; set; }
-        public string Address { get; set; }
-        public BigInteger Balance { get; set; }
+        public Nep11NotSupportedException() { }
+        public Nep11NotSupportedException(UInt160 scriptHash) : base($"Contract '{scriptHash}' does not support NEP-11.") { }
     }
 }
