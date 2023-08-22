@@ -11,10 +11,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Neo.SmartContract.Native;
 using Microsoft.AspNetCore.Http;
-using Neo.Plugins.RestServer.Models;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Exceptions;
 using System.Net.Mime;
+using Neo.Network.P2P.Payloads;
 
 namespace Neo.Plugins.RestServer.Controllers
 {
@@ -72,13 +72,13 @@ namespace Neo.Plugins.RestServer.Controllers
             //var end = start + take;
             var start = NativeContract.Ledger.CurrentIndex(_neosystem.StoreView) - ((skip - 1) * take);
             var end = start - take;
-            var lstOfBlocks = new List<BlockHeaderModel>();
+            var lstOfBlocks = new List<Header>();
             for (uint i = start; i > end; i--)
             {
                 var block = NativeContract.Ledger.GetBlock(_neosystem.StoreView, i);
                 if (block == null)
                     break;
-                lstOfBlocks.Add(block.ToHeaderModel());
+                lstOfBlocks.Add(block.Header);
             }
             if (lstOfBlocks.Any() == false) return NoContent();
             return Ok(lstOfBlocks);
@@ -91,7 +91,7 @@ namespace Neo.Plugins.RestServer.Controllers
         {
             var currentIndex = NativeContract.Ledger.CurrentIndex(_neosystem.StoreView);
             var block = NativeContract.Ledger.GetHeader(_neosystem.StoreView, currentIndex);
-            return Ok(block.ToModel());
+            return Ok(block);
         }
 
         [HttpGet("blocks/{index:min(0)}", Name = "GetBlock")]
@@ -104,7 +104,7 @@ namespace Neo.Plugins.RestServer.Controllers
             var block = NativeContract.Ledger.GetBlock(_neosystem.StoreView, blockIndex);
             if (block == null)
                 throw new BlockNotFoundException(blockIndex);
-            return Ok(block.ToModel());
+            return Ok(block);
         }
 
         [HttpGet("blocks/{index:min(0)}/header", Name = "GetBlockHeader")]
@@ -117,7 +117,7 @@ namespace Neo.Plugins.RestServer.Controllers
             var block = NativeContract.Ledger.GetBlock(_neosystem.StoreView, blockIndex);
             if (block == null)
                 throw new BlockNotFoundException(blockIndex);
-            return Ok(block.Header.ToModel());
+            return Ok(block.Header);
         }
 
         [HttpGet("blocks/{index:min(0)}/witness", Name = "GetBlockWitness")]
@@ -130,7 +130,7 @@ namespace Neo.Plugins.RestServer.Controllers
             var block = NativeContract.Ledger.GetBlock(_neosystem.StoreView, blockIndex);
             if (block == null)
                 throw new BlockNotFoundException(blockIndex);
-            return Ok(block.Witness.ToModel());
+            return Ok(block.Witness);
         }
 
         [HttpGet("blocks/{index:min(0)}/transactions", Name = "GetBlockTransactions")]
@@ -151,7 +151,7 @@ namespace Neo.Plugins.RestServer.Controllers
             if (block == null)
                 throw new BlockNotFoundException(blockIndex);
             if (block.Transactions == null || block.Transactions.Length == 0) return NoContent();
-            return Ok(block.Transactions.Skip((skip - 1) * take).Take(take).Select(s => s.ToModel()));
+            return Ok(block.Transactions.Skip((skip - 1) * take).Take(take));
         }
 
         #endregion
@@ -169,7 +169,7 @@ namespace Neo.Plugins.RestServer.Controllers
             var txst = NativeContract.Ledger.GetTransaction(_neosystem.StoreView, hash);
             if (txst == null)
                 throw new TransactionNotFoundException(hash);
-            return Ok(txst.ToModel());
+            return Ok(txst);
         }
 
         [HttpGet("transactions/{hash:required}/witnesses", Name = "GetTransactionWitnesses")]
@@ -182,7 +182,7 @@ namespace Neo.Plugins.RestServer.Controllers
             if (NativeContract.Ledger.ContainsTransaction(_neosystem.StoreView, hash) == false)
                 throw new TransactionNotFoundException(hash);
             var tx = NativeContract.Ledger.GetTransaction(_neosystem.StoreView, hash);
-            return Ok(tx.Witnesses.Select(s => s.ToModel()));
+            return Ok(tx.Witnesses);
         }
 
         [HttpGet("transactions/{hash:required}/signers", Name = "GetTransactionSigners")]
@@ -195,7 +195,7 @@ namespace Neo.Plugins.RestServer.Controllers
             if (NativeContract.Ledger.ContainsTransaction(_neosystem.StoreView, hash) == false)
                 throw new TransactionNotFoundException(hash);
             var tx = NativeContract.Ledger.GetTransaction(_neosystem.StoreView, hash);
-            return Ok(tx.Signers.Select(s => s.ToModel()));
+            return Ok(tx.Signers);
         }
 
         [HttpGet("transactions/{hash:required}/attributes", Name = "GetTransactionAttributes")]
@@ -208,7 +208,7 @@ namespace Neo.Plugins.RestServer.Controllers
             if (NativeContract.Ledger.ContainsTransaction(_neosystem.StoreView, hash) == false)
                 throw new TransactionNotFoundException(hash);
             var tx = NativeContract.Ledger.GetTransaction(_neosystem.StoreView, hash);
-            return Ok(tx.Attributes.Select(s => s.ToModel()));
+            return Ok(tx.Attributes);
         }
 
         #endregion
@@ -226,7 +226,7 @@ namespace Neo.Plugins.RestServer.Controllers
         {
             if (skip < 0 || take < 0 || take > _settings.MaxPageSize)
                 throw new InvalidParameterRangeException();
-            return Ok(_neosystem.MemPool.Skip((skip - 1) * take).Take(take).Select(s => s.ToModel()));
+            return Ok(_neosystem.MemPool.Skip((skip - 1) * take).Take(take));
         }
 
         [HttpGet("memorypool/count", Name = "GetMemoryPoolCount")]
@@ -254,7 +254,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 throw new InvalidParameterRangeException();
             if (_neosystem.MemPool.Any() == false) return NoContent();
             var vTx = _neosystem.MemPool.GetVerifiedTransactions();
-            return Ok(vTx.Skip((skip - 1) * take).Take(take).Select(s => s.ToModel()));
+            return Ok(vTx.Skip((skip - 1) * take).Take(take));
         }
 
         [HttpGet("memorypool/unverified", Name = "GetMemoryPoolUnveridiedTransactions")]
@@ -271,8 +271,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 throw new InvalidParameterRangeException();
             if (_neosystem.MemPool.Any() == false) return NoContent();
             _neosystem.MemPool.GetVerifiedAndUnverifiedTransactions(out _, out var unVerifiedTransactions);
-            return Ok(unVerifiedTransactions.Skip((skip - 1) * take).Take(take).Select(s => s.ToModel())
-            );
+            return Ok(unVerifiedTransactions.Skip((skip - 1) * take).Take(take));
         }
 
         #endregion

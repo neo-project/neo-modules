@@ -309,7 +309,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 throw new WalletException("Transaction could not be completed at this time.");
             tx.Witnesses = context.GetWitnesses();
             _neosystem.Blockchain.Tell(tx);
-            return Ok(tx.ToModel());
+            return Ok(tx);
         }
     }
 }

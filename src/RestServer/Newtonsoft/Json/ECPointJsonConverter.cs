@@ -32,7 +32,7 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
             //    new JProperty("value", value.ToString()),
             //};
             //o.WriteTo(writer);
-            writer.WriteValue(Convert.ToHexString(value.EncodePoint(true)));
+            writer.WriteValue(value.ToString());
         }
     }
 }

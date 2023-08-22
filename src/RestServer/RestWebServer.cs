@@ -14,18 +14,20 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
 using Neo.Plugins.RestServer.Middleware;
 using Neo.Plugins.RestServer.Models.Error;
+using Neo.Plugins.RestServer.Newtonsoft.Json;
 using Neo.Plugins.RestServer.Providers;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using System.Net.Mime;
 using System.Net.Security;
-using System.Reflection;
 
 namespace Neo.Plugins.RestServer
 {
@@ -120,13 +122,11 @@ namespace Neo.Plugins.RestServer
                         });
 
                     var controllers = services
-                        .AddControllers(options => options.EnableEndpointRouting = false)
-                        .ConfigureApplicationPartManager(manager =>
+                        .AddControllers(options =>
                         {
-                            var controllerFeatureProvider = manager.FeatureProviders.Single(p => p.GetType() == typeof(ControllerFeatureProvider));
-                            var index = manager.FeatureProviders.IndexOf(controllerFeatureProvider);
-                            manager.FeatureProviders[index] = new BlackListControllerFeatureProvider(_settings);
-                        }).ConfigureApiBehaviorOptions(options =>
+                            options.EnableEndpointRouting = false;
+                        })
+                        .ConfigureApiBehaviorOptions(options =>
                         {
                             options.InvalidModelStateResponseFactory = context =>
                                 new BadRequestObjectResult(new ParameterFormatExceptionModel(string.Join(' ', context.ModelState.Keys)))
@@ -136,24 +136,30 @@ namespace Neo.Plugins.RestServer
                                         MediaTypeNames.Application.Json,
                                     }
                                 };
+                        })
+                        .ConfigureApplicationPartManager(manager =>
+                        {
+                            var controllerFeatureProvider = manager.FeatureProviders.Single(p => p.GetType() == typeof(ControllerFeatureProvider));
+                            var index = manager.FeatureProviders.IndexOf(controllerFeatureProvider);
+                            manager.FeatureProviders[index] = new BlackListControllerFeatureProvider(_settings);
+
+                            foreach (var plugin in Plugin.Plugins)
+                                manager.ApplicationParts.Add(new AssemblyPart(plugin.GetType().Assembly));
+                        })
+                        .AddNewtonsoftJson(options =>
+                        {
+                            options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                            options.SerializerSettings.Formatting = Formatting.None;
+
+                            foreach (var converter in _settings.JsonSerializerSettings.Converters)
+                                options.SerializerSettings.Converters.Add(converter);
                         });
 
-                    // Load all plugins Controllers
-                    foreach (var plugin in Plugin.Plugins)
-                        controllers.AddApplicationPart(Assembly.GetAssembly(plugin.GetType()));
-
-                    // Json Binding for http server
-                    controllers.AddNewtonsoftJson(options =>
-                    {
-                        options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-                        options.SerializerSettings.Formatting = Formatting.None;
-
-                        foreach (var converter in _settings.JsonSerializerSettings.Converters)
-                            options.SerializerSettings.Converters.Add(converter);
-                    });
-
                     if (_settings.EnableSwagger)
+                    {
+                        services.AddEndpointsApiExplorer();
                         services.AddSwaggerGen();
+                    }
 
                     // Service configuration
                     if (_settings.EnableForwardedHeaders)
@@ -194,6 +200,7 @@ namespace Neo.Plugins.RestServer
                             Name = exception.GetType().Name,
                             Message = exception.Message,
                         };
+                        context.Response.StatusCode = 400;
                         await context.Response.WriteAsJsonAsync(response);
                     }));
                     app.UseMvc();

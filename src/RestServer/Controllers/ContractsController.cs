@@ -49,7 +49,7 @@ namespace Neo.Plugins.RestServer.Controllers
             if (contracts.Any() == false) return NoContent();
             var contractRequestList = contracts.OrderBy(o => o.Manifest.Name).Skip((skip - 1) * take).Take(take);
             if (contractRequestList.Any() == false) return NoContent();
-            return Ok(contractRequestList.Select(s => s.ToModel()));
+            return Ok(contractRequestList);
         }
 
         [HttpGet("count", Name = "GetContractCount")]
@@ -87,7 +87,7 @@ namespace Neo.Plugins.RestServer.Controllers
             var contracts = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, scripthash);
             if (contracts == null)
                 throw new ContractNotFoundException(scripthash);
-            return Ok(contracts.ToModel());
+            return Ok(contracts);
         }
 
         [HttpGet("{hash:required}/abi", Name = "GetContractAbi")]
@@ -100,7 +100,7 @@ namespace Neo.Plugins.RestServer.Controllers
             var contracts = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, scripthash);
             if (contracts == null)
                 throw new ContractNotFoundException(scripthash);
-            return Ok(contracts.Manifest.Abi.ToModel());
+            return Ok(contracts.Manifest.Abi);
         }
 
         [HttpGet("{hash:required}/manifest", Name = "GetContractManifest")]
@@ -113,7 +113,7 @@ namespace Neo.Plugins.RestServer.Controllers
             var contracts = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, scripthash);
             if (contracts == null)
                 throw new ContractNotFoundException(scripthash);
-            return Ok(contracts.Manifest.ToModel());
+            return Ok(contracts.Manifest);
         }
 
         [HttpGet("{hash:required}/nef", Name = "GetContractNefFile")]
@@ -126,7 +126,7 @@ namespace Neo.Plugins.RestServer.Controllers
             var contracts = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, scripthash);
             if (contracts == null)
                 throw new ContractNotFoundException(scripthash);
-            return Ok(contracts.Nef.ToModel());
+            return Ok(contracts.Nef);
         }
 
         [HttpPost("{hash:required}/invoke", Name = "InvokeContractMethod")]

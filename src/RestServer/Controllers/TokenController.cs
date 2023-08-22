@@ -131,7 +131,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 throw new InvalidParameterRangeException();
             var tokenList = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView);
             var vaildContracts = tokenList
-                .Where(w => ContractHelper.IsNep11Supported(w))
+                .Where(ContractHelper.IsNep11Supported)
             .OrderBy(o => o.Manifest.Name)
                 .Skip((skip - 1) * take)
                 .Take(take);
