@@ -201,6 +201,8 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromBody]
             WalletImportKey model)
         {
+            if (string.IsNullOrEmpty(model.Wif))
+                throw new JsonPropertyNullOrEmptyException(nameof(model.Wif));
             if (WalletSessions.ContainsKey(sessionId) == false)
                 throw new KeyNotFoundException(sessionId.ToString("n"));
             var session = WalletSessions[sessionId];
@@ -275,41 +277,54 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromBody]
             WalletSendModel model)
         {
+            if (model.AssetId == null || model.AssetId == UInt160.Zero)
+                throw new JsonPropertyNullException(nameof(model.AssetId));
+            if (model.From == null)
+                throw new JsonPropertyNullException(nameof(model.From));
+            if (model.To == null)
+                throw new JsonPropertyNullException(nameof(model.To));
             if (WalletSessions.ContainsKey(sessionId) == false)
                 throw new KeyNotFoundException(sessionId.ToString("n"));
             var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
             using var snapshot = _neosystem.GetSnapshot();
-            var descriptor = new AssetDescriptor(snapshot, _neosystem.Settings, model.AssetId);
-            var amount = new BigDecimal(model.Amount, descriptor.Decimals);
-            if (amount.Sign <= 0)
-                throw new WalletException($"Invalid Amount.");
-            var signers = model.Signers?.Select(s => new Signer() { Scopes = WitnessScope.CalledByEntry, Account = s }).ToArray();
-            var tx = wallet.MakeTransaction(snapshot,
-                new[]
-                {
-                    new TransferOutput()
+            try
+            {
+                var descriptor = new AssetDescriptor(snapshot, _neosystem.Settings, model.AssetId);
+                var amount = new BigDecimal(model.Amount, descriptor.Decimals);
+                if (amount.Sign <= 0)
+                    throw new WalletException($"Invalid Amount.");
+                var signers = model.Signers?.Select(s => new Signer() { Scopes = WitnessScope.CalledByEntry, Account = s }).ToArray();
+                var tx = wallet.MakeTransaction(snapshot,
+                    new[]
                     {
-                        AssetId = model.AssetId,
-                        Value = amount,
-                        ScriptHash = model.To,
-                        Data = model.Data,
+                        new TransferOutput()
+                        {
+                            AssetId = model.AssetId,
+                            Value = amount,
+                            ScriptHash = model.To,
+                            Data = model.Data,
+                        },
                     },
-                },
-                model.From, signers);
-            if (tx == null)
-                throw new WalletInsufficientFundsException();
-            var totalFees = new BigDecimal((BigInteger)(tx.SystemFee + tx.NetworkFee), NativeContract.GAS.Decimals);
-            if (totalFees.Value > _settings.MaxTransactionFee)
-                throw new WalletException("The transaction fees are to much.");
-            var context = new ContractParametersContext(snapshot, tx, _neosystem.Settings.Network);
-            wallet.Sign(context);
-            if (context.Completed == false)
-                throw new WalletException("Transaction could not be completed at this time.");
-            tx.Witnesses = context.GetWitnesses();
-            _neosystem.Blockchain.Tell(tx);
-            return Ok(tx);
+                    model.From, signers);
+                if (tx == null)
+                    throw new WalletInsufficientFundsException();
+                var totalFees = new BigDecimal((BigInteger)(tx.SystemFee + tx.NetworkFee), NativeContract.GAS.Decimals);
+                if (totalFees.Value > _settings.MaxTransactionFee)
+                    throw new WalletException("The transaction fees are to much.");
+                var context = new ContractParametersContext(snapshot, tx, _neosystem.Settings.Network);
+                wallet.Sign(context);
+                if (context.Completed == false)
+                    throw new WalletException("Transaction could not be completed at this time.");
+                tx.Witnesses = context.GetWitnesses();
+                _neosystem.Blockchain.Tell(tx);
+                return Ok(tx);
+            }
+            catch
+            {
+                throw new WalletException("Transaction failed! Check for invalid input.");
+            }
         }
     }
 }

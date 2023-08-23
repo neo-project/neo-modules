@@ -21,7 +21,7 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
             //return UInt160.Parse(o["value"].ToObject<string>());
             try
             {
-                return RestServerUtility.ConvertToScriptHash(reader.Value.ToString(), RestServerPlugin.NeoSystem.Settings);
+                return RestServerUtility.ConvertToScriptHash(reader.Value?.ToString(), RestServerPlugin.NeoSystem.Settings);
             }
             catch (FormatException)
             {

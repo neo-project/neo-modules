@@ -25,7 +25,7 @@ namespace Neo.Plugins.RestServer
         {
             if (UInt160.TryParse(address, out var scriptHash))
                 return scriptHash;
-            return address.ToScriptHash(settings.AddressVersion);
+            return address?.ToScriptHash(settings.AddressVersion);
         }
 
         public static bool TryConvertToScriptHash(string address, ProtocolSettings settings, out UInt160 scriptHash)
