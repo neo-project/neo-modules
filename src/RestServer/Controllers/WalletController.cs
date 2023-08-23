@@ -285,7 +285,7 @@ namespace Neo.Plugins.RestServer.Controllers
             var amount = new BigDecimal(model.Amount, descriptor.Decimals);
             if (amount.Sign <= 0)
                 throw new WalletException($"Invalid Amount.");
-            var signers = model.Signers.Select(s => new Signer() { Scopes = WitnessScope.CalledByEntry, Account = s }).ToArray();
+            var signers = model.Signers?.Select(s => new Signer() { Scopes = WitnessScope.CalledByEntry, Account = s }).ToArray();
             var tx = wallet.MakeTransaction(snapshot,
                 new[]
                 {

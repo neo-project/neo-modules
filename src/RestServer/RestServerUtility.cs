@@ -16,8 +16,6 @@ using Array = Neo.VM.Types.Array;
 using Boolean = Neo.VM.Types.Boolean;
 using Buffer = Neo.VM.Types.Buffer;
 using Neo.Wallets;
-using Neo.Persistence;
-using Neo.Network.P2P.Payloads;
 
 namespace Neo.Plugins.RestServer
 {
@@ -25,7 +23,7 @@ namespace Neo.Plugins.RestServer
     {
         public static UInt160 ConvertToScriptHash(string address, ProtocolSettings settings)
         {
-            if (UInt160.TryParse(address, out var scriptHash) == false)
+            if (UInt160.TryParse(address, out var scriptHash))
                 return scriptHash;
             return address.ToScriptHash(settings.AddressVersion);
         }
@@ -34,7 +32,7 @@ namespace Neo.Plugins.RestServer
         {
             try
             {
-                if (UInt160.TryParse(address, out scriptHash) == false)
+                if (UInt160.TryParse(address, out scriptHash))
                     return true;
                 scriptHash = address.ToScriptHash(settings.AddressVersion);
                 return true;

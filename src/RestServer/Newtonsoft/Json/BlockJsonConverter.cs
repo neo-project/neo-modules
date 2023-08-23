@@ -44,74 +44,94 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
             };
 
             var txArray = new JArray();
-            foreach (var tx in value.Transactions)
+            if (value.Transactions != null)
             {
-                var txObject = new JObject()
+                foreach (var tx in value.Transactions)
                 {
-                    ["hash"] = tx.Hash.ToString(),
-                    ["sender"] = tx.Sender.ToString(),
-                    ["script"] = Convert.ToBase64String(tx.Script.Span),
-                    ["feePerByte"] = tx.FeePerByte,
-                    ["networkFee"] = tx.NetworkFee,
-                    ["systemFee"] = tx.SystemFee,
-                    ["nonce"] = tx.Nonce,
-                    ["version"] = tx.Version,
-                    ["validUntilBlock"] = tx.ValidUntilBlock,
-                    ["size"] = tx.Size,
-                };
-
-                var witnessesArray = new JArray();
-                foreach (var witness in tx.Witnesses)
-                    witnessesArray.Add(new JObject()
+                    var txObject = new JObject()
                     {
-                        ["invocationScript"] = Convert.ToBase64String(witness.InvocationScript.Span),
-                        ["verificationScript"] = Convert.ToBase64String(witness.VerificationScript.Span),
-                        ["scriptHash"] = witness.ScriptHash.ToString(),
-                    });
-                txObject["witnesses"] = witnessesArray;
+                        ["hash"] = tx.Hash.ToString(),
+                        ["sender"] = tx.Sender.ToString(),
+                        ["script"] = Convert.ToBase64String(tx.Script.Span),
+                        ["feePerByte"] = tx.FeePerByte,
+                        ["networkFee"] = tx.NetworkFee,
+                        ["systemFee"] = tx.SystemFee,
+                        ["nonce"] = tx.Nonce,
+                        ["version"] = tx.Version,
+                        ["validUntilBlock"] = tx.ValidUntilBlock,
+                        ["size"] = tx.Size,
+                    };
 
-                var signersArray = new JArray();
-                foreach (var signer in tx.Signers)
-                {
-                    var signerObject = new JObject();
+                    var witnessesArray = new JArray();
+                    if (tx.Witnesses != null)
+                    {
+                        foreach (var witness in tx.Witnesses)
+                            witnessesArray.Add(new JObject()
+                            {
+                                ["invocationScript"] = Convert.ToBase64String(witness.InvocationScript.Span),
+                                ["verificationScript"] = Convert.ToBase64String(witness.VerificationScript.Span),
+                                ["scriptHash"] = witness.ScriptHash.ToString(),
+                            });
+                    }
+                    txObject["witnesses"] = witnessesArray;
 
-                    var rulesArray = new JArray();
-                    foreach (var rule in signer.Rules)
-                        rulesArray.Add(new JObject()
+                    var signersArray = new JArray();
+                    if (tx.Signers != null)
+                    {
+                        foreach (var signer in tx.Signers)
                         {
-                            ["action"] = rule.Action.ToString(),
-                            ["condition"] = rule.Condition.Type.ToString(),
-                        });
-                    signerObject["rules"] = rulesArray;
+                            var signerObject = new JObject();
 
-                    signerObject["account"] = signer.Account.ToString();
+                            var rulesArray = new JArray();
+                            if (signer.Rules != null)
+                            {
+                                foreach (var rule in signer.Rules)
+                                    rulesArray.Add(new JObject()
+                                    {
+                                        ["action"] = rule.Action.ToString(),
+                                        ["condition"] = rule.Condition.Type.ToString(),
+                                    });
+                            }
+                            signerObject["rules"] = rulesArray;
 
-                    var allowedContractsArray = new JArray();
-                    foreach (var contract in signer.AllowedContracts)
-                        allowedContractsArray.Add(contract.ToString());
-                    signerObject["allowedContracts"] = allowedContractsArray;
+                            signerObject["account"] = signer.Account.ToString();
 
-                    var allowedGroupsArray = new JArray();
-                    foreach (var group in signer.AllowedGroups)
-                        allowedGroupsArray.Add(group.ToString());
-                    signerObject["allowedGroups"] = allowedGroupsArray;
+                            var allowedContractsArray = new JArray();
+                            if (signer.AllowedContracts != null)
+                            {
+                                foreach (var contract in signer.AllowedContracts)
+                                    allowedContractsArray.Add(contract.ToString());
+                            }
+                            signerObject["allowedContracts"] = allowedContractsArray;
 
-                    signerObject["scopes"] = signer.Scopes.ToString();
-                    signersArray.Add(signerObject);
-                }
-                txObject["signers"] = signersArray;
+                            var allowedGroupsArray = new JArray();
+                            if (signer.AllowedGroups != null)
+                            {
+                                foreach (var group in signer.AllowedGroups)
+                                    allowedGroupsArray.Add(group.ToString());
+                            }
+                            signerObject["allowedGroups"] = allowedGroupsArray;
 
-                var attributesArray = new JArray();
-                foreach (var attr in tx.Attributes)
-                    attributesArray.Add(new JObject()
+                            signerObject["scopes"] = signer.Scopes.ToString();
+                            signersArray.Add(signerObject);
+                        }
+                    }
+                    txObject["signers"] = signersArray;
+
+                    var attributesArray = new JArray();
+                    if (tx.Attributes != null)
                     {
-                        ["allowMultiple"] = attr.AllowMultiple,
-                        ["yype"] = attr.Type.ToString(),
-                    });
+                        foreach (var attr in tx.Attributes)
+                            attributesArray.Add(new JObject()
+                            {
+                                ["allowMultiple"] = attr.AllowMultiple,
+                                ["yype"] = attr.Type.ToString(),
+                            });
+                    }
+                    txObject["attributes"] = attributesArray;
 
-                txObject["attributes"] = attributesArray;
-
-                txArray.Add(txObject);
+                    txArray.Add(txObject);
+                }
             }
             blockObject["transactions"] = txArray;
             blockObject.WriteTo(writer);

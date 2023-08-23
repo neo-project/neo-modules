@@ -21,7 +21,7 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
             //return UInt256.Parse(o["value"].ToObject<string>());
             try
             {
-                return UInt256.Parse(reader.ReadAsString());
+                return UInt256.Parse(reader.Value.ToString());
             }
             catch (FormatException)
             {
