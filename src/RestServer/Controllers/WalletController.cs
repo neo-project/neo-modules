@@ -29,7 +29,7 @@ namespace Neo.Plugins.RestServer.Controllers
     [ApiController]
     public class WalletController : ControllerBase
     {
-        private static readonly WalletSessionManager _walletSessions = new();
+        internal static WalletSessionManager WalletSessions { get; } = new();
 
         private readonly NeoSystem _neosystem;
         private readonly RestServerSettings _settings;
@@ -57,7 +57,7 @@ namespace Neo.Plugins.RestServer.Controllers
             if (wallet == null)
                 throw new WalletOpenException($"File '{model.Path}' could not be opened.");
             var sessionId = Guid.NewGuid();
-            _walletSessions[sessionId] = new WalletSession(wallet);
+            WalletSessions[sessionId] = new WalletSession(wallet);
             return Ok(new
             {
                 SessionId = sessionId.ToString("n"),
@@ -71,9 +71,9 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromRoute(Name = "session")]
             Guid session)
         {
-            if (_walletSessions.ContainsKey(session) == false)
+            if (WalletSessions.ContainsKey(session) == false)
                 throw new KeyNotFoundException(session.ToString("n"));
-            if (_walletSessions.TryRemove(session, out _) == false)
+            if (WalletSessions.TryRemove(session, out _) == false)
                 throw new WalletSessionException("Failed to remove session.");
             return Ok();
         }
@@ -84,9 +84,9 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromRoute(Name = "session")]
             Guid sessionId)
         {
-            if (_walletSessions.ContainsKey(sessionId) == false)
+            if (WalletSessions.ContainsKey(sessionId) == false)
                 throw new KeyNotFoundException(sessionId.ToString("n"));
-            var session = _walletSessions[sessionId];
+            var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
             var keys = wallet.GetAccounts().Where(p => p.HasKey)
@@ -108,9 +108,9 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromRoute(Name = "address")]
             UInt160 scriptHash)
         {
-            if (_walletSessions.ContainsKey(sessionId) == false)
+            if (WalletSessions.ContainsKey(sessionId) == false)
                 throw new KeyNotFoundException(sessionId.ToString("n"));
-            var session = _walletSessions[sessionId];
+            var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
             var account = wallet.GetAccount(scriptHash);
@@ -132,9 +132,9 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromBody]
             WalletCreateAccountModel model)
         {
-            if (_walletSessions.ContainsKey(sessionId) == false)
+            if (WalletSessions.ContainsKey(sessionId) == false)
                 throw new KeyNotFoundException(sessionId.ToString("n"));
-            var session = _walletSessions[sessionId];
+            var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
             var account = model.PrivateKey == null || model.PrivateKey.Length == 0 ?
@@ -157,9 +157,9 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromRoute(Name = "asset")]
             UInt160 scriptHash)
         {
-            if (_walletSessions.ContainsKey(sessionId) == false)
+            if (WalletSessions.ContainsKey(sessionId) == false)
                 throw new KeyNotFoundException(sessionId.ToString("n"));
-            var session = _walletSessions[sessionId];
+            var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
             var balance = wallet.GetAvailable(_neosystem.StoreView, scriptHash);
@@ -176,9 +176,9 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromRoute(Name = "session")]
             Guid sessionId)
         {
-            if (_walletSessions.ContainsKey(sessionId) == false)
+            if (WalletSessions.ContainsKey(sessionId) == false)
                 throw new KeyNotFoundException(sessionId.ToString("n"));
-            var session = _walletSessions[sessionId];
+            var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
             using var snapshot = _neosystem.GetSnapshot();
@@ -201,9 +201,9 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromBody]
             WalletImportKey model)
         {
-            if (_walletSessions.ContainsKey(sessionId) == false)
+            if (WalletSessions.ContainsKey(sessionId) == false)
                 throw new KeyNotFoundException(sessionId.ToString("n"));
-            var session = _walletSessions[sessionId];
+            var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
             var account = wallet.Import(model.Wif);
@@ -225,9 +225,9 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromRoute(Name = "session")]
             Guid sessionId)
         {
-            if (_walletSessions.ContainsKey(sessionId) == false)
+            if (WalletSessions.ContainsKey(sessionId) == false)
                 throw new KeyNotFoundException(sessionId.ToString("n"));
-            var session = _walletSessions[sessionId];
+            var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
             var accounts = new List<WalletAddressModel>();
@@ -251,9 +251,9 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromRoute(Name = "account")]
             UInt160 scriptHash)
         {
-            if (_walletSessions.ContainsKey(sessionId) == false)
+            if (WalletSessions.ContainsKey(sessionId) == false)
                 throw new KeyNotFoundException(sessionId.ToString("n"));
-            var session = _walletSessions[sessionId];
+            var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
             if (wallet.DeleteAccount(scriptHash) == false)
@@ -275,9 +275,9 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromBody]
             WalletSendModel model)
         {
-            if (_walletSessions.ContainsKey(sessionId) == false)
+            if (WalletSessions.ContainsKey(sessionId) == false)
                 throw new KeyNotFoundException(sessionId.ToString("n"));
-            var session = _walletSessions[sessionId];
+            var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
             using var snapshot = _neosystem.GetSnapshot();

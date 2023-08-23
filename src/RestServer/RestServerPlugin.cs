@@ -11,11 +11,10 @@
 using Akka.Actor;
 using Neo.ConsoleService;
 using Neo.Network.P2P;
-using Neo.Plugins.RestServer.Controllers;
 
 namespace Neo.Plugins.RestServer
 {
-    public class RestServerPlugin : Plugin
+    public partial class RestServerPlugin : Plugin
     {
         public override string Name => "RestServer";
         public override string Description => "Enables REST Web Sevices for the node";

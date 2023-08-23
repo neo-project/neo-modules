@@ -19,13 +19,13 @@ namespace Neo.Plugins.RestServer
 
         public WalletSessionManager()
         {
-            _timer = new(SessionTimeout, null, TimeSpan.Zero, TimeSpan.FromMinutes(RestServerSettings.Current.WalletTimeout));
+            _timer = new(SessionTimeout, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
         }
 
         private void SessionTimeout(object data)
         {
-            var killAll = this.Where(w => DateTime.Now >= w.Value.Expires)
-                .Select(s => new Task(() =>
+            var killAll = this.Where(w => w.Value.Expires <= DateTime.Now)
+                .Select(s => Task.Run(() =>
                 {
                     TryRemove(s);
                 }));
@@ -41,6 +41,7 @@ namespace Neo.Plugins.RestServer
         public WalletSession(Wallet wallet)
         {
             Wallet = wallet;
+            ResetExpiration();
         }
 
         public void ResetExpiration() =>
