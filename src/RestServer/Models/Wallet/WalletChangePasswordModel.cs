@@ -10,11 +10,11 @@
 
 namespace Neo.Plugins.RestServer.Models.Wallet
 {
-    public class WalletCreateModel
+    public class WalletChangePasswordModel
     {
-        public string Name { get; set; }
-        public string Path { get; set; }
-        public string Wif { get; set; }
-        public string Password { get; set; }
+        public string OldPassword { get; set; }
+        public string NewPassword { get; set; }
+        public bool CreateBackupFile { get; set; }
+        public bool OverwriteIfBackupFileExists { get; set; }
     }
 }

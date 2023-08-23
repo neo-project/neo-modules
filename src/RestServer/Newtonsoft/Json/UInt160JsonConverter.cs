@@ -25,7 +25,6 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
             }
             catch (FormatException)
             {
-
                 throw new ScriptHashFormatException();
             }
         }

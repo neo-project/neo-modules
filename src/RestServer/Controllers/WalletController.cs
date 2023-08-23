@@ -13,7 +13,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Neo.Network.P2P.Payloads;
 using Neo.Plugins.RestServer.Exceptions;
-using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Models.Wallet;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
@@ -21,6 +20,8 @@ using Neo.Wallets;
 using Neo.Wallets.NEP6;
 using System.Net.Mime;
 using System.Numerics;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
 
 namespace Neo.Plugins.RestServer.Controllers
 {
@@ -43,11 +44,11 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpPost("open", Name = "WalletOpen")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult OpenWallet(
+        public IActionResult WalletOpen(
             [FromBody]
             WalletOpenModel model)
         {
-            if (string.IsNullOrEmpty(model.Path))
+            if (string.IsNullOrWhiteSpace(model.Path))
                 throw new JsonPropertyNullOrEmptyException(nameof(model.Path));
             if (string.IsNullOrEmpty(model.Password))
                 throw new JsonPropertyNullOrEmptyException(nameof(model.Password));
@@ -67,7 +68,7 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpGet("{session:required}/close", Name = "WalletClose")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult CloseWallet(
+        public IActionResult WalletClose(
             [FromRoute(Name = "session")]
             Guid session)
         {
@@ -126,7 +127,7 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpPost("{session:required}/address/create", Name = "WalletCreateAddress")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult CreateNewAddress(
+        public IActionResult WalletCreateNewAddress(
             [FromRoute(Name = "session")]
             Guid sessionId,
             [FromBody]
@@ -142,16 +143,21 @@ namespace Neo.Plugins.RestServer.Controllers
                 wallet.CreateAccount(model.PrivateKey);
             if (wallet is NEP6Wallet nep6)
                 nep6.Save();
-            return Ok(new
+            return Ok(new WalletAddressModel()
             {
-                account.Address,
+                Address = account.Address,
+                ScriptHash = account.ScriptHash,
+                PublicKey = account.GetKey().PublicKey,
+                HasKey = account.HasKey,
+                Label = account.Label,
+                WatchOnly = account.WatchOnly,
             });
         }
 
         [HttpGet("{session:required}/balance/{asset:required}", Name = "WalletBalanceOf")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult GetWalletBalance(
+        public IActionResult WalletBalance(
             [FromRoute(Name = "session")]
             Guid sessionId,
             [FromRoute(Name = "asset")]
@@ -169,10 +175,10 @@ namespace Neo.Plugins.RestServer.Controllers
             });
         }
 
-        [HttpGet("{session:required}/UnClaimedGas", Name = "GetUnClaimedGas")]
+        [HttpGet("{session:required}/gas/unclaimed", Name = "GetUnClaimedGas")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult GetUnClaimedGas(
+        public IActionResult WalletUnClaimedGas(
             [FromRoute(Name = "session")]
             Guid sessionId)
         {
@@ -195,16 +201,16 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpPost("{session:required}/import", Name = "WalletImportByWif")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult ImportPrivateKey(
+        public IActionResult WalletImportPrivateKey(
             [FromRoute(Name = "session")]
             Guid sessionId,
             [FromBody]
             WalletImportKey model)
         {
-            if (string.IsNullOrEmpty(model.Wif))
-                throw new JsonPropertyNullOrEmptyException(nameof(model.Wif));
             if (WalletSessions.ContainsKey(sessionId) == false)
                 throw new KeyNotFoundException(sessionId.ToString("n"));
+            if (string.IsNullOrEmpty(model.Wif))
+                throw new JsonPropertyNullOrEmptyException(nameof(model.Wif));
             var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
@@ -214,16 +220,18 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(new WalletAddressModel()
             {
                 Address = account.Address,
+                ScriptHash = account.ScriptHash,
+                PublicKey = account.GetKey().PublicKey,
                 HasKey = account.HasKey,
                 Label = account.Label,
                 WatchOnly = account.WatchOnly,
             });
         }
 
-        [HttpGet("{session:required}/ListAddress", Name = "GetWalletListAddress")]
+        [HttpGet("{session:required}/address/list", Name = "GetWalletListAddress")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public IActionResult ListAddresses(
+        public IActionResult WalletListAddresses(
             [FromRoute(Name = "session")]
             Guid sessionId)
         {
@@ -237,6 +245,8 @@ namespace Neo.Plugins.RestServer.Controllers
                 accounts.Add(new WalletAddressModel()
                 {
                     Address = account.Address,
+                    ScriptHash = account.ScriptHash,
+                    PublicKey = account.GetKey().PublicKey,
                     HasKey = account.HasKey,
                     Label = account.Label,
                     WatchOnly = account.WatchOnly,
@@ -277,14 +287,14 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromBody]
             WalletSendModel model)
         {
+            if (WalletSessions.ContainsKey(sessionId) == false)
+                throw new KeyNotFoundException(sessionId.ToString("n"));
             if (model.AssetId == null || model.AssetId == UInt160.Zero)
                 throw new JsonPropertyNullException(nameof(model.AssetId));
             if (model.From == null)
                 throw new JsonPropertyNullException(nameof(model.From));
             if (model.To == null)
                 throw new JsonPropertyNullException(nameof(model.To));
-            if (WalletSessions.ContainsKey(sessionId) == false)
-                throw new KeyNotFoundException(sessionId.ToString("n"));
             var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
@@ -325,6 +335,153 @@ namespace Neo.Plugins.RestServer.Controllers
             {
                 throw new WalletException("Transaction failed! Check for invalid input.");
             }
+        }
+
+        [HttpPost("create", Name = "WalletCreate")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult WalletCreate(
+            [FromBody]
+            WalletCreateModel model)
+        {
+            if (string.IsNullOrWhiteSpace(model.Path))
+                throw new JsonPropertyNullOrEmptyException(nameof(model.Path));
+            if (string.IsNullOrEmpty(model.Password))
+                throw new JsonPropertyNullOrEmptyException(nameof(model.Password));
+            var wallet = Wallet.Create(model.Name, model.Path, model.Password, _neosystem.Settings);
+            if (wallet == null)
+                throw new WalletException("Wallet files in that format are not supported, please use a .json or .db3 file extension.");
+            if (string.IsNullOrEmpty(model.Wif) == false)
+                wallet.Import(model.Wif);
+            wallet.Save();
+            var sessionId = Guid.NewGuid();
+            WalletSessions[sessionId] = new WalletSession(wallet);
+            return Ok(new
+            {
+                SessionId = sessionId.ToString("n"),
+            });
+        }
+
+        [HttpPost("{session:required}/import/multisigaddress", Name = "WalletImportMultiSigAddress")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult WalletImportMultiSigAddress(
+            [FromRoute(Name = "session")]
+            Guid sessionId,
+            [FromBody]
+            WalletImportMultiSigAddressModel model)
+        {
+            if (WalletSessions.ContainsKey(sessionId) == false)
+                throw new KeyNotFoundException(sessionId.ToString("n"));
+            if (model.PublicKeys == null || model.PublicKeys.Length == 0)
+                throw new WalletException($"{nameof(model.PublicKeys)} is invalid.");
+            var session = WalletSessions[sessionId];
+            var wallet = session.Wallet;
+            session.ResetExpiration();
+
+            int n = model.PublicKeys.Length;
+
+            if (model.RequiredSignatures < 1 || model.RequiredSignatures > n || n > 1024)
+                throw new WalletException($"{nameof(model.RequiredSignatures)} and {nameof(model.PublicKeys)} is invalid.");
+
+            Contract multiSignContract = Contract.CreateMultiSigContract(model.RequiredSignatures, model.PublicKeys);
+            KeyPair keyPair = wallet.GetAccounts().FirstOrDefault(p => p.HasKey && model.PublicKeys.Contains(p.GetKey().PublicKey))?.GetKey();
+
+            wallet.CreateAccount(multiSignContract, keyPair);
+            if (wallet is NEP6Wallet nep6)
+                nep6.Save();
+            return Ok(new
+            {
+                Address = multiSignContract.ScriptHash.ToAddress(_neosystem.Settings.AddressVersion),
+                multiSignContract.ScriptHash,
+                multiSignContract.Script,
+            });
+        }
+
+        [HttpGet("{session:required}/asset/list", Name = "GetWalletAssetList")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult WalletListAsset(
+            [FromRoute(Name = "session")]
+            Guid sessionId)
+        {
+            if (WalletSessions.ContainsKey(sessionId) == false)
+                throw new KeyNotFoundException(sessionId.ToString("n"));
+            var session = WalletSessions[sessionId];
+            var wallet = session.Wallet;
+            session.ResetExpiration();
+            var assets = new List<WalletAssetModel>();
+            foreach (var account in wallet.GetAccounts())
+                assets.Add(new()
+                {
+                    Address = account.Address,
+                    ScriptHash = account.ScriptHash,
+                    PublicKey = account.GetKey().PublicKey,
+                    Neo = wallet.GetBalance(_neosystem.StoreView, NativeContract.NEO.Hash, account.ScriptHash),
+                    NeoHash = NativeContract.NEO.Hash,
+                    Gas = wallet.GetBalance(_neosystem.StoreView, NativeContract.GAS.Hash, account.ScriptHash),
+                    GasHash = NativeContract.GAS.Hash,
+                });
+            return Ok(assets);
+        }
+
+        [HttpGet("{session:required}/key/list", Name = "GetWalletKeyList")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult WalletListKeys(
+            [FromRoute(Name = "session")]
+            Guid sessionId)
+        {
+            if (WalletSessions.ContainsKey(sessionId) == false)
+                throw new KeyNotFoundException(sessionId.ToString("n"));
+            var session = WalletSessions[sessionId];
+            var wallet = session.Wallet;
+            session.ResetExpiration();
+            var keys = new List<WalletKeyModel>();
+            foreach (var account in wallet.GetAccounts().Where(w => w.HasKey))
+                keys.Add(new()
+                {
+                    Address = account.Address,
+                    ScriptHash = account.ScriptHash,
+                    PublicKey = account.GetKey().PublicKey,
+                });
+            return Ok(keys);
+        }
+
+        [HttpPost("{session:required}/changepassword", Name = "WalletChangePassword")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult WalletChangePassword(
+            [FromRoute(Name = "session")]
+            Guid sessionId,
+            [FromBody]
+            WalletChangePasswordModel model)
+        {
+            if (WalletSessions.ContainsKey(sessionId) == false)
+                throw new KeyNotFoundException(sessionId.ToString("n"));
+            if (string.IsNullOrEmpty(model.OldPassword))
+                throw new JsonPropertyNullOrEmptyException(nameof(model.OldPassword));
+            if (string.IsNullOrEmpty(model.NewPassword))
+                throw new JsonPropertyNullOrEmptyException(nameof(model.NewPassword));
+            if (model.OldPassword == model.NewPassword)
+                throw new WalletException($"{nameof(model.OldPassword)} is the same as {nameof(model.NewPassword)}.");
+            var session = WalletSessions[sessionId];
+            var wallet = session.Wallet;
+            session.ResetExpiration();
+            if (wallet.VerifyPassword(model.OldPassword) == false)
+                throw new WalletException("Invalid password! Session terminated!");
+            if (model.CreateBackupFile && wallet is NEP6Wallet)
+            {
+                var bakFile = wallet.Path + $".{sessionId:n}.bak";
+                if (System.IO.File.Exists(wallet.Path) == false || System.IO.File.Exists(bakFile))
+                    throw new WalletException("Wallet backup failed.");
+                System.IO.File.Copy(wallet.Path, bakFile, model.OverwriteIfBackupFileExists);
+            }
+            if (wallet.ChangePassword(model.OldPassword, model.NewPassword) == false)
+                throw new WalletException("Failed to change password!");
+            if (wallet is NEP6Wallet nep6)
+                nep6.Save();
+            return Ok();
         }
     }
 }

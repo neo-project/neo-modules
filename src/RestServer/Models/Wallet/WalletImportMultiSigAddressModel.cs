@@ -8,13 +8,13 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Neo.Cryptography.ECC;
+
 namespace Neo.Plugins.RestServer.Models.Wallet
 {
-    public class WalletCreateModel
+    public class WalletImportMultiSigAddressModel
     {
-        public string Name { get; set; }
-        public string Path { get; set; }
-        public string Wif { get; set; }
-        public string Password { get; set; }
+        public ushort RequiredSignatures { get; set; }
+        public ECPoint[] PublicKeys { get; set; }
     }
 }

@@ -8,11 +8,15 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Neo.Cryptography.ECC;
+
 namespace Neo.Plugins.RestServer.Models.Wallet
 {
     public class WalletAddressModel
     {
         public string Address { get; set; }
+        public UInt160 ScriptHash { get; set; }
+        public ECPoint PublicKey { get; set; }
         public bool HasKey { get; set; }
         public string Label { get; set; }
         public bool WatchOnly { get; set; }

@@ -8,7 +8,6 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using Neo.Cryptography.ECC;
 
@@ -18,8 +17,7 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
     {
         public override ECPoint ReadJson(JsonReader reader, Type objectType, ECPoint existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            var o = JObject.Load(reader);
-            if (ECPoint.TryParse(o["value"].ToObject<string>(), ECCurve.Secp256r1, out var value))
+            if (ECPoint.TryParse(reader?.Value.ToString(), ECCurve.Secp256r1, out var value))
                 return value;
             return default;
         }

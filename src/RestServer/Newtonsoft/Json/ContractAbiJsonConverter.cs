@@ -34,7 +34,7 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
                 };
 
                 var parametersArray = new JArray();
-                foreach(var parameter in method.Parameters)
+                foreach (var parameter in method.Parameters)
                     parametersArray.Add(new JObject()
                     {
                         ["name"] = parameter.Name,

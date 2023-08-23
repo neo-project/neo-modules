@@ -129,12 +129,13 @@ namespace Neo.Plugins.RestServer
                         .ConfigureApiBehaviorOptions(options =>
                         {
                             options.InvalidModelStateResponseFactory = context =>
-                                new BadRequestObjectResult(new ParameterFormatExceptionModel(string.Join(' ', context.ModelState.Keys)))
+                                new BadRequestObjectResult(
+                                    new ParameterFormatExceptionModel(string.Join(' ', context.ModelState.Values.SelectMany(s => s.Errors).Select(s => s.ErrorMessage))))
                                 {
                                     ContentTypes =
-                                    {
-                                        MediaTypeNames.Application.Json,
-                                    }
+                                        {
+                                            MediaTypeNames.Application.Json,
+                                        }
                                 };
                         })
                         .ConfigureApplicationPartManager(manager =>

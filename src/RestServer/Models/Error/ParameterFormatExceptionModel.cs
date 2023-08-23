@@ -20,10 +20,9 @@ namespace Neo.Plugins.RestServer.Models.Error
             Name = nameof(RestErrorCodes.ParameterFormatException);
         }
 
-        public ParameterFormatExceptionModel(string paramName) : this()
+        public ParameterFormatExceptionModel(string message) : this()
         {
-            if (string.IsNullOrEmpty(paramName) == false)
-                Message = $"Parameter {paramName} is in an invalid format.";
+            Message = message;
         }
     }
 }
