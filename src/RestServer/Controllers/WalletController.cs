@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Neo.Network.P2P.Payloads;
 using Neo.Plugins.RestServer.Exceptions;
+using Neo.Plugins.RestServer.Extensions;
+using Neo.Plugins.RestServer.Helpers;
 using Neo.Plugins.RestServer.Models.Wallet;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
@@ -20,8 +22,6 @@ using Neo.Wallets;
 using Neo.Wallets.NEP6;
 using System.Net.Mime;
 using System.Numerics;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Principal;
 
 namespace Neo.Plugins.RestServer.Controllers
 {
@@ -52,6 +52,8 @@ namespace Neo.Plugins.RestServer.Controllers
                 throw new JsonPropertyNullOrEmptyException(nameof(model.Path));
             if (string.IsNullOrEmpty(model.Password))
                 throw new JsonPropertyNullOrEmptyException(nameof(model.Password));
+            if (new FileInfo(model.Path).DirectoryName.StartsWith(Environment.CurrentDirectory, StringComparison.InvariantCultureIgnoreCase) == false)
+                throw new UnauthorizedAccessException(model.Path);
             if (System.IO.File.Exists(model.Path) == false)
                 throw new FileNotFoundException(null, model.Path);
             var wallet = Wallet.Open(model.Path, model.Password, _neosystem.Settings);
@@ -331,9 +333,9 @@ namespace Neo.Plugins.RestServer.Controllers
                 _neosystem.Blockchain.Tell(tx);
                 return Ok(tx);
             }
-            catch
+            catch (Exception ex)
             {
-                throw new WalletException("Transaction failed! Check for invalid input.");
+                throw ex.InnerException ?? ex;
             }
         }
 
@@ -482,6 +484,48 @@ namespace Neo.Plugins.RestServer.Controllers
             if (wallet is NEP6Wallet nep6)
                 nep6.Save();
             return Ok();
+        }
+
+        [HttpPost("{session:required}/transaction/script", Name = "WalletTransactionWithScript")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult WalletTransactionWithScript(
+            [FromRoute(Name = "session")]
+            Guid sessionId,
+            [FromBody]
+            WalletTransactionScriptModel model)
+        {
+            if (WalletSessions.ContainsKey(sessionId) == false)
+                throw new KeyNotFoundException(sessionId.ToString("n"));
+            if (model.Script == null || model.Script.Length == 0)
+                throw new JsonPropertyNullOrEmptyException(nameof(model.Script));
+            if (model.From == null)
+                throw new JsonPropertyNullException(nameof(model.From));
+            var session = WalletSessions[sessionId];
+            session.ResetExpiration();
+            var wallet = session.Wallet;
+            var signers = model.Signers?.Select(s => new Signer() { Scopes = WitnessScope.CalledByEntry, Account = s }).ToArray();
+            var appEngine = ScriptHelper.InvokeScript(_settings, model.Script, signers);
+            if (appEngine.State != VM.VMState.HALT)
+                throw new ApplicationEngineException(appEngine.FaultException?.InnerException?.Message ?? appEngine.FaultException?.Message ?? string.Empty);
+            var tx = wallet.MakeTransaction(_neosystem.StoreView, model.Script, model.From, signers, maxGas: _settings.MaxInvokeGas);
+            try
+            {
+                var context = new ContractParametersContext(_neosystem.StoreView, tx, _neosystem.Settings.Network);
+                wallet.Sign(context);
+                if (context.Completed == false)
+                    throw new WalletException($"Incomplete signature: {context}");
+                else
+                {
+                    tx.Witnesses = context.GetWitnesses();
+                    _neosystem.Blockchain.Tell(tx);
+                    return Ok(tx);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex.InnerException ?? ex;
+            }
         }
     }
 }

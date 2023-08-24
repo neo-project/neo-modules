@@ -35,12 +35,12 @@ namespace Neo.Plugins.RestServer.Helpers
             return engine.State == VMState.HALT;
         }
 
-        public static ApplicationEngine InvokeMethod(ProtocolSettings protocolSettings, RestServerSettings restSettings, DataCache snapshot, UInt160 scriptHash, string method, JToken args)
+        public static ApplicationEngine InvokeMethod(ProtocolSettings protocolSettings, RestServerSettings restSettings, DataCache snapshot, UInt160 scriptHash, string method, JToken args, out byte[] script)
         {
             var aparams = ((JArray)args).Select(FromJson).ToArray();
             using var scriptBuilder = new ScriptBuilder();
             scriptBuilder.EmitDynamicCall(scriptHash, method, CallFlags.ReadOnly, aparams);
-            byte[] script = scriptBuilder.ToArray();
+            script = scriptBuilder.ToArray();
             using var engine = ApplicationEngine.Run(script, snapshot, settings: protocolSettings, gas: restSettings.MaxInvokeGas);
             return engine;
         }

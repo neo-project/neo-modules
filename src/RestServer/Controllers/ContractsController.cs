@@ -147,8 +147,12 @@ namespace Neo.Plugins.RestServer.Controllers
                 throw new QueryParameterNotFoundException(nameof(method));
             try
             {
-                var engine = ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _neosystem.StoreView, contracts.Hash, method, jparams);
-                return Ok(engine.ToModel());
+                var engine = ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _neosystem.StoreView, contracts.Hash, method, jparams, out var script);
+                return Ok(new
+                {
+                    Script = script,
+                    ExecuteLog = engine.ToModel()
+                });
             }
             catch (Exception ex)
             {
