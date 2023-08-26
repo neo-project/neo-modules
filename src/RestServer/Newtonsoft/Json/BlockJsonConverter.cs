@@ -125,7 +125,7 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
                             attributesArray.Add(new JObject()
                             {
                                 ["allowMultiple"] = attr.AllowMultiple,
-                                ["yype"] = attr.Type.ToString(),
+                                ["type"] = attr.Type.ToString(),
                             });
                     }
                     txObject["attributes"] = attributesArray;

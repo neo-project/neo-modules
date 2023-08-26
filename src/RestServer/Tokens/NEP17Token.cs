@@ -19,10 +19,10 @@ namespace Neo.Plugins.RestServer.Tokens
 {
     internal class NEP17Token
     {
-        public UInt160 ScriptHash { get; init; }
-        public string Name { get; init; }
-        public string Symbol { get; init; }
-        public byte Decimals { get; init; }
+        public UInt160 ScriptHash { get; private init; }
+        public string Name { get; private init; }
+        public string Symbol { get; private init; }
+        public byte Decimals { get; private init; }
 
         private readonly NeoSystem _neosystem;
         private readonly RestServerSettings _settings;

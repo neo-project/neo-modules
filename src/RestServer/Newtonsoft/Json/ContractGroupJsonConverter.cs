@@ -25,7 +25,7 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
         {
             var contractGroupObject = new JObject()
             {
-                ["pubKey"] = JToken.Parse(JsonConvert.SerializeObject(value.PubKey, RestServerSettings.Default.JsonSerializerSettings)),
+                ["pubkey"] = JToken.Parse(JsonConvert.SerializeObject(value.PubKey, RestServerSettings.Default.JsonSerializerSettings)),
                 ["signature"] = JToken.Parse(JsonConvert.SerializeObject(value.Signature, RestServerSettings.Default.JsonSerializerSettings)),
             };
             contractGroupObject.WriteTo(writer);

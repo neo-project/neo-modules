@@ -14,6 +14,7 @@ using Neo.Plugins.RestServer.Models.Node;
 using Neo.Plugins.RestServer.Models.Token;
 using Neo.Plugins.RestServer.Tokens;
 using Neo.SmartContract;
+using Neo.VM.Types;
 
 namespace Neo.Plugins.RestServer.Extensions
 {
@@ -50,8 +51,8 @@ namespace Neo.Plugins.RestServer.Extensions
                 Tokens = nep11.Tokens().Select(s => new
                 {
                     Key = s,
-                    Value = nep11.Properties(s).AsReadOnly(),
-                }).ToDictionary(key => Convert.ToHexString(key.Key), value => value.Value).AsReadOnly(),
+                    Value = nep11.Properties(s),
+                }).ToDictionary(key => Convert.ToHexString(key.Key), value => value.Value),
             };
 
         public static ProtocolSettingsModel ToModel(this ProtocolSettings protocolSettings) =>

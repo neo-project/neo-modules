@@ -9,12 +9,11 @@
 // modifications are permitted.
 
 using Neo.VM.Types;
-using System.Collections.ObjectModel;
 
 namespace Neo.Plugins.RestServer.Models.Token
 {
     internal class NEP11TokenModel : NEP17TokenModel
     {
-        public ReadOnlyDictionary<string, ReadOnlyDictionary<string, StackItem>> Tokens { get; set; }
+        public IReadOnlyDictionary<string, IReadOnlyDictionary<string, StackItem>> Tokens { get; set; }
     }
 }

@@ -26,7 +26,7 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
             var contractPermissionsObject = new JObject()
             {
                 ["contract"] = value.Contract.ToString(),
-                ["nethods"] = value.Methods.Count == 0 ? "*" : JToken.Parse(JsonConvert.SerializeObject(value.Methods.Select(s => s.ToString()).ToArray(), RestServerSettings.Default.JsonSerializerSettings)),
+                ["methods"] = value.Methods.Count == 0 ? "*" : JToken.Parse(JsonConvert.SerializeObject(value.Methods.Select(s => s.ToString()).ToArray(), RestServerSettings.Default.JsonSerializerSettings)),
             };
             contractPermissionsObject.WriteTo(writer);
         }

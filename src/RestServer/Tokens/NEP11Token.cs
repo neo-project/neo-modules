@@ -76,37 +76,34 @@ namespace Neo.Plugins.RestServer.Tokens
             return new(BigInteger.Zero, Decimals);
         }
 
-        public BigDecimal BalanceOf(UInt160 address)
+        public BigDecimal BalanceOf(UInt160 owner)
         {
-            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "balanceOf", out var results, address))
+            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "balanceOf", out var results, owner))
                 return new(results[0].GetInteger(), Decimals);
             return new(BigInteger.Zero, Decimals);
         }
 
-        public BigDecimal BalanceOf(UInt160 address, byte[] tokenId)
+        public BigDecimal BalanceOf(UInt160 owner, byte[] tokenId)
         {
             if (Decimals == 0) throw new InvalidOperationException();
             ArgumentNullException.ThrowIfNull(tokenId, nameof(tokenId));
             if (tokenId.Length > 64) throw new ArgumentOutOfRangeException(nameof(tokenId));
-            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "balanceOf", out var results, address, tokenId))
+            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "balanceOf", out var results, owner, tokenId))
                 return new(results[0].GetInteger(), Decimals);
             return new(BigInteger.Zero, Decimals);
         }
 
-        public byte[][] TokensOf(UInt160 owner)
+        public IEnumerable<byte[]> TokensOf(UInt160 owner)
         {
             if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "tokensOf", out var results, owner))
             {
                 if (results[0].GetInterface<object>() is IIterator iterator)
                 {
                     var refCounter = new ReferenceCounter();
-                    var lstTokens = new List<byte[]>();
                     while (iterator.Next())
-                        lstTokens.Add(iterator.Value(refCounter).GetSpan().ToArray());
-                    return lstTokens.ToArray();
+                        yield return iterator.Value(refCounter).GetSpan().ToArray();
                 }
             }
-            return System.Array.Empty<byte[]>();
         }
 
         public UInt160[] OwnerOf(byte[] tokenId)
@@ -135,29 +132,20 @@ namespace Neo.Plugins.RestServer.Tokens
             return System.Array.Empty<UInt160>();
         }
 
-        public byte[][] Tokens()
+        public IEnumerable<byte[]> Tokens()
         {
-            try
+            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "tokens", out var results))
             {
-                if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _snapshot, ScriptHash, "tokens", out var results))
+                if (results[0].GetInterface<object>() is IIterator iterator)
                 {
-                    if (results[0].GetInterface<object>() is IIterator iterator)
-                    {
-                        var refCounter = new ReferenceCounter();
-                        var lstTokenIds = new List<byte[]>();
-                        while (iterator.Next())
-                            lstTokenIds.Add(iterator.Value(refCounter).GetSpan().ToArray());
-                        return lstTokenIds.ToArray();
-                    }
+                    var refCounter = new ReferenceCounter();
+                    while (iterator.Next())
+                        yield return iterator.Value(refCounter).GetSpan().ToArray();
                 }
             }
-            catch
-            {
-            }
-            return System.Array.Empty<byte[]>();
         }
 
-        public Dictionary<string, StackItem> Properties(byte[] tokenId)
+        public IReadOnlyDictionary<string, StackItem> Properties(byte[] tokenId)
         {
             ArgumentNullException.ThrowIfNull(tokenId, nameof(tokenId));
             if (tokenId.Length > 64) throw new ArgumentOutOfRangeException(nameof(tokenId));

@@ -25,7 +25,7 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
         {
             var nefFileObject = new JObject()
             {
-                ["checkSum"] = value.CheckSum,
+                ["checksum"] = value.CheckSum,
                 ["compiler"] = value.Compiler,
                 ["script"] = Convert.ToBase64String(value.Script.Span),
                 ["source"] = value.Source,
