@@ -30,6 +30,7 @@ using Neo.Plugins.RestServer.Providers;
 using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
 using Neo.SmartContract.Native;
+using Neo.VM;
 using Neo.VM.Types;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -262,6 +263,12 @@ namespace Neo.Plugins.RestServer
                                 Type = "object",
                                 Format = "stackitem",
                             });
+                            options.MapType<VMState>(() => new OpenApiSchema()
+                            {
+                                Type = "string",
+                                Format = "enum",
+                            });
+
                             options.MapType<JToken>(() => new OpenApiSchema() { Type = typeof(JToken).Name });
 
 

@@ -10,6 +10,7 @@
 
 using Neo.Network.P2P;
 using Neo.Plugins.RestServer.Models;
+using Neo.Plugins.RestServer.Models.Error;
 using Neo.Plugins.RestServer.Models.Node;
 using Neo.Plugins.RestServer.Models.Token;
 using Neo.Plugins.RestServer.Tokens;
@@ -25,9 +26,22 @@ namespace Neo.Plugins.RestServer.Extensions
             {
                 GasConsumed = ae.GasConsumed,
                 State = ae.State,
-                Notifications = ae.Notifications,
-                ResultStack = ae.ResultStack,
-                FaultException = ae.FaultException,
+                Notifications = ae.Notifications.Select(s =>
+                    new BlockchainEventModel()
+                    {
+                        ScriptHash = s.ScriptHash,
+                        EventName = s.EventName,
+                        State = s.State.ToArray(),
+                    }).ToArray(),
+                ResultStack = ae.ResultStack.ToArray(),
+                FaultException = ae.FaultException == null ?
+                    null :
+                    new ErrorModel()
+                    {
+                        Code = ae.FaultException?.InnerException?.HResult ?? ae.FaultException.HResult,
+                        Name = ae.FaultException?.InnerException?.GetType().Name ?? ae.FaultException?.GetType().Name,
+                        Message = ae.FaultException?.InnerException?.Message ?? ae.FaultException?.Message,
+                    },
             };
 
         public static NEP17TokenModel ToModel(this NEP17Token token) =>
