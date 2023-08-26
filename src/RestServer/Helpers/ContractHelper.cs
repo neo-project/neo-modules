@@ -39,9 +39,17 @@ namespace Neo.Plugins.RestServer.Helpers
         }
 
         public static bool IsNep17Supported(ContractState contractState) =>
-            contractState.Manifest.SupportedStandards.Any(a => a.Equals("NEP-17", StringComparison.OrdinalIgnoreCase));
+            contractState.Manifest.SupportedStandards.Any(a => a.Equals("NEP-17"));
 
         public static bool IsNep11Supported(ContractState contractState) =>
-            contractState.Manifest.SupportedStandards.Any(a => a.Equals("NEP-11", StringComparison.OrdinalIgnoreCase));
+            contractState.Manifest.SupportedStandards.Any(a => a.Equals("NEP-11"));
+
+        public static ContractMethodDescriptor GetContractMethod(DataCache snapshot, UInt160 scriptHash, string method, int pCount)
+        {
+            var contractState = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
+            if (contractState == null)
+                return null;
+            return contractState.Manifest.Abi.GetMethod(method, pCount);
+        }
     }
 }

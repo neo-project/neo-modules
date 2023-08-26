@@ -62,14 +62,6 @@ namespace Neo.Plugins.RestServer.Helpers
             return ApplicationEngine.Run(script, snapshot, tx, settings: neosystem.Settings, gas: restSettings.MaxInvokeGas);
         }
 
-        public static ContractMethodDescriptor GetContractMethod(DataCache snapshot, UInt160 scriptHash, string method, int pCount)
-        {
-            var contractState = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
-            if (contractState == null)
-                return null;
-            return contractState.Manifest.Abi.GetMethod(method, pCount);
-        }
-
         public static ContractParameter FromJson(JToken obj)
         {
             ContractParameter contractParam = new ContractParameter()

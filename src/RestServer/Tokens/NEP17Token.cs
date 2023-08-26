@@ -46,7 +46,7 @@ namespace Neo.Plugins.RestServer.Tokens
                 script = sb.ToArray();
             }
             using var engine = ApplicationEngine.Run(script, _datacache, settings: neoSystem.Settings, gas: settings.MaxInvokeGas);
-            if (engine.State != VMState.HALT) throw engine.FaultException;
+            if (engine.State != VMState.HALT) throw new NotSupportedException(nameof(scriptHash));
 
             _neosystem = neoSystem;
             ScriptHash = scriptHash;
@@ -57,6 +57,8 @@ namespace Neo.Plugins.RestServer.Tokens
 
         public BigDecimal BalanceOf(UInt160 address)
         {
+            if (ContractHelper.GetContractMethod(_datacache, ScriptHash, "balanceOf", 1) == null)
+                throw new NotSupportedException(nameof(ScriptHash));
             if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _datacache, ScriptHash, "balanceOf", out var result, address))
                 return new BigDecimal(result[0].GetInteger(), Decimals);
             return new BigDecimal(BigInteger.Zero, Decimals);
@@ -64,6 +66,8 @@ namespace Neo.Plugins.RestServer.Tokens
 
         public BigDecimal TotalSupply()
         {
+            if (ContractHelper.GetContractMethod(_datacache, ScriptHash, "totalSupply", 0) == null)
+                throw new NotSupportedException(nameof(ScriptHash));
             if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _datacache, ScriptHash, "totalSupply", out var result))
                 return new BigDecimal(result[0].GetInteger(), Decimals);
             return new BigDecimal(BigInteger.Zero, Decimals);
