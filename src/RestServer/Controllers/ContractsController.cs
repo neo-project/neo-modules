@@ -85,7 +85,7 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <summary>
         /// Get a smart contract's storage.
         /// </summary>
-        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash to Convert.</param>
+        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash</param>
         /// <returns>An array of the Key (Base64) Value (Base64) Pairs objects.</returns>
         /// <response code="200">Successful</response>
         /// <response code="400">If anything is invalid or request crashes.</response>
@@ -107,7 +107,7 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <summary>
         /// Get a smart contract.
         /// </summary>
-        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash to Convert.</param>
+        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash</param>
         /// <returns>Contract Object.</returns>
         /// <response code="200">Successful</response>
         /// <response code="400">If anything is invalid or request crashes.</response>
@@ -127,7 +127,7 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <summary>
         /// Get abi of a smart contract.
         /// </summary>
-        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash to Convert.</param>
+        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash</param>
         /// <returns>Contract Abi Object.</returns>
         /// <response code="200">Successful</response>
         /// <response code="400">If anything is invalid or request crashes.</response>
@@ -147,7 +147,7 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <summary>
         /// Get manifest of a smart contract.
         /// </summary>
-        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash to Convert.</param>
+        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash</param>
         /// <returns>Contract Manifest object.</returns>
         /// <response code="200">Successful</response>
         /// <response code="400">If anything is invalid or request crashes.</response>
@@ -167,7 +167,7 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <summary>
         /// Get nef of a smart contract.
         /// </summary>
-        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash to Convert.</param>
+        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash</param>
         /// <returns>Contract Nef object.</returns>
         /// <response code="200">Successful</response>
         /// <response code="400">If anything is invalid or request crashes.</response>
@@ -187,7 +187,7 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <summary>
         /// Invoke a method as ReadOnly Flag on a smart contract.
         /// </summary>
-        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash to Convert.</param>
+        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash</param>
         /// <param name="method" example="balanceOf">method name</param>
         /// <param name="aparams">JArray of the contract parameters.</param>
         /// <returns>Execution Engine object.</returns>

@@ -37,7 +37,7 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <summary>
         /// Converts script to Neo address.
         /// </summary>
-        /// <param name="ScriptHash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash to Convert.</param>
+        /// <param name="ScriptHash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash</param>
         /// <returns>Util Address Object.</returns>
         /// <response code="200">Successful</response>
         /// <response code="400">If anything is invalid or request crashes.</response>
@@ -59,7 +59,7 @@ namespace Neo.Plugins.RestServer.Controllers
         }
 
         /// <summary>
-        /// Converts Neo address to ScriptHash.
+        /// Converts Neo address to ScriptHash
         /// </summary>
         /// <param name="address" example="NNLi44dJNXtDNSBkofB48aTVYtb1zZrNEs">Neo Address</param>
         /// <returns>Util ScriptHash Object.</returns>

@@ -37,6 +37,7 @@ using Newtonsoft.Json.Serialization;
 using System.Net.Mime;
 using System.Net.Security;
 using System.Numerics;
+using System.Reflection;
 
 namespace Neo.Plugins.RestServer
 {
@@ -180,6 +181,12 @@ namespace Neo.Plugins.RestServer
                                     Url = new Uri("http://www.opensource.org/licenses/mit-license.php"),
                                 },
                             });
+                            options.MapType<UInt256>(() => new OpenApiSchema()
+                            {
+                                Type = "string",
+                                Format = "Hash256",
+                                Example = new OpenApiString("0xad83d993ca2d9783ca86a000b39920c20508c8ccae7b7db11806646a4832bc50"),
+                            });
                             options.MapType<UInt160>(() => new OpenApiSchema()
                             {
                                 Type = "string",
@@ -257,14 +264,12 @@ namespace Neo.Plugins.RestServer
                             });
                             options.MapType<JToken>(() => new OpenApiSchema() { Type = typeof(JToken).Name });
 
-                            foreach (var plugin in Plugin.Plugins)
-                            {
-                                var pluginAssembly = plugin.GetType().Assembly;
-                                var xmlFilename = $"{pluginAssembly.GetName().Name}.xml";
-                                var xmlPathAndFilename = Path.Combine(AppContext.BaseDirectory, "Plugins", plugin.Name, xmlFilename);
-                                if (File.Exists(xmlPathAndFilename))
-                                    options.IncludeXmlComments(xmlPathAndFilename);
-                            }
+
+                            var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+                            var xmlFilename = $"{assemblyName}.xml";
+                            var xmlPathAndFilename = Path.Combine(AppContext.BaseDirectory, "Plugins", assemblyName, xmlFilename);
+                            if (File.Exists(xmlPathAndFilename))
+                                options.IncludeXmlComments(xmlPathAndFilename);
 
                         });
 
@@ -302,6 +307,7 @@ namespace Neo.Plugins.RestServer
                                 Name = exception.GetType().Name,
                                 Message = exception.Message,
                             };
+                            RestServerMiddleware.SetServerInfomationHeader(context.Response);
                             context.Response.StatusCode = 400;
                             await context.Response.WriteAsJsonAsync(response);
                         }));

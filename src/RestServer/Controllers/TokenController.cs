@@ -252,7 +252,7 @@ namespace Neo.Plugins.RestServer.Controllers
         #endregion
 
         /// <summary>
-        /// Gets every single NEP17/NEP11 on the blockchain's balance by ScriptHash.
+        /// Gets every single NEP17/NEP11 on the blockchain's balance by ScriptHash
         /// </summary>
         /// <param name="addressOrScripthash"></param>
         /// <returns>Token Balance Object.</returns>
