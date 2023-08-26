@@ -16,7 +16,15 @@ namespace Neo.Plugins.RestServer.Models.Node
 {
     internal class ProtocolSettingsModel
     {
+        /// <summary>
+        /// Network
+        /// </summary>
+        /// <example>860833102</example>
         public uint Network { get; set; }
+        /// <summary>
+        /// AddressVersion
+        /// </summary>
+        /// <example>53</example>
         public byte AddressVersion { get; set; }
         public int ValidatorsCount { get; set; }
         public uint MillisecondsPerBlock { get; set; }

@@ -12,8 +12,20 @@ namespace Neo.Plugins.RestServer.Models.Node
 {
     internal class PluginModel
     {
+        /// <summary>
+        /// Name
+        /// </summary>
+        /// <example>RestServer</example>
         public string Name { get; set; }
+        /// <summary>
+        /// Version
+        /// </summary>
+        /// <example>3.5.0</example>
         public string Version { get; set; }
+        /// <summary>
+        /// Description
+        /// </summary>
+        /// <example>Enables REST Web Sevices for the node</example>
         public string Description { get; set; }
     }
 }

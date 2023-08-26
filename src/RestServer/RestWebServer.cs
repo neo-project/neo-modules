@@ -30,6 +30,7 @@ using Neo.Plugins.RestServer.Providers;
 using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
 using Neo.SmartContract.Native;
+using Neo.VM.Types;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
@@ -248,6 +249,11 @@ namespace Neo.Plugins.RestServer
                                 Type = "string",
                                 Format = "base64",
                                 Example = new OpenApiString("CHeABTw3Q5SkjWharPAhgE+p+rGVN9FhlO4hXoJZQqA="),
+                            });
+                            options.MapType<StackItem>(() => new OpenApiSchema()
+                            {
+                                Type = "object",
+                                Format = "stackitem",
                             });
                             options.MapType<JToken>(() => new OpenApiSchema() { Type = typeof(JToken).Name });
 
