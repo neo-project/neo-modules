@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Models.Error;
+using Neo.Plugins.RestServer.Models.Utils;
 using Neo.Wallets;
 using System.Net.Mime;
 
@@ -33,18 +34,23 @@ namespace Neo.Plugins.RestServer.Controllers
 
         #region Validation
 
+        /// <summary>
+        /// Converts script to Neo address.
+        /// </summary>
+        /// <param name="ScriptHash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash to Convert.</param>
+        /// <returns>Util Address Object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{hash:required}/address", Name = "GetAddressByScripthash")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UtilsAddressModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult ScriptHashToWalletAddress(
             [FromRoute(Name = "hash")]
-            string hash)
+            UInt160 ScriptHash)
         {
             try
             {
-                if (UInt160.TryParse(hash, out var scripthash) == false)
-                    throw new ScriptHashFormatException();
-                return Ok(new { Address = scripthash.ToAddress(_neosystem.Settings.AddressVersion) });
+                return Ok(new UtilsAddressModel() { Address = ScriptHash.ToAddress(_neosystem.Settings.AddressVersion) });
             }
             catch (FormatException)
             {
@@ -52,16 +58,23 @@ namespace Neo.Plugins.RestServer.Controllers
             }
         }
 
+        /// <summary>
+        /// Converts Neo address to ScriptHash.
+        /// </summary>
+        /// <param name="address" example="NNLi44dJNXtDNSBkofB48aTVYtb1zZrNEs">Neo Address</param>
+        /// <returns>Util ScriptHash Object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{address:required}/scripthash", Name = "GetScripthashByAddress")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UtilsScriptHashModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletAddressToScriptHash(
             [FromRoute(Name = "address")]
-            string addr)
+            string address)
         {
             try
             {
-                return Ok(new { ScriptHash = addr.ToScriptHash(_neosystem.Settings.AddressVersion) });
+                return Ok(new UtilsScriptHashModel() { ScriptHash = address.ToScriptHash(_neosystem.Settings.AddressVersion) });
             }
             catch (FormatException)
             {
@@ -69,25 +82,24 @@ namespace Neo.Plugins.RestServer.Controllers
             }
         }
 
+        /// <summary>
+        /// Get whether or not a Neo address or ScriptHash is valid.
+        /// </summary>
+        /// <param name="AddressOrScriptHash"></param>
+        /// <returns>Util Address Valid Object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{address:required}/validate", Name = "IsValidAddressOrScriptHash")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UtilsAddressIsValidModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult ValidateAddress(
             [FromRoute(Name = "address")]
-            string addr)
+            string AddressOrScriptHash)
         {
-            UInt160 scriptHash = UInt160.Zero;
-            try
+            return Ok(new UtilsAddressIsValidModel()
             {
-                if (UInt160.TryParse(addr, out scriptHash) == false)
-                    scriptHash = addr.ToScriptHash(_neosystem.Settings.AddressVersion);
-
-            }
-            catch (FormatException) { }
-            return Ok(new
-            {
-                Address = addr,
-                IsValid = scriptHash != UInt160.Zero,
+                Address = AddressOrScriptHash,
+                IsValid = RestServerUtility.TryConvertToScriptHash(AddressOrScriptHash, _neosystem.Settings, out _),
             });
         }
 

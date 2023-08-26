@@ -22,16 +22,20 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Neo.Cryptography.ECC;
+using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Plugins.RestServer.Middleware;
 using Neo.Plugins.RestServer.Models.Error;
 using Neo.Plugins.RestServer.Providers;
+using Neo.SmartContract;
+using Neo.SmartContract.Manifest;
+using Neo.SmartContract.Native;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System.Net.Mime;
 using System.Net.Security;
 using System.Numerics;
-using System.Reflection;
 
 namespace Neo.Plugins.RestServer
 {
@@ -203,6 +207,49 @@ namespace Neo.Plugins.RestServer
                             {
                                 Type = "object",
                             });
+                            options.MapType<Block>(() => new OpenApiSchema()
+                            {
+                                Type = "object",
+                            });
+                            options.MapType<ContractState>(() => new OpenApiSchema()
+                            {
+                                Type = "object",
+                            });
+                            options.MapType<Header>(() => new OpenApiSchema()
+                            {
+                                Type = "object",
+                            });
+                            options.MapType<TrimmedBlock>(() => new OpenApiSchema()
+                            {
+                                Type = "object",
+                            });
+                            options.MapType<Witness>(() => new OpenApiSchema()
+                            {
+                                Type = "object",
+                            });
+                            options.MapType<MemoryPool>(() => new OpenApiSchema()
+                            {
+                                Type = "object",
+                            });
+                            options.MapType<ContractAbi>(() => new OpenApiSchema()
+                            {
+                                Type = "object",
+                            });
+                            options.MapType<ContractManifest>(() => new OpenApiSchema()
+                            {
+                                Type = "object",
+                            });
+                            options.MapType<NefFile>(() => new OpenApiSchema()
+                            {
+                                Type = "object",
+                            });
+                            options.MapType<ReadOnlyMemory<byte>>(() => new OpenApiSchema()
+                            {
+                                Type = "string",
+                                Format = "base64",
+                                Example = new OpenApiString("CHeABTw3Q5SkjWharPAhgE+p+rGVN9FhlO4hXoJZQqA="),
+                            });
+                            options.MapType<JToken>(() => new OpenApiSchema() { Type = typeof(JToken).Name });
 
                             foreach (var plugin in Plugin.Plugins)
                             {

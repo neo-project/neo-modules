@@ -35,9 +35,9 @@ namespace Neo.Plugins.RestServer.Helpers
             return engine.State == VMState.HALT;
         }
 
-        public static ApplicationEngine InvokeMethod(ProtocolSettings protocolSettings, RestServerSettings restSettings, DataCache snapshot, UInt160 scriptHash, string method, JToken args, out byte[] script)
+        public static ApplicationEngine InvokeMethod(ProtocolSettings protocolSettings, RestServerSettings restSettings, DataCache snapshot, UInt160 scriptHash, string method, JArray args, out byte[] script)
         {
-            var aparams = ((JArray)args).Select(FromJson).ToArray();
+            var aparams = args.Select(FromJson).ToArray();
             using var scriptBuilder = new ScriptBuilder();
             scriptBuilder.EmitDynamicCall(scriptHash, method, CallFlags.ReadOnly, aparams);
             script = scriptBuilder.ToArray();
@@ -64,7 +64,7 @@ namespace Neo.Plugins.RestServer.Helpers
 
         public static ContractParameter FromJson(JToken obj)
         {
-            ContractParameter contractParam = new ContractParameter()
+            ContractParameter contractParam = new()
             {
                 Type = Enum.Parse<ContractParameterType>(obj["type"].ToObject<string>()),
             };

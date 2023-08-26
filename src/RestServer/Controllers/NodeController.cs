@@ -15,7 +15,7 @@ using Neo.Network.P2P;
 using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Models.Error;
-using Neo.SmartContract.Native;
+using Neo.Plugins.RestServer.Models.Node;
 using System.Net.Mime;
 
 namespace Neo.Plugins.RestServer.Controllers
@@ -36,33 +36,14 @@ namespace Neo.Plugins.RestServer.Controllers
             _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
         }
 
-        [HttpGet(Name = "GetNodeInfo")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
-        public IActionResult Get()
-        {
-            var rNodes = _neolocalnode
-                .GetRemoteNodes()
-                .OrderByDescending(o => o.LastBlockIndex)
-                .ToArray();
-
-            uint height = NativeContract.Ledger.CurrentIndex(_neosystem.StoreView);
-            uint headerHeight = _neosystem.HeaderCache.Last?.Index ?? height;
-            int connectedCount = _neolocalnode.ConnectedCount;
-            int unconnectedCount = _neolocalnode.UnconnectedCount;
-
-            return Ok(new
-            {
-                height,
-                headerHeight,
-                connectedCount,
-                unconnectedCount,
-                Nodes = rNodes.Select(s => s.ToModel()),
-            });
-        }
-
+        /// <summary>
+        /// Gets the connected remote nodes.
+        /// </summary>
+        /// <returns>An array of the Remote Node Objects.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("peers", Name = "GetNodeRemotePeers")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RemoteNodeModel[]))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetPeers()
         {
@@ -74,19 +55,32 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(rNodes.Select(s => s.ToModel()));
         }
 
+        /// <summary>
+        /// Gets all the loaded plugins of the current connected node.
+        /// </summary>
+        /// <returns>An array of the Plugin objects.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("plugins", Name = "GetNodePlugins")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PluginModel[]))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetPlugins() =>
-            Ok(Plugin.Plugins.Select(s => new
-            {
-                s.Name,
-                Version = s.Version.ToString(3),
-                s.Description,
-            }));
+            Ok(Plugin.Plugins.Select(s =>
+                new PluginModel()
+                {
+                    Name = s.Name,
+                    Version = s.Version.ToString(3),
+                    Description = s.Description,
+                }));
 
-        [HttpGet("settings", Name = "GetNodeProcotolSettings")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        /// <summary>
+        /// Gets the ProtocolSettings of the currently connected node.
+        /// </summary>
+        /// <returns>Protocol Settings Object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
+        [HttpGet("settings", Name = "GetNodeProtocolSettings")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ProtocolSettingsModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetSettings() =>
             Ok(_neosystem.Settings.ToModel());

@@ -13,7 +13,10 @@ using Microsoft.AspNetCore.Mvc;
 using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Helpers;
+using Neo.Plugins.RestServer.Models;
 using Neo.Plugins.RestServer.Models.Error;
+using Neo.SmartContract;
+using Neo.SmartContract.Manifest;
 using Neo.SmartContract.Native;
 using Newtonsoft.Json.Linq;
 using System.Net.Mime;
@@ -36,9 +39,18 @@ namespace Neo.Plugins.RestServer.Controllers
             _settings = RestServerSettings.Current;
         }
 
+        /// <summary>
+        /// Get all the smart contracts from the blockchain.
+        /// </summary>
+        /// <param name="skip" example="1">Page</param>
+        /// <param name="take" example="50">Page Size</param>
+        /// <returns>An array of Contract object.</returns>
+        /// <response code="204">No more pages.</response>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet(Name = "GetContracts")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ContractState[]))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult Get(
             [FromQuery(Name = "page")]
@@ -55,17 +67,30 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(contractRequestList);
         }
 
+        /// <summary>
+        /// Gets count of total smart contracts on blockchain.
+        /// </summary>
+        /// <returns>Count Object</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("count", Name = "GetContractCount")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CountModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetCount()
         {
             var contracts = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView);
-            return Ok(new { Count = contracts.Count() });
+            return Ok(new CountModel() { Count = contracts.Count() });
         }
 
+        /// <summary>
+        /// Get a smart contract's storage.
+        /// </summary>
+        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash to Convert.</param>
+        /// <returns>An array of the Key (Base64) Value (Base64) Pairs objects.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{hash:required}/storage", Name = "GetContractStorage")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(KeyValuePair<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>[]))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetContractStorage(
             [FromRoute(Name = "hash")]
@@ -76,12 +101,18 @@ namespace Neo.Plugins.RestServer.Controllers
             if (contract == null)
                 throw new ContractNotFoundException(scripthash);
             var contractStorage = contract.GetStorage(_neosystem.StoreView);
-            if (contractStorage.Any() == false) return NoContent();
             return Ok(contractStorage.Select(s => new KeyValuePair<ReadOnlyMemory<byte>, ReadOnlyMemory<byte>>(s.key.Key, s.value.Value)));
         }
 
+        /// <summary>
+        /// Get a smart contract.
+        /// </summary>
+        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash to Convert.</param>
+        /// <returns>Contract Object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{hash:required}", Name = "GetContract")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ContractState))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetByScriptHash(
             [FromRoute(Name = "hash")]
@@ -93,8 +124,15 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(contracts);
         }
 
+        /// <summary>
+        /// Get abi of a smart contract.
+        /// </summary>
+        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash to Convert.</param>
+        /// <returns>Contract Abi Object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{hash:required}/abi", Name = "GetContractAbi")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ContractAbi))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetContractAbi(
             [FromRoute(Name = "hash")]
@@ -106,8 +144,15 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(contracts.Manifest.Abi);
         }
 
+        /// <summary>
+        /// Get manifest of a smart contract.
+        /// </summary>
+        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash to Convert.</param>
+        /// <returns>Contract Manifest object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{hash:required}/manifest", Name = "GetContractManifest")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ContractManifest))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetContractManifest(
             [FromRoute(Name = "hash")]
@@ -119,8 +164,15 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(contracts.Manifest);
         }
 
+        /// <summary>
+        /// Get nef of a smart contract.
+        /// </summary>
+        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash to Convert.</param>
+        /// <returns>Contract Nef object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{hash:required}/nef", Name = "GetContractNefFile")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(NefFile))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetContractNef(
             [FromRoute(Name = "hash")]
@@ -132,8 +184,17 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(contracts.Nef);
         }
 
+        /// <summary>
+        /// Invoke a method as ReadOnly Flag on a smart contract.
+        /// </summary>
+        /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash to Convert.</param>
+        /// <param name="method" example="balanceOf">method name</param>
+        /// <param name="aparams">JArray of the contract parameters.</param>
+        /// <returns>Execution Engine object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpPost("{hash:required}/invoke", Name = "InvokeContractMethod")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ExecutionEngineModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult InvokeContract(
             [FromRoute(Name = "hash")]
@@ -141,7 +202,7 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromQuery(Name = "method")]
             string method,
             [FromBody]
-            JToken jparams)
+            JArray aparams)
         {
             var contracts = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, scripthash);
             if (contracts == null)
@@ -150,12 +211,8 @@ namespace Neo.Plugins.RestServer.Controllers
                 throw new QueryParameterNotFoundException(nameof(method));
             try
             {
-                var engine = ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _neosystem.StoreView, contracts.Hash, method, jparams, out var script);
-                return Ok(new
-                {
-                    Script = script,
-                    ExecuteLog = engine.ToModel()
-                });
+                var engine = ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _neosystem.StoreView, contracts.Hash, method, aparams, out var script);
+                return Ok(engine.ToModel());
             }
             catch (Exception ex)
             {

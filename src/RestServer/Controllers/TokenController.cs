@@ -18,6 +18,7 @@ using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Exceptions;
 using System.Net.Mime;
 using Neo.Plugins.RestServer.Models.Error;
+using Neo.Plugins.RestServer.Models;
 
 namespace Neo.Plugins.RestServer.Controllers
 {
@@ -39,9 +40,18 @@ namespace Neo.Plugins.RestServer.Controllers
 
         #region NEP-17
 
+        /// <summary>
+        /// Gets all Nep-17 valid contracts from the blockchain.
+        /// </summary>
+        /// <param name="skip" example="1">Page</param>
+        /// <param name="take" example="50">Page Size</param>
+        /// <returns>An array of the Nep-17 Token Object.</returns>
+        /// <response code="204">No more pages.</response>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("nep-17", Name = "GetNep17Tokens")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(NEP17TokenModel[]))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP17(
             [FromQuery(Name = "page")]
@@ -57,6 +67,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 .OrderBy(o => o.Manifest.Name)
                 .Skip((skip - 1) * take)
                 .Take(take);
+            if (vaildContracts.Any() == false) return NoContent();
             var listResults = new List<NEP17TokenModel>();
             foreach (var contract in vaildContracts)
             {
@@ -75,16 +86,33 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(listResults);
         }
 
+        /// <summary>
+        /// The count of how many Nep-17 contracts are on the blockchain.
+        /// </summary>
+        /// <returns>Count Object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("nep-17/count", Name = "GetNep17TokenCount")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CountModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP17Count()
         {
-            return Ok(new { Count = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView).Count(c => ContractHelper.IsNep17Supported(c)) });
+            return Ok(new CountModel()
+            {
+                Count = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView).Count(c => ContractHelper.IsNep17Supported(c))
+            });
         }
 
+        /// <summary>
+        /// Gets the balance of the Nep-17 contract by an address.
+        /// </summary>
+        /// <param name="tokenAddessOrScripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">Nep-17 ScriptHash</param>
+        /// <param name="lookupAddressOrScripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">Neo Address ScriptHash</param>
+        /// <returns>Token Balance Object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("nep-17/{scripthash:required}/balanceof/{address:required}", Name = "GetNep17TokenBalanceOf")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TokenBalanceModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP17(
             [FromRoute(Name = "scripthash")]
@@ -120,9 +148,18 @@ namespace Neo.Plugins.RestServer.Controllers
 
         #region NEP-11
 
+        /// <summary>
+        /// Gets all the Nep-11 valid contracts on from the blockchain.
+        /// </summary>
+        /// <param name="skip" example="1">Page</param>
+        /// <param name="take" example="50">Page Size</param>
+        /// <returns>Nep-11 Token Object.</returns>
+        /// <response code="204">No more pages.</response>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("nep-11", Name = "GetNep11Tokens")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(NEP11TokenModel[]))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP11(
             [FromQuery(Name = "page")]
@@ -138,6 +175,7 @@ namespace Neo.Plugins.RestServer.Controllers
             .OrderBy(o => o.Manifest.Name)
                 .Skip((skip - 1) * take)
                 .Take(take);
+            if (vaildContracts.Any() == false) return NoContent();
             var listResults = new List<NEP11TokenModel>();
             foreach (var contract in vaildContracts)
             {
@@ -156,16 +194,30 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(listResults);
         }
 
+        /// <summary>
+        /// The count of how many Nep-11 contracts are on the blockchain.
+        /// </summary>
+        /// <returns>Count Object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("nep-11/count", Name = "GetNep11TokenCount")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CountModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP11Count()
         {
-            return Ok(new { Count = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView).Count(c => ContractHelper.IsNep11Supported(c)) });
+            return Ok(new CountModel() { Count = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView).Count(c => ContractHelper.IsNep11Supported(c)) });
         }
 
+        /// <summary>
+        /// Gets the balance of the Nep-11 contract by an address.
+        /// </summary>
+        /// <param name="sAddressHash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">Nep-11 ScriptHash</param>
+        /// <param name="addressHash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">Neo Address ScriptHash</param>
+        /// <returns>Token Balance Object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("nep-11/{scripthash:required}/balanceof/{address:required}", Name = "GetNep11TokenBalanceOf")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TokenBalanceModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP11(
             [FromRoute(Name = "scripthash")]
@@ -199,9 +251,15 @@ namespace Neo.Plugins.RestServer.Controllers
 
         #endregion
 
-        // Gets every single NEP17/NEP11 on the blockchain balance by address (scriptHash).
+        /// <summary>
+        /// Gets every single NEP17/NEP11 on the blockchain's balance by ScriptHash.
+        /// </summary>
+        /// <param name="addressOrScripthash"></param>
+        /// <returns>Token Balance Object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("balanceof/{address:required}", Name = "GetAllTokensBalanceOf")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TokenBalanceModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetBalances(
             [FromRoute(Name = "address")]
@@ -242,7 +300,7 @@ namespace Neo.Plugins.RestServer.Controllers
                         TotalSupply = nft.TotalSupply().Value,
                     });
                 }
-                catch
+                catch (NotSupportedException)
                 {
                 }
             }
