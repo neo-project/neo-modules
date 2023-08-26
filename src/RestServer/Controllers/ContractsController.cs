@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Helpers;
+using Neo.Plugins.RestServer.Models.Error;
 using Neo.SmartContract.Native;
 using Newtonsoft.Json.Linq;
 using System.Net.Mime;
@@ -21,6 +22,8 @@ namespace Neo.Plugins.RestServer.Controllers
 {
     [Route("/api/v1/contracts")]
     [Produces(MediaTypeNames.Application.Json)]
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ApiExplorerSettings(GroupName = "v1")]
     [ApiController]
     public class ContractsController : ControllerBase
     {
@@ -36,7 +39,7 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpGet(Name = "GetContracts")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult Get(
             [FromQuery(Name = "page")]
             int skip = 1,
@@ -54,7 +57,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet("count", Name = "GetContractCount")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetCount()
         {
             var contracts = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView);
@@ -63,7 +66,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet("{hash:required}/storage", Name = "GetContractStorage")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetContractStorage(
             [FromRoute(Name = "hash")]
             UInt160 scripthash)
@@ -79,7 +82,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet("{hash:required}", Name = "GetContract")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetByScriptHash(
             [FromRoute(Name = "hash")]
             UInt160 scripthash)
@@ -92,7 +95,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet("{hash:required}/abi", Name = "GetContractAbi")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetContractAbi(
             [FromRoute(Name = "hash")]
             UInt160 scripthash)
@@ -105,7 +108,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet("{hash:required}/manifest", Name = "GetContractManifest")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetContractManifest(
             [FromRoute(Name = "hash")]
             UInt160 scripthash)
@@ -118,7 +121,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet("{hash:required}/nef", Name = "GetContractNefFile")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetContractNef(
             [FromRoute(Name = "hash")]
             UInt160 scripthash)
@@ -131,7 +134,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpPost("{hash:required}/invoke", Name = "InvokeContractMethod")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult InvokeContract(
             [FromRoute(Name = "hash")]
             UInt160 scripthash,

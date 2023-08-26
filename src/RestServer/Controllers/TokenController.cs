@@ -17,11 +17,14 @@ using Neo.Plugins.RestServer.Helpers;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Exceptions;
 using System.Net.Mime;
+using Neo.Plugins.RestServer.Models.Error;
 
 namespace Neo.Plugins.RestServer.Controllers
 {
     [Route("/api/v1/tokens")]
     [Produces(MediaTypeNames.Application.Json)]
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ApiExplorerSettings(GroupName = "v1")]
     [ApiController]
     public class TokenController : ControllerBase
     {
@@ -39,7 +42,7 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpGet("nep-17", Name = "GetNep17Tokens")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP17(
             [FromQuery(Name = "page")]
             int skip = 1,
@@ -74,7 +77,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet("nep-17/count", Name = "GetNep17TokenCount")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP17Count()
         {
             return Ok(new { Count = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView).Count(c => ContractHelper.IsNep17Supported(c)) });
@@ -82,7 +85,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet("nep-17/{scripthash:required}/balanceof/{address:required}", Name = "GetNep17TokenBalanceOf")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP17(
             [FromRoute(Name = "scripthash")]
             UInt160 tokenAddessOrScripthash,
@@ -120,7 +123,7 @@ namespace Neo.Plugins.RestServer.Controllers
         [HttpGet("nep-11", Name = "GetNep11Tokens")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP11(
             [FromQuery(Name = "page")]
             int skip = 1,
@@ -155,7 +158,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet("nep-11/count", Name = "GetNep11TokenCount")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP11Count()
         {
             return Ok(new { Count = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView).Count(c => ContractHelper.IsNep11Supported(c)) });
@@ -163,7 +166,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet("nep-11/{scripthash:required}/balanceof/{address:required}", Name = "GetNep11TokenBalanceOf")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP11(
             [FromRoute(Name = "scripthash")]
             UInt160 sAddressHash,
@@ -199,7 +202,7 @@ namespace Neo.Plugins.RestServer.Controllers
         // Gets every single NEP17/NEP11 on the blockchain balance by address (scriptHash).
         [HttpGet("balanceof/{address:required}", Name = "GetAllTokensBalanceOf")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetBalances(
             [FromRoute(Name = "address")]
             UInt160 addressOrScripthash)

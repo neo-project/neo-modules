@@ -12,9 +12,19 @@ using Neo.Cryptography.ECC;
 
 namespace Neo.Plugins.RestServer.Models.Wallet
 {
+    /// <summary>
+    /// Import Multi-Signature Address Object.
+    /// </summary>
     public class WalletImportMultiSigAddressModel
     {
+        /// <summary>
+        /// Minimum required signatures to sign.
+        /// </summary>
+        /// <example>2</example>
         public ushort RequiredSignatures { get; set; }
+        /// <summary>
+        /// Array of public keys of the addresses.
+        /// </summary>
         public ECPoint[] PublicKeys { get; set; }
     }
 }

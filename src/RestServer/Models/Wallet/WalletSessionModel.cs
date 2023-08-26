@@ -11,14 +11,14 @@
 namespace Neo.Plugins.RestServer.Models.Wallet
 {
     /// <summary>
-    /// Create account object.
+    /// Open/Created wallet session object.
     /// </summary>
-    public class WalletCreateAccountModel
+    public class WalletSessionModel
     {
         /// <summary>
-        /// Private key of the address you want to create. Can be null or empty.
+        /// Session id for an open/created wallet.
         /// </summary>
-        /// <example>CHeABTw3Q5SkjWharPAhgE+p+rGVN9FhlO4hXoJZQqA=</example>
-        public byte[] PrivateKey { get; set; }
+        /// <example>066843daf5ce45aba803587780998cdb</example>
+        public Guid SessionId { get; set; }
     }
 }

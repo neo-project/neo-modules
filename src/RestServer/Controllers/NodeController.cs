@@ -14,6 +14,7 @@ using Neo.IO;
 using Neo.Network.P2P;
 using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Extensions;
+using Neo.Plugins.RestServer.Models.Error;
 using Neo.SmartContract.Native;
 using System.Net.Mime;
 
@@ -21,6 +22,8 @@ namespace Neo.Plugins.RestServer.Controllers
 {
     [Route("/api/v1/node")]
     [Produces(MediaTypeNames.Application.Json)]
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ApiExplorerSettings(GroupName = "v1")]
     [ApiController]
     public class NodeController : ControllerBase
     {
@@ -35,7 +38,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet(Name = "GetNodeInfo")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult Get()
         {
             var rNodes = _neolocalnode
@@ -60,7 +63,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet("peers", Name = "GetNodeRemotePeers")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetPeers()
         {
             var rNodes = _neolocalnode
@@ -73,7 +76,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet("plugins", Name = "GetNodePlugins")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetPlugins() =>
             Ok(Plugin.Plugins.Select(s => new
             {
@@ -84,7 +87,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet("settings", Name = "GetNodeProcotolSettings")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetSettings() =>
             Ok(_neosystem.Settings.ToModel());
     }

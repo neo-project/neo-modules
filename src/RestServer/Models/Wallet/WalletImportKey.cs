@@ -10,8 +10,15 @@
 
 namespace Neo.Plugins.RestServer.Models.Wallet
 {
+    /// <summary>
+    /// Wallet import key object.
+    /// </summary>
     public class WalletImportKey
     {
+        /// <summary>
+        /// Representation of the private.
+        /// </summary>
+        /// <example>L3tgppXLgdaeqSGSFw1Go3skBiy8vQAM7YMXvTHsKQtE16PBncSU</example>
         public string Wif { get; set; }
     }
 }

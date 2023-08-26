@@ -10,11 +10,32 @@
 
 namespace Neo.Plugins.RestServer.Models.Wallet
 {
+    /// <summary>
+    /// Wallet create object.
+    /// </summary>
     public class WalletCreateModel
     {
+        /// <summary>
+        /// Account display name
+        /// </summary>
+        /// <example>Default Account</example>
+        /// <remarks>Can be null.</remarks>
         public string Name { get; set; }
+        /// <summary>
+        /// Path of the wallet file relative to the neo-cli path.
+        /// </summary>
+        /// <example>./wallets/mywallet.json</example>
         public string Path { get; set; }
+        /// <summary>
+        /// Representation of the private.
+        /// </summary>
+        /// <example>L3tgppXLgdaeqSGSFw1Go3skBiy8vQAM7YMXvTHsKQtE16PBncSU</example>
+        /// <remarks>Can be null or empty.</remarks>
         public string Wif { get; set; }
+        /// <summary>
+        /// Password to open the wallet file.
+        /// </summary>
+        /// <example>Password1!</example>
         public string Password { get; set; }
     }
 }

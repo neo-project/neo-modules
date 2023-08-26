@@ -9,12 +9,14 @@
 // modifications are permitted.
 
 using Akka.Actor;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Neo.Network.P2P.Payloads;
 using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Helpers;
+using Neo.Plugins.RestServer.Models.Error;
 using Neo.Plugins.RestServer.Models.Wallet;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
@@ -25,8 +27,14 @@ using System.Numerics;
 
 namespace Neo.Plugins.RestServer.Controllers
 {
+    /// <summary>
+    /// Wallet API
+    /// </summary>
     [Route("/api/v1/wallet")]
+    [DisableCors]
     [Produces(MediaTypeNames.Application.Json)]
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ApiExplorerSettings(GroupName = "v1")]
     [ApiController]
     public class WalletController : ControllerBase
     {
@@ -35,15 +43,26 @@ namespace Neo.Plugins.RestServer.Controllers
         private readonly NeoSystem _neosystem;
         private readonly RestServerSettings _settings;
 
+        /// <summary>
+        /// CTOR
+        /// </summary>
+        /// <exception cref="NodeNetworkException">Node network doesn't match plugins network.</exception>
         public WalletController()
         {
             _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
             _settings = RestServerSettings.Current;
         }
 
+        /// <summary>
+        /// Opens a wallet.
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns>A newly created wallet session object.</returns>
+        /// <response code="200">Returns newly create wallet session object.</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpPost("open", Name = "WalletOpen")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WalletSessionModel))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletOpen(
             [FromBody]
             WalletOpenModel model)
@@ -61,28 +80,43 @@ namespace Neo.Plugins.RestServer.Controllers
                 throw new WalletOpenException($"File '{model.Path}' could not be opened.");
             var sessionId = Guid.NewGuid();
             WalletSessions[sessionId] = new WalletSession(wallet);
-            return Ok(new
+            return Ok(new WalletSessionModel()
             {
-                SessionId = sessionId.ToString("n"),
+                SessionId = sessionId,
             });
         }
 
+        /// <summary>
+        /// Closes a wallet session.
+        /// </summary>
+        /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
+        /// <returns>Empty response body, if successful.</returns>
+        /// <response code="200">Successfully closed the wallet session.</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{session:required}/close", Name = "WalletClose")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletClose(
             [FromRoute(Name = "session")]
-            Guid session)
+            Guid sessionId)
         {
-            if (WalletSessions.ContainsKey(session) == false)
-                throw new KeyNotFoundException(session.ToString("n"));
-            if (WalletSessions.TryRemove(session, out _) == false)
+            if (WalletSessions.ContainsKey(sessionId) == false)
+                throw new KeyNotFoundException(sessionId.ToString("n"));
+            if (WalletSessions.TryRemove(sessionId, out _) == false)
                 throw new WalletSessionException("Failed to remove session.");
             return Ok();
         }
+
+        /// <summary>
+        /// Get all the keys of the wallet from each account.
+        /// </summary>
+        /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
+        /// <returns>A list of export key objects.</returns>
+        /// <response code="200">Successfully exported the keys.</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{session:required}/export", Name = "WalletExportKeys")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WalletExportKeyModel[]))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletExport(
             [FromRoute(Name = "session")]
             Guid sessionId)
@@ -102,9 +136,17 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(keys);
         }
 
+        /// <summary>
+        /// Get a key of the wallet by a specific account.
+        /// </summary>
+        /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
+        /// <param name="scriptHash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash of the wallet address.</param>
+        /// <returns>A export key object.</returns>
+        /// <response code="200">Successfully exported the key.</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{session:required}/export/{address:required}", Name = "WalletExportKeysByAddressOrScripthash")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WalletExportKeyModel))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletExportKey(
             [FromRoute(Name = "session")]
             Guid sessionId,
@@ -126,9 +168,17 @@ namespace Neo.Plugins.RestServer.Controllers
             });
         }
 
+        /// <summary>
+        /// Create a new address in the wallet with an optional private key.
+        /// </summary>
+        /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
+        /// <param name="model"></param>
+        /// <returns>Wallet address object.</returns>
+        /// <response code="200">Successfully created address.</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpPost("{session:required}/address/create", Name = "WalletCreateAddress")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WalletAddressModel))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletCreateNewAddress(
             [FromRoute(Name = "session")]
             Guid sessionId,
@@ -149,16 +199,24 @@ namespace Neo.Plugins.RestServer.Controllers
             {
                 Address = account.Address,
                 ScriptHash = account.ScriptHash,
-                PublicKey = account.GetKey().PublicKey,
+                Publickey = account.GetKey().PublicKey,
                 HasKey = account.HasKey,
                 Label = account.Label,
                 WatchOnly = account.WatchOnly,
             });
         }
 
+        /// <summary>
+        /// Get the wallet balance of a specific asset.
+        /// </summary>
+        /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
+        /// <param name="scriptHash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash of the wallet address.</param>
+        /// <returns>Account balance object of all the accounts in the wallet.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{session:required}/balance/{asset:required}", Name = "WalletBalanceOf")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WalletAccountBalanceModel))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletBalance(
             [FromRoute(Name = "session")]
             Guid sessionId,
@@ -171,15 +229,22 @@ namespace Neo.Plugins.RestServer.Controllers
             session.ResetExpiration();
             var wallet = session.Wallet;
             var balance = wallet.GetAvailable(_neosystem.StoreView, scriptHash);
-            return Ok(new
+            return Ok(new WalletAccountBalanceModel()
             {
-                balance,
+                Balance = balance.Value,
             });
         }
 
+        /// <summary>
+        /// Get unclaimed gas of the wallet for all accounts total.
+        /// </summary>
+        /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
+        /// <returns>Account balance object</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{session:required}/gas/unclaimed", Name = "GetUnClaimedGas")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WalletAccountBalanceModel))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletUnClaimedGas(
             [FromRoute(Name = "session")]
             Guid sessionId)
@@ -194,15 +259,23 @@ namespace Neo.Plugins.RestServer.Controllers
             BigInteger gas = BigInteger.Zero;
             foreach (var account in wallet.GetAccounts().Select(s => s.ScriptHash))
                 gas += NativeContract.NEO.UnclaimedGas(snapshot, account, height);
-            return Ok(new
+            return Ok(new WalletAccountBalanceModel
             {
-                Balance = new BigDecimal(gas, NativeContract.GAS.Decimals),
+                Balance = gas,
             });
         }
 
+        /// <summary>
+        /// import a private key into the wallet.
+        /// </summary>
+        /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
+        /// <param name="model"></param>
+        /// <returns>New wallet address object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpPost("{session:required}/import", Name = "WalletImportByWif")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WalletAddressModel))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletImportPrivateKey(
             [FromRoute(Name = "session")]
             Guid sessionId,
@@ -223,16 +296,23 @@ namespace Neo.Plugins.RestServer.Controllers
             {
                 Address = account.Address,
                 ScriptHash = account.ScriptHash,
-                PublicKey = account.GetKey().PublicKey,
+                Publickey = account.GetKey().PublicKey,
                 HasKey = account.HasKey,
                 Label = account.Label,
                 WatchOnly = account.WatchOnly,
             });
         }
 
+        /// <summary>
+        /// List all the addresses in the wallet.
+        /// </summary>
+        /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
+        /// <returns>An array of wallet address objects.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{session:required}/address/list", Name = "GetWalletListAddress")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WalletAddressModel[]))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletListAddresses(
             [FromRoute(Name = "session")]
             Guid sessionId)
@@ -248,7 +328,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 {
                     Address = account.Address,
                     ScriptHash = account.ScriptHash,
-                    PublicKey = account.GetKey().PublicKey,
+                    Publickey = account.GetKey().PublicKey,
                     HasKey = account.HasKey,
                     Label = account.Label,
                     WatchOnly = account.WatchOnly,
@@ -256,9 +336,18 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(accounts);
         }
 
+        /// <summary>
+        /// Deletes an account from the wallet.
+        /// </summary>
+        /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
+        /// <param name="scriptHash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash of the wallet address.</param>
+        /// <returns>Empty body response.</returns>
+        /// <remarks>No backups are made.</remarks>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{session:required}/delete/{account:required}", Name = "WalletDeleteAccountByAddressOrScriptHash")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletDeleteAccount(
             [FromRoute(Name = "session")]
             Guid sessionId,
@@ -280,9 +369,17 @@ namespace Neo.Plugins.RestServer.Controllers
             }
         }
 
+        /// <summary>
+        /// Trasnsfer assets from one wallet address to another address on the blockchain.
+        /// </summary>
+        /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
+        /// <param name="model"></param>
+        /// <returns>Transaction object</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpPost("{session:required}/transfer", Name = "WalletTransferAssets")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletTransferAssets(
             [FromRoute(Name = "session")]
             Guid sessionId,
@@ -339,9 +436,16 @@ namespace Neo.Plugins.RestServer.Controllers
             }
         }
 
+        /// <summary>
+        /// Create a wallet.
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns>A wallet session object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpPost("create", Name = "WalletCreate")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WalletSessionModel))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletCreate(
             [FromBody]
             WalletCreateModel model)
@@ -358,15 +462,23 @@ namespace Neo.Plugins.RestServer.Controllers
             wallet.Save();
             var sessionId = Guid.NewGuid();
             WalletSessions[sessionId] = new WalletSession(wallet);
-            return Ok(new
+            return Ok(new WalletSessionModel()
             {
-                SessionId = sessionId.ToString("n"),
+                SessionId = sessionId,
             });
         }
 
+        /// <summary>
+        /// Import multi-signature addresss into the wallet.
+        /// </summary>
+        /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpPost("{session:required}/import/multisigaddress", Name = "WalletImportMultiSigAddress")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WalletMultiSignContractModel))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletImportMultiSigAddress(
             [FromRoute(Name = "session")]
             Guid sessionId,
@@ -392,17 +504,24 @@ namespace Neo.Plugins.RestServer.Controllers
             wallet.CreateAccount(multiSignContract, keyPair);
             if (wallet is NEP6Wallet nep6)
                 nep6.Save();
-            return Ok(new
+            return Ok(new WalletMultiSignContractModel
             {
                 Address = multiSignContract.ScriptHash.ToAddress(_neosystem.Settings.AddressVersion),
-                multiSignContract.ScriptHash,
-                multiSignContract.Script,
+                ScriptHash = multiSignContract.ScriptHash,
+                Script = multiSignContract.Script,
             });
         }
 
+        /// <summary>
+        /// List assets of the wallet.
+        /// </summary>
+        /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
+        /// <returns>An array of wallet asset objects.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{session:required}/asset/list", Name = "GetWalletAssetList")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WalletAssetModel[]))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletListAsset(
             [FromRoute(Name = "session")]
             Guid sessionId)
@@ -419,17 +538,24 @@ namespace Neo.Plugins.RestServer.Controllers
                     Address = account.Address,
                     ScriptHash = account.ScriptHash,
                     PublicKey = account.GetKey().PublicKey,
-                    Neo = wallet.GetBalance(_neosystem.StoreView, NativeContract.NEO.Hash, account.ScriptHash),
+                    Neo = wallet.GetBalance(_neosystem.StoreView, NativeContract.NEO.Hash, account.ScriptHash).Value,
                     NeoHash = NativeContract.NEO.Hash,
-                    Gas = wallet.GetBalance(_neosystem.StoreView, NativeContract.GAS.Hash, account.ScriptHash),
+                    Gas = wallet.GetBalance(_neosystem.StoreView, NativeContract.GAS.Hash, account.ScriptHash).Value,
                     GasHash = NativeContract.GAS.Hash,
                 });
             return Ok(assets);
         }
 
+        /// <summary>
+        /// List all account keys in the wallet.
+        /// </summary>
+        /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
+        /// <returns>An array of wallet key objects.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpGet("{session:required}/key/list", Name = "GetWalletKeyList")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WalletKeyModel[]))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletListKeys(
             [FromRoute(Name = "session")]
             Guid sessionId)
@@ -450,9 +576,17 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok(keys);
         }
 
+        /// <summary>
+        /// Change wallet password.
+        /// </summary>
+        /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
+        /// <param name="model"></param>
+        /// <returns>Empty body response.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpPost("{session:required}/changepassword", Name = "WalletChangePassword")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletChangePassword(
             [FromRoute(Name = "session")]
             Guid sessionId,
@@ -486,9 +620,17 @@ namespace Neo.Plugins.RestServer.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Create a transaction with a script.
+        /// </summary>
+        /// <param name="sessionId" example="066843daf5ce45aba803587780998cdb">Session Id of the open/created wallet.</param>
+        /// <param name="model"></param>
+        /// <returns>Transaction object.</returns>
+        /// <response code="200">Successful</response>
+        /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpPost("{session:required}/transaction/script", Name = "WalletTransactionWithScript")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Transaction))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletTransactionWithScript(
             [FromRoute(Name = "session")]
             Guid sessionId,

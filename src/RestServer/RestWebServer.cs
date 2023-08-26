@@ -19,15 +19,18 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Any;
+using Microsoft.OpenApi.Models;
+using Neo.Cryptography.ECC;
 using Neo.Plugins.RestServer.Middleware;
 using Neo.Plugins.RestServer.Models.Error;
-using Neo.Plugins.RestServer.Newtonsoft.Json;
 using Neo.Plugins.RestServer.Providers;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using System.Net.Mime;
 using System.Net.Security;
+using System.Numerics;
+using System.Reflection;
 
 namespace Neo.Plugins.RestServer
 {
@@ -61,24 +64,25 @@ namespace Neo.Plugins.RestServer
                     options.Limits.MaxConcurrentConnections = _settings.MaxConcurrentConnections;
                     options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(_settings.KeepAliveTimeout);
                     options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(15);
-                    options.Listen(_settings.BindAddress, unchecked((int)_settings.Port), listenOptions =>
-                    {
-                        if (string.IsNullOrEmpty(_settings.SslCertFile)) return;
-                        listenOptions.UseHttps(_settings.SslCertFile, _settings.SslCertPassword, httpsOptions =>
+                    options.Listen(_settings.BindAddress, unchecked((int)_settings.Port),
+                        listenOptions =>
                         {
-                            if (_settings.TrustedAuthorities.Length == 0)
+                            if (string.IsNullOrEmpty(_settings.SslCertFile)) return;
+                            listenOptions.UseHttps(_settings.SslCertFile, _settings.SslCertPassword, httpsOptions =>
                             {
-                                httpsOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
-                                httpsOptions.ClientCertificateValidation = (cert, chain, err) =>
+                                if (_settings.TrustedAuthorities.Length == 0)
                                 {
-                                    if (err != SslPolicyErrors.None)
-                                        return false;
-                                    var authority = chain.ChainElements[^1].Certificate;
-                                    return _settings.TrustedAuthorities.Any(a => a.Equals(authority.Thumbprint, StringComparison.OrdinalIgnoreCase));
-                                };
-                            }
+                                    httpsOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
+                                    httpsOptions.ClientCertificateValidation = (cert, chain, err) =>
+                                    {
+                                        if (err != SslPolicyErrors.None)
+                                            return false;
+                                        var authority = chain.ChainElements[^1].Certificate;
+                                        return _settings.TrustedAuthorities.Any(a => a.Equals(authority.Thumbprint, StringComparison.OrdinalIgnoreCase));
+                                    };
+                                }
+                            });
                         });
-                    });
                 })
                 .ConfigureServices(services =>
                 {
@@ -157,10 +161,45 @@ namespace Neo.Plugins.RestServer
                         });
 
                     if (_settings.EnableSwagger)
-                    {
-                        services.AddEndpointsApiExplorer();
-                        services.AddSwaggerGen();
-                    }
+                        services.AddSwaggerGen(options =>
+                        {
+                            options.SwaggerDoc("v1", new OpenApiInfo()
+                            {
+                                Title = "RestServer API - V1",
+                                Description = "A Neo-cli Rest API.",
+                                Version = "v1",
+                                License = new OpenApiLicense()
+                                {
+                                    Name = "MIT",
+                                    Url = new Uri("http://www.opensource.org/licenses/mit-license.php"),
+                                },
+                            });
+                            options.MapType<UInt160>(() => new OpenApiSchema()
+                            {
+                                Type = "string",
+                                Format = "Hash160",
+                                Example = new OpenApiString("0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761"),
+                            });
+                            options.MapType<ECPoint>(() => new OpenApiSchema()
+                            {
+                                Type = "string",
+                                Format = "HexString",
+                                Example = new OpenApiString("03cdb067d930fd5adaa6c68545016044aaddec64ba39e548250eaea551172e535c"),
+                            });
+                            options.MapType<BigInteger>(() => new OpenApiSchema()
+                            {
+                                Type = "integer",
+                                Example = new OpenApiString("100000000"),
+                            });
+                            options.MapType<byte[]>(() => new OpenApiSchema()
+                            {
+                                Type = "string",
+                                Format = "base64",
+                                Example = new OpenApiString("CHeABTw3Q5SkjWharPAhgE+p+rGVN9FhlO4hXoJZQqA="),
+                            });
+                            var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                            options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "Plugins/RestServer", xmlFilename));
+                        });
 
                     // Service configuration
                     if (_settings.EnableForwardedHeaders)
@@ -184,26 +223,28 @@ namespace Neo.Plugins.RestServer
 
                     app.UseMiddleware<RestServerMiddleware>(_settings);
 
+                    app.UseExceptionHandler(config =>
+                        config.Run(async context =>
+                        {
+                            var exception = context.Features
+                                .Get<IExceptionHandlerPathFeature>()
+                                .Error;
+                            var response = new ErrorModel()
+                            {
+                                Code = exception.HResult,
+                                Name = exception.GetType().Name,
+                                Message = exception.Message,
+                            };
+                            context.Response.StatusCode = 400;
+                            await context.Response.WriteAsJsonAsync(response);
+                        }));
+
                     if (_settings.EnableSwagger)
                     {
                         app.UseSwagger();
                         app.UseSwaggerUI(options => options.DefaultModelsExpandDepth(-1));
                     }
 
-                    app.UseExceptionHandler(c => c.Run(async context =>
-                    {
-                        var exception = context.Features
-                            .Get<IExceptionHandlerPathFeature>()
-                            .Error;
-                        var response = new ErrorModel()
-                        {
-                            Code = exception.HResult,
-                            Name = exception.GetType().Name,
-                            Message = exception.Message,
-                        };
-                        context.Response.StatusCode = 400;
-                        await context.Response.WriteAsJsonAsync(response);
-                    }));
                     app.UseMvc();
                 })
                 .Build();

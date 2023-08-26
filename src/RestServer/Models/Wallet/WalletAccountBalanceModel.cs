@@ -8,17 +8,19 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using System.Numerics;
+
 namespace Neo.Plugins.RestServer.Models.Wallet
 {
     /// <summary>
-    /// Create account object.
+    /// Wallet account balance object.
     /// </summary>
-    public class WalletCreateAccountModel
+    internal class WalletAccountBalanceModel
     {
         /// <summary>
-        /// Private key of the address you want to create. Can be null or empty.
+        /// Balance of the account.
         /// </summary>
-        /// <example>CHeABTw3Q5SkjWharPAhgE+p+rGVN9FhlO4hXoJZQqA=</example>
-        public byte[] PrivateKey { get; set; }
+        /// <example>10000000</example>
+        public BigInteger Balance { get; set; }
     }
 }

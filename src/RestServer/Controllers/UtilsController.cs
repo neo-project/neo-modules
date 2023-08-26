@@ -11,6 +11,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Neo.Plugins.RestServer.Exceptions;
+using Neo.Plugins.RestServer.Models.Error;
 using Neo.Wallets;
 using System.Net.Mime;
 
@@ -18,6 +19,8 @@ namespace Neo.Plugins.RestServer.Controllers
 {
     [Route("/api/v1/utils")]
     [Produces(MediaTypeNames.Application.Json)]
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ApiExplorerSettings(GroupName = "v1")]
     [ApiController]
     public class UtilsController : ControllerBase
     {
@@ -32,7 +35,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet("{hash:required}/address", Name = "GetAddressByScripthash")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult ScriptHashToWalletAddress(
             [FromRoute(Name = "hash")]
             string hash)
@@ -51,7 +54,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet("{address:required}/scripthash", Name = "GetScripthashByAddress")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletAddressToScriptHash(
             [FromRoute(Name = "address")]
             string addr)
@@ -68,7 +71,7 @@ namespace Neo.Plugins.RestServer.Controllers
 
         [HttpGet("{address:required}/validate", Name = "IsValidAddressOrScriptHash")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult ValidateAddress(
             [FromRoute(Name = "address")]
             string addr)
