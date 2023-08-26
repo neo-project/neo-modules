@@ -14,7 +14,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Neo.Network.P2P.Payloads;
 using Neo.Plugins.RestServer.Exceptions;
-using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Helpers;
 using Neo.Plugins.RestServer.Models.Error;
 using Neo.Plugins.RestServer.Models.Wallet;
@@ -378,7 +377,7 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <response code="200">Successful</response>
         /// <response code="400">If anything is invalid or request crashes.</response>
         [HttpPost("{session:required}/transfer", Name = "WalletTransferAssets")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Transaction))]
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletTransferAssets(
             [FromRoute(Name = "session")]

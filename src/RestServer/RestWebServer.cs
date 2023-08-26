@@ -22,6 +22,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Neo.Cryptography.ECC;
+using Neo.Network.P2P.Payloads;
 using Neo.Plugins.RestServer.Middleware;
 using Neo.Plugins.RestServer.Models.Error;
 using Neo.Plugins.RestServer.Providers;
@@ -189,6 +190,7 @@ namespace Neo.Plugins.RestServer
                             options.MapType<BigInteger>(() => new OpenApiSchema()
                             {
                                 Type = "integer",
+                                Format = "BigInt",
                                 Example = new OpenApiString("100000000"),
                             });
                             options.MapType<byte[]>(() => new OpenApiSchema()
@@ -197,8 +199,20 @@ namespace Neo.Plugins.RestServer
                                 Format = "base64",
                                 Example = new OpenApiString("CHeABTw3Q5SkjWharPAhgE+p+rGVN9FhlO4hXoJZQqA="),
                             });
-                            var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-                            options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "Plugins/RestServer", xmlFilename));
+                            options.MapType<Transaction>(() => new OpenApiSchema()
+                            {
+                                Type = "object",
+                            });
+
+                            foreach (var plugin in Plugin.Plugins)
+                            {
+                                var pluginAssembly = plugin.GetType().Assembly;
+                                var xmlFilename = $"{pluginAssembly.GetName().Name}.xml";
+                                var xmlPathAndFilename = Path.Combine(AppContext.BaseDirectory, "Plugins", plugin.Name, xmlFilename);
+                                if (File.Exists(xmlPathAndFilename))
+                                    options.IncludeXmlComments(xmlPathAndFilename);
+                            }
+
                         });
 
                     // Service configuration

@@ -12,8 +12,21 @@ namespace Neo.Plugins.RestServer.Models.Error
 {
     internal class ErrorModel
     {
+        /// <summary>
+        /// Error's HResult Code.
+        /// </summary>
+        /// <example>1000</example>
         public int Code { get; init; } = 1000;
+        /// <summary>
+        /// Error's name of the type.
+        /// </summary>
+        /// <example>GeneralException</example>
         public string Name { get; init; } = "GeneralException";
+        /// <summary>
+        /// Error's exception message.
+        /// </summary>
+        /// <example>An error occurred.</example>
+        /// <remarks>Could be InnerException message as well, If exists.</remarks>
         public string Message { get; init; } = "An error occurred.";
     }
 }
