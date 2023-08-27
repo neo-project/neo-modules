@@ -169,8 +169,8 @@ namespace Neo.Plugins.RestServer
                         {
                             options.SwaggerDoc("v1", new OpenApiInfo()
                             {
-                                Title = "RestServer API - V1",
-                                Description = "Neo-cli's Rest API.",
+                                Title = "RestServer Plugin API - V1",
+                                Description = "REST Web Sevices for the node.",
                                 Version = "v1",
                                 License = new OpenApiLicense()
                                 {

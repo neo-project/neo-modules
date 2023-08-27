@@ -70,7 +70,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 throw new JsonPropertyNullOrEmptyException(nameof(model.Path));
             if (string.IsNullOrEmpty(model.Password))
                 throw new JsonPropertyNullOrEmptyException(nameof(model.Password));
-            if (new FileInfo(model.Path).DirectoryName.StartsWith(Environment.CurrentDirectory, StringComparison.InvariantCultureIgnoreCase) == false)
+            if (new FileInfo(model.Path).DirectoryName.StartsWith(AppContext.BaseDirectory, StringComparison.InvariantCultureIgnoreCase) == false)
                 throw new UnauthorizedAccessException(model.Path);
             if (System.IO.File.Exists(model.Path) == false)
                 throw new FileNotFoundException(null, model.Path);
@@ -158,6 +158,8 @@ namespace Neo.Plugins.RestServer.Controllers
             session.ResetExpiration();
             var wallet = session.Wallet;
             var account = wallet.GetAccount(scriptHash);
+            if (account == null)
+                throw new WalletException($"Account {scriptHash} doesn\'t exist.");
             var key = account.GetKey();
             return Ok(new WalletExportKeyModel
             {
@@ -192,6 +194,8 @@ namespace Neo.Plugins.RestServer.Controllers
             var account = model.PrivateKey == null || model.PrivateKey.Length == 0 ?
                 wallet.CreateAccount() :
                 wallet.CreateAccount(model.PrivateKey);
+            if (account == null)
+                throw new WalletException("Account couldn't be created.");
             if (wallet is NEP6Wallet nep6)
                 nep6.Save();
             return Ok(new WalletAddressModel()
@@ -289,6 +293,8 @@ namespace Neo.Plugins.RestServer.Controllers
             session.ResetExpiration();
             var wallet = session.Wallet;
             var account = wallet.Import(model.Wif);
+            if (account == null)
+                throw new WalletException("Account couldn\'t be imported.");
             if (wallet is NEP6Wallet nep6)
                 nep6.Save();
             return Ok(new WalletAddressModel()
@@ -453,12 +459,15 @@ namespace Neo.Plugins.RestServer.Controllers
                 throw new JsonPropertyNullOrEmptyException(nameof(model.Path));
             if (string.IsNullOrEmpty(model.Password))
                 throw new JsonPropertyNullOrEmptyException(nameof(model.Password));
+            if (new FileInfo(model.Path).DirectoryName.StartsWith(AppContext.BaseDirectory, StringComparison.InvariantCultureIgnoreCase) == false)
+                throw new UnauthorizedAccessException(model.Path);
             var wallet = Wallet.Create(model.Name, model.Path, model.Password, _neosystem.Settings);
             if (wallet == null)
                 throw new WalletException("Wallet files in that format are not supported, please use a .json or .db3 file extension.");
             if (string.IsNullOrEmpty(model.Wif) == false)
                 wallet.Import(model.Wif);
-            wallet.Save();
+            if (wallet is NEP6Wallet nep6)
+                nep6.Save();
             var sessionId = Guid.NewGuid();
             WalletSessions[sessionId] = new WalletSession(wallet);
             return Ok(new WalletSessionModel()
@@ -499,8 +508,11 @@ namespace Neo.Plugins.RestServer.Controllers
 
             Contract multiSignContract = Contract.CreateMultiSigContract(model.RequiredSignatures, model.PublicKeys);
             KeyPair keyPair = wallet.GetAccounts().FirstOrDefault(p => p.HasKey && model.PublicKeys.Contains(p.GetKey().PublicKey))?.GetKey();
-
-            wallet.CreateAccount(multiSignContract, keyPair);
+            if (keyPair == null)
+                throw new WalletException("Couldn\'t get key pair.");
+            var account = wallet.CreateAccount(multiSignContract, keyPair);
+            if (account == null)
+                throw new WalletException("Account couldn\'t be created.");
             if (wallet is NEP6Wallet nep6)
                 nep6.Save();
             return Ok(new WalletMultiSignContractModel
@@ -608,9 +620,11 @@ namespace Neo.Plugins.RestServer.Controllers
             if (model.CreateBackupFile && wallet is NEP6Wallet)
             {
                 var bakFile = wallet.Path + $".{sessionId:n}.bak";
-                if (System.IO.File.Exists(wallet.Path) == false || System.IO.File.Exists(bakFile))
-                    throw new WalletException("Wallet backup failed.");
-                System.IO.File.Copy(wallet.Path, bakFile, model.OverwriteIfBackupFileExists);
+                if (System.IO.File.Exists(wallet.Path) == false)
+                    throw new WalletException("Create wallet backup failed. Wallet file doesn\'t exist.");
+                if (System.IO.File.Exists(bakFile) && model.OverwriteIfBackupFileExists == false)
+                    throw new WalletException("Backup File already exists for this session.");
+                System.IO.File.Copy(wallet.Path, bakFile, true);
             }
             if (wallet.ChangePassword(model.OldPassword, model.NewPassword) == false)
                 throw new WalletException("Failed to change password!");
