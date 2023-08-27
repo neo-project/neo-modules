@@ -8,8 +8,6 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System.ComponentModel;
-
 namespace Neo.Plugins.RestServer.Models.Wallet
 {
     /// <summary>

@@ -9,8 +9,6 @@
 // modifications are permitted.
 
 using Neo.Cryptography.ECC;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 
 namespace Neo.Plugins.RestServer.Models.Node
 {

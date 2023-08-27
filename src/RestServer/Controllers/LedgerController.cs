@@ -17,7 +17,6 @@ using System.Net.Mime;
 using Neo.Network.P2P.Payloads;
 using Neo.Plugins.RestServer.Models.Error;
 using Neo.Plugins.RestServer.Models.Blockchain;
-using Neo.Ledger;
 using Neo.Plugins.RestServer.Models.Ledger;
 
 namespace Neo.Plugins.RestServer.Controllers

@@ -15,7 +15,6 @@ using Neo.Plugins.RestServer.Models.Node;
 using Neo.Plugins.RestServer.Models.Token;
 using Neo.Plugins.RestServer.Tokens;
 using Neo.SmartContract;
-using Neo.VM.Types;
 
 namespace Neo.Plugins.RestServer.Extensions
 {

@@ -13,13 +13,11 @@ using Neo.SmartContract.Native;
 using Neo.SmartContract;
 using Neo.VM.Types;
 using Neo.VM;
-using Neo.SmartContract.Manifest;
 using Array = System.Array;
 using Newtonsoft.Json.Linq;
 using System.Numerics;
 using Neo.Cryptography.ECC;
 using Neo.Network.P2P.Payloads;
-using System;
 
 namespace Neo.Plugins.RestServer.Helpers
 {
