@@ -22,23 +22,18 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Neo.Cryptography.ECC;
-using Neo.Ledger;
-using Neo.Network.P2P.Payloads;
+using Neo.Json;
+using Neo.Network.P2P.Payloads.Conditions;
 using Neo.Plugins.RestServer.Middleware;
 using Neo.Plugins.RestServer.Models.Error;
 using Neo.Plugins.RestServer.Providers;
-using Neo.SmartContract;
-using Neo.SmartContract.Manifest;
-using Neo.SmartContract.Native;
-using Neo.VM;
+using Neo.Plugins.RestServer.Swagger.Filters;
 using Neo.VM.Types;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System.Net.Mime;
 using System.Net.Security;
 using System.Numerics;
-using System.Reflection;
 
 namespace Neo.Plugins.RestServer
 {
@@ -169,12 +164,13 @@ namespace Neo.Plugins.RestServer
                         });
 
                     if (_settings.EnableSwagger)
+                    {
                         services.AddSwaggerGen(options =>
                         {
                             options.SwaggerDoc("v1", new OpenApiInfo()
                             {
                                 Title = "RestServer API - V1",
-                                Description = "A Neo-cli Rest API.",
+                                Description = "Neo-cli's Rest API.",
                                 Version = "v1",
                                 License = new OpenApiLicense()
                                 {
@@ -185,100 +181,68 @@ namespace Neo.Plugins.RestServer
                             options.MapType<UInt256>(() => new OpenApiSchema()
                             {
                                 Type = "string",
-                                Format = "Hash256",
-                                Example = new OpenApiString("0xad83d993ca2d9783ca86a000b39920c20508c8ccae7b7db11806646a4832bc50"),
+                                Format = "hash256",
                             });
                             options.MapType<UInt160>(() => new OpenApiSchema()
                             {
                                 Type = "string",
-                                Format = "Hash160",
-                                Example = new OpenApiString("0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761"),
+                                Format = "hash160",
                             });
                             options.MapType<ECPoint>(() => new OpenApiSchema()
                             {
                                 Type = "string",
-                                Format = "HexString",
-                                Example = new OpenApiString("03cdb067d930fd5adaa6c68545016044aaddec64ba39e548250eaea551172e535c"),
+                                Format = "hexstring",
                             });
                             options.MapType<BigInteger>(() => new OpenApiSchema()
                             {
                                 Type = "integer",
-                                Format = "BigInt",
-                                Example = new OpenApiString("100000000"),
+                                Format = "bigint",
                             });
                             options.MapType<byte[]>(() => new OpenApiSchema()
                             {
                                 Type = "string",
                                 Format = "base64",
-                                Example = new OpenApiString("CHeABTw3Q5SkjWharPAhgE+p+rGVN9FhlO4hXoJZQqA="),
-                            });
-                            options.MapType<Transaction>(() => new OpenApiSchema()
-                            {
-                                Type = "object",
-                            });
-                            options.MapType<Block>(() => new OpenApiSchema()
-                            {
-                                Type = "object",
-                            });
-                            options.MapType<ContractState>(() => new OpenApiSchema()
-                            {
-                                Type = "object",
-                            });
-                            options.MapType<Header>(() => new OpenApiSchema()
-                            {
-                                Type = "object",
-                            });
-                            options.MapType<TrimmedBlock>(() => new OpenApiSchema()
-                            {
-                                Type = "object",
-                            });
-                            options.MapType<Witness>(() => new OpenApiSchema()
-                            {
-                                Type = "object",
-                            });
-                            options.MapType<MemoryPool>(() => new OpenApiSchema()
-                            {
-                                Type = "object",
-                            });
-                            options.MapType<ContractAbi>(() => new OpenApiSchema()
-                            {
-                                Type = "object",
-                            });
-                            options.MapType<ContractManifest>(() => new OpenApiSchema()
-                            {
-                                Type = "object",
-                            });
-                            options.MapType<NefFile>(() => new OpenApiSchema()
-                            {
-                                Type = "object",
                             });
                             options.MapType<ReadOnlyMemory<byte>>(() => new OpenApiSchema()
                             {
                                 Type = "string",
                                 Format = "base64",
-                                Example = new OpenApiString("CHeABTw3Q5SkjWharPAhgE+p+rGVN9FhlO4hXoJZQqA="),
+                            });
+                            options.MapType<JObject>(() => new OpenApiSchema()
+                            {
+                                Type = "object",
                             });
                             options.MapType<StackItem>(() => new OpenApiSchema()
                             {
                                 Type = "object",
-                                Format = "stackitem",
                             });
-                            options.MapType<VMState>(() => new OpenApiSchema()
+                            options.MapType<WitnessCondition>(() => new OpenApiSchema()
                             {
                                 Type = "string",
-                                Format = "enum",
+                                Enum =
+                                {
+                                    new OpenApiString("CalledByEntry"),
+                                    new OpenApiString("CalledByContract"),
+                                    new OpenApiString("CalledByGroup"),
+                                    new OpenApiString("Boolean"),
+                                    new OpenApiString("Not"),
+                                    new OpenApiString("And"),
+                                    new OpenApiString("Or"),
+                                    new OpenApiString("ScriptHash"),
+                                    new OpenApiString("Group"),
+                                }
                             });
-
-                            options.MapType<JToken>(() => new OpenApiSchema() { Type = typeof(JToken).Name });
-
-
-                            var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
-                            var xmlFilename = $"{assemblyName}.xml";
-                            var xmlPathAndFilename = Path.Combine(AppContext.BaseDirectory, "Plugins", assemblyName, xmlFilename);
-                            if (File.Exists(xmlPathAndFilename))
-                                options.IncludeXmlComments(xmlPathAndFilename);
-
+                            options.SchemaFilter<SwaggerExcludeFilter>();
+                            foreach (var plugin in Plugin.Plugins)
+                            {
+                                var assemblyName = plugin.GetType().Assembly.GetName().Name;
+                                var xmlPathAndFilename = Path.Combine(AppContext.BaseDirectory, "Plugins", assemblyName, $"{assemblyName}.xml");
+                                if (File.Exists(xmlPathAndFilename))
+                                    options.IncludeXmlComments(xmlPathAndFilename);
+                            }
                         });
+                        services.AddSwaggerGenNewtonsoftSupport();
+                    }
 
                     // Service configuration
                     if (_settings.EnableForwardedHeaders)
