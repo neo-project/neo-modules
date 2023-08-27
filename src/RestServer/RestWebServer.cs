@@ -285,7 +285,7 @@ namespace Neo.Plugins.RestServer
 
                     if (_settings.EnableSwagger)
                     {
-                        app.UseSwagger();
+                        app.UseSwagger(options => options.SerializeAsV2 = true);
                         app.UseSwaggerUI(options => options.DefaultModelsExpandDepth(-1));
                     }
 
