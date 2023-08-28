@@ -77,7 +77,7 @@ namespace Neo.Plugins
             TrustedAuthorities = section.GetSection("TrustedAuthorities").GetChildren().Select(p => p.Get<string>()).ToArray(),
             RpcUser = section.GetSection("RpcUser").Value,
             RpcPass = section.GetSection("RpcPass").Value,
-            EnableCors = section.GetValue(nameof(EnableCors), Default.SessionEnabled),
+            EnableCors = section.GetValue(nameof(EnableCors), Default.EnableCors),
             AllowOrigins = section.GetSection(nameof(AllowOrigins)).GetChildren().Select(p => p.Get<string>()).ToArray(),
             MaxGasInvoke = (long)new BigDecimal(section.GetValue<decimal>("MaxGasInvoke", Default.MaxGasInvoke), NativeContract.GAS.Decimals).Value,
             MaxFee = (long)new BigDecimal(section.GetValue<decimal>("MaxFee", Default.MaxFee), NativeContract.GAS.Decimals).Value,
