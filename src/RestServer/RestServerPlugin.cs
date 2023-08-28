@@ -46,9 +46,9 @@ namespace Neo.Plugins.RestServer
                 ConsoleHelper.Warning("RestServer: CORS is misconfigured!");
                 ConsoleHelper.Info($"You have {nameof(_settings.EnableCors)} and {nameof(_settings.EnableBasicAuthentication)} enabled but");
                 ConsoleHelper.Info($"{nameof(_settings.AllowOrigins)} is empty in config.json for RestServer.");
-                ConsoleHelper.Info("You must add urls origins to the list to have CORS work from");
-                ConsoleHelper.Info($"browser with authentication enabled.");
-                ConsoleHelper.Info($"Example: [\"http://{_settings.BindAddress}:{_settings.Port}\"]");
+                ConsoleHelper.Info("You must add url origins to the list to have CORS work from");
+                ConsoleHelper.Info($"browser with basic authentication enabled.");
+                ConsoleHelper.Info($"Example: \"AllowOrigins\": [\"http://{_settings.BindAddress}:{_settings.Port}\"]");
             }
             if (system.Settings.Network == _settings.Network)
             {

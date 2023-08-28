@@ -95,7 +95,7 @@ namespace Neo.Plugins.RestServer
                         if (_settings.AllowOrigins.Length == 0)
                             services.AddCors(options =>
                             {
-                                options.AddDefaultPolicy(policy =>
+                                options.AddPolicy("All", policy =>
                                 {
                                     policy.AllowAnyOrigin()
                                     .AllowAnyHeader()
@@ -108,7 +108,7 @@ namespace Neo.Plugins.RestServer
                         else
                             services.AddCors(options =>
                             {
-                                options.AddDefaultPolicy(policy =>
+                                options.AddPolicy("All", policy =>
                                 {
                                     policy.WithOrigins(_settings.AllowOrigins)
                                     .AllowAnyHeader()
@@ -259,7 +259,7 @@ namespace Neo.Plugins.RestServer
                     app.UseRouting();
 
                     if (_settings.EnableCors)
-                        app.UseCors();
+                        app.UseCors("All");
 
                     if (_settings.EnableCompression)
                         app.UseResponseCompression();
