@@ -52,9 +52,13 @@ namespace Neo.Plugins
         {
             if (string.IsNullOrEmpty(settings.RpcUser)) return true;
 
-            context.Response.Headers["WWW-Authenticate"] = "Basic realm=\"Restricted\"";
-
             string reqauth = context.Request.Headers["Authorization"];
+            if (string.IsNullOrEmpty(reqauth))
+            {
+                context.Response.Headers["WWW-Authenticate"] = "Basic realm=\"Restricted\"";
+                context.Response.StatusCode = 401;
+            }
+
             string authstring;
             try
             {
@@ -129,11 +133,42 @@ namespace Neo.Plugins
             }))
             .Configure(app =>
             {
+                if (settings.EnableCors)
+                    app.UseCors("All");
+
                 app.UseResponseCompression();
                 app.Run(ProcessAsync);
             })
             .ConfigureServices(services =>
             {
+                if (settings.EnableCors)
+                {
+                    if (settings.AllowOrigins.Length == 0)
+                        services.AddCors(options =>
+                        {
+                            options.AddPolicy("All", policy =>
+                            {
+                                policy.AllowAnyOrigin()
+                                .AllowAnyHeader()
+                                .WithMethods("GET", "POST");
+                                // The CORS specification states that setting origins to "*" (all origins)
+                                // is invalid if the Access-Control-Allow-Credentials header is present.
+                                //.AllowCredentials() 
+                            });
+                        });
+                    else
+                        services.AddCors(options =>
+                        {
+                            options.AddPolicy("All", policy =>
+                            {
+                                policy.WithOrigins(settings.AllowOrigins)
+                                .AllowAnyHeader()
+                                .AllowCredentials()
+                                .WithMethods("GET", "POST");
+                            });
+                        });
+                }
+
                 services.AddResponseCompression(options =>
                 {
                     // options.EnableForHttps = false;
@@ -158,10 +193,6 @@ namespace Neo.Plugins
 
         public async Task ProcessAsync(HttpContext context)
         {
-            context.Response.Headers["Access-Control-Allow-Origin"] = "*";
-            context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST";
-            context.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type";
-            context.Response.Headers["Access-Control-Max-Age"] = "31536000";
             if (context.Request.Method != "GET" && context.Request.Method != "POST") return;
             JToken request = null;
             if (context.Request.Method == "GET")

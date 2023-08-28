@@ -38,6 +38,8 @@ namespace Neo.Plugins
         public int MaxConcurrentConnections { get; init; }
         public string RpcUser { get; init; }
         public string RpcPass { get; init; }
+        public bool EnableCors { get; init; }
+        public string[] AllowOrigins { get; init; }
         public long MaxGasInvoke { get; init; }
         public long MaxFee { get; init; }
         public int MaxIteratorResultItems { get; init; }
@@ -75,6 +77,8 @@ namespace Neo.Plugins
             TrustedAuthorities = section.GetSection("TrustedAuthorities").GetChildren().Select(p => p.Get<string>()).ToArray(),
             RpcUser = section.GetSection("RpcUser").Value,
             RpcPass = section.GetSection("RpcPass").Value,
+            EnableCors = section.GetValue(nameof(EnableCors), Default.SessionEnabled),
+            AllowOrigins = section.GetSection(nameof(AllowOrigins)).GetChildren().Select(p => p.Get<string>()).ToArray(),
             MaxGasInvoke = (long)new BigDecimal(section.GetValue<decimal>("MaxGasInvoke", Default.MaxGasInvoke), NativeContract.GAS.Decimals).Value,
             MaxFee = (long)new BigDecimal(section.GetValue<decimal>("MaxFee", Default.MaxFee), NativeContract.GAS.Decimals).Value,
             MaxIteratorResultItems = section.GetValue("MaxIteratorResultItems", Default.MaxIteratorResultItems),
