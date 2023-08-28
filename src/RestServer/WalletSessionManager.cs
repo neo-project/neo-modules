@@ -45,6 +45,6 @@ namespace Neo.Plugins.RestServer
         }
 
         public void ResetExpiration() =>
-            Expires = DateTime.Now.AddMinutes(RestServerSettings.Current.WalletTimeout);
+            Expires = DateTime.Now.AddMinutes(RestServerSettings.Current.WalletSessionTimeout);
     }
 }

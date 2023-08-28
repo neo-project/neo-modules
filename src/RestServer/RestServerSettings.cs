@@ -44,7 +44,7 @@ namespace Neo.Plugins.RestServer
         public long MaxTransactionFee { get; init; }
         public long MaxInvokeGas { get; init; }
         public uint MaxTransactionSize { get; init; }
-        public int WalletTimeout { get; init; }
+        public int WalletSessionTimeout { get; init; }
         public JsonSerializerSettings JsonSerializerSettings { get; init; }
 
         #endregion
@@ -76,7 +76,7 @@ namespace Neo.Plugins.RestServer
             MaxTransactionFee = 0_10000000L,
             MaxInvokeGas = 0_20000000L,
             MaxTransactionSize = 1024,
-            WalletTimeout = 2,
+            WalletSessionTimeout = 2,
             JsonSerializerSettings = new JsonSerializerSettings()
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -144,7 +144,7 @@ namespace Neo.Plugins.RestServer
                 MaxTransactionFee = section.GetValue(nameof(MaxTransactionFee), Default.MaxTransactionFee),
                 MaxInvokeGas = section.GetValue(nameof(MaxInvokeGas), Default.MaxInvokeGas),
                 MaxTransactionSize = section.GetValue(nameof(MaxTransactionSize), Default.MaxTransactionSize),
-                WalletTimeout = section.GetValue(nameof(WalletTimeout), Default.WalletTimeout),
+                WalletSessionTimeout = section.GetValue(nameof(WalletSessionTimeout), Default.WalletSessionTimeout),
                 JsonSerializerSettings = Default.JsonSerializerSettings,
             };
 

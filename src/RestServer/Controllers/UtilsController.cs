@@ -21,6 +21,7 @@ namespace Neo.Plugins.RestServer.Controllers
     [Route("/api/v1/utils")]
     [Produces(MediaTypeNames.Application.Json)]
     [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
     [ApiExplorerSettings(GroupName = "v1")]
     [ApiController]
     public class UtilsController : ControllerBase
@@ -40,10 +41,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <param name="ScriptHash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash</param>
         /// <returns>Util Address Object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("{hash:required}/address", Name = "GetAddressByScripthash")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UtilsAddressModel))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult ScriptHashToWalletAddress(
             [FromRoute(Name = "hash")]
             UInt160 ScriptHash)
@@ -64,10 +64,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <param name="address" example="NNLi44dJNXtDNSBkofB48aTVYtb1zZrNEs">Neo Address</param>
         /// <returns>Util ScriptHash Object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("{address:required}/scripthash", Name = "GetScripthashByAddress")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UtilsScriptHashModel))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult WalletAddressToScriptHash(
             [FromRoute(Name = "address")]
             string address)
@@ -88,10 +87,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <param name="AddressOrScriptHash"></param>
         /// <returns>Util Address Valid Object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("{address:required}/validate", Name = "IsValidAddressOrScriptHash")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UtilsAddressIsValidModel))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult ValidateAddress(
             [FromRoute(Name = "address")]
             string AddressOrScriptHash)

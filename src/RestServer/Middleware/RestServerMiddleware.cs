@@ -35,7 +35,8 @@ namespace Neo.Plugins.RestServer.Middleware
 
             if (_settings.EnableBasicAuthentication && CheckHttpBasicAuthentication(request) == false)
             {
-                response.StatusCode = StatusCodes.Status403Forbidden;
+                response.Headers.WWWAuthenticate = "Basic realm=\"Restricted\"";
+                response.StatusCode = StatusCodes.Status401Unauthorized;
                 return;
             }
 

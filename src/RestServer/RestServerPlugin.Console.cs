@@ -31,7 +31,7 @@ namespace Neo.Plugins.RestServer
                 ConsoleHelper.Info("   Path: ", wallet.Path);
                 ConsoleHelper.Info("Version: ", wallet.Version.ToString());
                 ConsoleHelper.Info("Session: ", key.ToString("n"));
-                ConsoleHelper.Info("Expires: ", Math.Round(expires.TotalSeconds, 0).ToString(), " seconds.");
+                ConsoleHelper.Info("Expires: ", Math.Round(expires.TotalSeconds, 0).ToString(), " second(s).");
 
                 if (WalletController.WalletSessions.Count > 1)
                     ConsoleHelper.Info();

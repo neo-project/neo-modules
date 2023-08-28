@@ -25,6 +25,7 @@ namespace Neo.Plugins.RestServer.Controllers
     [Route("/api/v1/tokens")]
     [Produces(MediaTypeNames.Application.Json)]
     [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
     [ApiExplorerSettings(GroupName = "v1")]
     [ApiController]
     public class TokenController : ControllerBase
@@ -48,11 +49,10 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <returns>An array of the Nep-17 Token Object.</returns>
         /// <response code="204">No more pages.</response>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("nep-17", Name = "GetNep17Tokens")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(NEP17TokenModel[]))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP17(
             [FromQuery(Name = "page")]
             int skip = 1,
@@ -91,10 +91,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// </summary>
         /// <returns>Count Object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("nep-17/count", Name = "GetNep17TokenCount")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CountModel))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP17Count()
         {
             return Ok(new CountModel()
@@ -110,10 +109,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <param name="lookupAddressOrScripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">Neo Address ScriptHash</param>
         /// <returns>Token Balance Object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("nep-17/{scripthash:required}/balanceof/{address:required}", Name = "GetNep17TokenBalanceOf")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TokenBalanceModel))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP17(
             [FromRoute(Name = "scripthash")]
             UInt160 tokenAddessOrScripthash,
@@ -156,11 +154,10 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <returns>Nep-11 Token Object.</returns>
         /// <response code="204">No more pages.</response>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("nep-11", Name = "GetNep11Tokens")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(NEP11TokenModel[]))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP11(
             [FromQuery(Name = "page")]
             int skip = 1,
@@ -199,10 +196,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// </summary>
         /// <returns>Count Object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("nep-11/count", Name = "GetNep11TokenCount")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CountModel))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP11Count()
         {
             return Ok(new CountModel() { Count = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView).Count(c => ContractHelper.IsNep11Supported(c)) });
@@ -215,10 +211,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <param name="addressHash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">Neo Address ScriptHash</param>
         /// <returns>Token Balance Object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("nep-11/{scripthash:required}/balanceof/{address:required}", Name = "GetNep11TokenBalanceOf")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TokenBalanceModel))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetNEP11(
             [FromRoute(Name = "scripthash")]
             UInt160 sAddressHash,
@@ -257,10 +252,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <param name="addressOrScripthash"></param>
         /// <returns>Token Balance Object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("balanceof/{address:required}", Name = "GetAllTokensBalanceOf")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TokenBalanceModel))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetBalances(
             [FromRoute(Name = "address")]
             UInt160 addressOrScripthash)

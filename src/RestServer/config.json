@@ -22,6 +22,6 @@
     "MaxTransactionFee": 10000000,
     "MaxInvokeGas": 20000000,
     "MaxTransactionSize": 1024,
-    "WalletTimeout": 2
+    "WalletSessionTimeout": 2
   }
 }

@@ -24,6 +24,7 @@ namespace Neo.Plugins.RestServer.Controllers
     [Route("/api/v1/ledger")]
     [Produces(MediaTypeNames.Application.Json)]
     [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
     [ApiExplorerSettings(GroupName = "v1")]
     [ApiController]
     public class LedgerController : ControllerBase
@@ -44,10 +45,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// </summary>
         /// <returns>An array of account details object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("gas/accounts", Name = "GetGasAccounts")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AccountDetails[]))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult ShowGasAccounts()
         {
             var accounts = NativeContract.GAS.ListAccounts(_neosystem.StoreView, _neosystem.Settings);
@@ -59,10 +59,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// </summary>
         /// <returns>An array of account details object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("neo/accounts", Name = "GetNeoAccounts")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AccountDetails[]))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult ShowNeoAccounts()
         {
             var accounts = NativeContract.NEO.ListAccounts(_neosystem.StoreView, _neosystem.Settings);
@@ -81,11 +80,10 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <returns>An array of Block Header Objects</returns>
         /// <response code="204">No more pages.</response>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("blocks", Name = "GetBlocks")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Header[]))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetBlocks(
             [FromQuery(Name = "page")]
             uint skip = 1,
@@ -115,10 +113,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// </summary>
         /// <returns>Full Block Object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("blocks/height", Name = "GetBlockHeight")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Block))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetCurrentBlock()
         {
             var currentIndex = NativeContract.Ledger.CurrentIndex(_neosystem.StoreView);
@@ -132,10 +129,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <param name="blockIndex" example="0">Block Index</param>
         /// <returns>Full Block Object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("blocks/{index:min(0)}", Name = "GetBlock")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Block))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetBlock(
             [FromRoute(Name = "index")]
             uint blockIndex)
@@ -152,10 +148,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <param name="blockIndex" example="0">Blocks index.</param>
         /// <returns>Block Header Object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("blocks/{index:min(0)}/header", Name = "GetBlockHeader")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Header))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetBlockHeader(
             [FromRoute(Name = "index")]
             uint blockIndex)
@@ -172,10 +167,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <param name="blockIndex" example="0">Block Index.</param>
         /// <returns>Witness Object</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("blocks/{index:min(0)}/witness", Name = "GetBlockWitness")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Witness))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetBlockWitness(
             [FromRoute(Name = "index")]
             uint blockIndex)
@@ -194,11 +188,10 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <param name="take">Page Size</param>
         /// <returns>An array of transaction object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("blocks/{index:min(0)}/transactions", Name = "GetBlockTransactions")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Transaction[]))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetBlockTransactions(
             [FromRoute(Name = "index")]
             uint blockIndex,
@@ -226,10 +219,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <param name="hash" example="0xad83d993ca2d9783ca86a000b39920c20508c8ccae7b7db11806646a4832bc50">Hash256</param>
         /// <returns>Transaction object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("transactions/{hash:required}", Name = "GetTransaction")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Transaction))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetTransaction(
             [FromRoute( Name = "hash")]
             UInt256 hash)
@@ -247,10 +239,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <param name="hash" example="0xad83d993ca2d9783ca86a000b39920c20508c8ccae7b7db11806646a4832bc50">Hash256</param>
         /// <returns>An array of witness object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("transactions/{hash:required}/witnesses", Name = "GetTransactionWitnesses")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Witness[]))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetTransactionWitnesses(
             [FromRoute( Name = "hash")]
             UInt256 hash)
@@ -267,10 +258,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <param name="hash" example="0xad83d993ca2d9783ca86a000b39920c20508c8ccae7b7db11806646a4832bc50">Hash256</param>
         /// <returns>An array of Signer object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("transactions/{hash:required}/signers", Name = "GetTransactionSigners")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Signer[]))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetTransactionSigners(
             [FromRoute( Name = "hash")]
             UInt256 hash)
@@ -287,10 +277,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <param name="hash" example="0xad83d993ca2d9783ca86a000b39920c20508c8ccae7b7db11806646a4832bc50">Hash256</param>
         /// <returns>An array of the transaction attributes object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("transactions/{hash:required}/attributes", Name = "GetTransactionAttributes")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(TransactionAttribute[]))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetTransactionAttributes(
             [FromRoute( Name = "hash")]
             UInt256 hash)
@@ -312,10 +301,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <param name="take" example="50">Page Size.</param>
         /// <returns>An array of the Transaction object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("memorypool", Name = "GetMemoryPoolTransactions")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Transaction[]))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetMemoryPool(
             [FromQuery(Name = "page")]
             int skip = 1,
@@ -332,10 +320,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// </summary>
         /// <returns>Memory Pool Count Object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("memorypool/count", Name = "GetMemoryPoolCount")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(MemoryPoolCountModel))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetMemoryPoolCount() =>
             Ok(new MemoryPoolCountModel()
             {
@@ -352,11 +339,10 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <returns>An array of the Transaction object.</returns>
         /// <response code="204">No more pages.</response>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("memorypool/verified", Name = "GetMemoryPoolVeridiedTransactions")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Transaction[]))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetMemoryPoolVerified(
             [FromQuery(Name = "page")]
             int skip = 1,
@@ -378,11 +364,10 @@ namespace Neo.Plugins.RestServer.Controllers
         /// <returns>An array of the Transaction object.</returns>
         /// <response code="204">No more pages.</response>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("memorypool/unverified", Name = "GetMemoryPoolUnveridiedTransactions")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Transaction[]))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetMemoryPoolUnVerified(
             [FromQuery(Name = "page")]
             int skip = 1,

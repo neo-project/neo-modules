@@ -23,6 +23,7 @@ namespace Neo.Plugins.RestServer.Controllers
     [Route("/api/v1/node")]
     [Produces(MediaTypeNames.Application.Json)]
     [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
     [ApiExplorerSettings(GroupName = "v1")]
     [ApiController]
     public class NodeController : ControllerBase
@@ -41,10 +42,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// </summary>
         /// <returns>An array of the Remote Node Objects.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("peers", Name = "GetNodeRemotePeers")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RemoteNodeModel[]))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetPeers()
         {
             var rNodes = _neolocalnode
@@ -60,10 +60,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// </summary>
         /// <returns>An array of the Plugin objects.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("plugins", Name = "GetNodePlugins")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PluginModel[]))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetPlugins() =>
             Ok(Plugin.Plugins.Select(s =>
                 new PluginModel()
@@ -78,10 +77,9 @@ namespace Neo.Plugins.RestServer.Controllers
         /// </summary>
         /// <returns>Protocol Settings Object.</returns>
         /// <response code="200">Successful</response>
-        /// <response code="400">If anything is invalid or request crashes.</response>
+        /// <response code="400">An error occurred. See Response for details.</response>
         [HttpGet("settings", Name = "GetNodeProtocolSettings")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ProtocolSettingsModel))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
         public IActionResult GetSettings() =>
             Ok(_neosystem.Settings.ToModel());
     }
