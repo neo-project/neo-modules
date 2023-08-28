@@ -149,11 +149,10 @@ namespace Neo.Plugins
                             options.AddPolicy("All", policy =>
                             {
                                 policy.AllowAnyOrigin()
-                                .AllowAnyHeader()
+                                .WithHeaders("Content-Type")
                                 .WithMethods("GET", "POST");
                                 // The CORS specification states that setting origins to "*" (all origins)
                                 // is invalid if the Access-Control-Allow-Credentials header is present.
-                                //.AllowCredentials() 
                             });
                         });
                     else
@@ -162,7 +161,7 @@ namespace Neo.Plugins
                             options.AddPolicy("All", policy =>
                             {
                                 policy.WithOrigins(settings.AllowOrigins)
-                                .AllowAnyHeader()
+                                .WithHeaders("Content-Type")
                                 .AllowCredentials()
                                 .WithMethods("GET", "POST");
                             });
