@@ -120,9 +120,17 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken GetContractState(JArray _params)
         {
-            UInt160 script_hash = ToScriptHash(_params[0].AsString());
-            ContractState contract = NativeContract.ContractManagement.GetContract(system.StoreView, script_hash);
-            return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
+            if (int.TryParse(_params[0].AsString(), out int contractId))
+            {
+                var contracts = NativeContract.ContractManagement.GetContractById(system.StoreView, contractId);
+                return contracts?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
+            }
+            else
+            {
+                UInt160 script_hash = ToScriptHash(_params[0].AsString());
+                ContractState contract = NativeContract.ContractManagement.GetContract(system.StoreView, script_hash);
+                return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
+            }
         }
 
         private static UInt160 ToScriptHash(string keyword)
