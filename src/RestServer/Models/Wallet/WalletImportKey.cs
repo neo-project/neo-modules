@@ -8,6 +8,8 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using System.ComponentModel.DataAnnotations;
+
 namespace Neo.Plugins.RestServer.Models.Wallet
 {
     /// <summary>
@@ -19,6 +21,7 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// Representation of the private.
         /// </summary>
         /// <example>L3tgppXLgdaeqSGSFw1Go3skBiy8vQAM7YMXvTHsKQtE16PBncSU</example>
+        [Required(AllowEmptyStrings = false)]
         public string Wif { get; set; }
     }
 }

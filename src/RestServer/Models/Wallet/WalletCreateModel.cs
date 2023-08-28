@@ -8,6 +8,8 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using System.ComponentModel.DataAnnotations;
+
 namespace Neo.Plugins.RestServer.Models.Wallet
 {
     /// <summary>
@@ -25,6 +27,7 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// Path of the wallet file relative to the neo-cli path.
         /// </summary>
         /// <example>./wallets/mywallet.json</example>
+        [Required(AllowEmptyStrings = false)]
         public string Path { get; set; }
         /// <summary>
         /// Representation of the private.
@@ -36,6 +39,7 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// Password to open the wallet file.
         /// </summary>
         /// <example>Password1!</example>
+        [Required(AllowEmptyStrings = false)]
         public string Password { get; set; }
     }
 }

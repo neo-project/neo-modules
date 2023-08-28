@@ -17,26 +17,19 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
     {
         public override UInt256 ReadJson(JsonReader reader, Type objectType, UInt256 existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            //var o = JObject.Load(reader);
-            //return UInt256.Parse(o["value"].ToObject<string>());
+            var value = reader.Value?.ToString();
             try
             {
-                return UInt256.Parse(reader.Value?.ToString());
+                return UInt256.Parse(value);
             }
             catch (FormatException)
             {
-                throw new UInt256FormatException();
+                throw new UInt256FormatException($"{value} is invalid.");
             }
         }
 
         public override void WriteJson(JsonWriter writer, UInt256 value, JsonSerializer serializer)
         {
-            //var o = new JObject()
-            //{
-            //    new JProperty("type", "Hash256"),
-            //    new JProperty("value", value.ToString()),
-            //};
-            //o.WriteTo(writer);
             writer.WriteValue(value.ToString());
         }
     }

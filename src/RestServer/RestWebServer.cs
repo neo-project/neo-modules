@@ -149,7 +149,7 @@ namespace Neo.Plugins.RestServer
                         {
                             var controllerFeatureProvider = manager.FeatureProviders.Single(p => p.GetType() == typeof(ControllerFeatureProvider));
                             var index = manager.FeatureProviders.IndexOf(controllerFeatureProvider);
-                            manager.FeatureProviders[index] = new BlackListControllerFeatureProvider(_settings);
+                            manager.FeatureProviders[index] = new BlackListControllerFeatureProvider();
 
                             foreach (var plugin in Plugin.Plugins)
                                 manager.ApplicationParts.Add(new AssemblyPart(plugin.GetType().Assembly));
@@ -264,7 +264,7 @@ namespace Neo.Plugins.RestServer
                     if (_settings.EnableCompression)
                         app.UseResponseCompression();
 
-                    app.UseMiddleware<RestServerMiddleware>(_settings);
+                    app.UseMiddleware<RestServerMiddleware>();
 
                     app.UseExceptionHandler(config =>
                         config.Run(async context =>
@@ -276,7 +276,7 @@ namespace Neo.Plugins.RestServer
                             {
                                 Code = exception.HResult,
                                 Name = exception.GetType().Name,
-                                Message = exception.Message,
+                                Message = exception.InnerException?.Message ?? exception.Message,
                             };
                             RestServerMiddleware.SetServerInfomationHeader(context.Response);
                             context.Response.StatusCode = 400;

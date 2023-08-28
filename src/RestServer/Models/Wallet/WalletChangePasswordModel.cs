@@ -8,6 +8,8 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using System.ComponentModel.DataAnnotations;
+
 namespace Neo.Plugins.RestServer.Models.Wallet
 {
     public class WalletChangePasswordModel
@@ -16,11 +18,13 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// Current password.
         /// </summary>
         /// <example>Password1!</example>
+        [Required(AllowEmptyStrings = false)]
         public string OldPassword { get; set; }
         /// <summary>
         /// New Password.
         /// </summary>
         /// <example>HelloWorld1!</example>
+        [Required(AllowEmptyStrings = false)]
         public string NewPassword { get; set; }
         /// <summary>
         /// Should create a backup file.

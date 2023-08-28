@@ -17,26 +17,19 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
     {
         public override UInt160 ReadJson(JsonReader reader, Type objectType, UInt160 existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            //var o = JObject.Load(reader);
-            //return UInt160.Parse(o["value"].ToObject<string>());
+            var value = reader.Value?.ToString();
             try
             {
-                return RestServerUtility.ConvertToScriptHash(reader.Value?.ToString(), RestServerPlugin.NeoSystem.Settings);
+                return RestServerUtility.ConvertToScriptHash(value, RestServerPlugin.NeoSystem.Settings);
             }
             catch (FormatException)
             {
-                throw new ScriptHashFormatException();
+                throw new ScriptHashFormatException($"{value} is invalid.");
             }
         }
 
         public override void WriteJson(JsonWriter writer, UInt160 value, JsonSerializer serializer)
         {
-            //var o = new JObject()
-            //{
-            //    new JProperty("type", "Hash160"),
-            //    new JProperty("value", value.ToString()),
-            //};
-            //o.WriteTo(writer);
             writer.WriteValue(value.ToString());
         }
     }

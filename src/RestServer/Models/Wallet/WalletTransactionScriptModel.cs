@@ -8,6 +8,8 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using System.ComponentModel.DataAnnotations;
+
 namespace Neo.Plugins.RestServer.Models.Wallet
 {
     public class WalletTransactionScriptModel
@@ -16,11 +18,13 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// Script to use.
         /// </summary>
         /// <example>CHeABTw3Q5SkjWharPAhgE+p+rGVN9FhlO4hXoJZQqA=</example>
+        [Required]
         public byte[] Script { get; set; }
         /// <summary>
         /// ScriptHash of the address in the wallet to send from.
         /// </summary>
         /// <example>0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761</example>
+        [Required]
         public UInt160 From { get; set; }
         /// <summary>
         /// An array of the signer that will be signing the transaction.

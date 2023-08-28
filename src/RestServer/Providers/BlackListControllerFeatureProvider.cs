@@ -18,10 +18,9 @@ namespace Neo.Plugins.RestServer.Providers
     {
         private readonly RestServerSettings _settings;
 
-        public BlackListControllerFeatureProvider(
-            RestServerSettings settings)
+        public BlackListControllerFeatureProvider()
         {
-            _settings = settings;
+            _settings = RestServerSettings.Current;
         }
 
         protected override bool IsController(TypeInfo typeInfo)

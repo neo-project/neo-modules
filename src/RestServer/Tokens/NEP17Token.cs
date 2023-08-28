@@ -25,16 +25,13 @@ namespace Neo.Plugins.RestServer.Tokens
         public byte Decimals { get; private init; }
 
         private readonly NeoSystem _neosystem;
-        private readonly RestServerSettings _settings;
         private readonly DataCache _datacache;
 
         public NEP17Token(
             NeoSystem neoSystem,
             UInt160 scriptHash,
-            RestServerSettings settings,
             DataCache snapshot = null)
         {
-            _settings = settings;
             _datacache = snapshot ?? neoSystem.GetSnapshot();
             var contractState = NativeContract.ContractManagement.GetContract(_datacache, scriptHash) ?? throw new ArgumentException(null, nameof(scriptHash));
             if (ContractHelper.IsNep17Supported(contractState) == false) throw new NotSupportedException(nameof(scriptHash));
@@ -45,7 +42,7 @@ namespace Neo.Plugins.RestServer.Tokens
                 sb.EmitDynamicCall(scriptHash, "symbol", CallFlags.ReadOnly);
                 script = sb.ToArray();
             }
-            using var engine = ApplicationEngine.Run(script, _datacache, settings: neoSystem.Settings, gas: settings.MaxInvokeGas);
+            using var engine = ApplicationEngine.Run(script, _datacache, settings: neoSystem.Settings, gas: RestServerSettings.Current.MaxGasInvoke);
             if (engine.State != VMState.HALT) throw new NotSupportedException(nameof(scriptHash));
 
             _neosystem = neoSystem;
@@ -59,7 +56,7 @@ namespace Neo.Plugins.RestServer.Tokens
         {
             if (ContractHelper.GetContractMethod(_datacache, ScriptHash, "balanceOf", 1) == null)
                 throw new NotSupportedException(nameof(ScriptHash));
-            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _datacache, ScriptHash, "balanceOf", out var result, address))
+            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _datacache, ScriptHash, "balanceOf", out var result, address))
                 return new BigDecimal(result[0].GetInteger(), Decimals);
             return new BigDecimal(BigInteger.Zero, Decimals);
         }
@@ -68,7 +65,7 @@ namespace Neo.Plugins.RestServer.Tokens
         {
             if (ContractHelper.GetContractMethod(_datacache, ScriptHash, "totalSupply", 0) == null)
                 throw new NotSupportedException(nameof(ScriptHash));
-            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _datacache, ScriptHash, "totalSupply", out var result))
+            if (ScriptHelper.InvokeMethod(_neosystem.Settings, _datacache, ScriptHash, "totalSupply", out var result))
                 return new BigDecimal(result[0].GetInteger(), Decimals);
             return new BigDecimal(BigInteger.Zero, Decimals);
         }

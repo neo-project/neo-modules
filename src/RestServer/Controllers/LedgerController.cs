@@ -30,12 +30,10 @@ namespace Neo.Plugins.RestServer.Controllers
     public class LedgerController : ControllerBase
     {
         private readonly NeoSystem _neosystem;
-        private readonly RestServerSettings _settings;
 
         public LedgerController()
         {
             _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
-            _settings = RestServerSettings.Current;
         }
 
         #region Accounts
@@ -90,7 +88,7 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromQuery(Name = "size")]
             uint take = 1)
         {
-            if (skip < 1 || take < 1 || take > _settings.MaxPageSize)
+            if (skip < 1 || take < 1 || take > RestServerSettings.Current.MaxPageSize)
                 throw new InvalidParameterRangeException();
             //var start = (skip - 1) * take + startIndex;
             //var end = start + take;
@@ -200,7 +198,7 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 1 || take < 1 || take > _settings.MaxPageSize)
+            if (skip < 1 || take < 1 || take > RestServerSettings.Current.MaxPageSize)
                 throw new InvalidParameterRangeException();
             var block = NativeContract.Ledger.GetBlock(_neosystem.StoreView, blockIndex);
             if (block == null)
@@ -310,7 +308,7 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 0 || take < 0 || take > _settings.MaxPageSize)
+            if (skip < 0 || take < 0 || take > RestServerSettings.Current.MaxPageSize)
                 throw new InvalidParameterRangeException();
             return Ok(_neosystem.MemPool.Skip((skip - 1) * take).Take(take));
         }
@@ -349,7 +347,7 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 0 || take < 0 || take > _settings.MaxPageSize)
+            if (skip < 0 || take < 0 || take > RestServerSettings.Current.MaxPageSize)
                 throw new InvalidParameterRangeException();
             if (_neosystem.MemPool.Any() == false) return NoContent();
             var vTx = _neosystem.MemPool.GetVerifiedTransactions();
@@ -374,7 +372,7 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 0 || take < 0 || take > _settings.MaxPageSize)
+            if (skip < 0 || take < 0 || take > RestServerSettings.Current.MaxPageSize)
                 throw new InvalidParameterRangeException();
             if (_neosystem.MemPool.Any() == false) return NoContent();
             _neosystem.MemPool.GetVerifiedAndUnverifiedTransactions(out _, out var unVerifiedTransactions);

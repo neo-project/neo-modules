@@ -18,12 +18,10 @@ namespace Neo.Plugins.RestServer.Middleware
     internal class RestServerMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly RestServerSettings _settings;
 
-        public RestServerMiddleware(RequestDelegate next, RestServerSettings settings)
+        public RestServerMiddleware(RequestDelegate next)
         {
             _next = next;
-            _settings = settings;
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -33,7 +31,7 @@ namespace Neo.Plugins.RestServer.Middleware
 
             SetServerInfomationHeader(response);
 
-            if (_settings.EnableBasicAuthentication && CheckHttpBasicAuthentication(request) == false)
+            if (RestServerSettings.Current.EnableBasicAuthentication && CheckHttpBasicAuthentication(request) == false)
             {
                 response.Headers.WWWAuthenticate = "Basic realm=\"Restricted\"";
                 response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -63,7 +61,7 @@ namespace Neo.Plugins.RestServer.Middleware
                     {
                         var decodedParams = Encoding.UTF8.GetString(Convert.FromBase64String(authValue.Parameter));
                         var creds = decodedParams.Split(':', 2);
-                        return (creds[0] == _settings.RestUser && creds[1] == _settings.RestPass);
+                        return (creds[0] == RestServerSettings.Current.RestUser && creds[1] == RestServerSettings.Current.RestPass);
                     }
                     catch (FormatException)
                     {

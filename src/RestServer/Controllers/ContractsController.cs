@@ -32,12 +32,10 @@ namespace Neo.Plugins.RestServer.Controllers
     public class ContractsController : ControllerBase
     {
         private readonly NeoSystem _neosystem;
-        private readonly RestServerSettings _settings;
 
         public ContractsController()
         {
             _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
-            _settings = RestServerSettings.Current;
         }
 
         /// <summary>
@@ -58,7 +56,7 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromQuery(Name = "size")]
             int take = 1)
         {
-            if (skip < 1 || take < 1 || take > _settings.MaxPageSize)
+            if (skip < 1 || take < 1 || take > RestServerSettings.Current.MaxPageSize)
                 throw new InvalidParameterRangeException();
             var contracts = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView);
             if (contracts.Any() == false) return NoContent();
@@ -202,7 +200,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 throw new QueryParameterNotFoundException(nameof(method));
             try
             {
-                var engine = ScriptHelper.InvokeMethod(_neosystem.Settings, _settings, _neosystem.StoreView, contracts.Hash, method, aparams, out var script);
+                var engine = ScriptHelper.InvokeMethod(_neosystem.Settings, _neosystem.StoreView, contracts.Hash, method, aparams, out var script);
                 return Ok(engine.ToModel());
             }
             catch (Exception ex)

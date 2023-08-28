@@ -9,6 +9,7 @@
 // modifications are permitted.
 
 using Neo.Cryptography.ECC;
+using System.ComponentModel.DataAnnotations;
 
 namespace Neo.Plugins.RestServer.Models.Wallet
 {
@@ -25,6 +26,7 @@ namespace Neo.Plugins.RestServer.Models.Wallet
         /// <summary>
         /// Array of public keys of the addresses.
         /// </summary>
+        [Required]
         public ECPoint[] PublicKeys { get; set; }
     }
 }

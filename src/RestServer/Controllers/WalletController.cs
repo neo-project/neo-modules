@@ -41,7 +41,6 @@ namespace Neo.Plugins.RestServer.Controllers
         internal static WalletSessionManager WalletSessions { get; } = new();
 
         private readonly NeoSystem _neosystem;
-        private readonly RestServerSettings _settings;
 
         /// <summary>
         /// CTOR
@@ -50,7 +49,6 @@ namespace Neo.Plugins.RestServer.Controllers
         public WalletController()
         {
             _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
-            _settings = RestServerSettings.Current;
         }
 
         /// <summary>
@@ -66,10 +64,6 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromBody]
             WalletOpenModel model)
         {
-            if (string.IsNullOrWhiteSpace(model.Path))
-                throw new JsonPropertyNullOrEmptyException(nameof(model.Path));
-            if (string.IsNullOrEmpty(model.Password))
-                throw new JsonPropertyNullOrEmptyException(nameof(model.Password));
             if (new FileInfo(model.Path).DirectoryName.StartsWith(AppContext.BaseDirectory, StringComparison.InvariantCultureIgnoreCase) == false)
                 throw new UnauthorizedAccessException(model.Path);
             if (System.IO.File.Exists(model.Path) == false)
@@ -280,8 +274,6 @@ namespace Neo.Plugins.RestServer.Controllers
         {
             if (WalletSessions.ContainsKey(sessionId) == false)
                 throw new KeyNotFoundException(sessionId.ToString("n"));
-            if (string.IsNullOrEmpty(model.Wif))
-                throw new JsonPropertyNullOrEmptyException(nameof(model.Wif));
             var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
@@ -383,12 +375,6 @@ namespace Neo.Plugins.RestServer.Controllers
         {
             if (WalletSessions.ContainsKey(sessionId) == false)
                 throw new KeyNotFoundException(sessionId.ToString("n"));
-            if (model.AssetId == null || model.AssetId == UInt160.Zero)
-                throw new JsonPropertyNullException(nameof(model.AssetId));
-            if (model.From == null)
-                throw new JsonPropertyNullException(nameof(model.From));
-            if (model.To == null)
-                throw new JsonPropertyNullException(nameof(model.To));
             var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
@@ -415,7 +401,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 if (tx == null)
                     throw new WalletInsufficientFundsException();
                 var totalFees = new BigDecimal((BigInteger)(tx.SystemFee + tx.NetworkFee), NativeContract.GAS.Decimals);
-                if (totalFees.Value > _settings.MaxTransactionFee)
+                if (totalFees.Value > RestServerSettings.Current.MaxTransactionFee)
                     throw new WalletException("The transaction fees are to much.");
                 var context = new ContractParametersContext(snapshot, tx, _neosystem.Settings.Network);
                 wallet.Sign(context);
@@ -444,10 +430,6 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromBody]
             WalletCreateModel model)
         {
-            if (string.IsNullOrWhiteSpace(model.Path))
-                throw new JsonPropertyNullOrEmptyException(nameof(model.Path));
-            if (string.IsNullOrEmpty(model.Password))
-                throw new JsonPropertyNullOrEmptyException(nameof(model.Password));
             if (new FileInfo(model.Path).DirectoryName.StartsWith(AppContext.BaseDirectory, StringComparison.InvariantCultureIgnoreCase) == false)
                 throw new UnauthorizedAccessException(model.Path);
             var wallet = Wallet.Create(model.Name, model.Path, model.Password, _neosystem.Settings);
@@ -591,10 +573,6 @@ namespace Neo.Plugins.RestServer.Controllers
         {
             if (WalletSessions.ContainsKey(sessionId) == false)
                 throw new KeyNotFoundException(sessionId.ToString("n"));
-            if (string.IsNullOrEmpty(model.OldPassword))
-                throw new JsonPropertyNullOrEmptyException(nameof(model.OldPassword));
-            if (string.IsNullOrEmpty(model.NewPassword))
-                throw new JsonPropertyNullOrEmptyException(nameof(model.NewPassword));
             if (model.OldPassword == model.NewPassword)
                 throw new WalletException($"{nameof(model.OldPassword)} is the same as {nameof(model.NewPassword)}.");
             var session = WalletSessions[sessionId];
@@ -638,16 +616,14 @@ namespace Neo.Plugins.RestServer.Controllers
                 throw new KeyNotFoundException(sessionId.ToString("n"));
             if (model.Script == null || model.Script.Length == 0)
                 throw new JsonPropertyNullOrEmptyException(nameof(model.Script));
-            if (model.From == null)
-                throw new JsonPropertyNullException(nameof(model.From));
             var session = WalletSessions[sessionId];
             session.ResetExpiration();
             var wallet = session.Wallet;
             var signers = model.Signers?.Select(s => new Signer() { Scopes = WitnessScope.CalledByEntry, Account = s }).ToArray();
-            var appEngine = ScriptHelper.InvokeScript(_settings, model.Script, signers);
+            var appEngine = ScriptHelper.InvokeScript(model.Script, signers);
             if (appEngine.State != VM.VMState.HALT)
                 throw new ApplicationEngineException(appEngine.FaultException?.InnerException?.Message ?? appEngine.FaultException?.Message ?? string.Empty);
-            var tx = wallet.MakeTransaction(_neosystem.StoreView, model.Script, model.From, signers, maxGas: _settings.MaxInvokeGas);
+            var tx = wallet.MakeTransaction(_neosystem.StoreView, model.Script, model.From, signers, maxGas: RestServerSettings.Current.MaxGasInvoke);
             try
             {
                 var context = new ContractParametersContext(_neosystem.StoreView, tx, _neosystem.Settings.Network);

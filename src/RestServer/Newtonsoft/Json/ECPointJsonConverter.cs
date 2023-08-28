@@ -10,6 +10,7 @@
 
 using Newtonsoft.Json;
 using Neo.Cryptography.ECC;
+using Neo.Plugins.RestServer.Exceptions;
 
 namespace Neo.Plugins.RestServer.Newtonsoft.Json
 {
@@ -17,19 +18,19 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
     {
         public override ECPoint ReadJson(JsonReader reader, Type objectType, ECPoint existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            if (ECPoint.TryParse(reader?.Value.ToString(), ECCurve.Secp256r1, out var value))
-                return value;
-            return default;
+            var value = reader?.Value.ToString();
+            try
+            {
+                return ECPoint.Parse(value, ECCurve.Secp256r1);
+            }
+            catch (FormatException)
+            {
+                throw new UInt256FormatException($"{value} is invalid.");
+            }
         }
 
         public override void WriteJson(JsonWriter writer, ECPoint value, JsonSerializer serializer)
         {
-            //var o = new JObject()
-            //{
-            //    new JProperty("type", "PublicKey"),
-            //    new JProperty("value", value.ToString()),
-            //};
-            //o.WriteTo(writer);
             writer.WriteValue(value.ToString());
         }
     }
