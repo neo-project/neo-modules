@@ -225,17 +225,17 @@ namespace Neo.Plugins
             byte[] txSign = Convert.FromBase64String(_params[2].AsString());
             byte[] msgSign = Convert.FromBase64String(_params[3].AsString());
 
-            if (finishedCache.ContainsKey(requestId)) throw new RpcException(-100, "Request has already finished");
+            if (finishedCache.ContainsKey(requestId)) throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.OracleRequestFinished));
 
             using (var snapshot = System.GetSnapshot())
             {
                 uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
                 var oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
-                if (!oracles.Any(p => p.Equals(oraclePub))) throw new RpcException(-100, $"{oraclePub} isn't an oracle node");
+                if (!oracles.Any(p => p.Equals(oraclePub))) throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.OracleNotDesignatedNode, $"{oraclePub} isn't an oracle node"));
                 if (NativeContract.Oracle.GetRequest(snapshot, requestId) is null)
-                    throw new RpcException(-100, "Request is not found");
+                    throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.OracleRequestNotFound));
                 var data = Neo.Helper.Concat(oraclePub.ToArray(), BitConverter.GetBytes(requestId), txSign);
-                if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(-100, "Invalid sign");
+                if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.InvalidSignature));
 
                 AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
             }
@@ -496,7 +496,7 @@ namespace Neo.Plugins
             else if (Crypto.VerifySignature(task.BackupTx.GetSignData(System.Settings.Network), sign, oraclePub))
                 task.BackupSigns.TryAdd(oraclePub, sign);
             else
-                throw new RpcException(-100, "Invalid response transaction sign");
+                throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.InvalidSignature, "Invalid response transaction sign"));
 
             if (CheckTxSign(snapshot, task.Tx, task.Signs) || CheckTxSign(snapshot, task.BackupTx, task.BackupSigns))
             {

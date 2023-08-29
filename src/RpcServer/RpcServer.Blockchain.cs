@@ -47,7 +47,7 @@ namespace Neo.Plugins
                 block = NativeContract.Ledger.GetBlock(snapshot, hash);
             }
             if (block == null)
-                throw new RpcException(-100, "Unknown block");
+                throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.UnknownBlock));
             if (verbose)
             {
                 JObject json = Utility.BlockToJson(block, system.Settings);
@@ -81,7 +81,7 @@ namespace Neo.Plugins
             {
                 return NativeContract.Ledger.GetBlockHash(snapshot, height).ToString();
             }
-            throw new RpcException(-100, "Invalid Height");
+            throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.UnknownHeight));
         }
 
         [RpcMethod]
@@ -102,7 +102,7 @@ namespace Neo.Plugins
                 header = NativeContract.Ledger.GetHeader(snapshot, hash);
             }
             if (header == null)
-                throw new RpcException(-100, "Unknown block");
+                throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.UnknownBlock));
 
             if (verbose)
             {
@@ -122,7 +122,7 @@ namespace Neo.Plugins
         {
             UInt160 script_hash = ToScriptHash(_params[0].AsString());
             ContractState contract = NativeContract.ContractManagement.GetContract(system.StoreView, script_hash);
-            return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
+            return contract?.ToJson() ?? throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.UnknownContract));
         }
 
         private static UInt160 ToScriptHash(string keyword)
@@ -163,7 +163,7 @@ namespace Neo.Plugins
             var snapshot = system.StoreView;
             TransactionState state = NativeContract.Ledger.GetTransactionState(snapshot, hash);
             tx ??= state?.Transaction;
-            if (tx is null) throw new RpcException(-100, "Unknown transaction");
+            if (tx is null) throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.UnknownTransaction));
             if (!verbose) return Convert.ToBase64String(tx.ToArray());
             JObject json = Utility.TransactionToJson(tx, system.Settings);
             if (state is not null)
@@ -184,7 +184,7 @@ namespace Neo.Plugins
             {
                 UInt160 hash = UInt160.Parse(_params[0].AsString());
                 ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, hash);
-                if (contract is null) throw new RpcException(-100, "Unknown contract");
+                if (contract is null) throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.UnknownContract));
                 id = contract.Id;
             }
             byte[] key = Convert.FromBase64String(_params[1].AsString());
@@ -193,7 +193,7 @@ namespace Neo.Plugins
                 Id = id,
                 Key = key
             });
-            if (item is null) throw new RpcException(-100, "Unknown storage");
+            if (item is null) throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.UnknownStorageItem));
             return Convert.ToBase64String(item.Value.Span);
         }
 
@@ -205,7 +205,7 @@ namespace Neo.Plugins
             {
                 UInt160 hash = UInt160.Parse(_params[0].AsString());
                 ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, hash);
-                if (contract is null) throw new RpcException(-100, "Unknown contract");
+                if (contract is null) throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.UnknownContract));
                 id = contract.Id;
             }
 
@@ -253,7 +253,7 @@ namespace Neo.Plugins
             UInt256 hash = UInt256.Parse(_params[0].AsString());
             uint? height = NativeContract.Ledger.GetTransactionState(system.StoreView, hash)?.BlockIndex;
             if (height.HasValue) return height.Value;
-            throw new RpcException(-100, "Unknown transaction");
+            throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.UnknownTransaction));
         }
 
         [RpcMethod]

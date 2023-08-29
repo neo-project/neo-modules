@@ -60,7 +60,7 @@ namespace Neo.Plugins
             }
             else
             {
-                throw new RpcException(-500, reason.ToString());
+                throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.VerificationFailed, reason.ToString()));
             }
         }
 

@@ -72,7 +72,7 @@ namespace Neo.Plugins.Trackers.NEP_17
                 }
             }
 
-            //update nep17 balance 
+            //update nep17 balance
             foreach (var balanceChangeRecord in balanceChangeRecords)
             {
                 try
@@ -143,14 +143,14 @@ namespace Neo.Plugins.Trackers.NEP_17
         [RpcMethod]
         public JToken GetNep17Transfers(JArray _params)
         {
-            if (!_shouldTrackHistory) throw new RpcException(-32601, "Method not found");
+            if (!_shouldTrackHistory) throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.MethodNotFound));
             UInt160 userScriptHash = GetScriptHashFromParam(_params[0].AsString());
             // If start time not present, default to 1 week of history.
             ulong startTime = _params.Count > 1 ? (ulong)_params[1].AsNumber() :
                 (DateTime.UtcNow - TimeSpan.FromDays(7)).ToTimestampMS();
             ulong endTime = _params.Count > 2 ? (ulong)_params[2].AsNumber() : DateTime.UtcNow.ToTimestampMS();
 
-            if (endTime < startTime) throw new RpcException(-32602, "Invalid params");
+            if (endTime < startTime) throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.InvalidParams));
 
             JObject json = new();
             json["address"] = userScriptHash.ToAddress(_neoSystem.Settings.AddressVersion);
