@@ -256,7 +256,7 @@ namespace Neo.Plugins
             catch (Exception ex)
             {
 #if DEBUG
-                return CreateErrorResponse(request["id"], ex.HResult, ex.Message, ex.StackTrace);
+                return CreateErrorResponse(request["id"], RpcErrorFactor.NewCustomError(ex.HResult, ex.Message), ex.StackTrace);
 #else
                 return CreateErrorResponse(request["id"], RpcErrorFactor.NewCustomError(ex.HResult, ex.Message));
 #endif
