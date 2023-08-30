@@ -245,6 +245,15 @@ namespace Neo.Network.RPC
             return ContractStateFromJson((JObject)result);
         }
 
+        /// <summary>
+        /// Queries contract information, according to the contract id.
+        /// </summary>
+        public async Task<ContractState> GetContractStateAsync(int id)
+        {
+            var result = await RpcSendAsync(GetRpcName(), id).ConfigureAwait(false);
+            return ContractStateFromJson((JObject)result);
+        }
+
         public static ContractState ContractStateFromJson(JObject json)
         {
             return new ContractState
