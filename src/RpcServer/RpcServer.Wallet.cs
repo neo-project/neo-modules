@@ -198,7 +198,7 @@ namespace Neo.Plugins
             AssetDescriptor descriptor = new(snapshot, system.Settings, assetId);
             BigDecimal amount = new(BigInteger.Parse(_params[3].AsString()), descriptor.Decimals);
             if (amount.Sign <= 0)
-                throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.InvalidParams));//-32602, "Invalid params");
+                throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.InvalidParams));
             Signer[] signers = _params.Count >= 5 ? ((JArray)_params[4]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
 
             Transaction tx = wallet.MakeTransaction(snapshot, new[]
@@ -225,7 +225,7 @@ namespace Neo.Plugins
                     tx.NetworkFee = calFee;
             }
             if (tx.NetworkFee > settings.MaxFee)
-                throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.WalletFeeLimit, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value."));//-301, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
+                throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.WalletFeeLimit, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value."));
             return SignAndRelay(snapshot, tx);
         }
 
@@ -242,7 +242,7 @@ namespace Neo.Plugins
             }
             JArray to = (JArray)_params[to_start];
             if (to.Count == 0)
-                throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.InvalidParams));//-32602, "Invalid params");
+                throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.InvalidParams));
             Signer[] signers = _params.Count >= to_start + 2 ? ((JArray)_params[to_start + 1]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
 
             TransferOutput[] outputs = new TransferOutput[to.Count];
