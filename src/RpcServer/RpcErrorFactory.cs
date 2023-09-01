@@ -14,13 +14,11 @@ namespace Neo.Plugins;
 public static class RpcErrorFactory
 {
     private static readonly Dictionary<int, string> DefaultMessages = new Dictionary<int, string> {
-
       {RpcErrorCode.InternalServerError, "Internal server RpcError"},
       {RpcErrorCode.BadRequest, "Bad request"},
       {RpcErrorCode.InvalidRequest, "Invalid request"},
       {RpcErrorCode.MethodNotFound, "Method not found"},
       {RpcErrorCode.InvalidParams, "Invalid params"},
-
       {RpcErrorCode.UnknownBlock, "Unknown block"},
       {RpcErrorCode.UnknownContract, "Unknown contract"},
       {RpcErrorCode.UnknownTransaction, "Unknown transaction"},
@@ -30,15 +28,12 @@ public static class RpcErrorFactory
       {RpcErrorCode.UnknownSession, "Unknown session"},
       {RpcErrorCode.UnknownIterator, "Unknown iterator"},
       {RpcErrorCode.UnknownHeight, "Unknown height"},
-
       {RpcErrorCode.InsufficientFundsWallet, "Insufficient funds in wallet"},
       {RpcErrorCode.WalletFeeLimit, "Wallet fee limit exceeded"},
       {RpcErrorCode.NoOpenedWallet, "No opened wallet"},
       {RpcErrorCode.WalletNotFound, "Wallet not found"},
       {RpcErrorCode.WalletNotSupported, "Wallet not supported"},
-
-      { RpcErrorCode.AccessDenied, "Access denied"},
-
+      {RpcErrorCode.AccessDenied, "Access denied"},
       {RpcErrorCode.VerificationFailed, "Inventory verification failed"},
       {RpcErrorCode.AlreadyExists, "Inventory already exists"},
       {RpcErrorCode.MempoolCapReached, "Memory pool capacity reached"},
@@ -52,7 +47,6 @@ public static class RpcErrorFactory
       {RpcErrorCode.ExpiredTransaction, "Expired transaction"},
       {RpcErrorCode.InsufficientFunds, "Insufficient funds for fee"},
       {RpcErrorCode.InvalidVerificationFunction, "Invalid contract verification"},
-
       {RpcErrorCode.SessionsDisabled, "State iterator sessions disabled"},
       {RpcErrorCode.OracleDisabled, "Oracle service disabled"},
       {RpcErrorCode.OracleRequestFinished, "Oracle request already finished"},
@@ -61,7 +55,6 @@ public static class RpcErrorFactory
       {RpcErrorCode.UnsupportedState, "Old state not supported"},
       {RpcErrorCode.InvalidProof, "Invalid state proof"},
       {RpcErrorCode.ExecutionFailed, "Contract execution failed"}
-
     };
 
     public static RpcError NewError(int code, string message = null, string data = "")
