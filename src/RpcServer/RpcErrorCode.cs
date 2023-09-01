@@ -10,9 +10,9 @@
 
 using System.Collections.Generic;
 namespace Neo.Plugins;
+
 public static class RpcErrorCode
 {
-
     public const int InternalServerError = -32603;
     public const int BadRequest = -32700;
     public const int InvalidRequest = -32600;
@@ -59,5 +59,4 @@ public static class RpcErrorCode
     public const int UnsupportedState = -606;
     public const int InvalidProof = -607;
     public const int ExecutionFailed = -608;
-
 }
