@@ -197,13 +197,13 @@ namespace Neo.Plugins
             JToken response;
             if (request == null)
             {
-                response = CreateErrorResponse(null, RpcErrorFactor.NewError(RpcErrorCode.BadRequest));
+                response = CreateErrorResponse(null, RpcErrorFactory.NewError(RpcErrorCode.BadRequest));
             }
             else if (request is JArray array)
             {
                 if (array.Count == 0)
                 {
-                    response = CreateErrorResponse(request["id"], RpcErrorFactor.NewError(RpcErrorCode.InvalidRequest));
+                    response = CreateErrorResponse(request["id"], RpcErrorFactory.NewError(RpcErrorCode.InvalidRequest));
                 }
                 else
                 {
@@ -227,16 +227,16 @@ namespace Neo.Plugins
             JToken @params = request["params"] ?? new JArray();
             if (!request.ContainsProperty("method") || @params is not JArray)
             {
-                return CreateErrorResponse(request["id"], RpcErrorFactor.NewError(RpcErrorCode.InvalidRequest));
+                return CreateErrorResponse(request["id"], RpcErrorFactory.NewError(RpcErrorCode.InvalidRequest));
             }
             JObject response = CreateResponse(request["id"]);
             try
             {
                 string method = request["method"].AsString();
                 if (!CheckAuth(context) || settings.DisabledMethods.Contains(method))
-                    throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.AccessDenied));
+                    throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.AccessDenied));
                 if (!methods.TryGetValue(method, out var func))
-                    throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.MethodNotFound));
+                    throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.MethodNotFound));
                 response["result"] = func((JArray)@params) switch
                 {
                     JToken result => result,
@@ -247,18 +247,18 @@ namespace Neo.Plugins
             }
             catch (FormatException)
             {
-                return CreateErrorResponse(request["id"], RpcErrorFactor.NewError(RpcErrorCode.InvalidParams));
+                return CreateErrorResponse(request["id"], RpcErrorFactory.NewError(RpcErrorCode.InvalidParams));
             }
             catch (IndexOutOfRangeException)
             {
-                return CreateErrorResponse(request["id"], RpcErrorFactor.NewError(RpcErrorCode.InvalidRequest));
+                return CreateErrorResponse(request["id"], RpcErrorFactory.NewError(RpcErrorCode.InvalidRequest));
             }
             catch (Exception ex)
             {
 #if DEBUG
-                return CreateErrorResponse(request["id"], RpcErrorFactor.NewCustomError(ex.HResult, ex.Message), ex.StackTrace);
+                return CreateErrorResponse(request["id"], RpcErrorFactory.NewCustomError(ex.HResult, ex.Message), ex.StackTrace);
 #else
-                return CreateErrorResponse(request["id"], RpcErrorFactor.NewCustomError(ex.HResult, ex.Message));
+                return CreateErrorResponse(request["id"], RpcErrorFactory.NewCustomError(ex.HResult, ex.Message));
 #endif
             }
         }

@@ -61,7 +61,7 @@ namespace Neo.Plugins
             UInt256 hash = UInt256.Parse(_params[0].AsString());
             byte[] value = _db.TryGet(hash.ToArray());
             if (value is null)
-                throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.UnknownStorageItem));
+                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnknownStorageItem));
 
             JObject raw = (JObject)JToken.Parse(Neo.Utility.StrictUTF8.GetString(value));
             //Additional optional "trigger" parameter to getapplicationlog for clients to be able to get just one execution result for a block.

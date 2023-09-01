@@ -270,7 +270,7 @@ namespace Neo.Plugins
                 script_hash = null;
             }
             if (script_hash == null)
-                throw new RpcException(RpcErrorFactor.NewError(RpcErrorCode.InvalidParams));
+                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.InvalidParams));
             var snapshot = system.StoreView;
             json["unclaimed"] = NativeContract.NEO.UnclaimedGas(snapshot, script_hash, NativeContract.Ledger.CurrentIndex(snapshot) + 1).ToString();
             json["address"] = script_hash.ToAddress(system.Settings.AddressVersion);

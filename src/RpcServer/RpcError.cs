@@ -53,7 +53,7 @@ public class RpcError
 
 }
 
-public static class RpcErrorFactor
+public static class RpcErrorFactory
 {
     private static readonly Dictionary<int, string> DefaultMessages = new Dictionary<int, string> {
 
