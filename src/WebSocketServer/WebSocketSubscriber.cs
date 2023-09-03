@@ -11,11 +11,11 @@ namespace Neo.Plugins.WebSocketServer;
 
 public class WebSocketSubscriber : WebSocketBehavior
 {
-    const int MaxSubscriptions = 16;
-    const int NotificationBufSize = 1024;
+    private const int MaxSubscriptions = 16;
+    private const int NotificationBufSize = 1024;
     private string SubscriberId { get; set; }
 
-    private readonly Dictionary<string, Func<JObject, object>> _methods = new();
+    private readonly Dictionary<string, Func<JObject, object>> _methods;
 
     private readonly ConcurrentDictionary<string, BlockSubscription> _blockSubscriptions = new();
     private readonly ConcurrentDictionary<string, TxSubscription> _txSubscriptions = new();
@@ -23,6 +23,15 @@ public class WebSocketSubscriber : WebSocketBehavior
     private readonly ConcurrentDictionary<string, ExecutionSubscription> _executionSubscriptions = new();
 
     private readonly ConcurrentBag<WeakReference> _subscriptions = new();
+
+    public WebSocketSubscriber()
+    {
+        _methods = new Dictionary<string, Func<JObject, object>>
+        {
+            { "subscribe", Subscribe },
+            { "unsubscribe", UnSubscribe }
+        };
+    }
 
     protected override void OnOpen()
     {
@@ -33,24 +42,22 @@ public class WebSocketSubscriber : WebSocketBehavior
         WebSocketServerPlugin.TransactionEvent += OnTransactionEvent;
         WebSocketServerPlugin.NotificationEvent += OnNotificationEvent;
         WebSocketServerPlugin.ExecutionEvent += OnExecutionEvent;
-
-        _methods.Add("subscribe", Subscribe);
-        _methods.Add("unsubscribe", UnSubscribe);
     }
 
     protected override void OnClose(CloseEventArgs e)
     {
         base.OnClose(e);
+        ClearSubscriptions();
+    }
+
+    private void ClearSubscriptions()
+    {
         _blockSubscriptions.Clear();
         _txSubscriptions.Clear();
         _notificationSubscriptions.Clear();
         _executionSubscriptions.Clear();
     }
 
-    /// <summary>
-    /// Receive message from the client
-    /// </summary>
-    /// <param name="e"></param>
     protected override void OnMessage(MessageEventArgs e)
     {
         var request = JToken.Parse(e.Data);
@@ -228,10 +235,10 @@ public class WebSocketSubscriber : WebSocketBehavior
         catch (Exception ex)
         {
 #if DEBUG
-            var res CreateErrorResponse(request["id"], ex.HResult, ex.Message, ex.StackTrace);
+            var res = CreateErrorResponse(request["id"], ex.HResult, ex.Message, ex.StackTrace);
             NotifySubscriber(res);
 #else
-            var res =  CreateErrorResponse(request["id"], ex.HResult, ex.Message);
+            var res = CreateErrorResponse(request["id"], ex.HResult, ex.Message);
             NotifySubscriber(res);
 #endif
         }

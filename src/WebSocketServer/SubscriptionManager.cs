@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Concurrent;
+
 namespace Neo.Plugins.WebSocketServer;
 
 public class SubscriptionManager<T> where T : Subscription
 {
-    private readonly ConcurrentDictionary<string, WeakReference<T>> _references
-        = new();
+    private readonly ConcurrentDictionary<string, WeakReference<T>> _references = new();
 
     public void Add(T target)
     {
@@ -17,12 +17,13 @@ public class SubscriptionManager<T> where T : Subscription
     {
         foreach (var kvp in _references)
         {
-            if (!kvp.Value.TryGetTarget(out var _))
+            if (!kvp.Value.TryGetTarget(out _))
             {
-                _references.TryRemove(kvp.Key, out var _);
+                _references.TryRemove(kvp.Key, out _);
             }
         }
     }
+
     public bool IsEmpty
     {
         get

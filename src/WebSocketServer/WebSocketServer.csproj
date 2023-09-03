@@ -10,6 +10,5 @@
   <ItemGroup>
     <ProjectReference Include="..\ApplicationLogs\ApplicationLogs.csproj" />
     <ProjectReference Include="..\RpcClient\RpcClient.csproj" />
-    <ProjectReference Include="..\WebSocketClient\WebSocketClient.csproj" />
   </ItemGroup>
 </Project>

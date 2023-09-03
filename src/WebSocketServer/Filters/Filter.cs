@@ -1,33 +1,15 @@
 #nullable enable
+
 namespace Neo.Plugins.WebSocketServer.Filters;
 
-public class BlockFilter
-{
-    public int? Primary { get; set; }
-    public uint? Since { get; set; }
-    public uint? Till { get; set; }
-}
+public record BlockFilter(int? Primary, uint? Since, uint? Till);
 
-public class TxFilter
-{
-    public UInt160? Sender { get; set; }
-    public UInt160? Signer { get; set; }
-}
+public record TxFilter(UInt160? Sender, UInt160? Signer);
 
-public class NotificationFilter
-{
+public record NotificationFilter(UInt160? Contract, string? Name);
 
-    public UInt160? Contract { get; set; }
-    public string? Name { get; set; }
+public record ExecutionFilter(string? State, UInt256? Container);
 
-}
-
-public class ExecutionFilter
-{
-    public string? State { get; set; }
-    public UInt256? Container { get; set; }
-
-}
 public interface IComparator
 {
     WssEventId WssEventId { get; }
