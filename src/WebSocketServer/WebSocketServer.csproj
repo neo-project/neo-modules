@@ -7,8 +7,4 @@
     <PackageReference Include="Neo.ConsoleService" Version="1.2.0" />
     <PackageReference Include="WebSocketSharp" Version="1.0.3-rc11" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ApplicationLogs\ApplicationLogs.csproj" />
-    <ProjectReference Include="..\RpcClient\RpcClient.csproj" />
-  </ItemGroup>
 </Project>

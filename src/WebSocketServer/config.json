@@ -12,6 +12,7 @@
         "SessionEnabled": false,
         "SessionExpirationTime": 60
       }
-    ]
+    ],
+    "MaxStackSize": 65535
   }
 }

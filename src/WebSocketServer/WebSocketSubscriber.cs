@@ -99,7 +99,7 @@ public class WebSocketSubscriber : WebSocketBehavior
     {
         if (_subscriptions.Count >= MaxSubscriptions)
         {
-            throw new Network.RPC.RpcException(-100, "Max subscriptions reached");
+            throw new WssException(-100, "Max subscriptions reached");
         }
 
         var eventId = @params["eventid"]!.AsString().FromMethod();
@@ -214,7 +214,7 @@ public class WebSocketSubscriber : WebSocketBehavior
         {
             var method = request["method"]?.AsString();
             if (!_methods.TryGetValue(method ?? throw new InvalidOperationException(), out var func))
-                throw new RpcException(-32601, "Method not found");
+                throw new WssException(-32601, "Method not found");
             response["result"] = func((JObject)@params) switch
             {
                 JToken result => result,

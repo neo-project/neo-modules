@@ -1,4 +1,3 @@
-using Neo.Json;
 namespace Neo.Plugins.WebSocketServer;
 
 public static class Handler

@@ -44,9 +44,11 @@ public record WebSocketServerSetting
 public class Settings
 {
     public IReadOnlyList<WebSocketServerSetting> Servers { get; init; }
+    public static int MaxStackSize { get; private set; }
 
     public Settings(IConfigurationSection section)
     {
         Servers = section.GetSection(nameof(Servers)).GetChildren().Select(p => WebSocketServerSetting.Load(p)).ToArray();
+        MaxStackSize = section.GetValue("MaxStackSize", (int)ushort.MaxValue);
     }
 }
