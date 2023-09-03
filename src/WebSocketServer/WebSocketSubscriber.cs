@@ -38,6 +38,8 @@ public class WebSocketSubscriber : WebSocketBehavior
         base.OnOpen();
         SubscriberId = Guid.NewGuid().ToString();
 
+        if (!WebSocketServerPlugin.AddSubscriber(SubscriberId, this)) return;
+
         WebSocketServerPlugin.BlockEvent += OnBlockEvent;
         WebSocketServerPlugin.TransactionEvent += OnTransactionEvent;
         WebSocketServerPlugin.NotificationEvent += OnNotificationEvent;
@@ -48,6 +50,7 @@ public class WebSocketSubscriber : WebSocketBehavior
     {
         base.OnClose(e);
         ClearSubscriptions();
+        WebSocketServerPlugin.RemoveSubscriber(SubscriberId);
     }
 
     private void ClearSubscriptions()
@@ -251,5 +254,13 @@ public class WebSocketSubscriber : WebSocketBehavior
             if (completed)
                 Console.WriteLine("Completed sending message.");
         });
+    }
+
+    /// <summary>
+    /// Close the connection if too many subscribers
+    /// </summary>
+    public void Close()
+    {
+        Sessions.CloseSession(ID);
     }
 }

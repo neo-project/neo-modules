@@ -19,9 +19,11 @@ namespace Neo.Plugins.WebSocketServer
         private const string TXID_KEY = "txid";
         private const string EXECUTIONS_KEY = "executions";
 
-        private Settings _settings;
+        private static Settings _settings;
         private static WebSocketSharp.Server.WebSocketServer _server;
         private NeoSystem _system;
+
+        private static readonly ConcurrentDictionary<string, WebSocketSubscriber> _subscribers = new();
 
         private static readonly SubscriptionManager<BlockSubscription> RefBlockSubscriptions = new();
         private static readonly SubscriptionManager<TxSubscription> RefTxSubscriptions = new();
@@ -102,6 +104,19 @@ namespace Neo.Plugins.WebSocketServer
                 if (!RefExecutionSubscriptions.IsEmpty)
                     NotifyExecutionEvent(LogReader.TxLogToJson(appExec));
             }
+        }
+
+        public static bool AddSubscriber(string subscriberId, WebSocketSubscriber subscriber)
+        {
+            if (_subscribers.Count <= _settings.Servers.FirstOrDefault(p => p != null)!.MaxConcurrentConnections) return _subscribers.TryAdd(subscriberId, subscriber);
+            ConsoleHelper.Error("Max concurrent connections reached");
+            subscriber.Close();
+            return false;
+        }
+
+        public static void RemoveSubscriber(string subscriberId)
+        {
+            _subscribers.TryRemove(subscriberId, out var subscriber);
         }
 
         private static void NotifyBlockEvent(JObject jObject)
