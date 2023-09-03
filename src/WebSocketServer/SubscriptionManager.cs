@@ -2,15 +2,15 @@ using System;
 using System.Collections.Concurrent;
 namespace Neo.Plugins.WebSocketServer;
 
-public class SubscriptionManager<T> where T : class
+public class SubscriptionManager<T> where T : Subscription
 {
-    private readonly ConcurrentDictionary<T, WeakReference<T>> _references
+    private readonly ConcurrentDictionary<string, WeakReference<T>> _references
         = new();
 
     public void Add(T target)
     {
         var weakReference = new WeakReference<T>(target);
-        _references.TryAdd(target, weakReference);
+        _references.TryAdd(target.SubscriptionId, weakReference);
     }
 
     private void Cleanup()
