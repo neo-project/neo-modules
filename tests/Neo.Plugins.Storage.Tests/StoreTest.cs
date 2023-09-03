@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Persistence;
+using System.IO;
 using System.Linq;
 
 namespace Neo.Plugins.Storage.Tests
@@ -9,6 +10,30 @@ namespace Neo.Plugins.Storage.Tests
     {
         private const string path_leveldb = "Data_LevelDB_UT";
         private const string path_rocksdb = "Data_RocksDB_UT";
+
+        [TestInitialize]
+        public void OnStart()
+        {
+            if (Directory.Exists(path_leveldb)) Directory.Delete(path_leveldb, true);
+            if (Directory.Exists(path_rocksdb)) Directory.Delete(path_rocksdb, true);
+        }
+
+        [TestMethod]
+        public void TestMemory()
+        {
+            using var store = new MemoryStore();
+            TestPersistenceDelete(store);
+            // Test all with the same store
+
+            TestStorage(store);
+
+            // Test with different storages
+
+            TestPersistenceWrite(store);
+            TestPersistenceRead(store, true);
+            TestPersistenceDelete(store);
+            TestPersistenceRead(store, false);
+        }
 
         [TestMethod]
         public void TestLevelDb()
@@ -74,13 +99,13 @@ namespace Neo.Plugins.Storage.Tests
                 Assert.IsNull(ret);
                 Assert.IsFalse(store.Contains(key1));
 
-                // Test seek
+                // Test seek in order
 
+                store.Put(new byte[] { 0x00, 0x00, 0x04 }, new byte[] { 0x04 });
                 store.Put(new byte[] { 0x00, 0x00, 0x00 }, new byte[] { 0x00 });
                 store.Put(new byte[] { 0x00, 0x00, 0x01 }, new byte[] { 0x01 });
                 store.Put(new byte[] { 0x00, 0x00, 0x02 }, new byte[] { 0x02 });
                 store.Put(new byte[] { 0x00, 0x00, 0x03 }, new byte[] { 0x03 });
-                store.Put(new byte[] { 0x00, 0x00, 0x04 }, new byte[] { 0x04 });
 
                 // Seek Forward
 
@@ -90,6 +115,8 @@ namespace Neo.Plugins.Storage.Tests
                 CollectionAssert.AreEqual(new byte[] { 0x02 }, entries[0].Value);
                 CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x03 }, entries[1].Key);
                 CollectionAssert.AreEqual(new byte[] { 0x03 }, entries[1].Value);
+                CollectionAssert.AreEqual(new byte[] { 0x00, 0x00, 0x04 }, entries[2].Key);
+                CollectionAssert.AreEqual(new byte[] { 0x04 }, entries[2].Value);
 
                 // Seek Backward
 

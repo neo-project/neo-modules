@@ -45,6 +45,7 @@ namespace Neo.Plugins
         public string[] DisabledMethods { get; init; }
         public bool SessionEnabled { get; init; }
         public TimeSpan SessionExpirationTime { get; init; }
+        public int FindStoragePageSize { get; init; }
 
         public static RpcServerSettings Default { get; } = new RpcServerSettings
         {
@@ -60,7 +61,8 @@ namespace Neo.Plugins
             DisabledMethods = Array.Empty<string>(),
             MaxConcurrentConnections = 40,
             SessionEnabled = false,
-            SessionExpirationTime = TimeSpan.FromSeconds(60)
+            SessionExpirationTime = TimeSpan.FromSeconds(60),
+            FindStoragePageSize = 50
         };
 
         public static RpcServerSettings Load(IConfigurationSection section) => new()
@@ -80,7 +82,8 @@ namespace Neo.Plugins
             DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray(),
             MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", Default.MaxConcurrentConnections),
             SessionEnabled = section.GetValue("SessionEnabled", Default.SessionEnabled),
-            SessionExpirationTime = TimeSpan.FromSeconds(section.GetValue("SessionExpirationTime", (int)Default.SessionExpirationTime.TotalSeconds))
+            SessionExpirationTime = TimeSpan.FromSeconds(section.GetValue("SessionExpirationTime", (int)Default.SessionExpirationTime.TotalSeconds)),
+            FindStoragePageSize = section.GetValue("FindStoragePageSize", Default.FindStoragePageSize)
         };
     }
 }
