@@ -23,7 +23,7 @@ public class BlockSubscription : Subscription
     public override Subscription FromJson(JObject json)
     {
         Height = (ulong)json["height"]!.GetInt32();
-        Filter = new TxFilter().FromJson((JObject)json["filter"]! ?? throw new InvalidOperationException());
+        Filter = new BlockFilter().FromJson((JObject)json["filter"]! ?? throw new InvalidOperationException());
         WssEvent = WssEventId.BlockEventId;
         return this;
     }

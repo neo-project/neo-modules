@@ -19,10 +19,6 @@ public class WebSocketServerPlugin : Plugin
     private static WebSocketSharp.Server.WebSocketServer _server;
     private NeoSystem _system;
 
-    // var manager = new WeakReferenceManager<ExecutionSubscription>();
-    // var subscription = new ExecutionSubscription();
-    // manager.Add(subscription);
-
     private static readonly SubscriptionManager<BlockSubscription> RefBlockSubscriptions = new();
     private static readonly SubscriptionManager<TxSubscription> RefTxSubscriptions = new();
     private static readonly SubscriptionManager<NotificationSubscription> RefNotificationSubscriptions = new();

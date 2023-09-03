@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Neo.Json;
 using WebSocketSharp;
@@ -53,32 +54,37 @@ public class WebSocketSubscriber : WebSocketBehavior
     protected override void OnMessage(MessageEventArgs e)
     {
         var request = JToken.Parse(e.Data);
-        if (request is JObject json) return;
-
+        ProcessRequestAsync((JObject)request).Wait();
     }
 
     private void OnBlockEvent(WebSocketEvent @event)
     {
-        var blockEvent = (BlockEvent)@event;
-        throw new NotImplementedException();
+        if (_blockSubscriptions.Any(p => p.Value.Matches(@event.Data, WssEventId.BlockEventId)))
+            NotifySubscriber(CreateEventNotify(WssEventId.BlockEventId, @event.Data));
+    }
+
+    private void OnNotificationEvent(WebSocketEvent @event)
+    {
+        var notifications = (JArray)(JToken)@event.Data;
+        foreach (var notification in notifications)
+        {
+            if (_notificationSubscriptions.Any(p => p.Value.Matches((JObject)notification, WssEventId.NotificationEventId)))
+            {
+                NotifySubscriber(CreateEventNotify(WssEventId.NotificationEventId, notification));
+            }
+        }
+    }
+    private void OnTransactionEvent(WebSocketEvent @event)
+    {
+        if (_txSubscriptions.Any(p => p.Value.Matches(@event.Data, WssEventId.TransactionEventId)))
+            NotifySubscriber(CreateEventNotify(WssEventId.TransactionEventId, @event.Data));
     }
 
     private void OnExecutionEvent(WebSocketEvent @event)
     {
-        var executionEvent = (ExecutionEvent)@event;
-        throw new NotImplementedException();
+        if (_executionSubscriptions.Any(p => p.Value.Matches(@event.Data, WssEventId.ExecutionEventId)))
+            NotifySubscriber(CreateEventNotify(WssEventId.ExecutionEventId, @event.Data));
     }
-    private void OnNotificationEvent(WebSocketEvent @event)
-    {
-        var notificationEvent = (NotificationEvent)@event;
-        throw new NotImplementedException();
-    }
-    private void OnTransactionEvent(WebSocketEvent @event)
-    {
-        var txEvent = (TxEvent)@event;
-        throw new NotImplementedException();
-    }
-
     private JToken Subscribe(JObject @params)
     {
         if (_subscriptions.Count >= MaxSubscriptions)
@@ -131,7 +137,8 @@ public class WebSocketSubscriber : WebSocketBehavior
             case WssEventId.InvalidEventId:
                 break;
             case WssEventId.BlockEventId:
-                _blockSubscriptions.TryRemove(subscriptionId, out BlockSubscription blockSubscription);
+                if (!_blockSubscriptions.TryRemove(subscriptionId, out BlockSubscription blockSubscription))
+                    return false;
                 break;
             case WssEventId.TransactionEventId:
                 _txSubscriptions.TryRemove(subscriptionId, out TxSubscription txSubscription);
@@ -146,9 +153,6 @@ public class WebSocketSubscriber : WebSocketBehavior
             default:
                 throw new ArgumentOutOfRangeException();
         }
-
-        // _subscriptions.Add(new WeakReference(subscription));
-        return subscriptionId;
 
         return true;
     }
@@ -172,15 +176,26 @@ public class WebSocketSubscriber : WebSocketBehavior
             ["id"] = id
         };
     }
-
-    private async Task<JObject> ProcessRequestAsync(JObject request)
+    private static JObject CreateEventNotify(WssEventId eventId, JToken @params)
     {
-        if (!request.ContainsProperty("id")) return null;
+        return new JObject
+        {
+            ["jsonrpc"] = "2.0",
+            ["method"] = eventId.ToMethod(),
+            ["params"] = @params
+        };
+    }
+
+    private async Task ProcessRequestAsync(JObject request)
+    {
+        if (!request.ContainsProperty("id")) return;
         JToken @params = request["params"] ?? new JArray();
         if (!request.ContainsProperty("method") || @params is not JArray)
         {
-            return CreateErrorResponse(request["id"], -32600, "Invalid Request");
+            var res = CreateErrorResponse(request["id"], -32600, "Invalid Request");
+            NotifySubscriber(res);
         }
+
         var response = CreateResponse(request["id"]);
         try
         {
@@ -193,29 +208,35 @@ public class WebSocketSubscriber : WebSocketBehavior
                 Task<JToken> task => await task,
                 _ => throw new NotSupportedException()
             };
-            return response;
+
+            NotifySubscriber(response);
         }
+
         catch (FormatException)
         {
-            return CreateErrorResponse(request["id"], -32602, "Invalid params");
+            var res = CreateErrorResponse(request["id"], -32602, "Invalid params");
+            NotifySubscriber(res);
         }
         catch (IndexOutOfRangeException)
         {
-            return CreateErrorResponse(request["id"], -32602, "Invalid params");
+            var res = CreateErrorResponse(request["id"], -32602, "Invalid params");
+            NotifySubscriber(res);
         }
         catch (Exception ex)
         {
 #if DEBUG
-            return CreateErrorResponse(request["id"], ex.HResult, ex.Message, ex.StackTrace);
+            var res CreateErrorResponse(request["id"], ex.HResult, ex.Message, ex.StackTrace);
+            NotifySubscriber(res);
 #else
-            return CreateErrorResponse(request["id"], ex.HResult, ex.Message);
+            var res =  CreateErrorResponse(request["id"], ex.HResult, ex.Message);
+            NotifySubscriber(res);
 #endif
         }
 
     }
-    private void Response()
+    private void NotifySubscriber(JObject response)
     {
-        SendAsync("xxx", completed =>
+        SendAsync(response.ToString(), completed =>
         {
             if (completed)
                 Console.WriteLine("Completed sending message.");

@@ -1,21 +1,20 @@
 #nullable enable
-using Neo.Network.P2P.Payloads;
 namespace Neo.Plugins.WebSocketServer.Filters;
 
-public abstract class BlockFilter
+public class BlockFilter
 {
     public int? Primary { get; set; }
     public uint? Since { get; set; }
     public uint? Till { get; set; }
 }
 
-public abstract class TxFilter
+public class TxFilter
 {
     public UInt160? Sender { get; set; }
     public UInt160? Signer { get; set; }
 }
 
-public abstract class NotificationFilter
+public class NotificationFilter
 {
 
     public UInt160? Contract { get; set; }
@@ -23,7 +22,7 @@ public abstract class NotificationFilter
 
 }
 
-public abstract class ExecutionFilter
+public class ExecutionFilter
 {
     public string? State { get; set; }
     public UInt256? Container { get; set; }
