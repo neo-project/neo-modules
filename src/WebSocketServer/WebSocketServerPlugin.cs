@@ -1,12 +1,13 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
 using Neo.ConsoleService;
-using Newtonsoft.Json.Linq;
+using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
-using Neo.Plugins.WebSocketServer.Behaviors;
+using Neo.Persistence;
 
 namespace Neo.Plugins.WebSocketServer;
 
@@ -16,12 +17,22 @@ public class WebSocketServerPlugin : Plugin
     public override string Description => "Enables WebSocket notifications for the node";
 
     private Settings _settings;
-    private static readonly Dictionary<Guid, BlockWebSocketBehavior> Handlers = new();
     private static WebSocketSharp.Server.WebSocketServer _server;
     private NeoSystem _system;
 
+    private static readonly ConcurrentBag<WeakReference<BlockSubscription>> RefBlockSubscriptions = new();
+    private static readonly ConcurrentBag<WeakReference<TxSubscription>> RefTxSubscriptions = new();
+    private static readonly ConcurrentBag<WeakReference<NotificationSubscription>> RefNotificationSubscriptions = new();
+    private static readonly ConcurrentBag<WeakReference<ExecutionSubscription>> RefExecutionSubscriptions = new();
+
+    public static event Handler.WebSocketEventHandler BlockEvent;
+    public static event Handler.WebSocketEventHandler TransactionEvent;
+    public static event Handler.WebSocketEventHandler NotificationEvent;
+    public static event Handler.WebSocketEventHandler ExecutionEvent;
+
     public WebSocketServerPlugin()
     {
+        Blockchain.Committing += OnCommitting;
         Blockchain.Committed += OnCommitted;
     }
 
@@ -37,6 +48,7 @@ public class WebSocketServerPlugin : Plugin
 
     public override void Dispose()
     {
+        Blockchain.Committing -= OnCommitting;
         Blockchain.Committed -= OnCommitted;
         _server?.Stop();
         base.Dispose();
@@ -56,7 +68,7 @@ public class WebSocketServerPlugin : Plugin
         {
             _server.SslConfiguration.ServerCertificate = new System.Security.Cryptography.X509Certificates.X509Certificate2(s.SslCert, s.SslCertPassword);
         }
-        _server.AddWebSocketService<BlockWebSocketBehavior>("/block", () => new BlockWebSocketBehavior());
+        _server.AddWebSocketService("/", () => new WebSocketSubscriber());
         _server.Start();
     }
 
@@ -67,38 +79,98 @@ public class WebSocketServerPlugin : Plugin
         ConsoleHelper.Info("Web Socket Server closed");
     }
 
-    private static async void OnCommitted(NeoSystem system, Block block)
+    private void OnCommitting(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
     {
-        using var snapshot = system.GetSnapshot();
-        var blockJson = JObject.FromObject(block);
-        await SendMessageToClients(blockJson.ToString());
-    }
+        if (system.Settings.Network != ProtocolSettings.Default.Network) return;
 
-    private static async Task SendMessageToClients(string message)
-    {
-        var sendTasks = new List<Task>();
+        if (!RefBlockSubscriptions.IsEmpty)
+            NotifySubscribers(EventId.BlockEventId, LogReader.BlockLogToJson(block, applicationExecutedList));
 
-        lock (Handlers)
+        //processing log for transactions
+        foreach (var appExec in applicationExecutedList.Where(p => p.Transaction != null))
         {
-            sendTasks.AddRange(Handlers.Values.Select(handler => handler.SendPersistedBlockMessage(message)));
-        }
-
-        await Task.WhenAll(sendTasks);
-    }
-
-    public static void AddClient(Guid clientId, BlockWebSocketBehavior client)
-    {
-        lock (Handlers)
-        {
-            Handlers[clientId] = client;
+            if (!RefTxSubscriptions.IsEmpty)
+                NotifySubscribers(EventId.TransactionEventId, appExec.Transaction.ToJson(ProtocolSettings.Default));
+            if (!RefNotificationSubscriptions.IsEmpty)
+                NotifySubscribers(EventId.ExecutionEventId, LogReader.TxLogToJson(appExec));
+            if (!RefExecutionSubscriptions.IsEmpty)
+                NotifySubscribers(EventId.NotificationEventId, LogReader.TxLogToJson(appExec));
         }
     }
 
-    public static void RemoveClient(Guid clientId)
+
+    private static void OnCommitted(NeoSystem system, Block block)
     {
-        lock (Handlers)
+    }
+
+    private static void NotifySubscribers(EventId eventId, JObject jObject)
+    {
+        switch (eventId)
         {
-            Handlers.Remove(clientId);
+            case EventId.BlockEventId:
+                if (RefBlockSubscriptions.IsEmpty) return;
+                var blockEvent = new BlockEvent
+                {
+                    Data = jObject,
+                    Height = jObject["index"].GetInt32()
+                };
+                BlockEvent(EventId.BlockEventId, blockEvent);
+                break;
+            case EventId.TransactionEventId:
+                if (RefTxSubscriptions.IsEmpty) return;
+                var txEvent = new TxEvent()
+                {
+                    Data = jObject,
+                    Container = UInt256.Parse(jObject["txid"].AsString())
+                };
+                BlockEvent(EventId.TransactionEventId, txEvent);
+                break;
+            case EventId.NotificationEventId:
+                if (RefNotificationSubscriptions.IsEmpty) return;
+                var notificationEvent = new NotificationEvent()
+                {
+                    Contract = UInt160.Parse(jObject["contract"].AsString()),
+                    Data = jObject,
+                };
+                BlockEvent(EventId.NotificationEventId, notificationEvent);
+                break;
+            case EventId.ExecutionEventId:
+                if (RefExecutionSubscriptions.IsEmpty) return;
+                var executionEvent = new ExecutionEvent
+                {
+                    Container = UInt256.Parse(jObject["txid"]
+                        .AsString()),
+                    Data = jObject,
+                    VmState = jObject["executions"]["vmstate"].AsString(),
+                };
+                BlockEvent(EventId.ExecutionEventId, executionEvent);
+                break;
+            case EventId.InvalidEventId:
+                break;
+            case EventId.MissedEventId:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(eventId), eventId, null);
         }
+    }
+
+    public static void AddBlockSubscription(BlockSubscription subscription)
+    {
+        RefBlockSubscriptions.Add(new WeakReference<BlockSubscription>(subscription));
+    }
+
+    public static void AddTransactionSubscription(TxSubscription subscription)
+    {
+        RefTxSubscriptions.Add(new WeakReference<TxSubscription>(subscription));
+    }
+
+    public static void AddNotificationSubscription(NotificationSubscription subscription)
+    {
+        RefNotificationSubscriptions.Add(new WeakReference<NotificationSubscription>(subscription));
+    }
+
+    public static void AddExecutionSubscription(ExecutionSubscription subscription)
+    {
+        RefExecutionSubscriptions.Add(new WeakReference<ExecutionSubscription>(subscription));
     }
 }
