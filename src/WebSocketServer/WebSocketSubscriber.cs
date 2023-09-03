@@ -137,17 +137,20 @@ public class WebSocketSubscriber : WebSocketBehavior
             case WssEventId.InvalidEventId:
                 break;
             case WssEventId.BlockEventId:
-                if (!_blockSubscriptions.TryRemove(subscriptionId, out BlockSubscription blockSubscription))
+                if (!_blockSubscriptions.TryRemove(subscriptionId, out var blockSubscription))
                     return false;
                 break;
             case WssEventId.TransactionEventId:
-                _txSubscriptions.TryRemove(subscriptionId, out TxSubscription txSubscription);
+                if (!_txSubscriptions.TryRemove(subscriptionId, out var txSubscription))
+                    return false;
                 break;
             case WssEventId.NotificationEventId:
-                _notificationSubscriptions.TryRemove(subscriptionId, out NotificationSubscription notificationSubscription);
+                if (!_notificationSubscriptions.TryRemove(subscriptionId, out var notificationSubscription))
+                    return false;
                 break;
             case WssEventId.ExecutionEventId:
-                _executionSubscriptions.TryRemove(subscriptionId, out ExecutionSubscription executionSubscription);
+                if (!_executionSubscriptions.TryRemove(subscriptionId, out var executionSubscription))
+                    return false;
                 break;
             case WssEventId.MissedEventId:
             default:
