@@ -32,7 +32,7 @@ namespace Neo.Plugins.WebSocketServer
         }
 
         // Convert string to its corresponding event ID
-        public static WssEventId ParseEventId(this string s)
+        public static WssEventId FromMethod(this string s)
         {
             return s switch
             {

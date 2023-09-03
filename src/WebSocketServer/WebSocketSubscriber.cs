@@ -99,7 +99,7 @@ public class WebSocketSubscriber : WebSocketBehavior
             throw new Network.RPC.RpcException(-100, "Max subscriptions reached");
         }
 
-        var eventId = @params["eventid"]!.AsString().ParseEventId();
+        var eventId = @params["eventid"]!.AsString().FromMethod();
         Subscription subscription = null;
         var subscriptionId = Guid.NewGuid().ToString();
         switch (eventId)
@@ -137,7 +137,7 @@ public class WebSocketSubscriber : WebSocketBehavior
 
     private JToken UnSubscribe(JObject @params)
     {
-        var eventId = @params["eventid"]!.AsString().ParseEventId();
+        var eventId = @params["eventid"]!.AsString().FromMethod();
         var subscriptionId = @params["subscriptionid"]!.AsString();
         switch (eventId)
         {
