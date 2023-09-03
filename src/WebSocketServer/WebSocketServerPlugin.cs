@@ -13,7 +13,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Neo.ConsoleService;
-using Neo.IO;
 using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
@@ -29,9 +28,9 @@ namespace Neo.Plugins.WebSocketServer
         public override string Name => "NeoWebSocketServer";
         public override string Description => "Enables WebSocket notifications for the node";
 
-        private const string INDEX_KEY = "index";
-        private const string TXID_KEY = "txid";
-        private const string EXECUTIONS_KEY = "executions";
+        private const string IndexKey = "index";
+        private const string TxIdKey = "txid";
+        private const string ExecutionsKey = "executions";
 
         private static Settings _settings;
         private static WebSocketSharp.Server.WebSocketServer _server;
@@ -130,7 +129,7 @@ namespace Neo.Plugins.WebSocketServer
 
         public static void RemoveSubscriber(string subscriberId)
         {
-            _subscribers.TryRemove(subscriberId, out var subscriber);
+            _subscribers.TryRemove(subscriberId, out _);
         }
 
         private static void NotifyBlockEvent(JObject jObject)
@@ -139,7 +138,7 @@ namespace Neo.Plugins.WebSocketServer
             {
                 WssEvent = WssEventId.BlockEventId,
                 Data = jObject,
-                Height = jObject[INDEX_KEY]!.GetInt32()
+                Height = jObject[IndexKey]!.GetInt32()
             };
             BlockEvent?.Invoke(blockEvent);
         }
@@ -150,7 +149,7 @@ namespace Neo.Plugins.WebSocketServer
             {
                 WssEvent = WssEventId.TransactionEventId,
                 Data = jObject,
-                Container = UInt256.Parse(jObject[TXID_KEY]?.AsString())
+                Container = UInt256.Parse(jObject[TxIdKey]?.AsString())
             };
             TransactionEvent?.Invoke(transactionEvent);
         }
@@ -160,8 +159,8 @@ namespace Neo.Plugins.WebSocketServer
             var notificationEvent = new NotificationEvent
             {
                 WssEvent = WssEventId.NotificationEventId,
-                Contract = UInt160.Parse(jObject[EXECUTIONS_KEY]?["contract"]?.AsString()),
-                Data = (JObject)jObject[EXECUTIONS_KEY]?["notifications"],
+                Contract = UInt160.Parse(jObject[ExecutionsKey]?["contract"]?.AsString()),
+                Data = (JObject)jObject[ExecutionsKey]?["notifications"],
             };
             NotificationEvent?.Invoke(notificationEvent);
         }
@@ -171,9 +170,9 @@ namespace Neo.Plugins.WebSocketServer
             var executionEvent = new ExecutionEvent
             {
                 WssEvent = WssEventId.ExecutionEventId,
-                Container = UInt256.Parse(jObject[TXID_KEY]?.AsString()),
+                Container = UInt256.Parse(jObject[TxIdKey]?.AsString()),
                 Data = jObject,
-                VmState = jObject[EXECUTIONS_KEY]?["vmstate"]?.AsString(),
+                VmState = jObject[ExecutionsKey]?["vmstate"]?.AsString(),
             };
             ExecutionEvent?.Invoke(executionEvent);
         }
@@ -198,17 +197,21 @@ namespace Neo.Plugins.WebSocketServer
             RefExecutionSubscriptions.Add(subscription);
         }
 
-        public static JObject TxLogToJson(Blockchain.ApplicationExecuted appExec)
+        private static JObject TxLogToJson(Blockchain.ApplicationExecuted appExec)
         {
             global::System.Diagnostics.Debug.Assert(appExec.Transaction != null);
 
-            var txJson = new JObject();
-            txJson["txid"] = appExec.Transaction.Hash.ToString();
-            JObject trigger = new JObject();
-            trigger["trigger"] = appExec.Trigger;
-            trigger["vmstate"] = appExec.VMState;
-            trigger["exception"] = appExec.Exception?.GetBaseException().Message;
-            trigger["gasconsumed"] = appExec.GasConsumed.ToString();
+            var txJson = new JObject
+            {
+                ["txid"] = appExec.Transaction.Hash.ToString()
+            };
+            var trigger = new JObject
+            {
+                ["trigger"] = appExec.Trigger,
+                ["vmstate"] = appExec.VMState,
+                ["exception"] = appExec.Exception?.GetBaseException().Message,
+                ["gasconsumed"] = appExec.GasConsumed.ToString()
+            };
             try
             {
                 trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.MaxStackSize)).ToArray();
@@ -219,9 +222,11 @@ namespace Neo.Plugins.WebSocketServer
             }
             trigger["notifications"] = appExec.Notifications.Select(q =>
             {
-                JObject notification = new JObject();
-                notification["contract"] = q.ScriptHash.ToString();
-                notification["eventname"] = q.EventName;
+                var notification = new JObject
+                {
+                    ["contract"] = q.ScriptHash.ToString(),
+                    ["eventname"] = q.EventName
+                };
                 try
                 {
                     notification["state"] = q.State.ToJson();
@@ -237,50 +242,52 @@ namespace Neo.Plugins.WebSocketServer
             return txJson;
         }
 
-        public static JObject BlockLogToJson(Block block, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        private static JObject BlockLogToJson(Block block, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
         {
             var blocks = applicationExecutedList.Where(p => p.Transaction is null).ToArray();
-            if (blocks.Length > 0)
+            if (blocks.Length <= 0) return null;
+            var blockJson = new JObject
             {
-                var blockJson = new JObject();
-                var blockHash = block.Hash.ToArray();
-                blockJson["blockhash"] = block.Hash.ToString();
-                var triggerList = new List<JObject>();
-                foreach (var appExec in blocks)
+                ["blockhash"] = block.Hash.ToString()
+            };
+            var triggerList = new List<JObject>();
+            foreach (var appExec in blocks)
+            {
+                var trigger = new JObject
                 {
-                    JObject trigger = new JObject();
-                    trigger["trigger"] = appExec.Trigger;
-                    trigger["vmstate"] = appExec.VMState;
-                    trigger["gasconsumed"] = appExec.GasConsumed.ToString();
+                    ["trigger"] = appExec.Trigger,
+                    ["vmstate"] = appExec.VMState,
+                    ["gasconsumed"] = appExec.GasConsumed.ToString()
+                };
+                try
+                {
+                    trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.MaxStackSize)).ToArray();
+                }
+                catch (Exception ex)
+                {
+                    trigger["exception"] = ex.Message;
+                }
+                trigger["notifications"] = appExec.Notifications.Select(q =>
+                {
+                    JObject notification = new JObject
+                    {
+                        ["contract"] = q.ScriptHash.ToString(),
+                        ["eventname"] = q.EventName
+                    };
                     try
                     {
-                        trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.MaxStackSize)).ToArray();
+                        notification["state"] = q.State.ToJson();
                     }
-                    catch (Exception ex)
+                    catch (InvalidOperationException)
                     {
-                        trigger["exception"] = ex.Message;
+                        notification["state"] = "error: recursive reference";
                     }
-                    trigger["notifications"] = appExec.Notifications.Select(q =>
-                    {
-                        JObject notification = new JObject();
-                        notification["contract"] = q.ScriptHash.ToString();
-                        notification["eventname"] = q.EventName;
-                        try
-                        {
-                            notification["state"] = q.State.ToJson();
-                        }
-                        catch (InvalidOperationException)
-                        {
-                            notification["state"] = "error: recursive reference";
-                        }
-                        return notification;
-                    }).ToArray();
-                    triggerList.Add(trigger);
-                }
-                blockJson["executions"] = triggerList.ToArray();
-                return blockJson;
+                    return notification;
+                }).ToArray();
+                triggerList.Add(trigger);
             }
-            return null;
+            blockJson["executions"] = triggerList.ToArray();
+            return blockJson;
         }
     }
 }
