@@ -8,13 +8,17 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System;
-namespace Neo.Plugins.WebSocketServer;
+using Neo.Json;
+using Neo.Plugins.WebSocketServer.Events;
+using Neo.Plugins.WebSocketServer.Filters;
+namespace Neo.Plugins.WebSocketServer.Subscriptions;
 
-public class WssException : Exception
+public class NotificationSubscription : Subscription
 {
-    public WssException(int code, string message) : base(message)
+    public override Subscription FromJson(JObject json)
     {
-        HResult = code;
+        Filter = CreateFilterFromJson<NotificationFilter>(json);
+        WssEvent = WssEventId.NotificationEventId;
+        return this;
     }
 }

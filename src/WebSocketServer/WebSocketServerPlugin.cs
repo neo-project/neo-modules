@@ -1,3 +1,13 @@
+// Copyright (C) 2015-2023 The Neo Project.
+//
+// The Neo.Network.RPC is free software distributed under the MIT software license,
+// see the accompanying file LICENSE in the main directory of the
+// project or http://www.opensource.org/licenses/mit-license.php
+// for more details.
+//
+// Redistribution and use in source and binary forms with or without
+// modifications are permitted.
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -8,6 +18,8 @@ using Neo.Json;
 using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
 using Neo.Persistence;
+using Neo.Plugins.WebSocketServer.Events;
+using Neo.Plugins.WebSocketServer.Subscriptions;
 using Neo.VM;
 
 namespace Neo.Plugins.WebSocketServer
@@ -25,7 +37,7 @@ namespace Neo.Plugins.WebSocketServer
         private static WebSocketSharp.Server.WebSocketServer _server;
         private NeoSystem _system;
 
-        private static readonly ConcurrentDictionary<string, WebSocketSubscriber> _subscribers = new();
+        private static readonly ConcurrentDictionary<string, Subscriber.WebSocketSubscriber> _subscribers = new();
 
         private static readonly SubscriptionManager<BlockSubscription> RefBlockSubscriptions = new();
         private static readonly SubscriptionManager<TxSubscription> RefTxSubscriptions = new();
@@ -68,7 +80,7 @@ namespace Neo.Plugins.WebSocketServer
             if (serverConfig == null) return;
 
             InitializeWebSocketServer(serverConfig);
-            _server.AddWebSocketService("/", () => new WebSocketSubscriber());
+            _server.AddWebSocketService("/", () => new Subscriber.WebSocketSubscriber());
             _server.Start();
         }
 
@@ -108,7 +120,7 @@ namespace Neo.Plugins.WebSocketServer
             }
         }
 
-        public static bool AddSubscriber(string subscriberId, WebSocketSubscriber subscriber)
+        public static bool AddSubscriber(string subscriberId, Subscriber.WebSocketSubscriber subscriber)
         {
             if (_subscribers.Count <= _settings.Servers.FirstOrDefault(p => p != null)!.MaxConcurrentConnections) return _subscribers.TryAdd(subscriberId, subscriber);
             ConsoleHelper.Error("Max concurrent connections reached");
@@ -134,13 +146,13 @@ namespace Neo.Plugins.WebSocketServer
 
         private static void NotifyTransactionEvent(JObject jObject)
         {
-            var txEvent = new TxEvent
+            var transactionEvent = new TransactionEvent
             {
                 WssEvent = WssEventId.TransactionEventId,
                 Data = jObject,
                 Container = UInt256.Parse(jObject[TXID_KEY]?.AsString())
             };
-            TransactionEvent?.Invoke(txEvent);
+            TransactionEvent?.Invoke(transactionEvent);
         }
 
         private static void NotifyNotificationEvent(JObject jObject)
@@ -268,9 +280,7 @@ namespace Neo.Plugins.WebSocketServer
                 blockJson["executions"] = triggerList.ToArray();
                 return blockJson;
             }
-
             return null;
         }
-
     }
 }

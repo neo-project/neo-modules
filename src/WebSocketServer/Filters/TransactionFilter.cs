@@ -8,19 +8,18 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-#nullable enable
 using Neo.Json;
 namespace Neo.Plugins.WebSocketServer.Filters;
 
-public abstract class Filter
+public class TransactionFilter : Filter
 {
-    public abstract Filter FromJson(JObject json);
-}
+    public UInt160? Sender { get; set; }
+    public UInt160? Signer { get; set; }
 
-// public record BlockFilter(int? Primary, uint? Since, uint? Till);
-//
-// public record TransactionFilter(UInt160? Sender, UInt160? Signer);
-//
-// public record NotificationFilter(UInt160? Contract, string? Name);
-//
-// public record ExecutionFilter(string? State, UInt256? Container);
+    public override Filter FromJson(JObject json)
+    {
+        Sender = UInt160.Parse(json["sender"]?.GetString());
+        Signer = UInt160.Parse(json["signer"]?.GetString());
+        return this;
+    }
+}

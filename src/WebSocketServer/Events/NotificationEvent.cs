@@ -8,13 +8,10 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System;
-namespace Neo.Plugins.WebSocketServer;
+namespace Neo.Plugins.WebSocketServer.Events;
 
-public class WssException : Exception
+public class NotificationEvent : WebSocketEvent
 {
-    public WssException(int code, string message) : base(message)
-    {
-        HResult = code;
-    }
+    public UInt160 Contract { get; set; }
+    public string Name { get; set; }
 }
