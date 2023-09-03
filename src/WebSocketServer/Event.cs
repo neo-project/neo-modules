@@ -7,10 +7,10 @@ public static class EventUtils
 {
     public static bool Matches(IComparator f, IContainer r)
     {
-        if (f.EventID != r.EventID) return false;
-        switch (f.EventID)
+        if (f.WssEventId != r.WssEventId) return false;
+        switch (f.WssEventId)
         {
-            case EventId.BlockEventId:
+            case WssEventId.BlockEventId:
                 {
                     var blockFilter = (BlockFilter)f.Filter;
                     var block = (Block)r.EventPayload;
@@ -19,7 +19,7 @@ public static class EventUtils
                     var tillOk = blockFilter.Till == null || block.Index <= blockFilter.Till;
                     return primaryOk && sinceOk && tillOk;
                 }
-            case EventId.TransactionEventId:
+            case WssEventId.TransactionEventId:
                 {
                     var txFilter = (TxFilter)f.Filter;
                     var tx = (Transaction)r.EventPayload;
@@ -29,7 +29,7 @@ public static class EventUtils
                     signerOk = tx.Signers.Any(signer => signer.Account.Equals(txFilter.Signer));
                     return senderOk && signerOk;
                 }
-            case EventId.NotificationEventId:
+            case WssEventId.NotificationEventId:
                 {
                     var notificationFilter = (NotificationFilter)f.Filter;
                     var notification = (NotificationEvent)r.EventPayload;
@@ -37,7 +37,7 @@ public static class EventUtils
                     var nameOk = notificationFilter.Name == null || notification.Name.Equals(notificationFilter.Name);
                     return hashOk && nameOk;
                 }
-            case EventId.ExecutionEventId:
+            case WssEventId.ExecutionEventId:
                 {
                     var executionFilter = (ExecutionFilter)f.Filter;
                     var execResult = (ExecutionEvent)r.EventPayload;

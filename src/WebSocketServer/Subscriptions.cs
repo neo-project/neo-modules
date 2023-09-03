@@ -5,7 +5,7 @@ namespace Neo.Plugins.WebSocketServer;
 
 public abstract class Subscription
 {
-    public required EventId Event { get; set; }
+    public WssEventId WssEvent { get; set; }
 
     // Server assigns each subscription a unique ID
     public string? SubscriptionId { get; set; }
@@ -22,12 +22,10 @@ public class BlockSubscription : Subscription
 
     public override Subscription FromJson(JObject json)
     {
-        return new BlockSubscription
-        {
-            Height = (ulong)json["height"]!.GetInt32(),
-            Filter = new TxFilter().FromJson((JObject)json["filter"]! ?? throw new InvalidOperationException()),
-            Event = EventId.BlockEventId
-        };
+        Height = (ulong)json["height"]!.GetInt32();
+        Filter = new TxFilter().FromJson((JObject)json["filter"]! ?? throw new InvalidOperationException());
+        WssEvent = WssEventId.BlockEventId;
+        return this;
     }
 }
 
@@ -36,13 +34,10 @@ public class TxSubscription : Subscription
     public UInt256? TxId { get; set; }
     public override Subscription FromJson(JObject json)
     {
-        return new TxSubscription
-        {
-            TxId = UInt256.Parse(json["txid"]
-                ?.GetString()),
-            Filter = new TxFilter().FromJson((JObject)json["filter"]! ?? throw new InvalidOperationException()),
-            Event = EventId.TransactionEventId,
-        };
+        TxId = UInt256.Parse(json["txid"]?.GetString());
+        Filter = new TxFilter().FromJson((JObject)json["filter"]! ?? throw new InvalidOperationException());
+        WssEvent = WssEventId.TransactionEventId;
+        return this;
     }
 }
 
@@ -50,11 +45,9 @@ public class NotificationSubscription : Subscription
 {
     public override Subscription FromJson(JObject json)
     {
-        return new NotificationSubscription
-        {
-            Filter = new NotificationFilter().FromJson((JObject)json["filter"]! ?? throw new InvalidOperationException()),
-            Event = EventId.NotificationEventId,
-        };
+        Filter = new NotificationFilter().FromJson((JObject)json["filter"]! ?? throw new InvalidOperationException());
+        WssEvent = WssEventId.NotificationEventId;
+        return this;
     }
 }
 
@@ -64,13 +57,10 @@ public class ExecutionSubscription : Subscription
 
     public override Subscription FromJson(JObject json)
     {
-        return new ExecutionSubscription
-        {
-            TxId = UInt256.Parse(json["txid"]
-                ?.GetString()),
-            Filter = new ExecutionFilter().FromJson((JObject)json["filter"]! ?? throw new InvalidOperationException()),
-            Event = EventId.ExecutionEventId,
-        };
+        TxId = UInt256.Parse(json["txid"]?.GetString());
+        Filter = new ExecutionFilter().FromJson((JObject)json["filter"]! ?? throw new InvalidOperationException());
+        WssEvent = WssEventId.ExecutionEventId;
+        return this;
     }
 }
 
@@ -88,12 +78,10 @@ public class BlockFilter : Filter
 
     public override Filter FromJson(JObject json)
     {
-        return new BlockFilter
-        {
-            Primary = json["primary"]?.GetInt32(),
-            Since = (uint?)json["since"]?.GetInt32(),
-            Till = (uint?)json["till"]?.GetInt32()
-        };
+        Primary = json["primary"]?.GetInt32();
+        Since = (uint?)json["since"]?.GetInt32();
+        Till = (uint?)json["till"]?.GetInt32();
+        return this;
     }
 }
 
@@ -104,11 +92,9 @@ public class TxFilter : Filter
 
     public override Filter FromJson(JObject json)
     {
-        return new TxFilter
-        {
-            Sender = UInt160.Parse(json["sender"]?.GetString()),
-            Signer = UInt160.Parse(json["signer"]?.GetString()),
-        };
+        Sender = UInt160.Parse(json["sender"]?.GetString());
+        Signer = UInt160.Parse(json["signer"]?.GetString());
+        return this;
 
     }
 }
@@ -119,11 +105,9 @@ public class NotificationFilter : Filter
     public string? Name { get; set; }
     public override Filter FromJson(JObject json)
     {
-        return new NotificationFilter
-        {
-            Contract = UInt160.Parse(json["contract"]?.GetString()),
-            Name = json["name"]?.GetString()
-        };
+        Contract = UInt160.Parse(json["contract"]?.GetString());
+        Name = json["name"]?.GetString();
+        return this;
     }
 }
 
@@ -134,10 +118,8 @@ public class ExecutionFilter : Filter
 
     public override Filter FromJson(JObject json)
     {
-        return new ExecutionFilter
-        {
-            State = json["state"]?.GetString(),
-            Container = UInt256.Parse(json["container"]?.GetString())
-        };
+        State = json["state"]?.GetString();
+        Container = UInt256.Parse(json["container"]?.GetString());
+        return this;
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Neo.Json;
 using WebSocketSharp;
@@ -12,6 +13,8 @@ public class WebSocketSubscriber : WebSocketBehavior
     const int MaxSubscriptions = 16;
     const int NotificationBufSize = 1024;
     private string SubscriberId { get; set; }
+
+    private readonly Dictionary<string, Func<JObject, object>> _methods = new();
 
     private readonly ConcurrentDictionary<string, BlockSubscription> _blockSubscriptions = new();
     private readonly ConcurrentDictionary<string, TxSubscription> _txSubscriptions = new();
@@ -29,6 +32,9 @@ public class WebSocketSubscriber : WebSocketBehavior
         WebSocketServerPlugin.TransactionEvent += OnTransactionEvent;
         WebSocketServerPlugin.NotificationEvent += OnNotificationEvent;
         WebSocketServerPlugin.ExecutionEvent += OnExecutionEvent;
+
+        _methods.Add("subscribe", Subscribe);
+        _methods.Add("unsubscribe", UnSubscribe);
     }
 
     protected override void OnClose(CloseEventArgs e)
@@ -49,73 +55,107 @@ public class WebSocketSubscriber : WebSocketBehavior
         var request = JToken.Parse(e.Data);
         if (request is JObject json) return;
 
-        SendAsync("xxx", completed =>
-        {
-            if (completed)
-                Console.WriteLine("Completed sending message.");
-        });
     }
 
-    public void AddSubscription(Subscription subscription)
-    {
-        if (_subscriptions.Count >= MaxSubscriptions)
-        {
-            // handle size limit reached
-            throw new Network.RPC.RpcException(-100, "Max subscriptions reached");
-        }
-
-        subscription.SubscriptionId = Guid.NewGuid().ToString();
-
-        _subscriptions.Add(new WeakReference(subscription));
-
-        switch (subscription)
-        {
-            case BlockSubscription blockSubscription:
-                _blockSubscriptions.TryAdd(subscription.SubscriptionId, blockSubscription);
-                WebSocketServerPlugin.AddBlockSubscription(blockSubscription);
-                break;
-            case TxSubscription txSubscription:
-                _txSubscriptions.TryAdd(subscription.SubscriptionId, txSubscription);
-                WebSocketServerPlugin.AddTransactionSubscription(txSubscription);
-                break;
-            case NotificationSubscription notificationSubscription:
-                _notificationSubscriptions.TryAdd(subscription.SubscriptionId, notificationSubscription);
-                WebSocketServerPlugin.AddNotificationSubscription(notificationSubscription);
-                break;
-            case ExecutionSubscription executionSubscription:
-                _executionSubscriptions.TryAdd(subscription.SubscriptionId, executionSubscription);
-                WebSocketServerPlugin.AddExecutionSubscription(executionSubscription);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-    }
-
-    private void OnBlockEvent(EventId eventid, WebSocketEvent @event)
+    private void OnBlockEvent(WebSocketEvent @event)
     {
         var blockEvent = (BlockEvent)@event;
         throw new NotImplementedException();
     }
 
-    private void OnExecutionEvent(EventId eventid, WebSocketEvent @event)
+    private void OnExecutionEvent(WebSocketEvent @event)
     {
         var executionEvent = (ExecutionEvent)@event;
         throw new NotImplementedException();
     }
-    private void OnNotificationEvent(EventId eventid, WebSocketEvent @event)
+    private void OnNotificationEvent(WebSocketEvent @event)
     {
         var notificationEvent = (NotificationEvent)@event;
         throw new NotImplementedException();
     }
-    private void OnTransactionEvent(EventId eventid, WebSocketEvent @event)
+    private void OnTransactionEvent(WebSocketEvent @event)
     {
         var txEvent = (TxEvent)@event;
         throw new NotImplementedException();
     }
 
+    private JToken Subscribe(JObject @params)
+    {
+        if (_subscriptions.Count >= MaxSubscriptions)
+        {
+            throw new Network.RPC.RpcException(-100, "Max subscriptions reached");
+        }
+
+        var eventId = @params["eventid"]!.AsString().ParseEventId();
+        Subscription subscription = null;
+        var subscriptionId = Guid.NewGuid().ToString();
+        switch (eventId)
+        {
+            case WssEventId.InvalidEventId:
+                break;
+            case WssEventId.BlockEventId:
+                subscription = new BlockSubscription().FromJson(@params);
+                _blockSubscriptions.TryAdd(subscriptionId, (BlockSubscription)subscription);
+                WebSocketServerPlugin.AddBlockSubscription((BlockSubscription)subscription);
+                break;
+            case WssEventId.TransactionEventId:
+                subscription = new TxSubscription().FromJson(@params);
+                _txSubscriptions.TryAdd(subscriptionId, (TxSubscription)subscription);
+                WebSocketServerPlugin.AddTransactionSubscription((TxSubscription)subscription);
+                break;
+            case WssEventId.NotificationEventId:
+                subscription = new NotificationSubscription().FromJson(@params);
+                _notificationSubscriptions.TryAdd(subscriptionId, (NotificationSubscription)subscription);
+                WebSocketServerPlugin.AddNotificationSubscription((NotificationSubscription)subscription);
+                break;
+            case WssEventId.ExecutionEventId:
+                subscription = new ExecutionSubscription().FromJson(@params);
+                _executionSubscriptions.TryAdd(subscriptionId, (ExecutionSubscription)subscription);
+                WebSocketServerPlugin.AddExecutionSubscription((ExecutionSubscription)subscription);
+                break;
+            case WssEventId.MissedEventId:
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        _subscriptions.Add(new WeakReference(subscription));
+        return subscriptionId;
+    }
+
+    private JToken UnSubscribe(JObject @params)
+    {
+        var eventId = @params["eventid"]!.AsString().ParseEventId();
+        var subscriptionId = @params["subscriptionid"]!.AsString();
+        switch (eventId)
+        {
+            case WssEventId.InvalidEventId:
+                break;
+            case WssEventId.BlockEventId:
+                _blockSubscriptions.TryRemove(subscriptionId, out BlockSubscription blockSubscription);
+                break;
+            case WssEventId.TransactionEventId:
+                _txSubscriptions.TryRemove(subscriptionId, out TxSubscription txSubscription);
+                break;
+            case WssEventId.NotificationEventId:
+                _notificationSubscriptions.TryRemove(subscriptionId, out NotificationSubscription notificationSubscription);
+                break;
+            case WssEventId.ExecutionEventId:
+                _executionSubscriptions.TryRemove(subscriptionId, out ExecutionSubscription executionSubscription);
+                break;
+            case WssEventId.MissedEventId:
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        // _subscriptions.Add(new WeakReference(subscription));
+        return subscriptionId;
+
+        return true;
+    }
+
     private static JObject CreateErrorResponse(JToken id, int code, string message, JToken data = null)
     {
-        JObject response = CreateResponse(id);
+        var response = CreateResponse(id);
         response["error"] = new JObject();
         response["error"]["code"] = code;
         response["error"]["message"] = message;
@@ -126,10 +166,11 @@ public class WebSocketSubscriber : WebSocketBehavior
 
     private static JObject CreateResponse(JToken id)
     {
-        JObject response = new();
-        response["jsonrpc"] = "2.0";
-        response["id"] = id;
-        return response;
+        return new JObject
+        {
+            ["jsonrpc"] = "2.0",
+            ["id"] = id
+        };
     }
 
     private async Task<JObject> ProcessRequestAsync(JObject request)
@@ -140,11 +181,13 @@ public class WebSocketSubscriber : WebSocketBehavior
         {
             return CreateErrorResponse(request["id"], -32600, "Invalid Request");
         }
-        JObject response = CreateResponse(request["id"]);
+        var response = CreateResponse(request["id"]);
         try
         {
-            string method = request["method"].AsString();
-            response["result"] = func((JArray)@params) switch
+            var method = request["method"]?.AsString();
+            if (!_methods.TryGetValue(method ?? throw new InvalidOperationException(), out var func))
+                throw new RpcException(-32601, "Method not found");
+            response["result"] = func((JObject)@params) switch
             {
                 JToken result => result,
                 Task<JToken> task => await task,
@@ -163,10 +206,19 @@ public class WebSocketSubscriber : WebSocketBehavior
         catch (Exception ex)
         {
 #if DEBUG
-                return CreateErrorResponse(request["id"], ex.HResult, ex.Message, ex.StackTrace);
+            return CreateErrorResponse(request["id"], ex.HResult, ex.Message, ex.StackTrace);
 #else
             return CreateErrorResponse(request["id"], ex.HResult, ex.Message);
 #endif
         }
+
+    }
+    private void Response()
+    {
+        SendAsync("xxx", completed =>
+        {
+            if (completed)
+                Console.WriteLine("Completed sending message.");
+        });
     }
 }

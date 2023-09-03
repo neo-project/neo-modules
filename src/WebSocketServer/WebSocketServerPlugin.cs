@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using Neo.ConsoleService;
 using Neo.Json;
 using Neo.Ledger;
@@ -20,10 +19,14 @@ public class WebSocketServerPlugin : Plugin
     private static WebSocketSharp.Server.WebSocketServer _server;
     private NeoSystem _system;
 
-    private static readonly ConcurrentBag<WeakReference<BlockSubscription>> RefBlockSubscriptions = new();
-    private static readonly ConcurrentBag<WeakReference<TxSubscription>> RefTxSubscriptions = new();
-    private static readonly ConcurrentBag<WeakReference<NotificationSubscription>> RefNotificationSubscriptions = new();
-    private static readonly ConcurrentBag<WeakReference<ExecutionSubscription>> RefExecutionSubscriptions = new();
+    // var manager = new WeakReferenceManager<ExecutionSubscription>();
+    // var subscription = new ExecutionSubscription();
+    // manager.Add(subscription);
+
+    private static readonly SubscriptionManager<BlockSubscription> RefBlockSubscriptions = new();
+    private static readonly SubscriptionManager<TxSubscription> RefTxSubscriptions = new();
+    private static readonly SubscriptionManager<NotificationSubscription> RefNotificationSubscriptions = new();
+    private static readonly SubscriptionManager<ExecutionSubscription> RefExecutionSubscriptions = new();
 
     public static event Handler.WebSocketEventHandler BlockEvent;
     public static event Handler.WebSocketEventHandler TransactionEvent;
@@ -84,17 +87,17 @@ public class WebSocketServerPlugin : Plugin
         if (system.Settings.Network != ProtocolSettings.Default.Network) return;
 
         if (!RefBlockSubscriptions.IsEmpty)
-            NotifySubscribers(EventId.BlockEventId, LogReader.BlockLogToJson(block, applicationExecutedList));
+            NotifySubscribers(WssEventId.BlockEventId, LogReader.BlockLogToJson(block, applicationExecutedList));
 
         //processing log for transactions
         foreach (var appExec in applicationExecutedList.Where(p => p.Transaction != null))
         {
             if (!RefTxSubscriptions.IsEmpty)
-                NotifySubscribers(EventId.TransactionEventId, appExec.Transaction.ToJson(ProtocolSettings.Default));
+                NotifySubscribers(WssEventId.TransactionEventId, appExec.Transaction.ToJson(ProtocolSettings.Default));
             if (!RefNotificationSubscriptions.IsEmpty)
-                NotifySubscribers(EventId.ExecutionEventId, LogReader.TxLogToJson(appExec));
+                NotifySubscribers(WssEventId.ExecutionEventId, LogReader.TxLogToJson(appExec));
             if (!RefExecutionSubscriptions.IsEmpty)
-                NotifySubscribers(EventId.NotificationEventId, LogReader.TxLogToJson(appExec));
+                NotifySubscribers(WssEventId.NotificationEventId, LogReader.TxLogToJson(appExec));
         }
     }
 
@@ -103,74 +106,77 @@ public class WebSocketServerPlugin : Plugin
     {
     }
 
-    private static void NotifySubscribers(EventId eventId, JObject jObject)
+    private static void NotifySubscribers(WssEventId wssEventId, JObject jObject)
     {
-        switch (eventId)
+        switch (wssEventId)
         {
-            case EventId.BlockEventId:
+            case WssEventId.BlockEventId:
                 if (RefBlockSubscriptions.IsEmpty) return;
                 var blockEvent = new BlockEvent
                 {
+                    WssEvent = WssEventId.BlockEventId,
                     Data = jObject,
-                    Height = jObject["index"].GetInt32()
+                    Height = jObject["index"]!.GetInt32()
                 };
-                BlockEvent(EventId.BlockEventId, blockEvent);
+                BlockEvent?.Invoke(blockEvent);
                 break;
-            case EventId.TransactionEventId:
+            case WssEventId.TransactionEventId:
                 if (RefTxSubscriptions.IsEmpty) return;
                 var txEvent = new TxEvent()
                 {
+                    WssEvent = WssEventId.TransactionEventId,
                     Data = jObject,
-                    Container = UInt256.Parse(jObject["txid"].AsString())
+                    Container = UInt256.Parse(jObject["txid"]?.AsString())
                 };
-                BlockEvent(EventId.TransactionEventId, txEvent);
+                TransactionEvent?.Invoke(txEvent);
                 break;
-            case EventId.NotificationEventId:
+            case WssEventId.NotificationEventId:
                 if (RefNotificationSubscriptions.IsEmpty) return;
                 var notificationEvent = new NotificationEvent()
                 {
-                    Contract = UInt160.Parse(jObject["contract"].AsString()),
-                    Data = jObject,
+                    WssEvent = WssEventId.NotificationEventId,
+                    Contract = UInt160.Parse(jObject["executions"]?["contract"]?.AsString()),
+                    Data = (JObject)jObject["executions"]?["notifications"],
                 };
-                BlockEvent(EventId.NotificationEventId, notificationEvent);
+                NotificationEvent?.Invoke(notificationEvent);
                 break;
-            case EventId.ExecutionEventId:
+            case WssEventId.ExecutionEventId:
                 if (RefExecutionSubscriptions.IsEmpty) return;
                 var executionEvent = new ExecutionEvent
                 {
-                    Container = UInt256.Parse(jObject["txid"]
-                        .AsString()),
+                    WssEvent = WssEventId.ExecutionEventId,
+                    Container = UInt256.Parse(jObject["txid"]?.AsString()),
                     Data = jObject,
-                    VmState = jObject["executions"]["vmstate"].AsString(),
+                    VmState = jObject["executions"]?["vmstate"]?.AsString(),
                 };
-                BlockEvent(EventId.ExecutionEventId, executionEvent);
+                ExecutionEvent?.Invoke(executionEvent);
                 break;
-            case EventId.InvalidEventId:
+            case WssEventId.InvalidEventId:
                 break;
-            case EventId.MissedEventId:
+            case WssEventId.MissedEventId:
                 break;
             default:
-                throw new ArgumentOutOfRangeException(nameof(eventId), eventId, null);
+                throw new ArgumentOutOfRangeException(nameof(wssEventId), wssEventId, null);
         }
     }
 
     public static void AddBlockSubscription(BlockSubscription subscription)
     {
-        RefBlockSubscriptions.Add(new WeakReference<BlockSubscription>(subscription));
+        RefBlockSubscriptions.Add(subscription);
     }
 
     public static void AddTransactionSubscription(TxSubscription subscription)
     {
-        RefTxSubscriptions.Add(new WeakReference<TxSubscription>(subscription));
+        RefTxSubscriptions.Add(subscription);
     }
 
     public static void AddNotificationSubscription(NotificationSubscription subscription)
     {
-        RefNotificationSubscriptions.Add(new WeakReference<NotificationSubscription>(subscription));
+        RefNotificationSubscriptions.Add(subscription);
     }
 
     public static void AddExecutionSubscription(ExecutionSubscription subscription)
     {
-        RefExecutionSubscriptions.Add(new WeakReference<ExecutionSubscription>(subscription));
+        RefExecutionSubscriptions.Add(subscription);
     }
 }

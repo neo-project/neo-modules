@@ -1,10 +1,9 @@
 using System;
-using System.Text.Json;
 using Neo.Json;
 
 namespace Neo.Plugins.WebSocketServer;
 
-public enum EventId : byte
+public enum WssEventId : byte
 {
     InvalidEventId = 0,
     BlockEventId,
@@ -16,28 +15,28 @@ public enum EventId : byte
 
 public static class EventIdExtensions
 {
-    public static string ToString(this EventId e)
+    public static string ToString(this WssEventId e)
     {
         return e switch
         {
-            EventId.BlockEventId => "block_added",
-            EventId.TransactionEventId => "transaction_added",
-            EventId.NotificationEventId => "notification_from_execution",
-            EventId.ExecutionEventId => "transaction_executed",
-            EventId.MissedEventId => "event_missed",
+            WssEventId.BlockEventId => "block_added",
+            WssEventId.TransactionEventId => "transaction_added",
+            WssEventId.NotificationEventId => "notification_from_execution",
+            WssEventId.ExecutionEventId => "transaction_executed",
+            WssEventId.MissedEventId => "event_missed",
             _ => "unknown"
         };
     }
 
-    public static EventId Parse(this string s)
+    public static WssEventId ParseEventId(this string s)
     {
         return s switch
         {
-            "block_added" => EventId.BlockEventId,
-            "transaction_added" => EventId.TransactionEventId,
-            "notification_from_execution" => EventId.NotificationEventId,
-            "transaction_executed" => EventId.ExecutionEventId,
-            "event_missed" => EventId.MissedEventId,
+            "block_added" => WssEventId.BlockEventId,
+            "transaction_added" => WssEventId.TransactionEventId,
+            "notification_from_execution" => WssEventId.NotificationEventId,
+            "transaction_executed" => WssEventId.ExecutionEventId,
+            "event_missed" => WssEventId.MissedEventId,
             _ => throw new ArgumentException("Invalid event ID string"),
         };
     }
@@ -45,7 +44,7 @@ public static class EventIdExtensions
 
 public abstract class WebSocketEvent
 {
-    public EventId Event { get; set; }
+    public WssEventId WssEvent { get; set; }
     public JObject Data { get; set; }
 
 

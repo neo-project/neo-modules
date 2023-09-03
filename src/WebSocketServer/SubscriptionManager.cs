@@ -1,0 +1,34 @@
+using System;
+using System.Collections.Concurrent;
+namespace Neo.Plugins.WebSocketServer;
+
+public class SubscriptionManager<T> where T : class
+{
+    private readonly ConcurrentDictionary<T, WeakReference<T>> _references
+        = new();
+
+    public void Add(T target)
+    {
+        var weakReference = new WeakReference<T>(target);
+        _references.TryAdd(target, weakReference);
+    }
+
+    private void Cleanup()
+    {
+        foreach (var kvp in _references)
+        {
+            if (!kvp.Value.TryGetTarget(out var _))
+            {
+                _references.TryRemove(kvp.Key, out var _);
+            }
+        }
+    }
+    public bool IsEmpty
+    {
+        get
+        {
+            Cleanup();
+            return _references.IsEmpty;
+        }
+    }
+}

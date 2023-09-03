@@ -31,12 +31,12 @@ public abstract class ExecutionFilter
 }
 public interface IComparator
 {
-    EventId EventID { get; }
+    WssEventId WssEventId { get; }
     object Filter { get; }
 }
 
 public interface IContainer
 {
-    EventId EventID { get; }
+    WssEventId WssEventId { get; }
     object EventPayload { get; }
 }
