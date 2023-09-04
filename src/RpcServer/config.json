@@ -12,6 +12,8 @@
         "RpcPass": "",
         "EnableCors": false,
         "AllowOrigins": [],
+        "KeepAliveTimeout": 60,
+        "RequestHeadersTimeout": 15,
         "MaxGasInvoke": 20,
         "MaxFee": 0.1,
         "MaxConcurrentConnections": 40,
