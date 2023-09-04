@@ -9,9 +9,7 @@
 // modifications are permitted.
 
 using Microsoft.AspNetCore.Http;
-using System.Net.Http.Headers;
 using System.Reflection;
-using System.Text;
 
 namespace Neo.Plugins.RestServer.Middleware
 {
@@ -31,13 +29,6 @@ namespace Neo.Plugins.RestServer.Middleware
 
             SetServerInfomationHeader(response);
 
-            if (RestServerSettings.Current.EnableBasicAuthentication && CheckHttpBasicAuthentication(request) == false)
-            {
-                response.Headers.WWWAuthenticate = "Basic realm=\"Restricted\"";
-                response.StatusCode = StatusCodes.Status401Unauthorized;
-                return;
-            }
-
             await _next(context);
         }
 
@@ -47,28 +38,6 @@ namespace Neo.Plugins.RestServer.Middleware
             var restServerAsm = Assembly.GetExecutingAssembly().GetName();
 
             response.Headers.Server = $"{neoCliAsm.Name}/{neoCliAsm.Version.ToString(3)} {restServerAsm.Name}/{restServerAsm.Version.ToString(3)}";
-        }
-
-        public bool CheckHttpBasicAuthentication(HttpRequest request)
-        {
-            var authHeader = request.Headers.Authorization;
-            if (AuthenticationHeaderValue.TryParse(authHeader, out AuthenticationHeaderValue authValue))
-            {
-                if (authValue.Scheme.Equals("basic", StringComparison.OrdinalIgnoreCase) &&
-                    authValue.Parameter != null)
-                {
-                    try
-                    {
-                        var decodedParams = Encoding.UTF8.GetString(Convert.FromBase64String(authValue.Parameter));
-                        var creds = decodedParams.Split(':', 2);
-                        return (creds[0] == RestServerSettings.Current.RestUser && creds[1] == RestServerSettings.Current.RestPass);
-                    }
-                    catch (FormatException)
-                    {
-                    }
-                }
-            }
-            return false;
         }
     }
 }

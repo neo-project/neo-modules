@@ -10,6 +10,7 @@
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Neo.Plugins.RestServer.Binder;
 using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Helpers;
@@ -18,7 +19,6 @@ using Neo.Plugins.RestServer.Models.Error;
 using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
 using Neo.SmartContract.Native;
-using Newtonsoft.Json.Linq;
 using System.Net.Mime;
 
 namespace Neo.Plugins.RestServer.Controllers
@@ -179,7 +179,7 @@ namespace Neo.Plugins.RestServer.Controllers
         /// </summary>
         /// <param name="scripthash" example="0xed7cc6f5f2dd842d384f254bc0c2d58fb69a4761">ScriptHash</param>
         /// <param name="method" example="balanceOf">method name</param>
-        /// <param name="aparams">JArray of the contract parameters.</param>
+        /// <param name="contractParameters">JArray of the contract parameters.</param>
         /// <returns>Execution Engine object.</returns>
         /// <response code="200">Successful</response>
         /// <response code="400">An error occurred. See Response for details.</response>
@@ -191,7 +191,7 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromQuery(Name = "method")]
             string method,
             [FromBody]
-            JArray aparams)
+            ContractParameter[] contractParameters)
         {
             var contracts = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, scripthash);
             if (contracts == null)
@@ -200,7 +200,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 throw new QueryParameterNotFoundException(nameof(method));
             try
             {
-                var engine = ScriptHelper.InvokeMethod(_neosystem.Settings, _neosystem.StoreView, contracts.Hash, method, aparams, out var script);
+                var engine = ScriptHelper.InvokeMethod(_neosystem.Settings, _neosystem.StoreView, contracts.Hash, method, contractParameters, out var script);
                 return Ok(engine.ToModel());
             }
             catch (Exception ex)

@@ -44,7 +44,7 @@ namespace Neo.Plugins.RestServer
         public long MaxTransactionFee { get; init; }
         public long MaxGasInvoke { get; init; }
         public uint MaxTransactionSize { get; init; }
-        public int WalletSessionTimeout { get; init; }
+        public uint WalletSessionTimeout { get; init; }
         public JsonSerializerSettings JsonSerializerSettings { get; init; }
 
         #endregion
@@ -57,7 +57,7 @@ namespace Neo.Plugins.RestServer
             Network = 860833102u,
             BindAddress = IPAddress.Loopback,
             Port = 10339u,
-            KeepAliveTimeout = 2u,
+            KeepAliveTimeout = 120u,
             SslCertFile = "",
             SslCertPassword = "",
             TrustedAuthorities = Array.Empty<string>(),
@@ -75,8 +75,8 @@ namespace Neo.Plugins.RestServer
             MaxConcurrentConnections = 40L,
             MaxTransactionFee = 0_10000000L,
             MaxGasInvoke = 0_20000000L,
-            MaxTransactionSize = 1024,
-            WalletSessionTimeout = 2,
+            MaxTransactionSize = 1024u,
+            WalletSessionTimeout = 120u,
             JsonSerializerSettings = new JsonSerializerSettings()
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -100,21 +100,8 @@ namespace Neo.Plugins.RestServer
                     new StackItemJsonConverter(),
                     new BigDecimalJsonConverter(),
                     new GuidJsonConverter(),
-                    new TrimmedBlockJsonConverter(),
-                    new BlockHeaderJsonConverter(),
-                    new WitnessJsonConverter(),
-                    new SignerJsonConverter(),
-                    new TransactionAttributeJsonConverter(),
-                    new BlockJsonConverter(),
-                    new TransactionJsonConverter(),
-                    new ContractJsonConverter(),
-                    new MethodTokenJsonConverter(),
-                    new NefFileJsonConverter(),
-                    new ContractPermissionDescriptorJsonConverter(),
-                    new ContractPermissionJsonConverter(),
-                    new ContractGroupJsonConverter(),
-                    new ContractManifestJsonConverter(),
-                    new ContractAbiJsonConverter(),
+                    new WitnessConditionJsonConverter(),
+                    new ContractParameterJsonConverter(),
                 },
             },
         };
@@ -149,6 +136,5 @@ namespace Neo.Plugins.RestServer
             };
 
         #endregion
-
     }
 }

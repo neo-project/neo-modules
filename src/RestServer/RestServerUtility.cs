@@ -16,6 +16,8 @@ using Array = Neo.VM.Types.Array;
 using Boolean = Neo.VM.Types.Boolean;
 using Buffer = Neo.VM.Types.Buffer;
 using Neo.Wallets;
+using Neo.SmartContract;
+using Neo.Cryptography.ECC;
 
 namespace Neo.Plugins.RestServer
 {
@@ -205,9 +207,114 @@ namespace Neo.Plugins.RestServer
                     };
                     break;
                 default:
-                    throw new NotImplementedException($"StackItemType({item.Type}) is not supported to JSON.");
+                    throw new NotSupportedException($"StackItemType({item.Type}) is not supported to JSON.");
             }
             return o;
+        }
+
+        public static ContractParameter ContractParameterFromJToken(JToken token)
+        {
+            if (token.Type != JTokenType.Object)
+                throw new FormatException();
+
+            var obj = (JObject)token;
+            var typeProp = obj
+                .Properties()
+                .SingleOrDefault(a => a.Name.Equals("type", StringComparison.InvariantCultureIgnoreCase));
+            var valueProp = obj
+                .Properties()
+                .SingleOrDefault(a => a.Name.Equals("value", StringComparison.InvariantCultureIgnoreCase));
+
+            if (typeProp == null || valueProp == null)
+                throw new FormatException();
+
+            var typeValue = Enum.Parse<ContractParameterType>(typeProp.ToObject<string>());
+
+            switch (typeValue)
+            {
+                case ContractParameterType.Any:
+                    return new ContractParameter(ContractParameterType.Any);
+                case ContractParameterType.ByteArray:
+                    return new ContractParameter()
+                    {
+                        Type = ContractParameterType.ByteArray,
+                        Value = Convert.FromBase64String(valueProp.ToObject<string>()),
+                    };
+                case ContractParameterType.Signature:
+                    return new ContractParameter()
+                    {
+                        Type = ContractParameterType.Signature,
+                        Value = Convert.FromBase64String(valueProp.ToObject<string>()),
+                    };
+                case ContractParameterType.Boolean:
+                    return new ContractParameter()
+                    {
+                        Type = ContractParameterType.Boolean,
+                        Value = valueProp.ToObject<bool>(),
+                    };
+                case ContractParameterType.Integer:
+                    return new ContractParameter()
+                    {
+                        Type = ContractParameterType.Integer,
+                        Value = BigInteger.Parse(valueProp.ToObject<string>()),
+                    };
+                case ContractParameterType.String:
+                    return new ContractParameter()
+                    {
+                        Type = ContractParameterType.String,
+                        Value = valueProp.ToObject<string>(),
+                    };
+                case ContractParameterType.Hash160:
+                    return new ContractParameter()
+                    {
+                        Type = ContractParameterType.Hash160,
+                        Value = UInt160.Parse(valueProp.ToObject<string>()),
+                    };
+                case ContractParameterType.Hash256:
+                    return new ContractParameter()
+                    {
+                        Type = ContractParameterType.Hash256,
+                        Value = UInt256.Parse(valueProp.ToObject<string>()),
+                    };
+                case ContractParameterType.PublicKey:
+                    return new ContractParameter()
+                    {
+                        Type = ContractParameterType.PublicKey,
+                        Value = ECPoint.Parse(valueProp.ToObject<string>(), ECCurve.Secp256r1),
+                    };
+                case ContractParameterType.Array:
+                    if (valueProp.Value?.Type != JTokenType.Array)
+                        throw new FormatException();
+                    var array = valueProp.Value as JArray;
+                    return new ContractParameter()
+                    {
+                        Type = ContractParameterType.Array,
+                        Value = array.Select(ContractParameterFromJToken).ToList(),
+                    };
+                case ContractParameterType.Map:
+                    if (valueProp.Value?.Type != JTokenType.Array)
+                        throw new FormatException();
+                    var map = valueProp.Value as JArray;
+                    return new ContractParameter()
+                    {
+                        Type = ContractParameterType.Map,
+                        Value = map.Select(s =>
+                        {
+                            if (s.Type != JTokenType.Object)
+                                throw new FormatException();
+                            var mapProp = valueProp.Value as JObject;
+                            var keyProp = mapProp
+                                .Properties()
+                                .SingleOrDefault(ss => ss.Name.Equals("key", StringComparison.InvariantCultureIgnoreCase));
+                            var keyValueProp = mapProp
+                                .Properties()
+                                .SingleOrDefault(ss => ss.Name.Equals("value", StringComparison.InvariantCultureIgnoreCase));
+                            return new KeyValuePair<ContractParameter, ContractParameter>(ContractParameterFromJToken(keyProp.Value), ContractParameterFromJToken(keyValueProp.Value));
+                        }).ToList(),
+                    };
+                default:
+                    throw new NotSupportedException($"ContractParameterType({typeValue}) is not supported to JSON.");
+            }
         }
     }
 }

@@ -3,25 +3,25 @@
     "Network": 860833102,
     "BindAddress": "127.0.0.1",
     "Port": 10339,
-    "KeepAliveTimeout": 2,
+    "KeepAliveTimeout": 120,
     "SslCertFile": "",
     "SslCertPassword": "",
     "TrustedAuthorities": [], // Example: "aec13cdd5ea6a3998aec14ac331ad96bedbb770f" (Thumbprint)
     "EnableBasicAuthentication": false,
     "RestUser": "",
     "RestPass": "",
-    "EnableCors": false,
+    "EnableCors": true,
     "AllowOrigins": [], // Example: "http://www.example.com"
     "DisableControllers": [ "WalletController" ],
-    "EnableCompression": false,
+    "EnableCompression": true,
     "CompressionLevel": "SmallestSize", // "Fastest" or "Optimal" or "NoCompression" or "SmallestSize"
     "EnableForwardedHeaders": false,
-    "EnableSwagger": false,
+    "EnableSwagger": true,
     "MaxPageSize": 50,
     "MaxConcurrentConnections": 40,
     "MaxTransactionFee": 10000000,
     "MaxGasInvoke": 20000000,
     "MaxTransactionSize": 1024,
-    "WalletSessionTimeout": 2
+    "WalletSessionTimeout": 120
   }
 }

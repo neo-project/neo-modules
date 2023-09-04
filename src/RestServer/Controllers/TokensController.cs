@@ -28,11 +28,11 @@ namespace Neo.Plugins.RestServer.Controllers
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
     [ApiExplorerSettings(GroupName = "v1")]
     [ApiController]
-    public class TokenController : ControllerBase
+    public class TokensController : ControllerBase
     {
         private readonly NeoSystem _neosystem;
 
-        public TokenController()
+        public TokensController()
         {
             _neosystem = RestServerPlugin.NeoSystem ?? throw new NodeNetworkException();
         }

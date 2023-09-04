@@ -14,9 +14,6 @@ using Neo.SmartContract;
 using Neo.VM.Types;
 using Neo.VM;
 using Array = System.Array;
-using Newtonsoft.Json.Linq;
-using System.Numerics;
-using Neo.Cryptography.ECC;
 using Neo.Network.P2P.Payloads;
 
 namespace Neo.Plugins.RestServer.Helpers
@@ -33,11 +30,10 @@ namespace Neo.Plugins.RestServer.Helpers
             return engine.State == VMState.HALT;
         }
 
-        public static ApplicationEngine InvokeMethod(ProtocolSettings protocolSettings, DataCache snapshot, UInt160 scriptHash, string method, JArray args, out byte[] script)
+        public static ApplicationEngine InvokeMethod(ProtocolSettings protocolSettings, DataCache snapshot, UInt160 scriptHash, string method, ContractParameter[] args, out byte[] script)
         {
-            var aparams = args.Select(FromJson).ToArray();
             using var scriptBuilder = new ScriptBuilder();
-            scriptBuilder.EmitDynamicCall(scriptHash, method, CallFlags.ReadOnly, aparams);
+            scriptBuilder.EmitDynamicCall(scriptHash, method, CallFlags.ReadOnly, args);
             script = scriptBuilder.ToArray();
             using var engine = ApplicationEngine.Run(script, snapshot, settings: protocolSettings, gas: RestServerSettings.Current.MaxGasInvoke);
             return engine;
@@ -58,58 +54,6 @@ namespace Neo.Plugins.RestServer.Helpers
                 Witnesses = witnesses
             };
             return ApplicationEngine.Run(script, snapshot, tx, settings: neosystem.Settings, gas: RestServerSettings.Current.MaxGasInvoke);
-        }
-
-        public static ContractParameter FromJson(JToken obj)
-        {
-            ContractParameter contractParam = new()
-            {
-                Type = Enum.Parse<ContractParameterType>(obj["type"].ToObject<string>()),
-            };
-
-            if (obj["value"] != null)
-            {
-                object value;
-                switch (contractParam.Type)
-                {
-                    case ContractParameterType.ByteArray:
-                    case ContractParameterType.Signature:
-                        value = Convert.FromBase64String(obj["value"].ToObject<string>());
-                        break;
-                    case ContractParameterType.Boolean:
-                        value = obj["value"].ToObject<bool>();
-                        break;
-                    case ContractParameterType.Integer:
-                        value = BigInteger.Parse(obj["value"].ToObject<string>());
-                        break;
-                    case ContractParameterType.String:
-                        value = obj["value"].ToObject<string>();
-                        break;
-                    case ContractParameterType.Hash160:
-                        value = UInt160.Parse(obj["value"].ToObject<string>());
-                        break;
-                    case ContractParameterType.Hash256:
-                        value = UInt256.Parse(obj["value"].ToObject<string>());
-                        break;
-                    case ContractParameterType.PublicKey:
-                        value = ECPoint.Parse(obj["value"].ToObject<string>(), ECCurve.Secp256r1);
-                        break;
-                    case ContractParameterType.Array:
-                        var a = obj["value"] as JArray;
-                        value = a.Select(FromJson).ToList();
-                        break;
-                    case ContractParameterType.Map:
-                        var m = obj["value"] as JArray;
-                        value = m.Select(s => new KeyValuePair<ContractParameter, ContractParameter>(FromJson(s["key"]), FromJson(s["value"]))).ToList();
-                        break;
-                    default:
-                        throw new ArgumentException(null, nameof(obj));
-                }
-
-                contractParam.Value = value;
-            }
-
-            return contractParam;
         }
     }
 }

@@ -15,6 +15,9 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
 {
     public class UInt160JsonConverter : JsonConverter<UInt160>
     {
+        public override bool CanRead => true;
+        public override bool CanWrite => true;
+
         public override UInt160 ReadJson(JsonReader reader, Type objectType, UInt160 existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
             var value = reader.Value?.ToString();
