@@ -45,7 +45,7 @@ namespace Neo.Consensus
         /// This will be cleared every block (so it will not grow out of control, but is used to prevent repeatedly
         /// responding to the same message.
         /// </summary>
-        private readonly HashSet<UInt256> knownHashes = new HashSet<UInt256>();
+        private readonly HashSet<UInt256> knownHashes = new();
         /// <summary>
         /// This variable is only true during OnRecoveryMessageReceived
         /// </summary>
