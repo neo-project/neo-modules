@@ -7,9 +7,6 @@
 </p>
 
 <p align="center">      
-  <a href="https://travis-ci.org/neo-project/neo-modules">
-    <img src="https://travis-ci.org/neo-project/neo-modules.svg?branch=master" alt="Current TravisCI build status.">
-  </a>
   <a href="https://github.com/neo-project/neo-modules/blob/master/LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
   </a>
