@@ -9,4 +9,10 @@
     <ProjectReference Include="..\..\src\RocksDBStore\RocksDBStore.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.7.2" />
+    <PackageReference Update="MSTest.TestAdapter" Version="3.1.1" />
+    <PackageReference Update="MSTest.TestFramework" Version="3.1.1" />
+  </ItemGroup>
+
 </Project>
