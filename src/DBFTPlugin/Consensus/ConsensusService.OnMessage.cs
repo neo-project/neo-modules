@@ -127,13 +127,26 @@ namespace Neo.Consensus
             {
                 if (mempoolVerified.TryGetValue(hash, out Transaction tx))
                 {
+                    if (NativeContract.Ledger.ContainsConflictHash(context.Snapshot, hash, tx.Signers.Select(s => s.Account)))
+                    {
+                        Log($"Invalid request: transaction has on-chain conflict", LogLevel.Warning);
+                        return;
+                    }
+
                     if (!AddTransaction(tx, false))
                         return;
                 }
                 else
                 {
                     if (neoSystem.MemPool.TryGetValue(hash, out tx))
+                    {
+                        if (NativeContract.Ledger.ContainsConflictHash(context.Snapshot, hash, tx.Signers.Select(s => s.Account)))
+                        {
+                            Log($"Invalid request: transaction has on-chain conflict", LogLevel.Warning);
+                            return;
+                        }
                         unverified.Add(tx);
+                    }
                 }
             }
             foreach (Transaction tx in unverified)
