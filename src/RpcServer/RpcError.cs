@@ -39,7 +39,6 @@ public class RpcError
     // Helper to wrap an existing RpcError with data
     public static RpcError WrapErrorWithData(RpcError error, string data) => new RpcError(error.Code, error.Message, data);
 
-
     public override string ToString()
     {
         if (string.IsNullOrEmpty(Data))
@@ -50,5 +49,4 @@ public class RpcError
     }
 
     public string ErrorMessage => string.IsNullOrEmpty(Data) ? $"{Message}" : $"{Message} - {Data}";
-
 }
