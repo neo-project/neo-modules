@@ -27,25 +27,25 @@ using Array = System.Array;
 
 namespace Neo.Plugins
 {
-    partial class RpcServer
+    partial class NeoService
     {
-        private readonly Dictionary<Guid, Session> sessions = new();
+        private readonly Dictionary<Guid, Session> _sessions = new();
         private Timer timer;
 
         private void Initialize_SmartContract()
         {
-            if (settings.SessionEnabled)
-                timer = new(OnTimer, null, settings.SessionExpirationTime, settings.SessionExpirationTime);
+            if (Settings.SessionEnabled)
+                timer = new Timer(OnTimer, null, Settings.SessionExpirationTime, Settings.SessionExpirationTime);
         }
 
         private void Dispose_SmartContract()
         {
             timer?.Dispose();
             Session[] toBeDestroyed;
-            lock (sessions)
+            lock (_sessions)
             {
-                toBeDestroyed = sessions.Values.ToArray();
-                sessions.Clear();
+                toBeDestroyed = _sessions.Values.ToArray();
+                _sessions.Clear();
             }
             foreach (Session session in toBeDestroyed)
                 session.Dispose();
@@ -54,13 +54,13 @@ namespace Neo.Plugins
         private void OnTimer(object state)
         {
             List<(Guid Id, Session Session)> toBeDestroyed = new();
-            lock (sessions)
+            lock (_sessions)
             {
-                foreach (var (id, session) in sessions)
-                    if (DateTime.UtcNow >= session.StartTime + settings.SessionExpirationTime)
+                foreach (var (id, session) in _sessions)
+                    if (DateTime.UtcNow >= session.StartTime + Settings.SessionExpirationTime)
                         toBeDestroyed.Add((id, session));
                 foreach (var (id, _) in toBeDestroyed)
-                    sessions.Remove(id);
+                    _sessions.Remove(id);
             }
             foreach (var (_, session) in toBeDestroyed)
                 session.Dispose();
@@ -69,7 +69,7 @@ namespace Neo.Plugins
         private JObject GetInvokeResult(byte[] script, Signer[] signers = null, Witness[] witnesses = null, bool useDiagnostic = false)
         {
             JObject json = new();
-            Session session = new(system, script, signers, witnesses, settings.MaxGasInvoke, useDiagnostic ? new Diagnostic() : null);
+            Session session = new(System, script, signers, witnesses, Settings.MaxGasInvoke, useDiagnostic ? new Diagnostic() : null);
             try
             {
                 json["script"] = Convert.ToBase64String(script);
@@ -111,7 +111,7 @@ namespace Neo.Plugins
                 session.Dispose();
                 throw;
             }
-            if (session.Iterators.Count == 0 || !settings.SessionEnabled)
+            if (session.Iterators.Count == 0 || !Settings.SessionEnabled)
             {
                 session.Dispose();
             }
@@ -119,16 +119,18 @@ namespace Neo.Plugins
             {
                 Guid id = Guid.NewGuid();
                 json["session"] = id.ToString();
-                lock (sessions)
-                    sessions.Add(id, session);
+                lock (_sessions)
+                    _sessions.Add(id, session);
             }
             return json;
         }
 
         private static JObject ToJson(TreeNode<UInt160> node)
         {
-            JObject json = new();
-            json["hash"] = node.Item.ToString();
+            JObject json = new()
+            {
+                ["hash"] = node.Item.ToString()
+            };
             if (node.Children.Any())
             {
                 json["call"] = new JArray(node.Children.Select(ToJson));
@@ -195,13 +197,13 @@ namespace Neo.Plugins
             }).ToArray();
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken InvokeFunction(JArray _params)
         {
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
             string operation = _params[1].AsString();
-            ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson((JObject)p)).ToArray() : System.Array.Empty<ContractParameter>();
-            Signer[] signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
+            ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson((JObject)p)).ToArray() : global::System.Array.Empty<ContractParameter>();
+            Signer[] signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], System.Settings) : null;
             Witness[] witnesses = _params.Count >= 4 ? WitnessesFromJson((JArray)_params[3]) : null;
             bool useDiagnostic = _params.Count >= 5 && _params[4].GetBoolean();
 
@@ -213,28 +215,28 @@ namespace Neo.Plugins
             return GetInvokeResult(script, signers, witnesses, useDiagnostic);
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken InvokeScript(JArray _params)
         {
             byte[] script = Convert.FromBase64String(_params[0].AsString());
-            Signer[] signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], system.Settings) : null;
+            Signer[] signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], System.Settings) : null;
             Witness[] witnesses = _params.Count >= 2 ? WitnessesFromJson((JArray)_params[1]) : null;
             bool useDiagnostic = _params.Count >= 3 && _params[2].GetBoolean();
             return GetInvokeResult(script, signers, witnesses, useDiagnostic);
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken TraverseIterator(JArray _params)
         {
             Guid sid = Guid.Parse(_params[0].GetString());
             Guid iid = Guid.Parse(_params[1].GetString());
             int count = _params[2].GetInt32();
-            if (count > settings.MaxIteratorResultItems)
+            if (count > Settings.MaxIteratorResultItems)
                 throw new ArgumentOutOfRangeException(nameof(count));
             Session session;
-            lock (sessions)
+            lock (_sessions)
             {
-                session = sessions[sid];
+                session = _sessions[sid];
                 session.ResetExpiration();
             }
             IIterator iterator = session.Iterators[iid];
@@ -244,19 +246,19 @@ namespace Neo.Plugins
             return json;
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken TerminateSession(JArray _params)
         {
             Guid sid = Guid.Parse(_params[0].GetString());
             Session session;
             bool result;
-            lock (sessions)
-                result = sessions.Remove(sid, out session);
+            lock (_sessions)
+                result = _sessions.Remove(sid, out session);
             if (result) session.Dispose();
             return result;
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken GetUnclaimedGas(JArray _params)
         {
             string address = _params[0].AsString();
@@ -264,17 +266,17 @@ namespace Neo.Plugins
             UInt160 script_hash;
             try
             {
-                script_hash = AddressToScriptHash(address, system.Settings.AddressVersion);
+                script_hash = AddressToScriptHash(address, System.Settings.AddressVersion);
             }
             catch
             {
                 script_hash = null;
             }
             if (script_hash == null)
-                throw new RpcException(-100, "Invalid address");
-            var snapshot = system.StoreView;
+                throw new ServicceException(-100, "Invalid address");
+            var snapshot = System.StoreView;
             json["unclaimed"] = NativeContract.NEO.UnclaimedGas(snapshot, script_hash, NativeContract.Ledger.CurrentIndex(snapshot) + 1).ToString();
-            json["address"] = script_hash.ToAddress(system.Settings.AddressVersion);
+            json["address"] = script_hash.ToAddress(System.Settings.AddressVersion);
             return json;
         }
 

@@ -30,25 +30,17 @@ using System.Threading.Tasks;
 
 namespace Neo.Plugins
 {
-    public partial class RpcServer : IDisposable
+    public partial class RpcServer : NeoService, IDisposable
     {
-        private readonly Dictionary<string, Func<JArray, object>> methods = new();
-
         private IWebHost host;
         private RpcServerSettings settings;
-        private readonly NeoSystem system;
-        private readonly LocalNode localNode;
 
-        public RpcServer(NeoSystem system, RpcServerSettings settings)
+        public RpcServer(NeoSystem system, RpcServerSettings settings) : base(system, settings)
         {
-            this.system = system;
             this.settings = settings;
-            localNode = system.LocalNode.Ask<LocalNode>(new LocalNode.GetInstance()).Result;
-            RegisterMethods(this);
-            Initialize_SmartContract();
         }
 
-        private bool CheckAuth(HttpContext context)
+        protected override bool CheckAuth(HttpContext context)
         {
             if (string.IsNullOrEmpty(settings.RpcUser)) return true;
 
@@ -93,15 +85,10 @@ namespace Neo.Plugins
 
         public void Dispose()
         {
-            Dispose_SmartContract();
-            if (host != null)
-            {
-                host.Dispose();
-                host = null;
-            }
+            base.Dispose();
         }
 
-        public void StartRpcServer()
+        public override void StartService()
         {
             host = new WebHostBuilder().UseKestrel(options => options.Listen(settings.BindAddress, settings.Port, listenOptions =>
             {
@@ -156,7 +143,7 @@ namespace Neo.Plugins
             this.settings = settings;
         }
 
-        public async Task ProcessAsync(HttpContext context)
+        public override async Task ProcessAsync(HttpContext context)
         {
             context.Response.Headers["Access-Control-Allow-Origin"] = "*";
             context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST";
@@ -221,7 +208,7 @@ namespace Neo.Plugins
             await context.Response.WriteAsync(response.ToString(), Encoding.UTF8);
         }
 
-        private async Task<JObject> ProcessRequestAsync(HttpContext context, JObject request)
+        protected override async Task<JObject> ProcessRequestAsync(HttpContext context, JObject request)
         {
             if (!request.ContainsProperty("id")) return null;
             JToken @params = request["params"] ?? new JArray();
@@ -235,7 +222,7 @@ namespace Neo.Plugins
                 string method = request["method"].AsString();
                 if (!CheckAuth(context) || settings.DisabledMethods.Contains(method))
                     throw new RpcException(-400, "Access denied");
-                if (!methods.TryGetValue(method, out var func))
+                if (!Methods.TryGetValue(method, out var func))
                     throw new RpcException(-32601, "Method not found");
                 response["result"] = func((JArray)@params) switch
                 {
@@ -260,17 +247,6 @@ namespace Neo.Plugins
 #else
                 return CreateErrorResponse(request["id"], ex.HResult, ex.Message);
 #endif
-            }
-        }
-
-        public void RegisterMethods(object handler)
-        {
-            foreach (MethodInfo method in handler.GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
-            {
-                RpcMethodAttribute attribute = method.GetCustomAttribute<RpcMethodAttribute>();
-                if (attribute is null) continue;
-                string name = string.IsNullOrEmpty(attribute.Name) ? method.Name.ToLowerInvariant() : attribute.Name;
-                methods[name] = method.CreateDelegate<Func<JArray, object>>(handler);
             }
         }
     }

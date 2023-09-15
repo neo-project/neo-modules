@@ -14,9 +14,9 @@ using System.Linq;
 
 namespace Neo.Plugins
 {
-    partial class RpcServer
+    partial class NeoService
     {
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken ListPlugins(JArray _params)
         {
             return new JArray(Plugin.Plugins
@@ -32,7 +32,7 @@ namespace Neo.Plugins
                 }));
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken ValidateAddress(JArray _params)
         {
             string address = _params[0].AsString();
@@ -40,7 +40,7 @@ namespace Neo.Plugins
             UInt160 scriptHash;
             try
             {
-                scriptHash = address.ToScriptHash(system.Settings.AddressVersion);
+                scriptHash = address.ToScriptHash(System.Settings.AddressVersion);
             }
             catch
             {

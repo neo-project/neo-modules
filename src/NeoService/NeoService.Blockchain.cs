@@ -15,26 +15,23 @@ using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.VM.Types;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Neo.Plugins
 {
-    partial class RpcServer
+    partial class NeoService
     {
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken GetBestBlockHash(JArray _params)
         {
-            return NativeContract.Ledger.CurrentHash(system.StoreView).ToString();
+            return NativeContract.Ledger.CurrentHash(System.StoreView).ToString();
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken GetBlock(JArray _params)
         {
             JToken key = _params[0];
             bool verbose = _params.Count >= 2 && _params[1].AsBoolean();
-            using var snapshot = system.GetSnapshot();
+            using var snapshot = System.GetSnapshot();
             Block block;
             if (key is JNumber)
             {
@@ -47,10 +44,10 @@ namespace Neo.Plugins
                 block = NativeContract.Ledger.GetBlock(snapshot, hash);
             }
             if (block == null)
-                throw new RpcException(-100, "Unknown block");
+                throw new ServicceException(-100, "Unknown block");
             if (verbose)
             {
-                JObject json = Utility.BlockToJson(block, system.Settings);
+                JObject json = Utility.BlockToJson(block, System.Settings);
                 json["confirmations"] = NativeContract.Ledger.CurrentIndex(snapshot) - block.Index + 1;
                 UInt256 hash = NativeContract.Ledger.GetBlockHash(snapshot, block.Index + 1);
                 if (hash != null)
@@ -60,36 +57,36 @@ namespace Neo.Plugins
             return Convert.ToBase64String(block.ToArray());
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken GetBlockHeaderCount(JArray _params)
         {
-            return (system.HeaderCache.Last?.Index ?? NativeContract.Ledger.CurrentIndex(system.StoreView)) + 1;
+            return (System.HeaderCache.Last?.Index ?? NativeContract.Ledger.CurrentIndex(System.StoreView)) + 1;
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken GetBlockCount(JArray _params)
         {
-            return NativeContract.Ledger.CurrentIndex(system.StoreView) + 1;
+            return NativeContract.Ledger.CurrentIndex(System.StoreView) + 1;
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken GetBlockHash(JArray _params)
         {
             uint height = uint.Parse(_params[0].AsString());
-            var snapshot = system.StoreView;
+            var snapshot = System.StoreView;
             if (height <= NativeContract.Ledger.CurrentIndex(snapshot))
             {
                 return NativeContract.Ledger.GetBlockHash(snapshot, height).ToString();
             }
-            throw new RpcException(-100, "Invalid Height");
+            throw new ServicceException(-100, "Invalid Height");
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken GetBlockHeader(JArray _params)
         {
             JToken key = _params[0];
             bool verbose = _params.Count >= 2 && _params[1].AsBoolean();
-            var snapshot = system.StoreView;
+            var snapshot = System.StoreView;
             Header header;
             if (key is JNumber)
             {
@@ -102,11 +99,11 @@ namespace Neo.Plugins
                 header = NativeContract.Ledger.GetHeader(snapshot, hash);
             }
             if (header == null)
-                throw new RpcException(-100, "Unknown block");
+                throw new ServicceException(-100, "Unknown block");
 
             if (verbose)
             {
-                JObject json = header.ToJson(system.Settings);
+                JObject json = header.ToJson(System.Settings);
                 json["confirmations"] = NativeContract.Ledger.CurrentIndex(snapshot) - header.Index + 1;
                 UInt256 hash = NativeContract.Ledger.GetBlockHash(snapshot, header.Index + 1);
                 if (hash != null)
@@ -117,19 +114,19 @@ namespace Neo.Plugins
             return Convert.ToBase64String(header.ToArray());
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken GetContractState(JArray _params)
         {
             if (int.TryParse(_params[0].AsString(), out int contractId))
             {
-                var contracts = NativeContract.ContractManagement.GetContractById(system.StoreView, contractId);
-                return contracts?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
+                var contracts = NativeContract.ContractManagement.GetContractById(System.StoreView, contractId);
+                return contracts?.ToJson() ?? throw new ServicceException(-100, "Unknown contract");
             }
             else
             {
                 UInt160 script_hash = ToScriptHash(_params[0].AsString());
-                ContractState contract = NativeContract.ContractManagement.GetContract(system.StoreView, script_hash);
-                return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
+                ContractState contract = NativeContract.ContractManagement.GetContract(System.StoreView, script_hash);
+                return contract?.ToJson() ?? throw new ServicceException(-100, "Unknown contract");
             }
         }
 
@@ -144,16 +141,16 @@ namespace Neo.Plugins
             return UInt160.Parse(keyword);
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken GetRawMemPool(JArray _params)
         {
             bool shouldGetUnverified = _params.Count >= 1 && _params[0].AsBoolean();
             if (!shouldGetUnverified)
-                return new JArray(system.MemPool.GetVerifiedTransactions().Select(p => (JToken)p.Hash.ToString()));
+                return new JArray(System.MemPool.GetVerifiedTransactions().Select(p => (JToken)p.Hash.ToString()));
 
             JObject json = new();
-            json["height"] = NativeContract.Ledger.CurrentIndex(system.StoreView);
-            system.MemPool.GetVerifiedAndUnverifiedTransactions(
+            json["height"] = NativeContract.Ledger.CurrentIndex(System.StoreView);
+            System.MemPool.GetVerifiedAndUnverifiedTransactions(
                 out IEnumerable<Transaction> verifiedTransactions,
                 out IEnumerable<Transaction> unverifiedTransactions);
             json["verified"] = new JArray(verifiedTransactions.Select(p => (JToken)p.Hash.ToString()));
@@ -161,19 +158,19 @@ namespace Neo.Plugins
             return json;
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken GetRawTransaction(JArray _params)
         {
             UInt256 hash = UInt256.Parse(_params[0].AsString());
             bool verbose = _params.Count >= 2 && _params[1].AsBoolean();
-            if (system.MemPool.TryGetValue(hash, out Transaction tx) && !verbose)
+            if (System.MemPool.TryGetValue(hash, out Transaction tx) && !verbose)
                 return Convert.ToBase64String(tx.ToArray());
-            var snapshot = system.StoreView;
+            var snapshot = System.StoreView;
             TransactionState state = NativeContract.Ledger.GetTransactionState(snapshot, hash);
             tx ??= state?.Transaction;
-            if (tx is null) throw new RpcException(-100, "Unknown transaction");
+            if (tx is null) throw new ServicceException(-100, "Unknown transaction");
             if (!verbose) return Convert.ToBase64String(tx.ToArray());
-            JObject json = Utility.TransactionToJson(tx, system.Settings);
+            JObject json = Utility.TransactionToJson(tx, System.Settings);
             if (state is not null)
             {
                 TrimmedBlock block = NativeContract.Ledger.GetTrimmedBlock(snapshot, NativeContract.Ledger.GetBlockHash(snapshot, state.BlockIndex));
@@ -184,15 +181,15 @@ namespace Neo.Plugins
             return json;
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken GetStorage(JArray _params)
         {
-            using var snapshot = system.GetSnapshot();
+            using var snapshot = System.GetSnapshot();
             if (!int.TryParse(_params[0].AsString(), out int id))
             {
                 UInt160 hash = UInt160.Parse(_params[0].AsString());
                 ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, hash);
-                if (contract is null) throw new RpcException(-100, "Unknown contract");
+                if (contract is null) throw new ServicceException(-100, "Unknown contract");
                 id = contract.Id;
             }
             byte[] key = Convert.FromBase64String(_params[1].AsString());
@@ -201,19 +198,19 @@ namespace Neo.Plugins
                 Id = id,
                 Key = key
             });
-            if (item is null) throw new RpcException(-100, "Unknown storage");
+            if (item is null) throw new ServicceException(-100, "Unknown storage");
             return Convert.ToBase64String(item.Value.Span);
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken FindStorage(JArray _params)
         {
-            using var snapshot = system.GetSnapshot();
+            using var snapshot = System.GetSnapshot();
             if (!int.TryParse(_params[0].AsString(), out int id))
             {
                 UInt160 hash = UInt160.Parse(_params[0].AsString());
                 ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, hash);
-                if (contract is null) throw new RpcException(-100, "Unknown contract");
+                if (contract is null) throw new ServicceException(-100, "Unknown contract");
                 id = contract.Id;
             }
 
@@ -227,7 +224,7 @@ namespace Neo.Plugins
 
             JObject json = new();
             JArray jarr = new();
-            int pageSize = settings.FindStoragePageSize;
+            int pageSize = Settings.FindStoragePageSize;
             int i = 0;
 
             using (var iter = snapshot.Find(prefix_key).Skip(count: start).GetEnumerator())
@@ -255,20 +252,20 @@ namespace Neo.Plugins
             return json;
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken GetTransactionHeight(JArray _params)
         {
             UInt256 hash = UInt256.Parse(_params[0].AsString());
-            uint? height = NativeContract.Ledger.GetTransactionState(system.StoreView, hash)?.BlockIndex;
+            uint? height = NativeContract.Ledger.GetTransactionState(System.StoreView, hash)?.BlockIndex;
             if (height.HasValue) return height.Value;
-            throw new RpcException(-100, "Unknown transaction");
+            throw new ServicceException(-100, "Unknown transaction");
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken GetNextBlockValidators(JArray _params)
         {
-            using var snapshot = system.GetSnapshot();
-            var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, system.Settings.ValidatorsCount);
+            using var snapshot = System.GetSnapshot();
+            var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, System.Settings.ValidatorsCount);
             return validators.Select(p =>
             {
                 JObject validator = new();
@@ -278,16 +275,16 @@ namespace Neo.Plugins
             }).ToArray();
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken GetCandidates(JArray _params)
         {
-            using var snapshot = system.GetSnapshot();
+            using var snapshot = System.GetSnapshot();
             byte[] script;
             using (ScriptBuilder sb = new())
             {
                 script = sb.EmitDynamicCall(NativeContract.NEO.Hash, "getCandidates", null).ToArray();
             }
-            using ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, settings: system.Settings, gas: settings.MaxGasInvoke);
+            using ApplicationEngine engine = ApplicationEngine.Run(script, snapshot, settings: System.Settings, gas: Settings.MaxGasInvoke);
             JObject json = new();
             try
             {
@@ -295,7 +292,7 @@ namespace Neo.Plugins
                 if (resultstack.Length > 0)
                 {
                     JArray jArray = new();
-                    var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, system.Settings.ValidatorsCount);
+                    var validators = NativeContract.NEO.GetNextBlockValidators(snapshot, System.Settings.ValidatorsCount);
 
                     foreach (var item in resultstack)
                     {
@@ -320,16 +317,16 @@ namespace Neo.Plugins
             return json;
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken GetCommittee(JArray _params)
         {
-            return new JArray(NativeContract.NEO.GetCommittee(system.StoreView).Select(p => (JToken)p.ToString()));
+            return new JArray(NativeContract.NEO.GetCommittee(System.StoreView).Select(p => (JToken)p.ToString()));
         }
 
-        [RpcMethod]
+        [ServiceMethod]
         protected virtual JToken GetNativeContracts(JArray _params)
         {
-            return new JArray(NativeContract.Contracts.Select(p => p.NativeContractToJson(system.Settings)));
+            return new JArray(NativeContract.Contracts.Select(p => p.NativeContractToJson(System.Settings)));
         }
     }
 }

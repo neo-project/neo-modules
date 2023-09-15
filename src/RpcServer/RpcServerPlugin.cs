@@ -52,7 +52,7 @@ namespace Neo.Plugins
                 }
             }
 
-            server.StartRpcServer();
+            server.StartService();
             servers.TryAdd(s.Network, server);
         }
 
