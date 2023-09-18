@@ -109,6 +109,7 @@ namespace Neo.Plugins
             {
                 // Default value is 5Mb
                 options.Limits.MaxRequestBodySize = settings.MaxRequestBodySize;
+                options.Limits.MaxRequestLineSize = Math.Min(settings.MaxRequestBodySize, options.Limits.MaxRequestLineSize);
                 // Default value is 40
                 options.Limits.MaxConcurrentConnections = settings.MaxConcurrentConnections;
                 // Default value is 1 minutes
@@ -178,7 +179,6 @@ namespace Neo.Plugins
                 {
                     try
                     {
-                        if (_params.Length > settings.MaxRequestBodySize) return;
                         _params = Encoding.UTF8.GetString(Convert.FromBase64String(_params));
                     }
                     catch (FormatException) { }
