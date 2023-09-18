@@ -36,6 +36,7 @@ namespace Neo.Plugins
         public string SslCertPassword { get; init; }
         public string[] TrustedAuthorities { get; init; }
         public int MaxConcurrentConnections { get; init; }
+        public int MaxRequestBodySize { get; init; }
         public string RpcUser { get; init; }
         public string RpcPass { get; init; }
         public long MaxGasInvoke { get; init; }
@@ -60,6 +61,7 @@ namespace Neo.Plugins
             MaxStackSize = ushort.MaxValue,
             DisabledMethods = Array.Empty<string>(),
             MaxConcurrentConnections = 40,
+            MaxRequestBodySize = 5 * 1024 * 1024,
             SessionEnabled = false,
             SessionExpirationTime = TimeSpan.FromSeconds(60),
             FindStoragePageSize = 50
@@ -81,6 +83,7 @@ namespace Neo.Plugins
             MaxStackSize = section.GetValue("MaxStackSize", Default.MaxStackSize),
             DisabledMethods = section.GetSection("DisabledMethods").GetChildren().Select(p => p.Get<string>()).ToArray(),
             MaxConcurrentConnections = section.GetValue("MaxConcurrentConnections", Default.MaxConcurrentConnections),
+            MaxRequestBodySize = section.GetValue("MaxRequestBodySize", Default.MaxRequestBodySize),
             SessionEnabled = section.GetValue("SessionEnabled", Default.SessionEnabled),
             SessionExpirationTime = TimeSpan.FromSeconds(section.GetValue("SessionExpirationTime", (int)Default.SessionExpirationTime.TotalSeconds)),
             FindStoragePageSize = section.GetValue("FindStoragePageSize", Default.FindStoragePageSize)
