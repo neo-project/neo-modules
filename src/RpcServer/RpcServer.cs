@@ -178,6 +178,7 @@ namespace Neo.Plugins
                 {
                     try
                     {
+                        if (_params.Length > settings.MaxRequestBodySize) return;
                         _params = Encoding.UTF8.GetString(Convert.FromBase64String(_params));
                     }
                     catch (FormatException) { }
