@@ -10,11 +10,11 @@
 
 using Neo.Persistence;
 using Neo.Plugins.RestServer.Helpers;
+using Neo.SmartContract;
 using Neo.SmartContract.Iterators;
 using Neo.SmartContract.Native;
-using Neo.SmartContract;
-using Neo.VM.Types;
 using Neo.VM;
+using Neo.VM.Types;
 using System.Numerics;
 
 namespace Neo.Plugins.RestServer.Tokens
@@ -44,7 +44,8 @@ namespace Neo.Plugins.RestServer.Tokens
             _neosystem = neoSystem;
             _snapshot = snapshot ?? _neosystem.GetSnapshot();
             _contract = NativeContract.ContractManagement.GetContract(_snapshot, scriptHash) ?? throw new ArgumentException(null, nameof(scriptHash));
-            if (ContractHelper.IsNep11Supported(_contract) == false) throw new NotSupportedException(nameof(scriptHash));
+            if (ContractHelper.IsNep11Supported(_contract) == false)
+                throw new NotSupportedException(nameof(scriptHash));
             Name = _contract.Manifest.Name;
             ScriptHash = scriptHash;
             Initialize();
@@ -59,7 +60,8 @@ namespace Neo.Plugins.RestServer.Tokens
             scriptBytes = sb.ToArray();
 
             using var appEngine = ApplicationEngine.Run(scriptBytes, _snapshot, settings: _neosystem.Settings, gas: RestServerSettings.Current.MaxGasInvoke);
-            if (appEngine.State != VMState.HALT) throw new NotSupportedException(nameof(ScriptHash));
+            if (appEngine.State != VMState.HALT)
+                throw new NotSupportedException(nameof(ScriptHash));
 
             Symbol = appEngine.ResultStack.Pop().GetString();
             Decimals = (byte)appEngine.ResultStack.Pop().GetInteger();
@@ -85,11 +87,13 @@ namespace Neo.Plugins.RestServer.Tokens
 
         public BigDecimal BalanceOf(UInt160 owner, byte[] tokenId)
         {
-            if (Decimals == 0) throw new InvalidOperationException();
+            if (Decimals == 0)
+                throw new InvalidOperationException();
             if (ContractHelper.GetContractMethod(_snapshot, ScriptHash, "balanceOf", 2) == null)
                 throw new NotSupportedException(nameof(ScriptHash));
             ArgumentNullException.ThrowIfNull(tokenId, nameof(tokenId));
-            if (tokenId.Length > 64) throw new ArgumentOutOfRangeException(nameof(tokenId));
+            if (tokenId.Length > 64)
+                throw new ArgumentOutOfRangeException(nameof(tokenId));
             if (ScriptHelper.InvokeMethod(_neosystem.Settings, _snapshot, ScriptHash, "balanceOf", out var results, owner, tokenId))
                 return new(results[0].GetInteger(), Decimals);
             return new(BigInteger.Zero, Decimals);
@@ -115,7 +119,8 @@ namespace Neo.Plugins.RestServer.Tokens
             if (ContractHelper.GetContractMethod(_snapshot, ScriptHash, "ownerOf", 1) == null)
                 throw new NotSupportedException(nameof(ScriptHash));
             ArgumentNullException.ThrowIfNull(tokenId, nameof(tokenId));
-            if (tokenId.Length > 64) throw new ArgumentOutOfRangeException(nameof(tokenId));
+            if (tokenId.Length > 64)
+                throw new ArgumentOutOfRangeException(nameof(tokenId));
             if (Decimals == 0)
             {
                 if (ScriptHelper.InvokeMethod(_neosystem.Settings, _snapshot, ScriptHash, "ownerOf", out var results, tokenId))
@@ -158,7 +163,8 @@ namespace Neo.Plugins.RestServer.Tokens
             ArgumentNullException.ThrowIfNull(tokenId, nameof(tokenId));
             if (ContractHelper.GetContractMethod(_snapshot, ScriptHash, "properties", 1) == null)
                 throw new NotImplementedException();
-            if (tokenId.Length > 64) throw new ArgumentOutOfRangeException(nameof(tokenId));
+            if (tokenId.Length > 64)
+                throw new ArgumentOutOfRangeException(nameof(tokenId));
             if (ScriptHelper.InvokeMethod(_neosystem.Settings, _snapshot, ScriptHash, "properties", out var results, tokenId))
             {
                 if (results[0] is Map map)

@@ -10,7 +10,6 @@
 
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
-using Neo.SmartContract;
 
 namespace Neo.Plugins.RestServer.Binder
 {

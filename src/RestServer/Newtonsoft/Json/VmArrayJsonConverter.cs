@@ -24,7 +24,7 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
 
         public override void WriteJson(JsonWriter writer, Array value, JsonSerializer serializer)
         {
-            var t = RestServerUtility.StackItemToJToken(value, null);
+            var t = RestServerUtility.StackItemToJToken(value, null, serializer);
             t.WriteTo(writer);
         }
     }

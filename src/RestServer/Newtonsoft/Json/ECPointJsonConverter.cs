@@ -8,9 +8,9 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Newtonsoft.Json;
 using Neo.Cryptography.ECC;
 using Neo.Plugins.RestServer.Exceptions;
+using Newtonsoft.Json;
 
 namespace Neo.Plugins.RestServer.Newtonsoft.Json
 {

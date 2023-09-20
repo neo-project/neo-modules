@@ -18,13 +18,13 @@ using Neo.Plugins.RestServer.Models.Error;
 using Neo.Plugins.RestServer.Models.Node;
 using System.Net.Mime;
 
-namespace Neo.Plugins.RestServer.Controllers
+namespace Neo.Plugins.RestServer.Controllers.v1
 {
-    [Route("/api/v1/node")]
+    [Route("/api/v{version:apiVersion}/node")]
     [Produces(MediaTypeNames.Application.Json)]
     [Consumes(MediaTypeNames.Application.Json)]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
-    [ApiExplorerSettings(GroupName = "v1")]
+    [ApiVersion("1.0")]
     [ApiController]
     public class NodeController : ControllerBase
     {

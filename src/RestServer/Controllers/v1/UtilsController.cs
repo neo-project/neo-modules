@@ -16,13 +16,13 @@ using Neo.Plugins.RestServer.Models.Utils;
 using Neo.Wallets;
 using System.Net.Mime;
 
-namespace Neo.Plugins.RestServer.Controllers
+namespace Neo.Plugins.RestServer.Controllers.v1
 {
-    [Route("/api/v1/utils")]
+    [Route("/api/v{version:apiVersion}/utils")]
     [Produces(MediaTypeNames.Application.Json)]
     [Consumes(MediaTypeNames.Application.Json)]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
-    [ApiExplorerSettings(GroupName = "v1")]
+    [ApiVersion("1.0")]
     [ApiController]
     public class UtilsController : ControllerBase
     {

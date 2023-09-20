@@ -17,7 +17,7 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
 {
     public sealed class WitnessConditionJsonConverter : JsonConverter<WitnessCondition>
     {
-        public override bool CanWrite => false;
+        public override bool CanWrite => true;
         public override bool CanRead => true;
 
         public override WitnessCondition ReadJson(JsonReader reader, Type objectType, WitnessCondition existingValue, bool hasExistingValue, JsonSerializer serializer)
@@ -30,7 +30,8 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
 
         public override void WriteJson(JsonWriter writer, WitnessCondition value, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            var j = RestServerUtility.WitnessConditionToJToken(value, serializer);
+            j.WriteTo(writer);
         }
 
         public static WitnessCondition FromJson(JObject o)
@@ -88,7 +89,7 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
             throw new NotSupportedException($"WitnessConditionType({type}) is not supported from JSON.");
         }
 
-        public static bool EqualsIgnoreCase(string left, string right) =>
+        private static bool EqualsIgnoreCase(string left, string right) =>
             left.Equals(right, StringComparison.InvariantCultureIgnoreCase);
     }
 }

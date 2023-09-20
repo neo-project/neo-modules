@@ -8,13 +8,13 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.Persistence;
-using Neo.SmartContract.Native;
-using Neo.SmartContract;
-using Neo.VM.Types;
-using Neo.VM;
-using Array = System.Array;
 using Neo.Network.P2P.Payloads;
+using Neo.Persistence;
+using Neo.SmartContract;
+using Neo.SmartContract.Native;
+using Neo.VM;
+using Neo.VM.Types;
+using Array = System.Array;
 
 namespace Neo.Plugins.RestServer.Helpers
 {

@@ -8,12 +8,12 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Neo.Persistence;
-using Neo.SmartContract.Native;
-using Neo.SmartContract;
 using Neo.IO;
-using Neo.Wallets;
+using Neo.Persistence;
 using Neo.Plugins.RestServer.Models.Blockchain;
+using Neo.SmartContract;
+using Neo.SmartContract.Native;
+using Neo.Wallets;
 
 #pragma warning disable IDE0060
 
@@ -30,7 +30,8 @@ namespace Neo.Plugins.RestServer.Extensions
         {
             ArgumentNullException.ThrowIfNull(nameof(contractState));
             ArgumentNullException.ThrowIfNull(nameof(snapshot));
-            if (prefix?.Length == 0) throw new ArgumentNullException(nameof(prefix));
+            if (prefix?.Length == 0)
+                throw new ArgumentNullException(nameof(prefix));
             foreach (var (key, value) in snapshot.Find(StorageKey.CreateSearchPrefix(contractState.Id, prefix)))
                 yield return (key, value);
         }
@@ -39,7 +40,8 @@ namespace Neo.Plugins.RestServer.Extensions
         {
             ArgumentNullException.ThrowIfNull(nameof(contractState));
             ArgumentNullException.ThrowIfNull(nameof(snapshot));
-            if (storageKey?.Length == 0) throw new ArgumentNullException(nameof(storageKey));
+            if (storageKey?.Length == 0)
+                throw new ArgumentNullException(nameof(storageKey));
             foreach (var (key, value) in snapshot.Find(StorageKey.CreateSearchPrefix(contractState.Id, storageKey)))
                 if (key.Key.Span.SequenceEqual(storageKey))
                     return value;
@@ -56,7 +58,8 @@ namespace Neo.Plugins.RestServer.Extensions
         public static IEnumerable<(StorageKey key, StorageItem value)> ListContractStorage(this ContractManagement contractManagement, DataCache snapshot, int contractId)
         {
             ArgumentNullException.ThrowIfNull(nameof(snapshot));
-            if (contractId < 0) throw new ArgumentOutOfRangeException(nameof(contractId));
+            if (contractId < 0)
+                throw new ArgumentOutOfRangeException(nameof(contractId));
             foreach (var (key, value) in snapshot.Find(StorageKey.CreateSearchPrefix(contractId, ReadOnlySpan<byte>.Empty)))
                 yield return (key, value);
         }

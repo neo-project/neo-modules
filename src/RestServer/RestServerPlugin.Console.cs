@@ -9,7 +9,7 @@
 // modifications are permitted.
 
 using Neo.ConsoleService;
-using Neo.Plugins.RestServer.Controllers;
+using Neo.Plugins.RestServer.Controllers.v1;
 using System.Text;
 
 namespace Neo.Plugins.RestServer

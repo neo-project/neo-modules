@@ -20,21 +20,24 @@ namespace Neo.Plugins.RestServer.Helpers
         public static ContractParameterDefinition[] GetAbiEventParams(DataCache snapshot, UInt160 scriptHash, string eventName)
         {
             var contractState = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
-            if (contractState == null) return Array.Empty<ContractParameterDefinition>();
+            if (contractState == null)
+                return Array.Empty<ContractParameterDefinition>();
             return contractState.Manifest.Abi.Events.SingleOrDefault(s => s.Name.Equals(eventName, StringComparison.OrdinalIgnoreCase))?.Parameters;
         }
 
         public static bool IsNep17Supported(DataCache snapshot, UInt160 scriptHash)
         {
             var contractState = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
-            if (contractState == null) return false;
+            if (contractState == null)
+                return false;
             return IsNep17Supported(contractState);
         }
 
         public static bool IsNep11Supported(DataCache snapshot, UInt160 scriptHash)
         {
             var contractState = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
-            if (contractState == null) return false;
+            if (contractState == null)
+                return false;
             return IsNep11Supported(contractState);
         }
 

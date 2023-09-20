@@ -10,7 +10,6 @@
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Neo.Plugins.RestServer.Binder;
 using Neo.Plugins.RestServer.Exceptions;
 using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Helpers;
@@ -21,13 +20,13 @@ using Neo.SmartContract.Manifest;
 using Neo.SmartContract.Native;
 using System.Net.Mime;
 
-namespace Neo.Plugins.RestServer.Controllers
+namespace Neo.Plugins.RestServer.Controllers.v1
 {
-    [Route("/api/v1/contracts")]
+    [Route("/api/v{version:apiVersion}/contracts")]
     [Produces(MediaTypeNames.Application.Json)]
     [Consumes(MediaTypeNames.Application.Json)]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
-    [ApiExplorerSettings(GroupName = "v1")]
+    [ApiVersion("1.0")]
     [ApiController]
     public class ContractsController : ControllerBase
     {
@@ -59,9 +58,11 @@ namespace Neo.Plugins.RestServer.Controllers
             if (skip < 1 || take < 1 || take > RestServerSettings.Current.MaxPageSize)
                 throw new InvalidParameterRangeException();
             var contracts = NativeContract.ContractManagement.ListContracts(_neosystem.StoreView);
-            if (contracts.Any() == false) return NoContent();
+            if (contracts.Any() == false)
+                return NoContent();
             var contractRequestList = contracts.OrderBy(o => o.Manifest.Name).Skip((skip - 1) * take).Take(take);
-            if (contractRequestList.Any() == false) return NoContent();
+            if (contractRequestList.Any() == false)
+                return NoContent();
             return Ok(contractRequestList);
         }
 
@@ -92,7 +93,8 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromRoute(Name = "hash")]
             UInt160 scripthash)
         {
-            if (NativeContract.IsNative(scripthash)) return NoContent();
+            if (NativeContract.IsNative(scripthash))
+                return NoContent();
             var contract = NativeContract.ContractManagement.GetContract(_neosystem.StoreView, scripthash);
             if (contract == null)
                 throw new ContractNotFoundException(scripthash);

@@ -80,10 +80,13 @@ namespace Neo.Plugins.RestServer
             JsonSerializerSettings = new JsonSerializerSettings()
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                MissingMemberHandling = MissingMemberHandling.Error,
+                NullValueHandling = NullValueHandling.Include,
                 Formatting = Formatting.None,
                 Converters = new JsonConverter[]
                 {
                     new StringEnumConverter(),
+                    new BigDecimalJsonConverter(),
                     new UInt160JsonConverter(),
                     new UInt256JsonConverter(),
                     new ECPointJsonConverter(),

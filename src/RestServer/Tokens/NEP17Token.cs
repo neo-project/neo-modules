@@ -9,11 +9,11 @@
 // modifications are permitted.
 
 using Neo.Persistence;
-using Neo.SmartContract.Native;
+using Neo.Plugins.RestServer.Helpers;
 using Neo.SmartContract;
+using Neo.SmartContract.Native;
 using Neo.VM;
 using System.Numerics;
-using Neo.Plugins.RestServer.Helpers;
 
 namespace Neo.Plugins.RestServer.Tokens
 {
@@ -34,7 +34,8 @@ namespace Neo.Plugins.RestServer.Tokens
         {
             _datacache = snapshot ?? neoSystem.GetSnapshot();
             var contractState = NativeContract.ContractManagement.GetContract(_datacache, scriptHash) ?? throw new ArgumentException(null, nameof(scriptHash));
-            if (ContractHelper.IsNep17Supported(contractState) == false) throw new NotSupportedException(nameof(scriptHash));
+            if (ContractHelper.IsNep17Supported(contractState) == false)
+                throw new NotSupportedException(nameof(scriptHash));
             byte[] script;
             using (var sb = new ScriptBuilder())
             {
@@ -43,7 +44,8 @@ namespace Neo.Plugins.RestServer.Tokens
                 script = sb.ToArray();
             }
             using var engine = ApplicationEngine.Run(script, _datacache, settings: neoSystem.Settings, gas: RestServerSettings.Current.MaxGasInvoke);
-            if (engine.State != VMState.HALT) throw new NotSupportedException(nameof(scriptHash));
+            if (engine.State != VMState.HALT)
+                throw new NotSupportedException(nameof(scriptHash));
 
             _neosystem = neoSystem;
             ScriptHash = scriptHash;

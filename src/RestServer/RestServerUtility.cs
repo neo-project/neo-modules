@@ -8,20 +8,19 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Neo.Cryptography.ECC;
+using Neo.SmartContract;
 using Neo.VM.Types;
+using Neo.Wallets;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
 using System.Numerics;
 using Array = Neo.VM.Types.Array;
 using Boolean = Neo.VM.Types.Boolean;
 using Buffer = Neo.VM.Types.Buffer;
-using Neo.Wallets;
-using Neo.SmartContract;
-using Neo.Cryptography.ECC;
 
 namespace Neo.Plugins.RestServer
 {
-    internal static class RestServerUtility
+    public static partial class RestServerUtility
     {
         public static UInt160 ConvertToScriptHash(string address, ProtocolSettings settings)
         {
@@ -48,58 +47,86 @@ namespace Neo.Plugins.RestServer
 
         public static StackItem StackItemFromJToken(JToken json)
         {
-            StackItem s = StackItem.Null;
-            var type = (StackItemType)Enum.Parse(typeof(StackItemType), json["type"].Value<string>(), true);
-            var value = json["value"];
-
-            switch (type)
+            if (json.Type == JTokenType.Object)
             {
-                case StackItemType.Struct:
-                    var st = new Struct();
-                    foreach (var item in (JArray)value)
-                        st.Add(StackItemFromJToken(item));
-                    s = st;
-                    break;
-                case StackItemType.Array:
-                    var a = new Array();
-                    foreach (var item in (JArray)value)
-                        a.Add(StackItemFromJToken(item));
-                    s = a;
-                    break;
-                case StackItemType.Map:
-                    var m = new Map();
-                    foreach (var item in (JArray)value)
+                var jsonObject = json as JObject;
+                var props = jsonObject.Properties();
+                var typeProp = props.SingleOrDefault(s => s.Name.Equals("type", StringComparison.InvariantCultureIgnoreCase));
+                var valueProp = props.SingleOrDefault(s => s.Name.Equals("value", StringComparison.InvariantCultureIgnoreCase));
+
+                if (typeProp != null)
+                {
+                    StackItem s = StackItem.Null;
+                    var type = Enum.Parse<StackItemType>(typeProp.ToObject<string>(), true);
+                    var value = valueProp.Value;
+
+                    switch (type)
                     {
-                        var key = (PrimitiveType)StackItemFromJToken(item["Key"]);
-                        m[key] = StackItemFromJToken(item["Value"]);
+                        case StackItemType.Struct:
+                            if (value.Type == JTokenType.Array)
+                            {
+                                var st = new Struct();
+                                foreach (var item in (JArray)value)
+                                    st.Add(StackItemFromJToken(item));
+                                s = st;
+                            }
+                            break;
+                        case StackItemType.Array:
+                            if (value.Type == JTokenType.Array)
+                            {
+                                var a = new Array();
+                                foreach (var item in (JArray)value)
+                                    a.Add(StackItemFromJToken(item));
+                                s = a;
+                            }
+                            break;
+                        case StackItemType.Map:
+                            if (value.Type == JTokenType.Array)
+                            {
+                                var m = new Map();
+                                foreach (var item in (JArray)value)
+                                {
+                                    if (item.Type != JTokenType.Object)
+                                        continue;
+                                    var vprops = ((JObject)item).Properties();
+                                    var keyProps = vprops.SingleOrDefault(s => s.Name.Equals("key", StringComparison.InvariantCultureIgnoreCase));
+                                    var keyValueProps = vprops.SingleOrDefault(s => s.Name.Equals("value", StringComparison.InvariantCultureIgnoreCase));
+                                    if (keyProps == null && keyValueProps == null)
+                                        continue;
+                                    var key = (PrimitiveType)StackItemFromJToken(keyProps?.Value);
+                                    m[key] = StackItemFromJToken(keyValueProps?.Value);
+                                }
+                                s = m;
+                            }
+                            break;
+                        case StackItemType.Boolean:
+                            s = value.ToObject<bool>() ? StackItem.True : StackItem.False;
+                            break;
+                        case StackItemType.Buffer:
+                            s = new Buffer(Convert.FromBase64String(value.ToObject<string>()));
+                            break;
+                        case StackItemType.ByteString:
+                            s = new ByteString(Convert.FromBase64String(value.ToObject<string>()));
+                            break;
+                        case StackItemType.Integer:
+                            s = value.ToObject<BigInteger>();
+                            break;
+                        case StackItemType.InteropInterface:
+                            s = new InteropInterface(Convert.FromBase64String(value.ToObject<string>()));
+                            break;
+                        case StackItemType.Pointer:
+                            s = new Pointer(null, value.ToObject<int>());
+                            break;
+                        default:
+                            break;
                     }
-                    s = m;
-                    break;
-                case StackItemType.Boolean:
-                    s = value.ToObject<bool>() ? StackItem.True : StackItem.False;
-                    break;
-                case StackItemType.Buffer:
-                    s = new Buffer(Convert.FromBase64String(value.ToObject<string>()));
-                    break;
-                case StackItemType.ByteString:
-                    s = new ByteString(Convert.FromBase64String(value.ToObject<string>()));
-                    break;
-                case StackItemType.Integer:
-                    s = value.ToObject<BigInteger>();
-                    break;
-                case StackItemType.InteropInterface:
-                    s = new InteropInterface(Convert.FromBase64String(value.ToObject<string>()));
-                    break;
-                case StackItemType.Pointer:
-                    s = new Pointer(null, value.ToObject<int>());
-                    break;
-                default:
-                    break;
+                    return s;
+                }
             }
-            return s;
+            throw new FormatException();
         }
 
-        public static JToken StackItemToJToken(StackItem item, IList<(StackItem, JToken)> context)
+        public static JToken StackItemToJToken(StackItem item, IList<(StackItem, JToken)> context, global::Newtonsoft.Json.JsonSerializer serializer)
         {
             JToken o = null;
             switch (item)
@@ -112,12 +139,12 @@ namespace Neo.Plugins.RestServer
                     if (o is null)
                     {
                         context.Add((item, o));
-                        var a = @struct.Select(s => StackItemToJToken(s, context));
-                        o = new JObject()
+                        var a = @struct.Select(s => StackItemToJToken(s, context, serializer));
+                        o = JToken.FromObject(new
                         {
-                            new JProperty("type", StackItemType.Struct.ToString()),
-                            new JProperty("value", JArray.FromObject(a)),
-                        };
+                            Type = StackItemType.Struct.ToString(),
+                            Value = JArray.FromObject(a),
+                        }, serializer);
                     }
                     break;
                 case Array array:
@@ -128,12 +155,12 @@ namespace Neo.Plugins.RestServer
                     if (o is null)
                     {
                         context.Add((item, o));
-                        var a = array.Select(s => StackItemToJToken(s, context));
-                        o = new JObject()
+                        var a = array.Select(s => StackItemToJToken(s, context, serializer));
+                        o = JToken.FromObject(new
                         {
-                            new JProperty("type", StackItemType.Array.ToString()),
-                            new JProperty("value", JArray.FromObject(a)),
-                        };
+                            Type = StackItemType.Array.ToString(),
+                            Value = JArray.FromObject(a, serializer),
+                        }, serializer);
                     }
                     break;
                 case Map map:
@@ -144,67 +171,66 @@ namespace Neo.Plugins.RestServer
                     if (o is null)
                     {
                         context.Add((item, o));
-                        var kvp = map.Select(s => new KeyValuePair<JToken, JToken>(StackItemToJToken(s.Key, context), StackItemToJToken(s.Value, context)));
-                        o = new JObject()
+                        var kvp = map.Select(s =>
+                            new KeyValuePair<JToken, JToken>(
+                                StackItemToJToken(s.Key, context, serializer),
+                                StackItemToJToken(s.Value, context, serializer)));
+                        o = JToken.FromObject(new
                         {
-                            new JProperty("type", StackItemType.Map.ToString()),
-                            new JProperty("value", JArray.FromObject(kvp)),
-                        };
+                            Type = StackItemType.Map.ToString(),
+                            Value = JArray.FromObject(kvp, serializer),
+                        }, serializer);
                     }
                     break;
                 case Boolean:
-                    o = new JObject()
+                    o = JToken.FromObject(new
                     {
-                        new JProperty("type", StackItemType.Boolean.ToString()),
-                        new JProperty("value", item.GetBoolean()),
-                    };
+                        Type = StackItemType.Boolean.ToString(),
+                        Value = item.GetBoolean(),
+                    }, serializer);
                     break;
                 case Buffer:
-                    o = new JObject()
+                    o = JToken.FromObject(new
                     {
-                        new JProperty("type", StackItemType.Buffer.ToString()),
-                        new JProperty("value", Convert.ToBase64String(item.GetSpan())),
-                    };
+                        Type = StackItemType.Buffer.ToString(),
+                        Value = Convert.ToBase64String(item.GetSpan()),
+                    }, serializer);
                     break;
                 case ByteString:
-                    o = new JObject()
+                    o = JToken.FromObject(new
                     {
-                        new JProperty("type", StackItemType.ByteString.ToString()),
-                        new JProperty("value", Convert.ToBase64String(item.GetSpan())),
-                    };
+                        Type = StackItemType.ByteString.ToString(),
+                        Value = Convert.ToBase64String(item.GetSpan()),
+                    }, serializer);
                     break;
                 case Integer:
-                    o = new JObject()
+                    o = JToken.FromObject(new
                     {
-                        new JProperty("type", StackItemType.Integer.ToString()),
-                        new JProperty("value", item.GetInteger()),
-                    };
+                        Type = StackItemType.Integer.ToString(),
+                        Value = item.GetInteger(),
+                    }, serializer);
                     break;
                 case InteropInterface:
-                    o = new JObject()
+                    o = JToken.FromObject(new
                     {
-                        new JProperty("type", StackItemType.InteropInterface.ToString()),
-                        new JProperty("value", JToken.Parse(
-                            JsonConvert.SerializeObject(
-                                item.GetInterface<object>(),
-                                RestServerSettings.Default.JsonSerializerSettings
-                            )
-                        )),
-                    };
+                        Type = StackItemType.InteropInterface.ToString(),
+                        Value = Convert.ToBase64String(item.GetSpan()),
+                    });
                     break;
                 case Pointer pointer:
-                    o = new JObject()
+                    o = JToken.FromObject(new
                     {
-                        new JProperty("type", StackItemType.Pointer.ToString()),
-                        new JProperty("value", pointer.Position),
-                    };
+                        Type = StackItemType.Pointer.ToString(),
+                        Value = pointer.Position,
+                    }, serializer);
                     break;
                 case Null:
-                    o = new JObject()
+                case null:
+                    o = JToken.FromObject(new
                     {
-                        new JProperty("type", StackItemType.Any.ToString()),
-                        new JProperty("value", null),
-                    };
+                        Type = StackItemType.Any.ToString(),
+                        Value = JValue.CreateNull(),
+                    }, serializer);
                     break;
                 default:
                     throw new NotSupportedException($"StackItemType({item.Type}) is not supported to JSON.");

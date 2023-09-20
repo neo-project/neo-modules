@@ -24,17 +24,17 @@ using Neo.Wallets.NEP6;
 using System.Net.Mime;
 using System.Numerics;
 
-namespace Neo.Plugins.RestServer.Controllers
+namespace Neo.Plugins.RestServer.Controllers.v1
 {
     /// <summary>
     /// Wallet API
     /// </summary>
-    [Route("/api/v1/wallet")]
+    [Route("/api/v{version:apiVersion}/wallet")]
     [DisableCors]
     [Produces(MediaTypeNames.Application.Json)]
     [Consumes(MediaTypeNames.Application.Json)]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
-    [ApiExplorerSettings(GroupName = "v1")]
+    [ApiVersion("1.0")]
     [ApiController]
     public class WalletController : ControllerBase
     {

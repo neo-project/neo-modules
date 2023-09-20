@@ -9,8 +9,6 @@
 // modifications are permitted.
 
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Neo.SmartContract;
-using Newtonsoft.Json;
 
 namespace Neo.Plugins.RestServer.Binder
 {

@@ -8,24 +8,24 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Microsoft.AspNetCore.Mvc;
-using Neo.SmartContract.Native;
 using Microsoft.AspNetCore.Http;
-using Neo.Plugins.RestServer.Extensions;
-using Neo.Plugins.RestServer.Exceptions;
-using System.Net.Mime;
+using Microsoft.AspNetCore.Mvc;
 using Neo.Network.P2P.Payloads;
-using Neo.Plugins.RestServer.Models.Error;
+using Neo.Plugins.RestServer.Exceptions;
+using Neo.Plugins.RestServer.Extensions;
 using Neo.Plugins.RestServer.Models.Blockchain;
+using Neo.Plugins.RestServer.Models.Error;
 using Neo.Plugins.RestServer.Models.Ledger;
+using Neo.SmartContract.Native;
+using System.Net.Mime;
 
-namespace Neo.Plugins.RestServer.Controllers
+namespace Neo.Plugins.RestServer.Controllers.v1
 {
-    [Route("/api/v1/ledger")]
+    [Route("/api/v{version:apiVersion}/ledger")]
     [Produces(MediaTypeNames.Application.Json)]
     [Consumes(MediaTypeNames.Application.Json)]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(ErrorModel))]
-    [ApiExplorerSettings(GroupName = "v1")]
+    [ApiVersion("1.0")]
     [ApiController]
     public class LedgerController : ControllerBase
     {
@@ -92,7 +92,7 @@ namespace Neo.Plugins.RestServer.Controllers
                 throw new InvalidParameterRangeException();
             //var start = (skip - 1) * take + startIndex;
             //var end = start + take;
-            var start = NativeContract.Ledger.CurrentIndex(_neosystem.StoreView) - ((skip - 1) * take);
+            var start = NativeContract.Ledger.CurrentIndex(_neosystem.StoreView) - (skip - 1) * take;
             var end = start - take;
             var lstOfBlocks = new List<Header>();
             for (uint i = start; i > end; i--)
@@ -102,7 +102,8 @@ namespace Neo.Plugins.RestServer.Controllers
                     break;
                 lstOfBlocks.Add(block.Header);
             }
-            if (lstOfBlocks.Any() == false) return NoContent();
+            if (lstOfBlocks.Any() == false)
+                return NoContent();
             return Ok(lstOfBlocks);
         }
 
@@ -203,7 +204,8 @@ namespace Neo.Plugins.RestServer.Controllers
             var block = NativeContract.Ledger.GetBlock(_neosystem.StoreView, blockIndex);
             if (block == null)
                 throw new BlockNotFoundException(blockIndex);
-            if (block.Transactions == null || block.Transactions.Length == 0) return NoContent();
+            if (block.Transactions == null || block.Transactions.Length == 0)
+                return NoContent();
             return Ok(block.Transactions.Skip((skip - 1) * take).Take(take));
         }
 
@@ -224,7 +226,8 @@ namespace Neo.Plugins.RestServer.Controllers
             [FromRoute( Name = "hash")]
             UInt256 hash)
         {
-            if (NativeContract.Ledger.ContainsTransaction(_neosystem.StoreView, hash) == false) return NotFound();
+            if (NativeContract.Ledger.ContainsTransaction(_neosystem.StoreView, hash) == false)
+                return NotFound();
             var txst = NativeContract.Ledger.GetTransaction(_neosystem.StoreView, hash);
             if (txst == null)
                 throw new TransactionNotFoundException(hash);
@@ -349,7 +352,8 @@ namespace Neo.Plugins.RestServer.Controllers
         {
             if (skip < 0 || take < 0 || take > RestServerSettings.Current.MaxPageSize)
                 throw new InvalidParameterRangeException();
-            if (_neosystem.MemPool.Any() == false) return NoContent();
+            if (_neosystem.MemPool.Any() == false)
+                return NoContent();
             var vTx = _neosystem.MemPool.GetVerifiedTransactions();
             return Ok(vTx.Skip((skip - 1) * take).Take(take));
         }
@@ -374,7 +378,8 @@ namespace Neo.Plugins.RestServer.Controllers
         {
             if (skip < 0 || take < 0 || take > RestServerSettings.Current.MaxPageSize)
                 throw new InvalidParameterRangeException();
-            if (_neosystem.MemPool.Any() == false) return NoContent();
+            if (_neosystem.MemPool.Any() == false)
+                return NoContent();
             _neosystem.MemPool.GetVerifiedAndUnverifiedTransactions(out _, out var unVerifiedTransactions);
             return Ok(unVerifiedTransactions.Skip((skip - 1) * take).Take(take));
         }

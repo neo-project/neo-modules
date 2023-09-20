@@ -16,19 +16,32 @@ namespace Neo.Plugins.RestServer.Newtonsoft.Json
 {
     public class BigDecimalJsonConverter : JsonConverter<BigDecimal>
     {
+        public override bool CanRead => true;
+        public override bool CanWrite => true;
+
         public override BigDecimal ReadJson(JsonReader reader, Type objectType, BigDecimal existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            var o = JObject.Load(reader);
-            return new BigDecimal(o["value"].ToObject<BigInteger>(), o["decimals"].ToObject<byte>());
+            var token = JToken.ReadFrom(reader);
+            if (token.Type == JTokenType.Object)
+            {
+                var valueProp = ((JObject)token).Properties().SingleOrDefault(p => p.Name.Equals("value", StringComparison.InvariantCultureIgnoreCase));
+                var decimalsProp = ((JObject)token).Properties().SingleOrDefault(p => p.Name.Equals("decimals", StringComparison.InvariantCultureIgnoreCase));
+
+                if (valueProp != null && decimalsProp != null)
+                {
+                    return new BigDecimal(valueProp.ToObject<BigInteger>(), decimalsProp.ToObject<byte>());
+                }
+            }
+            throw new FormatException();
         }
 
         public override void WriteJson(JsonWriter writer, BigDecimal value, JsonSerializer serializer)
         {
-            var o = new JObject()
+            var o = JToken.FromObject(new
             {
-                new JProperty("value", value.Value),
-                new JProperty("decimals", value.Decimals),
-            };
+                value.Value,
+                value.Decimals,
+            }, serializer);
             o.WriteTo(writer);
         }
     }
