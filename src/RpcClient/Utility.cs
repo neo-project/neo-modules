@@ -197,6 +197,14 @@ namespace Neo.Network.RPC
                     Code = Enum.Parse<OracleResponseCode>(json["code"].AsString()),
                     Result = Convert.FromBase64String(json["result"].AsString()),
                 },
+                TransactionAttributeType.NotValidBefore => new NotValidBefore()
+                {
+                    Height = (uint)json["height"].AsNumber(),
+                },
+                TransactionAttributeType.Conflicts => new Conflicts()
+                {
+                    Hash = UInt256.Parse(json["hash"].AsString())
+                },
                 _ => throw new FormatException(),
             };
         }
