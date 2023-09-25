@@ -81,7 +81,25 @@ namespace Neo.Consensus
             if (message.Version != context.Block.Version || message.PrevHash != context.Block.PrevHash) return;
             if (message.TransactionHashes.Length > neoSystem.Settings.MaxTransactionsPerBlock) return;
             Log($"{nameof(OnPrepareRequestReceived)}: height={message.BlockIndex} view={message.ViewNumber} index={message.ValidatorIndex} tx={message.TransactionHashes.Length}");
-            if (message.Timestamp <= context.PrevHeader.Timestamp || message.Timestamp > TimeProvider.Current.UtcNow.AddMilliseconds(8 * neoSystem.Settings.MillisecondsPerBlock).ToTimestampMS())
+
+            const int blockWindow = 10000;
+            ulong expectedIntervalValue;
+
+            if (message.BlockIndex > blockWindow)
+            {
+                var beginTimeStamp = NativeContract.Ledger.GetBlock(context.Snapshot, message.BlockIndex - blockWindow).Timestamp;
+                var currentInterval = (blockWindow + 1) * neoSystem.Settings.MillisecondsPerBlock - message.Timestamp + beginTimeStamp;
+                expectedIntervalValue = Math.Max(currentInterval, neoSystem.Settings.MillisecondsPerBlock);
+            }
+            else
+            {
+                expectedIntervalValue = neoSystem.Settings.MillisecondsPerBlock;
+            }
+
+            if (message.Timestamp <= context.PrevHeader.Timestamp
+                || message.Timestamp <= TimeProvider.Current.UtcNow.ToTimestampMS()
+                || message.Timestamp < TimeProvider.Current.UtcNow.AddMilliseconds(expectedIntervalValue).ToTimestampMS()
+                || message.Timestamp > TimeProvider.Current.UtcNow.AddMilliseconds(8 * neoSystem.Settings.MillisecondsPerBlock).ToTimestampMS())
             {
                 Log($"Timestamp incorrect: {message.Timestamp}", LogLevel.Warning);
                 return;
