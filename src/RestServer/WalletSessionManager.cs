@@ -15,21 +15,25 @@ namespace Neo.Plugins.RestServer
 {
     public class WalletSessionManager : ConcurrentDictionary<Guid, WalletSession>
     {
-        private readonly Timer _timer;
+        private readonly PeriodicTimer _timer;
 
         public WalletSessionManager()
         {
-            _timer = new(SessionTimeout, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+            _timer = new(TimeSpan.FromSeconds(1));
+            _ = Task.Run(SessionTimeout);
         }
 
-        private void SessionTimeout(object data)
+        private async Task SessionTimeout()
         {
-            var killAll = this.Where(w => w.Value.Expires <= DateTime.Now)
-                .Select(s => Task.Run(() =>
-                {
-                    TryRemove(s);
-                }));
-            Task.WhenAll(killAll);
+            while (await _timer.WaitForNextTickAsync())
+            {
+                var killAll = this.Where(w => w.Value.Expires <= DateTime.Now)
+                    .Select(s => Task.Run(() =>
+                    {
+                        TryRemove(s);
+                    }));
+                await Task.WhenAll(killAll);
+            }
         }
     }
 
