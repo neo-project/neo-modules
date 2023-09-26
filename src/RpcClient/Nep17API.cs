@@ -147,12 +147,12 @@ namespace Neo.Network.RPC
 
             var vmResult = await rpcClient.InvokeScriptAsync(manager.Tx.Script, signers);
 
-            if (vmResult.State != VMState.HALT && vmResult.Stack?[0].GetBoolean() == false)
-                throw new Exception("Transfer has not been processed. Result: 'false'.");
-
-            return await manager
-                .AddSignature(fromKey)
-                .SignAsync().ConfigureAwait(false);
+            if (vmResult.State == VMState.HALT && vmResult.Stack?[0].GetBoolean() == true)
+                return await manager
+                    .AddSignature(fromKey)
+                    .SignAsync().ConfigureAwait(false);
+            else
+                throw new Exception(vmResult.Exception ?? "Transfer has not been processed.");
         }
 
         /// <summary>
@@ -179,12 +179,12 @@ namespace Neo.Network.RPC
 
             var vmResult = await rpcClient.InvokeScriptAsync(manager.Tx.Script, signers);
 
-            if (vmResult.State != VMState.HALT && vmResult.Stack?[0].GetBoolean() == false)
-                throw new Exception("Transfer has not been processed. Result: 'false'.");
-
-            return await manager
-                .AddMultiSig(fromKeys, m, pubKeys)
-                .SignAsync().ConfigureAwait(false);
+            if (vmResult.State == VMState.HALT && vmResult.Stack?[0].GetBoolean() == true)
+                return await manager
+                    .AddMultiSig(fromKeys, m, pubKeys)
+                    .SignAsync().ConfigureAwait(false);
+            else
+                throw new Exception(vmResult.Exception ?? "Transfer has not been processed.");
         }
     }
 }
