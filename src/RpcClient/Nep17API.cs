@@ -34,11 +34,6 @@ namespace Neo.Network.RPC
         public Nep17API(RpcClient rpcClient) : base(rpcClient) { }
 
         /// <summary>
-        /// Throw an error if transfer returns false
-        /// </summary>
-        public bool ErrorOnTransferFalse { get; set; } = false;
-
-        /// <summary>
         /// Get balance of NEP17 token
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
@@ -142,19 +137,16 @@ namespace Neo.Network.RPC
         {
             var sender = Contract.CreateSignatureRedeemScript(fromKey.PublicKey).ToScriptHash();
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
-            byte[] script = scriptHash.MakeScript("transfer", sender, to, amount, data);
+            byte[] script = scriptHash.MakeScript("transfer", sender, to, amount, data)
+                .Concat(new[] { (byte)OpCode.ASSERT })
+                .ToArray();
 
             TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
 
-            var vmResult = await rpcClient.InvokeScriptAsync(script, signers).ConfigureAwait(false);
-
-            if (ErrorOnTransferFalse == false || (vmResult.State == VMState.HALT && vmResult.Stack?[0].GetBoolean() == true))
-                return await manager
-                    .AddSignature(fromKey)
-                    .SignAsync().ConfigureAwait(false);
-            else
-                throw new Exception(vmResult.Exception ?? "Transfer has not been processed.");
+            return await manager
+                .AddSignature(fromKey)
+                .SignAsync().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -174,19 +166,16 @@ namespace Neo.Network.RPC
                 throw new ArgumentException($"Need at least {m} KeyPairs for signing!");
             var sender = Contract.CreateMultiSigContract(m, pubKeys).ScriptHash;
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
-            byte[] script = scriptHash.MakeScript("transfer", sender, to, amount, data);
+            byte[] script = scriptHash.MakeScript("transfer", sender, to, amount, data)
+                .Concat(new[] { (byte)OpCode.ASSERT })
+                .ToArray();
 
             TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
 
-            var vmResult = await rpcClient.InvokeScriptAsync(script, signers).ConfigureAwait(false);
-
-            if (ErrorOnTransferFalse == false || (vmResult.State == VMState.HALT && vmResult.Stack?[0].GetBoolean() == true))
-                return await manager
-                    .AddMultiSig(fromKeys, m, pubKeys)
-                    .SignAsync().ConfigureAwait(false);
-            else
-                throw new Exception(vmResult.Exception ?? "Transfer has not been processed.");
+            return await manager
+                .AddMultiSig(fromKeys, m, pubKeys)
+                .SignAsync().ConfigureAwait(false);
         }
     }
 }

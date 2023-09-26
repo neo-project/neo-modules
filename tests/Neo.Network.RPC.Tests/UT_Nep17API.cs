@@ -26,10 +26,7 @@ namespace Neo.Network.RPC.Tests
             keyPair1 = new KeyPair(Wallet.GetPrivateKeyFromWIF("KyXwTh1hB76RRMquSvnxZrJzQx7h9nQP2PCRL38v6VDb5ip3nf1p"));
             sender = Contract.CreateSignatureRedeemScript(keyPair1.PublicKey).ToScriptHash();
             rpcClientMock = UT_TransactionManager.MockRpcClient(sender, new byte[0]);
-            nep17API = new Nep17API(rpcClientMock.Object)
-            {
-                ErrorOnTransferFalse = false,
-            };
+            nep17API = new Nep17API(rpcClientMock.Object);
         }
 
         [TestMethod]
@@ -140,13 +137,17 @@ namespace Neo.Network.RPC.Tests
         [TestMethod]
         public async Task TestTransfer()
         {
-            byte[] testScript = NativeContract.GAS.Hash.MakeScript("transfer", sender, UInt160.Zero, new BigInteger(1_00000000), null);
+            byte[] testScript = NativeContract.GAS.Hash.MakeScript("transfer", sender, UInt160.Zero, new BigInteger(1_00000000), null)
+                .Concat(new[] { (byte)OpCode.ASSERT })
+                .ToArray();
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter());
 
             var client = rpcClientMock.Object;
             var result = await nep17API.CreateTransferTxAsync(NativeContract.GAS.Hash, keyPair1, UInt160.Zero, new BigInteger(1_00000000));
 
-            testScript = NativeContract.GAS.Hash.MakeScript("transfer", sender, UInt160.Zero, new BigInteger(1_00000000), string.Empty);
+            testScript = NativeContract.GAS.Hash.MakeScript("transfer", sender, UInt160.Zero, new BigInteger(1_00000000), string.Empty)
+                .Concat(new[] { (byte)OpCode.ASSERT })
+                .ToArray();
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter());
 
             result = await nep17API.CreateTransferTxAsync(NativeContract.GAS.Hash, keyPair1, UInt160.Zero, new BigInteger(1_00000000), string.Empty);
