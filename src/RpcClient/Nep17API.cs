@@ -34,6 +34,11 @@ namespace Neo.Network.RPC
         public Nep17API(RpcClient rpcClient) : base(rpcClient) { }
 
         /// <summary>
+        /// Throw an error if transfer returns false
+        /// </summary>
+        public bool ErrorOnTransferFalse { get; set; } = false;
+
+        /// <summary>
         /// Get balance of NEP17 token
         /// </summary>
         /// <param name="scriptHash">contract script hash</param>
@@ -143,9 +148,9 @@ namespace Neo.Network.RPC
             TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
 
-            var vmResult = await rpcClient.InvokeScriptAsync(manager.Tx.Script, signers).ConfigureAwait(false);
+            var vmResult = await rpcClient.InvokeScriptAsync(script, signers).ConfigureAwait(false);
 
-            if (vmResult.State == VMState.HALT && vmResult.Stack?[0].GetBoolean() == true)
+            if (ErrorOnTransferFalse == false || (vmResult.State == VMState.HALT && vmResult.Stack?[0].GetBoolean() == true))
                 return await manager
                     .AddSignature(fromKey)
                     .SignAsync().ConfigureAwait(false);
@@ -175,9 +180,9 @@ namespace Neo.Network.RPC
             TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
 
-            var vmResult = await rpcClient.InvokeScriptAsync(manager.Tx.Script, signers).ConfigureAwait(false);
+            var vmResult = await rpcClient.InvokeScriptAsync(script, signers).ConfigureAwait(false);
 
-            if (vmResult.State == VMState.HALT && vmResult.Stack?[0].GetBoolean() == true)
+            if (ErrorOnTransferFalse == false || (vmResult.State == VMState.HALT && vmResult.Stack?[0].GetBoolean() == true))
                 return await manager
                     .AddMultiSig(fromKeys, m, pubKeys)
                     .SignAsync().ConfigureAwait(false);
