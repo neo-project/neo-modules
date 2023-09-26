@@ -145,7 +145,7 @@ namespace Neo.Network.RPC
             TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
 
-            var vmResult = await rpcClient.InvokeScriptAsync(manager.Tx.Script, signers);
+            var vmResult = await rpcClient.InvokeScriptAsync(manager.Tx.Script, signers).ConfigureAwait(false);
 
             if (vmResult.State == VMState.HALT && vmResult.Stack?[0].GetBoolean() == true)
                 return await manager
@@ -177,7 +177,7 @@ namespace Neo.Network.RPC
             TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
 
-            var vmResult = await rpcClient.InvokeScriptAsync(manager.Tx.Script, signers);
+            var vmResult = await rpcClient.InvokeScriptAsync(manager.Tx.Script, signers).ConfigureAwait(false);
 
             if (vmResult.State == VMState.HALT && vmResult.Stack?[0].GetBoolean() == true)
                 return await manager
