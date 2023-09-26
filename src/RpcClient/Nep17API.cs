@@ -148,7 +148,7 @@ namespace Neo.Network.RPC
             var vmResult = await rpcClient.InvokeScriptAsync(manager.Tx.Script, signers);
 
             if (vmResult.State != VMState.HALT && vmResult.Stack?[0].GetBoolean() == false)
-                throw new Exception("Transfer has indicated that there is problem. Result: 'false'.");
+                throw new Exception("Transfer has not been processed. Result: 'false'.");
 
             return await manager
                 .AddSignature(fromKey)
@@ -180,7 +180,7 @@ namespace Neo.Network.RPC
             var vmResult = await rpcClient.InvokeScriptAsync(manager.Tx.Script, signers);
 
             if (vmResult.State != VMState.HALT && vmResult.Stack?[0].GetBoolean() == false)
-                throw new Exception("Transfer has indicated that there is problem. Result: 'false'.");
+                throw new Exception("Transfer has not been processed. Result: 'false'.");
 
             return await manager
                 .AddMultiSig(fromKeys, m, pubKeys)
