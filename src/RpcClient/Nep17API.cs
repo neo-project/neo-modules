@@ -137,7 +137,6 @@ namespace Neo.Network.RPC
         /// <param name="to">to account script hash</param>
         /// <param name="amount">transfer amount</param>
         /// <param name="data">onPayment data</param>
-        /// <param name="failOnInvalidTransfer">checks to see if transfer method fails</param>
         /// <returns></returns>
         public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount, object data = null)
         {
