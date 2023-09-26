@@ -8,7 +8,6 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using Akka.Util;
 using Neo.Cryptography.ECC;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
@@ -16,7 +15,6 @@ using Neo.SmartContract;
 using Neo.VM;
 using Neo.Wallets;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
