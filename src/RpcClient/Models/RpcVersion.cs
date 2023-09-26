@@ -9,6 +9,9 @@
 // modifications are permitted.
 
 using Neo.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Neo.Network.RPC.Models
 {
@@ -25,6 +28,7 @@ namespace Neo.Network.RPC.Models
             public uint MaxTransactionsPerBlock { get; set; }
             public int MemoryPoolMaxTransactions { get; set; }
             public ulong InitialGasDistribution { get; set; }
+            public IReadOnlyDictionary<Hardfork, uint> Hardforks { get; set; }
 
             public JObject ToJson()
             {
@@ -38,6 +42,11 @@ namespace Neo.Network.RPC.Models
                 json["maxtransactionsperblock"] = MaxTransactionsPerBlock;
                 json["memorypoolmaxtransactions"] = MemoryPoolMaxTransactions;
                 json["initialgasdistribution"] = InitialGasDistribution;
+                json["hardforks"] = new JArray(Hardforks.Select(s => new JObject()
+                {
+                    ["name"] = s.Key,
+                    ["blockheight"] = s.Value,
+                }));
                 return json;
             }
 
@@ -54,6 +63,7 @@ namespace Neo.Network.RPC.Models
                     MaxTransactionsPerBlock = (uint)json["maxtransactionsperblock"].AsNumber(),
                     MemoryPoolMaxTransactions = (int)json["memorypoolmaxtransactions"].AsNumber(),
                     InitialGasDistribution = (ulong)json["initialgasdistribution"].AsNumber(),
+                    Hardforks = new Dictionary<Hardfork, uint>(((JArray)json["hardforks"]).Select(s => new KeyValuePair<Hardfork, uint>(Enum.Parse<Hardfork>(s["name"].AsString()), (uint)s["blockheight"].AsNumber()))),
                 };
             }
         }
