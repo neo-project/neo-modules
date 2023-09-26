@@ -8,6 +8,7 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Akka.Util;
 using Neo.Cryptography.ECC;
 using Neo.Network.P2P.Payloads;
 using Neo.Network.RPC.Models;
@@ -15,6 +16,7 @@ using Neo.SmartContract;
 using Neo.VM;
 using Neo.Wallets;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -132,6 +134,7 @@ namespace Neo.Network.RPC
         /// <param name="to">to account script hash</param>
         /// <param name="amount">transfer amount</param>
         /// <param name="data">onPayment data</param>
+        /// <param name="failOnInvalidTransfer">checks to see if transfer method fails</param>
         /// <returns></returns>
         public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount, object data = null)
         {
@@ -141,9 +144,15 @@ namespace Neo.Network.RPC
 
             TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
-            return await manager
-                .AddSignature(fromKey)
-                .SignAsync().ConfigureAwait(false);
+
+            var vmResult = await rpcClient.InvokeScriptAsync(manager.Tx.Script, signers);
+
+            if (vmResult.State == VMState.HALT && vmResult.Stack?[0].GetBoolean() == true)
+                return await manager
+                    .AddSignature(fromKey)
+                    .SignAsync().ConfigureAwait(false);
+            else
+                throw new Exception(vmResult.Exception ?? "Transfer has not been processed.");
         }
 
         /// <summary>
@@ -167,9 +176,15 @@ namespace Neo.Network.RPC
 
             TransactionManagerFactory factory = new TransactionManagerFactory(rpcClient);
             TransactionManager manager = await factory.MakeTransactionAsync(script, signers).ConfigureAwait(false);
-            return await manager
-                .AddMultiSig(fromKeys, m, pubKeys)
-                .SignAsync().ConfigureAwait(false);
+
+            var vmResult = await rpcClient.InvokeScriptAsync(manager.Tx.Script, signers);
+
+            if (vmResult.State == VMState.HALT && vmResult.Stack?[0].GetBoolean() == true)
+                return await manager
+                    .AddMultiSig(fromKeys, m, pubKeys)
+                    .SignAsync().ConfigureAwait(false);
+            else
+                throw new Exception(vmResult.Exception ?? "Transfer has not been processed.");
         }
     }
 }
