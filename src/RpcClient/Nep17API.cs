@@ -136,7 +136,7 @@ namespace Neo.Network.RPC
         /// <param name="data">onPayment data</param>
         /// <param name="failOnInvalidTransfer">checks to see if transfer method fails</param>
         /// <returns></returns>
-        public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount, object data = null, bool failOnInvalidTransfer = true)
+        public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, KeyPair fromKey, UInt160 to, BigInteger amount, object data = null)
         {
             var sender = Contract.CreateSignatureRedeemScript(fromKey.PublicKey).ToScriptHash();
             Signer[] signers = new[] { new Signer { Scopes = WitnessScope.CalledByEntry, Account = sender } };
@@ -147,8 +147,8 @@ namespace Neo.Network.RPC
 
             var vmResult = await rpcClient.InvokeScriptAsync(manager.Tx.Script, signers);
 
-            if (failOnInvalidTransfer == true)
-                Debug.Assert(vmResult.State == VMState.HALT && vmResult.Stack?[0].GetBoolean() == true);
+            if (vmResult.State != VMState.HALT && vmResult.Stack?[0].GetBoolean() == false)
+                throw new Exception("Transfer has indicated that there is problem. Result: 'false'.");
 
             return await manager
                 .AddSignature(fromKey)
@@ -166,7 +166,7 @@ namespace Neo.Network.RPC
         /// <param name="amount">transfer amount</param>
         /// <param name="data">onPayment data</param>
         /// <returns></returns>
-        public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] fromKeys, UInt160 to, BigInteger amount, object data = null, bool failOnInvalidTransfer = true)
+        public async Task<Transaction> CreateTransferTxAsync(UInt160 scriptHash, int m, ECPoint[] pubKeys, KeyPair[] fromKeys, UInt160 to, BigInteger amount, object data = null)
         {
             if (m > fromKeys.Length)
                 throw new ArgumentException($"Need at least {m} KeyPairs for signing!");
@@ -179,8 +179,8 @@ namespace Neo.Network.RPC
 
             var vmResult = await rpcClient.InvokeScriptAsync(manager.Tx.Script, signers);
 
-            if (failOnInvalidTransfer == true)
-                Debug.Assert(vmResult.State == VMState.HALT && vmResult.Stack?[0].GetBoolean() == true);
+            if (vmResult.State != VMState.HALT && vmResult.Stack?[0].GetBoolean() == false)
+                throw new Exception("Transfer has indicated that there is problem. Result: 'false'.");
 
             return await manager
                 .AddMultiSig(fromKeys, m, pubKeys)
