@@ -112,8 +112,12 @@ namespace Neo.Plugins
             {
                 // Default value is 40
                 options.Limits.MaxConcurrentConnections = settings.MaxConcurrentConnections;
+
                 // Default value is 1 minutes
-                options.Limits.KeepAliveTimeout = TimeSpan.FromSeconds(settings.KeepAliveTimeout);
+                options.Limits.KeepAliveTimeout = settings.KeepAliveTimeout == -1 ?
+                    TimeSpan.MaxValue :
+                    TimeSpan.FromSeconds(settings.KeepAliveTimeout);
+
                 // Default value is 15 seconds
                 options.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(settings.RequestHeadersTimeout);
 

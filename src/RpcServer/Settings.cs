@@ -40,7 +40,7 @@ namespace Neo.Plugins
         public string RpcPass { get; init; }
         public bool EnableCors { get; init; }
         public string[] AllowOrigins { get; init; }
-        public uint KeepAliveTimeout { get; init; }
+        public int KeepAliveTimeout { get; init; }
         public uint RequestHeadersTimeout { get; init; }
         public long MaxGasInvoke { get; init; }
         public long MaxFee { get; init; }
