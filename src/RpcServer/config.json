@@ -10,7 +10,7 @@
         "TrustedAuthorities": [],
         "RpcUser": "",
         "RpcPass": "",
-        "EnableCors": false,
+        "EnableCors": true,
         "AllowOrigins": [],
         "KeepAliveTimeout": 60,
         "RequestHeadersTimeout": 15,
