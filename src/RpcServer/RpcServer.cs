@@ -57,6 +57,7 @@ namespace Neo.Plugins
             {
                 context.Response.Headers["WWW-Authenticate"] = "Basic realm=\"Restricted\"";
                 context.Response.StatusCode = 401;
+                return false;
             }
 
             string authstring;
