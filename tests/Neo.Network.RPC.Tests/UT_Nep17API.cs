@@ -143,14 +143,14 @@ namespace Neo.Network.RPC.Tests
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter());
 
             var client = rpcClientMock.Object;
-            var result = await nep17API.CreateTransferTxAsync(NativeContract.GAS.Hash, keyPair1, UInt160.Zero, new BigInteger(1_00000000));
+            var result = await nep17API.CreateTransferTxAsync(NativeContract.GAS.Hash, keyPair1, UInt160.Zero, new BigInteger(1_00000000), null, true);
 
             testScript = NativeContract.GAS.Hash.MakeScript("transfer", sender, UInt160.Zero, new BigInteger(1_00000000), string.Empty)
                 .Concat(new[] { (byte)OpCode.ASSERT })
                 .ToArray();
             UT_TransactionManager.MockInvokeScript(rpcClientMock, testScript, new ContractParameter());
 
-            result = await nep17API.CreateTransferTxAsync(NativeContract.GAS.Hash, keyPair1, UInt160.Zero, new BigInteger(1_00000000), string.Empty);
+            result = await nep17API.CreateTransferTxAsync(NativeContract.GAS.Hash, keyPair1, UInt160.Zero, new BigInteger(1_00000000), string.Empty, true);
             Assert.IsNotNull(result);
         }
     }
