@@ -1,6 +1,6 @@
 // Copyright (C) 2023 Christopher R Schuchardt
 //
-// The Neo.Plugins.Crontab is free software distributed under the
+// The neo-cron-plugin is free software distributed under the
 // MIT software license, see the accompanying file LICENSE in
 // the main directory of the project for more details.
 
@@ -10,5 +10,4 @@ internal enum CronJobType : byte
 {
     Basic = 0x00,
     Transfer = 0x01,
-    VMScript = 0x02,
 }

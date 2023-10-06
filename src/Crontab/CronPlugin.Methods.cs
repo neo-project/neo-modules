@@ -1,6 +1,6 @@
 // Copyright (C) 2023 Christopher R Schuchardt
 //
-// The Neo.Plugins.Crontab is free software distributed under the
+// The neo-cron-plugin is free software distributed under the
 // MIT software license, see the accompanying file LICENSE in
 // the main directory of the project for more details.
 
@@ -9,8 +9,6 @@ using NCrontab;
 using Neo.ConsoleService;
 using Neo.Plugins.Crontab.Jobs;
 using Neo.Plugins.Crontab.Settings;
-using System;
-using System.IO;
 
 namespace Neo.Plugins.Crontab;
 
@@ -53,8 +51,6 @@ public partial class CronPlugin
                     break;
                 case CronJobType.Transfer:
                     CreateTransferJob(CronJobTransferSettings.Load(jobConfigRoot, filename));
-                    break;
-                case CronJobType.VMScript:
                     break;
                 default:
                     break;

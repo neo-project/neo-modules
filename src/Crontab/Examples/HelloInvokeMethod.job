@@ -1,0 +1,17 @@
+{
+  "Type": "Basic",
+  "Name": "HelloInvokeMethod",
+  "Expression": "* * * * *",
+  "RunOnce": true,
+  "Wallet": {
+    "Path": "wallets/main.json",
+    "Password": "main",
+    "Account": "0x951bf95707bb92a0c89d4308095697af60474472",
+    "Signers": []
+  },
+  "Contract": {
+    "ScriptHash": "0x0313bdad26721ae6867df516139d4e52f749f360",
+    "Method": "sayHello",
+    "Params": []
+  }
+}

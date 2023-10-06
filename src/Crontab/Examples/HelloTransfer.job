@@ -1,0 +1,18 @@
+{
+  "Type": "Transfer",
+  "Name": "HelloTransfer",
+  "Expression": "* * * * *",
+  "RunOnce": true,
+  "Wallet": {
+    "Path": "wallets/main.json",
+    "Password": "main",
+    "Account": "0x951bf95707bb92a0c89d4308095697af60474472",
+    "Signers": []
+  },
+  "Transfer": {
+    "AssetId": "0xd2a4cff31913016155e38e474a2c06d08be276cf",
+    "SendTo": "0x495df01c83bfa34cf6e4cc904391c5d129ccbfe0",
+    "SendAmount": 0.001,
+    "Comment": null
+  }
+}

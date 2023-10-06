@@ -1,6 +1,6 @@
 // Copyright (C) 2023 Christopher R Schuchardt
 //
-// The Neo.Plugins.Crontab is free software distributed under the
+// The neo-cron-plugin is free software distributed under the
 // MIT software license, see the accompanying file LICENSE in
 // the main directory of the project for more details.
 
@@ -10,8 +10,6 @@ using Neo.Plugins.Crontab.Settings;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.VM;
-using System;
-using System.Linq;
 using System.Numerics;
 
 namespace Neo.Plugins.Crontab.Utils;

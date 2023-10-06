@@ -4,6 +4,8 @@
     <TargetFramework>net7.0</TargetFramework>
     <RootNamespace>Neo.Plugins.Crontab</RootNamespace>
     <PackageId>Neo.Plugins.Crontab</PackageId>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="NCrontab" Version="3.3.3" />
+    <PackageReference Include="Neo" Version="3.6.0" />
     <PackageReference Include="Neo.ConsoleService" Version="1.2.0" />
   </ItemGroup>
 
