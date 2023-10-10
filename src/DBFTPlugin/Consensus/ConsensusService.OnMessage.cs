@@ -10,15 +10,14 @@
 
 using Akka.Actor;
 using Neo.Cryptography;
-using Neo.IO;
 using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
-using Neo.Wallets;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Neo.Consensus
@@ -76,6 +75,12 @@ namespace Neo.Consensus
 
         private void OnPrepareRequestReceived(ExtensiblePayload payload, PrepareRequest message)
         {
+            if (!File.Exists("prestatehash") || File.ReadAllText("prestatehash") != message.PreStateHash.ToString())
+            {
+                Log($"Invalid request: previous state hash does not match", LogLevel.Warning);
+                return;
+            }
+
             if (context.RequestSentOrReceived || context.NotAcceptingPayloadsDueToViewChanging) return;
             if (message.ValidatorIndex != context.Block.PrimaryIndex || message.ViewNumber != context.ViewNumber) return;
             if (message.Version != context.Block.Version || message.PrevHash != context.Block.PrevHash) return;

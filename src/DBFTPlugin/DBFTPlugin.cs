@@ -8,10 +8,17 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using System.Collections.Generic;
+using System;
+using System.IO;
+using System.Security.Cryptography;
 using Akka.Actor;
 using Neo.ConsoleService;
+using System.Text.Json;
+using Neo.Ledger;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
+using Neo.Persistence;
 using Neo.Plugins;
 using Neo.Wallets;
 
@@ -30,6 +37,7 @@ namespace Neo.Consensus
         public DBFTPlugin()
         {
             RemoteNode.MessageReceived += RemoteNode_MessageReceived;
+            Blockchain.Committing += OnCommitting;
         }
 
         public DBFTPlugin(Settings settings) : this()
@@ -95,6 +103,19 @@ namespace Neo.Consensus
                 consensus?.Tell(tx);
             }
             return true;
+        }
+
+        private static void OnCommitting(NeoSystem system, Block block, DataCache snapshot, IReadOnlyList<Blockchain.ApplicationExecuted> applicationExecutedList)
+        {
+            var serializedData = JsonSerializer.SerializeToUtf8Bytes(applicationExecutedList);
+            var hash = ComputeSha256Hash(serializedData);
+            File.WriteAllText("prestatehash", hash);
+        }
+
+        private static string ComputeSha256Hash(byte[] rawData)
+        {
+            var bytes = SHA256.HashData(rawData);
+            return BitConverter.ToString(bytes).Replace("-", "").ToLower();
         }
     }
 }

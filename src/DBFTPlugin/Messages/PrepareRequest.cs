@@ -19,6 +19,9 @@ namespace Neo.Consensus
     {
         public uint Version;
         public UInt256 PrevHash;
+        // The execution result hash of the previous block transactions
+        // since we do not need to update it or search it, no merkel tree is needed
+        public UInt256 PreStateHash;
         public ulong Timestamp;
         public ulong Nonce;
         public UInt256[] TransactionHashes;
@@ -26,6 +29,7 @@ namespace Neo.Consensus
         public override int Size => base.Size
             + sizeof(uint)                      //Version
             + UInt256.Length                    //PrevHash
+            + UInt256.Length                    //PreStateHash
             + sizeof(ulong)                     //Timestamp
             + sizeof(ulong)                     // Nonce
             + TransactionHashes.GetVarSize();   //TransactionHashes
@@ -37,6 +41,7 @@ namespace Neo.Consensus
             base.Deserialize(ref reader);
             Version = reader.ReadUInt32();
             PrevHash = reader.ReadSerializable<UInt256>();
+            PreStateHash = reader.ReadSerializable<UInt256>();
             Timestamp = reader.ReadUInt64();
             Nonce = reader.ReadUInt64();
             TransactionHashes = reader.ReadSerializableArray<UInt256>(ushort.MaxValue);
@@ -55,6 +60,7 @@ namespace Neo.Consensus
             base.Serialize(writer);
             writer.Write(Version);
             writer.Write(PrevHash);
+            writer.Write(PreStateHash);
             writer.Write(Timestamp);
             writer.Write(Nonce);
             writer.Write(TransactionHashes);
