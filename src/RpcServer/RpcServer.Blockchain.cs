@@ -120,9 +120,17 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken GetContractState(JArray _params)
         {
-            UInt160 script_hash = ToScriptHash(_params[0].AsString());
-            ContractState contract = NativeContract.ContractManagement.GetContract(system.StoreView, script_hash);
-            return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
+            if (int.TryParse(_params[0].AsString(), out int contractId))
+            {
+                var contracts = NativeContract.ContractManagement.GetContractById(system.StoreView, contractId);
+                return contracts?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
+            }
+            else
+            {
+                UInt160 script_hash = ToScriptHash(_params[0].AsString());
+                ContractState contract = NativeContract.ContractManagement.GetContract(system.StoreView, script_hash);
+                return contract?.ToJson() ?? throw new RpcException(-100, "Unknown contract");
+            }
         }
 
         private static UInt160 ToScriptHash(string keyword)
@@ -195,6 +203,56 @@ namespace Neo.Plugins
             });
             if (item is null) throw new RpcException(-100, "Unknown storage");
             return Convert.ToBase64String(item.Value.Span);
+        }
+
+        [RpcMethod]
+        protected virtual JToken FindStorage(JArray _params)
+        {
+            using var snapshot = system.GetSnapshot();
+            if (!int.TryParse(_params[0].AsString(), out int id))
+            {
+                UInt160 hash = UInt160.Parse(_params[0].AsString());
+                ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, hash);
+                if (contract is null) throw new RpcException(-100, "Unknown contract");
+                id = contract.Id;
+            }
+
+            byte[] prefix = Convert.FromBase64String(_params[1].AsString());
+            byte[] prefix_key = StorageKey.CreateSearchPrefix(id, prefix);
+
+            if (!int.TryParse(_params[2].AsString(), out int start))
+            {
+                start = 0;
+            }
+
+            JObject json = new();
+            JArray jarr = new();
+            int pageSize = settings.FindStoragePageSize;
+            int i = 0;
+
+            using (var iter = snapshot.Find(prefix_key).Skip(count: start).GetEnumerator())
+            {
+                var hasMore = false;
+                while (iter.MoveNext())
+                {
+                    if (i == pageSize)
+                    {
+                        hasMore = true;
+                        break;
+                    }
+
+                    JObject j = new();
+                    j["key"] = Convert.ToBase64String(iter.Current.Key.Key.Span);
+                    j["value"] = Convert.ToBase64String(iter.Current.Value.Value.Span);
+                    jarr.Add(j);
+                    i++;
+                }
+                json["truncated"] = hasMore;
+            }
+
+            json["next"] = start + i;
+            json["results"] = jarr;
+            return json;
         }
 
         [RpcMethod]

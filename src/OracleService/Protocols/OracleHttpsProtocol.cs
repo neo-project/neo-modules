@@ -15,6 +15,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -82,7 +83,32 @@ namespace Neo.Plugins
                 return (OracleResponseCode.Error, message.StatusCode.ToString());
             if (!Settings.Default.AllowedContentTypes.Contains(message.Content.Headers.ContentType.MediaType))
                 return (OracleResponseCode.ContentTypeNotSupported, null);
-            return (OracleResponseCode.Success, await message.Content.ReadAsStringAsync(cancellation));
+            if (message.Content.Headers.ContentLength.HasValue && message.Content.Headers.ContentLength > OracleResponse.MaxResultSize)
+                return (OracleResponseCode.ResponseTooLarge, null);
+
+            byte[] buffer = new byte[OracleResponse.MaxResultSize + 1];
+            var stream = message.Content.ReadAsStream(cancellation);
+            var read = await stream.ReadAsync(buffer, 0, buffer.Length, cancellation);
+
+            if (read > OracleResponse.MaxResultSize)
+                return (OracleResponseCode.ResponseTooLarge, null);
+
+            var encoding = GetEncoding(message.Content.Headers);
+            if (!encoding.Equals(Encoding.UTF8))
+                return (OracleResponseCode.Error, null);
+
+            return (OracleResponseCode.Success, Utility.StrictUTF8.GetString(buffer, 0, read));
+        }
+
+        private static Encoding GetEncoding(HttpContentHeaders headers)
+        {
+            Encoding encoding = null;
+            if ((headers.ContentType != null) && (headers.ContentType.CharSet != null))
+            {
+                encoding = Encoding.GetEncoding(headers.ContentType.CharSet);
+            }
+
+            return encoding ?? Encoding.UTF8;
         }
     }
 }
