@@ -272,7 +272,7 @@ namespace Neo.Consensus
 
             AddTransaction(transaction, true);
         }
-        
+
         private bool AddTransaction(Transaction tx, bool verify)
         {
             bool returnValue = false;
