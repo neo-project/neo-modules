@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>Neo</RootNamespace>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="FluentAssertions" Version="6.12.0"/>
+        <PackageReference Include="Moq" Version="4.20.69"/>
+        <PackageReference Include="coverlet.collector" Version="6.0.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Akka.TestKit" Version="1.5.13" />
+        <PackageReference Include="Akka.TestKit.Xunit2" Version="1.5.13" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.7.2"/>
+        <PackageReference Update="MSTest.TestAdapter" Version="3.1.1"/>
+        <PackageReference Update="MSTest.TestFramework" Version="3.1.1"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\DBFTPlugin\DBFTPlugin.csproj"/>
+    </ItemGroup>
+</Project>

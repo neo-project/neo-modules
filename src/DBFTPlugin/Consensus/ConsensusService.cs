@@ -21,7 +21,7 @@ using static Neo.Ledger.Blockchain;
 
 namespace Neo.Consensus
 {
-    partial class ConsensusService : UntypedActor
+    internal partial class ConsensusService : UntypedActor
     {
         public class Start { }
         private class Timer { public uint Height; public byte ViewNumber; }

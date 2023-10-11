@@ -8,12 +8,15 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Neo.ConsoleService;
 using Neo.Network.P2P;
 using Neo.Network.P2P.Payloads;
 using Neo.Plugins;
 using Neo.Wallets;
+
+[assembly: InternalsVisibleTo("Neo.Plugins.DBFTPlugin.Tests")]
 
 namespace Neo.Consensus
 {
