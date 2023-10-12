@@ -44,7 +44,8 @@ namespace Neo.Network.RPC.Models
                 json["initialgasdistribution"] = InitialGasDistribution;
                 json["hardforks"] = new JArray(Hardforks.Select(s => new JObject()
                 {
-                    ["name"] = s.Key,
+                    // Strip HF_ prefix.
+                    ["name"] = s.Key.ToString().Substring(3),
                     ["blockheight"] = s.Value,
                 }));
                 return json;
@@ -63,7 +64,7 @@ namespace Neo.Network.RPC.Models
                     MaxTransactionsPerBlock = (uint)json["maxtransactionsperblock"].AsNumber(),
                     MemoryPoolMaxTransactions = (int)json["memorypoolmaxtransactions"].AsNumber(),
                     InitialGasDistribution = (ulong)json["initialgasdistribution"].AsNumber(),
-                    Hardforks = new Dictionary<Hardfork, uint>(((JArray)json["hardforks"]).Select(s => new KeyValuePair<Hardfork, uint>(Enum.Parse<Hardfork>(s["name"].AsString()), (uint)s["blockheight"].AsNumber()))),
+                    Hardforks = new Dictionary<Hardfork, uint>(((JArray)json["hardforks"]).Select(s => new KeyValuePair<Hardfork, uint>(Enum.Parse<Hardfork>($"HF_{s["name"].AsString()}"), (uint)s["blockheight"].AsNumber()))),
                 };
             }
         }

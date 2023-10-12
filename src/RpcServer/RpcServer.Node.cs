@@ -85,7 +85,8 @@ namespace Neo.Plugins
             json["protocol"]["hardforks"] = new JArray(system.Settings.Hardforks.Select(hf =>
             {
                 JObject forkJson = new();
-                forkJson["name"] = hf.Key;
+                // Strip "HF_" prefix.
+                forkJson["name"] = hf.Key.ToString().Substring(3);
                 forkJson["blockheight"] = hf.Value;
                 return forkJson;
             }));
