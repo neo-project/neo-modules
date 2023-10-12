@@ -45,8 +45,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StorageDumper", "src\Storag
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neo.Plugins.DBFTPlugin.Tests", "tests\Neo.Plugins.DBFTPlugin.Tests\Neo.Plugins.DBFTPlugin.Tests.csproj", "{CA5D6744-F0C1-4B08-9B14-E202BEC2522C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neo", "..\neo\src\Neo\Neo.csproj", "{EC0058F3-89ED-4591-BDA3-C8B8A04F3F8F}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
