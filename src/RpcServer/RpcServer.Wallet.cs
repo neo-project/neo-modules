@@ -346,9 +346,7 @@ namespace Neo.Plugins
 
             try
             {
-                using ScriptBuilder scriptBuilder = new();
-                scriptBuilder.Emit(OpCode.RET);
-                tx = wallet.MakeTransaction(system.StoreView, scriptBuilder.ToArray(), signers[0].Account, signers, conflict);
+                tx = wallet.MakeTransaction(system.StoreView, new[] { (byte)OpCode.RET }, signers[0].Account, signers, conflict);
             }
             catch (InvalidOperationException e)
             {
