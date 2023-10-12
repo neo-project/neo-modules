@@ -3,7 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Neo.Consensus;
 using Neo.IO;
 
-namespace Neo;
+namespace Neo.Consensus;
 
 [TestClass]
 public class UT_RecoveryRequest

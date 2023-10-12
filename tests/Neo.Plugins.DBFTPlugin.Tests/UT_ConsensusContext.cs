@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Neo.Consensus;
 
-namespace Neo;
+namespace Neo.Consensus;
 
 [TestClass]
 public class UT_ConsensusContext : TestKit
@@ -56,16 +56,12 @@ public class UT_ConsensusContext : TestKit
     {
         // Only one tx, is included
         var mockNeoSystem = new Mock<TestNeoSystem>();
-        var mockSetting = new Mock<TestSetting>();
-        var mockWallet = new Mock<Wallet>();
 
         var tx1 = CreateTransactionWithSize(200);
         _context.EnsureMaxBlockLimitation(new Transaction[] { tx1 });
         EnsureContext(_context, tx1);
 
         // All txs included
-
-
         var max = mockNeoSystem.Object.Settings.MaxTransactionsPerBlock;
         var txs = new Transaction[max];
 

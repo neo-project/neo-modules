@@ -1,25 +1,49 @@
 
 using System;
-using System.Collections.Immutable;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using System.Numerics;
 using System.Security.Cryptography;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using Neo.Cryptography;
-using Neo.Cryptography.ECC;
 using Neo.IO;
 using Neo.Json;
-using Neo.Ledger;
 using Neo.Network.P2P.Payloads;
+using Neo.Persistence;
 using Neo.SmartContract;
 using Neo.SmartContract.Manifest;
 using Neo.SmartContract.Native;
 using Neo.VM;
+using Neo.VM.Types;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
-namespace Neo;
+using Array = System.Array;
+using ECCurve = Neo.Cryptography.ECC.ECCurve;
+using ECPoint = Neo.Cryptography.ECC.ECPoint;
+namespace Neo.Consensus;
+
+public static class TestBlockchain
+{
+    public static readonly NeoSystem TheNeoSystem;
+
+    static TestBlockchain()
+    {
+        Console.WriteLine("initialize NeoSystem");
+        TheNeoSystem = new NeoSystem(ProtocolSettings.Default, null, null);
+    }
+
+    public static void InitializeMockNeoSystem()
+    {
+    }
+
+    internal static DataCache GetTestSnapshot()
+    {
+        return TheNeoSystem.GetSnapshot().CreateSnapshot();
+    }
+}
 
 public class TestSetting : Neo.Consensus.Settings
 {
@@ -28,36 +52,8 @@ public class TestSetting : Neo.Consensus.Settings
     /// Have to make it this way since the GetConfiguration of Neo.Plugins is protected, can not be accessed from here.
     /// Ironically, all its contents are public.
     /// </summary>
-    public TestSetting() : base(new ConfigurationBuilder().AddJsonFile(Neo.Plugins.Plugin.ConfigFile, optional: true).Build().GetSection("PluginConfiguration"))
+    public TestSetting() : base(new ConfigurationBuilder().AddJsonFile("config.json", optional: true).Build().GetSection("ProtocolConfiguration"))
     {
-    }
-}
-public static class TestBlockchain
-{
-    public static readonly NeoSystem TheNeoSystem;
-    public static readonly UInt160[] DefaultExtensibleWitnessWhiteList;
-
-    static TestBlockchain()
-    {
-        Console.WriteLine("initialize NeoSystem");
-        TheNeoSystem = new NeoSystem();
-
-        // Ensure that blockchain is loaded
-
-        var bc = Blockchain.Singleton;
-
-        DefaultExtensibleWitnessWhiteList = (typeof(Blockchain).GetField("extensibleWitnessWhiteList",
-            BindingFlags.Instance | BindingFlags.NonPublic).GetValue(bc) as ImmutableHashSet<UInt160>).ToArray();
-        AddWhiteList(DefaultExtensibleWitnessWhiteList); // Add other address
-    }
-
-    public static void InitializeMockNeoSystem() { }
-
-    public static void AddWhiteList(params UInt160[] address)
-    {
-        var builder = ImmutableHashSet.CreateBuilder<UInt160>();
-        foreach (var entry in address) builder.Add(entry);
-        typeof(Blockchain).GetField("extensibleWitnessWhiteList", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(Blockchain.Singleton, builder.ToImmutable());
     }
 }
 
@@ -360,4 +356,107 @@ public class UT_Crypto
         }
         return new KeyPair(privateKey);
     }
+}
+
+public class TestTimeProvider
+{
+
+    private static readonly TestTimeProvider Default = new TestTimeProvider();
+
+    /// <summary>
+    /// The currently used <see cref="T:Neo.TimeProvider" /> instance.
+    /// </summary>
+    public static TestTimeProvider Current { get; internal set; } = TestTimeProvider.Default;
+
+    /// <summary>
+    /// Gets the current time expressed as the Coordinated Universal Time (UTC).
+    /// </summary>
+    public virtual DateTime UtcNow => DateTime.UtcNow;
+
+    internal static void ResetToDefault() => TestTimeProvider.Current = TestTimeProvider.Default;
+}
+
+public class TestCachedCommittee : TestInteroperableList<(ECPoint PublicKey, BigInteger Votes)>
+{
+    public TestCachedCommittee()
+    {
+    }
+
+    public TestCachedCommittee(IEnumerable<(ECPoint, BigInteger)> collection) => this.AddRange(collection);
+
+    protected override (ECPoint, BigInteger) ElementFromStackItem(StackItem item)
+    {
+        Struct @struct = (Struct)item;
+        return (ECPoint.DecodePoint(@struct[0].GetSpan(), ECCurve.Secp256r1), @struct[1].GetInteger());
+    }
+
+    protected override StackItem ElementToStackItem(
+        (ECPoint PublicKey, BigInteger Votes) element,
+        ReferenceCounter referenceCounter)
+    {
+        Struct stackItem = new Struct(referenceCounter);
+        stackItem.Add((StackItem)element.PublicKey.ToArray());
+        stackItem.Add((StackItem)element.Votes);
+        return (StackItem)stackItem;
+    }
+}
+
+
+public abstract class TestInteroperableList<T> :
+    IList<T>,
+    ICollection<T>,
+    IEnumerable<T>,
+    IEnumerable,
+    IInteroperable
+{
+    private System.Collections.Generic.List<T> list;
+
+    private System.Collections.Generic.List<T> List => this.list ?? (this.list = new System.Collections.Generic.List<T>());
+
+    public T this[int index]
+    {
+        get => this.List[index];
+        set => this.List[index] = value;
+    }
+
+    public int Count => this.List.Count;
+
+    public bool IsReadOnly => false;
+
+    public void Add(T item) => this.List.Add(item);
+
+    public void AddRange(IEnumerable<T> collection) => this.List.AddRange(collection);
+
+    public void Clear() => this.List.Clear();
+
+    public bool Contains(T item) => this.List.Contains(item);
+
+    public void CopyTo(T[] array, int arrayIndex) => this.List.CopyTo(array, arrayIndex);
+
+    IEnumerator IEnumerable.GetEnumerator() => (IEnumerator)this.List.GetEnumerator();
+
+    public IEnumerator<T> GetEnumerator() => (IEnumerator<T>)this.List.GetEnumerator();
+
+    public int IndexOf(T item) => this.List.IndexOf(item);
+
+    public void Insert(int index, T item) => this.List.Insert(index, item);
+
+    public bool Remove(T item) => this.List.Remove(item);
+
+    public void RemoveAt(int index) => this.List.RemoveAt(index);
+
+    public void Sort() => this.List.Sort();
+
+    protected abstract T ElementFromStackItem(StackItem item);
+
+    protected abstract StackItem ElementToStackItem(T element, ReferenceCounter referenceCounter);
+
+    public void FromStackItem(StackItem stackItem)
+    {
+        this.List.Clear();
+        foreach (StackItem stackItem1 in (Neo.VM.Types.Array)stackItem)
+            this.Add(this.ElementFromStackItem(stackItem1));
+    }
+
+    public StackItem ToStackItem(ReferenceCounter referenceCounter) => (StackItem)new Neo.VM.Types.Array(referenceCounter, this.Select<T, StackItem>((Func<T, StackItem>)(p => this.ElementToStackItem(p, referenceCounter))));
 }
