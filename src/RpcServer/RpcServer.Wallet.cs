@@ -359,9 +359,9 @@ namespace Neo.Plugins
             }
             else if (_params.Count >= 3)
             {
-                var extracFee = _params[2].AsString();
+                var extraFee = _params[2].AsString();
                 AssetDescriptor descriptor = new(system.StoreView, system.Settings, NativeContract.GAS.Hash);
-                if (!BigDecimal.TryParse(extracFee, descriptor.Decimals, out BigDecimal decimalExtraFee) || decimalExtraFee.Sign <= 0)
+                if (!BigDecimal.TryParse(extraFee, descriptor.Decimals, out BigDecimal decimalExtraFee) || decimalExtraFee.Sign <= 0)
                 {
                     throw new RpcException(32702, "Incorrect Amount Format");
                 }
