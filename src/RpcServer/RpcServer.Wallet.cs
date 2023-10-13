@@ -331,7 +331,7 @@ namespace Neo.Plugins
             }
 
             var conflict = new TransactionAttribute[] { new Conflicts() { Hash = txid } };
-            Signer[] signers = _params.Count >= 2 ? ((JArray)_params[1]).Select(j => new Signer() { Account = UInt160.Parse(j.AsString()), Scopes = WitnessScope.CalledByEntry }).ToArray() : Array.Empty<Signer>();
+            Signer[] signers = _params.Count >= 2 ? ((JArray)_params[1]).Select(j => new Signer() { Account = AddressToScriptHash(j.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : Array.Empty<Signer>();
             if (!signers.Any())
             {
                 throw new RpcException(32701, "no signers");
