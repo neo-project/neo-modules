@@ -370,7 +370,6 @@ namespace Neo.Plugins
             return SignAndRelay(system.StoreView, tx);
         }
 
-
         [RpcMethod]
         protected virtual JToken InvokeContractVerify(JArray _params)
         {
