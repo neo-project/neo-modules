@@ -655,7 +655,6 @@ namespace Neo.Network.RPC
             return (JObject)await RpcSendAsync(GetRpcName(), txId.ToString(), new JArray(parameters), extraFee).ConfigureAwait(false);
         }
 
-
         #endregion Wallet
 
         #region Plugins
