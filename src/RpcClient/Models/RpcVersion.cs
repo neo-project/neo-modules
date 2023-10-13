@@ -45,7 +45,7 @@ namespace Neo.Network.RPC.Models
                 json["hardforks"] = new JArray(Hardforks.Select(s => new JObject()
                 {
                     // Strip HF_ prefix.
-                    ["name"] = s.Key.ToString().Substring(3),
+                    ["name"] = StripPrefix(s.Key.ToString(), "HF_"),
                     ["blockheight"] = s.Value,
                 }));
                 return json;
@@ -64,8 +64,18 @@ namespace Neo.Network.RPC.Models
                     MaxTransactionsPerBlock = (uint)json["maxtransactionsperblock"].AsNumber(),
                     MemoryPoolMaxTransactions = (int)json["memorypoolmaxtransactions"].AsNumber(),
                     InitialGasDistribution = (ulong)json["initialgasdistribution"].AsNumber(),
-                    Hardforks = new Dictionary<Hardfork, uint>(((JArray)json["hardforks"]).Select(s => new KeyValuePair<Hardfork, uint>(Enum.Parse<Hardfork>($"HF_{s["name"].AsString()}"), (uint)s["blockheight"].AsNumber()))),
+                    Hardforks = new Dictionary<Hardfork, uint>(((JArray)json["hardforks"]).Select(s =>
+                    {
+                        var name = s["name"].AsString();
+                        // Add HF_ prefix to the hardfork response for proper Hardfork enum parsing.
+                        return new KeyValuePair<Hardfork, uint>(Enum.Parse<Hardfork>(name.StartsWith("HF_") ? name : $"HF_{name}"), (uint)s["blockheight"].AsNumber());
+                    })),
                 };
+            }
+
+            private static string StripPrefix(string s, string prefix)
+            {
+                return s.StartsWith(prefix) ? s.Substring(prefix.Length) : s;
             }
         }
 
