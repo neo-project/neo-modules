@@ -2494,7 +2494,7 @@
           "initialgasdistribution": 0,
           "hardforks": [
             {
-              "name": "HF_Aspidochelone",
+              "name": "Aspidochelone",
               "blockheight": 0
             }
           ]
