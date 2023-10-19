@@ -312,7 +312,7 @@ namespace Neo.Consensus
                         // We've ensured that there's no conlicting transactions in the context, thus, can safely provide an empty conflicting list
                         // for futher verification.
                         var conflictingTxs = new List<Transaction>();
-                        result = tx.Verify(neoSystem.Settings, context.Snapshot, context.VerificationContext, conflictingTxs);
+                        result = tx.Verify(neoSystem.Settings, context.Snapshot, context.VerificationContext[i], conflictingTxs);
                         if (result != VerifyResult.Succeed)
                         {
                             Log($"Rejected tx: {tx.Hash}, {result}{Environment.NewLine}{tx.ToArray().ToHexString()}", LogLevel.Warning);
