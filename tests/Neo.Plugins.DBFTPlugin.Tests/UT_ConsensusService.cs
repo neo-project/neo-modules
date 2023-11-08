@@ -1,10 +1,6 @@
-using Akka.TestKit.Xunit2;
-using FluentAssertions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Consensus;
-using Neo.Ledger;
-using Neo.Network.P2P.Payloads;
 using System;
+using Akka.TestKit.Xunit2;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Neo.Wallets;
 

@@ -1,5 +1,5 @@
-using Neo.Persistence;
 using System;
+using Neo.Persistence;
 
 namespace Neo.Plugins
 {

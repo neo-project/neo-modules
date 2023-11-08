@@ -1,4 +1,3 @@
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -61,7 +60,6 @@ public class TestNeoSystem : NeoSystem
 {
     public TestNeoSystem() : base(ProtocolSettings.Default)
     {
-        // Console.WriteLine("initialize TestNeoSystem");
     }
 }
 
@@ -335,8 +333,6 @@ public static class TestUtils
 
 public class UT_Crypto
 {
-    // private KeyPair key = null;
-
     public static KeyPair generateKey(int privateKeyLength)
     {
         byte[] privateKey = new byte[privateKeyLength];
@@ -394,10 +390,12 @@ public class TestCachedCommittee : TestInteroperableList<(ECPoint PublicKey, Big
         (ECPoint PublicKey, BigInteger Votes) element,
         ReferenceCounter referenceCounter)
     {
-        Struct stackItem = new Struct(referenceCounter);
-        stackItem.Add((StackItem)element.PublicKey.ToArray());
-        stackItem.Add((StackItem)element.Votes);
-        return (StackItem)stackItem;
+        Struct stackItem = new(referenceCounter)
+        {
+            (StackItem)element.PublicKey.ToArray(),
+            (StackItem)element.Votes
+        };
+        return stackItem;
     }
 }
 
@@ -409,9 +407,9 @@ public abstract class TestInteroperableList<T> :
     IEnumerable,
     IInteroperable
 {
-    private System.Collections.Generic.List<T> list;
+    private List<T> list;
 
-    private System.Collections.Generic.List<T> List => this.list ?? (this.list = new System.Collections.Generic.List<T>());
+    private List<T> List => this.list ??= new List<T>();
 
     public T this[int index]
     {
@@ -458,5 +456,5 @@ public abstract class TestInteroperableList<T> :
             this.Add(this.ElementFromStackItem(stackItem1));
     }
 
-    public StackItem ToStackItem(ReferenceCounter referenceCounter) => (StackItem)new Neo.VM.Types.Array(referenceCounter, this.Select<T, StackItem>((Func<T, StackItem>)(p => this.ElementToStackItem(p, referenceCounter))));
+    public StackItem ToStackItem(ReferenceCounter referenceCounter) => new VM.Types.Array(referenceCounter, this.Select(p => this.ElementToStackItem(p, referenceCounter)));
 }

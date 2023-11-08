@@ -1,6 +1,5 @@
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Neo.Consensus;
 using Neo.IO;
 
 namespace Neo.Consensus;

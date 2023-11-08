@@ -1,12 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Akka.TestKit.Xunit2;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Neo.Network.P2P.Payloads;
 using Neo.Wallets;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Neo.Consensus;
 
 namespace Neo.Consensus;
 

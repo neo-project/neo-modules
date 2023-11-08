@@ -1,10 +1,15 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using System.Reflection;
+using System.Security.Cryptography;
 using Akka.Actor;
 using Akka.TestKit;
 using Akka.TestKit.Xunit2;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using Neo.Consensus;
 using Neo.Cryptography;
 using Neo.IO;
 using Neo.Ledger;
@@ -13,14 +18,6 @@ using Neo.Network.P2P.Payloads;
 using Neo.SmartContract;
 using Neo.SmartContract.Native;
 using Neo.Wallets;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Reflection;
-using System.Security.Cryptography;
-using Neo.Plugins;
-using static Neo.SmartContract.Native.NeoToken;
 using ECPoint = Neo.Cryptography.ECC.ECPoint;
 
 namespace Neo.Consensus;
@@ -446,7 +443,6 @@ public class ConsensusTests : TestKit
         mockContext.Object.CountCommitted.Should().Be(3);
         // =============================================
 
-        // =============================================
         // ============================================================================
         //                      finalize ConsensusService actor
         // ============================================================================
