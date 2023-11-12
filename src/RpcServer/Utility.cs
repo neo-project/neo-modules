@@ -39,8 +39,7 @@ namespace Neo.Plugins
                 ["id"] = contract.Id,
                 ["hash"] = contract.Hash.ToString(),
                 ["nef"] = contract.Nef.ToJson(),
-                ["manifest"] = contract.Manifest.ToJson(),
-                ["updatehistory"] = settings.NativeUpdateHistory[contract.Name].Select(p => (JToken)p).ToArray()
+                ["manifest"] = contract.Manifest.ToJson()
             };
         }
     }

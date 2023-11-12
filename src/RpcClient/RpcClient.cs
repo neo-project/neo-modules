@@ -645,6 +645,16 @@ namespace Neo.Network.RPC
                 .ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Cancel Tx.
+        /// </summary>
+        /// <returns>This function returns Signed Transaction JSON if successful, ContractParametersContext JSON if signing failed.</returns>
+        public async Task<JObject> CancelTransactionAsync(UInt256 txId, string[] signers, string extraFee)
+        {
+            JToken[] parameters = signers.Select(s => (JString)s.AsScriptHash()).ToArray();
+            return (JObject)await RpcSendAsync(GetRpcName(), txId.ToString(), new JArray(parameters), extraFee).ConfigureAwait(false);
+        }
+
         #endregion Wallet
 
         #region Plugins

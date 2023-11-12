@@ -320,6 +320,57 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
+        protected virtual JToken CancelTransaction(JArray _params)
+        {
+            CheckWallet();
+            var txid = UInt256.Parse(_params[0].AsString());
+            TransactionState state = NativeContract.Ledger.GetTransactionState(system.StoreView, txid);
+            if (state != null)
+            {
+                throw new RpcException(32700, "This tx is already confirmed, can't be cancelled.");
+            }
+
+            var conflict = new TransactionAttribute[] { new Conflicts() { Hash = txid } };
+            Signer[] signers = _params.Count >= 2 ? ((JArray)_params[1]).Select(j => new Signer() { Account = AddressToScriptHash(j.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.None }).ToArray() : Array.Empty<Signer>();
+            if (!signers.Any())
+            {
+                throw new RpcException(32701, "no signers");
+            }
+
+            Transaction tx = new Transaction
+            {
+                Signers = signers,
+                Attributes = conflict,
+                Witnesses = Array.Empty<Witness>(),
+            };
+
+            try
+            {
+                tx = wallet.MakeTransaction(system.StoreView, new[] { (byte)OpCode.RET }, signers[0].Account, signers, conflict);
+            }
+            catch (InvalidOperationException e)
+            {
+                throw new RpcException(-500, GetExceptionMessage(e));
+            }
+
+            if (system.MemPool.TryGetValue(txid, out Transaction conflictTx))
+            {
+                tx.NetworkFee = Math.Max(tx.NetworkFee, conflictTx.NetworkFee) + 1;
+            }
+            else if (_params.Count >= 3)
+            {
+                var extraFee = _params[2].AsString();
+                AssetDescriptor descriptor = new(system.StoreView, system.Settings, NativeContract.GAS.Hash);
+                if (!BigDecimal.TryParse(extraFee, descriptor.Decimals, out BigDecimal decimalExtraFee) || decimalExtraFee.Sign <= 0)
+                {
+                    throw new RpcException(32702, "Incorrect Amount Format");
+                }
+                tx.NetworkFee += (long)decimalExtraFee.Value;
+            };
+            return SignAndRelay(system.StoreView, tx);
+        }
+
+        [RpcMethod]
         protected virtual JToken InvokeContractVerify(JArray _params)
         {
             UInt160 script_hash = UInt160.Parse(_params[0].AsString());
