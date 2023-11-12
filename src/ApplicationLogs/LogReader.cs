@@ -24,8 +24,9 @@ namespace Neo.Plugins
 {
     public class LogReader : Plugin
     {
-        private IStore _db;
-        private ISnapshot _snapshot;
+        private static IStore _db;
+        private static ISnapshot _snapshot;
+        private static readonly byte[] LogPrefix = { 0x12 };
 
         public override string Name => "ApplicationLogs";
         public override string Description => "Synchronizes the smart contract log with the NativeContract log (Notify)";
@@ -34,12 +35,16 @@ namespace Neo.Plugins
         {
             Blockchain.Committing += OnCommitting;
             Blockchain.Committed += OnCommitted;
+            if (Settings.Default.Debug)
+                ApplicationEngine.Log += ApplicationEngine_Log;
         }
 
         public override void Dispose()
         {
             Blockchain.Committing -= OnCommitting;
             Blockchain.Committed -= OnCommitted;
+            if (Settings.Default.Debug)
+                ApplicationEngine.Log -= ApplicationEngine_Log;
         }
 
         protected override void Configure()
@@ -75,6 +80,12 @@ namespace Neo.Plugins
                     else
                         i++;
                 }
+            }
+            if (!Settings.Default.Debug) return raw;
+            byte[] logs = _db.TryGet(LogPrefix.Concat(hash.ToArray()).ToArray());
+            if (logs != null)
+            {
+                raw["executions"]["logs"] = (JArray)JToken.Parse(Neo.Utility.StrictUTF8.GetString(value));
             }
             return raw;
         }
@@ -184,6 +195,31 @@ namespace Neo.Plugins
             {
                 Put(block.Hash.ToArray(), Neo.Utility.StrictUTF8.GetBytes(blockJson.ToString()));
             }
+        }
+
+        private static void ApplicationEngine_Log(object sender, LogEventArgs args)
+        {
+            if (!Settings.Default.Debug) return;
+
+            var tx = ((Transaction)args.ScriptContainer).Hash;
+
+            byte[] value = _db.TryGet(LogPrefix.Concat(tx.ToArray()).ToArray());
+
+            JArray logList = null;
+            if (value is null)
+            {
+                logList = new JArray();
+            }
+            else
+            {
+                logList = (JArray)JToken.Parse(Neo.Utility.StrictUTF8.GetString(value));
+            }
+            var logJson = new JObject();
+            logJson["contract"] = args.ScriptHash.ToString();
+            logJson["message"] = args.Message;
+            logList?.Add(logJson);
+
+            _snapshot.Put(LogPrefix.Concat(tx.ToArray()).ToArray(), Neo.Utility.StrictUTF8.GetBytes(logList?.ToString()!));
         }
 
         private void OnCommitted(NeoSystem system, Block block)
