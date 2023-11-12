@@ -214,9 +214,11 @@ namespace Neo.Plugins
             {
                 logList = (JArray)JToken.Parse(Neo.Utility.StrictUTF8.GetString(value));
             }
-            var logJson = new JObject();
-            logJson["contract"] = args.ScriptHash.ToString();
-            logJson["message"] = args.Message;
+            var logJson = new JObject
+            {
+                ["contract"] = args.ScriptHash.ToString(),
+                ["message"] = args.Message
+            };
             logList?.Add(logJson);
 
             _snapshot.Put(LogPrefix.Concat(tx.ToArray()).ToArray(), Neo.Utility.StrictUTF8.GetBytes(logList?.ToString()!));
