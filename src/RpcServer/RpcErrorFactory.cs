@@ -11,9 +11,9 @@
 using System.Collections.Generic;
 namespace Neo.Plugins
 {
-public static class RpcErrorFactory
-{
-    private static readonly Dictionary<int, string> DefaultMessages = new Dictionary<int, string> {
+    public static class RpcErrorFactory
+    {
+        private static readonly Dictionary<int, string> DefaultMessages = new Dictionary<int, string> {
       {RpcErrorCode.InternalServerError, "Internal server RpcError"},
       {RpcErrorCode.BadRequest, "Bad request"},
       {RpcErrorCode.InvalidRequest, "Invalid request"},
@@ -57,26 +57,26 @@ public static class RpcErrorFactory
       {RpcErrorCode.ExecutionFailed, "Contract execution failed"}
     };
 
-    public static RpcError NewError(int code, string message = null, string data = "")
-    {
-        message ??= DefaultMessages[code];
-        return new RpcError(code, message, data);
+        public static RpcError NewError(int code, string message = null, string data = "")
+        {
+            message ??= DefaultMessages[code];
+            return new RpcError(code, message, data);
+        }
+
+        public static RpcError NewCustomError(int code, string message)
+        {
+            return new RpcError(code, message, null);
+        }
+
+        public static bool Contains(int code)
+        {
+            return DefaultMessages.ContainsKey(code);
+        }
+
+        public static readonly RpcError ErrInvalidParams = NewError(RpcErrorCode.InvalidParams);
+
+        public static readonly RpcError ErrUnknownBlock = NewError(RpcErrorCode.UnknownBlock);
+
+        public static readonly RpcError ErrUnknownContract = NewError(RpcErrorCode.UnknownContract);
     }
-
-    public static RpcError NewCustomError(int code, string message)
-    {
-        return new RpcError(code, message, null);
-    }
-
-    public static bool Contains(int code)
-    {
-        return DefaultMessages.ContainsKey(code);
-    }
-
-    public static readonly RpcError ErrInvalidParams = NewError(RpcErrorCode.InvalidParams);
-
-    public static readonly RpcError ErrUnknownBlock = NewError(RpcErrorCode.UnknownBlock);
-
-    public static readonly RpcError ErrUnknownContract = NewError(RpcErrorCode.UnknownContract);
-}
 }
