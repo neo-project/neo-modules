@@ -16,7 +16,7 @@ namespace Neo.Plugins
     {
         public RpcException(RpcError error) : base(error.ErrorMessage)
         {
-            HResult = (int)error.Code;
+            HResult = error.Code;
         }
     }
 }
