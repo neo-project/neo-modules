@@ -327,14 +327,14 @@ namespace Neo.Plugins
             TransactionState state = NativeContract.Ledger.GetTransactionState(system.StoreView, txid);
             if (state != null)
             {
-                throw new RpcException(32700, "This tx is already confirmed, can't be cancelled.");
+                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.BadRequest, "This tx is already confirmed, can't be cancelled."));
             }
 
             var conflict = new TransactionAttribute[] { new Conflicts() { Hash = txid } };
             Signer[] signers = _params.Count >= 2 ? ((JArray)_params[1]).Select(j => new Signer() { Account = AddressToScriptHash(j.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.None }).ToArray() : Array.Empty<Signer>();
             if (!signers.Any())
             {
-                throw new RpcException(32701, "no signers");
+                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.BadRequest, "No signer"));
             }
 
             Transaction tx = new Transaction
@@ -350,7 +350,7 @@ namespace Neo.Plugins
             }
             catch (InvalidOperationException e)
             {
-                throw new RpcException(-500, GetExceptionMessage(e));
+                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.InsufficientFundsWallet, GetExceptionMessage(e)));
             }
 
             if (system.MemPool.TryGetValue(txid, out Transaction conflictTx))
@@ -363,7 +363,7 @@ namespace Neo.Plugins
                 AssetDescriptor descriptor = new(system.StoreView, system.Settings, NativeContract.GAS.Hash);
                 if (!BigDecimal.TryParse(extraFee, descriptor.Decimals, out BigDecimal decimalExtraFee) || decimalExtraFee.Sign <= 0)
                 {
-                    throw new RpcException(32702, "Incorrect Amount Format");
+                    throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.BadRequest, "Incorrect Amount Format"));
                 }
                 tx.NetworkFee += (long)decimalExtraFee.Value;
             };
