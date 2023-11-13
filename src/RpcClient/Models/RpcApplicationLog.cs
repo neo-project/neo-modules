@@ -61,6 +61,8 @@ namespace Neo.Network.RPC.Models
 
         public List<RpcNotifyEventArgs> Notifications { get; set; }
 
+        public List<RpcLogEventArgs> Logs { get; set; }
+
         public JObject ToJson()
         {
             JObject json = new();
@@ -70,6 +72,7 @@ namespace Neo.Network.RPC.Models
             json["exception"] = ExceptionMessage;
             json["stack"] = Stack.Select(q => q.ToJson()).ToArray();
             json["notifications"] = Notifications.Select(q => q.ToJson()).ToArray();
+            json["logs"] = Logs?.Select(q => q.ToJson()).ToArray();
             return json;
         }
 
@@ -82,7 +85,8 @@ namespace Neo.Network.RPC.Models
                 GasConsumed = long.Parse(json["gasconsumed"].AsString()),
                 ExceptionMessage = json["exception"]?.AsString(),
                 Stack = ((JArray)json["stack"]).Select(p => Utility.StackItemFromJson((JObject)p)).ToList(),
-                Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson((JObject)p, protocolSettings)).ToList()
+                Notifications = ((JArray)json["notifications"]).Select(p => RpcNotifyEventArgs.FromJson((JObject)p, protocolSettings)).ToList(),
+                Logs = ((JArray)json["logs"])?.Select(p => RpcLogEventArgs.FromJson((JObject)p, protocolSettings)).ToList()
             };
         }
     }
@@ -111,6 +115,31 @@ namespace Neo.Network.RPC.Models
                 Contract = json["contract"].ToScriptHash(protocolSettings),
                 EventName = json["eventname"].AsString(),
                 State = Utility.StackItemFromJson((JObject)json["state"])
+            };
+        }
+    }
+
+    public class RpcLogEventArgs
+    {
+        public UInt160 Contract { get; set; }
+
+        public string Message { get; set; }
+
+        public JObject ToJson()
+        {
+            return new JObject
+            {
+                ["contract"] = Contract.ToString(),
+                ["message"] = Message
+            };
+        }
+
+        public static RpcLogEventArgs FromJson(JObject json, ProtocolSettings protocolSettings)
+        {
+            return new RpcLogEventArgs
+            {
+                Contract = json["contract"].ToScriptHash(protocolSettings),
+                Message = json["message"]?.AsString(),
             };
         }
     }
