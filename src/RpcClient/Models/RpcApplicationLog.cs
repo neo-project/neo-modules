@@ -72,7 +72,11 @@ namespace Neo.Network.RPC.Models
             json["exception"] = ExceptionMessage;
             json["stack"] = Stack.Select(q => q.ToJson()).ToArray();
             json["notifications"] = Notifications.Select(q => q.ToJson()).ToArray();
-            json["logs"] = Logs?.Select(q => q.ToJson()).ToArray();
+            // Only add "logs" to json if Logs is not null
+            if (Logs != null)
+            {
+                json["logs"] = Logs.Select(q => q.ToJson()).ToArray();
+            }
             return json;
         }
 
