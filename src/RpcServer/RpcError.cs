@@ -8,6 +8,8 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using Neo.Json;
+
 namespace Neo.Plugins
 {
     public class RpcError
@@ -15,28 +17,29 @@ namespace Neo.Plugins
         public int Code { get; set; }
         public string Message { get; set; }
         public string Data { get; set; }
-        public RpcError(int code, string message, string data = "")
+
+        public RpcError(int code, string message, string data = null)
         {
             Code = code;
             Message = message;
             Data = data;
         }
 
-        public static RpcError ParseError(string data) => new RpcError(RpcErrorCode.BadRequest, "Parse RpcError", data);
+        public static RpcError ParseError(string data) => new(RpcErrorCode.BadRequest, "Parse RpcError", data);
 
         // Missing helper methods
-        public static RpcError InvalidRequestError(string data) => new RpcError(RpcErrorCode.InvalidRequest, "Invalid request", data);
+        public static RpcError InvalidRequestError(string data) => new(RpcErrorCode.InvalidRequest, "Invalid request", data);
 
-        public static RpcError MethodNotFoundError(string data) => new RpcError(RpcErrorCode.MethodNotFound, "Method not found", data);
+        public static RpcError MethodNotFoundError(string data) => new(RpcErrorCode.MethodNotFound, "Method not found", data);
 
-        public static RpcError InvalidParamsError(string data) => new RpcError(RpcErrorCode.InvalidParams, "Invalid params", data);
+        public static RpcError InvalidParamsError(string data) => new(RpcErrorCode.InvalidParams, "Invalid params", data);
 
-        public static RpcError InternalServerError(string data) => new RpcError(RpcErrorCode.InternalServerError, "Internal RpcError", data);
+        public static RpcError InternalServerError(string data) => new(RpcErrorCode.InternalServerError, "Internal RpcError", data);
 
-        public static RpcError ErrorWithCode(int code, string message) => new RpcError(code, message);
+        public static RpcError ErrorWithCode(int code, string message) => new(code, message);
 
         // Helper to wrap an existing RpcError with data
-        public static RpcError WrapErrorWithData(RpcError error, string data) => new RpcError(error.Code, error.Message, data);
+        public static RpcError WrapErrorWithData(RpcError error, string data) => new(error.Code, error.Message, data);
 
         public override string ToString()
         {
@@ -47,7 +50,16 @@ namespace Neo.Plugins
             return $"{Message} ({Code}) - {Data}";
         }
 
+        public JToken ToJson()
+        {
+            JObject json = new();
+            json["code"] = Code;
+            json["message"] = ErrorMessage;
+            if (!string.IsNullOrEmpty(Data))
+                json["data"] = Data;
+            return json;
+        }
+
         public string ErrorMessage => string.IsNullOrEmpty(Data) ? $"{Message}" : $"{Message} - {Data}";
     }
-
 }

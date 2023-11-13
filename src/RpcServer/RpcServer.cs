@@ -74,14 +74,10 @@ namespace Neo.Plugins
             return authvalues[0] == settings.RpcUser && authvalues[1] == settings.RpcPass;
         }
 
-        private static JObject CreateErrorResponse(JToken id, RpcError rpcError, JToken data = null)
+        private static JObject CreateErrorResponse(JToken id, RpcError rpcError)
         {
             JObject response = CreateResponse(id);
-            response["error"] = new JObject();
-            response["error"]["code"] = rpcError.Code;
-            response["error"]["message"] = rpcError.ErrorMessage;
-            if (data != null)
-                response["error"]["data"] = data;
+            response["error"] = rpcError.ToJson();
             return response;
         }
 
@@ -261,7 +257,7 @@ namespace Neo.Plugins
             catch (Exception ex)
             {
 #if DEBUG
-                return CreateErrorResponse(request["id"], RpcErrorFactory.NewCustomError(ex.HResult, ex.Message), ex.StackTrace);
+                return CreateErrorResponse(request["id"], RpcErrorFactory.NewCustomError(ex.HResult, ex.Message, ex.StackTrace));
 #else
                 return CreateErrorResponse(request["id"], RpcErrorFactory.NewCustomError(ex.HResult, ex.Message));
 #endif

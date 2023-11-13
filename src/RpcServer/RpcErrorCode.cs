@@ -59,5 +59,4 @@ namespace Neo.Plugins
         public const int InvalidProof = -607;
         public const int ExecutionFailed = -608;
     }
-
 }
