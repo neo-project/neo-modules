@@ -18,3 +18,4 @@ end_of_line = lf
 
 [.cs]
 csharp_style_namespace_declarations = file_scoped:warning
+dotnet_diagnostic.IDE0161.severity = warning
