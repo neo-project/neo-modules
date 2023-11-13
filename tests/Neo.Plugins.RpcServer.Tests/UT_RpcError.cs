@@ -20,7 +20,11 @@ namespace Neo.Plugins.RpcServer.Tests
                 .Cast<RpcError>())
             {
                 Assert.IsTrue(codes.Add(error.ToString()));
-                Assert.IsNull(error.Data);
+
+                if (error.Code == RpcError.WalletFeeLimit.Code)
+                    Assert.IsNotNull(error.Data);
+                else
+                    Assert.IsNull(error.Data);
             }
         }
 
