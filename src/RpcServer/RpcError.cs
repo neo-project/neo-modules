@@ -38,7 +38,7 @@ namespace Neo.Plugins
         public static readonly RpcError WalletNotFound = new(-303, "Wallet not found");
         public static readonly RpcError WalletNotSupported = new(-304, "Wallet not supported");
 
-        public static readonly RpcError AccessDenied = new(-400, "Access deniedstatic ");
+        public static readonly RpcError AccessDenied = new(-400, "Access deniedstatic");
 
         public static readonly RpcError VerificationFailed = new(-500, "Inventory verification failed");
         public static readonly RpcError AlreadyExists = new(-501, "Inventory already exists");
