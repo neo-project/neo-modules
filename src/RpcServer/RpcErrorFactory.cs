@@ -9,8 +9,8 @@
 // modifications are permitted.
 
 using System.Collections.Generic;
-namespace Neo.Plugins;
-
+namespace Neo.Plugins
+{
 public static class RpcErrorFactory
 {
     private static readonly Dictionary<int, string> DefaultMessages = new Dictionary<int, string> {
@@ -78,4 +78,5 @@ public static class RpcErrorFactory
     public static readonly RpcError ErrUnknownBlock = NewError(RpcErrorCode.UnknownBlock);
 
     public static readonly RpcError ErrUnknownContract = NewError(RpcErrorCode.UnknownContract);
+}
 }
