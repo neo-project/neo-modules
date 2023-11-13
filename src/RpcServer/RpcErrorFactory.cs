@@ -8,61 +8,15 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
-using System.Collections.Generic;
+using Neo.Cryptography.ECC;
 
 namespace Neo.Plugins
 {
     public static class RpcErrorFactory
     {
-        private static readonly Dictionary<int, string> DefaultMessages = new()
+        public static RpcError WithData(this RpcError error, string data = null)
         {
-            {RpcErrorCode.InternalServerError, "Internal server RpcError"},
-            {RpcErrorCode.BadRequest, "Bad request"},
-            {RpcErrorCode.InvalidRequest, "Invalid request"},
-            {RpcErrorCode.MethodNotFound, "Method not found"},
-            {RpcErrorCode.InvalidParams, "Invalid params"},
-            {RpcErrorCode.UnknownBlock, "Unknown block"},
-            {RpcErrorCode.UnknownContract, "Unknown contract"},
-            {RpcErrorCode.UnknownTransaction, "Unknown transaction"},
-            {RpcErrorCode.UnknownStorageItem, "Unknown storage item"},
-            {RpcErrorCode.UnknownScriptContainer, "Unknown script container"},
-            {RpcErrorCode.UnknownStateRoot, "Unknown state root"},
-            {RpcErrorCode.UnknownSession, "Unknown session"},
-            {RpcErrorCode.UnknownIterator, "Unknown iterator"},
-            {RpcErrorCode.UnknownHeight, "Unknown height"},
-            {RpcErrorCode.InsufficientFundsWallet, "Insufficient funds in wallet"},
-            {RpcErrorCode.WalletFeeLimit, "Wallet fee limit exceeded"},
-            {RpcErrorCode.NoOpenedWallet, "No opened wallet"},
-            {RpcErrorCode.WalletNotFound, "Wallet not found"},
-            {RpcErrorCode.WalletNotSupported, "Wallet not supported"},
-            {RpcErrorCode.AccessDenied, "Access denied"},
-            {RpcErrorCode.VerificationFailed, "Inventory verification failed"},
-            {RpcErrorCode.AlreadyExists, "Inventory already exists"},
-            {RpcErrorCode.MempoolCapReached, "Memory pool capacity reached"},
-            {RpcErrorCode.AlreadyInPool, "Already in transaction pool"},
-            {RpcErrorCode.InsufficientNetworkFee, "Insufficient network fee"},
-            {RpcErrorCode.PolicyFailed, "Policy check failed"},
-            {RpcErrorCode.InvalidScript, "Invalid transaction script"},
-            {RpcErrorCode.InvalidAttribute, "Invalid transaction attribute"},
-            {RpcErrorCode.InvalidSignature, "Invalid transaction signature"},
-            {RpcErrorCode.InvalidSize, "Invalid inventory size"},
-            {RpcErrorCode.ExpiredTransaction, "Expired transaction"},
-            {RpcErrorCode.InsufficientFunds, "Insufficient funds for fee"},
-            {RpcErrorCode.InvalidVerificationFunction, "Invalid contract verification"},
-            {RpcErrorCode.SessionsDisabled, "State iterator sessions disabled"},
-            {RpcErrorCode.OracleDisabled, "Oracle service disabled"},
-            {RpcErrorCode.OracleRequestFinished, "Oracle request already finished"},
-            {RpcErrorCode.OracleRequestNotFound, "Oracle request not found"},
-            {RpcErrorCode.OracleNotDesignatedNode, "Not a designated oracle node"},
-            {RpcErrorCode.UnsupportedState, "Old state not supported"},
-            {RpcErrorCode.InvalidProof, "Invalid state proof"},
-            {RpcErrorCode.ExecutionFailed, "Contract execution failed"}
-        };
-
-        public static RpcError NewError(int code, string message = null, string data = null)
-        {
-            message ??= DefaultMessages[code];
-            return new RpcError(code, message, data);
+            return new RpcError(error.Code, error.Message, data);
         }
 
         public static RpcError NewCustomError(int code, string message, string data = null)
@@ -70,10 +24,15 @@ namespace Neo.Plugins
             return new RpcError(code, message, data);
         }
 
-        public static readonly RpcError ErrInvalidParams = NewError(RpcErrorCode.InvalidParams);
+        #region Require data
 
-        public static readonly RpcError ErrUnknownBlock = NewError(RpcErrorCode.UnknownBlock);
+        public static RpcError BadRequest(string data) => RpcError.BadRequest.WithData(data);
+        public static RpcError InsufficientFundsWallet(string data) => RpcError.InsufficientFundsWallet.WithData(data);
+        public static RpcError VerificationFailed(string data) => RpcError.VerificationFailed.WithData(data);
+        public static RpcError InvalidVerificationFunction(UInt160 contractHash) => RpcError.InvalidVerificationFunction.WithData($"The smart contract {contractHash} haven't got verify method.");
+        public static RpcError InvalidSignature(string data) => RpcError.InvalidSignature.WithData(data);
+        public static RpcError OracleNotDesignatedNode(ECPoint oraclePub) => RpcError.OracleNotDesignatedNode.WithData($"{oraclePub} isn't an oracle node");
 
-        public static readonly RpcError ErrUnknownContract = NewError(RpcErrorCode.UnknownContract);
+        #endregion
     }
 }

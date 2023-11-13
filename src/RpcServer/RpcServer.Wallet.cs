@@ -8,6 +8,11 @@
 // Redistribution and use in source and binary forms with or without
 // modifications are permitted.
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Numerics;
 using Akka.Actor;
 using Neo.IO;
 using Neo.Json;
@@ -18,11 +23,6 @@ using Neo.SmartContract.Native;
 using Neo.VM;
 using Neo.Wallets;
 using Neo.Wallets.NEP6;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Numerics;
 
 namespace Neo.Plugins
 {
@@ -52,7 +52,7 @@ namespace Neo.Plugins
         private void CheckWallet()
         {
             if (wallet is null)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.AccessDenied));
+                throw new RpcException(RpcError.AccessDenied);
         }
 
         [RpcMethod]
@@ -198,7 +198,7 @@ namespace Neo.Plugins
             AssetDescriptor descriptor = new(snapshot, system.Settings, assetId);
             BigDecimal amount = new(BigInteger.Parse(_params[3].AsString()), descriptor.Decimals);
             if (amount.Sign <= 0)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.InvalidParams));
+                throw new RpcException(RpcError.InvalidParams);
             Signer[] signers = _params.Count >= 5 ? ((JArray)_params[4]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
 
             Transaction tx = wallet.MakeTransaction(snapshot, new[]
@@ -211,7 +211,7 @@ namespace Neo.Plugins
                 }
             }, from, signers);
             if (tx == null)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.InsufficientFunds));
+                throw new RpcException(RpcError.InsufficientFunds);
 
             ContractParametersContext transContext = new(snapshot, tx, settings.Network);
             wallet.Sign(transContext);
@@ -225,7 +225,7 @@ namespace Neo.Plugins
                     tx.NetworkFee = calFee;
             }
             if (tx.NetworkFee > settings.MaxFee)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.WalletFeeLimit, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value."));
+                throw new RpcException(RpcError.WalletFeeLimit);
             return SignAndRelay(snapshot, tx);
         }
 
@@ -242,7 +242,7 @@ namespace Neo.Plugins
             }
             JArray to = (JArray)_params[to_start];
             if (to.Count == 0)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.InvalidParams));
+                throw new RpcException(RpcError.InvalidParams);
             Signer[] signers = _params.Count >= to_start + 2 ? ((JArray)_params[to_start + 1]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
 
             TransferOutput[] outputs = new TransferOutput[to.Count];
@@ -258,11 +258,11 @@ namespace Neo.Plugins
                     ScriptHash = AddressToScriptHash(to[i]["address"].AsString(), system.Settings.AddressVersion)
                 };
                 if (outputs[i].Value.Sign <= 0)
-                    throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.InvalidParams));
+                    throw new RpcException(RpcError.InvalidParams);
             }
             Transaction tx = wallet.MakeTransaction(snapshot, outputs, from, signers);
             if (tx == null)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.InsufficientFunds));
+                throw new RpcException(RpcError.InsufficientFunds);
 
             ContractParametersContext transContext = new(snapshot, tx, settings.Network);
             wallet.Sign(transContext);
@@ -276,7 +276,7 @@ namespace Neo.Plugins
                     tx.NetworkFee = calFee;
             }
             if (tx.NetworkFee > settings.MaxFee)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.WalletFeeLimit, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value."));
+                throw new RpcException(RpcError.WalletFeeLimit);
             return SignAndRelay(snapshot, tx);
         }
 
@@ -290,7 +290,7 @@ namespace Neo.Plugins
             AssetDescriptor descriptor = new(snapshot, system.Settings, assetId);
             BigDecimal amount = new(BigInteger.Parse(_params[2].AsString()), descriptor.Decimals);
             if (amount.Sign <= 0)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.InvalidParams));
+                throw new RpcException(RpcError.InvalidParams);
             Transaction tx = wallet.MakeTransaction(snapshot, new[]
             {
                 new TransferOutput
@@ -301,7 +301,7 @@ namespace Neo.Plugins
                 }
             });
             if (tx == null)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.InsufficientFunds));
+                throw new RpcException(RpcError.InsufficientFunds);
 
             ContractParametersContext transContext = new(snapshot, tx, settings.Network);
             wallet.Sign(transContext);
@@ -315,7 +315,7 @@ namespace Neo.Plugins
                     tx.NetworkFee = calFee;
             }
             if (tx.NetworkFee > settings.MaxFee)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.WalletFeeLimit, "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value."));
+                throw new RpcException(RpcError.WalletFeeLimit);
             return SignAndRelay(snapshot, tx);
         }
 
@@ -327,14 +327,14 @@ namespace Neo.Plugins
             TransactionState state = NativeContract.Ledger.GetTransactionState(system.StoreView, txid);
             if (state != null)
             {
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.BadRequest, "This tx is already confirmed, can't be cancelled."));
+                throw new RpcException(RpcErrorFactory.BadRequest("This tx is already confirmed, can't be cancelled."));
             }
 
             var conflict = new TransactionAttribute[] { new Conflicts() { Hash = txid } };
             Signer[] signers = _params.Count >= 2 ? ((JArray)_params[1]).Select(j => new Signer() { Account = AddressToScriptHash(j.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.None }).ToArray() : Array.Empty<Signer>();
             if (!signers.Any())
             {
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.BadRequest, "No signer"));
+                throw new RpcException(RpcErrorFactory.BadRequest("No signer"));
             }
 
             Transaction tx = new Transaction
@@ -350,7 +350,7 @@ namespace Neo.Plugins
             }
             catch (InvalidOperationException e)
             {
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.InsufficientFundsWallet, GetExceptionMessage(e)));
+                throw new RpcException(RpcErrorFactory.InsufficientFundsWallet(GetExceptionMessage(e)));
             }
 
             if (system.MemPool.TryGetValue(txid, out Transaction conflictTx))
@@ -363,7 +363,7 @@ namespace Neo.Plugins
                 AssetDescriptor descriptor = new(system.StoreView, system.Settings, NativeContract.GAS.Hash);
                 if (!BigDecimal.TryParse(extraFee, descriptor.Decimals, out BigDecimal decimalExtraFee) || decimalExtraFee.Sign <= 0)
                 {
-                    throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.BadRequest, "Incorrect Amount Format"));
+                    throw new RpcException(RpcErrorFactory.BadRequest("Incorrect Amount Format"));
                 }
                 tx.NetworkFee += (long)decimalExtraFee.Value;
             };
@@ -386,13 +386,13 @@ namespace Neo.Plugins
             var contract = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
             if (contract is null)
             {
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnknownContract));
+                throw new RpcException(RpcError.UnknownContract);
             }
             var md = contract.Manifest.Abi.GetMethod("verify", -1);
             if (md is null)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.InvalidVerificationFunction, $"The smart contract {contract.Hash} haven't got verify method."));
+                throw new RpcException(RpcErrorFactory.InvalidVerificationFunction(contract.Hash));
             if (md.ReturnType != ContractParameterType.Boolean)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.VerificationFailed, "The verify method doesn't return boolean value."));
+                throw new RpcException(RpcErrorFactory.VerificationFailed("The verify method doesn't return boolean value."));
 
             Transaction tx = new()
             {

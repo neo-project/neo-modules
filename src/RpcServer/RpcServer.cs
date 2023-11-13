@@ -198,13 +198,13 @@ namespace Neo.Plugins
             JToken response;
             if (request == null)
             {
-                response = CreateErrorResponse(null, RpcErrorFactory.NewError(RpcErrorCode.BadRequest));
+                response = CreateErrorResponse(null, RpcError.BadRequest);
             }
             else if (request is JArray array)
             {
                 if (array.Count == 0)
                 {
-                    response = CreateErrorResponse(request["id"], RpcErrorFactory.NewError(RpcErrorCode.InvalidRequest));
+                    response = CreateErrorResponse(request["id"], RpcError.InvalidRequest);
                 }
                 else
                 {
@@ -228,16 +228,16 @@ namespace Neo.Plugins
             JToken @params = request["params"] ?? new JArray();
             if (!request.ContainsProperty("method") || @params is not JArray)
             {
-                return CreateErrorResponse(request["id"], RpcErrorFactory.NewError(RpcErrorCode.InvalidRequest));
+                return CreateErrorResponse(request["id"], RpcError.InvalidRequest);
             }
             JObject response = CreateResponse(request["id"]);
             try
             {
                 string method = request["method"].AsString();
                 if (!CheckAuth(context) || settings.DisabledMethods.Contains(method))
-                    throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.AccessDenied));
+                    throw new RpcException(RpcError.AccessDenied);
                 if (!methods.TryGetValue(method, out var func))
-                    throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.MethodNotFound));
+                    throw new RpcException(RpcError.MethodNotFound);
                 response["result"] = func((JArray)@params) switch
                 {
                     JToken result => result,
@@ -248,11 +248,11 @@ namespace Neo.Plugins
             }
             catch (FormatException)
             {
-                return CreateErrorResponse(request["id"], RpcErrorFactory.NewError(RpcErrorCode.InvalidParams));
+                return CreateErrorResponse(request["id"], RpcError.InvalidParams);
             }
             catch (IndexOutOfRangeException)
             {
-                return CreateErrorResponse(request["id"], RpcErrorFactory.NewError(RpcErrorCode.InvalidRequest));
+                return CreateErrorResponse(request["id"], RpcError.InvalidRequest);
             }
             catch (Exception ex)
             {

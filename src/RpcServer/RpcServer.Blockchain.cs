@@ -47,7 +47,7 @@ namespace Neo.Plugins
                 block = NativeContract.Ledger.GetBlock(snapshot, hash);
             }
             if (block == null)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnknownBlock));
+                throw new RpcException(RpcError.UnknownBlock);
             if (verbose)
             {
                 JObject json = Utility.BlockToJson(block, system.Settings);
@@ -81,7 +81,7 @@ namespace Neo.Plugins
             {
                 return NativeContract.Ledger.GetBlockHash(snapshot, height).ToString();
             }
-            throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnknownHeight));
+            throw new RpcException(RpcError.UnknownHeight);
         }
 
         [RpcMethod]
@@ -102,7 +102,7 @@ namespace Neo.Plugins
                 header = NativeContract.Ledger.GetHeader(snapshot, hash);
             }
             if (header == null)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnknownBlock));
+                throw new RpcException(RpcError.UnknownBlock);
 
             if (verbose)
             {
@@ -123,13 +123,13 @@ namespace Neo.Plugins
             if (int.TryParse(_params[0].AsString(), out int contractId))
             {
                 var contracts = NativeContract.ContractManagement.GetContractById(system.StoreView, contractId);
-                return contracts?.ToJson() ?? throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnknownContract));
+                return contracts?.ToJson() ?? throw new RpcException(RpcError.UnknownContract);
             }
             else
             {
                 UInt160 script_hash = ToScriptHash(_params[0].AsString());
                 ContractState contract = NativeContract.ContractManagement.GetContract(system.StoreView, script_hash);
-                return contract?.ToJson() ?? throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnknownContract));
+                return contract?.ToJson() ?? throw new RpcException(RpcError.UnknownContract);
             }
         }
 
@@ -171,7 +171,7 @@ namespace Neo.Plugins
             var snapshot = system.StoreView;
             TransactionState state = NativeContract.Ledger.GetTransactionState(snapshot, hash);
             tx ??= state?.Transaction;
-            if (tx is null) throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnknownTransaction));
+            if (tx is null) throw new RpcException(RpcError.UnknownTransaction);
             if (!verbose) return Convert.ToBase64String(tx.ToArray());
             JObject json = Utility.TransactionToJson(tx, system.Settings);
             if (state is not null)
@@ -192,7 +192,7 @@ namespace Neo.Plugins
             {
                 UInt160 hash = UInt160.Parse(_params[0].AsString());
                 ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, hash);
-                if (contract is null) throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnknownContract));
+                if (contract is null) throw new RpcException(RpcError.UnknownContract);
                 id = contract.Id;
             }
             byte[] key = Convert.FromBase64String(_params[1].AsString());
@@ -201,7 +201,7 @@ namespace Neo.Plugins
                 Id = id,
                 Key = key
             });
-            if (item is null) throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnknownStorageItem));
+            if (item is null) throw new RpcException(RpcError.UnknownStorageItem);
             return Convert.ToBase64String(item.Value.Span);
         }
 
@@ -213,7 +213,7 @@ namespace Neo.Plugins
             {
                 UInt160 hash = UInt160.Parse(_params[0].AsString());
                 ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, hash);
-                if (contract is null) throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnknownContract));
+                if (contract is null) throw new RpcException(RpcError.UnknownContract);
                 id = contract.Id;
             }
 
@@ -261,7 +261,7 @@ namespace Neo.Plugins
             UInt256 hash = UInt256.Parse(_params[0].AsString());
             uint? height = NativeContract.Ledger.GetTransactionState(system.StoreView, hash)?.BlockIndex;
             if (height.HasValue) return height.Value;
-            throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnknownTransaction));
+            throw new RpcException(RpcError.UnknownTransaction);
         }
 
         [RpcMethod]

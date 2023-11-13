@@ -182,7 +182,7 @@ namespace Neo.Plugins.StateService
             using var snapshot = StateStore.Singleton.GetSnapshot();
             StateRoot state_root = snapshot.GetStateRoot(index);
             if (state_root is null)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnknownStateRoot));
+                throw new RpcException(RpcError.UnknownStateRoot);
             else
                 return state_root.ToJson();
         }
@@ -220,12 +220,12 @@ namespace Neo.Plugins.StateService
         {
             if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
             {
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnsupportedState));
+                throw new RpcException(RpcError.UnsupportedState);
             }
             using var store = StateStore.Singleton.GetStoreSnapshot();
             var trie = new Trie(store, root_hash);
             var contract = GetHistoricalContractState(trie, script_hash);
-            if (contract is null) throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnknownContract));
+            if (contract is null) throw new RpcException(RpcError.UnknownContract);
             return GetProof(trie, contract.Id, key);
         }
 
@@ -253,7 +253,7 @@ namespace Neo.Plugins.StateService
             }
 
             var value = Trie.VerifyProof(root_hash, key, proofs);
-            if (value is null) throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.VerificationFailed));
+            if (value is null) throw new RpcException(RpcError.VerificationFailed);
             return Convert.ToBase64String(value);
         }
 
@@ -295,7 +295,7 @@ namespace Neo.Plugins.StateService
         {
             var root_hash = UInt256.Parse(_params[0].AsString());
             if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnsupportedState));
+                throw new RpcException(RpcError.UnsupportedState);
             var script_hash = UInt160.Parse(_params[1].AsString());
             var prefix = Convert.FromBase64String(_params[2].AsString());
             byte[] key = Array.Empty<byte>();
@@ -309,7 +309,7 @@ namespace Neo.Plugins.StateService
             using var store = StateStore.Singleton.GetStoreSnapshot();
             var trie = new Trie(store, root_hash);
             var contract = GetHistoricalContractState(trie, script_hash);
-            if (contract is null) throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnknownContract));
+            if (contract is null) throw new RpcException(RpcError.UnknownContract);
             StorageKey pkey = new()
             {
                 Id = contract.Id,
@@ -353,14 +353,14 @@ namespace Neo.Plugins.StateService
         {
             var root_hash = UInt256.Parse(_params[0].AsString());
             if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
-                throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnsupportedState));
+                throw new RpcException(RpcError.UnsupportedState);
             var script_hash = UInt160.Parse(_params[1].AsString());
             var key = Convert.FromBase64String(_params[2].AsString());
             using var store = StateStore.Singleton.GetStoreSnapshot();
             var trie = new Trie(store, root_hash);
 
             var contract = GetHistoricalContractState(trie, script_hash);
-            if (contract is null) throw new RpcException(RpcErrorFactory.NewError(RpcErrorCode.UnknownContract));
+            if (contract is null) throw new RpcException(RpcError.UnknownContract);
             StorageKey skey = new()
             {
                 Id = contract.Id,

@@ -14,6 +14,57 @@ namespace Neo.Plugins
 {
     public class RpcError
     {
+        #region Default Values
+
+        public static readonly RpcError InternalServerError = new(-32603, "Internal server RpcError");
+        public static readonly RpcError BadRequest = new(-32700, "Bad request");
+        public static readonly RpcError InvalidRequest = new(-32600, "Invalid request");
+        public static readonly RpcError MethodNotFound = new(-32601, "Method not found");
+        public static readonly RpcError InvalidParams = new(-32602, "Invalid params");
+
+        public static readonly RpcError UnknownBlock = new(-101, "Unknown block");
+        public static readonly RpcError UnknownContract = new(-102, "Unknown contract");
+        public static readonly RpcError UnknownTransaction = new(-103, "Unknown transaction");
+        public static readonly RpcError UnknownStorageItem = new(-104, "Unknown storage item");
+        public static readonly RpcError UnknownScriptContainer = new(-105, "Unknown script container");
+        public static readonly RpcError UnknownStateRoot = new(-106, "Unknown state root");
+        public static readonly RpcError UnknownSession = new(-107, "Unknown session");
+        public static readonly RpcError UnknownIterator = new(-108, "Unknown iterator");
+        public static readonly RpcError UnknownHeight = new(-109, "Unknown height");
+
+        public static readonly RpcError InsufficientFundsWallet = new(-300, "Insufficient funds in wallet");
+        public static readonly RpcError WalletFeeLimit = new(-301, "Wallet fee limit exceeded", "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
+        public static readonly RpcError NoOpenedWallet = new(-302, "No opened wallet");
+        public static readonly RpcError WalletNotFound = new(-303, "Wallet not found");
+        public static readonly RpcError WalletNotSupported = new(-304, "Wallet not supported");
+
+        public static readonly RpcError AccessDenied = new(-400, "Access deniedstatic ");
+
+        public static readonly RpcError VerificationFailed = new(-500, "Inventory verification failed");
+        public static readonly RpcError AlreadyExists = new(-501, "Inventory already exists");
+        public static readonly RpcError MempoolCapReached = new(-502, "Memory static pool capacity reached");
+        public static readonly RpcError AlreadyInPool = new(-503, "Already in transaction pool");
+        public static readonly RpcError InsufficientNetworkFee = new(-504, "Insufficient network fee");
+        public static readonly RpcError PolicyFailed = new(-505, "Policy check failed");
+        public static readonly RpcError InvalidScript = new(-506, "Invalid static transaction script");
+        public static readonly RpcError InvalidAttribute = new(-507, "Invalid transaction attribute");
+        public static readonly RpcError InvalidSignature = new(-508, "Invalid transaction signature");
+        public static readonly RpcError InvalidSize = new(-509, "Invalid inventory size");
+        public static readonly RpcError ExpiredTransaction = new(-510, "Expired transaction");
+        public static readonly RpcError InsufficientFunds = new(-511, "Insufficient funds for fee");
+        public static readonly RpcError InvalidVerificationFunction = new(-512, "Invalid contract verification");
+
+        public static readonly RpcError SessionsDisabled = new(-601, "State iterator sessions disabled");
+        public static readonly RpcError OracleDisabled = new(-602, "Oracle service disabled");
+        public static readonly RpcError OracleRequestFinished = new(-603, "Oracle request already finished");
+        public static readonly RpcError OracleRequestNotFound = new(-604, "Oracle request not found");
+        public static readonly RpcError OracleNotDesignatedNode = new(-605, "Not a designated oracle node");
+        public static readonly RpcError UnsupportedState = new(-606, "Old state not supported");
+        public static readonly RpcError InvalidProof = new(-607, "Invalid state proof");
+        public static readonly RpcError ExecutionFailed = new(-608, "Contract execution failed");
+
+        #endregion
+
         public int Code { get; set; }
         public string Message { get; set; }
         public string Data { get; set; }
@@ -24,22 +75,6 @@ namespace Neo.Plugins
             Message = message;
             Data = data;
         }
-
-        public static RpcError ParseError(string data) => new(RpcErrorCode.BadRequest, "Parse RpcError", data);
-
-        // Missing helper methods
-        public static RpcError InvalidRequestError(string data) => new(RpcErrorCode.InvalidRequest, "Invalid request", data);
-
-        public static RpcError MethodNotFoundError(string data) => new(RpcErrorCode.MethodNotFound, "Method not found", data);
-
-        public static RpcError InvalidParamsError(string data) => new(RpcErrorCode.InvalidParams, "Invalid params", data);
-
-        public static RpcError InternalServerError(string data) => new(RpcErrorCode.InternalServerError, "Internal RpcError", data);
-
-        public static RpcError ErrorWithCode(int code, string message) => new(code, message);
-
-        // Helper to wrap an existing RpcError with data
-        public static RpcError WrapErrorWithData(RpcError error, string data) => new(error.Code, error.Message, data);
 
         public override string ToString()
         {
