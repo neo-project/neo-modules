@@ -253,7 +253,7 @@ namespace Neo.Plugins.StateService
             }
 
             var value = Trie.VerifyProof(root_hash, key, proofs);
-            if (value is null) throw new RpcException(RpcError.VerificationFailed);
+            if (value is null) throw new RpcException(RpcError.InvalidProof);
             return Convert.ToBase64String(value);
         }
 
