@@ -35,7 +35,7 @@ namespace Neo.Plugins
         public static RpcError InvalidContractVerification(UInt160 contractHash) => RpcError.InvalidContractVerification.WithData($"The smart contract {contractHash} haven't got verify method.");
         public static RpcError InvalidContractVerification(string data) => RpcError.InvalidContractVerification.WithData(data);
         public static RpcError InvalidSignature(string data) => RpcError.InvalidSignature.WithData(data);
-        public static RpcError OracleNotDesignatedNode(ECPoint oraclePub) => RpcError.OracleNotDesignatedNode.WithData($"{oraclePub} isn't an oracle node");
+        public static RpcError OracleNotDesignatedNode(ECPoint oraclePub) => RpcError.OracleNotDesignatedNode.WithData($"{oraclePub} isn't an oracle node.");
 
         #endregion
     }

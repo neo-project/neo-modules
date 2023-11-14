@@ -198,7 +198,7 @@ namespace Neo.Plugins
             AssetDescriptor descriptor = new(snapshot, system.Settings, assetId);
             BigDecimal amount = new(BigInteger.Parse(_params[3].AsString()), descriptor.Decimals);
             if (amount.Sign <= 0)
-                throw new RpcException(RpcError.InvalidParams);
+                throw new RpcException(RpcErrorFactory.InvalidParams("Amount can't be negative."));
             Signer[] signers = _params.Count >= 5 ? ((JArray)_params[4]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
 
             Transaction tx = wallet.MakeTransaction(snapshot, new[]
@@ -242,7 +242,7 @@ namespace Neo.Plugins
             }
             JArray to = (JArray)_params[to_start];
             if (to.Count == 0)
-                throw new RpcException(RpcError.InvalidParams);
+                throw new RpcException(RpcErrorFactory.InvalidParams("Argument 'to' can't be empty."));
             Signer[] signers = _params.Count >= to_start + 2 ? ((JArray)_params[to_start + 1]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
 
             TransferOutput[] outputs = new TransferOutput[to.Count];
@@ -258,7 +258,7 @@ namespace Neo.Plugins
                     ScriptHash = AddressToScriptHash(to[i]["address"].AsString(), system.Settings.AddressVersion)
                 };
                 if (outputs[i].Value.Sign <= 0)
-                    throw new RpcException(RpcError.InvalidParams);
+                    throw new RpcException(RpcErrorFactory.InvalidParams($"Amount of '{asset_id}' can't be negative."));
             }
             Transaction tx = wallet.MakeTransaction(snapshot, outputs, from, signers);
             if (tx == null)
