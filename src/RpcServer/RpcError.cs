@@ -26,11 +26,11 @@ namespace Neo.Plugins
         public static readonly RpcError UnknownContract = new(-102, "Unknown contract");
         public static readonly RpcError UnknownTransaction = new(-103, "Unknown transaction");
         public static readonly RpcError UnknownStorageItem = new(-104, "Unknown storage item");
-        //public static readonly RpcError UnknownScriptContainer = new(-105, "Unknown script container");
-        public static readonly RpcError UnknownStateRoot = new(-106, "Unknown state root");
-        //public static readonly RpcError UnknownSession = new(-107, "Unknown session");
-        //public static readonly RpcError UnknownIterator = new(-108, "Unknown iterator");
-        public static readonly RpcError UnknownHeight = new(-109, "Unknown height");
+        public static readonly RpcError UnknownStateRoot = new(-105, "Unknown state root");
+        public static readonly RpcError UnknownHeight = new(-106, "Unknown height");
+        //public static readonly RpcError UnknownScriptContainer = new(-107, "Unknown script container");
+        //public static readonly RpcError UnknownSession = new(-108, "Unknown session");
+        //public static readonly RpcError UnknownIterator = new(-109, "Unknown iterator");
 
         public static readonly RpcError InsufficientFundsWallet = new(-300, "Insufficient funds in wallet");
         public static readonly RpcError WalletFeeLimit = new(-301, "Wallet fee limit exceeded", "The necessary fee is more than the Max_fee, this transaction is failed. Please increase your Max_fee value.");
@@ -44,15 +44,15 @@ namespace Neo.Plugins
         public static readonly RpcError InvalidSignature = new(-501, "Invalid signature");
         public static readonly RpcError InsufficientFunds = new(-502, "Insufficient funds for fee");
         public static readonly RpcError InvalidContractVerification = new(-503, "Invalid contract verification function");
-        public static readonly RpcError AlreadyExists = new(-501, "Inventory already exists");
-        //public static readonly RpcError MempoolCapReached = new(-502, "Memory pool capacity reached");
-        //public static readonly RpcError AlreadyInPool = new(-503, "Already in pool");
-        //public static readonly RpcError InsufficientNetworkFee = new(-504, "Insufficient network fee");
-        //public static readonly RpcError PolicyFailed = new(-505, "Policy check failed");
-        //public static readonly RpcError InvalidScript = new(-506, "Invalid transaction script");
-        //public static readonly RpcError InvalidAttribute = new(-507, "Invalid transaction attribute");
-        //public static readonly RpcError InvalidSize = new(-509, "Invalid inventory size");
-        //public static readonly RpcError ExpiredTransaction = new(-510, "Expired transaction");
+        public static readonly RpcError AlreadyExists = new(-504, "Inventory already exists");
+        //public static readonly RpcError MempoolCapReached = new(-505, "Memory pool capacity reached");
+        //public static readonly RpcError AlreadyInPool = new(-506, "Already in pool");
+        //public static readonly RpcError InsufficientNetworkFee = new(-507, "Insufficient network fee");
+        //public static readonly RpcError PolicyFailed = new(-508, "Policy check failed");
+        //public static readonly RpcError InvalidScript = new(-509, "Invalid transaction script");
+        //public static readonly RpcError InvalidAttribute = new(-510, "Invalid transaction attribute");
+        //public static readonly RpcError InvalidSize = new(-511, "Invalid inventory size");
+        //public static readonly RpcError ExpiredTransaction = new(-512, "Expired transaction");
 
         public static readonly RpcError OracleRequestFinished = new(-600, "Oracle request already finished");
         public static readonly RpcError OracleRequestNotFound = new(-601, "Oracle request not found");
