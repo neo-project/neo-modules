@@ -38,15 +38,15 @@ namespace Neo.Plugins
         public static readonly RpcError WalletNotFound = new(-303, "Wallet not found");
         public static readonly RpcError WalletNotSupported = new(-304, "Wallet not supported");
 
-        public static readonly RpcError AccessDenied = new(-400, "Access deniedstatic");
+        public static readonly RpcError AccessDenied = new(-400, "Access denied");
 
         public static readonly RpcError VerificationFailed = new(-500, "Inventory verification failed");
         public static readonly RpcError AlreadyExists = new(-501, "Inventory already exists");
-        public static readonly RpcError MempoolCapReached = new(-502, "Memory static pool capacity reached");
+        public static readonly RpcError MempoolCapReached = new(-502, "Memory pool capacity reached");
         public static readonly RpcError AlreadyInPool = new(-503, "Already in transaction pool");
         public static readonly RpcError InsufficientNetworkFee = new(-504, "Insufficient network fee");
         public static readonly RpcError PolicyFailed = new(-505, "Policy check failed");
-        public static readonly RpcError InvalidScript = new(-506, "Invalid static transaction script");
+        public static readonly RpcError InvalidScript = new(-506, "Invalid transaction script");
         public static readonly RpcError InvalidAttribute = new(-507, "Invalid transaction attribute");
         public static readonly RpcError InvalidSignature = new(-508, "Invalid transaction signature");
         public static readonly RpcError InvalidSize = new(-509, "Invalid inventory size");
