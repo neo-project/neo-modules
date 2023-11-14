@@ -237,7 +237,7 @@ namespace Neo.Plugins
                 if (!CheckAuth(context) || settings.DisabledMethods.Contains(method))
                     throw new RpcException(RpcError.AccessDenied);
                 if (!methods.TryGetValue(method, out var func))
-                    throw new RpcException(RpcError.MethodNotFound);
+                    throw new RpcException(RpcErrorFactory.MethodNotFound(method));
                 response["result"] = func((JArray)@params) switch
                 {
                     JToken result => result,
@@ -252,7 +252,7 @@ namespace Neo.Plugins
             }
             catch (IndexOutOfRangeException)
             {
-                return CreateErrorResponse(request["id"], RpcError.InvalidRequest);
+                return CreateErrorResponse(request["id"], RpcError.InvalidParams);
             }
             catch (Exception ex)
             {

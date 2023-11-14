@@ -327,7 +327,7 @@ namespace Neo.Plugins
             TransactionState state = NativeContract.Ledger.GetTransactionState(system.StoreView, txid);
             if (state != null)
             {
-                throw new RpcException(RpcErrorFactory.BadRequest("This tx is already confirmed, can't be cancelled."));
+                throw new RpcException(RpcErrorFactory.AlreadyExists("This tx is already confirmed, can't be cancelled."));
             }
 
             var conflict = new TransactionAttribute[] { new Conflicts() { Hash = txid } };
@@ -363,7 +363,7 @@ namespace Neo.Plugins
                 AssetDescriptor descriptor = new(system.StoreView, system.Settings, NativeContract.GAS.Hash);
                 if (!BigDecimal.TryParse(extraFee, descriptor.Decimals, out BigDecimal decimalExtraFee) || decimalExtraFee.Sign <= 0)
                 {
-                    throw new RpcException(RpcErrorFactory.BadRequest("Incorrect Amount Format"));
+                    throw new RpcException(RpcErrorFactory.InvalidParams("Incorrect Amount Format"));
                 }
                 tx.NetworkFee += (long)decimalExtraFee.Value;
             };
@@ -392,7 +392,7 @@ namespace Neo.Plugins
             if (md is null)
                 throw new RpcException(RpcErrorFactory.InvalidContractVerification(contract.Hash));
             if (md.ReturnType != ContractParameterType.Boolean)
-                throw new RpcException(RpcErrorFactory.VerificationFailed("The verify method doesn't return boolean value."));
+                throw new RpcException(RpcErrorFactory.InvalidContractVerification("The verify method doesn't return boolean value."));
 
             Transaction tx = new()
             {

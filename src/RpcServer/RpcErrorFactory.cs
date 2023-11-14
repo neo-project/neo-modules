@@ -26,10 +26,14 @@ namespace Neo.Plugins
 
         #region Require data
 
+        public static RpcError MethodNotFound(string method) => RpcError.AlreadyExists.WithData($"The method '{method}' doesn't exists.");
+        public static RpcError AlreadyExists(string data) => RpcError.AlreadyExists.WithData(data);
+        public static RpcError InvalidParams(string data) => RpcError.InvalidParams.WithData(data);
         public static RpcError BadRequest(string data) => RpcError.BadRequest.WithData(data);
         public static RpcError InsufficientFundsWallet(string data) => RpcError.InsufficientFundsWallet.WithData(data);
         public static RpcError VerificationFailed(string data) => RpcError.VerificationFailed.WithData(data);
         public static RpcError InvalidContractVerification(UInt160 contractHash) => RpcError.InvalidContractVerification.WithData($"The smart contract {contractHash} haven't got verify method.");
+        public static RpcError InvalidContractVerification(string data) => RpcError.InvalidContractVerification.WithData(data);
         public static RpcError InvalidSignature(string data) => RpcError.InvalidSignature.WithData(data);
         public static RpcError OracleNotDesignatedNode(ECPoint oraclePub) => RpcError.OracleNotDesignatedNode.WithData($"{oraclePub} isn't an oracle node");
 

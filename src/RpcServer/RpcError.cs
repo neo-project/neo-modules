@@ -44,7 +44,7 @@ namespace Neo.Plugins
         public static readonly RpcError InvalidSignature = new(-501, "Invalid signature");
         public static readonly RpcError InsufficientFunds = new(-502, "Insufficient funds for fee");
         public static readonly RpcError InvalidContractVerification = new(-503, "Invalid contract verification function");
-        //public static readonly RpcError AlreadyExists = new(-501, "Inventory already exists");
+        public static readonly RpcError AlreadyExists = new(-501, "Inventory already exists");
         //public static readonly RpcError MempoolCapReached = new(-502, "Memory pool capacity reached");
         //public static readonly RpcError AlreadyInPool = new(-503, "Already in pool");
         //public static readonly RpcError InsufficientNetworkFee = new(-504, "Insufficient network fee");
@@ -57,12 +57,12 @@ namespace Neo.Plugins
         public static readonly RpcError OracleRequestFinished = new(-600, "Oracle request already finished");
         public static readonly RpcError OracleRequestNotFound = new(-601, "Oracle request not found");
         public static readonly RpcError OracleNotDesignatedNode = new(-602, "Not a designated oracle node");
+        //public static readonly RpcError OracleDisabled = new(-603, "Oracle service disabled");
 
         public static readonly RpcError UnsupportedState = new(-700, "Old state not supported");
-        //public static readonly RpcError SessionsDisabled = new(-601, "State iterator sessions disabled");
-        //public static readonly RpcError OracleDisabled = new(-602, "Oracle service disabled");
-        //public static readonly RpcError InvalidProof = new(-607, "Invalid state proof");
-        //public static readonly RpcError ExecutionFailed = new(-608, "Contract execution failed");
+        public static readonly RpcError InvalidProof = new(-701, "Invalid state proof");
+        //public static readonly RpcError SessionsDisabled = new(-702, "State iterator sessions disabled");
+        //public static readonly RpcError ExecutionFailed = new(-703, "Contract execution failed");
 
         #endregion
 
