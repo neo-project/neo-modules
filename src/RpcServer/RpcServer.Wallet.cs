@@ -334,7 +334,7 @@ namespace Neo.Plugins
             Signer[] signers = _params.Count >= 2 ? ((JArray)_params[1]).Select(j => new Signer() { Account = AddressToScriptHash(j.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.None }).ToArray() : Array.Empty<Signer>();
             if (!signers.Any())
             {
-                throw new RpcException(RpcErrorFactory.BadRequest("No signer"));
+                throw new RpcException(RpcErrorFactory.BadRequest("No signer."));
             }
 
             Transaction tx = new Transaction
@@ -363,7 +363,7 @@ namespace Neo.Plugins
                 AssetDescriptor descriptor = new(system.StoreView, system.Settings, NativeContract.GAS.Hash);
                 if (!BigDecimal.TryParse(extraFee, descriptor.Decimals, out BigDecimal decimalExtraFee) || decimalExtraFee.Sign <= 0)
                 {
-                    throw new RpcException(RpcErrorFactory.InvalidParams("Incorrect Amount Format"));
+                    throw new RpcException(RpcErrorFactory.InvalidParams("Incorrect amount format."));
                 }
                 tx.NetworkFee += (long)decimalExtraFee.Value;
             };

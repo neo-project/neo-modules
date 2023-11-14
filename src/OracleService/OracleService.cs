@@ -235,8 +235,8 @@ namespace Neo.Plugins
                 if (NativeContract.Oracle.GetRequest(snapshot, requestId) is null)
                     throw new RpcException(RpcError.OracleRequestNotFound);
                 var data = Neo.Helper.Concat(oraclePub.ToArray(), BitConverter.GetBytes(requestId), txSign);
-                if (!Crypto.VerifySignature(data, msgSign, oraclePub)) throw new RpcException(RpcError.InvalidSignature);
-
+                if (!Crypto.VerifySignature(data, msgSign, oraclePub))
+                    throw new RpcException(RpcErrorFactory.InvalidSignature($"Invalid oracle response transaction signature from '{oraclePub}'."));
                 AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
             }
             return new JObject();
@@ -496,7 +496,7 @@ namespace Neo.Plugins
             else if (Crypto.VerifySignature(task.BackupTx.GetSignData(System.Settings.Network), sign, oraclePub))
                 task.BackupSigns.TryAdd(oraclePub, sign);
             else
-                throw new RpcException(RpcErrorFactory.InvalidSignature("Invalid response transaction sign"));
+                throw new RpcException(RpcErrorFactory.InvalidSignature($"Invalid oracle response transaction signature from '{oraclePub}'."));
 
             if (CheckTxSign(snapshot, task.Tx, task.Signs) || CheckTxSign(snapshot, task.BackupTx, task.BackupSigns))
             {
