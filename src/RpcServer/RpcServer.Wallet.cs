@@ -390,7 +390,7 @@ namespace Neo.Plugins
             }
             var md = contract.Manifest.Abi.GetMethod("verify", -1);
             if (md is null)
-                throw new RpcException(RpcErrorFactory.InvalidVerificationFunction(contract.Hash));
+                throw new RpcException(RpcErrorFactory.InvalidContractVerification(contract.Hash));
             if (md.ReturnType != ContractParameterType.Boolean)
                 throw new RpcException(RpcErrorFactory.VerificationFailed("The verify method doesn't return boolean value."));
 
