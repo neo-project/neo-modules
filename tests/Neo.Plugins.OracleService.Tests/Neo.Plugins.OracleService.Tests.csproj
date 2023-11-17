@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka.TestKit" Version="1.5.12" />
-    <PackageReference Include="Akka.TestKit.Xunit2" Version="1.5.12" />
+    <PackageReference Include="Akka.TestKit" Version="1.5.14" />
+    <PackageReference Include="Akka.TestKit.Xunit2" Version="1.5.14" />
   </ItemGroup>
   
   <ItemGroup>
@@ -15,7 +15,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.7.2" />
+    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Update="MSTest.TestAdapter" Version="3.1.1" />
     <PackageReference Update="MSTest.TestFramework" Version="3.1.1" />
   </ItemGroup>
