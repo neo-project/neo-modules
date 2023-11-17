@@ -75,7 +75,7 @@ jobs:
       with:
         dotnet-version: '7.0.x'
     - name: Restore dependencies
-      run: dotnet restore neo-express.sln
+      run: dotnet restore neo-modules.sln
 
     - name: Build
       run: dotnet build neo-modules.sln --configuration Release --no-restore --verbosity normal
