@@ -3,7 +3,6 @@
   <PropertyGroup>
     <PackageId>Neo.Plugins.RestServer</PackageId>
     <RootNamespace>Neo.Plugins.RestServer</RootNamespace>
-    <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
