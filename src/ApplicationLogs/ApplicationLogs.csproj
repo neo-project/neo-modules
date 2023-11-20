@@ -1,12 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <PackageId>Neo.Plugins.ApplicationLogs</PackageId>
-    <RootNamespace>Neo.Plugins</RootNamespace>
-  </PropertyGroup>
+	<PropertyGroup>
+		<PackageId>Neo.Plugins.ApplicationLogs</PackageId>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\RpcServer\RpcServer.csproj" AdditionalProperties="IncludeSettingsFileOutput=False"/>
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\RpcServer\RpcServer.csproj" AdditionalProperties="IncludeSettingsFileOutput=False">
+			<Private>false</Private>
+			<ExcludeAssets>runtime</ExcludeAssets>
+		</ProjectReference>
+	</ItemGroup>
 
 </Project>
