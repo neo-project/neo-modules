@@ -32,6 +32,8 @@ namespace Neo.Plugins
 {
     public partial class RpcServer : IDisposable
     {
+        private const int MaxParamsDepth = 32;
+
         private readonly Dictionary<string, Func<JArray, object>> methods = new();
 
         private IWebHost host;
@@ -110,6 +112,9 @@ namespace Neo.Plugins
         {
             host = new WebHostBuilder().UseKestrel(options => options.Listen(settings.BindAddress, settings.Port, listenOptions =>
             {
+                // Default value is 5Mb
+                options.Limits.MaxRequestBodySize = settings.MaxRequestBodySize;
+                options.Limits.MaxRequestLineSize = Math.Min(settings.MaxRequestBodySize, options.Limits.MaxRequestLineSize);
                 // Default value is 40
                 options.Limits.MaxConcurrentConnections = settings.MaxConcurrentConnections;
 
@@ -217,7 +222,7 @@ namespace Neo.Plugins
                         request["jsonrpc"] = jsonrpc;
                     request["id"] = id;
                     request["method"] = method;
-                    request["params"] = JToken.Parse(_params);
+                    request["params"] = JToken.Parse(_params, MaxParamsDepth);
                 }
             }
             else if (context.Request.Method == "POST")
@@ -225,7 +230,7 @@ namespace Neo.Plugins
                 using StreamReader reader = new(context.Request.Body);
                 try
                 {
-                    request = JToken.Parse(await reader.ReadToEndAsync());
+                    request = JToken.Parse(await reader.ReadToEndAsync(), MaxParamsDepth);
                 }
                 catch (FormatException) { }
             }
