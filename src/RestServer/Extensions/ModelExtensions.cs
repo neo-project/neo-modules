@@ -81,7 +81,6 @@ namespace Neo.Plugins.RestServer.Extensions
                 MaxTraceableBlocks = protocolSettings.MaxTraceableBlocks,
                 InitialGasDistribution = protocolSettings.InitialGasDistribution,
                 SeedList = protocolSettings.SeedList,
-                NativeUpdateHistory = protocolSettings.NativeUpdateHistory,
                 Hardforks = protocolSettings.Hardforks,
                 StandbyValidators = protocolSettings.StandbyValidators,
                 StandbyCommittee = protocolSettings.StandbyCommittee,
