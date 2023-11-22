@@ -5,6 +5,7 @@ using Neo;
 using Neo.Json;
 using Neo.Ledger;
 using Neo.Plugins;
+using Neo.SmartContract;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,6 +25,7 @@ namespace WebSocketServer
         private readonly WebSocketDictionary<WebSocketClient> _connections;
         private readonly Dictionary<string, Func<JArray, object>> _methods;
         private readonly WebSocketOptions _webSocketOptions;
+        private readonly List<NotifyEventArgs> _notifyEvents;
 
         private NeoSystem _neoSystem;
         private IWebHost _host;
@@ -38,6 +40,7 @@ namespace WebSocketServer
             _connections = new();
             _methods = new();
             _webSocketOptions = new();
+            _notifyEvents = new();
             Blockchain.Committed += OnBlockchainCommitted;
             Blockchain.Committing += OnBlockchainCommitting;
         }
@@ -74,10 +77,10 @@ namespace WebSocketServer
             if (_connections.IsEmpty)
                 return;
 
-            foreach (var appExec in applicationExecutedList.Where(w => w.Transaction != null))
-            {
+            _notifyEvents.Clear();
 
-            }
+            foreach (var appExec in applicationExecutedList.Where(w => w.Transaction != null))
+                _notifyEvents.AddRange(appExec.Notifications);
         }
 
         private void OnBlockchainCommitted(NeoSystem system, Neo.Network.P2P.Payloads.Block block)
@@ -89,10 +92,30 @@ namespace WebSocketServer
                 await _connections.SendToAllJsonAsync(
                     WebSocketResponseMessage.Create(
                         Guid.Empty,
-                        block.ToJson(system.Settings),
+                        block.Header.ToJson(system.Settings),
                         WebSocketResponseMessageEvent.Block)
                     .ToJson())
                 .ConfigureAwait(false));
+
+            foreach (var tx in block.Transactions)
+                Task.Run(async () =>
+                    await _connections.SendToAllJsonAsync(
+                        WebSocketResponseMessage.Create(
+                            Guid.Empty,
+                            tx.ToJson(system.Settings),
+                            WebSocketResponseMessageEvent.Transaction)
+                        .ToJson())
+                    .ConfigureAwait(false));
+
+            _notifyEvents.ForEach(f =>
+                Task.Run(async () =>
+                    await _connections.SendToAllJsonAsync(
+                        WebSocketResponseMessage.Create(
+                            Guid.Empty,
+                            f.ToJson(),
+                            WebSocketResponseMessageEvent.Notify)
+                        .ToJson())
+                    .ConfigureAwait(false)));
         }
 
         public void RegisterMethods(object handler)
@@ -114,21 +137,21 @@ namespace WebSocketServer
         private void StartWebSocketServer()
         {
             _host = new WebHostBuilder()
-                .UseKestrel(options =>
-                {
-                    options.AddServerHeader = false;
-                    options.Listen(WebSocketServerSettings.Current.BindAddress, WebSocketServerSettings.Current.Port);
-                })
-                //.ConfigureServices(services =>
-                //{
+            .UseKestrel(options =>
+            {
+                options.AddServerHeader = false;
+                options.Listen(WebSocketServerSettings.Current.BindAddress, WebSocketServerSettings.Current.Port);
+            })
+            //.ConfigureServices(services =>
+            //{
 
-                //})
-                .Configure(app =>
-                {
-                    app.UseWebSockets(_webSocketOptions);
-                    app.Run(ProcessRequestsAsync);
-                })
-                .Build();
+            //})
+            .Configure(app =>
+            {
+                app.UseWebSockets(_webSocketOptions);
+                app.Run(ProcessRequestsAsync);
+            })
+            .Build();
 
 
             _host.Start();
@@ -252,7 +275,7 @@ namespace WebSocketServer
         }
 
         [WebSocketMethod]
-        private JToken Test(JArray @params)
+        private JToken Echo(JArray @params)
         {
             return @params;
         }

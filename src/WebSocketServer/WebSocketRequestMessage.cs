@@ -14,7 +14,7 @@ namespace Neo.Plugins
             new()
             {
                 Version = new(message["version"].AsString()),
-                RequestId = Guid.Parse(message["requestId"].AsString()),
+                RequestId = Guid.Parse(message["requestid"].AsString()),
                 Method = message["method"].AsString(),
                 Params = (JArray)message["params"],
             };

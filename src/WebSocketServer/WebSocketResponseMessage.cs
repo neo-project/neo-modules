@@ -23,8 +23,8 @@ namespace Neo.Plugins
             new()
             {
                 ["version"] = Version.ToString(),
-                ["requestId"] = RequestId.ToString(),
-                ["eventId"] = EventId,
+                ["requestid"] = RequestId.ToString(),
+                ["eventid"] = EventId,
                 ["result"] = Result,
             };
 
@@ -32,8 +32,8 @@ namespace Neo.Plugins
             new()
             {
                 Version = new(message["version"].AsString()),
-                RequestId = Guid.Parse(message["requestId"].AsString()),
-                EventId = (byte)message["eventId"].AsNumber(),
+                RequestId = Guid.Parse(message["requestid"].AsString()),
+                EventId = (byte)message["eventid"].AsNumber(),
                 Result = message["result"],
             };
 
@@ -43,11 +43,11 @@ namespace Neo.Plugins
         public byte[] ToArray() =>
             Encoding.UTF8.GetBytes(ToString());
 
-        public bool Equals(WebSocketResponseMessage? other) =>
+        public bool Equals(WebSocketResponseMessage other) =>
             other != null && other.EventId == EventId && other.RequestId == RequestId &&
             other.Version == Version && other.Result == Result;
 
-        public override bool Equals(object? obj) =>
+        public override bool Equals(object obj) =>
             Equals(obj as WebSocketResponseMessage);
 
         public override int GetHashCode() =>
