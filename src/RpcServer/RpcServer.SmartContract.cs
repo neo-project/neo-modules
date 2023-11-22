@@ -237,15 +237,7 @@ namespace Neo.Plugins
                 session = Result.Ok_Or(() => sessions[sid], RpcError.UnknownSession);
                 session.ResetExpiration();
             }
-            IIterator iterator;
-            try
-            {
-                iterator = session.Iterators[iid];
-            }
-            catch
-            {
-                throw new RpcException(RpcError.UnknownIterator);
-            }
+            IIterator iterator = Result.Ok_Or(() => session.Iterators[iid], RpcError.UnknownIterator);
             JArray json = new();
             while (count-- > 0 && iterator.Next())
                 json.Add(iterator.Value(null).ToJson());
