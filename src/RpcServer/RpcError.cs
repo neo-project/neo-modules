@@ -20,7 +20,7 @@ namespace Neo.Plugins
         // | code               | message         | meaning                                                                           |
         // |--------------------|-----------------|-----------------------------------------------------------------------------------|
         // | -32700             | Parse error     | Invalid JSON was received by the server. An error occurred on the server while parsing the JSON text. |
-        // | -32600             | Invalid Request | The JSON sent is not a valid Request object.                                      |
+        // | -32600             | Invalid request | The JSON sent is not a valid Request object.                                      |
         // | -32601             | Method not found| The method does not exist / is not available.                                     |
         // | -32602             | Invalid params  | Invalid method parameter(s).                                                      |
         // | -32603             | Internal error  | Internal JSON-RPC error.                                                          |
