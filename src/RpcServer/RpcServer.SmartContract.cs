@@ -226,23 +226,15 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken TraverseIterator(JArray _params)
         {
-            if (!settings.SessionEnabled) throw new RpcException(RpcError.SessionsDisabled);
-            Guid sid = Guid.Parse(_params[0].GetString());
-            Guid iid = Guid.Parse(_params[1].GetString());
+            Result.True_Or(() => !settings.SessionEnabled, RpcError.SessionsDisabled);
+            Guid sid = Result.Ok_Or(() => Guid.Parse(_params[0].GetString()), RpcError.InvalidParams.WithData($"Invalid session id {nameof(sid)}"));
+            Guid iid = Result.Ok_Or(() => Guid.Parse(_params[1].GetString()), RpcError.InvalidParams.WithData($"Invliad iterator id {nameof(iid)}"));
             int count = _params[2].GetInt32();
-            if (count > settings.MaxIteratorResultItems)
-                throw new RpcException(RpcError.InvalidParams.WithData($"invalid iterator items count {nameof(count)}"));
+            Result.True_Or(() => count > settings.MaxIteratorResultItems, RpcError.InvalidParams.WithData($"Invalid iterator items count {nameof(count)}"));
             Session session;
             lock (sessions)
             {
-                try
-                {
-                    session = sessions[sid];
-                }
-                catch
-                {
-                    throw new RpcException(RpcError.UnknownSession);
-                }
+                session = Result.Ok_Or(() => sessions[sid], RpcError.UnknownSession);
                 session.ResetExpiration();
             }
             IIterator iterator;
@@ -263,28 +255,14 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken TerminateSession(JArray _params)
         {
-            if (!settings.SessionEnabled) throw new RpcException(RpcError.SessionsDisabled);
-            Guid sid;
-            try
-            {
-                sid = Guid.Parse(_params[0].GetString());
-            }
-            catch
-            {
-                throw new RpcException(RpcError.InvalidParams.WithData("Invalid session id"));
-            }
-            Session session;
+            Result.True_Or(() => !settings.SessionEnabled, RpcError.SessionsDisabled);
+            Guid sid = Result.Ok_Or(() => Guid.Parse(_params[0].GetString()), RpcError.InvalidParams.WithData("Invalid session id"));
+
+            Session session = null;
             bool result;
             lock (sessions)
             {
-                try
-                {
-                    result = sessions.Remove(sid, out session);
-                }
-                catch
-                {
-                    throw new RpcException(RpcError.UnknownSession);
-                }
+                result = Result.Ok_Or(() => sessions.Remove(sid, out session), RpcError.UnknownSession);
             }
             if (result) session.Dispose();
             return result;
@@ -295,15 +273,8 @@ namespace Neo.Plugins
         {
             string address = _params[0].AsString();
             JObject json = new();
-            UInt160 script_hash;
-            try
-            {
-                script_hash = AddressToScriptHash(address, system.Settings.AddressVersion);
-            }
-            catch
-            {
-                throw new RpcException(RpcError.InvalidParams);
-            }
+            UInt160 script_hash = Result.Ok_Or(() => AddressToScriptHash(address, system.Settings.AddressVersion), RpcError.InvalidParams);
+
             var snapshot = system.StoreView;
             json["unclaimed"] = NativeContract.NEO.UnclaimedGas(snapshot, script_hash, NativeContract.Ledger.CurrentIndex(snapshot) + 1).ToString();
             json["address"] = script_hash.ToAddress(system.Settings.AddressVersion);
