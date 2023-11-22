@@ -246,13 +246,13 @@ namespace Neo.Plugins
                 };
                 return response;
             }
-            catch (FormatException)
+            catch (FormatException ex)
             {
-                return CreateErrorResponse(request["id"], RpcError.InvalidParams);
+                return CreateErrorResponse(request["id"], RpcError.InvalidParams.WithData(ex.Message));
             }
-            catch (IndexOutOfRangeException)
+            catch (IndexOutOfRangeException ex)
             {
-                return CreateErrorResponse(request["id"], RpcError.InvalidParams);
+                return CreateErrorResponse(request["id"], RpcError.InvalidParams.WithData(ex.Message));
             }
             catch (Exception ex)
             {

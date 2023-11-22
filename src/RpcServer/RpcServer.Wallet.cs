@@ -52,7 +52,7 @@ namespace Neo.Plugins
         private void CheckWallet()
         {
             if (wallet is null)
-                throw new RpcException(RpcError.AccessDenied);
+                throw new RpcException(RpcError.NoOpenedWallet);
         }
 
         [RpcMethod]
@@ -153,9 +153,9 @@ namespace Neo.Plugins
         {
             string path = _params[0].AsString();
             string password = _params[1].AsString();
-            if (!File.Exists(path)) throw new FileNotFoundException();
+            if (!File.Exists(path)) throw new RpcException(RpcError.WalletNotFound);
             wallet = Wallet.Open(path, password, system.Settings)
-                ?? throw new NotSupportedException();
+                ?? throw new RpcException(RpcError.WalletNotSupported);
             return true;
         }
 

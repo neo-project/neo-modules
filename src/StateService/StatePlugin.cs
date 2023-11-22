@@ -200,7 +200,7 @@ namespace Neo.Plugins.StateService
         private string GetProof(Trie trie, StorageKey skey)
         {
             var result = trie.TryGetProof(skey.ToArray(), out var proof);
-            if (!result) throw new KeyNotFoundException();
+            if (!result) throw new RpcException(RpcError.UnknownStorageItem);
 
             using MemoryStream ms = new();
             using BinaryWriter writer = new(ms, Utility.StrictUTF8);
