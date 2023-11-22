@@ -16,12 +16,22 @@ namespace Neo.Plugins
     {
         #region Default Values
 
-        //public static readonly RpcError InternalServerError = new(-32603, "Internal server RpcError");
-        public static readonly RpcError BadRequest = new(-32700, "Bad request");
+        // https://www.jsonrpc.org/specification
+        // | code               | message         | meaning                                                                           |
+        // |--------------------|-----------------|-----------------------------------------------------------------------------------|
+        // | -32700             | Parse error     | Invalid JSON was received by the server. An error occurred on the server while parsing the JSON text. |
+        // | -32600             | Invalid Request | The JSON sent is not a valid Request object.                                      |
+        // | -32601             | Method not found| The method does not exist / is not available.                                     |
+        // | -32602             | Invalid params  | Invalid method parameter(s).                                                      |
+        // | -32603             | Internal error  | Internal JSON-RPC error.                                                          |
+        // | -32000 to -32099   | Server error    | Reserved for implementation-defined server-errors.                                |
         public static readonly RpcError InvalidRequest = new(-32600, "Invalid request");
         public static readonly RpcError MethodNotFound = new(-32601, "Method not found");
         public static readonly RpcError InvalidParams = new(-32602, "Invalid params");
+        public static readonly RpcError InternalServerError = new(-32603, "Internal server RpcError");
+        public static readonly RpcError BadRequest = new(-32700, "Bad request");
 
+        // https://github.com/neo-project/proposals/pull/156/files
         public static readonly RpcError UnknownBlock = new(-101, "Unknown block");
         public static readonly RpcError UnknownContract = new(-102, "Unknown contract");
         public static readonly RpcError UnknownTransaction = new(-103, "Unknown transaction");
@@ -38,8 +48,6 @@ namespace Neo.Plugins
         public static readonly RpcError WalletNotFound = new(-303, "Wallet not found");
         public static readonly RpcError WalletNotSupported = new(-304, "Wallet not supported");
 
-        public static readonly RpcError AccessDenied = new(-400, "Access denied");
-
         public static readonly RpcError VerificationFailed = new(-500, "Inventory verification failed");
         public static readonly RpcError AlreadyExists = new(-501, "Inventory already exists");
         public static readonly RpcError MempoolCapReached = new(-502, "Memory pool capacity reached");
@@ -54,6 +62,7 @@ namespace Neo.Plugins
         public static readonly RpcError InsufficientFunds = new(-511, "Insufficient funds for fee");
         public static readonly RpcError InvalidContractVerification = new(-512, "Invalid contract verification function");
 
+        public static readonly RpcError AccessDenied = new(-600, "Access denied");
         public static readonly RpcError SessionsDisabled = new(-601, "State iterator sessions disabled");
         public static readonly RpcError OracleDisabled = new(-602, "Oracle service disabled");
         public static readonly RpcError OracleRequestFinished = new(-603, "Oracle request already finished");
