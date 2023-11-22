@@ -219,7 +219,7 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject SubmitOracleResponse(JArray _params)
         {
-            if (status != OracleStatus.Running) throw new InvalidOperationException();
+            if (status != OracleStatus.Running) throw new RpcException(RpcError.OracleDisabled);
             ECPoint oraclePub = ECPoint.DecodePoint(Convert.FromBase64String(_params[0].AsString()), ECCurve.Secp256r1);
             ulong requestId = (ulong)_params[1].AsNumber();
             byte[] txSign = Convert.FromBase64String(_params[2].AsString());
