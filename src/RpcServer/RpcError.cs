@@ -85,14 +85,7 @@ namespace Neo.Plugins
             Data = data;
         }
 
-        public override string ToString()
-        {
-            if (string.IsNullOrEmpty(Data))
-            {
-                return $"{Message} ({Code})";
-            }
-            return $"{Message} ({Code}) - {Data}";
-        }
+        public override string ToString() => string.IsNullOrEmpty(Data) ? $"{Message} ({Code})" : $"{Message} ({Code}) - {Data}";
 
         public JToken ToJson()
         {
