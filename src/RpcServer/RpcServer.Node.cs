@@ -64,7 +64,6 @@ namespace Neo.Plugins
                 case VerifyResult.AlreadyExists:
                     {
                         throw new RpcException(RpcError.AlreadyExists.WithData(reason.ToString()));
-
                     }
                 case VerifyResult.OutOfMemory:
                     {
