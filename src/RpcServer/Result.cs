@@ -11,7 +11,7 @@ namespace Neo.Plugins
         /// <typeparam name="T">The return type</typeparam>
         /// <returns>The execution result</returns>
         /// <exception cref="RpcException">The Rpc exception</exception>
-        public static T Ok_Or<T>(this Func<T> function, RpcError err)
+        public static T Ok_Or<T>(this Func<T> function, RpcError err, bool withData = false)
         {
             try
             {
@@ -19,8 +19,10 @@ namespace Neo.Plugins
                 if (result == null) throw new RpcException(err);
                 return result;
             }
-            catch
+            catch (Exception ex)
             {
+                if (withData)
+                    throw new RpcException(err.WithData(ex.GetBaseException().Message));
                 throw new RpcException(err);
             }
         }

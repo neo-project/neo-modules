@@ -344,14 +344,7 @@ namespace Neo.Plugins
                 Witnesses = Array.Empty<Witness>(),
             };
 
-            try
-            {
-                tx = wallet.MakeTransaction(system.StoreView, new[] { (byte)OpCode.RET }, signers[0].Account, signers, conflict);
-            }
-            catch (InvalidOperationException e)
-            {
-                throw new RpcException(RpcErrorFactory.InsufficientFundsWallet(GetExceptionMessage(e)));
-            }
+            tx = Result.Ok_Or(() => wallet.MakeTransaction(system.StoreView, new[] { (byte)OpCode.RET }, signers[0].Account, signers, conflict), RpcError.InsufficientFunds, true);
 
             if (system.MemPool.TryGetValue(txid, out Transaction conflictTx))
             {
