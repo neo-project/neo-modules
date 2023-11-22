@@ -52,15 +52,56 @@ namespace Neo.Plugins
 
         private static JObject GetRelayResult(VerifyResult reason, UInt256 hash)
         {
-            if (reason == VerifyResult.Succeed)
+
+            switch (reason)
             {
-                var ret = new JObject();
-                ret["hash"] = hash.ToString();
-                return ret;
-            }
-            else
-            {
-                throw new RpcException(RpcErrorFactory.VerificationFailed(reason.ToString()));
+                case VerifyResult.Succeed:
+                    {
+                        var ret = new JObject();
+                        ret["hash"] = hash.ToString();
+                        return ret;
+                    }
+                case VerifyResult.AlreadyExists:
+                    {
+                        throw new RpcException(RpcError.AlreadyExists.WithData(reason.ToString()));
+
+                    }
+                case VerifyResult.OutOfMemory:
+                    {
+                        throw new RpcException(RpcError.MempoolCapReached.WithData(reason.ToString()));
+                    }
+                case VerifyResult.InvalidScript:
+                    {
+                        throw new RpcException(RpcError.InvalidScript.WithData(reason.ToString()));
+                    }
+                case VerifyResult.InvalidAttribute:
+                    {
+                        throw new RpcException(RpcError.InvalidAttribute.WithData(reason.ToString()));
+                    }
+                case VerifyResult.InvalidSignature:
+                    {
+                        throw new RpcException(RpcError.InvalidSignature.WithData(reason.ToString()));
+                    }
+                case VerifyResult.OverSize:
+                    {
+                        throw new RpcException(RpcError.InvalidSize.WithData(reason.ToString()));
+                    }
+                case VerifyResult.Expired:
+                    {
+                        throw new RpcException(RpcError.ExpiredTransaction.WithData(reason.ToString()));
+                    }
+                case VerifyResult.InsufficientFunds:
+                    {
+                        throw new RpcException(RpcError.InsufficientFunds.WithData(reason.ToString()));
+                    }
+                case VerifyResult.PolicyFail:
+                    {
+                        throw new RpcException(RpcError.PolicyFailed.WithData(reason.ToString()));
+                    }
+                default:
+                    {
+                        throw new RpcException(RpcError.VerificationFailed.WithData(reason.ToString()));
+                    }
             }
         }
 
