@@ -204,35 +204,20 @@ namespace WebSocketServer
                             await _connections.SendJsonAsync(clientId, ((WebSocketResponseMessage)obj).ToJson()).ConfigureAwait(false);
                         }
                     }
-                    catch (WebSocketException ex)
-                    {
-                        await _connections.SendJsonAsync(
-                            clientId,
-                            WebSocketResponseMessage.Create(
-                                requestId,
-                                WebSocketErrorResponseMessage.Create(ex).ToJson(),
-                                WebSocketResponseMessageEvent.Error)
-                            .ToJson());
-                    }
                     catch (Exception ex)
                     {
                         ex = ex.InnerException ?? ex;
-#if DEBUG
                         await _connections.SendJsonAsync(
                             clientId,
                             WebSocketResponseMessage.Create(
                                 requestId,
+#if DEBUG
                                 WebSocketErrorResponseMessage.Create(100, ex.Message, ex.StackTrace).ToJson(),
+#else
+                                WebSocketErrorResponseMessage.Create(100, ex.Message).ToJson(),
+#endif
                                 WebSocketResponseMessageEvent.Error)
                             .ToJson());
-#else
-                        await _connections.SendJsonAsync(
-                            clientId,
-                            WebSocketResponseMessage.Create(
-                                requestId,
-                                WebSocketErrorResponseMessage.Create(100, ex.Message).ToJson(),
-                                WebSocketResponseMessageEvent.Error));
-#endif
                     }
                 }
 
