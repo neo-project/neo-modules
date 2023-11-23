@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
+using Microsoft.Extensions.DependencyInjection;
 using Neo;
 using Neo.Json;
 using Neo.Ledger;
@@ -10,8 +12,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
+using System.Net.Security;
 using System.Net.WebSockets;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -140,7 +145,24 @@ namespace WebSocketServer
             .UseKestrel(options =>
             {
                 options.AddServerHeader = false;
-                options.Listen(WebSocketServerSettings.Current.BindAddress, WebSocketServerSettings.Current.Port);
+                options.Listen(WebSocketServerSettings.Current.BindAddress, WebSocketServerSettings.Current.Port, config =>
+                {
+                    if (string.IsNullOrEmpty(WebSocketServerSettings.Current.SslCertFile))
+                        return;
+                    config.UseHttps(WebSocketServerSettings.Current.SslCertFile, WebSocketServerSettings.Current.SslCertPassword, httpsConnectionAdapterOptions =>
+                    {
+                        if (WebSocketServerSettings.Current.TrustedAuthorities is null || WebSocketServerSettings.Current.TrustedAuthorities.Length == 0)
+                            return;
+                        httpsConnectionAdapterOptions.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
+                        httpsConnectionAdapterOptions.ClientCertificateValidation = (cert, chain, err) =>
+                        {
+                            if (err != SslPolicyErrors.None)
+                                return false;
+                            X509Certificate2 authority = chain.ChainElements[^1].Certificate;
+                            return WebSocketServerSettings.Current.TrustedAuthorities.Contains(authority.Thumbprint);
+                        };
+                    });
+                });
             })
             //.ConfigureServices(services =>
             //{
@@ -148,6 +170,11 @@ namespace WebSocketServer
             //})
             .Configure(app =>
             {
+                _webSocketOptions.KeepAliveInterval = TimeSpan.FromSeconds(WebSocketServerSettings.Current.ConcurrentProxyTimeout);
+
+                foreach (var origin in WebSocketServerSettings.Current.AllowOrigins)
+                    _webSocketOptions.AllowedOrigins.Add(origin);
+
                 app.UseWebSockets(_webSocketOptions);
                 app.Run(ProcessRequestsAsync);
             })
@@ -159,6 +186,15 @@ namespace WebSocketServer
 
         private async Task ProcessRequestsAsync(HttpContext context)
         {
+            if (WebSocketServerSettings.Current.EnableBasicAuthentication)
+            {
+                if (IsAuthorized(context) == false)
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return;
+                }
+            }
+
             if (context.WebSockets.IsWebSocketRequest == false)
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
             else
@@ -257,6 +293,29 @@ namespace WebSocketServer
             }
 
             return WebSocketRequestMessage.FromJson(JToken.Parse(Encoding.UTF8.GetString(ms.ToArray())));
+        }
+
+        private static bool IsAuthorized(HttpContext context)
+        {
+            var authHeader = context.Request.Headers.Authorization;
+            if (string.IsNullOrEmpty(authHeader) == false && AuthenticationHeaderValue.TryParse(authHeader, out var authValue))
+            {
+                if (authValue.Scheme.Equals("basic", StringComparison.OrdinalIgnoreCase) && authValue.Parameter != null)
+                {
+                    try
+                    {
+                        var decodedParams = Encoding.UTF8.GetString(Convert.FromBase64String(authValue.Parameter));
+                        var creds = decodedParams.Split(':', 2);
+                        if (creds[0] == WebSocketServerSettings.Current.User && creds[1] == WebSocketServerSettings.Current.Pass)
+                            return true;
+
+                    }
+                    catch (FormatException)
+                    {
+                    }
+                }
+            }
+            return false;
         }
 
         [WebSocketMethod]

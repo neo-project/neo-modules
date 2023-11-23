@@ -6,6 +6,11 @@
     "SslCert": "",
     "SslCertPassword": "",
     "TrustedAuthorities": [],
+    "EnableBasicAuthentication": false,
+    "User": "",
+    "Pass": "",
+    "AllowOrigins": [],
+    "ConcurrentProxyTimeout": 120,
     "MessageSize": 16384
   }
 }

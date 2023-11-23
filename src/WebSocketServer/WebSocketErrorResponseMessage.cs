@@ -30,13 +30,17 @@ namespace Neo.Plugins
 
 #if DEBUG
         public static WebSocketErrorResponseMessage Create(int code, string message, string stackTrace) =>
+#else
+        public static WebSocketErrorResponseMessage Create(int code, string message) =>
+#endif
             new()
             {
                 Code = code,
                 Message = message.Trim(),
+#if DEBUG
                 StackTrace = stackTrace.Trim(),
-            };
 #endif
+            };
 
         public override string ToString() =>
             $"{ToJson()}";
