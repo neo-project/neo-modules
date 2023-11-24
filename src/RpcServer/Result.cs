@@ -35,7 +35,7 @@ namespace Neo.Plugins
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         /// <exception cref="RpcException"></exception>
-        public static T True_Or<T>(this Func<T> function, RpcError err)
+        public static bool True_Or(this Func<bool> function, RpcError err)
         {
             try
             {
