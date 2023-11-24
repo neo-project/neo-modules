@@ -15,11 +15,4 @@
     <PackageReference Update="MSTest.TestFramework" Version="3.1.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Neo" Version="3.6.2">
-      <IncludeAssets>all</IncludeAssets>
-      <ExcludeAssets>none</ExcludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-  </ItemGroup>
 </Project>
