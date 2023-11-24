@@ -219,11 +219,11 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject SubmitOracleResponse(JArray _params)
         {
-            if (status != OracleStatus.Running) throw new RpcException(RpcError.OracleDisabled);
+            status.Equals(OracleStatus.Running).IsTrue_Or(RpcError.OracleDisabled);
             ECPoint oraclePub = ECPoint.DecodePoint(Convert.FromBase64String(_params[0].AsString()), ECCurve.Secp256r1);
-            ulong requestId = (ulong)_params[1].AsNumber();
-            byte[] txSign = Convert.FromBase64String(_params[2].AsString());
-            byte[] msgSign = Convert.FromBase64String(_params[3].AsString());
+            ulong requestId = Result.Ok_Or(() => (ulong)_params[1].AsNumber(), RpcError.InvalidParams.WithData($"Invalid requestId: {_params[1]}"));
+            byte[] txSign = Result.Ok_Or(() => Convert.FromBase64String(_params[2].AsString()), RpcError.InvalidParams.WithData($"Invalid txSign: {_params[2]}"));
+            byte[] msgSign = Result.Ok_Or(() => Convert.FromBase64String(_params[3].AsString()), RpcError.InvalidParams.WithData($"Invalid msgSign: {_params[3]}"));
 
             if (finishedCache.ContainsKey(requestId)) throw new RpcException(RpcError.OracleRequestFinished);
 
