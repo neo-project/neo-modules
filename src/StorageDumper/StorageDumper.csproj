@@ -1,12 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<PackageId>Neo.Plugins.StorageDumper</PackageId>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-	</PropertyGroup>
+    <PropertyGroup>
+        <PackageId>Neo.Plugins.StorageDumper</PackageId>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Neo.ConsoleService" Version="1.2.0" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Neo.ConsoleService" Version="1.2.0">
+            <ExcludeAssets>runtime</ExcludeAssets>
+            <PrivateAssets>none</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
 </Project>

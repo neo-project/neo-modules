@@ -11,6 +11,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/neo-project/neo-modules.git</RepositoryUrl>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,7 +22,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neo" Version="3.6.2" />
+    <PackageReference Include="Neo" Version="3.6.2">
+      <ExcludeAssets>runtime</ExcludeAssets>
+      <PrivateAssets>none</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>

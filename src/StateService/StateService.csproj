@@ -7,12 +7,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neo.ConsoleService" Version="1.2.0" />
+    <PackageReference Include="Neo.ConsoleService" Version="1.2.0">
+      <ExcludeAssets>runtime</ExcludeAssets>
+      <PrivateAssets>none</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MPTTrie\MPTTrie.csproj" />
-    <ProjectReference Include="..\RpcServer\RpcServer.csproj" AdditionalProperties="IncludeSettingsFileOutput=False"/>
+    <ProjectReference Include="..\MPTTrie\MPTTrie.csproj">
+      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\RpcServer\RpcServer.csproj" AdditionalProperties="IncludeSettingsFileOutput=False">
+      <CopyLocalSatelliteAssemblies>False</CopyLocalSatelliteAssemblies>
+      <Private>False</Private>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>
