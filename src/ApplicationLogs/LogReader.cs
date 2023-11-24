@@ -58,7 +58,7 @@ namespace Neo.Plugins
         [RpcMethod]
         public JToken GetApplicationLog(JArray _params)
         {
-            UInt256 hash = UInt256.Parse(_params[0].AsString());
+            UInt256 hash = Result.Ok_Or(() => UInt256.Parse(_params[0].AsString()), RpcError.InvalidParams.WithData($"Invalid transaction hash: {_params[0]}"));
             byte[] value = _db.TryGet(hash.ToArray());
             if (value is null)
                 throw new RpcException(RpcError.UnknownScriptContainer);

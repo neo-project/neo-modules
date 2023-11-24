@@ -32,7 +32,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken GetBlock(JArray _params)
         {
-            JToken key = _params[0];
+            JToken key = Result.Ok_Or(() => _params[0], RpcError.InvalidParams.WithData($"Invalid Block Hash or Index: {_params[0]}"));
             bool verbose = _params.Count >= 2 && _params[1].AsBoolean();
             using var snapshot = system.GetSnapshot();
             Block block;
@@ -46,8 +46,7 @@ namespace Neo.Plugins
                 UInt256 hash = UInt256.Parse(key.AsString());
                 block = NativeContract.Ledger.GetBlock(snapshot, hash);
             }
-            if (block == null)
-                throw new RpcException(RpcError.UnknownBlock);
+            block.Null_Or(RpcError.UnknownBlock);
             if (verbose)
             {
                 JObject json = Utility.BlockToJson(block, system.Settings);
@@ -75,7 +74,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken GetBlockHash(JArray _params)
         {
-            uint height = uint.Parse(_params[0].AsString());
+            uint height = Result.Ok_Or(() => uint.Parse(_params[0].AsString()), RpcError.InvalidParams.WithData($"Invalid Height: {_params[0]}"));
             var snapshot = system.StoreView;
             if (height <= NativeContract.Ledger.CurrentIndex(snapshot))
             {
@@ -101,9 +100,7 @@ namespace Neo.Plugins
                 UInt256 hash = UInt256.Parse(key.AsString());
                 header = NativeContract.Ledger.GetHeader(snapshot, hash);
             }
-            if (header == null)
-                throw new RpcException(RpcError.UnknownBlock);
-
+            header.Null_Or(RpcError.UnknownBlock);
             if (verbose)
             {
                 JObject json = header.ToJson(system.Settings);
@@ -164,7 +161,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken GetRawTransaction(JArray _params)
         {
-            UInt256 hash = UInt256.Parse(_params[0].AsString());
+            UInt256 hash = Result.Ok_Or(() => UInt256.Parse(_params[0].AsString()), RpcError.InvalidParams.WithData($"Invalid Transaction Hash: {_params[0]}"));
             bool verbose = _params.Count >= 2 && _params[1].AsBoolean();
             if (system.MemPool.TryGetValue(hash, out Transaction tx) && !verbose)
                 return Convert.ToBase64String(tx.ToArray());
@@ -258,7 +255,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken GetTransactionHeight(JArray _params)
         {
-            UInt256 hash = UInt256.Parse(_params[0].AsString());
+            UInt256 hash = Result.Ok_Or(() => UInt256.Parse(_params[0].AsString()), RpcError.InvalidParams.WithData($"Invalid Transaction Hash: {_params[0]}"));
             uint? height = NativeContract.Ledger.GetTransactionState(system.StoreView, hash)?.BlockIndex;
             if (height.HasValue) return height.Value;
             throw new RpcException(RpcError.UnknownTransaction);

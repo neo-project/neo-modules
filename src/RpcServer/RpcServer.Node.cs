@@ -141,7 +141,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken SendRawTransaction(JArray _params)
         {
-            Transaction tx = Convert.FromBase64String(_params[0].AsString()).AsSerializable<Transaction>();
+            Transaction tx = Result.Ok_Or(() => Convert.FromBase64String(_params[0].AsString()).AsSerializable<Transaction>(), RpcError.InvalidParams.WithData($"Invalid Transaction Format: {_params[0]}"));
             RelayResult reason = system.Blockchain.Ask<RelayResult>(tx).Result;
             return GetRelayResult(reason.Result, tx.Hash);
         }
@@ -149,7 +149,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken SubmitBlock(JArray _params)
         {
-            Block block = Convert.FromBase64String(_params[0].AsString()).AsSerializable<Block>();
+            Block block = Result.Ok_Or(() => Convert.FromBase64String(_params[0].AsString()).AsSerializable<Block>(), RpcError.InvalidParams.WithData($"Invalid Block Format: {_params[0]}"));
             RelayResult reason = system.Blockchain.Ask<RelayResult>(block).Result;
             return GetRelayResult(reason.Result, block.Hash);
         }

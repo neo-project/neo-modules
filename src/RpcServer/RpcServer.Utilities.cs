@@ -35,7 +35,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken ValidateAddress(JArray _params)
         {
-            string address = _params[0].AsString();
+            string address = Result.Ok_Or(() => _params[0].AsString(), RpcError.InvalidParams.WithData($"Invlid address format: {_params[0]}"));
             JObject json = new();
             UInt160 scriptHash;
             try

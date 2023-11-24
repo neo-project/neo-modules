@@ -198,8 +198,8 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken InvokeFunction(JArray _params)
         {
-            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
-            string operation = _params[1].AsString();
+            UInt160 script_hash = Result.Ok_Or(() => UInt160.Parse(_params[0].AsString()), RpcError.InvalidParams.WithData($"Invalid script hash {nameof(script_hash)}"));
+            string operation = Result.Ok_Or(() => _params[1].AsString(), RpcError.InvalidParams);
             ContractParameter[] args = _params.Count >= 3 ? ((JArray)_params[2]).Select(p => ContractParameter.FromJson((JObject)p)).ToArray() : System.Array.Empty<ContractParameter>();
             Signer[] signers = _params.Count >= 4 ? SignersFromJson((JArray)_params[3], system.Settings) : null;
             Witness[] witnesses = _params.Count >= 4 ? WitnessesFromJson((JArray)_params[3]) : null;
@@ -216,7 +216,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken InvokeScript(JArray _params)
         {
-            byte[] script = Convert.FromBase64String(_params[0].AsString());
+            byte[] script = Result.Ok_Or(() => Convert.FromBase64String(_params[0].AsString()), RpcError.InvalidParams);
             Signer[] signers = _params.Count >= 2 ? SignersFromJson((JArray)_params[1], system.Settings) : null;
             Witness[] witnesses = _params.Count >= 2 ? WitnessesFromJson((JArray)_params[1]) : null;
             bool useDiagnostic = _params.Count >= 3 && _params[2].GetBoolean();
@@ -226,7 +226,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken TraverseIterator(JArray _params)
         {
-            Result.True_Or(() => !settings.SessionEnabled, RpcError.SessionsDisabled);
+            settings.SessionEnabled.IsTrue_Or(RpcError.SessionsDisabled);
             Guid sid = Result.Ok_Or(() => Guid.Parse(_params[0].GetString()), RpcError.InvalidParams.WithData($"Invalid session id {nameof(sid)}"));
             Guid iid = Result.Ok_Or(() => Guid.Parse(_params[1].GetString()), RpcError.InvalidParams.WithData($"Invliad iterator id {nameof(iid)}"));
             int count = _params[2].GetInt32();
@@ -247,7 +247,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken TerminateSession(JArray _params)
         {
-            Result.True_Or(() => !settings.SessionEnabled, RpcError.SessionsDisabled);
+            settings.SessionEnabled.IsTrue_Or(RpcError.SessionsDisabled);
             Guid sid = Result.Ok_Or(() => Guid.Parse(_params[0].GetString()), RpcError.InvalidParams.WithData("Invalid session id"));
 
             Session session = null;
@@ -263,7 +263,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken GetUnclaimedGas(JArray _params)
         {
-            string address = _params[0].AsString();
+            string address = Result.Ok_Or(() => _params[0].AsString(), RpcError.InvalidParams.WithData($"Invalid address {nameof(address)}"));
             JObject json = new();
             UInt160 script_hash = Result.Ok_Or(() => AddressToScriptHash(address, system.Settings.AddressVersion), RpcError.InvalidParams);
 

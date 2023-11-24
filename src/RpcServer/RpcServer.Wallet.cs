@@ -240,7 +240,7 @@ namespace Neo.Plugins
                 from = AddressToScriptHash(_params[0].AsString(), system.Settings.AddressVersion);
                 to_start = 1;
             }
-            JArray to = (JArray)_params[to_start];
+            JArray to = Result.Ok_Or(() => (JArray)_params[to_start], RpcError.InvalidParams.WithData($"Invalid 'to' parameter: {_params[to_start]}"));
             if (to.Count == 0)
                 throw new RpcException(RpcErrorFactory.InvalidParams("Argument 'to' can't be empty."));
             Signer[] signers = _params.Count >= to_start + 2 ? ((JArray)_params[to_start + 1]).Select(p => new Signer() { Account = AddressToScriptHash(p.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.CalledByEntry }).ToArray() : null;
@@ -260,9 +260,7 @@ namespace Neo.Plugins
                 if (outputs[i].Value.Sign <= 0)
                     throw new RpcException(RpcErrorFactory.InvalidParams($"Amount of '{asset_id}' can't be negative."));
             }
-            Transaction tx = wallet.MakeTransaction(snapshot, outputs, from, signers);
-            if (tx == null)
-                throw new RpcException(RpcError.InsufficientFunds);
+            Transaction tx = wallet.MakeTransaction(snapshot, outputs, from, signers).NotNull_Or(RpcError.InsufficientFunds);
 
             ContractParametersContext transContext = new(snapshot, tx, settings.Network);
             wallet.Sign(transContext);
@@ -284,7 +282,7 @@ namespace Neo.Plugins
         protected virtual JToken SendToAddress(JArray _params)
         {
             CheckWallet();
-            UInt160 assetId = UInt160.Parse(_params[0].AsString());
+            UInt160 assetId = Result.Ok_Or(() => UInt160.Parse(_params[0].AsString()), RpcError.InvalidParams.WithData($"Invalid asset hash: {_params[0]}"));
             UInt160 to = AddressToScriptHash(_params[1].AsString(), system.Settings.AddressVersion);
             using var snapshot = system.GetSnapshot();
             AssetDescriptor descriptor = new(snapshot, system.Settings, assetId);
@@ -299,9 +297,7 @@ namespace Neo.Plugins
                     Value = amount,
                     ScriptHash = to
                 }
-            });
-            if (tx == null)
-                throw new RpcException(RpcError.InsufficientFunds);
+            }).NotNull_Or(RpcError.InsufficientFunds);
 
             ContractParametersContext transContext = new(snapshot, tx, settings.Network);
             wallet.Sign(transContext);
@@ -323,20 +319,12 @@ namespace Neo.Plugins
         protected virtual JToken CancelTransaction(JArray _params)
         {
             CheckWallet();
-            var txid = UInt256.Parse(_params[0].AsString());
-            TransactionState state = NativeContract.Ledger.GetTransactionState(system.StoreView, txid);
-            if (state != null)
-            {
-                throw new RpcException(RpcErrorFactory.AlreadyExists("This tx is already confirmed, can't be cancelled."));
-            }
+            var txid = Result.Ok_Or(() => UInt256.Parse(_params[0].AsString()), RpcError.InvalidParams.WithData($"Invalid txid: {_params[0]}"));
+            TransactionState state = NativeContract.Ledger.GetTransactionState(system.StoreView, txid).Null_Or(RpcErrorFactory.AlreadyExists("This tx is already confirmed, can't be cancelled."));
 
             var conflict = new TransactionAttribute[] { new Conflicts() { Hash = txid } };
             Signer[] signers = _params.Count >= 2 ? ((JArray)_params[1]).Select(j => new Signer() { Account = AddressToScriptHash(j.AsString(), system.Settings.AddressVersion), Scopes = WitnessScope.None }).ToArray() : Array.Empty<Signer>();
-            if (!signers.Any())
-            {
-                throw new RpcException(RpcErrorFactory.BadRequest("No signer."));
-            }
-
+            (!signers.Any()).IsTrue_Or(RpcErrorFactory.BadRequest("No signer."));
             Transaction tx = new Transaction
             {
                 Signers = signers,
@@ -366,7 +354,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken InvokeContractVerify(JArray _params)
         {
-            UInt160 script_hash = UInt160.Parse(_params[0].AsString());
+            UInt160 script_hash = Result.Ok_Or(() => UInt160.Parse(_params[0].AsString()), RpcError.InvalidParams.WithData($"Invalid script hash: {_params[0]}"));
             ContractParameter[] args = _params.Count >= 2 ? ((JArray)_params[1]).Select(p => ContractParameter.FromJson((JObject)p)).ToArray() : Array.Empty<ContractParameter>();
             Signer[] signers = _params.Count >= 3 ? SignersFromJson((JArray)_params[2], system.Settings) : null;
             Witness[] witnesses = _params.Count >= 3 ? WitnessesFromJson((JArray)_params[2]) : null;
@@ -376,17 +364,9 @@ namespace Neo.Plugins
         private JObject GetVerificationResult(UInt160 scriptHash, ContractParameter[] args, Signer[] signers = null, Witness[] witnesses = null)
         {
             using var snapshot = system.GetSnapshot();
-            var contract = NativeContract.ContractManagement.GetContract(snapshot, scriptHash);
-            if (contract is null)
-            {
-                throw new RpcException(RpcError.UnknownContract);
-            }
-            var md = contract.Manifest.Abi.GetMethod("verify", -1);
-            if (md is null)
-                throw new RpcException(RpcErrorFactory.InvalidContractVerification(contract.Hash));
-            if (md.ReturnType != ContractParameterType.Boolean)
-                throw new RpcException(RpcErrorFactory.InvalidContractVerification("The verify method doesn't return boolean value."));
-
+            var contract = NativeContract.ContractManagement.GetContract(snapshot, scriptHash).NotNull_Or(RpcError.UnknownContract);
+            var md = contract.Manifest.Abi.GetMethod("verify", -1).NotNull_Or(RpcErrorFactory.InvalidContractVerification(contract.Hash));
+            (md.ReturnType == ContractParameterType.Boolean).IsTrue_Or(RpcErrorFactory.InvalidContractVerification("The verify method doesn't return boolean value."));
             Transaction tx = new()
             {
                 Signers = signers ?? new Signer[] { new() { Account = scriptHash } },
