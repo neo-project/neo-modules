@@ -68,9 +68,45 @@ namespace WebSocketServer
             if (system.Settings.Network != WebSocketServerSettings.Current.Network)
                 return;
 
+            if (WebSocketServerSettings.Current.DebugMode)
+            {
+                ApplicationEngine.Log += OnApplicationEngineLog;
+                Utility.Logging += OnUtilityLogging;
+            }
+
             _neoSystem = system;
-            RegisterMethods(this);
+            //RegisterMethods(this);
             StartWebSocketServer();
+        }
+
+        private void OnUtilityLogging(string source, LogLevel level, object message)
+        {
+            if (_connections.IsEmpty)
+                return;
+
+            _ = Task.Run(async () =>
+                await _connections.SendToAllJsonAsync(
+                    WebSocketResponseMessage.Create(
+                        Guid.Empty,
+                        WebSocketUtilityLogResult.Create(source, level, message).ToJson(),
+                        WebSocketResponseMessageEvent.System)
+                    .ToJson())
+                .ConfigureAwait(false));
+        }
+
+        private void OnApplicationEngineLog(object sender, LogEventArgs e)
+        {
+            if (_connections.IsEmpty)
+                return;
+
+            _ = Task.Run(async () =>
+                await _connections.SendToAllJsonAsync(
+                    WebSocketResponseMessage.Create(
+                        Guid.Empty,
+                        WebSocketApplicationLogResult.Create(e).ToJson(),
+                        WebSocketResponseMessageEvent.Log)
+                    .ToJson())
+                .ConfigureAwait(false));
         }
 
         private void OnBlockchainCommitting(
@@ -248,7 +284,7 @@ namespace WebSocketServer
                             WebSocketResponseMessage.Create(
                                 requestId,
 #if DEBUG
-                                WebSocketErrorResponseMessage.Create(100, ex.Message, ex.StackTrace).ToJson(),
+                                WebSocketErrorResult.Create(100, ex.Message, ex.StackTrace).ToJson(),
 #else
                                 WebSocketErrorResponseMessage.Create(100, ex.Message).ToJson(),
 #endif
@@ -316,12 +352,6 @@ namespace WebSocketServer
                 }
             }
             return false;
-        }
-
-        [WebSocketMethod]
-        private JToken Echo(JArray @params)
-        {
-            return @params;
         }
     }
 }

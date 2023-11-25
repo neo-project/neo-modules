@@ -11,6 +11,7 @@
     "Pass": "",
     "AllowOrigins": [],
     "ConcurrentProxyTimeout": 120,
-    "MessageSize": 16384
+    "MessageSize": 4096,
+    "DebugMode": false
   }
 }

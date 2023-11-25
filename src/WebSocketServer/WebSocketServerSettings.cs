@@ -18,6 +18,7 @@ namespace Neo.Plugins
         public string[] AllowOrigins { get; private init; }
         public uint ConcurrentProxyTimeout { get; private init; }
         public uint MessageSize { get; private init; }
+        public bool DebugMode { get; private init; }
 
         public static WebSocketServerSettings Default => new()
         {
@@ -32,7 +33,8 @@ namespace Neo.Plugins
             Pass = string.Empty,
             AllowOrigins = Array.Empty<string>(),
             ConcurrentProxyTimeout = 120,
-            MessageSize = 1024 * 8,
+            MessageSize = 1024 * 4,
+            DebugMode = false,
         };
 
         public static WebSocketServerSettings Current { get; private set; }
@@ -52,6 +54,7 @@ namespace Neo.Plugins
                 AllowOrigins = section.GetSection(nameof(AllowOrigins))?.Get<string[]>() ?? Default.AllowOrigins,
                 ConcurrentProxyTimeout = section.GetValue(nameof(ConcurrentProxyTimeout), Default.ConcurrentProxyTimeout),
                 MessageSize = section.GetValue(nameof(MessageSize), Default.MessageSize),
+                DebugMode = section.GetValue(nameof(DebugMode), Default.DebugMode),
             };
 
             if (IPAddress.TryParse(section.GetSection(nameof(BindAddress)).Value, out var ipAddress))

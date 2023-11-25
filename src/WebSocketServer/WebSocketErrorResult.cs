@@ -3,7 +3,7 @@ using System;
 
 namespace Neo.Plugins
 {
-    internal class WebSocketErrorResponseMessage
+    internal class WebSocketErrorResult
     {
         public int Code { get; init; }
         public string Message { get; init; }
@@ -11,7 +11,7 @@ namespace Neo.Plugins
         public string StackTrace { get; init; }
 #endif
 
-        public static WebSocketErrorResponseMessage Create(Exception exception) =>
+        public static WebSocketErrorResult Create(Exception exception) =>
             new()
             {
                 Code = exception.HResult,
@@ -21,7 +21,7 @@ namespace Neo.Plugins
 #endif
             };
 
-        public static WebSocketErrorResponseMessage Create(int code, string message) =>
+        public static WebSocketErrorResult Create(int code, string message) =>
             new()
             {
                 Code = code,
@@ -29,7 +29,7 @@ namespace Neo.Plugins
             };
 
 #if DEBUG
-        public static WebSocketErrorResponseMessage Create(int code, string message, string stackTrace) =>
+        public static WebSocketErrorResult Create(int code, string message, string stackTrace) =>
 #else
         public static WebSocketErrorResponseMessage Create(int code, string message) =>
 #endif
