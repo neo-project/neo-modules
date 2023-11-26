@@ -192,7 +192,7 @@ namespace Neo.Plugins
 
         #region Public Methods
 
-        public void RegisterMethods(object handler)
+        public static void RegisterMethods(object handler)
         {
             MethodInfo[] array = handler.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             foreach (MethodInfo methodInfo in array)
