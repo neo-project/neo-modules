@@ -3,52 +3,78 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
-using Neo;
 using Neo.Json;
 using Neo.Ledger;
-using Neo.Plugins;
 using Neo.SmartContract;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Net.Security;
-using System.Net.WebSockets;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace WebSocketServer
+namespace Neo.Plugins
 {
+    public delegate void WebSocketConnect(Guid clientId);
+    public delegate void WebSocketDisconnect(Guid clientId);
+    public delegate void WebSocketRequest(HttpContext httpContext);
+    public delegate void WebSocketServerStarted();
+    public delegate void WebSocketMessageReceived(Guid clientId, JToken json);
+    public delegate void WebSocketMessageSent(Guid clientId, JToken json);
+
     public class WebSocketServerPlugin : Plugin
     {
         #region Global Variables
 
-        private readonly WebSocketDictionary<WebSocketClient> _connections;
-        private readonly Dictionary<string, Func<JArray, object>> _methods;
+        #region Static
+
+        internal static readonly Dictionary<string, Func<JArray, object>> Methods;
+        private static readonly WebSocketConnection<WebSocketClient> _connections;
+        public static event WebSocketRequest OnRequest;
+        public static event WebSocketServerStarted OnServerStarted;
+
+        #endregion
+
         private readonly WebSocketOptions _webSocketOptions;
         private readonly List<NotifyEventArgs> _notifyEvents;
 
-        private NeoSystem _neoSystem;
+
         private IWebHost _host;
+
+        #endregion
+
+        #region Properties
+
+        #region Static
+
+        public static bool HasClients => !_connections.IsEmpty;
 
         #endregion
 
         public override string Name => "WebSocketServer";
         public override string Description => "Enables web socket functionally.";
 
-        public WebSocketServerPlugin()
+        #endregion
+
+
+        static WebSocketServerPlugin()
         {
             _connections = new();
-            _methods = new();
+            Methods = new();
+        }
+
+        public WebSocketServerPlugin()
+        {
             _webSocketOptions = new();
             _notifyEvents = new();
             Blockchain.Committed += OnBlockchainCommitted;
             Blockchain.Committing += OnBlockchainCommitting;
         }
+
+        #region Overrides
 
         public override void Dispose()
         {
@@ -65,7 +91,7 @@ namespace WebSocketServer
 
         protected override void OnSystemLoaded(NeoSystem system)
         {
-            if (system.Settings.Network != WebSocketServerSettings.Current.Network)
+            if (system.Settings.Network != WebSocketServerSettings.Current?.Network)
                 return;
 
             if (WebSocketServerSettings.Current.DebugMode)
@@ -74,10 +100,13 @@ namespace WebSocketServer
                 Utility.Logging += OnUtilityLogging;
             }
 
-            _neoSystem = system;
             //RegisterMethods(this);
             StartWebSocketServer();
         }
+
+        #endregion
+
+        #region Events
 
         private void OnUtilityLogging(string source, LogLevel level, object message)
         {
@@ -85,7 +114,7 @@ namespace WebSocketServer
                 return;
 
             _ = Task.Run(async () =>
-                await _connections.SendToAllJsonAsync(
+                await _connections.SendAllJsonAsync(
                     WebSocketResponseMessage.Create(
                         Guid.Empty,
                         WebSocketUtilityLogResult.Create(source, level, message).ToJson(),
@@ -100,10 +129,10 @@ namespace WebSocketServer
                 return;
 
             _ = Task.Run(async () =>
-                await _connections.SendToAllJsonAsync(
+                await _connections.SendAllJsonAsync(
                     WebSocketResponseMessage.Create(
                         Guid.Empty,
-                        WebSocketApplicationLogResult.Create(e).ToJson(),
+                        e.ToJson(),
                         WebSocketResponseMessageEvent.Log)
                     .ToJson())
                 .ConfigureAwait(false));
@@ -130,7 +159,7 @@ namespace WebSocketServer
                 return;
 
             _ = Task.Run(async () =>
-                await _connections.SendToAllJsonAsync(
+                await _connections.SendAllJsonAsync(
                     WebSocketResponseMessage.Create(
                         Guid.Empty,
                         block.Header.ToJson(system.Settings),
@@ -140,7 +169,7 @@ namespace WebSocketServer
 
             foreach (var tx in block.Transactions)
                 Task.Run(async () =>
-                    await _connections.SendToAllJsonAsync(
+                    await _connections.SendAllJsonAsync(
                         WebSocketResponseMessage.Create(
                             Guid.Empty,
                             tx.ToJson(system.Settings),
@@ -150,7 +179,7 @@ namespace WebSocketServer
 
             _notifyEvents.ForEach(f =>
                 Task.Run(async () =>
-                    await _connections.SendToAllJsonAsync(
+                    await _connections.SendAllJsonAsync(
                         WebSocketResponseMessage.Create(
                             Guid.Empty,
                             f.ToJson(),
@@ -158,6 +187,10 @@ namespace WebSocketServer
                         .ToJson())
                     .ConfigureAwait(false)));
         }
+
+        #endregion
+
+        #region Public Methods
 
         public void RegisterMethods(object handler)
         {
@@ -170,10 +203,66 @@ namespace WebSocketServer
                     string key = string.IsNullOrEmpty(customAttribute.Name) ?
                         methodInfo.Name.ToLowerInvariant() :
                         customAttribute.Name.ToLowerInvariant();
-                    _methods[key] = methodInfo.CreateDelegate<Func<JArray, object>>(handler);
+                    Methods[key] = methodInfo.CreateDelegate<Func<JArray, object>>(handler);
                 }
             }
         }
+
+        #region Static
+
+        public static void SendAllJson(JToken json)
+        {
+            if (_connections.IsEmpty)
+                return;
+
+            _ = Task.Run(async () =>
+                await _connections.SendAllJsonAsync(
+                    WebSocketResponseMessage.Create(
+                        Guid.Empty,
+                        json,
+                        WebSocketResponseMessageEvent.System)
+                    .ToJson())
+                .ConfigureAwait(false));
+        }
+
+        public static void SendJson(Guid clientId, byte eventId, JToken json)
+        {
+            if (_connections.IsEmpty)
+                return;
+
+            _ = Task.Run(async () =>
+                await _connections.SendJsonAsync(
+                    clientId,
+                    WebSocketResponseMessage.Create(
+                        Guid.Empty,
+                        json,
+                        eventId)
+                    .ToJson())
+                .ConfigureAwait(false));
+        }
+
+        public static void SendJson(Guid clientId, WebSocketResponseMessageEvent eventId, JToken json)
+        {
+            if (_connections.IsEmpty)
+                return;
+
+            _ = Task.Run(async () =>
+                await _connections.SendJsonAsync(
+                    clientId,
+                    WebSocketResponseMessage.Create(
+                        Guid.Empty,
+                        json,
+                        eventId)
+                    .ToJson())
+                .ConfigureAwait(false));
+        }
+
+        #endregion
+
+
+        #endregion
+
+        #region Private Methods
 
         private void StartWebSocketServer()
         {
@@ -218,6 +307,7 @@ namespace WebSocketServer
 
 
             _host.Start();
+            OnServerStarted?.TryCatch(t => t.Invoke());
         }
 
         private async Task ProcessRequestsAsync(HttpContext context)
@@ -231,6 +321,7 @@ namespace WebSocketServer
                 }
             }
 
+
             if (context.WebSockets.IsWebSocketRequest == false)
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
             else
@@ -238,98 +329,15 @@ namespace WebSocketServer
                 var tcs = new TaskCompletionSource();
                 using var ws = await context.WebSockets.AcceptWebSocketAsync().ConfigureAwait(false);
 
-                await ProcessMessagesAsync(ws, tcs).ConfigureAwait(false);
+                OnRequest?.TryCatch(t => t.Invoke(context));
+
+                await _connections.ProcessClientAsync(ws, tcs).ConfigureAwait(false);
 
                 await tcs.Task;
             }
         }
 
-        public async Task ProcessMessagesAsync(WebSocket client, TaskCompletionSource tcs)
-        {
-            try
-            {
-                var clientId = await AddSocketAsync(client).ConfigureAwait(false);
-
-                if (clientId == Guid.Empty)
-                    throw new NullReferenceException(nameof(clientId));
-
-                while (client.CloseStatus.HasValue == false)
-                {
-                    Guid requestId = Guid.Empty;
-                    try
-                    {
-                        var message = await ReceiveMessageAsync(client).ConfigureAwait(false);
-                        if (message is not null)
-                        {
-                            requestId = message.RequestId;
-
-                            if (_methods.TryGetValue(message.Method, out var callMethod) == false)
-                                throw new WebSocketException(-32601, "Method not found");
-
-                            var obj = callMethod(message.Params);
-
-                            if (obj is Task<JToken> responseTask)
-                                obj = await responseTask.ConfigureAwait(false);
-
-                            obj = WebSocketResponseMessage.Create(message.RequestId, (JToken)obj, WebSocketResponseMessageEvent.Call);
-
-                            await _connections.SendJsonAsync(clientId, ((WebSocketResponseMessage)obj).ToJson()).ConfigureAwait(false);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        ex = ex.InnerException ?? ex;
-                        await _connections.SendJsonAsync(
-                            clientId,
-                            WebSocketResponseMessage.Create(
-                                requestId,
-#if DEBUG
-                                WebSocketErrorResult.Create(100, ex.Message, ex.StackTrace).ToJson(),
-#else
-                                WebSocketErrorResponseMessage.Create(100, ex.Message).ToJson(),
-#endif
-                                WebSocketResponseMessageEvent.Error)
-                            .ToJson());
-                    }
-                }
-
-                await _connections
-                    .TryRemoveAsync(clientId)
-                    .ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                tcs.TrySetException(ex);
-            }
-        }
-
-        private async Task<Guid> AddSocketAsync(WebSocket socket)
-        {
-            var clientId = Guid.NewGuid();
-            var client = new WebSocketClient()
-            {
-                Socket = socket
-            };
-
-            var result = await _connections.TryAddAsync(clientId, client).ConfigureAwait(false);
-            return result ? clientId : Guid.Empty;
-        }
-
-        private async Task<WebSocketRequestMessage> ReceiveMessageAsync(WebSocket client)
-        {
-            var buffer = new byte[WebSocketServerSettings.Current.MessageSize]; // 16384 bytes
-            WebSocketReceiveResult receiveResult = null;
-
-            using var ms = new MemoryStream();
-            while (receiveResult == null || receiveResult.EndOfMessage == false)
-            {
-                receiveResult = await client.ReceiveAsync(new(buffer), CancellationToken.None);
-                await ms.WriteAsync(buffer.AsMemory(0, receiveResult.Count)).ConfigureAwait(false);
-                Array.Clear(buffer, 0, buffer.Length);
-            }
-
-            return WebSocketRequestMessage.FromJson(JToken.Parse(Encoding.UTF8.GetString(ms.ToArray())));
-        }
+        #region Static
 
         private static bool IsAuthorized(HttpContext context)
         {
@@ -353,5 +361,10 @@ namespace WebSocketServer
             }
             return false;
         }
+
+        #endregion
+
+        #endregion
+
     }
 }

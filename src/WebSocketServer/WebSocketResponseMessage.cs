@@ -19,11 +19,19 @@ namespace Neo.Plugins
                 Result = result,
             };
 
-        public JObject ToJson() =>
+        internal static WebSocketResponseMessage Create(Guid requestId, JToken result, byte eventId) =>
             new()
             {
-                ["version"] = Version.ToString(),
-                ["requestid"] = RequestId.ToString(),
+                EventId = eventId,
+                RequestId = requestId,
+                Result = result,
+            };
+
+        public JToken ToJson() =>
+            new JObject()
+            {
+                ["version"] = $"{Version}",
+                ["requestid"] = $"{RequestId}",
                 ["eventid"] = EventId,
                 ["result"] = Result,
             };

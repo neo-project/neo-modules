@@ -19,8 +19,8 @@ namespace Neo.Plugins
         public override string ToString() =>
             $"{ToJson()}";
 
-        public JObject ToJson() =>
-            new()
+        public JToken ToJson() =>
+            new JObject()
             {
                 ["source"] = SourceName,
                 ["level"] = $"{LogLevel}",

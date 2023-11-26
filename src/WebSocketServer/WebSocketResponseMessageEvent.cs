@@ -1,6 +1,6 @@
 namespace Neo.Plugins
 {
-    internal enum WebSocketResponseMessageEvent : byte
+    public enum WebSocketResponseMessageEvent : byte
     {
         Block = 0x02,               // Blockchain.Committed
         MemoryPool = 0x03,          // MemoryPool

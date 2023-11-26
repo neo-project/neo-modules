@@ -4,7 +4,7 @@ using System.Net;
 
 namespace Neo.Plugins
 {
-    internal class WebSocketServerSettings
+    public class WebSocketServerSettings
     {
         public uint Network { get; private init; }
         public IPAddress BindAddress { get; private set; }
@@ -39,7 +39,7 @@ namespace Neo.Plugins
 
         public static WebSocketServerSettings Current { get; private set; }
 
-        public static void Load(IConfigurationSection section)
+        internal static void Load(IConfigurationSection section)
         {
             Current = new()
             {
