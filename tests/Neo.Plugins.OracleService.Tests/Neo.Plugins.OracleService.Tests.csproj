@@ -1,23 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <PackageId>OracleService.Tests</PackageId>
     <RootNamespace>Neo.Plugins</RootNamespace>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Akka.TestKit" Version="1.5.14" />
     <PackageReference Include="Akka.TestKit.Xunit2" Version="1.5.14" />
   </ItemGroup>
-  
   <ItemGroup>
-    <ProjectReference Include="..\..\src\OracleService\OracleService.csproj" AdditionalProperties="IncludeSettingsFileOutput=False" />
+    <ProjectReference Include="..\..\src\OracleService\OracleService.csproj" />
+    <ProjectReference Include="..\..\src\RpcServer\RpcServer.csproj">
+      <Private>false</Private>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </ProjectReference>
   </ItemGroup>
-  
-  <ItemGroup>
-    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.8.0" />
-    <PackageReference Update="MSTest.TestAdapter" Version="3.1.1" />
-    <PackageReference Update="MSTest.TestFramework" Version="3.1.1" />
-  </ItemGroup>
-
 </Project>
