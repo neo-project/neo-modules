@@ -94,9 +94,9 @@ namespace Neo.Plugins
             {
                 trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.Default.MaxStackSize)).ToArray();
             }
-            catch (Exception ex)
+            catch (InvalidOperationException)
             {
-                trigger["stackexception"] = ex.Message;
+                trigger["stack"] = "error: invalid operation";
             }
             trigger["notifications"] = appExec.Notifications.Select(q =>
             {
@@ -137,9 +137,9 @@ namespace Neo.Plugins
                     {
                         trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.Default.MaxStackSize)).ToArray();
                     }
-                    catch (Exception ex)
+                    catch (InvalidOperationException)
                     {
-                        trigger["stackexception"] = ex.Message;
+                        trigger["stack"] = "error: invalid operation";
                     }
                     trigger["notifications"] = appExec.Notifications.Select(q =>
                     {
