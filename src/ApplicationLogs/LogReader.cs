@@ -96,7 +96,7 @@ namespace Neo.Plugins
             }
             catch (Exception ex)
             {
-                trigger["exception"] = ex.Message;
+                trigger["stackexception"] = ex.Message;
             }
             trigger["notifications"] = appExec.Notifications.Select(q =>
             {
@@ -139,7 +139,7 @@ namespace Neo.Plugins
                     }
                     catch (Exception ex)
                     {
-                        trigger["exception"] = ex.Message;
+                        trigger["stackexception"] = ex.Message;
                     }
                     trigger["notifications"] = appExec.Notifications.Select(q =>
                     {
