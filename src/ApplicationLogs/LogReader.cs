@@ -90,14 +90,19 @@ namespace Neo.Plugins
             trigger["vmstate"] = appExec.VMState;
             trigger["exception"] = GetExceptionMessage(appExec.Exception);
             trigger["gasconsumed"] = appExec.GasConsumed.ToString();
-            try
+            var stack = new JArray();
+            foreach (var item in appExec.Stack)
             {
-                trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.Default.MaxStackSize)).ToArray();
+                try
+                {
+                    stack.Add(item.ToJson());
+                }
+                catch (InvalidOperationException)
+                {
+                    stack.Add("error: invalid operation");
+                }
             }
-            catch (InvalidOperationException)
-            {
-                trigger["stack"] = "error: invalid operation";
-            }
+            trigger["stack"] = stack;
             trigger["notifications"] = appExec.Notifications.Select(q =>
             {
                 JObject notification = new JObject();
@@ -133,13 +138,17 @@ namespace Neo.Plugins
                     trigger["trigger"] = appExec.Trigger;
                     trigger["vmstate"] = appExec.VMState;
                     trigger["gasconsumed"] = appExec.GasConsumed.ToString();
-                    try
+                    var stack = new JArray();
+                    foreach (var item in appExec.Stack)
                     {
-                        trigger["stack"] = appExec.Stack.Select(q => q.ToJson(Settings.Default.MaxStackSize)).ToArray();
-                    }
-                    catch (InvalidOperationException)
-                    {
-                        trigger["stack"] = "error: invalid operation";
+                        try
+                        {
+                            stack.Add(item.ToJson());
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            stack.Add("error: invalid operation");
+                        }
                     }
                     trigger["notifications"] = appExec.Notifications.Select(q =>
                     {
