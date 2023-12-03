@@ -146,16 +146,16 @@ namespace Neo.Plugins
                             WebSocketResponseMessage.Create(
                                 requestId,
 #if DEBUG
-                                WebSocketErrorResult.Create(100, ex.Message, ex.StackTrace).ToJson(),
+                                WebSocketErrorResult.Create(ex.HResult, ex.Message, ex.StackTrace).ToJson(),
 #else
-                                WebSocketErrorResponseMessage.Create(100, ex.Message).ToJson(),
+                                WebSocketErrorResponseMessage.Create(ex.HResult, ex.Message).ToJson(),
 #endif
                                 WebSocketResponseMessageEvent.Error)
                             .ToJson());
                     }
                 }
 
-                await TryRemoveAsync(clientId).ConfigureAwait(false);
+                await client.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -176,7 +176,7 @@ namespace Neo.Plugins
 
         private static async Task<WebSocketRequestMessage> ReceiveMessageAsync(Guid clientId, WebSocket client)
         {
-            var buffer = new byte[WebSocketServerSettings.Current.MessageSize]; // 16384 bytes
+            var buffer = new byte[WebSocketServerSettings.Current.MessageSize]; // 4096 bytes
             WebSocketReceiveResult receiveResult = null;
 
             using var ms = new MemoryStream();
