@@ -1,0 +1,17 @@
+{
+  "PluginConfiguration": {
+    "Network": 860833102,
+    "BindAddress": "127.0.0.1",
+    "Port": 10340,
+    "SslCertFile": "",
+    "SslCertPassword": "",
+    "TrustedAuthorities": [],
+    "EnableBasicAuthentication": false,
+    "User": "",
+    "Pass": "",
+    "AllowOrigins": [],
+    "ConcurrentProxyTimeout": 120,
+    "MessageSize": 4096,
+    "DebugMode": false
+  }
+}
