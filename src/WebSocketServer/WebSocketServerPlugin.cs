@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
 using Neo.Json;
 using Neo.Ledger;
+using Neo.Plugins.WebSocketServer.v1;
 using Neo.SmartContract;
 using System;
 using System.Collections.Generic;
@@ -40,6 +41,8 @@ namespace Neo.Plugins
 
         private readonly WebSocketOptions _webSocketOptions;
         private readonly List<NotifyEventArgs> _notifyEvents;
+
+        private BlockchainMethods blockchainMethods;
 
 
         private IWebHost _host;
@@ -100,7 +103,7 @@ namespace Neo.Plugins
                 Utility.Logging += OnUtilityLogging;
             }
 
-            //RegisterMethods(this);
+            blockchainMethods = new BlockchainMethods(system);
             StartWebSocketServer();
         }
 
