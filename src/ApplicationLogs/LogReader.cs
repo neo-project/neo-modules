@@ -97,9 +97,9 @@ namespace Neo.Plugins
                 {
                     stack.Add(item.ToJson(Settings.Default.MaxStackSize));
                 }
-                catch (InvalidOperationException)
+                catch (Exception ex)
                 {
-                    stack.Add("error: invalid operation");
+                    stack.Add("error: " + ex);
                 }
             }
             trigger["stack"] = stack;
@@ -145,11 +145,12 @@ namespace Neo.Plugins
                         {
                             stack.Add(item.ToJson(Settings.Default.MaxStackSize));
                         }
-                        catch (InvalidOperationException)
+                        catch (Exception ex)
                         {
-                            stack.Add("error: invalid operation");
+                            stack.Add("error: " + ex);
                         }
                     }
+                    trigger["stack"] = stack;
                     trigger["notifications"] = appExec.Notifications.Select(q =>
                     {
                         JObject notification = new JObject();

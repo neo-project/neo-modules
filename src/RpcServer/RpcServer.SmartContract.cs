@@ -100,9 +100,9 @@ namespace Neo.Plugins
                     {
                         stack.Add(ToJson(item, session));
                     }
-                    catch (InvalidOperationException)
+                    catch (Exception ex)
                     {
-                        stack.Add("error: invalid operation");
+                        stack.Add("error: " + ex);
                     }
                 }
                 json["stack"] = stack;
