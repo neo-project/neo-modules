@@ -95,7 +95,7 @@ namespace Neo.Plugins
             {
                 try
                 {
-                    stack.Add(item.ToJson());
+                    stack.Add(item.ToJson(Settings.Default.MaxStackSize));
                 }
                 catch (InvalidOperationException)
                 {
@@ -143,7 +143,7 @@ namespace Neo.Plugins
                     {
                         try
                         {
-                            stack.Add(item.ToJson());
+                            stack.Add(item.ToJson(Settings.Default.MaxStackSize));
                         }
                         catch (InvalidOperationException)
                         {
