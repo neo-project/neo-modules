@@ -99,7 +99,7 @@ namespace Neo.Plugins
                 }
                 catch (Exception ex)
                 {
-                    stack.Add("error: " + ex);
+                    stack.Add("error: " + ex.Message);
                 }
             }
             trigger["stack"] = stack;
@@ -147,7 +147,7 @@ namespace Neo.Plugins
                         }
                         catch (Exception ex)
                         {
-                            stack.Add("error: " + ex);
+                            stack.Add("error: " + ex.Message);
                         }
                     }
                     trigger["stack"] = stack;
