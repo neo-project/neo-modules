@@ -191,7 +191,7 @@ namespace Neo.Plugins
             {
                 var json = JToken.Parse(Encoding.UTF8.GetString(ms.ToArray()));
 
-                OnMessageReceived?.Invoke(clientId, json);
+                OnMessageReceived?.TryCatch(t => t.Invoke(clientId, json));
 
                 return WebSocketRequestMessage.FromJson(json);
             }

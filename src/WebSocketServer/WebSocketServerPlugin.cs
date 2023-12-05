@@ -43,6 +43,7 @@ namespace Neo.Plugins
         private readonly List<NotifyEventArgs> _notifyEvents;
 
         private BlockchainMethods blockchainMethods;
+        private NeoSystem _neoSystem;
 
 
         private IWebHost _host;
@@ -83,6 +84,8 @@ namespace Neo.Plugins
         {
             _host?.Dispose();
             _connections?.Dispose();
+            _neoSystem.MemPool.TransactionAdded -= OnMemPoolTransactionAdded;
+            Blockchain.Committing -= OnBlockchainCommitting;
             Blockchain.Committed -= OnBlockchainCommitted;
             GC.SuppressFinalize(this);
         }
@@ -97,11 +100,16 @@ namespace Neo.Plugins
             if (system.Settings.Network != WebSocketServerSettings.Current?.Network)
                 return;
 
+            _neoSystem = system;
+
             if (WebSocketServerSettings.Current.DebugMode)
             {
                 ApplicationEngine.Log += OnApplicationEngineLog;
                 Utility.Logging += OnUtilityLogging;
             }
+
+            _neoSystem.MemPool.TransactionAdded += OnMemPoolTransactionAdded;
+            //_neoSystem.MemPool.TransactionRemoved += OnMemPoolTransactionRemoved;
 
             blockchainMethods = new BlockchainMethods(system);
             StartWebSocketServer();
@@ -110,6 +118,21 @@ namespace Neo.Plugins
         #endregion
 
         #region Events
+
+        private void OnMemPoolTransactionAdded(object sender, Network.P2P.Payloads.Transaction e)
+        {
+            if (_connections.IsEmpty)
+                return;
+
+            _ = Task.Run(async () =>
+                await _connections.SendAllJsonAsync(
+                    WebSocketResponseMessage.Create(
+                        Guid.Empty,
+                        e.ToJson(_neoSystem.Settings),
+                        WebSocketResponseMessageEvent.MemoryPool)
+                    .ToJson())
+                .ConfigureAwait(false));
+        }
 
         private void OnUtilityLogging(string source, LogLevel level, object message)
         {
@@ -171,7 +194,7 @@ namespace Neo.Plugins
                 .ConfigureAwait(false));
 
             foreach (var tx in block.Transactions)
-                Task.Run(async () =>
+                _ = Task.Run(async () =>
                     await _connections.SendAllJsonAsync(
                         WebSocketResponseMessage.Create(
                             Guid.Empty,
@@ -181,7 +204,7 @@ namespace Neo.Plugins
                     .ConfigureAwait(false));
 
             _notifyEvents.ForEach(f =>
-                Task.Run(async () =>
+                _ = Task.Run(async () =>
                     await _connections.SendAllJsonAsync(
                         WebSocketResponseMessage.Create(
                             Guid.Empty,
