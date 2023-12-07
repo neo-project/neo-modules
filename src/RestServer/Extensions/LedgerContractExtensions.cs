@@ -110,6 +110,7 @@ namespace Neo.Plugins.RestServer.Extensions
                         ScriptHash = addressHash,
                         Address = addressHash.ToAddress(protocolSettings.AddressVersion),
                         Balance = value.GetInteroperable<AccountState>().Balance,
+                        Decimals = NativeContract.GAS.Decimals
                     };
                 }
                 else
