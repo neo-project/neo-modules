@@ -78,7 +78,6 @@ Parametes `{hash}` can be any Neo N3 address or scripthash; `{address}` can be a
   - `[GET]` `/api/v1/utils/{address}/scripthash`
   - `[GET]` `/api/v1/utils/{hash}/{address}/validate`
 - Node
-  - `[GET]` `/api/v1/node`
   - `[GET]` `/api/v1/node/peers`
   - `[GET]` `/api/v1/node/plugins`
   - `[GET]` `/api/v1/node/settings`
