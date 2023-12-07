@@ -29,5 +29,10 @@ namespace Neo.Plugins.RestServer.Models.Blockchain
         /// </summary>
         /// <example>10000000</example>
         public BigInteger Balance { get; set; }
+        /// <summary>
+        /// Decimals of the token.
+        /// </summary>
+        /// <example>8</example>
+        public BigInteger Decimals { get; set; }
     }
 }
