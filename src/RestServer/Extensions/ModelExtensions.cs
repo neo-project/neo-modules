@@ -81,7 +81,7 @@ namespace Neo.Plugins.RestServer.Extensions
                 MaxTraceableBlocks = protocolSettings.MaxTraceableBlocks,
                 InitialGasDistribution = protocolSettings.InitialGasDistribution,
                 SeedList = protocolSettings.SeedList,
-                Hardforks = protocolSettings.Hardforks,
+                Hardforks = protocolSettings.Hardforks.ToDictionary(k => k.Key.ToString().Replace("HF_", string.Empty), v => v.Value),
                 StandbyValidators = protocolSettings.StandbyValidators,
                 StandbyCommittee = protocolSettings.StandbyCommittee,
             };

@@ -32,7 +32,7 @@ namespace Neo.Plugins.RestServer.Models.Node
         public uint MaxTraceableBlocks { get; set; }
         public ulong InitialGasDistribution { get; set; }
         public IReadOnlyCollection<string> SeedList { get; set; }
-        public IReadOnlyDictionary<Hardfork, uint> Hardforks { get; set; }
+        public IReadOnlyDictionary<string, uint> Hardforks { get; set; }
         public IReadOnlyList<ECPoint> StandbyValidators { get; set; }
         public IReadOnlyList<ECPoint> StandbyCommittee { get; set; }
     }
