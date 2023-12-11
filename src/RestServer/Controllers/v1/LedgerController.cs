@@ -108,18 +108,18 @@ namespace Neo.Plugins.RestServer.Controllers.v1
         }
 
         /// <summary>
-        /// Gets the current block height of the connected node.
+        /// Gets the current block header of the connected node.
         /// </summary>
-        /// <returns>Full Block Object.</returns>
+        /// <returns>Full Block Header Object.</returns>
         /// <response code="200">Successful</response>
         /// <response code="400">An error occurred. See Response for details.</response>
-        [HttpGet("blocks/height", Name = "GetBlockHeight")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Block))]
-        public IActionResult GetCurrentBlock()
+        [HttpGet("blockheader/current", Name = "GetCurrnetBlockHeader")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Header))]
+        public IActionResult GetCurrentBlockHeader()
         {
             var currentIndex = NativeContract.Ledger.CurrentIndex(_neosystem.StoreView);
-            var block = NativeContract.Ledger.GetHeader(_neosystem.StoreView, currentIndex);
-            return Ok(block);
+            var blockheader = NativeContract.Ledger.GetHeader(_neosystem.StoreView, currentIndex);
+            return Ok(blockheader);
         }
 
         /// <summary>
