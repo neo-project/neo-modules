@@ -101,7 +101,7 @@ namespace Neo.Plugins.RestServer
                     o.Type,
                     o.Id,
                     o.Code,
-                    Result = Convert.ToBase64String(o.Result.Span),
+                    o.Result,
                     o.Size,
                 },
                 HighPriorityAttribute h => new

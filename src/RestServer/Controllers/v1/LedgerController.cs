@@ -227,10 +227,8 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             UInt256 hash)
         {
             if (NativeContract.Ledger.ContainsTransaction(_neosystem.StoreView, hash) == false)
-                return NotFound();
-            var txst = NativeContract.Ledger.GetTransaction(_neosystem.StoreView, hash);
-            if (txst == null)
                 throw new TransactionNotFoundException(hash);
+            var txst = NativeContract.Ledger.GetTransaction(_neosystem.StoreView, hash);
             return Ok(txst);
         }
 
