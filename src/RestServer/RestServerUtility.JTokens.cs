@@ -88,10 +88,38 @@ namespace Neo.Plugins.RestServer
             }, serializer);
 
         public static JToken TransactionAttributeToJToken(TransactionAttribute attribute, global::Newtonsoft.Json.JsonSerializer serializer) =>
-            JToken.FromObject(new
+            JToken.FromObject(attribute switch
             {
-                attribute.Type,
-                attribute.AllowMultiple,
+                Conflicts c => new
+                {
+                    c.Type,
+                    c.Hash,
+                    c.Size,
+                },
+                OracleResponse o => new
+                {
+                    o.Type,
+                    o.Id,
+                    o.Code,
+                    Result = Convert.ToBase64String(o.Result.Span),
+                    o.Size,
+                },
+                HighPriorityAttribute h => new
+                {
+                    h.Type,
+                    h.Size,
+                },
+                NotValidBefore n => new
+                {
+                    n.Type,
+                    n.Height,
+                    n.Size,
+                },
+                _ => new
+                {
+                    attribute.Type,
+                    attribute.Size,
+                }
             }, serializer);
 
         public static JToken WitnessRuleToJToken(WitnessRule rule, global::Newtonsoft.Json.JsonSerializer serializer) =>
