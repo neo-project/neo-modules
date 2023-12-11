@@ -86,7 +86,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             [FromQuery(Name = "page")]
             uint skip = 1,
             [FromQuery(Name = "size")]
-            uint take = 1)
+            uint take = 50)
         {
             if (skip < 1 || take < 1 || take > RestServerSettings.Current.MaxPageSize)
                 throw new InvalidParameterRangeException();
@@ -309,7 +309,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             [FromQuery(Name = "page")]
             int skip = 1,
             [FromQuery(Name = "size")]
-            int take = 1)
+            int take = 50)
         {
             if (skip < 0 || take < 0 || take > RestServerSettings.Current.MaxPageSize)
                 throw new InvalidParameterRangeException();
@@ -348,7 +348,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             [FromQuery(Name = "page")]
             int skip = 1,
             [FromQuery(Name = "size")]
-            int take = 1)
+            int take = 50)
         {
             if (skip < 0 || take < 0 || take > RestServerSettings.Current.MaxPageSize)
                 throw new InvalidParameterRangeException();
@@ -374,7 +374,7 @@ namespace Neo.Plugins.RestServer.Controllers.v1
             [FromQuery(Name = "page")]
             int skip = 1,
             [FromQuery(Name = "size")]
-            int take = 1)
+            int take = 50)
         {
             if (skip < 0 || take < 0 || take > RestServerSettings.Current.MaxPageSize)
                 throw new InvalidParameterRangeException();
