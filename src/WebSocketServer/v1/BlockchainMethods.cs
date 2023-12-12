@@ -145,6 +145,10 @@ namespace Neo.Plugins.WebSocketServer.v1
             if (_params.Count != 0)
                 throw new WebSocketException(-32602, "Invalid params");
 
+            var hardforks = new JObject();
+            foreach (var hf in _neoSystem.Settings.Hardforks)
+                hardforks.Properties.Add($"{hf.Key}".Replace("HF_", string.Empty).ToLower(), hf.Value);
+
             return new JObject()
             {
                 ["addressversion"] = _neoSystem.Settings.AddressVersion,
@@ -156,12 +160,9 @@ namespace Neo.Plugins.WebSocketServer.v1
                 ["maxtransactionsperblock"] = _neoSystem.Settings.MaxTransactionsPerBlock,
                 ["memorypoolmaxtransactions"] = _neoSystem.Settings.MemoryPoolMaxTransactions,
                 ["initialgasdistribution"] = _neoSystem.Settings.InitialGasDistribution,
-                ["hardforks"] = new JArray(_neoSystem.Settings.Hardforks.Select(s => new JObject()
-                {
-                    ["name"] = $"{s.Key}".Replace("HF_", string.Empty),
-                    ["blockheight"] = s.Value,
-                })),
+                ["hardforks"] = hardforks,
                 ["standbycommittee"] = new JArray(_neoSystem.Settings.StandbyCommittee.Select(s => new JString($"{s}"))),
+                ["standbyvalidators"] = new JArray(_neoSystem.Settings.StandbyValidators.Select(s => new JString($"{s}"))),
                 ["seedlist"] = new JArray(_neoSystem.Settings.SeedList.Select(s => new JString(s))),
             };
         }

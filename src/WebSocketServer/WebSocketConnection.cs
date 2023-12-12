@@ -145,11 +145,7 @@ namespace Neo.Plugins
                             clientId,
                             WebSocketResponseMessage.Create(
                                 requestId,
-#if DEBUG
-                                WebSocketErrorResult.Create(ex.HResult, ex.Message, ex.StackTrace).ToJson(),
-#else
-                                WebSocketErrorResponseMessage.Create(ex.HResult, ex.Message).ToJson(),
-#endif
+                                WebSocketErrorResult.Create(ex).ToJson(),
                                 WebSocketResponseMessageEvent.Error)
                             .ToJson());
                     }
