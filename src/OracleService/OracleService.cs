@@ -217,13 +217,13 @@ namespace Neo.Plugins
         }
 
         [RpcMethod]
-        public JObject SubmitOracleResponse(JArray @params)
+        public JObject SubmitOracleResponse(JArray parameters)
         {
             if (_status != OracleStatus.Running) throw new InvalidOperationException();
-            ECPoint oraclePub = ECPoint.DecodePoint(Convert.FromBase64String(@params[0].AsString()), ECCurve.Secp256r1);
-            ulong requestId = (ulong)@params[1].AsNumber();
-            byte[] txSign = Convert.FromBase64String(@params[2].AsString());
-            byte[] msgSign = Convert.FromBase64String(@params[3].AsString());
+            ECPoint oraclePub = ECPoint.DecodePoint(Convert.FromBase64String(parameters[0].AsString()), ECCurve.Secp256r1);
+            ulong requestId = (ulong)parameters[1].AsNumber();
+            byte[] txSign = Convert.FromBase64String(parameters[2].AsString());
+            byte[] msgSign = Convert.FromBase64String(parameters[3].AsString());
 
             if (_finishedCache.ContainsKey(requestId)) throw new RpcException(-100, "Request has already finished");
 

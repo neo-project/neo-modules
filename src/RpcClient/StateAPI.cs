@@ -57,22 +57,22 @@ namespace Neo.Network.RPC
 
         public static JToken[] MakeFindStatesParams(UInt256 rootHash, UInt160 scriptHash, ReadOnlySpan<byte> prefix, ReadOnlySpan<byte> from = default, int? count = null)
         {
-            var @params = new JToken[count.HasValue ? 5 : 4];
-            @params[0] = rootHash.ToString();
-            @params[1] = scriptHash.ToString();
-            @params[2] = Convert.ToBase64String(prefix);
-            @params[3] = Convert.ToBase64String(from);
+            var parameters = new JToken[count.HasValue ? 5 : 4];
+            parameters[0] = rootHash.ToString();
+            parameters[1] = scriptHash.ToString();
+            parameters[2] = Convert.ToBase64String(prefix);
+            parameters[3] = Convert.ToBase64String(from);
             if (count.HasValue)
             {
-                @params[4] = count.Value;
+                parameters[4] = count.Value;
             }
-            return @params;
+            return parameters;
         }
 
         public async Task<RpcFoundStates> FindStatesAsync(UInt256 rootHash, UInt160 scriptHash, ReadOnlyMemory<byte> prefix, ReadOnlyMemory<byte> from = default, int? count = null)
         {
-            var @params = MakeFindStatesParams(rootHash, scriptHash, prefix.Span, from.Span, count);
-            var result = await _rpcClient.RpcSendAsync(RpcClient.GetRpcName(), @params).ConfigureAwait(false);
+            var parameters = MakeFindStatesParams(rootHash, scriptHash, prefix.Span, from.Span, count);
+            var result = await _rpcClient.RpcSendAsync(RpcClient.GetRpcName(), parameters).ConfigureAwait(false);
 
             return RpcFoundStates.FromJson((JObject)result);
         }

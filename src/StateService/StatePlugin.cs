@@ -176,9 +176,9 @@ namespace Neo.Plugins.StateService
         }
 
         [RpcMethod]
-        public JToken GetStateRoot(JArray @params)
+        public JToken GetStateRoot(JArray parameters)
         {
-            uint index = uint.Parse(@params[0].AsString());
+            uint index = uint.Parse(parameters[0].AsString());
             using var snapshot = StateStore.Singleton.GetSnapshot();
             StateRoot stateRoot = snapshot.GetStateRoot(index);
             if (stateRoot is null)
@@ -230,11 +230,11 @@ namespace Neo.Plugins.StateService
         }
 
         [RpcMethod]
-        public JToken GetProof(JArray @params)
+        public JToken GetProof(JArray parameters)
         {
-            UInt256 rootHash = UInt256.Parse(@params[0].AsString());
-            UInt160 scriptHash = UInt160.Parse(@params[1].AsString());
-            byte[] key = Convert.FromBase64String(@params[2].AsString());
+            UInt256 rootHash = UInt256.Parse(parameters[0].AsString());
+            UInt160 scriptHash = UInt160.Parse(parameters[1].AsString());
+            byte[] key = Convert.FromBase64String(parameters[2].AsString());
             return GetProof(rootHash, scriptHash, key);
         }
 
@@ -258,15 +258,15 @@ namespace Neo.Plugins.StateService
         }
 
         [RpcMethod]
-        public JToken VerifyProof(JArray @params)
+        public JToken VerifyProof(JArray parameters)
         {
-            UInt256 rootHash = UInt256.Parse(@params[0].AsString());
-            byte[] proofBytes = Convert.FromBase64String(@params[1].AsString());
+            UInt256 rootHash = UInt256.Parse(parameters[0].AsString());
+            byte[] proofBytes = Convert.FromBase64String(parameters[1].AsString());
             return VerifyProof(rootHash, proofBytes);
         }
 
         [RpcMethod]
-        public JToken GetStateHeight(JArray @params)
+        public JToken GetStateHeight(JArray parameters)
         {
             return new JObject
             {
@@ -292,19 +292,19 @@ namespace Neo.Plugins.StateService
         }
 
         [RpcMethod]
-        public JToken FindStates(JArray @params)
+        public JToken FindStates(JArray parameters)
         {
-            var rootHash = UInt256.Parse(@params[0].AsString());
+            var rootHash = UInt256.Parse(parameters[0].AsString());
             if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != rootHash)
                 throw new RpcException(-100, "Old state not supported");
-            var scriptHash = UInt160.Parse(@params[1].AsString());
-            var prefix = Convert.FromBase64String(@params[2].AsString());
+            var scriptHash = UInt160.Parse(parameters[1].AsString());
+            var prefix = Convert.FromBase64String(parameters[2].AsString());
             byte[] key = Array.Empty<byte>();
-            if (3 < @params.Count)
-                key = Convert.FromBase64String(@params[3].AsString());
+            if (3 < parameters.Count)
+                key = Convert.FromBase64String(parameters[3].AsString());
             int count = Settings.Default.MaxFindResultItems;
-            if (4 < @params.Count)
-                count = int.Parse(@params[4].AsString());
+            if (4 < parameters.Count)
+                count = int.Parse(parameters[4].AsString());
             if (Settings.Default.MaxFindResultItems < count)
                 count = Settings.Default.MaxFindResultItems;
             using var store = StateStore.Singleton.GetStoreSnapshot();
@@ -350,13 +350,13 @@ namespace Neo.Plugins.StateService
         }
 
         [RpcMethod]
-        public JToken GetState(JArray @params)
+        public JToken GetState(JArray parameters)
         {
-            var rootHash = UInt256.Parse(@params[0].AsString());
+            var rootHash = UInt256.Parse(parameters[0].AsString());
             if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != rootHash)
                 throw new RpcException(-100, "Old state not supported");
-            var scriptHash = UInt160.Parse(@params[1].AsString());
-            var key = Convert.FromBase64String(@params[2].AsString());
+            var scriptHash = UInt160.Parse(parameters[1].AsString());
+            var key = Convert.FromBase64String(parameters[2].AsString());
             using var store = StateStore.Singleton.GetStoreSnapshot();
             var trie = new Trie(store, rootHash);
 

@@ -174,12 +174,12 @@ namespace Neo.Plugins
                 string jsonRpc = context.Request.Query["jsonrpc"];
                 string id = context.Request.Query["id"];
                 string method = context.Request.Query["method"];
-                string @params = context.Request.Query["params"];
-                if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(method) && !string.IsNullOrEmpty(@params))
+                string parameters = context.Request.Query["params"];
+                if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(method) && !string.IsNullOrEmpty(parameters))
                 {
                     try
                     {
-                        @params = Encoding.UTF8.GetString(Convert.FromBase64String(@params));
+                        parameters = Encoding.UTF8.GetString(Convert.FromBase64String(parameters));
                     }
                     catch (FormatException) { }
                     request = new JObject();
@@ -187,7 +187,7 @@ namespace Neo.Plugins
                         request["jsonrpc"] = jsonRpc;
                     request["id"] = id;
                     request["method"] = method;
-                    request["params"] = JToken.Parse(@params, MaxParamsDepth);
+                    request["params"] = JToken.Parse(parameters, MaxParamsDepth);
                 }
             }
             else if (context.Request.Method == "POST")
@@ -229,8 +229,8 @@ namespace Neo.Plugins
         private async Task<JObject> ProcessRequestAsync(HttpContext context, JObject request)
         {
             if (!request.ContainsProperty("id")) return null;
-            JToken @params = request["params"] ?? new JArray();
-            if (!request.ContainsProperty("method") || @params is not JArray)
+            JToken parameters = request["params"] ?? new JArray();
+            if (!request.ContainsProperty("method") || parameters is not JArray)
             {
                 return CreateErrorResponse(request["id"], -32600, "Invalid Request");
             }
@@ -242,7 +242,7 @@ namespace Neo.Plugins
                     throw new RpcException(-400, "Access denied");
                 if (!_methods.TryGetValue(method, out var func))
                     throw new RpcException(-32601, "Method not found");
-                response["result"] = func((JArray)@params) switch
+                response["result"] = func((JArray)parameters) switch
                 {
                     JToken result => result,
                     Task<JToken> task => await task,
