@@ -70,9 +70,22 @@ namespace Neo.Plugins
         /// <param name="err">the rpc exception code</param>
         /// <returns>the execution result</returns>
         /// <exception cref="RpcException">The rpc exception</exception>
-        public static bool IsTrue_Or(this bool result, RpcError err)
+        public static bool True_Or(this bool result, RpcError err)
         {
             if (!result.Equals(true)) throw new RpcException(err);
+            return result;
+        }
+
+        /// <summary>
+        /// Checks if the execution result is false or throws an exception.
+        /// </summary>
+        /// <param name="result">the execution result</param>
+        /// <param name="err">the rpc exception code</param>
+        /// <returns>the execution result</returns>
+        /// <exception cref="RpcException">The rpc exception</exception>
+        public static bool False_Or(this bool result, RpcError err)
+        {
+            if (!result.Equals(false)) throw new RpcException(err);
             return result;
         }
 
@@ -84,10 +97,9 @@ namespace Neo.Plugins
         /// <typeparam name="T">The execution result type</typeparam>
         /// <returns>The execution result</returns>
         /// <exception cref="RpcException">the rpc exception</exception>
-        public static T Null_Or<T>(this T result, RpcError err)
+        public static void Null_Or<T>(this T result, RpcError err)
         {
-            if (result == null) throw new RpcException(err);
-            return result;
+            if (result != null) throw new RpcException(err);
         }
     }
 }

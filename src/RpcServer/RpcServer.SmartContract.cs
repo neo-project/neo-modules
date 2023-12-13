@@ -231,7 +231,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken TraverseIterator(JArray _params)
         {
-            settings.SessionEnabled.IsTrue_Or(RpcError.SessionsDisabled);
+            settings.SessionEnabled.True_Or(RpcError.SessionsDisabled);
             Guid sid = Result.Ok_Or(() => Guid.Parse(_params[0].GetString()), RpcError.InvalidParams.WithData($"Invalid session id {nameof(sid)}"));
             Guid iid = Result.Ok_Or(() => Guid.Parse(_params[1].GetString()), RpcError.InvalidParams.WithData($"Invliad iterator id {nameof(iid)}"));
             int count = _params[2].GetInt32();
@@ -252,7 +252,7 @@ namespace Neo.Plugins
         [RpcMethod]
         protected virtual JToken TerminateSession(JArray _params)
         {
-            settings.SessionEnabled.IsTrue_Or(RpcError.SessionsDisabled);
+            settings.SessionEnabled.True_Or(RpcError.SessionsDisabled);
             Guid sid = Result.Ok_Or(() => Guid.Parse(_params[0].GetString()), RpcError.InvalidParams.WithData("Invalid session id"));
 
             Session session = null;

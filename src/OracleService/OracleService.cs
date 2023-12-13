@@ -219,24 +219,22 @@ namespace Neo.Plugins
         [RpcMethod]
         public JObject SubmitOracleResponse(JArray _params)
         {
-            status.Equals(OracleStatus.Running).IsTrue_Or(RpcError.OracleDisabled);
+            status.Equals(OracleStatus.Running).True_Or(RpcError.OracleDisabled);
             ECPoint oraclePub = ECPoint.DecodePoint(Convert.FromBase64String(_params[0].AsString()), ECCurve.Secp256r1);
             ulong requestId = Result.Ok_Or(() => (ulong)_params[1].AsNumber(), RpcError.InvalidParams.WithData($"Invalid requestId: {_params[1]}"));
             byte[] txSign = Result.Ok_Or(() => Convert.FromBase64String(_params[2].AsString()), RpcError.InvalidParams.WithData($"Invalid txSign: {_params[2]}"));
             byte[] msgSign = Result.Ok_Or(() => Convert.FromBase64String(_params[3].AsString()), RpcError.InvalidParams.WithData($"Invalid msgSign: {_params[3]}"));
 
-            if (finishedCache.ContainsKey(requestId)) throw new RpcException(RpcError.OracleRequestFinished);
+            finishedCache.ContainsKey(requestId).False_Or(RpcError.OracleRequestFinished);
 
             using (var snapshot = System.GetSnapshot())
             {
                 uint height = NativeContract.Ledger.CurrentIndex(snapshot) + 1;
                 var oracles = NativeContract.RoleManagement.GetDesignatedByRole(snapshot, Role.Oracle, height);
-                if (!oracles.Any(p => p.Equals(oraclePub))) throw new RpcException(RpcErrorFactory.OracleNotDesignatedNode(oraclePub));
-                if (NativeContract.Oracle.GetRequest(snapshot, requestId) is null)
-                    throw new RpcException(RpcError.OracleRequestNotFound);
+                oracles.Any(p => p.Equals(oraclePub)).True_Or(RpcErrorFactory.OracleNotDesignatedNode(oraclePub));
+                NativeContract.Oracle.GetRequest(snapshot, requestId).NotNull_Or(RpcError.OracleRequestNotFound);
                 var data = Neo.Helper.Concat(oraclePub.ToArray(), BitConverter.GetBytes(requestId), txSign);
-                if (!Crypto.VerifySignature(data, msgSign, oraclePub))
-                    throw new RpcException(RpcErrorFactory.InvalidSignature($"Invalid oracle response transaction signature from '{oraclePub}'."));
+                Crypto.VerifySignature(data, msgSign, oraclePub).True_Or(RpcErrorFactory.InvalidSignature($"Invalid oracle response transaction signature from '{oraclePub}'."));
                 AddResponseTxSign(snapshot, requestId, oraclePub, txSign);
             }
             return new JObject();

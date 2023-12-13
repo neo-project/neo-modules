@@ -196,7 +196,7 @@ namespace Neo.Plugins.StateService
 
         private string GetProof(Trie trie, StorageKey skey)
         {
-            trie.TryGetProof(skey.ToArray(), out var proof).IsTrue_Or(RpcError.UnknownStorageItem);
+            trie.TryGetProof(skey.ToArray(), out var proof).True_Or(RpcError.UnknownStorageItem);
             using MemoryStream ms = new();
             using BinaryWriter writer = new(ms, Utility.StrictUTF8);
 
@@ -213,10 +213,7 @@ namespace Neo.Plugins.StateService
 
         private string GetProof(UInt256 root_hash, UInt160 script_hash, byte[] key)
         {
-            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
-            {
-                throw new RpcException(RpcError.UnsupportedState);
-            }
+            (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash).False_Or(RpcError.UnsupportedState);
             using var store = StateStore.Singleton.GetStoreSnapshot();
             var trie = new Trie(store, root_hash);
             var contract = GetHistoricalContractState(trie, script_hash).NotNull_Or(RpcError.UnknownContract);
@@ -246,8 +243,7 @@ namespace Neo.Plugins.StateService
                 proofs.Add(reader.ReadVarBytes());
             }
 
-            var value = Trie.VerifyProof(root_hash, key, proofs);
-            if (value is null) throw new RpcException(RpcError.InvalidProof);
+            var value = Trie.VerifyProof(root_hash, key, proofs).NotNull_Or(RpcError.InvalidProof);
             return Convert.ToBase64String(value);
         }
 
@@ -288,8 +284,7 @@ namespace Neo.Plugins.StateService
         public JToken FindStates(JArray _params)
         {
             var root_hash = Result.Ok_Or(() => UInt256.Parse(_params[0].AsString()), RpcError.InvalidParams.WithData($"Invalid root hash: {_params[0]}"));
-            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
-                throw new RpcException(RpcError.UnsupportedState);
+            (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash).False_Or(RpcError.UnsupportedState);
             var script_hash = Result.Ok_Or(() => UInt160.Parse(_params[1].AsString()), RpcError.InvalidParams.WithData($"Invalid script hash: {_params[1]}"));
             var prefix = Result.Ok_Or(() => Convert.FromBase64String(_params[2].AsString()), RpcError.InvalidParams.WithData($"Invalid prefix: {_params[2]}"));
             byte[] key = Array.Empty<byte>();
@@ -345,8 +340,7 @@ namespace Neo.Plugins.StateService
         public JToken GetState(JArray _params)
         {
             var root_hash = Result.Ok_Or(() => UInt256.Parse(_params[0].AsString()), RpcError.InvalidParams.WithData($"Invalid root hash: {_params[0]}"));
-            if (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash)
-                throw new RpcException(RpcError.UnsupportedState);
+            (!Settings.Default.FullState && StateStore.Singleton.CurrentLocalRootHash != root_hash).False_Or(RpcError.UnsupportedState);
             var script_hash = Result.Ok_Or(() => UInt160.Parse(_params[1].AsString()), RpcError.InvalidParams.WithData($"Invalid script hash: {_params[1]}"));
             var key = Result.Ok_Or(() => Convert.FromBase64String(_params[2].AsString()), RpcError.InvalidParams.WithData($"Invalid key: {_params[2]}"));
             using var store = StateStore.Singleton.GetStoreSnapshot();

@@ -46,7 +46,7 @@ namespace Neo.Plugins
                 UInt256 hash = UInt256.Parse(key.AsString());
                 block = NativeContract.Ledger.GetBlock(snapshot, hash);
             }
-            block.Null_Or(RpcError.UnknownBlock);
+            block.NotNull_Or(RpcError.UnknownBlock);
             if (verbose)
             {
                 JObject json = Utility.BlockToJson(block, system.Settings);
@@ -93,14 +93,13 @@ namespace Neo.Plugins
             if (key is JNumber)
             {
                 uint height = uint.Parse(key.AsString());
-                header = NativeContract.Ledger.GetHeader(snapshot, height);
+                header = NativeContract.Ledger.GetHeader(snapshot, height).NotNull_Or(RpcError.UnknownBlock);
             }
             else
             {
                 UInt256 hash = UInt256.Parse(key.AsString());
-                header = NativeContract.Ledger.GetHeader(snapshot, hash);
+                header = NativeContract.Ledger.GetHeader(snapshot, hash).NotNull_Or(RpcError.UnknownBlock);
             }
-            header.Null_Or(RpcError.UnknownBlock);
             if (verbose)
             {
                 JObject json = header.ToJson(system.Settings);
@@ -120,13 +119,13 @@ namespace Neo.Plugins
             if (int.TryParse(_params[0].AsString(), out int contractId))
             {
                 var contracts = NativeContract.ContractManagement.GetContractById(system.StoreView, contractId);
-                return contracts?.ToJson() ?? throw new RpcException(RpcError.UnknownContract);
+                return contracts?.ToJson().NotNull_Or(RpcError.UnknownContract);
             }
             else
             {
                 UInt160 script_hash = ToScriptHash(_params[0].AsString());
                 ContractState contract = NativeContract.ContractManagement.GetContract(system.StoreView, script_hash);
-                return contract?.ToJson() ?? throw new RpcException(RpcError.UnknownContract);
+                return contract?.ToJson().NotNull_Or(RpcError.UnknownContract);
             }
         }
 
@@ -168,7 +167,7 @@ namespace Neo.Plugins
             var snapshot = system.StoreView;
             TransactionState state = NativeContract.Ledger.GetTransactionState(snapshot, hash);
             tx ??= state?.Transaction;
-            if (tx is null) throw new RpcException(RpcError.UnknownTransaction);
+            tx.NotNull_Or(RpcError.UnknownTransaction);
             if (!verbose) return Convert.ToBase64String(tx.ToArray());
             JObject json = Utility.TransactionToJson(tx, system.Settings);
             if (state is not null)
@@ -188,8 +187,7 @@ namespace Neo.Plugins
             if (!int.TryParse(_params[0].AsString(), out int id))
             {
                 UInt160 hash = UInt160.Parse(_params[0].AsString());
-                ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, hash);
-                if (contract is null) throw new RpcException(RpcError.UnknownContract);
+                ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, hash).NotNull_Or(RpcError.UnknownContract);
                 id = contract.Id;
             }
             byte[] key = Convert.FromBase64String(_params[1].AsString());
@@ -197,8 +195,7 @@ namespace Neo.Plugins
             {
                 Id = id,
                 Key = key
-            });
-            if (item is null) throw new RpcException(RpcError.UnknownStorageItem);
+            }).NotNull_Or(RpcError.UnknownStorageItem);
             return Convert.ToBase64String(item.Value.Span);
         }
 
@@ -209,8 +206,7 @@ namespace Neo.Plugins
             if (!int.TryParse(_params[0].AsString(), out int id))
             {
                 UInt160 hash = UInt160.Parse(_params[0].AsString());
-                ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, hash);
-                if (contract is null) throw new RpcException(RpcError.UnknownContract);
+                ContractState contract = NativeContract.ContractManagement.GetContract(snapshot, hash).NotNull_Or(RpcError.UnknownContract);
                 id = contract.Id;
             }
 

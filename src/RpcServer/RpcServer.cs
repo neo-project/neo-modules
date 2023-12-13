@@ -234,10 +234,8 @@ namespace Neo.Plugins
             try
             {
                 string method = request["method"].AsString();
-                if (!CheckAuth(context) || settings.DisabledMethods.Contains(method))
-                    throw new RpcException(RpcError.AccessDenied);
-                if (!methods.TryGetValue(method, out var func))
-                    throw new RpcException(RpcErrorFactory.MethodNotFound(method));
+                (CheckAuth(context) && !settings.DisabledMethods.Contains(method)).True_Or(RpcError.AccessDenied);
+                methods.TryGetValue(method, out var func).True_Or(RpcErrorFactory.MethodNotFound(method));
                 response["result"] = func((JArray)@params) switch
                 {
                     JToken result => result,
